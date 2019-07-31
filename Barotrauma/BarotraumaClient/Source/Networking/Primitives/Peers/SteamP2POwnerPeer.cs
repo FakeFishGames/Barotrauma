@@ -201,7 +201,27 @@ namespace Barotrauma.Networking
                 byte[] p2pData = new byte[inc.LengthBytes - p2pDataStart];
                 Array.Copy(inc.Data, p2pDataStart, p2pData, 0, p2pData.Length);
 
+                if (p2pData.Length + 4 >= MsgConstants.MTU)
+                {
+                    DebugConsole.Log("WARNING: message length comes close to exceeding MTU, forcing reliable send (" + p2pData.Length.ToString() + " bytes)");
+                    sendType = Facepunch.Steamworks.Networking.SendType.Reliable;
+                }
+
                 bool successSend = Steam.SteamManager.Instance.Networking.SendP2PPacket(recipientSteamId, p2pData, p2pData.Length, sendType);
+
+                if (!successSend)
+                {
+                    if (sendType != Facepunch.Steamworks.Networking.SendType.Reliable)
+                    {
+                        DebugConsole.Log("WARNING: message couldn't be sent unreliably, forcing reliable send (" + p2pData.Length.ToString() + " bytes)");
+                        sendType = Facepunch.Steamworks.Networking.SendType.Reliable;
+                        successSend = Steam.SteamManager.Instance.Networking.SendP2PPacket(recipientSteamId, p2pData, p2pData.Length, sendType);
+                    }
+                    if (!successSend)
+                    {
+                        DebugConsole.ThrowError("Failed to send message to remote peer! (" + p2pData.Length.ToString() + " bytes)");
+                    }
+                }
             }
             else
             {

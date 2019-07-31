@@ -258,8 +258,28 @@ namespace Barotrauma.Networking
                     break;
             }
 
+            if (length + 8 >= MsgConstants.MTU)
+            {
+                DebugConsole.Log("WARNING: message length comes close to exceeding MTU, forcing reliable send (" + length.ToString() + " bytes)");
+                sendType = Facepunch.Steamworks.Networking.SendType.Reliable;
+            }
+
             heartbeatTimer = 5.0;
-            SteamManager.Instance.Networking.SendP2PPacket(hostSteamId, buf, length + 4, sendType);
+            bool successSend = SteamManager.Instance.Networking.SendP2PPacket(hostSteamId, buf, length + 4, sendType);
+
+            if (!successSend)
+            {
+                if (sendType != Facepunch.Steamworks.Networking.SendType.Reliable)
+                {
+                    DebugConsole.Log("WARNING: message couldn't be sent unreliably, forcing reliable send (" + length.ToString() + " bytes)");
+                    sendType = Facepunch.Steamworks.Networking.SendType.Reliable;
+                    successSend = Steam.SteamManager.Instance.Networking.SendP2PPacket(hostSteamId, buf, length + 4, sendType);
+                }
+                if (!successSend)
+                {
+                    DebugConsole.ThrowError("Failed to send message to remote peer! (" + length.ToString() + " bytes)");
+                }
+            }
         }
 
         public override void SendPassword(string password)
