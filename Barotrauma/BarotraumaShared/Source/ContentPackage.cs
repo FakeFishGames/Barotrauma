@@ -37,7 +37,9 @@ namespace Barotrauma
         Afflictions,
         Buffs,
         Tutorials,
-        UIStyle
+        UIStyle,
+        EventManagerSettings,
+        Orders
     }
 
     public class ContentPackage
@@ -61,7 +63,8 @@ namespace Barotrauma
             ContentType.LevelObjectPrefabs,
             ContentType.RuinConfig,
             ContentType.Outpost,
-            ContentType.Afflictions
+            ContentType.Afflictions,
+            ContentType.Orders
         };
 
         //at least one file of each these types is required in core content packages
@@ -84,7 +87,8 @@ namespace Barotrauma
             ContentType.RuinConfig,
             ContentType.NPCConversations,
             ContentType.Afflictions,
-            ContentType.UIStyle
+            ContentType.UIStyle,
+            ContentType.EventManagerSettings
         };
 
         public static IEnumerable<ContentType> CorePackageRequiredFiles

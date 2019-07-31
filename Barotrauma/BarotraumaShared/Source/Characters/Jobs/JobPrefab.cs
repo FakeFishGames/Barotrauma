@@ -8,13 +8,13 @@ namespace Barotrauma
 {
     public class AutonomousObjective
     {
-        public string aiTag;
+        public string identifier;
         public string option;
         public float priorityModifier;
 
         public AutonomousObjective(XElement element)
         {
-            aiTag = element.GetAttributeString("aitag", null);
+            identifier = element.GetAttributeString("identifier", null);
             option = element.GetAttributeString("option", null);
             priorityModifier = element.GetAttributeFloat("prioritymodifier", 1);
             priorityModifier = MathHelper.Max(priorityModifier, 0);

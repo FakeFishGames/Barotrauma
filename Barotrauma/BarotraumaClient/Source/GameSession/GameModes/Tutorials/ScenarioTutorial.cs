@@ -176,9 +176,9 @@ namespace Barotrauma.Tutorials
             return WayPoint.GetRandom(spawnPointType, charInfo.Job, spawnSub);
         }
 
-        protected bool HasOrder(Character character, string aiTag, string option = null)
+        protected bool HasOrder(Character character, string identifier, string option = null)
         {
-            if (character.CurrentOrder?.AITag == aiTag)
+            if (character.CurrentOrder?.Identifier == identifier)
             {
                 if (option == null)
                 {

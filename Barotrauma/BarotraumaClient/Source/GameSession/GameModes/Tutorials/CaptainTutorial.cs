@@ -68,7 +68,7 @@ namespace Barotrauma.Tutorials
             captainsuniform.Unequip(captain);
             captain.Inventory.RemoveItem(captainsuniform);
 
-            var steerOrder = Order.PrefabList.Find(order => order.AITag == "steer");
+            var steerOrder = Order.GetPrefab("steer");
             captain_steerIcon = steerOrder.SymbolSprite;
             captain_steerIconColor = steerOrder.Color;
 
