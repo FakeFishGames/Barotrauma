@@ -404,7 +404,7 @@ namespace Barotrauma.Networking
             string connectingText = TextManager.Get("Connecting");
             while (!canStart && !connectCancelled)
             {
-                if (reconnectBox == null)
+                if (reconnectBox == null && waitInServerQueueBox == null)
                 {
                     string serverDisplayName = serverName;
                     if (string.IsNullOrEmpty(serverDisplayName)) { serverDisplayName = serverIP; }
@@ -430,28 +430,23 @@ namespace Barotrauma.Networking
                     reconnectBox.Buttons[0].OnClicked += reconnectBox.Close;
                 }
 
-                reconnectBox.Header.Text = connectingText + new string('.', ((int)Timing.TotalTime % 3 + 1));
+                if (reconnectBox != null)
+                {
+                    reconnectBox.Header.Text = connectingText + new string('.', ((int)Timing.TotalTime % 3 + 1));
+                }
 
                 yield return CoroutineStatus.Running;
 
                 if (DateTime.Now > timeOut)
                 {
                     OnDisconnect(Lidgren.Network.NetConnection.NoResponseMessage);
-                    if (reconnectBox != null)
-                    {
-                        reconnectBox.Close(null, null);
-                        reconnectBox = null;
-                    }
+                    reconnectBox?.Close(); reconnectBox = null;
                     break;
                 }
                 
                 if (requiresPw && !canStart && !connectCancelled)
                 {
-                    if (reconnectBox != null)
-                    {
-                        reconnectBox.Close(null, null);
-                        reconnectBox = null;
-                    }
+                    reconnectBox?.Close(); reconnectBox = null;
 
                     string pwMsg = "Password required "+pwRetries; //TODO: read from msg?
 
@@ -493,11 +488,7 @@ namespace Barotrauma.Networking
                 }
             }
 
-            if (reconnectBox != null)
-            {
-                reconnectBox.Close(null, null);
-                reconnectBox = null;
-            }
+            reconnectBox?.Close(); reconnectBox = null;
 
             if (connectCancelled) yield return CoroutineStatus.Success;
             
@@ -563,7 +554,7 @@ namespace Barotrauma.Networking
 
             if (reconnectBox != null)
             {
-                reconnectBox.Close(null, null);
+                reconnectBox.Close();
                 reconnectBox = null;
             }
 
@@ -716,8 +707,13 @@ namespace Barotrauma.Networking
 
             if (disconnectReason == DisconnectReason.ServerFull)
             {
-                //already waiting for a slot to free up, do nothing
-                if (CoroutineManager.IsCoroutineRunning("WaitInServerQueue")) return;
+                CoroutineManager.StopCoroutines("WaitForStartingInfo");
+                //already waiting for a slot to free up, stop waiting for starting info and 
+                //let WaitInServerQueue reattempt connecting later
+                if (CoroutineManager.IsCoroutineRunning("WaitInServerQueue"))
+                {
+                    return;
+                }
 
                 reconnectBox?.Close(); reconnectBox = null;
 
@@ -814,7 +810,7 @@ namespace Barotrauma.Networking
                 if (!CoroutineManager.IsCoroutineRunning("WaitForStartingInfo"))
                 {
                     ConnectToServer(serverEndpoint, serverName);
-                    yield return new WaitForSeconds(2.0f);
+                    yield return new WaitForSeconds(5.0f);
                 }
                 yield return new WaitForSeconds(0.5f);
             }
