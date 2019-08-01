@@ -704,8 +704,7 @@ namespace Barotrauma
                     container.Inventory.movableFrameRect = new Rectangle(container.Inventory.BackgroundFrame.X, container.Inventory.BackgroundFrame.Y - height, container.Inventory.BackgroundFrame.Width, height);
                     positionUpdateQueued = true;
                 }
-
-                //spriteBatch.Draw(EquipIndicator.Texture, container.Inventory.movableFrameRect, EquipIndicator.SourceRect, Color.White);
+                
                 GUI.DrawRectangle(spriteBatch, container.Inventory.movableFrameRect, movableFrameRectColor, true);
             }
         }
@@ -815,7 +814,10 @@ namespace Barotrauma
                     hoverArea.Height -= over;
                 }
             }
-            hoverArea.Inflate(10, 10);
+
+            float inflateAmount = 10 * UIScale;
+
+            hoverArea.Inflate(inflateAmount, inflateAmount);
             return hoverArea;
         }
 
