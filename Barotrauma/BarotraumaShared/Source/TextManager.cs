@@ -314,9 +314,38 @@ namespace Barotrauma
             return string.Format(text, args);     
         }
 
-        public static string FormatServerMessage(string serverMessage, string[] variables, string[] values)
+        public static string FormatServerMessage(string textId)
         {
-            return serverMessage + string.Join("", variables.Zip(values, (variable, value) => $"~{variable}={value}"));
+            return $"{textId}~";
+        }
+
+        public static string FormatServerMessage(string message, IEnumerable<string> keys, IEnumerable<string> values)
+        {
+            var startIndex = message.LastIndexOf('/') + 1;
+            var endIndex = message.IndexOf('~', startIndex);
+            if (endIndex == -1)
+            {
+                endIndex = message.Length - 1;
+            }
+            var textId = message.Substring(startIndex, endIndex - startIndex + 1);
+            var keysWithValues = keys.Zip(values, (key, value) => new { Key = key, Value = value });
+            var prefixEntries = keysWithValues.Select((kv, index) =>
+            {
+                if (kv.Value.IndexOfAny(new char[] { '~', '/' }) != -1)
+                {
+                    var kvStartIndex = kv.Value.LastIndexOf('/') + 1;
+                    return kv.Value.Substring(0, kvStartIndex) + $"[{textId}.{index}]={kv.Value.Substring(kvStartIndex)}";
+                }
+                else
+                {
+                    return null;
+                }
+            }).Where(e => e != null).ToArray();
+            return string.Join("",
+                (prefixEntries.Length > 0 ? string.Join("/", prefixEntries) + "/" : ""),
+                message,
+                string.Join("", keysWithValues.Select((kv, index) => kv.Value.IndexOfAny(new char[] { '~', '/' }) != -1 ? $"~{kv.Key}=[{textId}.{index}]" : $"~{kv.Key}={kv.Value}").ToArray())
+            );
         }
 
         static readonly Regex reReplacedMessage = new Regex(@"^(?<variable>[\[\].A-Za-z0-9]+?)=(?<message>.*)$", RegexOptions.Compiled);
@@ -344,15 +373,14 @@ namespace Barotrauma
             {
                 for (int i = 0; i < messages.Length; i++)
                 {
-                    // Console.WriteLine($"MESSAGES[{i}]: {messages[i]}");
+                    if (messages[i].EndsWith("~", StringComparison.Ordinal))
+                    {
+                        messages[i] = messages[i].Substring(0, messages[i].Length - 1);
+                    }
                     if (!IsServerMessageWithVariables(messages[i]) && !messages[i].Contains('=')) // No variables, try to translate
                     {
                         foreach (var replacedMessage in replacedMessages)
                         {
-                            /*if (messages[i].Contains(replacedMessage.Key))
-                            {
-                                Console.WriteLine($"REPLACE({replacedMessage.Key} => {replacedMessage.Value}): {messages[i]} -> {messages[i].Replace(replacedMessage.Key, replacedMessage.Value)}");
-                            }*/
                             messages[i] = messages[i].Replace(replacedMessage.Key, replacedMessage.Value);
                         }
 
@@ -372,17 +400,10 @@ namespace Barotrauma
                         {
                             messageVariable = match.Groups["variable"].ToString();
                             messages[i] = match.Groups["message"].ToString();
-                            // Console.WriteLine($"VARIABLE[{messageVariable}] = {messages[i]}");
                         }
 
                         foreach (var replacedMessage in replacedMessages)
                         {
-                            /*
-                            if (messages[i].Contains(replacedMessage.Key))
-                            {
-                                Console.WriteLine($"REPLACE({replacedMessage.Key} => {replacedMessage.Value}): {messages[i]} -> {messages[i].Replace(replacedMessage.Key, replacedMessage.Value)}");
-                            }
-                            */
                             messages[i] = messages[i].Replace(replacedMessage.Key, replacedMessage.Value);
                         }
 

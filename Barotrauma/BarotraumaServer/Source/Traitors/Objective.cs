@@ -28,28 +28,25 @@ namespace Barotrauma
 
             public string GoalInfos =>
                 string.Join("/",
-                    string.Join("/", allGoals.SelectMany((goal, index) => new string[] {
-                        // $"[{index}.infotext]={goal.InfoText}",
-                        string.Join("/", goal.InfoTextKeys.Zip(goal.InfoTextValues, (key, value) => $"[{index}.infotext.{key}]={value}")),
-                        $"[{index}.infotext]={goal.InfoTextId}" + string.Join("", goal.InfoTextKeys.Zip(goal.InfoTextValues, (key, value) => $"~{key}=[{index}.infotext.{key}]").ToArray()),
-                        string.Join("/", goal.StatusTextKeys.Zip(goal.StatusTextValues, (key, value) => $"[{index}.statustext.{key}]={value}")),
-                        $"[{index}.statustext]={goal.StatusTextId}" + string.Join("", goal.StatusTextKeys.Zip(goal.StatusTextValues, (key, value) => $"~{key}=[{index}.statustext.{key}]").ToArray()),
-                        $"[{index}.statusline]={GoalInfoFormatId}~[statustext]=[{index}.statustext]"
+                    string.Join("/", allGoals.Select((goal, index) =>
+                    {
+                        var statusText = goal.StatusText;
+                        var startIndex = statusText.LastIndexOf('/') + 1;
+                        return $"{statusText.Substring(0, startIndex)}[{index}.st]={statusText.Substring(startIndex)}/[{index}.sl]={TextManager.FormatServerMessage(GoalInfoFormatId, new string[] { "[statustext]" }, new string[] { $"[{index}.st]" })}";
                     }).ToArray()),
-                    string.Join("", allGoals.Select((_, index) => $"[{index}.statusline]"))
-                );
+                    string.Join("", allGoals.Select((goal, index) => $"[{index}.sl]").ToArray()));
 
             public virtual string StartMessageTextId { get; set; } = "TraitorObjectiveStartMessage";
             public virtual IEnumerable<string> StartMessageKeys => new string[] { "[traitorgoalinfos]" };
             public virtual IEnumerable<string> StartMessageValues => new string[] { GoalInfos };
 
-            public virtual string StartMessageText => TextManager.FormatServerMessage(StartMessageTextId, StartMessageKeys.ToArray(), StartMessageValues.ToArray());
+            public virtual string StartMessageText => TextManager.FormatServerMessage(StartMessageTextId, StartMessageKeys, StartMessageValues);
 
             public virtual string StartMessageServerTextId { get; set; } = "TraitorObjectiveStartMessageServer";
             public virtual IEnumerable<string> StartMessageServerKeys => StartMessageKeys.Concat(new string[] { "[traitorname]" });
             public virtual IEnumerable<string> StartMessageServerValues => StartMessageValues.Concat(new string[] { Traitor?.Character?.Name ?? "(unknown)" });
 
-            public virtual string StartMessageServerText => TextManager.FormatServerMessage(StartMessageServerTextId, StartMessageServerKeys.ToArray(), StartMessageServerValues.ToArray());
+            public virtual string StartMessageServerText => TextManager.FormatServerMessage(StartMessageServerTextId, StartMessageServerKeys, StartMessageServerValues);
 
             public virtual string EndMessageSuccessTextId { get; set; } = "TraitorObjectiveEndMessageSuccess";
             public virtual string EndMessageSuccessDeadTextId { get; set; } = "TraitorObjectiveEndMessageSuccessDead";
@@ -69,7 +66,7 @@ namespace Barotrauma
                     var messageId = IsCompleted
                         ? (traitorIsDead ? EndMessageSuccessDeadTextId : traitorIsDetained ? EndMessageSuccessDetainedTextId : EndMessageSuccessTextId)
                         : (traitorIsDead ? EndMessageFailureDeadTextId : traitorIsDetained ? EndMessageFailureDetainedTextId : EndMessageFailureTextId);
-                    return TextManager.ReplaceGenderPronouns(TextManager.FormatServerMessage(messageId, EndMessageKeys.ToArray(), EndMessageValues.ToArray()), Traitor.Character.Info.Gender);
+                    return /*TextManager.ReplaceGenderPronouns(*/TextManager.FormatServerMessage(messageId, EndMessageKeys.ToArray(), EndMessageValues.ToArray())/*, Traitor.Character.Info.Gender)*/;
                 }
             }
 

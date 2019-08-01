@@ -42,7 +42,7 @@ namespace Barotrauma
                 var ownerMsg = ChatMessage.Create(
                     null,//TextManager.Get("NewTraitor"),
                     CurrentObjective.StartMessageServerText,
-                    ChatMessageType.MessageBox,
+                    ChatMessageType.ServerMessageBox,
                     null
                 );
                 GameMain.Server.SendDirectChatMessage(ownerMsg, ownerClient);

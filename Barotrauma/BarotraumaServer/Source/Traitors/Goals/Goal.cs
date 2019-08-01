@@ -20,10 +20,10 @@ namespace Barotrauma
             private string completedTextId = null;
             public virtual string CompletedTextId { get => completedTextId; set { completedTextId = value; } }
 
-            public virtual string StatusValueId => IsCompleted ? "complete" : "inprogress";
+            public virtual string StatusValueTextId => IsCompleted ? "complete" : "inprogress";
 
             public virtual IEnumerable<string> StatusTextKeys => new string[] { "[infotext]", "[status]" };
-            public virtual IEnumerable<string> StatusTextValues => new string[] { InfoText, TextManager.Get(IsCompleted ? "complete" : "inprogress") };
+            public virtual IEnumerable<string> StatusTextValues => new string[] { InfoText, TextManager.FormatServerMessage(StatusValueTextId) };
 
             public virtual IEnumerable<string> InfoTextKeys => new string[] { };
             public virtual IEnumerable<string> InfoTextValues => new string[] { };
@@ -31,9 +31,9 @@ namespace Barotrauma
             public virtual IEnumerable<string> CompletedTextKeys => new string[] { };
             public virtual IEnumerable<string> CompletedTextValues => new string[] { };
 
-            public virtual string StatusText => TextManager.FormatServerMessage(StatusTextId, StatusTextKeys.ToArray(), StatusTextValues.ToArray());
-            public virtual string InfoText => TextManager.FormatServerMessage(InfoTextId, InfoTextKeys.ToArray(), InfoTextValues.ToArray());
-            public virtual string CompletedText => CompletedTextId != null ? TextManager.FormatServerMessage(CompletedTextId, CompletedTextKeys.ToArray(), CompletedTextValues.ToArray()) : StatusText;
+            public virtual string StatusText => TextManager.FormatServerMessage(StatusTextId, StatusTextKeys, StatusTextValues);
+            public virtual string InfoText => TextManager.FormatServerMessage(InfoTextId, InfoTextKeys, InfoTextValues);
+            public virtual string CompletedText => CompletedTextId != null ? TextManager.FormatServerMessage(CompletedTextId, CompletedTextKeys, CompletedTextValues) : StatusText;
 
             public abstract bool IsCompleted { get; }
             public virtual bool IsStarted => Traitor != null;

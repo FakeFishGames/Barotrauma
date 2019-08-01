@@ -79,7 +79,7 @@ namespace Barotrauma
                 // SendObjectiveMessage(server);
                 foreach(var traitor in Traitors.Values)
                 {
-                    GameServer.Log(string.Format("{0} is the traitor and the current goals are:\n{1}", traitor.Character.Name, traitor.CurrentObjective?.GoalInfos ?? "(empty)"), ServerLog.MessageType.ServerMessage);
+                    GameServer.Log(string.Format("{0} is the traitor and the current goals are:\n{1}", traitor.Character.Name, traitor.CurrentObjective?.GoalInfos != null ? TextManager.GetServerMessage(traitor.CurrentObjective?.GoalInfos) : "(empty)"), ServerLog.MessageType.ServerMessage);
                 }
 #endif
             }
