@@ -353,17 +353,24 @@ namespace Barotrauma
         public int GetCaretIndexFromLocalPos(Vector2 pos)
         {
             var positions = GetAllPositions();
+            if (positions.Count==0) { return 0; }
             float halfHeight = Font.MeasureString("T").Y * 0.5f;
-            positions.Sort((p1, p2) =>
+
+            var currPosition = positions[0];
+
+            for (int i=1;i<positions.Count;i++)
             {
+                var p1 = positions[i];
+                var p2 = currPosition;
+
                 float diffY = Math.Abs(p1.Item1.Y - pos.Y) - Math.Abs(p2.Item1.Y - pos.Y);
                 if (diffY < -3.0f)
                 {
-                    return -1;
+                    currPosition = p1; continue;
                 }
                 else if (diffY > 3.0f)
                 {
-                    return 1;
+                    continue;
                 }
                 else
                 {
@@ -374,38 +381,30 @@ namespace Barotrauma
                         float diffX = Math.Abs(p1.Item1.X - pos.X) - Math.Abs(p2.Item1.X - pos.X);
                         if (diffX < -1.0f)
                         {
-                            return -1;
-                        }
-                        else if (diffX > 1.0f)
-                        {
-                            return 1;
+                            currPosition = p1; continue;
                         }
                         else
                         {
-                            return 0;
+                            continue;
                         }
                     }
                     else
                     {
                         //we are on a different line, preserve order
-                        if (p1.Item2<p2.Item2)
+                        if (p1.Item2 < p2.Item2)
                         {
-                            return p1.Item1.Y < pos.Y ? 1 : -1;
+                            if (p1.Item1.Y > pos.Y) { currPosition = p1; }
                         }
-                        else if (p1.Item2>p2.Item2)
+                        else if (p1.Item2 > p2.Item2)
                         {
-                            return p1.Item1.Y < pos.Y ? -1 : 1;
+                            if (p1.Item1.Y < pos.Y) { currPosition = p1; }
                         }
-                        else
-                        {
-                            return 0;
-                        }
+                        continue;
                     }
                 }
-            });
-            var posIndex = positions.FirstOrDefault();
+            }
             //GUI.AddMessage($"index: {posIndex.Item2}, pos: {posIndex.Item1}", Color.WhiteSmoke);
-            return posIndex != null ? posIndex.Item2 : textBlock.Text.Length;
+            return currPosition != null ? currPosition.Item2 : textBlock.Text.Length;
         }
 
         public void Select()
