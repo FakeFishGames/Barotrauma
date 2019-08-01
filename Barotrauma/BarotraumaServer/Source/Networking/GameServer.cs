@@ -607,7 +607,7 @@ namespace Barotrauma.Networking
                 KickClient(c, "DisconnectMessage.AFK");
             }
 
-            serverPeer.Update();
+            serverPeer.Update(deltaTime);
 
             // if update interval has passed
             if (updateTimer < DateTime.Now)

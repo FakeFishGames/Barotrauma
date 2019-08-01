@@ -133,7 +133,7 @@ namespace Barotrauma.Networking
             OnShutdown?.Invoke();
         }
 
-        public override void Update()
+        public override void Update(float deltaTime)
         {
             if (netServer == null) { return; }
 
@@ -145,12 +145,13 @@ namespace Barotrauma.Networking
 
             netServer.ReadMessages(incomingLidgrenMessages);
 
-            foreach (SteamP2PConnection conn in connectedClients)
+            //backwards for loop so we can remove elements while iterating
+            for (int i = connectedClients.Count - 1; i >= 0; i--)
             {
-                conn.Decay();
-                if (conn.Timeout < 0.0)
+                connectedClients[i].Decay(deltaTime);
+                if (connectedClients[i].Timeout < 0.0)
                 {
-                    Disconnect(conn, "Timed out");
+                    Disconnect(connectedClients[i], "Timed out");
                 }
             }
 

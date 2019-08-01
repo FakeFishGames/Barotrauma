@@ -124,7 +124,7 @@ namespace Barotrauma.Networking
             OnShutdown?.Invoke();
         }
 
-        public override void Update()
+        public override void Update(float deltaTime)
         {
             if (netServer == null) { return; }
 
@@ -166,7 +166,7 @@ namespace Barotrauma.Networking
             for (int i = 0; i < pendingClients.Count; i++)
             {
                 PendingClient pendingClient = pendingClients[i];
-                UpdatePendingClient(pendingClient);
+                UpdatePendingClient(pendingClient, deltaTime);
                 if (i >= pendingClients.Count || pendingClients[i] != pendingClient) { i--; }
             }
 
@@ -463,7 +463,7 @@ namespace Barotrauma.Networking
             return "\"" + contentPackage.Name + "\" (hash " + contentPackage.MD5hash.ShortHash + ")";
         }
 
-        private void UpdatePendingClient(PendingClient pendingClient)
+        private void UpdatePendingClient(PendingClient pendingClient, float deltaTime)
         {
             if (netServer == null) { return; }
 
@@ -490,7 +490,7 @@ namespace Barotrauma.Networking
             }
 
 
-            pendingClient.TimeOut -= Timing.Step;
+            pendingClient.TimeOut -= deltaTime;
             if (pendingClient.TimeOut < 0.0)
             {
                 RemovePendingClient(pendingClient, Lidgren.Network.NetConnection.NoResponseMessage);
