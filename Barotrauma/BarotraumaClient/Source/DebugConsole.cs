@@ -984,7 +984,7 @@ namespace Barotrauma
                         }
                         if (!property.TrySetValue(me, args[1]))
                         {
-                            NewMessage("Failed to set the value of \"" + args[0] + "\" to " + args[1] + " on the entity \"" + me.ToString() + "\".", Color.Orange);
+                            NewMessage("Failed to set the value of \"" + args[0] + "\" to \"" + args[1] + "\" on the entity \"" + me.ToString() + "\".", Color.Orange);
                         }
                     }
                 }
