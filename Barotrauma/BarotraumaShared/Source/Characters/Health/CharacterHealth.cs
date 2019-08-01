@@ -225,10 +225,9 @@ namespace Barotrauma
 
         public IEnumerable<Affliction> GetAllAfflictions(Func<Affliction, bool> limbHealthFilter = null)
         {
-            // TODO: If there can be duplicates, we should use Union instead.
             return limbHealthFilter == null
-                ? afflictions.Concat(limbHealths.SelectMany(lh => lh.Afflictions))
-                : afflictions.Concat(limbHealths.SelectMany(lh => lh.Afflictions.Where(limbHealthFilter)));
+                ? afflictions.Union(limbHealths.SelectMany(lh => lh.Afflictions))
+                : afflictions.Where(limbHealthFilter).Union(limbHealths.SelectMany(lh => lh.Afflictions.Where(limbHealthFilter)));
         }
 
         private LimbHealth GetMatchingLimbHealth(Limb limb) => limbHealths[limb.HealthIndex];
