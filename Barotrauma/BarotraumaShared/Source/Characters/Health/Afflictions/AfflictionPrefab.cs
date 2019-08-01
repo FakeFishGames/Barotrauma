@@ -224,32 +224,16 @@ namespace Barotrauma
                             }
                         }
                     }
-                    switch (elementName)
+                    string type = sourceElement.GetAttributeString("type", null);
+
+                    AfflictionPrefab prefab = null;
+                    switch (type)
                     {
-                        case "internaldamage":
-                            List.Add(InternalDamage = new AfflictionPrefab(sourceElement, typeof(Affliction)));
-                            break;
                         case "bleeding":
-                            List.Add(Bleeding = new AfflictionPrefab(sourceElement, typeof(AfflictionBleeding)));
+                            prefab = new AfflictionPrefab(sourceElement, typeof(AfflictionBleeding));
                             break;
-                        case "burn":
-                            List.Add(Burn = new AfflictionPrefab(sourceElement, typeof(Affliction)));
-                            break;
-                        case "oxygenlow":
-                            List.Add(OxygenLow = new AfflictionPrefab(sourceElement, typeof(Affliction)));
-                            break;
-                        case "bloodloss":
-                            List.Add(Bloodloss = new AfflictionPrefab(sourceElement, typeof(Affliction)));
-                            break;
-                        case "pressure":
-                            List.Add(Pressure = new AfflictionPrefab(sourceElement, typeof(Affliction)));
-                            break;
-                        case "stun":
-                            List.Add(Stun = new AfflictionPrefab(sourceElement, typeof(Affliction)));
-                            break;
-                        case "husk":
-                        case "afflictionhusk":
-                            List.Add(Husk = new AfflictionPrefab(sourceElement, typeof(AfflictionHusk)));
+                        case "huskinfection":
+                            prefab = new AfflictionPrefab(sourceElement, typeof(AfflictionHusk));
                             break;
                         case "cprsettings":
                             if (CPRSettings.IsLoaded)
@@ -266,10 +250,46 @@ namespace Barotrauma
                             }
                             CPRSettings.Load(sourceElement);
                             break;
+                        case "damage":
+                        case "burn":
+                        case "oxygenlow":
+                        case "bloodloss":
+                        case "stun":
+                        case "pressure":
+                            prefab = new AfflictionPrefab(sourceElement, typeof(Affliction));
+                            break;
                         default:
-                            List.Add(new AfflictionPrefab(sourceElement));
+                            prefab = new AfflictionPrefab(sourceElement);
                             break;
                     }
+                    switch (identifier)
+                    {
+                        case "internaldamage":
+                            InternalDamage = prefab;
+                            break;
+                        case "bleeding":
+                            Bleeding = prefab;
+                            break;
+                        case "burn":
+                            Burn = prefab;
+                            break;
+                        case "oxygenlow":
+                            OxygenLow = prefab;
+                            break;
+                        case "bloodloss":
+                            Bloodloss = prefab;
+                            break;
+                        case "pressure":
+                            Pressure = prefab;
+                            break;
+                        case "stun":
+                            Stun = prefab;
+                            break;
+                        case "huskinfection":
+                            Husk = prefab;
+                            break;
+                    }
+                    List.Add(prefab);
                 }
             }
 
