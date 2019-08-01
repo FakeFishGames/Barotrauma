@@ -240,7 +240,7 @@ namespace Barotrauma
         private IEnumerable<Affliction> GetMatchingAfflictions(LimbHealth limb, Func<Affliction, bool> predicate)
             => limb.Afflictions.Where(predicate).Union(afflictions.Where(a => predicate(a) && GetMatchingLimbHealth(a) == limb));
 
-        public Affliction GetAffliction(string afflictionType, bool allowLimbAfflictions = true)
+        public Affliction GetAfflictionByType(string afflictionType, bool allowLimbAfflictions = true)
         {
             foreach (Affliction affliction in afflictions)
             {
@@ -259,12 +259,43 @@ namespace Barotrauma
             return null;
         }
 
-        public T GetAffliction<T>(string afflictionType, bool allowLimbAfflictions = true) where T : Affliction
+
+        public Affliction GetAffliction(string identifier, bool allowLimbAfflictions = true)
         {
-            return GetAffliction(afflictionType, allowLimbAfflictions) as T;
+            foreach (Affliction affliction in afflictions)
+            {
+                if (affliction.Prefab.Identifier == identifier) return affliction;
+            }
+            if (!allowLimbAfflictions) return null;
+
+            foreach (LimbHealth limbHealth in limbHealths)
+            {
+                foreach (Affliction affliction in limbHealth.Afflictions)
+                {
+                    if (affliction.Prefab.Identifier == identifier) return affliction;
+                }
+            }
+
+            return null;
         }
 
-        public Affliction GetAffliction(string afflictionType, Limb limb)
+        public T GetAffliction<T>(string identifier, bool allowLimbAfflictions = true) where T : Affliction
+        {
+            return GetAffliction(identifier, allowLimbAfflictions) as T;
+        }
+
+        public IEnumerable<Affliction> GetAfflictionsByType(string afflictionType, Limb limb)
+        {
+            if (limb.HealthIndex < 0 || limb.HealthIndex >= limbHealths.Count)
+            {
+                DebugConsole.ThrowError("Limb health index out of bounds. Character\"" + Character.Name +
+                    "\" only has health configured for" + limbHealths.Count + " limbs but the limb " + limb.type + " is targeting index " + limb.HealthIndex);
+                return null;
+            }
+            return limbHealths[limb.HealthIndex].Afflictions.Where(a => a.Prefab.AfflictionType == afflictionType);
+        }
+
+        public Affliction GetAffliction(string identifier, Limb limb)
         {
             if (limb.HealthIndex < 0 || limb.HealthIndex >= limbHealths.Count)
             {
@@ -274,7 +305,7 @@ namespace Barotrauma
             }
             foreach (Affliction affliction in limbHealths[limb.HealthIndex].Afflictions)
             {
-                if (affliction.Prefab.AfflictionType == afflictionType) return affliction;
+                if (affliction.Prefab.Identifier == identifier) return affliction;
             }
             return null;
         }
