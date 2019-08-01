@@ -40,13 +40,13 @@ namespace Barotrauma
             public virtual IEnumerable<string> StartMessageKeys => new string[] { "[traitorgoalinfos]" };
             public virtual IEnumerable<string> StartMessageValues => new string[] { GoalInfos };
 
-            public virtual string StartMessageText => TextManager.FormatServerMessage(StartMessageTextId, StartMessageKeys, StartMessageValues);
+            public virtual string StartMessageText => TextManager.FormatServerMessageWithGenderPronouns(Traitor.Character.Info.Gender, StartMessageTextId, StartMessageKeys, StartMessageValues);
 
             public virtual string StartMessageServerTextId { get; set; } = "TraitorObjectiveStartMessageServer";
             public virtual IEnumerable<string> StartMessageServerKeys => StartMessageKeys.Concat(new string[] { "[traitorname]" });
             public virtual IEnumerable<string> StartMessageServerValues => StartMessageValues.Concat(new string[] { Traitor?.Character?.Name ?? "(unknown)" });
 
-            public virtual string StartMessageServerText => TextManager.FormatServerMessage(StartMessageServerTextId, StartMessageServerKeys, StartMessageServerValues);
+            public virtual string StartMessageServerText => TextManager.FormatServerMessageWithGenderPronouns(Traitor.Character.Info.Gender, StartMessageServerTextId, StartMessageServerKeys, StartMessageServerValues);
 
             public virtual string EndMessageSuccessTextId { get; set; } = "TraitorObjectiveEndMessageSuccess";
             public virtual string EndMessageSuccessDeadTextId { get; set; } = "TraitorObjectiveEndMessageSuccessDead";
@@ -61,13 +61,12 @@ namespace Barotrauma
             {
                 get
                 {
-                    // TODO(xxx): Replace gender pronouns can't be done directly here, need to provide those as extra pronoun=[id]/-prefix replacements
                     var traitorIsDead = Traitor.Character.IsDead;
                     var traitorIsDetained = Traitor.Character.LockHands;
                     var messageId = IsCompleted
                         ? (traitorIsDead ? EndMessageSuccessDeadTextId : traitorIsDetained ? EndMessageSuccessDetainedTextId : EndMessageSuccessTextId)
                         : (traitorIsDead ? EndMessageFailureDeadTextId : traitorIsDetained ? EndMessageFailureDetainedTextId : EndMessageFailureTextId);
-                    return TextManager.FormatServerMessage(messageId, EndMessageKeys.ToArray(), EndMessageValues.ToArray());
+                    return TextManager.FormatServerMessageWithGenderPronouns(Traitor.Character.Info.Gender, messageId, EndMessageKeys.ToArray(), EndMessageValues.ToArray());
                 }
             }
 

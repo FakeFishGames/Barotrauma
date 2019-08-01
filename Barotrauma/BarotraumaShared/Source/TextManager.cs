@@ -321,6 +321,10 @@ namespace Barotrauma
 
         public static string FormatServerMessage(string message, IEnumerable<string> keys, IEnumerable<string> values)
         {
+            if (!keys.Any())
+            {
+                return FormatServerMessage(message);
+            }
             var startIndex = message.LastIndexOf('/') + 1;
             var endIndex = message.IndexOf('~', startIndex);
             if (endIndex == -1)
@@ -346,6 +350,40 @@ namespace Barotrauma
                 message,
                 string.Join("", keysWithValues.Select((kv, index) => kv.Value.IndexOfAny(new char[] { '~', '/' }) != -1 ? $"~{kv.Key}=[{textId}.{index}]" : $"~{kv.Key}={kv.Value}").ToArray())
             );
+        }
+
+        static readonly string[] genderPronounVariables = new string[] {
+            "[genderpronoun]",
+            "[genderpronounpossessive]",
+            "[genderpronounreflexive]",
+            "[Genderpronoun]",
+            "[Genderpronounpossessive]",
+            "[Genderpronounreflexive]"
+        };
+
+        // TODO: .ToLower() after Get() for first 3 entries of each, Capitalize(Get(x)) for last 3 of each
+
+        static readonly string[] genderPronounMaleValues = new string[] {
+             "PronounMale",
+             "PronounPossessiveMale",
+             "PronounReflexiveMale",
+             "PronounMale",
+             "PronounPossessiveMale",
+             "PronounReflexiveMale"
+        };
+
+        static readonly string[] genderPronounFemaleValues = new string[] {
+             "PronounFemale",
+             "PronounPossessiveFemale",
+             "PronounReflexiveFemale",
+             "PronounMale",
+             "PronounPossessiveFemale",
+             "PronounReflexiveFemale"
+        };
+
+        public static string FormatServerMessageWithGenderPronouns(Gender gender, string message, IEnumerable<string> keys, IEnumerable<string> values)
+        {
+            return FormatServerMessage(message, keys.Concat(genderPronounVariables), values.Concat(gender == Gender.Male ? genderPronounMaleValues : genderPronounFemaleValues));
         }
 
         static readonly Regex reReplacedMessage = new Regex(@"^(?<variable>[\[\].A-Za-z0-9]+?)=(?<message>.*)$", RegexOptions.Compiled);

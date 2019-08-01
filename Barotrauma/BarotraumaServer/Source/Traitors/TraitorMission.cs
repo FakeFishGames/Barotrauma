@@ -24,8 +24,20 @@ namespace Barotrauma
             public string StartText { get; private set; }
             public string CodeWords { get; private set; }
             public string CodeResponse { get; private set; }
-
-            // TODO(xxx): Mission start, end messages
+            public string EndMessage {
+                get
+                {
+                    var traitor = Traitors["traitor"];
+                    if (pendingObjectives.Count <= 0)
+                    {
+                        return "TraitorMissionSuccessMessage";
+                    }
+                    else
+                    {
+                        return pendingObjectives[0].EndMessageText;
+                    }
+                }
+            }
 
             public Objective GetCurrentObjective(Traitor traitor)
             {
@@ -117,9 +129,16 @@ namespace Barotrauma
                     var objective = completedObjectives[i];
                     objective.End(GameMain.Server);
                 }
-                if (startedCount > 0 && pendingObjectives.Count > 0)
+                if (pendingObjectives.Count > 0)
                 {
-                    pendingObjectives[0].StartMessage(GameMain.Server);
+                    if (startedCount > 0)
+                    {
+                        pendingObjectives[0].StartMessage(GameMain.Server);
+                    }
+                }
+                else
+                {
+                    GameMain.Server.EndGame();
                 }
             }
 

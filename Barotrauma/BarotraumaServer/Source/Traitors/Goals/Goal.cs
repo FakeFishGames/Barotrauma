@@ -31,9 +31,9 @@ namespace Barotrauma
             public virtual IEnumerable<string> CompletedTextKeys => new string[] { };
             public virtual IEnumerable<string> CompletedTextValues => new string[] { };
 
-            public virtual string StatusText => TextManager.FormatServerMessage(StatusTextId, StatusTextKeys, StatusTextValues);
-            public virtual string InfoText => TextManager.FormatServerMessage(InfoTextId, InfoTextKeys, InfoTextValues);
-            public virtual string CompletedText => CompletedTextId != null ? TextManager.FormatServerMessage(CompletedTextId, CompletedTextKeys, CompletedTextValues) : StatusText;
+            public virtual string StatusText => TextManager.FormatServerMessageWithGenderPronouns(Traitor.Character.Info.Gender, StatusTextId, StatusTextKeys, StatusTextValues);
+            public virtual string InfoText => TextManager.FormatServerMessageWithGenderPronouns(Traitor.Character.Info.Gender, InfoTextId, InfoTextKeys, InfoTextValues);
+            public virtual string CompletedText => CompletedTextId != null ? TextManager.FormatServerMessageWithGenderPronouns(Traitor.Character.Info.Gender, CompletedTextId, CompletedTextKeys, CompletedTextValues) : StatusText;
 
             public abstract bool IsCompleted { get; }
             public virtual bool IsStarted => Traitor != null;

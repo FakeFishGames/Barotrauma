@@ -59,14 +59,7 @@ namespace Barotrauma
 #endif
             if (GameMain.Server == null || Mission == null) return "";
 
-            string endMessage = "";
-
-            foreach (var traitor in Mission.Traitors)
-            {
-                endMessage += traitor.Value.CurrentObjective?.EndMessageText ?? "";
-            }
-
-            return endMessage;
+            return Mission.EndMessage;
         }
     }
 }
