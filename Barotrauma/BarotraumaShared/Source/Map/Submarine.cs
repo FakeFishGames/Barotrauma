@@ -3,7 +3,6 @@ using Barotrauma.Networking;
 using Barotrauma.RuinGeneration;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -745,6 +744,12 @@ namespace Barotrauma
         private static readonly Dictionary<Body, float> bodyDist = new Dictionary<Body, float>();
         private static readonly List<Body> bodies = new List<Body>();
 
+        public static float LastPickedBodyDist(Body body)
+        {
+            if (!bodyDist.ContainsKey(body)) { return 0.0f; }
+            return bodyDist[body];
+        }
+
         /// <summary>
         /// Returns a list of physics bodies the ray intersects with, sorted according to distance (the closest body is at the beginning of the list).
         /// </summary>
@@ -1067,16 +1072,14 @@ namespace Barotrauma
             //Level.Loaded.Move(-amount);
         }
 
-        public static Submarine FindClosest(Vector2 worldPosition, bool ignoreOutposts = false)
+        public static Submarine FindClosest(Vector2 worldPosition, bool ignoreOutposts = false, bool ignoreOutsideLevel = true)
         {
             Submarine closest = null;
             float closestDist = 0.0f;
             foreach (Submarine sub in loaded)
             {
-                if (ignoreOutposts && sub.IsOutpost)
-                {
-                    continue;
-                }
+                if (ignoreOutposts && sub.IsOutpost) { continue; }
+                if (ignoreOutsideLevel && Level.Loaded != null && sub.WorldPosition.Y > Level.Loaded.Size.Y) { continue; }
                 float dist = Vector2.DistanceSquared(worldPosition, sub.WorldPosition);
                 if (closest == null || dist < closestDist)
                 {

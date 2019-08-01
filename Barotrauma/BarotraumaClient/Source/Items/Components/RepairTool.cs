@@ -72,7 +72,7 @@ namespace Barotrauma.Items.Components
                 float particleAngle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
                 ParticleEmitter.Emit(
                     deltaTime, item.WorldPosition + TransformedBarrelPos,
-                    item.CurrentHull, particleAngle, -particleAngle);
+                    item.CurrentHull, particleAngle, ParticleEmitter.Prefab.CopyEntityAngle ? -particleAngle : 0);
             }
         }
 

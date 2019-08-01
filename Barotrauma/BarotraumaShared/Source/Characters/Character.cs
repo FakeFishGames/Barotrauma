@@ -748,31 +748,34 @@ namespace Barotrauma
                 PressureProtection = 100.0f;
             }
 
+            List<XElement> inventoryElements = new List<XElement>();
+            List<float> inventoryCommonness = new List<float>();
+            List<XElement> healthElements = new List<XElement>();
+            List<float> healthCommonness = new List<float>();
             foreach (XElement subElement in mainElement.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "inventory":
-                        Inventory = new CharacterInventory(subElement, this);
+                        inventoryElements.Add(subElement);
+                        inventoryCommonness.Add(subElement.GetAttributeFloat("commonness", 1.0f));
                         break;
                     case "health":
-                        CharacterHealth = new CharacterHealth(subElement, this);
+                        healthElements.Add(subElement);
+                        healthCommonness.Add(subElement.GetAttributeFloat("commonness", 1.0f));
                         break;
                     case "statuseffect":
                         statusEffects.Add(StatusEffect.Load(subElement, Name));
                         break;
                 }
             }
-            
-            List<XElement> healthElements = new List<XElement>();
-            List<float> healthCommonness = new List<float>();
-            foreach (XElement element in mainElement.Elements())
-            {
-                if (element.Name.ToString().ToLowerInvariant() != "health") continue;
-                healthElements.Add(element);
-                healthCommonness.Add(element.GetAttributeFloat("commonness", 1.0f));
-            }
 
+            if (inventoryElements.Count > 0)
+            {
+                Inventory = new CharacterInventory(
+                    inventoryElements.Count == 1 ? inventoryElements[0] : ToolBox.SelectWeightedRandom(inventoryElements, inventoryCommonness, random), 
+                    this);
+            }
             if (healthElements.Count == 0)
             {
                 CharacterHealth = new CharacterHealth(this);
@@ -839,6 +842,7 @@ namespace Barotrauma
 
 #if CLIENT
             head.LoadHuskSprite();
+            head.LoadHerpesSprite();
 #endif
         }
 
@@ -1038,7 +1042,30 @@ namespace Barotrauma
                 return false;
             }
 #endif
-            
+            if (inputType == InputType.Up || inputType == InputType.Down ||
+                inputType == InputType.Left || inputType == InputType.Right)
+            {
+                var invertControls = CharacterHealth.GetAffliction("invertcontrols");
+                if (invertControls != null)
+                {
+                    switch (inputType)
+                    {
+                        case InputType.Left:
+                            inputType = InputType.Right;
+                            break;
+                        case InputType.Right:
+                            inputType = InputType.Left;
+                            break;
+                        case InputType.Up:
+                            inputType = InputType.Down;
+                            break;
+                        case InputType.Down:
+                            inputType = InputType.Up;
+                            break;
+                    }
+                }
+            }
+
             return keys[(int)inputType].Held;
         }
 
@@ -1640,9 +1667,16 @@ namespace Barotrauma
                 //locked wires are never interactable
                 if (wire.Locked) return false;
 
-                //wires are interactable if the character has selected either of the items the wire is connected to
-                if (wire.Connections[0]?.Item != null && SelectedConstruction == wire.Connections[0].Item) return true;
-                if (wire.Connections[1]?.Item != null && SelectedConstruction == wire.Connections[1].Item) return true;
+                //wires are interactable if the character has selected an item the wire is connected to,
+                //and it's disconnected from the other end
+                if (wire.Connections[0]?.Item != null && SelectedConstruction == wire.Connections[0].Item)
+                {
+                    return wire.Connections[1] == null;
+                }
+                if (wire.Connections[1]?.Item != null && SelectedConstruction == wire.Connections[1].Item)
+                {
+                    return wire.Connections[0] == null;
+                }
             }
 
             if (checkLinked && item.DisplaySideBySideWhenLinked)
@@ -1867,7 +1901,7 @@ namespace Barotrauma
             {
                 DeselectCharacter();
             }
-            else if (focusedCharacter != null && IsKeyHit(InputType.Grab) && FocusedCharacter.CanInventoryBeAccessed)
+            else if (focusedCharacter != null && IsKeyHit(InputType.Grab) && FocusedCharacter.CanBeDragged)
             {
                 SelectCharacter(focusedCharacter);
             }
@@ -1966,12 +2000,16 @@ namespace Barotrauma
                             if (distSqr > NetConfig.DisableCharacterDistSqr)
                             {
                                 c.Enabled = false;
+                                if (c.IsDead && c.AIController is EnemyAIController)
+                                {
+                                    Entity.Spawner?.AddToRemoveQueue(c);
+                                }
                             }
                             else if (distSqr < NetConfig.EnableCharacterDistSqr)
                             {
                                 c.Enabled = true;
                             }
-                        }                        
+                        }
                     }
                     else if (Submarine.MainSub != null)
                     {
@@ -1985,12 +2023,16 @@ namespace Barotrauma
                         {
                             distSqr = Math.Min(distSqr, Vector2.DistanceSquared(GameMain.GameScreen.Cam.GetPosition(), c.WorldPosition));
                         }
-                        
+
                         if (distSqr > NetConfig.DisableCharacterDistSqr)
                         {
                             c.Enabled = false;
+                            if (c.IsDead && c.AIController is EnemyAIController)
+                            {
+                                Entity.Spawner?.AddToRemoveQueue(c);
+                            }
                         }
-                        else if ( distSqr < NetConfig.EnableCharacterDistSqr)
+                        else if (distSqr < NetConfig.EnableCharacterDistSqr)
                         {
                             c.Enabled = true;
                         }
@@ -2336,8 +2378,6 @@ namespace Barotrauma
             speechBubbleColor = color;
         }
 
-        partial void AdjustKarma(Character attacker, AttackResult attackResult);
-        
         partial void DamageHUD(float amount);
 
         public void SetAllDamage(float damageAmount, float bleedingDamageAmount, float burnDamageAmount)
@@ -2433,7 +2473,12 @@ namespace Barotrauma
         {
             hitLimb = null;
 
-            if (Removed) return new AttackResult();
+            if (Removed) { return new AttackResult(); }
+
+            if (attacker != null && GameMain.NetworkMember != null && !GameMain.NetworkMember.ServerSettings.AllowFriendlyFire)
+            {
+                if (attacker.TeamID == TeamID) { return new AttackResult(); }
+            }
 
             float closestDistance = 0.0f;
             foreach (Limb limb in AnimController.Limbs)
@@ -2451,7 +2496,12 @@ namespace Barotrauma
 
         public AttackResult DamageLimb(Vector2 worldPosition, Limb hitLimb, List<Affliction> afflictions, float stun, bool playSound, float attackImpulse, Character attacker = null)
         {
-            if (Removed) return new AttackResult();
+            if (Removed) { return new AttackResult(); }
+
+            if (attacker != null && attacker != this && GameMain.NetworkMember != null && !GameMain.NetworkMember.ServerSettings.AllowFriendlyFire)
+            {
+                if (attacker.TeamID == TeamID) { return new AttackResult(); }
+            }
 
             SetStun(stun);
             Vector2 dir = hitLimb.WorldPosition - worldPosition;
@@ -2470,7 +2520,6 @@ namespace Barotrauma
                 OnAttacked?.Invoke(attacker, attackResult);
                 OnAttackedProjSpecific(attacker, attackResult);
             };
-            AdjustKarma(attacker, attackResult);
 
             if (attacker != null && attackResult.Damage > 0.0f)
             {

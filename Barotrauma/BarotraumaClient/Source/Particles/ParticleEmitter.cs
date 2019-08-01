@@ -56,6 +56,7 @@ namespace Barotrauma.Particles
             if (particle != null)
             {
                 particle.Size *= Rand.Range(Prefab.ScaleMin, Prefab.ScaleMax);
+                particle.HighQualityCollisionDetection = Prefab.HighQualityCollisionDetection;
             }
         }
 
@@ -97,6 +98,8 @@ namespace Barotrauma.Particles
         public readonly int ParticleAmount;
 
         public readonly float ParticlesPerSecond;
+
+        public readonly bool HighQualityCollisionDetection;
 
         public readonly bool CopyEntityAngle;
 
@@ -145,7 +148,7 @@ namespace Barotrauma.Particles
             EmitInterval = element.GetAttributeFloat("emitinterval", 0.0f);
             ParticlesPerSecond = element.GetAttributeInt("particlespersecond", 0);
             ParticleAmount = element.GetAttributeInt("particleamount", 0);
-
+            HighQualityCollisionDetection = element.GetAttributeBool("highqualitycollisiondetection", false);
             CopyEntityAngle = element.GetAttributeBool("copyentityangle", false);
         }
     }

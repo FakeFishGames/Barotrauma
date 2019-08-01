@@ -179,11 +179,21 @@ namespace Barotrauma.Items.Components
                     GetLinkedHulls(hull, hullData.LinkedHulls);
                     hullDatas.Add(hull, hullData);
                 }
+                
+                Color neutralColor = Color.DarkCyan;
+                if (hull.RoomName != null)
+                {
+                    if (hull.RoomName.Contains("ballast") || hull.RoomName.Contains("Ballast") ||
+                        hull.RoomName.Contains("airlock") || hull.RoomName.Contains("Airlock"))
+                    {
+                        neutralColor = new Color(9, 80, 159);
+                    }
+                }
 
                 if (hullData.Distort)
                 {
                     hullFrame.Children.First().Color = Color.Lerp(Color.Black, Color.DarkGray * 0.5f, Rand.Range(0.0f, 1.0f));
-                    hullFrame.Color = Color.DarkGray * 0.5f;
+                    hullFrame.Color = neutralColor * 0.5f;
                     continue;
                 }
                 
@@ -192,20 +202,23 @@ namespace Barotrauma.Items.Components
                     hullFrame.Parent.Rect.Width / (float)hull.Submarine.Borders.Width, 
                     hullFrame.Parent.Rect.Height / (float)hull.Submarine.Borders.Height);
                 
-                Color borderColor = Color.DarkCyan;
+                Color borderColor = neutralColor;
                 
                 float? gapOpenSum = 0.0f;
                 if (ShowHullIntegrity)
                 {
                     gapOpenSum = hull.ConnectedGaps.Where(g => !g.IsRoomToRoom).Sum(g => g.Open);
-                    borderColor = Color.Lerp(Color.DarkCyan, Color.Red, Math.Min((float)gapOpenSum, 1.0f));
+                    borderColor = Color.Lerp(neutralColor, Color.Red, Math.Min((float)gapOpenSum, 1.0f));
                 }
 
                 float? oxygenAmount = null;
                 if (!RequireOxygenDetectors || hullData?.Oxygen != null)
                 {
                     oxygenAmount = RequireOxygenDetectors ? hullData.Oxygen : hull.OxygenPercentage;
-                    GUI.DrawRectangle(spriteBatch, hullFrame.Rect, Color.Lerp(Color.Red * 0.5f, Color.Green * 0.3f, (float)oxygenAmount / 100.0f), true);
+                    GUI.DrawRectangle(
+                        spriteBatch, hullFrame.Rect, 
+                        Color.Lerp(Color.Red * 0.5f, Color.Green * 0.3f, (float)oxygenAmount / 100.0f), 
+                        true);
                 }
 
                 float? waterAmount = null;
@@ -234,7 +247,7 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    hullFrame.Children.First().Color = Color.DarkCyan * 0.8f;
+                    hullFrame.Children.First().Color = neutralColor * 0.8f;
                 }
 
                 if (mouseOnHull == hull)
@@ -291,8 +304,6 @@ namespace Barotrauma.Items.Components
                     GUI.DrawLine(spriteBatch, center + start, center + end, Color.DarkCyan * Rand.Range(0.3f, 0.35f), width: (int)(10 * GUI.Scale));
                 }
             }
-
-
         }
 
         private void GetLinkedHulls(Hull hull, List<Hull> linkedHulls)

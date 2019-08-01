@@ -131,6 +131,15 @@ namespace Barotrauma
 #if SERVER
             if (GameMain.Server != null && Entity.Spawner != null)
             {
+                if (GameMain.Server.EntityEventManager.UniqueEvents.Any(ev => ev.Entity == item))
+                {
+                    string errorMsg = $"Error while spawning job items. Item {item.Name} created network events before the spawn event had been created.";
+                    DebugConsole.ThrowError(errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("Job.InitializeJobItem:EventsBeforeSpawning", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameMain.Server.EntityEventManager.UniqueEvents.RemoveAll(ev => ev.Entity == item);
+                    GameMain.Server.EntityEventManager.Events.RemoveAll(ev => ev.Entity == item);
+                }
+
                 Entity.Spawner.CreateNetworkEvent(item, false);
             }
 #endif

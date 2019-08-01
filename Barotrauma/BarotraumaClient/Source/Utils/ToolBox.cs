@@ -207,6 +207,41 @@ namespace Barotrauma
             }
 
             return wrappedText.ToString().Replace(" \n ", "\n");
-        }     
+        }
+
+        public static void ParseConnectCommand(string[] args, out string name, out string endpoint)
+        {
+            name = null; endpoint = null;
+            for (int i = 0; i < args.Length - 2; i++)
+            {
+                if (args[i].Trim().ToLower().Equals("-connect", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    int j = i + 2;
+
+                    name = "";
+                    if (args[i + 1].Trim()[0] == '"')
+                    {
+                        name = args[i + 1].Trim().Substring(1);
+                        for (; j < args.Length - 1; j++)
+                        {
+                            name += " " + args[j].Trim();
+                            if (name[name.Length - 1] == '"' && (name.Length < 2 || name[name.Length - 1] != '\\'))
+                            {
+                                name = name.Substring(0, name.Length - 1).Replace("\\\"", "\"");
+                                j++;
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        name = args[i + 1].Trim();
+                    }
+                    endpoint = args[j].Trim();
+                    
+                    break;
+                }
+            }
+        }
     }
 }

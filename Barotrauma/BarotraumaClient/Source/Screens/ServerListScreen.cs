@@ -332,7 +332,14 @@ namespace Barotrauma
                 {
                     if (ipBox.UserData is ServerInfo selectedServer)
                     {
-                        JoinServer(selectedServer.IP + ":" + selectedServer.Port, selectedServer.ServerName);
+                        if (selectedServer.SteamID == 0)
+                        {
+                            JoinServer(selectedServer.IP + ":" + selectedServer.Port, selectedServer.ServerName);
+                        }
+                        else
+                        {
+                            JoinServer(selectedServer.SteamID.ToString(), selectedServer.ServerName);
+                        }
                     }
                     else if (!string.IsNullOrEmpty(ipBox.Text))
                     {
@@ -901,13 +908,17 @@ namespace Barotrauma
             return true;
         }
         
-        private IEnumerable<object> ConnectToServer(string ip, string serverName)
+        private IEnumerable<object> ConnectToServer(string endpoint, string serverName)
         {
+            string serverIP = null;
+            UInt64 serverSteamID = SteamManager.SteamIDStringToUInt64(endpoint);
+            if (serverSteamID == 0) { serverIP = endpoint; }
+
 #if !DEBUG
             try
             {
 #endif
-                GameMain.Client = new GameClient(clientNameBox.Text, ip, serverName);
+                GameMain.Client = new GameClient(clientNameBox.Text, serverIP, serverSteamID, serverName);
 #if !DEBUG
             }
             catch (Exception e)

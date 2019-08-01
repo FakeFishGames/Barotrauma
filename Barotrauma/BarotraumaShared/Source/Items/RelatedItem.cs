@@ -95,47 +95,50 @@ namespace Barotrauma
             switch (type)
             {
                 case RelationType.Contained:
-                    if (parentItem == null) return false;
-
-                    var containedItems = parentItem.ContainedItems;
-                    if (containedItems == null) return false;
-
-                    if (MatchOnEmpty && !containedItems.Any(ci => ci != null))
-                    {
-                        return true;
-                    }
-
-                    foreach (Item contained in containedItems)
-                    {
-                        if (contained.Condition > 0.0f && MatchesItem(contained)) return true;
-                    }
-                    break;
+                    if (parentItem == null) { return false; }
+                    return CheckContained(parentItem);
                 case RelationType.Container:
-                    if (parentItem == null || parentItem.Container == null) return false;
-
+                    if (parentItem == null || parentItem.Container == null) { return false; }
                     return parentItem.Container.Condition > 0.0f && MatchesItem(parentItem.Container);
                 case RelationType.Equipped:
-                    if (character == null) return false;
+                    if (character == null) { return false; }
                     foreach (Item equippedItem in character.SelectedItems)
                     {
-                        if (equippedItem == null) continue;
-
-                        if (equippedItem.Condition > 0.0f && MatchesItem(equippedItem)) return true;
+                        if (equippedItem == null) { continue; }
+                        if (equippedItem.Condition > 0.0f && MatchesItem(equippedItem)) { return true; }
                     }
                     break;
                 case RelationType.Picked:
-                    if (character == null || character.Inventory == null) return false;
+                    if (character == null || character.Inventory == null) { return false; }
                     foreach (Item pickedItem in character.Inventory.Items)
                     {
-                        if (pickedItem == null) continue;
-
-                        if (MatchesItem(pickedItem)) return true;
+                        if (pickedItem == null) { continue; }
+                        if (MatchesItem(pickedItem)) { return true; }
                     }
                     break;
                 default:
                     return true;
             }
 
+            return false;
+        }
+
+        private bool CheckContained(Item parentItem)
+        {
+            var containedItems = parentItem.ContainedItems;
+            if (containedItems == null) { return false; }
+
+            if (MatchOnEmpty && !containedItems.Any(ci => ci != null))
+            {
+                return true;
+            }
+
+            foreach (Item contained in containedItems)
+            {
+                if (contained == null) { continue; }
+                if (contained.Condition > 0.0f && MatchesItem(contained)) { return true; }
+                if (CheckContained(contained)) { return true; }
+            }
             return false;
         }
 

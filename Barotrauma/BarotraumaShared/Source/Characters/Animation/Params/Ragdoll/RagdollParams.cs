@@ -66,7 +66,8 @@ namespace Barotrauma
             .Concat(Joints.Select(j => j as RagdollSubParams)));
 
         public static string GetDefaultFileName(string speciesName) => $"{speciesName.CapitaliseFirstInvariant()}DefaultRagdoll";
-        public static string GetDefaultFile(string speciesName, ContentPackage contentPackage = null) => $"{GetFolder(speciesName, contentPackage)}{GetDefaultFileName(speciesName)}.xml";
+        public static string GetDefaultFile(string speciesName, ContentPackage contentPackage = null)
+            => Path.Combine(GetFolder(speciesName, contentPackage), $"{GetDefaultFileName(speciesName)}.xml");
 
         private static readonly object[] dummyParams = new object[]
         {

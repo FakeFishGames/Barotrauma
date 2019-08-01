@@ -96,8 +96,8 @@ namespace Barotrauma
         public virtual AnimationType AnimationType { get; protected set; }
 
         public static string GetDefaultFileName(string speciesName, AnimationType animType) => $"{speciesName.CapitaliseFirstInvariant()}{animType.ToString()}";
-        public static string GetDefaultFile(string speciesName, AnimationType animType, ContentPackage contentPackage = null) => 
-            $"{GetFolder(speciesName, contentPackage)}{GetDefaultFileName(speciesName, animType)}.xml";
+        public static string GetDefaultFile(string speciesName, AnimationType animType, ContentPackage contentPackage = null) 
+            => Path.Combine(GetFolder(speciesName, contentPackage), $"{GetDefaultFileName(speciesName, animType)}.xml");
 
         public static string GetFolder(string speciesName, ContentPackage contentPackage = null)
         {

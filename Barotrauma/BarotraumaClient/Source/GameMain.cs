@@ -102,6 +102,9 @@ namespace Barotrauma
 
         private GameTime fixedTime;
 
+        private string ConnectName;
+        private string ConnectEndpoint;
+
         private static SpriteBatch spriteBatch;
 
         private Viewport defaultViewport;
@@ -175,6 +178,11 @@ namespace Barotrauma
             Config = new GameSettings();
 
             ConsoleArguments = args;
+
+            ConnectName = null;
+            ConnectEndpoint = null;
+
+            ToolBox.ParseConnectCommand(ConsoleArguments, out ConnectName, out ConnectEndpoint);
 
             GUI.KeyboardDispatcher = new EventInput.KeyboardDispatcher(Window);
 
@@ -405,55 +413,12 @@ namespace Barotrauma
                 DebugConsole.Log("Selected content packages: " + string.Join(", ", SelectedPackages.Select(cp => cp.Name)));
             }
 
-/*#if DEBUG
+#if DEBUG
             GameSettings.ShowUserStatisticsPrompt = false;
             GameSettings.SendUserStatistics = false;
-#endif*/
+#endif
 
             InitUserStats();
-
-        yield return CoroutineStatus.Running;
-
-            LightManager = new Lights.LightManager(base.GraphicsDevice, Content);
-
-            TitleScreen.LoadState = 1.0f;
-        yield return CoroutineStatus.Running;
-
-            GUI.LoadContent();
-            TitleScreen.LoadState = 2.0f;
-
-        yield return CoroutineStatus.Running;
-
-            Character.LoadAllConfigFiles();
-            MissionPrefab.Init();
-            MapEntityPrefab.Init();
-            Tutorials.Tutorial.Init();
-            MapGenerationParams.Init();
-            LevelGenerationParams.LoadPresets();
-            ScriptedEventSet.LoadPrefabs();
-            AfflictionPrefab.LoadAll(GetFilesOfType(ContentType.Afflictions));
-            TitleScreen.LoadState = 10.0f;
-        yield return CoroutineStatus.Running;
-
-            StructurePrefab.LoadAll(GetFilesOfType(ContentType.Structure));
-            TitleScreen.LoadState = 15.0f;
-        yield return CoroutineStatus.Running;
-
-            ItemPrefab.LoadAll(GetFilesOfType(ContentType.Item));
-            TitleScreen.LoadState = 25.0f;
-        yield return CoroutineStatus.Running;
-
-            JobPrefab.LoadAll(GetFilesOfType(ContentType.Jobs));
-            // Add any missing jobs from the prefab into Config.JobNamePreferences.
-            foreach (string job in JobPrefab.List.Keys)
-            {
-                if (!Config.JobPreferences.Contains(job)) { Config.JobPreferences.Add(job); }
-            }
-
-            NPCConversation.LoadAll(GetFilesOfType(ContentType.NPCConversations));
-
-            ItemAssemblyPrefab.LoadAll();
-            TitleScreen.LoadState = 30.0f;
 
         yield return CoroutineStatus.Running;
 
@@ -467,55 +432,110 @@ namespace Barotrauma
 
                 i++;
                 TitleScreen.LoadState = SoundPlayer.SoundCount == 0 ?
-                    30.0f :
-                    Math.Min(30.0f + 40.0f * i / Math.Max(SoundPlayer.SoundCount, 1), 70.0f);
+                    1.0f :
+                    Math.Min(40.0f * i / Math.Max(SoundPlayer.SoundCount, 1), 40.0f);
 
                 yield return CoroutineStatus.Running;
             }
 
-            TitleScreen.LoadState = 70.0f;
+            TitleScreen.LoadState = 40.0f;
         yield return CoroutineStatus.Running;
 
+            LightManager = new Lights.LightManager(base.GraphicsDevice, Content);
+
+            TitleScreen.LoadState = 41.0f;
+        yield return CoroutineStatus.Running;
+
+            GUI.LoadContent();
+            TitleScreen.LoadState = 42.0f;
+
+        yield return CoroutineStatus.Running;
+
+            Character.LoadAllConfigFiles();
+            MissionPrefab.Init();
+            MapEntityPrefab.Init();
+            Tutorials.Tutorial.Init();
+            MapGenerationParams.Init();
+            LevelGenerationParams.LoadPresets();
+            ScriptedEventSet.LoadPrefabs();
+            AfflictionPrefab.LoadAll(GetFilesOfType(ContentType.Afflictions));
+            TitleScreen.LoadState = 50.0f;
+        yield return CoroutineStatus.Running;
+
+            StructurePrefab.LoadAll(GetFilesOfType(ContentType.Structure));
+            TitleScreen.LoadState = 53.0f;
+        yield return CoroutineStatus.Running;
+
+            ItemPrefab.LoadAll(GetFilesOfType(ContentType.Item));
+            TitleScreen.LoadState = 55.0f;
+        yield return CoroutineStatus.Running;
+
+            JobPrefab.LoadAll(GetFilesOfType(ContentType.Jobs));
+            // Add any missing jobs from the prefab into Config.JobNamePreferences.
+            foreach (string job in JobPrefab.List.Keys)
+            {
+                if (!Config.JobPreferences.Contains(job)) { Config.JobPreferences.Add(job); }
+            }
+
+            NPCConversation.LoadAll(GetFilesOfType(ContentType.NPCConversations));
+
+            ItemAssemblyPrefab.LoadAll();
+            TitleScreen.LoadState = 60.0f;
+        yield return CoroutineStatus.Running;
+            
             GameModePreset.Init();
 
             Submarine.RefreshSavedSubs();
 
-            TitleScreen.LoadState = 80.0f;
-
+            TitleScreen.LoadState = 65.0f;
         yield return CoroutineStatus.Running;
 
             GameScreen = new GameScreen(GraphicsDeviceManager.GraphicsDevice, Content);
 
-            TitleScreen.LoadState = 90.0f;
-
+            TitleScreen.LoadState = 68.0f;
         yield return CoroutineStatus.Running;
 
             MainMenuScreen          = new MainMenuScreen(this);
             LobbyScreen             = new LobbyScreen();
             ServerListScreen        = new ServerListScreen();
 
+            TitleScreen.LoadState = 70.0f;
+        yield return CoroutineStatus.Running;
+
             if (SteamManager.USE_STEAM)
             {
-                SteamWorkshopScreen     = new SteamWorkshopScreen();
+                SteamWorkshopScreen = new SteamWorkshopScreen();
+                if (SteamManager.IsInitialized)
+                {
+                    SteamManager.Instance.Friends.OnInvitedToGame += OnInvitedToGame;
+                }
             }
-
             SubEditorScreen         = new SubEditorScreen();
+
+            TitleScreen.LoadState = 75.0f;
+        yield return CoroutineStatus.Running;
+
             ParticleEditorScreen    = new ParticleEditorScreen();
+
+            TitleScreen.LoadState = 80.0f;
+        yield return CoroutineStatus.Running;
+
             LevelEditorScreen       = new LevelEditorScreen();
             SpriteEditorScreen      = new SpriteEditorScreen();
             CharacterEditorScreen   = new CharacterEditorScreen();
 
         yield return CoroutineStatus.Running;
 
-            TitleScreen.LoadState = 95.0f;
+            TitleScreen.LoadState = 85.0f;
             ParticleManager = new ParticleManager(GameScreen.Cam);
             ParticleManager.LoadPrefabs();
-            TitleScreen.LoadState = 97.0f;
+            TitleScreen.LoadState = 88.0f;
             LevelObjectPrefab.LoadAll();
-            DecalManager = new DecalManager();
-            TitleScreen.LoadState = 99.0f;
+            
+            TitleScreen.LoadState = 90.0f;
         yield return CoroutineStatus.Running;
 
+            DecalManager = new DecalManager();
             LocationType.Init();
             MainMenuScreen.Select();
 
@@ -588,6 +608,13 @@ namespace Barotrauma
             }
         }
 
+        public void OnInvitedToGame(Facepunch.Steamworks.SteamFriend friend, string connectCommand)
+        {
+            ToolBox.ParseConnectCommand(connectCommand.Split(' '), out ConnectName, out ConnectEndpoint);
+
+            DebugConsole.NewMessage(ConnectName+", "+ConnectEndpoint,Color.Yellow);
+        }
+
         /// <summary>
         /// Allows the game to run logic such as updating the world,
         /// checking for collisions, gathering input, and playing audio.
@@ -637,12 +664,18 @@ namespace Barotrauma
 
                 PlayerInput.Update(Timing.Step);
 
+
                 if (loadingScreenOpen)
                 {
                     //reset accumulator if loading
                     // -> less choppy loading screens because the screen is rendered after each update
                     // -> no pause caused by leftover time in the accumulator when starting a new shift
                     GameMain.ResetFrameTime();
+
+                    if (!TitleScreen.PlayingSplashScreen)
+                    {
+                        SoundPlayer.Update((float)Timing.Step);
+                    }
 
                     if (TitleScreen.LoadState >= 100.0f && !TitleScreen.PlayingSplashScreen &&
                         (!waitForKeyHit || ((PlayerInput.GetKeyboardState.GetPressedKeys().Length > 0 || PlayerInput.LeftButtonClicked()) && WindowActive)))
@@ -662,6 +695,24 @@ namespace Barotrauma
                 }
                 else if (hasLoaded)
                 {
+                    if (!string.IsNullOrWhiteSpace(ConnectEndpoint))
+                    {
+                        if (Client != null)
+                        {
+                            Client.Disconnect();
+                            Client = null;
+
+                            GameMain.MainMenuScreen.Select();
+                        }
+                        UInt64 serverSteamId = SteamManager.SteamIDStringToUInt64(ConnectEndpoint);
+                        Client = new GameClient(SteamManager.GetUsername(),
+                                                serverSteamId != 0 ? null : ConnectEndpoint,
+                                                serverSteamId,
+                                                string.IsNullOrWhiteSpace(ConnectName) ? ConnectEndpoint : ConnectName);
+                        ConnectEndpoint = null;
+                        ConnectName = null;
+                    }
+
                     SoundPlayer.Update((float)Timing.Step);
 
                     if (PlayerInput.KeyHit(Keys.Escape) && WindowActive)

@@ -298,7 +298,10 @@ namespace Barotrauma
                         }
 
                         float afflictionStrength = subElement.GetAttributeFloat(1.0f, "amount", "strength");
-                        Afflictions.Add(afflictionPrefab.Instantiate(afflictionStrength));
+                        var affliction = afflictionPrefab.Instantiate(afflictionStrength);
+                        affliction.ApplyProbability = subElement.GetAttributeFloat("probability", 1.0f);
+                        Afflictions.Add(affliction);
+
                         break;
                     case "conditional":
                         foreach (XAttribute attribute in subElement.Attributes())

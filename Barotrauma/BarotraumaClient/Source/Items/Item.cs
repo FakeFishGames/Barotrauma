@@ -1,7 +1,6 @@
 ﻿using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using FarseerPhysics;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -329,6 +328,10 @@ namespace Barotrauma
                         item.AiTarget?.Draw(spriteBatch);
                     }
                 }
+                if (body != null)
+                {
+                    body.DebugDraw(spriteBatch, Color.White);
+                }
             }
 
             if (!editing || (body != null && !body.Enabled))
@@ -428,23 +431,6 @@ namespace Barotrauma
                     if (!animate) { continue; }
                     spriteState.OffsetState += deltaTime;
                     spriteState.RotationState += deltaTime;
-
-                    bool ConditionalMatches(PropertyConditional conditional)
-                    {
-                        if (string.IsNullOrEmpty(conditional.TargetItemComponentName))
-                        {
-                            if (!conditional.Matches(this)) { return false; }
-                        }
-                        else
-                        {
-                            foreach (ItemComponent component in components)
-                            {
-                                if (component.Name != conditional.TargetItemComponentName) { continue; }
-                                if (!conditional.Matches(component)) { return false; }
-                            }
-                        }
-                        return true;
-                    }
                 }
             }            
         }
@@ -652,10 +638,11 @@ namespace Barotrauma
             List<Rectangle> disallowedAreas = new List<Rectangle>();
             if (GameMain.GameSession?.CrewManager != null && Screen.Selected == GameMain.GameScreen)
             {
+                int disallowedPadding = (int)(50 * GUI.Scale);
                 disallowedAreas.Add(GameMain.GameSession.CrewManager.GetCharacterListArea());
                 disallowedAreas.Add(new Rectangle(
-                    HUDLayoutSettings.ChatBoxArea.X - 50, HUDLayoutSettings.ChatBoxArea.Y, 
-                    HUDLayoutSettings.ChatBoxArea.Width + 50, HUDLayoutSettings.ChatBoxArea.Height));                
+                    HUDLayoutSettings.ChatBoxArea.X - disallowedPadding, HUDLayoutSettings.ChatBoxArea.Y, 
+                    HUDLayoutSettings.ChatBoxArea.Width + disallowedPadding, HUDLayoutSettings.ChatBoxArea.Height));                
             }
 
             GUI.PreventElementOverlap(elementsToMove, disallowedAreas,
@@ -854,7 +841,7 @@ namespace Barotrauma
             }
         }
 
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             if (type == ServerNetObject.ENTITY_POSITION)
             {
@@ -864,7 +851,7 @@ namespace Barotrauma
 
             NetEntityEvent.Type eventType =
                 (NetEntityEvent.Type)msg.ReadRangedInteger(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1);
-
+            
             switch (eventType)
             {
                 case NetEntityEvent.Type.ComponentState:
@@ -935,7 +922,7 @@ namespace Barotrauma
             }
         }
 
-        public void ClientWrite(NetBuffer msg, object[] extraData = null)
+        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
         {
             if (extraData == null || extraData.Length == 0 || !(extraData[0] is NetEntityEvent.Type))
             {
@@ -943,17 +930,17 @@ namespace Barotrauma
             }
 
             NetEntityEvent.Type eventType = (NetEntityEvent.Type)extraData[0];
-            msg.WriteRangedInteger(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1, (int)eventType);
+            msg.WriteRangedIntegerDeprecated(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1, (int)eventType);
             switch (eventType)
             {
                 case NetEntityEvent.Type.ComponentState:
                     int componentIndex = (int)extraData[1];
-                    msg.WriteRangedInteger(0, components.Count - 1, componentIndex);
+                    msg.WriteRangedIntegerDeprecated(0, components.Count - 1, componentIndex);
                     (components[componentIndex] as IClientSerializable).ClientWrite(msg, extraData);
                     break;
                 case NetEntityEvent.Type.InventoryState:
                     int containerIndex = (int)extraData[1];
-                    msg.WriteRangedInteger(0, components.Count - 1, containerIndex);
+                    msg.WriteRangedIntegerDeprecated(0, components.Count - 1, containerIndex);
                     (components[containerIndex] as ItemContainer).Inventory.ClientWrite(msg, extraData);
                     break;
                 case NetEntityEvent.Type.Treatment:
@@ -1006,7 +993,7 @@ namespace Barotrauma
             rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
         }
 
-        public void ClientReadPosition(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public void ClientReadPosition(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             if (body == null)
             {
@@ -1074,7 +1061,7 @@ namespace Barotrauma
             GameMain.Client.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ComponentState, index });
         }
         
-        public static Item ReadSpawnData(NetBuffer msg, bool spawn = true)
+        public static Item ReadSpawnData(IReadMessage msg, bool spawn = true)
         {
             string itemName = msg.ReadString();
             string itemIdentifier = msg.ReadString();
@@ -1136,22 +1123,31 @@ namespace Barotrauma
             }
 
             Inventory inventory = null;
-
-            var inventoryOwner = FindEntityByID(inventoryId);
-            if (inventoryOwner != null)
+            if (inventoryId > 0)
             {
-                if (inventoryOwner is Character)
+                var inventoryOwner = FindEntityByID(inventoryId);
+                if (inventoryOwner is Character character)
                 {
-                    inventory = (inventoryOwner as Character).Inventory;
+                    inventory = character.Inventory;
                 }
-                else if (inventoryOwner is Item)
+                else if (inventoryOwner is Item parentItem)
                 {
-                    if ((inventoryOwner as Item).components[itemContainerIndex] is ItemContainer container)
+                    if (itemContainerIndex < 0 || itemContainerIndex >= parentItem.components.Count)
+                    {
+                        string errorMsg = "Failed to spawn item \"" + (itemIdentifier ?? "null") +
+                            "\" in the inventory of \"" + parentItem.prefab.Identifier + "\" (component index out of range). Index: " + itemContainerIndex + ", components: " + parentItem.components.Count + ".";
+                        GameAnalyticsManager.AddErrorEventOnce("Item.ReadSpawnData:ContainerIndexOutOfRange" + (itemName ?? "null") + (itemIdentifier ?? "null"),
+                            GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                            errorMsg);
+                        DebugConsole.ThrowError(errorMsg);
+                    }
+                    else if (parentItem.components[itemContainerIndex] is ItemContainer container)
                     {
                         inventory = container.Inventory;
                     }
-                }
+                }                
             }
+
 
             var item = new Item(itemPrefab, pos, sub)
             {

@@ -29,7 +29,8 @@ namespace Barotrauma.Steam
 
             RefreshServerDetails(server);
 
-            instance.server.Auth.OnAuthChange = server.OnAuthChange;
+            server.ServerPeer.InitializeSteamServerCallbacks(instance.server);
+
             Instance.server.LogOnAnonymous();
 
             return true;
@@ -47,7 +48,12 @@ namespace Barotrauma.Steam
             // These server state variables may be changed at any time.  Note that there is no longer a mechanism
             // to send the player count.  The player count is maintained by steam and you should use the player
             // creation/authentication functions to maintain your player count.
-            instance.server.ServerName = server.Name;
+            string serverName = server.Name;
+            if (server.ServerPeer is Networking.SteamP2PServerPeer serverPeer)
+            {
+                serverName = SteamIDUInt64ToString(serverPeer.OwnerSteamID)+"|"+serverName;
+            }
+            instance.server.ServerName = serverName;
             instance.server.MaxPlayers = server.ServerSettings.MaxPlayers;
             instance.server.Passworded = server.ServerSettings.HasPassword;
             instance.server.MapName = GameMain.NetLobbyScreen?.SelectedSub?.DisplayName ?? "";
@@ -66,23 +72,24 @@ namespace Barotrauma.Steam
             Instance.server.SetKey("traitors", server.ServerSettings.TraitorsEnabled.ToString());
             Instance.server.SetKey("gamestarted", server.GameStarted.ToString());
             Instance.server.SetKey("gamemode", server.ServerSettings.GameModeIdentifier);
-            
+
             instance.server.DedicatedServer = true;
 
             return true;
         }
 
-        public static bool StartAuthSession(byte[] authTicketData, ulong clientSteamID)
+        public static ServerAuth.StartAuthSessionResult StartAuthSession(byte[] authTicketData, ulong clientSteamID)
         {
-            if (instance == null || !instance.isInitialized || instance.server == null) return false;
+            if (instance == null || !instance.isInitialized || instance.server == null) return ServerAuth.StartAuthSessionResult.ServerNotConnectedToSteam;
             
             DebugConsole.Log("SteamManager authenticating Steam client " + clientSteamID);
-            if (!instance.server.Auth.StartSession(authTicketData, clientSteamID))
+            ServerAuth.StartAuthSessionResult startResult = instance.server.Auth.StartSession(authTicketData, clientSteamID);
+            if (startResult != ServerAuth.StartAuthSessionResult.OK)
             {
-                DebugConsole.Log("Authentication failed");
-                return false;
+                DebugConsole.Log("Authentication failed: failed to start auth session (" + startResult.ToString() + ")");
             }
-            return true;
+
+            return startResult;
         }
 
         public static void StopAuthSession(ulong clientSteamID)

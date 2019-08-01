@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -58,6 +57,10 @@ namespace Barotrauma.Items.Components
         private GUIFrame inventoryContainer;
 
         private GUIComponent leftHUDColumn;
+        private GUIComponent midHUDColumn;
+        private GUIComponent rightHUDColumn;
+
+        private GUILayoutGroup sliderControlsContainer;
 
         private Dictionary<string, GUIButton> warningButtons = new Dictionary<string, GUIButton>();
 
@@ -107,11 +110,13 @@ namespace Barotrauma.Items.Components
                 RelativeSpacing = 0.012f,
                 Stretch = true
             };
-            
+
             GUIFrame columnLeft = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f), paddedFrame.RectTransform), style: null);
-            leftHUDColumn = columnLeft;
             GUIFrame columnMid = new GUIFrame(new RectTransform(new Vector2(0.45f, 1.0f), paddedFrame.RectTransform), style: null);
             GUIFrame columnRight = new GUIFrame(new RectTransform(new Vector2(0.3f, 1.0f), paddedFrame.RectTransform), style: null);
+            leftHUDColumn = columnLeft;
+            midHUDColumn = columnMid;
+            rightHUDColumn = columnRight;
 
             //----------------------------------------------------------
             //left column
@@ -180,9 +185,16 @@ namespace Barotrauma.Items.Components
                 ToolTip = TextManager.Get("ReactorTipTurbineOutput")
             };
 
-            new GUITextBlock(new RectTransform(new Point(0, (int)(20 * GUI.Scale)), columnMid.RectTransform, Anchor.BottomLeft) { AbsoluteOffset = new Point(0, (int)(90 * GUI.Scale)) },
+            GUILayoutGroup sliderControls = new GUILayoutGroup(new RectTransform(new Point(columnMid.Rect.Width, (int)(114 * GUI.Scale)), columnMid.RectTransform, Anchor.BottomCenter))
+            {
+                Stretch = true,
+                AbsoluteSpacing = (int)(5 * GUI.Scale)
+            };
+            sliderControlsContainer = sliderControls;
+
+            new GUITextBlock(new RectTransform(new Point(0, (int)(20 * GUI.Scale)), sliderControls.RectTransform, Anchor.TopLeft),
                 TextManager.Get("ReactorFissionRate"));
-            fissionRateScrollBar = new GUIScrollBar(new RectTransform(new Point(columnMid.Rect.Width, (int)(30 * GUI.Scale)), columnMid.RectTransform, Anchor.BottomCenter) { AbsoluteOffset = new Point(0, (int)(60 * GUI.Scale)) },
+            fissionRateScrollBar = new GUIScrollBar(new RectTransform(new Point(sliderControls.Rect.Width, (int)(30 * GUI.Scale)), sliderControls.RectTransform, Anchor.TopCenter),
                 style: "GUISlider", barSize: 0.1f)
             {
                 OnMoved = (GUIScrollBar bar, float scrollAmount) =>
@@ -194,10 +206,10 @@ namespace Barotrauma.Items.Components
                     return false;
                 }
             };
-                        
-            new GUITextBlock(new RectTransform(new Point(0, (int)(20 * GUI.Scale)), columnMid.RectTransform, Anchor.BottomLeft) { AbsoluteOffset = new Point(0, (int)(30 * GUI.Scale)) },
+
+            new GUITextBlock(new RectTransform(new Point(0, (int)(20 * GUI.Scale)), sliderControls.RectTransform, Anchor.BottomLeft),
                 TextManager.Get("ReactorTurbineOutput"));
-            turbineOutputScrollBar = new GUIScrollBar(new RectTransform(new Point(columnMid.Rect.Width, (int)(30 * GUI.Scale)), columnMid.RectTransform, Anchor.BottomCenter),
+            turbineOutputScrollBar = new GUIScrollBar(new RectTransform(new Point(sliderControls.Rect.Width, (int)(30 * GUI.Scale)), sliderControls.RectTransform, Anchor.BottomCenter),
                 style: "GUISlider", barSize: 0.1f, isHorizontal: true)
             {
                 OnMoved = (GUIScrollBar bar, float scrollAmount) =>
@@ -263,11 +275,11 @@ namespace Barotrauma.Items.Components
                 "Load", textColor: Color.LightBlue, textAlignment: Alignment.CenterLeft)
             {
                 ToolTip = TextManager.Get("ReactorTipLoad")
-            };            
+            };
             string loadStr = TextManager.Get("ReactorLoad");
             loadText.TextGetter += () => { return loadStr.Replace("[kw]", ((int)load).ToString()); };
 
-            var outputText = new GUITextBlock(new RectTransform(textSize, graphArea.RectTransform, Anchor.BottomLeft, Pivot.TopLeft), 
+            var outputText = new GUITextBlock(new RectTransform(textSize, graphArea.RectTransform, Anchor.BottomLeft, Pivot.TopLeft),
                 "Output", textColor: Color.LightGreen, textAlignment: Alignment.CenterLeft)
             {
                 ToolTip = TextManager.Get("ReactorTipPower")
@@ -321,9 +333,9 @@ namespace Barotrauma.Items.Components
 
             if (temperature > optimalTemperature.Y)
             {
-                GUI.DrawRectangle(spriteBatch, 
-                    new Vector2(graphArea.X - 30, graphArea.Y), 
-                    new Vector2(tempMeterFrame.SourceRect.Width, (graphArea.Bottom - graphArea.Height * optimalTemperature.Y / 100.0f) - graphArea.Y), 
+                GUI.DrawRectangle(spriteBatch,
+                    new Vector2(graphArea.X - 30, graphArea.Y),
+                    new Vector2(tempMeterFrame.SourceRect.Width, (graphArea.Bottom - graphArea.Height * optimalTemperature.Y / 100.0f) - graphArea.Y),
                     Color.Red * (float)Math.Sin(Timing.TotalTime * 5.0f) * 0.7f, isFilled: true);
             }
             if (temperature < optimalTemperature.X)
@@ -415,15 +427,52 @@ namespace Barotrauma.Items.Components
             warningButtons["ReactorWarningLowFuel"].Selected = prevAvailableFuel < fissionRate && lightOn;
             warningButtons["ReactorWarningMeltdown"].Selected = meltDownTimer > MeltdownDelay * 0.5f || item.Condition == 0.0f && lightOn;
             warningButtons["ReactorWarningSCRAM"].Selected = temperature > 0.1f && onOffSwitch.BarScroll > 0.5f;
-                        
+
             AutoTemp = autoTempSlider.BarScroll < 0.5f;
             shutDown = onOffSwitch.BarScroll > 0.5f;
+
+            if ((sliderControlsContainer.Rect.Contains(PlayerInput.MousePosition) || sliderControlsContainer.Children.Contains(GUIScrollBar.draggingBar)) &&
+                !PlayerInput.KeyDown(InputType.Deselect) && !PlayerInput.KeyHit(InputType.Deselect))
+            {
+                Character.DisableControls = true;
+            }
 
             if (shutDown)
             {
                 fissionRateScrollBar.BarScroll = FissionRate / 100.0f;
                 turbineOutputScrollBar.BarScroll = TurbineOutput / 100.0f;
-            }            
+            }
+            else if (!autoTemp && Character.DisableControls && GUI.KeyboardDispatcher.Subscriber == null)
+            {
+                Vector2 input = Vector2.Zero;
+                float rate = 50.0f; //percentage per second
+
+                if (PlayerInput.KeyDown(InputType.Left)) input.X += -1.0f;
+                if (PlayerInput.KeyDown(InputType.Right)) input.X += 1.0f;
+                if (PlayerInput.KeyDown(InputType.Up)) input.Y += 1.0f;
+                if (PlayerInput.KeyDown(InputType.Down)) input.Y += -1.0f;
+                if (PlayerInput.KeyDown(InputType.Run)) rate = 200.0f;
+
+                rate *= deltaTime;
+                input.X *= rate;
+                input.Y *= rate;
+
+                if (input.LengthSquared() > 0)
+                {
+                    LastUser = Character.Controlled;
+                    unsentChanges = true;
+                    if (input.X != 0.0f && GUIScrollBar.draggingBar != fissionRateScrollBar)
+                    {
+                        targetFissionRate = MathHelper.Clamp(targetFissionRate + input.X, 0.0f, 100.0f);
+                        fissionRateScrollBar.BarScroll += input.X / 100.0f;
+                    }
+                    if (input.Y != 0.0f && GUIScrollBar.draggingBar != turbineOutputScrollBar)
+                    {
+                        targetTurbineOutput = MathHelper.Clamp(targetTurbineOutput + input.Y, 0.0f, 100.0f);
+                        turbineOutputScrollBar.BarScroll += input.Y / 100.0f;
+                    }
+                }
+            }
         }
 
         private bool ToggleAutoTemp(GUITickBox tickBox)
@@ -562,7 +611,7 @@ namespace Barotrauma.Items.Components
             tempRangeIndicator.Remove();
         }
 
-        public void ClientWrite(NetBuffer msg, object[] extraData = null)
+        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
         {
             msg.Write(autoTemp);
             msg.Write(shutDown);
@@ -572,7 +621,7 @@ namespace Barotrauma.Items.Components
             correctionTimer = CorrectionDelay;
         }
 
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             if (correctionTimer > 0.0f)
             {

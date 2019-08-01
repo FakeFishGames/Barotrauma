@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -127,7 +126,7 @@ namespace Barotrauma.Networking
             whitelistedPlayers.Add(new WhiteListedPlayer(name, ip));
         }
 
-        public void ServerAdminWrite(NetBuffer outMsg, Client c)
+        public void ServerAdminWrite(IWriteMessage outMsg, Client c)
         {
             if (!c.HasPermission(ClientPermissions.ManageSettings))
             {
@@ -139,7 +138,7 @@ namespace Barotrauma.Networking
             outMsg.Write(Enabled);
 
             outMsg.WritePadBits();
-            outMsg.WriteVariableInt32(whitelistedPlayers.Count);
+            outMsg.WriteVariableUInt32((UInt32)whitelistedPlayers.Count);
             for (int i = 0; i < whitelistedPlayers.Count; i++)
             {
                 WhiteListedPlayer whitelistedPlayer = whitelistedPlayers[i];
@@ -154,13 +153,13 @@ namespace Barotrauma.Networking
             }
         }
 
-        public bool ServerAdminRead(NetBuffer incMsg, Client c)
+        public bool ServerAdminRead(IReadMessage incMsg, Client c)
         {
             if (!c.HasPermission(ClientPermissions.ManageSettings))
             {
                 bool enabled = incMsg.ReadBoolean(); incMsg.ReadPadBits();
                 UInt16 removeCount = incMsg.ReadUInt16();
-                incMsg.Position += removeCount * 4 * 8;
+                incMsg.BitPosition += removeCount * 4 * 8;
                 UInt16 addCount = incMsg.ReadUInt16();
                 for (int i = 0; i < addCount; i++)
                 {

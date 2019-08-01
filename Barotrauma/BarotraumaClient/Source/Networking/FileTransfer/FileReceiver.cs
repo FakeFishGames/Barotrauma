@@ -1,11 +1,12 @@
-﻿using Lidgren.Network;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Xml;
+
+//TODO: reimplement sequence channels
 
 namespace Barotrauma.Networking
 {
@@ -72,7 +73,7 @@ namespace Barotrauma.Networking
                 private set;
             }
 
-            public NetConnection Connection
+            public NetworkConnection Connection
             {
                 get;
                 private set;
@@ -80,7 +81,7 @@ namespace Barotrauma.Networking
 
             public int SequenceChannel;
 
-            public FileTransferIn(NetConnection connection, string filePath, FileTransferType fileType)
+            public FileTransferIn(NetworkConnection connection, string filePath, FileTransferType fileType)
             {
                 FilePath = filePath;
                 FileName = Path.GetFileName(FilePath);
@@ -105,9 +106,9 @@ namespace Barotrauma.Networking
                 TimeStarted = Environment.TickCount;
             }
 
-            public void ReadBytes(NetIncomingMessage inc)
+            public void ReadBytes(IReadMessage inc)
             {
-                int bytesToRead = inc.LengthBytes - inc.PositionInBytes;
+                int bytesToRead = inc.LengthBytes - inc.BytePosition;
                 if (Received + (ulong)(bytesToRead) > FileSize)
                 {
                     //strip out excess bytes
@@ -179,7 +180,7 @@ namespace Barotrauma.Networking
             activeTransfers = new List<FileTransferIn>();
         }
         
-        public void ReadMessage(NetIncomingMessage inc)
+        public void ReadMessage(IReadMessage inc)
         {
             System.Diagnostics.Debug.Assert(!activeTransfers.Any(t => 
                 t.Status == FileTransferStatus.Error ||
@@ -187,14 +188,17 @@ namespace Barotrauma.Networking
                 t.Status == FileTransferStatus.Finished), "List of active file transfers contains entires that should have been removed");
 
             byte transferMessageType = inc.ReadByte();
+
+            DebugConsole.NewMessage(((FileTransferMessageType)transferMessageType).ToString());
+
             switch (transferMessageType)
             {
                 case (byte)FileTransferMessageType.Initiate:
                     {
-                        var existingTransfer = activeTransfers.Find(t => t.SequenceChannel == inc.SequenceChannel);
+                        var existingTransfer = activeTransfers.Count>0 ? activeTransfers.First() : null;//Find(t => t.SequenceChannel == inc.SequenceChannel);
                         if (existingTransfer != null)
                         {
-                            GameMain.Client.CancelFileTransfer(inc.SequenceChannel);
+                            GameMain.Client.CancelFileTransfer(0);//inc.SequenceChannel);
                             DebugConsole.ThrowError("File transfer error: file transfer initiated on a sequence channel that's already in use");
                             return;
                         }
@@ -206,7 +210,7 @@ namespace Barotrauma.Networking
 
                         if (!ValidateInitialData(fileType, fileName, fileSize, out string errorMsg))
                         {
-                            GameMain.Client.CancelFileTransfer(inc.SequenceChannel);
+                            GameMain.Client.CancelFileTransfer(0);//inc.SequenceChannel);
                             DebugConsole.ThrowError("File transfer failed (" + errorMsg + ")");
                             return;
                         }
@@ -216,7 +220,7 @@ namespace Barotrauma.Networking
                             DebugConsole.Log("Received file transfer initiation message: ");
                             DebugConsole.Log("  File: " + fileName);
                             DebugConsole.Log("  Size: " + fileSize);
-                            DebugConsole.Log("  Sequence channel: " + inc.SequenceChannel);
+                            DebugConsole.Log("  Sequence channel: " + 0);//inc.SequenceChannel);
                         }
 
                         string downloadFolder = downloadFolders[(FileTransferType)fileType];
@@ -233,9 +237,9 @@ namespace Barotrauma.Networking
                             }
                         }
 
-                        FileTransferIn newTransfer = new FileTransferIn(inc.SenderConnection, Path.Combine(downloadFolder, fileName), (FileTransferType)fileType)
+                        FileTransferIn newTransfer = new FileTransferIn(inc.Sender, Path.Combine(downloadFolder, fileName), (FileTransferType)fileType)
                         {
-                            SequenceChannel = inc.SequenceChannel,
+                            SequenceChannel = 0,//inc.SequenceChannel,
                             Status = FileTransferStatus.Receiving,
                             FileSize = fileSize
                         };
@@ -257,7 +261,7 @@ namespace Barotrauma.Networking
                                 else
                                 {
                                     DebugConsole.NewMessage("Failed to initiate a file transfer {" + e.Message + "}", Color.Red);
-                                    GameMain.Client.CancelFileTransfer(inc.SequenceChannel);
+                                    GameMain.Client.CancelFileTransfer(0);//inc.SequenceChannel);
                                     newTransfer.Status = FileTransferStatus.Error;
                                     OnTransferFailed(newTransfer);
                                     return;
@@ -276,19 +280,19 @@ namespace Barotrauma.Networking
                         {
                             DebugConsole.Log("Received file transfer message on the same machine: ");
                             DebugConsole.Log("  File: " + filePath);
-                            DebugConsole.Log("  Sequence channel: " + inc.SequenceChannel);
+                            DebugConsole.Log("  Sequence channel: " + 0);// inc.SequenceChannel);
                         }
 
                         if (!File.Exists(filePath))
                         {
                             DebugConsole.ThrowError("File transfer on the same machine failed, file \"" + filePath + "\" not found.");
-                            GameMain.Client.CancelFileTransfer(inc.SequenceChannel);
+                            GameMain.Client.CancelFileTransfer(0);// inc.SequenceChannel);
                             return;
                         }
 
-                        FileTransferIn directTransfer = new FileTransferIn(inc.SenderConnection, filePath, (FileTransferType)fileType)
+                        FileTransferIn directTransfer = new FileTransferIn(inc.Sender, filePath, (FileTransferType)fileType)
                         {
-                            SequenceChannel = inc.SequenceChannel,
+                            SequenceChannel = 0,//inc.SequenceChannel,
                             Status = FileTransferStatus.Finished,
                             FileSize = 0
                         };
@@ -296,22 +300,22 @@ namespace Barotrauma.Networking
                     }
                     break;
                 case (byte)FileTransferMessageType.Data:
-                    var activeTransfer = activeTransfers.Find(t => t.Connection == inc.SenderConnection && t.SequenceChannel == inc.SequenceChannel);
+                    var activeTransfer = activeTransfers.Find(t => t.Connection == inc.Sender/* && t.SequenceChannel == inc.SequenceChannel*/);
                     if (activeTransfer == null)
                     {
-                        GameMain.Client.CancelFileTransfer(inc.SequenceChannel);
+                        GameMain.Client.CancelFileTransfer(0);// inc.SequenceChannel);
                         DebugConsole.ThrowError("File transfer error: received data without a transfer initiation message");
                         return;
                     }
 
                     //allow one extra byte at the end for the 0 that identifies non-compressed messages
-                    if (activeTransfer.Received + (ulong)(inc.LengthBytes - inc.PositionInBytes) > activeTransfer.FileSize + 1)
+                    if (activeTransfer.Received + (ulong)(inc.LengthBytes - inc.BytePosition) > activeTransfer.FileSize + 1)
                     {
-                        GameMain.Client.CancelFileTransfer(inc.SequenceChannel);
+                        GameMain.Client.CancelFileTransfer(0);// inc.SequenceChannel);
                         DebugConsole.ThrowError("File transfer error: Received more data than expected (total received: " + activeTransfer.Received +
-                            ", msg received: " + (inc.LengthBytes - inc.PositionInBytes) +
+                            ", msg received: " + (inc.LengthBytes - inc.BytePosition) +
                             ", msg length: " + inc.LengthBytes +
-                            ", msg read: " + inc.PositionInBytes +
+                            ", msg read: " + inc.BytePosition +
                             ", filesize: " + activeTransfer.FileSize);
                         activeTransfer.Status = FileTransferStatus.Error;
                         StopTransfer(activeTransfer);
@@ -324,7 +328,7 @@ namespace Barotrauma.Networking
                     }
                     catch (Exception e)
                     {
-                        GameMain.Client.CancelFileTransfer(inc.SequenceChannel);
+                        GameMain.Client.CancelFileTransfer(0);// inc.SequenceChannel);
                         DebugConsole.ThrowError("File transfer error: " + e.Message);
                         activeTransfer.Status = FileTransferStatus.Error;
                         StopTransfer(activeTransfer, true);
@@ -352,7 +356,7 @@ namespace Barotrauma.Networking
                     break;
                 case (byte)FileTransferMessageType.Cancel:
                     byte sequenceChannel = inc.ReadByte();
-                    var matchingTransfer = activeTransfers.Find(t => t.Connection == inc.SenderConnection && t.SequenceChannel == sequenceChannel);
+                    var matchingTransfer = activeTransfers.Find(t => t.Connection == inc.Sender/* && t.SequenceChannel == sequenceChannel*/);
                     if (matchingTransfer != null)
                     {
                         new GUIMessageBox("File transfer cancelled", "The server has cancelled the transfer of the file \"" + matchingTransfer.FileName + "\".");

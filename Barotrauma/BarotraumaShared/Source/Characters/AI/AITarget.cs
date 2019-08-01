@@ -64,6 +64,12 @@ namespace Barotrauma
             }
         }
 
+        public float SonarDisruption
+        {
+            get;
+            set;
+        }
+
         public string SonarLabel;
 
         public bool Enabled = true;
@@ -127,6 +133,7 @@ namespace Barotrauma
             MaxSightRange = element.GetAttributeFloat("maxsightrange", SightRange);
             MaxSoundRange = element.GetAttributeFloat("maxsoundrange", SoundRange);
             FadeOutTime = element.GetAttributeFloat("fadeouttime", FadeOutTime);
+            SonarDisruption = element.GetAttributeFloat("sonardisruption", 0.0f);
             SonarLabel = element.GetAttributeString("sonarlabel", "");
             string typeString = element.GetAttributeString("type", "Any");
             if (Enum.TryParse(typeString, out TargetType t))

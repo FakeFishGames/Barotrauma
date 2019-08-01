@@ -8,10 +8,6 @@
       <GuiFrame relativesize="0.5,0.6" anchor="CenterLeft" style="OuterGlow" color="0,0,0,0.8" absoluteoffset="30,0" />
       <StatusEffect type="InWater" target="This" condition="-0.5" />
       <poweronsound file="Content/Items/PowerOnLight1.ogg" range="1000" loop="false" />
-      <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false" />
-      <sparksound file="Content/Items/Electricity/Zap2.ogg" range="500" loop="false" />
-      <sparksound file="Content/Items/Electricity/Zap3.ogg" range="500" loop="false" />
-      <sparksound file="Content/Items/Electricity/Zap4.ogg" range="500" loop="false" />
       <MaintainPosIndicator texture="Content/Items/Command/NavUI.png" sourcerect="50,0,60,61" />
       <MaintainPosOriginIndicator texture="Content/Items/Command/NavUI.png" sourcerect="0,0,50,54" />
       <SteeringIndicator texture="Content/Items/Command/NavUI.png" sourcerect="0,135,362,16" origin="0,0.5"/>
@@ -75,9 +71,6 @@
       <MaintainPosOriginIndicator texture="Content/Items/Command/NavUI.png" sourcerect="0,0,50,54" />
       <SteeringIndicator texture="Content/Items/Command/NavUI.png" sourcerect="0,135,362,16" origin="0,0.5"/>
       <poweronsound file="Content/Items/PowerOnLight2.ogg" range="1000" loop="false" />
-      <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false" />
-      <sparksound file="Content/Items/Electricity/Zap2.ogg" range="500" loop="false" />
-      <sparksound file="Content/Items/Electricity/Zap3.ogg" range="500" loop="false" />
     </Steering>
     <Sonar canbeselected="true" powerconsumption="100" displaybordersize="-0.1">
       <GuiFrame relativesize="0.5,0.6" anchor="CenterLeft" absoluteoffset="30,0" />
@@ -123,9 +116,6 @@
       <GuiFrame relativesize="0.5,0.6" anchor="CenterLeft" absoluteoffset="30,0" />
       <StatusEffect type="InWater" target="This" condition="-0.5" />
       <poweronsound file="Content/Items/PowerOnLight3.ogg" range="1000" loop="false" />
-      <sparksound file="Content/Items/Electricity/Zap3.ogg" range="500" loop="false" />
-      <sparksound file="Content/Items/Electricity/Zap4.ogg" range="500" loop="false" />
-      <sparksound file="Content/Items/Electricity/Zap5.ogg" range="500" loop="false" />
       <PingCircle texture="Content/Items/Command/pingCircle.png" origin="0.5,0.5" />
       <DirectionalPingCircle texture="Content/Items/Command/directionalPingCircle.png" origin="0.0,0.5" />
       <ScreenOverlay texture="Content/Items/Command/sonarOverlay.png" origin="0.5,0.5" />
@@ -152,9 +142,6 @@
       <GuiFrame relativesize="0.5,0.5" anchor="CenterRight" style="ItemUI" />
       <AlternativeLayout relativesize="0.35,0.35" />
       <poweronsound file="Content/Items/PowerOnLight3.ogg" range="1000" loop="false" />
-      <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false" />
-      <sparksound file="Content/Items/Electricity/Zap2.ogg" range="500" loop="false" />
-      <sparksound file="Content/Items/Electricity/Zap3.ogg" range="500" loop="false" />
     </MiniMap>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />

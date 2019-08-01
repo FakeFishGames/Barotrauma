@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
-    enum MissionType
+    public enum MissionType
     {
         Random,
         None,
