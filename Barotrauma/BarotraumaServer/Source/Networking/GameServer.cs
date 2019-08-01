@@ -138,7 +138,7 @@ namespace Barotrauma.Networking
                 Log("Starting the server...", ServerLog.MessageType.ServerMessage);
                 if (!ownerSteamId.HasValue || ownerSteamId.Value == 0)
                 {
-                    Log("Using Lidgren networking)", ServerLog.MessageType.ServerMessage);
+                    Log("Using Lidgren networking", ServerLog.MessageType.ServerMessage);
                     serverPeer = new LidgrenServerPeer(ownerKey, serverSettings);
                 }
                 else
