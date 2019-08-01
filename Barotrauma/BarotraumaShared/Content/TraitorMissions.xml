@@ -163,28 +163,35 @@
     </TraitorMission> -->
   
   <TraitorMission identifier="SabotageReactor_Assassinate">
-    <StartInfoText id="SabotageReactor_Assassinate_startmessage"/>
 
+    <StartInfoText id="MVPtraitormissionStartInfoText" />
+    <SuccessEndInfoText id="traitormissionsuccessmessage"/>
+    <FailEndInfoText id="traitormissionfailuremessage"/>
+    
     <Objective>
+      <StartMessage id="MVPtraitorobjectivestartmessage1"/>
       <Goal type="finditem" identifier="oxygentank">
-        <InfoText id="traitorgoals_SabotageReactor_Assassinate" />
+        <InfoText id="MVP_GoalInfoText_1" />    
       </Goal>
     </Objective>
-
+    
     <Objective>
+      <StartMessage id="MVPtraitorobjectivestartmessage2"/>
       <Goal type="sabotage" tag="reactor" threshold="20">
-        <InfoText id="traitorgoal_SabotagedReactor_Assassinate" />
+        <InfoText id="traitorgoalsabotagedurationinfo" />
         <Modifier type="duration" duration="10" cumulative="true" />
       </Goal>
     </Objective>
 
     <Objective>
+      <StartMessage id="MVPtraitorobjectivestartmessage2"/>
       <Goal type="killtarget" job="captain">
         <InfoText id="traitorgoalkilltargetinfo" />
       </Goal>
     </Objective>
 
   </TraitorMission>
+
 
 
 </TraitorMissions>

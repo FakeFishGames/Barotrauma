@@ -3221,15 +3221,11 @@
   <complete>Complete</complete>
 
   <!-- Traitor mission (new) -->
-  <!--<traitormissionstartmessage>You are the traitor! You have successfully infiltrated the submarine and now it's time to put the plans in motion.</traitormissionstartmessage>-->
-
-  <SabotageReactor_Assassinate_startmessage>The cult of the Husk calls you to service. When the sub is underway, search the storage lockers for your orders - they'll be hidden under some spare oxygen tanks.</SabotageReactor_Assassinate_startmessage>
   
   <traitormissionfailuremessage>You have failed in your mission. As a result, the mission has been canceled and you are now part of the crew. Keep a low profile until you are contacted again.</traitormissionfailuremessage>
   <traitormissionsuccessmessage>You have successfully sabotaged the crew's efforts. An escape shuttle has been dispatched for you.</traitormissionsuccessmessage>
 
   <!-- Traitor objectives (new) -->
-  <traitorobjectivestartmessage>You have a new objective, following goals need to be completed:\n[traitorgoalinfos]</traitorobjectivestartmessage>
   <traitorobjectivestartmessageserver>[traitorname] is the traitor and has the following goals:\n[traitorgoalinfos]</traitorobjectivestartmessageserver>
   <traitorobjectiveendmessagesuccess>[traitorname] was a traitor and succeeded in completing the given goals:\n [traitorgoalinfos]</traitorobjectiveendmessagesuccess>
   <traitorobjectiveendmessagesuccessdead>[traitorname] was a traitor and succeeded in completing the given goals but regrettably died in the process, goals:\n[traitorgoalinfos]</traitorobjectiveendmessagesuccessdead>
@@ -3263,8 +3259,16 @@
   <traitorgoaltamperrailguninfomulti>Load [number] dummy shells into a railgun loader.</traitorgoaltamperrailguninfomulti>
   <traitorgoalescape>Escape to the nearby shuttle.</traitorgoalescape>
 
-  <traitorgoals_SabotageReactor_Assassinate>First, sabotage the reactor. Then only after you've achieved this goal, kill the captain, and escape the sub. The Husk commands you!</traitorgoals_SabotageReactor_Assassinate>
-  <traitorgoal_SabotagedReactor_Assassinate>Our plans begin to bloom, like the stalk of the blessed Husk. Now kill the captain.</traitorgoal_SabotagedReactor_Assassinate>
+  <!-- MVP Traitor mission text package -->
+  <MVPtraitormissionStartInfoText>The cult of the Husk calls you to service!</MVPtraitormissionStartInfoText>
+  <MVPtraitorobjectivestartmessage1>When the sub is underway:\n[traitorgoalinfos]</MVPtraitorobjectivestartmessage1>
+  <MVP_GoalInfoText_1>Search the storage lockers for your orders, they'll be hidden under a spare oxygen tank.</MVP_GoalInfoText_1>
+  <MVPtraitorobjectivestartmessage2>Your first task:\n[traitorgoalinfos]</MVPtraitorobjectivestartmessage2>
+  <MVPtraitorobjectivestartmessage3>Our plans begin to bloom, like the stalk of a blessed Husk. Now:\n[traitorgoalinfos]</MVPtraitorobjectivestartmessage3>
+
+
+  <traitormissionfailuremessage>You have failed in your mission. As a result, the mission has been canceled and you are now part of the crew. Keep a low profile until you are contacted again.</traitormissionfailuremessage>
+  <traitormissionsuccessmessage>You have successfully sabotaged the crew's efforts. An escape shuttle has been dispatched for you.</traitormissionsuccessmessage>
 
 
   <entityname.flamer>Flamer</entityname.flamer>
