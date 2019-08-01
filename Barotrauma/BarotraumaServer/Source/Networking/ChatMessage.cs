@@ -75,7 +75,7 @@ namespace Barotrauma.Networking
                 }
             }
             //order/report messages can be sent a little faster than normal messages without triggering the spam filter
-            if (orderMsg == null)
+            if (orderMsg != null)
             {
                 similarity *= 0.25f;
             }
