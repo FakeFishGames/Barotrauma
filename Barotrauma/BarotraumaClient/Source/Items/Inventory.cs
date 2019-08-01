@@ -150,6 +150,7 @@ namespace Barotrauma
         private Rectangle movableFrameRect;
         private Point savedPosition, originalPos;
         private bool canMove = false;
+        private bool positionUpdateQueued = false;
 
         public class SlotReference
         {
@@ -685,15 +686,23 @@ namespace Barotrauma
 
             if (container.MovableFrame && !IsInventoryHoverAvailable(Owner as Character, container))
             {
+                if (positionUpdateQueued) // Wait a frame before updating the positioning of the container after a resolution change to have everything working
+                {
+                    container.Inventory.originalPos = container.Inventory.savedPosition = container.Inventory.movableFrameRect.Center;
+                    positionUpdateQueued = false;
+                }
+
                 if (container.Inventory.movableFrameRect.Size == Point.Zero || GUI.HasSizeChanged(prevScreenResolution, prevUIScale, prevHUDScale))
                 {
-                    // Reset the movable container's values
+                    // Reset position
+                    container.Inventory.savedPosition = container.Inventory.originalPos;
+
                     prevScreenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
                     prevUIScale = UIScale;
                     prevHUDScale = GUI.Scale;
                     int height = (int)(movableFrameRectHeight * UIScale);
                     container.Inventory.movableFrameRect = new Rectangle(container.Inventory.BackgroundFrame.X, container.Inventory.BackgroundFrame.Y - height, container.Inventory.BackgroundFrame.Width, height);
-                    container.Inventory.originalPos = container.Inventory.savedPosition = container.Inventory.movableFrameRect.Center;
+                    positionUpdateQueued = true;
                 }
 
                 //spriteBatch.Draw(EquipIndicator.Texture, container.Inventory.movableFrameRect, EquipIndicator.SourceRect, Color.White);
