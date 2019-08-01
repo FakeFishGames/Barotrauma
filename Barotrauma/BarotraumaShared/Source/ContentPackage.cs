@@ -511,6 +511,23 @@ namespace Barotrauma
                 DebugConsole.NewMessage($"Content package load order: { new string(reportList.SelectMany(cp => cp.Name + "  |  ").ToArray()) }");
             }
         }
+
+        public void Delete()
+        {
+            try
+            {
+                File.Delete(Path);
+                GameMain.Config.SelectedContentPackages.Remove(this);
+                GameMain.Config.SaveNewPlayerConfig();
+            }
+            catch (IOException e)
+            {
+                DebugConsole.ThrowError("Failed to delete content package \"" + Name + "\".", e);
+                return;
+            }
+            List.Remove(this);
+            SortContentPackages();
+        }
     }
 
     public class ContentFile
