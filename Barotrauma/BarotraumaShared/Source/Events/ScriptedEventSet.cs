@@ -103,7 +103,7 @@ namespace Barotrauma
             foreach (string configFile in configFiles)
             {
                 XDocument doc = XMLExtensions.TryLoadXml(configFile);
-                if (doc == null || doc.Root == null) { continue; }
+                if (doc == null) { continue; }
 
                 var mainElement = doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;
                 if (doc.Root.IsOverride())

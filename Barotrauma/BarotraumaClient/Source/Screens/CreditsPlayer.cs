@@ -17,6 +17,7 @@ namespace Barotrauma
             GameMain.Instance.OnResolutionChanged += () => { ClearChildren(); Load(); };
 
             var doc = XMLExtensions.TryLoadXml(configFile);
+            if (doc == null) { return; }
             configElement = doc.Root;
 
             Load();

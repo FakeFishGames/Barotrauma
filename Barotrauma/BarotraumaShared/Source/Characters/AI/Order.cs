@@ -61,7 +61,7 @@ namespace Barotrauma
             foreach (string file in GameMain.Instance.GetFilesOfType(ContentType.Orders))
             {
                 XDocument doc = XMLExtensions.TryLoadXml(file);
-                if (doc == null || doc.Root == null) { return; }
+                if (doc == null) { continue; }
                 var mainElement = doc.Root;
                 bool allowOverriding = false;
                 if (doc.Root.IsOverride())

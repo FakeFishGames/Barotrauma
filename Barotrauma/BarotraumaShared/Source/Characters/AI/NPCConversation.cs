@@ -33,7 +33,7 @@ namespace Barotrauma
             {
                 if (Path.GetExtension(filePath) == ".csv") continue; // .csv files are not supported
                 XDocument doc = XMLExtensions.TryLoadXml(filePath);
-                if (doc == null || doc.Root == null) continue;
+                if (doc == null) { continue; }
                 string language = doc.Root.GetAttributeString("Language", "English");
                 string identifier = doc.Root.GetAttributeString("Identifier", "unknown");
                 contentPackageFiles.Add(new Tuple<string, string, string>(language, identifier, filePath));
@@ -44,7 +44,7 @@ namespace Barotrauma
             {
                 if (Path.GetExtension(filePath) == ".csv") continue; // .csv files are not supported
                 XDocument doc = XMLExtensions.TryLoadXml(filePath);
-                if (doc == null || doc.Root == null) continue;
+                if (doc == null) { continue; }
                 string language = doc.Root.GetAttributeString("Language", "English");
                 string identifier = doc.Root.GetAttributeString("Identifier", "unknown");
                 translationFiles.Add(new Tuple<string, string, string>(language, identifier, filePath));
@@ -73,7 +73,7 @@ namespace Barotrauma
         private static void Load(string file)
         {
             XDocument doc = XMLExtensions.TryLoadXml(file);
-            if (doc == null || doc.Root == null) return;
+            if (doc == null) { return; }
 
             string language = doc.Root.GetAttributeString("Language", "English");
             if (language != TextManager.Language) return;

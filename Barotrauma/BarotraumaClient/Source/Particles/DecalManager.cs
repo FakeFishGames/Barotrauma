@@ -14,7 +14,7 @@ namespace Barotrauma.Particles
             foreach (string configFile in GameMain.Instance.GetFilesOfType(ContentType.Decals))
             {
                 XDocument doc = XMLExtensions.TryLoadXml(configFile);
-                if (doc == null || doc.Root == null) { continue; }
+                if (doc == null) { continue; }
 
                 bool allowOverriding = false;
                 var mainElement = doc.Root;

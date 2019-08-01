@@ -899,7 +899,7 @@ namespace Barotrauma
         private static bool AddConfigFile(string file, bool allowOverriding)
         {
             XDocument doc = XMLExtensions.TryLoadXml(file);
-            if (doc == null || doc.Root == null)
+            if (doc == null)
             {
                 DebugConsole.ThrowError($"Loading character file failed: {file}");
                 return false;

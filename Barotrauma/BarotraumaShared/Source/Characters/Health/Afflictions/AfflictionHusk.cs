@@ -115,7 +115,7 @@ namespace Barotrauma
             }
             string pathToAppendage = huskDoc.Root.Element("huskappendage").GetAttributeString("path", string.Empty);
             XDocument doc = XMLExtensions.TryLoadXml(pathToAppendage);
-            if (doc == null || doc.Root == null) { return null; }
+            if (doc == null) { return null; }
             if (ragdoll == null)
             {
                 ragdoll = character.AnimController;

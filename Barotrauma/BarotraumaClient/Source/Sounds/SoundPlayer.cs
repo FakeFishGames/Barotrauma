@@ -116,7 +116,7 @@ namespace Barotrauma
             foreach (string soundFile in soundFiles)
             {
                 XDocument doc = XMLExtensions.TryLoadXml(soundFile);
-                if (doc?.Root == null) { continue; }
+                if (doc == null) { continue; }
                 var mainElement = doc.Root;
                 if (doc.Root.IsOverride())
                 {

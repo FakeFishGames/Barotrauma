@@ -1090,7 +1090,7 @@ namespace Barotrauma
             {
                 string filePath = args.Length > 0 ? args[0] : "Content/Texts/EnglishVanilla.xml";
                 var doc = XMLExtensions.TryLoadXml(filePath);
-                if (doc?.Root == null) return;
+                if (doc == null) { return; }
                 List<string> lines = new List<string>();
                 foreach (XElement element in doc.Root.Elements())
                 {
@@ -1123,6 +1123,7 @@ namespace Barotrauma
                     return;
                 }
                 var doc = XMLExtensions.TryLoadXml(destinationPath);
+                if (doc == null) { return; }
                 int i = 0;
                 foreach (XElement element in doc.Root.Elements())
                 {
@@ -1154,6 +1155,8 @@ namespace Barotrauma
 
                 var sourceDoc = XMLExtensions.TryLoadXml(sourcePath);
                 var destinationDoc = XMLExtensions.TryLoadXml(destinationPath);
+
+                if (sourceDoc == null || destinationDoc == null) { return; }
 
                 XElement destinationElement = destinationDoc.Root.Elements().First();
                 foreach (XElement element in sourceDoc.Root.Elements())

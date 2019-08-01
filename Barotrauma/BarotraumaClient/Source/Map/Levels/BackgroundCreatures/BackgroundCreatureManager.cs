@@ -36,7 +36,7 @@ namespace Barotrauma
             try
             {
                 XDocument doc = XMLExtensions.TryLoadXml(configPath);
-                if (doc == null || doc.Root == null) { return; }
+                if (doc == null) { return; }
                 var mainElement = doc.Root;
                 if (mainElement.IsOverride())
                 {

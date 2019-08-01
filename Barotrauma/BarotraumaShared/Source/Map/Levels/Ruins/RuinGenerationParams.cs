@@ -140,7 +140,7 @@ namespace Barotrauma.RuinGeneration
             foreach (string configFile in GameMain.Instance.GetFilesOfType(ContentType.RuinConfig))
             {
                 XDocument doc = XMLExtensions.TryLoadXml(configFile);
-                if (doc?.Root == null) { continue; }
+                if (doc == null) { continue; }
                 var mainElement = doc.Root;
                 if (doc.Root.IsOverride())
                 {
@@ -175,7 +175,7 @@ namespace Barotrauma.RuinGeneration
                     if (configFile != generationParams.filePath) continue;
 
                     XDocument doc = XMLExtensions.TryLoadXml(configFile);
-                    if (doc?.Root == null) continue;
+                    if (doc == null) { continue; }
 
                     SerializableProperty.SerializeProperties(generationParams, doc.Root);
 

@@ -229,7 +229,7 @@ namespace Barotrauma
                 return;
             }
             var doc = XMLExtensions.TryLoadXml(path);
-            if (doc == null || doc.Root == null) { return; }
+            if (doc == null) { continue; }
             if (string.IsNullOrWhiteSpace(Name) && string.IsNullOrWhiteSpace(EntityID)) { return; }
             var spriteElements = doc.Descendants("sprite").Concat(doc.Descendants("Sprite"));
             var sourceElements = spriteElements.Where(e => e.GetAttributeString("name", null) == Name);

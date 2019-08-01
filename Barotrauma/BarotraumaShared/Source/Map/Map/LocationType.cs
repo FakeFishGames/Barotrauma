@@ -193,7 +193,7 @@ namespace Barotrauma
             foreach (string file in locationTypeFiles)
             {
                 XDocument doc = XMLExtensions.TryLoadXml(file);
-                if (doc?.Root == null) { continue; }    
+                if (doc == null) { continue; }
                 var mainElement = doc.Root;
                 if (doc.Root.IsOverride())
                 {

@@ -945,7 +945,7 @@ namespace Barotrauma
             if (File.Exists(ServerSettings.SettingsFile))
             {
                 XDocument settingsDoc = XMLExtensions.TryLoadXml(ServerSettings.SettingsFile);
-                if (settingsDoc?.Root != null)
+                if (settingsDoc != null)
                 {
                     port = settingsDoc.Root.GetAttributeInt("port", port);
                     queryPort = settingsDoc.Root.GetAttributeInt("queryport", queryPort);

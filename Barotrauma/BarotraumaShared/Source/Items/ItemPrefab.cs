@@ -412,7 +412,7 @@ namespace Barotrauma
                 }
 
                 XDocument doc = XMLExtensions.TryLoadXml(filePath);
-                if (doc?.Root == null) { return; }
+                if (doc == null) { return; }
 
                 var rootElement = doc.Root;
                 switch (rootElement.Name.ToString().ToLowerInvariant())

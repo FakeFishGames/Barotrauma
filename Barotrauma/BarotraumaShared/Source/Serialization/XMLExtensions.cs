@@ -34,9 +34,11 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Couldn't load xml document \"" + filePath + "\"!", e);
                 return null;
             }
-
-            if (doc.Root == null) return null;
-
+            if (doc?.Root == null)
+            {
+                DebugConsole.ThrowError("File \"" + filePath + "\" could not be loaded: Document or the root element is invalid!");
+                return null;
+            }
             return doc;
         }
 
