@@ -966,6 +966,30 @@ namespace Barotrauma
                 }
             }, isCheat: false));
 
+            commands.Add(new Command("setentityproperties", "setentityproperties [property name] [value]: Sets the value of some property on all selected items/structures in the sub editor.", (string[] args) =>
+            {
+                if (args.Length != 2 || Screen.Selected != GameMain.SubEditorScreen) { return; }
+                foreach (MapEntity me in MapEntity.SelectedList)
+                {
+                    if (me is ISerializableEntity serializableEntity)
+                    {
+                        if (serializableEntity.SerializableProperties == null)
+                        {
+                            continue;
+                        }
+                        if (!serializableEntity.SerializableProperties.TryGetValue(args[0].ToLowerInvariant(), out SerializableProperty property))
+                        {
+                            NewMessage("Property \"" + args[0] + "\" not found in the entity \"" + me.ToString() + "\".", Color.Orange);
+                            continue;
+                        }
+                        if (!property.TrySetValue(me, args[1]))
+                        {
+                            NewMessage("Failed to set the value of \"" + args[0] + "\" to " + args[1] + " on the entity \"" + me.ToString() + "\".", Color.Orange);
+                        }
+                    }
+                }
+            }));
+
 #if DEBUG
             commands.Add(new Command("printreceivertransfers", "", (string[] args) =>
             {
