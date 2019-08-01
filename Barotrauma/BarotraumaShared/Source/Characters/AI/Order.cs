@@ -118,7 +118,7 @@ namespace Barotrauma
 
                 catch (Exception e)
                 {
-                    //DebugConsole.ThrowError("Error in " + ConfigFile + ", item component type " + targetItemType + " not found", e);
+                    DebugConsole.ThrowError("Error in the order definitions: item component type " + targetItemType + " not found", e);
                 }
             }
 
