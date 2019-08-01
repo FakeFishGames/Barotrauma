@@ -30,7 +30,8 @@ namespace Barotrauma
                     var traitor = Traitors["traitor"];
                     if (pendingObjectives.Count <= 0)
                     {
-                        return "TraitorMissionSuccessMessage";
+                        if (completedObjectives.Count <= 0) return "";
+                        return completedObjectives[completedObjectives.Count - 1].EndMessageText;
                     }
                     else
                     {
@@ -109,7 +110,10 @@ namespace Barotrauma
                         {
                             pendingObjectives.RemoveAt(0);
                             completedObjectives.Add(objective);
-                            objective.EndMessage(GameMain.Server);
+                            if (pendingObjectives.Count > 0)
+                            {
+                                objective.EndMessage(GameMain.Server);
+                            }
                             continue;
                         }
                         ++startedCount;
@@ -119,16 +123,21 @@ namespace Barotrauma
                     {
                         pendingObjectives.RemoveAt(0);
                         completedObjectives.Add(objective);
-                        objective.EndMessage(GameMain.Server);
+                        if (pendingObjectives.Count > 0)
+                        {
+                            objective.EndMessage(GameMain.Server);
+                        }
                         continue;
                     }
                     break;
                 }
-                for (int i = previousCompletedCount; i < completedObjectives.Count; ++i)
+                int completedMax = completedObjectives.Count - 1;
+                for (int i = previousCompletedCount; i <= completedMax; ++i)
                 {
                     var objective = completedObjectives[i];
-                    objective.End(GameMain.Server);
+                    objective.End(GameMain.Server, i < completedMax || pendingObjectives.Count > 0);
                 }
+
                 if (pendingObjectives.Count > 0)
                 {
                     if (startedCount > 0)

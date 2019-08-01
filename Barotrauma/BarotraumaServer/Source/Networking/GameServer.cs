@@ -1973,12 +1973,7 @@ namespace Barotrauma.Networking
                 Log("Ending the round...", ServerLog.MessageType.ServerMessage);
             }
 
-            string endMessage = "The round has ended." + '\n';
-
-            if (TraitorManager != null)
-            {
-                endMessage += TraitorManager.GetEndMessage();
-            }
+            string endMessage = TextManager.FormatServerMessage("ServerListRoundHasEnded", new string[] { "[traitorinfo]" }, new string[] { TraitorManager != null ? TraitorManager.GetEndMessage() : "" });
 
             Mission mission = GameMain.GameSession.Mission;
             GameMain.GameSession.GameMode.End(endMessage);

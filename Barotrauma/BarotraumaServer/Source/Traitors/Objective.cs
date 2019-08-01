@@ -107,10 +107,13 @@ namespace Barotrauma
                 server.SendDirectChatMessage(StartMessageText, traitorClient);
             }
 
-            public void End(GameServer server)
+            public void End(GameServer server, bool displayMessage)
             {
-                Client traitorClient = server.ConnectedClients.Find(c => c.Character == Traitor.Character);
-                GameMain.Server.SendDirectChatMessage(ChatMessage.Create(null, EndMessageText, ChatMessageType.ServerMessageBox, null), traitorClient);
+                if (displayMessage)
+                {
+                    Client traitorClient = server.ConnectedClients.Find(c => c.Character == Traitor.Character);
+                    GameMain.Server.SendDirectChatMessage(ChatMessage.Create(null, EndMessageText, ChatMessageType.ServerMessageBox, null), traitorClient);
+                }
 
                 // Traitor.Character.TraitorCurrentObjective = "";
                 // server.SendTraitorCurrentObjective(traitorClient, Traitor.Character.TraitorCurrentObjective);

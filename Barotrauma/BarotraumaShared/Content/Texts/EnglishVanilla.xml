@@ -538,6 +538,7 @@
   <serverlistping>Ping</serverlistping>
   <serverlistroundstarted>Round started</serverlistroundstarted>
   <serverlistroundnotstarted>Round has not started</serverlistroundnotstarted>
+  <serverlistroundhasended>The round has ended.\n\n[traitorinfo]</serverlistroundhasended>
   <serverlistinfo>Info</serverlistinfo>
   <serverlistjoin>Join</serverlistjoin>
   <serverlistunknownversion>Could not determine compatibility (unknown game version)</serverlistunknownversion>
@@ -3221,6 +3222,10 @@
   <complete>Complete</complete>
 
   <!-- Traitor mission (new) -->
+
+  <traitormissionstartmessage>You are the traitor! You have successfully infiltrated the submarine and now it's time to put the plans in motion.</traitormissionstartmessage>
+
+  <SabotageReactor_Assassinate_startmessage>The cult of the Husk calls you to service. When the sub is underway, search the storage lockers for your orders - they'll be hidden under some spare oxygen tanks.</SabotageReactor_Assassinate_startmessage>
   
   <traitormissionfailuremessage>You have failed in your mission. As a result, the mission has been canceled and you are now part of the crew. Keep a low profile until you are contacted again.</traitormissionfailuremessage>
   <traitormissionsuccessmessage>You have successfully sabotaged the crew's efforts. An escape shuttle has been dispatched for you.</traitormissionsuccessmessage>

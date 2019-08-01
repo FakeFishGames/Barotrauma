@@ -60,7 +60,7 @@ namespace Barotrauma
             if (!string.IsNullOrWhiteSpace(endMessage))
             {
                 var endText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoTextBox.Content.RectTransform), 
-                    endMessage, wrap: true);
+                    TextManager.GetServerMessage(endMessage), wrap: true);
             }
 
             //don't show the mission info if the mission was not completed and there's no localized "mission failed" text available
