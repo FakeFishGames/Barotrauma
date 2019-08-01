@@ -240,25 +240,17 @@ namespace Barotrauma
         private IEnumerable<Affliction> GetMatchingAfflictions(LimbHealth limb, Func<Affliction, bool> predicate)
             => limb.Afflictions.Where(predicate).Union(afflictions.Where(a => predicate(a) && GetMatchingLimbHealth(a) == limb));
 
-        public Affliction GetAfflictionByType(string afflictionType, bool allowLimbAfflictions = true)
+        public IEnumerable<Affliction> GetAfflictionsByType(string afflictionType, bool allowLimbAfflictions = true)
         {
-            foreach (Affliction affliction in afflictions)
+            if (allowLimbAfflictions)
             {
-                if (affliction.Prefab.AfflictionType == afflictionType) return affliction;
+                return GetAllAfflictions(a => a.Prefab.AfflictionType == afflictionType);
             }
-            if (!allowLimbAfflictions) return null;
-
-            foreach (LimbHealth limbHealth in limbHealths)
+            else
             {
-                foreach (Affliction affliction in limbHealth.Afflictions)
-                {
-                    if (affliction.Prefab.AfflictionType == afflictionType) return affliction;
-                }
+                return afflictions.Where(a => a.Prefab.AfflictionType == afflictionType);
             }
-
-            return null;
         }
-
 
         public Affliction GetAffliction(string identifier, bool allowLimbAfflictions = true)
         {
