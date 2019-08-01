@@ -12,6 +12,8 @@ namespace Barotrauma.Networking
     {
         public const int MTU = 1200;
         public const int CompressionThreshold = 1000;
+        public const int InitialBufferSize = 256;
+        public const int BufferOverAllocateAmount = 4;
     }
 
     /// <summary>
@@ -35,11 +37,13 @@ namespace Barotrauma.Networking
 
     internal static class MsgWriter
     {
-        internal static void Write(byte[] buf, ref int bitPos, bool val)
+        internal static void Write(ref byte[] buf, ref int bitPos, bool val)
         {
 #if DEBUG
             int resetPos = bitPos;
 #endif
+
+            EnsureBufferSize(ref buf, bitPos + 1);
 
             int bytePos = bitPos / 8;
             int bitOffset = bitPos % 8;
@@ -58,122 +62,153 @@ namespace Barotrauma.Networking
 #endif
         }
 
-        internal static void WritePadBits(byte[] buf, ref int bitPos)
+        internal static void WritePadBits(ref byte[] buf, ref int bitPos)
         {
             int bitOffset = bitPos % 8;
             bitPos += ((8 - bitOffset) % 8);
+            EnsureBufferSize(ref buf, bitPos);
         }
 
-        internal static void Write(byte[] buf, ref int bitPos, byte val)
+        internal static void Write(ref byte[] buf, ref int bitPos, byte val)
         {
+            EnsureBufferSize(ref buf, bitPos + 8);
             NetBitWriter.WriteByte(val, 8, buf, bitPos);
             bitPos += 8;
         }
 
-        internal static void Write(byte[] buf, ref int bitPos, UInt16 val)
+        internal static void Write(ref byte[] buf, ref int bitPos, UInt16 val)
         {
+            EnsureBufferSize(ref buf, bitPos + 16);
             NetBitWriter.WriteUInt16(val, 16, buf, bitPos);
             bitPos += 16;
         }
 
-        internal static void Write(byte[] buf, ref int bitPos, Int16 val)
+        internal static void Write(ref byte[] buf, ref int bitPos, Int16 val)
         {
+            EnsureBufferSize(ref buf, bitPos + 16);
             NetBitWriter.WriteUInt16((UInt16)val, 16, buf, bitPos);
             bitPos += 16;
         }
 
-        internal static void Write(byte[] buf, ref int bitPos, UInt32 val)
+        internal static void Write(ref byte[] buf, ref int bitPos, UInt32 val)
         {
+            EnsureBufferSize(ref buf, bitPos + 32);
             NetBitWriter.WriteUInt32(val, 32, buf, bitPos);
             bitPos += 32;
         }
 
-        internal static void Write(byte[] buf, ref int bitPos, Int32 val)
+        internal static void Write(ref byte[] buf, ref int bitPos, Int32 val)
         {
+            EnsureBufferSize(ref buf, bitPos + 32);
             NetBitWriter.WriteUInt32((UInt32)val, 32, buf, bitPos);
             bitPos += 32;
         }
 
-        internal static void Write(byte[] buf, ref int bitPos, UInt64 val)
+        internal static void Write(ref byte[] buf, ref int bitPos, UInt64 val)
         {
+            EnsureBufferSize(ref buf, bitPos + 64);
             NetBitWriter.WriteUInt64(val, 64, buf, bitPos);
             bitPos += 64;
         }
 
-        internal static void Write(byte[] buf, ref int bitPos, Int64 val)
+        internal static void Write(ref byte[] buf, ref int bitPos, Int64 val)
         {
+            EnsureBufferSize(ref buf, bitPos + 64);
             NetBitWriter.WriteUInt64((UInt64)val, 64, buf, bitPos);
             bitPos += 64;
         }
 
-        internal static void Write(byte[] buf, ref int bitPos, Single val)
+        internal static void Write(ref byte[] buf, ref int bitPos, Single val)
         {
             // Use union to avoid BitConverter.GetBytes() which allocates memory on the heap
             SingleUIntUnion su;
             su.UIntValue = 0; // must initialize every member of the union to avoid warning
             su.SingleValue = val;
+            
+            EnsureBufferSize(ref buf, bitPos + 32);
 
             NetBitWriter.WriteUInt32(su.UIntValue, 32, buf, bitPos);
             bitPos += 32;
         }
 
-        internal static void Write(byte[] buf, ref int bitPos, Double val)
+        internal static void Write(ref byte[] buf, ref int bitPos, Double val)
         {
+            EnsureBufferSize(ref buf, bitPos + 64);
+
             byte[] bytes = BitConverter.GetBytes(val);
-            WriteBytes(buf, ref bitPos, bytes, 0, bytes.Length);
+            WriteBytes(ref buf, ref bitPos, bytes, 0, bytes.Length);
             bitPos += 64;
         }
-        internal static void Write(byte[] buf, ref int bitPos, string val)
+        internal static void Write(ref byte[] buf, ref int bitPos, string val)
         {
             if (string.IsNullOrEmpty(val))
             {
-                WriteVariableUInt32(buf, ref bitPos, (uint)0);
+                WriteVariableUInt32(ref buf, ref bitPos, (uint)0);
                 return;
             }
             
             byte[] bytes = Encoding.UTF8.GetBytes(val);
-            WriteVariableUInt32(buf, ref bitPos, (uint)bytes.Length);
-            WriteBytes(buf, ref bitPos, bytes, 0, bytes.Length);
+            WriteVariableUInt32(ref buf, ref bitPos, (uint)bytes.Length);
+            WriteBytes(ref buf, ref bitPos, bytes, 0, bytes.Length);
         }
 
-        internal static int WriteVariableUInt32(byte[] buf, ref int bitPos, uint value)
+        internal static int WriteVariableUInt32(ref byte[] buf, ref int bitPos, uint value)
         {
             int retval = 1;
             uint num1 = (uint)value;
             while (num1 >= 0x80)
             {
-                Write(buf, ref bitPos, (byte)(num1 | 0x80));
+                Write(ref buf, ref bitPos, (byte)(num1 | 0x80));
                 num1 = num1 >> 7;
                 retval++;
             }
-            Write(buf, ref bitPos, (byte)num1);
+            Write(ref buf, ref bitPos, (byte)num1);
             return retval;
         }
 
-        internal static void WriteRangedInteger(byte[] buf, ref int bitPos, int val, int min, int max)
+        internal static void WriteRangedInteger(ref byte[] buf, ref int bitPos, int val, int min, int max)
         {
             uint range = (uint)(max - min);
             int numberOfBits = NetUtility.BitsToHoldUInt(range);
+
+            EnsureBufferSize(ref buf, bitPos + numberOfBits);
 
             uint rvalue = (uint)(val - min);
             NetBitWriter.WriteUInt32(rvalue, numberOfBits, buf, bitPos);
             bitPos += numberOfBits;
         }
 
-        internal static void WriteRangedSingle(byte[] buf, ref int bitPos, Single val, Single min, Single max, int numberOfBits)
+        internal static void WriteRangedSingle(ref byte[] buf, ref int bitPos, Single val, Single min, Single max, int numberOfBits)
         {
             float range = max - min;
             float unit = ((val - min) / range);
             int maxVal = (1 << numberOfBits) - 1;
-            
+
+            EnsureBufferSize(ref buf, bitPos + numberOfBits);
+
             NetBitWriter.WriteUInt32((UInt32)((float)maxVal * unit), numberOfBits, buf, bitPos);
             bitPos += numberOfBits;
         }
 
-        internal static void WriteBytes(byte[] buf, ref int bitPos, byte[] val, int pos, int length)
+        internal static void WriteBytes(ref byte[] buf, ref int bitPos, byte[] val, int pos, int length)
         {
+            EnsureBufferSize(ref buf, bitPos + length * 8);
             NetBitWriter.WriteBytes(val, pos, length, buf, bitPos);
             bitPos += length * 8;
+        }
+
+        internal static void EnsureBufferSize(ref byte[] buf, int numberOfBits)
+        {
+            int byteLen = ((numberOfBits + 7) >> 3);
+            if (buf == null)
+            {
+                buf = new byte[byteLen + MsgConstants.BufferOverAllocateAmount];
+                return;
+            }
+            if (buf.Length < byteLen)
+            {
+                Array.Resize<byte>(ref buf, byteLen + MsgConstants.BufferOverAllocateAmount);
+            }
         }
     }
 
@@ -339,7 +374,7 @@ namespace Barotrauma.Networking
 
     public class WriteOnlyMessage : IWriteMessage
     {
-        private byte[] buf = new byte[5000];
+        private byte[] buf = new byte[MsgConstants.InitialBufferSize];
         private int seekPos = 0;
         private int lengthBits = 0;
 
@@ -395,89 +430,89 @@ namespace Barotrauma.Networking
 
         public void Write(bool val)
         {
-            MsgWriter.Write(buf, ref seekPos, val);
+            MsgWriter.Write(ref buf, ref seekPos, val);
         }
 
         public void WritePadBits()
         {
-            MsgWriter.WritePadBits(buf, ref seekPos);
+            MsgWriter.WritePadBits(ref buf, ref seekPos);
         }
 
         public void Write(byte val)
         {
-            MsgWriter.Write(buf, ref seekPos, val);
+            MsgWriter.Write(ref buf, ref seekPos, val);
         }
 
         public void Write(UInt16 val)
         {
-            MsgWriter.Write(buf, ref seekPos, val);
+            MsgWriter.Write(ref buf, ref seekPos, val);
         }
 
         public void Write(Int16 val)
         {
-            MsgWriter.Write(buf, ref seekPos, val);
+            MsgWriter.Write(ref buf, ref seekPos, val);
         }
 
         public void Write(UInt32 val)
         {
-            MsgWriter.Write(buf, ref seekPos, val);
+            MsgWriter.Write(ref buf, ref seekPos, val);
         }
 
         public void Write(Int32 val)
         {
-            MsgWriter.Write(buf, ref seekPos, val);
+            MsgWriter.Write(ref buf, ref seekPos, val);
         }
 
         public void Write(UInt64 val)
         {
-            MsgWriter.Write(buf, ref seekPos, val);
+            MsgWriter.Write(ref buf, ref seekPos, val);
         }
 
         public void Write(Int64 val)
         {
-            MsgWriter.Write(buf, ref seekPos, val);
+            MsgWriter.Write(ref buf, ref seekPos, val);
         }
 
         public void Write(Single val)
         {
-            MsgWriter.Write(buf, ref seekPos, val);
+            MsgWriter.Write(ref buf, ref seekPos, val);
         }
 
         public void Write(Double val)
         {
-            MsgWriter.Write(buf, ref seekPos, val);
+            MsgWriter.Write(ref buf, ref seekPos, val);
         }
 
         public void WriteVariableUInt32(UInt32 val)
         {
-            MsgWriter.WriteVariableUInt32(buf, ref seekPos, val);
+            MsgWriter.WriteVariableUInt32(ref buf, ref seekPos, val);
         }
 
         public void Write(String val)
         {
-            MsgWriter.Write(buf, ref seekPos, val);
+            MsgWriter.Write(ref buf, ref seekPos, val);
         }
 
         public void WriteRangedIntegerDeprecated(int min, int max, int val)
         {
-            MsgWriter.WriteRangedInteger(buf, ref seekPos, val, min, max);
+            MsgWriter.WriteRangedInteger(ref buf, ref seekPos, val, min, max);
         }
 
         public void WriteRangedInteger(int val, int min, int max)
         {
-            MsgWriter.WriteRangedInteger(buf, ref seekPos, val, min, max);
+            MsgWriter.WriteRangedInteger(ref buf, ref seekPos, val, min, max);
         }
 
         public void WriteRangedSingle(Single val, Single min, Single max, int bitCount)
         {
-            MsgWriter.WriteRangedSingle(buf, ref seekPos, val, min, max, bitCount);
+            MsgWriter.WriteRangedSingle(ref buf, ref seekPos, val, min, max, bitCount);
         }
 
         public void Write(byte[] val, int startPos, int length)
         {
-            MsgWriter.WriteBytes(buf, ref seekPos, val, startPos, length);
+            MsgWriter.WriteBytes(ref buf, ref seekPos, val, startPos, length);
         }
-
+        
         public void PrepareForSending(ref byte[] outBuf, out bool isCompressed, out int length)
         {
             if (LengthBytes <= MsgConstants.CompressionThreshold)
@@ -521,7 +556,7 @@ namespace Barotrauma.Networking
 
     public class ReadOnlyMessage : IReadMessage
     {
-        private byte[] buf = new byte[5000];
+        private byte[] buf;
         private int seekPos = 0;
         private int lengthBits = 0;
 
@@ -594,12 +629,14 @@ namespace Barotrauma.Networking
                         decompressedData = output.ToArray();
                     }
                 }
+                buf = new byte[decompressedData.Length];
                 Array.Copy(decompressedData, 0, buf, 0, decompressedData.Length);
                 lengthBits = decompressedData.Length * 8;
                 DebugConsole.NewMessage("Decompressing message: " + inLength + " to " + LengthBytes);
             }
             else
             {
+                buf = new byte[inBuf.Length];
                 Array.Copy(inBuf, startPos, buf, 0, inLength);
                 lengthBits = inLength * 8;
             }
@@ -689,7 +726,7 @@ namespace Barotrauma.Networking
 
     public class ReadWriteMessage : IWriteMessage, IReadMessage
     {
-        private byte[] buf = new byte[5000];
+        private byte[] buf = new byte[MsgConstants.InitialBufferSize];
         private int seekPos = 0;
         private int lengthBits = 0;
 
@@ -747,87 +784,87 @@ namespace Barotrauma.Networking
 
         public void Write(bool val)
         {
-            MsgWriter.Write(buf, ref seekPos, val);
+            MsgWriter.Write(ref buf, ref seekPos, val);
         }
 
         public void WritePadBits()
         {
-            MsgWriter.WritePadBits(buf, ref seekPos);
+            MsgWriter.WritePadBits(ref buf, ref seekPos);
         }
 
         public void Write(byte val)
         {
-            MsgWriter.Write(buf, ref seekPos, val);
+            MsgWriter.Write(ref buf, ref seekPos, val);
         }
 
         public void Write(UInt16 val)
         {
-            MsgWriter.Write(buf, ref seekPos, val);
+            MsgWriter.Write(ref buf, ref seekPos, val);
         }
 
         public void Write(Int16 val)
         {
-            MsgWriter.Write(buf, ref seekPos, val);
+            MsgWriter.Write(ref buf, ref seekPos, val);
         }
 
         public void Write(UInt32 val)
         {
-            MsgWriter.Write(buf, ref seekPos, val);
+            MsgWriter.Write(ref buf, ref seekPos, val);
         }
 
         public void Write(Int32 val)
         {
-            MsgWriter.Write(buf, ref seekPos, val);
+            MsgWriter.Write(ref buf, ref seekPos, val);
         }
 
         public void Write(UInt64 val)
         {
-            MsgWriter.Write(buf, ref seekPos, val);
+            MsgWriter.Write(ref buf, ref seekPos, val);
         }
 
         public void Write(Int64 val)
         {
-            MsgWriter.Write(buf, ref seekPos, val);
+            MsgWriter.Write(ref buf, ref seekPos, val);
         }
 
         public void Write(Single val)
         {
-            MsgWriter.Write(buf, ref seekPos, val);
+            MsgWriter.Write(ref buf, ref seekPos, val);
         }
 
         public void Write(Double val)
         {
-            MsgWriter.Write(buf, ref seekPos, val);
+            MsgWriter.Write(ref buf, ref seekPos, val);
         }
 
         public void WriteVariableUInt32(UInt32 val)
         {
-            MsgWriter.WriteVariableUInt32(buf, ref seekPos, val);
+            MsgWriter.WriteVariableUInt32(ref buf, ref seekPos, val);
         }
 
         public void Write(String val)
         {
-            MsgWriter.Write(buf, ref seekPos, val);
+            MsgWriter.Write(ref buf, ref seekPos, val);
         }
 
         public void WriteRangedIntegerDeprecated(int min, int max, int val)
         {
-            MsgWriter.WriteRangedInteger(buf, ref seekPos, val, min, max);
+            MsgWriter.WriteRangedInteger(ref buf, ref seekPos, val, min, max);
         }
 
         public void WriteRangedInteger(int val, int min, int max)
         {
-            MsgWriter.WriteRangedInteger(buf, ref seekPos, val, min, max);
+            MsgWriter.WriteRangedInteger(ref buf, ref seekPos, val, min, max);
         }
 
         public void WriteRangedSingle(Single val, Single min, Single max, int bitCount)
         {
-            MsgWriter.WriteRangedSingle(buf, ref seekPos, val, min, max, bitCount);
+            MsgWriter.WriteRangedSingle(ref buf, ref seekPos, val, min, max, bitCount);
         }
 
         public void Write(byte[] val, int startPos, int length)
         {
-            MsgWriter.WriteBytes(buf, ref seekPos, val, startPos, length);
+            MsgWriter.WriteBytes(ref buf, ref seekPos, val, startPos, length);
         }
 
         public bool ReadBoolean()
