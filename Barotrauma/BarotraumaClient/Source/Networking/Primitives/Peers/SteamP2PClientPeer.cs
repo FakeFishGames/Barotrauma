@@ -122,12 +122,12 @@ namespace Barotrauma.Networking
             }
         }
 
-        public override void Update()
+        public override void Update(float deltaTime)
         {
             if (!isActive) { return; }
 
-            timeout -= Timing.Step;
-            heartbeatTimer -= Timing.Step;
+            timeout -= deltaTime;
+            heartbeatTimer -= deltaTime;
 
             if (heartbeatTimer < 0.0)
             {

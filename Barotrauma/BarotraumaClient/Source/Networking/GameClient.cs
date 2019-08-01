@@ -537,7 +537,7 @@ namespace Barotrauma.Networking
             
             try
             {
-                clientPeer?.Update();
+                clientPeer?.Update(deltaTime);
             }
             catch (Exception e)
             {

@@ -75,7 +75,7 @@ namespace Barotrauma.Networking
             isActive = true;
         }
 
-        public override void Update()
+        public override void Update(float deltaTime)
         {
             if (!isActive) { return; }
 

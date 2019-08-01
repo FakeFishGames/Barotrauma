@@ -117,11 +117,11 @@ namespace Barotrauma.Networking
             netClient.SendMessage(outMsg, lidgrenDeliveryMethod);
         }
 
-        public override void Update()
+        public override void Update(float deltaTime)
         {
             if (!isActive) { return; }
 
-            for (int i=remotePeers.Count-1;i>=0;i--)
+            for (int i = remotePeers.Count - 1; i >= 0; i--)
             {
                 if (remotePeers[i].DisconnectTime != null && remotePeers[i].DisconnectTime < Timing.TotalTime)
                 {
