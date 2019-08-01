@@ -30,10 +30,10 @@
   </Item>
   <Item name="Accordion" identifier="accordion" category="Misc" Tags="smallitem" scale="0.5" description="An old hand-made harmonica." price="300" impactsoundtag="impact_metal_light" isshootable="true">
     <Upgrade gameversion="0.9.2.0" scale="0.5"/>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,256,64,64" origin="0.5,0.5" />
-    <Sprite texture="Misc.png" sourcerect="102,16,58,21" depth="0.5" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="575,957,64,64" origin="0.5,0.5" />
+    <Sprite texture="Misc.png" sourcerect="164,5,92,110" depth="0.55" origin="0.5,0.5" />
     <Body width="58" height="20" />
-    <Holdable slots="RightHand+LeftHand,Any" aimable="false" aimpos="20,20" handle1="-5,0" handle2="5,0" swingamount="20,0" swingspeed="1" swingwhenusing="true" msg="ItemMsgPickUpSelect">
+    <Holdable slots="RightHand+LeftHand,Any" aimable="false" aimpos="50,-20" handle1="-20,0" handle2="-10,0" swingamount="50,0" swingspeed="0.5" swingwhenusing="true" msg="ItemMsgPickUpSelect">
       <sound file="Content/Items/Misc/AccordionLoop.ogg" type="OnUse" selectionmode="CharacterSpecific" range="600" loop="true" />
     </Holdable>
   </Item>
