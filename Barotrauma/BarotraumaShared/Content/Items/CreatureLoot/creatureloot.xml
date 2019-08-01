@@ -72,9 +72,9 @@
     <Body width="50" height="45" density="30" />
     <Wearable limbtype="Head" slots="Any,Head" msg="ItemMsgPickUpSelect">
       <sprite texture="Content/Items/Jobgear/AlienGear.png" limb="Head" inheritlimbdepth="true" hidelimb="false" inherittexturescale="true" hideotherwearables="false" sourcerect="129,142,100,121" origin="0.5,0.55" />
-      <StatusEffect type="OnWearing" target="Character" delay="7" stackable="false" CheckConditionalAlways="true">
-        <Conditional IsDead="false"/>
-        <Sound file="Content/Characters/Crawler/CRAWLER_idle1.ogg" type="OnUse" range="300" selectionmode="Random" />
+      <StatusEffect type="OnWearing" target="Character" delay="7" stackable="false" checkconditionalalways="true">
+        <conditional isDead="eq false"/>
+        <Sound file="Content/Characters/Crawler/CRAWLER_idle1.ogg" type="OnUse" range="300" selectionmode="Random" />        
         <Sound file="Content/Characters/Crawler/CRAWLER_idle2.ogg" type="OnUse" range="300" />
         <Sound file="Content/Characters/Crawler/CRAWLER_idle3.ogg" type="OnUse" range="300" />
       </StatusEffect>
