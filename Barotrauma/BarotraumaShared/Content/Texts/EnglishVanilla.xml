@@ -3264,18 +3264,16 @@
   <traitorgoaltamperrailguninfomulti>Load [number] dummy shells into a railgun loader.</traitorgoaltamperrailguninfomulti>
   <traitorgoalescape>Escape to the nearby shuttle.</traitorgoalescape>
 
+  <traitormissionfailuremessage>You have failed in your mission. As a result, the mission has been canceled and you are now part of the crew. Keep a low profile until you are contacted again.</traitormissionfailuremessage>
+  <traitormissionsuccessmessage>You have successfully sabotaged the crew's efforts. An escape shuttle has been dispatched for you.</traitormissionsuccessmessage>
+
   <!-- MVP Traitor mission text package -->
   <MVPtraitormissionStartInfoText>The cult of the Husk calls you to service!</MVPtraitormissionStartInfoText>
   <MVPtraitorobjectivestartmessage1>When the sub is underway:\n[traitorgoalinfos]</MVPtraitorobjectivestartmessage1>
   <MVP_GoalInfoText_1>Search the storage lockers for your orders, they'll be hidden under a spare oxygen tank.</MVP_GoalInfoText_1>
   <MVPtraitorobjectivestartmessage2>Your first task:\n[traitorgoalinfos]</MVPtraitorobjectivestartmessage2>
   <MVPtraitorobjectivestartmessage3>Our plans begin to bloom, like the stalk of a blessed Husk. Now:\n[traitorgoalinfos]</MVPtraitorobjectivestartmessage3>
-
-
-  <traitormissionfailuremessage>You have failed in your mission. As a result, the mission has been canceled and you are now part of the crew. Keep a low profile until you are contacted again.</traitormissionfailuremessage>
-  <traitormissionsuccessmessage>You have successfully sabotaged the crew's efforts. An escape shuttle has been dispatched for you.</traitormissionsuccessmessage>
-
-
+  
   <entityname.flamer>Flamer</entityname.flamer>
   <entitydescription.flamer>An incendiary weapon that fires a stream of burning welding fuel.</entitydescription.flamer>
 
