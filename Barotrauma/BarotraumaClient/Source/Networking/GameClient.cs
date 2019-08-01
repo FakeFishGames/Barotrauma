@@ -367,14 +367,23 @@ namespace Barotrauma.Networking
             return true;
         }
 
-        private bool ReturnToServerList(GUIButton button, object obj)
+        private bool ReturnToPreviousMenu(GUIButton button, object obj)
         {
             Disconnect();
 
             Submarine.Unload();
             GameMain.Client = null;
             GameMain.GameSession = null;
-            GameMain.ServerListScreen.Select();
+            if (IsServerOwner)
+            {
+                GameMain.MainMenuScreen.Select();
+            }
+            else
+            {
+                GameMain.ServerListScreen.Select();
+            }
+
+            GUIMessageBox.MessageBoxes.RemoveAll(m => true);
 
             return true;
         }
@@ -382,6 +391,12 @@ namespace Barotrauma.Networking
         private bool connectCancelled;
         private void CancelConnect()
         {
+            if (!(GameMain.ServerChildProcess?.HasExited??true))
+            {
+                GameMain.ServerChildProcess.Kill();
+                GameMain.ServerChildProcess = null;
+            }
+
             connectCancelled = true;
             clientPeer?.Close();
             clientPeer = null;
@@ -448,7 +463,7 @@ namespace Barotrauma.Networking
                 {
                     reconnectBox?.Close(); reconnectBox = null;
 
-                    string pwMsg = "Password required "+pwRetries; //TODO: read from msg?
+                    string pwMsg = TextManager.Get("PasswordRequired");
 
                     var msgBox = new GUIMessageBox(pwMsg, "", new string[] { TextManager.Get("OK"), TextManager.Get("Cancel") },
                         relativeSize: new Vector2(0.25f, 0.2f), minSize: new Point(400, 150));
@@ -579,6 +594,16 @@ namespace Barotrauma.Networking
             if (serverSettings.VoiceChatEnabled)
             {
                 VoipClient?.SendToServer();
+            }
+
+            if (IsServerOwner)
+            {
+                if (GameMain.ServerChildProcess?.HasExited??true)
+                {
+                    Disconnect();
+                    var msgBox = new GUIMessageBox(TextManager.Get("ConnectionLost"), TextManager.Get("ServerApplicationClosed"));
+                    msgBox.Buttons[0].OnClicked += ReturnToPreviousMenu;
+                }
             }
 
             // Update current time
@@ -782,12 +807,12 @@ namespace Barotrauma.Networking
                 {
                     //display a generic "could not connect" popup if the message is Lidgren's "failed to establish connection"
                     var msgBox = new GUIMessageBox(TextManager.Get("ConnectionFailed"), TextManager.Get(allowReconnect ? "ConnectionLost" : "CouldNotConnectToServer"));
-                    msgBox.Buttons[0].OnClicked += ReturnToServerList;
+                    msgBox.Buttons[0].OnClicked += ReturnToPreviousMenu;
                 }
                 else
                 {
                     var msgBox = new GUIMessageBox(TextManager.Get(allowReconnect ? "ConnectionLost" : "CouldNotConnectToServer"), msg);
-                    msgBox.Buttons[0].OnClicked += ReturnToServerList;
+                    msgBox.Buttons[0].OnClicked += ReturnToPreviousMenu;
                 }
             }
         }
