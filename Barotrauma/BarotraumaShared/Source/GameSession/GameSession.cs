@@ -260,7 +260,7 @@ namespace Barotrauma
 
             if (GameMode != null)
             {
-                GameMode.MsgBox();
+                GameMode.ShowStartMessage();
 
                 if (GameMode is MultiPlayerCampaign mpCampaign && GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                 {

@@ -182,7 +182,7 @@ namespace Barotrauma.Networking
             catch (Exception e)
             {
                 string errorMsg = "Server failed to read an incoming message. {" + e + "}\n" + e.StackTrace;
-                GameAnalyticsManager.AddErrorEventOnce("LidgrenServerPeer.Update:ClientReadException" + e.TargetSite.ToString(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("SteamP2PServerPeer.Update:ClientReadException" + e.TargetSite.ToString(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 if (GameSettings.VerboseLogging)
                 {
                     DebugConsole.ThrowError(errorMsg);
@@ -358,6 +358,8 @@ namespace Barotrauma.Networking
                     netServer.SendMessage(outMsg, netConnection, NetDeliveryMethod.ReliableUnordered);
                     break;
                 case NetConnectionStatus.Disconnected:
+                    DebugConsole.NewMessage("Owner disconnected: closing the server...");
+                    GameServer.Log("Owner disconnected: closing the server...", ServerLog.MessageType.ServerMessage);
                     Close(DisconnectReason.ServerShutdown.ToString() + "/ Owner disconnected");
                     break;
             }

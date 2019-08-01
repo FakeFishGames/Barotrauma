@@ -136,12 +136,14 @@ namespace Barotrauma.Networking
             try
             {
                 Log("Starting the server...", ServerLog.MessageType.ServerMessage);
-                if (!ownerSteamId.HasValue || ownerSteamId.Value==0)
+                if (!ownerSteamId.HasValue || ownerSteamId.Value == 0)
                 {
+                    Log("Using Lidgren networking)", ServerLog.MessageType.ServerMessage);
                     serverPeer = new LidgrenServerPeer(ownerKey, serverSettings);
                 }
                 else
                 {
+                    Log("Using SteamP2P", ServerLog.MessageType.ServerMessage);
                     serverPeer = new SteamP2PServerPeer(ownerSteamId.Value, serverSettings);
                 }
 
@@ -2116,8 +2118,14 @@ namespace Barotrauma.Networking
 
         public void BanClient(Client client, string reason, bool range = false, TimeSpan? duration = null)
         {
-            if (client == null) return;
-            if (client.Connection == OwnerConnection) return;
+            if (client == null || client.Connection == OwnerConnection) { return; }
+
+            var previousPlayer = previousPlayers.Find(p => p.MatchesClient(client));
+            if (previousPlayer != null)
+            {
+                //reset karma to a neutral value, so if/when the ban is revoked the client wont get immediately punished by long karma again
+                previousPlayer.Karma = Math.Max(previousPlayer.Karma, 50.0f);
+            }
 
             string targetMsg = DisconnectReason.Banned.ToString();
             DisconnectClient(client, $"ServerMessage.BannedFromServer~[client]={client.Name}", targetMsg, reason);
@@ -2157,7 +2165,8 @@ namespace Barotrauma.Networking
         {
             if (senderConnection == OwnerConnection)
             {
-                DebugConsole.NewMessage("Owner disconnected: closing server", Color.Yellow);
+                DebugConsole.NewMessage("Owner disconnected: closing the server...", Color.Yellow);
+                Log("Owner disconnected: closing the server...", ServerLog.MessageType.ServerMessage);
                 GameMain.ShouldRun = false;
             }
             Client client = connectedClients.Find(x => x.Connection == senderConnection);

@@ -1533,7 +1533,7 @@ namespace Barotrauma
             var buttonAreaMiddle = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform), isHorizontal: true);
             var buttonAreaLower = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform), isHorizontal: true);
 
-            if (selectedClient.SteamID != 0)
+            if (selectedClient.SteamID != 0 && Steam.SteamManager.IsInitialized)
             {
                 var viewSteamProfileButton = new GUIButton(new RectTransform(new Vector2(0.8f, 1.0f), buttonAreaUpper.RectTransform, Anchor.TopCenter),
                         TextManager.Get("ViewSteamProfile"))

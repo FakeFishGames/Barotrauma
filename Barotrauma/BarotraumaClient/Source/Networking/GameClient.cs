@@ -339,7 +339,7 @@ namespace Barotrauma.Networking
             // Connect client, to endpoint previously requested from user
             try
             {
-                clientPeer.Start(translatedEndpoint);
+                clientPeer.Start(translatedEndpoint, ownerKey);
             }
             catch (Exception e)
             {
@@ -404,39 +404,49 @@ namespace Barotrauma.Networking
             string connectingText = TextManager.Get("Connecting");
             while (!canStart && !connectCancelled)
             {
-                if (reconnectBox == null)
+                if (reconnectBox == null && waitInServerQueueBox == null)
                 {
+                    string serverDisplayName = serverName;
+                    if (string.IsNullOrEmpty(serverDisplayName)) { serverDisplayName = serverIP; }
+                    if (string.IsNullOrEmpty(serverDisplayName) && clientPeer?.ServerConnection is SteamP2PConnection steamConnection)
+                    {
+                        serverDisplayName = steamConnection.SteamID.ToString();
+                        if (SteamManager.IsInitialized)
+                        {
+                            string steamUserName = SteamManager.Instance.Friends.GetName(steamConnection.SteamID);
+                            if (!string.IsNullOrEmpty(steamUserName) && steamUserName != "[unknown]")
+                            {
+                                serverDisplayName = steamUserName;
+                            }
+                        }
+                    }
+                    if (string.IsNullOrEmpty(serverDisplayName)) { serverDisplayName = TextManager.Get("Unknown"); }
+
                     reconnectBox = new GUIMessageBox(
                         connectingText,
-                        TextManager.GetWithVariable("ConnectingTo", "[serverip]", string.IsNullOrEmpty(serverName) ? serverIP : serverName),
+                        TextManager.GetWithVariable("ConnectingTo", "[serverip]", serverDisplayName),
                         new string[] { TextManager.Get("Cancel") });
                     reconnectBox.Buttons[0].OnClicked += (btn, userdata) => { CancelConnect(); return true; };
                     reconnectBox.Buttons[0].OnClicked += reconnectBox.Close;
                 }
 
-                reconnectBox.Header.Text = connectingText + new string('.', ((int)Timing.TotalTime % 3 + 1));
+                if (reconnectBox != null)
+                {
+                    reconnectBox.Header.Text = connectingText + new string('.', ((int)Timing.TotalTime % 3 + 1));
+                }
 
                 yield return CoroutineStatus.Running;
 
                 if (DateTime.Now > timeOut)
                 {
-                    clientPeer?.Close(Lidgren.Network.NetConnection.NoResponseMessage);
-                    clientPeer = null;
-                    if (reconnectBox != null)
-                    {
-                        reconnectBox.Close(null, null);
-                        reconnectBox = null;
-                    }
+                    OnDisconnect(Lidgren.Network.NetConnection.NoResponseMessage);
+                    reconnectBox?.Close(); reconnectBox = null;
                     break;
                 }
                 
                 if (requiresPw && !canStart && !connectCancelled)
                 {
-                    if (reconnectBox != null)
-                    {
-                        reconnectBox.Close(null, null);
-                        reconnectBox = null;
-                    }
+                    reconnectBox?.Close(); reconnectBox = null;
 
                     string pwMsg = "Password required "+pwRetries; //TODO: read from msg?
 
@@ -478,11 +488,7 @@ namespace Barotrauma.Networking
                 }
             }
 
-            if (reconnectBox != null)
-            {
-                reconnectBox.Close(null, null);
-                reconnectBox = null;
-            }
+            reconnectBox?.Close(); reconnectBox = null;
 
             if (connectCancelled) yield return CoroutineStatus.Success;
             
@@ -548,7 +554,7 @@ namespace Barotrauma.Networking
 
             if (reconnectBox != null)
             {
-                reconnectBox.Close(null, null);
+                reconnectBox.Close();
                 reconnectBox = null;
             }
 
@@ -701,8 +707,13 @@ namespace Barotrauma.Networking
 
             if (disconnectReason == DisconnectReason.ServerFull)
             {
-                //already waiting for a slot to free up, do nothing
-                if (CoroutineManager.IsCoroutineRunning("WaitInServerQueue")) return;
+                CoroutineManager.StopCoroutines("WaitForStartingInfo");
+                //already waiting for a slot to free up, stop waiting for starting info and 
+                //let WaitInServerQueue reattempt connecting later
+                if (CoroutineManager.IsCoroutineRunning("WaitInServerQueue"))
+                {
+                    return;
+                }
 
                 reconnectBox?.Close(); reconnectBox = null;
 
@@ -799,7 +810,7 @@ namespace Barotrauma.Networking
                 if (!CoroutineManager.IsCoroutineRunning("WaitForStartingInfo"))
                 {
                     ConnectToServer(serverEndpoint, serverName);
-                    yield return new WaitForSeconds(2.0f);
+                    yield return new WaitForSeconds(5.0f);
                 }
                 yield return new WaitForSeconds(0.5f);
             }
