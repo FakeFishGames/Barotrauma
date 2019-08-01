@@ -88,7 +88,8 @@ namespace Barotrauma
             ContentType.NPCConversations,
             ContentType.Afflictions,
             ContentType.UIStyle,
-            ContentType.EventManagerSettings
+            ContentType.EventManagerSettings,
+            ContentType.Orders
         };
 
         public static IEnumerable<ContentType> CorePackageRequiredFiles
