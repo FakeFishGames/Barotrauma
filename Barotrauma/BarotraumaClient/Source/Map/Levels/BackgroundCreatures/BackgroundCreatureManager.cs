@@ -44,9 +44,9 @@ namespace Barotrauma
                     prefabs.Clear();
                     DebugConsole.NewMessage($"Overriding all background creatures with '{configPath}'", Color.Yellow);
                 }
-                else
+                else if (prefabs.Any())
                 {
-                    DebugConsole.NewMessage($"Loading background creatures from file '{configPath}'");
+                    DebugConsole.NewMessage($"Loading additional background creatures from file '{configPath}'");
                 }
 
                 foreach (XElement element in mainElement.Elements())

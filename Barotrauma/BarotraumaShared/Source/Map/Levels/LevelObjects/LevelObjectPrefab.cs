@@ -297,8 +297,7 @@ namespace Barotrauma
                 }
                 else if (list.Any())
                 {
-                    // Report only when loading additional content.
-                    DebugConsole.NewMessage($"Loading level object prefabs from file '{configPath}'");
+                    DebugConsole.NewMessage($"Loading additional level object prefabs from file '{configPath}'");
                 }
                 foreach (XElement element in mainElement.Elements())
                 {

@@ -203,8 +203,7 @@ namespace Barotrauma
                 }
                 else if (List.Any())
                 {
-                    // Report only when loading additional content
-                    DebugConsole.NewMessage($"Loading location types from file '{file}'");
+                    DebugConsole.NewMessage($"Loading additional location types from file '{file}'");
                 }
                 foreach (XElement sourceElement in mainElement.Elements())
                 {

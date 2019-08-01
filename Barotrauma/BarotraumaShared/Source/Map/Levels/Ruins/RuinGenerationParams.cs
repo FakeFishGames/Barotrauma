@@ -148,7 +148,10 @@ namespace Barotrauma.RuinGeneration
                     paramsList.Clear();
                     DebugConsole.NewMessage($"Overriding all ruin configuration parameters using the file {configFile}.", Color.Yellow);
                 }
-                DebugConsole.NewMessage($"Adding new ruin configuration parameters from file '{configFile}'");
+                else if (paramsList.Any())
+                {
+                    DebugConsole.NewMessage($"Adding additional ruin configuration parameters from file '{configFile}'");
+                }
                 var newParams = new RuinGenerationParams(mainElement)
                 {
                     filePath = configFile
