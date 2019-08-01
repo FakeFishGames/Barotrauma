@@ -723,31 +723,6 @@ namespace Barotrauma
             needsAir = mainElement.GetAttributeBool("needsair", false);
             Noise = mainElement.GetAttributeFloat("noise", 100f);
 
-            //List<XElement> ragdollElements = new List<XElement>();
-            //List<float> ragdollCommonness = new List<float>();
-            //foreach (XElement element in doc.Root.Elements())
-            //{
-            //    if (element.Name.ToString().ToLowerInvariant() != "ragdoll") continue;                
-            //    ragdollElements.Add(element);
-            //    ragdollCommonness.Add(element.GetAttributeFloat("commonness", 1.0f));                
-            //}
-
-            ////choose a random ragdoll element
-            //XElement ragdollElement = ragdollElements.Count == 1 ?
-            //    ragdollElements[0] : ToolBox.SelectWeightedRandom(ragdollElements, ragdollCommonness, random);
-
-            if (IsHumanoid)
-            {
-                AnimController = new HumanoidAnimController(this, seed, ragdollParams as HumanRagdollParams);
-                AnimController.TargetDir = Direction.Right;
-                
-            }
-            else
-            {
-                AnimController = new FishAnimController(this, seed, ragdollParams as FishRagdollParams);
-                PressureProtection = 100.0f;
-            }
-
             List<XElement> inventoryElements = new List<XElement>();
             List<float> inventoryCommonness = new List<float>();
             List<XElement> healthElements = new List<XElement>();
@@ -785,6 +760,18 @@ namespace Barotrauma
                 CharacterHealth = new CharacterHealth(
                     healthElements.Count == 1 ? healthElements[0] : ToolBox.SelectWeightedRandom(healthElements, healthCommonness, random), 
                     this);
+            }
+
+            if (IsHumanoid)
+            {
+                AnimController = new HumanoidAnimController(this, seed, ragdollParams as HumanRagdollParams);
+                AnimController.TargetDir = Direction.Right;
+
+            }
+            else
+            {
+                AnimController = new FishAnimController(this, seed, ragdollParams as FishRagdollParams);
+                PressureProtection = 100.0f;
             }
 
             AnimController.SetPosition(ConvertUnits.ToSimUnits(position));

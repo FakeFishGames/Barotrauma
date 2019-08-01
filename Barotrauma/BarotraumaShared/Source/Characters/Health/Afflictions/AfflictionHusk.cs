@@ -22,7 +22,7 @@ namespace Barotrauma
         {
             get { return state; }
         }
-        
+
         public AfflictionHusk(AfflictionPrefab prefab, float strength) : 
             base(prefab, strength)
         {
@@ -96,26 +96,43 @@ namespace Barotrauma
             }
         }
 
-        private void ActivateHusk(Character character)
+        public void ActivateHusk(Character character)
         {
-            character.NeedsAir = false;
             if (huskAppendage == null)
             {
-                huskAppendage = AttachHuskAppendage(character);
-                character.SetStun(0.5f);
+                huskAppendage = AttachHuskAppendage(character, Prefab.Identifier);
+                if (huskAppendage != null)
+                {
+                    character.NeedsAir = false;
+                    character.SetStun(0.5f);
+                }
             }
         }
 
-        public static List<Limb> AttachHuskAppendage(Character character, Ragdoll ragdoll = null)
+        public static List<Limb> AttachHuskAppendage(Character character, string afflictionIdentifier, Ragdoll ragdoll = null)
         {
-            if (!Character.TryGetConfigFile(Character.GetConfigFile("humanhusk"), out XDocument huskDoc))
+            string infectedSpeciesName = character.SpeciesName.ToLowerInvariant();
+            if (!infectedSpeciesName.Contains("husk"))
             {
-                DebugConsole.ThrowError("Failed to load the husk config file!");
-                return new List<Limb>();
+                infectedSpeciesName += "husk";
             }
-            string pathToAppendage = huskDoc.Root.Element("huskappendage").GetAttributeString("path", string.Empty);
+            string filePath = Character.GetConfigFile(infectedSpeciesName);
+            var appendage = new List<Limb>();
+            if (!Character.TryGetConfigFile(filePath, out XDocument huskDoc))
+            {
+                DebugConsole.ThrowError($"Error in '{filePath}': Failed to load the config file for the husk infected species with the species name '{infectedSpeciesName}'!");
+                return appendage;
+            }
+            var mainElement = huskDoc.Root.IsOverride() ? huskDoc.Root.FirstElement() : huskDoc.Root;
+            var element = mainElement.GetChildElements("huskappendage").FirstOrDefault(e => e.GetAttributeString("identifier", string.Empty).Equals(afflictionIdentifier));
+            if (element == null)
+            {
+                DebugConsole.ThrowError($"Error in '{filePath}': Failed to find a huskappendage that matches the affliction with an identifier '{afflictionIdentifier}'!");
+                return appendage;
+            }
+            string pathToAppendage = element.GetAttributeString("path", string.Empty);
             XDocument doc = XMLExtensions.TryLoadXml(pathToAppendage);
-            if (doc == null) { return null; }
+            if (doc == null) { return appendage; }
             if (ragdoll == null)
             {
                 ragdoll = character.AnimController;
@@ -124,7 +141,6 @@ namespace Barotrauma
             {
                 ragdoll.Flip();
             }
-            var huskAppendages = new List<Limb>();
             var limbElements = doc.Root.Elements("limb").ToDictionary(e => e.GetAttributeString("id", null), e => e);
             foreach (var jointElement in doc.Root.Elements("joint"))
             {
@@ -137,23 +153,24 @@ namespace Barotrauma
                     huskAppendage.body.SetTransform(attachLimb.SimPosition, attachLimb.Rotation);
                     ragdoll.AddLimb(huskAppendage);
                     ragdoll.AddJoint(jointParams);
-                    huskAppendages.Add(huskAppendage);
+                    appendage.Add(huskAppendage);
                 }
             }
-            return huskAppendages;
+            return appendage;
         }
 
         private void DeactivateHusk(Character character)
         {
-            character.NeedsAir = true;
-            RemoveHuskAppendage(character);
-        }
-
-        private void RemoveHuskAppendage(Character character)
-        {
-            if (huskAppendage == null) return;
-            huskAppendage.ForEach(l => character.AnimController.RemoveLimb(l));
-            huskAppendage = null;
+            if (Character.TryGetConfigFile(character.ConfigPath, out XDocument configDoc))
+            {
+                var mainElement = configDoc.Root.IsOverride() ? configDoc.Root.FirstElement() : configDoc.Root;
+                character.NeedsAir = mainElement.GetAttributeBool("needsair", false);
+            }
+            if (huskAppendage != null)
+            {
+                huskAppendage.ForEach(l => character.AnimController.RemoveLimb(l));
+                huskAppendage = null;
+            }
         }
 
         public void Remove(Character character)
@@ -186,7 +203,12 @@ namespace Barotrauma
             character.Enabled = false;
             Entity.Spawner.AddToRemoveQueue(character);
 
-            var configFile = Character.GetConfigFile("humanhusk");
+            string infectedSpeciesName = character.SpeciesName.ToLowerInvariant();
+            if (!infectedSpeciesName.Contains("husk"))
+            {
+                infectedSpeciesName += "husk";
+            }
+            var configFile = Character.GetConfigFile(infectedSpeciesName);
 
             if (string.IsNullOrEmpty(configFile))
             {
@@ -194,15 +216,6 @@ namespace Barotrauma
                 yield return CoroutineStatus.Success;
             }
 
-            //XDocument doc = XMLExtensions.TryLoadXml(configFile);
-            //if (doc?.Root == null)
-            //{
-            //    DebugConsole.ThrowError("Failed to turn character \"" + character.Name + "\" into a husk - husk config file ("+configFile+") could not be read.");
-            //    yield return CoroutineStatus.Success;
-            //}
-            
-            //character.Info.Ragdoll = null;
-            //character.Info.SourceElement = doc.Root;
             var husk = Character.Create(configFile, character.WorldPosition, character.Info.Name, character.Info, isRemotePlayer: false, hasAi: true);
 
             foreach (Limb limb in husk.AnimController.Limbs)
