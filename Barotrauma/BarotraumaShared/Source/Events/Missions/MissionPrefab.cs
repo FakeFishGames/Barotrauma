@@ -86,7 +86,8 @@ namespace Barotrauma
                         else
                         {
                             DebugConsole.ThrowError($"Duplicate mission found with the identifier '{identifier}' in file '{file}'! Add <override></override> tags as the parent of the mission definition to allow overriding.");
-                            continue;
+                            // TODO: Don't allow adding duplicates when the issue with multiple missions is solved.
+                            //continue;
                         }
                     }
                     List.Add(new MissionPrefab(element));
