@@ -72,8 +72,9 @@
     <Body width="50" height="45" density="30" />
     <Wearable limbtype="Head" slots="Any,Head" msg="ItemMsgPickUpSelect">
       <sprite texture="Content/Items/Jobgear/AlienGear.png" limb="Head" inheritlimbdepth="true" hidelimb="false" inherittexturescale="true" hideotherwearables="false" sourcerect="129,142,100,121" origin="0.5,0.55" />
-      <StatusEffect type="OnWearing" target="Character" delay="7" stackable="false" >
-        <Sound file="Content/Characters/Crawler/CRAWLER_idle1.ogg" type="OnUse" range="300" selectionmode="Random" />
+      <StatusEffect type="OnWearing" target="Character" delay="7" stackable="false" checkconditionalalways="true">
+        <conditional isDead="eq false"/>
+        <Sound file="Content/Characters/Crawler/CRAWLER_idle1.ogg" type="OnUse" range="300" selectionmode="Random" />        
         <Sound file="Content/Characters/Crawler/CRAWLER_idle2.ogg" type="OnUse" range="300" />
         <Sound file="Content/Characters/Crawler/CRAWLER_idle3.ogg" type="OnUse" range="300" />
       </StatusEffect>
@@ -99,15 +100,15 @@
       <StatusEffect type="OnActive" target="Character" SpeedMultiplier="0.6" setvalue="true" />
     </Holdable>
   </Item>
-  <Item name="Moloch Shell Fragment" identifier="shellshield" category="Equipment" tags="weapon" impactsoundtag="impact_metal_light">
+  <Item name="Moloch Shell Fragment" identifier="shellshield" category="Equipment" tags="weapon" impactsoundtag="impact_metal_light" scale="0.4">
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,384,64,64" />
-    <Sprite texture="Content/Items/Jobgear/AlienGear.png" sourcerect="9,152,110,154" depth="0.6" />
+    <Sprite texture="Content/Items/Jobgear/AlienGear.png" sourcerect="305,10,126,207" depth="0.6" />
     <Body radius="100" height="140" density="40" />
     <Wearable slots="Any,OuterClothes" msg="ItemMsgPickUpSelect">
       <damagemodifier afflictiontypes="burn" armorsector="0.0,360.0" damagemultiplier="0.9" />
       <damagemodifier afflictiontypes="damage" armorsector="0.0,360.0" damagemultiplier="0.3" bleedingmultiplier="0.3" damagesound="LimbArmor" deflectprojectiles="true" />
       <damagemodifier afflictiontypes="bleeding" armorsector="0.0,360.0" damagemultiplier="0.1" bleedingmultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
-      <sprite name="Security Vest" texture="Content/Items/Jobgear/AlienGear.png" sourcerect="9,152,110,154" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="false" inheritsourcerect="false" origin="0.6,0.5"/>
+      <sprite name="Security Vest" texture="Content/Items/Jobgear/AlienGear.png" sourcerect="305,10,126,207" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="false" inheritsourcerect="false" origin="0.6,0.5"/>
       <StatusEffect type="OnWearing" target="Character" SpeedMultiplier="0.6" setvalue="true" disabledeltatime="true" />
     </Wearable>
 
