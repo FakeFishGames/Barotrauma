@@ -167,8 +167,7 @@
     <StartInfoText id="MVPtraitormissionStartInfoText" />
     
     <Objective>
-      <SuccessEndInfoText id="traitormissionsuccessmessage"/>
-      <FailEndInfoText id="traitormissionfailuremessage"/>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="MVPobjectiveSuccessMessage1" />
       <StartMessage id="MVPtraitorobjectivestartmessage1"/>
       <Goal type="finditem" identifier="oxygentank">
@@ -177,8 +176,7 @@
     </Objective>
     
     <Objective>
-      <SuccessEndInfoText id="traitormissionsuccessmessage"/>
-      <FailEndInfoText id="traitormissionfailuremessage"/>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="MVPobjectiveSuccessMessage2" />
       <StartMessage id="MVPtraitorobjectivestartmessage2"/>
       <Goal type="sabotage" tag="reactor" threshold="20">
@@ -188,8 +186,7 @@
     </Objective>
 
     <Objective>
-      <SuccessEndInfoText id="traitormissionsuccessmessage"/>
-      <FailEndInfoText id="traitormissionfailuremessage"/>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="MVPobjectiveSuccessMessage3" />
       <StartMessage id="MVPtraitorobjectivestartmessage3"/>
       <Goal type="killtarget" job="captain">
