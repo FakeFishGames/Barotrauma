@@ -353,7 +353,7 @@ namespace Barotrauma
                 }
             }
 
-            if (character.SpeciesName.ToLowerInvariant().Contains("husk"))
+            if (character.IsHusk)
             {
                 if (Character.TryGetConfigFile(character.ConfigPath, out XDocument configFile))
                 {

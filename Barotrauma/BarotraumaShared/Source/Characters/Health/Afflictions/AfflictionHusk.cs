@@ -182,7 +182,7 @@ namespace Barotrauma
 
             if (character.Inventory.Items.Length != husk.Inventory.Items.Length)
             {
-                string errorMsg = "Failed to move items from a human's inventory into a humanhusk's inventory (inventory sizes don't match)";
+                string errorMsg = "Failed to move items from the source character's inventory into a husk's inventory (inventory sizes don't match)";
                 DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce("AfflictionHusk.CreateAIHusk:InventoryMismatch", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 yield return CoroutineStatus.Success;

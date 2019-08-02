@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name="Humanhusk" humanoid="true" needsair="false" genders="true" canspeak="false">
+<Character name="Humanhusk" husk="true" humanoid="true" needsair="false" genders="true" canspeak="false">
 
   <ragdolls folder="default"/>
   <animations folder="default"/>

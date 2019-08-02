@@ -103,6 +103,7 @@ namespace Barotrauma
         public Entity LastDamageSource;
 
         public readonly bool IsHumanoid;
+        public readonly bool IsHusk;
 
         //the name of the species (e.q. human)
         public readonly string SpeciesName;
@@ -692,7 +693,7 @@ namespace Barotrauma
             Properties = SerializableProperty.GetProperties(this);
 
             Info = characterInfo;
-            if (file == HumanConfigFile || file == GetConfigFile("humanhusk"))
+            if (file == HumanConfigFile || file.ToLowerInvariant().Contains("human"))
             {
                 if (characterInfo == null)
                 {
@@ -719,6 +720,7 @@ namespace Barotrauma
             displayName = TextManager.Get($"Character.{Path.GetFileName(Path.GetDirectoryName(file))}", true);
 
             IsHumanoid = mainElement.GetAttributeBool("humanoid", false);
+            IsHusk = mainElement.GetAttributeBool("husk", false);
             CanSpeak = mainElement.GetAttributeBool("canspeak", false);
             needsAir = mainElement.GetAttributeBool("needsair", false);
             Noise = mainElement.GetAttributeFloat("noise", 100f);

@@ -427,8 +427,7 @@ namespace Barotrauma
                         depthStep += 0.000001f;
                     }
                 }
-                if (HuskSprite != null && (character.SpeciesName == "Humanhusk" || (character.SpeciesName == "Human" &&
-                    character.CharacterHealth.GetAffliction<AfflictionHusk>("huskinfection")?.State == AfflictionHusk.InfectionState.Active)))
+                if (HuskSprite != null && (character.IsHusk || character.CharacterHealth.GetAffliction<AfflictionHusk>("huskinfection")?.State == AfflictionHusk.InfectionState.Active))
                 {
                     DrawWearable(HuskSprite, depthStep, spriteBatch, color, spriteEffect);
                     depthStep += 0.000001f;
