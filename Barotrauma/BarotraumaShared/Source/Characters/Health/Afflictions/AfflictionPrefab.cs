@@ -41,6 +41,7 @@ namespace Barotrauma
     {
         public AfflictionPrefabHusk(XElement element, Type type = null) : base(element, type)
         {
+            HuskedSpeciesName = element.GetAttributeString("huskedspeciesname", null);
             var attachElement = element.GetChildElement("attachlimb");
             if (attachElement != null)
             {
@@ -61,6 +62,7 @@ namespace Barotrauma
         public readonly int AttachLimbId;
         public readonly string AttachLimbName;
         public readonly LimbType AttachLimbType;
+        public readonly string HuskedSpeciesName;
     }
 
     class AfflictionPrefab

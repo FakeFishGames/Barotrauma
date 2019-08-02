@@ -109,23 +109,107 @@ namespace Barotrauma
             }
         }
 
+        private void DeactivateHusk(Character character)
+        {
+            if (Character.TryGetConfigFile(character.ConfigPath, out XDocument configDoc))
+            {
+                var mainElement = configDoc.Root.IsOverride() ? configDoc.Root.FirstElement() : configDoc.Root;
+                character.NeedsAir = mainElement.GetAttributeBool("needsair", false);
+            }
+            if (huskAppendage != null)
+            {
+                huskAppendage.ForEach(l => character.AnimController.RemoveLimb(l));
+                huskAppendage = null;
+            }
+        }
+
+        public void Remove(Character character)
+        {
+            DeactivateHusk(character);
+            if (character != null) character.OnDeath -= CharacterDead;
+            subscribedToDeathEvent = false;
+        }
+
+        private void CharacterDead(Character character, CauseOfDeath causeOfDeath)
+        {
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
+            if (Strength < Prefab.MaxStrength * 0.5f || character.Removed) { return; }
+
+            //don't turn the character into a husk if any of its limbs are severed
+            if (character.AnimController?.LimbJoints != null)
+            {
+                foreach (var limbJoint in character.AnimController.LimbJoints)
+                {
+                    if (limbJoint.IsSevered) return;
+                }
+            }
+
+            //create the AI husk in a coroutine to ensure that we don't modify the character list while enumerating it
+            CoroutineManager.StartCoroutine(CreateAIHusk(character));
+        }
+
+        private IEnumerable<object> CreateAIHusk(Character character)
+        {
+            character.Enabled = false;
+            Entity.Spawner.AddToRemoveQueue(character);
+
+            string configFile = Character.GetConfigFile(GetHuskedSpeciesName(character, Prefab as AfflictionPrefabHusk));
+
+            if (string.IsNullOrEmpty(configFile))
+            {
+                DebugConsole.ThrowError("Failed to turn character \"" + character.Name + "\" into a husk - husk config file not found.");
+                yield return CoroutineStatus.Success;
+            }
+
+            var husk = Character.Create(configFile, character.WorldPosition, character.Info.Name, character.Info, isRemotePlayer: false, hasAi: true);
+
+            foreach (Limb limb in husk.AnimController.Limbs)
+            {
+                if (limb.type == LimbType.None)
+                {
+                    limb.body.SetTransform(character.SimPosition, 0.0f);
+                    continue;
+                }
+
+                var matchingLimb = character.AnimController.GetLimb(limb.type);
+                if (matchingLimb?.body != null)
+                {
+                    limb.body.SetTransform(matchingLimb.SimPosition, matchingLimb.Rotation);
+                    limb.body.LinearVelocity = matchingLimb.LinearVelocity;
+                    limb.body.AngularVelocity = matchingLimb.body.AngularVelocity;
+                }
+            }
+
+            if (character.Inventory.Items.Length != husk.Inventory.Items.Length)
+            {
+                string errorMsg = "Failed to move items from a human's inventory into a humanhusk's inventory (inventory sizes don't match)";
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("AfflictionHusk.CreateAIHusk:InventoryMismatch", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                yield return CoroutineStatus.Success;
+            }
+
+            for (int i = 0; i < character.Inventory.Items.Length && i < husk.Inventory.Items.Length; i++)
+            {
+                if (character.Inventory.Items[i] == null) continue;
+                husk.Inventory.TryPutItem(character.Inventory.Items[i], i, true, false, null);
+            }
+
+            yield return CoroutineStatus.Success;
+        }
+
         public static List<Limb> AttachHuskAppendage(Character character, string afflictionIdentifier, Ragdoll ragdoll = null)
         {
-            string infectedSpeciesName = character.SpeciesName.ToLowerInvariant();
-            if (!infectedSpeciesName.Contains("husk"))
-            {
-                infectedSpeciesName += "husk";
-            }
-            string filePath = Character.GetConfigFile(infectedSpeciesName);
             var appendage = new List<Limb>();
             if (!(AfflictionPrefab.List.FirstOrDefault(ap => ap.Identifier == afflictionIdentifier) is AfflictionPrefabHusk matchingAffliction))
             {
                 DebugConsole.ThrowError($"Could not find an affliction of type 'huskinfection' that matches the identifier '{afflictionIdentifier}'!");
                 return appendage;
             }
+            string huskedSpeciesName = GetHuskedSpeciesName(character, matchingAffliction);
+            string filePath = Character.GetConfigFile(huskedSpeciesName);
             if (!Character.TryGetConfigFile(filePath, out XDocument huskDoc))
             {
-                DebugConsole.ThrowError($"Error in '{filePath}': Failed to load the config file for the husk infected species with the species name '{infectedSpeciesName}'!");
+                DebugConsole.ThrowError($"Error in '{filePath}': Failed to load the config file for the husk infected species with the species name '{huskedSpeciesName}'!");
                 return appendage;
             }
             var mainElement = huskDoc.Root.IsOverride() ? huskDoc.Root.FirstElement() : huskDoc.Root;
@@ -195,97 +279,18 @@ namespace Barotrauma
             return appendage;
         }
 
-        private void DeactivateHusk(Character character)
+        private static string GetHuskedSpeciesName(Character character, AfflictionPrefabHusk prefab)
         {
-            if (Character.TryGetConfigFile(character.ConfigPath, out XDocument configDoc))
+            string huskedSpeciesName = prefab.HuskedSpeciesName;
+            if (huskedSpeciesName == null)
             {
-                var mainElement = configDoc.Root.IsOverride() ? configDoc.Root.FirstElement() : configDoc.Root;
-                character.NeedsAir = mainElement.GetAttributeBool("needsair", false);
-            }
-            if (huskAppendage != null)
-            {
-                huskAppendage.ForEach(l => character.AnimController.RemoveLimb(l));
-                huskAppendage = null;
-            }
-        }
-
-        public void Remove(Character character)
-        {
-            DeactivateHusk(character);
-            if (character != null) character.OnDeath -= CharacterDead;
-            subscribedToDeathEvent = false;
-        }
-
-        private void CharacterDead(Character character, CauseOfDeath causeOfDeath)
-        {
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
-            if (Strength < Prefab.MaxStrength * 0.5f || character.Removed) { return; }
-
-            //don't turn the character into a husk if any of its limbs are severed
-            if (character.AnimController?.LimbJoints != null)
-            {
-                foreach (var limbJoint in character.AnimController.LimbJoints)
+                huskedSpeciesName = character.SpeciesName.ToLowerInvariant();
+                if (!huskedSpeciesName.Contains("husk"))
                 {
-                    if (limbJoint.IsSevered) return;
+                    huskedSpeciesName += "husk";
                 }
             }
-
-            //create the AI husk in a coroutine to ensure that we don't modify the character list while enumerating it
-            CoroutineManager.StartCoroutine(CreateAIHusk(character));
-        }
-
-        private IEnumerable<object> CreateAIHusk(Character character)
-        {
-            character.Enabled = false;
-            Entity.Spawner.AddToRemoveQueue(character);
-
-            string infectedSpeciesName = character.SpeciesName.ToLowerInvariant();
-            if (!infectedSpeciesName.Contains("husk"))
-            {
-                infectedSpeciesName += "husk";
-            }
-            var configFile = Character.GetConfigFile(infectedSpeciesName);
-
-            if (string.IsNullOrEmpty(configFile))
-            {
-                DebugConsole.ThrowError("Failed to turn character \"" + character.Name + "\" into a husk - husk config file not found.");
-                yield return CoroutineStatus.Success;
-            }
-
-            var husk = Character.Create(configFile, character.WorldPosition, character.Info.Name, character.Info, isRemotePlayer: false, hasAi: true);
-
-            foreach (Limb limb in husk.AnimController.Limbs)
-            {
-                if (limb.type == LimbType.None)
-                {
-                    limb.body.SetTransform(character.SimPosition, 0.0f);
-                    continue;
-                }
-
-                var matchingLimb = character.AnimController.GetLimb(limb.type);
-                if (matchingLimb?.body != null)
-                {
-                    limb.body.SetTransform(matchingLimb.SimPosition, matchingLimb.Rotation);
-                    limb.body.LinearVelocity = matchingLimb.LinearVelocity;
-                    limb.body.AngularVelocity = matchingLimb.body.AngularVelocity;
-                }
-            }
-
-            if (character.Inventory.Items.Length != husk.Inventory.Items.Length)
-            {
-                string errorMsg = "Failed to move items from a human's inventory into a humanhusk's inventory (inventory sizes don't match)";
-                DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("AfflictionHusk.CreateAIHusk:InventoryMismatch", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
-                yield return CoroutineStatus.Success;
-            }
-
-            for (int i = 0; i < character.Inventory.Items.Length && i < husk.Inventory.Items.Length; i++)
-            {
-                if (character.Inventory.Items[i] == null) continue;
-                husk.Inventory.TryPutItem(character.Inventory.Items[i], i, true, false, null);
-            }
-
-            yield return CoroutineStatus.Success;
+            return huskedSpeciesName;
         }
     }
 }
