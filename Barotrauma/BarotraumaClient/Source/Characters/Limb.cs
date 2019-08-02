@@ -130,26 +130,8 @@ namespace Barotrauma
         public WearableSprite HuskSprite { get; private set; }
         public WearableSprite HerpesSprite { get; private set; }
 
-        public void LoadHuskSprite()
-        {
-            var info = character.Info;
-            if (info == null) { return; }
-            var element = info.FilterByTypeAndHeadID(character.Info.FilterElementsByGenderAndRace(character.Info.Wearables), WearableType.Husk)?.FirstOrDefault();
-            if (element != null)
-            {
-                HuskSprite = new WearableSprite(element.Element("sprite"), WearableType.Husk);
-            }
-        }
-        public void LoadHerpesSprite()
-        {
-            var info = character.Info;
-            if (info == null) { return; }
-            var element = info.FilterByTypeAndHeadID(character.Info.FilterElementsByGenderAndRace(character.Info.Wearables), WearableType.Herpes).FirstOrDefault();
-            if (element != null)
-            {
-                HerpesSprite = new WearableSprite(element.Element("sprite"), WearableType.Herpes);
-            }
-        }
+        public void LoadHuskSprite() => HuskSprite = GetWearableSprite(WearableType.Husk);
+        public void LoadHerpesSprite() => HerpesSprite = GetWearableSprite(WearableType.Herpes);
 
         public float TextureScale => limbParams.Ragdoll.TextureScale;
 
@@ -582,6 +564,26 @@ namespace Barotrauma
                 new Color((color.R * wearableColor.R) / (255.0f * 255.0f), (color.G * wearableColor.G) / (255.0f * 255.0f), (color.B * wearableColor.B) / (255.0f * 255.0f)) * ((color.A * wearableColor.A) / (255.0f * 255.0f)),
                 origin, -body.DrawRotation,
                 Scale * textureScale, spriteEffect, depth);
+        }
+
+        private WearableSprite GetWearableSprite(WearableType type, bool random = false)
+        {
+            var info = character.Info;
+            if (info == null) { return null; }
+            XElement element;
+            if (random)
+            {
+                element = info.FilterByTypeAndHeadID(character.Info.FilterElementsByGenderAndRace(character.Info.Wearables), type)?.FirstOrDefault();
+            }
+            else
+            {
+                element = info.FilterByTypeAndHeadID(character.Info.FilterElementsByGenderAndRace(character.Info.Wearables), type)?.GetRandom(Rand.RandSync.ClientOnly);
+            }
+            if (element != null)
+            {
+                return new WearableSprite(element.Element("sprite"), type);
+            }
+            return null;
         }
 
         partial void RemoveProjSpecific()
