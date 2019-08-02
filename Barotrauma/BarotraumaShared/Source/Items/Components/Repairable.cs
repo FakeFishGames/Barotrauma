@@ -85,6 +85,7 @@ namespace Barotrauma.Items.Components
             set
             {
                 if (currentFixer == value || (item.IsFullCondition && !value.IsTraitor)) return;
+                if (currentFixer != null && currentFixer.IsTraitor && !currentFixer.IsDead) return;
                 if (currentFixer != null) currentFixer.AnimController.Anim = AnimController.Animation.None;
                 currentFixer = value;
                 if (currentFixer == null)
@@ -150,15 +151,6 @@ namespace Barotrauma.Items.Components
 #endif
         }
 
-        public void ResetDeteriorationTimerTo(float relativeValue, float relativeAdjustment)
-        {
-            deteriorationTimer = MathHelper.Lerp((1.0f - relativeAdjustment) * MinDeteriorationDelay, MaxDeteriorationDelay, relativeValue);
-#if SERVER
-            //let the clients know the initial deterioration delay
-            item.CreateServerEvent(this);
-#endif
-        }
-
         public override void Update(float deltaTime, Camera cam)
         {
             UpdateProjSpecific(deltaTime);
@@ -171,6 +163,10 @@ namespace Barotrauma.Items.Components
                     if (deteriorateAlwaysResetTimer <= 0.0f)
                     {
                         DeteriorateAlways = false;
+#if SERVER
+                        //let the clients know the deterioration delay
+                        item.CreateServerEvent(this);
+#endif
                     }
                 }
                 if (!ShouldDeteriorate()) { return; }

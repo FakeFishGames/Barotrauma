@@ -26,6 +26,7 @@ namespace Barotrauma
             private bool isCompleted = false;
             public override bool IsCompleted => isCompleted;
             public override bool IsStarted => base.IsStarted && goal.IsStarted;
+            public override bool CanBeCompleted => base.CanBeCompleted && goal.CanBeCompleted;
 
             private float remainingDuration = float.NaN;
 
