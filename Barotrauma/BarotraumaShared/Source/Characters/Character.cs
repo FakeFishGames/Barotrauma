@@ -935,7 +935,9 @@ namespace Barotrauma
 
         public static bool TryGetConfigFile(string file, out XDocument doc)
         {
+            doc = null;
             if (configFiles.None()) { LoadAllConfigFiles(); }
+            if (string.IsNullOrWhiteSpace(file)) { return false; }
             configFiles.TryGetValue(file, out doc);
             return doc != null;
         }
