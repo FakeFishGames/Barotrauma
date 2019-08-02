@@ -335,6 +335,7 @@
 
   <!-- Round summary -->
 
+  <roundsummaryroundhasended>The round has ended.\n\n[traitorinfo]</roundsummaryroundhasended>
   <roundsummaryprogress>[sub] has made its way to [location].</roundsummaryprogress>
   <roundsummaryprogress>[sub] has arrived at [location].</roundsummaryprogress>
   <roundsummaryreturn>[sub] has returned to [location].</roundsummaryreturn>
@@ -538,7 +539,6 @@
   <serverlistping>Ping</serverlistping>
   <serverlistroundstarted>Round started</serverlistroundstarted>
   <serverlistroundnotstarted>Round has not started</serverlistroundnotstarted>
-  <serverlistroundhasended>The round has ended.\n\n[traitorinfo]</serverlistroundhasended>
   <serverlistinfo>Info</serverlistinfo>
   <serverlistjoin>Join</serverlistjoin>
   <serverlistunknownversion>Could not determine compatibility (unknown game version)</serverlistunknownversion>
