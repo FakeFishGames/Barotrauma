@@ -643,6 +643,12 @@ namespace Barotrauma
             return MouseOn;
         }
 
+        public static bool HasSizeChanged(Point referenceResolution, float referenceUIScale, float referenceHUDScale)
+        {
+            return GameMain.GraphicsWidth != referenceResolution.X || GameMain.GraphicsHeight != referenceResolution.Y ||
+                   referenceUIScale != Inventory.UIScale || referenceHUDScale != Scale;
+        }
+
         public static void Update(float deltaTime)
         {
             HandlePersistingElements(deltaTime);

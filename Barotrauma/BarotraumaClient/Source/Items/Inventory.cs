@@ -129,6 +129,7 @@ namespace Barotrauma
 
         protected float prevUIScale = UIScale;
         protected float prevHUDScale = GUI.Scale;
+        protected Point prevScreenResolution;
 
         protected static Sprite slotSpriteSmall, slotSpriteHorizontal, slotSpriteVertical, slotSpriteRound;
         public static Sprite EquipIndicator, EquipIndicatorHighlight;
@@ -148,8 +149,8 @@ namespace Barotrauma
         private Color movableFrameRectColor = new Color(60, 60, 60);
         private Rectangle movableFrameRect;
         private Point savedPosition, originalPos;
-        private bool resolutionChanged = false;
         private bool canMove = false;
+        private bool positionUpdateQueued = false;
 
         public class SlotReference
         {
@@ -488,8 +489,8 @@ namespace Barotrauma
 
                 if (canMove)
                 {
-                    startX += (int)subInventory.savedPosition.X - subInventory.originalPos.X;
-                    startY += (int)subInventory.savedPosition.Y - subInventory.originalPos.Y;
+                    startX += subInventory.savedPosition.X - subInventory.originalPos.X;
+                    startY += subInventory.savedPosition.Y - subInventory.originalPos.Y;
                 }
 
                 float totalHeight = itemCapacity / columns * (subRect.Height + spacing.Y);
@@ -685,24 +686,27 @@ namespace Barotrauma
 
             if (container.MovableFrame && !IsInventoryHoverAvailable(Owner as Character, container))
             {
-                if (container.Inventory.movableFrameRect.Size == Point.Zero || resolutionChanged)
+                if (positionUpdateQueued) // Wait a frame before updating the positioning of the container after a resolution change to have everything working
                 {
-                    resolutionChanged = false;
-                    int height = (int)(movableFrameRectHeight * UIScale);
-                    container.Inventory.movableFrameRect = new Rectangle(container.Inventory.BackgroundFrame.X, container.Inventory.BackgroundFrame.Y - height, container.Inventory.BackgroundFrame.Width, height);
                     container.Inventory.originalPos = container.Inventory.savedPosition = container.Inventory.movableFrameRect.Center;
-                    GameMain.Instance.OnResolutionChanged += TriggerResolutionChanged;
+                    positionUpdateQueued = false;
                 }
 
-                //spriteBatch.Draw(EquipIndicator.Texture, container.Inventory.movableFrameRect, EquipIndicator.SourceRect, Color.White);
+                if (container.Inventory.movableFrameRect.Size == Point.Zero || GUI.HasSizeChanged(prevScreenResolution, prevUIScale, prevHUDScale))
+                {
+                    // Reset position
+                    container.Inventory.savedPosition = container.Inventory.originalPos;
+
+                    prevScreenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+                    prevUIScale = UIScale;
+                    prevHUDScale = GUI.Scale;
+                    int height = (int)(movableFrameRectHeight * UIScale);
+                    container.Inventory.movableFrameRect = new Rectangle(container.Inventory.BackgroundFrame.X, container.Inventory.BackgroundFrame.Y - height, container.Inventory.BackgroundFrame.Width, height);
+                    positionUpdateQueued = true;
+                }
+                
                 GUI.DrawRectangle(spriteBatch, container.Inventory.movableFrameRect, movableFrameRectColor, true);
             }
-        }
-
-        private void TriggerResolutionChanged()
-        {
-            GameMain.Instance.OnResolutionChanged -= TriggerResolutionChanged;
-            resolutionChanged = true;
         }
 
         public static void UpdateDragging()
@@ -810,7 +814,10 @@ namespace Barotrauma
                     hoverArea.Height -= over;
                 }
             }
-            hoverArea.Inflate(10, 10);
+
+            float inflateAmount = 10 * UIScale;
+
+            hoverArea.Inflate(inflateAmount, inflateAmount);
             return hoverArea;
         }
 
