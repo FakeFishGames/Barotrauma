@@ -118,6 +118,11 @@ namespace Barotrauma
             }
             string filePath = Character.GetConfigFile(infectedSpeciesName);
             var appendage = new List<Limb>();
+            if (!(AfflictionPrefab.List.FirstOrDefault(ap => ap.Identifier == afflictionIdentifier) is AfflictionPrefabHusk matchingAffliction))
+            {
+                DebugConsole.ThrowError($"Could not find an affliction of type 'huskinfection' that matches the identifier '{afflictionIdentifier}'!");
+                return appendage;
+            }
             if (!Character.TryGetConfigFile(filePath, out XDocument huskDoc))
             {
                 DebugConsole.ThrowError($"Error in '{filePath}': Failed to load the config file for the husk infected species with the species name '{infectedSpeciesName}'!");
@@ -147,13 +152,44 @@ namespace Barotrauma
                 if (limbElements.TryGetValue(jointElement.GetAttributeString("limb2", null), out XElement limbElement))
                 {
                     JointParams jointParams = new JointParams(jointElement, ragdoll.RagdollParams);
-                    Limb attachLimb = ragdoll.Limbs[jointParams.Limb1];
-                    Limb huskAppendage = new Limb(ragdoll, character, new LimbParams(limbElement, ragdoll.RagdollParams));
-                    huskAppendage.body.Submarine = character.Submarine;
-                    huskAppendage.body.SetTransform(attachLimb.SimPosition, attachLimb.Rotation);
-                    ragdoll.AddLimb(huskAppendage);
-                    ragdoll.AddJoint(jointParams);
-                    appendage.Add(huskAppendage);
+                    Limb attachLimb = null;
+                    if (matchingAffliction.AttachLimbId > -1)
+                    {
+                        attachLimb = ragdoll.Limbs[matchingAffliction.AttachLimbId];
+                    }
+                    else if (matchingAffliction.AttachLimbName != null)
+                    {
+                        attachLimb = ragdoll.Limbs.FirstOrDefault(l => l.Name == matchingAffliction.AttachLimbName);
+                    }
+                    else if (matchingAffliction.AttachLimbType != LimbType.None)
+                    {
+                        attachLimb = ragdoll.Limbs.FirstOrDefault(l => l.type == matchingAffliction.AttachLimbType);
+                    }
+                    if (attachLimb == null)
+                    {
+                        DebugConsole.Log("Attachment limb not defined in the affliction prefab or no matching limb could be found. Using the appendage definition as it is.");
+                        attachLimb = ragdoll.Limbs[jointParams.Limb1];
+                    }
+                    if (attachLimb != null)
+                    {
+                        jointParams.Limb1 = attachLimb.limbParams.ID;
+                        var appendageLimbParams = new LimbParams(limbElement, ragdoll.RagdollParams)
+                        {
+                            // Ensure that we have a valid id for the new limb
+                            ID = ragdoll.Limbs.Length
+                        };
+                        jointParams.Limb2 = appendageLimbParams.ID;
+                        Limb huskAppendage = new Limb(ragdoll, character, appendageLimbParams);
+                        huskAppendage.body.Submarine = character.Submarine;
+                        huskAppendage.body.SetTransform(attachLimb.SimPosition, attachLimb.Rotation);
+                        ragdoll.AddLimb(huskAppendage);
+                        ragdoll.AddJoint(jointParams);
+                        appendage.Add(huskAppendage);
+                    }
+                    else
+                    {
+                        DebugConsole.ThrowError("Attachment limb not found!");
+                    }
                 }
             }
             return appendage;

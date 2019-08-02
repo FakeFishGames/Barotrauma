@@ -37,6 +37,32 @@ namespace Barotrauma
         }
     }
 
+    class AfflictionPrefabHusk : AfflictionPrefab
+    {
+        public AfflictionPrefabHusk(XElement element, Type type = null) : base(element, type)
+        {
+            var attachElement = element.GetChildElement("attachlimb");
+            if (attachElement != null)
+            {
+                AttachLimbId = attachElement.GetAttributeInt("id", -1);
+                AttachLimbName = attachElement.GetAttributeString("name", null);
+                AttachLimbType = Enum.TryParse(attachElement.GetAttributeString("type", "none"), true, out LimbType limbType) ? limbType : LimbType.None;
+            }
+            else
+            {
+                AttachLimbId = -1;
+                AttachLimbName = null;
+                AttachLimbType = LimbType.None;
+            }
+        }
+
+        // Use any of these to define which limb the appendage is attached to.
+        // If multiple are defined, the order of preference is: id, name, type.
+        public readonly int AttachLimbId;
+        public readonly string AttachLimbName;
+        public readonly LimbType AttachLimbType;
+    }
+
     class AfflictionPrefab
     {
         public class Effect
@@ -129,7 +155,7 @@ namespace Barotrauma
         public static AfflictionPrefab Bloodloss;
         public static AfflictionPrefab Pressure;
         public static AfflictionPrefab Stun;
-        public static AfflictionPrefab Husk;
+        public static AfflictionPrefabHusk Husk;
 
         public static List<AfflictionPrefab> List = new List<AfflictionPrefab>();
 
@@ -233,7 +259,7 @@ namespace Barotrauma
                             prefab = new AfflictionPrefab(sourceElement, typeof(AfflictionBleeding));
                             break;
                         case "huskinfection":
-                            prefab = new AfflictionPrefab(sourceElement, typeof(AfflictionHusk));
+                            prefab = new AfflictionPrefabHusk(sourceElement, typeof(AfflictionHusk));
                             break;
                         case "cprsettings":
                             if (CPRSettings.IsLoaded)
@@ -286,7 +312,7 @@ namespace Barotrauma
                             Stun = prefab;
                             break;
                         case "huskinfection":
-                            Husk = prefab;
+                            Husk = prefab as AfflictionPrefabHusk;
                             break;
                     }
                     List.Add(prefab);
