@@ -3223,6 +3223,7 @@
   <self_causeofdeathdescription.unknown>You have died.</self_causeofdeathdescription.unknown>
 
   <!-- New generic strings -->
+  <damagebutton>Damage</damagebutton>
   <pending>Pending</pending>
   <inprogress>In progress</inprogress>
   <complete>Complete</complete>
