@@ -78,7 +78,7 @@ namespace Barotrauma {
                             Config.GetAttributeBool("matchInventory", false));
                         break;
                     case "sabotage":
-                        goal = new Traitor.GoalSabotageItems(Config.GetAttributeString("tag", null), Config.GetAttributeFloat("threshold", 0.0f) / 100.0f);
+                        goal = new Traitor.GoalSabotageItems(Config.GetAttributeString("tag", null), Config.GetAttributeFloat("threshold", 20.0f));
                         break;
                     case "floodsub":
                         goal = new Traitor.GoalFloodPercentOfSub(Config.GetAttributeFloat("percentage", 100.0f) / 100.0f);

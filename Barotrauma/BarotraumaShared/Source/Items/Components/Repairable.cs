@@ -84,7 +84,7 @@ namespace Barotrauma.Items.Components
             get { return currentFixer; }
             set
             {
-                if (currentFixer == value || (item.IsFullCondition && !value.IsTraitor)) return;
+                if (currentFixer == value) return;
                 if (currentFixer != null && currentFixer.IsTraitor && !currentFixer.IsDead) return;
                 if (currentFixer != null) currentFixer.AnimController.Anim = AnimController.Animation.None;
                 currentFixer = value;
@@ -192,7 +192,10 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            if ((CurrentFixer.IsTraitor ? item.Condition <= MinDeteriorationCondition : item.IsFullCondition) || CurrentFixer.SelectedConstruction != item || !currentFixer.CanInteractWith(item))
+            if ((currentFixerAction == FixActions.Sabotage && item.Condition <= MinDeteriorationCondition) ||
+                (currentFixerAction == FixActions.Repair && item.IsFullCondition) || 
+                CurrentFixer.SelectedConstruction != item || 
+                !currentFixer.CanInteractWith(item))
             {
                 currentFixer.AnimController.Anim = AnimController.Animation.None;
                 currentFixer = null;
