@@ -99,6 +99,10 @@ namespace Barotrauma
 
             public virtual void Update(float deltaTime)
             {
+                if (pendingObjectives.Count <= 0)
+                {
+                    return;
+                }
                 int previousCompletedCount = completedObjectives.Count;
                 int startedCount = 0;
                 while (pendingObjectives.Count > 0)
@@ -128,7 +132,8 @@ namespace Barotrauma
                             objective.EndMessage(GameMain.Server);
                         }
                         continue;
-                    } else if (!objective.CanBeCompleted)
+                    } 
+                    if (!objective.CanBeCompleted)
                     {
                         objective.EndMessage(GameMain.Server);
                         objective.End(GameMain.Server, true);
@@ -142,7 +147,6 @@ namespace Barotrauma
                     var objective = completedObjectives[i];
                     objective.End(GameMain.Server, i < completedMax || pendingObjectives.Count > 0);
                 }
-
                 if (pendingObjectives.Count > 0)
                 {
                     if (startedCount > 0)
@@ -150,8 +154,12 @@ namespace Barotrauma
                         pendingObjectives[0].StartMessage(GameMain.Server);
                     }
                 }
-                else
+                else if (completedObjectives.Count >= allObjectives.Count)
                 {
+                    foreach (var traitor in Traitors)
+                    {
+                        SteamAchievementManager.OnTraitorWin(traitor.Value.Character);
+                    }
                     GameMain.Server.EndGame();
                 }
             }
