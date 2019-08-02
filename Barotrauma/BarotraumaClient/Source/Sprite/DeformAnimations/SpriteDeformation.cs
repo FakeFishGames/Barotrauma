@@ -14,7 +14,7 @@ namespace Barotrauma.SpriteDeformations
         /// A positive value means that this deformation is or could be used for multiple sprites.
         /// This behaviour is not automatic, and has to be implemented for any particular case separately (currently only used in Limbs).
         /// </summary>
-        [Serialize(-1, true)]
+        [Serialize(-1, true), Editable]
         public int Sync
         {
             get;
@@ -37,16 +37,16 @@ namespace Barotrauma.SpriteDeformations
 
         public string Name => GetType().Name;
 
-        [Serialize(false, true)]
+        [Serialize(false, true), Editable]
         public bool UseMovementSine { get; set; }
 
-        [Serialize(false, true)]
+        [Serialize(false, true), Editable]
         public bool StopWhenHostIsDead { get; set; }
 
         /// <summary>
         /// Only used if UseMovementSine is enabled. Multiplier for Pi.
         /// </summary>
-        [Serialize(0f, true)]
+        [Serialize(0f, true), Editable]
         public float SineOffset { get; set; }
 
         public virtual float Frequency { get; set; } = 1;

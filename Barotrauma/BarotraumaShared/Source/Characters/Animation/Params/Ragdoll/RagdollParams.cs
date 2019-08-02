@@ -4,8 +4,11 @@ using System.Collections.Generic;
 using System.Xml.Linq;
 using System.Linq;
 using System.IO;
-using Barotrauma.Extensions;
 using System.Xml;
+using Barotrauma.Extensions;
+#if CLIENT
+using Barotrauma.SpriteDeformations;
+#endif
 
 namespace Barotrauma
 {
@@ -460,23 +463,58 @@ namespace Barotrauma
     {
         public LimbParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
         {
-            var spriteElement = element.Element("sprite");
+            var spriteElement = element.GetChildElement("sprite");
             if (spriteElement != null)
             {
                 normalSpriteParams = new SpriteParams(spriteElement, ragdoll);
                 SubParams.Add(normalSpriteParams);
             }
-            var damagedElement = element.Element("damagedsprite");
-            if (damagedElement != null)
+            var damagedSpriteElement = element.GetChildElement("damagedsprite");
+            if (damagedSpriteElement != null)
             {
-                damagedSpriteParams = new SpriteParams(damagedElement, ragdoll);
+                damagedSpriteParams = new SpriteParams(damagedSpriteElement, ragdoll);
                 // Hide the damaged sprite params in the editor for now.
                 //SubParams.Add(damagedSpriteParams);
             }
-            var deformElement = element.Element("deformablesprite");
-            if (deformElement != null)
+            var deformSpriteElement = element.GetChildElement("deformablesprite");
+            if (deformSpriteElement != null)
             {
-                deformSpriteParams = new SpriteParams(deformElement, ragdoll);
+                deformSpriteParams = new SpriteParams(deformSpriteElement, ragdoll);
+#if CLIENT
+                deformSpriteParams.Deformations = new List<SpriteDeformationParams>();
+                foreach (var deformationElement in deformSpriteElement.GetChildElements("spritedeformation"))
+                {
+                    string typeName = deformationElement.GetAttributeString("typename", null) ?? deformationElement.GetAttributeString("type", "");
+                    SpriteDeformationParams deformation = null;
+                    switch (typeName.ToLowerInvariant())
+                    {
+                        case "inflate":
+                            deformation = new InflateParams(deformationElement);
+                            break;
+                        case "custom":
+                            deformation = new CustomDeformationParams(deformationElement);
+                            break;
+                        case "noise":
+                            deformation = new NoiseDeformationParams(deformationElement);
+                            break;
+                        case "jointbend":
+                        case "bendjoint":
+                            deformation = new JointBendDeformationParams(deformationElement);
+                            break;
+                        case "reacttotriggerers":
+                            deformation = new PositionalDeformationParams(deformationElement);
+                            break;
+                        default:
+                            DebugConsole.ThrowError($"SpriteDeformationParams not implemented: '{typeName}'");
+                            break;
+                    }
+                    if (deformation != null)
+                    {
+                        deformation.TypeName = typeName;
+                    }
+                    deformSpriteParams.Deformations.Add(deformation);
+                }
+#endif
                 SubParams.Add(deformSpriteParams);
             }
         }
@@ -579,6 +617,10 @@ namespace Barotrauma
 
         [Serialize("", true)]
         public string Texture { get; set; }
+
+#if CLIENT
+        public List<SpriteDeformationParams> Deformations;
+#endif
     }
 
     class ColliderParams : RagdollSubParams
@@ -674,7 +716,18 @@ namespace Barotrauma
         public virtual void AddToEditor(ParamsEditor editor)
         {
             SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, this, inGame: false, showName: true);
-            SubParams.ForEach(sp => sp.AddToEditor(editor));
+            foreach (var subParam in SubParams)
+            {
+                subParam.AddToEditor(editor);
+                if (subParam is SpriteParams spriteParams && spriteParams.Deformations != null)
+                {
+                    foreach (var deformation in spriteParams.Deformations)
+                    {
+                        // TODO: make deformations subparams so that we can serialize and deserialize them properly
+                        new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, deformation, inGame: false, showName: true);
+                    }
+                }
+            }
         }
      #endif
     }
