@@ -13,12 +13,15 @@ namespace Barotrauma.Items.Components
         public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
         {
             if (c.Character == null) return;
-            StartRepairing(c.Character);
+            var fixAction = (FixActions)msg.ReadRangedInteger(0, 2);
+            StartRepairing(c.Character, fixAction);
         }
 
         public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             msg.Write(deteriorationTimer);
+            msg.Write(deteriorateAlwaysResetTimer);
+            msg.Write(DeteriorateAlways);
         }
     }
 }

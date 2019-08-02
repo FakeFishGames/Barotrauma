@@ -280,6 +280,5 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\SaveUtil.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\ToolBox.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\UpdaterUtil.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Sabotageable.cs" />
   </ItemGroup>
 </Project>
