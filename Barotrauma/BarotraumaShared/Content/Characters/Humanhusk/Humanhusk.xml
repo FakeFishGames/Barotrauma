@@ -3,7 +3,7 @@
 
   <ragdolls folder="default"/>
   <animations folder="default"/>
-  <huskappendage path="Content/Characters/Humanhusk/Huskappendage.xml"/>
+  <huskappendage affliction="huskinfection" path="Content/Characters/Humanhusk/Huskappendage.xml"/>
 
   <bloodemitter particle="blackblood" particleamount="5"/>
   <bloodemitter particle="blackwaterblood" particleamount="1"/>

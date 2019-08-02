@@ -360,7 +360,7 @@ namespace Barotrauma
                     var mainElement = configFile.Root.IsOverride() ? configFile.Root.FirstElement() : configFile.Root;
                     foreach (var huskAppendage in mainElement.GetChildElements("huskappendage"))
                     {
-                        AfflictionHusk.AttachHuskAppendage(character, huskAppendage.GetAttributeString("identifier", string.Empty), ragdoll: this);
+                        AfflictionHusk.AttachHuskAppendage(character, huskAppendage.GetAttributeString("affliction", string.Empty), huskAppendage, ragdoll: this);
                     }
                 }
             }

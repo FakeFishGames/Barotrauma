@@ -197,12 +197,12 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        public static List<Limb> AttachHuskAppendage(Character character, string afflictionIdentifier, Ragdoll ragdoll = null)
+        public static List<Limb> AttachHuskAppendage(Character character, string afflictionIdentifier, XElement appendageDefinition = null, Ragdoll ragdoll = null)
         {
             var appendage = new List<Limb>();
             if (!(AfflictionPrefab.List.FirstOrDefault(ap => ap.Identifier == afflictionIdentifier) is AfflictionPrefabHusk matchingAffliction))
             {
-                DebugConsole.ThrowError($"Could not find an affliction of type 'huskinfection' that matches the identifier '{afflictionIdentifier}'!");
+                DebugConsole.ThrowError($"Could not find an affliction of type 'huskinfection' that matches the affliction '{afflictionIdentifier}'!");
                 return appendage;
             }
             string huskedSpeciesName = GetHuskedSpeciesName(character, matchingAffliction);
@@ -213,7 +213,11 @@ namespace Barotrauma
                 return appendage;
             }
             var mainElement = huskDoc.Root.IsOverride() ? huskDoc.Root.FirstElement() : huskDoc.Root;
-            var element = mainElement.GetChildElements("huskappendage").FirstOrDefault(e => e.GetAttributeString("identifier", string.Empty).Equals(afflictionIdentifier));
+            var element = appendageDefinition;
+            if (element == null)
+            {
+                element = mainElement.GetChildElements("huskappendage").FirstOrDefault(e => e.GetAttributeString("affliction", string.Empty).Equals(afflictionIdentifier));
+            }
             if (element == null)
             {
                 DebugConsole.ThrowError($"Error in '{filePath}': Failed to find a huskappendage that matches the affliction with an identifier '{afflictionIdentifier}'!");
