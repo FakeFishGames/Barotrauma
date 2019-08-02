@@ -128,6 +128,11 @@ namespace Barotrauma
                             objective.EndMessage(GameMain.Server);
                         }
                         continue;
+                    } else if (!objective.CanBeCompleted)
+                    {
+                        objective.EndMessage(GameMain.Server);
+                        objective.End(GameMain.Server, true);
+                        pendingObjectives.Clear();
                     }
                     break;
                 }

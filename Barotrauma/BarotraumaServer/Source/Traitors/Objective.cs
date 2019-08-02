@@ -18,6 +18,7 @@ namespace Barotrauma
             public bool IsCompleted => pendingGoals.Count <= 0;
             public bool IsPartiallyCompleted => completedGoals.Count > 0;
             public bool IsStarted { get; private set; } = false;
+            public bool CanBeCompleted => !IsStarted || pendingGoals.All(goal => goal.CanBeCompleted);
 
             public bool IsEnemy(Character character) => pendingGoals.Any(goal => goal.IsEnemy(character));
 

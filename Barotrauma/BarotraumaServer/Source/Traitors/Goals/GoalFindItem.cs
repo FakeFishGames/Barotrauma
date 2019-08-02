@@ -27,6 +27,10 @@ namespace Barotrauma
                     {
                         return false;
                     }
+                    if (target == null)
+                    {
+                        return true;
+                    }
                     if (target.Submarine == null)
                     {
                         if (!(target.ParentInventory?.Owner is Character))
