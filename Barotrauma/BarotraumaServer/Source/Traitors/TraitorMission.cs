@@ -1,5 +1,5 @@
-﻿#define SERVER_IS_TRAITOR
-#define ALLOW_SOLO_TRAITOR
+﻿//#define SERVER_IS_TRAITOR
+//#define ALLOW_SOLO_TRAITOR
 using Barotrauma.Networking;
 using Lidgren.Network;
 using System.Collections.Generic;
