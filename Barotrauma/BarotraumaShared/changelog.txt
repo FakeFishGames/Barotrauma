@@ -27,10 +27,11 @@ target, cause a reactor meltdown, flood the sub...
 give the other players a better chance to detect (and detain/kill) the traitor before they proceed to the
 more lethal ones.
 
-New items:
+New items and structures:
 - Additional weapons: stun gun, SMG, shotgun, grenade launcher, flamer.
 - New monster loot: husk stinger, mudraptor shell, crawler mask, moloch shell shield.
 - Fun stuff: new musical instruments, captain's pipe, clown hammer.
+- Tons of new decorative submarine pieces for the sub editor.
 
 Bugfixes:
 - Fixed crashing when selecting doors or gaps in the sub editor.
@@ -88,6 +89,10 @@ preventing the message from being sent if the name wasn't written in lower case.
 - Pass private messages to the client hosting the server when the message is targeted to the server.
 - Private messages appear in the server log.
 - Fixed plasma cutter and welding tool hit particles being offset from the flame.
+- Fixed steel bar and titanium-aluminium alloy deconstructing to 100% condition items even when degraded 
+(which could be used as an exploit to get infinite coilgun rounds).
+- Fixed holdable items staying in the characters hand(s) when swapping them from a hand slot to another 
+limb slot (for example, when moving a flashlight from a hand slot to the head slot).
 
 Misc additions and changes:
 - Respawn shuttles now spawn inside the level somewhere near the submarine, instead of always spawning
@@ -112,6 +117,8 @@ some device instead of a wire node.
 Prevents console errors about corrupted submarine/save files caused by the partially downloaded files.
 - Increased Humpback's battery capacity.
 - Added widgets for manipulating coilgun/railgun rotation limits in the sub editor.
+- Added a command for setting the value of a property on all selected entities in the sub editor 
+(for example, "setentityproperties scale 2" would set the scale of all selected items/structures to 2).
 - Show ballast tanks and airlocks in a different color on the status monitor to make it easier to 
 distinguish which rooms are actually flooding and which are supposed to have water in them.
 - Option to define multiple inventory variants for a character (e.g. to add variation to monster loot).
