@@ -20,6 +20,30 @@ namespace Barotrauma
             public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { targetPrefab.Name, targetContainer.Prefab.Name, targetContainer.CurrentHull.DisplayName });
 
             public override bool IsCompleted => target != null && target.ParentInventory == Traitor.Character.Inventory;
+            public override bool CanBeCompleted {
+                get
+                {
+                    if (!base.CanBeCompleted)
+                    {
+                        return false;
+                    }
+                    if (target.Submarine == null)
+                    {
+                        if (!(target.ParentInventory?.Owner is Character))
+                        {
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        if (target.Submarine.TeamID != Traitor.Character.TeamID)
+                        {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+            }
 
             public override bool IsEnemy(Character character) => base.IsEnemy(character) || (target != null && target.ParentInventory == character.Inventory);
 

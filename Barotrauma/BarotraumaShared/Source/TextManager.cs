@@ -361,21 +361,19 @@ namespace Barotrauma
             "[Genderpronounreflexive]"
         };
 
-        // TODO: .ToLower() after Get() for first 3 entries of each, Capitalize(Get(x)) for last 3 of each
-
         static readonly string[] genderPronounMaleValues = new string[] {
-             "PronounMale",
-             "PronounPossessiveMale",
-             "PronounReflexiveMale",
+             "PronounMaleLowercase",
+             "PronounPossessiveMaleLowercase",
+             "PronounReflexiveMaleLowercase",
              "PronounMale",
              "PronounPossessiveMale",
              "PronounReflexiveMale"
         };
 
         static readonly string[] genderPronounFemaleValues = new string[] {
-             "PronounFemale",
-             "PronounPossessiveFemale",
-             "PronounReflexiveFemale",
+             "PronounFemaleLowercase",
+             "PronounPossessiveFemaleLowercase",
+             "PronounReflexiveFemaleLowercase",
              "PronounMale",
              "PronounPossessiveFemale",
              "PronounReflexiveFemale"
@@ -603,21 +601,21 @@ namespace Barotrauma
         {
             if (gender == Gender.Male)
             {
-                return text.Replace("[genderpronoun]",     Get("PronounMale").ToLower())
-                    .Replace("[genderpronounpossessive]",  Get("PronounPossessiveMale").ToLower())
-                    .Replace("[genderpronounreflexive]",   Get("PronounReflexiveMale").ToLower())
-                    .Replace("[Genderpronoun]",            Capitalize(Get("PronounMale")))
-                    .Replace("[Genderpronounpossessive]",  Capitalize(Get("PronounPossessiveMale")))
-                    .Replace("[Genderpronounreflexive]",   Capitalize(Get("PronounReflexiveMale")));
+                return text.Replace("[genderpronoun]",     Get("PronounMaleLowercase"))
+                    .Replace("[genderpronounpossessive]",  Get("PronounPossessiveMaleLowercase"))
+                    .Replace("[genderpronounreflexive]",   Get("PronounReflexiveMaleLowercase"))
+                    .Replace("[Genderpronoun]",            Get("PronounMale"))
+                    .Replace("[Genderpronounpossessive]",  Get("PronounPossessiveMale"))
+                    .Replace("[Genderpronounreflexive]",   Get("PronounReflexiveMale"));
             }
             else
             {
-                return text.Replace("[genderpronoun]",     Get("PronounFemale").ToLower())
-                    .Replace("[genderpronounpossessive]",  Get("PronounPossessiveFemale").ToLower())
-                    .Replace("[genderpronounreflexive]",   Get("PronounReflexiveFemale").ToLower())
-                    .Replace("[Genderpronoun]",            Capitalize(Get("PronounFemale")))
-                    .Replace("[Genderpronounpossessive]",  Capitalize(Get("PronounPossessiveFemale")))
-                    .Replace("[Genderpronounreflexive]",   Capitalize(Get("PronounReflexiveFemale")));
+                return text.Replace("[genderpronoun]",     Get("PronounFemaleLowercase"))
+                    .Replace("[genderpronounpossessive]",  Get("PronounPossessiveFemaleLowercase"))
+                    .Replace("[genderpronounreflexive]",   Get("PronounReflexiveFemaleLowerCase"))
+                    .Replace("[Genderpronoun]",            Get("PronounFemale"))
+                    .Replace("[Genderpronounpossessive]",  Get("PronounPossessiveFemale"))
+                    .Replace("[Genderpronounreflexive]",   Get("PronounReflexiveFemale"));
             }
         }
         

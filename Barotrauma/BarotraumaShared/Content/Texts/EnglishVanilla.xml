@@ -457,6 +457,12 @@
   <pronounfemale>She</pronounfemale>
   <pronounpossessivefemale>Her</pronounpossessivefemale>
   <pronounreflexivefemale>Herself</pronounreflexivefemale>
+  <pronounmalelowercase>he</pronounmalelowercase>
+  <pronounpossessivemalelowercase>his</pronounpossessivemalelowercase>
+  <pronounreflexivemalelowercase>himself</pronounreflexivemalelowercase>
+  <pronounfemalelowercase>she</pronounfemalelowercase>
+  <pronounpossessivefemalelowercase>her</pronounpossessivefemalelowercase>
+  <pronounreflexivefemalelowercase>herself</pronounreflexivefemalelowercase>
 
   <!-- Campaign -->
   <campaignsetup>Campaign Setup</campaignsetup>
