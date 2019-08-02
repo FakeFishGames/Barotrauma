@@ -14,7 +14,7 @@ using System.Text;
 
 namespace Barotrauma
 {
-    partial class Character : Entity, IDamageable, ISerializableEntity, IClientSerializable, IServerSerializable, ISpatialEntity
+    partial class Character : Entity, IDamageable, ISerializableEntity, IClientSerializable, IServerSerializable
     {
         public static List<Character> CharacterList = new List<Character>();
 
@@ -103,6 +103,7 @@ namespace Barotrauma
         public Entity LastDamageSource;
 
         public readonly bool IsHumanoid;
+        public readonly bool IsHusk;
 
         //the name of the species (e.q. human)
         public readonly string SpeciesName;
@@ -692,7 +693,7 @@ namespace Barotrauma
             Properties = SerializableProperty.GetProperties(this);
 
             Info = characterInfo;
-            if (file == HumanConfigFile || file == GetConfigFile("humanhusk"))
+            if (file == HumanConfigFile || file.ToLowerInvariant().Contains("human"))
             {
                 if (characterInfo == null)
                 {
@@ -706,48 +707,29 @@ namespace Barotrauma
                 keys[i] = new Key((InputType)i);
             }
 
-            XDocument doc = XMLExtensions.TryLoadXml(file);
-            if (doc == null || doc.Root == null) return;
+            if (!TryGetConfigFile(file, out XDocument doc))
+            {
+                DebugConsole.ThrowError($"Failed to load config file: {file}");
+                return;
+            }
 
-            InitProjSpecific(doc);
-            SpeciesName = doc.Root.GetAttributeString("name", "Unknown");
+            var rootElement = doc.Root;
+            var mainElement = rootElement.IsOverride() ? rootElement.FirstElement() : rootElement;
+            InitProjSpecific(mainElement);
+            SpeciesName = mainElement.GetAttributeString("name", "Unknown");
             displayName = TextManager.Get($"Character.{Path.GetFileName(Path.GetDirectoryName(file))}", true);
 
-            IsHumanoid = doc.Root.GetAttributeBool("humanoid", false);
-            CanSpeak = doc.Root.GetAttributeBool("canspeak", false);
-            needsAir = doc.Root.GetAttributeBool("needsair", false);
-            Noise = doc.Root.GetAttributeFloat("noise", 100f);
-
-            //List<XElement> ragdollElements = new List<XElement>();
-            //List<float> ragdollCommonness = new List<float>();
-            //foreach (XElement element in doc.Root.Elements())
-            //{
-            //    if (element.Name.ToString().ToLowerInvariant() != "ragdoll") continue;                
-            //    ragdollElements.Add(element);
-            //    ragdollCommonness.Add(element.GetAttributeFloat("commonness", 1.0f));                
-            //}
-
-            ////choose a random ragdoll element
-            //XElement ragdollElement = ragdollElements.Count == 1 ?
-            //    ragdollElements[0] : ToolBox.SelectWeightedRandom(ragdollElements, ragdollCommonness, random);
-
-            if (IsHumanoid)
-            {
-                AnimController = new HumanoidAnimController(this, seed, ragdollParams as HumanRagdollParams);
-                AnimController.TargetDir = Direction.Right;
-                
-            }
-            else
-            {
-                AnimController = new FishAnimController(this, seed, ragdollParams as FishRagdollParams);
-                PressureProtection = 100.0f;
-            }
+            IsHumanoid = mainElement.GetAttributeBool("humanoid", false);
+            IsHusk = mainElement.GetAttributeBool("husk", false);
+            CanSpeak = mainElement.GetAttributeBool("canspeak", false);
+            needsAir = mainElement.GetAttributeBool("needsair", false);
+            Noise = mainElement.GetAttributeFloat("noise", 100f);
 
             List<XElement> inventoryElements = new List<XElement>();
             List<float> inventoryCommonness = new List<float>();
             List<XElement> healthElements = new List<XElement>();
             List<float> healthCommonness = new List<float>();
-            foreach (XElement subElement in doc.Root.Elements())
+            foreach (XElement subElement in mainElement.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -764,6 +746,7 @@ namespace Barotrauma
                         break;
                 }
             }
+
             if (inventoryElements.Count > 0)
             {
                 Inventory = new CharacterInventory(
@@ -779,6 +762,18 @@ namespace Barotrauma
                 CharacterHealth = new CharacterHealth(
                     healthElements.Count == 1 ? healthElements[0] : ToolBox.SelectWeightedRandom(healthElements, healthCommonness, random), 
                     this);
+            }
+
+            if (IsHumanoid)
+            {
+                AnimController = new HumanoidAnimController(this, seed, ragdollParams as HumanRagdollParams);
+                AnimController.TargetDir = Direction.Right;
+
+            }
+            else
+            {
+                AnimController = new FishAnimController(this, seed, ragdollParams as FishRagdollParams);
+                PressureProtection = 100.0f;
             }
 
             AnimController.SetPosition(ConvertUnits.ToSimUnits(position));
@@ -800,7 +795,7 @@ namespace Barotrauma
                 LoadHeadAttachments();
             }
         }
-        partial void InitProjSpecific(XDocument doc);
+        partial void InitProjSpecific(XElement mainElement);
 
         public void ReloadHead(int? headId = null, int hairIndex = -1, int beardIndex = -1, int moustacheIndex = -1, int faceAttachmentIndex = -1)
         {
@@ -840,39 +835,7 @@ namespace Barotrauma
 #endif
         }
 
-        private static string humanConfigFile;
-        public static string HumanConfigFile
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(humanConfigFile))
-                {
-                    humanConfigFile = GameMain.Instance.GetFilesOfType(ContentType.Character)?
-                            .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == "human.xml");
-
-                    if (humanConfigFile == null)
-                    {
-                        DebugConsole.ThrowError($"Couldn't find a human config file from the selected content packages!");
-                        DebugConsole.ThrowError($"(The config file must end with \"human.xml\")");
-                        return string.Empty;
-                    }
-                }
-                return humanConfigFile;
-            }
-        }
-
-        private static IEnumerable<string> characterConfigFiles;
-        private static IEnumerable<string> CharacterConfigFiles
-        {
-            get
-            {
-                if (characterConfigFiles == null)
-                {
-                    characterConfigFiles = GameMain.Instance.GetFilesOfType(ContentType.Character);
-                }
-                return characterConfigFiles;
-            }
-        }
+        public static string HumanConfigFile => GetConfigFile("human");
 
         /// <summary>
         /// Searches for a character config file from all currently selected content packages, 
@@ -880,25 +843,115 @@ namespace Barotrauma
         /// </summary>
         public static string GetConfigFile(string speciesName, ContentPackage contentPackage = null)
         {
-            string configFile = null;
-            if (contentPackage == null)
+            if (configFilePaths.None() || configFiles.None())
             {
-                configFile = GameMain.Instance.GetFilesOfType(ContentType.Character)
-                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
+                LoadAllConfigFiles();
             }
-            else
+            string configFile = null;
+            if (contentPackage != null)
             {
                 configFile = contentPackage.GetFilesOfType(ContentType.Character)?
                     .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
-            }
 
-            if (configFile == null)
+                if (configFile == null)
+                {
+                    DebugConsole.ThrowError($"Couldn't find a config file for {speciesName} from the specified content package {contentPackage.Name} defined in {contentPackage.Path}!");
+                    DebugConsole.ThrowError($"(The config file must end with \"{speciesName}.xml\")");
+                    return string.Empty;
+                }
+            }
+            else
             {
-                DebugConsole.ThrowError($"Couldn't find a config file for {speciesName} from the selected content packages!");
-                DebugConsole.ThrowError($"(The config file must end with \"{speciesName}.xml\")");
-                return string.Empty;
+                if (!configFilePaths.TryGetValue(speciesName.ToLowerInvariant(), out configFile))
+                {
+                    DebugConsole.ThrowError($"Couldn't find a config file for {speciesName} from the selected content packages!");
+                }
             }
             return configFile;
+        }
+
+        private readonly static Dictionary<string, string> configFilePaths = new Dictionary<string, string>();
+        private readonly static Dictionary<string, XDocument> configFiles = new Dictionary<string, XDocument>();
+
+        public static IEnumerable<string> ConfigFilePaths => configFiles.Keys;
+        public static IEnumerable<XDocument> ConfigFiles => configFiles.Values;
+
+        public static bool TryAddConfigFile(string file, bool allowOverriding = false)
+        {
+            if (configFilePaths.None() || configFiles.None())
+            {
+                LoadAllConfigFiles();
+            }
+            return AddConfigFile(file, allowOverriding);
+        }
+
+        private static bool AddConfigFile(string file, bool allowOverriding)
+        {
+            XDocument doc = XMLExtensions.TryLoadXml(file);
+            if (doc == null)
+            {
+                DebugConsole.ThrowError($"Loading character file failed: {file}");
+                return false;
+            }
+            if (configFilePaths.ContainsKey(file))
+            {
+                DebugConsole.ThrowError($"Duplicate path: {file}");
+                return false;
+            }
+            XElement mainElement;
+            if (allowOverriding && doc.Root.IsOverride())
+            {
+                mainElement = doc.Root.FirstElement();
+            }
+            else
+            {
+                allowOverriding = false;
+                mainElement = doc.Root;
+            }
+            var name = mainElement.GetAttributeString("name", string.Empty).ToLowerInvariant();
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                DebugConsole.ThrowError($"No character name defined for: {file}");
+                return false;
+            }
+            var duplicate = configFiles.FirstOrDefault(kvp => kvp.Value.Root.GetAttributeString("name", string.Empty).Equals(name, StringComparison.OrdinalIgnoreCase));
+            if (duplicate.Value != null)
+            {
+                if (allowOverriding)
+                {
+                    DebugConsole.NewMessage($"Overriding the existing character '{name}' defined in '{duplicate.Key}' with '{file}'", Color.Yellow);
+                    configFiles.Remove(duplicate.Key);
+                    configFilePaths.Remove(name);
+                }
+                else
+                {
+                    DebugConsole.ThrowError($"Duplicate character name '{name}' in '{file}'! Add <override></override> tags as the parent of the character definition to override an existing character.");
+                    return false;
+                }
+
+            }
+            configFiles.Add(file, doc);
+            configFilePaths.Add(name, file);
+            return true;
+        }
+
+        public static bool TryGetConfigFile(string file, out XDocument doc)
+        {
+            doc = null;
+            if (configFiles.None()) { LoadAllConfigFiles(); }
+            if (string.IsNullOrWhiteSpace(file)) { return false; }
+            configFiles.TryGetValue(file, out doc);
+            return doc != null;
+        }
+
+        public static void LoadAllConfigFiles()
+        {
+            configFiles.Clear();
+            configFilePaths.Clear();
+            foreach (var file in ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.Character))
+            {
+                AddConfigFile(file, allowOverriding: true);
+            }
         }
 
         public bool IsKeyHit(InputType inputType)

@@ -72,7 +72,7 @@ namespace Barotrauma.Networking
             if (!File.Exists(file)) return;
 
             XDocument doc = XMLExtensions.TryLoadXml(file);
-            if (doc == null || doc.Root == null) return;
+            if (doc == null) { return; }
 
             foreach (XElement element in doc.Root.Elements())
             {

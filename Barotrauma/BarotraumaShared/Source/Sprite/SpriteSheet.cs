@@ -20,8 +20,8 @@ namespace Barotrauma
             private set;
         }
         
-        public SpriteSheet(XElement element, string path = "", string file = "", int emptyFrameCount = 0)
-            : base(element, path, file)
+        public SpriteSheet(XElement element, string path = "", string file = "", int emptyFrameCount = 0, bool lazyload = false)
+            : base(element, path, file, lazyLoad: lazyload)
         {
             int columnCount = Math.Max(element.GetAttributeInt("columns", 1), 1);
             int rowCount = Math.Max(element.GetAttributeInt("rows", 1), 1);

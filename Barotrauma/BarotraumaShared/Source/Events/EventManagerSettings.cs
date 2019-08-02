@@ -1,8 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Xml.Linq;
+using System.Linq;
+using System;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
@@ -28,17 +28,42 @@ namespace Barotrauma
 
         static EventManagerSettings()
         {
-            Load(Path.Combine("Content", "EventManagerSettings.xml"));
+            foreach (string file in GameMain.Instance.GetFilesOfType(ContentType.EventManagerSettings))
+            {
+                Load(file);
+            }
         }
 
         private static void Load(string file)
         {
             XDocument doc = XMLExtensions.TryLoadXml(file);
-            if (doc == null || doc.Root == null) return;
-
-            foreach (XElement subElement in doc.Root.Elements())
+            if (doc == null) { return; }
+            var mainElement = doc.Root;
+            bool allowOverriding = false;
+            if (doc.Root.IsOverride())
             {
-                List.Add(new EventManagerSettings(subElement));
+                mainElement = doc.Root.FirstElement();
+                allowOverriding = true;
+            }
+            foreach (XElement subElement in mainElement.Elements())
+            {
+                var element = subElement.IsOverride() ? subElement.FirstElement() : subElement;
+                string name = element.Name.ToString();
+                var duplicate = List.FirstOrDefault(e => e.Name.ToString().Equals(name, StringComparison.OrdinalIgnoreCase));
+                if (duplicate != null)
+                {
+                    if (allowOverriding || subElement.IsOverride())
+                    {
+                        DebugConsole.NewMessage($"Overriding the existing preset '{name}' in the event manager settings using the file '{file}'", Color.Yellow);
+                        List.Remove(duplicate);
+                    }
+                    else
+                    {
+                        DebugConsole.ThrowError($"Error in '{file}': Another element with the name '{name}' found! Each element must have a unique name. Use <override></override> tags if you want to override an existing preset.");
+                        continue;
+                    }
+                }
+                List.Add(new EventManagerSettings(element));
             }
         }
 

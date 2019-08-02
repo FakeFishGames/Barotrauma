@@ -111,7 +111,7 @@ namespace Barotrauma.Tutorials
             bodyarmor.Unequip(officer);
             officer.Inventory.RemoveItem(bodyarmor);
 
-            var gunOrder = Order.PrefabList.Find(order => order.AITag == "operateweapons");
+            var gunOrder = Order.GetPrefab("operateweapons");
             officer_gunIcon = gunOrder.SymbolSprite;
             officer_gunIconColor = gunOrder.Color;
 

@@ -102,7 +102,12 @@ namespace Barotrauma
         public static string GetFolder(string speciesName, ContentPackage contentPackage = null)
         {
             string configFilePath = Character.GetConfigFile(speciesName, contentPackage);
-            var folder = XMLExtensions.TryLoadXml(configFilePath)?.Root?.Element("animations")?.GetAttributeString("folder", string.Empty);
+            if (!Character.TryGetConfigFile(configFilePath, out XDocument configFile))
+            {
+                DebugConsole.ThrowError($"Failed to load config file: {configFilePath} for '{speciesName}'");
+                return string.Empty;
+            }
+            var folder = configFile.Root?.Element("animations")?.GetAttributeString("folder", string.Empty);
             if (string.IsNullOrEmpty(folder) || folder.ToLowerInvariant() == "default")
             {
                 folder = Path.Combine(Path.GetDirectoryName(configFilePath), "Animations");

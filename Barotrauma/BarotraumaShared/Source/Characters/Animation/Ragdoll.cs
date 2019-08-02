@@ -352,11 +352,16 @@ namespace Barotrauma
                     limb.WearingItems.AddRange(itemList);
                 }
             }
-            if (character.SpeciesName.ToLowerInvariant() == "humanhusk")
+
+            if (character.IsHusk)
             {
-                if (Limbs.None(l => l.Name.ToLowerInvariant() == "huskappendage"))
+                if (Character.TryGetConfigFile(character.ConfigPath, out XDocument configFile))
                 {
-                    AfflictionHusk.AttachHuskAppendage(character, this);
+                    var mainElement = configFile.Root.IsOverride() ? configFile.Root.FirstElement() : configFile.Root;
+                    foreach (var huskAppendage in mainElement.GetChildElements("huskappendage"))
+                    {
+                        AfflictionHusk.AttachHuskAppendage(character, huskAppendage.GetAttributeString("affliction", string.Empty), huskAppendage, ragdoll: this);
+                    }
                 }
             }
         }

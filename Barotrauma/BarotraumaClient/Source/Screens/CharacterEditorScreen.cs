@@ -1146,7 +1146,7 @@ namespace Barotrauma
             {
                 if (allFiles == null)
                 {
-                    allFiles = GameMain.Instance.GetFilesOfType(ContentType.Character).OrderBy(f => f).ToList();
+                    allFiles = Character.ConfigFilePaths.ToList();
                     allFiles.ForEach(f => DebugConsole.NewMessage(f, Color.White));
                 }
                 return allFiles;
@@ -1223,7 +1223,7 @@ namespace Barotrauma
             }
             if (configFile == Character.HumanConfigFile && selectedJob != null)
             {
-                var characterInfo = new CharacterInfo(configFile, jobPrefab: JobPrefab.List.First(job => job.Identifier == selectedJob));
+                var characterInfo = new CharacterInfo(configFile, jobPrefab: JobPrefab.Get(selectedJob));
                 character = Character.Create(configFile, spawnPosition, ToolBox.RandomSeed(8), characterInfo, hasAi: false, ragdoll: ragdoll);
                 character.GiveJobItems();
                 HideWearables();
@@ -1386,11 +1386,6 @@ namespace Barotrauma
                 DebugConsole.ThrowError(GetCharacterEditorTranslation("NoContentPackageSelected"));
                 return false;
             }
-            if (!GameMain.Config.SelectedContentPackages.Contains(contentPackage))
-            {
-                GameMain.Config.SelectedContentPackages.Add(contentPackage);
-                GameMain.Config.SaveNewPlayerConfig();
-            }
 #if !DEBUG
             if (vanilla != null && contentPackage == vanilla)
             {
@@ -1401,11 +1396,18 @@ namespace Barotrauma
             string speciesName = name;
             // Config file
             string configFilePath = Path.Combine(mainFolder, $"{speciesName}.xml").Replace(@"\", @"/");
-            if (ContentPackage.GetFilesOfType(GameMain.SelectedPackages, ContentType.Character).Any(path => path.Contains(speciesName)))
+            if (Character.ConfigFiles.Any(f => f.Root.GetAttributeString("name", "").Equals(speciesName, StringComparison.OrdinalIgnoreCase)))
             {
                 GUI.AddMessage(GetCharacterEditorTranslation("ExistingCharacterFound"), Color.Red, font: GUI.LargeFont);
                 // TODO: add a prompt: "Do you want to replace it?" + functionality
                 return false;
+            }
+
+            if (!GameMain.Config.SelectedContentPackages.Contains(contentPackage))
+            {
+                GameMain.Config.SelectedContentPackages.Add(contentPackage);
+                GameMain.Config.SaveNewPlayerConfig();
+                ContentPackage.SortContentPackages();
             }
 
             // Create the config file
@@ -1427,9 +1429,11 @@ namespace Barotrauma
             contentPackage.AddFile(configFilePath, ContentType.Character);
             contentPackage.Save(contentPackage.Path);
             DebugConsole.NewMessage(GetCharacterEditorTranslation("ContentPackageSaved").Replace("[path]", contentPackage.Path));
+            
+            // TODO: allow overriding if explicitly accepted
+            Character.TryAddConfigFile(configFilePath, allowOverriding: false);
 
             // Ragdoll
-            string ragdollFolder = RagdollParams.GetFolder(speciesName);
             string ragdollPath = RagdollParams.GetDefaultFile(speciesName);
             RagdollParams ragdollParams = isHumanoid
                 ? RagdollParams.CreateDefault<HumanRagdollParams>(ragdollPath, speciesName, ragdollConfig)
@@ -2242,7 +2246,7 @@ namespace Barotrauma
                 }, elementCount: 8, style: null);
                 jobDropDown.ListBox.Color = new Color(jobDropDown.ListBox.Color.R, jobDropDown.ListBox.Color.G, jobDropDown.ListBox.Color.B, byte.MaxValue);
                 jobDropDown.AddItem("None");
-                JobPrefab.List.ForEach(j => jobDropDown.AddItem(j.Name, j.Identifier));
+                JobPrefab.List.ForEach(j => jobDropDown.AddItem(j.Value.Name, j.Value.Identifier));
                 jobDropDown.SelectItem(selectedJob);
                 jobDropDown.OnSelected = (component, data) =>
                 {
@@ -4989,7 +4993,7 @@ namespace Barotrauma
                                             contentPackageNameElement.Text,
                                             Path.Combine(ContentPackage.Folder, $"{fileName}.xml"), false);
                                         ContentPackage.List.Add(ContentPackage);
-                                        GameMain.Config.SelectedContentPackages.Add(ContentPackage);
+                                        GameMain.Config.SelectContentPackage(ContentPackage);
                                         contentPackageDropDown.AddItem(ContentPackage.Name, ContentPackage, ContentPackage.Path);
                                         contentPackageDropDown.SelectItem(ContentPackage);
                                         contentPackageNameElement.Text = "";

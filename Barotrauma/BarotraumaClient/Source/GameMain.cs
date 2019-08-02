@@ -16,6 +16,7 @@ using System.IO;
 using System.Threading;
 using Barotrauma.Tutorials;
 using Barotrauma.Media;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -52,7 +53,7 @@ namespace Barotrauma
 
         public static Thread MainThread { get; private set; }
 
-        public static HashSet<ContentPackage> SelectedPackages
+        public static IEnumerable<ContentPackage> SelectedPackages
         {
             get { return Config?.SelectedContentPackages; }
         }
@@ -403,7 +404,7 @@ namespace Barotrauma
                 }
             }
 
-            if (SelectedPackages.Count == 0)
+            if (SelectedPackages.None())
             {
                 DebugConsole.Log("No content packages selected");
             }
@@ -450,6 +451,7 @@ namespace Barotrauma
 
         yield return CoroutineStatus.Running;
 
+            Character.LoadAllConfigFiles();
             MissionPrefab.Init();
             MapEntityPrefab.Init();
             Tutorials.Tutorial.Init();
@@ -470,9 +472,9 @@ namespace Barotrauma
 
             JobPrefab.LoadAll(GetFilesOfType(ContentType.Jobs));
             // Add any missing jobs from the prefab into Config.JobNamePreferences.
-            foreach (JobPrefab job in JobPrefab.List)
+            foreach (string job in JobPrefab.List.Keys)
             {
-                if (!Config.JobPreferences.Contains(job.Identifier)) { Config.JobPreferences.Add(job.Identifier); }
+                if (!Config.JobPreferences.Contains(job)) { Config.JobPreferences.Add(job); }
             }
 
             NPCConversation.LoadAll(GetFilesOfType(ContentType.NPCConversations));

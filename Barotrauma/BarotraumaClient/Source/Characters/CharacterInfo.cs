@@ -238,7 +238,7 @@ namespace Barotrauma
             Dictionary<string, float> skillLevels = new Dictionary<string, float>();
             if (!string.IsNullOrEmpty(jobIdentifier))
             {
-                jobPrefab = JobPrefab.List.Find(jp => jp.Identifier == jobIdentifier);
+                jobPrefab = JobPrefab.Get(jobIdentifier);
                 byte skillCount = inc.ReadByte();
                 for (int i = 0; i < skillCount; i++)
                 {

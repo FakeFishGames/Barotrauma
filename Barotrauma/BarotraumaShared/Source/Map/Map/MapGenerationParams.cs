@@ -172,14 +172,35 @@ namespace Barotrauma
                 DebugConsole.ThrowError("No map generation parameters found in the selected content packages!");
                 return;
             }
-
+            // Let's not actually load the parameters until we have solved which file is the last, because loading the parameters takes some resources that would also need to be released.
+            XElement selectedElement = null;
             foreach (string file in files)
             {
                 XDocument doc = XMLExtensions.TryLoadXml(file);
-                if (doc?.Root == null) return;
-
-                instance = new MapGenerationParams(doc.Root);
-                break;
+                if (doc == null) { continue; }
+                var mainElement = doc.Root;
+                if (doc.Root.IsOverride())
+                {
+                    mainElement = doc.Root.FirstElement();
+                    if (selectedElement != null)
+                    {
+                        DebugConsole.NewMessage($"Overriding the map generation parameters with '{file}'", Color.Yellow);
+                    }
+                }
+                else if (selectedElement != null)
+                {
+                    DebugConsole.ThrowError($"Error in {file}: Another map generation parameter file already loaded! Use <override></override> tags to override it.");
+                    break;
+                }
+                selectedElement = mainElement;
+            }
+            if (selectedElement == null)
+            {
+                DebugConsole.ThrowError("Could not find a valid element in the map generation parameter files!");
+            }
+            else
+            {
+                instance = new MapGenerationParams(selectedElement);
             }
         }
 

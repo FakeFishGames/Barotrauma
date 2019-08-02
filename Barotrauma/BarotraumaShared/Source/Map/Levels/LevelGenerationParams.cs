@@ -457,9 +457,22 @@ namespace Barotrauma
             foreach (string file in files)
             {
                 XDocument doc = XMLExtensions.TryLoadXml(file);
-                if (doc == null || doc.Root == null) return;
+                if (doc == null) { continue; }
+                var mainElement = doc.Root;
+                if (doc.Root.IsOverride())
+                {
+                    mainElement = doc.Root.FirstElement();
+                    biomeElements.Clear();
+                    levelParamElements.Clear();
+                    DebugConsole.NewMessage($"Overriding the level generation parameters with '{file}'", Color.Yellow);
+                }
+                else if (biomeElements.Any() || levelParamElements.Any())
+                {
+                    DebugConsole.ThrowError($"Error in '{file}': Another level generation parameter file already loaded! Use <override></override> tags to override it.");
+                    break;
+                }
 
-                foreach (XElement element in doc.Root.Elements())
+                foreach (XElement element in mainElement.Elements())
                 {
                     if (element.Name.ToString().ToLowerInvariant() == "biomes")
                     {

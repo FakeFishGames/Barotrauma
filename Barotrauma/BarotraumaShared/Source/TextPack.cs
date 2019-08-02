@@ -25,7 +25,7 @@ namespace Barotrauma
             texts = new Dictionary<string, List<string>>();
 
             XDocument doc = XMLExtensions.TryLoadXml(filePath);
-            if (doc == null || doc.Root == null) return;
+            if (doc == null) { return; }
 
             Language = doc.Root.GetAttributeString("language", "Unknown");
             TranslatedName = doc.Root.GetAttributeString("translatedname", Language);
@@ -89,7 +89,7 @@ namespace Barotrauma
             Dictionary<string, int> textCounts = new Dictionary<string, int>();
 
             XDocument doc = XMLExtensions.TryLoadXml(filePath);
-            if (doc == null || doc.Root == null) return;
+            if (doc == null) { return; }
 
             foreach (XElement subElement in doc.Root.Elements())
             {

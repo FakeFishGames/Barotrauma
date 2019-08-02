@@ -2,18 +2,19 @@
 using System.Collections.Generic;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
+using System.Linq;
 
 namespace Barotrauma
 {
     public class AutonomousObjective
     {
-        public string aiTag;
+        public string identifier;
         public string option;
         public float priorityModifier;
 
         public AutonomousObjective(XElement element)
         {
-            aiTag = element.GetAttributeString("aitag", null);
+            identifier = element.GetAttributeString("identifier", null);
             option = element.GetAttributeString("option", null);
             priorityModifier = element.GetAttributeFloat("prioritymodifier", 1);
             priorityModifier = MathHelper.Max(priorityModifier, 0);
@@ -22,7 +23,24 @@ namespace Barotrauma
 
     partial class JobPrefab
     {
-        public static List<JobPrefab> List;
+        public static Dictionary<string, JobPrefab> List;
+        public static JobPrefab Get(string identifier)
+        {
+            if (List == null)
+            {
+                DebugConsole.ThrowError("Issue in the code execution order: job prefabs not loaded.");
+                return null;
+            }
+            if (List.TryGetValue(identifier, out JobPrefab job))
+            {
+                return job;
+            }
+            else
+            {
+                DebugConsole.ThrowError("Couldn't find a job prefab with the given identifier: " + identifier);
+                return null;
+            }
+        }
 
         public readonly XElement Items;
         public readonly List<string> ItemNames = new List<string>();
@@ -126,6 +144,7 @@ namespace Barotrauma
             SerializableProperty.DeserializeProperties(this, element);
             Name = TextManager.Get("JobName." + Identifier);
             Description = TextManager.Get("JobDescription." + Identifier);
+            Identifier = Identifier.ToLowerInvariant();
 
             foreach (XElement subElement in element.Elements())
             {
@@ -184,24 +203,45 @@ namespace Barotrauma
             }
         }
 
-        public static JobPrefab Random()
-        {
-            return List[Rand.Int(List.Count)];
-        }
+        public static JobPrefab Random(Rand.RandSync sync = Rand.RandSync.Unsynced) => List.Values.GetRandom(sync);
 
         public static void LoadAll(IEnumerable<string> filePaths)
         {
-            List = new List<JobPrefab>();
+            List = new Dictionary<string, JobPrefab>();
 
             foreach (string filePath in filePaths)
             {
                 XDocument doc = XMLExtensions.TryLoadXml(filePath);
-                if (doc == null || doc.Root == null) return;
-
-                foreach (XElement element in doc.Root.Elements())
+                if (doc == null) { continue; }
+                var mainElement = doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;            
+                if (doc.Root.IsOverride())
                 {
-                    JobPrefab job = new JobPrefab(element);
-                    List.Add(job);
+                    DebugConsole.ThrowError($"Error in '{filePath}': Cannot override all job prefabs, because many of them are required by the main game! Please try overriding jobs one by one.");
+                }
+                foreach (XElement element in mainElement.Elements())
+                {
+                    if (element.IsOverride())
+                    {
+                        var job = new JobPrefab(element.FirstElement());
+                        if (List.TryGetValue(job.Identifier, out JobPrefab duplicate))
+                        {
+                            DebugConsole.NewMessage($"Overriding the job '{duplicate.Identifier}' with another defined in '{filePath}'", Color.Yellow);
+                            List.Remove(duplicate.Identifier);
+                        }
+                        List.Add(job.Identifier, job);
+                    }
+                    else
+                    {
+                        if (List.TryGetValue(element.GetAttributeString("identifier", "").ToLowerInvariant(), out JobPrefab duplicate))
+                        {
+                            DebugConsole.ThrowError($"Error in '{filePath}': Duplicate job definition found for: '{duplicate.Identifier}'. Use the <override> XML element as the parent of job element's definition to override the existing job.");
+                        }
+                        else
+                        {
+                            var job = new JobPrefab(element);
+                            List.Add(job.Identifier, job);
+                        }
+                    }
                 }
             }
         }

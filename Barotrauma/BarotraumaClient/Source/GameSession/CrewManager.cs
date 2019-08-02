@@ -172,6 +172,11 @@ namespace Barotrauma
             }
 
             var reports = Order.PrefabList.FindAll(o => o.TargetAllCharacters && o.SymbolSprite != null);
+            if (reports.None())
+            {
+                DebugConsole.ThrowError("No valid orders for report buttons found! Cannot create report buttons. The orders for the report buttons must have 'targetallcharacters' attribute enabled and a valid 'symbolsprite' defined.");
+                return;
+            }
             reportButtonFrame = new GUILayoutGroup(new RectTransform(
                 new Point((HUDLayoutSettings.CrewArea.Height - (int)((reports.Count - 1) * 5 * GUI.Scale)) / reports.Count, HUDLayoutSettings.CrewArea.Height), guiFrame.RectTransform))
             {
@@ -515,7 +520,7 @@ namespace Barotrauma
 
                     if (btn.GetChildByUserData("selected").Visible)
                     {
-                        SetCharacterOrder(character, Order.PrefabList.Find(o => o.AITag == "dismissed"), null, Character.Controlled);
+                        SetCharacterOrder(character, Order.GetPrefab("dismissed"), null, Character.Controlled);
                     }
                     else
                     {
@@ -998,12 +1003,12 @@ namespace Barotrauma
                 color: matchingItems.Count > 1 ? Color.Black * 0.9f : Color.Black * 0.7f);
         }
 
-        public void HighlightOrderButton(Character character, string orderAiTag, Color color, Vector2? flashRectInflate = null)
+        public void HighlightOrderButton(Character character, string orderIdentifier, Color color, Vector2? flashRectInflate = null)
         {
-            var order = Order.PrefabList.Find(o => o.AITag == orderAiTag);
+            var order = Order.GetPrefab(orderIdentifier);
             if (order == null)
             {
-                DebugConsole.ThrowError("Could not find an order with the AI tag \"" + orderAiTag + "\".\n" + Environment.StackTrace);
+                DebugConsole.ThrowError("Could not find an order with the AI tag \"" + orderIdentifier + "\".\n" + Environment.StackTrace);
                 return;
             }
             var characterElement = characterListBox.Content.FindChild(character);
@@ -1415,14 +1420,14 @@ namespace Barotrauma
         //    return true;
         //}
 
-        private void ToggleReportButton(string orderAiTag, bool enabled)
+        private void ToggleReportButton(string orderIdentifier, bool enabled)
         {
-            Order order = Order.PrefabList.Find(o => o.AITag == orderAiTag);
+            Order order = Order.GetPrefab(orderIdentifier);
 
             //already reported, disable the button
             /*if (GameMain.GameSession.CrewManager.ActiveOrders.Any(o =>
                 o.First.TargetEntity == Character.Controlled.CurrentHull &&
-                o.First.AITag == orderAiTag))
+                o.First.Identifier == orderIdentifier))
             {
                 enabled = false;
             }*/

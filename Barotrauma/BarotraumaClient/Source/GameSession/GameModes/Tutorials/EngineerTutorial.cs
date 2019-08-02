@@ -91,11 +91,11 @@ namespace Barotrauma.Tutorials
             toolbox.Unequip(engineer);
             engineer.Inventory.RemoveItem(toolbox);
 
-            var repairOrder = Order.PrefabList.Find(order => order.AITag == "repairsystems");
+            var repairOrder = Order.GetPrefab("repairsystems");
             engineer_repairIcon = repairOrder.SymbolSprite;
             engineer_repairIconColor = repairOrder.Color;
 
-            var reactorOrder = Order.PrefabList.Find(order => order.AITag == "operatereactor");
+            var reactorOrder = Order.GetPrefab("operatereactor");
             engineer_reactorIcon = reactorOrder.SymbolSprite;
             engineer_reactorIconColor = reactorOrder.Color;
 

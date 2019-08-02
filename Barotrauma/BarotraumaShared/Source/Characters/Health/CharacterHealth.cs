@@ -225,10 +225,9 @@ namespace Barotrauma
 
         public IEnumerable<Affliction> GetAllAfflictions(Func<Affliction, bool> limbHealthFilter = null)
         {
-            // TODO: If there can be duplicates, we should use Union instead.
             return limbHealthFilter == null
-                ? afflictions.Concat(limbHealths.SelectMany(lh => lh.Afflictions))
-                : afflictions.Concat(limbHealths.SelectMany(lh => lh.Afflictions.Where(limbHealthFilter)));
+                ? afflictions.Union(limbHealths.SelectMany(lh => lh.Afflictions))
+                : afflictions.Where(limbHealthFilter).Union(limbHealths.SelectMany(lh => lh.Afflictions.Where(limbHealthFilter)));
         }
 
         private LimbHealth GetMatchingLimbHealth(Limb limb) => limbHealths[limb.HealthIndex];
@@ -240,11 +239,23 @@ namespace Barotrauma
         private IEnumerable<Affliction> GetMatchingAfflictions(LimbHealth limb, Func<Affliction, bool> predicate)
             => limb.Afflictions.Where(predicate).Union(afflictions.Where(a => predicate(a) && GetMatchingLimbHealth(a) == limb));
 
-        public Affliction GetAffliction(string afflictionType, bool allowLimbAfflictions = true)
+        public IEnumerable<Affliction> GetAfflictionsByType(string afflictionType, bool allowLimbAfflictions = true)
+        {
+            if (allowLimbAfflictions)
+            {
+                return GetAllAfflictions(a => a.Prefab.AfflictionType == afflictionType);
+            }
+            else
+            {
+                return afflictions.Where(a => a.Prefab.AfflictionType == afflictionType);
+            }
+        }
+
+        public Affliction GetAffliction(string identifier, bool allowLimbAfflictions = true)
         {
             foreach (Affliction affliction in afflictions)
             {
-                if (affliction.Prefab.AfflictionType == afflictionType) return affliction;
+                if (affliction.Prefab.Identifier == identifier) return affliction;
             }
             if (!allowLimbAfflictions) return null;
 
@@ -252,19 +263,30 @@ namespace Barotrauma
             {
                 foreach (Affliction affliction in limbHealth.Afflictions)
                 {
-                    if (affliction.Prefab.AfflictionType == afflictionType) return affliction;
+                    if (affliction.Prefab.Identifier == identifier) return affliction;
                 }
             }
 
             return null;
         }
 
-        public T GetAffliction<T>(string afflictionType, bool allowLimbAfflictions = true) where T : Affliction
+        public T GetAffliction<T>(string identifier, bool allowLimbAfflictions = true) where T : Affliction
         {
-            return GetAffliction(afflictionType, allowLimbAfflictions) as T;
+            return GetAffliction(identifier, allowLimbAfflictions) as T;
         }
 
-        public Affliction GetAffliction(string afflictionType, Limb limb)
+        public IEnumerable<Affliction> GetAfflictionsByType(string afflictionType, Limb limb)
+        {
+            if (limb.HealthIndex < 0 || limb.HealthIndex >= limbHealths.Count)
+            {
+                DebugConsole.ThrowError("Limb health index out of bounds. Character\"" + Character.Name +
+                    "\" only has health configured for" + limbHealths.Count + " limbs but the limb " + limb.type + " is targeting index " + limb.HealthIndex);
+                return null;
+            }
+            return limbHealths[limb.HealthIndex].Afflictions.Where(a => a.Prefab.AfflictionType == afflictionType);
+        }
+
+        public Affliction GetAffliction(string identifier, Limb limb)
         {
             if (limb.HealthIndex < 0 || limb.HealthIndex >= limbHealths.Count)
             {
@@ -274,7 +296,7 @@ namespace Barotrauma
             }
             foreach (Affliction affliction in limbHealths[limb.HealthIndex].Afflictions)
             {
-                if (affliction.Prefab.AfflictionType == afflictionType) return affliction;
+                if (affliction.Prefab.Identifier == identifier) return affliction;
             }
             return null;
         }
@@ -520,7 +542,7 @@ namespace Barotrauma
         {
             if (!DoesBleed && newAffliction is AfflictionBleeding) return;
             if (!Character.NeedsAir && newAffliction.Prefab == AfflictionPrefab.OxygenLow) return;
-            // Currently only human can get the husk infection.
+            // Currently only human can get the husk infection. TODO: change this
             if (newAffliction.Prefab == AfflictionPrefab.Husk && Character.SpeciesName.ToLowerInvariant() != "human") { return; }
             foreach (Affliction affliction in afflictions)
             {

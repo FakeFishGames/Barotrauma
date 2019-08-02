@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System.Xml;
 using System.IO;
+using Barotrauma.Extensions;
 #if CLIENT
 using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Tutorials;
@@ -222,7 +223,25 @@ namespace Barotrauma
             set { TextManager.Language = value; }
         }
 
-        public readonly HashSet<ContentPackage> SelectedContentPackages = new HashSet<ContentPackage>();
+        public readonly List<ContentPackage> SelectedContentPackages = new List<ContentPackage>();
+
+        public void SelectContentPackage(ContentPackage contentPackage)
+        {
+            if (!SelectedContentPackages.Contains(contentPackage))
+            {
+                SelectedContentPackages.Add(contentPackage);
+                ContentPackage.SortContentPackages();
+            }
+        }
+
+        public void DeselectContentPackage(ContentPackage contentPackage)
+        {
+            if (SelectedContentPackages.Contains(contentPackage))
+            {
+                SelectedContentPackages.Remove(contentPackage);
+                ContentPackage.SortContentPackages();
+            }
+        }
 
         private HashSet<string> selectedContentPackagePaths = new HashSet<string>();
 
@@ -419,11 +438,11 @@ namespace Barotrauma
                 GraphicsWidth = 1024;
                 GraphicsHeight = 768;
                 MasterServerUrl = "";
-                SelectedContentPackages.Add(ContentPackage.List.Any() ? ContentPackage.List[0] : new ContentPackage(""));
+                SelectContentPackage(ContentPackage.List.Any() ? ContentPackage.List[0] : new ContentPackage(""));
                 jobPreferences = new List<string>();
-                foreach (JobPrefab job in JobPrefab.List)
+                foreach (string job in JobPrefab.List.Keys)
                 {
-                    jobPreferences.Add(job.Identifier);
+                    jobPreferences.Add(job);
                 }
                 return;
             }
@@ -665,6 +684,7 @@ namespace Barotrauma
                 }
             }
 
+            ContentPackage.SortContentPackages();
             TextManager.LoadTextPacks(SelectedContentPackages);
 
             foreach (ContentPackage contentPackage in SelectedContentPackages)
@@ -705,14 +725,14 @@ namespace Barotrauma
 
             if (GameMain.VanillaContent != null)
             {
-                SelectedContentPackages.Add(GameMain.VanillaContent);
+                SelectContentPackage(GameMain.VanillaContent);
             }
             else
             {
                 var availablePackage = ContentPackage.List.FirstOrDefault(cp => cp.IsCompatible() && cp.CorePackage);
                 if (availablePackage != null)
                 {
-                    SelectedContentPackages.Add(availablePackage);
+                    SelectContentPackage(availablePackage);
                 }
             }
         }
@@ -1029,7 +1049,7 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "contentpackage":
-                        string path = System.IO.Path.GetFullPath(subElement.GetAttributeString("path", ""));
+                        string path = Path.GetFullPath(subElement.GetAttributeString("path", ""));
                         selectedContentPackagePaths.Add(path);
                         break;
                 }
