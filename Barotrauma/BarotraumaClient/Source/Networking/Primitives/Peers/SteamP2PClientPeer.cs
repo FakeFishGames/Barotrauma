@@ -91,7 +91,7 @@ namespace Barotrauma.Networking
             bool isDisconnectMessage = (incByte & (byte)PacketHeader.IsDisconnectMessage) != 0;
             bool isServerMessage = (incByte & (byte)PacketHeader.IsServerMessage) != 0;
             bool isHeartbeatMessage = (incByte & (byte)PacketHeader.IsHeartbeatMessage) != 0;
-            
+
             if (!isServerMessage) { return; }
 
             if (isConnectionInitializationStep)

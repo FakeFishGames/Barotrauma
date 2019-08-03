@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Barotrauma.Steam
 {
@@ -82,6 +84,7 @@ namespace Barotrauma.Steam
                     return;
                 }
                 DebugConsole.NewMessage("Lobby created!", Microsoft.Xna.Framework.Color.Lime);
+                
                 lobbyState = LobbyState.Owner;
                 UpdateLobby(serverSettings);
             };
@@ -104,7 +107,7 @@ namespace Barotrauma.Steam
             }
             
             var contentPackages = GameMain.Config.SelectedContentPackages.Where(cp => cp.HasMultiplayerIncompatibleContent);
-
+            
             instance.client.Lobby.Name = serverSettings.ServerName;
             instance.client.Lobby.Owner = Steam.SteamManager.GetSteamID();
             instance.client.Lobby.MaxMembers = serverSettings.MaxPlayers;
