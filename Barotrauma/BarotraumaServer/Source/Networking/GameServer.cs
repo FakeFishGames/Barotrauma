@@ -185,7 +185,7 @@ namespace Barotrauma.Networking
                 isPublic = false; //steamp2p servers don't register to the master server
             }
 
-            if (SteamManager.USE_STEAM && !(serverPeer is SteamP2PServerPeer))
+            if (SteamManager.USE_STEAM)
             {
                 registeredToMaster = SteamManager.CreateServer(this, isPublic);
             }

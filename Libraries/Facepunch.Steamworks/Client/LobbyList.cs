@@ -128,11 +128,12 @@ namespace Facepunch.Steamworks
             if (callback.Success == 1) //1 if success, 0 if failure
             {
                 //find the lobby that has been updated
-                Lobby lobby = Lobbies.Find(x => x.LobbyID == callback.SteamIDLobby);
+                Lobby lobby = Lobbies.Find(x => x != null && x.LobbyID == callback.SteamIDLobby);
 
                 //if this lobby isn't yet in the list of lobbies, we know that we should add it
                 if (lobby == null)
                 {
+                    lobby = Lobby.FromSteam(client, callback.SteamIDLobby);
                     Lobbies.Add(lobby);
                     checkFinished();
                 }

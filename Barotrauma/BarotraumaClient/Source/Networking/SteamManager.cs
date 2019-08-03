@@ -238,6 +238,7 @@ namespace Barotrauma.Steam
             foreach (LobbyList.Lobby lobby in instance.client.LobbyList.Lobbies)
             {
                 bool hasPassword = false;
+                if (string.IsNullOrWhiteSpace(lobby.GetData("haspassword"))) { continue; }
                 bool.TryParse(lobby.GetData("haspassword"), out hasPassword);
 
                 var serverInfo = new ServerInfo()
