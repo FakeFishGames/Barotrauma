@@ -15,6 +15,7 @@ namespace Barotrauma.Steam
         public Facepunch.Steamworks.User User => client?.User;
         public Facepunch.Steamworks.Friends Friends => client?.Friends;
         public Facepunch.Steamworks.Overlay Overlay => client?.Overlay;
+        public Facepunch.Steamworks.Auth Auth => client?.Auth;
 
         private SteamManager()
         {
@@ -86,7 +87,7 @@ namespace Barotrauma.Steam
             };
             if (lobbyState != LobbyState.NotOwner) { return; }
             lobbyState = LobbyState.Creating;
-            instance.client.Lobby.Create(Lobby.Type.Public, serverSettings.MaxPlayers);
+            instance.client.Lobby.Create(serverSettings.isPublic ? Lobby.Type.Public : Lobby.Type.FriendsOnly, serverSettings.MaxPlayers);
             instance.client.Lobby.Joinable = true;
         }
         
@@ -136,6 +137,7 @@ namespace Barotrauma.Steam
             lobbyState = LobbyState.NotOwner;
         }
 
+        /*TODO: determine if we should have people join lobbies
         public static void JoinLobby(UInt64 steamId)
         {
             instance.client.Lobby.OnLobbyJoined = (success) =>
@@ -147,7 +149,7 @@ namespace Barotrauma.Steam
                 }
             };
             instance.client.Lobby.Join(steamId);
-        }
+        }*/
 
         public static ulong GetWorkshopItemIDFromUrl(string url)
         {
@@ -420,8 +422,30 @@ namespace Barotrauma.Steam
             {
                 return null;
             }
-
+            
             return instance.client.Auth.GetAuthSessionTicket();
+        }
+
+        public static ClientStartAuthSessionResult StartAuthSession(byte[] authTicketData, ulong clientSteamID)
+        {
+            if (instance == null || !instance.isInitialized || instance.client == null) return ClientStartAuthSessionResult.ServerNotConnectedToSteam;
+
+            DebugConsole.NewMessage("SteamManager authenticating Steam client " + clientSteamID);
+            ClientStartAuthSessionResult startResult = instance.client.Auth.StartSession(authTicketData, clientSteamID);
+            if (startResult != ClientStartAuthSessionResult.OK)
+            {
+                DebugConsole.NewMessage("Authentication failed: failed to start auth session (" + startResult.ToString() + ")");
+            }
+
+            return startResult;
+        }
+
+        public static void StopAuthSession(ulong clientSteamID)
+        {
+            if (instance == null || !instance.isInitialized || instance.client == null) return;
+
+            DebugConsole.NewMessage("SteamManager ending auth session with Steam client " + clientSteamID);
+            instance.client.Auth.EndSession(clientSteamID);
         }
 
         #endregion

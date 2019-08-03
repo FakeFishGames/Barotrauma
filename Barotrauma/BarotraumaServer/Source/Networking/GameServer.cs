@@ -184,14 +184,16 @@ namespace Barotrauma.Networking
             {
                 isPublic = false; //steamp2p servers don't register to the master server
             }
-
-            if (SteamManager.USE_STEAM)
+            else if (serverPeer is LidgrenServerPeer)
             {
-                registeredToMaster = SteamManager.CreateServer(this, isPublic);
-            }
-            if (isPublic && !GameMain.Config.UseSteamMatchmaking)
-            {
-                CoroutineManager.StartCoroutine(RegisterToMasterServer());
+                if (SteamManager.USE_STEAM)
+                {
+                    registeredToMaster = SteamManager.CreateServer(this, isPublic);
+                }
+                if (isPublic && !GameMain.Config.UseSteamMatchmaking)
+                {
+                    CoroutineManager.StartCoroutine(RegisterToMasterServer());
+                }
             }
 
             TickRate = serverSettings.TickRate;

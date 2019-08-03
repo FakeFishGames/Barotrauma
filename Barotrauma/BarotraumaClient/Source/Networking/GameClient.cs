@@ -315,11 +315,6 @@ namespace Barotrauma.Networking
                     SteamManager.Instance.User.SetRichPresence("connect", "-connect \"" + serverName.Replace("\"","\\\"") + "\" " + serverEndpoint);
                 }
 
-                if (clientPeer is SteamP2PClientPeer)
-                {
-                    SteamManager.JoinLobby((UInt64)endpoint);
-                }
-
                 canStart = true;
                 connected = true;
 

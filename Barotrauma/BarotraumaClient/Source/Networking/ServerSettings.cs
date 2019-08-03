@@ -103,7 +103,9 @@ namespace Barotrauma.Networking
         {
             ServerName = incMsg.ReadString();
             ServerMessageText = incMsg.ReadString();
-            HasPassword = incMsg.ReadBoolean(); incMsg.ReadPadBits();
+            HasPassword = incMsg.ReadBoolean();
+            isPublic = incMsg.ReadBoolean();
+            incMsg.ReadPadBits();
             TickRate = incMsg.ReadRangedInteger(1, 60);
             GameMain.NetworkMember.TickRate = TickRate;
 

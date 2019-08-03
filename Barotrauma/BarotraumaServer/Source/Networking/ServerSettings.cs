@@ -46,7 +46,9 @@ namespace Barotrauma.Networking
         {
             outMsg.Write(ServerName);
             outMsg.Write(ServerMessageText);
-            outMsg.Write(HasPassword); outMsg.WritePadBits();
+            outMsg.Write(HasPassword);
+            outMsg.Write(isPublic);
+            outMsg.WritePadBits();
             outMsg.WriteRangedIntegerDeprecated(1, 60, TickRate);
 
             WriteExtraCargo(outMsg);
