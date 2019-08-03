@@ -194,9 +194,9 @@ namespace Barotrauma.Steam
             query.OnUpdate += () => { UpdateServerQuery(query, onServerFound, onServerRulesReceived, includeUnresponsive: true); };
             query.OnFinished = onFinished;
 
-            /*var localQuery = instance.client.ServerList.Local(filter);
+            var localQuery = instance.client.ServerList.Local(filter);
             localQuery.OnUpdate += () => { UpdateServerQuery(localQuery, onServerFound, onServerRulesReceived, includeUnresponsive: true); };
-            localQuery.OnFinished = onFinished;*/
+            localQuery.OnFinished = onFinished;
 
             instance.client.LobbyList.OnLobbiesUpdated += () => { UpdateLobbyQuery(onServerFound, onServerRulesReceived, onFinished); };
             instance.client.LobbyList.Refresh();
