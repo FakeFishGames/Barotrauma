@@ -76,7 +76,7 @@ namespace Facepunch.Steamworks
 
         }
 
-
+        bool registeredLobbyDataUpdated = false; 
         void OnLobbyList(LobbyMatchList_t callback, bool error)
         {
             if (error) return;
@@ -103,7 +103,11 @@ namespace Facepunch.Steamworks
                 {
                     //else we need to get the info for the missing lobby
                     client.native.matchmaking.RequestLobbyData(lobby);
-                    client.RegisterCallback<SteamNative.LobbyDataUpdate_t>( OnLobbyDataUpdated );
+                    if (!registeredLobbyDataUpdated)
+                    {
+                        client.RegisterCallback<SteamNative.LobbyDataUpdate_t>(OnLobbyDataUpdated);
+                        registeredLobbyDataUpdated = true;
+                    }
                 }
 
             }
@@ -115,7 +119,7 @@ namespace Facepunch.Steamworks
 
         void checkFinished()
         {
-            if (Lobbies.Count == requests.Count)
+            if (Lobbies.Count >= requests.Count)
             {
                 Finished = true;
                 return;

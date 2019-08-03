@@ -108,7 +108,8 @@ namespace Barotrauma.Steam
             instance.client.Lobby.Name = serverSettings.ServerName;
             instance.client.Lobby.Owner = Steam.SteamManager.GetSteamID();
             instance.client.Lobby.MaxMembers = serverSettings.MaxPlayers;
-            instance.client.Lobby.CurrentLobbyData.SetData("maxplayers", serverSettings.MaxPlayers.ToString());
+            instance.client.Lobby.CurrentLobbyData.SetData("currplayernum", (GameMain.Client?.ConnectedClients?.Count??0).ToString());
+            instance.client.Lobby.CurrentLobbyData.SetData("maxplayernum", serverSettings.MaxPlayers.ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("connectsteamid", Steam.SteamManager.GetSteamID().ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("haspassword", serverSettings.HasPassword.ToString());
 
@@ -191,14 +192,14 @@ namespace Barotrauma.Steam
             //the response is queried using the server's query port, not the game port,
             //so it may be possible to play on the server even if it doesn't respond to server list queries
             var query = instance.client.ServerList.Internet(filter);
-            query.OnUpdate += () => { UpdateServerQuery(query, onServerFound, onServerRulesReceived, includeUnresponsive: true); };
+            query.OnUpdate = () => { UpdateServerQuery(query, onServerFound, onServerRulesReceived, includeUnresponsive: true); };
             query.OnFinished = onFinished;
 
             var localQuery = instance.client.ServerList.Local(filter);
-            localQuery.OnUpdate += () => { UpdateServerQuery(localQuery, onServerFound, onServerRulesReceived, includeUnresponsive: true); };
+            localQuery.OnUpdate = () => { UpdateServerQuery(localQuery, onServerFound, onServerRulesReceived, includeUnresponsive: true); };
             localQuery.OnFinished = onFinished;
 
-            instance.client.LobbyList.OnLobbiesUpdated += () => { UpdateLobbyQuery(onServerFound, onServerRulesReceived, onFinished); };
+            instance.client.LobbyList.OnLobbiesUpdated = () => { UpdateLobbyQuery(onServerFound, onServerRulesReceived, onFinished); };
             instance.client.LobbyList.Refresh();
 
             return true;
@@ -223,7 +224,7 @@ namespace Barotrauma.Steam
             //the response is queried using the server's query port, not the game port,
             //so it may be possible to play on the server even if it doesn't respond to server list queries
             var query = instance.client.ServerList.Favourites(filter);
-            query.OnUpdate += () => { UpdateServerQuery(query, onServerFound, onServerRulesReceived, includeUnresponsive: true); };
+            query.OnUpdate = () => { UpdateServerQuery(query, onServerFound, onServerRulesReceived, includeUnresponsive: true); };
             query.OnFinished = onFinished;
 
             return true;
@@ -248,7 +249,7 @@ namespace Barotrauma.Steam
             //the response is queried using the server's query port, not the game port,
             //so it may be possible to play on the server even if it doesn't respond to server list queries
             var query = instance.client.ServerList.History(filter);
-            query.OnUpdate += () => { UpdateServerQuery(query, onServerFound, onServerRulesReceived, includeUnresponsive: true); };
+            query.OnUpdate = () => { UpdateServerQuery(query, onServerFound, onServerRulesReceived, includeUnresponsive: true); };
             query.OnFinished = onFinished;
 
             return true;
@@ -261,8 +262,10 @@ namespace Barotrauma.Steam
                 bool hasPassword = false;
                 if (string.IsNullOrWhiteSpace(lobby.GetData("haspassword"))) { continue; }
                 bool.TryParse(lobby.GetData("haspassword"), out hasPassword);
+                int currPlayers = 1;
+                int.TryParse(lobby.GetData("currplayernum"), out currPlayers);
                 int maxPlayers = 1;
-                int.TryParse(lobby.GetData("maxplayers"), out maxPlayers);
+                int.TryParse(lobby.GetData("maxplayernum"), out maxPlayers);
                 UInt64 connectSteamId = 0;
                 UInt64.TryParse(lobby.GetData("connectsteamid"), out connectSteamId);
 
@@ -271,7 +274,7 @@ namespace Barotrauma.Steam
                     ServerName = lobby.Name,
                     Port = "",
                     IP = "",
-                    PlayerCount = lobby.NumMembers,
+                    PlayerCount = currPlayers,
                     MaxPlayers = maxPlayers,
                     HasPassword = hasPassword,
                     RespondedToSteamQuery = true,
