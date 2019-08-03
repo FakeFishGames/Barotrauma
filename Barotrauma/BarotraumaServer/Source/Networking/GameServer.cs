@@ -178,8 +178,14 @@ namespace Barotrauma.Networking
 
                 yield return CoroutineStatus.Success;
             }
-            
-            if (SteamManager.USE_STEAM)
+
+
+            if (serverPeer is SteamP2PServerPeer)
+            {
+                isPublic = false; //steamp2p servers don't register to the master server
+            }
+
+            if (SteamManager.USE_STEAM && !(serverPeer is SteamP2PServerPeer))
             {
                 registeredToMaster = SteamManager.CreateServer(this, isPublic);
             }

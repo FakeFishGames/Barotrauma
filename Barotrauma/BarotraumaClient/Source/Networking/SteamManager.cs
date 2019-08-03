@@ -61,7 +61,75 @@ namespace Barotrauma.Steam
             }
             return clientInitialized;
         }
+
+        private static bool ownsLobby = false;
+
+        public static void CreateLobby(ServerSettings serverSettings)
+        {
+            instance.client.Lobby.OnLobbyCreated = (success) =>
+            {
+                if (!success)
+                {
+                    DebugConsole.ThrowError("Failed to create Steam lobby!");
+                    ownsLobby = false;
+                    return;
+                }
+                UpdateLobby(serverSettings);
+            };
+            if (ownsLobby) { return; }
+            ownsLobby = true;
+            instance.client.Lobby.Create(serverSettings.isPublic ? Lobby.Type.Public : Lobby.Type.FriendsOnly, serverSettings.MaxPlayers);
+        }
         
+        public static void UpdateLobby(ServerSettings serverSettings)
+        {
+            if (!ownsLobby)
+            {
+                CreateLobby(serverSettings);
+                return;
+            }
+
+            var contentPackages = GameMain.Config.SelectedContentPackages.Where(cp => cp.HasMultiplayerIncompatibleContent);
+
+            instance.client.Lobby.Name = serverSettings.ServerName;
+            instance.client.Lobby.SetMemberData("haspassword", serverSettings.HasPassword.ToString());
+
+            instance.client.Lobby.SetMemberData("message", serverSettings.ServerMessageText);
+            instance.client.Lobby.SetMemberData("version", GameMain.Version.ToString());
+
+            instance.client.Lobby.SetMemberData("contentpackage", string.Join(",", contentPackages.Select(cp => cp.Name)));
+            instance.client.Lobby.SetMemberData("contentpackagehash", string.Join(",", contentPackages.Select(cp => cp.MD5hash.Hash)));
+            instance.client.Lobby.SetMemberData("contentpackageurl", string.Join(",", contentPackages.Select(cp => cp.SteamWorkshopUrl ?? "")));
+            instance.client.Lobby.SetMemberData("usingwhitelist", (serverSettings.Whitelist != null && serverSettings.Whitelist.Enabled).ToString());
+            instance.client.Lobby.SetMemberData("modeselectionmode", serverSettings.ModeSelectionMode.ToString());
+            instance.client.Lobby.SetMemberData("subselectionmode", serverSettings.SubSelectionMode.ToString());
+            instance.client.Lobby.SetMemberData("voicechatenabled", serverSettings.VoiceChatEnabled.ToString());
+            instance.client.Lobby.SetMemberData("allowspectating", serverSettings.AllowSpectating.ToString());
+            instance.client.Lobby.SetMemberData("allowrespawn", serverSettings.AllowRespawn.ToString());
+            instance.client.Lobby.SetMemberData("traitors", serverSettings.TraitorsEnabled.ToString());
+            instance.client.Lobby.SetMemberData("gamestarted", GameMain.Client.GameStarted.ToString());
+            instance.client.Lobby.SetMemberData("gamemode", serverSettings.GameModeIdentifier);
+        }
+
+        public static void LeaveLobby()
+        {
+            instance.client.Lobby.Leave();
+            ownsLobby = false;
+        }
+
+        public static void JoinLobby(UInt64 steamId)
+        {
+            instance.client.Lobby.OnLobbyJoined = (success) =>
+            {
+                if (!success)
+                {
+                    //allowing silent failure here
+                    //DebugConsole.ThrowError("Failed to join Steam lobby!");
+                }
+            };
+            instance.client.Lobby.Join(steamId);
+        }
+
         public static ulong GetWorkshopItemIDFromUrl(string url)
         {
             try
@@ -108,6 +176,9 @@ namespace Barotrauma.Steam
             var localQuery = instance.client.ServerList.Local(filter);
             localQuery.OnUpdate += () => { UpdateServerQuery(localQuery, onServerFound, onServerRulesReceived, includeUnresponsive: true); };
             localQuery.OnFinished = onFinished;
+
+            instance.client.LobbyList.OnLobbiesUpdated += () => { UpdateLobbyQuery(onServerFound, onServerRulesReceived, onFinished); };
+            instance.client.LobbyList.Refresh();
 
             return true;
         }
@@ -162,6 +233,60 @@ namespace Barotrauma.Steam
             return true;
         }
 
+        private static void UpdateLobbyQuery(Action<Networking.ServerInfo> onServerFound, Action<Networking.ServerInfo> onServerRulesReceived, Action onFinished)
+        {
+            foreach (LobbyList.Lobby lobby in instance.client.LobbyList.Lobbies)
+            {
+                bool hasPassword = false;
+                bool.TryParse(lobby.GetData("haspassword"), out hasPassword);
+
+                var serverInfo = new ServerInfo()
+                {
+                    ServerName = lobby.Name,
+                    Port = "",
+                    IP = "",
+                    PlayerCount = lobby.NumMembers,
+                    MaxPlayers = lobby.MemberLimit,
+                    HasPassword = hasPassword,
+                    RespondedToSteamQuery = true,
+                    SteamID = lobby.Owner
+                };
+                serverInfo.PingChecked = false;
+                serverInfo.ServerMessage = lobby.GetData("message");
+                serverInfo.GameVersion = lobby.GetData("version");
+
+                serverInfo.ContentPackageNames.AddRange(lobby.GetData("contentpackage").Split(','));
+                serverInfo.ContentPackageHashes.AddRange(lobby.GetData("contentpackagehash").Split(','));
+                serverInfo.ContentPackageWorkshopUrls.AddRange(lobby.GetData("contentpackageurl").Split(','));
+
+                serverInfo.UsingWhiteList = lobby.GetData("usingwhitelist") == "True";
+                SelectionMode selectionMode;
+                if (Enum.TryParse(lobby.GetData("modeselectionmode"), out selectionMode)) serverInfo.ModeSelectionMode = selectionMode;
+                if (Enum.TryParse(lobby.GetData("subselectionmode"), out selectionMode)) serverInfo.SubSelectionMode = selectionMode;
+
+                serverInfo.AllowSpectating = lobby.GetData("allowspectating") == "True";
+                serverInfo.AllowRespawn = lobby.GetData("allowrespawn") == "True";
+                serverInfo.VoipEnabled = lobby.GetData("voicechatenabled") == "True";
+                if (Enum.TryParse(lobby.GetData("traitors"), out YesNoMaybe traitorsEnabled)) serverInfo.TraitorsEnabled = traitorsEnabled;
+
+                serverInfo.GameStarted = lobby.GetData("gamestarted") == "True";
+                serverInfo.GameMode = lobby.GetData("gamemode");
+
+                if (serverInfo.ContentPackageNames.Count != serverInfo.ContentPackageHashes.Count ||
+                    serverInfo.ContentPackageHashes.Count != serverInfo.ContentPackageWorkshopUrls.Count)
+                {
+                    //invalid contentpackage info
+                    serverInfo.ContentPackageNames.Clear();
+                    serverInfo.ContentPackageHashes.Clear();
+                }
+
+                onServerFound(serverInfo);
+                onServerRulesReceived(serverInfo);
+            }
+
+            onFinished();
+        }
+
         private static void UpdateServerQuery(ServerList.Request query, Action<Networking.ServerInfo> onServerFound, Action<Networking.ServerInfo> onServerRulesReceived, bool includeUnresponsive)
         {
             IEnumerable<ServerList.Server> servers = includeUnresponsive ?
@@ -184,24 +309,10 @@ namespace Barotrauma.Steam
 
                 string serverName = "";
                 UInt64 serverSteamId = 0;
-
-                if (!string.IsNullOrWhiteSpace(s.Name))
-                {
-                    string[] nameSplit = s.Name.Split('|');
-                    serverSteamId = SteamManager.SteamIDStringToUInt64(nameSplit[0]);
-                    if (serverSteamId == 0)
-                    {
-                        serverName = s.Name;
-                    }
-                    else
-                    {
-                        serverName = string.Join("|", nameSplit.Skip(1));
-                    }
-                }
                 
                 var serverInfo = new ServerInfo()
                 {
-                    ServerName = serverName,
+                    ServerName = s.Name,
                     Port = s.ConnectionPort.ToString(),
                     IP = s.Address.ToString(),
                     PlayerCount = s.Players,

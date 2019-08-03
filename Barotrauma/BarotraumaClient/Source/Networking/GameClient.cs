@@ -315,6 +315,11 @@ namespace Barotrauma.Networking
                     SteamManager.Instance.User.SetRichPresence("connect", "-connect \"" + serverName.Replace("\"","\\\"") + "\" " + serverEndpoint);
                 }
 
+                if (clientPeer is SteamP2PClientPeer)
+                {
+                    SteamManager.JoinLobby((UInt64)endpoint);
+                }
+
                 canStart = true;
                 connected = true;
 
@@ -1292,6 +1297,11 @@ namespace Barotrauma.Networking
                                 settingsBuf.Write(settingsData, 0, settingsLen); settingsBuf.BitPosition = 0;
                                 serverSettings.ClientRead(settingsBuf);
 
+                                if (clientPeer is SteamP2POwnerPeer)
+                                {
+                                    Steam.SteamManager.UpdateLobby(serverSettings);
+                                }
+
                                 GameMain.NetLobbyScreen.LastUpdateID = updateID;
 
                                 serverSettings.ServerLog.ServerName = serverSettings.ServerName;
@@ -1717,6 +1727,12 @@ namespace Barotrauma.Networking
         public override void Disconnect()
         {
             allowReconnect = false;
+
+            if (clientPeer is SteamP2PClientPeer || clientPeer is SteamP2POwnerPeer)
+            {
+                SteamManager.LeaveLobby();
+            }
+
             clientPeer?.Close();
             clientPeer = null;
 
