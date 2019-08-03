@@ -180,11 +180,7 @@ namespace Barotrauma.Networking
             }
 
 
-            if (serverPeer is SteamP2PServerPeer)
-            {
-                isPublic = false; //steamp2p servers don't register to the master server
-            }
-            else if (serverPeer is LidgrenServerPeer)
+            if (serverPeer is LidgrenServerPeer)
             {
                 if (SteamManager.USE_STEAM)
                 {
