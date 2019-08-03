@@ -62,7 +62,13 @@ namespace Barotrauma.Steam
             return clientInitialized;
         }
 
-        private static bool ownsLobby = false;
+        private enum LobbyState
+        {
+            NotOwner,
+            Creating,
+            Owner
+        }
+        private static LobbyState lobbyState = LobbyState.NotOwner;
 
         public static void CreateLobby(ServerSettings serverSettings)
         {
@@ -71,50 +77,63 @@ namespace Barotrauma.Steam
                 if (!success)
                 {
                     DebugConsole.ThrowError("Failed to create Steam lobby!");
-                    ownsLobby = false;
+                    lobbyState = LobbyState.NotOwner;
                     return;
                 }
+                DebugConsole.NewMessage("Lobby created!", Microsoft.Xna.Framework.Color.Lime);
+                lobbyState = LobbyState.Owner;
                 UpdateLobby(serverSettings);
             };
-            if (ownsLobby) { return; }
-            ownsLobby = true;
-            instance.client.Lobby.Create(serverSettings.isPublic ? Lobby.Type.Public : Lobby.Type.FriendsOnly, serverSettings.MaxPlayers);
+            if (lobbyState != LobbyState.NotOwner) { return; }
+            lobbyState = LobbyState.Creating;
+            instance.client.Lobby.Create(Lobby.Type.Public, serverSettings.MaxPlayers);
+            instance.client.Lobby.Joinable = true;
         }
         
         public static void UpdateLobby(ServerSettings serverSettings)
         {
-            if (!ownsLobby)
+            if (lobbyState == LobbyState.NotOwner)
             {
                 CreateLobby(serverSettings);
-                return;
             }
 
+            if (lobbyState != LobbyState.Owner)
+            {
+                return;
+            }
+            
             var contentPackages = GameMain.Config.SelectedContentPackages.Where(cp => cp.HasMultiplayerIncompatibleContent);
 
             instance.client.Lobby.Name = serverSettings.ServerName;
-            instance.client.Lobby.SetMemberData("haspassword", serverSettings.HasPassword.ToString());
+            instance.client.Lobby.Owner = Steam.SteamManager.GetSteamID();
+            instance.client.Lobby.MaxMembers = serverSettings.MaxPlayers;
+            instance.client.Lobby.CurrentLobbyData.SetData("maxplayers", serverSettings.MaxPlayers.ToString());
+            instance.client.Lobby.CurrentLobbyData.SetData("connectsteamid", Steam.SteamManager.GetSteamID().ToString());
+            instance.client.Lobby.CurrentLobbyData.SetData("haspassword", serverSettings.HasPassword.ToString());
 
-            instance.client.Lobby.SetMemberData("message", serverSettings.ServerMessageText);
-            instance.client.Lobby.SetMemberData("version", GameMain.Version.ToString());
+            instance.client.Lobby.CurrentLobbyData.SetData("message", serverSettings.ServerMessageText);
+            instance.client.Lobby.CurrentLobbyData.SetData("version", GameMain.Version.ToString());
 
-            instance.client.Lobby.SetMemberData("contentpackage", string.Join(",", contentPackages.Select(cp => cp.Name)));
-            instance.client.Lobby.SetMemberData("contentpackagehash", string.Join(",", contentPackages.Select(cp => cp.MD5hash.Hash)));
-            instance.client.Lobby.SetMemberData("contentpackageurl", string.Join(",", contentPackages.Select(cp => cp.SteamWorkshopUrl ?? "")));
-            instance.client.Lobby.SetMemberData("usingwhitelist", (serverSettings.Whitelist != null && serverSettings.Whitelist.Enabled).ToString());
-            instance.client.Lobby.SetMemberData("modeselectionmode", serverSettings.ModeSelectionMode.ToString());
-            instance.client.Lobby.SetMemberData("subselectionmode", serverSettings.SubSelectionMode.ToString());
-            instance.client.Lobby.SetMemberData("voicechatenabled", serverSettings.VoiceChatEnabled.ToString());
-            instance.client.Lobby.SetMemberData("allowspectating", serverSettings.AllowSpectating.ToString());
-            instance.client.Lobby.SetMemberData("allowrespawn", serverSettings.AllowRespawn.ToString());
-            instance.client.Lobby.SetMemberData("traitors", serverSettings.TraitorsEnabled.ToString());
-            instance.client.Lobby.SetMemberData("gamestarted", GameMain.Client.GameStarted.ToString());
-            instance.client.Lobby.SetMemberData("gamemode", serverSettings.GameModeIdentifier);
+            instance.client.Lobby.CurrentLobbyData.SetData("contentpackage", string.Join(",", contentPackages.Select(cp => cp.Name)));
+            instance.client.Lobby.CurrentLobbyData.SetData("contentpackagehash", string.Join(",", contentPackages.Select(cp => cp.MD5hash.Hash)));
+            instance.client.Lobby.CurrentLobbyData.SetData("contentpackageurl", string.Join(",", contentPackages.Select(cp => cp.SteamWorkshopUrl ?? "")));
+            instance.client.Lobby.CurrentLobbyData.SetData("usingwhitelist", (serverSettings.Whitelist != null && serverSettings.Whitelist.Enabled).ToString());
+            instance.client.Lobby.CurrentLobbyData.SetData("modeselectionmode", serverSettings.ModeSelectionMode.ToString());
+            instance.client.Lobby.CurrentLobbyData.SetData("subselectionmode", serverSettings.SubSelectionMode.ToString());
+            instance.client.Lobby.CurrentLobbyData.SetData("voicechatenabled", serverSettings.VoiceChatEnabled.ToString());
+            instance.client.Lobby.CurrentLobbyData.SetData("allowspectating", serverSettings.AllowSpectating.ToString());
+            instance.client.Lobby.CurrentLobbyData.SetData("allowrespawn", serverSettings.AllowRespawn.ToString());
+            instance.client.Lobby.CurrentLobbyData.SetData("traitors", serverSettings.TraitorsEnabled.ToString());
+            instance.client.Lobby.CurrentLobbyData.SetData("gamestarted", GameMain.Client.GameStarted.ToString());
+            instance.client.Lobby.CurrentLobbyData.SetData("gamemode", serverSettings.GameModeIdentifier);
+
+            DebugConsole.NewMessage("Lobby updated!", Microsoft.Xna.Framework.Color.Lime);
         }
 
         public static void LeaveLobby()
         {
             instance.client.Lobby.Leave();
-            ownsLobby = false;
+            lobbyState = LobbyState.NotOwner;
         }
 
         public static void JoinLobby(UInt64 steamId)
@@ -173,9 +192,9 @@ namespace Barotrauma.Steam
             query.OnUpdate += () => { UpdateServerQuery(query, onServerFound, onServerRulesReceived, includeUnresponsive: true); };
             query.OnFinished = onFinished;
 
-            var localQuery = instance.client.ServerList.Local(filter);
+            /*var localQuery = instance.client.ServerList.Local(filter);
             localQuery.OnUpdate += () => { UpdateServerQuery(localQuery, onServerFound, onServerRulesReceived, includeUnresponsive: true); };
-            localQuery.OnFinished = onFinished;
+            localQuery.OnFinished = onFinished;*/
 
             instance.client.LobbyList.OnLobbiesUpdated += () => { UpdateLobbyQuery(onServerFound, onServerRulesReceived, onFinished); };
             instance.client.LobbyList.Refresh();
@@ -240,6 +259,10 @@ namespace Barotrauma.Steam
                 bool hasPassword = false;
                 if (string.IsNullOrWhiteSpace(lobby.GetData("haspassword"))) { continue; }
                 bool.TryParse(lobby.GetData("haspassword"), out hasPassword);
+                int maxPlayers = 1;
+                int.TryParse(lobby.GetData("maxplayers"), out maxPlayers);
+                UInt64 connectSteamId = 0;
+                UInt64.TryParse(lobby.GetData("connectsteamid"), out connectSteamId);
 
                 var serverInfo = new ServerInfo()
                 {
@@ -247,10 +270,10 @@ namespace Barotrauma.Steam
                     Port = "",
                     IP = "",
                     PlayerCount = lobby.NumMembers,
-                    MaxPlayers = lobby.MemberLimit,
+                    MaxPlayers = maxPlayers,
                     HasPassword = hasPassword,
                     RespondedToSteamQuery = true,
-                    SteamID = lobby.Owner
+                    SteamID = connectSteamId
                 };
                 serverInfo.PingChecked = false;
                 serverInfo.ServerMessage = lobby.GetData("message");
