@@ -973,7 +973,7 @@ namespace Barotrauma
 
         public void PingServer(ServerInfo serverInfo, int timeOut)
         {
-            if (serverInfo?.IP == null)
+            if (string.IsNullOrWhiteSpace(serverInfo?.IP))
             {
                 serverInfo.PingChecked = true;
                 serverInfo.Ping = -1;
@@ -981,7 +981,8 @@ namespace Barotrauma
             }
 
             long rtt = -1;
-            IPAddress address = IPAddress.Parse(serverInfo.IP);
+            IPAddress address = null;
+            IPAddress.TryParse(serverInfo.IP, out address);
             if (address != null)
             {
                 //don't attempt to ping if the address is IPv6 and it's not supported

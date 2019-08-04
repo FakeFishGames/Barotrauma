@@ -338,7 +338,7 @@ namespace Barotrauma.Steam
                 UInt64 connectSteamId = 0;
                 UInt64.TryParse(lobby.GetData("connectsteamid"), out connectSteamId);
                 string ip = lobby.GetData("hostipaddress");
-                if (string.IsNullOrWhiteSpace(ip)) { ip = "N/A"; }
+                if (string.IsNullOrWhiteSpace(ip)) { ip = ""; }
 
                 var serverInfo = new ServerInfo()
                 {
