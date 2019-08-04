@@ -163,18 +163,6 @@ namespace Barotrauma.Networking
             bool isDisconnectMessage = (incByte & (byte)PacketHeader.IsDisconnectMessage) != 0;
             bool isServerMessage = (incByte & (byte)PacketHeader.IsServerMessage) != 0;
             bool isHeartbeatMessage = (incByte & (byte)PacketHeader.IsHeartbeatMessage) != 0;
-            bool isPing = (incByte & (byte)PacketHeader.IsPing) != 0;
-
-            if (isPing)
-            {
-                Steam.SteamManager.Instance.Networking.SendP2PPacket(steamId, data, dataLength, Facepunch.Steamworks.Networking.SendType.Unreliable);
-                if (!remotePeer.Authenticated && !remotePeer.Authenticating)
-                {
-                    remotePeer.DisconnectTime = Timing.TotalTime + 5.0f;
-                }
-
-                return;
-            }
 
             if (!remotePeer.Authenticated)
             {

@@ -72,6 +72,59 @@ namespace Barotrauma.Steam
             Owner
         }
         private static LobbyState lobbyState = LobbyState.NotOwner;
+        private static string lobbyIP = "";
+        private static Thread lobbyIPRetrievalThread;
+
+        private static void RetrieveLobbyIP()
+        {
+            //TODO: set up our own server for IP retrieval?
+
+            Server tempServer = null;
+            try
+            {
+                var serverInit = new ServerInit("Barotrauma", "Barotrauma IP Retrieval")
+                {
+                    GamePort = (ushort)27015,
+                    QueryPort = (ushort)27016
+                };
+                tempServer = new Server(AppID, serverInit, false);
+                if (!tempServer.IsValid)
+                {
+                    tempServer.Dispose();
+                    tempServer = null;
+                    DebugConsole.ThrowError("Failed to retrieve public IP: Initializing Steam server failed.");
+                    return;
+                }
+
+                tempServer.LogOnAnonymous();
+                lobbyIP = "";
+                for (int i = 0; i < 30*60; i++)
+                {
+                    tempServer.Update();
+                    tempServer.ForceHeartbeat();
+                    if (tempServer.PublicIp != null)
+                    {
+                        lobbyIP = tempServer.PublicIp.ToString();
+                        DebugConsole.NewMessage("Successfully retrieved public IP: "+lobbyIP, Microsoft.Xna.Framework.Color.Lime);
+                        instance.client.Lobby.CurrentLobbyData.SetData("hostipaddress", lobbyIP);
+                        break;
+                    }
+                    Thread.Sleep(16);
+                }
+
+                tempServer.Dispose();
+                tempServer = null;
+                if (string.IsNullOrWhiteSpace(lobbyIP))
+                {
+                    DebugConsole.ThrowError("Failed to retrieve public IP: Timed out.");
+                }
+            }
+            catch
+            {
+                tempServer?.Dispose();
+                tempServer = null;
+            }
+        }
 
         public static void CreateLobby(ServerSettings serverSettings)
         {
@@ -84,13 +137,20 @@ namespace Barotrauma.Steam
                     return;
                 }
                 DebugConsole.NewMessage("Lobby created!", Microsoft.Xna.Framework.Color.Lime);
-                
+
+                lobbyIPRetrievalThread?.Abort();
+                lobbyIPRetrievalThread?.Join();
+                lobbyIPRetrievalThread = null;
+                lobbyIPRetrievalThread = new Thread(new ThreadStart(RetrieveLobbyIP));
+                lobbyIPRetrievalThread.IsBackground = true;
+                lobbyIPRetrievalThread.Start();
+
                 lobbyState = LobbyState.Owner;
                 UpdateLobby(serverSettings);
             };
             if (lobbyState != LobbyState.NotOwner) { return; }
             lobbyState = LobbyState.Creating;
-            instance.client.Lobby.Create(serverSettings.isPublic ? Lobby.Type.Public : Lobby.Type.FriendsOnly, serverSettings.MaxPlayers);
+            instance.client.Lobby.Create(serverSettings.isPublic ? Lobby.Type.Public : Lobby.Type.FriendsOnly, 1);
             instance.client.Lobby.Joinable = true;
         }
         
@@ -113,6 +173,7 @@ namespace Barotrauma.Steam
             instance.client.Lobby.MaxMembers = serverSettings.MaxPlayers;
             instance.client.Lobby.CurrentLobbyData.SetData("currplayernum", (GameMain.Client?.ConnectedClients?.Count??0).ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("maxplayernum", serverSettings.MaxPlayers.ToString());
+            instance.client.Lobby.CurrentLobbyData.SetData("hostipaddress", lobbyIP);
             instance.client.Lobby.CurrentLobbyData.SetData("connectsteamid", Steam.SteamManager.GetSteamID().ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("haspassword", serverSettings.HasPassword.ToString());
 
@@ -137,7 +198,12 @@ namespace Barotrauma.Steam
 
         public static void LeaveLobby()
         {
+            lobbyIPRetrievalThread?.Abort();
+            lobbyIPRetrievalThread?.Join();
+            lobbyIPRetrievalThread = null;
+
             instance.client.Lobby.Leave();
+            lobbyIP = "";
             lobbyState = LobbyState.NotOwner;
         }
 
@@ -271,12 +337,14 @@ namespace Barotrauma.Steam
                 int.TryParse(lobby.GetData("maxplayernum"), out maxPlayers);
                 UInt64 connectSteamId = 0;
                 UInt64.TryParse(lobby.GetData("connectsteamid"), out connectSteamId);
+                string ip = lobby.GetData("hostipaddress");
+                if (string.IsNullOrWhiteSpace(ip)) { ip = "N/A"; }
 
                 var serverInfo = new ServerInfo()
                 {
                     ServerName = lobby.Name,
                     Port = "",
-                    IP = "N/A",
+                    IP = ip,
                     PlayerCount = currPlayers,
                     MaxPlayers = maxPlayers,
                     HasPassword = hasPassword,
@@ -338,10 +406,11 @@ namespace Barotrauma.Steam
                 {
                     DebugConsole.Log(s.Name + " did not respond to server query.");
                 }
-
-                string serverName = "";
-                UInt64 serverSteamId = 0;
                 
+                UInt64 serverSteamId = 0;
+
+                if (s.Description == "Barotrauma IP Retrieval") { continue; }
+
                 var serverInfo = new ServerInfo()
                 {
                     ServerName = s.Name,

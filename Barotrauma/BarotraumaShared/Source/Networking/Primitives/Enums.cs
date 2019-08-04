@@ -31,8 +31,7 @@ namespace Barotrauma.Networking
         //used only by SteamP2P implementations
         IsDisconnectMessage = 0x4,
         IsServerMessage = 0x8,
-        IsHeartbeatMessage = 0x10,
-        IsPing = 0x20
+        IsHeartbeatMessage = 0x10
     }
 }
 

@@ -942,13 +942,13 @@ namespace Barotrauma
             serverInfo.PingChecked = false;
             serverInfo.Ping = -1;
 
-            var pingThread = new Thread(() => { PingServer(serverInfo, 60000); })
+            var pingThread = new Thread(() => { PingServer(serverInfo, 1000); })
             {
                 IsBackground = true
             };
             pingThread.Start();
 
-            CoroutineManager.StartCoroutine(UpdateServerPingText(serverInfo, serverPingText, 60000));
+            CoroutineManager.StartCoroutine(UpdateServerPingText(serverInfo, serverPingText, 1000));
         }
 
         private IEnumerable<object> UpdateServerPingText(ServerInfo serverInfo, GUITextBlock serverPingText, int timeOut)
@@ -979,97 +979,6 @@ namespace Barotrauma
 
         public void PingServer(ServerInfo serverInfo, int timeOut)
         {
-            if ((serverInfo?.SteamID??0) != 0)
-            {
-                int pendingPings = Interlocked.Increment(ref pendingP2PPings);
-                if (pendingPings == 1)
-                {
-                    Steam.SteamManager.Instance.Networking.SetListenChannel(0, true);
-                }
-                DebugConsole.NewMessage(pendingPings.ToString());
-
-                ManualResetEvent mre = new ManualResetEvent(false);
-                string dataStr0 = "..PING0000000000000000000000000000";
-                byte[] data0 = Encoding.ASCII.GetBytes(dataStr0);
-                data0[0] = 0x0; data0[1] = (byte)PacketHeader.IsPing;
-                string dataStr1 = "..PING1111111111111111111111111111";
-                byte[] data1 = Encoding.ASCII.GetBytes(dataStr1);
-                data1[0] = 0x0; data1[1] = (byte)PacketHeader.IsPing;
-                string dataStr2 = "..PING2222222222222222222222222222";
-                byte[] data2 = Encoding.ASCII.GetBytes(dataStr2);
-                data2[0] = 0x0; data2[1] = (byte)PacketHeader.IsPing;
-
-                byte[] expectedData = data0;
-
-                bool pingResponded = false;
-                Func<ulong, bool> onIncomingConnection = (ulong steamId) =>
-                {
-                    return true;
-                };
-                SteamManager.Instance.Networking.OnIncomingConnection += onIncomingConnection;
-                Facepunch.Steamworks.Networking.OnRecievedP2PData onP2PData = (ulong steamId, byte[] data, int dataLength, int channel) =>
-                {
-                    if (expectedData == null) { return; }
-                    if (steamId != serverInfo.SteamID) { return; }
-                    bool equals = false;
-                    if (dataLength != expectedData.Length)
-                    {
-                        return;
-                    }
-                    for (int j=0;j<dataLength;j++)
-                    {
-                        if (data[j] != expectedData[j])
-                        {
-                            return;
-                        }
-                    }
-                    pingResponded = true;
-                    expectedData = null;
-                    mre.Set();
-                };
-                SteamManager.Instance.Networking.OnP2PData += onP2PData;
-                SteamManager.Instance.Networking.SendP2PPacket(serverInfo.SteamID, expectedData, expectedData.Length);
-                mre.WaitOne(TimeSpan.FromMilliseconds(timeOut/3)); //start connection
-                mre.Reset();
-                bool pingChecked = true;
-                int ping = (int)-1;
-
-                if (pingResponded)
-                {
-                    for (int i = 0; i < 2; i++)
-                    {
-                        pingResponded = false;
-                        expectedData = i == 0 ? data1 : data2;
-                        double startTime = Timing.TotalTime;
-                        SteamManager.Instance.Networking.SendP2PPacket(serverInfo.SteamID, expectedData, expectedData.Length, Facepunch.Steamworks.Networking.SendType.UnreliableNoDelay);
-                        mre.WaitOne(TimeSpan.FromMilliseconds(timeOut/3)); //measure ping
-                        mre.Reset();
-                        double timeTaken = Timing.TotalTime - startTime;
-                        if (pingResponded)
-                        {
-                            pingChecked = true;
-                            ping = (int)(timeTaken * 1000.0);
-                            SteamManager.Instance.Networking.CloseSession(serverInfo.SteamID);
-                            break;
-                        }
-                    }
-                }
-
-                SteamManager.Instance.Networking.OnIncomingConnection -= onIncomingConnection;
-                SteamManager.Instance.Networking.OnP2PData -= onP2PData;
-
-                serverInfo.PingChecked = pingChecked;
-                serverInfo.Ping = ping;
-
-                pendingPings = Interlocked.Decrement(ref pendingP2PPings);
-                /*if (pendingPings == 0)
-                {
-                    Steam.SteamManager.Instance.Networking.SetListenChannel(0, false);
-                }*/
-
-                return;
-            }
-
             if (serverInfo?.IP == null)
             {
                 serverInfo.PingChecked = true;
