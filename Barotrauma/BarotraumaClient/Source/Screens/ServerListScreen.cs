@@ -46,9 +46,7 @@ namespace Barotrauma
         private readonly GUITickBox filterEmpty;
 
         private string sortedBy;
-
-        private int pendingP2PPings = 0;
-
+        
         private readonly GUIButton serverPreviewToggleButton;
 
         //a timer for preventing the client from spamming the refresh button faster than AllowedRefreshInterval
@@ -481,10 +479,6 @@ namespace Barotrauma
         public override void Select()
         {
             base.Select();
-            pendingP2PPings = 0;
-            SteamManager.Instance.Networking.OnIncomingConnection = null;
-            SteamManager.Instance.Networking.OnP2PData = null;
-            Steam.SteamManager.Instance.Networking.SetListenChannel(0, false);
             RefreshServers();
         }
 
