@@ -276,7 +276,7 @@ namespace Barotrauma.Steam
                 {
                     ServerName = lobby.Name,
                     Port = "",
-                    IP = "",
+                    IP = "N/A",
                     PlayerCount = currPlayers,
                     MaxPlayers = maxPlayers,
                     HasPassword = hasPassword,
@@ -313,7 +313,7 @@ namespace Barotrauma.Steam
                 }
 
                 onServerFound(serverInfo);
-                onServerRulesReceived(serverInfo);
+                //onServerRulesReceived(serverInfo);
             }
 
             onFinished();

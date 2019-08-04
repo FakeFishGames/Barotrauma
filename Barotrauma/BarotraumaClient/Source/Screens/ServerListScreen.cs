@@ -47,6 +47,8 @@ namespace Barotrauma
 
         private string sortedBy;
 
+        private int pendingP2PPings = 0;
+
         private readonly GUIButton serverPreviewToggleButton;
 
         //a timer for preventing the client from spamming the refresh button faster than AllowedRefreshInterval
@@ -479,6 +481,10 @@ namespace Barotrauma
         public override void Select()
         {
             base.Select();
+            pendingP2PPings = 0;
+            SteamManager.Instance.Networking.OnIncomingConnection = null;
+            SteamManager.Instance.Networking.OnP2PData = null;
+            Steam.SteamManager.Instance.Networking.SetListenChannel(0, false);
             RefreshServers();
         }
 
@@ -936,13 +942,13 @@ namespace Barotrauma
             serverInfo.PingChecked = false;
             serverInfo.Ping = -1;
 
-            var pingThread = new Thread(() => { PingServer(serverInfo, 1000); })
+            var pingThread = new Thread(() => { PingServer(serverInfo, 60000); })
             {
                 IsBackground = true
             };
             pingThread.Start();
 
-            CoroutineManager.StartCoroutine(UpdateServerPingText(serverInfo, serverPingText, 1000));
+            CoroutineManager.StartCoroutine(UpdateServerPingText(serverInfo, serverPingText, 60000));
         }
 
         private IEnumerable<object> UpdateServerPingText(ServerInfo serverInfo, GUITextBlock serverPingText, int timeOut)
@@ -975,6 +981,13 @@ namespace Barotrauma
         {
             if ((serverInfo?.SteamID??0) != 0)
             {
+                int pendingPings = Interlocked.Increment(ref pendingP2PPings);
+                if (pendingPings == 1)
+                {
+                    Steam.SteamManager.Instance.Networking.SetListenChannel(0, true);
+                }
+                DebugConsole.NewMessage(pendingPings.ToString());
+
                 ManualResetEvent mre = new ManualResetEvent(false);
                 string dataStr0 = "..PING0000000000000000000000000000";
                 byte[] data0 = Encoding.ASCII.GetBytes(dataStr0);
@@ -996,28 +1009,41 @@ namespace Barotrauma
                 SteamManager.Instance.Networking.OnIncomingConnection += onIncomingConnection;
                 Facepunch.Steamworks.Networking.OnRecievedP2PData onP2PData = (ulong steamId, byte[] data, int dataLength, int channel) =>
                 {
+                    if (expectedData == null) { return; }
                     if (steamId != serverInfo.SteamID) { return; }
-                    if (Enumerable.SequenceEqual(data, expectedData))
+                    bool equals = false;
+                    if (dataLength != expectedData.Length)
                     {
-                        pingResponded = true;
-                        mre.Set();
+                        return;
                     }
+                    for (int j=0;j<dataLength;j++)
+                    {
+                        if (data[j] != expectedData[j])
+                        {
+                            return;
+                        }
+                    }
+                    pingResponded = true;
+                    expectedData = null;
+                    mre.Set();
                 };
                 SteamManager.Instance.Networking.OnP2PData += onP2PData;
                 SteamManager.Instance.Networking.SendP2PPacket(serverInfo.SteamID, expectedData, expectedData.Length);
-                mre.WaitOne(TimeSpan.FromSeconds(timeOut)); //start connection
+                mre.WaitOne(TimeSpan.FromMilliseconds(timeOut/3)); //start connection
+                mre.Reset();
                 bool pingChecked = true;
                 int ping = (int)-1;
 
                 if (pingResponded)
                 {
-                    for (int i = 0; i < 3; i++)
+                    for (int i = 0; i < 2; i++)
                     {
                         pingResponded = false;
                         expectedData = i == 0 ? data1 : data2;
                         double startTime = Timing.TotalTime;
                         SteamManager.Instance.Networking.SendP2PPacket(serverInfo.SteamID, expectedData, expectedData.Length, Facepunch.Steamworks.Networking.SendType.UnreliableNoDelay);
-                        mre.WaitOne(TimeSpan.FromSeconds(timeOut)); //measure ping
+                        mre.WaitOne(TimeSpan.FromMilliseconds(timeOut/3)); //measure ping
+                        mre.Reset();
                         double timeTaken = Timing.TotalTime - startTime;
                         if (pingResponded)
                         {
@@ -1034,6 +1060,12 @@ namespace Barotrauma
 
                 serverInfo.PingChecked = pingChecked;
                 serverInfo.Ping = ping;
+
+                pendingPings = Interlocked.Decrement(ref pendingP2PPings);
+                if (pendingPings == 0)
+                {
+                    Steam.SteamManager.Instance.Networking.SetListenChannel(0, false);
+                }
 
                 return;
             }

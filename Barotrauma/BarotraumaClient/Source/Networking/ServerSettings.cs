@@ -103,6 +103,7 @@ namespace Barotrauma.Networking
         {
             ServerName = incMsg.ReadString();
             ServerMessageText = incMsg.ReadString();
+            MaxPlayers = incMsg.ReadByte();
             HasPassword = incMsg.ReadBoolean();
             isPublic = incMsg.ReadBoolean();
             incMsg.ReadPadBits();

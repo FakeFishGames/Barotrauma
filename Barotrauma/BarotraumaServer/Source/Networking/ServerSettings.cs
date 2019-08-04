@@ -46,6 +46,7 @@ namespace Barotrauma.Networking
         {
             outMsg.Write(ServerName);
             outMsg.Write(ServerMessageText);
+            outMsg.Write((byte)MaxPlayers);
             outMsg.Write(HasPassword);
             outMsg.Write(isPublic);
             outMsg.WritePadBits();

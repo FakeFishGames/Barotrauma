@@ -56,11 +56,14 @@ namespace Facepunch.Steamworks
             UpdateTimer.Reset();
             UpdateTimer.Start();
 
-            foreach ( var channel in ListenChannels )
+            lock (ListenChannels)
             {
-                while ( ReadP2PPacket( channel ) )
+                foreach (var channel in ListenChannels)
                 {
-                    // Nothing Here.
+                    while (ReadP2PPacket(channel))
+                    {
+                        // Nothing Here.
+                    }
                 }
             }
         }
@@ -72,11 +75,14 @@ namespace Facepunch.Steamworks
         /// </summary>
         public void SetListenChannel( int ChannelId, bool Listen )
         {
-            ListenChannels.RemoveAll( x => x == ChannelId );
-
-            if ( Listen  )
+            lock (ListenChannels)
             {
-                ListenChannels.Add( ChannelId );
+                ListenChannels.RemoveAll(x => x == ChannelId);
+
+                if (Listen)
+                {
+                    ListenChannels.Add(ChannelId);
+                }
             }
         }
 
