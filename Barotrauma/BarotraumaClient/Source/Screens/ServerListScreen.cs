@@ -1062,10 +1062,10 @@ namespace Barotrauma
                 serverInfo.Ping = ping;
 
                 pendingPings = Interlocked.Decrement(ref pendingP2PPings);
-                if (pendingPings == 0)
+                /*if (pendingPings == 0)
                 {
                     Steam.SteamManager.Instance.Networking.SetListenChannel(0, false);
-                }
+                }*/
 
                 return;
             }
