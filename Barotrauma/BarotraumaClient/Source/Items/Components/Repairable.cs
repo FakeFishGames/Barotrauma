@@ -1,6 +1,5 @@
 ﻿using Barotrauma.Networking;
 using Barotrauma.Particles;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
@@ -139,12 +138,12 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             deteriorationTimer = msg.ReadSingle();
         }
 
-        public void ClientWrite(NetBuffer msg, object[] extraData = null)
+        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
         {
             //no need to write anything, just letting the server know we started repairing
         }

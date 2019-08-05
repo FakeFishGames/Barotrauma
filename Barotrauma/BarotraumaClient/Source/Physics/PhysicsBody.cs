@@ -45,7 +45,7 @@ namespace Barotrauma
             {
                 if (!body.Enabled)
                 {
-                    color = Color.Gray;
+                    color = Color.Black;
                 }
                 else if (!body.Awake)
                 {
@@ -144,7 +144,7 @@ namespace Barotrauma
                 1.0f / bodyShapeTextureScale, SpriteEffects.None, 0.0f);
         }
 
-        public PosInfo ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime, string parentDebugName)
+        public PosInfo ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime, string parentDebugName)
         {
             float MaxVel            = NetConfig.MaxPhysicsBodyVelocity;
             float MaxAngularVel     = NetConfig.MaxPhysicsBodyAngularVelocity;
@@ -156,8 +156,8 @@ namespace Barotrauma
             float? newAngularVelocity   = null;
 
             newPosition = new Vector2(
-                msg.ReadFloat(), 
-                msg.ReadFloat());
+                msg.ReadSingle(), 
+                msg.ReadSingle());
             
             awake = msg.ReadBoolean();
             bool fixedRotation = msg.ReadBoolean();

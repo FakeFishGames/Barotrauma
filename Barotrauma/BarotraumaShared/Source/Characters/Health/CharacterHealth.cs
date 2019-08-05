@@ -1,9 +1,9 @@
-﻿using Lidgren.Network;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -411,7 +411,7 @@ namespace Barotrauma
                     amount -= reduceAmount;
                 }
             }
-            
+            CalculateVitality();
         }
 
         public void ApplyDamage(Limb hitLimb, AttackResult attackResult)
@@ -732,14 +732,14 @@ namespace Barotrauma
             return allAfflictions;
         }
 
-        public void ServerWrite(NetBuffer msg)
+        public void ServerWrite(IWriteMessage msg)
         {
             List<Affliction> activeAfflictions = afflictions.FindAll(a => a.Strength > 0.0f && a.Strength >= a.Prefab.ActivationThreshold);
 
             msg.Write((byte)activeAfflictions.Count);
             foreach (Affliction affliction in activeAfflictions)
             {
-                msg.WriteRangedInteger(0, AfflictionPrefab.List.Count - 1, AfflictionPrefab.List.IndexOf(affliction.Prefab));
+                msg.WriteRangedIntegerDeprecated(0, AfflictionPrefab.List.Count - 1, AfflictionPrefab.List.IndexOf(affliction.Prefab));
                 msg.WriteRangedSingle(
                     MathHelper.Clamp(affliction.Strength, 0.0f, affliction.Prefab.MaxStrength), 
                     0.0f, affliction.Prefab.MaxStrength, 8);
@@ -758,8 +758,8 @@ namespace Barotrauma
             msg.Write((byte)limbAfflictions.Count);
             foreach (var limbAffliction in limbAfflictions)
             {
-                msg.WriteRangedInteger(0, limbHealths.Count - 1, limbHealths.IndexOf(limbAffliction.First));
-                msg.WriteRangedInteger(0, AfflictionPrefab.List.Count - 1, AfflictionPrefab.List.IndexOf(limbAffliction.Second.Prefab));
+                msg.WriteRangedIntegerDeprecated(0, limbHealths.Count - 1, limbHealths.IndexOf(limbAffliction.First));
+                msg.WriteRangedIntegerDeprecated(0, AfflictionPrefab.List.Count - 1, AfflictionPrefab.List.IndexOf(limbAffliction.Second.Prefab));
                 msg.WriteRangedSingle(
                     MathHelper.Clamp(limbAffliction.Second.Strength, 0.0f, limbAffliction.Second.Prefab.MaxStrength), 
                     0.0f, limbAffliction.Second.Prefab.MaxStrength, 8);

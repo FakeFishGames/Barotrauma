@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -132,7 +131,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ClientWrite(NetBuffer msg, object[] extraData = null)
+        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
         {
             //extradata contains an array of buttons clicked by the player (or nothing if the player didn't click anything)
             for (int i = 0; i < customInterfaceElementList.Count; i++)
@@ -148,7 +147,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             for (int i = 0; i < customInterfaceElementList.Count; i++)
             {

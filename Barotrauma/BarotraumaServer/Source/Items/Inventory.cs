@@ -1,6 +1,5 @@
 ﻿using Barotrauma.Items.Components;
 using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +8,7 @@ namespace Barotrauma
 {
     partial class Inventory : IServerSerializable, IClientSerializable
     {
-        public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
+        public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
         {
             List<Item> prevItems = new List<Item>(Items);
             ushort[] newItemIDs = new ushort[capacity];
@@ -142,7 +141,7 @@ namespace Barotrauma
             }
         }
 
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             SharedWrite(msg, extraData);
         }

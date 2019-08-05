@@ -1,6 +1,5 @@
 ﻿using Barotrauma.Networking;
 using FarseerPhysics;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Xml.Linq;
@@ -286,14 +285,21 @@ namespace Barotrauma.Items.Components
                 item.SetTransform(rightHand.SimPosition, 0.0f);
             }
 
-            bool alreadySelected = character.HasEquippedItem(item);
-            if (picker.TrySelectItem(item) || picker.HasEquippedItem(item))
+            bool alreadyEquipped = character.HasEquippedItem(item);
+            bool canSelect = picker.TrySelectItem(item);
+
+            if (canSelect || picker.HasEquippedItem(item))
             {
+                if (!canSelect)
+                {
+                    character.DeselectItem(item);
+                }
+
                 item.body.Enabled = true;
                 IsActive = true;
 
 #if SERVER
-                if (!alreadySelected) GameServer.Log(character.LogName + " equipped " + item.Name, ServerLog.MessageType.ItemInteraction);
+                if (!alreadyEquipped) GameServer.Log(character.LogName + " equipped " + item.Name, ServerLog.MessageType.ItemInteraction);
 #endif
             }
         }
@@ -557,8 +563,32 @@ namespace Barotrauma.Items.Components
                 DeattachFromWall();
             }
         }
+        
+        public override XElement Save(XElement parentElement)
+        {
+            if (!attachable)
+            {
+                return base.Save(parentElement);
+            }
 
-        public override void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+            var tempMsg = DisplayMsg;
+            var tempPickKey = PickKey;
+            var tempRequiredItems = requiredItems;
+
+            DisplayMsg = prevMsg;
+            PickKey = prevPickKey;
+            requiredItems = prevRequiredItems;
+            
+            XElement saveElement = base.Save(parentElement);
+
+            DisplayMsg = tempMsg;
+            PickKey = tempPickKey;
+            requiredItems = tempRequiredItems;
+
+            return saveElement;
+        }
+        
+        public override void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             base.ServerWrite(msg, c, extraData);
             if (!attachable || body == null) { return; }
@@ -568,11 +598,11 @@ namespace Barotrauma.Items.Components
             msg.Write(body.SimPosition.Y);
         }
 
-        public override void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public override void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             base.ClientRead(type, msg, sendingTime);
             bool shouldBeAttached = msg.ReadBoolean();
-            Vector2 simPosition = new Vector2(msg.ReadFloat(), msg.ReadFloat());
+            Vector2 simPosition = new Vector2(msg.ReadSingle(), msg.ReadSingle());
 
             if (!attachable)
             {

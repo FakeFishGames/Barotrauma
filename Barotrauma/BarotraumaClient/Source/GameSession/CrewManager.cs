@@ -455,9 +455,13 @@ namespace Barotrauma
                 isHorizontal: true, childAnchor: Anchor.CenterLeft)
             {
                 AbsoluteSpacing = (int)(10 * GUI.Scale),
-                UserData = "orderbuttons",
-                CanBeFocused = false
+                UserData = "orderbuttons"
             };
+
+            var spacer = new GUIFrame(new RectTransform(new Point(spacing, orderButtonFrame.Rect.Height), frame.RectTransform)
+            {
+                AbsoluteOffset = new Point(characterInfoWidth, 0)
+            });
 
             //listbox for holding the orders inappropriate for this character
             //(so we can easily toggle their visibility)
@@ -1357,7 +1361,9 @@ namespace Barotrauma
             {
                 reportButtonFrame.Visible = true;
 
-                var reportButtonParent = ChatBox ?? GameMain.Client.ChatBox;
+                var reportButtonParent = ChatBox ?? GameMain.Client?.ChatBox;
+                if (reportButtonParent == null) { return; }
+
                 reportButtonFrame.RectTransform.AbsoluteOffset = new Point(
                     Math.Min(reportButtonParent.GUIFrame.Rect.X, reportButtonParent.ToggleButton.Rect.X) - reportButtonFrame.Rect.Width - (int)(10 * GUI.Scale),
                     reportButtonParent.GUIFrame.Rect.Y);

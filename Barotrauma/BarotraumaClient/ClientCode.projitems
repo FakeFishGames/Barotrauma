@@ -40,6 +40,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameMain.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\CrewManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameMode.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\CampaignMode.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\MultiPlayerCampaign.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\SinglePlayerCampaign.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\Tutorials\BasicTutorial.cs" />
@@ -160,10 +161,15 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\EntitySpawner.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\FileTransfer\FileReceiver.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\GameClient.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\KarmaManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetEntityEvent\ClientEntityEventManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetEntityEvent\NetEntityEvent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetStats.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\OrderChatMessage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Primitives\Peers\ClientPeer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Primitives\Peers\LidgrenClientPeer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Primitives\Peers\SteamP2PClientPeer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Primitives\Peers\SteamP2POwnerPeer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\RespawnManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\ServerInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\ServerLog.cs" />

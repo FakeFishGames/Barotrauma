@@ -278,7 +278,7 @@ namespace Barotrauma
                     Color.White, Color.Black * 0.5f, 0, SmallFont);
 
                 DrawString(spriteBatch, new Vector2(10, 40),
-                    "Bodies: " + GameMain.World.BodyList.Count + " (" + GameMain.World.BodyList.FindAll(b => b.Awake && b.Enabled).Count + " awake)",
+                    $"Bodies: {GameMain.World.BodyList.Count} ({GameMain.World.BodyList.FindAll(b => b.Awake && b.Enabled).Count} awake, {GameMain.World.BodyList.FindAll(b => b.Awake && b.BodyType == FarseerPhysics.Dynamics.BodyType.Dynamic && b.Enabled).Count} dynamic)",
                     Color.White, Color.Black * 0.5f, 0, SmallFont);
 
                 if (Screen.Selected.Cam != null)
@@ -343,17 +343,20 @@ namespace Barotrauma
                                 soundStr += " (looping)";
                                 clr = Color.Yellow;
                             }
-
                             if (playingSoundChannel.IsStream)
                             {
                                 soundStr += " (streaming)";
                                 clr = Color.Lime;
                             }
-
                             if (!playingSoundChannel.IsPlaying)
                             {
                                 soundStr += " (stopped)";
                                 clr *= 0.5f;
+                            }
+                            else if (playingSoundChannel.Muffled)
+                            {
+                                soundStr += " (muffled)";
+                                clr = Color.Lerp(clr, Color.LightGray, 0.5f);
                             }
                         }
 
@@ -638,6 +641,12 @@ namespace Barotrauma
                 }
             }
             return MouseOn;
+        }
+
+        public static bool HasSizeChanged(Point referenceResolution, float referenceUIScale, float referenceHUDScale)
+        {
+            return GameMain.GraphicsWidth != referenceResolution.X || GameMain.GraphicsHeight != referenceResolution.Y ||
+                   referenceUIScale != Inventory.UIScale || referenceHUDScale != Scale;
         }
 
         public static void Update(float deltaTime)
@@ -1040,6 +1049,8 @@ namespace Barotrauma
 
         public static Texture2D CreateRectangle(int width, int height)
         {
+            width = Math.Max(width, 1);
+            height = Math.Max(height, 1);
             Color[] data = new Color[width * height];
 
             for (int i = 0; i < data.Length; i++)
@@ -1056,7 +1067,6 @@ namespace Barotrauma
                 TrySetArray(data, x, Color.White);
                 TrySetArray(data, (height - 1) * width + x, Color.White);
             }
-
 
             Texture2D texture = null;
             CrossThread.RequestExecutionOnMainThread(() =>
@@ -1460,6 +1470,9 @@ namespace Barotrauma
 
             if (pauseMenuOpen)
             {
+                Inventory.draggingItem = null;
+                Inventory.DraggingInventory = null;
+
                 PauseMenu = new GUIFrame(new RectTransform(Vector2.One, Canvas), style: null, color: Color.Black * 0.5f);
                     
                 var pauseMenuInner = new GUIFrame(new RectTransform(new Vector2(0.13f, 0.35f), PauseMenu.RectTransform, Anchor.Center) { MinSize = new Point(200, 300) });

@@ -6,71 +6,220 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Barotrauma.Steam
 {
     partial class SteamManager
     {
-        private static List<string> initializationErrors = new List<string>();
-        public static IEnumerable<string> InitializationErrors
-        {
-            get { return initializationErrors; }
-        }
+        public Facepunch.Steamworks.Networking Networking => client?.Networking;
+        public Facepunch.Steamworks.User User => client?.User;
+        public Facepunch.Steamworks.Friends Friends => client?.Friends;
+        public Facepunch.Steamworks.Overlay Overlay => client?.Overlay;
+        public Facepunch.Steamworks.Auth Auth => client?.Auth;
 
         private SteamManager()
         {
+            client = null;
+            isInitialized = InitializeClient();
+        }
+
+        private bool InitializeClient()
+        {
+            if (client != null) { return true; }
+            bool clientInitialized = false;
             try
             {
                 client = new Facepunch.Steamworks.Client(AppID);
-                isInitialized = client.IsSubscribed && client.IsValid;
+                clientInitialized = client.IsSubscribed && client.IsValid;
 
-                if (isInitialized)
+                if (clientInitialized)
                 {
-                    DebugConsole.Log("Logged in as " + client.Username + " (SteamID " + client.SteamId + ")");
+                    DebugConsole.NewMessage("Logged in as " + client.Username + " (SteamID " + SteamIDUInt64ToString(client.SteamId) + ")");
                 }
             }
             catch (DllNotFoundException)
             {
-                isInitialized = false;
+                clientInitialized = false;
                 initializationErrors.Add("SteamDllNotFound");
             }
             catch (Exception)
             {
-                isInitialized = false;
+                clientInitialized = false;
                 initializationErrors.Add("SteamClientInitFailed");
             }
 
-            if (!isInitialized)
+            if (!clientInitialized)
             {
                 try
                 {
-
                     Facepunch.Steamworks.Client.Instance.Dispose();
                 }
                 catch (Exception e)
                 {
                     if (GameSettings.VerboseLogging) DebugConsole.ThrowError("Disposing Steam client failed.", e);
                 }
+                client = null;
+            }
+            return clientInitialized;
+        }
+
+        private enum LobbyState
+        {
+            NotOwner,
+            Creating,
+            Owner
+        }
+        private static LobbyState lobbyState = LobbyState.NotOwner;
+        private static string lobbyIP = "";
+        private static Thread lobbyIPRetrievalThread;
+
+        private static void RetrieveLobbyIP()
+        {
+            //TODO: set up our own server for IP retrieval?
+
+            Server tempServer = null;
+            try
+            {
+                var serverInit = new ServerInit("Barotrauma", "Barotrauma IP Retrieval")
+                {
+                    GamePort = (ushort)27015,
+                    QueryPort = (ushort)27016
+                };
+                tempServer = new Server(AppID, serverInit, false);
+                if (!tempServer.IsValid)
+                {
+                    tempServer.Dispose();
+                    tempServer = null;
+                    DebugConsole.ThrowError("Failed to retrieve public IP: Initializing Steam server failed.");
+                    return;
+                }
+
+                tempServer.LogOnAnonymous();
+                lobbyIP = "";
+                for (int i = 0; i < 30*60; i++)
+                {
+                    tempServer.Update();
+                    tempServer.ForceHeartbeat();
+                    if (tempServer.PublicIp != null)
+                    {
+                        lobbyIP = tempServer.PublicIp.ToString();
+                        DebugConsole.NewMessage("Successfully retrieved public IP: "+lobbyIP, Microsoft.Xna.Framework.Color.Lime);
+                        instance.client.Lobby.CurrentLobbyData.SetData("hostipaddress", lobbyIP);
+                        break;
+                    }
+                    Thread.Sleep(16);
+                }
+
+                tempServer.Dispose();
+                tempServer = null;
+                if (string.IsNullOrWhiteSpace(lobbyIP))
+                {
+                    DebugConsole.ThrowError("Failed to retrieve public IP: Timed out.");
+                }
+            }
+            catch
+            {
+                tempServer?.Dispose();
+                tempServer = null;
             }
         }
 
-        public static ulong GetSteamID()
+        public static void CreateLobby(ServerSettings serverSettings)
         {
-            if (instance == null || !instance.isInitialized)
+            instance.client.Lobby.OnLobbyCreated = (success) =>
             {
-                return 0;
+                if (!success)
+                {
+                    DebugConsole.ThrowError("Failed to create Steam lobby!");
+                    lobbyState = LobbyState.NotOwner;
+                    return;
+                }
+                DebugConsole.NewMessage("Lobby created!", Microsoft.Xna.Framework.Color.Lime);
+
+                lobbyIPRetrievalThread?.Abort();
+                lobbyIPRetrievalThread?.Join();
+                lobbyIPRetrievalThread = null;
+                lobbyIPRetrievalThread = new Thread(new ThreadStart(RetrieveLobbyIP));
+                lobbyIPRetrievalThread.IsBackground = true;
+                lobbyIPRetrievalThread.Start();
+
+                lobbyState = LobbyState.Owner;
+                UpdateLobby(serverSettings);
+            };
+            if (lobbyState != LobbyState.NotOwner) { return; }
+            lobbyState = LobbyState.Creating;
+            instance.client.Lobby.Create(serverSettings.isPublic ? Lobby.Type.Public : Lobby.Type.FriendsOnly, 1);
+            instance.client.Lobby.Joinable = true;
+        }
+        
+        public static void UpdateLobby(ServerSettings serverSettings)
+        {
+            if (lobbyState == LobbyState.NotOwner)
+            {
+                CreateLobby(serverSettings);
             }
-            return instance.client.SteamId;
+
+            if (lobbyState != LobbyState.Owner)
+            {
+                return;
+            }
+            
+            var contentPackages = GameMain.Config.SelectedContentPackages.Where(cp => cp.HasMultiplayerIncompatibleContent);
+            
+            instance.client.Lobby.Name = serverSettings.ServerName;
+            instance.client.Lobby.Owner = Steam.SteamManager.GetSteamID();
+            instance.client.Lobby.MaxMembers = serverSettings.MaxPlayers;
+            instance.client.Lobby.CurrentLobbyData.SetData("currplayernum", (GameMain.Client?.ConnectedClients?.Count??0).ToString());
+            instance.client.Lobby.CurrentLobbyData.SetData("maxplayernum", serverSettings.MaxPlayers.ToString());
+            instance.client.Lobby.CurrentLobbyData.SetData("hostipaddress", lobbyIP);
+            instance.client.Lobby.CurrentLobbyData.SetData("connectsteamid", Steam.SteamManager.GetSteamID().ToString());
+            instance.client.Lobby.CurrentLobbyData.SetData("haspassword", serverSettings.HasPassword.ToString());
+
+            instance.client.Lobby.CurrentLobbyData.SetData("message", serverSettings.ServerMessageText);
+            instance.client.Lobby.CurrentLobbyData.SetData("version", GameMain.Version.ToString());
+
+            instance.client.Lobby.CurrentLobbyData.SetData("contentpackage", string.Join(",", contentPackages.Select(cp => cp.Name)));
+            instance.client.Lobby.CurrentLobbyData.SetData("contentpackagehash", string.Join(",", contentPackages.Select(cp => cp.MD5hash.Hash)));
+            instance.client.Lobby.CurrentLobbyData.SetData("contentpackageurl", string.Join(",", contentPackages.Select(cp => cp.SteamWorkshopUrl ?? "")));
+            instance.client.Lobby.CurrentLobbyData.SetData("usingwhitelist", (serverSettings.Whitelist != null && serverSettings.Whitelist.Enabled).ToString());
+            instance.client.Lobby.CurrentLobbyData.SetData("modeselectionmode", serverSettings.ModeSelectionMode.ToString());
+            instance.client.Lobby.CurrentLobbyData.SetData("subselectionmode", serverSettings.SubSelectionMode.ToString());
+            instance.client.Lobby.CurrentLobbyData.SetData("voicechatenabled", serverSettings.VoiceChatEnabled.ToString());
+            instance.client.Lobby.CurrentLobbyData.SetData("allowspectating", serverSettings.AllowSpectating.ToString());
+            instance.client.Lobby.CurrentLobbyData.SetData("allowrespawn", serverSettings.AllowRespawn.ToString());
+            instance.client.Lobby.CurrentLobbyData.SetData("traitors", serverSettings.TraitorsEnabled.ToString());
+            instance.client.Lobby.CurrentLobbyData.SetData("gamestarted", GameMain.Client.GameStarted.ToString());
+            instance.client.Lobby.CurrentLobbyData.SetData("gamemode", serverSettings.GameModeIdentifier);
+
+            DebugConsole.NewMessage("Lobby updated!", Microsoft.Xna.Framework.Color.Lime);
         }
 
-        public static string GetUsername()
+        public static void LeaveLobby()
         {
-            if (instance == null || !instance.isInitialized)
-            {
-                return "";
-            }
-            return instance.client.Username;
+            lobbyIPRetrievalThread?.Abort();
+            lobbyIPRetrievalThread?.Join();
+            lobbyIPRetrievalThread = null;
+
+            instance.client.Lobby.Leave();
+            lobbyIP = "";
+            lobbyState = LobbyState.NotOwner;
         }
+
+        /*TODO: determine if we should have people join lobbies
+        public static void JoinLobby(UInt64 steamId)
+        {
+            instance.client.Lobby.OnLobbyJoined = (success) =>
+            {
+                if (!success)
+                {
+                    //allowing silent failure here
+                    //DebugConsole.ThrowError("Failed to join Steam lobby!");
+                }
+            };
+            instance.client.Lobby.Join(steamId);
+        }*/
 
         public static ulong GetWorkshopItemIDFromUrl(string url)
         {
@@ -112,12 +261,15 @@ namespace Barotrauma.Steam
             //the response is queried using the server's query port, not the game port,
             //so it may be possible to play on the server even if it doesn't respond to server list queries
             var query = instance.client.ServerList.Internet(filter);
-            query.OnUpdate += () => { UpdateServerQuery(query, onServerFound, onServerRulesReceived, includeUnresponsive: true); };
+            query.OnUpdate = () => { UpdateServerQuery(query, onServerFound, onServerRulesReceived, includeUnresponsive: true); };
             query.OnFinished = onFinished;
 
             var localQuery = instance.client.ServerList.Local(filter);
-            localQuery.OnUpdate += () => { UpdateServerQuery(localQuery, onServerFound, onServerRulesReceived, includeUnresponsive: true); };
+            localQuery.OnUpdate = () => { UpdateServerQuery(localQuery, onServerFound, onServerRulesReceived, includeUnresponsive: true); };
             localQuery.OnFinished = onFinished;
+
+            instance.client.LobbyList.OnLobbiesUpdated = () => { UpdateLobbyQuery(onServerFound, onServerRulesReceived, onFinished); };
+            instance.client.LobbyList.Refresh();
 
             return true;
         }
@@ -141,7 +293,7 @@ namespace Barotrauma.Steam
             //the response is queried using the server's query port, not the game port,
             //so it may be possible to play on the server even if it doesn't respond to server list queries
             var query = instance.client.ServerList.Favourites(filter);
-            query.OnUpdate += () => { UpdateServerQuery(query, onServerFound, onServerRulesReceived, includeUnresponsive: true); };
+            query.OnUpdate = () => { UpdateServerQuery(query, onServerFound, onServerRulesReceived, includeUnresponsive: true); };
             query.OnFinished = onFinished;
 
             return true;
@@ -166,10 +318,73 @@ namespace Barotrauma.Steam
             //the response is queried using the server's query port, not the game port,
             //so it may be possible to play on the server even if it doesn't respond to server list queries
             var query = instance.client.ServerList.History(filter);
-            query.OnUpdate += () => { UpdateServerQuery(query, onServerFound, onServerRulesReceived, includeUnresponsive: true); };
+            query.OnUpdate = () => { UpdateServerQuery(query, onServerFound, onServerRulesReceived, includeUnresponsive: true); };
             query.OnFinished = onFinished;
 
             return true;
+        }
+
+        private static void UpdateLobbyQuery(Action<Networking.ServerInfo> onServerFound, Action<Networking.ServerInfo> onServerRulesReceived, Action onFinished)
+        {
+            foreach (LobbyList.Lobby lobby in instance.client.LobbyList.Lobbies)
+            {
+                bool hasPassword = false;
+                if (string.IsNullOrWhiteSpace(lobby.GetData("haspassword"))) { continue; }
+                bool.TryParse(lobby.GetData("haspassword"), out hasPassword);
+                int currPlayers = 1;
+                int.TryParse(lobby.GetData("currplayernum"), out currPlayers);
+                int maxPlayers = 1;
+                int.TryParse(lobby.GetData("maxplayernum"), out maxPlayers);
+                UInt64 connectSteamId = 0;
+                UInt64.TryParse(lobby.GetData("connectsteamid"), out connectSteamId);
+                string ip = lobby.GetData("hostipaddress");
+                if (string.IsNullOrWhiteSpace(ip)) { ip = ""; }
+
+                var serverInfo = new ServerInfo()
+                {
+                    ServerName = lobby.Name,
+                    Port = "",
+                    IP = ip,
+                    PlayerCount = currPlayers,
+                    MaxPlayers = maxPlayers,
+                    HasPassword = hasPassword,
+                    RespondedToSteamQuery = true,
+                    SteamID = connectSteamId
+                };
+                serverInfo.PingChecked = false;
+                serverInfo.ServerMessage = lobby.GetData("message");
+                serverInfo.GameVersion = lobby.GetData("version");
+
+                serverInfo.ContentPackageNames.AddRange(lobby.GetData("contentpackage").Split(','));
+                serverInfo.ContentPackageHashes.AddRange(lobby.GetData("contentpackagehash").Split(','));
+                serverInfo.ContentPackageWorkshopUrls.AddRange(lobby.GetData("contentpackageurl").Split(','));
+
+                serverInfo.UsingWhiteList = lobby.GetData("usingwhitelist") == "True";
+                SelectionMode selectionMode;
+                if (Enum.TryParse(lobby.GetData("modeselectionmode"), out selectionMode)) serverInfo.ModeSelectionMode = selectionMode;
+                if (Enum.TryParse(lobby.GetData("subselectionmode"), out selectionMode)) serverInfo.SubSelectionMode = selectionMode;
+
+                serverInfo.AllowSpectating = lobby.GetData("allowspectating") == "True";
+                serverInfo.AllowRespawn = lobby.GetData("allowrespawn") == "True";
+                serverInfo.VoipEnabled = lobby.GetData("voicechatenabled") == "True";
+                if (Enum.TryParse(lobby.GetData("traitors"), out YesNoMaybe traitorsEnabled)) serverInfo.TraitorsEnabled = traitorsEnabled;
+
+                serverInfo.GameStarted = lobby.GetData("gamestarted") == "True";
+                serverInfo.GameMode = lobby.GetData("gamemode");
+
+                if (serverInfo.ContentPackageNames.Count != serverInfo.ContentPackageHashes.Count ||
+                    serverInfo.ContentPackageHashes.Count != serverInfo.ContentPackageWorkshopUrls.Count)
+                {
+                    //invalid contentpackage info
+                    serverInfo.ContentPackageNames.Clear();
+                    serverInfo.ContentPackageHashes.Clear();
+                }
+
+                onServerFound(serverInfo);
+                //onServerRulesReceived(serverInfo);
+            }
+
+            onFinished();
         }
 
         private static void UpdateServerQuery(ServerList.Request query, Action<Networking.ServerInfo> onServerFound, Action<Networking.ServerInfo> onServerRulesReceived, bool includeUnresponsive)
@@ -191,6 +406,11 @@ namespace Barotrauma.Steam
                 {
                     DebugConsole.Log(s.Name + " did not respond to server query.");
                 }
+                
+                UInt64 serverSteamId = 0;
+
+                if (s.Description == "Barotrauma IP Retrieval") { continue; }
+
                 var serverInfo = new ServerInfo()
                 {
                     ServerName = s.Name,
@@ -203,6 +423,7 @@ namespace Barotrauma.Steam
                 };
                 serverInfo.PingChecked = true;
                 serverInfo.Ping = s.Ping;
+                serverInfo.SteamID = serverSteamId;
                 if (responded)
                 {
                     s.FetchRules();
@@ -210,7 +431,7 @@ namespace Barotrauma.Steam
                 s.OnReceivedRules += (bool rulesReceived) =>
                 {
                     if (!rulesReceived || s.Rules == null) { return; }
-
+                    
                     if (s.Rules.ContainsKey("message")) serverInfo.ServerMessage = s.Rules["message"];
                     if (s.Rules.ContainsKey("version")) serverInfo.GameVersion = s.Rules["version"];
 
@@ -276,8 +497,30 @@ namespace Barotrauma.Steam
             {
                 return null;
             }
-
+            
             return instance.client.Auth.GetAuthSessionTicket();
+        }
+
+        public static ClientStartAuthSessionResult StartAuthSession(byte[] authTicketData, ulong clientSteamID)
+        {
+            if (instance == null || !instance.isInitialized || instance.client == null) return ClientStartAuthSessionResult.ServerNotConnectedToSteam;
+
+            DebugConsole.NewMessage("SteamManager authenticating Steam client " + clientSteamID);
+            ClientStartAuthSessionResult startResult = instance.client.Auth.StartSession(authTicketData, clientSteamID);
+            if (startResult != ClientStartAuthSessionResult.OK)
+            {
+                DebugConsole.NewMessage("Authentication failed: failed to start auth session (" + startResult.ToString() + ")");
+            }
+
+            return startResult;
+        }
+
+        public static void StopAuthSession(ulong clientSteamID)
+        {
+            if (instance == null || !instance.isInitialized || instance.client == null) return;
+
+            DebugConsole.NewMessage("SteamManager ending auth session with Steam client " + clientSteamID);
+            instance.client.Auth.EndSession(clientSteamID);
         }
 
         #endregion

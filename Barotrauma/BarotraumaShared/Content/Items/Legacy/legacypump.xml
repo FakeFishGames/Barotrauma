@@ -10,7 +10,7 @@
     <Sprite texture="pump.png" depth="0.8" sourcerect="0,0,128,128"/>
 
     <Pump canbeselected="true" maxflow="500" PowerConsumption="300.0" MinVoltage="0.3">
-      <GuiFrame relativesize="0.25,0.15" minsize="330,145" maxsize="400,175" anchor="Center" style="ItemUI"/>
+      <GuiFrame relativesize="0.25,0.18" minsize="330,145" maxsize="400,175" anchor="Center" style="ItemUI"/>
       <sound file="Content/Items/Pump/Pump.ogg" type="OnActive" range="800.0" volumeproperty="CurrFlow" volume="0.01" loop="true"/>
     </Pump>
 
@@ -35,7 +35,7 @@
     <Sprite texture="smallpump.png" depth="0.8" sourcerect="0,0,64,48"/>
 
     <Pump canbeselected = "true" maxflow="100" PowerConsumption="60.0" MinVoltage="0.3">
-      <GuiFrame relativesize="0.25,0.15" minsize="330,145" maxsize="400,175" anchor="Center" style="ItemUI"/>
+      <GuiFrame relativesize="0.25,0.18" minsize="330,145" maxsize="400,175" anchor="Center" style="ItemUI"/>
       <sound file="Content/Items/Pump/Pump.ogg" type="OnActive" range="500.0" volumeproperty="CurrFlow" volume="0.005" loop="true"/>
     </Pump>
 

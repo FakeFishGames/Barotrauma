@@ -79,6 +79,7 @@
     selfcauseofdeathdescription="You have bled to death."
     limbspecific="true"
     maxstrength="100"
+    karmachangeonapplied="-1"
     damageoverlayalpha="1">
     <Effect minstrength="0" maxstrength="100"
       minvitalitydecrease="0"
@@ -183,7 +184,8 @@
     limbspecific="false"
     indicatorlimb="Torso"
     activationthreshold="0"
-    showiconthreshold="40"
+    showiconthreshold="40"    
+    karmachangeonapplied="-1"
     maxstrength="100"
     achievementonremoved="healhusk">
     <Effect minstrength="0" maxstrength="100"
@@ -191,7 +193,55 @@
       strengthchange="0.3"/>
     <icon texture="Content/UI/IconAtlas.png" sourcerect="0,640,128,128" color="60,107,195,255" origin="0,0"/>
   </AfflictionHusk>
-  
+
+  <AfflictionSpaceHerpes
+    name="Space herpes"
+    identifier="spaceherpes"
+    description=""
+    type="spaceherpes"
+    causeofdeathdescription=""
+    selfcauseofdeathdescription=""
+    limbspecific="false"
+    indicatorlimb="Torso"
+    showiconthreshold="20"
+    maxstrength="100">
+    
+    <Effect minstrength="0" maxstrength="50"
+      minscreendistort="0.0"
+      maxscreendistort="0.0"
+      minradialdistort="0.0"
+      maxradialdistort="0.0">
+    </Effect>
+    <Effect minstrength="50" maxstrength="100"
+      minscreendistort="0.0"
+      maxscreendistort="0.5"
+      minradialdistort="0.0"
+      maxradialdistort="0.5">
+      <StatusEffect target="Character" SpeedMultiplier="0.6" setvalue="true"/>
+    </Effect>
+
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="0,384,128,128" color="193,162,122,255" origin="0,0"/>
+  </AfflictionSpaceHerpes>
+
+  <Affliction
+    name="Disoriented"
+    identifier="invertcontrols"
+    description=""
+    type="invertcontrols"
+    causeofdeathdescription=""
+    selfcauseofdeathdescription=""
+    limbspecific="false"
+    showiconthreshold="100"
+    maxstrength="100">
+    <Effect minstrength="50" maxstrength="100"
+      minscreendistort="0.0"
+      maxscreendistort="0.5"
+      minradialdistort="0.0"
+      maxradialdistort="0.5"
+      strengthchange="-1.0">
+      <StatusEffect target="Character" SpeedMultiplier="0.7" setvalue="true"/>
+    </Effect>
+  </Affliction>
   <!-- Special afflictions -->
 
   <AfflictionPsychosis
@@ -202,7 +252,8 @@
     limbspecific="false"
     indicatorlimb="Head"
     activationthreshold="0"
-    showiconthreshold="40"
+    showiconthreshold="40"    
+    karmachangeonapplied="-1"
     maxstrength="100"
     achievementonremoved="healpsychosis">
     <Effect minstrength="0" maxstrength="100"
@@ -327,7 +378,8 @@
     selfcauseofdeathdescription="You have died of opiate overdose."
     limbspecific="false"
     indicatorlimb="Head"
-    showiconthreshold="50"
+    showiconthreshold="50"    
+    karmachangeonapplied="-1"
     maxstrength="100">
     <!-- No effects except slight distortion at this level -->
     <Effect minstrength="0" maxstrength="50"
@@ -362,7 +414,8 @@
     limbspecific="false"
     indicatorlimb="Head"    
     showiconthreshold="20"
-    maxstrength="100"
+    maxstrength="100"    
+    karmachangeonapplied="-0.1"
     achievementonremoved="healopiateaddiction">
     <Effect minstrength="0" maxstrength="20" strengthchange="-0.05"/>
     
@@ -398,6 +451,7 @@
     selfcauseofdeathdescription="You have died of gunshot wounds."
     limbspecific="true"
     maxstrength="100"
+    karmachangeonapplied="-1"
     damageoverlayalpha="1"
     strengthchange="-0.1">
     <Effect minstrength="0" maxstrength="100"
@@ -417,6 +471,7 @@
     limbspecific="false"
     indicatorlimb="Torso"
     showiconthreshold="10"
+    karmachangeonapplied="-1"
     maxstrength="100">
     <!-- Cause burns depending on strength -->
     <Effect minstrength="0" maxstrength="25">
@@ -460,6 +515,7 @@
     limbspecific="false"
     indicatorlimb="Torso"
     showiconthreshold="5"
+    karmachangeonapplied="-20"
     maxstrength="100">
     <!-- Slow down the character and decrease vitality -->
     <!-- Becomes lethal in ~50 seconds -->
@@ -488,6 +544,7 @@
     limbspecific="false"
     indicatorlimb="Torso"
     showiconthreshold="5"
+    karmachangeonapplied="-10"
     maxstrength="100">
     <!-- Slow down the character and decrease vitality -->
     <!-- Becomes lethal in ~50 seconds -->
@@ -516,6 +573,7 @@
     limbspecific="false"
     indicatorlimb="Torso"
     showiconthreshold="5"
+    karmachangeonapplied="-5"
     maxstrength="100">
     <!-- Slowly cause psychosis -->
     <!-- Non-lethal -->
@@ -537,6 +595,7 @@
     limbspecific="false"
     indicatorlimb="Torso"
     showiconthreshold="5"
+    karmachangeonapplied="-10"
     maxstrength="100">
     <!-- Decrease vitality, slow player down -->
     <!-- Becomes lethal in ~100 seconds -->
@@ -684,5 +743,6 @@
     <icon texture="Content/UI/IconAtlas.png" sourcerect="256,896,128,128" color="10,193,114,255" origin="0,0"/>
   </Affliction>
   
+
 
 </Afflictions>

@@ -117,6 +117,14 @@ namespace Barotrauma.Networking
                 else
                 {
                     RespawnShuttle.SetPosition(spawnPos);
+                    RespawnShuttle.Velocity = Vector2.Zero;
+                    if (shuttleSteering != null)
+                    {
+                        shuttleSteering.AutoPilot = true;
+                        shuttleSteering.MaintainPos = true;
+                        shuttleSteering.PosToMaintain = RespawnShuttle.WorldPosition;
+                        shuttleSteering.UnsentChanges = true;
+                    }
                 }
             }
             else
@@ -266,9 +274,9 @@ namespace Barotrauma.Networking
                     }
 
                     clients[i].Character = character;
-                    character.OwnerClientIP = clients[i].Connection.RemoteEndPoint.Address.ToString();
+                    character.OwnerClientEndPoint = clients[i].Connection.EndPointString;
                     character.OwnerClientName = clients[i].Name;
-                    GameServer.Log(string.Format("Respawning {0} ({1}) as {2}", clients[i].Name, clients[i].Connection?.RemoteEndPoint?.Address, characterInfos[i].Job.Name), ServerLog.MessageType.Spawning);
+                    GameServer.Log(string.Format("Respawning {0} ({1}) as {2}", clients[i].Name, clients[i].Connection?.EndPointString, characterInfos[i].Job.Name), ServerLog.MessageType.Spawning);
                 }
 
                 if (divingSuitPrefab != null && oxyPrefab != null && RespawnShuttle != null)
@@ -317,9 +325,9 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
-            msg.WriteRangedInteger(0, Enum.GetNames(typeof(State)).Length, (int)CurrentState);
+            msg.WriteRangedIntegerDeprecated(0, Enum.GetNames(typeof(State)).Length, (int)CurrentState);
 
             switch (CurrentState)
             {

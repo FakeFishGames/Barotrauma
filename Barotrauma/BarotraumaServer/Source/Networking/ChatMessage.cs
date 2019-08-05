@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Items.Components;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
@@ -9,7 +8,7 @@ namespace Barotrauma.Networking
 {
     partial class ChatMessage
     {
-        public static void ServerRead(NetIncomingMessage msg, Client c)
+        public static void ServerRead(IReadMessage msg, Client c)
         {
             c.KickAFKTimer = 0.0f;
 
@@ -61,30 +60,33 @@ namespace Barotrauma.Networking
             }
 
             float similarity = 0.0f;
-            //don't do message similarity checks on order messages
-            if (orderMsg == null)
+            for (int i = 0; i < c.LastSentChatMessages.Count; i++)
             {
-                for (int i = 0; i < c.LastSentChatMessages.Count; i++)
+                float closeFactor = 1.0f / (c.LastSentChatMessages.Count - i);
+                    
+                if (string.IsNullOrEmpty(txt))
                 {
-                    float closeFactor = 1.0f / (c.LastSentChatMessages.Count - i);
-                    if (string.IsNullOrEmpty(txt))
-                    {
-                        similarity += closeFactor;
-                    }
-                    else
-                    {
-                        int levenshteinDist = ToolBox.LevenshteinDistance(txt, c.LastSentChatMessages[i]);
-                        similarity += Math.Max((txt.Length - levenshteinDist) / (float)txt.Length * closeFactor, 0.0f);
-                    }
+                    similarity += closeFactor;
                 }
+                else
+                {
+                    int levenshteinDist = ToolBox.LevenshteinDistance(txt, c.LastSentChatMessages[i]);
+                    similarity += Math.Max((txt.Length - levenshteinDist) / (float)txt.Length * closeFactor, 0.0f);
+                }
+            }
+            //order/report messages can be sent a little faster than normal messages without triggering the spam filter
+            if (orderMsg != null)
+            {
+                similarity *= 0.25f;
             }
 
             bool isOwner = GameMain.Server.OwnerConnection != null && c.Connection == GameMain.Server.OwnerConnection;
 
             if (similarity + c.ChatSpamSpeed > 5.0f && !isOwner)
             {
-                c.ChatSpamCount++;
+                GameMain.Server.KarmaManager.OnSpamFilterTriggered(c);
 
+                c.ChatSpamCount++;
                 if (c.ChatSpamCount > 3)
                 {
                     //kick for spamming too much
@@ -152,7 +154,7 @@ namespace Barotrauma.Networking
             return length;
         }
 
-        public virtual void ServerWrite(NetOutgoingMessage msg, Client c)
+        public virtual void ServerWrite(IWriteMessage msg, Client c)
         {
             msg.Write((byte)ServerNetObject.CHAT_MESSAGE);
             msg.Write(NetStateID);

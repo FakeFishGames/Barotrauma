@@ -113,6 +113,17 @@ namespace Facepunch.Steamworks
         }
 
         /// <summary>
+        /// Gets the server owner's SteamID.
+        /// </summary>
+        public ulong SteamId
+        {
+            get
+            {
+                return native.gameServer.GetSteamID();
+            }
+        }
+
+        /// <summary>
         /// Sets whether this should be marked as a dedicated server.
         /// If not, it is assumed to be a listen server.
         /// </summary>

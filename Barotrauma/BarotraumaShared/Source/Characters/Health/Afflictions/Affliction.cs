@@ -19,6 +19,11 @@ namespace Barotrauma
         public Affliction MultiplierSource;
 
         /// <summary>
+        /// Probability for the affliction to be applied. Used by attacks.
+        /// </summary>
+        public float ApplyProbability = 1.0f;
+
+        /// <summary>
         /// Which character gave this affliction
         /// </summary>
         public Character Source;
@@ -162,6 +167,7 @@ namespace Barotrauma
 
             foreach (StatusEffect statusEffect in currentEffect.StatusEffects)
             {
+                statusEffect.SetUser(Source);
                 if (statusEffect.HasTargetType(StatusEffect.TargetType.Character))
                 {
                     statusEffect.Apply(ActionType.OnActive, deltaTime, characterHealth.Character, characterHealth.Character);

@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Lidgren.Network;
 
 namespace Barotrauma.Networking
 {
     partial class OrderChatMessage : ChatMessage
     {
-        public override void ServerWrite(NetOutgoingMessage msg, Client c)
+        public override void ServerWrite(IWriteMessage msg, Client c)
         {
             msg.Write((byte)ServerNetObject.CHAT_MESSAGE);
             msg.Write(NetStateID);

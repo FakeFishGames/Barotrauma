@@ -1383,7 +1383,7 @@ namespace Barotrauma
                 OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) ClosePlayerFrame(btn, userdata); return true; }
             };
 
-            Vector2 frameSize = GameMain.Client.HasPermission(ClientPermissions.ManagePermissions) ? new Vector2(.24f, .34f) : new Vector2(.24f, .14f);
+            Vector2 frameSize = GameMain.Client.HasPermission(ClientPermissions.ManagePermissions) ? new Vector2(.24f, .44f) : new Vector2(.24f, .24f);
 
             var playerFrameInner = new GUIFrame(new RectTransform(frameSize, playerFrame.RectTransform, Anchor.Center));
             var paddedPlayerFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), playerFrameInner.RectTransform, Anchor.Center))
@@ -1530,13 +1530,29 @@ namespace Barotrauma
             }
 
             var buttonAreaUpper = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform), isHorizontal: true);
+            var buttonAreaMiddle = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform), isHorizontal: true);
             var buttonAreaLower = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform), isHorizontal: true);
-            
+
+            if (selectedClient.SteamID != 0 && Steam.SteamManager.IsInitialized)
+            {
+                var viewSteamProfileButton = new GUIButton(new RectTransform(new Vector2(0.8f, 1.0f), buttonAreaUpper.RectTransform, Anchor.TopCenter),
+                        TextManager.Get("ViewSteamProfile"))
+                {
+                    UserData = selectedClient
+                };
+
+                viewSteamProfileButton.OnClicked = (bt, userdata) =>
+                {
+                    Steam.SteamManager.Instance.Overlay.OpenUrl("https://steamcommunity.com/profiles/" + selectedClient.SteamID.ToString());
+                    return true;
+                };
+            }
+
             if (!myClient)
             {
                 if (GameMain.Client.HasPermission(ClientPermissions.Ban))
                 {
-                    var banButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaUpper.RectTransform),
+                    var banButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaMiddle.RectTransform),
                         TextManager.Get("Ban"))
                     {
                         UserData = selectedClient
@@ -1544,7 +1560,7 @@ namespace Barotrauma
                     banButton.OnClicked = (bt, userdata) => { BanPlayer(selectedClient); return true; };
                     banButton.OnClicked += ClosePlayerFrame;
 
-                    var rangebanButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaUpper.RectTransform),
+                    var rangebanButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaMiddle.RectTransform),
                         TextManager.Get("BanRange"))
                     {
                         UserData = selectedClient
@@ -1578,7 +1594,7 @@ namespace Barotrauma
                     kickButton.OnClicked += ClosePlayerFrame;
                 }
 
-                new GUITickBox(new RectTransform(new Vector2(0.25f, 1.0f), buttonAreaUpper.RectTransform, Anchor.TopRight),
+                new GUITickBox(new RectTransform(new Vector2(0.25f, 1.0f), buttonAreaMiddle.RectTransform, Anchor.TopRight),
                     TextManager.Get("Mute"))
                 {
                     IgnoreLayoutGroups = true,

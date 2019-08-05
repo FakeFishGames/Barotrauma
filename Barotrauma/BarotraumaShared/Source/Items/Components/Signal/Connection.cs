@@ -24,7 +24,7 @@ namespace Barotrauma.Items.Components
 
         public readonly bool IsOutput;
         
-        public readonly List<StatusEffect> effects;
+        public readonly List<StatusEffect> Effects;
 
         public readonly ushort[] wireId;
 
@@ -135,7 +135,7 @@ namespace Barotrauma.Items.Components
 
             IsPower = Name == "power_in" || Name == "power" || Name == "power_out";
 
-            effects = new List<StatusEffect>();
+            Effects = new List<StatusEffect>();
 
             wireId = new ushort[MaxLinked];
 
@@ -158,7 +158,7 @@ namespace Barotrauma.Items.Components
                         break;
 
                     case "statuseffect":
-                        effects.Add(StatusEffect.Load(subElement, item.Name + ", connection " + Name));
+                        Effects.Add(StatusEffect.Load(subElement, item.Name + ", connection " + Name));
                         break;
                 }
             }
@@ -222,6 +222,7 @@ namespace Barotrauma.Items.Components
             recipientsDirty = true;
             if (wire != null)
             {
+                ConnectionPanel.DisconnectedWires.Remove(wire);
                 var otherConnection = wire.OtherConnection(this);
                 if (otherConnection != null)
                 {
@@ -251,10 +252,10 @@ namespace Barotrauma.Items.Components
                 }
 
                 bool broken = recipient.Item.Condition <= 0.0f;
-                foreach (StatusEffect effect in recipient.effects)
+                foreach (StatusEffect effect in recipient.Effects)
                 {
                     if (broken && effect.type != ActionType.OnBroken) continue;
-                    recipient.Item.ApplyStatusEffect(effect, ActionType.OnUse, 1.0f, null, null, false, false);
+                    recipient.Item.ApplyStatusEffect(effect, ActionType.OnUse, (float)Timing.Step, null, null, false, false);
                 }
             }
         }
@@ -277,11 +278,9 @@ namespace Barotrauma.Items.Components
             
             for (int i = 0; i < MaxLinked; i++)
             {
-                if (wireId[i] == 0) continue;
+                if (wireId[i] == 0) { continue; }
 
-                Item wireItem = Entity.FindEntityByID(wireId[i]) as Item;
-
-                if (wireItem == null) continue;
+                if (!(Entity.FindEntityByID(wireId[i]) is Item wireItem)) { continue; }
                 wires[i] = wireItem.GetComponent<Wire>();
                 recipientsDirty = true;
 

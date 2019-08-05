@@ -18,10 +18,6 @@
 
     <OxygenGenerator powerconsumption="1000.0" minvoltage="0.5" canbeselected = "true">
       <poweronsound file="Content/Items/PowerOnLight2.ogg" range="1500" loop="false" />
-      <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false"/>
-      <sparksound file="Content/Items/Electricity/Zap2.ogg" range="500" loop="false"/>
-      <sparksound file="Content/Items/Electricity/Zap3.ogg" range="500" loop="false"/>
-      <sparksound file="Content/Items/Electricity/Zap4.ogg" range="500" loop="false"/>
       <sound file="Content/Items/OxygenGenerator/OxygenGenerator.ogg" type="OnActive" range="1000.0" volumeproperty="CurrFlow" volume="0.001f" loop="true"/>
       <StatusEffect type="OnFire" target="This" Condition="-0.5"/>
       <StatusEffect type="OnActive" target="Contained" targetidentifiers="oxygentank" Condition="2.0"/>

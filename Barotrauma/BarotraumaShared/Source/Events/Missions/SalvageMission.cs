@@ -94,16 +94,15 @@ namespace Barotrauma
                     if (item.ParentInventory != null) item.body.FarseerBody.IsKinematic = false;
                     if (item.CurrentHull?.Submarine == null) return;
 
-#if CLIENT
                     ShowMessage(state);
-#endif
+
                     state = 1;
                     break;
                 case 1:
                     if (!Submarine.MainSub.AtEndPosition && !Submarine.MainSub.AtStartPosition) return;
-#if CLIENT
+
                     ShowMessage(state);
-#endif
+
                     state = 2;
                     break;
             }    

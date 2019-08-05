@@ -1,18 +1,18 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="UEX" identifier="uex" category="Equipment" description="A simple explosive compound made of sodium and phosphorus." Tags="smallitem,explosive" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_soft">
+  <Item name="UEX" identifier="uex" category="Equipment" description="A simple explosive compound made of sodium and phosphorus." Scale="0.5" Tags="smallitem,explosive" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_soft">
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Outpost" buyprice="125" />
     <Price locationtype="Research" buyprice="75" />
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
-      <RequiredSkill identifier="weapons" level="60"/>
-      <RequiredItem identifier="sodium"/>
-      <RequiredItem identifier="phosphorus"/>
+      <RequiredSkill identifier="weapons" level="60" />
+      <RequiredItem identifier="sodium" />
+      <RequiredItem identifier="phosphorus" />
     </Fabricate>
     <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,64,64,64" />
-    <Sprite texture="weapons.png" depth="0.8" sourcerect="103,58,23,16" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="897,896,64,64" origin="0.5,0.5" />
+    <Sprite texture="weapons_new.png" depth="0.8" sourcerect="220,380,47,32" origin="0.5,0.5" />
     <Body width="23" height="16" density="20" />
     <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect">
       <sound file="Content/Items/Weapons/ExplosionMedium1.ogg" type="OnUse" range="10000" selectionmode="All" />
@@ -26,18 +26,18 @@
       </StatusEffect>
     </Throwable>
   </Item>
-  <Item name="C-4 Block" identifier="c4block" category="Equipment" Tags="smallitem,explosive" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_soft">
+  <Item name="C-4 Block" identifier="c4block" category="Equipment" Tags="smallitem,explosive" Scale="0.5" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_soft">
     <Price locationtype="Military" buyprice="100" />
     <Price locationtype="City" buyprice="125" />
     <Price locationtype="Outpost" buyprice="200" />
     <Price locationtype="Research" buyprice="125" />
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
-      <RequiredSkill identifier="weapons" level="70"/>
-      <RequiredItem identifier="uex"/>
-      <RequiredItem identifier="plastic"/>
+      <RequiredSkill identifier="weapons" level="70" />
+      <RequiredItem identifier="uex" />
+      <RequiredItem identifier="plastic" />
     </Fabricate>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,64,64,64" />
-    <Sprite texture="weapons.png" depth="0.8" sourcerect="103,58,23,16" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,64,64,64" origin="0.5,0.5" />
+    <Sprite texture="weapons_new.png" depth="0.8" sourcerect="274,380,48,33" origin="0.5,0.5" />
     <Body width="23" height="16" density="20" />
     <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect">
       <sound file="Content/Items/Weapons/ExplosionMedium1.ogg" type="OnUse" range="10000" selectionmode="All" />
@@ -51,15 +51,15 @@
       </StatusEffect>
     </Throwable>
   </Item>
-  <Item name="Compound N" identifier="compoundn" category="Equipment" Tags="smallitem,explosive" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_soft">
+  <Item name="Compound N" identifier="compoundn" category="Equipment" Tags="smallitem,explosive" Scale="0.5" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_soft">
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="20">
-      <RequiredSkill identifier="medical" level="60"/>
-      <RequiredItem identifier="aluminium"/>
-      <RequiredItem identifier="potassium"/>
-      <RequiredItem identifier="sulphuricacid"/>
+      <RequiredSkill identifier="medical" level="60" />
+      <RequiredItem identifier="aluminium" />
+      <RequiredItem identifier="potassium" />
+      <RequiredItem identifier="sulphuricacid" />
     </Fabricate>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,64,64,64" />
-    <Sprite texture="weapons.png" depth="0.8" sourcerect="103,75,24,16" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,64,64,64" origin="0.5,0.5" />
+    <Sprite texture="weapons_new.png" depth="0.8" sourcerect="339,378,49,34" origin="0.5,0.5" />
     <Body width="24" height="16" density="20" />
     <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect">
       <sound file="Content/Items/Weapons/ExplosionMedium2.ogg" type="OnUse" range="10000" selectionmode="All" />
@@ -75,14 +75,14 @@
       </StatusEffect>
     </Throwable>
   </Item>
-  <Item name="Volatile Compound N" identifier="volatilecompoundn" category="Equipment" Tags="smallitem,explosive" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_soft">
+  <Item name="Volatile Compound N" identifier="volatilecompoundn" category="Equipment" Tags="smallitem,explosive" Scale="0.5" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_soft">
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="20">
-      <RequiredSkill identifier="medical" level="40"/>
-      <RequiredItem identifier="compoundn"/>
-      <RequiredItem identifier="flashpowder"/>
+      <RequiredSkill identifier="medical" level="40" />
+      <RequiredItem identifier="compoundn" />
+      <RequiredItem identifier="flashpowder" />
     </Fabricate>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,64,64,64" />
-    <Sprite texture="weapons.png" depth="0.8" sourcerect="103,108,23,17" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,64,64,64" origin="0.5,0.5" />
+    <Sprite texture="weapons_new.png" depth="0.8" sourcerect="402,377,50,34" origin="0.5,0.5" />
     <Body width="24" height="18" density="20" />
     <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect">
       <sound file="Content/Items/Weapons/ExplosionMedium3.ogg" type="OnUse" range="10000" selectionmode="All" />
@@ -101,14 +101,14 @@
       </StatusEffect>
     </Throwable>
   </Item>
-  <Item name="IC-4 Block" identifier="ic4block" description="A compound made of C-4 and incendium." category="Equipment" Tags="smallitem,explosive" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_soft">
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,64,64,64" />
-    <Sprite texture="weapons.png" depth="0.8" sourcerect="103,91,23,16" />
+  <Item name="IC-4 Block" identifier="ic4block" description="A compound made of C-4 and incendium." category="Equipment" Tags="smallitem,explosive" Scale="0.5" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_soft">
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,64,64,64" origin="0.5,0.5" />
+    <Sprite texture="weapons_new.png" depth="0.8" sourcerect="462,378,50,34" origin="0.5,0.5" />
     <Body width="24" height="16" density="20" />
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
-      <RequiredSkill identifier="weapons" level="50"/>
-      <RequiredItem identifier="c4block"/>
-      <RequiredItem identifier="incendium"/>
+      <RequiredSkill identifier="weapons" level="50" />
+      <RequiredItem identifier="c4block" />
+      <RequiredItem identifier="incendium" />
     </Fabricate>
     <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect">
       <sound file="Content/Items/Weapons/ExplosionMedium3.ogg" type="OnUse" range="10000" selectionmode="All" />
@@ -126,18 +126,19 @@
       </StatusEffect>
     </Throwable>
   </Item>
-  <Item name="Detonator" identifier="detonator" description="A device that detonates any contained explosive when receiving a signal." category="Equipment" Tags="smallitem" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="Detonator" identifier="detonator" description="A device that detonates any contained explosive when receiving a signal." category="Equipment" Tags="smallitem" Scale="0.5" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Outpost" buyprice="100" />
     <Price locationtype="Research" buyprice="100" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,64,64,64" />
-    <Sprite texture="weapons.png" depth="0.8" sourcerect="0,105,24,22" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,64,64,64" origin="0.5,0.5" />
+    <Sprite texture="weapons_new.png" depth="0.8" sourcerect="-1,385,41,21" origin="0.5,0.5" />
     <Body width="24" height="22" density="20" />
     <Holdable selectkey="Action" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
       <RequiredItem identifier="wrench" type="Equipped" />
     </Holdable>
     <ItemContainer canbeselected="true" capacity="1" itempos="0,0" hideitems="false">
+      <GuiFrame relativesize="0.13,0.18" anchor="Center" style="ItemUI" />
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,204,110,27" />
       <Containable identifiers="explosive" />
     </ItemContainer>
@@ -151,9 +152,9 @@
       </input>
     </ConnectionPanel>
   </Item>
-  <Item name="Nitroglycerin" identifier="nitroglycerin" category="Material" description="A highly unstable liquid that may explode when subjected to heat or physical shock." spritecolor="1.0,1.0,1.0,1.0" containercolor="1.0,1.0,1.0,1.0" cargocontaineridentifier="explosivecrate" Tags="smallitem,chem,medical" impacttolerance="6" useinhealthinterface="true" scale="0.2" impactsoundtag="impact_metal_light">
+  <Item name="Nitroglycerin" identifier="nitroglycerin" category="Material" description="A highly unstable liquid that may explode when subjected to heat or physical shock." spritecolor="1.0,1.0,1.0,1.0" containercolor="1.0,1.0,1.0,1.0" cargocontaineridentifier="explosivecrate" Tags="smallitem,chem,medical" impacttolerance="6" useinhealthinterface="true" scale="0.5" impactsoundtag="impact_metal_light">
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="653,769,37,62" origin="0.5,0.5" />
-    <Sprite texture="GrenadesExplosiveKnife.png" sourcerect="171,0,77,152" depth="0.6" origin="0.5,0.5" />
+    <Sprite texture="weapons_new.png" sourcerect="481,-1,31,62" depth="0.6" origin="0.5,0.5" />
     <Body width="35" height="60" density="20" />
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect">
       <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true" />

@@ -96,16 +96,16 @@ namespace Barotrauma
         public virtual AnimationType AnimationType { get; protected set; }
 
         public static string GetDefaultFileName(string speciesName, AnimationType animType) => $"{speciesName.CapitaliseFirstInvariant()}{animType.ToString()}";
-        public static string GetDefaultFolder(string speciesName) => $"Content/Characters/{speciesName.CapitaliseFirstInvariant()}/Animations/";
-        public static string GetDefaultFile(string speciesName, AnimationType animType, ContentPackage contentPackage = null) => 
-            $"{GetFolder(speciesName, contentPackage)}{GetDefaultFileName(speciesName, animType)}.xml";
+        public static string GetDefaultFile(string speciesName, AnimationType animType, ContentPackage contentPackage = null) 
+            => Path.Combine(GetFolder(speciesName, contentPackage), $"{GetDefaultFileName(speciesName, animType)}.xml");
 
         public static string GetFolder(string speciesName, ContentPackage contentPackage = null)
         {
-            var folder = XMLExtensions.TryLoadXml(Character.GetConfigFile(speciesName, contentPackage))?.Root?.Element("animations")?.GetAttributeString("folder", string.Empty);
+            string configFilePath = Character.GetConfigFile(speciesName, contentPackage);
+            var folder = XMLExtensions.TryLoadXml(configFilePath)?.Root?.Element("animations")?.GetAttributeString("folder", string.Empty);
             if (string.IsNullOrEmpty(folder) || folder.ToLowerInvariant() == "default")
             {
-                folder = GetDefaultFolder(speciesName);
+                folder = Path.Combine(Path.GetDirectoryName(configFilePath), "Animations");
             }
             return folder;
         }
