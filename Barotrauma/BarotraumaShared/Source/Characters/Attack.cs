@@ -313,18 +313,20 @@ namespace Barotrauma
 
             }
         }
-        partial void InitProjSpecific(XElement element);
+        partial void InitProjSpecific(XElement element = null);
 
-        public void Serialize()
+        public void Serialize(XElement element = null)
         {
+            element = element ?? SourceElement;
             if (SourceElement == null) { return; }
-            SerializableProperty.SerializeProperties(this, SourceElement, true);
+            SerializableProperty.SerializeProperties(this, element, true);
         }
 
-        public void Deserialize()
+        public void Deserialize(XElement element = null)
         {
+            element = element ?? SourceElement;
             if (SourceElement == null) { return; }
-            SerializableProperties = SerializableProperty.DeserializeProperties(this, SourceElement);
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
         }
         
         public AttackResult DoDamage(Character attacker, IDamageable target, Vector2 worldPosition, float deltaTime, bool playSound = true)
