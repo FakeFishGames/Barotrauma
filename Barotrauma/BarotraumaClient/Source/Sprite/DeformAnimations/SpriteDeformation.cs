@@ -54,7 +54,7 @@ namespace Barotrauma.SpriteDeformations
         public Dictionary<string, SerializableProperty> SerializableProperties
         {
             get;
-            private set;
+            set;
         }
 
         /// <summary>

@@ -1622,7 +1622,7 @@ namespace Barotrauma
                     ThrowError("Not controlling any character!");
                     return;
                 }
-                character.AnimController.ResetRagdoll();
+                character.AnimController.ResetRagdoll(forceReload: true);
             }, isCheat: true));
 
             commands.Add(new Command("reloadwearables", "Reloads the sprites of all limbs and wearable sprites (clothing) of the controlled character. Provide id or name if you want to target another character.", args =>

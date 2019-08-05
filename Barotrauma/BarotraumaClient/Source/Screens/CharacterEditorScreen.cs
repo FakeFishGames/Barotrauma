@@ -1311,6 +1311,8 @@ namespace Barotrauma
 
         private void RecreateRagdoll(RagdollParams ragdoll = null)
         {
+            RagdollParams.Apply();
+            ragdollResetRequiresForceLoading = true;
             character.AnimController.Recreate(ragdoll);
             TeleportTo(spawnPosition);
             // For some reason Enumerable.Contains() method does not find the match, threfore the conversion to a list.
@@ -2816,6 +2818,7 @@ namespace Barotrauma
                         foreach (var limb in character.AnimController.Limbs)
                         {
                             limb.limbParams.AddToEditor(ParamsEditor.Instance);
+                            // TODO: make attacks ragdollsubparams
                             if (limb.attack != null)
                             {
                                 new SerializableEntityEditor(ParamsEditor.Instance.EditorBox.Content.RectTransform, limb.attack, inGame: false, showName: true);
@@ -2827,6 +2830,7 @@ namespace Barotrauma
                         foreach (var limb in selectedLimbs)
                         {
                             limb.limbParams.AddToEditor(ParamsEditor.Instance);
+                            // TODO: make attacks ragdollsubparams
                             if (limb.attack != null)
                             {
                                 new SerializableEntityEditor(ParamsEditor.Instance.EditorBox.Content.RectTransform, limb.attack, inGame: false, showName: true);

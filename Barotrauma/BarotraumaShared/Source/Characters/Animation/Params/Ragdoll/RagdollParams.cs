@@ -252,6 +252,18 @@ namespace Barotrauma
             return false;
         }
 
+        /// <summary>
+        /// Applies the current properties to the xml definition without saving to file.
+        /// </summary>
+        public void Apply()
+        {
+            Serialize();
+            //Deserialize();
+        }
+
+        /// <summary>
+        /// Resets the current properties to the xml (stored in memory). Force reload reloads the file from disk.
+        /// </summary>
         public override bool Reset(bool forceReload = false)
         {
             if (forceReload)
@@ -479,42 +491,11 @@ namespace Barotrauma
             var deformSpriteElement = element.GetChildElement("deformablesprite");
             if (deformSpriteElement != null)
             {
-                deformSpriteParams = new SpriteParams(deformSpriteElement, ragdoll);
-#if CLIENT
-                deformSpriteParams.Deformations = new List<SpriteDeformationParams>();
-                foreach (var deformationElement in deformSpriteElement.GetChildElements("spritedeformation"))
+                deformSpriteParams = new SpriteParams(deformSpriteElement, ragdoll)
                 {
-                    string typeName = deformationElement.GetAttributeString("typename", null) ?? deformationElement.GetAttributeString("type", "");
-                    SpriteDeformationParams deformation = null;
-                    switch (typeName.ToLowerInvariant())
-                    {
-                        case "inflate":
-                            deformation = new InflateParams(deformationElement);
-                            break;
-                        case "custom":
-                            deformation = new CustomDeformationParams(deformationElement);
-                            break;
-                        case "noise":
-                            deformation = new NoiseDeformationParams(deformationElement);
-                            break;
-                        case "jointbend":
-                        case "bendjoint":
-                            deformation = new JointBendDeformationParams(deformationElement);
-                            break;
-                        case "reacttotriggerers":
-                            deformation = new PositionalDeformationParams(deformationElement);
-                            break;
-                        default:
-                            DebugConsole.ThrowError($"SpriteDeformationParams not implemented: '{typeName}'");
-                            break;
-                    }
-                    if (deformation != null)
-                    {
-                        deformation.TypeName = typeName;
-                    }
-                    deformSpriteParams.Deformations.Add(deformation);
-                }
-#endif
+                    Deformation = new LimbDeformationParams(deformSpriteElement, ragdoll)
+                };
+                deformSpriteParams.SubParams.Add(deformSpriteParams.Deformation);
                 SubParams.Add(deformSpriteParams);
             }
         }
@@ -618,8 +599,72 @@ namespace Barotrauma
         [Serialize("", true)]
         public string Texture { get; set; }
 
+        public LimbDeformationParams Deformation { get; set; }
+    }
+
+    class LimbDeformationParams : RagdollSubParams
+    {
+        public LimbDeformationParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
+        {
 #if CLIENT
-        public List<SpriteDeformationParams> Deformations;
+            Deformations = new Dictionary<SpriteDeformationParams, XElement>();
+            foreach (var deformationElement in element.GetChildElements("spritedeformation"))
+            {
+                string typeName = deformationElement.GetAttributeString("typename", null) ?? deformationElement.GetAttributeString("type", "");
+                SpriteDeformationParams deformation = null;
+                switch (typeName.ToLowerInvariant())
+                {
+                    case "inflate":
+                        deformation = new InflateParams(deformationElement);
+                        break;
+                    case "custom":
+                        deformation = new CustomDeformationParams(deformationElement);
+                        break;
+                    case "noise":
+                        deformation = new NoiseDeformationParams(deformationElement);
+                        break;
+                    case "jointbend":
+                    case "bendjoint":
+                        deformation = new JointBendDeformationParams(deformationElement);
+                        break;
+                    case "reacttotriggerers":
+                        deformation = new PositionalDeformationParams(deformationElement);
+                        break;
+                    default:
+                        DebugConsole.ThrowError($"SpriteDeformationParams not implemented: '{typeName}'");
+                        break;
+                }
+                if (deformation != null)
+                {
+                    deformation.TypeName = typeName;
+                }
+                Deformations.Add(deformation, deformationElement);
+            }
+#endif
+        }
+
+#if CLIENT
+        public Dictionary<SpriteDeformationParams, XElement> Deformations { get; private set; }
+
+        public override bool Deserialize(XElement element = null, bool recursive = true)
+        {
+            base.Deserialize(element, recursive);
+            Deformations.ForEach(d => d.Key.SerializableProperties = SerializableProperty.DeserializeProperties(d.Key, d.Value));
+            return SerializableProperties != null;
+        }
+
+        public override bool Serialize(XElement element = null, bool recursive = true)
+        {
+            base.Serialize(element, recursive);
+            Deformations.ForEach(d => SerializableProperty.SerializeProperties(d.Key, d.Value));
+            return true;
+        }
+
+        public override void Reset()
+        {
+            base.Reset();
+            Deformations.ForEach(d => d.Key.SerializableProperties = SerializableProperty.DeserializeProperties(d.Key, d.Value));
+        }
 #endif
     }
 
@@ -699,13 +744,13 @@ namespace Barotrauma
             return true;
         }
 
-        public void SetCurrentElementAsOriginalElement()
+        public virtual void SetCurrentElementAsOriginalElement()
         {
             OriginalElement = Element;
             SubParams.ForEach(sp => sp.SetCurrentElementAsOriginalElement());
         }
 
-        public void Reset()
+        public virtual void Reset()
         {
             Deserialize(OriginalElement, false);
             SubParams.ForEach(sp => sp.Reset());
@@ -716,17 +761,23 @@ namespace Barotrauma
         public virtual void AddToEditor(ParamsEditor editor)
         {
             SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, this, inGame: false, showName: true);
+            if (this is SpriteParams spriteParams && spriteParams.Deformation != null)
+            {
+                foreach (var deformation in spriteParams.Deformation.Deformations.Keys)
+                {
+                    new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, deformation, inGame: false, showName: true);
+                }
+            }
             foreach (var subParam in SubParams)
             {
                 subParam.AddToEditor(editor);
-                if (subParam is SpriteParams spriteParams && spriteParams.Deformations != null)
-                {
-                    foreach (var deformation in spriteParams.Deformations)
-                    {
-                        // TODO: make deformations subparams so that we can serialize and deserialize them properly
-                        new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, deformation, inGame: false, showName: true);
-                    }
-                }
+                //if (subParam is SpriteParams spriteParams && spriteParams.Deformation != null)
+                //{
+                //    foreach (var deformation in spriteParams.Deformation.Deformations.Keys)
+                //    {
+                //        new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, deformation, inGame: false, showName: true);
+                //    }
+                //}
             }
         }
      #endif
