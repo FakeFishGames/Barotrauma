@@ -461,29 +461,19 @@ namespace Barotrauma
         /// </summary>
         public void SaveRagdoll(string fileNameWithoutExtension = null)
         {
-            SaveJoints();
             SaveLimbs();
             RagdollParams.Save(fileNameWithoutExtension);
         }
 
         /// <summary>
         /// Resets the serializable data to the currently selected ragdoll params.
-        /// Force reloading always loads the xml stored in the disk.
+        /// Force reloading always loads the xml stored on the disk.
         /// </summary>
         public void ResetRagdoll(bool forceReload = false)
         {
             RagdollParams.Reset(forceReload);
             ResetJoints();
             ResetLimbs();
-        }
-
-        /// <summary>
-        /// Saves the current joint values to the serializable joint params. This method should properly handle character flipping. 
-        /// NOTE: Currently all the params are handled stored as SubRagdollParams and handled in the RagdollParams Save method. This method does nothing.
-        /// </summary>
-        public void SaveJoints()
-        {
-            LimbJoints.ForEach(j => j.SaveParams());
         }
 
         /// <summary>

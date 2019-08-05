@@ -43,28 +43,6 @@ namespace Barotrauma
             LimbB = limbB;
         }
 
-        public void SaveParams()
-        {
-            // Saving to the params is handled only in the params level.
-            return;
-
-            jointParams.Stiffness = MaxMotorTorque;
-            if (ragdoll.IsFlipped)
-            {
-                jointParams.Limb1Anchor = ConvertUnits.ToDisplayUnits(new Vector2(-LocalAnchorA.X, LocalAnchorA.Y) / jointParams.Ragdoll.JointScale);
-                jointParams.Limb2Anchor = ConvertUnits.ToDisplayUnits(new Vector2(-LocalAnchorB.X, LocalAnchorB.Y) / jointParams.Ragdoll.JointScale);
-                jointParams.UpperLimit = MathHelper.ToDegrees(-LowerLimit);
-                jointParams.LowerLimit = MathHelper.ToDegrees(-UpperLimit);
-            }
-            else
-            {
-                jointParams.Limb1Anchor = ConvertUnits.ToDisplayUnits(LocalAnchorA / jointParams.Ragdoll.JointScale);
-                jointParams.Limb2Anchor = ConvertUnits.ToDisplayUnits(LocalAnchorB / jointParams.Ragdoll.JointScale);
-                jointParams.UpperLimit = MathHelper.ToDegrees(UpperLimit);
-                jointParams.LowerLimit = MathHelper.ToDegrees(LowerLimit);
-            }
-        }
-
         public void LoadParams()
         {
             MaxMotorTorque = jointParams.Stiffness;
