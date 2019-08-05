@@ -109,6 +109,7 @@ namespace Barotrauma
 
             List<string> words = new List<string>();
             string currWord = "";
+
             for (int i = 0; i < text.Length; i++)
             {
                 if (TextManager.IsCJK(text[i].ToString()))
@@ -154,27 +155,33 @@ namespace Barotrauma
                 }
 
                 Vector2 size = words[i].Length == 0 ? spaceSize : font.MeasureString(words[i]) * textScale;
-                if (size.X > lineLength)
+
+                if (size.X > lineLength - linePos)
                 {
-                    if (linePos == 0.0f)
+                    float splitSize = 0.0f;
+                    //string[] splitWord = new string[(int)Math.Ceiling((size.X + linePos) / lineLength)];
+                    List<string> splitWord = new List<string>() { string.Empty };
+
+                    int k = 0;
+
+                    for (int j = 0; j < words[i].Length; j++)
                     {
-                        wrappedText.AppendLine(words[i]);
-                    }
-                    else
-                    {
-                        do
+                        splitWord[k] += words[i][j];
+                        splitSize += (font.MeasureString(words[i][j].ToString()) * textScale).X;
+
+                        if (splitSize + linePos > lineLength)
                         {
-                            if (words[i].Length == 0) break;
+                            linePos = splitSize = 0.0f;
+                            splitWord[k] = splitWord[k].Remove(splitWord[k].Length - 1) + "\n";
+                            j--;
+                            splitWord.Add(string.Empty);
+                            k++;
+                        }
+                    }
 
-                            wrappedText.Append(words[i][0]);
-                            words[i] = words[i].Remove(0, 1);
-
-                            linePos += size.X;
-                        } while (words[i].Length > 0 && (size = font.MeasureString((words[i][0]).ToString()) * textScale).X + linePos < lineLength);
-
-                        wrappedText.Append("\n");
-                        linePos = 0.0f;
-                        i--;
+                    for (int j = 0; j < splitWord.Count; j++)
+                    {
+                        wrappedText.Append(splitWord[j]);
                     }
 
                     continue;
