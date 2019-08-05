@@ -199,6 +199,12 @@ namespace Barotrauma
             }
         }
 
+        public Vector4 Padding
+        {
+            get { return textBlock.Padding; }
+            set { textBlock.Padding = value; }
+        }
+
         // TODO: should this be defined in the stylesheet?
         public Color SelectionColor { get; set; } = Color.White * 0.25f;
 
