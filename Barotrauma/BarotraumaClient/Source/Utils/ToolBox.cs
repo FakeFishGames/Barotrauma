@@ -128,6 +128,7 @@ namespace Barotrauma
                         words.Add(currWord);
                         currWord = "";
                     }
+                    words.Add(string.Empty);
                 }
                 else
                 {
@@ -145,29 +146,29 @@ namespace Barotrauma
             Vector2 spaceSize = font.MeasureString(" ") * textScale;
             for (int i = 0; i < words.Count; ++i)
             {
-                if (words[i].Length == 0)
+                string currentWord = words[i];
+                if (currentWord.Length == 0)
                 {
-                    //space
+                    // space
+                    currentWord = " ";
                 }
-                else if (string.IsNullOrWhiteSpace(words[i]) && words[i] != "\n")
+                else if (string.IsNullOrWhiteSpace(currentWord) && currentWord != "\n")
                 {
                     continue;
                 }
 
-                Vector2 size = words[i].Length == 0 ? spaceSize : font.MeasureString(words[i]) * textScale;
+                Vector2 size = words[i].Length == 0 ? spaceSize : font.MeasureString(currentWord) * textScale;
 
-                if (size.X > lineLength - linePos)
+                if (size.X > lineLength)
                 {
                     float splitSize = 0.0f;
-                    //string[] splitWord = new string[(int)Math.Ceiling((size.X + linePos) / lineLength)];
                     List<string> splitWord = new List<string>() { string.Empty };
-
                     int k = 0;
 
-                    for (int j = 0; j < words[i].Length; j++)
+                    for (int j = 0; j < currentWord.Length; j++)
                     {
-                        splitWord[k] += words[i][j];
-                        splitSize += (font.MeasureString(words[i][j].ToString()) * textScale).X;
+                        splitWord[k] += currentWord[j];
+                        splitSize += (font.MeasureString(currentWord[j].ToString()) * textScale).X;
 
                         if (splitSize + linePos > lineLength)
                         {
@@ -184,32 +185,29 @@ namespace Barotrauma
                         wrappedText.Append(splitWord[j]);
                     }
 
-                    continue;
-                }
-
-                if (linePos + size.X < lineLength)
-                {
-                    wrappedText.Append(words[i]);
-                    if (words[i] == "\n")
-                    {
-                        linePos = 0.0f;
-                    }
-                    else
-                    {
-                        linePos += size.X + spaceSize.X;
-                    }
+                    linePos = splitSize;
                 }
                 else
                 {
-                    wrappedText.Append("\n");
-                    wrappedText.Append(words[i]);
+                    if (linePos + size.X < lineLength)
+                    {
+                        wrappedText.Append(currentWord);
+                        if (currentWord == "\n")
+                        {
+                            linePos = 0.0f;
+                        }
+                        else
+                        {
+                            linePos += size.X;
+                        }
+                    }
+                    else
+                    {
+                        wrappedText.Append("\n");
+                        wrappedText.Append(currentWord);
 
-                    linePos = size.X + spaceSize.X;
-                }
-
-                if (i < words.Count - 1 && !TextManager.IsCJK(words[i]) && !TextManager.IsCJK(words[i + 1]))
-                {
-                    wrappedText.Append(" ");
+                        linePos = size.X;
+                    }
                 }
             }
 
