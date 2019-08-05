@@ -689,7 +689,7 @@ namespace Barotrauma.Networking
                     inc.ReadPadBits();
                     if (cheatsEnabled == DebugConsole.CheatsEnabled)
                     {
-                        continue;
+                        return;
                     }
                     else
                     {
@@ -863,7 +863,7 @@ namespace Barotrauma.Networking
             SteamAchievementManager.UnlockAchievement(achievementIdentifier);
         }
 
-        private void ReadTraitorObjective(NetIncomingMessage inc)
+        private void ReadTraitorObjective(IReadMessage inc)
         {
             string objectiveText = inc.ReadString();
             objectiveText = TextManager.GetServerMessage(objectiveText);
@@ -879,7 +879,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        private void ReadPermissions(NetIncomingMessage inc)
+        private void ReadPermissions(IReadMessage inc)
         {
             List<string> permittedConsoleCommands = new List<string>();
             byte clientID = inc.ReadByte();

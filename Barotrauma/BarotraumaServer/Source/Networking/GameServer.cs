@@ -2666,12 +2666,11 @@ namespace Barotrauma.Networking
             {
                 return;
             }
-            var msg = server.CreateMessage();
+            var msg = new WriteOnlyMessage(); 
             msg.Write((byte)ServerPacketHeader.TRAITOR_OBJECTIVE);
             msg.Write(objectiveText);
 
-            CompressOutgoingMessage(msg);
-            server.SendMessage(msg, client.Connection, NetDeliveryMethod.ReliableOrdered);
+            serverPeer.Send(msg, client.Connection, DeliveryMethod.ReliableOrdered);
         }
 
         public void UpdateCheatsEnabled()

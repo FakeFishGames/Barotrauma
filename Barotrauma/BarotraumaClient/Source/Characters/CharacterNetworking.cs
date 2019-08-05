@@ -414,7 +414,7 @@ namespace Barotrauma
             return character;
         }
 
-        private void ReadTraitorStatus(IReadBuffer msg)
+        private void ReadTraitorStatus(IReadMessage msg)
         {
             IsTraitor = msg.ReadBoolean();
             if (IsTraitor)
