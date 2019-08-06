@@ -493,12 +493,12 @@ namespace Barotrauma
                 }
                 foreach (var modifier in damageModifiers)
                 {
-                    float rotation = -body.TransformedRotation + GetArmorSectorRotationOffset(modifier.ArmorSector) * Dir;
+                    float rotation = -body.TransformedRotation + GetArmorSectorRotationOffset(modifier.ArmorSectorInRadians) * Dir;
                     Vector2 forward = VectorExtensions.Forward(rotation);
                     float size = ConvertUnits.ToDisplayUnits(body.GetSize().Length() / 2);
                     color = modifier.DamageMultiplier > 1 ? Color.Red : Color.GreenYellow;
                     GUI.DrawLine(spriteBatch, bodyDrawPos, bodyDrawPos + Vector2.Normalize(forward) * size, color, width: (int)Math.Round(4 / cam.Zoom));
-                    ShapeExtensions.DrawSector(spriteBatch, bodyDrawPos, size, GetArmorSectorSize(modifier.ArmorSector) * Dir, 40, color, rotation + MathHelper.Pi, thickness: 2 / cam.Zoom);
+                    ShapeExtensions.DrawSector(spriteBatch, bodyDrawPos, size, GetArmorSectorSize(modifier.ArmorSectorInRadians) * Dir, 40, color, rotation + MathHelper.Pi, thickness: 2 / cam.Zoom);
                 }
             }
         }

@@ -391,7 +391,7 @@ namespace Barotrauma
                 foreach (DamageModifier damageModifier in damageModifiers)
                 {
                     if (!damageModifier.MatchesAffliction(afflictionsCopy[i])) continue;
-                    if (SectorHit(damageModifier.ArmorSector, simPosition))
+                    if (SectorHit(damageModifier.ArmorSectorInRadians, simPosition))
                     {
                         afflictionsCopy[i] = afflictionsCopy[i].CreateMultiplied(damageModifier.DamageMultiplier);
                         appliedDamageModifiers.Add(damageModifier);
@@ -403,7 +403,7 @@ namespace Barotrauma
                     foreach (DamageModifier damageModifier in wearable.WearableComponent.DamageModifiers)
                     {
                         if (!damageModifier.MatchesAffliction(afflictionsCopy[i])) continue;
-                        if (SectorHit(damageModifier.ArmorSector, simPosition))
+                        if (SectorHit(damageModifier.ArmorSectorInRadians, simPosition))
                         {
                             afflictionsCopy[i] = afflictionsCopy[i].CreateMultiplied(damageModifier.DamageMultiplier);
                             appliedDamageModifiers.Add(damageModifier);

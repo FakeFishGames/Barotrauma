@@ -10,8 +10,6 @@ namespace Barotrauma
 {
     class JointParams : RagdollSubParams
     {
-        public JointParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll) { }
-
         private string name;
         [Serialize("", true), Editable]
         public override string Name
@@ -70,47 +68,17 @@ namespace Barotrauma
 
         [Serialize(0.25f, true), Editable]
         public float Stiffness { get; set; }
+
+        public JointParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll) { }
     }
 
     class LimbParams : RagdollSubParams
     {
-        public LimbParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
-        {
-            var spriteElement = element.GetChildElement("sprite");
-            if (spriteElement != null)
-            {
-                normalSpriteParams = new SpriteParams(spriteElement, ragdoll);
-                SubParams.Add(normalSpriteParams);
-            }
-            var damagedSpriteElement = element.GetChildElement("damagedsprite");
-            if (damagedSpriteElement != null)
-            {
-                damagedSpriteParams = new SpriteParams(damagedSpriteElement, ragdoll);
-                // Hide the damaged sprite params in the editor for now.
-                //SubParams.Add(damagedSpriteParams);
-            }
-            var deformSpriteElement = element.GetChildElement("deformablesprite");
-            if (deformSpriteElement != null)
-            {
-                deformSpriteParams = new SpriteParams(deformSpriteElement, ragdoll)
-                {
-                    Deformation = new LimbDeformationParams(deformSpriteElement, ragdoll)
-                };
-                deformSpriteParams.SubParams.Add(deformSpriteParams.Deformation);
-                SubParams.Add(deformSpriteParams);
-            }
-            var attackElement = element.GetChildElement("attack");
-            if (attackElement != null)
-            {
-                attackParams = new LimbAttackParams(attackElement, ragdoll);
-                SubParams.Add(attackParams);
-            }
-        }
-
         public readonly SpriteParams normalSpriteParams;
         public readonly SpriteParams damagedSpriteParams;
         public readonly SpriteParams deformSpriteParams;
         public readonly LimbAttackParams attackParams;
+        public readonly DamageModifierParams damageModifierParams;
 
         private string name;
         [Serialize("", true), Editable]
@@ -189,12 +157,49 @@ namespace Barotrauma
 
         [Serialize(0.05f, true)]
         public float Restitution { get; set; }
+
+        public LimbParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
+        {
+            var spriteElement = element.GetChildElement("sprite");
+            if (spriteElement != null)
+            {
+                normalSpriteParams = new SpriteParams(spriteElement, ragdoll);
+                SubParams.Add(normalSpriteParams);
+            }
+            var damagedSpriteElement = element.GetChildElement("damagedsprite");
+            if (damagedSpriteElement != null)
+            {
+                damagedSpriteParams = new SpriteParams(damagedSpriteElement, ragdoll);
+                // Hide the damaged sprite params in the editor for now.
+                //SubParams.Add(damagedSpriteParams);
+            }
+            var deformSpriteElement = element.GetChildElement("deformablesprite");
+            if (deformSpriteElement != null)
+            {
+                deformSpriteParams = new SpriteParams(deformSpriteElement, ragdoll)
+                {
+                    Deformation = new LimbDeformationParams(deformSpriteElement, ragdoll)
+                };
+                deformSpriteParams.SubParams.Add(deformSpriteParams.Deformation);
+                SubParams.Add(deformSpriteParams);
+            }
+            var attackElement = element.GetChildElement("attack");
+            if (attackElement != null)
+            {
+                attackParams = new LimbAttackParams(attackElement, ragdoll);
+                SubParams.Add(attackParams);
+            }
+            var damageElement = element.GetChildElement("damagemodifier");
+            if (damageElement != null)
+            {
+                damageModifierParams = new DamageModifierParams(damageElement, ragdoll);
+                SubParams.Add(damageModifierParams);
+            }
+        }
     }
 
     class SpriteParams : RagdollSubParams
     {
-        public SpriteParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll) { }
-
         [Serialize("0, 0, 0, 0", true), Editable]
         public Rectangle SourceRect { get; set; }
 
@@ -208,6 +213,8 @@ namespace Barotrauma
         public string Texture { get; set; }
 
         public LimbDeformationParams Deformation { get; set; }
+
+        public SpriteParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll) { }
     }
 
     class LimbDeformationParams : RagdollSubParams
@@ -278,11 +285,6 @@ namespace Barotrauma
 
     class ColliderParams : RagdollSubParams
     {
-        public ColliderParams(XElement element, RagdollParams ragdoll, string name = null) : base(element, ragdoll)
-        {
-            Name = name;
-        }
-
         private string name;
         [Serialize("", true), Editable]
         public override string Name
@@ -309,16 +311,22 @@ namespace Barotrauma
 
         [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
         public float Width { get; set; }
+
+        public ColliderParams(XElement element, RagdollParams ragdoll, string name = null) : base(element, ragdoll)
+        {
+            Name = name;
+        }
     }
 
+    // TODO: conditionals?
     class LimbAttackParams : RagdollSubParams
     {
+        public Attack Attack { get; private set; }
+
         public LimbAttackParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
         {
             Attack = new Attack(element, ragdoll.SpeciesName);
         }
-
-        public Attack Attack { get; private set; }
 
         public override bool Deserialize(XElement element = null, bool recursive = true)
         {
@@ -341,16 +349,35 @@ namespace Barotrauma
         }
     }
 
-    #region TODO
     class DamageModifierParams : RagdollSubParams
     {
+        public DamageModifier DamageModifier { get; private set; }
+
         public DamageModifierParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
         {
+            DamageModifier = new DamageModifier(element, ragdoll.SpeciesName);
+        }
+
+        public override bool Deserialize(XElement element = null, bool recursive = true)
+        {
+            base.Deserialize(element, recursive);
+            DamageModifier.Deserialize();
+            return SerializableProperties != null;
+        }
+
+        public override bool Serialize(XElement element = null, bool recursive = true)
+        {
+            base.Serialize(element, recursive);
+            DamageModifier.Serialize();
+            return true;
+        }
+
+        public override void Reset()
+        {
+            base.Reset();
+            DamageModifier.Deserialize();
         }
     }
-
-    // TODO: conditionals?
-    #endregion
 
     abstract class RagdollSubParams : ISerializableEntity
     {
@@ -425,6 +452,10 @@ namespace Barotrauma
                 {
                     new SerializableEntityEditor(ParamsEditor.Instance.EditorBox.Content.RectTransform, affliction, inGame: false, showName: true);
                 }
+            }
+            else if (this is DamageModifierParams damageModifierParams)
+            {
+                new SerializableEntityEditor(ParamsEditor.Instance.EditorBox.Content.RectTransform, damageModifierParams.DamageModifier, inGame: false, showName: true);
             }
             foreach (var subParam in SubParams)
             {

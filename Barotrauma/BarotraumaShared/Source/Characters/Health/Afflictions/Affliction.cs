@@ -14,16 +14,6 @@ namespace Barotrauma
 
         public Dictionary<string, SerializableProperty> SerializableProperties { get; set; }
 
-        public void Serialize(XElement element)
-        {
-            SerializableProperty.SerializeProperties(this, element);
-        }
-
-        public void Deserialize(XElement element)
-        {
-            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
-        }
-
         [Serialize(0f, true), Editable]
         public float Strength { get; set; }
 
@@ -52,6 +42,16 @@ namespace Barotrauma
             Prefab = prefab;
             Strength = strength;
             Identifier = prefab.Identifier;
+        }
+
+        public void Serialize(XElement element)
+        {
+            SerializableProperty.SerializeProperties(this, element);
+        }
+
+        public void Deserialize(XElement element)
+        {
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
         }
 
         public Affliction CreateMultiplied(float multiplier)
