@@ -100,12 +100,15 @@ namespace Barotrauma
             return Color.Lerp(gradient[(int)scaledT], gradient[(int)Math.Min(scaledT + 1, gradient.Length - 1)], (scaledT - (int)scaledT));
         }
 
-        public static string WrapText(string text, float lineLength, ScalableFont font, float textScale = 1.0f) //TODO: could integrate this into the ScalableFont class directly
+        public static string WrapText(string text, float lineLength, ScalableFont font, float textScale = 1.0f, bool playerInput = false) //TODO: could integrate this into the ScalableFont class directly
         {
             Vector2 textSize = font.MeasureString(text);
             if (textSize.X < lineLength) { return text; }
 
-            text = text.Replace("\n", " \n ");
+            if (!playerInput)
+            {
+                text = text.Replace("\n", " \n ");
+            }
 
             List<string> words = new List<string>();
             string currWord = "";
@@ -211,7 +214,14 @@ namespace Barotrauma
                 }
             }
 
-            return wrappedText.ToString().Replace(" \n ", "\n");
+            if (!playerInput)
+            {
+                return wrappedText.ToString().Replace(" \n ", "\n");
+            }
+            else
+            {
+                return wrappedText.ToString();
+            }
         }
 
         public static void ParseConnectCommand(string[] args, out string name, out string endpoint)
