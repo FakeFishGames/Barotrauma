@@ -940,18 +940,31 @@ namespace Barotrauma
                 GameMain.ShouldRun = false;
             }));
 
-            commands.Add(new Command("say", "say [message]: Send a chat message that displays \"HOST\" as the sender.", (string[] args) =>
+            commands.Add(new Command("say", "say [message]: Send a global chat message. When issued through the server command line, displays \"HOST\" as the sender.", (string[] args) =>
             {
                 string text = string.Join(" ", args);
                 text = "HOST: " + text;
                 GameMain.Server.SendChatMessage(text, ChatMessageType.Server);
             }));
+            AssignOnClientRequestExecute("say",
+            (Client client, Vector2 cursorPos, string[] args) =>
+            {
+                string text = string.Join(" ", args);
+                text = client.Name+": " + text;
+                GameMain.Server.SendChatMessage(text, ChatMessageType.Server);
+            });
 
             commands.Add(new Command("msg", "msg [message]: Send a chat message with no sender specified.", (string[] args) =>
             {
                 string text = string.Join(" ", args);
                 GameMain.Server.SendChatMessage(text, ChatMessageType.Server);
             }));
+            AssignOnClientRequestExecute("msg",
+            (Client client, Vector2 cursorPos, string[] args) =>
+            {
+                string text = string.Join(" ", args);
+                GameMain.Server.SendChatMessage(text, ChatMessageType.Server);
+            });
 
             commands.Add(new Command("servername", "servername [name]: Change the name of the server.", (string[] args) =>
             {

@@ -479,6 +479,10 @@ namespace Barotrauma
 
             commands.Add(new Command("clientlist", "", (string[] args) => { }));
             AssignRelayToServer("clientlist", true);
+            commands.Add(new Command("say", "", (string[] args) => { }));
+            AssignRelayToServer("say", true);
+            commands.Add(new Command("msg", "", (string[] args) => { }));
+            AssignRelayToServer("msg", true);
             commands.Add(new Command("setmaxplayers|maxplayers", "", (string[] args) => { }));
             AssignRelayToServer("setmaxplayers", true);
             commands.Add(new Command("setpassword|password", "", (string[] args) => { }));
