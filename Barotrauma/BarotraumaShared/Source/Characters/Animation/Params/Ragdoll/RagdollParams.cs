@@ -255,7 +255,6 @@ namespace Barotrauma
         public void Apply()
         {
             Serialize();
-            //Deserialize();
         }
 
         /// <summary>

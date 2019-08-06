@@ -2805,37 +2805,18 @@ namespace Barotrauma
                     }
                     else
                     {
-                        foreach (var joint in selectedJoints)
-                        {
-                            joint.jointParams.AddToEditor(ParamsEditor.Instance);
-                        }
+                        selectedJoints.ForEach(j => j.jointParams.AddToEditor(ParamsEditor.Instance));
                     }
                 }
                 if (editLimbs)
                 {
                     if (selectedLimbs.None())
                     {
-                        foreach (var limb in character.AnimController.Limbs)
-                        {
-                            limb.limbParams.AddToEditor(ParamsEditor.Instance);
-                            // TODO: make attacks ragdollsubparams
-                            if (limb.attack != null)
-                            {
-                                new SerializableEntityEditor(ParamsEditor.Instance.EditorBox.Content.RectTransform, limb.attack, inGame: false, showName: true);
-                            }
-                        }
+                        character.AnimController.Limbs.ForEach(l => l.limbParams.AddToEditor(ParamsEditor.Instance));
                     }
                     else
                     {
-                        foreach (var limb in selectedLimbs)
-                        {
-                            limb.limbParams.AddToEditor(ParamsEditor.Instance);
-                            // TODO: make attacks ragdollsubparams
-                            if (limb.attack != null)
-                            {
-                                new SerializableEntityEditor(ParamsEditor.Instance.EditorBox.Content.RectTransform, limb.attack, inGame: false, showName: true);
-                            }
-                        }
+                        selectedLimbs.ForEach(l => l.limbParams.AddToEditor(ParamsEditor.Instance));
                     }
                 }
             }

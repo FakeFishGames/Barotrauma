@@ -99,11 +99,18 @@ namespace Barotrauma
                 deformSpriteParams.SubParams.Add(deformSpriteParams.Deformation);
                 SubParams.Add(deformSpriteParams);
             }
+            var attackElement = element.GetChildElement("attack");
+            if (attackElement != null)
+            {
+                attackParams = new LimbAttackParams(attackElement, ragdoll);
+                SubParams.Add(attackParams);
+            }
         }
 
         public readonly SpriteParams normalSpriteParams;
         public readonly SpriteParams damagedSpriteParams;
         public readonly SpriteParams deformSpriteParams;
+        public readonly LimbAttackParams attackParams;
 
         private string name;
         [Serialize("", true), Editable]
@@ -309,11 +316,31 @@ namespace Barotrauma
     {
         public LimbAttackParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
         {
+            Attack = new Attack(element, ragdoll.SpeciesName);
         }
 
-        public Attack Attack { get; set; }
+        public Attack Attack { get; private set; }
+        private readonly XElement attackElement;
 
-        // new SerializableEntityEditor(ParamsEditor.Instance.EditorBox.Content.RectTransform, limb.attack, inGame: false, showName: true);
+        public override bool Deserialize(XElement element = null, bool recursive = true)
+        {
+            base.Deserialize(element, recursive);
+            Attack.Deserialize(attackElement);
+            return SerializableProperties != null;
+        }
+
+        public override bool Serialize(XElement element = null, bool recursive = true)
+        {
+            base.Serialize(element, recursive);
+            Attack.Serialize(attackElement);
+            return true;
+        }
+
+        public override void Reset()
+        {
+            base.Reset();
+            Attack.Deserialize(attackElement);
+        }
     }
 
     class DamageModifierParams : RagdollSubParams
@@ -402,6 +429,10 @@ namespace Barotrauma
                 {
                     new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, deformation, inGame: false, showName: true);
                 }
+            }
+            else if (this is LimbAttackParams attackParams)
+            {
+                new SerializableEntityEditor(ParamsEditor.Instance.EditorBox.Content.RectTransform, attackParams.Attack, inGame: false, showName: true);
             }
             foreach (var subParam in SubParams)
             {
