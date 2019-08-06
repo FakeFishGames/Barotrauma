@@ -160,6 +160,7 @@ namespace Barotrauma.Networking
         public TransferInDelegate OnTransferFailed;
 
         private List<FileTransferIn> activeTransfers;
+        private List<Pair<int, double>> finishedTransfers;
 
         private Dictionary<FileTransferType, string> downloadFolders = new Dictionary<FileTransferType, string>()
         {
@@ -175,6 +176,7 @@ namespace Barotrauma.Networking
         public FileReceiver()
         {
             activeTransfers = new List<FileTransferIn>();
+            finishedTransfers = new List<Pair<int, double>>();
         }
         
         public void ReadMessage(IReadMessage inc)
@@ -194,6 +196,7 @@ namespace Barotrauma.Networking
                     {
                         byte transferId = inc.ReadByte();
                         var existingTransfer = activeTransfers.Find(t => t.ID == transferId);
+                        finishedTransfers.RemoveAll(t => t.First  == transferId);
                         byte fileType = inc.ReadByte();
                         //ushort chunkLen = inc.ReadUInt16();
                         int fileSize = inc.ReadInt32();
@@ -316,8 +319,15 @@ namespace Barotrauma.Networking
                         var activeTransfer = activeTransfers.Find(t => t.Connection == inc.Sender && t.ID == transferId);
                         if (activeTransfer == null)
                         {
-                            GameMain.Client.CancelFileTransfer(transferId);
-                            DebugConsole.ThrowError("File transfer error: received data without a transfer initiation message");
+                            //it's possible for the server to send some extra data
+                            //before it acknowledges that the download is finished,
+                            //so let's suppress the error message in that case
+                            finishedTransfers.RemoveAll(t => t.Second + 5.0 < Timing.TotalTime);
+                            if (!finishedTransfers.Any(t => t.First == transferId))
+                            {
+                                GameMain.Client.CancelFileTransfer(transferId);
+                                DebugConsole.ThrowError("File transfer error: received data without a transfer initiation message");
+                            }
                             return;
                         }
 
@@ -332,8 +342,7 @@ namespace Barotrauma.Networking
                         }
 
                         int bytesToRead = inc.ReadUInt16();
-
-                        //allow one extra byte at the end for the 0 that identifies non-compressed messages
+                        
                         if (activeTransfer.Received + bytesToRead > activeTransfer.FileSize)
                         {
                             GameMain.Client.CancelFileTransfer(transferId);
@@ -362,10 +371,12 @@ namespace Barotrauma.Networking
 
                         if (activeTransfer.Status == FileTransferStatus.Finished)
                         {
+                            GameMain.Client.UpdateFileTransfer(activeTransfer.ID, activeTransfer.Received, true);
                             activeTransfer.Dispose();
 
                             if (ValidateReceivedData(activeTransfer, out string errorMessage))
                             {
+                                finishedTransfers.Add(new Pair<int, double>(transferId, Timing.TotalTime));
                                 StopTransfer(activeTransfer);
                                 OnFinished(activeTransfer);
                             }

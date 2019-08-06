@@ -1588,14 +1588,14 @@ namespace Barotrauma.Networking
             CancelFileTransfer(transfer.ID);
         }
 
-        public void UpdateFileTransfer(int id, int offset)
+        public void UpdateFileTransfer(int id, int offset, bool reliable=false)
         {
             IWriteMessage msg = new WriteOnlyMessage();
             msg.Write((byte)ClientPacketHeader.FILE_REQUEST);
             msg.Write((byte)FileTransferMessageType.Data);
             msg.Write((byte)id);
             msg.Write(offset);
-            clientPeer.Send(msg, DeliveryMethod.Unreliable);
+            clientPeer.Send(msg, reliable ? DeliveryMethod.Reliable : DeliveryMethod.Unreliable);
         }
 
         public void CancelFileTransfer(int id)

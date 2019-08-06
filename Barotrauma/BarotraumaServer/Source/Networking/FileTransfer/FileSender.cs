@@ -39,7 +39,7 @@ namespace Barotrauma.Networking
 
             public float Progress
             {
-                get { return SentOffset / (float)Data.Length; }
+                get { return KnownReceivedOffset / (float)Data.Length; }
             }
 
             public float WaitTimer
@@ -61,6 +61,8 @@ namespace Barotrauma.Networking
                 set;
             }
 
+            public int KnownReceivedOffset;
+
             public NetworkConnection Connection
             {
                 get { return connection; }
@@ -78,6 +80,7 @@ namespace Barotrauma.Networking
 
                 Acknowledged = false;
                 SentOffset = 0;
+                KnownReceivedOffset = 0;
 
                 Status = FileTransferStatus.NotStarted;
                 
@@ -255,6 +258,13 @@ namespace Barotrauma.Networking
                     message.Write((ushort)sendByteCount);
                     message.Write(sendBytes, 0, sendByteCount);
 
+                    transfer.SentOffset += sendByteCount;
+                    if (transfer.SentOffset > transfer.KnownReceivedOffset + chunkLen * 5 ||
+                        transfer.SentOffset >= transfer.Data.Length)
+                    {
+                        transfer.SentOffset = transfer.KnownReceivedOffset;
+                    }
+
                     peer.Send(message, transfer.Connection, DeliveryMethod.Unreliable);
                 }
 
@@ -272,11 +282,6 @@ namespace Barotrauma.Networking
                 if (GameSettings.VerboseLogging)
                 {
                     DebugConsole.Log("Sending " + sendByteCount + " bytes of the file " + transfer.FileName + " (" + transfer.SentOffset + "/" + transfer.Data.Length + " sent)");
-                }
-
-                if (remaining - sendByteCount <= 0)
-                {
-                    transfer.Status = FileTransferStatus.Finished;
                 }
             }
         }
@@ -311,7 +316,13 @@ namespace Barotrauma.Networking
                 {
                     matchingTransfer.Acknowledged = true;
                     int offset = inc.ReadInt32();
-                    matchingTransfer.SentOffset = offset > matchingTransfer.SentOffset ? offset : matchingTransfer.SentOffset;
+                    matchingTransfer.KnownReceivedOffset = offset > matchingTransfer.KnownReceivedOffset ? offset : matchingTransfer.KnownReceivedOffset;
+                    if (matchingTransfer.SentOffset < matchingTransfer.KnownReceivedOffset) { matchingTransfer.SentOffset = matchingTransfer.KnownReceivedOffset; }
+
+                    if (matchingTransfer.KnownReceivedOffset >= matchingTransfer.Data.Length)
+                    {
+                        matchingTransfer.Status = FileTransferStatus.Finished;
+                    }
                 }
             }
 
