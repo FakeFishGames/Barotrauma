@@ -1585,15 +1585,25 @@ namespace Barotrauma.Networking
 
         public void CancelFileTransfer(FileReceiver.FileTransferIn transfer)
         {
-            CancelFileTransfer(transfer.SequenceChannel);
+            CancelFileTransfer(transfer.ID);
         }
 
-        public void CancelFileTransfer(int sequenceChannel)
+        public void UpdateFileTransfer(int id, int offset)
+        {
+            IWriteMessage msg = new WriteOnlyMessage();
+            msg.Write((byte)ClientPacketHeader.FILE_REQUEST);
+            msg.Write((byte)FileTransferMessageType.Data);
+            msg.Write((byte)id);
+            msg.Write(offset);
+            clientPeer.Send(msg, DeliveryMethod.Unreliable);
+        }
+
+        public void CancelFileTransfer(int id)
         {
             IWriteMessage msg = new WriteOnlyMessage();
             msg.Write((byte)ClientPacketHeader.FILE_REQUEST);
             msg.Write((byte)FileTransferMessageType.Cancel);
-            msg.Write((byte)sequenceChannel);
+            msg.Write((byte)id);
             clientPeer.Send(msg, DeliveryMethod.Reliable);
         }
 
