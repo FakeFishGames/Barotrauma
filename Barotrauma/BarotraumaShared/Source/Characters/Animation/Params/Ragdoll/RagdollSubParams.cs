@@ -349,19 +349,7 @@ namespace Barotrauma
         }
     }
 
-    class AfflictionParams : RagdollSubParams
-    {
-        public AfflictionParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
-        {
-        }
-    }
-
-    class StatusEffectParams : RagdollSubParams
-    {
-        public StatusEffectParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
-        {
-        }
-    }
+    // TODO: conditionals?
     #endregion
 
     abstract class RagdollSubParams : ISerializableEntity
@@ -417,6 +405,7 @@ namespace Barotrauma
             SubParams.ForEach(sp => sp.Reset());
         }
 
+
 #if CLIENT
         public SerializableEntityEditor SerializableEntityEditor { get; protected set; }
         public virtual void AddToEditor(ParamsEditor editor)
@@ -432,6 +421,10 @@ namespace Barotrauma
             else if (this is LimbAttackParams attackParams)
             {
                 new SerializableEntityEditor(ParamsEditor.Instance.EditorBox.Content.RectTransform, attackParams.Attack, inGame: false, showName: true);
+                foreach (var affliction in attackParams.Attack.Afflictions.Keys)
+                {
+                    new SerializableEntityEditor(ParamsEditor.Instance.EditorBox.Content.RectTransform, affliction, inGame: false, showName: true);
+                }
             }
             foreach (var subParam in SubParams)
             {

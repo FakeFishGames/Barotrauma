@@ -272,7 +272,7 @@ namespace Barotrauma
                         attack.Afflictions.Clear();
                         foreach (Affliction affliction in multipliedAfflictions)
                         {
-                            attack.Afflictions.Add(affliction);
+                            attack.Afflictions.Add(affliction, null);
                         }
                         attacks.Add(attack);
                         break;

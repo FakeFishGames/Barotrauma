@@ -186,7 +186,7 @@ namespace Barotrauma
         //(if none, force is applied only to the limb the attack is attached to)
         public readonly List<int> ForceOnLimbIndices = new List<int>();
 
-        public readonly List<Affliction> Afflictions = new List<Affliction>();
+        public readonly Dictionary<Affliction, XElement> Afflictions = new Dictionary<Affliction, XElement>();
 
         /// <summary>
         /// Only affects ai decision making. All the conditionals has to be met in order to select the attack. TODO: allow to define conditionals using any (implemented in StatusEffect -> move from there to PropertyConditional?)
@@ -207,7 +207,7 @@ namespace Barotrauma
         public List<Affliction> GetMultipliedAfflictions(float multiplier)
         {
             List<Affliction> multipliedAfflictions = new List<Affliction>();
-            foreach (Affliction affliction in Afflictions)
+            foreach (Affliction affliction in Afflictions.Keys)
             {
                 multipliedAfflictions.Add(affliction.Prefab.Instantiate(affliction.Strength * multiplier, affliction.Source));
             }
@@ -227,7 +227,7 @@ namespace Barotrauma
         public float GetTotalDamage(bool includeStructureDamage = false)
         {
             float totalDamage = includeStructureDamage ? StructureDamage : 0.0f;
-            foreach (Affliction affliction in Afflictions)
+            foreach (Affliction affliction in Afflictions.Keys)
             {
                 totalDamage += affliction.GetVitalityDecrease(null);
             }
@@ -236,9 +236,9 @@ namespace Barotrauma
 
         public Attack(float damage, float bleedingDamage, float burnDamage, float structureDamage, float range = 0.0f)
         {
-            if (damage > 0.0f) Afflictions.Add(AfflictionPrefab.InternalDamage.Instantiate(damage));
-            if (bleedingDamage > 0.0f) Afflictions.Add(AfflictionPrefab.Bleeding.Instantiate(bleedingDamage));
-            if (burnDamage > 0.0f) Afflictions.Add(AfflictionPrefab.Burn.Instantiate(burnDamage));
+            if (damage > 0.0f) Afflictions.Add(AfflictionPrefab.InternalDamage.Instantiate(damage), null);
+            if (bleedingDamage > 0.0f) Afflictions.Add(AfflictionPrefab.Bleeding.Instantiate(bleedingDamage), null);
+            if (burnDamage > 0.0f) Afflictions.Add(AfflictionPrefab.Burn.Instantiate(burnDamage), null);
 
             Range = range;
             DamageRange = range;
@@ -257,8 +257,6 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError("Error in Attack (" + parentDebugName + ") - Define damage as afflictions instead of using the damage attribute (e.g. <Affliction identifier=\"internaldamage\" strength=\"10\" />).");
             }
-
-            DamageRange = element.GetAttributeFloat("damagerange", 0f);
 
             InitProjSpecific(element);
 
@@ -300,7 +298,7 @@ namespace Barotrauma
                         float afflictionStrength = subElement.GetAttributeFloat(1.0f, "amount", "strength");
                         var affliction = afflictionPrefab.Instantiate(afflictionStrength);
                         affliction.ApplyProbability = subElement.GetAttributeFloat("probability", 1.0f);
-                        Afflictions.Add(affliction);
+                        Afflictions.Add(affliction, subElement);
 
                         break;
                     case "conditional":
@@ -310,7 +308,10 @@ namespace Barotrauma
                         }
                         break;
                 }
-
+            }
+            foreach (var affliction in Afflictions)
+            {
+                affliction.Key.Deserialize(affliction.Value);
             }
         }
         partial void InitProjSpecific(XElement element = null);
@@ -319,12 +320,26 @@ namespace Barotrauma
         {
             if (SourceElement == null) { return; }
             SerializableProperty.SerializeProperties(this, SourceElement, true);
+            foreach (var affliction in Afflictions)
+            {
+                if (affliction.Value != null)
+                {
+                    affliction.Key.Serialize(affliction.Value);
+                }
+            }
         }
 
         public void Deserialize()
         {
             if (SourceElement == null) { return; }
             SerializableProperties = SerializableProperty.DeserializeProperties(this, SourceElement);
+            foreach (var affliction in Afflictions)
+            {
+                if (affliction.Value != null)
+                {
+                    affliction.Key.Deserialize(affliction.Value);
+                }
+            }
         }
         
         public AttackResult DoDamage(Character attacker, IDamageable target, Vector2 worldPosition, float deltaTime, bool playSound = true)

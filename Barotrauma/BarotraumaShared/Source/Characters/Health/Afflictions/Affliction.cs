@@ -2,14 +2,33 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class Affliction
+    class Affliction : ISerializableEntity
     {
         public readonly AfflictionPrefab Prefab;
-        
-        public float Strength;
+
+        public string Name => ToString();
+
+        public Dictionary<string, SerializableProperty> SerializableProperties { get; set; }
+
+        public void Serialize(XElement element)
+        {
+            SerializableProperty.SerializeProperties(this, element);
+        }
+
+        public void Deserialize(XElement element)
+        {
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+        }
+
+        [Serialize(0f, true), Editable]
+        public float Strength { get; set; }
+
+        [Serialize("", true), Editable]
+        public string Identifier { get; private set; }
 
         public float DamagePerSecond;
         public float DamagePerSecondTimer;
@@ -32,6 +51,7 @@ namespace Barotrauma
         {
             Prefab = prefab;
             Strength = strength;
+            Identifier = prefab.Identifier;
         }
 
         public Affliction CreateMultiplied(float multiplier)

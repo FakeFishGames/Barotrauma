@@ -381,19 +381,19 @@ namespace Barotrauma
             return AddDamage(simPosition, afflictions, playSound);
         }
 
-        public AttackResult AddDamage(Vector2 simPosition, List<Affliction> afflictions, bool playSound)
+        public AttackResult AddDamage(Vector2 simPosition, IEnumerable<Affliction> afflictions, bool playSound)
         {
             List<DamageModifier> appliedDamageModifiers = new List<DamageModifier>();
             //create a copy of the original affliction list to prevent modifying the afflictions of an Attack/StatusEffect etc
-            afflictions = new List<Affliction>(afflictions.Where(a => Rand.Range(0.0f, 1.0f) <= a.ApplyProbability));
-            for (int i = 0; i < afflictions.Count; i++)
+            var afflictionsCopy = afflictions.Where(a => Rand.Range(0.0f, 1.0f) <= a.ApplyProbability).ToList();
+            for (int i = 0; i < afflictionsCopy.Count; i++)
             {
                 foreach (DamageModifier damageModifier in damageModifiers)
                 {
-                    if (!damageModifier.MatchesAffliction(afflictions[i])) continue;
+                    if (!damageModifier.MatchesAffliction(afflictionsCopy[i])) continue;
                     if (SectorHit(damageModifier.ArmorSector, simPosition))
                     {
-                        afflictions[i] = afflictions[i].CreateMultiplied(damageModifier.DamageMultiplier);
+                        afflictionsCopy[i] = afflictionsCopy[i].CreateMultiplied(damageModifier.DamageMultiplier);
                         appliedDamageModifiers.Add(damageModifier);
                     }
                 }
@@ -402,19 +402,19 @@ namespace Barotrauma
                 {
                     foreach (DamageModifier damageModifier in wearable.WearableComponent.DamageModifiers)
                     {
-                        if (!damageModifier.MatchesAffliction(afflictions[i])) continue;
+                        if (!damageModifier.MatchesAffliction(afflictionsCopy[i])) continue;
                         if (SectorHit(damageModifier.ArmorSector, simPosition))
                         {
-                            afflictions[i] = afflictions[i].CreateMultiplied(damageModifier.DamageMultiplier);
+                            afflictionsCopy[i] = afflictionsCopy[i].CreateMultiplied(damageModifier.DamageMultiplier);
                             appliedDamageModifiers.Add(damageModifier);
                         }
                     }
                 }
             }
 
-            AddDamageProjSpecific(simPosition, afflictions, playSound, appliedDamageModifiers);
+            AddDamageProjSpecific(simPosition, afflictionsCopy, playSound, appliedDamageModifiers);
 
-            return new AttackResult(afflictions, this, appliedDamageModifiers);
+            return new AttackResult(afflictionsCopy, this, appliedDamageModifiers);
         }
 
         partial void AddDamageProjSpecific(Vector2 simPosition, List<Affliction> afflictions, bool playSound, List<DamageModifier> appliedDamageModifiers);
