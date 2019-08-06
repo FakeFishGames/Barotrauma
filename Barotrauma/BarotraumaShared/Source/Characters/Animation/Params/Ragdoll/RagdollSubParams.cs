@@ -77,8 +77,6 @@ namespace Barotrauma
         public readonly SpriteParams normalSpriteParams;
         public readonly SpriteParams damagedSpriteParams;
         public readonly SpriteParams deformSpriteParams;
-        public readonly LimbAttackParams attackParams;
-        public readonly DamageModifierParams damageModifierParams;
 
         private string name;
         [Serialize("", true), Editable]
@@ -186,14 +184,11 @@ namespace Barotrauma
             var attackElement = element.GetChildElement("attack");
             if (attackElement != null)
             {
-                attackParams = new LimbAttackParams(attackElement, ragdoll);
-                SubParams.Add(attackParams);
+                SubParams.Add(new LimbAttackParams(attackElement, ragdoll));
             }
-            var damageElement = element.GetChildElement("damagemodifier");
-            if (damageElement != null)
+            foreach (var damageElement in element.GetChildElements("damagemodifier"))
             {
-                damageModifierParams = new DamageModifierParams(damageElement, ragdoll);
-                SubParams.Add(damageModifierParams);
+                SubParams.Add(new DamageModifierParams(damageElement, ragdoll));
             }
         }
     }
