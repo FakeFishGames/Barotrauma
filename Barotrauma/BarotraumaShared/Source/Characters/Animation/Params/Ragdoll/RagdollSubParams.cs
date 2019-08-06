@@ -311,7 +311,6 @@ namespace Barotrauma
         public float Width { get; set; }
     }
 
-    #region TODO
     class LimbAttackParams : RagdollSubParams
     {
         public LimbAttackParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
@@ -320,29 +319,29 @@ namespace Barotrauma
         }
 
         public Attack Attack { get; private set; }
-        private readonly XElement attackElement;
 
         public override bool Deserialize(XElement element = null, bool recursive = true)
         {
             base.Deserialize(element, recursive);
-            Attack.Deserialize(attackElement);
+            Attack.Deserialize();
             return SerializableProperties != null;
         }
 
         public override bool Serialize(XElement element = null, bool recursive = true)
         {
             base.Serialize(element, recursive);
-            Attack.Serialize(attackElement);
+            Attack.Serialize();
             return true;
         }
 
         public override void Reset()
         {
             base.Reset();
-            Attack.Deserialize(attackElement);
+            Attack.Deserialize();
         }
     }
 
+    #region TODO
     class DamageModifierParams : RagdollSubParams
     {
         public DamageModifierParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
