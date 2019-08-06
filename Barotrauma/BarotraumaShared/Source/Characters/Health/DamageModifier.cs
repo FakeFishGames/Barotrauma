@@ -30,13 +30,6 @@ namespace Barotrauma
 
         public Vector2 ArmorSectorInRadians => new Vector2(MathHelper.ToRadians(ArmorSector.X), MathHelper.ToRadians(ArmorSector.Y));
 
-        [Serialize(true, false), Editable]
-        public bool IsArmor
-        {
-            get;
-            private set;
-        }
-
         [Serialize(false, false), Editable]
         public bool DeflectProjectiles
         {
