@@ -253,19 +253,21 @@ namespace Barotrauma
             }
         }
 
-        public SerializableEntityEditor(RectTransform parent, ISerializableEntity entity, bool inGame, bool showName, string style = "", int elementHeight = 24) : base(style, new RectTransform(Vector2.One, parent))
+        public SerializableEntityEditor(RectTransform parent, ISerializableEntity entity, bool inGame, bool showName, string style = "", int elementHeight = 24, ScalableFont titleFont = null)
+            : this(parent, entity, inGame ? SerializableProperty.GetProperties<InGameEditable>(entity) : SerializableProperty.GetProperties<Editable>(entity), showName, style, elementHeight, titleFont)
+        {
+        }
+
+        public SerializableEntityEditor(RectTransform parent, ISerializableEntity entity, IEnumerable<SerializableProperty> properties, bool showName, string style = "", int elementHeight = 24, ScalableFont titleFont = null)
+            : base(style, new RectTransform(Vector2.One, parent))
         {
             this.elementHeight = (int)(elementHeight * GUI.Scale);
-            List<SerializableProperty> editableProperties = inGame ? 
-                SerializableProperty.GetProperties<InGameEditable>(entity) : 
-                SerializableProperty.GetProperties<Editable>(entity);
-            
             layoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, RectTransform)) { AbsoluteSpacing = 2 };
             if (showName)
             {
-                new GUITextBlock(new RectTransform(new Point(layoutGroup.Rect.Width, this.elementHeight), layoutGroup.RectTransform), entity.Name, font: GUI.Font);
+                new GUITextBlock(new RectTransform(new Point(layoutGroup.Rect.Width, this.elementHeight), layoutGroup.RectTransform), entity.Name, font: titleFont ?? GUI.Font);
             }
-            editableProperties.ForEach(ep => CreateNewField(ep, entity));
+            properties.ForEach(ep => CreateNewField(ep, entity));
 
             //scale the size of this component and the layout group to fit the children
             int contentHeight = ContentHeight;

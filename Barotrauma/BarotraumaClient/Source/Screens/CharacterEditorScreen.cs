@@ -2794,29 +2794,29 @@ namespace Barotrauma
             {
                 if (editRagdoll || !editLimbs && !editJoints)
                 {
-                    RagdollParams.AddToEditor(ParamsEditor.Instance, alsoChildren: false);
-                    RagdollParams.ColliderParams.ForEach(c => c.AddToEditor(ParamsEditor.Instance, false));
+                    RagdollParams.AddToEditor(ParamsEditor.Instance, alsoChildren: false, space: 10);
+                    RagdollParams.ColliderParams.ForEach(c => c.AddToEditor(ParamsEditor.Instance, false, 10));
                 }
                 if (editJoints)
                 {
-                    if (selectedJoints.None())
+                    if (selectedJoints.Any())
                     {
-                        RagdollParams.Joints.ForEach(jp => jp.AddToEditor(ParamsEditor.Instance, false));
+                        selectedJoints.ForEach(j => j.jointParams.AddToEditor(ParamsEditor.Instance, true, space: 10));
                     }
                     else
                     {
-                        selectedJoints.ForEach(j => j.jointParams.AddToEditor(ParamsEditor.Instance, true));
+                        RagdollParams.Joints.ForEach(jp => jp.AddToEditor(ParamsEditor.Instance, false, space: 10));
                     }
                 }
                 if (editLimbs)
                 {
-                    if (selectedLimbs.None())
+                    if (selectedLimbs.Any())
                     {
-                        character.AnimController.Limbs.ForEach(l => l.limbParams.AddToEditor(ParamsEditor.Instance, false));
+                        selectedLimbs.ForEach(l => l.limbParams.AddToEditor(ParamsEditor.Instance, true, space: 10));
                     }
                     else
                     {
-                        selectedLimbs.ForEach(l => l.limbParams.AddToEditor(ParamsEditor.Instance, true));
+                        character.AnimController.Limbs.ForEach(l => l.limbParams.AddToEditor(ParamsEditor.Instance, false, space: 10));
                     }
                 }
             }

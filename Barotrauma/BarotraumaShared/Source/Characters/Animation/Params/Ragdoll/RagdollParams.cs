@@ -328,7 +328,7 @@ namespace Barotrauma
         }
 
 #if CLIENT
-        public void AddToEditor(ParamsEditor editor, bool alsoChildren = true)
+        public void AddToEditor(ParamsEditor editor, bool alsoChildren = true, int space = 0)
         {
             base.AddToEditor(editor);
             if (alsoChildren)
@@ -336,10 +336,15 @@ namespace Barotrauma
                 var subParams = GetAllSubParams();
                 foreach (var subParam in subParams)
                 {
-                    subParam.AddToEditor(editor, true);
-                    new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 10), editor.EditorBox.Content.RectTransform),
-                        style: null, color: Color.Black);
+                    subParam.AddToEditor(editor, true, space);
                 }
+            }
+            if (space > 0)
+            {
+                new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, space), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
+                {
+                    CanBeFocused = false
+                };
             }
         }
 #endif

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using System.Linq;
 using Barotrauma.Extensions;
 #if CLIENT
 using Barotrauma.SpriteDeformations;
@@ -430,9 +431,9 @@ namespace Barotrauma
 
 #if CLIENT
         public SerializableEntityEditor SerializableEntityEditor { get; protected set; }
-        public virtual void AddToEditor(ParamsEditor editor, bool recursive = true)
+        public virtual void AddToEditor(ParamsEditor editor, bool recursive = true, int space = 0)
         {
-            SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, this, inGame: false, showName: true);
+            SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, this, inGame: false, showName: true, titleFont: GUI.LargeFont);
             if (this is SpriteParams spriteParams && spriteParams.Deformation != null)
             {
                 foreach (var deformation in spriteParams.Deformation.Deformations.Keys)
@@ -440,24 +441,28 @@ namespace Barotrauma
                     new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, deformation, inGame: false, showName: true);
                 }
             }
-            else if (this is LimbAttackParams attackParams)
+            if (this is LimbAttackParams attackParams)
             {
-                new SerializableEntityEditor(ParamsEditor.Instance.EditorBox.Content.RectTransform, attackParams.Attack, inGame: false, showName: true);
+                new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, attackParams.Attack, inGame: false, showName: true);
                 foreach (var affliction in attackParams.Attack.Afflictions.Keys)
                 {
-                    new SerializableEntityEditor(ParamsEditor.Instance.EditorBox.Content.RectTransform, affliction, inGame: false, showName: true);
+                    new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, affliction, inGame: false, showName: true);
                 }
             }
             else if (this is DamageModifierParams damageModifierParams)
             {
-                new SerializableEntityEditor(ParamsEditor.Instance.EditorBox.Content.RectTransform, damageModifierParams.DamageModifier, inGame: false, showName: true);
+                new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, damageModifierParams.DamageModifier, inGame: false, showName: true);
             }
             if (recursive)
             {
-                foreach (var subParam in SubParams)
+                SubParams.ForEach(sp => sp.AddToEditor(editor, true));
+            }
+            if (space > 0)
+            {
+                new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, space), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
                 {
-                    subParam.AddToEditor(editor, true);
-                }
+                    CanBeFocused = false
+                };
             }
         }
 #endif

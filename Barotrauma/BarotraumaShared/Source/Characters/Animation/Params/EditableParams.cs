@@ -119,7 +119,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError("[Params] Not loaded!");
                 return;
             }
-            SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, this, false, true);
+            SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, this, false, true, titleFont: GUI.LargeFont);
         }
 #endif
 
