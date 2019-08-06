@@ -2795,28 +2795,28 @@ namespace Barotrauma
                 if (editRagdoll || !editLimbs && !editJoints)
                 {
                     RagdollParams.AddToEditor(ParamsEditor.Instance, alsoChildren: false);
-                    RagdollParams.ColliderParams.ForEach(c => c.AddToEditor(ParamsEditor.Instance));
+                    RagdollParams.ColliderParams.ForEach(c => c.AddToEditor(ParamsEditor.Instance, false));
                 }
                 if (editJoints)
                 {
                     if (selectedJoints.None())
                     {
-                        RagdollParams.Joints.ForEach(jp => jp.AddToEditor(ParamsEditor.Instance));
+                        RagdollParams.Joints.ForEach(jp => jp.AddToEditor(ParamsEditor.Instance, false));
                     }
                     else
                     {
-                        selectedJoints.ForEach(j => j.jointParams.AddToEditor(ParamsEditor.Instance));
+                        selectedJoints.ForEach(j => j.jointParams.AddToEditor(ParamsEditor.Instance, true));
                     }
                 }
                 if (editLimbs)
                 {
                     if (selectedLimbs.None())
                     {
-                        character.AnimController.Limbs.ForEach(l => l.limbParams.AddToEditor(ParamsEditor.Instance));
+                        character.AnimController.Limbs.ForEach(l => l.limbParams.AddToEditor(ParamsEditor.Instance, false));
                     }
                     else
                     {
-                        selectedLimbs.ForEach(l => l.limbParams.AddToEditor(ParamsEditor.Instance));
+                        selectedLimbs.ForEach(l => l.limbParams.AddToEditor(ParamsEditor.Instance, true));
                     }
                 }
             }

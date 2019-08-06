@@ -430,7 +430,7 @@ namespace Barotrauma
 
 #if CLIENT
         public SerializableEntityEditor SerializableEntityEditor { get; protected set; }
-        public virtual void AddToEditor(ParamsEditor editor)
+        public virtual void AddToEditor(ParamsEditor editor, bool recursive = true)
         {
             SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, this, inGame: false, showName: true);
             if (this is SpriteParams spriteParams && spriteParams.Deformation != null)
@@ -452,9 +452,12 @@ namespace Barotrauma
             {
                 new SerializableEntityEditor(ParamsEditor.Instance.EditorBox.Content.RectTransform, damageModifierParams.DamageModifier, inGame: false, showName: true);
             }
-            foreach (var subParam in SubParams)
+            if (recursive)
             {
-                subParam.AddToEditor(editor);
+                foreach (var subParam in SubParams)
+                {
+                    subParam.AddToEditor(editor, true);
+                }
             }
         }
 #endif

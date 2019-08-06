@@ -336,7 +336,7 @@ namespace Barotrauma
                 var subParams = GetAllSubParams();
                 foreach (var subParam in subParams)
                 {
-                    subParam.AddToEditor(editor);
+                    subParam.AddToEditor(editor, true);
                     new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 10), editor.EditorBox.Content.RectTransform),
                         style: null, color: Color.Black);
                 }
