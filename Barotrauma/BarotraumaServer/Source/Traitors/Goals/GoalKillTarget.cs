@@ -25,13 +25,13 @@ namespace Barotrauma
                 isCompleted = Target?.IsDead ?? false;
             }
 
-            public override bool Start(GameServer server, Traitor traitor)
+            public override bool Start(Traitor traitor)
             {
-                if (!base.Start(server, traitor))
+                if (!base.Start(traitor))
                 {
                     return false;
                 }
-                Target = traitor.Mission.FindKillTarget(server, traitor.Character, Filter);
+                Target = traitor.Mission.FindKillTarget(traitor.Character, Filter);
                 return Target != null && !Target.IsDead;
             }
 

@@ -109,13 +109,13 @@ namespace Barotrauma
                     var objective = pendingObjectives[0];
                     if (!objective.IsStarted)
                     {
-                        if (!objective.Start(GameMain.Server, Traitors["traitor"]))
+                        if (!objective.Start(Traitors["traitor"]))
                         {
                             pendingObjectives.RemoveAt(0);
                             completedObjectives.Add(objective);
                             if (pendingObjectives.Count > 0)
                             {
-                                objective.EndMessage(GameMain.Server);
+                                objective.EndMessage();
                             }
                             continue;
                         }
@@ -128,14 +128,14 @@ namespace Barotrauma
                         completedObjectives.Add(objective);
                         if (pendingObjectives.Count > 0)
                         {
-                            objective.EndMessage(GameMain.Server);
+                            objective.EndMessage();
                         }
                         continue;
                     }
                     if (!objective.CanBeCompleted)
                     {
-                        objective.EndMessage(GameMain.Server);
-                        objective.End(GameMain.Server, true);
+                        objective.EndMessage();
+                        objective.End(true);
                         pendingObjectives.Clear();
                     }
                     break;
@@ -144,13 +144,13 @@ namespace Barotrauma
                 for (int i = previousCompletedCount; i <= completedMax; ++i)
                 {
                     var objective = completedObjectives[i];
-                    objective.End(GameMain.Server, i < completedMax || pendingObjectives.Count > 0);
+                    objective.End(i < completedMax || pendingObjectives.Count > 0);
                 }
                 if (pendingObjectives.Count > 0)
                 {
                     if (startedCount > 0)
                     {
-                        pendingObjectives[0].StartMessage(GameMain.Server);
+                        pendingObjectives[0].StartMessage();
                     }
                 }
                 else if (completedObjectives.Count >= allObjectives.Count)
@@ -164,7 +164,7 @@ namespace Barotrauma
             }
 
             public delegate bool CharacterFilter(Character character);
-            public Character FindKillTarget(GameServer server, Character traitor, CharacterFilter filter)
+            public Character FindKillTarget(Character traitor, CharacterFilter filter)
             {
                 int charactersCount = Character.CharacterList.Count;
                 int targetIndex = Rand.Int(charactersCount);

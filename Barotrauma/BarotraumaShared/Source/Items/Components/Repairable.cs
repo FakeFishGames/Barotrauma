@@ -277,6 +277,8 @@ namespace Barotrauma.Items.Components
                     deteriorationTimer = 0.0f;
                     deteriorateAlwaysResetTimer = item.Condition / DeteriorationSpeed;
                     DeteriorateAlways = true;
+                    item.Condition = MinDeteriorationCondition;
+                    currentFixer = null;
 
                     wasGoodCondition = false;
 #if SERVER

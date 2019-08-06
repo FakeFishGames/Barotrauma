@@ -46,9 +46,9 @@ namespace Barotrauma
                 isCompleted = replacedAmount >= (int)(replaceAmount * totalAmount + 0.5f);
             }
 
-            public override bool Start(GameServer server, Traitor traitor)
+            public override bool Start(Traitor traitor)
             {
-                if (!base.Start(server, traitor))
+                if (!base.Start(traitor))
                 {
                     return false;
                 }

@@ -52,13 +52,13 @@ namespace Barotrauma
                 }
             }
 
-            public override bool Start(GameServer server, Traitor traitor)
+            public override bool Start(Traitor traitor)
             {
-                if (!base.Start(server, traitor))
+                if (!base.Start(traitor))
                 {
                     return false;
                 }
-                return goal.Start(server, traitor);
+                return goal.Start(traitor);
             }
 
             public GoalWithDuration(Goal goal, float requiredDuration, bool countTotalDuration) : base()

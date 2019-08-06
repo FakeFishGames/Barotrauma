@@ -41,7 +41,7 @@ namespace Barotrauma
 
             public virtual bool IsEnemy(Character character) => false;
 
-            public virtual bool Start(GameServer server, Traitor traitor)
+            public virtual bool Start(Traitor traitor)
             {
                 Traitor = traitor;
                 return true;

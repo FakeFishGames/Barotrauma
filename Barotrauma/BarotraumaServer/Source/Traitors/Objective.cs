@@ -71,13 +71,13 @@ namespace Barotrauma
                 }
             }
 
-            public bool Start(GameServer server, Traitor traitor)
+            public bool Start(Traitor traitor)
             {
                 Traitor = traitor;
                 for (var i = 0; i < pendingGoals.Count;)
                 {
                     var goal = pendingGoals[i];
-                    if (goal.Start(server, traitor))
+                    if (goal.Start(traitor))
                     {
                         ++i;
                     }
@@ -99,12 +99,12 @@ namespace Barotrauma
                 return true;
             }
 
-            public void StartMessage(GameServer server)
+            public void StartMessage()
             {
                 Traitor.SendChatMessage(StartMessageText);
             }
 
-            public void End(GameServer server, bool displayMessage)
+            public void End(bool displayMessage)
             {
                 if (displayMessage)
                 {
@@ -113,7 +113,7 @@ namespace Barotrauma
                 // traitor.UpdateCurrentObjective("");
             }
 
-            public void EndMessage(GameServer server)
+            public void EndMessage()
             {
                 Traitor.SendChatMessage(EndMessageText);
             }
