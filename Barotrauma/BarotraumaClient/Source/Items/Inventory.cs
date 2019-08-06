@@ -294,7 +294,7 @@ namespace Barotrauma
             }
 
             if (container == null) return false;
-            return CharacterHealth.OpenHealthWindow != null || !container.KeepOpenWhenEquipped || (!(owner is Character)) || !owner.HasEquippedItem(container.Item);
+            return owner.SelectedCharacter != null || !container.KeepOpenWhenEquipped || (!(owner is Character)) || !owner.HasEquippedItem(container.Item);
         }
 
         protected virtual bool HideSlot(int i)
