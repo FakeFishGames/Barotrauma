@@ -187,8 +187,6 @@ namespace Barotrauma.Networking
                 t.Status == FileTransferStatus.Finished), "List of active file transfers contains entires that should have been removed");
 
             byte transferMessageType = inc.ReadByte();
-            
-            DebugConsole.NewMessage(((FileTransferMessageType)transferMessageType).ToString());
 
             switch (transferMessageType)
             {
