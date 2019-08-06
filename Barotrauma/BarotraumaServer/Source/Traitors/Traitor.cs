@@ -29,13 +29,11 @@ namespace Barotrauma
             }, new string[] {
                 codeWords, codeResponse
             });
-            var greetingChatMsg = ChatMessage.Create(null, greetingMessage, ChatMessageType.Server, null);
-            var greetingMsgBox = ChatMessage.Create(null, greetingMessage, ChatMessageType.ServerMessageBox, null);
+
+            SendChatMessage(greetingMessage);
+            SendChatMessageBox(greetingMessage);
 
             Client traitorClient = server.ConnectedClients.Find(c => c.Character == Character);
-            GameMain.Server.SendDirectChatMessage(greetingChatMsg, traitorClient);
-            GameMain.Server.SendDirectChatMessage(greetingMsgBox, traitorClient);
-
             Client ownerClient = server.ConnectedClients.Find(c => c.Connection == server.OwnerConnection);
             if (traitorClient != ownerClient && ownerClient != null && ownerClient.Character == null)
             {
@@ -47,6 +45,25 @@ namespace Barotrauma
                 );
                 GameMain.Server.SendDirectChatMessage(ownerMsg, ownerClient);
             }
+        }
+
+        public void SendChatMessage(string serverText)
+        {
+            Client client = GameMain.Server.ConnectedClients.Find(c => c.Character == Character);
+            GameMain.Server.SendDirectChatMessage(ChatMessage.Create("", serverText, ChatMessageType.Server, null), client);
+        }
+
+        public void SendChatMessageBox(string serverText)
+        {
+            Client client = GameMain.Server.ConnectedClients.Find(c => c.Character == Character);
+            GameMain.Server.SendDirectChatMessage(ChatMessage.Create("", serverText, ChatMessageType.ServerMessageBox, null), client);
+        }
+
+        public void UpdateCurrentObjective(string objectiveText)
+        {
+            Client traitorClient = GameMain.Server.ConnectedClients.Find(c => c.Character == Character);
+            Character.TraitorCurrentObjective = objectiveText;
+            GameMain.Server.SendTraitorCurrentObjective(traitorClient, Character.TraitorCurrentObjective);
         }
     }
 }

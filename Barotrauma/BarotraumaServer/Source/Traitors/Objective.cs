@@ -92,38 +92,30 @@ namespace Barotrauma
                     return false;
                 }
                 IsStarted = true;
-                Client traitorClient = server.ConnectedClients.Find(c => c.Character == traitor.Character);
-                // server.SendDirectChatMessage(StartMessageText, traitorClient);
-                server.SendDirectChatMessage(ChatMessage.Create(null, StartMessageText, ChatMessageType.ServerMessageBox, null), traitorClient);
 
-                Traitor.Character.TraitorCurrentObjective = GoalInfos;
-                server.SendTraitorCurrentObjective(traitorClient, Traitor.Character.TraitorCurrentObjective);
+                traitor.SendChatMessageBox(StartMessageText);
+                traitor.UpdateCurrentObjective(GoalInfos);
 
                 return true;
             }
 
             public void StartMessage(GameServer server)
             {
-                Client traitorClient = server.ConnectedClients.Find(c => c.Character == Traitor.Character);
-                server.SendDirectChatMessage(StartMessageText, traitorClient);
+                Traitor.SendChatMessage(StartMessageText);
             }
 
             public void End(GameServer server, bool displayMessage)
             {
                 if (displayMessage)
                 {
-                    Client traitorClient = server.ConnectedClients.Find(c => c.Character == Traitor.Character);
-                    GameMain.Server.SendDirectChatMessage(ChatMessage.Create(null, EndMessageText, ChatMessageType.ServerMessageBox, null), traitorClient);
+                    Traitor.SendChatMessageBox(EndMessageText);
                 }
-
-                // Traitor.Character.TraitorCurrentObjective = "";
-                // server.SendTraitorCurrentObjective(traitorClient, Traitor.Character.TraitorCurrentObjective);
+                // traitor.UpdateCurrentObjective("");
             }
 
             public void EndMessage(GameServer server)
             {
-                Client traitorClient = server.ConnectedClients.Find(c => c.Character == Traitor.Character);
-                GameMain.Server.SendDirectChatMessage(EndMessageText, traitorClient);
+                Traitor.SendChatMessage(EndMessageText);
             }
 
             public void Update(float deltaTime)
@@ -147,18 +139,12 @@ namespace Barotrauma
                         pendingGoals.RemoveAt(i);
                         if (GameMain.Server != null)
                         {
-                            Client traitorClient = GameMain.Server.ConnectedClients?.Find(c => c.Character == goal.Traitor.Character);
-                            if (traitorClient != null)
+                            Traitor.SendChatMessage(goal.CompletedText);
+                            if (pendingGoals.Count > 0)
                             {
-                                GameMain.Server.SendDirectChatMessage(ChatMessage.Create(null, goal.CompletedText, ChatMessageType.Server, null), traitorClient);
-                                if (pendingGoals.Count > 0)
-                                {
-                                    GameMain.Server.SendDirectChatMessage(ChatMessage.Create(null, goal.CompletedText, ChatMessageType.ServerMessageBox, null), traitorClient);
-                                }
-
-                                Traitor.Character.TraitorCurrentObjective = GoalInfos;
-                                GameMain.Server.SendTraitorCurrentObjective(traitorClient, Traitor.Character.TraitorCurrentObjective);
+                                Traitor.SendChatMessageBox(goal.CompletedText);
                             }
+                            Traitor.UpdateCurrentObjective(GoalInfos);
                         }
                     }
                 }
