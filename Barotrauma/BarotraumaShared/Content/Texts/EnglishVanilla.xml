@@ -3224,20 +3224,21 @@
   <label.airlock>Airlock</label.airlock>
   <label.dockingport>Docking Port</label.dockingport>
   <label.weapons>Weapons</label.weapons>
-  <label.cargo>Cargo</label.cargo>
+  <label.cargo>Cargo Bay</label.cargo>
   <label.crewquarters>Crew Quarters</label.crewquarters>
-  <label.electrical>Electrical</label.electrical>
+  <label.electrical1>Electrical #1</label.electrical1>
+  <label.electrical2>Electrical #2</label.electrical2>
   <label.medical>Medical</label.medical>
   <label.engineering>Engineering</label.engineering>
   <label.ballast>Ballast</label.ballast>
   <label.reactor>Reactor</label.reactor>
-  <label.armory>Weapons</label.armory>
-  <label.top>Top</label.top>
-  <label.bottom>Bottom</label.bottom>
-  <label.batteryoutput>Bottom</label.batteryoutput>
+  <label.armory>Armory</label.armory>
+  <label.batteryoutput>Battery Output</label.batteryoutput>
   <label.onoff>On/Off</label.onoff>
   <label.bilge>Bilge</label.bilge>
   <label.powermainline>Power Mainline</label.powermainline>
+  <label.command>Command</label.command>
+  <label.engine>Engine</label.engine>
 
   <deletefileverification>Do you want to delete [filename]?</deletefileverification>
 
