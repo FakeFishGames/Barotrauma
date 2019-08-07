@@ -674,6 +674,11 @@ namespace Barotrauma
             },null));
 
 #if DEBUG
+            commands.Add(new Command("crash", "crash: Crashes the game.", (string[] args) =>
+            {
+                throw new Exception("crash command issued");
+            }));
+
             commands.Add(new Command("teleportsub", "teleportsub [start/end]: Teleport the submarine to the start or end of the level. WARNING: does not take outposts into account, so often leads to physics glitches. Only use for debugging.", (string[] args) =>
             {
                 if (Submarine.MainSub == null || Level.Loaded == null) return;

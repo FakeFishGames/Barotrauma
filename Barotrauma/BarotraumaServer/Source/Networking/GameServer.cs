@@ -10,6 +10,7 @@ using System.IO.Compression;
 using System.IO;
 using Barotrauma.Steam;
 using System.Xml.Linq;
+using System.Threading;
 
 namespace Barotrauma.Networking
 {
@@ -217,6 +218,21 @@ namespace Barotrauma.Networking
             }
             ownerClient.SetPermissions(ClientPermissions.All, DebugConsole.Commands);
             UpdateClientPermissions(ownerClient);
+        }
+
+        public void NotifyCrash()
+        {
+            var tempList = ConnectedClients.Where(c => c.Connection != OwnerConnection).ToList();
+            foreach (var c in tempList)
+            {
+                DisconnectClient(c.Connection, DisconnectReason.ServerCrashed.ToString(), DisconnectReason.ServerCrashed.ToString());
+            }
+            if (OwnerConnection != null)
+            {
+                var conn = OwnerConnection; OwnerConnection = null;
+                DisconnectClient(conn, DisconnectReason.ServerCrashed.ToString(), DisconnectReason.ServerCrashed.ToString());
+            }
+            Thread.Sleep(500);
         }
 
         private void OnInitializationComplete(NetworkConnection connection)

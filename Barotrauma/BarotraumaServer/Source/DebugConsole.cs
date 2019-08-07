@@ -7,6 +7,8 @@ using System.ComponentModel;
 using FarseerPhysics;
 using Barotrauma.Items.Components;
 using System.Threading;
+using System.IO;
+using System.Text;
 
 namespace Barotrauma
 {
@@ -184,6 +186,22 @@ namespace Barotrauma
             catch (ThreadAbortException)
             {
                 //don't have anything to do here yet
+            }
+            catch (Exception exception)
+            {
+                StreamWriter sw = new StreamWriter("inputthreadcrash.log");
+
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine("Barotrauma Dedicated Server input thread crash report (generated on " + DateTime.Now + ")");
+                sb.AppendLine("\n");
+                sb.AppendLine("Target site: " + exception.TargetSite.ToString());
+                sb.AppendLine("Stack trace: ");
+                sb.AppendLine(exception.StackTrace);
+
+                sw.WriteLine(sb.ToString());
+                sw.Close();
+
+                GameMain.ShouldRun = false;
             }
         }
 
