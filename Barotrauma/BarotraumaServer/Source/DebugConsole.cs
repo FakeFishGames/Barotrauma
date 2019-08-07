@@ -951,6 +951,11 @@ namespace Barotrauma
             {
                 string text = string.Join(" ", args);
                 text = client.Name+": " + text;
+                if (GameMain.Server.OwnerConnection != null &&
+                    client.Connection == GameMain.Server.OwnerConnection)
+                {
+                    text = "[HOST] " + text;
+                }
                 GameMain.Server.SendChatMessage(text, ChatMessageType.Server);
             });
 
