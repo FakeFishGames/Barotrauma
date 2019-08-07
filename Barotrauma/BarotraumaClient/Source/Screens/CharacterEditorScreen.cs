@@ -396,7 +396,7 @@ namespace Barotrauma
                     {
                         CurrentAnimation.ClearHistory();
                         animSelection.Select(index);
-                        CurrentAnimation.CreateSnapshot();
+                        CurrentAnimation.StoreSnapshot();
                     }
                 }
                 if (!PlayerInput.KeyDown(Keys.LeftControl) && PlayerInput.KeyHit(Keys.E))
@@ -1296,8 +1296,8 @@ namespace Barotrauma
             ClearWidgets();
             ClearSelection();
             ResetParamsEditor();
-            CurrentAnimation.CreateSnapshot();
-            RagdollParams.CreateSnapshot();
+            CurrentAnimation.StoreSnapshot();
+            RagdollParams.StoreSnapshot();
             Cam.Position = character.WorldPosition;
         }
 
@@ -2117,7 +2117,7 @@ namespace Barotrauma
             limbScaleBar.Bar.OnClicked += (button, data) =>
             {
                 RecreateRagdoll();
-                RagdollParams.CreateSnapshot();
+                RagdollParams.StoreSnapshot();
                 ragdollResetRequiresForceLoading = true;
                 return true;
             };
@@ -2127,7 +2127,7 @@ namespace Barotrauma
                 {
                     RecreateRagdoll();
                 }
-                RagdollParams.CreateSnapshot();
+                RagdollParams.StoreSnapshot();
                 ragdollResetRequiresForceLoading = true;
                 return true;
             };
@@ -3135,11 +3135,11 @@ namespace Barotrauma
         {
             if (editJoints || editLimbs || editIK)
             {
-                RagdollParams.CreateSnapshot();
+                RagdollParams.StoreSnapshot();
             }
             if (editAnimations)
             {
-                CurrentAnimation.CreateSnapshot();
+                CurrentAnimation.StoreSnapshot();
             }
         }
         #endregion
@@ -4685,7 +4685,7 @@ namespace Barotrauma
                     tooltipOffset = new Vector2(selectedSize / 2 + 5, -10),
                     data = character.AnimController.CurrentAnimationParams
                 };
-                widget.MouseUp += () => CurrentAnimation.CreateSnapshot();
+                widget.MouseUp += () => CurrentAnimation.StoreSnapshot();
                 widget.color = color;
                 widget.PreUpdate += dTime =>
                 {
@@ -4775,7 +4775,7 @@ namespace Barotrauma
                     }
                     ResetParamsEditor();
                 };
-                widget.MouseUp += () => RagdollParams.CreateSnapshot();
+                widget.MouseUp += () => RagdollParams.StoreSnapshot();
                 widget.tooltip = joint.jointParams.Name;
                 jointSelectionWidgets.Add(ID, widget);
                 return widget;
@@ -4810,7 +4810,7 @@ namespace Barotrauma
                     w.size = w.IsSelected ? selectedSize : normalSize;
                     w.isFilled = w.IsControlled;
                 };
-                w.MouseUp += () => RagdollParams.CreateSnapshot();
+                w.MouseUp += () => RagdollParams.StoreSnapshot();
                 initMethod?.Invoke(w);
                 return w;
             }

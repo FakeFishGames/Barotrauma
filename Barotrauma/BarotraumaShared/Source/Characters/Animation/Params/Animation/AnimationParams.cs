@@ -43,7 +43,7 @@ namespace Barotrauma
         public float SteerTorque { get; set; }
     }
 
-    abstract class AnimationParams : EditableParams
+    abstract class AnimationParams : EditableParams, IMemorizable<AnimationParams>
     {
         public string SpeciesName { get; private set; }
         public bool IsGroundedAnimation => AnimationType == AnimationType.Walk || AnimationType == AnimationType.Run;
@@ -385,7 +385,9 @@ namespace Barotrauma
         }
 
         #region Memento
-        protected void CreateSnapshot<T>() where T : AnimationParams, new()
+        public Memento<AnimationParams> Memento { get; protected set; } = new Memento<AnimationParams>();
+        public abstract void StoreSnapshot();
+        protected void StoreSnapshot<T>() where T : AnimationParams, new()
         {
             Serialize();
             if (doc == null)
@@ -400,10 +402,11 @@ namespace Barotrauma
             };
             copy.Deserialize();
             copy.Serialize();
-            memento.Store(copy);
+            Memento.Store(copy);
         }
-        public override void Undo() => Deserialize(memento.Undo().MainElement);
-        public override void Redo() => Deserialize(memento.Redo().MainElement);
+        public void Undo() => Deserialize(Memento.Undo().MainElement);
+        public void Redo() => Deserialize(Memento.Redo().MainElement);
+        public void ClearHistory() => Memento.Clear();
         #endregion
     }
 }

@@ -20,7 +20,7 @@ namespace Barotrauma
         public static FishRagdollParams GetDefaultRagdollParams(string speciesName) => GetDefaultRagdollParams<FishRagdollParams>(speciesName);
     }
 
-    class RagdollParams : EditableParams
+    class RagdollParams : EditableParams, IMemorizable<RagdollParams>
     {
         public const float MIN_SCALE = 0.1f;
         public const float MAX_SCALE = 2;
@@ -350,7 +350,8 @@ namespace Barotrauma
 #endif
 
         #region Memento
-        public override void CreateSnapshot()
+        public Memento<RagdollParams> Memento { get; protected set; } = new Memento<RagdollParams>();
+        public void StoreSnapshot()
         {
             Serialize();
             if (doc == null)
@@ -368,10 +369,11 @@ namespace Barotrauma
             copy.CreateJoints();
             copy.Deserialize();
             copy.Serialize();
-            memento.Store(copy);
+            Memento.Store(copy);
         }
-        public override void Undo() => RevertTo(memento.Undo() as RagdollParams);
-        public override void Redo() => RevertTo(memento.Redo() as RagdollParams);
+        public void Undo() => RevertTo(Memento.Undo() as RagdollParams);
+        public void Redo() => RevertTo(Memento.Redo() as RagdollParams);
+        public void ClearHistory() => Memento.Clear();
 
         private void RevertTo(RagdollParams source)
         {
