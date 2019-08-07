@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name="Tigerthresher" humanoid="false">
+<Character speciesname="Tigerthresher" humanoid="false">
 
   <ragdolls folder="default"/>
   <animations folder="default"/>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<Character name="Mantis" humanoid="false" blooddecal="blood">
+<Character speciesname="Mantis" humanoid="false" blooddecal="blood">
   
   <ragdolls folder="default"/>
   <animations folder="default"/>

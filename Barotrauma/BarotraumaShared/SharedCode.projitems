@@ -53,6 +53,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\Params\Animation\AnimationParams.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\Params\Animation\FishAnimations.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\Params\Animation\HumanoidAnimations.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\Params\CharacterParams.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\Params\EditableParams.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\Params\Ragdoll\RagdollSubParams.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\Params\Ragdoll\RagdollParams.cs" />

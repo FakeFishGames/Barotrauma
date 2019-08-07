@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Character name="Hammerhead" humanoid="false">
+<Character speciesname="Hammerhead" humanoid="false">
   <ragdolls />
   <animations />
 

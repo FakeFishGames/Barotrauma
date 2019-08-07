@@ -10,7 +10,9 @@ using System.Xml.Linq;
 using Barotrauma.Items.Components;
 using FarseerPhysics.Dynamics;
 using Barotrauma.Extensions;
+#if SERVER
 using System.Text;
+#endif
 
 namespace Barotrauma
 {
@@ -91,8 +93,7 @@ namespace Barotrauma
         public AnimController AnimController;
 
         private Vector2 cursorPosition;
-
-        protected bool needsAir;
+        
         protected float oxygenAvailable;
 
         //seed used to generate this character
@@ -102,12 +103,26 @@ namespace Barotrauma
         public Character LastAttacker;
         public Entity LastDamageSource;
 
-        public readonly bool IsHumanoid;
-        public readonly bool IsHusk;
+        public readonly CharacterParams CharacterParams;
+        public string SpeciesName => CharacterParams.SpeciesName;
+        public bool IsHumanoid => CharacterParams.Humanoid;
+        public bool IsHusk => CharacterParams.Husk;
+        public bool CanSpeak
+        {
+            get => CharacterParams.CanSpeak;
+            set => CharacterParams.CanSpeak = value;
+        }
+        public bool NeedsAir
+        {
+            get => CharacterParams.NeedsAir;
+            set => CharacterParams.NeedsAir = value;
+        }
+        public float Noise
+        {
+            get => CharacterParams.Noise;
+            set => CharacterParams.Noise = value;
+        }
 
-        //the name of the species (e.q. human)
-        public readonly string SpeciesName;
-        
         private float attackCoolDown;
 
         private Order currentOrder;
@@ -323,8 +338,6 @@ namespace Barotrauma
             }
         }
 
-        private float Noise { get; set; }
-
         private float pressureProtection;
         public float PressureProtection
         {
@@ -343,12 +356,6 @@ namespace Barotrauma
         public bool IsUnconscious
         {
             get { return CharacterHealth.IsUnconscious; }
-        }
-
-        public bool NeedsAir
-        {
-            get { return needsAir; }
-            set { needsAir = value; }
         }
 
         public float Oxygen
@@ -430,8 +437,6 @@ namespace Barotrauma
                 }
             }
         }
-
-        public bool CanSpeak;
 
         private bool speechImpedimentSet;
 
@@ -691,6 +696,8 @@ namespace Barotrauma
             lowPassMultiplier = 1.0f;
 
             Properties = SerializableProperty.GetProperties(this);
+            CharacterParams = new CharacterParams();
+            CharacterParams.Init(file);
 
             Info = characterInfo;
             if (file == HumanConfigFile || file.ToLowerInvariant().Contains("human"))
@@ -716,14 +723,7 @@ namespace Barotrauma
             var rootElement = doc.Root;
             var mainElement = rootElement.IsOverride() ? rootElement.FirstElement() : rootElement;
             InitProjSpecific(mainElement);
-            SpeciesName = mainElement.GetAttributeString("name", "Unknown");
             displayName = TextManager.Get($"Character.{Path.GetFileName(Path.GetDirectoryName(file))}", true);
-
-            IsHumanoid = mainElement.GetAttributeBool("humanoid", false);
-            IsHusk = mainElement.GetAttributeBool("husk", false);
-            CanSpeak = mainElement.GetAttributeBool("canspeak", false);
-            needsAir = mainElement.GetAttributeBool("needsair", false);
-            Noise = mainElement.GetAttributeFloat("noise", 100f);
 
             List<XElement> inventoryElements = new List<XElement>();
             List<float> inventoryCommonness = new List<float>();
@@ -908,13 +908,22 @@ namespace Barotrauma
                 allowOverriding = false;
                 mainElement = doc.Root;
             }
-            var name = mainElement.GetAttributeString("name", string.Empty).ToLowerInvariant();
+            var name = mainElement.GetAttributeString("name", null);
+            if (name != null)
+            {
+                DebugConsole.ThrowError($"Error in {file}: 'name' is deprecated! Use 'speciesname' instead.");
+            }
+            else
+            {
+                name = mainElement.GetAttributeString("speciesname", string.Empty);
+            }
             if (string.IsNullOrWhiteSpace(name))
             {
-                DebugConsole.ThrowError($"No character name defined for: {file}");
+                DebugConsole.ThrowError($"No species name defined for: {file}");
                 return false;
             }
-            var duplicate = configFiles.FirstOrDefault(kvp => kvp.Value.Root.GetAttributeString("name", string.Empty).Equals(name, StringComparison.OrdinalIgnoreCase));
+            name = name.ToLowerInvariant();
+            var duplicate = configFiles.FirstOrDefault(kvp => kvp.Value.Root.GetAttributeString("speciesname", string.Empty).Equals(name, StringComparison.OrdinalIgnoreCase));
             if (duplicate.Value != null)
             {
                 if (allowOverriding)
@@ -925,7 +934,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    DebugConsole.ThrowError($"Duplicate character name '{name}' in '{file}'! Add <override></override> tags as the parent of the character definition to override an existing character.");
+                    DebugConsole.ThrowError($"Duplicate species name '{name}' in '{file}'! Add <override></override> tags as the parent of the character definition to override an existing character.");
                     return false;
                 }
 
@@ -2095,7 +2104,7 @@ namespace Barotrauma
             }
             speechImpedimentSet = false;
             
-            if (needsAir)
+            if (NeedsAir)
             {
                 bool protectedFromPressure = PressureProtection > 0.0f;            
                 //cannot be protected from pressure when below crush depth
@@ -2144,7 +2153,7 @@ namespace Barotrauma
             UpdateControlled(deltaTime, cam);
             
             //Health effects
-            if (needsAir) UpdateOxygen(deltaTime);
+            if (NeedsAir) UpdateOxygen(deltaTime);
             CharacterHealth.Update(deltaTime);
             
             if (IsUnconscious)

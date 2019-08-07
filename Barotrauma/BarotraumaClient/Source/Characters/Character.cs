@@ -216,7 +216,7 @@ namespace Barotrauma
                 float targetOffsetAmount = 0.0f;
                 if (moveCam)
                 {
-                    if (needsAir &&
+                    if (NeedsAir &&
                         pressureProtection < 80.0f &&
                         (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure > 0.0f))
                     {

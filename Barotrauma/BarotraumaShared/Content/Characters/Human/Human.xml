@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name="Human" humanoid="true" needsair="true" genders="true" canspeak="true" blooddecal="blood">
+<Character speciesname="Human" humanoid="true" needsair="true" genders="true" canspeak="true" blooddecal="blood">
 
   <name firstname="Content/Characters/Human/firstnames_[GENDER].txt" lastname="Content/Characters/Human/lastnames.txt" />
   <portraitbackground>
@@ -14,7 +14,7 @@
   <gibemitter particle="gib" particleamount="20" velocitymin="200" velocitymax="700" anglemin="0" anglemax="360"/>
   <gibemitter particle="heavygib" particleamount="10" velocitymin="50" velocitymax="500" anglemin="0" anglemax="360"/>
 
-  <sound file="Content/Characters/Human/female_damage1.ogg"  gender="Female" state="Damage" range="500"/>
+  <sound file="female_damage"  gender="Female" state="Damage" range="500"/>
   <sound file="Content/Characters/Human/female_damage2.ogg"  gender="Female" state="Damage" range="500"/>
   <sound file="Content/Characters/Human/female_damage3.ogg"  gender="Female" state="Damage" range="500"/>
   <sound file="Content/Characters/Human/female_damage4.ogg"  gender="Female" state="Damage" range="500"/>
@@ -44,7 +44,7 @@
     doesbleed="true">
     <Sprite texture="Content/UI/Health/MedUI_Silhouette.png" columns="7" rows="3" sourcerect="0,0,980,1056"/>
     <Limb name="Head">
-      <Sprite texture="Content/UI/Health/MedUI_Head.png" sourcerect="0,0,140,352" highlightarea="44,0,52,58"/>
+      <Sprite texture="MedUI_Head.png" sourcerect="0,0,140,352" highlightarea="44,0,52,58"/>
       <VitalityMultiplier type="damage" multiplier="2.0"/>
     </Limb>
     <Limb name="Torso">

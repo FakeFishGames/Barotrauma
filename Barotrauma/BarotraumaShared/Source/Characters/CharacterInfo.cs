@@ -126,7 +126,7 @@ namespace Barotrauma
             }
         }
 
-        public string SpeciesName => CharacterConfigElement.GetAttributeString("name", string.Empty).ToLowerInvariant();
+        public string SpeciesName => CharacterConfigElement.GetAttributeString("speciesname", string.Empty).ToLowerInvariant();
 
         /// <summary>
         /// Note: Can be null.

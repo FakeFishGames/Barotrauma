@@ -106,6 +106,10 @@ namespace Barotrauma
         /// </summary>
         public static T GetRagdollParams<T>(string speciesName, string fileName = null) where T : RagdollParams, new()
         {
+            if (string.IsNullOrWhiteSpace(speciesName))
+            {
+                throw new Exception($"Species name null or empty!");
+            }
             if (!allRagdolls.TryGetValue(speciesName, out Dictionary<string, RagdollParams> ragdolls))
             {
                 ragdolls = new Dictionary<string, RagdollParams>();
