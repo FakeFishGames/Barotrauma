@@ -60,7 +60,6 @@ namespace Barotrauma
         private bool displayWearables;
         private bool displayBackgroundColor;
         private bool ragdollResetRequiresForceLoading;
-        private bool animationResetRequiresForceLoading;
 
         private bool jointCreationMode;
         private bool useMouseOffset;
@@ -166,7 +165,6 @@ namespace Barotrauma
             displayWearables = true;
             displayBackgroundColor = false;
             ragdollResetRequiresForceLoading = false;
-            animationResetRequiresForceLoading = false;
             jointCreationMode = false;
             isExtrudingJoint = false;
             isDrawingJoint = false;
@@ -184,6 +182,7 @@ namespace Barotrauma
             ResetVariables();
             if (character != null)
             {
+                CharacterParams.Reset();
                 AnimParams.ForEach(a => a.Reset(true));
                 RagdollParams.Reset(true);
                 RagdollParams.ClearHistory();
@@ -239,8 +238,6 @@ namespace Barotrauma
         #region Main methods
         public override void AddToGUIUpdateList()
         {
-            //base.AddToGUIUpdateList();
-
             fileEditPanel.AddToGUIUpdateList();
             modesPanel.AddToGUIUpdateList();
             toolsPanel.AddToGUIUpdateList();
@@ -315,7 +312,6 @@ namespace Barotrauma
                             character.AnimController.ResetLimbs();
                             ClearWidgets();
                             CreateGUI();
-                            //ragdollResetRequiresForceLoading = true;
                             ResetParamsEditor();
                         }
                         if (editAnimations)
@@ -323,8 +319,6 @@ namespace Barotrauma
                             CurrentAnimation.Undo();
                             ClearWidgets();
                             ResetParamsEditor();
-                            //CreateGUI();
-                            animationResetRequiresForceLoading = true;
                         }
                     }
                     else if (PlayerInput.KeyHit(Keys.R))
@@ -336,7 +330,6 @@ namespace Barotrauma
                             character.AnimController.ResetLimbs();
                             ClearWidgets();
                             CreateGUI();
-                            //ragdollResetRequiresForceLoading = true;
                             ResetParamsEditor();
                         }
                         if (editAnimations)
@@ -344,8 +337,6 @@ namespace Barotrauma
                             CurrentAnimation.Redo();
                             ClearWidgets();
                             ResetParamsEditor();
-                            //CreateGUI();
-                            animationResetRequiresForceLoading = true;
                         }
                     }
                 }
@@ -1278,7 +1269,6 @@ namespace Barotrauma
             }
             spawnPosition = wayPoint.WorldPosition;
             ragdollResetRequiresForceLoading = false;
-            animationResetRequiresForceLoading = false;
         }
 
         private void OnPostSpawn()
@@ -2331,9 +2321,9 @@ namespace Barotrauma
 
             // Spacing
             new GUIFrame(new RectTransform(buttonSize / 2, layoutGroup.RectTransform), style: null) { CanBeFocused = false };
-            var quickSaveAnimButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("QuickSaveAnimations"));
-            quickSaveAnimButton.Color = Color.LightGreen;
-            quickSaveAnimButton.OnClicked += (button, userData) =>
+            var saveAllButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("SaveButton"));
+            saveAllButton.Color = Color.LightGreen;
+            saveAllButton.OnClicked += (button, userData) =>
             {
 #if !DEBUG
                 if (VanillaCharacters != null && VanillaCharacters.Contains(currentCharacterConfig))
@@ -2342,25 +2332,12 @@ namespace Barotrauma
                     return false;
                 }
 #endif
-                AnimParams.ForEach(p => p.Save());
-                animationResetRequiresForceLoading = true;
-                GUI.AddMessage(GetCharacterEditorTranslation("AllAnimationsSaved"), Color.Green, font: GUI.Font);
-                return true;
-            };
-            var quickSaveRagdollButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("QuickSaveRagdoll"));
-            quickSaveRagdollButton.Color = Color.LightGreen;
-            quickSaveRagdollButton.OnClicked += (button, userData) =>
-            {
-#if !DEBUG
-                if (VanillaCharacters != null && VanillaCharacters.Contains(currentCharacterConfig))
-                {
-                    GUI.AddMessage(GetCharacterEditorTranslation("CannotEditVanillaCharacters"), Color.Red, font: GUI.LargeFont);
-                    return false;
-                }
-#endif
+                character.CharacterParams.Save();
+                GUI.AddMessage(GetCharacterEditorTranslation("CharacterSavedTo").Replace("[path]", CharacterParams.FullPath), Color.Green, font: GUI.Font, lifeTime: 5);
                 character.AnimController.SaveRagdoll();
                 ragdollResetRequiresForceLoading = true;
-                GUI.AddMessage(GetCharacterEditorTranslation("RagdollSavedTo").Replace("[path]", RagdollParams.FullPath), Color.Green, font: GUI.Font);
+                GUI.AddMessage(GetCharacterEditorTranslation("RagdollSavedTo").Replace("[path]", RagdollParams.FullPath), Color.Green, font: GUI.Font, lifeTime: 5);
+                AnimParams.ForEach(p => p.Save());
                 return true;
             };
             // Spacing
@@ -2523,7 +2500,6 @@ namespace Barotrauma
 #endif
                     var animParams = character.AnimController.GetAnimationParamsFromType(selectedType);
                     animParams.Save(inputField.Text);
-                    animationResetRequiresForceLoading = true;
                     GUI.AddMessage(GetCharacterEditorTranslation("AnimationOfTypeSavedTo").Replace("[type]", animParams.AnimationType.ToString()).Replace("[path]", animParams.FullPath), Color.Green, font: GUI.Font);
                     ResetParamsEditor();
                     box.Close();
@@ -2676,20 +2652,12 @@ namespace Barotrauma
 
             // Spacing
             new GUIFrame(new RectTransform(buttonSize / 2, layoutGroup.RectTransform), style: null) { CanBeFocused = false };
-            var resetAnimButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("ResetAnimations"));
-            resetAnimButton.Color = Color.Red;
-            resetAnimButton.OnClicked += (button, userData) =>
+            var resetButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("ResetButton"));
+            resetButton.Color = Color.Red;
+            resetButton.OnClicked += (button, userData) =>
             {
+                CharacterParams.Reset();
                 AnimParams.ForEach(p => p.Reset(true));
-                ResetParamsEditor();
-                GUI.AddMessage(GetCharacterEditorTranslation("AllAnimationsReset"), Color.WhiteSmoke, font: GUI.Font);
-                animationResetRequiresForceLoading = false;
-                return true;
-            };
-            var resetRagdollButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("ResetRagdoll"));
-            resetRagdollButton.Color = Color.Red;
-            resetRagdollButton.OnClicked += (button, userData) =>
-            {
                 if (ragdollResetRequiresForceLoading)
                 {
                     character.AnimController.ResetRagdoll(forceReload: true);
@@ -2723,7 +2691,6 @@ namespace Barotrauma
                 jointCreationMode = false;
                 closestSelectedLimb = null;
                 CreateGUI();
-                GUI.AddMessage(GetCharacterEditorTranslation("RagdollReset"), Color.WhiteSmoke, font: GUI.Font);
                 return true;
             };
 
@@ -2815,6 +2782,7 @@ namespace Barotrauma
         #endregion
 
         #region Params
+        private CharacterParams CharacterParams => character.CharacterParams;
         private List<AnimationParams> AnimParams => character.AnimController.AllAnimParams;
         private AnimationParams CurrentAnimation => character.AnimController.CurrentAnimationParams;
         private RagdollParams RagdollParams => character.AnimController.RagdollParams;
@@ -2829,7 +2797,7 @@ namespace Barotrauma
             }
             if (editCharacterInfo)
             {
-                // TODO
+                CharacterParams.AddToEditor(ParamsEditor.Instance);
             }
             else if (editAnimations)
             {

@@ -2966,15 +2966,12 @@
   <charactereditor.followcursor>Follow Cursor</charactereditor.followcursor>
   <charactereditor.showcolliders>Colliders</charactereditor.showcolliders>
   <charactereditor.editbackgroundcolor>Edit Background Color</charactereditor.editbackgroundcolor>
-  <charactereditor.quicksaveanimations>Quick Save Animations</charactereditor.quicksaveanimations>
+  <charactereditor.savebutton>Save All</charactereditor.savebutton>
   <charactereditor.canteditvanillacontent>Can't edit Vanilla content!</charactereditor.canteditvanillacontent>
   <charactereditor.allanimationssaved>All animations saved</charactereditor.allanimationssaved>
-  <charactereditor.quicksaveragdoll>Quick Save Ragdoll</charactereditor.quicksaveragdoll>
   <charactereditor.ragdollsavedto>Ragdoll saved to [path]</charactereditor.ragdollsavedto>
-  <charactereditor.resetanimations>Reset Animations</charactereditor.resetanimations>
-  <charactereditor.allanimationsreset>All animations reset</charactereditor.allanimationsreset>
-  <charactereditor.resetragdoll>Reset Ragdoll</charactereditor.resetragdoll>
-  <charactereditor.ragdollreset>Ragdoll reset</charactereditor.ragdollreset>
+  <charactereditor.charactersavedto>Character config file saved to [path]</charactereditor.charactersavedto>
+  <charactereditor.resetbutton>Reset</charactereditor.resetbutton>
   <charactereditor.saveragdoll>Save Ragdoll</charactereditor.saveragdoll>
   <charactereditor.providefilename>Please provide a name for the file</charactereditor.providefilename>
   <charactereditor.loadragdoll>Load Ragdoll</charactereditor.loadragdoll>
@@ -2990,7 +2987,7 @@
   <charactereditor.animationoftypeloaded>Animation of type [type] loaded from [file]</charactereditor.animationoftypeloaded>
   <charactereditor.reloadtextures>Reload Textures</charactereditor.reloadtextures>
   <charactereditor.recreateragdoll>Recreate Ragdoll</charactereditor.recreateragdoll>
-  <charactereditor.recreateragdolltooltip>Many of the parameters requires recreation of the ragdoll. If adjusting the parameter doesn't seem to have effect, click this button.</charactereditor.recreateragdolltooltip>
+  <charactereditor.recreateragdolltooltip>Many of the parameters requires recreating the ragdoll. If adjusting the parameter doesn't seem to have effect, click this button.</charactereditor.recreateragdolltooltip>
   <charactereditor.createnewcharacter>Create New Character</charactereditor.createnewcharacter>
   <charactereditor.nofieldforparameterfound>No field for [parameter] found!</charactereditor.nofieldforparameterfound>
   <charactereditor.selecttargetlimbforjointend>Left click to select the target limb for the other end of the joint.</charactereditor.selecttargetlimbforjointend>
