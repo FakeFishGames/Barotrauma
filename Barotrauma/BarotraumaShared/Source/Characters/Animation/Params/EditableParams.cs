@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Xml;
 using System.Xml.Linq;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
@@ -112,7 +113,7 @@ namespace Barotrauma
 
 #if CLIENT
         public SerializableEntityEditor SerializableEntityEditor { get; protected set; }
-        public virtual void AddToEditor(ParamsEditor editor)
+        public virtual void AddToEditor(ParamsEditor editor, int space = 0)
         {
             if (!IsLoaded)
             {
@@ -120,6 +121,13 @@ namespace Barotrauma
                 return;
             }
             SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, this, false, true, titleFont: GUI.LargeFont);
+            if (space > 0)
+            {
+                new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, space), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
+                {
+                    CanBeFocused = false
+                };
+            }
         }
 #endif
 

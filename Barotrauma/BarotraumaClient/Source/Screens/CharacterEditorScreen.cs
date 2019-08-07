@@ -1616,7 +1616,6 @@ namespace Barotrauma
             // Spacing
             new GUIFrame(new RectTransform(toggleSize, layoutGroup.RectTransform), style: null) { CanBeFocused = false };
             // Minor modes
-            skeletonToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("DrawSkeleton")) { Selected = drawSkeleton };
             paramsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("ShowParameters")) { Selected = showParamsEditor };
             spritesheetToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("ShowSpriteSheet")) { Selected = showSpritesheet };
             showCollidersToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("ShowColliders"))
@@ -1629,6 +1628,8 @@ namespace Barotrauma
                 }
             };
             ikToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("EditIKTargets")) { Selected = editIK };
+            skeletonToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("DrawSkeleton")) { Selected = drawSkeleton };
+
             animsToggle.OnSelected = box =>
             {
                 editAnimations = box.Selected;
@@ -2832,7 +2833,7 @@ namespace Barotrauma
             }
             else if (editAnimations)
             {
-                AnimParams.ForEach(p => p.AddToEditor(ParamsEditor.Instance));
+                AnimParams.ForEach(p => p.AddToEditor(ParamsEditor.Instance, space: 10));
             }
             else
             {
