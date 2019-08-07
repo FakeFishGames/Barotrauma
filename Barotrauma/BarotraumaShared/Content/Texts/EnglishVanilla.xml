@@ -3280,9 +3280,9 @@
   <MVP_GoalInfoText_1>Search the storage lockers, a special message just for you is hidden under one of the spare oxygen tanks.</MVP_GoalInfoText_1>
   <MVPobjectiveSuccessMessage1>As you somehow predicted, a slip of filthy paper is stuck to the underside of this oxygen tank. It's covered in primitive scribbles, but you intuitively understand it to be coded instructions.</MVPobjectiveSuccessMessage1>
   <MVPtraitorobjectivestartmessage2>Your first task:\n[traitorgoalinfos]</MVPtraitorobjectivestartmessage2>
-  <MVPtraitorobjectivestartmessage2>A rush of pleasure hits you like a wave as you complete the first task on the paper. A dry, mad laugh echoes within your head for a moment, fading into indistinct wet clicks. You read the next coded instruction:\n[traitorgoalinfos]</MVPtraitorobjectivestartmessage2>
-  <MVPtraitorobjectivestartmessage3>Your second task:\n[traitorgoalinfos]</MVPtraitorobjectivestartmessage3>
-  <MVPtraitorobjectivestartmessage3>Another rush of pleasure gives way to a sudden moment of clarity. What have you done?!</MVPtraitorobjectivestartmessage3>
+  <MVPobjectiveSuccessMessage2>A rush of pleasure hits you like a wave as you complete the first task on the paper. A dry, mad laugh echoes within your head for a moment, fading into indistinct wet clicks.</MVPobjectiveSuccessMessage2>
+  <MVPtraitorobjectivestartmessage3> You read the next coded instruction:\n[traitorgoalinfos]</MVPtraitorobjectivestartmessage3>
+  <MVPobjectiveSuccessMessage3>With that, there is nothing more to do. The sub is in disarray, the voice in your head grows silent, and your fate is sealed.</MVPobjectiveSuccessMessage3>
   
   <entityname.flamer>Flamer</entityname.flamer>
   <entitydescription.flamer>An incendiary weapon that fires a stream of burning welding fuel.</entitydescription.flamer>

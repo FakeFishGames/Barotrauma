@@ -189,7 +189,7 @@
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="MVPobjectiveSuccessMessage3" />
       <StartMessage id="MVPtraitorobjectivestartmessage3"/>
-      <Goal type="killtarget" job="captain">
+      <Goal type="killtarget">
         <InfoText id="traitorgoalkilltargetinfo" />
       </Goal>
     </Objective>
