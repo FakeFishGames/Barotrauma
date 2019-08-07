@@ -26,25 +26,37 @@ namespace Barotrauma
             GameMain game = null;
             Thread inputThread = null;
 
-#if !DEBUG || TRUE
+#if !DEBUG
             try
             {
 #endif
                 game = new GameMain(args);
-                inputThread = new Thread(new ThreadStart(DebugConsole.UpdateCommandLine));
-                inputThread.IsBackground = true;
-                inputThread.Start();
+                inputThread = null;
+#if !DEBUG
+                if (!args.Contains("-ownerkey") && !args.Contains("-steamid"))
+                {
+#endif
+                    inputThread = new Thread(new ThreadStart(DebugConsole.UpdateCommandLine));
+                    inputThread.IsBackground = true;
+                    inputThread.Start();
+#if !DEBUG
+                }
+                else
+                {
+                    Console.WriteLine("Server launched through client, command line IO disabled");
+                }
+#endif
                 game.Run();
-                inputThread.Abort(); inputThread.Join();
+                inputThread?.Abort(); inputThread?.Join();
                 if (GameSettings.SendUserStatistics) GameAnalytics.OnQuit();
                 SteamManager.ShutDown();
-#if !DEBUG || TRUE
+#if !DEBUG
             }
             catch (Exception e)
             {
                 CrashDump(game, "servercrashreport.log", e);
                 GameMain.Server?.NotifyCrash();
-                inputThread.Abort(); inputThread.Join();
+                inputThread?.Abort(); inputThread?.Join();
             }
 #endif
         }
