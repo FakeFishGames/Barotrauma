@@ -96,7 +96,7 @@ namespace Barotrauma
         public string Path
         {
             get;
-            private set;
+            set;
         }
 
         public string SteamWorkshopUrl;
@@ -419,7 +419,7 @@ namespace Barotrauma
             switch (contentFile.Type)
             {
                 case ContentType.Submarine:
-                    return path == "Submarines";
+                    return path == "Submarines" || path == "Mods";
                 default:
                     return path == "Mods";
             }
@@ -460,8 +460,9 @@ namespace Barotrauma
             return Files.Where(f => f.Type == type).Select(f => f.Path);
         }
         
-        public static void LoadAll(string folder)
+        public static void LoadAll()
         {
+            string folder = ContentPackage.Folder;
             if (!Directory.Exists(folder))
             {
                 try
@@ -475,14 +476,23 @@ namespace Barotrauma
                 }
             }
 
-            string[] files = Directory.GetFiles(folder, "*.xml");
-
             List.Clear();
 
+            string[] files = Directory.GetFiles(folder, "*.xml");
             foreach (string filePath in files)
             {
-                ContentPackage package = new ContentPackage(filePath);
-                List.Add(package);                               
+                List.Add(new ContentPackage(filePath));                               
+            }
+
+            string[] modDirectories = Directory.GetDirectories("Mods");
+            foreach (string modDirectory in modDirectories)
+            {
+                if (System.IO.Path.GetFileName(modDirectory.TrimEnd(System.IO.Path.DirectorySeparatorChar)) == "ExampleMod") { continue; }
+                string modFilePath = System.IO.Path.Combine(modDirectory, Steam.SteamManager.MetadataFileName);
+                if (File.Exists(modFilePath))
+                {
+                    List.Add(new ContentPackage(modFilePath));
+                }
             }
         }
 
@@ -505,7 +515,7 @@ namespace Barotrauma
 
     public class ContentFile
     {
-        public readonly string Path;
+        public string Path;
         public ContentType Type;
 
         public Workshop.Item WorkShopItem;

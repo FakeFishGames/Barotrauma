@@ -398,7 +398,7 @@ namespace Barotrauma
             {
                 if (SteamManager.AutoUpdateWorkshopItems())
                 {
-                    ContentPackage.LoadAll(ContentPackage.Folder);
+                    ContentPackage.LoadAll();
                     Config.ReloadContentPackages();
                 }
             }

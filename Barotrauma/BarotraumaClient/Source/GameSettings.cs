@@ -116,6 +116,10 @@ namespace Barotrauma
                     OnSelected = SelectContentPackage,
                     Selected = SelectedContentPackages.Contains(contentPackage)
                 };
+                if (contentPackage.CorePackage)
+                {
+                    tickBox.TextColor = Color.White;
+                }
                 if (!contentPackage.IsCompatible())
                 {
                     tickBox.TextColor = Color.Red;

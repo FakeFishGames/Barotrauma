@@ -286,7 +286,7 @@ namespace Barotrauma
 
         public GameSettings()
         {
-            ContentPackage.LoadAll(ContentPackage.Folder);
+            ContentPackage.LoadAll();
             CompletedTutorialNames = new List<string>();
 
             LoadDefaultConfig();
