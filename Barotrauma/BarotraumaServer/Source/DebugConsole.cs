@@ -195,6 +195,7 @@ namespace Barotrauma
                 StringBuilder sb = new StringBuilder();
                 sb.AppendLine("Barotrauma Dedicated Server input thread crash report (generated on " + DateTime.Now + ")");
                 sb.AppendLine("\n");
+                sb.AppendLine("Exception: " + exception.Message);
                 sb.AppendLine("Target site: " + exception.TargetSite.ToString());
                 sb.AppendLine("Stack trace: ");
                 sb.AppendLine(exception.StackTrace);
