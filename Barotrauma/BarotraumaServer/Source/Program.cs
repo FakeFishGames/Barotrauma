@@ -24,21 +24,20 @@ namespace Barotrauma
         static void Main(string[] args)
         {
             GameMain game = null;
-            Thread inputThread = null;
 
 #if !DEBUG
             try
             {
 #endif
                 game = new GameMain(args);
-                inputThread = null;
+                DebugConsole.InputThread = null;
 #if !DEBUG
                 if (!args.Contains("-ownerkey") && !args.Contains("-steamid"))
                 {
 #endif
-                    inputThread = new Thread(new ThreadStart(DebugConsole.UpdateCommandLine));
-                    inputThread.IsBackground = true;
-                    inputThread.Start();
+                    DebugConsole.InputThread = new Thread(new ThreadStart(DebugConsole.UpdateCommandLine));
+                    DebugConsole.InputThread.IsBackground = true;
+                    DebugConsole.InputThread.Start();
 #if !DEBUG
                 }
                 else
@@ -47,7 +46,7 @@ namespace Barotrauma
                 }
 #endif
                 game.Run();
-                inputThread?.Abort(); inputThread?.Join();
+                DebugConsole.InputThread?.Abort(); DebugConsole.InputThread?.Join();
                 if (GameSettings.SendUserStatistics) GameAnalytics.OnQuit();
                 SteamManager.ShutDown();
 #if !DEBUG
@@ -56,7 +55,7 @@ namespace Barotrauma
             {
                 CrashDump(game, "servercrashreport.log", e);
                 GameMain.Server?.NotifyCrash();
-                inputThread?.Abort(); inputThread?.Join();
+                DebugConsole.InputThread?.Abort(); DebugConsole.InputThread?.Join();
             }
 #endif
         }

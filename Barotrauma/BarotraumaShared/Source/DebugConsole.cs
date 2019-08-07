@@ -1510,6 +1510,7 @@ namespace Barotrauma
             if (string.IsNullOrEmpty((msg))) return;
             
             var newMsg = new ColoredText(msg, color, isCommand);
+            
             lock (queuedMessages)
             {
                 queuedMessages.Enqueue(new ColoredText(msg, color, isCommand));
