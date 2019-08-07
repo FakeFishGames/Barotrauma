@@ -66,7 +66,7 @@
     <!-- 1-3 crawlers or 1 -3 husks after 150 seconds or passing 20% -->
     <EventSet chooserandom="true" mindistancetraveled="0.20" minmissiontime="150" minintensity="0.0" maxintensity="0.25">
       <MonsterEvent characterfile="Content/Characters/Crawler/Crawler.xml" minamount="1" maxamount="3" spawntype="mainpath" musictype="monster" />
-      <MonsterEvent characterfile="Content/Characters/Humanhusk/Humanhusk.xml" minamount="1" maxamount="3" spawntype="mainpath" musictype="monster" />
+      <MonsterEvent characterfile="Content/Characters/Husk/Husk.xml" minamount="1" maxamount="3" spawntype="mainpath" musictype="monster" />
     </EventSet>
 
     <!-- 2 - 3 crawlers and 0-1 mud raptors after 5 minutes or passing 40% -->
