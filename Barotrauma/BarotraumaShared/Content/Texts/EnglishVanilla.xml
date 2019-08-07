@@ -2951,10 +2951,12 @@
   <charactereditor.nextcharacter>Next</charactereditor.nextcharacter>
   <charactereditor.showparameters>Parameters</charactereditor.showparameters>
   <charactereditor.showspritesheet>Spritesheet</charactereditor.showspritesheet>
-  <charactereditor.showragdoll>Ragdoll</charactereditor.showragdoll>
+  <charactereditor.drawskeleton>Draw Skeleton</charactereditor.drawskeleton>
+  <charactereditor.editcharacter>CHARACTER</charactereditor.editcharacter>
   <charactereditor.editanimations>ANIMATIONS</charactereditor.editanimations>
   <charactereditor.editlimbs>LIMBS</charactereditor.editlimbs>
   <charactereditor.editjoints>JOINTS</charactereditor.editjoints>
+  <charactereditor.editragdoll>RAGDOLL</charactereditor.editragdoll>
   <charactereditor.editiktargets>IK Targets</charactereditor.editiktargets>
   <charactereditor.freeze>Freeze</charactereditor.freeze>
   <charactereditor.autofreeze>Auto Freeze</charactereditor.autofreeze>
@@ -3049,6 +3051,8 @@
   <charactereditor.characterpanel>Character</charactereditor.characterpanel>
   <charactereditor.toolspanel>Tools</charactereditor.toolspanel>
   <charactereditor.addmultiplelimbsbutton>Add Multiple</charactereditor.addmultiplelimbsbutton>
+  <charactereditor.contentpackagenameinuse>A content package with the same name already exists. Please choose another name or select the existing content package from the dropdown if you want to add the character to it.</charactereditor.contentpackagenameinuse>
+
 
   <!-- Submarine editor -->
   <items>Items</items>
@@ -3205,8 +3209,6 @@
   <voipnodevices>No audio capture devices found</voipnodevices>
 
   <wrongfiletype>Wrong file type!</wrongfiletype>
-
-  <charactereditor.contentpackagenameinuse>A content package with the same name already exists. Please choose another name or select the existing content package from the dropdown if you want to add the character to it.</charactereditor.contentpackagenameinuse>
 
   <servermessage.previousclientname>[client] previously used the name [previousname] on the server.</servermessage.previousclientname>
 
