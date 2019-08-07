@@ -20,17 +20,10 @@ particle effects and sound cues that make it easier to detect and fix wiring pro
 reactor to catch fire and explode.
 - Option to disable friendly fire altogether.
 
-Expanded traitor mode:
-- More varied objectives: destroy cargo, jam the sonar, sabotage devices, infect crew members, kill a specific
-target, cause a reactor meltdown, flood the sub...
-- The traitors must complete a set of tasks, generally starting with less destructive objectives that 
-give the other players a better chance to detect (and detain/kill) the traitor before they proceed to the
-more lethal ones.
-
 New items and structures:
-- Additional weapons: stun gun, SMG, shotgun, grenade launcher, flamer.
-- New monster loot: husk stinger, mudraptor shell, crawler mask, moloch shell shield.
-- Fun stuff: new musical instruments, captain's pipe, clown hammer.
+- Additional weapons: stun gun, SMG, shotgun, grenade launcher, flamer, two new types of coilgun ammunition (piercing & explosive).
+- New monster loot: husk stinger, mudraptor shell, crawler mask, moloch shell.
+- Fun stuff: accordion, captain's pipe, toy hammer.
 - Tons of new decorative submarine pieces for the sub editor.
 
 Bugfixes:
@@ -93,6 +86,11 @@ preventing the message from being sent if the name wasn't written in lower case.
 (which could be used as an exploit to get infinite coilgun rounds).
 - Fixed holdable items staying in the characters hand(s) when swapping them from a hand slot to another 
 limb slot (for example, when moving a flashlight from a hand slot to the head slot).
+- Fixed text wrapping not working properly with words that are longer than a single line.
+- Fixed deconstructor losing some of the material from deconstructed items if the output container couldn't hold all of the new items.
+- Fixed discrepancies in door welding & repairing logic regarding collision.
+- Fixed a crash when retrieving lobby information with an uninitialized IP.
+- Fixed max player count in server list & duplicate lobby entries
 
 Misc additions and changes:
 - Respawn shuttles now spawn inside the level somewhere near the submarine, instead of always spawning
@@ -132,6 +130,7 @@ impacts between the feet and the floor).
 - Decreased minimum item scale from 0.1 to 0.01.
 - The amount of materials received from deconstructing fuel rods depends on the condition of the fuel rod.
 - Reactors keep sending the temperature_out signal after a meltdown.
+- Improved file transfer
 
 ---------------------------------------------------------------------------------------------------------
 v0.9.1.0
