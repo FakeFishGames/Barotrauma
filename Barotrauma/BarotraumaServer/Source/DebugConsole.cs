@@ -187,6 +187,7 @@ namespace Barotrauma
             {
                 //don't have anything to do here yet
             }
+#if !DEBUG
             catch (Exception exception)
             {
                 StreamWriter sw = new StreamWriter("inputthreadcrash.log");
@@ -203,6 +204,7 @@ namespace Barotrauma
 
                 GameMain.ShouldRun = false;
             }
+#endif
         }
 
         private static void RewriteInputToCommandLine(string input)
