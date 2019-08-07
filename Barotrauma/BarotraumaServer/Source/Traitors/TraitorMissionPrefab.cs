@@ -70,15 +70,36 @@ namespace Barotrauma {
                         }
                         break;
                     case "destroyitems":
-                        goal = new Traitor.GoalDestroyItemsWithTag(
-                            Config.GetAttributeString("tag", ""),
-                            Config.GetAttributeFloat("percentage", 100.0f) / 100.0f,
-                            Config.GetAttributeBool("matchIdentifier", true),
-                            Config.GetAttributeBool("matchTag", true),
-                            Config.GetAttributeBool("matchInventory", false));
+                        {
+                            var tag = Config.GetAttributeString("tag", null);
+                            if (tag != null)
+                            {
+                                goal = new Traitor.GoalDestroyItemsWithTag(
+                                    tag,
+                                    Config.GetAttributeFloat("percentage", 100.0f) / 100.0f,
+                                    Config.GetAttributeBool("matchIdentifier", true),
+                                    Config.GetAttributeBool("matchTag", true),
+                                    Config.GetAttributeBool("matchInventory", false));
+                            }
+                            else
+                            {
+                                GameServer.Log(string.Format("No tag attribute specified for \"destroyitems\" goal."), ServerLog.MessageType.Error);
+                            }
+                        }
                         break;
                     case "sabotage":
-                        goal = new Traitor.GoalSabotageItems(Config.GetAttributeString("tag", null), Config.GetAttributeFloat("threshold", 20.0f));
+                        {
+                            var tag = Config.GetAttributeString("tag", null);
+                            if (tag != null)
+                            {
+                                goal = new Traitor.GoalSabotageItems(tag, Config.GetAttributeFloat("threshold", 20.0f));
+
+                            }
+                            else
+                            {
+                                GameServer.Log(string.Format("No tag attribute specified for \"sabotage\" goal."), ServerLog.MessageType.Error);
+                            }
+                        }
                         break;
                     case "floodsub":
                         goal = new Traitor.GoalFloodPercentOfSub(Config.GetAttributeFloat("percentage", 100.0f) / 100.0f);
@@ -152,12 +173,13 @@ namespace Barotrauma {
             public string EndMessageFailureTextId { get; internal set; }
             public string EndMessageFailureDeadTextId { get; internal set; }
             public string EndMessageFailureDetainedTextId { get; internal set; }
+            public int ShuffleGoalsCount { get; internal set; }
 
             public readonly List<Goal> Goals = new List<Goal>();
 
             public Traitor.Objective Instantiate()
             {
-                var result = new Traitor.Objective(InfoText, Goals.ConvertAll(goal => {
+                var result = new Traitor.Objective(InfoText, ShuffleGoalsCount, Goals.ConvertAll(goal => {
                     var instance = goal.Instantiate();
                     if (instance == null)
                     {
@@ -200,7 +222,14 @@ namespace Barotrauma {
                 return result;
             }
         }
+        /*
+        public class Role
+        {
+            public string Job;
+        }
 
+        public readonly Dictionary<string, Role> Roles = new Dictionary<string, Role>();
+        */
         public readonly string Identifier;
         public readonly string StartText;
         public readonly List<Objective> Objectives = new List<Objective>();
@@ -208,7 +237,7 @@ namespace Barotrauma {
         public Traitor.TraitorMission Instantiate()
         {
             return new Traitor.TraitorMission(
-                StartText ?? "TraiorMissionStartMessage", 
+                StartText ?? "TraitorMissionStartMessage", 
                 Objectives.ConvertAll(objective => objective.Instantiate()).ToArray());
         }
 
@@ -221,6 +250,7 @@ namespace Barotrauma {
         protected Objective LoadObjective(XElement objectiveRoot)
         {
             var result = new Objective();
+            result.ShuffleGoalsCount = objectiveRoot.GetAttributeInt("shuffleGoalsCount", -1);
             foreach (var element in objectiveRoot.Elements())
             {
                 switch(element.Name.ToString().ToLowerInvariant())

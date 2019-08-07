@@ -10,7 +10,7 @@ namespace Barotrauma.Networking
 {
     public static class MsgConstants
     {
-        public const int MTU = 1600; // 1200; // <- TODO(xxx): Traitor messages with translation text substitutions wont fit 1200
+        public const int MTU = 3600; // 1200; // <- TODO(xxx): Traitor messages with translation text substitutions wont fit 1200
         public const int CompressionThreshold = 1000;
         public const int InitialBufferSize = 256;
         public const int BufferOverAllocateAmount = 4;

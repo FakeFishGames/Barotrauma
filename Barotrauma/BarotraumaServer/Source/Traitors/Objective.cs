@@ -11,7 +11,10 @@ namespace Barotrauma
         {
             public Traitor Traitor { get; private set; }
 
+            private int shuffleGoalsCount;
+
             private readonly List<Goal> allGoals = new List<Goal>();
+            private readonly List<Goal> activeGoals = new List<Goal>();
             private readonly List<Goal> pendingGoals = new List<Goal>();
             private readonly List<Goal> completedGoals = new List<Goal>();
 
@@ -26,16 +29,15 @@ namespace Barotrauma
 
             public virtual string GoalInfoFormatId { get; set; } = "TraitorObjectiveGoalInfoFormat";
 
-
             public string GoalInfos =>
                 string.Join("/",
-                    string.Join("/", allGoals.Select((goal, index) =>
+                    string.Join("/", activeGoals.Select((goal, index) =>
                     {
                         var statusText = goal.StatusText;
                         var startIndex = statusText.LastIndexOf('/') + 1;
                         return $"{statusText.Substring(0, startIndex)}[{index}.st]={statusText.Substring(startIndex)}/[{index}.sl]={TextManager.FormatServerMessage(GoalInfoFormatId, new string[] { "[statustext]" }, new string[] { $"[{index}.st]" })}";
                     }).ToArray()),
-                    string.Join("", allGoals.Select((goal, index) => $"[{index}.sl]").ToArray()));
+                    string.Join("", activeGoals.Select((goal, index) => $"[{index}.sl]").ToArray()));
 
             public virtual string StartMessageTextId { get; set; } = "TraitorObjectiveStartMessage";
             public virtual IEnumerable<string> StartMessageKeys => new string[] { "[traitorgoalinfos]" };
@@ -74,17 +76,36 @@ namespace Barotrauma
             public bool Start(Traitor traitor)
             {
                 Traitor = traitor;
-                for (var i = 0; i < pendingGoals.Count;)
+
+                activeGoals.Clear();
+                pendingGoals.Clear();
+                completedGoals.Clear();
+
+                var allGoalsCount = allGoals.Count;
+                var indices = allGoals.Select((goal, index) => index).ToArray();
+                for(var i = allGoalsCount; i > 1;)
                 {
-                    var goal = pendingGoals[i];
+                    int j = Rand.Int(i--);
+                    var temp = indices[j];
+                    indices[j] = indices[i];
+                    indices[i] = temp;
+                }
+
+                for (var i = 0; i < allGoalsCount; ++i)
+                {
+                    var goal = allGoals[indices[i]];
                     if (goal.Start(traitor))
                     {
-                        ++i;
+                        activeGoals.Add(goal);
+                        pendingGoals.Add(goal);
+                        if (pendingGoals.Count >= shuffleGoalsCount)
+                        {
+                            break;
+                        }
                     }
                     else
                     {
                         completedGoals.Add(goal);
-                        pendingGoals.RemoveAt(i);
                     }
                 }
                 if (pendingGoals.Count <= 0)
@@ -150,11 +171,11 @@ namespace Barotrauma
                 }
             }
 
-            public Objective(string infoText, params Goal[] goals)
+            public Objective(string infoText, int shuffleGoalsCount, params Goal[] goals)
             {
                 InfoText = infoText;
+                this.shuffleGoalsCount = shuffleGoalsCount;
                 allGoals.AddRange(goals);
-                pendingGoals.AddRange(goals);
             }
         }
     }
