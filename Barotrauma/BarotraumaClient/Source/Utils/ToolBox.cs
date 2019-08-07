@@ -100,15 +100,19 @@ namespace Barotrauma
             return Color.Lerp(gradient[(int)scaledT], gradient[(int)Math.Min(scaledT + 1, gradient.Length - 1)], (scaledT - (int)scaledT));
         }
 
-        public static string WrapText(string text, float lineLength, ScalableFont font, float textScale = 1.0f) //TODO: could integrate this into the ScalableFont class directly
+        public static string WrapText(string text, float lineLength, ScalableFont font, float textScale = 1.0f, bool playerInput = false) //TODO: could integrate this into the ScalableFont class directly
         {
             Vector2 textSize = font.MeasureString(text);
             if (textSize.X < lineLength) { return text; }
 
-            text = text.Replace("\n", " \n ");
+            if (!playerInput)
+            {
+                text = text.Replace("\n", " \n ");
+            }
 
             List<string> words = new List<string>();
             string currWord = "";
+
             for (int i = 0; i < text.Length; i++)
             {
                 if (TextManager.IsCJK(text[i].ToString()))
@@ -127,6 +131,7 @@ namespace Barotrauma
                         words.Add(currWord);
                         currWord = "";
                     }
+                    words.Add(string.Empty);
                 }
                 else
                 {
@@ -144,69 +149,79 @@ namespace Barotrauma
             Vector2 spaceSize = font.MeasureString(" ") * textScale;
             for (int i = 0; i < words.Count; ++i)
             {
-                if (words[i].Length == 0)
+                string currentWord = words[i];
+                if (currentWord.Length == 0)
                 {
-                    //space
+                    // space
+                    currentWord = " ";
                 }
-                else if (string.IsNullOrWhiteSpace(words[i]) && words[i] != "\n")
+                else if (string.IsNullOrWhiteSpace(currentWord) && currentWord != "\n")
                 {
                     continue;
                 }
 
-                Vector2 size = words[i].Length == 0 ? spaceSize : font.MeasureString(words[i]) * textScale;
+                Vector2 size = words[i].Length == 0 ? spaceSize : font.MeasureString(currentWord) * textScale;
+
                 if (size.X > lineLength)
                 {
-                    if (linePos == 0.0f)
+                    float splitSize = 0.0f;
+                    List<string> splitWord = new List<string>() { string.Empty };
+                    int k = 0;
+
+                    for (int j = 0; j < currentWord.Length; j++)
                     {
-                        wrappedText.AppendLine(words[i]);
-                    }
-                    else
-                    {
-                        do
+                        splitWord[k] += currentWord[j];
+                        splitSize += (font.MeasureString(currentWord[j].ToString()) * textScale).X;
+
+                        if (splitSize + linePos > lineLength)
                         {
-                            if (words[i].Length == 0) break;
-
-                            wrappedText.Append(words[i][0]);
-                            words[i] = words[i].Remove(0, 1);
-
-                            linePos += size.X;
-                        } while (words[i].Length > 0 && (size = font.MeasureString((words[i][0]).ToString()) * textScale).X + linePos < lineLength);
-
-                        wrappedText.Append("\n");
-                        linePos = 0.0f;
-                        i--;
+                            linePos = splitSize = 0.0f;
+                            splitWord[k] = splitWord[k].Remove(splitWord[k].Length - 1) + "\n";
+                            j--;
+                            splitWord.Add(string.Empty);
+                            k++;
+                        }
                     }
 
-                    continue;
-                }
-
-                if (linePos + size.X < lineLength)
-                {
-                    wrappedText.Append(words[i]);
-                    if (words[i] == "\n")
+                    for (int j = 0; j < splitWord.Count; j++)
                     {
-                        linePos = 0.0f;
+                        wrappedText.Append(splitWord[j]);
                     }
-                    else
-                    {
-                        linePos += size.X + spaceSize.X;
-                    }
+
+                    linePos = splitSize;
                 }
                 else
                 {
-                    wrappedText.Append("\n");
-                    wrappedText.Append(words[i]);
+                    if (linePos + size.X < lineLength)
+                    {
+                        wrappedText.Append(currentWord);
+                        if (currentWord == "\n")
+                        {
+                            linePos = 0.0f;
+                        }
+                        else
+                        {
+                            linePos += size.X;
+                        }
+                    }
+                    else
+                    {
+                        wrappedText.Append("\n");
+                        wrappedText.Append(currentWord);
 
-                    linePos = size.X + spaceSize.X;
-                }
-
-                if (i < words.Count - 1 && !TextManager.IsCJK(words[i]) && !TextManager.IsCJK(words[i + 1]))
-                {
-                    wrappedText.Append(" ");
+                        linePos = size.X;
+                    }
                 }
             }
 
-            return wrappedText.ToString().Replace(" \n ", "\n");
+            if (!playerInput)
+            {
+                return wrappedText.ToString().Replace(" \n ", "\n");
+            }
+            else
+            {
+                return wrappedText.ToString();
+            }
         }
 
         public static void ParseConnectCommand(string[] args, out string name, out string endpoint)

@@ -512,22 +512,25 @@ namespace Barotrauma
                     highlightedSubInventorySlots.Remove(subInventorySlot);
                 }
             }
-            
-            for (int i = 0; i < capacity; i++)
+
+            if (character.SelectedCharacter == null) // Permanently open subinventories only available when the default UI layout is in use -> not when grabbing characters
             {
-                var item = Items[i];
-                if (item != null)
-                {  
-                    if (HideSlot(i) || CharacterHealth.OpenHealthWindow != null) continue;
-                    if (character.HasEquippedItem(item)) // Keep a subinventory display open permanently when the container is equipped
+                for (int i = 0; i < capacity; i++)
+                {
+                    var item = Items[i];
+                    if (item != null)
                     {
-                        var itemContainer = item.GetComponent<ItemContainer>();
-                        if (itemContainer != null && itemContainer.KeepOpenWhenEquipped && !highlightedSubInventorySlots.Any(s => s.Inventory == itemContainer.Inventory))
+                        if (HideSlot(i)) continue;
+                        if (character.HasEquippedItem(item)) // Keep a subinventory display open permanently when the container is equipped
                         {
-                            ShowSubInventory(new SlotReference(this, slots[i], i, false, itemContainer.Inventory), deltaTime, cam, hideSubInventories, true);
+                            var itemContainer = item.GetComponent<ItemContainer>();
+                            if (itemContainer != null && itemContainer.KeepOpenWhenEquipped && !highlightedSubInventorySlots.Any(s => s.Inventory == itemContainer.Inventory))
+                            {
+                                ShowSubInventory(new SlotReference(this, slots[i], i, false, itemContainer.Inventory), deltaTime, cam, hideSubInventories, true);
+                            }
                         }
                     }
-                } 
+                }
             }
 
             if (doubleClickedItem != null)
