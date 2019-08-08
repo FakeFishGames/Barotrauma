@@ -161,7 +161,7 @@ namespace Microsoft.Xna.Framework.Input
             return Keys.None;
         }
 
-        public static char ApplyModifiers(char chr, Sdl.Keyboard.Keymod mods)
+        public static int ApplyModifiers(int chr, Sdl.Keyboard.Keymod mods)
         {
             //TODO: this is not by any means comprehensive
             if ((mods & Sdl.Keyboard.Keymod.Ctrl) == Sdl.Keyboard.Keymod.None) return chr;
@@ -169,22 +169,22 @@ namespace Microsoft.Xna.Framework.Input
             {
                 case 'a':
                 case 'A':
-                    return (char)0x1;
+                    return 0x1;
                 case 'r':
                 case 'R':
-                    return (char)0x12;
+                    return 0x12;
                 case 'z':
                 case 'Z':
-                    return (char)0x1A;
+                    return 0x1A;
                 case 'x':
                 case 'X':
-                    return (char)0x18;
+                    return 0x18;
                 case 'c':
                 case 'C':
-                    return (char)0x3;
+                    return 0x3;
                 case 'v':
                 case 'V':
-                    return (char)0x16;
+                    return 0x16;
             }
             return chr;
         }
