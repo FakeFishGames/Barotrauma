@@ -73,11 +73,23 @@ namespace Barotrauma
 
         public void CreateSettingsFrame(Tab selectedTab = Tab.Graphics)
         {
-            settingsFrame = new GUIFrame(new RectTransform(new Vector2(0.8f, 0.8f), GUI.Canvas, Anchor.Center));
+            RectTransform settingsHolder = null;
+
+            if (Screen.Selected == GameMain.MainMenuScreen)
+            {
+                settingsFrame = new GUIFrame(new RectTransform(new Vector2(0.8f, 0.8f), GUI.Canvas, Anchor.Center));
+                settingsHolder = settingsFrame.RectTransform;
+            }
+            else
+            {
+                settingsFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null, color: Color.Black * 0.5f);
+                var settingsFrameContent = new GUIFrame(new RectTransform(new Vector2(0.8f, 0.8f), settingsFrame.RectTransform, Anchor.Center));
+                settingsHolder = settingsFrameContent.RectTransform;
+            }
 
             Vector2 tickBoxScale = Vector2.One * 0.05f;
 
-            var settingsFramePadding = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), settingsFrame.RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.05f) }) { RelativeSpacing = 0.01f, IsHorizontal = true };
+            var settingsFramePadding = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), settingsHolder, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.05f) }) { RelativeSpacing = 0.01f, IsHorizontal = true };
 
             /// General tab --------------------------------------------------------------
 
@@ -104,6 +116,10 @@ namespace Barotrauma
                     OnSelected = SelectContentPackage,
                     Selected = SelectedContentPackages.Contains(contentPackage)
                 };
+                if (contentPackage.CorePackage)
+                {
+                    tickBox.TextColor = Color.White;
+                }
                 if (!contentPackage.IsCompatible())
                 {
                     tickBox.TextColor = Color.Red;

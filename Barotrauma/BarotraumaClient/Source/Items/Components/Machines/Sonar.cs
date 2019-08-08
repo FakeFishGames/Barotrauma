@@ -1181,7 +1181,7 @@ namespace Barotrauma.Items.Components
                 2, GUI.SmallFont);
         }
         
-        public void ClientWrite(Lidgren.Network.NetBuffer msg, object[] extraData = null)
+        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
         {
             msg.Write(currentMode == Mode.Active);
             if (currentMode == Mode.Active)
@@ -1195,9 +1195,9 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        public void ClientRead(ServerNetObject type, Lidgren.Network.NetBuffer msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
-            long msgStartPos = msg.Position;
+            int msgStartPos = msg.BitPosition;
 
             bool isActive           = msg.ReadBoolean();
             float zoomT             = 1.0f;
@@ -1215,8 +1215,8 @@ namespace Barotrauma.Items.Components
 
             if (correctionTimer > 0.0f)
             {
-                int msgLength = (int)(msg.Position - msgStartPos);
-                msg.Position = msgStartPos;
+                int msgLength = (int)(msg.BitPosition - msgStartPos);
+                msg.BitPosition = msgStartPos;
                 StartDelayedCorrection(type, msg.ExtractBits(msgLength), sendingTime);
                 return;
             }

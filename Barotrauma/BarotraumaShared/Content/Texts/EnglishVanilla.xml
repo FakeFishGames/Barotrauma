@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <infotexts language="English" translatedname="English">
 
   <!-- Loading Screen -->
@@ -97,7 +97,6 @@
   <maxplayers>Max players</maxplayers>
   <password>Password</password>
   <publicserver>Public server</publicserver>
-  <publicservertooltip>Public servers are shown in the list of available servers in the 'Join Server' tab.</publicservertooltip>
   <attemptupnp>Attempt UPnP port forwarding</attemptupnp>
   <attemptupnptooltip>UPnP can be used for forwarding ports on your router to allow players to join the server. However, UPnP isn't supported by all routers, so you may need to setup port forwards manually if players are unable to join the server (see the readme for instructions).</attemptupnptooltip>
   <startserverbutton>Start</startserverbutton>
@@ -571,6 +570,8 @@
   <connectionlostreconnecting>You have been disconnected from the server. Reconnecting...</connectionlostreconnecting>
   <connectionfailed>Connecting failed</connectionfailed>
   <connectingto>Connecting to [serverip]</connectingto>
+  <serverprocessclosed>The server process has closed unexpectedly. A crash report (servercrashreport.log) may have been generated in the game's root directory.</serverprocessclosed>
+  <serverprocesscrashed>The server process has crashed. A crash report (servercrashreport.log) has been generated in the game's root directory.</serverprocesscrashed>
   <serverfullquestionprompt>Do you want to join the server queue and wait for a slot to free up?</serverfullquestionprompt>
   <serverqueue>Queue</serverqueue>
   <serverqueuepleasewait>Please wait...</serverqueuepleasewait>
@@ -584,6 +585,7 @@
   <disconnectreason.banned>You have been banned from the server.</disconnectreason.banned>
   <disconnectreason.kicked>You have been kicked from the server.</disconnectreason.kicked>
   <disconnectreason.servershutdown>The server has shut down.</disconnectreason.servershutdown>
+  <disconnectreason.servercrashed>The server has crashed.</disconnectreason.servercrashed>
   <disconnectreason.serverfull>The server is full.</disconnectreason.serverfull>
   <disconnectreason.authenticationrequired>Client did not properly request authentication.</disconnectreason.authenticationrequired>
   <disconnectreason.steamauthenticationrequired>Steam authentication required. Please make sure Steam is running and you are logged in to an account.</disconnectreason.steamauthenticationrequired>
@@ -641,6 +643,7 @@
   <rank>Rank</rank>
   <customrank>Custom</customrank>
   <permissions>Permissions</permissions>
+  <viewsteamprofile>View Steam profile</viewsteamprofile>
   <kick>Kick</kick>
   <votetokick>Vote to kick</votetokick>
   <ban>Ban</ban>
@@ -1778,7 +1781,6 @@
   <traitorendmessagefailuretraitordetained>[traitorname] was a traitor! [Genderpronounpossessive] task was to assassinate [targetname]. The task failed—[genderpronoun] was successfully detained.</traitorendmessagefailuretraitordetained>
   <traitorrespawnmessage>Your traitor objective was unsuccessful. You are no longer a traitor, so play nice!</traitorrespawnmessage>
   <traitortargetmessage>[traitorname] had a secret objective to assassinate you—and the task was successful.</traitortargetmessage>
-
 
   <!-- Causes of death -->
   <causeofdeath>Cause of death</causeofdeath>
@@ -3179,11 +3181,11 @@
   <connection.turretaimingout>position_out</connection.turretaimingout>
   <connection.turrettriggerout>trigger_out</connection.turrettriggerout>
   <connection.sonardataout>data_out</connection.sonardataout>
-
+  
   <label.outpostinfodisplay1>Welcome. Oxygen Levels: Nominal. Power Levels: Nominal. Radiation Levels: Suboptimal. Weather Forecast For Today: Cold and Damp.</label.outpostinfodisplay1>
   <label.navterminaldock>Dock</label.navterminaldock>
   <label.navterminaldock>Undock</label.navterminaldock>
-
+  
   <connectionerrornoresponse>No response from the server. There may be a connection issue at the server's end.</connectionerrornoresponse>
 
   <dialognorescuetargets>No-one seems to be in need of medical attention at the moment!</dialognorescuetargets>
@@ -3217,8 +3219,30 @@
   <causeofdeath.unknown>Unknown</causeofdeath.unknown>
   <self_causeofdeathdescription.unknown>You have died.</self_causeofdeathdescription.unknown>
 
-  <!-- New generic strings -->
+  <!-- Submarine labels -->
+  <label.betadeck>Beta Deck</label.betadeck>
+  <label.airlock>Airlock</label.airlock>
+  <label.dockingport>Docking Port</label.dockingport>
+  <label.weapons>Weapons</label.weapons>
+  <label.cargo>Cargo Bay</label.cargo>
+  <label.crewquarters>Crew Quarters</label.crewquarters>
+  <label.electrical1>Electrical #1</label.electrical1>
+  <label.electrical2>Electrical #2</label.electrical2>
+  <label.medical>Medical</label.medical>
+  <label.engineering>Engineering</label.engineering>
+  <label.ballast>Ballast</label.ballast>
+  <label.reactor>Reactor</label.reactor>
+  <label.armory>Armory</label.armory>
+  <label.batteryoutput>Battery Output</label.batteryoutput>
+  <label.onoff>On/Off</label.onoff>
+  <label.bilge>Bilge</label.bilge>
+  <label.powermainline>Power Mainline</label.powermainline>
+  <label.command>Command</label.command>
+  <label.engine>Engine</label.engine>
 
+  <deletefileverification>Do you want to delete [filename]?</deletefileverification>
+
+  <!-- New generic strings -->
   <pending>Pending</pending>
   <inprogress>In progress</inprogress>
   <complete>Complete</complete>
@@ -3238,7 +3262,7 @@
   <traitorobjectiveendmessagefailuredead>[traitorname] was a traitor but died while failing to complete the given goals:\n[traitorgoalinfos]</traitorobjectiveendmessagefailuredead>
   <traitorobjectiveendmessagefailuredetained>[traitorname] was a traitor but got detained while failing to complete the given goals:\n[traitorgoalinfos]</traitorobjectiveendmessagefailuredetained>
   <traitorobjectivegoalinfoformat>- [statustext]\n</traitorobjectivegoalinfoformat>
-  
+
   <!-- Traitor goals (new) -->
   <traitorgoalstatustextformat>[infotext] ([status])</traitorgoalstatustextformat>
   <traitorgoaltimelimitfailure>You failed to complete your objective in time.</traitorgoaltimelimitfailure>
@@ -3258,79 +3282,10 @@
   <traitorgoaltamperrailguninfo>Load a dummy shell into a railgun loader.</traitorgoaltamperrailguninfo>
   <traitorgoaltamperrailguninfomulti>Load [number] dummy shells into a railgun loaders.</traitorgoaltamperrailguninfomulti>
 
-  <Karma.KickBanThreshold>Ban threshold</Karma.KickBanThreshold>
-  <Karma.KickBanThresholdTooltip>The players whose karma decreases below this threshold get automatically banned from the server.</Karma.KickBanThresholdTooltip>
-  
-  <Karma.KarmaDecay>Karma decay speed</Karma.KarmaDecay>
-  <Karma.KarmaDecayTooltip>How much karma decreases per second when it's above the decay threshold.</Karma.KarmaDecayTooltip>
-  
-  <Karma.KarmaDecayThreshold>Karma decay threshold</Karma.KarmaDecayThreshold>
-  <Karma.KarmaDecayThresholdTooltip>Karma gradually decreases when it's above this threshold.</Karma.KarmaDecayThresholdTooltip>
-  
-  <Karma.KarmaIncrease>Karma increase speed</Karma.KarmaIncrease>
-  <Karma.KarmaIncreaseTooltip>How much karma increases per second when it's below the increase threshold.</Karma.KarmaIncreaseTooltip>  
-  
-  <Karma.KarmaIncreaseThreshold>Karma increase threshold</Karma.KarmaIncreaseThreshold>
-  <Karma.KarmaIncreaseThresholdTooltip>Karma gradually increases when it's below this threshold.</Karma.KarmaIncreaseThresholdTooltip>
-  
-  <Karma.StructureRepairKarmaIncrease>Structure repaired</Karma.StructureRepairKarmaIncrease>
-  <Karma.StructureRepairKarmaIncreaseTooltip>How much karma increases when repairing structures (per amount of damage repaired, for example a value of 0.05 would mean you get 5 points of karma when you repair a wall from 0 health to 100).</Karma.StructureRepairKarmaIncreaseTooltip>
-  
-  <Karma.StructureDamageKarmaDecrease>Structure damaged</Karma.StructureDamageKarmaDecrease>
-  <Karma.StructureDamageKarmaDecreaseTooltip>How much karma decreases when damaging structures (per amount of damage done, for example a value of 0.05 would mean that karma decreases by 5 when taking a wall from 100 health to 0).</Karma.StructureDamageKarmaDecreaseTooltip>
-  
-  <Karma.ItemRepairKarmaIncrease>Device repaired</Karma.ItemRepairKarmaIncrease>
-  <Karma.ItemRepairKarmaIncreaseTooltip>How much karma increases when repairing devices (per amount of damage repaired, for example a value of 0.05 would mean you get 5 points of karma when you repair a device from 0 health to 100).</Karma.ItemRepairKarmaIncreaseTooltip>
-  
-  <Karma.DamageEnemyKarmaIncrease>Damage to enemy</Karma.DamageEnemyKarmaIncrease>
-  <Karma.DamageEnemyKarmaIncreaseTooltip>How much karma increases when damaging enemies (per amount of damage done).</Karma.DamageEnemyKarmaIncreaseTooltip>
-  
-  <Karma.HealFriendlyKarmaIncrease>Heal friendly</Karma.HealFriendlyKarmaIncrease>
-  <Karma.HealFriendlyKarmaIncreaseTooltip>How much karma increases when healing other members of the crew (per amount of damage healed).</Karma.HealFriendlyKarmaIncreaseTooltip>
-
-  <Karma.DamageFriendlyKarmaDecrease>Damage to friendly</Karma.DamageFriendlyKarmaDecrease>
-  <Karma.DamageFriendlyKarmaDecreaseTooltip>How much karma decreases when damaging other members of the crew (per amount of damage done).</Karma.DamageFriendlyKarmaDecreaseTooltip>
-
-  <Karma.ReactorMeltdownKarmaDecrease>Reactor meltdown</Karma.ReactorMeltdownKarmaDecrease>
-  <Karma.ReactorMeltdownKarmaDecreaseTooltip>How much karma decreases if the player causes a reactor meltdown.</Karma.ReactorMeltdownKarmaDecreaseTooltip>
-
-  <Karma.ReactorOverheatKarmaDecrease>Reactor overheat</Karma.ReactorOverheatKarmaDecrease>
-  <Karma.ReactorOverheatKarmaDecreaseTooltip>How much karma decreases per second if a reactor's temperature stays critical while the player is operating it.</Karma.ReactorOverheatKarmaDecreaseTooltip>
-
-  <Karma.ExtinguishFireKarmaIncrease>Extinguish fires</Karma.ExtinguishFireKarmaIncrease>
-  <Karma.ExtinguishFireKarmaIncreaseTooltip>How much karma increases per second when attempting to extinguish fires.</Karma.ExtinguishFireKarmaIncreaseTooltip>
-
-  <Karma.AllowedWireDisconnectionsPerMinute>Allowed wire disconnections per minute</Karma.AllowedWireDisconnectionsPerMinute>
-  <Karma.AllowedWireDisconnectionsPerMinuteTooltip>How many wires a player is allowed to disconnect per minute before they start losing karma.</Karma.AllowedWireDisconnectionsPerMinuteTooltip>
-
-  <Karma.WireDisconnectionKarmaDecrease>Disconnect lots of wires</Karma.WireDisconnectionKarmaDecrease>
-  <Karma.WireDisconnectionKarmaDecreaseTooltip>How much karma decreases if a player disconnects more than the allowed number of wires per minute.</Karma.WireDisconnectionKarmaDecreaseTooltip>
-
-  <Karma.SpamFilterKarmaDecrease>Triggering the spam filter</Karma.SpamFilterKarmaDecrease>
-  <Karma.SpamFilterKarmaDecreaseTooltip>How much karma decreases if a player triggers the spam filter of the text chat.</Karma.SpamFilterKarmaDecreaseTooltip>
-
-  <Karma.HerpesThreshold>Space herpes threshold</Karma.HerpesThreshold>
-  <Karma.HerpesThresholdToolTip>How low does the karma have to decrease for the player to get the space herpes.</Karma.HerpesThresholdToolTip>
-  
-  <Karma.PositiveActions>Helpful actions</Karma.PositiveActions>
-  <Karma.NegativeActions>Harmful actions</Karma.NegativeActions>
-
-  <KarmaPreset.Default>Default</KarmaPreset.Default>
-  <KarmaPreset.Strict>Strict</KarmaPreset.Strict>
-  <KarmaPreset.Custom>Custom</KarmaPreset.Custom>
-
-  <karmadecreasedunknownamount>Your Karma has decreased.</karmadecreasedunknownamount>
-  <karmaincreasedunknownamount>Your Karma has increased.</karmaincreasedunknownamount>
-
-  <afflictionname.spaceherpes>Space herpes</afflictionname.spaceherpes>
-  <afflictiondescription.spaceherpes>The patient's face is filled with nasty-looking blisters and ulcers.</afflictiondescription.spaceherpes>
-
-  <afflictionname.invertcontrols>Disoriented</afflictionname.invertcontrols>
-  <afflictiondescription.invertcontrols>The patient's eyes are darting around and they seem to be having trouble orienting to their surroundings.</afflictiondescription.invertcontrols>
-
+  <!-- New items -->
   <entityname.flamer>Flamer</entityname.flamer>
   <entitydescription.flamer>An incendiary weapon that fires a stream of burning welding fuel.</entitydescription.flamer>
-  
+
   <entityname.smg>SMG</entityname.smg>
   <entitydescription.smg>A .45 caliber submachine gun.</entitydescription.smg>
 
@@ -3418,43 +3373,65 @@
   
   <Karma.KarmaIncreaseThreshold>Karma increase threshold</Karma.KarmaIncreaseThreshold>
   <Karma.KarmaIncreaseThresholdTooltip>Karma gradually increases when it's below this threshold.</Karma.KarmaIncreaseThresholdTooltip>
+
+  <Karma.StructureRepairKarmaIncrease>Structure repaired</Karma.StructureRepairKarmaIncrease>
+  <Karma.StructureRepairKarmaIncreaseTooltip>How much karma increases when repairing structures (per amount of damage repaired, for example a value of 0.05 would mean you get 5 points of karma when you repair a wall from 0 health to 100).</Karma.StructureRepairKarmaIncreaseTooltip>
   
-  <servertag.casual>Casual</servertag.casual>
-  <servertagdescription.casual>Having fun is more important than completing the objective. A good choice for new players.</servertagdescription.casual>
-  <servertag.serious>Serious</servertag.serious>
-  <servertagdescription.serious>The crew should focus on working together efficiently and completing their objective. No unnecessary messing around.</servertagdescription.serious>
-  <servertag.roleplaying>Roleplaying</servertag.roleplaying>
-  <servertagdescription.roleplaying>The crew should aim to act like a real submarine crew. Chain of command is important, as is taking care of your responsibilities and following orders. Speaking out-of-character should be avoided when a round is running.</servertagdescription.roleplaying>
-  <servertag.somethingdifferent>Something different</servertag.somethingdifferent>
-  <servertagdescription.somethingdifferent>Gameplay differs significantly from the usual Barotrauma gameplay. Modded servers, very unconventional subs, battle royale rounds, shuttle racing, deathrun maps... Anything goes!</servertagdescription.somethingdifferent>
-  <servertag.modded>Modded</servertag.modded>
-  <servertagdescription.modded>One or more mods enabled. Installing mods from the Workshop may be required to join the server.</servertagdescription.modded>
-  <servertag.carnage>Carnage</servertag.carnage>
-  <servertagdescription.carnage>Fighting your crew mates is not only allowed, but encouraged. The server may still enforce rules on who you are allowed to harm and how.</servertagdescription.carnage>
-  <servertag.247>24/7</servertag.247>
-  <servertagdescription.247>Runs around the clock.</servertagdescription.247>
-  <servertag.friendlyfireenabled>Friendly fire enabled</servertag.friendlyfireenabled>
-  <servertagdescription.friendlyfireenabled>Causing damage to your crew mates is enabled.</servertagdescription.friendlyfireenabled>
-  <servertag.friendlyfiredisabled>Friendly fire disabled</servertag.friendlyfiredisabled>
-  <servertagdescription.friendlyfiredisabled>Causing damage to your crew mates is disabled.</servertagdescription.friendlyfiredisabled>
-  <servertag.voipdisabled>Voice chat disabled</servertag.voipdisabled>
-  <servertagdescription.voipdisabled>Voice chat is disabled.</servertagdescription.voipdisabled>
-  <servertag.voipenabled>Voice chat enabled</servertag.voipenabled>
-  <servertagdescription.voipenabled>Voice chat is enabled.</servertagdescription.voipenabled>
-  <servertag.karmadisabled>Karma disabled</servertag.karmadisabled>
-  <servertagdescription.karmadisabled>Karma system is disabled.</servertagdescription.karmadisabled>
-  <servertag.karmaenabled>Karma enabled</servertag.karmaenabled>
-  <servertagdescription.karmaenabled>Karma system is enabled.</servertagdescription.karmaenabled>
-  <servertag.traitors>Traitors enabled</servertag.traitors>
-  <servertagdescription.traitors>Traitors are enabled.</servertagdescription.traitors>
+  <Karma.StructureDamageKarmaDecrease>Structure damaged</Karma.StructureDamageKarmaDecrease>
+  <Karma.StructureDamageKarmaDecreaseTooltip>How much karma decreases when damaging structures (per amount of damage done, for example a value of 0.05 would mean that karma decreases by 5 when taking a wall from 100 health to 0).</Karma.StructureDamageKarmaDecreaseTooltip>
+  
+  <Karma.ItemRepairKarmaIncrease>Device repaired</Karma.ItemRepairKarmaIncrease>
+  <Karma.ItemRepairKarmaIncreaseTooltip>How much karma increases when repairing devices (per amount of damage repaired, for example a value of 0.05 would mean you get 5 points of karma when you repair a device from 0 health to 100).</Karma.ItemRepairKarmaIncreaseTooltip>
+  
+  <Karma.DamageEnemyKarmaIncrease>Damage to enemy</Karma.DamageEnemyKarmaIncrease>
+  <Karma.DamageEnemyKarmaIncreaseTooltip>How much karma increases when damaging enemies (per amount of damage done).</Karma.DamageEnemyKarmaIncreaseTooltip>
+  
+  <Karma.HealFriendlyKarmaIncrease>Heal friendly</Karma.HealFriendlyKarmaIncrease>
+  <Karma.HealFriendlyKarmaIncreaseTooltip>How much karma increases when healing other members of the crew (per amount of damage healed).</Karma.HealFriendlyKarmaIncreaseTooltip>
+  
+  <Karma.DamageFriendlyKarmaDecrease>Damage to friendly</Karma.DamageFriendlyKarmaDecrease>
+  <Karma.DamageFriendlyKarmaDecreaseTooltip>How much karma decreases when damaging other members of the crew (per amount of damage done).</Karma.DamageFriendlyKarmaDecreaseTooltip>
 
-  <clientpermission.karmaimmunity>Karma immunity</clientpermission.karmaimmunity>
+  <Karma.ReactorMeltdownKarmaDecrease>Reactor meltdown</Karma.ReactorMeltdownKarmaDecrease>
+  <Karma.ReactorMeltdownKarmaDecreaseTooltip>How much karma decreases if the player causes a reactor meltdown.</Karma.ReactorMeltdownKarmaDecreaseTooltip>
 
-  <viewsteamprofile>View Steam profile</viewsteamprofile>
+  <Karma.ReactorOverheatKarmaDecrease>Reactor overheat</Karma.ReactorOverheatKarmaDecrease>
+  <Karma.ReactorOverheatKarmaDecreaseTooltip>How much karma decreases per second if a reactor's temperature stays critical while the player is operating it.</Karma.ReactorOverheatKarmaDecreaseTooltip>
+
+  <Karma.ExtinguishFireKarmaIncrease>Extinguish fires</Karma.ExtinguishFireKarmaIncrease>
+  <Karma.ExtinguishFireKarmaIncreaseTooltip>How much karma increases per second when attempting to extinguish fires.</Karma.ExtinguishFireKarmaIncreaseTooltip>
+
+  <Karma.AllowedWireDisconnectionsPerMinute>Allowed wire disconnections per minute</Karma.AllowedWireDisconnectionsPerMinute>
+  <Karma.AllowedWireDisconnectionsPerMinuteTooltip>How many wires a player is allowed to disconnect per minute before they start losing karma.</Karma.AllowedWireDisconnectionsPerMinuteTooltip>
+
+  <Karma.WireDisconnectionKarmaDecrease>Disconnect lots of wires</Karma.WireDisconnectionKarmaDecrease>
+  <Karma.WireDisconnectionKarmaDecreaseTooltip>How much karma decreases if a player disconnects more than the allowed number of wires per minute.</Karma.WireDisconnectionKarmaDecreaseTooltip>
+
+  <Karma.SpamFilterKarmaDecrease>Triggering the spam filter</Karma.SpamFilterKarmaDecrease>
+  <Karma.SpamFilterKarmaDecreaseTooltip>How much karma decreases if a player triggers the spam filter of the text chat.</Karma.SpamFilterKarmaDecreaseTooltip>
+
+  <Karma.HerpesThreshold>Space herpes threshold</Karma.HerpesThreshold>
+  <Karma.HerpesThresholdToolTip>How low does the karma have to decrease for the player to get the space herpes.</Karma.HerpesThresholdToolTip>
+  
+  <Karma.PositiveActions>Helpful actions</Karma.PositiveActions>
+  <Karma.NegativeActions>Harmful actions</Karma.NegativeActions>
+
+  <KarmaPreset.Default>Default</KarmaPreset.Default>
+  <KarmaPreset.Strict>Strict</KarmaPreset.Strict>
+  <KarmaPreset.Custom>Custom</KarmaPreset.Custom>
+
+  <karmadecreasedunknownamount>Your Karma has decreased.</karmadecreasedunknownamount>
+  <karmaincreasedunknownamount>Your Karma has increased.</karmaincreasedunknownamount>
+
+  <afflictionname.spaceherpes>Space herpes</afflictionname.spaceherpes>
+  <afflictiondescription.spaceherpes>The patient's face is filled with nasty-looking blisters and ulcers.</afflictiondescription.spaceherpes>
+
+  <afflictionname.invertcontrols>Disoriented</afflictionname.invertcontrols>
+  <afflictiondescription.invertcontrols>The patient's eyes are darting around and they seem to be having trouble orienting to their surroundings.</afflictiondescription.invertcontrols>
 
   <deletefileverification>Do you want to delete [filename]?</deletefileverification>
 
-  <deletefileverification>Do you want to delete [filename]?</deletefileverification>
+  <pumpautocontrol>Automatic control</pumpautocontrol>
 
   <!-- MODIFIED -->
   <missionsuccess.pvpmission>The [loser] vessel has been defeated by the [winner] crew!</missionsuccess.pvpmission>
@@ -3486,7 +3463,6 @@
   <joinserverbutton>Server browser</joinserverbutton>
 
   <karmabanwarning>WARNING: Your karma is dangerously low. You will be banned from the server if it decreases further.</karmabanwarning>
-
   <nosubscribedmods>You haven't subscribed to any mods on the Steam Workshop. Select the 'Popular mods' tab to find some!</nosubscribedmods>
-
+  <publicservertooltip>Public servers are shown in the list of available servers in the 'Server Browser'.</publicservertooltip>
 </infotexts>

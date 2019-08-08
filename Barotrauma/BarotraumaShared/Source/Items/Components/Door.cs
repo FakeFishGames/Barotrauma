@@ -32,6 +32,7 @@ namespace Barotrauma.Items.Components
         private Rectangle doorRect;
 
         private bool isBroken;
+        private const float brokenThreshold = 50.0f;
         
         public bool IsBroken
         {
@@ -284,13 +285,15 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (isBroken)
+            // The door has to be over the broken threshold before collision detection on the body is re-enabled, and under for the collision detection to be disabled
+            if (isBroken && item.ConditionPercentage > brokenThreshold)
             {
-                //the door has to be restored to 50% health before collision detection on the body is re-enabled
-                if (item.ConditionPercentage > 50.0f)
-                {
-                    IsBroken = false;
-                }
+                IsBroken = false;
+                return;
+            }
+            else if (!isBroken && item.ConditionPercentage <= brokenThreshold)
+            {
+                IsBroken = true;                
                 return;
             }
 

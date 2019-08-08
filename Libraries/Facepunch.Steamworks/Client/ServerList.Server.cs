@@ -46,16 +46,36 @@ namespace Facepunch.Steamworks
 
             internal static Server FromSteam( Client client, SteamNative.gameserveritem_t item )
             {
+                int serverNameLength = item.ServerName.Length;
+                for (int i = 0; i < item.ServerName.Length; i++)
+                {
+                    if (item.ServerName[i] == '\0')
+                    {
+                        serverNameLength = i;
+                        break;
+                    }
+                }
+
+                int mapLength = item.Map.Length;
+                for (int i = 0; i < item.Map.Length; i++)
+                {
+                    if (item.Map[i] == '\0')
+                    {
+                        mapLength = i;
+                        break;
+                    }
+                }
+
                 return new Server()
                 {
                     Client = client,
                     Address = Utility.Int32ToIp( item.NetAdr.IP ), 
                     ConnectionPort = item.NetAdr.ConnectionPort,
                     QueryPort = item.NetAdr.QueryPort,
-                    Name = Encoding.UTF8.GetString(item.ServerName),
+                    Name = Encoding.UTF8.GetString(item.ServerName, 0, serverNameLength),
                     Ping = item.Ping,
                     GameDir = item.GameDir,
-                    Map = Encoding.UTF8.GetString(item.Map),
+                    Map = Encoding.UTF8.GetString(item.Map, 0, mapLength),
                     Description = item.GameDescription,
                     AppId = item.AppID,
                     Players = item.Players,

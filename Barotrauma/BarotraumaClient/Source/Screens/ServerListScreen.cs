@@ -10,6 +10,7 @@ using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading;
 
 namespace Barotrauma
@@ -45,7 +46,7 @@ namespace Barotrauma
         private readonly GUITickBox filterEmpty;
 
         private string sortedBy;
-
+        
         private readonly GUIButton serverPreviewToggleButton;
 
         //a timer for preventing the client from spamming the refresh button faster than AllowedRefreshInterval
@@ -332,7 +333,14 @@ namespace Barotrauma
                 {
                     if (ipBox.UserData is ServerInfo selectedServer)
                     {
-                        JoinServer(selectedServer.IP + ":" + selectedServer.Port, selectedServer.ServerName);
+                        if (selectedServer.SteamID == 0)
+                        {
+                            JoinServer(selectedServer.IP + ":" + selectedServer.Port, selectedServer.ServerName);
+                        }
+                        else
+                        {
+                            JoinServer(selectedServer.SteamID.ToString(), selectedServer.ServerName);
+                        }
                     }
                     else if (!string.IsNullOrEmpty(ipBox.Text))
                     {
@@ -901,13 +909,17 @@ namespace Barotrauma
             return true;
         }
         
-        private IEnumerable<object> ConnectToServer(string ip, string serverName)
+        private IEnumerable<object> ConnectToServer(string endpoint, string serverName)
         {
+            string serverIP = null;
+            UInt64 serverSteamID = SteamManager.SteamIDStringToUInt64(endpoint);
+            if (serverSteamID == 0) { serverIP = endpoint; }
+
 #if !DEBUG
             try
             {
 #endif
-                GameMain.Client = new GameClient(clientNameBox.Text, ip, serverName);
+                GameMain.Client = new GameClient(clientNameBox.Text, serverIP, serverSteamID, serverName);
 #if !DEBUG
             }
             catch (Exception e)
@@ -961,7 +973,7 @@ namespace Barotrauma
 
         public void PingServer(ServerInfo serverInfo, int timeOut)
         {
-            if (serverInfo?.IP == null)
+            if (string.IsNullOrWhiteSpace(serverInfo?.IP))
             {
                 serverInfo.PingChecked = true;
                 serverInfo.Ping = -1;
@@ -969,7 +981,8 @@ namespace Barotrauma
             }
 
             long rtt = -1;
-            IPAddress address = IPAddress.Parse(serverInfo.IP);
+            IPAddress address = null;
+            IPAddress.TryParse(serverInfo.IP, out address);
             if (address != null)
             {
                 //don't attempt to ping if the address is IPv6 and it's not supported

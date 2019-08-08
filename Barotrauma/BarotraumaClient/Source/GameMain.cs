@@ -101,6 +101,9 @@ namespace Barotrauma
 
         private GameTime fixedTime;
 
+        private string ConnectName;
+        private string ConnectEndpoint;
+
         private static SpriteBatch spriteBatch;
 
         private Viewport defaultViewport;
@@ -174,6 +177,11 @@ namespace Barotrauma
             Config = new GameSettings();
 
             ConsoleArguments = args;
+
+            ConnectName = null;
+            ConnectEndpoint = null;
+
+            ToolBox.ParseConnectCommand(ConsoleArguments, out ConnectName, out ConnectEndpoint);
 
             GUI.KeyboardDispatcher = new EventInput.KeyboardDispatcher(Window);
 
@@ -390,7 +398,7 @@ namespace Barotrauma
             {
                 if (SteamManager.AutoUpdateWorkshopItems())
                 {
-                    ContentPackage.LoadAll(ContentPackage.Folder);
+                    ContentPackage.LoadAll();
                     Config.ReloadContentPackages();
                 }
             }
@@ -494,7 +502,11 @@ namespace Barotrauma
 
             if (SteamManager.USE_STEAM)
             {
-                SteamWorkshopScreen     = new SteamWorkshopScreen();
+                SteamWorkshopScreen = new SteamWorkshopScreen();
+                if (SteamManager.IsInitialized)
+                {
+                    SteamManager.Instance.Friends.OnInvitedToGame += OnInvitedToGame;
+                }
             }
             SubEditorScreen         = new SubEditorScreen();
 
@@ -594,6 +606,13 @@ namespace Barotrauma
             }
         }
 
+        public void OnInvitedToGame(Facepunch.Steamworks.SteamFriend friend, string connectCommand)
+        {
+            ToolBox.ParseConnectCommand(connectCommand.Split(' '), out ConnectName, out ConnectEndpoint);
+
+            DebugConsole.NewMessage(ConnectName+", "+ConnectEndpoint,Color.Yellow);
+        }
+
         /// <summary>
         /// Allows the game to run logic such as updating the world,
         /// checking for collisions, gathering input, and playing audio.
@@ -674,6 +693,24 @@ namespace Barotrauma
                 }
                 else if (hasLoaded)
                 {
+                    if (!string.IsNullOrWhiteSpace(ConnectEndpoint))
+                    {
+                        if (Client != null)
+                        {
+                            Client.Disconnect();
+                            Client = null;
+
+                            GameMain.MainMenuScreen.Select();
+                        }
+                        UInt64 serverSteamId = SteamManager.SteamIDStringToUInt64(ConnectEndpoint);
+                        Client = new GameClient(SteamManager.GetUsername(),
+                                                serverSteamId != 0 ? null : ConnectEndpoint,
+                                                serverSteamId,
+                                                string.IsNullOrWhiteSpace(ConnectName) ? ConnectEndpoint : ConnectName);
+                        ConnectEndpoint = null;
+                        ConnectName = null;
+                    }
+
                     SoundPlayer.Update((float)Timing.Step);
 
                     if (PlayerInput.KeyHit(Keys.Escape) && WindowActive)

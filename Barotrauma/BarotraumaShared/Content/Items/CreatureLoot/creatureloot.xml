@@ -68,22 +68,23 @@
     <Holdable slots="RightHand,LeftHand,Any" holdpos="0,-70" handle1="0,10" handle2="0,-10" />
   </Item>
   <Item name="Crawler Mask" identifier="crawlermask" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate">
-    <Sprite texture="Content/Characters/Crawler/crawler.png" depth="0.6" sourcerect="152,0,104,84" origin="0.5,0.5" />
-    <Body width="75" height="50" density="30" />
+    <Sprite texture="Content/Items/InventoryIconAtlas.png" depth="0.6" sourcerect="960,448,64,64" origin="0.5,0.5" />
+    <Body width="50" height="45" density="30" />
     <Wearable limbtype="Head" slots="Any,Head" msg="ItemMsgPickUpSelect">
-      <sprite texture="Content/Characters/Crawler/crawler.png" limb="Head" inheritlimbdepth="true" hidelimb="false" inherittexturescale="true" hideotherwearables="false" sourcerect="152,0,104,84" origin="0.5,0.6485507" />
-      <StatusEffect type="OnWearing" target="Character" delay="7" stackable="false" >
-        <Sound file="Content/Characters/Crawler/CRAWLER_idle1.ogg" type="OnUse" range="300" selectionmode="Random" />
+      <sprite texture="Content/Items/Jobgear/AlienGear.png" limb="Head" inheritlimbdepth="true" hidelimb="false" inherittexturescale="true" hideotherwearables="false" sourcerect="129,142,100,121" origin="0.5,0.55" />
+      <StatusEffect type="OnWearing" target="Character" delay="7" stackable="false" checkconditionalalways="true">
+        <conditional isDead="eq false"/>
+        <Sound file="Content/Characters/Crawler/CRAWLER_idle1.ogg" type="OnUse" range="300" selectionmode="Random" />        
         <Sound file="Content/Characters/Crawler/CRAWLER_idle2.ogg" type="OnUse" range="300" />
         <Sound file="Content/Characters/Crawler/CRAWLER_idle3.ogg" type="OnUse" range="300" />
-      </StatusEffect>-->
+      </StatusEffect>
     </Wearable>
   </Item>
-  <Item name="Husk Stinger" identifier="huskstinger" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light" scale="0.4">
-    <InventoryIcon texture="Content/Characters/Husk/HuskStinger.png" sourcerect="54,0,56,151" />
-    <Sprite texture="Content/Characters/Husk/HuskStinger.png" sourcerect="54,0,56,151" depth="0.55" origin="0.44,0.6" />
-    <Body radius="15" height="100" density="50" />
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="40,5" handle1="5,-5" holdangle="0" reload="1.0" range="50" combatpriority="10" msg="ItemMsgPickUpSelect">
+  <Item name="Husk Stinger" identifier="huskstinger" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light" scale="0.3">
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,576,64,64" />
+    <Sprite texture="Content/Items/Jobgear/AlienGear.png" sourcerect="9,318,172,47" depth="0.55" origin="0.44,0.6" />
+    <Body radius="15" width="100" density="50" />
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="30,5" handle1="-20,0" holdangle="65" reload="1.0" range="50" combatpriority="10" msg="ItemMsgPickUpSelect">
       <Attack structuredamage="5" stun="0.2">
         <Affliction identifier="internaldamage" strength="5" />
         <Affliction identifier="bleeding" strength="10" />
@@ -91,25 +92,26 @@
       </Attack>
     </MeleeWeapon>
   </Item>
-  <Item name="Mudraptor Shell" identifier="mudraptorshell" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" impactsoundtag="impact_soft">
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,256,64,64" />
-    <Sprite texture="Content/Items/Jobgear/Security/securitygear.png" sourcerect="0,0,39,55" depth="0.6" />
-    <Body radius="20" height="20" density="40" />
-    <Wearable slots="Any,OuterClothes" msg="ItemMsgPickUpSelect">
-      <damagemodifier afflictiontypes="burn" armorsector="0.0,360.0" damagemultiplier="0.9" />
-      <damagemodifier afflictiontypes="damage" armorsector="0.0,360.0" damagemultiplier="0.3" bleedingmultiplier="0.3" damagesound="LimbArmor" deflectprojectiles="true" />
-      <damagemodifier afflictiontypes="bleeding" armorsector="0.0,360.0" damagemultiplier="0.1" bleedingmultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
-      <sprite name="Security Vest" texture="Content/Items/Jobgear/Security/SecurityVest.png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <StatusEffect type="OnWearing" target="Character" SpeedMultiplier="0.6" setvalue="true" disabledeltatime="true" />
-    </Wearable>
-  </Item>
-  <Item name="Moloch Shell Fragment" identifier="shellshield" category="Equipment" tags="weapon" impactsoundtag="impact_metal_light">
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,320,64,64" />
-    <Sprite texture="Content/Items/Jobgear/Security/riotgear.png" sourcerect="31,54,27,147" origin="0.5,0.5" depth="0.55" />
+  <Item name="Mudraptor Shell" identifier="mudraptorshell" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" impactsoundtag="impact_soft" scale="0.4">
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,320,64,64" />
+    <Sprite texture="Content/Items/Jobgear/AlienGear.png" sourcerect="238,10,59,287" origin="0.5,0.5" depth="0.55" />
     <Body width="40" height="145" density="30" />
     <Holdable slots="RightHand+LeftHand" aimpos="60,-30" holdpos="45,-30" handle1="-10,0" handle2="10,0" controlpose="true" blocksplayers="true" msg="ItemMsgPickUpSelect">
       <StatusEffect type="OnActive" target="Character" SpeedMultiplier="0.6" setvalue="true" />
     </Holdable>
+  </Item>
+  <Item name="Moloch Shell Fragment" identifier="shellshield" category="Equipment" tags="weapon" impactsoundtag="impact_metal_light" scale="0.4">
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,384,64,64" />
+    <Sprite texture="Content/Items/Jobgear/AlienGear.png" sourcerect="305,10,126,207" depth="0.6" />
+    <Body radius="70" height="80" density="40" />
+    <Wearable slots="Any,OuterClothes" msg="ItemMsgPickUpSelect">
+      <damagemodifier afflictiontypes="burn" armorsector="0.0,360.0" damagemultiplier="0.9" />
+      <damagemodifier afflictiontypes="damage" armorsector="0.0,360.0" damagemultiplier="0.3" bleedingmultiplier="0.3" damagesound="LimbArmor" deflectprojectiles="true" />
+      <damagemodifier afflictiontypes="bleeding" armorsector="0.0,360.0" damagemultiplier="0.1" bleedingmultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
+      <sprite name="Security Vest" texture="Content/Items/Jobgear/AlienGear.png" sourcerect="305,10,126,207" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="false" inheritsourcerect="false" origin="0.5,0.5"/>
+      <StatusEffect type="OnWearing" target="Character" SpeedMultiplier="0.6" setvalue="true" disabledeltatime="true" />
+    </Wearable>
+
   </Item>
 
 </Items>

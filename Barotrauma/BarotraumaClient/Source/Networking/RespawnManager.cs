@@ -21,8 +21,7 @@ namespace Barotrauma.Networking
                 GameMain.Client.AddChatMessage("ServerMessage.ShuttleLeaving", ChatMessageType.Server);
             }
         }
-        
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             var newState = (State)msg.ReadRangedInteger(0, Enum.GetNames(typeof(State)).Length);
 

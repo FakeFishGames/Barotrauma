@@ -599,7 +599,8 @@ namespace Barotrauma
                             if (!tb.Selected) { return false; }
                             RefreshMissionTab(tb.UserData as Mission); 
                             Campaign.Map.OnMissionSelected?.Invoke(connection, mission);
-                            if (GameMain.Client != null && GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign))
+                            if ((Campaign is MultiPlayerCampaign multiPlayerCampaign) && !multiPlayerCampaign.SuppressStateSending &&
+                                GameMain.Client != null && GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign))
                             {
                                 GameMain.Client?.SendCampaignState();
                             }

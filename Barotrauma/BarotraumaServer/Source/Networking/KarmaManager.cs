@@ -79,7 +79,7 @@ namespace Barotrauma
                 if (TestMode)
                 {
                     string msg =
-                        karmaChange < 0 ? $"You karma has decreased to {client.Karma}" : $"You karma has increased to {client.Karma}";
+                        karmaChange < 0 ? $"Your karma has decreased to {client.Karma}" : $"Your karma has increased to {client.Karma}";
                     if (!string.IsNullOrEmpty(debugKarmaChangeReason))
                     {
                         msg += $". Reason: {debugKarmaChangeReason}";
@@ -100,17 +100,17 @@ namespace Barotrauma
 
         private void UpdateClient(Client client, float deltaTime)
         {
-            if (client.Karma > KarmaDecayThreshold)
-            {
-                client.Karma -= KarmaDecay * deltaTime;
-            }
-            else if (client.Karma < KarmaIncreaseThreshold)
-            {
-                client.Karma += KarmaIncrease * deltaTime;
-            }
-
             if (client.Character != null && !client.Character.Removed)
             {
+                if (client.Karma > KarmaDecayThreshold)
+                {
+                    client.Karma -= KarmaDecay * deltaTime;
+                }
+                else if (client.Karma < KarmaIncreaseThreshold)
+                {
+                    client.Karma += KarmaIncrease * deltaTime;
+                }
+
                 //increase the strength of the herpes affliction in steps instead of linearly
                 //otherwise clients could determine their exact karma value from the strength
                 float herpesStrength = 0.0f;
@@ -129,6 +129,10 @@ namespace Barotrauma
                 else if (existingAffliction != null)
                 {
                     existingAffliction.Strength = herpesStrength;
+                    if (herpesStrength <= 0.0f)
+                    {
+                        client.Character.CharacterHealth.ReduceAffliction(null, "invertcontrols", 100.0f);
+                    }
                 }
 
                 //check if the client has disconnected an excessive number of wires
@@ -205,7 +209,7 @@ namespace Barotrauma
                 }
             }
 
-            if (target.AIController is EnemyAIController || target.TeamID != attacker.TeamID)
+            if (isEnemy)
             {
                 if (damage > 0)
                 {

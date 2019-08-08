@@ -192,7 +192,7 @@
       </StatusEffect>
     </Projectile>
   </Item>
-  <Item name="SMG Magazine" identifier="smgmagazine" scale="0.32" category="Equipment" linkable="true" impactsoundtag="impact_metal_light">
+  <Item name="SMG Magazine" identifier="smgmagazine" scale="0.32" category="Equipment" cargocontaineridentifier="metalcrate" linkable="true" tags="smallitem" impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="30" />
     <Price locationtype="City" buyprice="50" />
     <Deconstruct time="10">
@@ -203,6 +203,7 @@
     <Body width="50" height="65" density="50" />
     <ItemContainer hideitems="true" capacity="1" drawinventory="false" canbeselected="false" ShowConditionInContainedStateIndicator="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
+      <Containable identifiers="smground" />
       <!--Spawn an SMG round on use. Condition -6.7 -> 15 shots per magazine.-->
       <StatusEffect type="OnUse" target="This" condition="-6.7" disabledeltatime="true">
         <SpawnItem identifiers="smground" spawnposition="ThisInventory" />
@@ -246,7 +247,7 @@
     </ItemContainer>
   </Item>
 
-  <Item name="Flamer" identifier="flamer" category="Equipment" Tags="smallitem,weapon" cargocontaineridentifier="metalcrate" description="Flamethrower text. REPLACE ME!" Scale="0.32" impactsoundtag="impact_metal_light">
+  <Item name="Flamer" identifier="flamer" category="Equipment" Tags="smallitem,weapon" cargocontaineridentifier="metalcrate" description="An incendiary weapon that fires a stream of burning welding fuel." Scale="0.32" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="75" />
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="Military" buyprice="75" />
@@ -312,6 +313,7 @@
   </Item>  
 
   <Item name="Stun Grenade" identifier="stungrenade" category="Equipment" cargocontaineridentifier="explosivecrate" tags="smallitem,weapon,explosive" Scale="0.5" impactsoundtag="impact_metal_light">
+    <Upgrade gameversion="0.9.2.0" scale="0.5"/>
     <Price locationtype="Military" buyprice="175" />
     <Price locationtype="City" buyprice="200" />
     <Deconstruct time="10">
@@ -455,7 +457,8 @@
       </StatusEffect>
     </Throwable>
   </Item>
-  <Item name="Stun Baton" identifier="stunbaton" category="Equipment" Tags="smallitem,weapon" Scale="0.32" cargocontaineridentifier="metalcrate" description="If verbal orders are insufficient, a high-voltage shock from a Stun Baton may be enough to beat an unruly crew member into submission." impactsoundtag="impact_metal_light">
+  <Item name="Stun Baton" identifier="stunbaton" category="Equipment" Tags="smallitem,weapon" Scale="0.5" cargocontaineridentifier="metalcrate" description="If verbal orders are insufficient, a high-voltage shock from a Stun Baton may be enough to beat an unruly crew member into submission." impactsoundtag="impact_metal_light">
+    <Upgrade gameversion="0.9.2.0" scale="0.5"/>
     <Price locationtype="Military" buyprice="100" />
     <Price locationtype="City" buyprice="200" />
     <Price locationtype="Outpost" buyprice="500" />
@@ -476,21 +479,33 @@
         <Sound file="Content/Items/Weapons/Smack1.ogg" range="800" />
         <Affliction identifier="internaldamage" strength="4" />
       </Attack>
-      <StatusEffect type="OnUse" target="Contained,Character" Condition="-25.0" stun="15.0" disabledeltatime="true">
+      <!-- 4 usages with normal battery -->
+      <StatusEffect type="OnUse" target="Contained" Condition="-25.0" disabledeltatime="true">
+        <RequiredItem identifier="batterycell" type="Contained" msg="ItemMsgBatteryCellRequired" />
+      </StatusEffect>
+      <!-- 7 usages with a fulgurium battery -->
+      <StatusEffect type="OnUse" target="Contained" Condition="-15.0" disabledeltatime="true">
+        <RequiredItem identifier="fulguriumcatterycell" type="Contained" msg="ItemMsgBatteryCellRequired" />
+      </StatusEffect>
+      <!-- normal batteries cause 15 seconds of stun to anything with a mass smaller than 60 -->
+      <StatusEffect type="OnUse" target="Character" stun="15.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/StunBaton1.ogg" selectionmode="random" range="500" />
         <sound file="Content/Items/Weapons/StunBaton2.ogg" range="500" />
         <sound file="Content/Items/Weapons/StunBaton3.ogg" range="500" />
         <sound file="Content/Items/Weapons/StunBaton4.ogg" range="500" />
         <RequiredItem identifier="batterycell" type="Contained" msg="ItemMsgBatteryCellRequired" />
         <Explosion range="100.0" force="0.1" shockwave="false" flames="false" smoke="false" underwaterbubble="false" camerashake="6.0" />
+        <Conditional mass="lt 60"/>
       </StatusEffect>
-      <StatusEffect type="OnUse" target="Contained,Character" Condition="-15.0" stun="30.0" disabledeltatime="true">
+      <!-- fulgurium batteries cause 30 seconds of stun to anything with a mass smaller than 150 -->
+      <StatusEffect type="OnUse" target="Character" stun="30.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/StunBaton1.ogg" selectionmode="random" range="500" />
         <sound file="Content/Items/Weapons/StunBaton2.ogg" range="500" />
         <sound file="Content/Items/Weapons/StunBaton3.ogg" range="500" />
         <sound file="Content/Items/Weapons/StunBaton4.ogg" range="500" />
         <RequiredItem identifier="fulguriumbatterycell" type="Contained" msg="ItemMsgBatteryCellRequired" />
         <Explosion range="100.0" force="0.5" shockwave="false" flames="false" smoke="true" underwaterbubble="false" camerashake="6.0" />
+        <Conditional mass="lt 150"/>
       </StatusEffect>
     </MeleeWeapon>
     <ItemContainer capacity="1" hideitems="true">
@@ -618,7 +633,7 @@
       <!--Grenade launcher ammo explodes on impact-->
       <StatusEffect type="OnImpact" Condition="-100.0" disabledeltatime="true" delay="0.0">
         <sound file="Content/Items/Weapons/StunGrenade.ogg" />
-        <Explosion range="250" force="0.1" smoke="false">
+        <Explosion range="300" force="0.1" smoke="false">
           <Affliction identifier="internaldamage" strength="5" />
           <Affliction identifier="stun" strength="15" />
         </Explosion>
@@ -743,7 +758,7 @@
     <Sprite texture="weapons_new.png" sourcerect="242,420,121,55" depth="0.55" origin="0.5,0.5" />
     <Body width="120" height="48" density="50" />
     <MeleeWeapon slots="RightHand+LeftHand,Any" controlpose="true" aimpos="45,10" handle1="-20,-7" handle2="-10,0" holdangle="60" reload="1" range="100" combatpriority="30" msg="ItemMsgPickUpSelect">
-      <Attack structuredamage="2" stun="0.6">
+      <Attack stun="0.6">
         <Sound file="Content/Items/Weapons/ToyHammerHit1.ogg" range="800" selectionmode="Random"/>
         <Sound file="Content/Items/Weapons/ToyHammerHit2.ogg" range="800" />
         <Sound file="Content/Items/Weapons/ToyHammerHit3.ogg" range="800" />

@@ -4,7 +4,6 @@ using Barotrauma.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -346,12 +345,23 @@ namespace Barotrauma
             }
         }
 
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
-            for (int i = 0; i < Sections.Length; i++)
+            byte sectionCount = msg.ReadByte();
+            if (sectionCount != Sections.Length)
+            {
+                string errorMsg = $"Error while reading a network event for the structure \"{Name}\". Section count does not match (server: {sectionCount} client: {Sections.Length})";
+                DebugConsole.NewMessage(errorMsg, Color.Red);
+                GameAnalyticsManager.AddErrorEventOnce("Structure.ClientRead:SectionCountMismatch", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+            }
+
+            for (int i = 0; i < sectionCount; i++)
             {
                 float damage = msg.ReadRangedSingle(0.0f, 1.0f, 8) * Health;
-                SetDamage(i, damage);
+                if (i < Sections.Length)
+                {
+                    SetDamage(i, damage);
+                }
             }
         }
     }

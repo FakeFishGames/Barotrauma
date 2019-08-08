@@ -165,26 +165,25 @@
       </StatusEffect>
     </Projectile>
   </Item>
-
   <Item name="Exploding Ammunition Box" identifier="coilgunammoboxexplosive" scale="0.5" tags="coilgunequipment,coilgunammo" category="Equipment" linkable="true" impactsoundtag="impact_metal_heavy">
     <Price locationtype="Outpost" buyprice="400" />
     <Price locationtype="Military" buyprice="300" />
     <Price locationtype="City" buyprice="400" />
     <Deconstruct time="10">
-      <Item identifier="steel" copycondition="true"/>
-      <Item identifier="uex" copycondition="true"/>
+      <Item identifier="steel" copycondition="true" />
+      <Item identifier="uex" copycondition="true" />
       <Item identifier="aluminium" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
-      <RequiredSkill identifier="mechanical" level="25"/>
-      <RequiredItem identifier="aluminium"/>
-      <RequiredItem identifier="uex"/>
-      <RequiredItem identifier="steel"/>
+      <RequiredSkill identifier="mechanical" level="25" />
+      <RequiredItem identifier="aluminium" />
+      <RequiredItem identifier="uex" />
+      <RequiredItem identifier="steel" />
     </Fabricate>
     <!--<InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64" />-->
-    <Sprite texture="Content/Items/Containers/crates.png" depth="0.54" sourcerect="344,197,117,89" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Containers/crates.png" depth="0.54" sourcerect="25,197,117,89" origin="0.5,0.5" />
     <Body width="115" height="88" density="50" />
-    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-40,30" handle2="40,30" aimable="false" msg="ItemMsgPickUpSelect"/>
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-40,30" handle2="40,30" aimable="false" msg="ItemMsgPickUpSelect" />
     <ItemContainer hideitems="true" capacity="1" drawinventory="false" canbeselected="false" ShowConditionInContainedStateIndicator="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
       <!-- we cheat a bit with ammunition boxes - they don't actually contain hundreds of rounds, 
@@ -222,24 +221,23 @@
       </StatusEffect>
     </Projectile>
   </Item>
-  
   <Item name="Piercing Ammunition Box" identifier="coilgunammoboxpiercing" scale="0.5" tags="coilgunequipment,coilgunammo" category="Equipment" linkable="true" impactsoundtag="impact_metal_heavy">
     <Price locationtype="Outpost" buyprice="300" />
     <Price locationtype="Military" buyprice="200" />
     <Price locationtype="City" buyprice="300" />
     <Deconstruct time="10">
-      <Item identifier="titanium" copycondition="true"/>
+      <Item identifier="titanium" copycondition="true" />
       <Item identifier="aluminium" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
-      <RequiredSkill identifier="mechanical" level="25"/>
-      <RequiredItem identifier="aluminium"/>
-      <RequiredItem identifier="titanium"/>
+      <RequiredSkill identifier="mechanical" level="25" />
+      <RequiredItem identifier="aluminium" />
+      <RequiredItem identifier="titanium" />
     </Fabricate>
     <!--<InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64" />-->
-    <Sprite texture="Content/Items/Containers/crates.png" depth="0.54" sourcerect="344,197,117,89" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Containers/crates.png" depth="0.54" sourcerect="184,197,117,89" origin="0.5,0.5" />
     <Body width="115" height="88" density="50" />
-    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-40,30" handle2="40,30" aimable="false" msg="ItemMsgPickUpSelect"/>
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-40,30" handle2="40,30" aimable="false" msg="ItemMsgPickUpSelect" />
     <ItemContainer hideitems="true" capacity="1" drawinventory="false" canbeselected="false" ShowConditionInContainedStateIndicator="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
       <!-- we cheat a bit with ammunition boxes - they don't actually contain hundreds of rounds, 

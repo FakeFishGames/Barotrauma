@@ -13,7 +13,7 @@ namespace Barotrauma
             }
         }
 
-        public void ServerWrite(Lidgren.Network.NetBuffer message, Client client, object[] extraData = null)
+        public void ServerWrite(IWriteMessage message, Client client, object[] extraData = null)
         {
             if (GameMain.Server == null) return;
 

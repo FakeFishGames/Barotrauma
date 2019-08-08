@@ -257,11 +257,11 @@ namespace Barotrauma.Sounds
         {
             if (Disabled) { return -1; }
 
-            lock (playingChannels)
+            int poolIndex = (int)newChannel.Sound.SourcePoolIndex;
+            lock (playingChannels[poolIndex])
             {
                 //remove a channel that has stopped
                 //or hasn't even been assigned
-                int poolIndex = (int)newChannel.Sound.SourcePoolIndex;
                 for (int i = 0; i < playingChannels[poolIndex].Length; i++)
                 {
                     if (playingChannels[poolIndex][i] == null || !playingChannels[poolIndex][i].IsPlaying)
@@ -291,7 +291,7 @@ namespace Barotrauma.Sounds
         public bool IsPlaying(Sound sound)
         {
             if (Disabled) { return false; }
-            lock (playingChannels)
+            lock (playingChannels[(int)sound.SourcePoolIndex])
             {
                 for (int i = 0; i < playingChannels[(int)sound.SourcePoolIndex].Length; i++)
                 {
@@ -309,7 +309,7 @@ namespace Barotrauma.Sounds
         {
             if (Disabled) { return 0; }
             int count = 0;
-            lock (playingChannels)
+            lock (playingChannels[(int)sound.SourcePoolIndex])
             {
                 for (int i = 0; i < playingChannels[(int)sound.SourcePoolIndex].Length; i++)
                 {
@@ -326,7 +326,7 @@ namespace Barotrauma.Sounds
         public SoundChannel GetChannelFromSound(Sound sound)
         {
             if (Disabled) { return null; }
-            lock (playingChannels)
+            lock (playingChannels[(int)sound.SourcePoolIndex])
             {
                 for (int i = 0; i < playingChannels[(int)sound.SourcePoolIndex].Length; i++)
                 {
@@ -343,7 +343,7 @@ namespace Barotrauma.Sounds
         public void KillChannels(Sound sound)
         {
             if (Disabled) { return; }
-            lock (playingChannels)
+            lock (playingChannels[(int)sound.SourcePoolIndex])
             {
                 for (int i = 0; i < playingChannels[(int)sound.SourcePoolIndex].Length; i++)
                 {
@@ -384,9 +384,9 @@ namespace Barotrauma.Sounds
             {
                 categoryModifiers[category].First = gain;
             }
-            lock (playingChannels)
+            for (int i = 0; i < playingChannels.Length; i++)
             {
-                for (int i = 0; i < playingChannels.Length; i++)
+                lock (playingChannels[i])
                 {
                     for (int j = 0; j < playingChannels[i].Length; j++)
                     {
@@ -464,9 +464,9 @@ namespace Barotrauma.Sounds
             while (areStreamsPlaying)
             {
                 areStreamsPlaying = false;
-                lock (playingChannels)
+                for (int i = 0; i < playingChannels.Length; i++)
                 {
-                    for (int i = 0; i < playingChannels.Length; i++)
+                    lock (playingChannels[i])
                     {
                         for (int j = 0; j < playingChannels[i].Length; j++)
                         {
@@ -497,14 +497,14 @@ namespace Barotrauma.Sounds
                 Thread.Sleep(10); //TODO: use a separate thread for network audio?
             }
         }
-        
+
         public void Dispose()
         {
             if (Disabled) { return; }
 
-            lock (playingChannels)
+            for (int i = 0; i < playingChannels.Length; i++)
             {
-                for (int i = 0; i < playingChannels.Length; i++)
+                lock (playingChannels[i])
                 {
                     for (int j = 0; j < playingChannels[i].Length; j++)
                     {

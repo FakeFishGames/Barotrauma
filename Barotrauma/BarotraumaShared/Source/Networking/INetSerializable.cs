@@ -1,6 +1,4 @@
-﻿using Lidgren.Network;
-
-namespace Barotrauma.Networking
+﻿namespace Barotrauma.Networking
 {
     interface INetSerializable { }
 
@@ -10,10 +8,10 @@ namespace Barotrauma.Networking
     interface IClientSerializable : INetSerializable
     {
 #if CLIENT
-        void ClientWrite(NetBuffer msg, object[] extraData = null);
+        void ClientWrite(IWriteMessage msg, object[] extraData = null);
 #endif
 #if SERVER
-        void ServerRead(ClientNetObject type, NetBuffer msg, Client c);        
+        void ServerRead(ClientNetObject type, IReadMessage msg, Client c);        
 #endif
     }
 
@@ -23,10 +21,10 @@ namespace Barotrauma.Networking
     interface IServerSerializable : INetSerializable
     {
 #if SERVER
-        void ServerWrite(NetBuffer msg, Client c, object[] extraData = null);
+        void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null);
 #endif
 #if CLIENT
-        void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime);
+        void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime);
 #endif
     }
 }

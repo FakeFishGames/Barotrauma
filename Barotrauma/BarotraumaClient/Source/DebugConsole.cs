@@ -199,6 +199,7 @@ namespace Barotrauma
                     return client.HasPermission(ClientPermissions.Kick);
                 case "ban":
                 case "banip":
+                case "banendpoint":
                     return client.HasPermission(ClientPermissions.Ban);
                 case "unban":
                 case "unbanip":
@@ -317,7 +318,13 @@ namespace Barotrauma
 
         private static void AssignRelayToServer(string names, bool relay)
         {
-            commands.First(c => c.names.Intersect(names.Split('|')).Count() > 0).RelayToServer = relay;
+            Command command = commands.Find(c => c.names.Intersect(names.Split('|')).Count() > 0);
+            if (command == null)
+            {
+                DebugConsole.Log("Could not assign to relay to server: " + names);
+                return;
+            }
+            command.RelayToServer = relay;
         }
 
         private static void InitProjectSpecific()
@@ -358,16 +365,23 @@ namespace Barotrauma
                 }
             }));
 
-            commands.Add(new Command("startclient", "", (string[] args) =>
+            commands.Add(new Command("startlidgrenclient", "", (string[] args) =>
             {
                 if (args.Length == 0) return;
 
                 if (GameMain.Client == null)
                 {
-                    GameMain.Client = new GameClient("Name", args[0]);
+                    GameMain.Client = new GameClient("Name", args[0], 0);
                 }
             }));
 
+            commands.Add(new Command("startsteamp2pclient", "", (string[] args) =>
+            {
+                if (GameMain.Client == null)
+                {
+                    GameMain.Client = new GameClient("Name", null, 76561198977850505); //this is juan's alt account, feel free to abuse this one
+                }
+            }));
 
             commands.Add(new Command("enablecheats", "enablecheats: Enables cheat commands and disables Steam achievements during this play session.", (string[] args) =>
             {
@@ -465,6 +479,10 @@ namespace Barotrauma
 
             commands.Add(new Command("clientlist", "", (string[] args) => { }));
             AssignRelayToServer("clientlist", true);
+            commands.Add(new Command("say", "", (string[] args) => { }));
+            AssignRelayToServer("say", true);
+            commands.Add(new Command("msg", "", (string[] args) => { }));
+            AssignRelayToServer("msg", true);
             commands.Add(new Command("setmaxplayers|maxplayers", "", (string[] args) => { }));
             AssignRelayToServer("setmaxplayers", true);
             commands.Add(new Command("setpassword|password", "", (string[] args) => { }));
@@ -952,7 +970,36 @@ namespace Barotrauma
                 }
             }, isCheat: false));
 
+            commands.Add(new Command("setentityproperties", "setentityproperties [property name] [value]: Sets the value of some property on all selected items/structures in the sub editor.", (string[] args) =>
+            {
+                if (args.Length != 2 || Screen.Selected != GameMain.SubEditorScreen) { return; }
+                foreach (MapEntity me in MapEntity.SelectedList)
+                {
+                    if (me is ISerializableEntity serializableEntity)
+                    {
+                        if (serializableEntity.SerializableProperties == null)
+                        {
+                            continue;
+                        }
+                        if (!serializableEntity.SerializableProperties.TryGetValue(args[0].ToLowerInvariant(), out SerializableProperty property))
+                        {
+                            NewMessage("Property \"" + args[0] + "\" not found in the entity \"" + me.ToString() + "\".", Color.Orange);
+                            continue;
+                        }
+                        if (!property.TrySetValue(me, args[1]))
+                        {
+                            NewMessage("Failed to set the value of \"" + args[0] + "\" to \"" + args[1] + "\" on the entity \"" + me.ToString() + "\".", Color.Orange);
+                        }
+                    }
+                }
+            }));
+
 #if DEBUG
+            commands.Add(new Command("printreceivertransfers", "", (string[] args) =>
+            {
+                GameMain.Client.PrintReceiverTransters();
+            }));
+
             commands.Add(new Command("checkmissingloca", "", (string[] args) =>
             {
                 foreach (MapEntityPrefab me in MapEntityPrefab.List)
@@ -1416,11 +1463,11 @@ namespace Barotrauma
             );
 
             AssignOnClientExecute(
-                "banip",
+                "banendpoint|banip",
                 (string[] args) =>
                 {
                     if (GameMain.Client == null || args.Length == 0) return;
-                    ShowQuestionPrompt("Reason for banning the ip \"" + args[0] + "\"?", (reason) =>
+                    ShowQuestionPrompt("Reason for banning the endpoint \"" + args[0] + "\"?", (reason) =>
                     {
                         ShowQuestionPrompt("Enter the duration of the ban (leave empty to ban permanently, or use the format \"[days] d [hours] h\")", (duration) =>
                         {
@@ -1436,7 +1483,7 @@ namespace Barotrauma
                             }
 
                             GameMain.Client.SendConsoleCommand(
-                                "banip " +
+                                "banendpoint " +
                                 args[0] + " " +
                                 (banDuration.HasValue ? banDuration.Value.TotalSeconds.ToString() : "0") + " " +
                                 reason);
@@ -1777,6 +1824,21 @@ namespace Barotrauma
                         int.TryParse(args[4], out faceAttachmentIndex);
                     }
                     character.ReloadHead(id, hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
+                }
+            }, isCheat: true));
+
+            commands.Add(new Command("spawnsub", "spawnsub [subname]: Spawn a submarine at the position of the cursor", (string[] args) =>
+            {
+                try
+                {
+                    Submarine spawnedSub = Submarine.Load(args[0], false);
+                    spawnedSub.SetPosition(GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition));
+                }
+                catch (Exception e)
+                {
+                    string errorMsg = "Failed to spawn a submarine. Arguments: \"" + string.Join(" ", args) + "\".";
+                    ThrowError(errorMsg, e);
+                    GameAnalyticsManager.AddErrorEventOnce("DebugConsole.SpawnSubmarine:Error", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg + '\n' + e.Message + '\n' + e.StackTrace);
                 }
             }, isCheat: true));
         }

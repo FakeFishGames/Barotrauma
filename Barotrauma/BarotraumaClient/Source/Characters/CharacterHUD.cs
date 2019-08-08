@@ -210,7 +210,7 @@ namespace Barotrauma
 
                     GUI.DrawString(spriteBatch, textPos, focusName, nameColor, Color.Black * 0.7f, 2);
                     textPos.Y += offset.Y;
-                    if (character.FocusedCharacter.CanInventoryBeAccessed)
+                    if (character.FocusedCharacter.CanBeDragged)
                     {
                         GUI.DrawString(spriteBatch, textPos, GetCachedHudText("GrabHint", GameMain.Config.KeyBind(InputType.Grab).ToString()),
                             Color.LightGreen, Color.Black, 2, GUI.SmallFont);

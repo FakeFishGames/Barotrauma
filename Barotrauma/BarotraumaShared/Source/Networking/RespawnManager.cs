@@ -282,7 +282,7 @@ namespace Barotrauma.Networking
         {
             RespawnCharactersProjSpecific();
         }
-
+        
         public Vector2 FindSpawnPos()
         {
             if (Level.Loaded == null || Submarine.MainSub == null) { return Vector2.Zero; }
@@ -310,12 +310,11 @@ namespace Barotrauma.Networking
                 //make sure there aren't any walls too close
                 var tooCloseCells = Level.Loaded.GetTooCloseCells(potentialSpawnPos.Position.ToVector2(), Math.Max(minWidth, minHeight));
                 if (tooCloseCells.Any()) { continue; }
-
+                
                 //make sure the spawnpoint is far enough from other subs
                 foreach (Submarine sub in Submarine.Loaded)
                 {
                     if (sub == RespawnShuttle || RespawnShuttle.DockedTo.Contains(sub)) { continue; }
-
                     float minDist = Math.Max(Math.Max(minWidth, minHeight) + Math.Max(sub.Borders.Width, sub.Borders.Height), 10000.0f);
                     if (Vector2.DistanceSquared(sub.WorldPosition, potentialSpawnPos.Position.ToVector2()) < minDist * minDist)
                     {

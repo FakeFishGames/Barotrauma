@@ -1839,7 +1839,7 @@ namespace Barotrauma
             {
                 DeselectCharacter();
             }
-            else if (focusedCharacter != null && IsKeyHit(InputType.Grab) && FocusedCharacter.CanInventoryBeAccessed)
+            else if (focusedCharacter != null && IsKeyHit(InputType.Grab) && FocusedCharacter.CanBeDragged)
             {
                 SelectCharacter(focusedCharacter);
             }
@@ -1954,6 +1954,10 @@ namespace Barotrauma
                         //disable AI characters that are far away from the sub and the controlled character
                         float distSqr = Vector2.DistanceSquared(Submarine.MainSub.WorldPosition, c.WorldPosition);
                         if (Controlled != null)
+                        {
+                            distSqr = Math.Min(distSqr, Vector2.DistanceSquared(Controlled.WorldPosition, c.WorldPosition));
+                        }
+                        else
                         {
                             distSqr = Math.Min(distSqr, Vector2.DistanceSquared(GameMain.GameScreen.Cam.GetPosition(), c.WorldPosition));
                         }

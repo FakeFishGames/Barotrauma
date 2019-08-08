@@ -66,9 +66,9 @@ namespace Barotrauma
 
 
                     if (activeMonsters.Any()) { return; }
-#if CLIENT
+
                     ShowMessage(state);
-#endif
+
                     state = 1;
                     break;
             }

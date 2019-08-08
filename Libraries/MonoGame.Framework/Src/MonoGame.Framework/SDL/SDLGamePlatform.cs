@@ -132,9 +132,23 @@ namespace Microsoft.Xna.Framework
 
                     if (!_keys.Contains(key))
                         _keys.Add(key);
-                    char character = KeyboardUtil.ApplyModifiers((char)ev.Key.Keysym.Sym, ev.Key.Keysym.Mod);
-                    if (char.IsControl(character))
+
+                    //TODO: rethink all of this
+                    char character = (char)KeyboardUtil.ApplyModifiers(ev.Key.Keysym.Sym, ev.Key.Keysym.Mod);
+                    
+                    if ((int)((char)ev.Key.Keysym.Sym) != ev.Key.Keysym.Sym)
+                    {
+                        character = '\0';
+                    }
+
+                    if (char.IsControl(character) ||
+                        key == Keys.Left ||
+                        key == Keys.Right ||
+                        key == Keys.Up ||
+                        key == Keys.Down)
+                    {
                         _view.CallTextInput(character, key);
+                    }
                 }
                 else if (ev.Type == Sdl.EventType.KeyUp)
                 {

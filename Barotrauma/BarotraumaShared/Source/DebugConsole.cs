@@ -438,7 +438,7 @@ namespace Barotrauma
                 });
             }));
             
-            commands.Add(new Command("banip", "banip [ip]: Ban the IP address from the server.", null));
+            commands.Add(new Command("banendpoint|banip", "banendpoint [endpoint]: Ban the IP address/SteamID from the server.", null));
             
             commands.Add(new Command("teleportcharacter|teleport", "teleport [character name]: Teleport the specified character to the position of the cursor. If the name parameter is omitted, the controlled character will be teleported.", (string[] args) =>
             {
@@ -674,6 +674,11 @@ namespace Barotrauma
             },null));
 
 #if DEBUG
+            commands.Add(new Command("crash", "crash: Crashes the game.", (string[] args) =>
+            {
+                throw new Exception("crash command issued");
+            }));
+
             commands.Add(new Command("teleportsub", "teleportsub [start/end]: Teleport the submarine to the start or end of the level. WARNING: does not take outposts into account, so often leads to physics glitches. Only use for debugging.", (string[] args) =>
             {
                 if (Submarine.MainSub == null || Level.Loaded == null) return;
@@ -960,6 +965,7 @@ namespace Barotrauma
             }));
 
 #if DEBUG
+            /*TODO: reimplement
             commands.Add(new Command("simulatedlatency", "simulatedlatency [minimumlatencyseconds] [randomlatencyseconds]: applies a simulated latency to network messages. Useful for simulating real network conditions when testing the multiplayer locally.", (string[] args) =>
             {
                 if (args.Count() < 2 || (GameMain.NetworkMember == null)) return;
@@ -1029,7 +1035,7 @@ namespace Barotrauma
                 }
 #endif
                 NewMessage("Set packet duplication to " + (int)(duplicates * 100) + "%.", Color.White);
-            }));
+            }));*/
 #endif
 
             //"dummy commands" that only exist so that the server can give clients permissions to use them
@@ -1502,8 +1508,9 @@ namespace Barotrauma
         public static void NewMessage(string msg, Color color, bool isCommand = false)
         {
             if (string.IsNullOrEmpty((msg))) return;
-
+            
             var newMsg = new ColoredText(msg, color, isCommand);
+            
             lock (queuedMessages)
             {
                 queuedMessages.Enqueue(new ColoredText(msg, color, isCommand));

@@ -114,10 +114,13 @@ namespace Barotrauma
             if (IsMouseOver || (!RequireMouseOn && selectedWidgets.Contains(this) && PlayerInput.LeftButtonHeld()))
             {
                 Hovered?.Invoke();
-                if ((multiselect && !selectedWidgets.Contains(this)) || selectedWidgets.None())
+                if (RequireMouseOn || PlayerInput.LeftButtonDown())
                 {
-                    selectedWidgets.Add(this);
-                    Selected?.Invoke();
+                    if ((multiselect && !selectedWidgets.Contains(this)) || selectedWidgets.None())
+                    {
+                        selectedWidgets.Add(this);
+                        Selected?.Invoke();
+                    }
                 }
             }
             else if (selectedWidgets.Contains(this))
