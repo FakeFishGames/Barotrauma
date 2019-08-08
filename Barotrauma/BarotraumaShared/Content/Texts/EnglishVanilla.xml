@@ -3373,6 +3373,7 @@
   <pumpautocontrol>Automatic control</pumpautocontrol>
   <viewsteamprofile>View Steam profile</viewsteamprofile>
   <deletefileverification>Do you want to delete [filename]?</deletefileverification>
+  <connection.activate>activate</connection.activate>
 
   <!-- Submarine labels -->
   <label.betadeck>Beta Deck</label.betadeck>
