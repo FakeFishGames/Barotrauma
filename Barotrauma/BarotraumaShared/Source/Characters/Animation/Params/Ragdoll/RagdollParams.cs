@@ -270,17 +270,17 @@ namespace Barotrauma
             {
                 return Load(FullPath, SpeciesName);
             }
-            Deserialize(OriginalElement, recursive: true);
-            GetAllSubParams().ForEach(sp => sp.Reset());
+            Deserialize(OriginalElement, alsoChildren: true);
+            //GetAllSubParams().ForEach(sp => sp.Reset());
             return true;
         }
 
         protected void CreateColliders()
         {
             ColliderParams.Clear();
-            for (int i = 0; i < MainElement.Elements("collider").Count(); i++)
+            for (int i = 0; i < MainElement.GetChildElements("collider").Count(); i++)
             {
-                var element = MainElement.Elements("collider").ElementAt(i);
+                var element = MainElement.GetChildElements("collider").ElementAt(i);
                 string name = i > 0 ? "Secondary Collider" : "Main Collider";
                 ColliderParams.Add(new ColliderParams(element, this, name));
             }
@@ -289,7 +289,7 @@ namespace Barotrauma
         protected void CreateLimbs()
         {
             Limbs.Clear();
-            foreach (var element in MainElement.Elements("limb"))
+            foreach (var element in MainElement.GetChildElements("limb"))
             {
                 Limbs.Add(new LimbParams(element, this));
             }
@@ -299,32 +299,32 @@ namespace Barotrauma
         protected void CreateJoints()
         {
             Joints.Clear();
-            foreach (var element in MainElement.Elements("joint"))
+            foreach (var element in MainElement.GetChildElements("joint"))
             {
                 Joints.Add(new JointParams(element, this));
             }
         }
 
-        protected bool Deserialize(XElement element = null, bool recursive = true)
+        protected bool Deserialize(XElement element = null, bool alsoChildren = true, bool recursive = true)
         {
             if (base.Deserialize(element))
             {
-                if (recursive)
+                if (alsoChildren)
                 {
-                    GetAllSubParams().ForEach(p => p.Deserialize());
+                    GetAllSubParams().ForEach(p => p.Deserialize(recursive: recursive));
                 }
                 return true;
             }
             return false;
         }
 
-        protected bool Serialize(XElement element = null, bool recursive = true)
+        protected bool Serialize(XElement element = null, bool alsoChildren = true, bool recursive = true)
         {
             if (base.Serialize(element))
             {
-                if (recursive)
+                if (alsoChildren)
                 {
-                    GetAllSubParams().ForEach(p => p.Serialize());
+                    GetAllSubParams().ForEach(p => p.Serialize(recursive: recursive));
                 }
                 return true;
             }
@@ -386,7 +386,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError("[RagdollParams] The source XML Element of the given RagdollParams is null!");
                 return;
             }
-            Deserialize(source.MainElement, recursive: false);
+            Deserialize(source.MainElement, alsoChildren: false);
             var sourceSubParams = source.GetAllSubParams().ToList();
             var subParams = GetAllSubParams().ToList();
             // TODO: cannot currently undo joint/limb deletion.

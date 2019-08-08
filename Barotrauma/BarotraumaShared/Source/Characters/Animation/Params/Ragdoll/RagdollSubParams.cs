@@ -400,7 +400,7 @@ namespace Barotrauma
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
             if (recursive)
             {
-                SubParams.ForEach(sp => sp.Deserialize());
+                SubParams.ForEach(sp => sp.Deserialize(recursive: true));
             }
             return SerializableProperties != null;
         }
@@ -411,7 +411,7 @@ namespace Barotrauma
             SerializableProperty.SerializeProperties(this, element, true);
             if (recursive)
             {
-                SubParams.ForEach(sp => sp.Serialize());
+                SubParams.ForEach(sp => sp.Serialize(recursive: true));
             }
             return true;
         }
