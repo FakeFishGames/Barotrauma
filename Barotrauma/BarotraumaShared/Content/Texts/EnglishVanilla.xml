@@ -97,7 +97,6 @@
   <maxplayers>Max players</maxplayers>
   <password>Password</password>
   <publicserver>Public server</publicserver>
-  <publicservertooltip>Public servers are shown in the list of available servers in the 'Join Server' tab.</publicservertooltip>
   <attemptupnp>Attempt UPnP port forwarding</attemptupnp>
   <attemptupnptooltip>UPnP can be used for forwarding ports on your router to allow players to join the server. However, UPnP isn't supported by all routers, so you may need to setup port forwards manually if players are unable to join the server (see the readme for instructions).</attemptupnptooltip>
   <startserverbutton>Start</startserverbutton>
@@ -3463,4 +3462,5 @@
 
   <karmabanwarning>WARNING: Your karma is dangerously low. You will be banned from the server if it decreases further.</karmabanwarning>
   <nosubscribedmods>You haven't subscribed to any mods on the Steam Workshop. Select the 'Popular mods' tab to find some!</nosubscribedmods>
+  <publicservertooltip>Public servers are shown in the list of available servers in the 'Server Browser'.</publicservertooltip>
 </infotexts>
