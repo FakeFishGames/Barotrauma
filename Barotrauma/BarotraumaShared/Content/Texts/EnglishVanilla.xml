@@ -3293,11 +3293,22 @@
   <flood_1_GoalInfoText_2>Retrieve the explosives from the medbay.</flood_1_GoalInfoText_2>
   <flood_1_objectiveSuccessMessage2>The plan is coming together perfectly, you grab the explosives and try not to giggle too much.</flood_1_objectiveSuccessMessage2>
   <flood_1_traitorobjectivestartmessage3>Finally, the painted man said you'll need to find something to set this all off!\n[traitorgoalinfos]</flood_1_traitorobjectivestartmessage3>
-  <flood_1_GoalInfoText_3>Search the supply cabinets around the sub and retrieve the detonator.</flood_1_GoalInfoText_3>
+  <flood_1_GoalInfoText_3>Search the steel storage cabinets around the sub and retrieve the detonator.</flood_1_GoalInfoText_3>
   <flood_1_objectiveSuccessMessage3>The operative really came through! You have all you need now to get the party here started.</flood_1_objectiveSuccessMessage3>
   <flood_1_traitorobjectivestartmessage4>You're going need to set the detonator on a wall in a good location, place the button a safe distance away, wire the two together, then set it all off to flood this rust bucket!\n[traitorgoalinfos]</flood_1_traitorobjectivestartmessage4>
   <flood_1_objectiveSuccessMessage4>HONK HONK! There's more than enough water in the sub now to end its mission prematurely. You wonder how long it will take to swim to the nearest outpost and report back to the painted man...</flood_1_objectiveSuccessMessage4>
   
+  <!-- flood_2 traitor mission text package -->
+  <flood_2_traitormissionStartInfoText>Scanning furtively around, you notice nobody's looking at you, Which makes this the perfect time to snap into action.</flood_2_traitormissionStartInfoText>
+  <flood_2_traitorobjectivestartmessage1>You've spent months gaining the trust of this crew, and it's all about to pay off:\n[traitorgoalinfos]</flood_2_traitorobjectivestartmessage1>
+  <flood_2_GoalInfoText_1>Search the emergency supply cabinets around the sub, one of the diving masks has a small low frequency reciever hidden in it which you'll need to get your objectives.</flood_2_GoalInfoText_1>
+  <flood_2_objectiveSuccessMessage1>You find the tiny radio reciever and activate it.</flood_2_objectiveSuccessMessage1>
+  <flood_2_traitorobjectivestartmessage2>The reciever crackles and whistles as a weak signal is recieved - "Europan Resistance direct action, you are clear to go ahead with the mission: Start by creating a distraction.\n[traitorgoalinfos]</flood_2_traitorobjectivestartmessage2>
+  <flood_2_objectiveSuccessMessage2>"Well done, without oxygen, we'll have those pigs in a panic soon enough."</flood_2_objectiveSuccessMessage2>
+  <flood_2_traitorobjectivestartmessage3>"Now cause a little flood and watch the fascists sqeal":\n[traitorgoalinfos]</flood_2_traitorobjectivestartmessage3>
+  <flood_2_objectiveSuccessMessage3>"Excellent! Remember comrade, there are no bad tactics, only bad targets!"</flood_2_objectiveSuccessMessage3>
+  <flood_2_traitorobjectivestartmessage4>"Quickly, capitalize on the confusion and take out the worst of those pigs while you can!"\n[traitorgoalinfos]</flood_2_traitorobjectivestartmessage4>
+  <flood_2_objectiveSuccessMessage4>As you take their life you note, perhaps with a little bitterness, that your reciever has gone dead quite suddenly. Your comrades have left you to the mercy of Mother Europa.</flood_2_objectiveSuccessMessage4>
   
   
   <entityname.flamer>Flamer</entityname.flamer>

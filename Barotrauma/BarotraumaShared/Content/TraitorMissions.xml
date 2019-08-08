@@ -240,5 +240,48 @@
   </TraitorMission>
 
 
+  <TraitorMission identifier="flood2">
+
+    <StartInfoText id="flood_2_traitormissionStartInfoText"/>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="flood_2_objectiveSuccessMessage1"/>
+      <StartMessage id="flood_2_traitorobjectivestartmessage1"/>
+      <Goal type="finditem" identifier="divingmask" allowedContainers="suppliescabinet">
+        <InfoText id="flood_2_GoalInfoText_1"/>
+      </Goal>
+    </Objective>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="flood_2_objectiveSuccessMessage2"/>
+      <StartMessage id="flood_2_traitorobjectivestartmessage2"/>
+      <Goal type="destroyitems" tag="oxygensource" percentage="50">
+        <InfoText id="traitorgoaldestroyitems" />
+      </Goal>
+    </Objective>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="flood_2_objectiveSuccessMessage3"/>
+      <StartMessage id="flood_2_traitorobjectivestartmessage3"/>
+      <Goal type="floodsub" percentage="25">
+        <InfoText id="traitorgoalfloodpercentofsub"/>
+      </Goal>
+    </Objective>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="flood_2_objectiveSuccessMessage4" />
+      <StartMessage id="flood_2_traitorobjectivestartmessage4"/>
+      <Goal type="killtarget">
+        <InfoText id="traitorgoalkilltargetinfo" />
+      </Goal>
+    </Objective>
+
+  </TraitorMission>
+
+
 
 </TraitorMissions>
