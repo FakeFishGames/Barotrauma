@@ -3285,18 +3285,16 @@
   <MVPobjectiveSuccessMessage3>With that, there is nothing more to do. The sub is in disarray, the voice in your head grows silent, and your fate is sealed.</MVPobjectiveSuccessMessage3>
   
   <!-- flood_1 traitor mission text package -->
-  <flood_1_traitormissionStartInfoText>HONK!</flood_1_traitormissionStartInfoText>
-  <flood_1_traitorobjectivestartmessage1>It's time. As the man with the strange painted face instructed you, back at the loading dock in Minos Linea, you get to work:\n[traitorgoalinfos]</flood_1_traitorobjectivestartmessage1>
+  <flood_1_traitormissionStartInfoText>Praise the Honkmother!</flood_1_traitormissionStartInfoText>
+  <flood_1_traitorobjectivestartmessage1>It's time. As the man with the strange painted face instructed you back on the loading dock at Minos Linea, you get to work:\n[traitorgoalinfos]</flood_1_traitorobjectivestartmessage1>
   <flood_1_GoalInfoText_1>Search the emergency supplies lockers in each compartment, an operative has hidden a button component in one of them.</flood_1_GoalInfoText_1>
   <flood_1_objectiveSuccessMessage1>You quickly stash the button in your pocket and try to act casual. HONK!</flood_1_objectiveSuccessMessage1>
   <flood_1_traitorobjectivestartmessage2>Next, you'll need to find some explosives before anyone else can get to them!\n[traitorgoalinfos]</flood_1_traitorobjectivestartmessage2>
   <flood_1_GoalInfoText_2>Retrieve the explosives from the medbay.</flood_1_GoalInfoText_2>
   <flood_1_objectiveSuccessMessage2>The plan is coming together perfectly, you grab the explosives and try not to giggle too much.</flood_1_objectiveSuccessMessage2>
-  
   <flood_1_traitorobjectivestartmessage3>Finally, the painted man said you'll need to find something to set this all off!\n[traitorgoalinfos]</flood_1_traitorobjectivestartmessage3>
   <flood_1_GoalInfoText_3>Search the supply cabinets around the sub and retrieve the detonator.</flood_1_GoalInfoText_3>
   <flood_1_objectiveSuccessMessage3>The operative really came through! You have all you need now to get the party here started.</flood_1_objectiveSuccessMessage3>
-  
   <flood_1_traitorobjectivestartmessage4>You're going need to set the detonator on a wall in a good location, place the button a safe distance away, wire the two together, then set it all off to flood this rust bucket!\n[traitorgoalinfos]</flood_1_traitorobjectivestartmessage4>
   <flood_1_objectiveSuccessMessage4>HONK HONK! There's more than enough water in the sub now to end its mission prematurely. You wonder how long it will take to swim to the nearest outpost and report back to the painted man...</flood_1_objectiveSuccessMessage4>
   
