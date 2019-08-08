@@ -36,6 +36,7 @@ namespace Barotrauma
 
         public List<CharacterSubParams> SubParams { get; private set; } = new List<CharacterSubParams>();
         public HealthParams Health { get; private set; }
+        public AIParams AI { get; private set; }
 
         /* 
          * 
@@ -89,11 +90,20 @@ namespace Barotrauma
         protected void CreateSubParams()
         {
             SubParams.Clear();
-            foreach (var element in MainElement.GetChildElements("health"))
+            var health = MainElement.GetChildElement("health");
+            if (health != null)
             {
-                Health = new HealthParams(element, this);
+                Health = new HealthParams(health, this);
                 SubParams.Add(Health);
             }
+            // TODO: support for multiple ai elements?
+            var ai = MainElement.GetChildElement("ai");
+            if (ai != null)
+            {
+                AI = new AIParams(ai, this);
+                SubParams.Add(AI);
+            }
+
             // TODO: create other sub params
         }
 
@@ -160,6 +170,38 @@ namespace Barotrauma
         // TODO: limbhealths, sprite?
 
         public HealthParams(XElement element, CharacterParams character) : base(element, character) { }
+    }
+
+    class AIParams : CharacterSubParams
+    {
+        public AIParams(XElement element, CharacterParams character) : base(element, character) { }
+
+        [Serialize(1.0f, true), Editable]
+        public float CombatStrength { get; private set; }
+
+        [Serialize(0.5f, true), Editable(minValue: 0f, maxValue: 2f)]
+        public float Sight { get; private set; }
+
+        [Serialize(0.5f, true), Editable(minValue: 0f, maxValue: 2f)]
+        public float Hearing { get; private set; }
+
+        [Serialize(100f, true), Editable]
+        public float AggressionHurt { get; private set; }
+
+        [Serialize(10f, true), Editable]
+        public float AggressionGreed { get; private set; }
+
+        [Serialize(0f, true), Editable]
+        public float FleeHealthThreshold { get; private set; }
+
+        [Serialize(false, true), Editable]
+        public bool AttackOnlyWhenProvoked { get; private set; }
+
+        [Serialize(false, true), Editable]
+        public bool AggressiveBoarding { get; private set; }
+
+
+        // TODO: targeting priorities, latchonto, swarming
     }
 
     abstract class CharacterSubParams : ISerializableEntity

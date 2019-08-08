@@ -28,7 +28,7 @@
     attackpriorityhumans="0.0"
     attackpriorityrooms="0.0"
     combatstrength="1000"
-    attackwhenprovoked="true"
+    attackonlywhenprovoked="true"
     sight="1.0"
     hearing="0.0">
     <targetpriority tag="decoy" state="Attack" priority="600" />
