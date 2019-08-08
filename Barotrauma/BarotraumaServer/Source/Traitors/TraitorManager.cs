@@ -35,6 +35,9 @@ namespace Barotrauma
             }
             if (server == null) return;
             Mission = TraitorMissionPrefab.RandomPrefab()?.Instantiate();
+
+            // TODO(xxx): Make sure we don't mess up the level seed
+            Rand.SetSyncedSeed((int)System.DateTime.UtcNow.Ticks);
             if (Mission != null)
             {
                 Mission.Start(server, "traitor");
