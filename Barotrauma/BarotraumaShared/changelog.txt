@@ -26,6 +26,9 @@ New items and structures:
 - Fun stuff: accordion, captain's pipe, toy hammer.
 - Tons of new decorative submarine pieces for the sub editor.
 
+New submarine:
+- Berilia, a submarine for 16 players
+
 Bugfixes:
 - Fixed crashing when selecting doors or gaps in the sub editor.
 - Fixed crashing when combining items inside an ItemContainer (e.g. cabinet, deconstructor).
@@ -91,6 +94,7 @@ limb slot (for example, when moving a flashlight from a hand slot to the head sl
 - Fixed discrepancies in door welding & repairing logic regarding collision.
 - Fixed a crash when retrieving lobby information with an uninitialized IP.
 - Fixed max player count in server list & duplicate lobby entries
+- Fixed arrow keys not changing caret position when typing
 
 Misc additions and changes:
 - Respawn shuttles now spawn inside the level somewhere near the submarine, instead of always spawning
