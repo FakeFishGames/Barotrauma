@@ -384,7 +384,7 @@ namespace Barotrauma
             return FormatServerMessage(message, keys.Concat(genderPronounVariables), values.Concat(gender == Gender.Male ? genderPronounMaleValues : genderPronounFemaleValues));
         }
 
-        static readonly Regex reReplacedMessage = new Regex(@"^(?<variable>[\[\].A-Za-z0-9]+?)=(?<message>.*)$", RegexOptions.Compiled);
+        static readonly Regex reReplacedMessage = new Regex(@"^(?<variable>[\[\].A-Za-z0-9_]+?)=(?<message>.*)$", RegexOptions.Compiled);
 
         // Format: ServerMessage.Identifier1/ServerMessage.Indentifier2~[variable1]=value~[variable2]=value
         // Also: replacement=ServerMessage.Identifier1~[variable1]=value/ServerMessage.Identifier2~[variable2]=replacement
