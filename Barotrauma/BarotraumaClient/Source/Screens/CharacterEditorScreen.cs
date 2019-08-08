@@ -2332,7 +2332,7 @@ namespace Barotrauma
                     return false;
                 }
 #endif
-                character.CharacterParams.Save();
+                character.Params.Save();
                 GUI.AddMessage(GetCharacterEditorTranslation("CharacterSavedTo").Replace("[path]", CharacterParams.FullPath), Color.Green, font: GUI.Font, lifeTime: 5);
                 character.AnimController.SaveRagdoll();
                 ragdollResetRequiresForceLoading = true;
@@ -2782,7 +2782,7 @@ namespace Barotrauma
         #endregion
 
         #region Params
-        private CharacterParams CharacterParams => character.CharacterParams;
+        private CharacterParams CharacterParams => character.Params;
         private List<AnimationParams> AnimParams => character.AnimController.AllAnimParams;
         private AnimationParams CurrentAnimation => character.AnimController.CurrentAnimationParams;
         private RagdollParams RagdollParams => character.AnimController.RagdollParams;

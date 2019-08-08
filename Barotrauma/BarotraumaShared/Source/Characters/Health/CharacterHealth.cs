@@ -82,28 +82,28 @@ namespace Barotrauma
 
         protected float maxVitality
         {
-            get => Character.CharacterParams.Health.Vitality;
-            set => Character.CharacterParams.Health.Vitality = value;
+            get => Character.Params.Health.Vitality;
+            set => Character.Params.Health.Vitality = value;
         }
 
         public bool Unkillable;
 
         public bool DoesBleed
         {
-            get => Character.CharacterParams.Health.DoesBleed;
-            private set => Character.CharacterParams.Health.DoesBleed = value;
+            get => Character.Params.Health.DoesBleed;
+            private set => Character.Params.Health.DoesBleed = value;
         }
 
         public bool UseHealthWindow
         {
-            get => Character.CharacterParams.Health.UseHealthWindow;
-            set => Character.CharacterParams.Health.UseHealthWindow = value;
+            get => Character.Params.Health.UseHealthWindow;
+            set => Character.Params.Health.UseHealthWindow = value;
         }
 
         public float CrushDepth
         {
-            get => Character.CharacterParams.Health.CrushDepth;
-            private set => Character.CharacterParams.Health.CrushDepth = value;
+            get => Character.Params.Health.CrushDepth;
+            private set => Character.Params.Health.CrushDepth = value;
         }
 
         private List<LimbHealth> limbHealths = new List<LimbHealth>();

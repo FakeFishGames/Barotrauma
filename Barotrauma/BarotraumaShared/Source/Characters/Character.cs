@@ -103,24 +103,24 @@ namespace Barotrauma
         public Character LastAttacker;
         public Entity LastDamageSource;
 
-        public readonly CharacterParams CharacterParams;
-        public string SpeciesName => CharacterParams.SpeciesName;
-        public bool IsHumanoid => CharacterParams.Humanoid;
-        public bool IsHusk => CharacterParams.Husk;
+        public readonly CharacterParams Params;
+        public string SpeciesName => Params.SpeciesName;
+        public bool IsHumanoid => Params.Humanoid;
+        public bool IsHusk => Params.Husk;
         public bool CanSpeak
         {
-            get => CharacterParams.CanSpeak;
-            set => CharacterParams.CanSpeak = value;
+            get => Params.CanSpeak;
+            set => Params.CanSpeak = value;
         }
         public bool NeedsAir
         {
-            get => CharacterParams.NeedsAir;
-            set => CharacterParams.NeedsAir = value;
+            get => Params.NeedsAir;
+            set => Params.NeedsAir = value;
         }
         public float Noise
         {
-            get => CharacterParams.Noise;
-            set => CharacterParams.Noise = value;
+            get => Params.Noise;
+            set => Params.Noise = value;
         }
 
         private float attackCoolDown;
@@ -696,7 +696,7 @@ namespace Barotrauma
             lowPassMultiplier = 1.0f;
 
             Properties = SerializableProperty.GetProperties(this);
-            CharacterParams = new CharacterParams(file);
+            Params = new CharacterParams(file);
 
             Info = characterInfo;
             if (file == HumanConfigFile || file.ToLowerInvariant().Contains("human"))
