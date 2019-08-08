@@ -7,6 +7,8 @@ using System.ComponentModel;
 using FarseerPhysics;
 using Barotrauma.Items.Components;
 using System.Threading;
+using System.IO;
+using System.Text;
 
 namespace Barotrauma
 {
@@ -49,6 +51,7 @@ namespace Barotrauma
         }
 
         public static List<string> QueuedCommands = new List<string>();
+        public static Thread InputThread;
 
         public static void Update()
         {
@@ -58,6 +61,30 @@ namespace Barotrauma
                 {
                     ExecuteCommand(QueuedCommands[0]);
                     QueuedCommands.RemoveAt(0);
+                }
+            }
+            if (InputThread == null)
+            {
+                lock (queuedMessages)
+                {
+                    while (queuedMessages.Count > 0)
+                    {
+                        var msg = queuedMessages.Dequeue();
+                        Messages.Add(msg);
+                        if (GameSettings.SaveDebugConsoleLogs)
+                        {
+                            unsavedMessages.Add(msg);
+                            if (unsavedMessages.Count >= messagesPerFile)
+                            {
+                                SaveLogs();
+                                unsavedMessages.Clear();
+                            }
+                        }
+                    }
+                    if (Messages.Count > MaxMessages)
+                    {
+                        Messages.RemoveRange(0, Messages.Count - MaxMessages);
+                    }
                 }
             }
         }
@@ -91,6 +118,7 @@ namespace Barotrauma
                             while (queuedMessages.Count > 0)
                             {
                                 ColoredText msg = queuedMessages.Dequeue();
+                                Messages.Add(msg);
                                 if (GameSettings.SaveDebugConsoleLogs)
                                 {
                                     unsavedMessages.Add(msg);
@@ -112,6 +140,10 @@ namespace Barotrauma
                                 Console.WriteLine(msgTxt);
                             }
                             RewriteInputToCommandLine(input);
+                        }
+                        if (Messages.Count > MaxMessages)
+                        {
+                            Messages.RemoveRange(0, Messages.Count - MaxMessages);
                         }
                     }
 
@@ -185,6 +217,25 @@ namespace Barotrauma
             {
                 //don't have anything to do here yet
             }
+#if !DEBUG
+            catch (Exception exception)
+            {
+                StreamWriter sw = new StreamWriter("inputthreadcrash.log");
+
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine("Barotrauma Dedicated Server input thread crash report (generated on " + DateTime.Now + ")");
+                sb.AppendLine("\n");
+                sb.AppendLine("Exception: " + exception.Message);
+                sb.AppendLine("Target site: " + exception.TargetSite.ToString());
+                sb.AppendLine("Stack trace: ");
+                sb.AppendLine(exception.StackTrace);
+
+                sw.WriteLine(sb.ToString());
+                sw.Close();
+
+                GameMain.ShouldRun = false;
+            }
+#endif
         }
 
         private static void RewriteInputToCommandLine(string input)

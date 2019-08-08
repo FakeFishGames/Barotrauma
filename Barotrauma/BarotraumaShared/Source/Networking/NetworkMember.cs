@@ -90,6 +90,7 @@ namespace Barotrauma.Networking
         Banned,
         Kicked,
         ServerShutdown,
+        ServerCrashed,
         ServerFull,
         AuthenticationRequired,
         SteamAuthenticationRequired,

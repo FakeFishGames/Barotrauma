@@ -596,12 +596,12 @@ namespace Barotrauma.Networking
                 VoipClient?.SendToServer();
             }
 
-            if (IsServerOwner)
+            if (IsServerOwner && connected && !connectCancelled)
             {
                 if (GameMain.ServerChildProcess?.HasExited??true)
                 {
                     Disconnect();
-                    var msgBox = new GUIMessageBox(TextManager.Get("ConnectionLost"), TextManager.Get("ServerApplicationClosed"));
+                    var msgBox = new GUIMessageBox(TextManager.Get("ConnectionLost"), TextManager.Get("ServerProcessClosed"));
                     msgBox.Buttons[0].OnClicked += ReturnToPreviousMenu;
                 }
             }
@@ -794,10 +794,15 @@ namespace Barotrauma.Networking
                 {
                     DebugConsole.NewMessage("Do not attempt to reconnect (DisconnectReason doesn't allow reconnection).");
                     msg = TextManager.Get("DisconnectReason." + disconnectReason.ToString());
-
+                    
                     for (int i = 1; i < splitMsg.Length; i++)
                     {
                         msg += TextManager.GetServerMessage(splitMsg[i]);
+                    }
+
+                    if (disconnectReason == DisconnectReason.ServerCrashed && IsServerOwner)
+                    {
+                        msg = TextManager.Get("ServerProcessCrashed");
                     }
                 }
 

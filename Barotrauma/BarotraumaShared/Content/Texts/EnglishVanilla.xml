@@ -570,7 +570,8 @@
   <connectionlostreconnecting>You have been disconnected from the server. Reconnecting...</connectionlostreconnecting>
   <connectionfailed>Connecting failed</connectionfailed>
   <connectingto>Connecting to [serverip]</connectingto>
-  <serverapplicationclosed>The server process has closed.</serverapplicationclosed>
+  <serverprocessclosed>The server process has closed unexpectedly. A crash report (servercrashreport.log) may have been generated in the game's root directory.</serverprocessclosed>
+  <serverprocesscrashed>The server process has crashed. A crash report (servercrashreport.log) has been generated in the game's root directory.</serverprocesscrashed>
   <serverfullquestionprompt>Do you want to join the server queue and wait for a slot to free up?</serverfullquestionprompt>
   <serverqueue>Queue</serverqueue>
   <serverqueuepleasewait>Please wait...</serverqueuepleasewait>
@@ -584,6 +585,7 @@
   <disconnectreason.banned>You have been banned from the server.</disconnectreason.banned>
   <disconnectreason.kicked>You have been kicked from the server.</disconnectreason.kicked>
   <disconnectreason.servershutdown>The server has shut down.</disconnectreason.servershutdown>
+  <disconnectreason.servercrashed>The server has crashed.</disconnectreason.servercrashed>
   <disconnectreason.serverfull>The server is full.</disconnectreason.serverfull>
   <disconnectreason.authenticationrequired>Client did not properly request authentication.</disconnectreason.authenticationrequired>
   <disconnectreason.steamauthenticationrequired>Steam authentication required. Please make sure Steam is running and you are logged in to an account.</disconnectreason.steamauthenticationrequired>

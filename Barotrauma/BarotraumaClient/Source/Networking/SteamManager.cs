@@ -98,15 +98,29 @@ namespace Barotrauma.Steam
 
                 tempServer.LogOnAnonymous();
                 lobbyIP = "";
+                string error = "Timed out.";
                 for (int i = 0; i < 30*60; i++)
                 {
+                    if (instance.client.Lobby.CurrentLobby == 0)
+                    {
+                        error = "";
+                        break;
+                    }
                     tempServer.Update();
                     tempServer.ForceHeartbeat();
                     if (tempServer.PublicIp != null)
                     {
-                        lobbyIP = tempServer.PublicIp.ToString();
-                        DebugConsole.NewMessage("Successfully retrieved public IP: "+lobbyIP, Microsoft.Xna.Framework.Color.Lime);
-                        instance.client.Lobby.CurrentLobbyData.SetData("hostipaddress", lobbyIP);
+                        if (instance.client.Lobby.CurrentLobby != 0)
+                        {
+                            lobbyIP = tempServer.PublicIp.ToString();
+                            DebugConsole.NewMessage("Successfully retrieved public IP: " + lobbyIP, Microsoft.Xna.Framework.Color.Lime);
+                            instance.client.Lobby.CurrentLobbyData.SetData("hostipaddress", lobbyIP);
+                        }
+                        else
+                        {
+                            error = "";
+                            lobbyIP = "";
+                        }
                         break;
                     }
                     Thread.Sleep(16);
@@ -114,9 +128,9 @@ namespace Barotrauma.Steam
 
                 tempServer.Dispose();
                 tempServer = null;
-                if (string.IsNullOrWhiteSpace(lobbyIP))
+                if (string.IsNullOrWhiteSpace(lobbyIP) && !string.IsNullOrWhiteSpace(error))
                 {
-                    DebugConsole.ThrowError("Failed to retrieve public IP: Timed out.");
+                    DebugConsole.ThrowError("Failed to retrieve public IP: "+error);
                 }
             }
             catch
@@ -136,6 +150,7 @@ namespace Barotrauma.Steam
                     lobbyState = LobbyState.NotOwner;
                     return;
                 }
+                
                 DebugConsole.NewMessage("Lobby created!", Microsoft.Xna.Framework.Color.Lime);
 
                 lobbyIPRetrievalThread?.Abort();
@@ -144,7 +159,7 @@ namespace Barotrauma.Steam
                 lobbyIPRetrievalThread = new Thread(new ThreadStart(RetrieveLobbyIP));
                 lobbyIPRetrievalThread.IsBackground = true;
                 lobbyIPRetrievalThread.Start();
-
+                
                 lobbyState = LobbyState.Owner;
                 UpdateLobby(serverSettings);
             };
@@ -156,6 +171,11 @@ namespace Barotrauma.Steam
         
         public static void UpdateLobby(ServerSettings serverSettings)
         {
+            if (GameMain.Client == null)
+            {
+                LeaveLobby();
+            }
+
             if (lobbyState == LobbyState.NotOwner)
             {
                 CreateLobby(serverSettings);

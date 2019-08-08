@@ -637,6 +637,10 @@ namespace Barotrauma.Networking
                 OnDisconnect?.Invoke(conn, msg);
                 Steam.SteamManager.StopAuthSession(conn.SteamID);
             }
+            else if (steamp2pConn == OwnerConnection)
+            {
+                netConnection.Disconnect(msg);
+            }
         }
 
         public override void Disconnect(NetworkConnection conn, string msg = null)
