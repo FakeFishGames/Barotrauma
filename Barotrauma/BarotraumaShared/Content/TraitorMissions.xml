@@ -195,6 +195,49 @@
     </Objective>
 
   </TraitorMission>
+  
+
+  <TraitorMission identifier="flood_1">
+
+    <StartInfoText id="flood_1_traitormissionStartInfoText" />
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="flood_1_objectiveSuccessMessage1" />
+      <StartMessage id="flood_1_traitorobjectivestartmessage1"/>
+      <Goal type="finditem" identifier="button" allowedContainers="suppliescabinet">
+        <InfoText id="flood_1_GoalInfoText_1" />
+      </Goal>
+    </Objective>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="flood_1_objectiveSuccessMessage2" />
+      <StartMessage id="flood_1_traitorobjectivestartmessage2"/>
+      <Goal type="finditem" identifier="uex" allowedContainers="medcabinet, toxcabinet">
+        <InfoText id="flood_1_GoalInfoText_2" />
+      </Goal>
+    </Objective>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="flood_1_objectiveSuccessMessage3" />
+      <StartMessage id="flood_1_traitorobjectivestartmessage3"/>
+      <Goal type="finditem" identifier="detonator" allowedContainers="mediumsteelcabinet, mediumwindowedsteelcabinet, steelcabinet">
+        <InfoText id="flood_1_GoalInfoText_3" />
+      </Goal>
+    </Objective>
+    
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="flood_1_objectiveSuccessMessage4" />
+      <StartMessage id="flood_1_traitorobjectivestartmessage4"/>
+      <Goal type="floodsub" percentage="75">
+        <InfoText id="traitorgoalfloodpercentofsub" />
+      </Goal>
+    </Objective>
+
+  </TraitorMission>
 
 
 
