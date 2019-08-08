@@ -3237,19 +3237,12 @@
   <traitorgoaltimelimitfailure>You failed to complete your objective in time.</traitorgoaltimelimitfailure>
   <traitorgoalkilltargetinfo>Assassinate [targetname].</traitorgoalkilltargetinfo>
   <traitorgoalkilleveryoneinfo>Kill all crew members.</traitorgoalkilleveryoneinfo>
-  <traitorgoalfinditeminfo>Find your next objective inside [target] in [targethullname].</traitorgoalfinditeminfo>
   <traitorgoalcausereactormeltdown>Cause a reactor meltdown.</traitorgoalcausereactormeltdown>
   <traitorgoaldestroyitems>Destroy at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>
-  <traitorgoalfloodpercentofsub>Flood at least [percentage] percent of the sub.</traitorgoalfloodpercentofsub>
   <traitorgoaljamsonarinfo>Hide an active sonar jammer somewhere it can't be found for [duration] seconds.</traitorgoaljamsonarinfo>
   <traitorgoaljamsonarinfoalt>Jam the submarine's sonar for [duration] seconds.</traitorgoaljamsonarinfoalt>
-  <traitorgoalsabotageinfo>Sabotage [target] for at least [duration] seconds.</traitorgoalsabotageinfo>
   <traitorgoalpoisoninfo>Inject [targetname] with [poison].</traitorgoalpoisoninfo>
-  <traitorgoaltamperoxygeninfo>Swap at least [percentage] of oxygen tanks inside diving equipment with welding fuel.</traitorgoaltamperoxygeninfo>
-  <traitorgoaltampercoilguninfo>Load dummy ammunition into a coilgun loader.</traitorgoaltampercoilguninfo>
   <traitorgoaltampercoilguninfomulti>Load dummy ammunition into [number] coilgun loaders.</traitorgoaltampercoilguninfomulti>
-  <traitorgoaltamperrailguninfo>Load a dummy shell into a railgun loader.</traitorgoaltamperrailguninfo>
-  <traitorgoaltamperrailguninfomulti>Load [number] dummy shells into a railgun loaders.</traitorgoaltamperrailguninfomulti>
 
   <!-- New items -->
   <entityname.flamer>Flamer</entityname.flamer>
@@ -3473,49 +3466,12 @@
   <inprogress>In progress</inprogress>
   <complete>Complete</complete>
 
-  <!-- Traitor mission (new) -->
-
-  <traitormissionstartmessage>You are the traitor! You have successfully infiltrated the submarine and now it's time to put the plans in motion.</traitormissionstartmessage>
-  <traitormissionfailuremessage>You have failed in your mission. As a result, the mission has been canceled and you are now part of the crew. Keep a low profile until you are contacted again.</traitormissionfailuremessage>
-  <traitormissionsuccessmessage>You have successfully sabotaged the crew's efforts. An escape shuttle has been dispatched for you.</traitormissionsuccessmessage>
-
-  <!-- Traitor objectives (new) -->
-  <traitorobjectivestartmessageserver>[traitorname] is the traitor and has the following goals:\n[traitorgoalinfos]</traitorobjectivestartmessageserver>
-  <traitorobjectiveendmessagesuccess>[traitorname] was a traitor and succeeded in completing the given goals:\n [traitorgoalinfos]</traitorobjectiveendmessagesuccess>
-  <traitorobjectiveendmessagesuccessdead>[traitorname] was a traitor and succeeded in completing the given goals but regrettably died in the process, goals:\n[traitorgoalinfos]</traitorobjectiveendmessagesuccessdead>
-  <traitorobjectiveendmessagesuccessdetained>[traitorname] was a traitor and succeeded in completing the given goals but was detained, goals:\n[traitorgoalinfos]</traitorobjectiveendmessagesuccessdetained>
-  <traitorobjectiveendmessagefailure>[traitorname] was a traitor but failed to complete the given goals:\n[traitorgoalinfos]</traitorobjectiveendmessagefailure>
-  <traitorobjectiveendmessagefailuredead>[traitorname] was a traitor but died while failing to complete the given goals:\n[traitorgoalinfos]</traitorobjectiveendmessagefailuredead>
-  <traitorobjectiveendmessagefailuredetained>[traitorname] was a traitor but got detained while failing to complete the given goals:\n[traitorgoalinfos]</traitorobjectiveendmessagefailuredetained>
-  <traitorobjectivegoalinfoformat>- [statustext]\n</traitorobjectivegoalinfoformat>
-
   <!-- Traitor goals (new) -->
-  <traitorgoalstatustextformat>[infotext] ([status])</traitorgoalstatustextformat>
-  <traitorgoaltimelimitfailure>You failed to complete your objective in time.</traitorgoaltimelimitfailure>
-  <traitorgoalkilltargetinfo>Assassinate [targetname].</traitorgoalkilltargetinfo>
-  <traitorgoalkilleveryoneinfo>Kill all crew members.</traitorgoalkilleveryoneinfo>
   <traitorgoalfindcontainerinfo>Find your next objective inside a [target] in [targethullname].</traitorgoalfindcontainerinfo>
-  <traitorgoalfinditeminfo>Find a [identifier] in [targethullname].</traitorgoalfinditeminfo>
-  <traitorgoalcausereactormeltdown>Cause a reactor meltdown.</traitorgoalcausereactormeltdown>
-  <traitorgoaldestroyitems>Destroy at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>
   <traitorgoaldestroyoxygen>Destroy at least [percentage] percent of all non-inventory oxygen tanks on the sub.</traitorgoaldestroyoxygen>
-  <traitorgoalfloodpercentofsub>Flood at least [percentage] percent of the submarine.</traitorgoalfloodpercentofsub>
-  <traitorgoaljamsonarinfo>Hide an active sonar jammer somewhere it can't be found for [duration] seconds.</traitorgoaljamsonarinfo>
-  <traitorgoaljamsonarinfoalt>Jam the submarine's sonar for [duration] seconds.</traitorgoaljamsonarinfoalt>
-  <traitorgoalsabotageinfo>Sabotage the [target] so that its condition is under [threshold]%.</traitorgoalsabotageinfo>
   <traitorgoalsabotagedurationinfo>Sabotage the [tag] so that its condition is under [threshold]% for at least [duration] seconds.</traitorgoalsabotagedurationinfo>
-  <traitorgoalpoisoninfo>Inject [targetname] with [poison].</traitorgoalpoisoninfo>
-  <!--<traitorgoaltamperinfodefault>Swap at least [percentage] percent of oxygen tanks inside diving equipment with welding fuel.</traitorgoaltamperinfodefault>-->
-  <traitorgoaltamperoxygeninfo>Swap at least [percentage] percent of oxygen tanks inside diving equipment with welding fuel.</traitorgoaltamperoxygeninfo>
-  <traitorgoaltampercoilguninfo>Load dummy ammunition into all coilgun loaders.</traitorgoaltampercoilguninfo>
-  <traitorgoaltampercoilguninfomulti>Load dummy ammunition into [number] coilgun loaders.</traitorgoaltampercoilguninfomulti>
-  <traitorgoaltamperrailguninfo>Load a dummy shell into all railgun loaders.</traitorgoaltamperrailguninfo>
-  <traitorgoaltamperrailguninfomulti>Load [number] dummy shells into a railgun loader.</traitorgoaltamperrailguninfomulti>
   <traitorgoalescape>Escape to the nearby shuttle.</traitorgoalescape>
-
-  <traitormissionfailuremessage>You have failed in your mission. As a result, the mission has been canceled and you are now part of the crew. Keep a low profile until you are contacted again.</traitormissionfailuremessage>
-  <traitormissionsuccessmessage>You have successfully sabotaged the crew's efforts. An escape shuttle has been dispatched for you.</traitormissionsuccessmessage>
-
+  
   <!-- MVP Traitor mission text package -->
   <MVPtraitormissionStartInfoText>A voice within your head screams loudly enough to startle you: "THE CULT OF THE HUSK CALLS YOU TO SERVICE!"</MVPtraitormissionStartInfoText>
   <MVPtraitorobjectivestartmessage1>An idea gradually forms in your mind, strangely seductive to you in spite of its mundane nature:\n[traitorgoalinfos]</MVPtraitorobjectivestartmessage1>
@@ -3552,10 +3508,17 @@
   <flood_2_traitorobjectivestartmessage4>"Quickly, capitalize on the confusion and take out the worst of those pigs while you can!"\n[traitorgoalinfos]</flood_2_traitorobjectivestartmessage4>
   <flood_2_objectiveSuccessMessage4>As you take their life you note, perhaps with a little bitterness, that your reciever has gone dead quite suddenly. Your comrades have left you to the mercy of Mother Europa.</flood_2_objectiveSuccessMessage4>
 
-
   <!-- MODIFIED -->
   <karmabanwarning>WARNING: Your karma is dangerously low. You will be banned from the server if it decreases further.</karmabanwarning>
   <publicservertooltip>Public servers are shown in the list of available servers in the 'Server Browser'.</publicservertooltip>
   <serversettingsroundstab>Gameplay</serversettingsroundstab>
   <nosubscribedmods>You haven't subscribed to any mods on the Steam Workshop. Select the 'Popular mods' tab to find some!</nosubscribedmods>
+
+  <traitorgoalfinditeminfo>Find a [identifier] in [targethullname].</traitorgoalfinditeminfo>
+  <traitorgoalfloodpercentofsub>Flood at least [percentage] percent of the submarine.</traitorgoalfloodpercentofsub>
+  <traitorgoalsabotageinfo>Sabotage the [target] so that its condition is under [threshold]%.</traitorgoalsabotageinfo>
+  <traitorgoaltamperoxygeninfo>Swap at least [percentage] percent of oxygen tanks inside diving equipment with welding fuel.</traitorgoaltamperoxygeninfo>
+  <traitorgoaltampercoilguninfo>Load dummy ammunition into all coilgun loaders.</traitorgoaltampercoilguninfo>
+  <traitorgoaltamperrailguninfo>Load a dummy shell into all railgun loaders.</traitorgoaltamperrailguninfo>
+  <traitorgoaltamperrailguninfomulti>Load [number] dummy shells into a railgun loader.</traitorgoaltamperrailguninfomulti>
 </infotexts>
