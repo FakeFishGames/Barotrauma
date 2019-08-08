@@ -782,13 +782,13 @@
   <missionheader0.killhammerhead>Target terminated</missionheader0.killhammerhead>
   <missionmessage0.killhammerhead>The Hammerhead is dead. Navigate the submarine out of the cavern to claim the reward.</missionmessage0.killhammerhead>
   <missionname.killcrawlerswarm1>Terminate a Swarm</missionname.killcrawlerswarm1>
-  <missiondescription.killcrawlerswarm1>A small swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew who can neutralize it.</missiondescription.killcrawlerswarm1>
+  <!--<missiondescription.killcrawlerswarm1>A small swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew who can neutralize it.</missiondescription.killcrawlerswarm1>-->
   <missionsonarlabel.killcrawlerswarm1>Swarm</missionsonarlabel.killcrawlerswarm1>
   <missionsuccess.killcrawlerswarm1>The swarm has been terminated.</missionsuccess.killcrawlerswarm1>
   <missionheader0.killcrawlerswarm1>Target terminated</missionheader0.killcrawlerswarm1>
   <missionmessage0.killcrawlerswarm1>The swarm is terminated. Navigate the submarine out of the cavern to claim the reward.</missionmessage0.killcrawlerswarm1>
   <missionname.killcrawlerswarm2>Terminate a Swarm</missionname.killcrawlerswarm2>
-  <missiondescription.killcrawlerswarm2>A large swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew who can neutralize it.</missiondescription.killcrawlerswarm2>
+  <!--<missiondescription.killcrawlerswarm2>A large swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew who can neutralize it.</missiondescription.killcrawlerswarm2>-->
   <missionsonarlabel.killcrawlerswarm2>Swarm</missionsonarlabel.killcrawlerswarm2>
   <missionsuccess.killcrawlerswarm2>The swarm has been terminated.</missionsuccess.killcrawlerswarm2>
   <missionheader0.killcrawlerswarm2>Target terminated</missionheader0.killcrawlerswarm2>
@@ -818,7 +818,7 @@
   <missiondescription.cargovolatilecompoundn>A local arms dealer is offering [reward] credits in exchange for delivering two crates of high explosives to a customer in [location2].</missiondescription.cargovolatilecompoundn>
   <missionsuccess.cargovolatilecompoundn>The explosives have been successfully delivered.</missionsuccess.cargovolatilecompoundn>
   <missionname.cargochemicals>Chemical shipment</missionname.cargochemicals>
-  <missiondescription.cargochemicals>Researchersof [location1] need someone to deliver some dangerous chemicals to [location2] for a reward of 250 credits. </missiondescription.cargochemicals>
+  <!--<missiondescription.cargochemicals>Researchersof [location1] need someone to deliver some dangerous chemicals to [location2] for a reward of 250 credits. </missiondescription.cargochemicals>-->
   <missionsuccess.cargochemicals>The chemicals have been successfully delivered.</missionsuccess.cargochemicals>
   <missionname.cargohuskeggs>Biohazard</missionname.cargohuskeggs>
   <missiondescription.cargohuskeggs>Local researchers are offering [reward] credits for delivering a container of husk parasite eggs to [location2].</missiondescription.cargohuskeggs>
@@ -3121,7 +3121,8 @@
   <stringpropertytranslate>This text will be translated to [translation].</stringpropertytranslate>
   <stringpropertycannottranslate>This text will not be translated - text with the tag [tag] not found in the language files.</stringpropertycannottranslate>
 
-  <!-- New additions -->
+  <!-- *** JULY (translations coming 12.8.) *** -->
+  <!-- NEW ADDITIONS -->
   <itemmsgoxygenrefill>Insert oxygen tank to refill it</itemmsgoxygenrefill>
   <missiondescription.cargochemicals>Researchers of [location1] need someone to deliver some dangerous chemicals to [location2] for a reward of [reward] credits.</missiondescription.cargochemicals>
   <privacypolicy>Privacy policy</privacypolicy>
@@ -3205,36 +3206,10 @@
 
   <servermessage.previousclientname>[client] previously used the name [previousname] on the server.</servermessage.previousclientname>
 
-  <serversettingsgeneraltab>General</serversettingsgeneraltab>
-  <serversettingsantigriefingtab>Anti-griefing</serversettingsantigriefingtab>
-
   <serverlistdirectjoin>Direct Join</serverlistdirectjoin>
 
   <causeofdeath.unknown>Unknown</causeofdeath.unknown>
   <self_causeofdeathdescription.unknown>You have died.</self_causeofdeathdescription.unknown>
-
-  <!-- Submarine labels -->
-  <label.betadeck>Beta Deck</label.betadeck>
-  <label.airlock>Airlock</label.airlock>
-  <label.dockingport>Docking Port</label.dockingport>
-  <label.weapons>Weapons</label.weapons>
-  <label.cargo>Cargo Bay</label.cargo>
-  <label.crewquarters>Crew Quarters</label.crewquarters>
-  <label.electrical1>Electrical #1</label.electrical1>
-  <label.electrical2>Electrical #2</label.electrical2>
-  <label.medical>Medical</label.medical>
-  <label.engineering>Engineering</label.engineering>
-  <label.ballast>Ballast</label.ballast>
-  <label.reactor>Reactor</label.reactor>
-  <label.armory>Armory</label.armory>
-  <label.batteryoutput>Battery Output</label.batteryoutput>
-  <label.onoff>On/Off</label.onoff>
-  <label.bilge>Bilge</label.bilge>
-  <label.powermainline>Power Mainline</label.powermainline>
-  <label.command>Command</label.command>
-  <label.engine>Engine</label.engine>
-
-  <deletefileverification>Do you want to delete [filename]?</deletefileverification>
 
   <!-- New generic strings -->
   <pending>Pending</pending>
@@ -3353,36 +3328,104 @@
   <serverlogo>Server logo</serverlogo>
   <servertagline>Tagline</servertagline>
 
+  <!-- MODIFIED -->
+  <missiondescription.killcrawlerswarm1>A small swarm of [monster] has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew who can neutralize it.</missiondescription.killcrawlerswarm1>
+  <missiondescription.killcrawlerswarm2>A large swarm of [monster] has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew who can neutralize it.</missiondescription.killcrawlerswarm2>
+  <missiondescription.cargochemicals>Researchers of [location1] need someone to deliver some dangerous chemicals to [location2] for a reward of [reward] credits.</missiondescription.cargochemicals>
+  <missionsuccess.pvpmission>The [loser] vessel has been defeated by the [winner] crew!</missionsuccess.pvpmission>
+  <workshopitemrefreshfilelisttooltip>Reload the configuration file of the Workshop item (filelist.xml inside the item's folder) and add all new files in it to the file list.</workshopitemrefreshfilelisttooltip>
+  <entitydescription.alienshell>For firing from a railgun.</entitydescription.alienshell>
+
+  <workshop.contenttag.eventset>Event set</workshop.contenttag.eventset>
+  <workshop.contenttag.totalconversion>Total conversion</workshop.contenttag.totalconversion>
+  <workshop.contenttag.itemassembly>Item assembly</workshop.contenttag.itemassembly>
+  <workshop.contenttag.language>Language</workshop.contenttag.language>
+  <entitydescription.brockite>A mineral containing thorium and phosphorus.</entitydescription.brockite>
+
+  <serverlisthaspassword>Password</serverlisthaspassword>
+  <filterpassword>No password</filterpassword>
+  <filterincompatibleservers>Hide incompatible</filterincompatibleservers>
+  <filterfullservers>Hide full</filterfullservers>
+  <filteremptyservers>Hide empty</filteremptyservers>
+  <serverlistrefresh>Scan Servers</serverlistrefresh>
+  <yourname>Player name</yourname>
+  <joinserver>Server browser</joinserver>
+  <joinserverbutton>Server browser</joinserverbutton>
+  
+  <!-- *** AUGUST *** (Will be sent to localization asap) -->
+  <!-- NEW ADDITIONS-->
+  <!-- Server -->
+  <serversettingsgeneraltab>General</serversettingsgeneraltab>
+  <serversettingsantigriefingtab>Anti-griefing</serversettingsantigriefingtab>
+  <serverprocessclosed>The server process has closed unexpectedly. A crash report (servercrashreport.log) may have been generated in the game's root directory.</serverprocessclosed>
+  <serverprocesscrashed>The server process has crashed. A crash report (servercrashreport.log) has been generated in the game's root directory.</serverprocesscrashed>
+  <disconnectreason.servercrashed>The server has crashed.</disconnectreason.servercrashed>
+  
+  <!-- Workshop -->
+  <workshoperroronenable>Cannot enable Workshop item '[itemname]'.</workshoperroronenable>
+  
+  <!-- Audio -->
+  <dynamicrangecompression>Dynamic range compression</dynamicrangecompression>
+  <dynamicrangecompressiontooltip>Adjusts the game's volume automatically to prevent audio distortion.</dynamicrangecompressiontooltip>
+  <voipnodevices>No audio capture devices found</voipnodevices>
+  
+  <!-- Misc -->
+  <pumpautocontrol>Automatic control</pumpautocontrol>
+  <viewsteamprofile>View Steam profile</viewsteamprofile>
+  <deletefileverification>Do you want to delete [filename]?</deletefileverification>
+
+  <!-- Submarine labels -->
+  <label.betadeck>Beta Deck</label.betadeck>
+  <label.airlock>Airlock</label.airlock>
+  <label.dockingport>Docking Port</label.dockingport>
+  <label.weapons>Weapons</label.weapons>
+  <label.cargo>Cargo Bay</label.cargo>
+  <label.crewquarters>Crew Quarters</label.crewquarters>
+  <label.electrical1>Electrical #1</label.electrical1>
+  <label.electrical2>Electrical #2</label.electrical2>
+  <label.medical>Medical</label.medical>
+  <label.engineering>Engineering</label.engineering>
+  <label.ballast>Ballast</label.ballast>
+  <label.reactor>Reactor</label.reactor>
+  <label.armory>Armory</label.armory>
+  <label.batteryoutput>Battery Output</label.batteryoutput>
+  <label.onoff>On/Off</label.onoff>
+  <label.bilge>Bilge</label.bilge>
+  <label.powermainline>Power Mainline</label.powermainline>
+  <label.command>Command</label.command>
+  <label.engine>Engine</label.engine>
+
+  <!-- Karma system -->
   <Karma.KickBanThreshold>Ban threshold</Karma.KickBanThreshold>
   <Karma.KickBanThresholdTooltip>The players whose karma decreases below this threshold get automatically banned from the server.</Karma.KickBanThresholdTooltip>
-  
+
   <Karma.KarmaDecay>Karma decay speed</Karma.KarmaDecay>
   <Karma.KarmaDecayTooltip>How much karma decreases per second when it's above the decay threshold.</Karma.KarmaDecayTooltip>
-  
+
   <Karma.KarmaDecayThreshold>Karma decay threshold</Karma.KarmaDecayThreshold>
   <Karma.KarmaDecayThresholdTooltip>Karma gradually decreases when it's above this threshold.</Karma.KarmaDecayThresholdTooltip>
-  
+
   <Karma.KarmaIncrease>Karma increase speed</Karma.KarmaIncrease>
-  <Karma.KarmaIncreaseTooltip>How much karma increases per second when it's below the increase threshold.</Karma.KarmaIncreaseTooltip>  
-  
+  <Karma.KarmaIncreaseTooltip>How much karma increases per second when it's below the increase threshold.</Karma.KarmaIncreaseTooltip>
+
   <Karma.KarmaIncreaseThreshold>Karma increase threshold</Karma.KarmaIncreaseThreshold>
   <Karma.KarmaIncreaseThresholdTooltip>Karma gradually increases when it's below this threshold.</Karma.KarmaIncreaseThresholdTooltip>
 
   <Karma.StructureRepairKarmaIncrease>Structure repaired</Karma.StructureRepairKarmaIncrease>
   <Karma.StructureRepairKarmaIncreaseTooltip>How much karma increases when repairing structures (per amount of damage repaired, for example a value of 0.05 would mean you get 5 points of karma when you repair a wall from 0 health to 100).</Karma.StructureRepairKarmaIncreaseTooltip>
-  
+
   <Karma.StructureDamageKarmaDecrease>Structure damaged</Karma.StructureDamageKarmaDecrease>
   <Karma.StructureDamageKarmaDecreaseTooltip>How much karma decreases when damaging structures (per amount of damage done, for example a value of 0.05 would mean that karma decreases by 5 when taking a wall from 100 health to 0).</Karma.StructureDamageKarmaDecreaseTooltip>
-  
+
   <Karma.ItemRepairKarmaIncrease>Device repaired</Karma.ItemRepairKarmaIncrease>
   <Karma.ItemRepairKarmaIncreaseTooltip>How much karma increases when repairing devices (per amount of damage repaired, for example a value of 0.05 would mean you get 5 points of karma when you repair a device from 0 health to 100).</Karma.ItemRepairKarmaIncreaseTooltip>
-  
+
   <Karma.DamageEnemyKarmaIncrease>Damage to enemy</Karma.DamageEnemyKarmaIncrease>
   <Karma.DamageEnemyKarmaIncreaseTooltip>How much karma increases when damaging enemies (per amount of damage done).</Karma.DamageEnemyKarmaIncreaseTooltip>
-  
+
   <Karma.HealFriendlyKarmaIncrease>Heal friendly</Karma.HealFriendlyKarmaIncrease>
   <Karma.HealFriendlyKarmaIncreaseTooltip>How much karma increases when healing other members of the crew (per amount of damage healed).</Karma.HealFriendlyKarmaIncreaseTooltip>
-  
+
   <Karma.DamageFriendlyKarmaDecrease>Damage to friendly</Karma.DamageFriendlyKarmaDecrease>
   <Karma.DamageFriendlyKarmaDecreaseTooltip>How much karma decreases when damaging other members of the crew (per amount of damage done).</Karma.DamageFriendlyKarmaDecreaseTooltip>
 
@@ -3406,7 +3449,7 @@
 
   <Karma.HerpesThreshold>Space herpes threshold</Karma.HerpesThreshold>
   <Karma.HerpesThresholdToolTip>How low does the karma have to decrease for the player to get the space herpes.</Karma.HerpesThresholdToolTip>
-  
+
   <Karma.PositiveActions>Helpful actions</Karma.PositiveActions>
   <Karma.NegativeActions>Harmful actions</Karma.NegativeActions>
 
@@ -3423,52 +3466,9 @@
   <afflictionname.invertcontrols>Disoriented</afflictionname.invertcontrols>
   <afflictiondescription.invertcontrols>The patient's eyes are darting around and they seem to be having trouble orienting to their surroundings.</afflictiondescription.invertcontrols>
 
-  <deletefileverification>Do you want to delete [filename]?</deletefileverification>
-
-  <pumpautocontrol>Automatic control</pumpautocontrol>
-
   <!-- MODIFIED -->
-  <missionsuccess.pvpmission>The [loser] vessel has been defeated by the [winner] crew!</missionsuccess.pvpmission>
-  <workshopitemrefreshfilelisttooltip>Reload the configuration file of the Workshop item (filelist.xml inside the item's folder) and add all new files in it to the file list.</workshopitemrefreshfilelisttooltip>
-  <entitydescription.alienshell>For firing from a railgun.</entitydescription.alienshell>
-
-  <workshop.contenttag.eventset>Event set</workshop.contenttag.eventset>
-  <workshop.contenttag.totalconversion>Total conversion</workshop.contenttag.totalconversion>
-  <workshop.contenttag.itemassembly>Item assembly</workshop.contenttag.itemassembly>
-  <workshop.contenttag.language>Language</workshop.contenttag.language>
-  <entitydescription.brockite>A mineral containing thorium and phosphorus.</entitydescription.brockite>
-
-  <serverlisthaspassword>Password</serverlisthaspassword>
-
-  <serversettingsroundstab>Gameplay</serversettingsroundstab>
-
-  <filterpassword>No password</filterpassword>
-  <filterincompatibleservers>Hide incompatible</filterincompatibleservers>
-  <filterfullservers>Hide full</filterfullservers>
-  <filteremptyservers>Hide empty</filteremptyservers>
-
-  <serverlistrefresh>Scan Servers</serverlistrefresh>
-
-  <yourname>Player name</yourname>
-
-  <workshoperroronenable>Cannot enable Workshop item '[itemname]'.</workshoperroronenable>
-
-  <joinserver>Server browser</joinserver>
-  <joinserverbutton>Server browser</joinserverbutton>
-
   <karmabanwarning>WARNING: Your karma is dangerously low. You will be banned from the server if it decreases further.</karmabanwarning>
-  <nosubscribedmods>You haven't subscribed to any mods on the Steam Workshop. Select the 'Popular mods' tab to find some!</nosubscribedmods>
   <publicservertooltip>Public servers are shown in the list of available servers in the 'Server Browser'.</publicservertooltip>
-
-  <serverprocessclosed>The server process has closed unexpectedly. A crash report (servercrashreport.log) may have been generated in the game's root directory.</serverprocessclosed>
-  <serverprocesscrashed>The server process has crashed. A crash report (servercrashreport.log) has been generated in the game's root directory.</serverprocesscrashed>
-
-  <disconnectreason.servercrashed>The server has crashed.</disconnectreason.servercrashed>
-
-  <dynamicrangecompression>Dynamic range compression</dynamicrangecompression>
-  <dynamicrangecompressiontooltip>Adjusts the game's volume automatically to prevent audio distortion.</dynamicrangecompressiontooltip>
-  
-  <viewsteamprofile>View Steam profile</viewsteamprofile>
-  
-  <voipnodevices>No audio capture devices found</voipnodevices>
+  <serversettingsroundstab>Gameplay</serversettingsroundstab>
+  <nosubscribedmods>You haven't subscribed to any mods on the Steam Workshop. Select the 'Popular mods' tab to find some!</nosubscribedmods>
 </infotexts>
