@@ -32,15 +32,13 @@ namespace Barotrauma
         [Serialize(100f, true), Editable]
         public float Noise { get; set; }
 
-        public void Init(string file)
-        {
-            base.Load(file);
-            // TODO: implement subparams
-        }
+        public readonly string File;
+
+        public List<CharacterSubParams> SubParams { get; private set; } = new List<CharacterSubParams>();
+        public HealthParams Health { get; private set; }
 
         /* 
          * 
-         * health
          * ai
          * inventory
          * sound
@@ -52,5 +50,179 @@ namespace Barotrauma
          * 
          * 
         */
+
+        public CharacterParams(string file)
+        {
+            File = file;
+            Load();
+        }
+
+        public bool Load()
+        {
+            bool success= base.Load(File);
+            CreateSubParams();
+            return success;
+        }
+
+        public bool Save(string fileNameWithoutExtension = null)
+        {
+            Serialize();
+            return base.Save(fileNameWithoutExtension, new XmlWriterSettings
+            {
+                Indent = true,
+                OmitXmlDeclaration = true,
+                NewLineOnAttributes = false
+            });
+        }
+
+        public override bool Reset(bool forceReload = false)
+        {
+            if (forceReload)
+            {
+                return Load();
+            }
+            Deserialize(OriginalElement, alsoChildren: true);
+            SubParams.ForEach(sp => sp.Reset());
+            return true;
+        }
+
+        protected void CreateSubParams()
+        {
+            SubParams.Clear();
+            foreach (var element in MainElement.GetChildElements("health"))
+            {
+                Health = new HealthParams(element, this);
+                SubParams.Add(Health);
+            }
+            // TODO: create other sub params
+        }
+
+        protected bool Deserialize(XElement element = null, bool alsoChildren = true, bool recursive = true)
+        {
+            if (base.Deserialize(element))
+            {
+                if (alsoChildren)
+                {
+                    SubParams.ForEach(p => p.Deserialize(recursive));
+                }
+                return true;
+            }
+            return false;
+        }
+
+        protected bool Serialize(XElement element = null, bool alsoChildren = true, bool recursive = true)
+        {
+            if (base.Serialize(element))
+            {
+                if (alsoChildren)
+                {
+                    SubParams.ForEach(p => p.Serialize(recursive));
+                }
+                return true;
+            }
+            return false;
+        }
+
+#if CLIENT
+        public void AddToEditor(ParamsEditor editor, bool alsoChildren = true, bool recursive = true, int space = 0)
+        {
+            base.AddToEditor(editor);
+            if (alsoChildren)
+            {
+                SubParams.ForEach(s => s.AddToEditor(editor, recursive));
+            }
+            if (space > 0)
+            {
+                new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, space), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
+                {
+                    CanBeFocused = false
+                };
+            }
+        }
+#endif
+    }
+
+    class HealthParams : CharacterSubParams
+    {
+        [Serialize(100f, true), Editable]
+        public float Vitality { get; set; }
+
+        [Serialize(true, true), Editable]
+        public bool DoesBleed { get; set; }
+
+        [Serialize(true, true), Editable]
+        public bool UseHealthWindow { get; set; }
+
+        [Serialize(float.NegativeInfinity, true), Editable]
+        public float CrushDepth { get; set; }
+
+        // TODO: limbhealths, sprite?
+
+        public HealthParams(XElement element, CharacterParams character) : base(element, character) { }
+    }
+
+    abstract class CharacterSubParams : ISerializableEntity
+    {
+        public virtual string Name { get; set; }
+        public Dictionary<string, SerializableProperty> SerializableProperties { get; private set; }
+        public XElement Element { get; set; }
+        public List<CharacterSubParams> SubParams { get; set; } = new List<CharacterSubParams>();
+
+        public virtual string GenerateName() => Element.Name.ToString();
+
+        public CharacterParams Character { get; private set; }
+
+        public CharacterSubParams(XElement element, CharacterParams character)
+        {
+            Element = element;
+            Character = character;
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+        }
+
+        public virtual bool Deserialize(bool recursive = true)
+        {
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, Element);
+            if (recursive)
+            {
+                SubParams.ForEach(sp => sp.Deserialize(true));
+            }
+            return SerializableProperties != null;
+        }
+
+        public virtual bool Serialize(bool recursive = true)
+        {
+            SerializableProperty.SerializeProperties(this, Element, true);
+            if (recursive)
+            {
+                SubParams.ForEach(sp => sp.Serialize(true));
+            }
+            return true;
+        }
+
+        public virtual void Reset()
+        {
+            Deserialize(false);
+            SubParams.ForEach(sp => sp.Reset());
+        }
+
+
+#if CLIENT
+        public SerializableEntityEditor SerializableEntityEditor { get; protected set; }
+        public virtual void AddToEditor(ParamsEditor editor, bool recursive = true, int space = 0)
+        {
+            SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, this, inGame: false, showName: true, titleFont: GUI.LargeFont);
+            if (recursive)
+            {
+                SubParams.ForEach(sp => sp.AddToEditor(editor, true));
+            }
+            if (space > 0)
+            {
+                new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, space), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
+                {
+                    CanBeFocused = false
+                };
+            }
+        }
+#endif
     }
 }

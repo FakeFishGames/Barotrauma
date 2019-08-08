@@ -696,8 +696,7 @@ namespace Barotrauma
             lowPassMultiplier = 1.0f;
 
             Properties = SerializableProperty.GetProperties(this);
-            CharacterParams = new CharacterParams();
-            CharacterParams.Init(file);
+            CharacterParams = new CharacterParams(file);
 
             Info = characterInfo;
             if (file == HumanConfigFile || file.ToLowerInvariant().Contains("human"))
