@@ -116,6 +116,7 @@ namespace Barotrauma.Networking
                 }
                 GameMain.NetLobbyScreen.SetPlayerSpeaking(client);
                 GameMain.GameSession?.CrewManager?.SetClientSpeaking(client);
+                GameMain.SoundManager.VoipAttenuatedGain = 0.2f;
             }
         }
 

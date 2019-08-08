@@ -25,7 +25,7 @@ namespace Barotrauma.Sounds
         }
 
         private VoipQueue queue;
-        public int bufferID = 0;
+        private int bufferID = 0;
         
         private SoundChannel soundChannel;
 

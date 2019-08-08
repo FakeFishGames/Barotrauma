@@ -2,6 +2,7 @@
 using OpenAL;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace Barotrauma.Sounds
 {
@@ -303,10 +304,9 @@ namespace Barotrauma.Sounds
                 else
                 {
                     float retVal = -1.0f;
-                    lock (mutex)
-                    {
-                        retVal = streamAmplitude;
-                    }
+                    Monitor.Enter(mutex);
+                    retVal = streamAmplitude;
+                    Monitor.Exit(mutex);
                     return retVal;
                 }
             }
@@ -379,11 +379,15 @@ namespace Barotrauma.Sounds
             decayTimer = 0;
             streamSeekPos = 0; reachedEndSample = false;
             buffersToRequeue = 4;
-            
-            mutex = new object();
 
-            lock (mutex)
+            if (IsStream)
             {
+                mutex = new object();
+            }
+
+            try
+            {
+                if (mutex != null) { Monitor.Enter(mutex); }
                 if (sound.Owner.CountPlayingInstances(sound) < sound.MaxSimultaneousInstances)
                 {
                     ALSourceIndex = sound.Owner.AssignFreeSourceToChannel(this);
@@ -456,20 +460,27 @@ namespace Barotrauma.Sounds
                                 throw new Exception("Generated streamBuffer[" + i.ToString() + "] is invalid!");
                             }
                         }
-
                         Sound.Owner.InitStreamThread();
                     }
                 }
-                
+
                 this.Position = position;
                 this.Gain = gain;
                 this.Looping = false;
                 this.Near = near;
                 this.Far = far;
                 this.Category = category;
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                if (mutex != null) { Monitor.Exit(mutex); }
+            }
 
-                Sound.Owner.Update();
-            }            
+            Sound.Owner.Update();
         }
 
         public bool FadingOutAndDisposing;
@@ -480,8 +491,9 @@ namespace Barotrauma.Sounds
 
         public void Dispose()
         {
-            lock (mutex)
+            try
             {
+                if (mutex != null) { Monitor.Enter(mutex); }
                 if (ALSourceIndex >= 0)
                 {
                     Al.SourceStop(Sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex));
@@ -551,14 +563,19 @@ namespace Barotrauma.Sounds
                     ALSourceIndex = -1;
                 }
             }
+            finally
+            {
+                if (mutex != null) { Monitor.Exit(mutex); }
+            }
         }
 
         public void UpdateStream()
         {
             if (!IsStream) throw new Exception("Called UpdateStream on a non-streamed sound channel!");
 
-            lock (mutex)
+            try
             {
+                Monitor.Enter(mutex);
                 if (!reachedEndSample)
                 {
                     uint alSource = Sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex);
@@ -612,6 +629,7 @@ namespace Barotrauma.Sounds
 
                             if (readSamples <= 0)
                             {
+                                streamAmplitude *= 0.5f;
                                 decayTimer++;
                                 if (decayTimer > 120) //TODO: replace magic number
                                 {
@@ -685,6 +703,10 @@ namespace Barotrauma.Sounds
                 {
                     streamAmplitude = 0.0f;
                 }
+            }
+            finally
+            {
+                Monitor.Exit(mutex);
             }
         }
     }

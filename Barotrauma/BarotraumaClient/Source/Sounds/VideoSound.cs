@@ -70,8 +70,15 @@ namespace Barotrauma.Sounds
             SoundChannel chn = null;
             lock (mutex)
             {
-                if (soundChannel != null) soundChannel.Dispose();
-                chn = new SoundChannel(this, gain, null, 1.0f, 3.0f, "video", false);
+                if (soundChannel != null)
+                {
+                    soundChannel.Dispose();
+                    soundChannel = null;
+                }
+            }
+            chn = new SoundChannel(this, gain, null, 1.0f, 3.0f, "video", false);
+            lock (mutex)
+            {
                 soundChannel = chn;
             }
             return chn;

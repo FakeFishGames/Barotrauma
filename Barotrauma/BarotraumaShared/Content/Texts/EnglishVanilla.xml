@@ -97,7 +97,6 @@
   <maxplayers>Max players</maxplayers>
   <password>Password</password>
   <publicserver>Public server</publicserver>
-  <publicservertooltip>Public servers are shown in the list of available servers in the 'Join Server' tab.</publicservertooltip>
   <attemptupnp>Attempt UPnP port forwarding</attemptupnp>
   <attemptupnptooltip>UPnP can be used for forwarding ports on your router to allow players to join the server. However, UPnP isn't supported by all routers, so you may need to setup port forwards manually if players are unable to join the server (see the readme for instructions).</attemptupnptooltip>
   <startserverbutton>Start</startserverbutton>
@@ -120,7 +119,6 @@
   <modstab>Subscribed Mods</modstab>
   <downloadbutton>Subscribe</downloadbutton>
   <subscribedmods>Mods</subscribedmods>
-  <nosubscribedmods>You haven't subscribed to any mods on the Steam Workshop. Click the 'Find more mods' button below to get started!</nosubscribedmods>
   <popularmods>Popular mods</popularmods>
   <findmodsbutton>Find more mods...</findmodsbutton>
   <workshopitemunsubscribe>Unsubscribe</workshopitemunsubscribe>
@@ -244,8 +242,6 @@
   <microphonevolume>Microphone volume</microphonevolume>
   <muteonfocuslost>Mute on focus lost</muteonfocuslost>
   <muteonfocuslosttooltip>Mutes the game when its window is not in focus.</muteonfocuslosttooltip>
-  <dynamicrangecompression>Dynamic range compression</dynamicrangecompression>
-  <dynamicrangecompressiontooltip>Adjusts the game's volume automatically to prevent audio distortion.</dynamicrangecompressiontooltip>
   <voicechat>Voice chat</voicechat>
   <currentdevice>Current device</currentdevice>
   <currentdevicetooltip.osx>This device will be used for voice chat. Unfortunately there is no way to change the input device on Mac OS X—it will only use your system's default.</currentdevicetooltip.osx>
@@ -295,8 +291,6 @@
   <setlegacybindingstooltip>Set key bindings to ones that were used in the old pre-alpha versions of Barotrauma (E to select and deselect items, left mouse button to use item the in hand).</setlegacybindingstooltip>
 
   <!-- Server settings -->
-  <serversettingsroundstab>Rounds</serversettingsroundstab>
-  <serversettingsservertab>Server</serversettingsservertab>
   <serversettingsbanlisttab>Banlist</serversettingsbanlisttab>
   <serversettingswhitelisttab>Whitelist</serversettingswhitelisttab>
   <serversettingssubselection>Submarine selection</serversettingssubselection>
@@ -727,6 +721,7 @@
   <clientpermission.manageround>Manage round</clientpermission.manageround>
   <clientpermission.managesettings>Manage settings</clientpermission.managesettings>
   <clientpermission.managepermissions>Manage permissions</clientpermission.managepermissions>
+  <clientpermission.karmaimmunity>Karma immunity</clientpermission.karmaimmunity>
 
   <!-- Mission types -->
   <missiontype.none>None</missiontype.none>
@@ -787,13 +782,13 @@
   <missionheader0.killhammerhead>Target terminated</missionheader0.killhammerhead>
   <missionmessage0.killhammerhead>The Hammerhead is dead. Navigate the submarine out of the cavern to claim the reward.</missionmessage0.killhammerhead>
   <missionname.killcrawlerswarm1>Terminate a Swarm</missionname.killcrawlerswarm1>
-  <missiondescription.killcrawlerswarm1>A small swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew who can neutralize it.</missiondescription.killcrawlerswarm1>
+  <!--<missiondescription.killcrawlerswarm1>A small swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew who can neutralize it.</missiondescription.killcrawlerswarm1>-->
   <missionsonarlabel.killcrawlerswarm1>Swarm</missionsonarlabel.killcrawlerswarm1>
   <missionsuccess.killcrawlerswarm1>The swarm has been terminated.</missionsuccess.killcrawlerswarm1>
   <missionheader0.killcrawlerswarm1>Target terminated</missionheader0.killcrawlerswarm1>
   <missionmessage0.killcrawlerswarm1>The swarm is terminated. Navigate the submarine out of the cavern to claim the reward.</missionmessage0.killcrawlerswarm1>
   <missionname.killcrawlerswarm2>Terminate a Swarm</missionname.killcrawlerswarm2>
-  <missiondescription.killcrawlerswarm2>A large swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew who can neutralize it.</missiondescription.killcrawlerswarm2>
+  <!--<missiondescription.killcrawlerswarm2>A large swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew who can neutralize it.</missiondescription.killcrawlerswarm2>-->
   <missionsonarlabel.killcrawlerswarm2>Swarm</missionsonarlabel.killcrawlerswarm2>
   <missionsuccess.killcrawlerswarm2>The swarm has been terminated.</missionsuccess.killcrawlerswarm2>
   <missionheader0.killcrawlerswarm2>Target terminated</missionheader0.killcrawlerswarm2>
@@ -823,7 +818,7 @@
   <missiondescription.cargovolatilecompoundn>A local arms dealer is offering [reward] credits in exchange for delivering two crates of high explosives to a customer in [location2].</missiondescription.cargovolatilecompoundn>
   <missionsuccess.cargovolatilecompoundn>The explosives have been successfully delivered.</missionsuccess.cargovolatilecompoundn>
   <missionname.cargochemicals>Chemical shipment</missionname.cargochemicals>
-  <missiondescription.cargochemicals>Researchersof [location1] need someone to deliver some dangerous chemicals to [location2] for a reward of 250 credits. </missiondescription.cargochemicals>
+  <!--<missiondescription.cargochemicals>Researchersof [location1] need someone to deliver some dangerous chemicals to [location2] for a reward of 250 credits. </missiondescription.cargochemicals>-->
   <missionsuccess.cargochemicals>The chemicals have been successfully delivered.</missionsuccess.cargochemicals>
   <missionname.cargohuskeggs>Biohazard</missionname.cargohuskeggs>
   <missiondescription.cargohuskeggs>Local researchers are offering [reward] credits for delivering a container of husk parasite eggs to [location2].</missiondescription.cargohuskeggs>
@@ -1210,7 +1205,6 @@
   <entityname.titanite>Titanite</entityname.titanite>
   <entitydescription.titanite>A mineral containing titanium and iron.</entitydescription.titanite>
   <entityname.brockite>Brockite</entityname.brockite>
-  <entitydescription.brockite>A mineral containing titanium and phosphorus.</entitydescription.brockite>
   <entityname.thorianite>Thorianite</entityname.thorianite>
   <entitydescription.thorianite>A rare mineral containing thorium.</entitydescription.thorianite>
   <entityname.amblygonite>Amblygonite</entityname.amblygonite>
@@ -2493,7 +2487,6 @@
   <resetkarma>Reset Karma</resetkarma>
   <karmadecreased>Your Karma decreased by [karmadecrease].</karmadecreased>
   <karmaincreased>Your Karma increased by [karmaincrease].</karmaincreased>
-  <karmabanwarning>Warning: You will be banned from the server if your Karma decreases below [banthreshold].</karmabanwarning>
   <karmabanned>You have been banned from the server because your Karma decreased below [banthreshold].</karmabanned>
   <karmajobdisallowed>You are not allowed to select this job because your Karma is too low ([yourkarma]/[minkarma]).</karmajobdisallowed>
 
@@ -3128,7 +3121,8 @@
   <stringpropertytranslate>This text will be translated to [translation].</stringpropertytranslate>
   <stringpropertycannottranslate>This text will not be translated - text with the tag [tag] not found in the language files.</stringpropertycannottranslate>
 
-  <!-- New additions -->
+  <!-- *** JULY (translations coming 12.8.) *** -->
+  <!-- NEW ADDITIONS -->
   <itemmsgoxygenrefill>Insert oxygen tank to refill it</itemmsgoxygenrefill>
   <missiondescription.cargochemicals>Researchers of [location1] need someone to deliver some dangerous chemicals to [location2] for a reward of [reward] credits.</missiondescription.cargochemicals>
   <privacypolicy>Privacy policy</privacypolicy>
@@ -3184,7 +3178,11 @@
   <connection.turretaimingout>position_out</connection.turretaimingout>
   <connection.turrettriggerout>trigger_out</connection.turrettriggerout>
   <connection.sonardataout>data_out</connection.sonardataout>
+  
   <label.outpostinfodisplay1>Welcome. Oxygen Levels: Nominal. Power Levels: Nominal. Radiation Levels: Suboptimal. Weather Forecast For Today: Cold and Damp.</label.outpostinfodisplay1>
+  <label.navterminaldock>Dock</label.navterminaldock>
+  <label.navterminaldock>Undock</label.navterminaldock>
+  
   <connectionerrornoresponse>No response from the server. There may be a connection issue at the server's end.</connectionerrornoresponse>
 
   <dialognorescuetargets>No-one seems to be in need of medical attention at the moment!</dialognorescuetargets>
@@ -3202,8 +3200,6 @@
 
   <debugconsolehelptext> Debug console - Press F3 to open/close, enter "help" for a list of available commands</debugconsolehelptext>
 
-  <voipnodevices>No audio capture devices found</voipnodevices>
-
   <wrongfiletype>Wrong file type!</wrongfiletype>
 
   <charactereditor.contentpackagenameinuse>A content package with the same name already exists. Please choose another name or select the existing content package from the dropdown if you want to add the character to it.</charactereditor.contentpackagenameinuse>
@@ -3214,8 +3210,128 @@
 
   <causeofdeath.unknown>Unknown</causeofdeath.unknown>
   <self_causeofdeathdescription.unknown>You have died.</self_causeofdeathdescription.unknown>
-  
+
+  <!-- New generic strings -->
+  <pending>Pending</pending>
+  <inprogress>In progress</inprogress>
+  <complete>Complete</complete>
+
+  <!-- Traitor mission (new) -->
+  <traitormissionstartmessage>You are the traitor! You have successfully infiltrated the submarine and now it's time to put the plans in motion.</traitormissionstartmessage>
+  <traitormissionfailuremessage>You have failed in your mission. As a result, the mission has been canceled and you are now part of the crew. Keep a low profile until you are contacted again.</traitormissionfailuremessage>
+  <traitormissionsuccessmessage>You have successfully sabotaged the crew's efforts. An escape shuttle has been dispatched for you.</traitormissionsuccessmessage>
+
+  <!-- Traitor objectives (new) -->
+  <traitorobjectivestartmessage>You have a new objective, following goals need to be completed:\n[traitorgoalinfos]</traitorobjectivestartmessage>
+  <traitorobjectivestartmessageserver>[traitorname] is the traitor and has the following goals:\n[traitorgoalinfos]</traitorobjectivestartmessageserver>
+  <traitorobjectiveendmessagesuccess>[traitorname] was a traitor and succeeded in completing the given goals:\n [traitorgoalinfos]</traitorobjectiveendmessagesuccess>
+  <traitorobjectiveendmessagesuccessdead>[traitorname] was a traitor and succeeded in completing the given goals but regrettably died in the process, goals:\n[traitorgoalinfos]</traitorobjectiveendmessagesuccessdead>
+  <traitorobjectiveendmessagesuccessdetained>[traitorname] was a traitor and succeeded in completing the given goals but was detained, goals:\n[traitorgoalinfos]</traitorobjectiveendmessagesuccessdetained>
+  <traitorobjectiveendmessagefailure>[traitorname] was a traitor but failed to complete the given goals:\n[traitorgoalinfos]</traitorobjectiveendmessagefailure>
+  <traitorobjectiveendmessagefailuredead>[traitorname] was a traitor but died while failing to complete the given goals:\n[traitorgoalinfos]</traitorobjectiveendmessagefailuredead>
+  <traitorobjectiveendmessagefailuredetained>[traitorname] was a traitor but got detained while failing to complete the given goals:\n[traitorgoalinfos]</traitorobjectiveendmessagefailuredetained>
+  <traitorobjectivegoalinfoformat>- [statustext]\n</traitorobjectivegoalinfoformat>
+
+  <!-- Traitor goals (new) -->
+  <traitorgoalstatustextformat>[infotext] ([status])</traitorgoalstatustextformat>
+  <traitorgoaltimelimitfailure>You failed to complete your objective in time.</traitorgoaltimelimitfailure>
+  <traitorgoalkilltargetinfo>Assassinate [targetname].</traitorgoalkilltargetinfo>
+  <traitorgoalkilleveryoneinfo>Kill all crew members.</traitorgoalkilleveryoneinfo>
+  <traitorgoalfinditeminfo>Find your next objective inside [target] in [targethullname].</traitorgoalfinditeminfo>
+  <traitorgoalcausereactormeltdown>Cause a reactor meltdown.</traitorgoalcausereactormeltdown>
+  <traitorgoaldestroyitems>Destroy at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>
+  <traitorgoalfloodpercentofsub>Flood at least [percentage] percent of the sub.</traitorgoalfloodpercentofsub>
+  <traitorgoaljamsonarinfo>Hide an active sonar jammer somewhere it can't be found for [duration] seconds.</traitorgoaljamsonarinfo>
+  <traitorgoaljamsonarinfoalt>Jam the submarine's sonar for [duration] seconds.</traitorgoaljamsonarinfoalt>
+  <traitorgoalsabotageinfo>Sabotage [target] for at least [duration] seconds.</traitorgoalsabotageinfo>
+  <traitorgoalpoisoninfo>Inject [targetname] with [poison].</traitorgoalpoisoninfo>
+  <traitorgoaltamperoxygeninfo>Swap at least [percentage] of oxygen tanks inside diving equipment with welding fuel.</traitorgoaltamperoxygeninfo>
+  <traitorgoaltampercoilguninfo>Load dummy ammunition into a coilgun loader.</traitorgoaltampercoilguninfo>
+  <traitorgoaltampercoilguninfomulti>Load dummy ammunition into [number] coilgun loaders.</traitorgoaltampercoilguninfomulti>
+  <traitorgoaltamperrailguninfo>Load a dummy shell into a railgun loader.</traitorgoaltamperrailguninfo>
+  <traitorgoaltamperrailguninfomulti>Load [number] dummy shells into a railgun loaders.</traitorgoaltamperrailguninfomulti>
+
+  <!-- New items -->
+  <entityname.flamer>Flamer</entityname.flamer>
+  <entitydescription.flamer>An incendiary weapon that fires a stream of burning welding fuel.</entitydescription.flamer>
+
+  <entityname.smg>SMG</entityname.smg>
+  <entitydescription.smg>A .45 caliber submachine gun.</entitydescription.smg>
+
+  <entityname.smgmagazine>SMG Magazine</entityname.smgmagazine>
+  <entitydescription.smgmagazine>A magazine for 15 .45 caliber rounds.</entitydescription.smgmagazine>
+
+  <entityname.smground>SMG Round</entityname.smground>
+  <entitydescription.smground>A .45 caliber submachine gun round.</entitydescription.smground>
+
+  <entityname.grenadelauncher>Grenade Launcher</entityname.grenadelauncher>
+  <entitydescription.grenadelauncher>A portable grenade launcher for 40mm grenades.</entitydescription.grenadelauncher>
+
+  <entityname.40mmgrenade>40mm Grenade</entityname.40mmgrenade>
+  <entitydescription.40mmgrenade>Ammunition for grenade launcher.</entitydescription.40mmgrenade>
+
+  <entityname.40mmstungrenade>40mm Stun Grenade</entityname.40mmstungrenade>
+  <entitydescription.40mmstungrenade>Ammunition for grenade launcher. Non-lethal.</entitydescription.40mmstungrenade>
+
+  <entityname.shotgun>Riot Shotgun</entityname.shotgun>
+  <entitydescription.shotgun>A shotgun designed for crowd control.</entitydescription.shotgun>
+
+  <entityname.shotgunshell>Shotgun Shell</entityname.shotgunshell>
+  <entitydescription.shotgunshell>Ammunition for a shotgun. Lethal.</entitydescription.shotgunshell>
+
+  <entityname.stungun>Stun Gun</entityname.stungun>
+  <entitydescription.stungun>A device for firing electrified darts.</entitydescription.stungun>
+
+  <entityname.stungundart>Stun Gun Dart</entityname.stungundart>
+  <entitydescription.stungundart>Causes electric shock to incapacitate a target. Non-lethal.</entitydescription.stungundart>
+
+  <entityname.toyhammer>Toy Hammer</entityname.toyhammer>
+  <entitydescription.toyhammer>Non-lethal but extremely annoying.</entitydescription.toyhammer>
+
+  <entityname.coilgunammoboxexplosive>Exploding Ammunition Box</entityname.coilgunammoboxexplosive>
+  <entitydescription.coilgunammoboxexplosive>Ammunition for the coilgun. Explodes on impact.</entitydescription.coilgunammoboxexplosive>
+
+  <entityname.coilgunammoboxpiercing>Piercing Ammunition Box</entityname.coilgunammoboxpiercing>
+  <entitydescription.coilgunammoboxpiercing>Coilgun ammo that has piercing capabilities.</entitydescription.coilgunammoboxpiercing>
+
+  <entityname.coilgunboltexplosive>Exploding Coilgun Bolt</entityname.coilgunboltexplosive>
+  <entitydescription.coilgunboltexplosive>Ammunition for the coilgun. Explodes on impact.</entitydescription.coilgunboltexplosive>
+
+  <entityname.coilgunboltpiercing>Piercing Coilgun Bolt</entityname.coilgunboltpiercing>
+  <entitydescription.coilgunboltpiercing>Coilgun ammo that has piercing capabilities.</entitydescription.coilgunboltpiercing>
+
+  <entityname.crawlermask>Crawler Mask</entityname.crawlermask>
+  <entitydescription.crawlermask>Protects wearer's identity. Fun at certain parties.</entitydescription.crawlermask>
+
+  <entityname.huskstinger>Husk Stinger</entityname.huskstinger>
+  <entitydescription.huskstinger>A makeshift stabbing tool.</entitydescription.huskstinger>
+
+  <entityname.shellshield>Moloch Shell Fragment</entityname.shellshield>
+  <entitydescription.shellshield>A sturdy piece of a moloch's shell.</entitydescription.shellshield>
+
+  <entityname.mudraptorshell>Mudraptor Shell</entityname.mudraptorshell>
+  <entitydescription.mudraptorshell>A protective shell of a mudraptor.</entitydescription.mudraptorshell>
+
+  <entityname.accordion>Accordion</entityname.accordion>
+  <entitydescription.accordion>An old handmade accordion.</entitydescription.accordion>
+
+  <entityname.bongodrums>Bongo Drums</entityname.bongodrums>
+  <entitydescription.bongodrums>An old handmade pair of bongo drums.</entitydescription.bongodrums>
+
+  <entityname.captainspipe>Captain's Pipe</entityname.captainspipe>
+  <entitydescription.captainspipe>For calming the nerves when the sea is stormy.</entitydescription.captainspipe>
+
+  <serverplaystyle>Play style</serverplaystyle>
+  <servertags>Server tags</servertags>
+  <servermotd>Message of the day</servermotd>
+  <serverbanner>Server banner</serverbanner>
+  <serverlogo>Server logo</serverlogo>
+  <servertagline>Tagline</servertagline>
+
   <!-- MODIFIED -->
+  <missiondescription.killcrawlerswarm1>A small swarm of [monster] has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew who can neutralize it.</missiondescription.killcrawlerswarm1>
+  <missiondescription.killcrawlerswarm2>A large swarm of [monster] has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew who can neutralize it.</missiondescription.killcrawlerswarm2>
+  <missiondescription.cargochemicals>Researchers of [location1] need someone to deliver some dangerous chemicals to [location2] for a reward of [reward] credits.</missiondescription.cargochemicals>
   <missionsuccess.pvpmission>The [loser] vessel has been defeated by the [winner] crew!</missionsuccess.pvpmission>
   <workshopitemrefreshfilelisttooltip>Reload the configuration file of the Workshop item (filelist.xml inside the item's folder) and add all new files in it to the file list.</workshopitemrefreshfilelisttooltip>
   <entitydescription.alienshell>For firing from a railgun.</entitydescription.alienshell>
@@ -3224,18 +3340,138 @@
   <workshop.contenttag.totalconversion>Total conversion</workshop.contenttag.totalconversion>
   <workshop.contenttag.itemassembly>Item assembly</workshop.contenttag.itemassembly>
   <workshop.contenttag.language>Language</workshop.contenttag.language>
+  <entitydescription.brockite>A mineral containing thorium and phosphorus.</entitydescription.brockite>
 
   <serverlisthaspassword>Password</serverlisthaspassword>
-
   <filterpassword>No password</filterpassword>
   <filterincompatibleservers>Hide incompatible</filterincompatibleservers>
   <filterfullservers>Hide full</filterfullservers>
   <filteremptyservers>Hide empty</filteremptyservers>
-
   <serverlistrefresh>Scan Servers</serverlistrefresh>
-
   <yourname>Player name</yourname>
-
   <joinserver>Server browser</joinserver>
   <joinserverbutton>Server browser</joinserverbutton>
+  
+  <!-- *** AUGUST *** (Will be sent to localization asap) -->
+  <!-- NEW ADDITIONS-->
+  <!-- Server -->
+  <serversettingsgeneraltab>General</serversettingsgeneraltab>
+  <serversettingsantigriefingtab>Anti-griefing</serversettingsantigriefingtab>
+  <serverprocessclosed>The server process has closed unexpectedly. A crash report (servercrashreport.log) may have been generated in the game's root directory.</serverprocessclosed>
+  <serverprocesscrashed>The server process has crashed. A crash report (servercrashreport.log) has been generated in the game's root directory.</serverprocesscrashed>
+  <disconnectreason.servercrashed>The server has crashed.</disconnectreason.servercrashed>
+  
+  <!-- Workshop -->
+  <workshoperroronenable>Cannot enable Workshop item '[itemname]'.</workshoperroronenable>
+  
+  <!-- Audio -->
+  <dynamicrangecompression>Dynamic range compression</dynamicrangecompression>
+  <dynamicrangecompressiontooltip>Adjusts the game's volume automatically to prevent audio distortion.</dynamicrangecompressiontooltip>
+  <voipattenuation>Voice chat attenuation</voipattenuation>
+  <voipattenuationtooltip>Lowers the game's volume when players are speaking.</voipattenuationtooltip>
+  <voipnodevices>No audio capture devices found</voipnodevices>
+  
+  <!-- Misc -->
+  <pumpautocontrol>Automatic control</pumpautocontrol>
+  <viewsteamprofile>View Steam profile</viewsteamprofile>
+  <deletefileverification>Do you want to delete [filename]?</deletefileverification>
+  <connection.activate>activate</connection.activate>
+
+  <!-- Submarine labels -->
+  <label.betadeck>Beta Deck</label.betadeck>
+  <label.airlock>Airlock</label.airlock>
+  <label.dockingport>Docking Port</label.dockingport>
+  <label.weapons>Weapons</label.weapons>
+  <label.cargo>Cargo Bay</label.cargo>
+  <label.crewquarters>Crew Quarters</label.crewquarters>
+  <label.electrical1>Electrical #1</label.electrical1>
+  <label.electrical2>Electrical #2</label.electrical2>
+  <label.medical>Medical</label.medical>
+  <label.engineering>Engineering</label.engineering>
+  <label.ballast>Ballast</label.ballast>
+  <label.reactor>Reactor</label.reactor>
+  <label.armory>Armory</label.armory>
+  <label.batteryoutput>Battery Output</label.batteryoutput>
+  <label.onoff>On/Off</label.onoff>
+  <label.bilge>Bilge</label.bilge>
+  <label.powermainline>Power Mainline</label.powermainline>
+  <label.command>Command</label.command>
+  <label.engine>Engine</label.engine>
+
+  <!-- Karma system -->
+  <Karma.KickBanThreshold>Ban threshold</Karma.KickBanThreshold>
+  <Karma.KickBanThresholdTooltip>The players whose karma decreases below this threshold get automatically banned from the server.</Karma.KickBanThresholdTooltip>
+
+  <Karma.KarmaDecay>Karma decay speed</Karma.KarmaDecay>
+  <Karma.KarmaDecayTooltip>How much karma decreases per second when it's above the decay threshold.</Karma.KarmaDecayTooltip>
+
+  <Karma.KarmaDecayThreshold>Karma decay threshold</Karma.KarmaDecayThreshold>
+  <Karma.KarmaDecayThresholdTooltip>Karma gradually decreases when it's above this threshold.</Karma.KarmaDecayThresholdTooltip>
+
+  <Karma.KarmaIncrease>Karma increase speed</Karma.KarmaIncrease>
+  <Karma.KarmaIncreaseTooltip>How much karma increases per second when it's below the increase threshold.</Karma.KarmaIncreaseTooltip>
+
+  <Karma.KarmaIncreaseThreshold>Karma increase threshold</Karma.KarmaIncreaseThreshold>
+  <Karma.KarmaIncreaseThresholdTooltip>Karma gradually increases when it's below this threshold.</Karma.KarmaIncreaseThresholdTooltip>
+
+  <Karma.StructureRepairKarmaIncrease>Structure repaired</Karma.StructureRepairKarmaIncrease>
+  <Karma.StructureRepairKarmaIncreaseTooltip>How much karma increases when repairing structures (per amount of damage repaired, for example a value of 0.05 would mean you get 5 points of karma when you repair a wall from 0 health to 100).</Karma.StructureRepairKarmaIncreaseTooltip>
+
+  <Karma.StructureDamageKarmaDecrease>Structure damaged</Karma.StructureDamageKarmaDecrease>
+  <Karma.StructureDamageKarmaDecreaseTooltip>How much karma decreases when damaging structures (per amount of damage done, for example a value of 0.05 would mean that karma decreases by 5 when taking a wall from 100 health to 0).</Karma.StructureDamageKarmaDecreaseTooltip>
+
+  <Karma.ItemRepairKarmaIncrease>Device repaired</Karma.ItemRepairKarmaIncrease>
+  <Karma.ItemRepairKarmaIncreaseTooltip>How much karma increases when repairing devices (per amount of damage repaired, for example a value of 0.05 would mean you get 5 points of karma when you repair a device from 0 health to 100).</Karma.ItemRepairKarmaIncreaseTooltip>
+
+  <Karma.DamageEnemyKarmaIncrease>Damage to enemy</Karma.DamageEnemyKarmaIncrease>
+  <Karma.DamageEnemyKarmaIncreaseTooltip>How much karma increases when damaging enemies (per amount of damage done).</Karma.DamageEnemyKarmaIncreaseTooltip>
+
+  <Karma.HealFriendlyKarmaIncrease>Heal friendly</Karma.HealFriendlyKarmaIncrease>
+  <Karma.HealFriendlyKarmaIncreaseTooltip>How much karma increases when healing other members of the crew (per amount of damage healed).</Karma.HealFriendlyKarmaIncreaseTooltip>
+
+  <Karma.DamageFriendlyKarmaDecrease>Damage to friendly</Karma.DamageFriendlyKarmaDecrease>
+  <Karma.DamageFriendlyKarmaDecreaseTooltip>How much karma decreases when damaging other members of the crew (per amount of damage done).</Karma.DamageFriendlyKarmaDecreaseTooltip>
+
+  <Karma.ReactorMeltdownKarmaDecrease>Reactor meltdown</Karma.ReactorMeltdownKarmaDecrease>
+  <Karma.ReactorMeltdownKarmaDecreaseTooltip>How much karma decreases if the player causes a reactor meltdown.</Karma.ReactorMeltdownKarmaDecreaseTooltip>
+
+  <Karma.ReactorOverheatKarmaDecrease>Reactor overheat</Karma.ReactorOverheatKarmaDecrease>
+  <Karma.ReactorOverheatKarmaDecreaseTooltip>How much karma decreases per second if a reactor's temperature stays critical while the player is operating it.</Karma.ReactorOverheatKarmaDecreaseTooltip>
+
+  <Karma.ExtinguishFireKarmaIncrease>Extinguish fires</Karma.ExtinguishFireKarmaIncrease>
+  <Karma.ExtinguishFireKarmaIncreaseTooltip>How much karma increases per second when attempting to extinguish fires.</Karma.ExtinguishFireKarmaIncreaseTooltip>
+
+  <Karma.AllowedWireDisconnectionsPerMinute>Allowed wire disconnections per minute</Karma.AllowedWireDisconnectionsPerMinute>
+  <Karma.AllowedWireDisconnectionsPerMinuteTooltip>How many wires a player is allowed to disconnect per minute before they start losing karma.</Karma.AllowedWireDisconnectionsPerMinuteTooltip>
+
+  <Karma.WireDisconnectionKarmaDecrease>Disconnect lots of wires</Karma.WireDisconnectionKarmaDecrease>
+  <Karma.WireDisconnectionKarmaDecreaseTooltip>How much karma decreases if a player disconnects more than the allowed number of wires per minute.</Karma.WireDisconnectionKarmaDecreaseTooltip>
+
+  <Karma.SpamFilterKarmaDecrease>Triggering the spam filter</Karma.SpamFilterKarmaDecrease>
+  <Karma.SpamFilterKarmaDecreaseTooltip>How much karma decreases if a player triggers the spam filter of the text chat.</Karma.SpamFilterKarmaDecreaseTooltip>
+
+  <Karma.HerpesThreshold>Space herpes threshold</Karma.HerpesThreshold>
+  <Karma.HerpesThresholdToolTip>How low does the karma have to decrease for the player to get the space herpes.</Karma.HerpesThresholdToolTip>
+
+  <Karma.PositiveActions>Helpful actions</Karma.PositiveActions>
+  <Karma.NegativeActions>Harmful actions</Karma.NegativeActions>
+
+  <KarmaPreset.Default>Default</KarmaPreset.Default>
+  <KarmaPreset.Strict>Strict</KarmaPreset.Strict>
+  <KarmaPreset.Custom>Custom</KarmaPreset.Custom>
+
+  <karmadecreasedunknownamount>Your Karma has decreased.</karmadecreasedunknownamount>
+  <karmaincreasedunknownamount>Your Karma has increased.</karmaincreasedunknownamount>
+
+  <afflictionname.spaceherpes>Space herpes</afflictionname.spaceherpes>
+  <afflictiondescription.spaceherpes>The patient's face is filled with nasty-looking blisters and ulcers.</afflictiondescription.spaceherpes>
+
+  <afflictionname.invertcontrols>Disoriented</afflictionname.invertcontrols>
+  <afflictiondescription.invertcontrols>The patient's eyes are darting around and they seem to be having trouble orienting to their surroundings.</afflictiondescription.invertcontrols>
+
+  <!-- MODIFIED -->
+  <karmabanwarning>WARNING: Your karma is dangerously low. You will be banned from the server if it decreases further.</karmabanwarning>
+  <publicservertooltip>Public servers are shown in the list of available servers in the 'Server Browser'.</publicservertooltip>
+  <serversettingsroundstab>Gameplay</serversettingsroundstab>
+  <nosubscribedmods>You haven't subscribed to any mods on the Steam Workshop. Select the 'Popular mods' tab to find some!</nosubscribedmods>
 </infotexts>
