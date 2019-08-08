@@ -445,6 +445,11 @@ namespace Barotrauma
             LoadAudioSettings(doc);
             LoadControls(doc);
             LoadContentPackages(doc);
+
+#if DEBUG
+            WindowMode = WindowMode.Windowed;
+#endif
+
             UnsavedSettings = false;
         }
 
