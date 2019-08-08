@@ -150,11 +150,12 @@ namespace Barotrauma
         [Serialize(true, true), Editable]
         public bool DoesBleed { get; set; }
 
-        [Serialize(false, true), Editable]
-        public bool UseHealthWindow { get; set; }
-
         [Serialize(float.NegativeInfinity, true), Editable]
         public float CrushDepth { get; set; }
+
+        // Make editable?
+        [Serialize(false, true)]
+        public bool UseHealthWindow { get; set; }
 
         // TODO: limbhealths, sprite?
 
