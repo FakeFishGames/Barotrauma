@@ -3360,6 +3360,8 @@
   <!-- Audio -->
   <dynamicrangecompression>Dynamic range compression</dynamicrangecompression>
   <dynamicrangecompressiontooltip>Adjusts the game's volume automatically to prevent audio distortion.</dynamicrangecompressiontooltip>
+  <voipattenuation>Voice chat attenuation</voipattenuation>
+  <voipattenuationtooltip>Lowers the game's volume when players are speaking.</voipattenuationtooltip>
   <voipnodevices>No audio capture devices found</voipnodevices>
   
   <!-- Misc -->
