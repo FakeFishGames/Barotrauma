@@ -3367,11 +3367,8 @@
   <!-- Audio -->
   <dynamicrangecompression>Dynamic range compression</dynamicrangecompression>
   <dynamicrangecompressiontooltip>Adjusts the game's volume automatically to prevent audio distortion.</dynamicrangecompressiontooltip>
-<<<<<<< HEAD
   <voipattenuation>Voice chat attenuation</voipattenuation>
   <voipattenuationtooltip>Lowers the game's volume when players are speaking.</voipattenuationtooltip>
-=======
->>>>>>> origin/dev
   <voipnodevices>No audio capture devices found</voipnodevices>
   
   <!-- Misc -->
@@ -3472,8 +3469,6 @@
   <afflictionname.invertcontrols>Disoriented</afflictionname.invertcontrols>
   <afflictiondescription.invertcontrols>The patient's eyes are darting around and they seem to be having trouble orienting to their surroundings.</afflictiondescription.invertcontrols>
 
-<<<<<<< HEAD
-=======
   <!-- New generic strings -->
   <damagebutton>Damage</damagebutton>
   <pending>Pending</pending>
@@ -3560,7 +3555,6 @@
   <flood_2_objectiveSuccessMessage4>As you take their life you note, perhaps with a little bitterness, that your reciever has gone dead quite suddenly. Your comrades have left you to the mercy of Mother Europa.</flood_2_objectiveSuccessMessage4>
 
 
->>>>>>> origin/dev
   <!-- MODIFIED -->
   <karmabanwarning>WARNING: Your karma is dangerously low. You will be banned from the server if it decreases further.</karmabanwarning>
   <publicservertooltip>Public servers are shown in the list of available servers in the 'Server Browser'.</publicservertooltip>
