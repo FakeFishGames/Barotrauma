@@ -570,8 +570,6 @@
   <connectionlostreconnecting>You have been disconnected from the server. Reconnecting...</connectionlostreconnecting>
   <connectionfailed>Connecting failed</connectionfailed>
   <connectingto>Connecting to [serverip]</connectingto>
-  <serverprocessclosed>The server process has closed unexpectedly. A crash report (servercrashreport.log) may have been generated in the game's root directory.</serverprocessclosed>
-  <serverprocesscrashed>The server process has crashed. A crash report (servercrashreport.log) has been generated in the game's root directory.</serverprocesscrashed>
   <serverfullquestionprompt>Do you want to join the server queue and wait for a slot to free up?</serverfullquestionprompt>
   <serverqueue>Queue</serverqueue>
   <serverqueuepleasewait>Please wait...</serverqueuepleasewait>
@@ -585,7 +583,6 @@
   <disconnectreason.banned>You have been banned from the server.</disconnectreason.banned>
   <disconnectreason.kicked>You have been kicked from the server.</disconnectreason.kicked>
   <disconnectreason.servershutdown>The server has shut down.</disconnectreason.servershutdown>
-  <disconnectreason.servercrashed>The server has crashed.</disconnectreason.servercrashed>
   <disconnectreason.serverfull>The server is full.</disconnectreason.serverfull>
   <disconnectreason.authenticationrequired>Client did not properly request authentication.</disconnectreason.authenticationrequired>
   <disconnectreason.steamauthenticationrequired>Steam authentication required. Please make sure Steam is running and you are logged in to an account.</disconnectreason.steamauthenticationrequired>
@@ -643,7 +640,6 @@
   <rank>Rank</rank>
   <customrank>Custom</customrank>
   <permissions>Permissions</permissions>
-  <viewsteamprofile>View Steam profile</viewsteamprofile>
   <kick>Kick</kick>
   <votetokick>Vote to kick</votetokick>
   <ban>Ban</ban>
@@ -3203,8 +3199,6 @@
 
   <debugconsolehelptext> Debug console - Press F3 to open/close, enter "help" for a list of available commands</debugconsolehelptext>
 
-  <voipnodevices>No audio capture devices found</voipnodevices>
-
   <wrongfiletype>Wrong file type!</wrongfiletype>
 
   <charactereditor.contentpackagenameinuse>A content package with the same name already exists. Please choose another name or select the existing content package from the dropdown if you want to add the character to it.</charactereditor.contentpackagenameinuse>
@@ -3465,4 +3459,16 @@
   <karmabanwarning>WARNING: Your karma is dangerously low. You will be banned from the server if it decreases further.</karmabanwarning>
   <nosubscribedmods>You haven't subscribed to any mods on the Steam Workshop. Select the 'Popular mods' tab to find some!</nosubscribedmods>
   <publicservertooltip>Public servers are shown in the list of available servers in the 'Server Browser'.</publicservertooltip>
+
+  <serverprocessclosed>The server process has closed unexpectedly. A crash report (servercrashreport.log) may have been generated in the game's root directory.</serverprocessclosed>
+  <serverprocesscrashed>The server process has crashed. A crash report (servercrashreport.log) has been generated in the game's root directory.</serverprocesscrashed>
+
+  <disconnectreason.servercrashed>The server has crashed.</disconnectreason.servercrashed>
+
+  <dynamicrangecompression>Dynamic range compression</dynamicrangecompression>
+  <dynamicrangecompressiontooltip>Adjusts the game's volume automatically to prevent audio distortion.</dynamicrangecompressiontooltip>
+  
+  <viewsteamprofile>View Steam profile</viewsteamprofile>
+  
+  <voipnodevices>No audio capture devices found</voipnodevices>
 </infotexts>
