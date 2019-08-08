@@ -7,7 +7,7 @@ using System.Xml.Linq;
 namespace Barotrauma.Networking
 {
     [Flags]
-    enum ClientPermissions
+    public enum ClientPermissions
     {
         None = 0x0,
         ManageRound = 0x1,
@@ -21,7 +21,8 @@ namespace Barotrauma.Networking
         ServerLog = 0x100,
         ManageSettings = 0x200,
         ManagePermissions = 0x400,
-        All = 0x7ff
+        KarmaImmunity = 0x800,
+        All = 0xFFF
     }
 
     class PermissionPreset

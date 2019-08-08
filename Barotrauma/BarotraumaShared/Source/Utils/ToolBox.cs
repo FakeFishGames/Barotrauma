@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -7,6 +6,7 @@ using System.Security.Cryptography;
 using System.Reflection;
 using System.Text;
 using Microsoft.Xna.Framework;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -260,19 +260,20 @@ namespace Barotrauma
 
         public static string SecondsToReadableTime(float seconds)
         {
+            int s = (int)(seconds % 60.0f);
             if (seconds < 60.0f)
             {
-                return (int)seconds + " s";
+                return s + " s";
             }
-            else
-            {
-                int m = (int)(seconds / 60.0f);
-                int s = (int)(seconds % 60.0f);
 
-                return s == 0 ?
-                    m + " m" :
-                    m + " m " + s + " s";
-            }
+            int h = (int)(seconds / (60.0f * 60.0f));
+            int m = (int)((seconds / 60.0f) % 60);
+
+            string text = "";
+            if (h != 0) { text = h + " h"; }
+            if (m != 0) { text = string.IsNullOrEmpty(text) ? m + " m" : string.Join(" ", text, m, "m"); }
+            if (s != 0) { text = string.IsNullOrEmpty(text) ? s + " s" : string.Join(" ", text, s, "s"); }
+            return text;
         }
 
         private static Dictionary<string, List<string>> cachedLines = new Dictionary<string, List<string>>();
@@ -312,13 +313,16 @@ namespace Barotrauma
         /// <summary>
         /// Reads a number of bits from the buffer and inserts them to a new NetBuffer instance
         /// </summary>
-        public static NetBuffer ExtractBits(this NetBuffer originalBuffer, int numberOfBits)
+        public static IReadMessage ExtractBits(this IReadMessage originalBuffer, int numberOfBits)
         {
-            var buffer = new NetBuffer();
-            byte[] data = new byte[(int)Math.Ceiling(numberOfBits / (double)8)];
-
-            originalBuffer.ReadBits(data, 0, numberOfBits);
-            buffer.Write(data);
+            var buffer = new ReadWriteMessage();
+            
+            for (int i=0;i<numberOfBits;i++)
+            {
+                bool bit = originalBuffer.ReadBoolean();
+                buffer.Write(bit);
+            }
+            buffer.BitPosition = 0;
 
             return buffer;
         }
@@ -405,6 +409,14 @@ namespace Barotrauma
             //    throw new Exception("Failed to copy some of the fields.");
             //}
             return destination;
+        }
+
+        public static string ByteArrayToString(byte[] ba)
+        {
+            StringBuilder hex = new StringBuilder(ba.Length * 2);
+            foreach (byte b in ba)
+                hex.AppendFormat("{0:x2}", b);
+            return hex.ToString();
         }
     }
 }

@@ -36,6 +36,8 @@ namespace Barotrauma
         private List<ScriptedEventSet> selectedEventSets;
 
         private EventManagerSettings settings;
+
+        private readonly bool isClient;
         
         public float CurrentIntensity
         {
@@ -51,13 +53,15 @@ namespace Barotrauma
         {
             events = new List<ScriptedEvent>();
             selectedEventSets = new List<ScriptedEventSet>();
+
+            isClient = GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient;
         }
 
         public bool Enabled = true;
 
         public void StartRound(Level level)
         {
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) return;
+            if (isClient) { return; }
 
             var suitableSettings = EventManagerSettings.List.FindAll(s =>
                 level.Difficulty >= s.MinLevelDifficulty &&
@@ -193,13 +197,13 @@ namespace Barotrauma
         
         public void Update(float deltaTime)
         {
-            if (!Enabled) return;
+            if (!Enabled) { return; }
 
             //clients only calculate the intensity but don't create any events
             //(the intensity is used for controlling the background music)
             CalculateCurrentIntensity(deltaTime);
-            
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) return;
+
+            if (isClient) { return; }
 
             roundDuration += deltaTime;
 
@@ -280,16 +284,23 @@ namespace Barotrauma
 
             float holeCount = 0.0f;
             floodingAmount = 0.0f;
+            int hullCount = 0;
             foreach (Hull hull in Hull.hullList)
             {
                 if (hull.Submarine == null || hull.Submarine.IsOutpost) { continue; }
+                hullCount++;
                 foreach (Gap gap in hull.ConnectedGaps)
                 {
                     if (!gap.IsRoomToRoom) holeCount += gap.Open;
                 }
-                floodingAmount += hull.WaterVolume / hull.Volume / Hull.hullList.Count;
+                floodingAmount += hull.WaterVolume / hull.Volume;
                 fireAmount += hull.FireSources.Sum(fs => fs.Size.X);
             }
+            if (hullCount > 0)
+            {
+                floodingAmount = floodingAmount / hullCount;
+            }
+
             //hull integrity at 0.0 if there are 10 or more wide-open holes
             avgHullIntegrity = MathHelper.Clamp(1.0f - holeCount / 10.0f, 0.0f, 1.0f);
             

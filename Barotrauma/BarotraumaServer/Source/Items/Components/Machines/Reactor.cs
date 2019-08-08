@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using Lidgren.Network;
 using System;
 
 namespace Barotrauma.Items.Components
@@ -11,7 +10,7 @@ namespace Barotrauma.Items.Components
         private float? nextServerLogWriteTime;
         private float lastServerLogWriteTime;
 
-        public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
+        public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
         {
             bool autoTemp = msg.ReadBoolean();
             bool shutDown = msg.ReadBoolean();
@@ -42,7 +41,7 @@ namespace Barotrauma.Items.Components
             unsentChanges = true;
         }
 
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             msg.Write(autoTemp);
             msg.Write(shutDown);

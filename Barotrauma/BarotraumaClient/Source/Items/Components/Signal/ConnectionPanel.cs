@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -52,7 +51,7 @@ namespace Barotrauma.Items.Components
 
         private void DrawConnections(SpriteBatch spriteBatch, GUICustomComponent container)
         {
-            if (user != Character.Controlled || user == null) return;
+            if (user != Character.Controlled || user == null) { return; }
 
             HighlightedWire = null;
             Connection.DrawConnections(spriteBatch, this, user);
@@ -64,14 +63,28 @@ namespace Barotrauma.Items.Components
         }
 
 
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             if (GameMain.Client.MidRoundSyncing)
             {
                 //delay reading the state until midround syncing is done
                 //because some of the wires connected to the panel may not exist yet
-                int bitsToRead = Connections.Count * Connection.MaxLinked * 16;
-                StartDelayedCorrection(type, msg.ExtractBits(bitsToRead), sendingTime, waitForMidRoundSync: true);
+                long msgStartPos = msg.BitPosition;
+                foreach (Connection connection in Connections)
+                {
+                    for (int i = 0; i < Connection.MaxLinked; i++)
+                    {
+                        msg.ReadUInt16();
+                    }
+                }
+                ushort disconnectedWireCount = msg.ReadUInt16();
+                for (int i = 0; i < disconnectedWireCount; i++)
+                {
+                    msg.ReadUInt16();
+                }
+                int msgLength = (int)(msg.BitPosition - msgStartPos);
+                msg.BitPosition = (int)msgStartPos;
+                StartDelayedCorrection(type, msg.ExtractBits(msgLength), sendingTime, waitForMidRoundSync: true);
             }
             else
             {
@@ -79,7 +92,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private void ApplyRemoteState(NetBuffer msg)
+        private void ApplyRemoteState(IReadMessage msg)
         {
             List<Wire> prevWires = Connections.SelectMany(c => c.Wires.Where(w => w != null)).ToList();
             List<Wire> newWires = new List<Wire>();
@@ -95,11 +108,9 @@ namespace Barotrauma.Items.Components
                 {
                     ushort wireId = msg.ReadUInt16();
 
-                    Item wireItem = Entity.FindEntityByID(wireId) as Item;
-                    if (wireItem == null) continue;
-
+                    if (!(Entity.FindEntityByID(wireId) is Item wireItem)) { continue; }
                     Wire wireComponent = wireItem.GetComponent<Wire>();
-                    if (wireComponent == null) continue;
+                    if (wireComponent == null) { continue; }
 
                     newWires.Add(wireComponent);
 
@@ -108,18 +119,46 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            List<Wire> previousDisconnectedWires = new List<Wire>(DisconnectedWires);
+            DisconnectedWires.Clear();
+            ushort disconnectedWireCount = msg.ReadUInt16();
+            for (int i = 0; i < disconnectedWireCount; i++)
+            {
+                ushort wireId = msg.ReadUInt16();
+                if (!(Entity.FindEntityByID(wireId) is Item wireItem)) { continue; }
+                Wire wireComponent = wireItem.GetComponent<Wire>();
+                if (wireComponent == null) { continue; }
+                DisconnectedWires.Add(wireComponent);
+            }
+
             foreach (Wire wire in prevWires)
             {
-                if (wire.Connections[0] == null && wire.Connections[1] == null)
+                bool connected = wire.Connections[0] != null || wire.Connections[1] != null;
+                if (!connected)
+                {
+                    foreach (Item item in Item.ItemList)
+                    {
+                        var connectionPanel = item.GetComponent<ConnectionPanel>();
+                        if (connectionPanel != null && connectionPanel.DisconnectedWires.Contains(wire))
+                        {
+                            connected = true;
+                            break;
+                        }
+                    }
+                }
+                if (wire.Item.ParentInventory == null && !connected)
                 {
                     wire.Item.Drop(null);
                 }
-                //wires that are not in anyone's inventory (i.e. not currently being rewired) can never be connected to only one connection
-                // -> someone must have dropped the wire from the connection panel
-                else if (wire.Item.ParentInventory == null &&
-                    (wire.Connections[0] != null ^ wire.Connections[1] != null))
+            }
+
+            foreach (Wire disconnectedWire in previousDisconnectedWires)
+            {
+                if (disconnectedWire.Connections[0] == null &&
+                    disconnectedWire.Connections[1] == null &&
+                    !DisconnectedWires.Contains(disconnectedWire))
                 {
-                    wire.Item.Drop(null);
+                    disconnectedWire.Item.Drop(dropper: null);
                 }
             }
         }

@@ -57,7 +57,12 @@ namespace Barotrauma
             get;
             private set;
         }
-        
+
+        public override string ToString()
+        {
+            return $"LocationType (" + Identifier + ")";
+        }
+
         private LocationType(XElement element)
         {
             Identifier = element.GetAttributeString("identifier", element.Name.ToString());

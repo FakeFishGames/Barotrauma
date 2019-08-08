@@ -1,7 +1,6 @@
 ﻿using Barotrauma.Networking;
 using Barotrauma.Particles;
 using Barotrauma.Sounds;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -528,14 +527,14 @@ namespace Barotrauma
             }
         }
 
-        public void ClientWrite(NetBuffer msg, object[] extraData = null)
+        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
         {
             msg.WriteRangedSingle(MathHelper.Clamp(waterVolume / Volume, 0.0f, 1.5f), 0.0f, 1.5f, 8);
 
             msg.Write(FireSources.Count > 0);
             if (FireSources.Count > 0)
             {
-                msg.WriteRangedInteger(0, 16, Math.Min(FireSources.Count, 16));
+                msg.WriteRangedIntegerDeprecated(0, 16, Math.Min(FireSources.Count, 16));
                 for (int i = 0; i < Math.Min(FireSources.Count, 16); i++)
                 {
                     var fireSource = FireSources[i];
@@ -550,7 +549,7 @@ namespace Barotrauma
             }
         }
 
-        public void ClientRead(ServerNetObject type, NetBuffer message, float sendingTime)
+        public void ClientRead(ServerNetObject type, IReadMessage message, float sendingTime)
         {
             remoteWaterVolume = message.ReadRangedSingle(0.0f, 1.5f, 8) * Volume;
             remoteOxygenPercentage = message.ReadRangedSingle(0.0f, 100.0f, 8);

@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using System;
+﻿using System;
 
 namespace Barotrauma.Networking
 {
@@ -15,7 +14,8 @@ namespace Barotrauma.Networking
             ApplyStatusEffect,
             ChangeProperty,
             Control,
-            UpdateSkills
+            UpdateSkills,
+            Combine
         }
 
         public readonly Entity Entity;

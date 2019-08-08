@@ -24,17 +24,29 @@ namespace Barotrauma
         static void Main(string[] args)
         {
             GameMain game = null;
-            Thread inputThread = null;
 
 #if !DEBUG
             try
             {
 #endif
                 game = new GameMain(args);
-                inputThread = new Thread(new ThreadStart(DebugConsole.UpdateCommandLine));
-                inputThread.Start();
+                DebugConsole.InputThread = null;
+#if !DEBUG
+                if (!args.Contains("-ownerkey") && !args.Contains("-steamid"))
+                {
+#endif
+                    DebugConsole.InputThread = new Thread(new ThreadStart(DebugConsole.UpdateCommandLine));
+                    DebugConsole.InputThread.IsBackground = true;
+                    DebugConsole.InputThread.Start();
+#if !DEBUG
+                }
+                else
+                {
+                    Console.WriteLine("Server launched through client, command line IO disabled");
+                }
+#endif
                 game.Run();
-                inputThread.Abort(); inputThread.Join();
+                DebugConsole.InputThread?.Abort(); DebugConsole.InputThread?.Join();
                 if (GameSettings.SendUserStatistics) GameAnalytics.OnQuit();
                 SteamManager.ShutDown();
 #if !DEBUG
@@ -42,7 +54,8 @@ namespace Barotrauma
             catch (Exception e)
             {
                 CrashDump(game, "servercrashreport.log", e);
-                inputThread.Abort(); inputThread.Join();
+                GameMain.Server?.NotifyCrash();
+                DebugConsole.InputThread?.Abort(); DebugConsole.InputThread?.Join();
             }
 #endif
         }
@@ -88,6 +101,17 @@ namespace Barotrauma
             sb.AppendLine("Stack trace: ");
             sb.AppendLine(exception.StackTrace);
             sb.AppendLine("\n");
+
+            if (exception.InnerException != null)
+            {
+                sb.AppendLine("InnerException: " + exception.InnerException.Message);
+                if (exception.InnerException.TargetSite != null)
+                {
+                    sb.AppendLine("Target site: " + exception.InnerException.TargetSite.ToString());
+                }
+                sb.AppendLine("Stack trace: ");
+                sb.AppendLine(exception.InnerException.StackTrace);
+            }
 
             sb.AppendLine("Last debug messages:");
             for (int i = DebugConsole.Messages.Count - 1; i > 0 && i > DebugConsole.Messages.Count - 15; i-- )

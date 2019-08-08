@@ -1,5 +1,5 @@
 using Barotrauma.Extensions;
-using Lidgren.Network;
+using Barotrauma.Networking;
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
@@ -220,7 +220,7 @@ namespace Barotrauma
         }
 
 
-        public static CharacterInfo ClientRead(string configPath, NetBuffer inc)
+        public static CharacterInfo ClientRead(string configPath, IReadMessage inc)
         {
             ushort infoID = inc.ReadUInt16();
             string newName = inc.ReadString();

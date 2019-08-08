@@ -1,6 +1,5 @@
 ﻿using Barotrauma.Networking;
 using FarseerPhysics;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -122,7 +121,7 @@ namespace Barotrauma
             return "LevelObject (" + ActivePrefab.Name + ")";
         }
 
-        public void ServerWrite(NetBuffer msg, Client c)
+        public void ServerWrite(IWriteMessage msg, Client c)
         {
             for (int j = 0; j < Triggers.Count; j++)
             {

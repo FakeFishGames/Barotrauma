@@ -32,6 +32,7 @@ namespace Barotrauma.Items.Components
         private Rectangle doorRect;
 
         private bool isBroken;
+        private const float brokenThreshold = 50.0f;
         
         public bool IsBroken
         {
@@ -250,17 +251,14 @@ namespace Barotrauma.Items.Components
             if (item.Condition <= RepairThreshold) { return true; }
             if (requiredItems.Any() && !hasValidIdCard)
             {
-                ForceOpen(ActionType.OnPicked);
+                ToggleState(ActionType.OnPicked);
             }
             return false;
         }
 
-        private void ForceOpen(ActionType actionType)
+        private void ToggleState(ActionType actionType)
         {
-            SetState(PredictedState == null ? !isOpen : !PredictedState.Value, false, true); //crowbar function
-#if CLIENT
-            PlaySound(actionType, item.WorldPosition, picker);
-#endif
+            SetState(PredictedState == null ? !isOpen : !PredictedState.Value, false, true, forcedOpen: actionType == ActionType.OnPicked);
         }
 
         public override bool Select(Character character)
@@ -272,7 +270,7 @@ namespace Barotrauma.Items.Components
                 {
                     float originalPickingTime = PickingTime;
                     PickingTime = 0;
-                    ForceOpen(ActionType.OnUse);
+                    ToggleState(ActionType.OnUse);
                     PickingTime = originalPickingTime;
                 }
                 else if (hasRequiredItems)
@@ -287,13 +285,15 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (isBroken)
+            // The door has to be over the broken threshold before collision detection on the body is re-enabled, and under for the collision detection to be disabled
+            if (isBroken && item.ConditionPercentage > brokenThreshold)
             {
-                //the door has to be restored to 50% health before collision detection on the body is re-enabled
-                if (item.ConditionPercentage > 50.0f)
-                {
-                    IsBroken = false;
-                }
+                IsBroken = false;
+                return;
+            }
+            else if (!isBroken && item.ConditionPercentage <= brokenThreshold)
+            {
+                IsBroken = true;                
                 return;
             }
 
@@ -538,11 +538,11 @@ namespace Barotrauma.Items.Components
 
             if (connection.Name == "toggle")
             {
-                SetState(!wasOpen, false, true);
+                SetState(!wasOpen, false, true, forcedOpen: false);
             }
             else if (connection.Name == "set_state")
             {
-                SetState(signal != "0", false, true);
+                SetState(signal != "0", false, true, forcedOpen: false);
             }
 
 #if SERVER
@@ -555,9 +555,9 @@ namespace Barotrauma.Items.Components
 
         public void TrySetState(bool open, bool isNetworkMessage, bool sendNetworkMessage = false)
         {
-            SetState(open, isNetworkMessage, sendNetworkMessage);
+            SetState(open, isNetworkMessage, sendNetworkMessage, forcedOpen: false);
         }
 
-        partial void SetState(bool open, bool isNetworkMessage, bool sendNetworkMessage);
+        partial void SetState(bool open, bool isNetworkMessage, bool sendNetworkMessage, bool forcedOpen);
     }
 }

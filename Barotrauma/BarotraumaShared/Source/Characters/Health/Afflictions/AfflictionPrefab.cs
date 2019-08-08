@@ -157,6 +157,9 @@ namespace Barotrauma
         //how high the strength has to be for the affliction icon to be shown with a health scanner
         public readonly float ShowInHealthScannerThreshold = 0.05f;
 
+        //how much karma changes when a player applies this affliction to someone (per strength of the affliction)
+        public float KarmaChangeOnApplied;
+
         public float BurnOverlayAlpha;
         public float DamageOverlayAlpha;
 
@@ -265,8 +268,11 @@ namespace Barotrauma
             DamageOverlayAlpha  = element.GetAttributeFloat("damageoverlayalpha", 0.0f);
             BurnOverlayAlpha    = element.GetAttributeFloat("burnoverlayalpha", 0.0f);
 
+            KarmaChangeOnApplied = element.GetAttributeFloat("karmachangeonapplied", 0.0f);
+
             CauseOfDeathDescription     = TextManager.Get("AfflictionCauseOfDeath." + Identifier, true) ?? element.GetAttributeString("causeofdeathdescription", "");
             SelfCauseOfDeathDescription = TextManager.Get("AfflictionCauseOfDeathSelf." + Identifier, true) ?? element.GetAttributeString("selfcauseofdeathdescription", "");
+
 
             AchievementOnRemoved = element.GetAttributeString("achievementonremoved", "");
             

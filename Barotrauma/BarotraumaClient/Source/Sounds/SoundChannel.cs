@@ -379,6 +379,7 @@ namespace Barotrauma.Sounds
             decayTimer = 0;
             streamSeekPos = 0; reachedEndSample = false;
             buffersToRequeue = 4;
+            muffled = muffle;
 
             if (IsStream)
             {
@@ -426,7 +427,8 @@ namespace Barotrauma.Sounds
                     }
                     else
                     {
-                        Al.Sourcei(sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex), Al.Buffer, (int)sound.ALBuffer);
+                        uint alBuffer = sound.Owner.GetCategoryMuffle(category) || muffle ? sound.ALMuffledBuffer : sound.ALBuffer;
+                        Al.Sourcei(sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex), Al.Buffer, (int)alBuffer);
                         int alError = Al.GetError();
                         if (alError != Al.NoError)
                         {

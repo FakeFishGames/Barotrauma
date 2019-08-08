@@ -181,9 +181,12 @@
     <Compile Include="Source\Characters\CharacterNetworking.cs" />
     <Compile Include="Source\DebugConsole.cs" />
     <Compile Include="Source\Events\Missions\CombatMission.cs" />
+    <Compile Include="Source\Events\Missions\Mission.cs" />
     <Compile Include="Source\GameMain.cs" />
     <Compile Include="Source\GameSession\CrewManager.cs" />
+    <Compile Include="Source\GameSession\GameModes\CampaignMode.cs" />
     <Compile Include="Source\GameSession\GameModes\CharacterCampaignData.cs" />
+    <Compile Include="Source\GameSession\GameModes\MissionMode.cs" />
     <Compile Include="Source\GameSession\GameModes\MultiPlayerCampaign.cs" />
     <Compile Include="Source\GameSession\GameModes\TraitorManager.cs" />
     <Compile Include="Source\Items\Components\Door.cs" />
@@ -211,10 +214,13 @@
     <Compile Include="Source\Networking\EntitySpawner.cs" />
     <Compile Include="Source\Networking\FileTransfer\FileSender.cs" />
     <Compile Include="Source\Networking\GameServer.cs" />
-    <Compile Include="Source\Networking\GameServerLogin.cs" />
+    <Compile Include="Source\Networking\KarmaManager.cs" />
     <Compile Include="Source\Networking\NetEntityEvent\ServerEntityEventManager.cs" />
     <Compile Include="Source\Networking\NetworkMember.cs" />
     <Compile Include="Source\Networking\OrderChatMessage.cs" />
+    <Compile Include="Source\Networking\Primitives\Peers\Server\LidgrenServerPeer.cs" />
+    <Compile Include="Source\Networking\Primitives\Peers\Server\ServerPeer.cs" />
+    <Compile Include="Source\Networking\Primitives\Peers\Server\SteamP2PServerPeer.cs" />
     <Compile Include="Source\Networking\RespawnManager.cs" />
     <Compile Include="Source\Networking\ServerSettings.cs" />
     <Compile Include="Source\Networking\SteamManager.cs" />

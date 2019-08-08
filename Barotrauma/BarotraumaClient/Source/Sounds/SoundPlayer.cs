@@ -203,6 +203,8 @@ namespace Barotrauma
 
         public static void Update(float deltaTime)
         {
+            if (!Initialized) { return; }
+
             UpdateMusic(deltaTime);
 
             if (startUpSound != null && !GameMain.SoundManager.IsPlaying(startUpSound))
@@ -391,7 +393,7 @@ namespace Barotrauma
                     if (Math.Abs(diff.X) < FireSoundRange && Math.Abs(diff.Y) < FireSoundRange)
                     {
                         Vector2 diffLeft = (fs.WorldPosition + new Vector2(fs.Size.X, fs.Size.Y / 2)) - listenerPos;
-                        if (diff.X < fs.Size.X / 2.0f) diff.X = 0.0f;
+                        if (diff.X < fs.Size.X / 2.0f) diffLeft.X = 0.0f;
                         if (diffLeft.X <= 0)
                         {
                             float distFallOffLeft = diffLeft.Length() / FireSoundRange;
@@ -403,7 +405,7 @@ namespace Barotrauma
                         }
 
                         Vector2 diffRight = (fs.WorldPosition + new Vector2(0.0f, fs.Size.Y / 2)) - listenerPos;
-                        if (diff.X < fs.Size.X / 2.0f) diff.X = 0.0f;
+                        if (diff.X < fs.Size.X / 2.0f) diffRight.X = 0.0f;
                         if (diffRight.X >= 0)
                         {
                             float distFallOffRight = diffRight.Length() / FireSoundRange;
@@ -629,7 +631,7 @@ namespace Barotrauma
         {
             if (OverrideMusicType != null) return OverrideMusicType;
 
-            if (Screen.Selected != GameMain.GameScreen)
+            if (Screen.Selected == null || Screen.Selected != GameMain.GameScreen)
             {
                 return "menu";
             }
@@ -644,7 +646,7 @@ namespace Barotrauma
             Submarine targetSubmarine = Character.Controlled?.Submarine;
 
             if ((targetSubmarine != null && targetSubmarine.AtDamageDepth) ||
-                (Screen.Selected == GameMain.GameScreen && GameMain.GameScreen.Cam.Position.Y < SubmarineBody.DamageDepth))
+                (GameMain.GameScreen != null && Screen.Selected == GameMain.GameScreen && GameMain.GameScreen.Cam.Position.Y < SubmarineBody.DamageDepth))
             {
                 return "deep";
             }

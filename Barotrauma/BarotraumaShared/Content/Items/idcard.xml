@@ -1,15 +1,7 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
-<Item
-  name="ID Card"
-  identifier="idcard"
-  category="Equipment"
-  Tags="smallitem"
-  cargocontaineridentifier="metalcrate">
-
-  <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,64,64,64"/>
-	<Sprite texture="idcard.png" depth="0.8" sourcerect="0,0,16,16"/>
-
-	<Body width="16" height="16" density="20"/>
-
-	<Pickable slots="Card,Any" msg="ItemMsgPickUpSelect"/>
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Item name="ID Card" identifier="idcard" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate">
+  <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,64,64,64" origin="0.5,0.5" />
+  <Sprite texture="idcard.png" depth="0.8" sourcerect="0,0,16,16" />
+  <Body width="16" height="16" density="20" />
+  <Pickable slots="Card,Any" msg="ItemMsgPickUpSelect" />
 </Item>

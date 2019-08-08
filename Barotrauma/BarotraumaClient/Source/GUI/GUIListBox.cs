@@ -651,7 +651,9 @@ namespace Barotrauma
                 case Keys.Up:
                     SelectPrevious();
                     break;
-                default:
+                case Keys.Enter:
+                case Keys.Space:
+                case Keys.Escape:
                     GUI.KeyboardDispatcher.Subscriber = null;
                     break;
             }

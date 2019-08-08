@@ -464,7 +464,7 @@ namespace Barotrauma.Sounds
             {
                 categoryModifiers[category].SetGainMultiplier(index, gain);
             }
-            
+
             for (int i = 0; i < playingChannels.Length; i++)
             {
                 lock (playingChannels[i])
@@ -598,7 +598,7 @@ namespace Barotrauma.Sounds
             while (areStreamsPlaying)
             {
                 areStreamsPlaying = false;
-                
+
                 for (int i = 0; i < playingChannels.Length; i++)
                 {
                     lock (playingChannels[i])
@@ -632,14 +632,13 @@ namespace Barotrauma.Sounds
                 Thread.Sleep(10); //TODO: use a separate thread for network audio?
             }
         }
-        
+
         public void Dispose()
         {
             if (Disabled) { return; }
 
             for (int i = 0; i < playingChannels.Length; i++)
             {
-
                 lock (playingChannels[i])
                 {
                     for (int j = 0; j < playingChannels[i].Length; j++)

@@ -25,8 +25,12 @@
   <sound file="Content/Characters/Crawler/CRAWLER_damage1.ogg" state="Damage" range="1000"/>
   <sound file="Content/Characters/Crawler/CRAWLER_damage2.ogg" state="Damage" range="1000"/>
   <sound file="Content/Characters/Crawler/CRAWLER_damage3.ogg" state="Damage" range="1000"/>
-
-  <Inventory slots="Any, Any" accessiblewhenalive="false">
+  
+  <Inventory slots="Any, Any" accessiblewhenalive="false" commonness="1">
+    <Item identifier="crawlermask"/>
+    <Item identifier="alienblood"/>
+  </Inventory>
+  <Inventory slots="Any, Any" accessiblewhenalive="false" commonness="50">
     <Item identifier="alienblood"/>
   </Inventory>
 

@@ -56,27 +56,33 @@ namespace Facepunch.Steamworks
             UpdateTimer.Reset();
             UpdateTimer.Start();
 
-            foreach ( var channel in ListenChannels )
+            lock (ListenChannels)
             {
-                while ( ReadP2PPacket( channel ) )
+                foreach (var channel in ListenChannels)
                 {
-                    // Nothing Here.
+                    while (ReadP2PPacket(channel))
+                    {
+                        // Nothing Here.
+                    }
                 }
             }
         }
 
         /// <summary>
         /// Enable or disable listening on a specific channel.
-        /// If you donp't enable the channel we won't listen to it,
+        /// If you don't enable the channel we won't listen to it,
         /// so you won't be able to receive messages on it.
         /// </summary>
         public void SetListenChannel( int ChannelId, bool Listen )
         {
-            ListenChannels.RemoveAll( x => x == ChannelId );
-
-            if ( Listen  )
+            lock (ListenChannels)
             {
-                ListenChannels.Add( ChannelId );
+                ListenChannels.RemoveAll(x => x == ChannelId);
+
+                if (Listen)
+                {
+                    ListenChannels.Add(ChannelId);
+                }
             }
         }
 

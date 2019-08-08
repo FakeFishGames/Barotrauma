@@ -1,4 +1,142 @@
 ---------------------------------------------------------------------------------------------------------
+v0.9.2.0
+---------------------------------------------------------------------------------------------------------
+
+Easier server hosting:
+- Switched to Steam's networking API, which allows clients to connect to servers without the need for the
+host to forward their ports.
+
+Anti-griefing:
+- Karma: a system that detects malicious actions and automatically creates a more challenging experience 
+for griefers, or potentially triggers a kickban. The feature is completely optional and the server hosts 
+can decide how aggressively it will react to malicious actions. In a nutshell, you can lose karma for doing 
+dumb things, karma is regained gradually over time and may be increased more rapidly by doing good things, 
+thus negating false positives and also giving you the chance to redeem yourself. Lose too much karma and 
+you'll start to experience increasing levels of inconvenience.
+- Wire griefing is more difficult: wires have to be disconnected from the connection panels at both ends
+before they can be removed. Disconnected wires can be seen visibly hanging from the device, with noticeable
+particle effects and sound cues that make it easier to detect and fix wiring problems.
+- Added a built-in overheat warning light and siren to reactors and increased the time it takes for the
+reactor to catch fire and explode.
+- Option to disable friendly fire altogether.
+
+New items and structures:
+- Additional weapons: stun gun, SMG, shotgun, grenade launcher, flamer, two new types of coilgun ammunition (piercing & explosive).
+- New monster loot: husk stinger, mudraptor shell, crawler mask, moloch shell.
+- Fun stuff: accordion, captain's pipe, toy hammer.
+- Tons of new decorative submarine pieces for the sub editor.
+
+New submarine:
+- Berilia, a submarine for 16 players
+
+Bugfixes:
+- Fixed crashing when selecting doors or gaps in the sub editor.
+- Fixed crashing when combining items inside an ItemContainer (e.g. cabinet, deconstructor).
+- Fixed shuttles not being able to redock into some submarines with unconventionally positioned docking 
+ports. Specifically, if a port needed to be docked to from below but was positioned above the center of
+the submarine (or vice versa), the docking interface would not activate on the navigation terminal.
+- Fixed docking port using the wrong submarine's position for joint adjustment, causing errors when 
+docking a submarine with greater mass to one with a smaller mass
+- Fixed item editing panel not appearing in wiring mode when selecting a wire in the sub editor.
+- Fixed ability to throw throwable items while unconscious.
+- Fixed bots not using fire extinguishers client-side in multiplayer.
+- Fixed clients not hearing the sound when someone crowbars a door open.
+- Fixed progress bars not showing client-side when cutting/welding doors.
+- Fixed inability to combine items in multiplayer.
+- Fixed occasional "index out of range" errors when loading walls that have been set to a non-default
+scale in the submarine editor.
+- Fixed inability to scroll the crew list with the mouse wheel when the cursor is over certain parts 
+of the list.
+- Fixed sonar pings stopping mid-way when active sonar is turned off, which could be exploited to stop
+the pings before they reach a monster further away from the sub.
+- Fixed clients not seeing other characters when entering spectator mode after their character has been
+eaten by a creature.
+- Fixed clients not seeing other characters in spectator mode after the distance between the submarine 
+and the client's corpse gets great enough.
+- Fixed clients getting stuck to a non-functional game screen if they start a new round before the ending 
+cinematic has finished server-side.
+- Fixed projectiles hitting a character you're standing next to when firing.
+- Fixed characters automatically equipping handcuffs (i.e. handcuffing themselves) if they were picked up
+when the only free inventory space was the hand slots.
+- Fixed a rare race condition that occasionally caused the game to crash during the loading screen with 
+a "no text packs available in English!" error message.
+- Fixed husk infection being healable with broad-spectrum antibiotics even when the infection has reached 
+the final stage.
+- Fixed attachable items (detonators, electrical components) becoming deattachable without any tools 
+if the sub is saved after deattaching them.
+- Fixed projectile raycasts not taking wall rotation into account, causing the projectiles to hit sloped 
+walls when standing next to them.
+- Fixed PowerTransfer components checking overloads based on the item the recursive power check starts from, 
+not the item that's currently being checked. Caused junction boxes to never break or catch fire in some subs
+- Fixed crashing in the character editor when no textures were found for the selected character.
+- Fixed crashing if a humanoid character has no knees or ankles.
+- Fixed EventManager calculating flooding amount incorrectly, causing floods to only have a very small
+effect on the intensity value.
+- Fixed batteries and supercapacitors being able to provide power through their signal connections 
+(e.g. "set_charge_rate", "charge_rate_out").
+- Lighting fix: obstruct background lights behind hulls. Previously the background lights would only get 
+obstructed by background structures, causing light to "bleed through" parts with no structures (e.g. 
+humpback's docking port) and windows in the background walls.
+- Fixed item loading being interrupted if any item XML cannot be loaded, causing some items not to be
+loaded if any of the selected content packages are missing files or contain corrupted item XMLs.
+- Fixed fire sounds not playing when standing inside a fire source.
+- Fixed client names being converted to lower case when comparing them to the name written by the sender, 
+preventing the message from being sent if the name wasn't written in lower case.
+- Pass private messages to the client hosting the server when the message is targeted to the server.
+- Private messages appear in the server log.
+- Fixed plasma cutter and welding tool hit particles being offset from the flame.
+- Fixed steel bar and titanium-aluminium alloy deconstructing to 100% condition items even when degraded 
+(which could be used as an exploit to get infinite coilgun rounds).
+- Fixed holdable items staying in the characters hand(s) when swapping them from a hand slot to another 
+limb slot (for example, when moving a flashlight from a hand slot to the head slot).
+- Fixed text wrapping not working properly with words that are longer than a single line.
+- Fixed deconstructor losing some of the material from deconstructed items if the output container couldn't hold all of the new items.
+- Fixed discrepancies in door welding & repairing logic regarding collision.
+- Fixed a crash when retrieving lobby information with an uninitialized IP.
+- Fixed max player count in server list & duplicate lobby entries
+- Fixed arrow keys not changing caret position when typing
+
+Misc additions and changes:
+- Respawn shuttles now spawn inside the level somewhere near the submarine, instead of always spawning
+at the beginning of the level.
+- Respawn shuttles don't leave and despawn until a new respawn is pending.
+- Added "respawnnow" console command which immediately dispatches the respawn shuttle.
+- Search for default animation/ragdoll folders from the folder where the character file is located, not
+from "Content/Characters". Fixes mods not being able to load animation/ragdoll files if the file paths
+are not defined explicitly in the character configuration file.
+- Improved performance by deleting dead monsters that are far away from the sub and by disabling physics
+on dead bodies when they stay still long enough.
+- Added option to use conditionals to activate/deactivate ItemComponents. You can take a look at the 
+reactor and junction box config files to see how it's used.
+- Added some indicator lights to junction boxes and reactors.
+- Stun batons don't affect large enemies (molochs, hammerheads, endworms, etc).
+- In wiring mode, items are selected by pressing E instead of clicking. Selecting items with the left
+mouse button made it very difficult to manipulate the wires because it was easy to accidentally select
+some device instead of a wire node. 
+- Crate/toolbox inventories stay open and can be moved across the screen when the item is equipped.
+- Added limits to submarine name and description length.
+- Delete incomplete file downloads when disconnecting from a server while a file transfer is active.
+Prevents console errors about corrupted submarine/save files caused by the partially downloaded files.
+- Increased Humpback's battery capacity.
+- Added widgets for manipulating coilgun/railgun rotation limits in the sub editor.
+- Added a command for setting the value of a property on all selected entities in the sub editor 
+(for example, "setentityproperties scale 2" would set the scale of all selected items/structures to 2).
+- Show ballast tanks and airlocks in a different color on the status monitor to make it easier to 
+distinguish which rooms are actually flooding and which are supposed to have water in them.
+- Option to define multiple inventory variants for a character (e.g. to add variation to monster loot).
+- Start playing the main menu music during the loading screen.
+- More reliable human walk sounds (played at specific points of the walk cycle instead of relying on 
+impacts between the feet and the floor).
+- Option to show a 16x16 grid and snap the cursor to it in the sprite editor.
+- Reactor can be controlled with movement keys.
+- Option to add a probability for afflictions applied by an attack.
+- Husk attacks have a 50% chance of causing a husk infection.
+- Decreased minimum item scale from 0.1 to 0.01.
+- The amount of materials received from deconstructing fuel rods depends on the condition of the fuel rod.
+- Reactors keep sending the temperature_out signal after a meltdown.
+- Improved file transfer
+
+---------------------------------------------------------------------------------------------------------
 v0.9.1.0
 ---------------------------------------------------------------------------------------------------------
 

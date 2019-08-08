@@ -3,19 +3,18 @@ using System;
 using System.Globalization;
 using System.Xml.Linq;
 using Barotrauma.Networking;
-using Lidgren.Network;
 
 namespace Barotrauma.Items.Components
 {
     partial class Engine : Powered, IServerSerializable, IClientSerializable
     {
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             //force can only be adjusted at 10% intervals -> no need for more accuracy than this
-            msg.WriteRangedInteger(-10, 10, (int)(targetForce / 10.0f));
+            msg.WriteRangedIntegerDeprecated(-10, 10, (int)(targetForce / 10.0f));
         }
 
-        public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
+        public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
         {
             float newTargetForce = msg.ReadRangedInteger(-10, 10) * 10.0f;
 

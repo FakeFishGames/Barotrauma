@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
@@ -14,13 +13,20 @@ namespace Barotrauma
             {
                 if (this != Controlled)
                 {
+                    if (GameMain.Client.EndCinematic != null) // Freezes the characters during the ending cinematic
+                    {
+                        AnimController.Frozen = true;
+                        memState.Clear();
+                        return;
+                    }
+
                     //freeze AI characters if more than 1 seconds have passed since last update from the server
-                    if (lastRecvPositionUpdateTime < NetTime.Now - 1.0f)
+                    if (lastRecvPositionUpdateTime < Lidgren.Network.NetTime.Now - 1.0f)
                     {
                         AnimController.Frozen = true;
                         memState.Clear();
                         //hide after 2 seconds
-                        if (lastRecvPositionUpdateTime < NetTime.Now - 2.0f)
+                        if (lastRecvPositionUpdateTime < Lidgren.Network.NetTime.Now - 2.0f)
                         {
                             Enabled = false;
                             return;
@@ -92,22 +98,22 @@ namespace Barotrauma
             }
         }
 
-        public virtual void ClientWrite(NetBuffer msg, object[] extraData = null)
+        public virtual void ClientWrite(IWriteMessage msg, object[] extraData = null)
         {
             if (extraData != null)
             {
                 switch ((NetEntityEvent.Type)extraData[0])
                 {
                     case NetEntityEvent.Type.InventoryState:
-                        msg.WriteRangedInteger(0, 3, 0);
+                        msg.WriteRangedIntegerDeprecated(0, 3, 0);
                         Inventory.ClientWrite(msg, extraData);
                         break;
                     case NetEntityEvent.Type.Treatment:
-                        msg.WriteRangedInteger(0, 3, 1);
+                        msg.WriteRangedIntegerDeprecated(0, 3, 1);
                         msg.Write(AnimController.Anim == AnimController.Animation.CPR);
                         break;
                     case NetEntityEvent.Type.Status:
-                        msg.WriteRangedInteger(0, 3, 2);
+                        msg.WriteRangedIntegerDeprecated(0, 3, 2);
                         break;
                 }
             }
@@ -125,7 +131,7 @@ namespace Barotrauma
                 msg.Write(inputCount);
                 for (int i = 0; i < inputCount; i++)
                 {
-                    msg.WriteRangedInteger(0, (int)InputNetFlags.MaxVal, (int)memInput[i].states);
+                    msg.WriteRangedIntegerDeprecated(0, (int)InputNetFlags.MaxVal, (int)memInput[i].states);
                     msg.Write(memInput[i].intAim);
                     if (memInput[i].states.HasFlag(InputNetFlags.Select) || 
                         memInput[i].states.HasFlag(InputNetFlags.Deselect) ||
@@ -140,14 +146,14 @@ namespace Barotrauma
             msg.WritePadBits();
         }
 
-        public virtual void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public virtual void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             switch (type)
             {
                 case ServerNetObject.ENTITY_POSITION:
                     bool facingRight = AnimController.Dir > 0.0f;
 
-                    lastRecvPositionUpdateTime = (float)NetTime.Now;
+                    lastRecvPositionUpdateTime = (float)Lidgren.Network.NetTime.Now;
 
                     AnimController.Frozen = false;
                     Enabled = true;
@@ -215,8 +221,8 @@ namespace Barotrauma
                     }
 
                     Vector2 pos = new Vector2(
-                        msg.ReadFloat(),
-                        msg.ReadFloat());
+                        msg.ReadSingle(),
+                        msg.ReadSingle());
                     float MaxVel = NetConfig.MaxPhysicsBodyVelocity;
                     Vector2 linearVelocity = new Vector2(
                         msg.ReadRangedSingle(-MaxVel, MaxVel, 12), 
@@ -228,7 +234,7 @@ namespace Barotrauma
                     float? angularVelocity = null;
                     if (!fixedRotation)
                     {
-                        rotation = msg.ReadFloat();
+                        rotation = msg.ReadSingle();
                         float MaxAngularVel = NetConfig.MaxPhysicsBodyAngularVelocity;
                         angularVelocity = msg.ReadRangedSingle(-MaxAngularVel, MaxAngularVel, 8);
                         angularVelocity = NetConfig.Quantize(angularVelocity.Value, -MaxAngularVel, MaxAngularVel, 8);
@@ -329,7 +335,7 @@ namespace Barotrauma
             }
         }
 
-        public static Character ReadSpawnData(NetBuffer inc, bool spawn = true)
+        public static Character ReadSpawnData(IReadMessage inc, bool spawn = true)
         {
             DebugConsole.NewMessage("READING CHARACTER SPAWN DATA", Color.Cyan);
 
@@ -340,7 +346,7 @@ namespace Barotrauma
             string speciesName = inc.ReadString();
             string seed = inc.ReadString();
 
-            Vector2 position = new Vector2(inc.ReadFloat(), inc.ReadFloat());
+            Vector2 position = new Vector2(inc.ReadSingle(), inc.ReadSingle());
 
             bool enabled = inc.ReadBoolean();
 
@@ -408,7 +414,7 @@ namespace Barotrauma
             return character;
         }
         
-        private void ReadStatus(NetBuffer msg)
+        private void ReadStatus(IReadMessage msg)
         {
             bool isDead = msg.ReadBoolean();
             if (isDead)

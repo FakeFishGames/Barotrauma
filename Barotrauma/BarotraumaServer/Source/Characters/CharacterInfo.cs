@@ -1,10 +1,10 @@
-﻿using Lidgren.Network;
+﻿using Barotrauma.Networking;
 
 namespace Barotrauma
 {
     partial class CharacterInfo
     {
-        public void ServerWrite(NetBuffer msg)
+        public void ServerWrite(IWriteMessage msg)
         {
             msg.Write(ID);
             msg.Write(Name);

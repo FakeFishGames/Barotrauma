@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using Lidgren.Network;
 using System;
 using System.Linq;
 using System.Xml.Linq;
@@ -84,6 +83,8 @@ namespace Barotrauma.Items.Components
             progressState = Math.Min(progressTimer / deconstructTime, 1.0f);
             if (progressTimer > deconstructTime)
             {
+                int emptySlots = outputContainer.Inventory.Items.Where(i => i == null).Count();
+
                 foreach (DeconstructItem deconstructProduct in targetItem.Prefab.DeconstructItems)
                 {
                     float percentageHealth = targetItem.Condition / targetItem.Prefab.Health;
@@ -100,13 +101,14 @@ namespace Barotrauma.Items.Components
                         itemPrefab.Health * deconstructProduct.OutCondition;
                     
                     //container full, drop the items outside the deconstructor
-                    if (outputContainer.Inventory.Items.All(i => i != null))
+                    if (emptySlots <= 0)
                     {
                         Entity.Spawner.AddToSpawnQueue(itemPrefab, item.Position, item.Submarine, condition);
                     }
                     else
                     {
                         Entity.Spawner.AddToSpawnQueue(itemPrefab, outputContainer.Inventory, condition);
+                        emptySlots--;
                     }
                 }
                 

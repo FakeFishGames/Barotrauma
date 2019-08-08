@@ -288,7 +288,7 @@ namespace Barotrauma
 
         public GameSettings()
         {
-            ContentPackage.LoadAll(ContentPackage.Folder);
+            ContentPackage.LoadAll();
             CompletedTutorialNames = new List<string>();
 
             LoadDefaultConfig();
@@ -914,7 +914,7 @@ namespace Barotrauma
             }
             AutoCheckUpdates = doc.Root.GetAttributeBool("autocheckupdates", AutoCheckUpdates);
             sendUserStatistics = doc.Root.GetAttributeBool("senduserstatistics", sendUserStatistics);
-            QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsubmarine", "");
+            QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsub", QuickStartSubmarineName);
             useSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", useSteamMatchmaking);
             requireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", requireSteamAuthentication);
             EnableSplashScreen = doc.Root.GetAttributeBool("enablesplashscreen", EnableSplashScreen);

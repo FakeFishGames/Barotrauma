@@ -1,6 +1,5 @@
 ﻿using Barotrauma.Items.Components;
 using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -1375,7 +1374,7 @@ namespace Barotrauma
                 (int)(limbHealth.HighlightArea.Height * scale));
         }
         
-        public void ClientRead(NetBuffer inc)
+        public void ClientRead(IReadMessage inc)
         {
             List<Pair<AfflictionPrefab, float>> newAfflictions = new List<Pair<AfflictionPrefab, float>>();
 

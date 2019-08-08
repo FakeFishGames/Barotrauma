@@ -4,7 +4,6 @@ using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
 using FarseerPhysics.Factories;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -460,15 +459,16 @@ namespace Barotrauma
             {
                 if (IsHorizontal)
                 {
-                    xsections = (int)Math.Ceiling((float)rect.Width / WallSectionSize);
+                    //equivalent to (int)Math.Ceiling((double)rect.Width / WallSectionSize) without the potential for floating point indeterminism
+                    xsections = (rect.Width + WallSectionSize - 1) / WallSectionSize;
                     Sections = new WallSection[xsections];
-                    width = (int)WallSectionSize;
+                    width = WallSectionSize;
                 }
                 else
                 {
-                    ysections = (int)Math.Ceiling((float)rect.Height / WallSectionSize);
+                    ysections = (rect.Height + WallSectionSize - 1) / WallSectionSize;
                     Sections = new WallSection[ysections];
-                    height = (int)WallSectionSize;
+                    height = WallSectionSize;
                 }
             }
 
@@ -816,8 +816,7 @@ namespace Barotrauma
 
 
         }
-
-        partial void AdjustKarma(IDamageable attacker, float amount);
+        
 
         public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
         {
@@ -972,23 +971,18 @@ namespace Barotrauma
             bool hadHole = SectionBodyDisabled(sectionIndex);
             Sections[sectionIndex].damage = MathHelper.Clamp(damage, 0.0f, Prefab.Health);
             
-            //otherwise it's possible to infinitely gain karma by welding fixed things
             if (attacker != null && damageDiff != 0.0f)
             {
-                AdjustKarma(attacker, damageDiff);
-#if CLIENT
-                if (GameMain.Client == null)
+                OnHealthChangedProjSpecific(attacker, damageDiff);
+                if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
                 {
-#endif
                     if (damageDiff < 0.0f)
                     {
                         attacker.Info.IncreaseSkillLevel("mechanical", 
                             -damageDiff * SkillIncreaseMultiplier / Math.Max(attacker.GetSkillLevel("mechanical"), 1.0f),
                             SectionPosition(sectionIndex, true));                                    
                     }
-#if CLIENT
                 }
-#endif
             }
 
             bool hasHole = SectionBodyDisabled(sectionIndex);
@@ -997,6 +991,8 @@ namespace Barotrauma
                         
             UpdateSections();
         }
+
+        partial void OnHealthChangedProjSpecific(Character attacker, float damageAmount);
 
         public void SetCollisionCategory(Category collisionCategory)
         {
@@ -1188,21 +1184,32 @@ namespace Barotrauma
                 ID = (ushort)int.Parse(element.Attribute("ID").Value)
             };
 
+            SerializableProperty.DeserializeProperties(s, element);
+
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString())
                 {
                     case "section":
                         int index = subElement.GetAttributeInt("i", -1);
-                        if (index == -1) continue;
-                        s.Sections[index].damage = subElement.GetAttributeFloat("damage", 0.0f);
+                        if (index == -1) { continue; }
+
+                        if (index < 0 || index >= s.SectionCount)
+                        {
+                            string errorMsg = $"Error while loading structure \"{s.Name}\". Section damage index out of bounds. Index: {index}, section count: {s.SectionCount}.";
+                            DebugConsole.ThrowError(errorMsg);
+                            GameAnalyticsManager.AddErrorEventOnce("Structure.Load:SectionIndexOutOfBounds", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                        }
+                        else
+                        {
+                            s.Sections[index].damage = subElement.GetAttributeFloat("damage", 0.0f);
+                        }
                         break;
                 }
             }
 
             if (element.GetAttributeBool("flippedx", false)) s.FlipX(false);
             if (element.GetAttributeBool("flippedy", false)) s.FlipY(false);
-            SerializableProperty.DeserializeProperties(s, element);
 
             //structures with a body drop a shadow by default
             if (element.Attribute("usedropshadow") == null)

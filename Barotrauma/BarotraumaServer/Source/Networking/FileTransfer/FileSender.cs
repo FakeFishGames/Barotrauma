@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,11 +11,11 @@ namespace Barotrauma.Networking
     {
         public class FileTransferOut
         {
-            private byte[] data;
+            private readonly byte[] data;
 
-            private DateTime startingTime;
+            private readonly DateTime startingTime;
 
-            private NetConnection connection;
+            private readonly NetworkConnection connection;
 
             public FileTransferStatus Status;
             
@@ -40,7 +39,7 @@ namespace Barotrauma.Networking
 
             public float Progress
             {
-                get { return SentOffset / (float)Data.Length; }
+                get { return KnownReceivedOffset / (float)Data.Length; }
             }
 
             public float WaitTimer
@@ -54,26 +53,34 @@ namespace Barotrauma.Networking
                 get { return data; }
             }
 
+            public bool Acknowledged;
+
             public int SentOffset
             {
                 get;
                 set;
             }
 
-            public NetConnection Connection
+            public int KnownReceivedOffset;
+
+            public NetworkConnection Connection
             {
                 get { return connection; }
             }
 
-            public int SequenceChannel;
+            public int ID;
 
-            public FileTransferOut(NetConnection recipient, FileTransferType fileType, string filePath)
+            public FileTransferOut(NetworkConnection recipient, FileTransferType fileType, string filePath)
             {
                 connection = recipient;
 
                 FileType = fileType;
                 FilePath = filePath;
                 FileName = Path.GetFileName(filePath);
+
+                Acknowledged = false;
+                SentOffset = 0;
+                KnownReceivedOffset = 0;
 
                 Status = FileTransferStatus.NotStarted;
                 
@@ -105,26 +112,26 @@ namespace Barotrauma.Networking
         public FileTransferDelegate OnStarted;
         public FileTransferDelegate OnEnded;
 
-        private List<FileTransferOut> activeTransfers;
+        private readonly List<FileTransferOut> activeTransfers;
 
-        private int chunkLen;
+        private readonly int chunkLen;
 
-        private NetPeer peer;
+        private readonly ServerPeer peer;
 
         public List<FileTransferOut> ActiveTransfers
         {
             get { return activeTransfers; }
         }
 
-        public FileSender(NetworkMember networkMember)
+        public FileSender(ServerPeer serverPeer, int mtu)
         {
-            peer = networkMember.NetPeer;
-            chunkLen = peer.Configuration.MaximumTransmissionUnit - 100;
+            peer = serverPeer;
+            chunkLen = mtu - 100;
 
             activeTransfers = new List<FileTransferOut>();
         }
 
-        public FileTransferOut StartTransfer(NetConnection recipient, FileTransferType fileType, string filePath)
+        public FileTransferOut StartTransfer(NetworkConnection recipient, FileTransferType fileType, string filePath)
         {
             if (activeTransfers.Count >= MaxTransferCount)
             {
@@ -147,11 +154,11 @@ namespace Barotrauma.Networking
             {
                 transfer = new FileTransferOut(recipient, fileType, filePath)
                 {
-                    SequenceChannel = 1
+                    ID = 1
                 };
-                while (activeTransfers.Any(t => t.Connection == recipient && t.SequenceChannel == transfer.SequenceChannel))
+                while (activeTransfers.Any(t => t.Connection == recipient && t.ID == transfer.ID))
                 {
-                    transfer.SequenceChannel++;
+                    transfer.ID++;
                 }
                 activeTransfers.Add(transfer);
             }
@@ -168,10 +175,10 @@ namespace Barotrauma.Networking
 
         public void Update(float deltaTime)
         {
-            activeTransfers.RemoveAll(t => t.Connection.Status != NetConnectionStatus.Connected);
+            activeTransfers.RemoveAll(t => t.Connection.Status != NetworkConnectionStatus.Connected);
 
             var endedTransfers = activeTransfers.FindAll(t => 
-                t.Connection.Status != NetConnectionStatus.Connected ||
+                t.Connection.Status != NetworkConnectionStatus.Connected ||
                 t.Status == FileTransferStatus.Finished ||
                 t.Status == FileTransferStatus.Canceled || 
                 t.Status == FileTransferStatus.Error);
@@ -187,77 +194,94 @@ namespace Barotrauma.Networking
                 transfer.WaitTimer -= deltaTime;
                 if (transfer.WaitTimer > 0.0f) continue;
                 
-                if (!transfer.Connection.CanSendImmediately(NetDeliveryMethod.ReliableOrdered, transfer.SequenceChannel)) continue;
-
                 transfer.WaitTimer = 0.05f;// transfer.Connection.AverageRoundtripTime;
 
                 // send another part of the file
                 long remaining = transfer.Data.Length - transfer.SentOffset;
                 int sendByteCount = (remaining > chunkLen ? chunkLen : (int)remaining);
                 
-                NetOutgoingMessage message;
+                IWriteMessage message;
 
-                //first message; send length, chunk length, file name etc
-                if (transfer.SentOffset == 0)
+                try
                 {
-                    message = peer.CreateMessage();
-                    message.Write((byte)ServerPacketHeader.FILE_TRANSFER);
-
-                    //if the recipient is the owner of the server (= a client running the server from the main exe)
-                    //we don't need to send anything, the client can just read the file directly
-                    if (transfer.Connection == GameMain.Server.OwnerConnection)
+                    //first message; send length, file name etc
+                    //wait for acknowledgement before sending data
+                    if (!transfer.Acknowledged)
                     {
-                        message.Write((byte)FileTransferMessageType.TransferOnSameMachine);
-                        message.Write((byte)transfer.FileType);
-                        message.Write(transfer.FilePath);
-                        GameMain.Server.CompressOutgoingMessage(message);
-                        transfer.Connection.SendMessage(message, NetDeliveryMethod.ReliableOrdered, transfer.SequenceChannel);
-                        transfer.Status = FileTransferStatus.Finished;
+                        message = new WriteOnlyMessage();
+                        message.Write((byte)ServerPacketHeader.FILE_TRANSFER);
+
+                        //if the recipient is the owner of the server (= a client running the server from the main exe)
+                        //we don't need to send anything, the client can just read the file directly
+                        if (transfer.Connection == GameMain.Server.OwnerConnection)
+                        {
+                            message.Write((byte)FileTransferMessageType.TransferOnSameMachine);
+                            message.Write((byte)transfer.ID);
+                            message.Write((byte)transfer.FileType);
+                            message.Write(transfer.FilePath);
+                            peer.Send(message, transfer.Connection, DeliveryMethod.Unreliable);
+                            transfer.Status = FileTransferStatus.Finished;
+                        }
+                        else
+                        {
+                            message.Write((byte)FileTransferMessageType.Initiate);
+                            message.Write((byte)transfer.ID);
+                            message.Write((byte)transfer.FileType);
+                            //message.Write((ushort)chunkLen);
+                            message.Write(transfer.Data.Length);
+                            message.Write(transfer.FileName);
+                            peer.Send(message, transfer.Connection, DeliveryMethod.Unreliable);
+
+                            transfer.Status = FileTransferStatus.Sending;
+
+                            if (GameSettings.VerboseLogging)
+                            {
+                                DebugConsole.Log("Sending file transfer initiation message: ");
+                                DebugConsole.Log("  File: " + transfer.FileName);
+                                DebugConsole.Log("  Size: " + transfer.Data.Length);
+                                DebugConsole.Log("  ID: " + transfer.ID);
+                            }
+                        }
                         return;
                     }
-                    else
+
+                    message = new WriteOnlyMessage();
+                    message.Write((byte)ServerPacketHeader.FILE_TRANSFER);
+                    message.Write((byte)FileTransferMessageType.Data);
+
+                    message.Write((byte)transfer.ID);
+                    message.Write(transfer.SentOffset);
+
+                    byte[] sendBytes = new byte[sendByteCount];
+                    Array.Copy(transfer.Data, transfer.SentOffset, sendBytes, 0, sendByteCount);
+
+                    message.Write((ushort)sendByteCount);
+                    message.Write(sendBytes, 0, sendByteCount);
+
+                    transfer.SentOffset += sendByteCount;
+                    if (transfer.SentOffset > transfer.KnownReceivedOffset + chunkLen * 5 ||
+                        transfer.SentOffset >= transfer.Data.Length)
                     {
-                        message.Write((byte)FileTransferMessageType.Initiate);
-                        message.Write((byte)transfer.FileType);
-                        message.Write((ushort)chunkLen);
-                        message.Write((ulong)transfer.Data.Length);
-                        message.Write(transfer.FileName);
-                        GameMain.Server.CompressOutgoingMessage(message);
-                        transfer.Connection.SendMessage(message, NetDeliveryMethod.ReliableOrdered, transfer.SequenceChannel);
-
-                        transfer.Status = FileTransferStatus.Sending;
-
-                        if (GameSettings.VerboseLogging)
-                        {
-                            DebugConsole.Log("Sending file transfer initiation message: ");
-                            DebugConsole.Log("  File: " + transfer.FileName);
-                            DebugConsole.Log("  Size: " + transfer.Data.Length);
-                            DebugConsole.Log("  Sequence channel: " + transfer.SequenceChannel);
-                        }
+                        transfer.SentOffset = transfer.KnownReceivedOffset;
                     }
+
+                    peer.Send(message, transfer.Connection, DeliveryMethod.Unreliable);
                 }
 
-                message = peer.CreateMessage(1 + 1 + sendByteCount);
-                message.Write((byte)ServerPacketHeader.FILE_TRANSFER);
-                message.Write((byte)FileTransferMessageType.Data);
-
-                byte[] sendBytes = new byte[sendByteCount];
-                Array.Copy(transfer.Data, transfer.SentOffset, sendBytes, 0, sendByteCount);
-
-                message.Write(sendBytes);
-
-                GameMain.Server.CompressOutgoingMessage(message);
-                transfer.Connection.SendMessage(message, NetDeliveryMethod.ReliableOrdered, transfer.SequenceChannel);
-                transfer.SentOffset += sendByteCount;
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("FileSender threw an exception when trying to send data", e);
+                    GameAnalyticsManager.AddErrorEventOnce(
+                        "FileSender.Update:Exception", 
+                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error, 
+                        "FileSender threw an exception when trying to send data:\n" + e.Message + "\n" + e.StackTrace);
+                    transfer.Status = FileTransferStatus.Error;
+                    break;
+                }
 
                 if (GameSettings.VerboseLogging)
                 {
                     DebugConsole.Log("Sending " + sendByteCount + " bytes of the file " + transfer.FileName + " (" + transfer.SentOffset + "/" + transfer.Data.Length + " sent)");
-                }
-
-                if (remaining - sendByteCount <= 0)
-                {
-                    transfer.Status = FileTransferStatus.Finished;
                 }
             }
         }
@@ -272,17 +296,34 @@ namespace Barotrauma.Networking
             GameMain.Server.SendCancelTransferMsg(transfer);
         }
 
-        public void ReadFileRequest(NetIncomingMessage inc, Client client)
+        public void ReadFileRequest(IReadMessage inc, Client client)
         {
             byte messageType = inc.ReadByte();
 
             if (messageType == (byte)FileTransferMessageType.Cancel)
             {
-                byte sequenceChannel = inc.ReadByte();
-                var matchingTransfer = activeTransfers.Find(t => t.Connection == inc.SenderConnection && t.SequenceChannel == sequenceChannel);
+                byte transferId = inc.ReadByte();
+                var matchingTransfer = activeTransfers.Find(t => t.Connection == inc.Sender && t.ID == transferId);
                 if (matchingTransfer != null) CancelTransfer(matchingTransfer);
 
                 return;
+            }
+            else if (messageType == (byte)FileTransferMessageType.Data)
+            {
+                byte transferId = inc.ReadByte();
+                var matchingTransfer = activeTransfers.Find(t => t.Connection == inc.Sender && t.ID == transferId);
+                if (matchingTransfer != null)
+                {
+                    matchingTransfer.Acknowledged = true;
+                    int offset = inc.ReadInt32();
+                    matchingTransfer.KnownReceivedOffset = offset > matchingTransfer.KnownReceivedOffset ? offset : matchingTransfer.KnownReceivedOffset;
+                    if (matchingTransfer.SentOffset < matchingTransfer.KnownReceivedOffset) { matchingTransfer.SentOffset = matchingTransfer.KnownReceivedOffset; }
+
+                    if (matchingTransfer.KnownReceivedOffset >= matchingTransfer.Data.Length)
+                    {
+                        matchingTransfer.Status = FileTransferStatus.Finished;
+                    }
+                }
             }
 
             byte fileType = inc.ReadByte();
@@ -295,17 +336,17 @@ namespace Barotrauma.Networking
 
                     if (requestedSubmarine != null)
                     {
-                        StartTransfer(inc.SenderConnection, FileTransferType.Submarine, requestedSubmarine.FilePath);
+                        StartTransfer(inc.Sender, FileTransferType.Submarine, requestedSubmarine.FilePath);
                     }
                     break;
                 case (byte)FileTransferType.CampaignSave:
                     if (GameMain.GameSession != null &&
-                        !ActiveTransfers.Any(t => t.Connection == inc.SenderConnection && t.FileType == FileTransferType.CampaignSave))
+                        !ActiveTransfers.Any(t => t.Connection == inc.Sender && t.FileType == FileTransferType.CampaignSave))
                     {                       
-                        StartTransfer(inc.SenderConnection, FileTransferType.CampaignSave, GameMain.GameSession.SavePath);
+                        StartTransfer(inc.Sender, FileTransferType.CampaignSave, GameMain.GameSession.SavePath);
                         if (GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign)
                         {
-                            client.LastCampaignSaveSendTime = new Pair<ushort, float>(campaign.LastSaveID, (float)NetTime.Now);
+                            client.LastCampaignSaveSendTime = new Pair<ushort, float>(campaign.LastSaveID, (float)Lidgren.Network.NetTime.Now);
                         }
                     }
                     break;

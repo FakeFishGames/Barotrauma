@@ -65,24 +65,31 @@ namespace Barotrauma.Items.Components
         }
 
         public Dictionary<string, SerializableProperty> SerializableProperties { get; protected set; }
-                
+
+        public float IsActiveTimer;
         public virtual bool IsActive
         {
             get { return isActive; }
             set 
             {
 #if CLIENT
-                if (!value && isActive)
+                if (!value)
                 {
-                    StopSounds(ActionType.OnActive);                    
+                    IsActiveTimer = 0.0f;
+                    if (isActive)
+                    {
+                        StopSounds(ActionType.OnActive);
+                    }
                 }
 #endif
                 if (AITarget != null) AITarget.Enabled = value;
-                isActive = value; 
+                isActive = value;
             }
         }
 
         private bool drawable = true;
+
+        public List<PropertyConditional> IsActiveConditionals;
 
         public bool Drawable
         {
@@ -262,6 +269,15 @@ namespace Barotrauma.Items.Components
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
+                    case "activeconditional":
+                    case "isactive":
+                        IsActiveConditionals = IsActiveConditionals ?? new List<PropertyConditional>();
+                        foreach (XAttribute attribute in subElement.Attributes())
+                        {
+                            if (attribute.Name.ToString().ToLowerInvariant() == "targetitemcomponent") { continue; }
+                            IsActiveConditionals.Add(new PropertyConditional(attribute));
+                        }
+                        break;
                     case "requireditem":
                     case "requireditems":
                         RelatedItem ri = RelatedItem.Load(subElement, item.Name);
@@ -384,7 +400,10 @@ namespace Barotrauma.Items.Components
                     item.Use(1.0f);
                     break;
                 case "toggle":
-                    IsActive = !isActive;
+                    if (signal != "0")
+                    {
+                        IsActive = !isActive;
+                    }
                     break;
                 case "set_active":
                 case "set_state":
@@ -410,8 +429,10 @@ namespace Barotrauma.Items.Components
                     {
                         if (item.ParentInventory != null)
                         {
-                            Character owner = (Character)item.ParentInventory.Owner;
-                            if (owner != null && owner.HasSelectedItem(item)) item.Unequip(owner);
+                            if (item.ParentInventory.Owner is Character owner && owner.HasSelectedItem(item))
+                            {
+                                item.Unequip(owner);
+                            }
                             item.ParentInventory.RemoveItem(item);
                         }
                         Entity.Spawner.AddToRemoveQueue(item);
@@ -424,8 +445,10 @@ namespace Barotrauma.Items.Components
                     {
                         if (this.Item.ParentInventory != null)
                         {
-                            Character owner = (Character)this.Item.ParentInventory.Owner;
-                            if (owner != null && owner.HasSelectedItem(this.Item)) this.Item.Unequip(owner);
+                            if (this.Item.ParentInventory.Owner is Character owner && owner.HasSelectedItem(this.Item))
+                            {
+                                this.Item.Unequip(owner);
+                            }
                             this.Item.ParentInventory.RemoveItem(this.Item);
                         }
                         Entity.Spawner.AddToRemoveQueue(this.Item);
@@ -561,14 +584,14 @@ namespace Barotrauma.Items.Components
 
         public virtual void FlipY(bool relativeToSub) { }
 
-        public bool HasRequiredContainedItems(bool addMessage, string msg = null)
+        public bool HasRequiredContainedItems(Character user, bool addMessage, string msg = null)
         {
             if (!requiredItems.ContainsKey(RelatedItem.RelationType.Contained)) return true;
             if (item.OwnInventory == null) return false;
             
             foreach (RelatedItem ri in requiredItems[RelatedItem.RelationType.Contained])
             {
-                if (!item.OwnInventory.Items.Any(it => it != null && it.Condition > 0.0f && ri.MatchesItem(it)))
+                if (!ri.CheckRequirements(user, item))
                 {
 #if CLIENT
                     msg = msg ?? ri.Msg;

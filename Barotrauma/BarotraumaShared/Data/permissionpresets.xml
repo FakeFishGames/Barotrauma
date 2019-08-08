@@ -25,6 +25,12 @@
     <Command name="kickid"/>
     <Command name="campaigninfo"/>
     <Command name="campaigndestination"/>
+    <Command name="togglekarma"/>
+    <Command name="setkarma"/>
+    <Command name="resetkarma"/>
+    <Command name="showkarma"/>
+    <Command name="togglekarmatestmode"/>
+    <Command name="respawnnow"/>
   </Preset>
 
   <Preset 
@@ -76,5 +82,11 @@
     <Command name="power"/>
     <Command name="oxygen"/>
     <Command name="setclientcharacter"/>
+    <Command name="togglekarma"/>
+    <Command name="setkarma"/>
+    <Command name="resetkarma"/>
+    <Command name="showkarma"/>
+    <Command name="togglekarmatestmode"/>
+    <Command name="respawnnow"/>
   </Preset>
 </PermissionPresets>

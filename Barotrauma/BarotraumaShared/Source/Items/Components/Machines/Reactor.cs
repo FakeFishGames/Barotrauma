@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -74,14 +73,14 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        [Editable(0.0f, float.MaxValue, ToolTip = "How long the temperature has to stay critical until a meltdown occurs."), Serialize(30.0f, true)]
+        [Editable(0.0f, float.MaxValue, ToolTip = "How long the temperature has to stay critical until a meltdown occurs."), Serialize(120.0f, true)]
         public float MeltdownDelay
         {
             get { return meltDownDelay; }
             set { meltDownDelay = Math.Max(value, 0.0f); }
         }
 
-        [Editable(0.0f, float.MaxValue, ToolTip = "How long the temperature has to stay critical until the reactor catches fire."), Serialize(10.0f, true)]
+        [Editable(0.0f, float.MaxValue, ToolTip = "How long the temperature has to stay critical until the reactor catches fire."), Serialize(30.0f, true)]
         public float FireDelay
         {
             get { return fireDelay; }
@@ -130,6 +129,13 @@ namespace Barotrauma.Items.Components
                 if (!MathUtils.IsValid(value)) return;
                 fuelConsumptionRate = Math.Max(value, 0.0f);
             }
+        }
+
+        [Serialize(false, true)]
+        public bool TemperatureCritical
+        {
+            get { return temperature > allowedTemperature.Y; }
+            set { /*do nothing*/ }
         }
 
         private float correctTurbineOutput;
@@ -264,7 +270,7 @@ namespace Barotrauma.Items.Components
 
                         //calculate how much external power there is in the grid 
                         //(power coming from somewhere else than this reactor, e.g. batteries)
-                        float externalPower = CurrPowerConsumption - pt.CurrPowerConsumption;
+                        float externalPower = Math.Max(CurrPowerConsumption - pt.CurrPowerConsumption, 0);
                         //reduce the external power from the load to prevent overloading the grid
                         load = Math.Max(load, pt.PowerLoad - externalPower);
                     }
@@ -384,6 +390,14 @@ namespace Barotrauma.Items.Components
                 float prevFireTimer = fireTimer;
                 fireTimer += MathHelper.Lerp(deltaTime * 2.0f, deltaTime, item.Condition / item.MaxCondition);
 
+
+#if SERVER
+                if (fireTimer > Math.Min(5.0f, FireDelay / 2) && blameOnBroken?.Character?.SelectedConstruction == item)
+                {
+                    GameMain.Server.KarmaManager.OnReactorOverHeating(blameOnBroken.Character, deltaTime);
+                }
+#endif
+
                 if (fireTimer >= FireDelay && prevFireTimer < fireDelay)
                 {
                     new FireSource(item.WorldPosition);
@@ -424,6 +438,8 @@ namespace Barotrauma.Items.Components
         {
             base.UpdateBroken(deltaTime, cam);
 
+            item.SendSignal(0, ((int)(temperature * 100.0f)).ToString(), "temperature_out", null);
+
             currPowerConsumption = 0.0f;
             Temperature -= deltaTime * 1000.0f;
             targetFissionRate = Math.Max(targetFissionRate - deltaTime * 10.0f, 0.0f);
@@ -437,14 +453,8 @@ namespace Barotrauma.Items.Components
 
         private void MeltDown()
         {
-            if (item.Condition <= 0.0f) return;
-#if CLIENT
-            if (GameMain.Client != null) return;
-#endif
-
-#if SERVER
-            GameServer.Log("Reactor meltdown!", ServerLog.MessageType.ItemInteraction);
-#endif
+            if (item.Condition <= 0.0f) { return; }
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
 
             item.Condition = 0.0f;
             fireTimer = 0.0f;
@@ -461,9 +471,10 @@ namespace Barotrauma.Items.Components
             }
 
 #if SERVER
-            if (GameMain.Server != null && GameMain.Server.ConnectedClients.Contains(blameOnBroken))
+            GameServer.Log("Reactor meltdown!", ServerLog.MessageType.ItemInteraction);
+            if (GameMain.Server != null)
             {
-                blameOnBroken.Karma = 0.0f;
+                GameMain.Server.KarmaManager.OnReactorMeltdown(blameOnBroken?.Character);
             }
 #endif
         }

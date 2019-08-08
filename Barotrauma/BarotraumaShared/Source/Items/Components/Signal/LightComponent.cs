@@ -2,7 +2,6 @@
 using System;
 using System.Xml.Linq;
 using Barotrauma.Networking;
-using Lidgren.Network;
 #if CLIENT
 using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Lights;
@@ -165,6 +164,10 @@ namespace Barotrauma.Items.Components
         {
             base.OnItemLoaded();
             itemLoaded = true;
+#if CLIENT
+            light.Color = IsActive ? lightColor : Color.Transparent;
+            if (!IsActive) lightBrightness = 0.0f;
+#endif
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -217,10 +220,9 @@ namespace Barotrauma.Items.Components
             if (Rand.Range(0.0f, 1.0f) < 0.05f && voltage < Rand.Range(0.0f, minVoltage))
             {
 #if CLIENT
-                if (voltage > 0.1f && sparkSounds.Count > 0) 
+                if (voltage > 0.1f)
                 {
-                    var sparkSound = sparkSounds[Rand.Int(sparkSounds.Count)];
-                    SoundPlayer.PlaySound(sparkSound.Sound, item.WorldPosition, sparkSound.Volume, sparkSound.Range, item.CurrentHull);
+                    SoundPlayer.PlaySound("zap", item.WorldPosition, hullGuess: item.CurrentHull);
                 }
 #endif
                 lightBrightness = 0.0f;
@@ -264,6 +266,7 @@ namespace Barotrauma.Items.Components
         public override void UpdateBroken(float deltaTime, Camera cam)
         {
             light.Color = Color.Transparent;
+            lightBrightness = 0.0f;
         }
 
         protected override void RemoveComponentSpecific()
@@ -295,7 +298,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             msg.Write(IsOn);
         }

@@ -5,7 +5,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    enum MissionType
+    public enum MissionType
     {
         Random,
         None,

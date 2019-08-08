@@ -7,6 +7,8 @@ using System.ComponentModel;
 using FarseerPhysics;
 using Barotrauma.Items.Components;
 using System.Threading;
+using System.IO;
+using System.Text;
 
 namespace Barotrauma
 {
@@ -49,6 +51,7 @@ namespace Barotrauma
         }
 
         public static List<string> QueuedCommands = new List<string>();
+        public static Thread InputThread;
 
         public static void Update()
         {
@@ -58,6 +61,30 @@ namespace Barotrauma
                 {
                     ExecuteCommand(QueuedCommands[0]);
                     QueuedCommands.RemoveAt(0);
+                }
+            }
+            if (InputThread == null)
+            {
+                lock (queuedMessages)
+                {
+                    while (queuedMessages.Count > 0)
+                    {
+                        var msg = queuedMessages.Dequeue();
+                        Messages.Add(msg);
+                        if (GameSettings.SaveDebugConsoleLogs)
+                        {
+                            unsavedMessages.Add(msg);
+                            if (unsavedMessages.Count >= messagesPerFile)
+                            {
+                                SaveLogs();
+                                unsavedMessages.Clear();
+                            }
+                        }
+                    }
+                    if (Messages.Count > MaxMessages)
+                    {
+                        Messages.RemoveRange(0, Messages.Count - MaxMessages);
+                    }
                 }
             }
         }
@@ -86,10 +113,12 @@ namespace Barotrauma
                             int inputLines = Math.Max((int)Math.Ceiling(input.Length / (float)Console.WindowWidth), 1);
                             Console.CursorLeft = 0;
                             Console.Write(new string(' ', consoleWidth));
-                            Console.CursorTop -= inputLines; Console.CursorLeft = 0;
+                            Console.CursorTop = Math.Max(Console.CursorTop - inputLines, 0);
+                            Console.CursorLeft = 0;
                             while (queuedMessages.Count > 0)
                             {
                                 ColoredText msg = queuedMessages.Dequeue();
+                                Messages.Add(msg);
                                 if (GameSettings.SaveDebugConsoleLogs)
                                 {
                                     unsavedMessages.Add(msg);
@@ -112,6 +141,10 @@ namespace Barotrauma
                             }
                             RewriteInputToCommandLine(input);
                         }
+                        if (Messages.Count > MaxMessages)
+                        {
+                            Messages.RemoveRange(0, Messages.Count - MaxMessages);
+                        }
                     }
 
                     //read player input
@@ -121,9 +154,9 @@ namespace Barotrauma
                         switch (key.Key)
                         {
                             case ConsoleKey.Enter:
-                                lock (DebugConsole.QueuedCommands)
+                                lock (QueuedCommands)
                                 {
-                                    DebugConsole.QueuedCommands.Add(input);
+                                    QueuedCommands.Add(input);
                                 }
                                 input = "";
                                 memoryIndex = -1;
@@ -184,6 +217,25 @@ namespace Barotrauma
             {
                 //don't have anything to do here yet
             }
+#if !DEBUG
+            catch (Exception exception)
+            {
+                StreamWriter sw = new StreamWriter("inputthreadcrash.log");
+
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine("Barotrauma Dedicated Server input thread crash report (generated on " + DateTime.Now + ")");
+                sb.AppendLine("\n");
+                sb.AppendLine("Exception: " + exception.Message);
+                sb.AppendLine("Target site: " + exception.TargetSite.ToString());
+                sb.AppendLine("Stack trace: ");
+                sb.AppendLine(exception.StackTrace);
+
+                sw.WriteLine(sb.ToString());
+                sw.Close();
+
+                GameMain.ShouldRun = false;
+            }
+#endif
         }
 
         private static void RewriteInputToCommandLine(string input)
@@ -219,7 +271,15 @@ namespace Barotrauma
 
         private static void AssignOnClientRequestExecute(string names, Action<Client, Vector2, string[]> onClientRequestExecute)
         {
-            commands.First(c => c.names.Intersect(names.Split('|')).Count() > 0).OnClientRequestExecute = onClientRequestExecute;
+            var matchingCommand = commands.Find(c => c.names.Intersect(names.Split('|')).Count() > 0);
+            if (matchingCommand == null)
+            {
+                throw new Exception("AssignOnClientRequestExecute failed. Command matching the name(s) \"" + names + "\" not found.");
+            }
+            else
+            {
+                matchingCommand.OnClientRequestExecute = onClientRequestExecute;
+            }
         }
 
         private static void InitProjectSpecific()
@@ -568,10 +628,8 @@ namespace Barotrauma
                 NewMessage(client.Name + " has the following permissions:", Color.White);
                 foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
                 {
-                    if (permission == ClientPermissions.None || !client.HasPermission(permission)) continue;
-                    System.Reflection.FieldInfo fi = typeof(ClientPermissions).GetField(permission.ToString());
-                    DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
-                    NewMessage("   - " + attributes[0].Description, Color.White);
+                    if (permission == ClientPermissions.None || !client.HasPermission(permission)) { continue; }
+                    NewMessage("   - " + TextManager.Get("ClientPermission." + permission), Color.White);
                 }
                 if (client.HasPermission(ClientPermissions.ConsoleCommands))
                 {
@@ -590,18 +648,106 @@ namespace Barotrauma
                 }
             });
 
-            /*AssignOnExecute("togglekarma", (string[] args) =>
+            AssignOnExecute("togglekarma", (string[] args) =>
             {
-                return;
                 if (GameMain.Server == null) return;
                 GameMain.Server.ServerSettings.KarmaEnabled = !GameMain.Server.ServerSettings.KarmaEnabled;
-            });*/
+                NewMessage(GameMain.Server.ServerSettings.KarmaEnabled ? "Karma system enabled." : "Karma system disabled.", Color.LightGreen);
+            });
 
-            AssignOnExecute("banip", (string[] args) =>
+            AssignOnExecute("resetkarma", (string[] args) =>
+            {
+                if (GameMain.Server == null || args.Length == 0) return;
+                var client = GameMain.Server.ConnectedClients.Find(c => c.Name == args[0]);
+                if (client == null)
+                {
+                    ThrowError("Client \"" + args[0] + "\" not found.");
+                    return;
+                }
+                client.Karma = 100.0f;
+                NewMessage("Set the karma of the client \"" + args[0] + "\" to 100.", Color.LightGreen);
+            });
+            AssignOnClientRequestExecute("resetkarma", (Client client, Vector2 cursorWorldPos, string[] args) =>
+            {
+                if (GameMain.Server == null || args.Length == 0) return;
+                var targetClient = GameMain.Server.ConnectedClients.Find(c => c.Name == args[0]);
+                if (targetClient == null)
+                {
+                    ThrowError("Client \"" + args[0] + "\" not found.");
+                    return;
+                }
+                targetClient.Karma = 100.0f;
+                GameMain.Server.SendDirectChatMessage("Set the karma of the client \"" + args[0] + "\" to 100.", client);
+                NewMessage("Client \"" + client.Name + "\" set the karma of \"" + args[0] + "\" to 100.", Color.LightGreen);
+            });
+
+            AssignOnExecute("setkarma", (string[] args) =>
+            {
+                if (GameMain.Server == null || args.Length < 2) return;
+                var client = GameMain.Server.ConnectedClients.Find(c => c.Name == args[0]);
+                if (client == null)
+                {
+                    ThrowError("Client \"" + args[0] + "\" not found.");
+                    return;
+                }
+                if (!float.TryParse(args[1], out float karmaValue) || karmaValue < 0.0f || karmaValue > 100.0f)
+                {
+                    ThrowError("\"" + args[1] + "\" is not a valid karma value. You need to enter a number between 0-100.");
+                    return;
+                }
+                client.Karma = karmaValue;
+                NewMessage("Set the karma of the client \"" + args[0] + "\" to " + karmaValue + ".", Color.LightGreen);
+            });
+            AssignOnClientRequestExecute("setkarma", (Client client, Vector2 cursorWorldPos, string[] args) =>
+            {
+                if (GameMain.Server == null || args.Length < 2) return;
+                var targetClient = GameMain.Server.ConnectedClients.Find(c => c.Name == args[0]);
+                if (targetClient == null)
+                {
+                    GameMain.Server.SendDirectChatMessage("Client \"" + args[0] + "\" not found.", client);
+                    return;
+                }
+                if (!float.TryParse(args[1], out float karmaValue) || karmaValue < 0.0f || karmaValue > 100.0f)
+                {
+                    GameMain.Server.SendDirectChatMessage("\"" + args[1] + "\" is not a valid karma value. You need to enter a number between 0-100.", client);
+                    return;
+                }
+                targetClient.Karma = karmaValue;
+                GameMain.Server.SendDirectChatMessage("Set the karma of the client \"" + args[0] + "\" to " + karmaValue + ".", client);
+                NewMessage("Client \"" + client.Name + "\" set the karma of \"" + args[0] + "\" to " + karmaValue + ".", Color.LightGreen);
+            });
+
+            AssignOnExecute("showkarma", (string[] args) =>
+            {
+                if (GameMain.Server == null) return;
+                NewMessage("***************", Color.Cyan);
+                foreach (Client c in GameMain.Server.ConnectedClients)
+                {
+                    NewMessage("- " + c.ID.ToString() + ": " + c.Name + (c.Character != null ? " playing " + c.Character.LogName : "") + ", " + c.Karma, Color.Cyan);
+                }
+                NewMessage("***************", Color.Cyan);
+            });
+            AssignOnClientRequestExecute("showkarma", (Client client, Vector2 cursorWorldPos, string[] args) =>
+            {
+                GameMain.Server.SendConsoleMessage("***************", client);
+                foreach (Client c in GameMain.Server.ConnectedClients)
+                {
+                    GameMain.Server.SendConsoleMessage("- " + c.ID.ToString() + ": " + c.Name + (c.Character != null ? " playing " + c.Character.LogName : "") + ", " + c.Karma, client);
+                }
+                GameMain.Server.SendConsoleMessage("***************", client);
+            });
+            AssignOnExecute("togglekarmatestmode|karmatestmode", (string[] args) =>
+            {
+                if (GameMain.Server?.KarmaManager == null) return;
+                GameMain.Server.KarmaManager.TestMode = !GameMain.Server.KarmaManager.TestMode;
+                NewMessage(GameMain.Server.KarmaManager.TestMode ? "Karma test mode enabled." : "Karma test mode disabled.", Color.LightGreen);
+            });
+
+            AssignOnExecute("banendpoint", (string[] args) =>
             {
                 if (GameMain.Server == null || args.Length == 0) return;
 
-                ShowQuestionPrompt("Reason for banning the ip \"" + args[0] + "\"?", (reason) =>
+                ShowQuestionPrompt("Reason for banning the endpoint \"" + args[0] + "\"?", (reason) =>
                 {
                     ShowQuestionPrompt("Enter the duration of the ban (leave empty to ban permanently, or use the format \"[days] d [hours] h\")", (duration) =>
                     {
@@ -616,7 +762,7 @@ namespace Barotrauma
                             banDuration = parsedBanDuration;
                         }
 
-                        var clients = GameMain.Server.ConnectedClients.FindAll(c => c.IPMatches(args[0]));
+                        var clients = GameMain.Server.ConnectedClients.FindAll(c => c.EndpointMatches(args[0]));
                         if (clients.Count == 0)
                         {
                             GameMain.Server.ServerSettings.BanList.BanPlayer("Unnamed", args[0], reason, banDuration);
@@ -721,7 +867,7 @@ namespace Barotrauma
                 NewMessage("***************", Color.Cyan);
                 foreach (Client c in GameMain.Server.ConnectedClients)
                 {
-                    NewMessage("- " + c.ID.ToString() + ": " + c.Name + (c.Character != null ? " playing " + c.Character.LogName : "") + ", " + c.Connection.RemoteEndPoint.Address.ToString(), Color.Cyan);
+                    NewMessage("- " + c.ID.ToString() + ": " + c.Name + (c.Character != null ? " playing " + c.Character.LogName : "") + ", " + c.Connection.EndPointString, Color.Cyan);
                 }
                 NewMessage("***************", Color.Cyan);
             }));
@@ -730,7 +876,7 @@ namespace Barotrauma
                 GameMain.Server.SendConsoleMessage("***************", client);
                 foreach (Client c in GameMain.Server.ConnectedClients)
                 {
-                    GameMain.Server.SendConsoleMessage("- " + c.ID.ToString() + ": " + c.Name + ", " + c.Connection.RemoteEndPoint.Address.ToString(), client);
+                    GameMain.Server.SendConsoleMessage("- " + c.ID.ToString() + ": " + c.Name + ", " + c.Connection.EndPointString, client);
                 }
                 GameMain.Server.SendConsoleMessage("***************", client);
             });
@@ -835,6 +981,7 @@ namespace Barotrauma
                 NewMessage("*****************", Color.Lime);
                 NewMessage("RESTARTING SERVER", Color.Lime);
                 NewMessage("*****************", Color.Lime);
+                GameServer.Log("Console command \"restart\" executed: closing the server...", ServerLog.MessageType.ServerMessage);
                 GameMain.Instance.CloseServer();
                 GameMain.Instance.StartServer();
             }));
@@ -844,18 +991,36 @@ namespace Barotrauma
                 GameMain.ShouldRun = false;
             }));
 
-            commands.Add(new Command("say", "say [message]: Send a chat message that displays \"HOST\" as the sender.", (string[] args) =>
+            commands.Add(new Command("say", "say [message]: Send a global chat message. When issued through the server command line, displays \"HOST\" as the sender.", (string[] args) =>
             {
                 string text = string.Join(" ", args);
                 text = "HOST: " + text;
                 GameMain.Server.SendChatMessage(text, ChatMessageType.Server);
             }));
+            AssignOnClientRequestExecute("say",
+            (Client client, Vector2 cursorPos, string[] args) =>
+            {
+                string text = string.Join(" ", args);
+                text = client.Name+": " + text;
+                if (GameMain.Server.OwnerConnection != null &&
+                    client.Connection == GameMain.Server.OwnerConnection)
+                {
+                    text = "[HOST] " + text;
+                }
+                GameMain.Server.SendChatMessage(text, ChatMessageType.Server);
+            });
 
             commands.Add(new Command("msg", "msg [message]: Send a chat message with no sender specified.", (string[] args) =>
             {
                 string text = string.Join(" ", args);
                 GameMain.Server.SendChatMessage(text, ChatMessageType.Server);
             }));
+            AssignOnClientRequestExecute("msg",
+            (Client client, Vector2 cursorPos, string[] args) =>
+            {
+                string text = string.Join(" ", args);
+                GameMain.Server.SendChatMessage(text, ChatMessageType.Server);
+            });
 
             commands.Add(new Command("servername", "servername [name]: Change the name of the server.", (string[] args) =>
             {
@@ -989,6 +1154,16 @@ namespace Barotrauma
                 };
             }));
 
+
+            AssignOnExecute("respawnnow", (string[] args) =>
+            {
+                if (GameMain.Server?.RespawnManager == null) { return; }
+                if (GameMain.Server.RespawnManager.CurrentState != RespawnManager.State.Transporting)
+                {
+                    GameMain.Server.RespawnManager.ForceRespawn();
+                }
+            });
+
             commands.Add(new Command("startgame|startround|start", "start/startgame/startround: Start a new round.", (string[] args) =>
             {
                 if (Screen.Selected == GameMain.GameScreen) return;
@@ -1012,6 +1187,11 @@ namespace Barotrauma
             }));
 
 #if DEBUG
+            commands.Add(new Command("printsendertransfers", "", (string[] args) =>
+            {
+                GameMain.Server.PrintSenderTransters();
+            }));
+
             commands.Add(new Command("eventdata", "", (string[] args) =>
             {
                 if (args.Length == 0) return;
@@ -1049,11 +1229,11 @@ namespace Barotrauma
             );
 
             AssignOnClientRequestExecute(
-                "banip",
+                "banendpoint|banip",
                 (Client client, Vector2 cursorPos, string[] args) =>
                 {
                     if (args.Length < 1) return;
-                    var clients = GameMain.Server.ConnectedClients.FindAll(c => c.IPMatches(args[0]));
+                    var clients = GameMain.Server.ConnectedClients.FindAll(c => c.EndpointMatches(args[0]));
                     TimeSpan? duration = null;
                     if (args.Length > 1)
                     {
@@ -1523,7 +1703,11 @@ namespace Barotrauma
                 "showperm",
                 (Client senderClient, Vector2 cursorWorldPos, string[] args) =>
                 {
-                    if (args.Length < 2) return;
+                    if (args.Length < 1)
+                    {
+                        GameMain.Server.SendConsoleMessage("showperm [id]: Shows the current administrative permissions of the client with the specified client ID.", senderClient);
+                        return;
+                    }
 
                     int.TryParse(args[0], out int id);
                     var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
@@ -1542,10 +1726,8 @@ namespace Barotrauma
                     GameMain.Server.SendConsoleMessage(client.Name + " has the following permissions:", senderClient);
                     foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
                     {
-                        if (permission == ClientPermissions.None || !client.HasPermission(permission)) continue;
-                        System.Reflection.FieldInfo fi = typeof(ClientPermissions).GetField(permission.ToString());
-                        DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
-                        GameMain.Server.SendConsoleMessage("   - " + attributes[0].Description, senderClient);
+                        if (permission == ClientPermissions.None || !client.HasPermission(permission)) { continue; }
+                        GameMain.Server.SendConsoleMessage("   - " + TextManager.Get("ClientPermission." + permission), senderClient);
                     }
                     if (client.HasPermission(ClientPermissions.ConsoleCommands))
                     {

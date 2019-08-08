@@ -3367,8 +3367,11 @@
   <!-- Audio -->
   <dynamicrangecompression>Dynamic range compression</dynamicrangecompression>
   <dynamicrangecompressiontooltip>Adjusts the game's volume automatically to prevent audio distortion.</dynamicrangecompressiontooltip>
+<<<<<<< HEAD
   <voipattenuation>Voice chat attenuation</voipattenuation>
   <voipattenuationtooltip>Lowers the game's volume when players are speaking.</voipattenuationtooltip>
+=======
+>>>>>>> origin/dev
   <voipnodevices>No audio capture devices found</voipnodevices>
   
   <!-- Misc -->
@@ -3469,6 +3472,95 @@
   <afflictionname.invertcontrols>Disoriented</afflictionname.invertcontrols>
   <afflictiondescription.invertcontrols>The patient's eyes are darting around and they seem to be having trouble orienting to their surroundings.</afflictiondescription.invertcontrols>
 
+<<<<<<< HEAD
+=======
+  <!-- New generic strings -->
+  <damagebutton>Damage</damagebutton>
+  <pending>Pending</pending>
+  <inprogress>In progress</inprogress>
+  <complete>Complete</complete>
+
+  <!-- Traitor mission (new) -->
+
+  <traitormissionstartmessage>You are the traitor! You have successfully infiltrated the submarine and now it's time to put the plans in motion.</traitormissionstartmessage>
+  <traitormissionfailuremessage>You have failed in your mission. As a result, the mission has been canceled and you are now part of the crew. Keep a low profile until you are contacted again.</traitormissionfailuremessage>
+  <traitormissionsuccessmessage>You have successfully sabotaged the crew's efforts. An escape shuttle has been dispatched for you.</traitormissionsuccessmessage>
+
+  <!-- Traitor objectives (new) -->
+  <traitorobjectivestartmessageserver>[traitorname] is the traitor and has the following goals:\n[traitorgoalinfos]</traitorobjectivestartmessageserver>
+  <traitorobjectiveendmessagesuccess>[traitorname] was a traitor and succeeded in completing the given goals:\n [traitorgoalinfos]</traitorobjectiveendmessagesuccess>
+  <traitorobjectiveendmessagesuccessdead>[traitorname] was a traitor and succeeded in completing the given goals but regrettably died in the process, goals:\n[traitorgoalinfos]</traitorobjectiveendmessagesuccessdead>
+  <traitorobjectiveendmessagesuccessdetained>[traitorname] was a traitor and succeeded in completing the given goals but was detained, goals:\n[traitorgoalinfos]</traitorobjectiveendmessagesuccessdetained>
+  <traitorobjectiveendmessagefailure>[traitorname] was a traitor but failed to complete the given goals:\n[traitorgoalinfos]</traitorobjectiveendmessagefailure>
+  <traitorobjectiveendmessagefailuredead>[traitorname] was a traitor but died while failing to complete the given goals:\n[traitorgoalinfos]</traitorobjectiveendmessagefailuredead>
+  <traitorobjectiveendmessagefailuredetained>[traitorname] was a traitor but got detained while failing to complete the given goals:\n[traitorgoalinfos]</traitorobjectiveendmessagefailuredetained>
+  <traitorobjectivegoalinfoformat>- [statustext]\n</traitorobjectivegoalinfoformat>
+
+  <!-- Traitor goals (new) -->
+  <traitorgoalstatustextformat>[infotext] ([status])</traitorgoalstatustextformat>
+  <traitorgoaltimelimitfailure>You failed to complete your objective in time.</traitorgoaltimelimitfailure>
+  <traitorgoalkilltargetinfo>Assassinate [targetname].</traitorgoalkilltargetinfo>
+  <traitorgoalkilleveryoneinfo>Kill all crew members.</traitorgoalkilleveryoneinfo>
+  <traitorgoalfindcontainerinfo>Find your next objective inside a [target] in [targethullname].</traitorgoalfindcontainerinfo>
+  <traitorgoalfinditeminfo>Find a [identifier] in [targethullname].</traitorgoalfinditeminfo>
+  <traitorgoalcausereactormeltdown>Cause a reactor meltdown.</traitorgoalcausereactormeltdown>
+  <traitorgoaldestroyitems>Destroy at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>
+  <traitorgoaldestroyoxygen>Destroy at least [percentage] percent of all non-inventory oxygen tanks on the sub.</traitorgoaldestroyoxygen>
+  <traitorgoalfloodpercentofsub>Flood at least [percentage] percent of the submarine.</traitorgoalfloodpercentofsub>
+  <traitorgoaljamsonarinfo>Hide an active sonar jammer somewhere it can't be found for [duration] seconds.</traitorgoaljamsonarinfo>
+  <traitorgoaljamsonarinfoalt>Jam the submarine's sonar for [duration] seconds.</traitorgoaljamsonarinfoalt>
+  <traitorgoalsabotageinfo>Sabotage the [target] so that its condition is under [threshold]%.</traitorgoalsabotageinfo>
+  <traitorgoalsabotagedurationinfo>Sabotage the [tag] so that its condition is under [threshold]% for at least [duration] seconds.</traitorgoalsabotagedurationinfo>
+  <traitorgoalpoisoninfo>Inject [targetname] with [poison].</traitorgoalpoisoninfo>
+  <!--<traitorgoaltamperinfodefault>Swap at least [percentage] percent of oxygen tanks inside diving equipment with welding fuel.</traitorgoaltamperinfodefault>-->
+  <traitorgoaltamperoxygeninfo>Swap at least [percentage] percent of oxygen tanks inside diving equipment with welding fuel.</traitorgoaltamperoxygeninfo>
+  <traitorgoaltampercoilguninfo>Load dummy ammunition into all coilgun loaders.</traitorgoaltampercoilguninfo>
+  <traitorgoaltampercoilguninfomulti>Load dummy ammunition into [number] coilgun loaders.</traitorgoaltampercoilguninfomulti>
+  <traitorgoaltamperrailguninfo>Load a dummy shell into all railgun loaders.</traitorgoaltamperrailguninfo>
+  <traitorgoaltamperrailguninfomulti>Load [number] dummy shells into a railgun loader.</traitorgoaltamperrailguninfomulti>
+  <traitorgoalescape>Escape to the nearby shuttle.</traitorgoalescape>
+
+  <traitormissionfailuremessage>You have failed in your mission. As a result, the mission has been canceled and you are now part of the crew. Keep a low profile until you are contacted again.</traitormissionfailuremessage>
+  <traitormissionsuccessmessage>You have successfully sabotaged the crew's efforts. An escape shuttle has been dispatched for you.</traitormissionsuccessmessage>
+
+  <!-- MVP Traitor mission text package -->
+  <MVPtraitormissionStartInfoText>A voice within your head screams loudly enough to startle you: "THE CULT OF THE HUSK CALLS YOU TO SERVICE!"</MVPtraitormissionStartInfoText>
+  <MVPtraitorobjectivestartmessage1>An idea gradually forms in your mind, strangely seductive to you in spite of its mundane nature:\n[traitorgoalinfos]</MVPtraitorobjectivestartmessage1>
+  <MVP_GoalInfoText_1>Search the storage lockers, a special message just for you is hidden under one of the spare oxygen tanks.</MVP_GoalInfoText_1>
+  <MVPobjectiveSuccessMessage1>As you somehow predicted, a slip of filthy paper is stuck to the underside of this oxygen tank. It's covered in primitive scribbles, but you intuitively understand it to be coded instructions.</MVPobjectiveSuccessMessage1>
+  <MVPtraitorobjectivestartmessage2>Your first task:\n[traitorgoalinfos]</MVPtraitorobjectivestartmessage2>
+  <MVPobjectiveSuccessMessage2>A rush of pleasure hits you like a wave as you complete the first task on the paper. A dry, mad laugh echoes within your head for a moment, fading into indistinct wet clicks.</MVPobjectiveSuccessMessage2>
+  <MVPtraitorobjectivestartmessage3> You read the next coded instruction:\n[traitorgoalinfos]</MVPtraitorobjectivestartmessage3>
+  <MVPobjectiveSuccessMessage3>With that, there is nothing more to do. The sub is in disarray, the voice in your head grows silent, and your fate is sealed.</MVPobjectiveSuccessMessage3>
+
+  <!-- flood_1 traitor mission text package -->
+  <flood_1_traitormissionStartInfoText>Praise the Honkmother!</flood_1_traitormissionStartInfoText>
+  <flood_1_traitorobjectivestartmessage1>It's time. As the man with the strange painted face instructed you back on the loading dock at Minos Linea, you get to work:\n[traitorgoalinfos]</flood_1_traitorobjectivestartmessage1>
+  <flood_1_GoalInfoText_1>Search the emergency supplies lockers in each compartment, an operative has hidden a button component in one of them.</flood_1_GoalInfoText_1>
+  <flood_1_objectiveSuccessMessage1>You quickly stash the button in your pocket and try to act casual. HONK!</flood_1_objectiveSuccessMessage1>
+  <flood_1_traitorobjectivestartmessage2>Next, you'll need to find some explosives before anyone else can get to them!\n[traitorgoalinfos]</flood_1_traitorobjectivestartmessage2>
+  <flood_1_GoalInfoText_2>Retrieve the explosives from the medbay.</flood_1_GoalInfoText_2>
+  <flood_1_objectiveSuccessMessage2>The plan is coming together perfectly, you grab the explosives and try not to giggle too much.</flood_1_objectiveSuccessMessage2>
+  <flood_1_traitorobjectivestartmessage3>Finally, the painted man said you'll need to find something to set this all off!\n[traitorgoalinfos]</flood_1_traitorobjectivestartmessage3>
+  <flood_1_GoalInfoText_3>Search the steel storage cabinets around the sub and retrieve the detonator.</flood_1_GoalInfoText_3>
+  <flood_1_objectiveSuccessMessage3>The operative really came through! You have all you need now to get the party here started.</flood_1_objectiveSuccessMessage3>
+  <flood_1_traitorobjectivestartmessage4>You're going need to set the detonator on a wall in a good location, place the button a safe distance away, wire the two together, then set it all off to flood this rust bucket!\n[traitorgoalinfos]</flood_1_traitorobjectivestartmessage4>
+  <flood_1_objectiveSuccessMessage4>HONK HONK! There's more than enough water in the sub now to end its mission prematurely. You wonder how long it will take to swim to the nearest outpost and report back to the painted man...</flood_1_objectiveSuccessMessage4>
+
+  <!-- flood_2 traitor mission text package -->
+  <flood_2_traitormissionStartInfoText>Scanning furtively around, you notice nobody's looking at you, Which makes this the perfect time to snap into action.</flood_2_traitormissionStartInfoText>
+  <flood_2_traitorobjectivestartmessage1>You've spent months gaining the trust of this crew, and it's all about to pay off:\n[traitorgoalinfos]</flood_2_traitorobjectivestartmessage1>
+  <flood_2_GoalInfoText_1>Search the emergency supply cabinets around the sub, one of the diving masks has a small low frequency reciever hidden in it which you'll need to get your objectives.</flood_2_GoalInfoText_1>
+  <flood_2_objectiveSuccessMessage1>You find the tiny radio reciever and activate it.</flood_2_objectiveSuccessMessage1>
+  <flood_2_traitorobjectivestartmessage2>The reciever crackles and whistles as a weak signal is recieved - "Europan Resistance direct action, you are clear to go ahead with the mission: Start by creating a distraction.\n[traitorgoalinfos]</flood_2_traitorobjectivestartmessage2>
+  <flood_2_objectiveSuccessMessage2>"Well done, without oxygen, we'll have those pigs in a panic soon enough."</flood_2_objectiveSuccessMessage2>
+  <flood_2_traitorobjectivestartmessage3>"Now cause a little flood and watch the fascists sqeal":\n[traitorgoalinfos]</flood_2_traitorobjectivestartmessage3>
+  <flood_2_objectiveSuccessMessage3>"Excellent! Remember comrade, there are no bad tactics, only bad targets!"</flood_2_objectiveSuccessMessage3>
+  <flood_2_traitorobjectivestartmessage4>"Quickly, capitalize on the confusion and take out the worst of those pigs while you can!"\n[traitorgoalinfos]</flood_2_traitorobjectivestartmessage4>
+  <flood_2_objectiveSuccessMessage4>As you take their life you note, perhaps with a little bitterness, that your reciever has gone dead quite suddenly. Your comrades have left you to the mercy of Mother Europa.</flood_2_objectiveSuccessMessage4>
+
+
+>>>>>>> origin/dev
   <!-- MODIFIED -->
   <karmabanwarning>WARNING: Your karma is dangerously low. You will be banned from the server if it decreases further.</karmabanwarning>
   <publicservertooltip>Public servers are shown in the list of available servers in the 'Server Browser'.</publicservertooltip>
