@@ -78,14 +78,33 @@ namespace Barotrauma
 
         public const float InsufficientOxygenThreshold = 30.0f;
         public const float LowOxygenThreshold = 50.0f;
-        protected float minVitality, maxVitality;
+        protected float minVitality;
+
+        protected float maxVitality
+        {
+            get => Character.CharacterParams.Health.Vitality;
+            set => Character.CharacterParams.Health.Vitality = value;
+        }
 
         public bool Unkillable;
 
-        //bleeding settings
-        public bool DoesBleed { get; private set; }
+        public bool DoesBleed
+        {
+            get => Character.CharacterParams.Health.DoesBleed;
+            private set => Character.CharacterParams.Health.DoesBleed = value;
+        }
 
-        public bool UseHealthWindow { get; set; }
+        public bool UseHealthWindow
+        {
+            get => Character.CharacterParams.Health.UseHealthWindow;
+            set => Character.CharacterParams.Health.UseHealthWindow = value;
+        }
+
+        public float CrushDepth
+        {
+            get => Character.CharacterParams.Health.CrushDepth;
+            private set => Character.CharacterParams.Health.CrushDepth = value;
+        }
 
         private List<LimbHealth> limbHealths = new List<LimbHealth>();
         //non-limb-specific afflictions
@@ -102,7 +121,6 @@ namespace Barotrauma
             get { return Vitality <= 0.0f; }
         }
 
-        public float CrushDepth { get; private set; }
         public float PressureKillDelay { get; private set; } = 5.0f;
 
         public float Vitality { get; private set; }
@@ -168,7 +186,6 @@ namespace Barotrauma
         {
             this.Character = character;
             Vitality = 100.0f;
-            maxVitality = 100.0f;
 
             DoesBleed = true;
             UseHealthWindow = false;
@@ -185,13 +202,7 @@ namespace Barotrauma
             this.Character = character;
             InitIrremovableAfflictions();
 
-            CrushDepth = element.GetAttributeFloat("crushdepth", float.NegativeInfinity);
-
-            maxVitality = element.GetAttributeFloat("vitality", 100.0f);
             Vitality    = maxVitality;
-
-            DoesBleed               = element.GetAttributeBool("doesbleed", true);
-            UseHealthWindow         = element.GetAttributeBool("usehealthwindow", false);
 
             minVitality = (character.ConfigPath == Character.HumanConfigFile) ? -100.0f : 0.0f;
 

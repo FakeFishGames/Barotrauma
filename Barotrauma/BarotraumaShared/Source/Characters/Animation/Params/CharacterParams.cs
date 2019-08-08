@@ -150,7 +150,7 @@ namespace Barotrauma
         [Serialize(true, true), Editable]
         public bool DoesBleed { get; set; }
 
-        [Serialize(true, true), Editable]
+        [Serialize(false, true), Editable]
         public bool UseHealthWindow { get; set; }
 
         [Serialize(float.NegativeInfinity, true), Editable]
