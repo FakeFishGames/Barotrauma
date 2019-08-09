@@ -79,6 +79,8 @@ namespace Barotrauma
         public readonly SpriteParams damagedSpriteParams;
         public readonly SpriteParams deformSpriteParams;
 
+        public LimbAttackParams Attack { get; private set; }
+
         private string name;
         [Serialize("", true), Editable]
         public override string Name
@@ -185,12 +187,32 @@ namespace Barotrauma
             var attackElement = element.GetChildElement("attack");
             if (attackElement != null)
             {
-                SubParams.Add(new LimbAttackParams(attackElement, ragdoll));
+                Attack = new LimbAttackParams(attackElement, ragdoll);
+                SubParams.Add(Attack);
             }
             foreach (var damageElement in element.GetChildElements("damagemodifier"))
             {
                 SubParams.Add(new DamageModifierParams(damageElement, ragdoll));
             }
+        }
+
+        public bool AddAttack()
+        {
+            if (Attack != null) { return false; }
+            var element = LimbAttackParams.CreateNewElement();
+            Element.Add(element);
+            Attack = new LimbAttackParams(element, Ragdoll);
+            SubParams.Add(Attack);
+            return Attack != null;
+        }
+
+        public bool RemoveAttack()
+        {
+            if (Attack == null) { return false; }
+            Attack.Element.Remove();
+            SubParams.Remove(Attack);
+            Attack = null;
+            return Attack == null;
         }
     }
 
@@ -343,6 +365,8 @@ namespace Barotrauma
             base.Reset();
             Attack.Deserialize();
         }
+
+        public static XElement CreateNewElement() => new XElement("attack");
     }
 
     class DamageModifierParams : RagdollSubParams

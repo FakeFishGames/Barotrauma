@@ -245,7 +245,7 @@ namespace Barotrauma
                     return true;
                 }
             };
-            new GUIButton(new RectTransform(new Vector2(0.45f, 0.9f), buttonParent.RectTransform, Anchor.CenterRight), "Remove Last Target")
+            new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), buttonParent.RectTransform, Anchor.CenterRight), "Remove Last Target")
             {
                 OnClicked = (button, data) =>
                 {

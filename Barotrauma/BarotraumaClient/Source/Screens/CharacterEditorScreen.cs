@@ -2825,7 +2825,43 @@ namespace Barotrauma
                 {
                     if (selectedLimbs.Any())
                     {
-                        selectedLimbs.ForEach(l => l.limbParams.AddToEditor(ParamsEditor.Instance, true, space: 10));
+                        foreach (var limb in selectedLimbs)
+                        {
+                            var editor = ParamsEditor.Instance;
+                            limb.limbParams.AddToEditor(editor, true, space: 0);
+                            var buttonParent = new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 40), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
+                            {
+                                CanBeFocused = false
+                            };
+                            if (limb.limbParams.Attack == null)
+                            {
+                                new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), buttonParent.RectTransform, Anchor.Center), "Add Attack")
+                                {
+                                    OnClicked = (button, data) =>
+                                    {
+                                        limb.limbParams.AddAttack();
+                                        ResetParamsEditor();
+                                        return true;
+                                    }
+                                };
+                            }
+                            else
+                            {
+                                new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), buttonParent.RectTransform, Anchor.Center), "Remove Attack")
+                                {
+                                    OnClicked = (button, data) =>
+                                    {
+                                        limb.limbParams.RemoveAttack();
+                                        ResetParamsEditor();
+                                        return true;
+                                    }
+                                };
+                            }
+                            new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 20), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
+                            {
+                                CanBeFocused = false
+                            };
+                        }
                     }
                     else
                     {
