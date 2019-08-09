@@ -369,6 +369,7 @@ namespace Barotrauma
 
         public bool AddNewAffliction()
         {
+            Attack.Serialize(Element);
             var subElement = new XElement("affliction", 
                 new XAttribute("identifier", "internaldamage"), 
                 new XAttribute("strength", 0f),
@@ -384,6 +385,7 @@ namespace Barotrauma
             var afflictions = Element.GetChildElements("affliction");
             var last = afflictions.LastOrDefault();
             if (last == null) { return false; }
+            Attack.Serialize(Element);
             last.Remove();
             Attack.ReloadAfflictions(Element);
             Attack.Serialize(Element);

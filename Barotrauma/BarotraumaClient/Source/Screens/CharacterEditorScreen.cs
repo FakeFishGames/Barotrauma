@@ -180,7 +180,7 @@ namespace Barotrauma
             ResetVariables();
             if (character != null)
             {
-                CharacterParams.Reset();
+                CharacterParams.Reset(true);
                 AnimParams.ForEach(a => a.Reset(true));
                 RagdollParams.Reset(true);
                 RagdollParams.ClearHistory();
