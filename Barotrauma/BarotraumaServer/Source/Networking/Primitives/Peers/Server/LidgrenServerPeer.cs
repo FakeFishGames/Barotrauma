@@ -337,8 +337,13 @@ namespace Barotrauma.Networking
 
                     if (!Client.IsValidName(name, serverSettings))
                     {
-                        RemovePendingClient(pendingClient, DisconnectReason.InvalidName.ToString() + "/ The name \"" +name+"\" is invalid");
-                        return;
+                        if (OwnerConnection != null ||
+                            !IPAddress.IsLoopback(pendingClient.Connection.RemoteEndPoint.Address.MapToIPv4()) &&
+                            ownerKey == null || ownKey == 0 && ownKey != ownerKey)
+                        {
+                            RemovePendingClient(pendingClient, DisconnectReason.InvalidName.ToString() + "/ The name \"" + name + "\" is invalid");
+                            return;
+                        }
                     }
 
                     string version = inc.ReadString();

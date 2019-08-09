@@ -2069,16 +2069,20 @@ namespace Barotrauma.Networking
             //so the client will be informed what their actual name is
             LastClientListUpdateID++;
 
-            if (!Client.IsValidName(newName, serverSettings))
+            if (c.Connection != OwnerConnection)
             {
-                SendDirectChatMessage("Could not change your name to \"" + newName + "\" (the name contains disallowed symbols).", c, ChatMessageType.MessageBox);
-                return false;
+                if (!Client.IsValidName(newName, serverSettings))
+                {
+                    SendDirectChatMessage("Could not change your name to \"" + newName + "\" (the name contains disallowed symbols).", c, ChatMessageType.MessageBox);
+                    return false;
+                }
+                if (Homoglyphs.Compare(newName.ToLower(), Name.ToLower()))
+                {
+                    SendDirectChatMessage("Could not change your name to \"" + newName + "\" (too similar to the server's name).", c, ChatMessageType.MessageBox);
+                    return false;
+                }
             }
-            if (c.Connection != OwnerConnection && Homoglyphs.Compare(newName.ToLower(), Name.ToLower()))
-            {
-                SendDirectChatMessage("Could not change your name to \"" + newName + "\" (too similar to the server's name).", c, ChatMessageType.MessageBox);
-                return false;
-            }
+            
             Client nameTaken = ConnectedClients.Find(c2 => c != c2 && Homoglyphs.Compare(c2.Name.ToLower(), newName.ToLower()));
             if (nameTaken != null)
             {
