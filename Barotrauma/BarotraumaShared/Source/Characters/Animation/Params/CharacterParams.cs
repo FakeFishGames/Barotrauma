@@ -283,7 +283,7 @@ namespace Barotrauma
             }
         }
 
-        public bool TryAddEmptyTarget(out TargetParams targetParams) => TryAddNewTarget("newtarget", AIState.Attack, 0f, out targetParams);
+        public bool TryAddEmptyTarget(out TargetParams targetParams) => TryAddNewTarget("newtarget" + targets.Count, AIState.Attack, 0f, out targetParams);
 
         public bool TryAddNewTarget(string tag, AIState state, float priority, out TargetParams targetParams, bool createNewElement = true)
         {
