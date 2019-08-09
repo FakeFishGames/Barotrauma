@@ -2656,7 +2656,7 @@ namespace Barotrauma
             resetButton.Color = Color.Red;
             resetButton.OnClicked += (button, userData) =>
             {
-                CharacterParams.Reset();
+                CharacterParams.Reset(true);
                 AnimParams.ForEach(p => p.Reset(true));
                 if (ragdollResetRequiresForceLoading)
                 {
