@@ -349,21 +349,45 @@ namespace Barotrauma
         public override bool Deserialize(XElement element = null, bool recursive = true)
         {
             base.Deserialize(element, recursive);
-            Attack.Deserialize();
+            Attack.Deserialize(element ?? Element);
             return SerializableProperties != null;
         }
 
         public override bool Serialize(XElement element = null, bool recursive = true)
         {
             base.Serialize(element, recursive);
-            Attack.Serialize();
+            Attack.Serialize(Element);
             return true;
         }
 
         public override void Reset()
         {
             base.Reset();
-            Attack.Deserialize();
+            Attack.Deserialize(OriginalElement);
+            Attack.ReloadAfflictions(OriginalElement);
+        }
+
+        public bool AddNewAffliction()
+        {
+            var subElement = new XElement("affliction", 
+                new XAttribute("identifier", "internaldamage"), 
+                new XAttribute("strength", 0f),
+                new XAttribute("probability", 1.0f));
+            Element.Add(subElement);
+            Attack.ReloadAfflictions(Element);
+            Attack.Serialize(Element);
+            return true;
+        }
+
+        public bool RemoveLastAffliction()
+        {
+            var afflictions = Element.GetChildElements("affliction");
+            var last = afflictions.LastOrDefault();
+            if (last == null) { return false; }
+            last.Remove();
+            Attack.ReloadAfflictions(Element);
+            Attack.Serialize(Element);
+            return false;
         }
 
         public static XElement CreateNewElement() => new XElement("attack");

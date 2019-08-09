@@ -245,14 +245,17 @@ namespace Barotrauma
                     return true;
                 }
             };
-            new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), buttonParent.RectTransform, Anchor.CenterRight), "Remove Last Target")
+            if (Targets.Any())
             {
-                OnClicked = (button, data) =>
+                new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), buttonParent.RectTransform, Anchor.CenterRight), "Remove Last Target")
                 {
-                    TryRemoveLastTarget();
-                    return true;
-                }
-            };
+                    OnClicked = (button, data) =>
+                    {
+                        TryRemoveLastTarget();
+                        return true;
+                    }
+                };
+            }
             if (space > 0)
             {
                 new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, space), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))

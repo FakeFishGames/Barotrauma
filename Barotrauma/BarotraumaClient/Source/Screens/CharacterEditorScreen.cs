@@ -2349,7 +2349,7 @@ namespace Barotrauma
             saveRagdollButton.OnClicked += (button, userData) =>
             {
                 var box = new GUIMessageBox(GetCharacterEditorTranslation("SaveRagdoll"), $"{GetCharacterEditorTranslation("ProvideFileName")}: ", new string[] { TextManager.Get("Cancel"), TextManager.Get("Save") }, messageBoxRelSize);
-                var inputField = new GUITextBox(new RectTransform(new Point(box.Content.Rect.Width, 30), box.Content.RectTransform, Anchor.Center), RagdollParams.Name);
+                var inputField = new GUITextBox(new RectTransform(new Point(box.Content.Rect.Width, 30), box.Content.RectTransform, Anchor.Center), RagdollParams.Name.RemoveWhitespace());
                 box.Buttons[0].OnClicked += (b, d) =>
                 {
                     box.Close();
@@ -2836,12 +2836,12 @@ namespace Barotrauma
                         {
                             var editor = ParamsEditor.Instance;
                             limb.limbParams.AddToEditor(editor, true, space: 0);
-                            var buttonParent = new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 40), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
-                            {
-                                CanBeFocused = false
-                            };
                             if (limb.limbParams.Attack == null)
                             {
+                                var buttonParent = new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 40), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
+                                {
+                                    CanBeFocused = false
+                                };
                                 new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), buttonParent.RectTransform, Anchor.Center), "Add Attack")
                                 {
                                     OnClicked = (button, data) =>
@@ -2854,6 +2854,35 @@ namespace Barotrauma
                             }
                             else
                             {
+                                var parent = new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 30), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
+                                {
+                                    CanBeFocused = false
+                                };
+                                new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), parent.RectTransform, Anchor.CenterLeft), "Add New Affliction")
+                                {
+                                    OnClicked = (button, data) =>
+                                    {
+                                        limb.limbParams.Attack.AddNewAffliction();
+                                        ResetParamsEditor();
+                                        return true;
+                                    }
+                                };
+                                if (limb.limbParams.Attack.Element.GetChildElements("affliction").Any())
+                                {
+                                    new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), parent.RectTransform, Anchor.CenterRight), "Remove Last Affliction")
+                                    {
+                                        OnClicked = (button, data) =>
+                                        {
+                                            limb.limbParams.Attack.RemoveLastAffliction();
+                                            ResetParamsEditor();
+                                            return true;
+                                        }
+                                    };
+                                }
+                                var buttonParent = new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 40), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
+                                {
+                                    CanBeFocused = false
+                                };
                                 new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), buttonParent.RectTransform, Anchor.Center), "Remove Attack")
                                 {
                                     OnClicked = (button, data) =>

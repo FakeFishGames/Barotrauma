@@ -68,8 +68,6 @@ namespace Barotrauma
     
     partial class Attack : ISerializableEntity
     {
-        public readonly XElement SourceElement;
-
         [Serialize(AttackContext.NotDefined, true), Editable]
         public AttackContext Context { get; private set; }
 
@@ -247,8 +245,7 @@ namespace Barotrauma
 
         public Attack(XElement element, string parentDebugName)
         {
-            SourceElement = element;
-            Deserialize();
+            Deserialize(element);
 
             if (element.Attribute("damage") != null ||
                 element.Attribute("bluntdamage") != null ||
@@ -295,10 +292,9 @@ namespace Barotrauma
                             }
                         }
 
-                        float afflictionStrength = subElement.GetAttributeFloat(1.0f, "amount", "strength");
-                        var affliction = afflictionPrefab.Instantiate(afflictionStrength);
-                        affliction.ApplyProbability = subElement.GetAttributeFloat("probability", 1.0f);
-                        Afflictions.Add(affliction, subElement);
+                        //float afflictionStrength = subElement.GetAttributeFloat(1.0f, "amount", "strength");
+                        //var affliction = afflictionPrefab.Instantiate(afflictionStrength);
+                        //Afflictions.Add(affliction, subElement);
 
                         break;
                     case "conditional":
@@ -309,17 +305,36 @@ namespace Barotrauma
                         break;
                 }
             }
-            foreach (var affliction in Afflictions)
-            {
-                affliction.Key.Deserialize(affliction.Value);
-            }
         }
         partial void InitProjSpecific(XElement element = null);
 
-        public void Serialize()
+        public void ReloadAfflictions(XElement element)
         {
-            if (SourceElement == null) { return; }
-            SerializableProperty.SerializeProperties(this, SourceElement, true);
+            Afflictions.Clear();
+            foreach (var subElement in element.GetChildElements("affliction"))
+            {
+                AfflictionPrefab afflictionPrefab;
+                Affliction affliction;
+                string afflictionIdentifier = subElement.GetAttributeString("identifier", "").ToLowerInvariant();
+                afflictionPrefab = AfflictionPrefab.List.Find(ap => ap.Identifier.ToLowerInvariant() == afflictionIdentifier);
+                if (afflictionPrefab != null)
+                {
+                    float afflictionStrength = subElement.GetAttributeFloat(1.0f, "amount", "strength");
+                    affliction = afflictionPrefab.Instantiate(afflictionStrength);
+                }
+                else
+                {
+                    affliction = new Affliction(null, 0);
+                }
+                affliction.Deserialize(subElement);
+                // add the affliction anyway, so that it can be shown in the editor.
+                Afflictions.Add(affliction, subElement);
+            }
+        }
+
+        public void Serialize(XElement element)
+        {
+            SerializableProperty.SerializeProperties(this, element, true);
             foreach (var affliction in Afflictions)
             {
                 if (affliction.Value != null)
@@ -329,17 +344,10 @@ namespace Barotrauma
             }
         }
 
-        public void Deserialize()
+        public void Deserialize(XElement element)
         {
-            if (SourceElement == null) { return; }
-            SerializableProperties = SerializableProperty.DeserializeProperties(this, SourceElement);
-            foreach (var affliction in Afflictions)
-            {
-                if (affliction.Value != null)
-                {
-                    affliction.Key.Deserialize(affliction.Value);
-                }
-            }
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+            ReloadAfflictions(element);
         }
         
         public AttackResult DoDamage(Character attacker, IDamageable target, Vector2 worldPosition, float deltaTime, bool playSound = true)

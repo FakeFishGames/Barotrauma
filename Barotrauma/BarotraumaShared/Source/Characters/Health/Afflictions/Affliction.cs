@@ -20,17 +20,18 @@ namespace Barotrauma
         [Serialize("", true), Editable]
         public string Identifier { get; private set; }
 
+        /// <summary>
+        /// Probability for the affliction to be applied. Used by attacks.
+        /// </summary>
+        [Serialize(1.0f, true), Editable]
+        public float Probability { get; private set; }
+
         public float DamagePerSecond;
         public float DamagePerSecondTimer;
         public float PreviousVitalityDecrease;
 
         public float StrengthDiminishMultiplier = 1.0f;
         public Affliction MultiplierSource;
-
-        /// <summary>
-        /// Probability for the affliction to be applied. Used by attacks.
-        /// </summary>
-        public float ApplyProbability = 1.0f;
 
         /// <summary>
         /// Which character gave this affliction
@@ -41,7 +42,7 @@ namespace Barotrauma
         {
             Prefab = prefab;
             Strength = strength;
-            Identifier = prefab.Identifier;
+            Identifier = prefab?.Identifier;
         }
 
         public void Serialize(XElement element)
@@ -59,10 +60,7 @@ namespace Barotrauma
             return Prefab.Instantiate(Strength * multiplier, Source);
         }
 
-        public override string ToString()
-        {
-            return "Affliction (" + Prefab.Name + ")";
-        }
+        public override string ToString() => Prefab == null ? "Affliction (Invalid)" : $"Affliction ({Prefab.Name})";
 
         public float GetVitalityDecrease(CharacterHealth characterHealth)
         {
