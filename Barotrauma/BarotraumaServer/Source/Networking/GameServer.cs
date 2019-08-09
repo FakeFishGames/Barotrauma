@@ -2092,6 +2092,7 @@ namespace Barotrauma.Networking
 
             SendChatMessage("Player \"" + c.Name + "\" has changed their name to \"" + newName + "\".", ChatMessageType.Server);
             c.Name = newName;
+            c.Connection.Name = newName;
             return true;
         }
 
@@ -2147,9 +2148,10 @@ namespace Barotrauma.Networking
             var previousPlayer = previousPlayers.Find(p => p.MatchesClient(client));
             if (previousPlayer != null)
             {
-                //reset karma to a neutral value, so if/when the ban is revoked the client wont get immediately punished by long karma again
+                //reset karma to a neutral value, so if/when the ban is revoked the client wont get immediately punished by low karma again
                 previousPlayer.Karma = Math.Max(previousPlayer.Karma, 50.0f);
             }
+            client.Karma = Math.Max(client.Karma, 50.0f);
 
             string targetMsg = DisconnectReason.Banned.ToString();
             DisconnectClient(client, $"ServerMessage.BannedFromServer~[client]={client.Name}", targetMsg, reason);
