@@ -86,11 +86,7 @@ namespace Barotrauma
             set { chromaticAberrationStrength = MathHelper.Clamp(value, 0.0f, 100.0f); }
         }
 
-        public string BloodDecalName
-        {
-            get;
-            private set;
-        }
+        public string BloodDecalName => Params.BloodDecal;
                 
         private List<ParticleEmitter> bloodEmitters = new List<ParticleEmitter>();
         public IEnumerable<ParticleEmitter> BloodEmitters
@@ -141,8 +137,6 @@ namespace Barotrauma
         {
             soundInterval = mainElement.GetAttributeFloat("soundinterval", 10.0f);
             soundTimer = Rand.Range(0.0f, soundInterval);
-
-            BloodDecalName = mainElement.GetAttributeString("blooddecal", "");
 
             sounds = new List<CharacterSound>();
             foreach (XElement subElement in mainElement.Elements())

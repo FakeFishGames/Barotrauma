@@ -29,25 +29,14 @@ namespace Barotrauma
         [Serialize(100f, true), Editable]
         public float Noise { get; set; }
 
+        [Serialize("", true), Editable]
+        public string BloodDecal { get; private set; }
+
         public readonly string File;
 
         public List<CharacterSubParams> SubParams { get; private set; } = new List<CharacterSubParams>();
         public HealthParams Health { get; private set; }
         public AIParams AI { get; private set; }
-
-        /* 
-         * 
-         * ai
-         * inventory
-         * sound
-         * 
-         * ?:
-         * blooddecal
-         * bloodemitter
-         * gibemitter
-         * 
-         * 
-        */
 
         public CharacterParams(string file)
         {
@@ -103,7 +92,7 @@ namespace Barotrauma
                 SubParams.Add(AI);
             }
 
-            // TODO: create other sub params
+            // TODO: bloodemitter, gibemitter, sounds, inventory
         }
 
         protected bool Deserialize(XElement element = null, bool alsoChildren = true, bool recursive = true)
@@ -223,7 +212,7 @@ namespace Barotrauma
         [Serialize(false, true), Editable]
         public bool AggressiveBoarding { get; private set; }
 
-        // TODO: targeting priorities, latchonto, swarming
+        // TODO: latchonto, swarming
 
         public readonly Dictionary<string, TargetParams> Targets = new Dictionary<string, TargetParams>();
 
