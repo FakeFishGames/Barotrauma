@@ -2473,13 +2473,16 @@ namespace Barotrauma
                 var typeDropdown = new GUIDropDown(new RectTransform(new Vector2(0.4f, 1), typeSelectionArea.RectTransform, Anchor.TopCenter, Pivot.TopLeft), elementCount: 4);
                 foreach (object enumValue in Enum.GetValues(typeof(AnimationType)))
                 {
-                    typeDropdown.AddItem(enumValue.ToString(), enumValue);
+                    if (!(enumValue is AnimationType.NotDefined))
+                    {
+                        typeDropdown.AddItem(enumValue.ToString(), enumValue);
+                    }
                 }
                 AnimationType selectedType = character.AnimController.ForceSelectAnimationType;
                 typeDropdown.OnSelected = (component, data) =>
                 {
                     selectedType = (AnimationType)data;
-                    inputField.Text = character.AnimController.GetAnimationParamsFromType(selectedType).Name;
+                    inputField.Text = character.AnimController.GetAnimationParamsFromType(selectedType)?.Name.RemoveWhitespace();
                     return true;
                 };
                 typeDropdown.SelectItem(selectedType);
@@ -2499,6 +2502,7 @@ namespace Barotrauma
                     }
 #endif
                     var animParams = character.AnimController.GetAnimationParamsFromType(selectedType);
+                    if (animParams == null) { return true; }
                     animParams.Save(inputField.Text);
                     GUI.AddMessage(GetCharacterEditorTranslation("AnimationOfTypeSavedTo").Replace("[type]", animParams.AnimationType.ToString()).Replace("[path]", animParams.FullPath), Color.Green, font: GUI.Font);
                     ResetParamsEditor();
@@ -2521,7 +2525,10 @@ namespace Barotrauma
                 var typeDropdown = new GUIDropDown(new RectTransform(new Vector2(0.4f, 1), typeSelectionArea.RectTransform, Anchor.TopCenter, Pivot.TopLeft), elementCount: 4);
                 foreach (object enumValue in Enum.GetValues(typeof(AnimationType)))
                 {
-                    typeDropdown.AddItem(enumValue.ToString(), enumValue);
+                    if (!(enumValue is AnimationType.NotDefined))
+                    {
+                        typeDropdown.AddItem(enumValue.ToString(), enumValue);
+                    }
                 }
                 AnimationType selectedType = character.AnimController.ForceSelectAnimationType;
                 typeDropdown.OnSelected = (component, data) =>

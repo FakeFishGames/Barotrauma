@@ -214,6 +214,8 @@ namespace Barotrauma
                     return SwimSlowParams;
                 case AnimationType.SwimFast:
                     return SwimFastParams;
+                case AnimationType.NotDefined:
+                    return null;
                 default:
                     throw new NotImplementedException(type.ToString());
             }
