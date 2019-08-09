@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Xml.Linq;
 using System.Xml;
+using System.Linq;
 using Barotrauma.Extensions;
 
 namespace Barotrauma
@@ -177,11 +178,15 @@ namespace Barotrauma
 
         public TargetParams(XElement element, CharacterParams character) : base(element, character) { }
 
-        public TargetParams(string tag, AIState state, float priority, CharacterParams character) 
-            : base(new XElement("target",
-                        new XElement("tag", tag),
-                        new XElement("state", state),
-                        new XElement("priority", priority)), character) { }
+        public TargetParams(string tag, AIState state, float priority, CharacterParams character) : base(CreateNewElement(tag, state, priority), character) { }
+
+        public static XElement CreateNewElement(string tag, AIState state, float priority)
+        {
+            return new XElement("target",
+                        new XAttribute("tag", tag),
+                        new XAttribute("state", state),
+                        new XAttribute("priority", priority));
+        }
     }
 
     class AIParams : CharacterSubParams
@@ -214,33 +219,111 @@ namespace Barotrauma
 
         // TODO: latchonto, swarming
 
-        public readonly Dictionary<string, TargetParams> Targets = new Dictionary<string, TargetParams>();
+        public IEnumerable<TargetParams> Targets => targets;
+        protected readonly List<TargetParams> targets = new List<TargetParams>();
 
         public AIParams(XElement element, CharacterParams character) : base(element, character)
         {
-            element.GetChildElements("target").ForEach(t => TryAddTarget(t));
-            element.GetChildElements("targetpriority").ForEach(t => TryAddTarget(t));
-            void TryAddTarget(XElement targetElement)
+            element.GetChildElements("target").ForEach(t => TryAddTarget(t, character, out _));
+            element.GetChildElements("targetpriority").ForEach(t => TryAddTarget(t, character, out _));
+        }
+
+#if CLIENT
+        public override void AddToEditor(ParamsEditor editor, bool recursive = true, int space = 0, ScalableFont titleFont = null)
+        {
+            base.AddToEditor(editor, recursive, 0, titleFont);
+            var buttonParent = new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 40), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
             {
-                string tag = targetElement.GetAttributeString("tag", null);
-                if (tag == null) { return; }
-                tag = tag.ToLowerInvariant();
-                if (GetTarget(tag) != null)
+                CanBeFocused = false
+            };
+            new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), buttonParent.RectTransform, Anchor.CenterLeft), "Add New Target")
+            {
+                OnClicked = (button, data) =>
                 {
-                    DebugConsole.ThrowError($"Multiple targets with the same tag ('{tag}') defined! Only the first will be used!");
+                    TryAddEmptyTarget(out _);
+                    buttonParent.SetAsLastChild();
+                    return true;
                 }
-                else
+            };
+            new GUIButton(new RectTransform(new Vector2(0.45f, 0.9f), buttonParent.RectTransform, Anchor.CenterRight), "Remove Last Target")
+            {
+                OnClicked = (button, data) =>
                 {
-                    var target = new TargetParams(targetElement, character);
-                    Targets.Add(tag, target);
-                    SubParams.Add(target);
+                    TryRemoveLastTarget();
+                    return true;
                 }
+            };
+            if (space > 0)
+            {
+                new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, space), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
+                {
+                    CanBeFocused = false
+                };
             }
+        }
+#endif
+
+        private bool TryAddTarget(XElement targetElement, CharacterParams character, out TargetParams target)
+        {
+            target = null;
+            string tag = targetElement.GetAttributeString("tag", null);
+            if (tag == null) { return false; }
+            tag = tag.ToLowerInvariant();
+            if (targets.Any(t => t.Tag == tag))
+            {
+                DebugConsole.ThrowError($"Multiple targets with the same tag ('{tag}') defined! Only the first will be used!");
+                return false;
+            }
+            else
+            {
+                target = new TargetParams(targetElement, character);
+                targets.Add(target);
+                SubParams.Add(target);
+                return true;
+            }
+        }
+
+        public bool TryAddEmptyTarget(out TargetParams targetParams) => TryAddNewTarget("newtarget", AIState.Attack, 0f, out targetParams);
+
+        public bool TryAddNewTarget(string tag, AIState state, float priority, out TargetParams targetParams, bool createNewElement = true)
+        {
+            var element = TargetParams.CreateNewElement(tag, state, priority);
+            if (TryAddTarget(element, Character, out targetParams))
+            {
+                Element.Add(element);
+#if CLIENT
+                targetParams.AddToEditor(ParamsEditor.Instance, titleFont: GUI.SmallFont);
+#endif
+            }
+            return targetParams != null;
+        }
+
+        public bool TryRemoveLastTarget()
+        {
+            if (targets.None()) { return false; }
+            var last = targets.LastOrDefault();
+            if (last == null) { return false; }
+            targets.Remove(last);
+            SubParams.Remove(last);
+            last.Element.Remove();
+#if CLIENT
+            last.SerializableEntityEditor.RectTransform.Parent = null;
+#endif
+            return true;
+        }
+
+        public bool TryGetTarget(string targetTag, out TargetParams target)
+        {
+            target = targets.FirstOrDefault(t => t.Tag == targetTag);
+            return target != null;
         }
 
         public TargetParams GetTarget(string targetTag)
         {
-            Targets.TryGetValue(targetTag, out TargetParams target);
+            if (!TryGetTarget(targetTag, out TargetParams target))
+            {
+                DebugConsole.ThrowError($"Cannot find a target with the tag {targetTag}!");
+            }
             return target;
         }
     }

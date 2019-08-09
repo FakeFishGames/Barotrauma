@@ -208,7 +208,6 @@ namespace Barotrauma
         }
 
         private AIParams AIParams => Character.Params.AI;
-        private Dictionary<string, TargetParams> TargetingPriorities => AIParams.Targets;
         private TargetParams GetTargetingPriority(string targetTag) => AIParams.GetTarget(targetTag);
 
         public override void SelectTarget(AITarget target)
@@ -887,21 +886,21 @@ namespace Barotrauma
             if (attackResult.Damage > 0.0f && Character.Params.AI.AttackOnlyWhenProvoked)
             {
                 string tag = attacker.SpeciesName.ToLowerInvariant();
-                if (!TargetingPriorities.TryGetValue(tag, out TargetParams target))
-                {
-                    TargetingPriorities.Add(tag, new TargetParams(tag, AIState.Attack, 100f, AIParams.Character));
-                }
-                else
+                if (AIParams.TryGetTarget(tag, out TargetParams target))
                 {
                     target.State = AIState.Attack;
                     target.Priority = 100f;
                 }
+                else
+                {
+                    AIParams.TryAddNewTarget(tag, AIState.Attack, 100f, out target, createNewElement: false);
+                }
                 if (attacker.Submarine != null && attacker.IsHuman)
                 {
-                    if (TargetingPriorities.TryGetValue("room", out TargetParams t))
+                    if (AIParams.TryGetTarget("room", out TargetParams room))
                     {
-                        t.State = AIState.Attack;
-                        t.Priority = 100f;
+                        room.State = AIState.Attack;
+                        room.Priority = 100f;
                     }
                 }
             }
@@ -1129,7 +1128,7 @@ namespace Barotrauma
                         //target inside, AI outside -> we'll be attacking a wall between the characters so use the priority for attacking rooms
                         targetingTag = "room";
                     }
-                    else if (TargetingPriorities.ContainsKey(targetCharacter.SpeciesName.ToLowerInvariant()))
+                    else if (AIParams.Targets.Any(t => t.Tag.Equals(targetCharacter.SpeciesName, StringComparison.OrdinalIgnoreCase)))
                     {
                         targetingTag = targetCharacter.SpeciesName.ToLowerInvariant();
                     }
@@ -1149,7 +1148,7 @@ namespace Barotrauma
                         }
 
                         door = item.GetComponent<Door>();
-                        foreach (TargetParams prio in TargetingPriorities.Values)
+                        foreach (TargetParams prio in AIParams.Targets)
                         {
                             if (item.HasTag(prio.Tag))
                             {
