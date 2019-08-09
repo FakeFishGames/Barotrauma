@@ -59,7 +59,6 @@ namespace Barotrauma
         private bool showColliders;
         private bool displayWearables;
         private bool displayBackgroundColor;
-        private bool ragdollResetRequiresForceLoading;
 
         private bool jointCreationMode;
         private bool useMouseOffset;
@@ -164,7 +163,6 @@ namespace Barotrauma
             showColliders = false;
             displayWearables = true;
             displayBackgroundColor = false;
-            ragdollResetRequiresForceLoading = false;
             jointCreationMode = false;
             isExtrudingJoint = false;
             isDrawingJoint = false;
@@ -891,7 +889,6 @@ namespace Barotrauma
             ClearSelection();
             selectedLimbs.Add(character.AnimController.Limbs.Single(l => l.limbParams == newLimbParams));
             ResetParamsEditor();
-            ragdollResetRequiresForceLoading = true;
         }
 
         /// <summary>
@@ -939,7 +936,6 @@ namespace Barotrauma
             selectedJoints.Add(character.AnimController.LimbJoints.Single(j => j.jointParams == newJointParams));
             jointsToggle.Selected = true;
             ResetParamsEditor();
-            ragdollResetRequiresForceLoading = true;
         }
 
         /// <summary>
@@ -1022,7 +1018,6 @@ namespace Barotrauma
                 RagdollParams.Joints.Remove(jointParam);
             }
             RecreateRagdoll();
-            ragdollResetRequiresForceLoading = true;
         }
         #endregion
 
@@ -1268,7 +1263,6 @@ namespace Barotrauma
                 wayPoint = WayPoint.GetRandom(sub: Submarine.MainSub);
             }
             spawnPosition = wayPoint.WorldPosition;
-            ragdollResetRequiresForceLoading = false;
         }
 
         private void OnPostSpawn()
@@ -1308,7 +1302,6 @@ namespace Barotrauma
         private void RecreateRagdoll(RagdollParams ragdoll = null)
         {
             RagdollParams.Apply();
-            ragdollResetRequiresForceLoading = true;
             character.AnimController.Recreate(ragdoll);
             TeleportTo(spawnPosition);
             // For some reason Enumerable.Contains() method does not find the match, threfore the conversion to a list.
@@ -2108,7 +2101,6 @@ namespace Barotrauma
             {
                 RecreateRagdoll();
                 RagdollParams.StoreSnapshot();
-                ragdollResetRequiresForceLoading = true;
                 return true;
             };
             jointScaleBar.Bar.OnClicked += (button, data) =>
@@ -2118,7 +2110,6 @@ namespace Barotrauma
                     RecreateRagdoll();
                 }
                 RagdollParams.StoreSnapshot();
-                ragdollResetRequiresForceLoading = true;
                 return true;
             };
 
@@ -2335,7 +2326,6 @@ namespace Barotrauma
                 character.Params.Save();
                 GUI.AddMessage(GetCharacterEditorTranslation("CharacterSavedTo").Replace("[path]", CharacterParams.FullPath), Color.Green, font: GUI.Font, lifeTime: 5);
                 character.AnimController.SaveRagdoll();
-                ragdollResetRequiresForceLoading = true;
                 GUI.AddMessage(GetCharacterEditorTranslation("RagdollSavedTo").Replace("[path]", RagdollParams.FullPath), Color.Green, font: GUI.Font, lifeTime: 5);
                 AnimParams.ForEach(p => p.Save());
                 return true;
@@ -2366,7 +2356,6 @@ namespace Barotrauma
                     }
 #endif
                     character.AnimController.SaveRagdoll(inputField.Text);
-                    ragdollResetRequiresForceLoading = true;
                     GUI.AddMessage(GetCharacterEditorTranslation("RagdollSavedTo").Replace("[path]", RagdollParams.FullPath), Color.Green, font: GUI.Font);
                     box.Close();
                     return true;
@@ -2665,36 +2654,8 @@ namespace Barotrauma
             {
                 CharacterParams.Reset(true);
                 AnimParams.ForEach(p => p.Reset(true));
-                if (ragdollResetRequiresForceLoading)
-                {
-                    character.AnimController.ResetRagdoll(forceReload: true);
-                    RecreateRagdoll();
-                    ragdollResetRequiresForceLoading = false;
-                }
-                else
-                {
-                    character.AnimController.ResetRagdoll(forceReload: false);
-                    // For some reason Enumerable.Contains() method does not find the match, threfore the conversion to a list.
-                    var selectedJointParams = selectedJoints.Select(j => j.jointParams).ToList();
-                    var selectedLimbParams = selectedLimbs.Select(l => l.limbParams).ToList();
-                    ClearWidgets();
-                    ClearSelection();
-                    foreach (var joint in character.AnimController.LimbJoints)
-                    {
-                        if (selectedJointParams.Contains(joint.jointParams))
-                        {
-                            selectedJoints.Add(joint);
-                        }
-                    }
-                    foreach (var limb in character.AnimController.Limbs)
-                    {
-                        if (selectedLimbParams.Contains(limb.limbParams))
-                        {
-                            selectedLimbs.Add(limb);
-                        }
-                    }
-                    ResetParamsEditor();
-                }
+                character.AnimController.ResetRagdoll(forceReload: true);
+                RecreateRagdoll();
                 jointCreationMode = false;
                 closestSelectedLimb = null;
                 CreateGUI();
