@@ -32,8 +32,8 @@
     sight="1.0"
     hearing="0.0">
     <targetpriority tag="decoy" state="Attack" priority="600" />
-    <targetpriority tag="human" state="None" priority="10"/>
-    <targetpriority tag="light" state="None" priority="10"/>
+    <targetpriority tag="human" state="Idle" priority="10"/>
+    <targetpriority tag="light" state="Idle" priority="10"/>
   </ai>
 
 </Character>

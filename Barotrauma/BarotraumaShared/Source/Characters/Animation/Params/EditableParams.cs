@@ -36,6 +36,8 @@ namespace Barotrauma
         public XElement MainElement => doc.Root;
         public XElement OriginalElement { get; protected set; }
 
+        protected virtual string GetName() => Path.GetFileNameWithoutExtension(FullPath).FormatCamelCaseWithSpaces();
+
         protected virtual bool Deserialize(XElement element = null)
         {
             element = element ?? MainElement;
@@ -68,7 +70,7 @@ namespace Barotrauma
         protected virtual void UpdatePath(string fullPath)
         {
             FullPath = fullPath;
-            Name = Path.GetFileNameWithoutExtension(FullPath);
+            Name = GetName();
             FileName = Path.GetFileName(FullPath);
             Folder = Path.GetDirectoryName(FullPath);
         }

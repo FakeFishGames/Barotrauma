@@ -542,7 +542,7 @@ namespace Barotrauma
                 {                    
                     switch (AIController.State)
                     {
-                        case AIController.AIState.Attack:
+                        case AIState.Attack:
                             PlaySound(CharacterSound.SoundType.Attack);
                             break;
                         default:

@@ -2,10 +2,10 @@
 
 namespace Barotrauma
 {
+    public enum AIState { Idle, Attack, GoTo, Escape, Eat }
+
     abstract partial class AIController : ISteerable
     {
-        public enum AIState { Idle, Attack, GoTo, Escape, Eat }
-
         public bool Enabled;
 
         public readonly Character Character;

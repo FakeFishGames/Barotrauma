@@ -107,21 +107,26 @@ namespace Barotrauma
         public string SpeciesName => Params.SpeciesName;
         public bool IsHumanoid => Params.Humanoid;
         public bool IsHusk => Params.Husk;
+
         public bool CanSpeak
         {
             get => Params.CanSpeak;
             set => Params.CanSpeak = value;
         }
+
         public bool NeedsAir
         {
             get => Params.NeedsAir;
             set => Params.NeedsAir = value;
         }
+
         public float Noise
         {
             get => Params.Noise;
             set => Params.Noise = value;
         }
+
+        public bool IsHuman => SpeciesName == "human";
 
         private float attackCoolDown;
 

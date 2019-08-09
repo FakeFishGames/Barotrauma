@@ -1,9 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
-using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
-using System.Linq;
-using System.IO;
 using System.Xml;
 using Barotrauma.Extensions;
 
@@ -57,6 +54,8 @@ namespace Barotrauma
             File = file;
             Load();
         }
+
+        protected override string GetName() => "Character Config File";
 
         public bool Load()
         {
@@ -154,6 +153,8 @@ namespace Barotrauma
 
     class HealthParams : CharacterSubParams
     {
+        public override string Name => "Health";
+
         [Serialize(100f, true), Editable]
         public float Vitality { get; set; }
 
@@ -172,9 +173,31 @@ namespace Barotrauma
         public HealthParams(XElement element, CharacterParams character) : base(element, character) { }
     }
 
+    class TargetParams : CharacterSubParams
+    {
+        public override string Name => "Target";
+
+        [Serialize("", true), Editable]
+        public string Tag { get; private set; }
+
+        [Serialize(AIState.Idle, true), Editable]
+        public AIState State { get; set; }
+
+        [Serialize(0f, true), Editable]
+        public float Priority { get; set; }
+
+        public TargetParams(XElement element, CharacterParams character) : base(element, character) { }
+
+        public TargetParams(string tag, AIState state, float priority, CharacterParams character) 
+            : base(new XElement("target",
+                        new XElement("tag", tag),
+                        new XElement("state", state),
+                        new XElement("priority", priority)), character) { }
+    }
+
     class AIParams : CharacterSubParams
     {
-        public AIParams(XElement element, CharacterParams character) : base(element, character) { }
+        public override string Name => "AI";
 
         [Serialize(1.0f, true), Editable]
         public float CombatStrength { get; private set; }
@@ -200,8 +223,37 @@ namespace Barotrauma
         [Serialize(false, true), Editable]
         public bool AggressiveBoarding { get; private set; }
 
-
         // TODO: targeting priorities, latchonto, swarming
+
+        public readonly Dictionary<string, TargetParams> Targets = new Dictionary<string, TargetParams>();
+
+        public AIParams(XElement element, CharacterParams character) : base(element, character)
+        {
+            element.GetChildElements("target").ForEach(t => TryAddTarget(t));
+            element.GetChildElements("targetpriority").ForEach(t => TryAddTarget(t));
+            void TryAddTarget(XElement targetElement)
+            {
+                string tag = targetElement.GetAttributeString("tag", null);
+                if (tag == null) { return; }
+                tag = tag.ToLowerInvariant();
+                if (GetTarget(tag) != null)
+                {
+                    DebugConsole.ThrowError($"Multiple targets with the same tag ('{tag}') defined! Only the first will be used!");
+                }
+                else
+                {
+                    var target = new TargetParams(targetElement, character);
+                    Targets.Add(tag, target);
+                    SubParams.Add(target);
+                }
+            }
+        }
+
+        public TargetParams GetTarget(string targetTag)
+        {
+            Targets.TryGetValue(targetTag, out TargetParams target);
+            return target;
+        }
     }
 
     abstract class CharacterSubParams : ISerializableEntity
@@ -210,8 +262,6 @@ namespace Barotrauma
         public Dictionary<string, SerializableProperty> SerializableProperties { get; private set; }
         public XElement Element { get; set; }
         public List<CharacterSubParams> SubParams { get; set; } = new List<CharacterSubParams>();
-
-        public virtual string GenerateName() => Element.Name.ToString();
 
         public CharacterParams Character { get; private set; }
 
@@ -248,15 +298,14 @@ namespace Barotrauma
             SubParams.ForEach(sp => sp.Reset());
         }
 
-
 #if CLIENT
         public SerializableEntityEditor SerializableEntityEditor { get; protected set; }
-        public virtual void AddToEditor(ParamsEditor editor, bool recursive = true, int space = 0)
+        public virtual void AddToEditor(ParamsEditor editor, bool recursive = true, int space = 0, ScalableFont titleFont = null)
         {
-            SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, this, inGame: false, showName: true, titleFont: GUI.LargeFont);
+            SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, this, inGame: false, showName: true, titleFont: titleFont ?? GUI.LargeFont);
             if (recursive)
             {
-                SubParams.ForEach(sp => sp.AddToEditor(editor, true));
+                SubParams.ForEach(sp => sp.AddToEditor(editor, true, titleFont: titleFont ?? GUI.SmallFont));
             }
             if (space > 0)
             {

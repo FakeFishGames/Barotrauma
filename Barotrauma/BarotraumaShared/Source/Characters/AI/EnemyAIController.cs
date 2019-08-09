@@ -33,32 +33,9 @@ namespace Barotrauma
             }
         }
 
-        public class TargetingPriority
-        {
-            public string TargetTag;
-            public AIState State;
-            public float Priority;
-
-            public TargetingPriority(XElement element)
-            {
-                TargetTag = element.GetAttributeString("tag", "").ToLowerInvariant();
-                Enum.TryParse(element.GetAttributeString("state", ""), out State);
-                Priority = element.GetAttributeFloat("priority", 0.0f);
-            }
-
-            public TargetingPriority(string tag, AIState state, float priority)
-            {
-                TargetTag = tag;
-                State = state;
-                Priority = priority;
-            }
-        }
-
         private const float UpdateTargetsInterval = 1.0f;
 
         private const float RaycastInterval = 1.0f;
-
-        private Dictionary<string, TargetingPriority> targetingPriorities = new Dictionary<string, TargetingPriority>();
 
         private SteeringManager outsideSteering, insideSteering;
 
@@ -192,9 +169,6 @@ namespace Barotrauma
                     case "swarmbehavior":
                         SwarmBehavior = new SwarmBehavior(subElement, this);
                         break;
-                    case "targetpriority":
-                        targetingPriorities.Add(subElement.GetAttributeString("tag", "").ToLowerInvariant(), new TargetingPriority(subElement));
-                        break;
                 }
             }
 
@@ -232,15 +206,10 @@ namespace Barotrauma
                     break;
             }
         }
-        
-        private TargetingPriority GetTargetingPriority(string targetTag)
-        {
-            if (targetingPriorities.TryGetValue(targetTag, out TargetingPriority priority))
-            {
-                return priority;
-            }
-            return null;
-        }
+
+        private AIParams AIParams => Character.Params.AI;
+        private Dictionary<string, TargetParams> TargetingPriorities => AIParams.Targets;
+        private TargetParams GetTargetingPriority(string targetTag) => AIParams.GetTarget(targetTag);
 
         public override void SelectTarget(AITarget target)
         {
@@ -285,7 +254,7 @@ namespace Barotrauma
             }
             else
             {
-                UpdateTargets(Character, out TargetingPriority targetingPriority);
+                UpdateTargets(Character, out TargetParams targetingPriority);
                 updateTargetsTimer = UpdateTargetsInterval;
 
                 if (SelectedAiTarget == null)
@@ -917,10 +886,23 @@ namespace Barotrauma
 
             if (attackResult.Damage > 0.0f && Character.Params.AI.AttackOnlyWhenProvoked)
             {
-                if (!(attacker is AICharacter) || (((AICharacter)attacker).AIController is HumanAIController))
+                string tag = attacker.SpeciesName.ToLowerInvariant();
+                if (!TargetingPriorities.TryGetValue(tag, out TargetParams target))
                 {
-                    targetingPriorities["human"] = new TargetingPriority("human", AIState.Attack, 100.0f);
-                    targetingPriorities["room"] = new TargetingPriority("room", AIState.Attack, 100.0f);
+                    TargetingPriorities.Add(tag, new TargetParams(tag, AIState.Attack, 100f, AIParams.Character));
+                }
+                else
+                {
+                    target.State = AIState.Attack;
+                    target.Priority = 100f;
+                }
+                if (attacker.Submarine != null && attacker.IsHuman)
+                {
+                    if (TargetingPriorities.TryGetValue("room", out TargetParams t))
+                    {
+                        t.State = AIState.Attack;
+                        t.Priority = 100f;
+                    }
                 }
             }
             
@@ -1039,7 +1021,7 @@ namespace Barotrauma
         //goes through all the AItargets, evaluates how preferable it is to attack the target,
         //whether the Character can see/hear the target and chooses the most preferable target within
         //sight/hearing range
-        public AITarget UpdateTargets(Character character, out TargetingPriority priority)
+        public AITarget UpdateTargets(Character character, out TargetParams priority)
         {
             if ((SelectedAiTarget != null || wallTarget != null) && IsLatchedOnSub)
             {
@@ -1147,7 +1129,7 @@ namespace Barotrauma
                         //target inside, AI outside -> we'll be attacking a wall between the characters so use the priority for attacking rooms
                         targetingTag = "room";
                     }
-                    else if (targetingPriorities.ContainsKey(targetCharacter.SpeciesName.ToLowerInvariant()))
+                    else if (TargetingPriorities.ContainsKey(targetCharacter.SpeciesName.ToLowerInvariant()))
                     {
                         targetingTag = targetCharacter.SpeciesName.ToLowerInvariant();
                     }
@@ -1167,11 +1149,11 @@ namespace Barotrauma
                         }
 
                         door = item.GetComponent<Door>();
-                        foreach (TargetingPriority prio in targetingPriorities.Values)
+                        foreach (TargetParams prio in TargetingPriorities.Values)
                         {
-                            if (item.HasTag(prio.TargetTag))
+                            if (item.HasTag(prio.Tag))
                             {
-                                targetingTag = prio.TargetTag;
+                                targetingTag = prio.Tag;
                                 break;
                             }
                         }
@@ -1281,9 +1263,9 @@ namespace Barotrauma
                 }
 
                 if (targetingTag == null) continue;
-                if (!targetingPriorities.ContainsKey(targetingTag)) continue;
-
-                valueModifier *= targetingPriorities[targetingTag].Priority;
+                var targetPrio = GetTargetingPriority(targetingTag);
+                if (targetPrio == null) { continue; }
+                valueModifier *= targetPrio.Priority;
 
                 if (valueModifier == 0.0f) continue;
 
@@ -1314,7 +1296,7 @@ namespace Barotrauma
                 {
                     newTarget = target;
                     selectedTargetMemory = targetMemory;
-                    priority = targetingPriorities[targetingTag];
+                    priority = GetTargetingPriority(targetingTag);
                     targetValue = valueModifier;
                 }
             }
