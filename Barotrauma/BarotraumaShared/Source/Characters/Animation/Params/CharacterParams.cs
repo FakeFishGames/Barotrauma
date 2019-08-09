@@ -179,10 +179,10 @@ namespace Barotrauma
         [Serialize(1.0f, true), Editable]
         public float CombatStrength { get; private set; }
 
-        [Serialize(0.5f, true), Editable(minValue: 0f, maxValue: 2f)]
+        [Serialize(1.0f, true), Editable(minValue: 0f, maxValue: 2f)]
         public float Sight { get; private set; }
 
-        [Serialize(0.5f, true), Editable(minValue: 0f, maxValue: 2f)]
+        [Serialize(1.0f, true), Editable(minValue: 0f, maxValue: 2f)]
         public float Hearing { get; private set; }
 
         [Serialize(100f, true), Editable]
