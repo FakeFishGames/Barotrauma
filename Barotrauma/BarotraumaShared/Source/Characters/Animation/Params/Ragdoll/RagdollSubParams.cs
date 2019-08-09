@@ -424,6 +424,7 @@ namespace Barotrauma
 
         public virtual void Reset()
         {
+            // Don't use recursion, because the reset method might be overriden
             Deserialize(OriginalElement, false);
             SubParams.ForEach(sp => sp.Reset());
         }

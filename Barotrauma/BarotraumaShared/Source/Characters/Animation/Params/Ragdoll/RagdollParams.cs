@@ -270,8 +270,9 @@ namespace Barotrauma
             {
                 return Load(FullPath, SpeciesName);
             }
-            Deserialize(OriginalElement, alsoChildren: true);
-            //GetAllSubParams().ForEach(sp => sp.Reset());
+            // Don't use recursion, because the reset method might be overriden
+            Deserialize(OriginalElement, alsoChildren: false, recursive: false);
+            GetAllSubParams().ForEach(sp => sp.Reset());
             return true;
         }
 
