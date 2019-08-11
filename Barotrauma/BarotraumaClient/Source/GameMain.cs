@@ -369,7 +369,7 @@ namespace Barotrauma
             SoundManager.SetCategoryGainMultiplier("music", Config.MusicVolume);
             SoundManager.SetCategoryGainMultiplier("voip", Config.VoiceChatVolume * 20.0f);
 
-            if (ConsoleArguments.Contains("skipintro")) {
+            if (ConsoleArguments.Contains("-skipintro")) {
                 Config.EnableSplashScreen = false;
             }
 
