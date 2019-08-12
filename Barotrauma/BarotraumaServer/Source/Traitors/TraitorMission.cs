@@ -62,7 +62,7 @@ namespace Barotrauma
                 else
 #endif
                 {
-                    traitorCandidates.AddRange(server.ConnectedClients.ConvertAll(client => client.Character));
+                    traitorCandidates.AddRange(server.ConnectedClients.FindAll(c => c.Character != null).ConvertAll(client => client.Character));
                 }
 #if !ALLOW_SOLO_TRAITOR
                 if (characters.Count < 2)
@@ -89,7 +89,7 @@ namespace Barotrauma
                     traitor.Greet(server, CodeWords, CodeResponse);
                 }
 #if SERVER
-                foreach(var traitor in Traitors.Values)
+                foreach (var traitor in Traitors.Values)
                 {
                     GameServer.Log(string.Format("{0} is the traitor and the current goals are:\n{1}", traitor.Character.Name, traitor.CurrentObjective?.GoalInfos != null ? TextManager.GetServerMessage(traitor.CurrentObjective?.GoalInfos) : "(empty)"), ServerLog.MessageType.ServerMessage);
                 }
