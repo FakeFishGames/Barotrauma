@@ -98,7 +98,7 @@ namespace Barotrauma
 
             public virtual void Update(float deltaTime)
             {
-                if (pendingObjectives.Count <= 0)
+                if (pendingObjectives.Count <= 0 || Traitors.Count <= 0)
                 {
                     return;
                 }
