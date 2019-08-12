@@ -247,6 +247,7 @@ namespace Barotrauma
             };
             if (Targets.Any())
             {
+                // TODO: replace with X-button at the target element
                 new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), buttonParent.RectTransform, Anchor.CenterRight), "Remove Last Target")
                 {
                     OnClicked = (button, data) =>

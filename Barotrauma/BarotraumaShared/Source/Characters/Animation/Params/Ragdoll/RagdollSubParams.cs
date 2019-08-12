@@ -203,7 +203,7 @@ namespace Barotrauma
         public bool AddAttack()
         {
             if (Attack != null) { return false; }
-            var element = LimbAttackParams.CreateNewElement();
+            var element = new XElement("attack");
             Element.Add(element);
             Attack = new LimbAttackParams(element, Ragdoll);
             SubParams.Add(Attack);
@@ -231,16 +231,21 @@ namespace Barotrauma
             return true;
         }
 
+        public bool RemoveDamageModifier(DamageModifierParams damageModifier)
+        {
+            if (!DamageModifiers.Contains(damageModifier)) { return false; }
+            Serialize();
+            SubParams.Remove(damageModifier);
+            DamageModifiers.Remove(damageModifier);
+            damageModifier.Element.Remove();
+            return Serialize();
+        }
+
         public bool RemoveLastDamageModifier()
         {
             var last = DamageModifiers.LastOrDefault();
             if (last == null) { return false; }
-            Serialize();
-            SubParams.Remove(last);
-            DamageModifiers.Remove(last);
-            last.Element.Remove();
-            Serialize();
-            return false;
+            return RemoveDamageModifier(last);
         }
     }
 
@@ -419,8 +424,6 @@ namespace Barotrauma
             Serialize();
             return false;
         }
-
-        public static XElement CreateNewElement() => new XElement("attack");
     }
 
     class DamageModifierParams : RagdollSubParams
@@ -510,6 +513,7 @@ namespace Barotrauma
 
 #if CLIENT
         public SerializableEntityEditor SerializableEntityEditor { get; protected set; }
+        public SerializableEntityEditor SubEditor { get; set; }
         public virtual void AddToEditor(ParamsEditor editor, bool recursive = true, int space = 0)
         {
             SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, this, inGame: false, showName: true, titleFont: GUI.LargeFont);
@@ -530,7 +534,7 @@ namespace Barotrauma
             }
             else if (this is DamageModifierParams damageModifierParams)
             {
-                new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, damageModifierParams.DamageModifier, inGame: false, showName: true);
+                damageModifierParams.SubEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, damageModifierParams.DamageModifier, inGame: false, showName: true);
             }
             if (recursive)
             {

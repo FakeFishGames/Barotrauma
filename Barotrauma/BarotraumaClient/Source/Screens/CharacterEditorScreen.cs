@@ -2819,11 +2819,32 @@ namespace Barotrauma
                         {
                             var editor = ParamsEditor.Instance;
                             limb.limbParams.AddToEditor(editor, true, space: 0);
+                            foreach (var damageModifier in limb.limbParams.DamageModifiers)
+                            {
+                                var modifierEditor = damageModifier.SubEditor;
+                                if (modifierEditor != null)
+                                {
+                                    var buttonParent = new GUIFrame(new RectTransform(new Point(modifierEditor.Rect.Width, 30), modifierEditor.RectTransform), style: null)
+                                    {
+                                        CanBeFocused = false
+                                    };
+                                    new GUIButton(new RectTransform(new Vector2(0.08f, 0.8f), buttonParent.RectTransform, Anchor.BottomRight), "X", color: Color.Red)
+                                    {
+                                        OnClicked = (button, data) =>
+                                        {
+                                            limb.limbParams.RemoveDamageModifier(damageModifier);
+                                            ResetParamsEditor();
+                                            return true;
+                                        }
+                                    };
+                                    modifierEditor.AddCustomContent(buttonParent, 0);
+                                }
+                            }
                             var modifierParent = new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 30), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
                             {
                                 CanBeFocused = false
                             };
-                            new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), modifierParent.RectTransform, Anchor.CenterLeft), "Add New Damage Modifier")
+                            new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), modifierParent.RectTransform, Anchor.CenterLeft), "New Damage Modifier")
                             {
                                 OnClicked = (button, data) =>
                                 {
@@ -2832,18 +2853,6 @@ namespace Barotrauma
                                     return true;
                                 }
                             };
-                            if (limb.limbParams.DamageModifiers.Any())
-                            {
-                                new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), modifierParent.RectTransform, Anchor.CenterRight), "Remove Last Damage Modifier")
-                                {
-                                    OnClicked = (button, data) =>
-                                    {
-                                        limb.limbParams.RemoveLastDamageModifier();
-                                        ResetParamsEditor();
-                                        return true;
-                                    }
-                                };
-                            }
                             if (limb.limbParams.Attack == null)
                             {
                                 var buttonParent = new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 40), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
@@ -2866,7 +2875,7 @@ namespace Barotrauma
                                 {
                                     CanBeFocused = false
                                 };
-                                new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), parent.RectTransform, Anchor.CenterLeft), "Add New Affliction")
+                                new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), parent.RectTransform, Anchor.CenterLeft), "New Affliction")
                                 {
                                     OnClicked = (button, data) =>
                                     {
@@ -2875,6 +2884,7 @@ namespace Barotrauma
                                         return true;
                                     }
                                 };
+                                // TODO: replace with X-buttons at each element
                                 if (limb.limbParams.Attack.Element.GetChildElements("affliction").Any())
                                 {
                                     new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), parent.RectTransform, Anchor.CenterRight), "Remove Last Affliction")
@@ -2891,6 +2901,7 @@ namespace Barotrauma
                                 {
                                     CanBeFocused = false
                                 };
+                                // TODO: replace with X-button at the attack element
                                 new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), buttonParent.RectTransform, Anchor.Center), "Remove Attack")
                                 {
                                     OnClicked = (button, data) =>
