@@ -2821,7 +2821,7 @@ namespace Barotrauma
                             limb.limbParams.AddToEditor(editor, true, space: 0);
                             foreach (var damageModifier in limb.limbParams.DamageModifiers)
                             {
-                                var modifierEditor = damageModifier.SubEditor;
+                                var modifierEditor = damageModifier.SerializableEntityEditor;
                                 if (modifierEditor != null)
                                 {
                                     var buttonParent = new GUIFrame(new RectTransform(new Point(modifierEditor.Rect.Width, 30), modifierEditor.RectTransform), style: null)

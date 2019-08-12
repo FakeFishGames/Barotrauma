@@ -513,7 +513,6 @@ namespace Barotrauma
 
 #if CLIENT
         public SerializableEntityEditor SerializableEntityEditor { get; protected set; }
-        public SerializableEntityEditor SubEditor { get; set; }
         public virtual void AddToEditor(ParamsEditor editor, bool recursive = true, int space = 0)
         {
             SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, this, inGame: false, showName: true, titleFont: GUI.LargeFont);
@@ -534,7 +533,7 @@ namespace Barotrauma
             }
             else if (this is DamageModifierParams damageModifierParams)
             {
-                damageModifierParams.SubEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, damageModifierParams.DamageModifier, inGame: false, showName: true);
+                damageModifierParams.SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, damageModifierParams.DamageModifier, inGame: false, showName: true);
             }
             if (recursive)
             {
