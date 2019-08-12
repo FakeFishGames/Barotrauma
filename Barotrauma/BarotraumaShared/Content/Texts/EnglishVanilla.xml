@@ -2951,7 +2951,8 @@
   <charactereditor.nextcharacter>Next</charactereditor.nextcharacter>
   <charactereditor.showparameters>Parameters</charactereditor.showparameters>
   <charactereditor.showspritesheet>Spritesheet</charactereditor.showspritesheet>
-  <charactereditor.drawskeleton>Draw Skeleton</charactereditor.drawskeleton>
+  <charactereditor.drawskeleton>Skeleton</charactereditor.drawskeleton>
+  <charactereditor.drawdamagemodifiers>Damage Modifiers</charactereditor.drawdamagemodifiers>
   <charactereditor.editcharacter>CHARACTER</charactereditor.editcharacter>
   <charactereditor.editanimations>ANIMATIONS</charactereditor.editanimations>
   <charactereditor.editlimbs>LIMBS</charactereditor.editlimbs>
@@ -3039,7 +3040,7 @@
   <charactereditor.limbwithindexanchor>Limb [index] Anchor</charactereditor.limbwithindexanchor>
   <charactereditor.failedtoreadhtml>Character Editor Screen: Failed to read HTML at [path]</charactereditor.failedtoreadhtml>
   <charactereditor.multipleitemswithsamehierarchy>Multiple items with the same hierarchy [hierarchy] found ([name]). Cannot continue.</charactereditor.multipleitemswithsamehierarchy>
-  <charactereditor.cannoteditvanillacharacters>Cannot edit the characters defined in the Vanilla content package!</charactereditor.cannoteditvanillacharacters>
+  <charactereditor.cannoteditvanillacharacters>Cannot edit the characters defined in the 'Vanilla' content package!</charactereditor.cannoteditvanillacharacters>
   <charactereditor.existingcharacterfoundreplaceverification>An existing character with the same name was found. Do you want to replace it?</charactereditor.existingcharacterfoundreplaceverification>
   <charactereditor.existingcharacterfound>An existing character with the same name was found.</charactereditor.existingcharacterfound>
   <charactereditor.modespanel>Modes</charactereditor.modespanel>
