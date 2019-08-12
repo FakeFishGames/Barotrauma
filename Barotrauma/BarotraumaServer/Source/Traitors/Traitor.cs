@@ -43,16 +43,12 @@ namespace Barotrauma
 
         public void SendChatMessage(string serverText)
         {
-            serverText = string.Join("   -   ", serverText, serverText, serverText, serverText);
-
             Client traitorClient = GameMain.Server.ConnectedClients.Find(c => c.Character == Character);
             GameMain.Server.SendTraitorMessage(traitorClient, serverText, isObjective: false, createMessageBox: false);
         }
 
         public void SendChatMessageBox(string serverText)
         {
-            serverText = string.Join("   -   ", serverText, serverText, serverText, serverText);
-
             Client traitorClient = GameMain.Server.ConnectedClients.Find(c => c.Character == Character);
             GameMain.Server.SendTraitorMessage(traitorClient, serverText, isObjective: false, createMessageBox: true);
         }
