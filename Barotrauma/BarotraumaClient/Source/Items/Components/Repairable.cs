@@ -78,8 +78,7 @@ namespace Barotrauma.Items.Components
 
             repairButtonText = TextManager.Get("RepairButton");
             repairingText = TextManager.Get("Repairing");
-            repairButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.15f), paddedFrame.RectTransform, Anchor.TopCenter),
-                repairButtonText)
+            repairButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.15f), paddedFrame.RectTransform, Anchor.TopCenter), repairButtonText)
             {
                 OnClicked = (btn, obj) =>
                 {
@@ -173,7 +172,7 @@ namespace Barotrauma.Items.Components
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)
         {
             //no need to write anything, just letting the server know we started repairing
-            msg.WriteRangedInteger(0, 2, (int)currentFixerAction);
+            msg.WriteRangedInteger((int)currentFixerAction, 0, 2);
         }
 
         public void Draw(SpriteBatch spriteBatch, bool editing)

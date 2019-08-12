@@ -251,7 +251,7 @@ namespace Barotrauma.Items.Components
 #endif
                 }
             }
-            else
+            else if (currentFixerAction == FixActions.Sabotage)
             {
                 if (fixDuration <= 0.0f)
                 {
