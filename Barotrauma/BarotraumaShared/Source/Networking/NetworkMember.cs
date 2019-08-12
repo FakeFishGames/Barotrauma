@@ -62,7 +62,7 @@ namespace Barotrauma.Networking
         STARTGAME,          //start a new round
         ENDGAME,
 
-        TRAITOR_OBJECTIVE
+        TRAITOR_MESSAGE
     }
     enum ServerNetObject
     {

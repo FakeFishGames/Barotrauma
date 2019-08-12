@@ -704,8 +704,8 @@ namespace Barotrauma.Networking
                 case ServerPacketHeader.FILE_TRANSFER:
                     fileReceiver.ReadMessage(inc);
                     break;
-                case ServerPacketHeader.TRAITOR_OBJECTIVE:
-                    ReadTraitorObjective(inc);
+                case ServerPacketHeader.TRAITOR_MESSAGE:
+                    ReadTraitorMessage(inc);
                     break;
             }
         }
@@ -863,19 +863,33 @@ namespace Barotrauma.Networking
             SteamAchievementManager.UnlockAchievement(achievementIdentifier);
         }
 
-        private void ReadTraitorObjective(IReadMessage inc)
+        private void ReadTraitorMessage(IReadMessage inc)
         {
-            string objectiveText = inc.ReadString();
-            objectiveText = TextManager.GetServerMessage(objectiveText);
-            if (Character != null)
+            bool isObjective = inc.ReadBoolean();
+            bool createMessageBox = inc.ReadBoolean();
+            string message = inc.ReadString();
+            message = TextManager.GetServerMessage(message);
+
+            if (isObjective)
             {
-                Character.IsTraitor = true;
-                Character.TraitorCurrentObjective = objectiveText;
+                if (Character != null)
+                {
+                    Character.IsTraitor = true;
+                    Character.TraitorCurrentObjective = message;
+                }
+                else
+                {
+                    SpawnAsTraitor = true;
+                    TraitorFirstObjective = message;
+                }
+            }
+            else if (createMessageBox)
+            {
+                new GUIMessageBox("", message);
             }
             else
             {
-                SpawnAsTraitor = true;
-                TraitorFirstObjective = objectiveText;
+                GameMain.Client.AddChatMessage(message, ChatMessageType.Server);
             }
         }
 

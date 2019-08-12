@@ -2663,15 +2663,18 @@ namespace Barotrauma.Networking
             serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
         }
 
-        public void SendTraitorCurrentObjective(Client client, string objectiveText)
+        public void SendTraitorMessage(Client client, string message, bool isObjective, bool createMessageBox)
         {
-            if (!TraitorManager.IsTraitor(client.Character))
+            if (client == null) { return; }
+            if (!TraitorManager.IsTraitor(client.Character) && client.Connection != OwnerConnection)
             {
                 return;
             }
             var msg = new WriteOnlyMessage(); 
-            msg.Write((byte)ServerPacketHeader.TRAITOR_OBJECTIVE);
-            msg.Write(objectiveText);
+            msg.Write((byte)ServerPacketHeader.TRAITOR_MESSAGE);
+            msg.Write(isObjective);
+            msg.Write(createMessageBox);
+            msg.Write(message);
 
             serverPeer.Send(msg, client.Connection, DeliveryMethod.ReliableOrdered);
         }
