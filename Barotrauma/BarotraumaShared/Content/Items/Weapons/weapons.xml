@@ -633,7 +633,7 @@
       <!--Grenade launcher ammo explodes on impact-->
       <StatusEffect type="OnImpact" Condition="-100.0" disabledeltatime="true" delay="0.0">
         <sound file="Content/Items/Weapons/StunGrenade.ogg" />
-        <Explosion range="250" force="0.1" smoke="false">
+        <Explosion range="300" force="0.1" smoke="false">
           <Affliction identifier="internaldamage" strength="5" />
           <Affliction identifier="stun" strength="15" />
         </Explosion>

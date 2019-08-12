@@ -16,9 +16,9 @@ namespace Barotrauma.Networking
             Heartbeat();
         }
 
-        public void Decay()
+        public void Decay(float deltaTime)
         {
-            Timeout -= Timing.Step;
+            Timeout -= deltaTime;
         }
 
         public void Heartbeat()

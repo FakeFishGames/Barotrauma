@@ -60,22 +60,24 @@ namespace Barotrauma.Networking
             }
 
             float similarity = 0.0f;
-            //don't do message similarity checks on order messages
-            if (orderMsg == null)
+            for (int i = 0; i < c.LastSentChatMessages.Count; i++)
             {
-                for (int i = 0; i < c.LastSentChatMessages.Count; i++)
+                float closeFactor = 1.0f / (c.LastSentChatMessages.Count - i);
+                    
+                if (string.IsNullOrEmpty(txt))
                 {
-                    float closeFactor = 1.0f / (c.LastSentChatMessages.Count - i);
-                    if (string.IsNullOrEmpty(txt))
-                    {
-                        similarity += closeFactor;
-                    }
-                    else
-                    {
-                        int levenshteinDist = ToolBox.LevenshteinDistance(txt, c.LastSentChatMessages[i]);
-                        similarity += Math.Max((txt.Length - levenshteinDist) / (float)txt.Length * closeFactor, 0.0f);
-                    }
+                    similarity += closeFactor;
                 }
+                else
+                {
+                    int levenshteinDist = ToolBox.LevenshteinDistance(txt, c.LastSentChatMessages[i]);
+                    similarity += Math.Max((txt.Length - levenshteinDist) / (float)txt.Length * closeFactor, 0.0f);
+                }
+            }
+            //order/report messages can be sent a little faster than normal messages without triggering the spam filter
+            if (orderMsg != null)
+            {
+                similarity *= 0.25f;
             }
 
             bool isOwner = GameMain.Server.OwnerConnection != null && c.Connection == GameMain.Server.OwnerConnection;

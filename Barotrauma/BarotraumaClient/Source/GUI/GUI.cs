@@ -343,17 +343,20 @@ namespace Barotrauma
                                 soundStr += " (looping)";
                                 clr = Color.Yellow;
                             }
-
                             if (playingSoundChannel.IsStream)
                             {
                                 soundStr += " (streaming)";
                                 clr = Color.Lime;
                             }
-
                             if (!playingSoundChannel.IsPlaying)
                             {
                                 soundStr += " (stopped)";
                                 clr *= 0.5f;
+                            }
+                            else if (playingSoundChannel.Muffled)
+                            {
+                                soundStr += " (muffled)";
+                                clr = Color.Lerp(clr, Color.LightGray, 0.5f);
                             }
                         }
 

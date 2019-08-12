@@ -166,7 +166,6 @@ namespace Barotrauma
 
             try
             {
-
                 switch (typeName)
                 {
                     case "bool":
@@ -175,19 +174,25 @@ namespace Barotrauma
                         propertyInfo.SetValue(parentObject, boolValue, null);
                         break;
                     case "int":
-                        int intVal;
-                        if (int.TryParse(value, out intVal))
+                        if (int.TryParse(value, out int intVal))
                         {
                             if (TrySetValueWithoutReflection(parentObject, intVal)) { return true; }
                             propertyInfo.SetValue(parentObject, intVal, null);
                         }
+                        else
+                        {
+                            return false;
+                        }
                         break;
                     case "float":
-                        float floatVal;
-                        if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out floatVal))
+                        if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out float floatVal))
                         {
                             if (TrySetValueWithoutReflection(parentObject, floatVal)) { return true; }
                             propertyInfo.SetValue(parentObject, floatVal, null);
+                        }
+                        else
+                        {
+                            return false;
                         }
                         break;
                     case "string":

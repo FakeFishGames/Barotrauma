@@ -22,6 +22,8 @@ namespace Barotrauma.Steam
             get { return initializationErrors; }
         }
 
+        public const string MetadataFileName = "filelist.xml";
+
         private Dictionary<string, int> tagCommonness = new Dictionary<string, int>()
         {
             { "submarine", 10 },

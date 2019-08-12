@@ -314,6 +314,7 @@ namespace Barotrauma
 
         protected List<Tuple<Vector2, int>> GetAllPositions()
         {
+            float halfHeight = Font.MeasureString("T").Y * 0.5f;
             string textDrawn = Censor ? textBlock.CensoredText : textBlock.WrappedText;
             var positions = new List<Tuple<Vector2, int>>();
             if (textDrawn.Contains("\n"))
@@ -329,9 +330,9 @@ namespace Barotrauma
                     for (int j = 0; j <= line.Length; j++)
                     {
                         Vector2 lineTextSize = Font.MeasureString(line.Substring(0, j));
-                        Vector2 indexPos = new Vector2(lineTextSize.X + textBlock.Padding.X, totalTextHeight + textBlock.Padding.Y);
+                        Vector2 indexPos = new Vector2(lineTextSize.X + textBlock.Padding.X, totalTextHeight + textBlock.Padding.Y - halfHeight);
                         //DebugConsole.NewMessage($"index: {index}, pos: {indexPos}", Color.AliceBlue);
-                        positions.Add(new Tuple<Vector2, int>(textBlock.Rect.Location.ToVector2() + indexPos, index + j));
+                        positions.Add(new Tuple<Vector2, int>(indexPos, index + j));
                     }
                     index = totalIndex;
                 }
@@ -342,9 +343,9 @@ namespace Barotrauma
                 for (int i = 0; i <= textBlock.Text.Length; i++)
                 {
                     Vector2 textSize = Font.MeasureString(textDrawn.Substring(0, i));
-                    Vector2 indexPos = new Vector2(textSize.X + textBlock.Padding.X, textSize.Y + textBlock.Padding.Y) + textBlock.TextPos - textBlock.Origin;
+                    Vector2 indexPos = new Vector2(textSize.X + textBlock.Padding.X, textSize.Y + textBlock.Padding.Y - halfHeight) + textBlock.TextPos - textBlock.Origin;
                     //DebugConsole.NewMessage($"index: {i}, pos: {indexPos}", Color.WhiteSmoke);
-                    positions.Add(new Tuple<Vector2, int>(textBlock.Rect.Location.ToVector2() + indexPos, i));
+                    positions.Add(new Tuple<Vector2, int>(indexPos, i));
                 }
             }
             return positions;
@@ -352,10 +353,64 @@ namespace Barotrauma
 
         public int GetCaretIndexFromScreenPos(Vector2 pos)
         {
-            var positions = GetAllPositions().OrderBy(p => Vector2.DistanceSquared(p.Item1, pos));
-            var posIndex = positions.FirstOrDefault();
+            return GetCaretIndexFromLocalPos(pos - textBlock.Rect.Location.ToVector2());
+        }
+
+        public int GetCaretIndexFromLocalPos(Vector2 pos)
+        {
+            var positions = GetAllPositions();
+            if (positions.Count==0) { return 0; }
+            float halfHeight = Font.MeasureString("T").Y * 0.5f;
+
+            var currPosition = positions[0];
+
+            for (int i=1;i<positions.Count;i++)
+            {
+                var p1 = positions[i];
+                var p2 = currPosition;
+
+                float diffY = Math.Abs(p1.Item1.Y - pos.Y) - Math.Abs(p2.Item1.Y - pos.Y);
+                if (diffY < -3.0f)
+                {
+                    currPosition = p1; continue;
+                }
+                else if (diffY > 3.0f)
+                {
+                    continue;
+                }
+                else
+                {
+                    diffY = Math.Abs(p1.Item1.Y - pos.Y);
+                    if (diffY < halfHeight)
+                    {
+                        //we are on this line, select the nearest character
+                        float diffX = Math.Abs(p1.Item1.X - pos.X) - Math.Abs(p2.Item1.X - pos.X);
+                        if (diffX < -1.0f)
+                        {
+                            currPosition = p1; continue;
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        //we are on a different line, preserve order
+                        if (p1.Item2 < p2.Item2)
+                        {
+                            if (p1.Item1.Y > pos.Y) { currPosition = p1; }
+                        }
+                        else if (p1.Item2 > p2.Item2)
+                        {
+                            if (p1.Item1.Y < pos.Y) { currPosition = p1; }
+                        }
+                        continue;
+                    }
+                }
+            }
             //GUI.AddMessage($"index: {posIndex.Item2}, pos: {posIndex.Item1}", Color.WhiteSmoke);
-            return posIndex != null ? posIndex.Item2 : textBlock.Text.Length;
+            return currPosition != null ? currPosition.Item2 : textBlock.Text.Length;
         }
 
         public void Select()
@@ -680,9 +735,9 @@ namespace Barotrauma
                     {
                         InitSelectionStart();
                     }
-                    float lineHeight = Font.MeasureString(Text).Y;
-                    int newIndex = GetCaretIndexFromScreenPos(new Vector2(CaretScreenPos.X, CaretScreenPos.Y - lineHeight / 2));
-                    CaretIndex = newIndex != CaretIndex ? newIndex : 0;
+                    float lineHeight = Font.MeasureString("T").Y;
+                    int newIndex = GetCaretIndexFromLocalPos(new Vector2(caretPos.X, caretPos.Y-lineHeight));
+                    CaretIndex = newIndex;
                     caretTimer = 0;
                     HandleSelection();
                     break;
@@ -691,9 +746,9 @@ namespace Barotrauma
                     {
                         InitSelectionStart();
                     }
-                    lineHeight = Font.MeasureString(Text).Y;
-                    newIndex = GetCaretIndexFromScreenPos(new Vector2(CaretScreenPos.X, CaretScreenPos.Y + lineHeight * 2));
-                    CaretIndex = newIndex != CaretIndex ? newIndex : Text.Length;
+                    lineHeight = Font.MeasureString("T").Y;
+                    newIndex = GetCaretIndexFromLocalPos(new Vector2(caretPos.X, caretPos.Y+lineHeight));
+                    CaretIndex = newIndex;
                     caretTimer = 0;
                     HandleSelection();
                     break;

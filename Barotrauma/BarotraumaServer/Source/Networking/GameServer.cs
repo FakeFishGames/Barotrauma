@@ -10,6 +10,7 @@ using System.IO.Compression;
 using System.IO;
 using Barotrauma.Steam;
 using System.Xml.Linq;
+using System.Threading;
 
 namespace Barotrauma.Networking
 {
@@ -136,12 +137,14 @@ namespace Barotrauma.Networking
             try
             {
                 Log("Starting the server...", ServerLog.MessageType.ServerMessage);
-                if (!ownerSteamId.HasValue || ownerSteamId.Value==0)
+                if (!ownerSteamId.HasValue || ownerSteamId.Value == 0)
                 {
+                    Log("Using Lidgren networking", ServerLog.MessageType.ServerMessage);
                     serverPeer = new LidgrenServerPeer(ownerKey, serverSettings);
                 }
                 else
                 {
+                    Log("Using SteamP2P", ServerLog.MessageType.ServerMessage);
                     serverPeer = new SteamP2PServerPeer(ownerSteamId.Value, serverSettings);
                 }
 
@@ -176,14 +179,18 @@ namespace Barotrauma.Networking
 
                 yield return CoroutineStatus.Success;
             }
-            
-            if (SteamManager.USE_STEAM)
+
+
+            if (serverPeer is LidgrenServerPeer)
             {
-                registeredToMaster = SteamManager.CreateServer(this, isPublic);
-            }
-            if (isPublic && !GameMain.Config.UseSteamMatchmaking)
-            {
-                CoroutineManager.StartCoroutine(RegisterToMasterServer());
+                if (SteamManager.USE_STEAM)
+                {
+                    registeredToMaster = SteamManager.CreateServer(this, isPublic);
+                }
+                if (isPublic && !GameMain.Config.UseSteamMatchmaking)
+                {
+                    CoroutineManager.StartCoroutine(RegisterToMasterServer());
+                }
             }
 
             TickRate = serverSettings.TickRate;
@@ -211,6 +218,21 @@ namespace Barotrauma.Networking
             }
             ownerClient.SetPermissions(ClientPermissions.All, DebugConsole.Commands);
             UpdateClientPermissions(ownerClient);
+        }
+
+        public void NotifyCrash()
+        {
+            var tempList = ConnectedClients.Where(c => c.Connection != OwnerConnection).ToList();
+            foreach (var c in tempList)
+            {
+                DisconnectClient(c.Connection, DisconnectReason.ServerCrashed.ToString(), DisconnectReason.ServerCrashed.ToString());
+            }
+            if (OwnerConnection != null)
+            {
+                var conn = OwnerConnection; OwnerConnection = null;
+                DisconnectClient(conn, DisconnectReason.ServerCrashed.ToString(), DisconnectReason.ServerCrashed.ToString());
+            }
+            Thread.Sleep(500);
         }
 
         private void OnInitializationComplete(NetworkConnection connection)
@@ -607,7 +629,7 @@ namespace Barotrauma.Networking
                 KickClient(c, "DisconnectMessage.AFK");
             }
 
-            serverPeer.Update();
+            serverPeer.Update(deltaTime);
 
             // if update interval has passed
             if (updateTimer < DateTime.Now)
@@ -2047,16 +2069,20 @@ namespace Barotrauma.Networking
             //so the client will be informed what their actual name is
             LastClientListUpdateID++;
 
-            if (!Client.IsValidName(newName, serverSettings))
+            if (c.Connection != OwnerConnection)
             {
-                SendDirectChatMessage("Could not change your name to \"" + newName + "\" (the name contains disallowed symbols).", c, ChatMessageType.MessageBox);
-                return false;
+                if (!Client.IsValidName(newName, serverSettings))
+                {
+                    SendDirectChatMessage("Could not change your name to \"" + newName + "\" (the name contains disallowed symbols).", c, ChatMessageType.MessageBox);
+                    return false;
+                }
+                if (Homoglyphs.Compare(newName.ToLower(), Name.ToLower()))
+                {
+                    SendDirectChatMessage("Could not change your name to \"" + newName + "\" (too similar to the server's name).", c, ChatMessageType.MessageBox);
+                    return false;
+                }
             }
-            if (c.Connection != OwnerConnection && Homoglyphs.Compare(newName.ToLower(), Name.ToLower()))
-            {
-                SendDirectChatMessage("Could not change your name to \"" + newName + "\" (too similar to the server's name).", c, ChatMessageType.MessageBox);
-                return false;
-            }
+            
             Client nameTaken = ConnectedClients.Find(c2 => c != c2 && Homoglyphs.Compare(c2.Name.ToLower(), newName.ToLower()));
             if (nameTaken != null)
             {
@@ -2066,6 +2092,7 @@ namespace Barotrauma.Networking
 
             SendChatMessage("Player \"" + c.Name + "\" has changed their name to \"" + newName + "\".", ChatMessageType.Server);
             c.Name = newName;
+            c.Connection.Name = newName;
             return true;
         }
 
@@ -2116,8 +2143,15 @@ namespace Barotrauma.Networking
 
         public void BanClient(Client client, string reason, bool range = false, TimeSpan? duration = null)
         {
-            if (client == null) return;
-            if (client.Connection == OwnerConnection) return;
+            if (client == null || client.Connection == OwnerConnection) { return; }
+
+            var previousPlayer = previousPlayers.Find(p => p.MatchesClient(client));
+            if (previousPlayer != null)
+            {
+                //reset karma to a neutral value, so if/when the ban is revoked the client wont get immediately punished by low karma again
+                previousPlayer.Karma = Math.Max(previousPlayer.Karma, 50.0f);
+            }
+            client.Karma = Math.Max(client.Karma, 50.0f);
 
             string targetMsg = DisconnectReason.Banned.ToString();
             DisconnectClient(client, $"ServerMessage.BannedFromServer~[client]={client.Name}", targetMsg, reason);
@@ -2157,7 +2191,8 @@ namespace Barotrauma.Networking
         {
             if (senderConnection == OwnerConnection)
             {
-                DebugConsole.NewMessage("Owner disconnected: closing server", Color.Yellow);
+                DebugConsole.NewMessage("Owner disconnected: closing the server...", Color.Yellow);
+                Log("Owner disconnected: closing the server...", ServerLog.MessageType.ServerMessage);
                 GameMain.ShouldRun = false;
             }
             Client client = connectedClients.Find(x => x.Connection == senderConnection);
@@ -2516,7 +2551,7 @@ namespace Barotrauma.Networking
             IWriteMessage msg = new WriteOnlyMessage();
             msg.Write((byte)ServerPacketHeader.FILE_TRANSFER);
             msg.Write((byte)FileTransferMessageType.Cancel);
-            msg.Write((byte)transfer.SequenceChannel);
+            msg.Write((byte)transfer.ID);
             serverPeer.Send(msg, transfer.Connection, DeliveryMethod.ReliableOrdered);
         }
 

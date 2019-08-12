@@ -1,11 +1,13 @@
-﻿using Microsoft.Xna.Framework;
+﻿using EventInput;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Barotrauma
 {
-    public class GUIDropDown : GUIComponent
+    public class GUIDropDown : GUIComponent, IKeyboardSubscriber
     {
         public delegate bool OnSelectedHandler(GUIComponent selected, object obj = null);
         public OnSelectedHandler OnSelected;
@@ -42,9 +44,21 @@ namespace Barotrauma
             set { button.Enabled = value; }
         }
 
-        public GUIComponent Selected
+        public GUIComponent SelectedComponent
         {
             get { return listBox.SelectedComponent; }
+        }
+        
+        public bool Selected
+        {
+            get
+            {
+                return Dropped;
+            }
+            set
+            {
+                Dropped = value;
+            }
         }
 
         public GUIListBox ListBox
@@ -66,6 +80,30 @@ namespace Barotrauma
             {
                 if (listBox.SelectedComponent == null) return -1;
                 return listBox.Content.GetChildIndex(listBox.SelectedComponent);
+            }
+        }
+
+        public void ReceiveTextInput(char inputChar)
+        {
+            GUI.KeyboardDispatcher.Subscriber = null;
+        }
+        public void ReceiveTextInput(string text) { }
+        public void ReceiveCommandInput(char command) { }
+
+        public void ReceiveSpecialInput(Keys key)
+        {
+            switch (key)
+            {
+                case Keys.Up:
+                case Keys.Down:
+                    listBox.ReceiveSpecialInput(key);
+                    GUI.KeyboardDispatcher.Subscriber = this;
+                    break;
+                case Keys.Enter:
+                case Keys.Space:
+                case Keys.Escape:
+                    GUI.KeyboardDispatcher.Subscriber = null;
+                    break;
             }
         }
 
@@ -287,6 +325,12 @@ namespace Barotrauma
             {
                 OnDropped?.Invoke(this, userData);
                 listBox.UpdateScrollBarSize();
+
+                GUI.KeyboardDispatcher.Subscriber = this;
+            }
+            else if (GUI.KeyboardDispatcher.Subscriber == this)
+            {
+                GUI.KeyboardDispatcher.Subscriber = null;
             }
             return true;
         }
@@ -343,6 +387,10 @@ namespace Barotrauma
                 if (!listBoxRect.Contains(PlayerInput.MousePosition) && !button.Rect.Contains(PlayerInput.MousePosition))
                 {
                     Dropped = false;
+                    if (GUI.KeyboardDispatcher.Subscriber == this)
+                    {
+                        GUI.KeyboardDispatcher.Subscriber = null;
+                    }
                 }
             }
         }

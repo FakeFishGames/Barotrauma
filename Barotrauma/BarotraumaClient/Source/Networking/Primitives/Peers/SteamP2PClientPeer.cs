@@ -30,7 +30,7 @@ namespace Barotrauma.Networking
             isActive = false;
         }
 
-        public override void Start(object endPoint)
+        public override void Start(object endPoint, int ownerKey)
         {
             steamAuthTicket = SteamManager.GetAuthSessionTicket();
             //TODO: wait for GetAuthSessionTicketResponse_t
@@ -91,7 +91,7 @@ namespace Barotrauma.Networking
             bool isDisconnectMessage = (incByte & (byte)PacketHeader.IsDisconnectMessage) != 0;
             bool isServerMessage = (incByte & (byte)PacketHeader.IsServerMessage) != 0;
             bool isHeartbeatMessage = (incByte & (byte)PacketHeader.IsHeartbeatMessage) != 0;
-            
+
             if (!isServerMessage) { return; }
 
             if (isConnectionInitializationStep)
@@ -122,12 +122,12 @@ namespace Barotrauma.Networking
             }
         }
 
-        public override void Update()
+        public override void Update(float deltaTime)
         {
             if (!isActive) { return; }
 
-            timeout -= Timing.Step;
-            heartbeatTimer -= Timing.Step;
+            timeout -= deltaTime;
+            heartbeatTimer -= deltaTime;
 
             if (heartbeatTimer < 0.0)
             {
@@ -258,8 +258,28 @@ namespace Barotrauma.Networking
                     break;
             }
 
+            if (length + 8 >= MsgConstants.MTU)
+            {
+                DebugConsole.Log("WARNING: message length comes close to exceeding MTU, forcing reliable send (" + length.ToString() + " bytes)");
+                sendType = Facepunch.Steamworks.Networking.SendType.Reliable;
+            }
+
             heartbeatTimer = 5.0;
-            SteamManager.Instance.Networking.SendP2PPacket(hostSteamId, buf, length + 4, sendType);
+            bool successSend = SteamManager.Instance.Networking.SendP2PPacket(hostSteamId, buf, length + 4, sendType);
+
+            if (!successSend)
+            {
+                if (sendType != Facepunch.Steamworks.Networking.SendType.Reliable)
+                {
+                    DebugConsole.Log("WARNING: message couldn't be sent unreliably, forcing reliable send (" + length.ToString() + " bytes)");
+                    sendType = Facepunch.Steamworks.Networking.SendType.Reliable;
+                    successSend = Steam.SteamManager.Instance.Networking.SendP2PPacket(hostSteamId, buf, length + 4, sendType);
+                }
+                if (!successSend)
+                {
+                    DebugConsole.ThrowError("Failed to send message to remote peer! (" + length.ToString() + " bytes)");
+                }
+            }
         }
 
         public override void SendPassword(string password)

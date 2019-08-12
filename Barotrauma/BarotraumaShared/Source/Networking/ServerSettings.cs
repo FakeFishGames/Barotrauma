@@ -508,6 +508,12 @@ namespace Barotrauma.Networking
         public bool HasPassword
         {
             get { return password != null; }
+#if CLIENT
+            set
+            {
+                password = value ? (password ?? new byte[1]) : null;
+            }
+#endif
         }
         
         [Serialize(true, true)]

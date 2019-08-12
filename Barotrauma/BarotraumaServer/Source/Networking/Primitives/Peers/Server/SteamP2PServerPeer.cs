@@ -16,8 +16,6 @@ namespace Barotrauma.Networking
         private NetServer netServer;
 
         private NetConnection netConnection;
-
-        private Facepunch.Steamworks.Server steamServer;
         
         public UInt64 OwnerSteamID
         {
@@ -68,9 +66,7 @@ namespace Barotrauma.Networking
             pendingClients = new List<PendingClient>();
 
             incomingLidgrenMessages = new List<NetIncomingMessage>();
-
-            steamServer = null;
-
+            
             ownerKey = null;
 
             OwnerSteamID = steamId;
@@ -123,17 +119,11 @@ namespace Barotrauma.Networking
             connectedClients.Clear();
 
             netServer = null;
-
-            if (steamServer != null)
-            {
-                steamServer.Auth.OnAuthChange = null;
-            }
-            steamServer = null;
-
+            
             OnShutdown?.Invoke();
         }
 
-        public override void Update()
+        public override void Update(float deltaTime)
         {
             if (netServer == null) { return; }
 
@@ -145,12 +135,13 @@ namespace Barotrauma.Networking
 
             netServer.ReadMessages(incomingLidgrenMessages);
 
-            foreach (SteamP2PConnection conn in connectedClients)
+            //backwards for loop so we can remove elements while iterating
+            for (int i = connectedClients.Count - 1; i >= 0; i--)
             {
-                conn.Decay();
-                if (conn.Timeout < 0.0)
+                connectedClients[i].Decay(deltaTime);
+                if (connectedClients[i].Timeout < 0.0)
                 {
-                    Disconnect(conn, "Timed out");
+                    Disconnect(connectedClients[i], "Timed out");
                 }
             }
 
@@ -181,7 +172,7 @@ namespace Barotrauma.Networking
             catch (Exception e)
             {
                 string errorMsg = "Server failed to read an incoming message. {" + e + "}\n" + e.StackTrace;
-                GameAnalyticsManager.AddErrorEventOnce("LidgrenServerPeer.Update:ClientReadException" + e.TargetSite.ToString(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("SteamP2PServerPeer.Update:ClientReadException" + e.TargetSite.ToString(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 if (GameSettings.VerboseLogging)
                 {
                     DebugConsole.ThrowError(errorMsg);
@@ -357,6 +348,8 @@ namespace Barotrauma.Networking
                     netServer.SendMessage(outMsg, netConnection, NetDeliveryMethod.ReliableUnordered);
                     break;
                 case NetConnectionStatus.Disconnected:
+                    DebugConsole.NewMessage("Owner disconnected: closing the server...");
+                    GameServer.Log("Owner disconnected: closing the server...", ServerLog.MessageType.ServerMessage);
                     Close(DisconnectReason.ServerShutdown.ToString() + "/ Owner disconnected");
                     break;
             }
@@ -380,7 +373,7 @@ namespace Barotrauma.Networking
                     string name = Client.SanitizeName(inc.ReadString());
                     UInt64 steamId = inc.ReadUInt64();
                     UInt16 ticketLength = inc.ReadUInt16();
-                    byte[] ticket = inc.ReadBytes(ticketLength);
+                    inc.BitPosition += ticketLength * 8; //skip ticket, owner handles steam authentication
 
                     if (!Client.IsValidName(name, serverSettings))
                     {
@@ -444,12 +437,8 @@ namespace Barotrauma.Networking
 
                     if (!pendingClient.AuthSessionStarted)
                     {
-                        ServerAuth.StartAuthSessionResult authSessionStartState = Steam.SteamManager.StartAuthSession(ticket, steamId);
-                        if (authSessionStartState != ServerAuth.StartAuthSessionResult.OK)
-                        {
-                            RemovePendingClient(pendingClient, DisconnectReason.SteamAuthenticationFailed.ToString()+"/ Steam auth session failed to start: " + authSessionStartState.ToString());
-                            return;
-                        }
+                        pendingClient.InitializationStep = serverSettings.HasPassword ? ConnectionInitialization.Password: ConnectionInitialization.Success;
+
                         pendingClient.Name = name;
                         pendingClient.AuthSessionStarted = true;
                     }
@@ -583,49 +572,9 @@ namespace Barotrauma.Networking
 
         public override void InitializeSteamServerCallbacks(Server steamSrvr)
         {
-            steamServer = steamSrvr;
-
-            steamServer.Auth.OnAuthChange = OnAuthChange;
+            throw new InvalidOperationException("Called InitializeSteamServerCallbacks on SteamP2PServerPeer!");
         }
-
-        private void OnAuthChange(ulong steamID, ulong ownerID, ServerAuth.Status status)
-        {
-            if (netServer == null) { return; }
-
-            PendingClient pendingClient = pendingClients.Find(c => c.SteamID == steamID);
-            DebugConsole.NewMessage(steamID + " validation: " + status + ", " + (pendingClient != null));
-
-            if (pendingClient == null)
-            {
-                if (status != ServerAuth.Status.OK)
-                {
-                    SteamP2PConnection connection = connectedClients.Find(c => c.SteamID == steamID);
-                    if (connection != null)
-                    {
-                        Disconnect(connection, DisconnectReason.SteamAuthenticationFailed.ToString() + "/ Steam authentication status changed: " + status.ToString());
-                    }
-                }
-                return;
-            }
-
-            if (serverSettings.BanList.IsBanned(steamID))
-            {
-                RemovePendingClient(pendingClient, DisconnectReason.Banned.ToString()+"/ SteamID banned");
-                return;
-            }
-
-            if (status == ServerAuth.Status.OK)
-            {
-                pendingClient.InitializationStep = serverSettings.HasPassword ? ConnectionInitialization.Password : ConnectionInitialization.Success;
-                pendingClient.UpdateTime = Timing.TotalTime;
-            }
-            else
-            {
-                RemovePendingClient(pendingClient, DisconnectReason.SteamAuthenticationFailed.ToString()+"/ Steam authentication failed: " + status.ToString());
-                return;
-            }
-        }
-
+        
         public override void Send(IWriteMessage msg, NetworkConnection conn, DeliveryMethod deliveryMethod)
         {
             if (netServer == null) { return; }
@@ -687,6 +636,10 @@ namespace Barotrauma.Networking
                 connectedClients.Remove(steamp2pConn);
                 OnDisconnect?.Invoke(conn, msg);
                 Steam.SteamManager.StopAuthSession(conn.SteamID);
+            }
+            else if (steamp2pConn == OwnerConnection)
+            {
+                netConnection.Disconnect(msg);
             }
         }
 

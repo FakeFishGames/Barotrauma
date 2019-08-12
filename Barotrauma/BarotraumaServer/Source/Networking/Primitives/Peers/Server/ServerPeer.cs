@@ -26,9 +26,9 @@ namespace Barotrauma.Networking
         public abstract void InitializeSteamServerCallbacks(Facepunch.Steamworks.Server steamSrvr);
 
         public abstract void Start();
-        public abstract void Close(string msg=null);
-        public abstract void Update();
+        public abstract void Close(string msg = null);
+        public abstract void Update(float deltaTime);
         public abstract void Send(IWriteMessage msg, NetworkConnection conn, DeliveryMethod deliveryMethod);
-        public abstract void Disconnect(NetworkConnection conn, string msg=null);
+        public abstract void Disconnect(NetworkConnection conn, string msg = null);
     }
 }
