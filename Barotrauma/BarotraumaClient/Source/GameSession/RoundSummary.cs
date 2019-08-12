@@ -57,9 +57,10 @@ namespace Barotrauma
             var infoText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoTextBox.Content.RectTransform),
                 summaryText, wrap: true);
 
+            GUIComponent endText = null;
             if (!string.IsNullOrWhiteSpace(endMessage))
             {
-                var endText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoTextBox.Content.RectTransform), 
+                endText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoTextBox.Content.RectTransform), 
                     TextManager.GetServerMessage(endMessage), wrap: true);
             }
 
@@ -70,7 +71,13 @@ namespace Barotrauma
                 if (!string.IsNullOrEmpty(message))
                 {
                     //spacing
-                    new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), infoTextBox.Content.RectTransform), style: null);
+
+                    var spacingTransform = new RectTransform(new Vector2(1.0f, 0.1f), infoTextBox.Content.RectTransform);
+                    if (endText != null)
+                    {
+                        spacingTransform.MinSize = endText.Rect.Size;
+                    }
+                    new GUIFrame(spacingTransform, style: null);
 
                     new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoTextBox.Content.RectTransform),
                        TextManager.AddPunctuation(':', TextManager.Get("Mission"), GameMain.GameSession.Mission.Name),
