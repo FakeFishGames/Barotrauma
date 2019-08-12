@@ -413,16 +413,20 @@ namespace Barotrauma
             return true;
         }
 
+        public bool RemoveAffliction(XElement affliction)
+        {
+            Serialize();
+            affliction.Remove();
+            Attack.ReloadAfflictions(Element);
+            return Serialize();
+        }
+
         public bool RemoveLastAffliction()
         {
             var afflictions = Element.GetChildElements("affliction");
             var last = afflictions.LastOrDefault();
             if (last == null) { return false; }
-            Serialize();
-            last.Remove();
-            Attack.ReloadAfflictions(Element);
-            Serialize();
-            return false;
+            return RemoveAffliction(last);
         }
     }
 
@@ -513,6 +517,7 @@ namespace Barotrauma
 
 #if CLIENT
         public SerializableEntityEditor SerializableEntityEditor { get; protected set; }
+        public Dictionary<Affliction, SerializableEntityEditor> AfflictionEditors { get; private set; } = new Dictionary<Affliction, SerializableEntityEditor>();
         public virtual void AddToEditor(ParamsEditor editor, bool recursive = true, int space = 0)
         {
             SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, this, inGame: false, showName: true, titleFont: GUI.LargeFont);
@@ -525,15 +530,18 @@ namespace Barotrauma
             }
             if (this is LimbAttackParams attackParams)
             {
-                new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, attackParams.Attack, inGame: false, showName: true);
+                SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, attackParams.Attack, inGame: false, showName: true);
+                AfflictionEditors.Clear();
                 foreach (var affliction in attackParams.Attack.Afflictions.Keys)
                 {
-                    new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, affliction, inGame: false, showName: true);
+                    var afflictionEditor = new SerializableEntityEditor(SerializableEntityEditor.RectTransform, affliction, inGame: false, showName: true);
+                    AfflictionEditors.Add(affliction, afflictionEditor);
+                    SerializableEntityEditor.AddCustomContent(afflictionEditor, SerializableEntityEditor.ContentCount);
                 }
             }
             else if (this is DamageModifierParams damageModifierParams)
             {
-                damageModifierParams.SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, damageModifierParams.DamageModifier, inGame: false, showName: true);
+                SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, damageModifierParams.DamageModifier, inGame: false, showName: true);
             }
             if (recursive)
             {

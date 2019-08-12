@@ -2817,8 +2817,9 @@ namespace Barotrauma
                     {
                         foreach (var limb in selectedLimbs)
                         {
-                            var editor = ParamsEditor.Instance;
-                            limb.limbParams.AddToEditor(editor, true, space: 0);
+                            var mainEditor = ParamsEditor.Instance;
+                            limb.limbParams.AddToEditor(mainEditor, true, space: 0);
+                            var limbEditor = limb.limbParams.SerializableEntityEditor;
                             foreach (var damageModifier in limb.limbParams.DamageModifiers)
                             {
                                 var modifierEditor = damageModifier.SerializableEntityEditor;
@@ -2840,22 +2841,9 @@ namespace Barotrauma
                                     modifierEditor.AddCustomContent(buttonParent, 0);
                                 }
                             }
-                            var modifierParent = new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 30), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
-                            {
-                                CanBeFocused = false
-                            };
-                            new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), modifierParent.RectTransform, Anchor.CenterLeft), "New Damage Modifier")
-                            {
-                                OnClicked = (button, data) =>
-                                {
-                                    limb.limbParams.AddNewDamageModifier();
-                                    ResetParamsEditor();
-                                    return true;
-                                }
-                            };
                             if (limb.limbParams.Attack == null)
                             {
-                                var buttonParent = new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 40), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
+                                var buttonParent = new GUIFrame(new RectTransform(new Point(mainEditor.EditorBox.Rect.Width, 40), mainEditor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
                                 {
                                     CanBeFocused = false
                                 };
@@ -2871,7 +2859,29 @@ namespace Barotrauma
                             }
                             else
                             {
-                                var parent = new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 30), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
+                                var attackParams = limb.limbParams.Attack;
+                                foreach (var affliction in attackParams.Attack.Afflictions)
+                                {
+                                    if (attackParams.AfflictionEditors.TryGetValue(affliction.Key, out SerializableEntityEditor afflictionEditor))
+                                    {
+                                        var p = new GUIFrame(new RectTransform(new Point(afflictionEditor.Rect.Width, 30), afflictionEditor.RectTransform), style: null)
+                                        {
+                                            CanBeFocused = false
+                                        };
+                                        new GUIButton(new RectTransform(new Vector2(0.08f, 0.8f), p.RectTransform, Anchor.BottomRight), "X", color: Color.Red)
+                                        {
+                                            OnClicked = (button, data) =>
+                                            {
+                                                attackParams.RemoveAffliction(affliction.Value);
+                                                ResetParamsEditor();
+                                                return true;
+                                            }
+                                        };
+                                        afflictionEditor.AddCustomContent(p, 0);
+                                    }
+                                }
+                                var attackEditor = limb.limbParams.Attack.SerializableEntityEditor;
+                                var parent = new GUIFrame(new RectTransform(new Point(attackEditor.Rect.Width, 30), attackEditor.RectTransform), style: null, color: new Color(20, 20, 20, 255))
                                 {
                                     CanBeFocused = false
                                 };
@@ -2884,25 +2894,12 @@ namespace Barotrauma
                                         return true;
                                     }
                                 };
-                                // TODO: replace with X-buttons at each element
-                                if (limb.limbParams.Attack.Element.GetChildElements("affliction").Any())
-                                {
-                                    new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), parent.RectTransform, Anchor.CenterRight), "Remove Last Affliction")
-                                    {
-                                        OnClicked = (button, data) =>
-                                        {
-                                            limb.limbParams.Attack.RemoveLastAffliction();
-                                            ResetParamsEditor();
-                                            return true;
-                                        }
-                                    };
-                                }
-                                var buttonParent = new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 40), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
+                                attackEditor.AddCustomContent(parent, attackEditor.ContentCount);
+                                var buttonParent = new GUIFrame(new RectTransform(new Point(attackEditor.Rect.Width, 40), attackEditor.RectTransform), style: null, color: new Color(20, 20, 20, 255))
                                 {
                                     CanBeFocused = false
                                 };
-                                // TODO: replace with X-button at the attack element
-                                new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), buttonParent.RectTransform, Anchor.Center), "Remove Attack")
+                                new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), buttonParent.RectTransform, Anchor.Center), "Remove Attack", color: Color.Red)
                                 {
                                     OnClicked = (button, data) =>
                                     {
@@ -2911,8 +2908,22 @@ namespace Barotrauma
                                         return true;
                                     }
                                 };
+                                attackEditor.AddCustomContent(buttonParent, attackEditor.ContentCount);
                             }
-                            new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 20), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
+                            var modifierParent = new GUIFrame(new RectTransform(new Point(mainEditor.EditorBox.Rect.Width, 30), mainEditor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
+                            {
+                                CanBeFocused = false
+                            };
+                            new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), modifierParent.RectTransform, Anchor.CenterLeft), "New Damage Modifier")
+                            {
+                                OnClicked = (button, data) =>
+                                {
+                                    limb.limbParams.AddNewDamageModifier();
+                                    ResetParamsEditor();
+                                    return true;
+                                }
+                            };
+                            new GUIFrame(new RectTransform(new Point(mainEditor.EditorBox.Rect.Width, 20), mainEditor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
                             {
                                 CanBeFocused = false
                             };
