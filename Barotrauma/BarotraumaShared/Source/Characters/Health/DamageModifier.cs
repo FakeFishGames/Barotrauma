@@ -8,8 +8,6 @@ namespace Barotrauma
 {
     partial class DamageModifier : ISerializableEntity
     {
-        public readonly XElement SourceElement;
-
         public string Name => "Damage Modifier";
 
         public Dictionary<string, SerializableProperty> SerializableProperties { get; private set; }
@@ -72,8 +70,7 @@ namespace Barotrauma
 
         public DamageModifier(XElement element, string parentDebugName)
         {
-            SourceElement = element;
-            Deserialize();
+            Deserialize(element);
             if (element.Attribute("afflictionnames") != null)
             {
                 DebugConsole.ThrowError("Error in DamageModifier config (" + parentDebugName + ") - define afflictions using identifiers or types instead of names.");
@@ -108,16 +105,16 @@ namespace Barotrauma
                 || parsedAfflictionTypes.Any(t => t.Equals(affliction.Prefab.AfflictionType, StringComparison.OrdinalIgnoreCase));
         }
 
-        public void Serialize()
+        public void Serialize(XElement element)
         {
-            if (SourceElement == null) { return; }
-            SerializableProperty.SerializeProperties(this, SourceElement);
+            if (element == null) { return; }
+            SerializableProperty.SerializeProperties(this, element);
         }
 
-        public void Deserialize()
+        public void Deserialize(XElement element)
         {
-            if (SourceElement == null) { return; }
-            SerializableProperties = SerializableProperty.DeserializeProperties(this, SourceElement);
+            if (element == null) { return; }
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
         }
     }
 }

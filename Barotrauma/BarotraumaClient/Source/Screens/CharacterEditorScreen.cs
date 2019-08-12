@@ -2819,6 +2819,31 @@ namespace Barotrauma
                         {
                             var editor = ParamsEditor.Instance;
                             limb.limbParams.AddToEditor(editor, true, space: 0);
+                            var modifierParent = new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 30), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
+                            {
+                                CanBeFocused = false
+                            };
+                            new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), modifierParent.RectTransform, Anchor.CenterLeft), "Add New Damage Modifier")
+                            {
+                                OnClicked = (button, data) =>
+                                {
+                                    limb.limbParams.AddNewDamageModifier();
+                                    ResetParamsEditor();
+                                    return true;
+                                }
+                            };
+                            if (limb.limbParams.DamageModifiers.Any())
+                            {
+                                new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), modifierParent.RectTransform, Anchor.CenterRight), "Remove Last Damage Modifier")
+                                {
+                                    OnClicked = (button, data) =>
+                                    {
+                                        limb.limbParams.RemoveLastDamageModifier();
+                                        ResetParamsEditor();
+                                        return true;
+                                    }
+                                };
+                            }
                             if (limb.limbParams.Attack == null)
                             {
                                 var buttonParent = new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 40), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))

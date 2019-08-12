@@ -79,7 +79,9 @@ namespace Barotrauma
         public readonly SpriteParams damagedSpriteParams;
         public readonly SpriteParams deformSpriteParams;
 
+        // TODO: support for multiple attacks?
         public LimbAttackParams Attack { get; private set; }
+        public List<DamageModifierParams> DamageModifiers { get; private set; } = new List<DamageModifierParams>();
 
         private string name;
         [Serialize("", true), Editable]
@@ -192,7 +194,9 @@ namespace Barotrauma
             }
             foreach (var damageElement in element.GetChildElements("damagemodifier"))
             {
-                SubParams.Add(new DamageModifierParams(damageElement, ragdoll));
+                var damageModifier = new DamageModifierParams(damageElement, ragdoll);
+                DamageModifiers.Add(damageModifier);
+                SubParams.Add(damageModifier);
             }
         }
 
@@ -213,6 +217,30 @@ namespace Barotrauma
             SubParams.Remove(Attack);
             Attack = null;
             return Attack == null;
+        }
+
+        public bool AddNewDamageModifier()
+        {
+            Serialize();
+            var subElement = new XElement("damagemodifier");
+            Element.Add(subElement);
+            var damageModifier = new DamageModifierParams(subElement, Ragdoll);
+            DamageModifiers.Add(damageModifier);
+            SubParams.Add(damageModifier);
+            Serialize();
+            return true;
+        }
+
+        public bool RemoveLastDamageModifier()
+        {
+            var last = DamageModifiers.LastOrDefault();
+            if (last == null) { return false; }
+            Serialize();
+            SubParams.Remove(last);
+            DamageModifiers.Remove(last);
+            last.Element.Remove();
+            Serialize();
+            return false;
         }
     }
 
@@ -356,7 +384,7 @@ namespace Barotrauma
         public override bool Serialize(XElement element = null, bool recursive = true)
         {
             base.Serialize(element, recursive);
-            Attack.Serialize(Element);
+            Attack.Serialize(element ?? Element);
             return true;
         }
 
@@ -369,14 +397,14 @@ namespace Barotrauma
 
         public bool AddNewAffliction()
         {
-            Attack.Serialize(Element);
+            Serialize();
             var subElement = new XElement("affliction", 
                 new XAttribute("identifier", "internaldamage"), 
                 new XAttribute("strength", 0f),
                 new XAttribute("probability", 1.0f));
             Element.Add(subElement);
             Attack.ReloadAfflictions(Element);
-            Attack.Serialize(Element);
+            Serialize();
             return true;
         }
 
@@ -385,10 +413,10 @@ namespace Barotrauma
             var afflictions = Element.GetChildElements("affliction");
             var last = afflictions.LastOrDefault();
             if (last == null) { return false; }
-            Attack.Serialize(Element);
+            Serialize();
             last.Remove();
             Attack.ReloadAfflictions(Element);
-            Attack.Serialize(Element);
+            Serialize();
             return false;
         }
 
@@ -407,21 +435,21 @@ namespace Barotrauma
         public override bool Deserialize(XElement element = null, bool recursive = true)
         {
             base.Deserialize(element, recursive);
-            DamageModifier.Deserialize();
+            DamageModifier.Deserialize(element ?? Element);
             return SerializableProperties != null;
         }
 
         public override bool Serialize(XElement element = null, bool recursive = true)
         {
             base.Serialize(element, recursive);
-            DamageModifier.Serialize();
+            DamageModifier.Serialize(element ?? Element);
             return true;
         }
 
         public override void Reset()
         {
             base.Reset();
-            DamageModifier.Deserialize();
+            DamageModifier.Deserialize(OriginalElement);
         }
     }
 
