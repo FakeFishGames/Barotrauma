@@ -45,6 +45,7 @@ namespace Barotrauma
         private bool editIK;
 
         private bool drawSkeleton;
+        private bool drawDamageModifiers;
         private bool showParamsEditor;
         private bool showSpritesheet;
         private bool isFreezed;
@@ -149,6 +150,7 @@ namespace Barotrauma
             editJoints = false;
             editIK = false;
             drawSkeleton = false;
+            drawDamageModifiers = false;
             showParamsEditor = false;
             showSpritesheet = false;
             isFreezed = false;
@@ -642,6 +644,16 @@ namespace Barotrauma
 
             // GUI
             spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
+            if (drawDamageModifiers)
+            {
+                foreach (Limb limb in character.AnimController.Limbs)
+                {
+                    if (selectedLimbs.Contains(limb) || selectedLimbs.None())
+                    {
+                        limb.DrawDamageModifiers(spriteBatch, cam, SimToScreen(limb.SimPosition), isScreenSpace: true);
+                    }
+                }
+            }
             if (editAnimations)
             {
                 DrawAnimationControls(spriteBatch, (float)deltaTime);
@@ -1520,6 +1532,7 @@ namespace Barotrauma
         private GUITickBox jointsToggle;
         private GUITickBox spritesheetToggle;
         private GUITickBox skeletonToggle;
+        private GUITickBox damageModifiersToggle;
         private GUITickBox ikToggle;
 
         private GUIFrame extraRagdollControls;
@@ -1600,7 +1613,17 @@ namespace Barotrauma
             new GUIFrame(new RectTransform(toggleSize, layoutGroup.RectTransform), style: null) { CanBeFocused = false };
             // Minor modes
             paramsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("ShowParameters")) { Selected = showParamsEditor };
+            paramsToggle.OnSelected = box =>
+            {
+                showParamsEditor = box.Selected;
+                return true;
+            };
             spritesheetToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("ShowSpriteSheet")) { Selected = showSpritesheet };
+            spritesheetToggle.OnSelected = box =>
+            {
+                showSpritesheet = box.Selected;
+                return true;
+            };
             showCollidersToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("ShowColliders"))
             {
                 Selected = showColliders,
@@ -1611,7 +1634,23 @@ namespace Barotrauma
                 }
             };
             ikToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("EditIKTargets")) { Selected = editIK };
+            ikToggle.OnSelected = box =>
+            {
+                editIK = box.Selected;
+                return true;
+            };
             skeletonToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("DrawSkeleton")) { Selected = drawSkeleton };
+            skeletonToggle.OnSelected = box =>
+            {
+                drawSkeleton = box.Selected;
+                return true;
+            };
+            damageModifiersToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("DrawDamageModifiers")) { Selected = drawDamageModifiers };
+            damageModifiersToggle.OnSelected = box =>
+            {
+                drawDamageModifiers = box.Selected;
+                return true;
+            };
 
             animsToggle.OnSelected = box =>
             {
@@ -1687,26 +1726,6 @@ namespace Barotrauma
                 }
                 ClearSelection();
                 ResetParamsEditor();
-                return true;
-            };
-            paramsToggle.OnSelected = box =>
-            {
-                showParamsEditor = box.Selected;
-                return true;
-            };
-            skeletonToggle.OnSelected = box =>
-            {
-                drawSkeleton = box.Selected;
-                return true;
-            };
-            ikToggle.OnSelected = box =>
-            {
-                editIK = box.Selected;
-                return true;
-            };
-            spritesheetToggle.OnSelected = box =>
-            {
-                showSpritesheet = box.Selected;
                 return true;
             };
             modesToggle = new ToggleButton(new RectTransform(new Vector2(0.125f, 1), modesPanel.RectTransform, Anchor.CenterRight, Pivot.CenterLeft), Direction.Left);
@@ -2668,12 +2687,15 @@ namespace Barotrauma
             {
                 OnClicked = (button, data) =>
                 {
+                    characterInfoToggle.Selected = false;
+                    ragdollToggle.Selected = false;
                     limbsToggle.Selected = false;
                     animsToggle.Selected = false;
                     spritesheetToggle.Selected = false;
                     jointsToggle.Selected = false;
                     paramsToggle.Selected = false;
                     skeletonToggle.Selected = false;
+                    damageModifiersToggle.Selected = false;
                     Wizard.Instance.SelectTab(Wizard.Tab.Character);
                     return true;
                 }
@@ -3818,6 +3840,7 @@ namespace Barotrauma
             {
                 GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 200, 250), GetCharacterEditorTranslation("HoldLeftAltToManipulateJoint"), Color.White, Color.Black * 0.5f, 10, GUI.Font);
             }
+
             foreach (Limb limb in character.AnimController.Limbs)
             {
                 if (editIK)

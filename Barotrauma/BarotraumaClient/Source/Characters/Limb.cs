@@ -491,15 +491,34 @@ namespace Barotrauma
                     //GUI.DrawLine(spriteBatch, mainLimbDrawPos, mainLimbFront, Color.White, width: 5);
                     //GUI.DrawRectangle(spriteBatch, new Rectangle((int)mainLimbFront.X, (int)mainLimbFront.Y, 10, 10), Color.Yellow, true);
                 }
-                foreach (var modifier in damageModifiers)
+                DrawDamageModifiers(spriteBatch, cam, bodyDrawPos, isScreenSpace: false);
+            }
+        }
+
+        public void DrawDamageModifiers(SpriteBatch spriteBatch, Camera cam, Vector2 startPos, bool isScreenSpace)
+        {
+            foreach (var modifier in damageModifiers)
+            {
+                float rotation = -body.TransformedRotation + GetArmorSectorRotationOffset(modifier.ArmorSectorInRadians) * Dir;
+                Vector2 forward = VectorExtensions.Forward(rotation);
+                float size = ConvertUnits.ToDisplayUnits(body.GetSize().Length() / 2);
+                if (isScreenSpace)
                 {
-                    float rotation = -body.TransformedRotation + GetArmorSectorRotationOffset(modifier.ArmorSectorInRadians) * Dir;
-                    Vector2 forward = VectorExtensions.Forward(rotation);
-                    float size = ConvertUnits.ToDisplayUnits(body.GetSize().Length() / 2);
-                    color = modifier.DamageMultiplier > 1 ? Color.Red : Color.GreenYellow;
-                    GUI.DrawLine(spriteBatch, bodyDrawPos, bodyDrawPos + Vector2.Normalize(forward) * size, color, width: (int)Math.Round(4 / cam.Zoom));
-                    ShapeExtensions.DrawSector(spriteBatch, bodyDrawPos, size, GetArmorSectorSize(modifier.ArmorSectorInRadians) * Dir, 40, color, rotation + MathHelper.Pi, thickness: 2 / cam.Zoom);
+                    size *= cam.Zoom;
                 }
+                Color color = modifier.DamageMultiplier > 1 ? Color.Red : Color.GreenYellow;
+                int width = 4;
+                if (!isScreenSpace)
+                {
+                    width = (int)Math.Round(width / cam.Zoom);
+                }
+                GUI.DrawLine(spriteBatch, startPos, startPos + Vector2.Normalize(forward) * size, color, width: width);
+                int thickness = 2;
+                if (!isScreenSpace)
+                {
+                    thickness = (int)Math.Round(thickness / cam.Zoom);
+                }
+                ShapeExtensions.DrawSector(spriteBatch, startPos, size, GetArmorSectorSize(modifier.ArmorSectorInRadians) * Dir, 40, color, rotation + MathHelper.Pi, thickness);
             }
         }
 
