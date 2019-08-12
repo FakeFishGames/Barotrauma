@@ -34,10 +34,10 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Traitor Manager: TraitorCount somehow ended up less than 1, setting it to 1.");
             }
             if (server == null) return;
+            
+            Traitor.TraitorMission.InitializeRandom();
             Mission = TraitorMissionPrefab.RandomPrefab()?.Instantiate();
-
-            // TODO(xxx): Make sure we don't mess up the level seed
-            Rand.SetSyncedSeed((int)System.DateTime.UtcNow.Ticks);
+            
             if (Mission != null)
             {
                 Mission.Start(server, "traitor");

@@ -1,5 +1,7 @@
 ﻿//#define SERVER_IS_TRAITOR
 //#define ALLOW_SOLO_TRAITOR
+
+using System;
 using Barotrauma.Networking;
 using Lidgren.Network;
 using System.Collections.Generic;
@@ -11,6 +13,13 @@ namespace Barotrauma
     {
         public class TraitorMission
         {
+            private static System.Random random = null;
+            
+            public static void InitializeRandom() => random = new System.Random((int)DateTime.UtcNow.Ticks);
+            
+            // All traitor related functionality should use the following interface for generating random values
+            public static int Random(int n) => random.Next(n);
+
             private static string wordsTxt = Path.Combine("Content", "CodeWords.txt");
 
             private readonly List<Objective> allObjectives = new List<Objective>();
@@ -76,7 +85,7 @@ namespace Barotrauma
                 foreach (var role in traitorRoles)
                 {
 
-                    int traitorIndex = Rand.Int(traitorCandidates.Count);
+                    int traitorIndex = Random(traitorCandidates.Count);
                     Character traitorCharacter = traitorCandidates[traitorIndex];
                     traitorCandidates.Remove(traitorCharacter);
 
@@ -167,7 +176,7 @@ namespace Barotrauma
             public Character FindKillTarget(Character traitor, CharacterFilter filter)
             {
                 int charactersCount = Character.CharacterList.Count;
-                int targetIndex = Rand.Int(charactersCount);
+                int targetIndex = Random(charactersCount);
                 for (int i = 0; i < charactersCount; ++i)
                 {
                     var character = Character.CharacterList[(targetIndex + i) % charactersCount];

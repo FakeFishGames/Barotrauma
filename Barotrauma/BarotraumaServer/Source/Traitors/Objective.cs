@@ -85,7 +85,7 @@ namespace Barotrauma
                 var indices = allGoals.Select((goal, index) => index).ToArray();
                 for(var i = allGoalsCount; i > 1;)
                 {
-                    int j = Rand.Int(i--);
+                    int j = TraitorMission.Random(i--);
                     var temp = indices[j];
                     indices[j] = indices[i];
                     indices[i] = temp;

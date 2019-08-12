@@ -27,7 +27,7 @@ namespace Barotrauma {
 
         public static TraitorMissionPrefab RandomPrefab()
         {
-            return List.Count > 0 ? List[Rand.Int(List.Count)] : null;
+            return List.Count > 0 ? List[Traitor.TraitorMission.Random(List.Count)] : null;
         }
 
         public class Context

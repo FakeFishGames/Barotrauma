@@ -60,7 +60,7 @@ namespace Barotrauma
             protected Item FindRandomContainer()
             {
                 int itemsCount = Item.ItemList.Count;
-                int startIndex = Rand.Int(itemsCount);
+                int startIndex = TraitorMission.Random(itemsCount);
                 for (int i = 0; i < itemsCount; ++i)
                 {
                     var item = Item.ItemList[(i + startIndex) % itemsCount];
