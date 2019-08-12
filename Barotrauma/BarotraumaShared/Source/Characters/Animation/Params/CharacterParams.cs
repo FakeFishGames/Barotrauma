@@ -228,45 +228,6 @@ namespace Barotrauma
             element.GetChildElements("targetpriority").ForEach(t => TryAddTarget(t, character, out _));
         }
 
-#if CLIENT
-        public override void AddToEditor(ParamsEditor editor, bool recursive = true, int space = 0, ScalableFont titleFont = null)
-        {
-            base.AddToEditor(editor, recursive, 0, titleFont);
-            var buttonParent = new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 40), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
-            {
-                CanBeFocused = false
-            };
-            new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), buttonParent.RectTransform, Anchor.CenterLeft), "Add New Target")
-            {
-                OnClicked = (button, data) =>
-                {
-                    TryAddEmptyTarget(out _);
-                    buttonParent.SetAsLastChild();
-                    return true;
-                }
-            };
-            if (Targets.Any())
-            {
-                // TODO: replace with X-button at the target element
-                new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), buttonParent.RectTransform, Anchor.CenterRight), "Remove Last Target")
-                {
-                    OnClicked = (button, data) =>
-                    {
-                        TryRemoveLastTarget();
-                        return true;
-                    }
-                };
-            }
-            if (space > 0)
-            {
-                new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, space), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
-                {
-                    CanBeFocused = false
-                };
-            }
-        }
-#endif
-
         private bool TryAddTarget(XElement targetElement, CharacterParams character, out TargetParams target)
         {
             target = null;
@@ -295,11 +256,19 @@ namespace Barotrauma
             if (TryAddTarget(element, Character, out targetParams))
             {
                 Element.Add(element);
-#if CLIENT
-                targetParams.AddToEditor(ParamsEditor.Instance, titleFont: GUI.SmallFont);
-#endif
             }
             return targetParams != null;
+        }
+
+        public bool TryRemoveTarget(TargetParams target)
+        {
+            if (target == null || target.Element == null || target.Element.Parent == null) { return false; }
+            if (!targets.Contains(target)) { return false; }
+            if (!SubParams.Contains(target)) { return false; }
+            targets.Remove(target);
+            SubParams.Remove(target);
+            target.Element.Remove();
+            return true;
         }
 
         public bool TryRemoveLastTarget()
@@ -307,13 +276,7 @@ namespace Barotrauma
             if (targets.None()) { return false; }
             var last = targets.LastOrDefault();
             if (last == null) { return false; }
-            targets.Remove(last);
-            SubParams.Remove(last);
-            last.Element.Remove();
-#if CLIENT
-            last.SerializableEntityEditor.RectTransform.Parent = null;
-#endif
-            return true;
+            return TryRemoveTarget(last);
         }
 
         public bool TryGetTarget(string targetTag, out TargetParams target)
