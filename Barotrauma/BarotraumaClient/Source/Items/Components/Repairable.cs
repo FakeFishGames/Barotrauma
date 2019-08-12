@@ -66,14 +66,14 @@ namespace Barotrauma.Items.Components
             for (int i = 0; i < requiredSkills.Count; i++)
             {
                 var skillText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform),
-                    "   - " + TextManager.AddPunctuation(':', TextManager.Get("SkillName." + requiredSkills[i].Identifier), ((int)requiredSkills[i].Level).ToString()), 
+                    "   - " + TextManager.AddPunctuation(':', TextManager.Get("SkillName." + requiredSkills[i].Identifier), ((int) requiredSkills[i].Level).ToString()),
                     font: GUI.SmallFont)
                 {
                     UserData = requiredSkills[i]
                 };
             }
 
-            progressBar = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform), 
+            progressBar = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform),
                 color: Color.Green, barSize: 0.0f);
 
             repairButtonText = TextManager.Get("RepairButton");
@@ -88,7 +88,6 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
             };
-
             sabotageButtonText = TextManager.Get("SabotageButton");
             sabotagingText = TextManager.Get("Sabotaging");
             sabotageButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.15f), paddedFrame.RectTransform, Anchor.BottomCenter), sabotageButtonText)
@@ -140,6 +139,7 @@ namespace Barotrauma.Items.Components
                 repairButtonText : 
                 repairingText + new string('.', ((int)(Timing.TotalTime * 2.0f) % 3) + 1);
 
+            sabotageButton.Visible = character.IsTraitor;
             sabotageButton.Enabled = currentFixer == null && character.IsTraitor;
             sabotageButton.Text = (currentFixer == null || currentFixerAction != FixActions.Sabotage || !character.IsTraitor) ?
                 sabotageButtonText :

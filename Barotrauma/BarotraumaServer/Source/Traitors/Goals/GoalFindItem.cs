@@ -15,6 +15,7 @@ namespace Barotrauma
             private ItemPrefab targetPrefab;
             private Item targetContainer;
             private Item target;
+            private HashSet<Item> existingItems = new HashSet<Item>();
 
             public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[identifier]", "[target]", "[targethullname]" });
             public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { targetPrefab.Name, targetContainer.Prefab.Name, targetContainer.CurrentHull.DisplayName });
@@ -91,6 +92,12 @@ namespace Barotrauma
                 {
                     return false;
                 }
+
+                existingItems.Clear();
+                foreach (var item in targetContainer.OwnInventory.Items)
+                {
+                    existingItems.Add(item);
+                }
                 Entity.Spawner.AddToSpawnQueue(targetPrefab, targetContainer.OwnInventory);
                 target = null;
                 return true;
@@ -101,7 +108,11 @@ namespace Barotrauma
                 base.Update(deltaTime);
                 if (target == null)
                 {
-                    target = targetContainer.OwnInventory.FindItemByIdentifier(identifier);
+                    target = targetContainer.OwnInventory.Items.FirstOrDefault(item => item != null && item.Prefab.Identifier == identifier && !existingItems.Contains(item));
+                    if (target != null)
+                    {
+                        existingItems.Clear();
+                    }
                 }
             }
 
