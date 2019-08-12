@@ -4,6 +4,8 @@ namespace Barotrauma
 {
     partial class CharacterCampaignData
     {
+        public bool HasSpawned;
+
         partial void InitProjSpecific(Client client)
         {
             ClientEndPoint = client.Connection.EndPointString;
