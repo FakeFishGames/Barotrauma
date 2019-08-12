@@ -165,10 +165,11 @@ namespace Barotrauma.Networking
             {
                 string errorMsg = "Server failed to read an incoming message. {" + e + "}\n" + e.StackTrace;
                 GameAnalyticsManager.AddErrorEventOnce("LidgrenServerPeer.Update:ClientReadException" + e.TargetSite.ToString(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
-                if (GameSettings.VerboseLogging)
-                {
-                    DebugConsole.ThrowError(errorMsg);
-                }
+#if DEBUG
+                DebugConsole.ThrowError(errorMsg);
+#else
+                if (GameSettings.VerboseLogging) { DebugConsole.ThrowError(errorMsg); }
+#endif
             }
 
             for (int i = 0; i < pendingClients.Count; i++)
