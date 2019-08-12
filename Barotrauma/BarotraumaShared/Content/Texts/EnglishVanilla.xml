@@ -2925,121 +2925,121 @@
   <!-- Character editor -->
   <charactereditor.creatingnewjoint>Creating a new joint</charactereditor.creatingnewjoint>
   <charactereditor.frozen>Frozen</charactereditor.frozen>
-  <charactereditor.animationtestposeenabled>Animation Test Pose Enabled</charactereditor.animationtestposeenabled>
-  <charactereditor.spritesheetorientation>Spritesheet Orientation</charactereditor.spritesheetorientation>
+  <charactereditor.animationtestposeenabled>Animation test pose enabled</charactereditor.animationtestposeenabled>
+  <charactereditor.spritesheetorientation>Spritesheet orientation</charactereditor.spritesheetorientation>
   <charactereditor.cantaddjointsnolimbelements>Cannot add joints, because no limb elements were found!</charactereditor.cantaddjointsnolimbelements>
   <charactereditor.humanoidlimbdeletiondisabled>Deleting limbs from a humanoid is currently disabled due to crashing</charactereditor.humanoidlimbdeletiondisabled>
   <charactereditor.tryingtospawncharacter>Trying to spawn [config]</charactereditor.tryingtospawncharacter>
   <charactereditor.nocontentpackageselected>No content package selected!</charactereditor.nocontentpackageselected>
   <charactereditor.contentpackagesaved>Content package saved at: [path]</charactereditor.contentpackagesaved>
-  <charactereditor.backgroundcolor>Background \nColor</charactereditor.backgroundcolor>
-  <charactereditor.spritesheetzoom>Spritesheet Zoom</charactereditor.spritesheetzoom>
+  <charactereditor.backgroundcolor>Background \ncolor</charactereditor.backgroundcolor>
+  <charactereditor.spritesheetzoom>Spritesheet zoom</charactereditor.spritesheetzoom>
   <charactereditor.reset>Reset</charactereditor.reset>
-  <charactereditor.hidebodysprites>Hide Body Sprites</charactereditor.hidebodysprites>
-  <charactereditor.showwearables>Show Wearables</charactereditor.showwearables>
-  <charactereditor.lockspriteorigin>Lock Sprite Origin</charactereditor.lockspriteorigin>
-  <charactereditor.lockspriteposition>Lock Sprite Position</charactereditor.lockspriteposition>
-  <charactereditor.lockspritesize>Lock Sprite Size</charactereditor.lockspritesize>
-  <charactereditor.adjustcollider>Adjust Collider</charactereditor.adjustcollider>
-  <charactereditor.uniformscale>Uniform Scale</charactereditor.uniformscale>
-  <charactereditor.copyjointsettings>Copy Joint Settings</charactereditor.copyjointsettings>
+  <charactereditor.hidebodysprites>Hide body sprites</charactereditor.hidebodysprites>
+  <charactereditor.showwearables>Show wearables</charactereditor.showwearables>
+  <charactereditor.lockspriteorigin>Lock sprite origin</charactereditor.lockspriteorigin>
+  <charactereditor.lockspriteposition>Lock sprite position</charactereditor.lockspriteposition>
+  <charactereditor.lockspritesize>Lock sprite size</charactereditor.lockspritesize>
+  <charactereditor.adjustcollider>Adjust collider</charactereditor.adjustcollider>
+  <charactereditor.uniformscale>Uniform scale</charactereditor.uniformscale>
+  <charactereditor.copyjointsettings>Copy joint settings</charactereditor.copyjointsettings>
   <charactereditor.copyjointsettingstooltip>Copies the currently tweaked settings to all selected joints.</charactereditor.copyjointsettingstooltip>
-  <charactereditor.jointscale>Joint Scale</charactereditor.jointscale>
-  <charactereditor.limbscale>Limb Scale</charactereditor.limbscale>
-  <charactereditor.selectedanimation>Selected Animation</charactereditor.selectedanimation>
+  <charactereditor.jointscale>Joint scale</charactereditor.jointscale>
+  <charactereditor.limbscale>Limb scale</charactereditor.limbscale>
+  <charactereditor.selectedanimation>Selected animation</charactereditor.selectedanimation>
   <charactereditor.previouscharacter>Previous</charactereditor.previouscharacter>
   <charactereditor.nextcharacter>Next</charactereditor.nextcharacter>
   <charactereditor.showparameters>Parameters</charactereditor.showparameters>
   <charactereditor.showspritesheet>Spritesheet</charactereditor.showspritesheet>
-  <charactereditor.drawskeleton>Draw Skeleton</charactereditor.drawskeleton>
+  <charactereditor.drawskeleton>Skeleton</charactereditor.drawskeleton>
+  <charactereditor.drawdamagemodifiers>Damage modifiers</charactereditor.drawdamagemodifiers>
   <charactereditor.editcharacter>CHARACTER</charactereditor.editcharacter>
   <charactereditor.editanimations>ANIMATIONS</charactereditor.editanimations>
   <charactereditor.editlimbs>LIMBS</charactereditor.editlimbs>
   <charactereditor.editjoints>JOINTS</charactereditor.editjoints>
   <charactereditor.editragdoll>RAGDOLL</charactereditor.editragdoll>
-  <charactereditor.editiktargets>IK Targets</charactereditor.editiktargets>
+  <charactereditor.editiktargets>IK targets</charactereditor.editiktargets>
   <charactereditor.freeze>Freeze</charactereditor.freeze>
-  <charactereditor.autofreeze>Auto Freeze</charactereditor.autofreeze>
-  <charactereditor.limbpairediting>Limb Pair Editing</charactereditor.limbpairediting>
-  <charactereditor.animationtestpose>Animation Test Pose</charactereditor.animationtestpose>
-  <charactereditor.automove>Auto Move</charactereditor.automove>
-  <charactereditor.followcursor>Follow Cursor</charactereditor.followcursor>
+  <charactereditor.autofreeze>Auto freeze</charactereditor.autofreeze>
+  <charactereditor.limbpairediting>Limb pair editing</charactereditor.limbpairediting>
+  <charactereditor.animationtestpose>Animation test pose</charactereditor.animationtestpose>
+  <charactereditor.automove>Auto move</charactereditor.automove>
+  <charactereditor.followcursor>Follow cursor</charactereditor.followcursor>
   <charactereditor.showcolliders>Colliders</charactereditor.showcolliders>
-  <charactereditor.editbackgroundcolor>Edit Background Color</charactereditor.editbackgroundcolor>
-  <charactereditor.savebutton>Save All</charactereditor.savebutton>
-  <charactereditor.canteditvanillacontent>Can't edit Vanilla content!</charactereditor.canteditvanillacontent>
+  <charactereditor.editbackgroundcolor>Edit background color</charactereditor.editbackgroundcolor>
+  <charactereditor.savebutton>Save all</charactereditor.savebutton>
   <charactereditor.allanimationssaved>All animations saved</charactereditor.allanimationssaved>
   <charactereditor.ragdollsavedto>Ragdoll saved to [path]</charactereditor.ragdollsavedto>
   <charactereditor.charactersavedto>Character config file saved to [path]</charactereditor.charactersavedto>
   <charactereditor.resetbutton>Reset</charactereditor.resetbutton>
-  <charactereditor.saveragdoll>Save Ragdoll</charactereditor.saveragdoll>
+  <charactereditor.saveragdoll>Save ragdoll</charactereditor.saveragdoll>
   <charactereditor.providefilename>Please provide a name for the file</charactereditor.providefilename>
-  <charactereditor.loadragdoll>Load Ragdoll</charactereditor.loadragdoll>
+  <charactereditor.loadragdoll>Load ragdoll</charactereditor.loadragdoll>
   <charactereditor.couldntopendirectory>Couldn't open directory [folder]!</charactereditor.couldntopendirectory>
   <charactereditor.ragdolldeletedfrom>Ragdoll deleted from [file]</charactereditor.ragdolldeletedfrom>
   <charactereditor.ragdollloadedfrom>Ragdoll loaded from [file]</charactereditor.ragdollloadedfrom>
-  <charactereditor.saveanimation>Save Animation</charactereditor.saveanimation>
-  <charactereditor.selectanimationtype>Select Animation Type</charactereditor.selectanimationtype>
+  <charactereditor.saveanimation>Save animation</charactereditor.saveanimation>
+  <charactereditor.selectanimationtype>Select animation type</charactereditor.selectanimationtype>
   <charactereditor.animationoftypesavedto>Animation of type [type] saved to [path]</charactereditor.animationoftypesavedto>
-  <charactereditor.loadanimation>Load Animation</charactereditor.loadanimation>
+  <charactereditor.loadanimation>Load animation</charactereditor.loadanimation>
   <charactereditor.animationoftypedeleted>Animation of type [type] at [file] deleted</charactereditor.animationoftypedeleted>
   <charactereditor.animationtypenotimplemented>Animation type [type] not implemented!</charactereditor.animationtypenotimplemented>
   <charactereditor.animationoftypeloaded>Animation of type [type] loaded from [file]</charactereditor.animationoftypeloaded>
-  <charactereditor.reloadtextures>Reload Textures</charactereditor.reloadtextures>
-  <charactereditor.recreateragdoll>Recreate Ragdoll</charactereditor.recreateragdoll>
+  <charactereditor.reloadtextures>Reload textures</charactereditor.reloadtextures>
+  <charactereditor.recreateragdoll>Recreate ragdoll</charactereditor.recreateragdoll>
   <charactereditor.recreateragdolltooltip>Many of the parameters requires recreating the ragdoll. If adjusting the parameter doesn't seem to have effect, click this button.</charactereditor.recreateragdolltooltip>
-  <charactereditor.createnewcharacter>Create New Character</charactereditor.createnewcharacter>
+  <charactereditor.createnewcharacter>Create new character</charactereditor.createnewcharacter>
   <charactereditor.nofieldforparameterfound>No field for [parameter] found!</charactereditor.nofieldforparameterfound>
   <charactereditor.selecttargetlimbforjointend>Left click to select the target limb for the other end of the joint.</charactereditor.selecttargetlimbforjointend>
-  <charactereditor.holdleftalttoadjustcyclespeed>Hold Left Alt to adjust cycle speed</charactereditor.holdleftalttoadjustcyclespeed>
-  <charactereditor.cyclespeed>Cycle Speed</charactereditor.cyclespeed>
-  <charactereditor.movementspeed>Movement Speed</charactereditor.movementspeed>
-  <charactereditor.headangle>Head Angle</charactereditor.headangle>
+  <charactereditor.holdleftalttoadjustcyclespeed>Hold 'Left Alt' to adjust cycle speed</charactereditor.holdleftalttoadjustcyclespeed>
+  <charactereditor.cyclespeed>Cycle speed</charactereditor.cyclespeed>
+  <charactereditor.movementspeed>Movement speed</charactereditor.movementspeed>
+  <charactereditor.headangle>Head angle</charactereditor.headangle>
   <charactereditor.head>Head</charactereditor.head>
-  <charactereditor.headposition>Head Position</charactereditor.headposition>
-  <charactereditor.torsoangle>Torso Angle</charactereditor.torsoangle>
+  <charactereditor.headposition>Head position</charactereditor.headposition>
+  <charactereditor.torsoangle>Torso angle</charactereditor.torsoangle>
   <charactereditor.torso>Torso</charactereditor.torso>
-  <charactereditor.torsoposition>Torso Position</charactereditor.torsoposition>
-  <charactereditor.tailangle>Tail Angle</charactereditor.tailangle>
-  <charactereditor.footangle>Foot Angle</charactereditor.footangle>
-  <charactereditor.stepsize>Step Size</charactereditor.stepsize>
-  <charactereditor.handmoveamount>Hand Move Amount</charactereditor.handmoveamount>
-  <charactereditor.tailmovementspeed>Tail Movement Speed</charactereditor.tailmovementspeed>
-  <charactereditor.tailmovementamount>Tail Movement Amount</charactereditor.tailmovementamount>
-  <charactereditor.legmovementspeed>Leg Movement Speed</charactereditor.legmovementspeed>
-  <charactereditor.legmovementamount>Leg Movement Amount</charactereditor.legmovementamount>
-  <charactereditor.handmovementamount>Hand Movement Amount</charactereditor.handmovementamount>
-  <charactereditor.holdleftalttomanipulatejoint>Hold Left Alt to manipulate the other end of the joint</charactereditor.holdleftalttomanipulatejoint>
+  <charactereditor.torsoposition>Torso position</charactereditor.torsoposition>
+  <charactereditor.tailangle>Tail angle</charactereditor.tailangle>
+  <charactereditor.footangle>Foot angle</charactereditor.footangle>
+  <charactereditor.stepsize>Step size</charactereditor.stepsize>
+  <charactereditor.handmoveamount>Hand move amount</charactereditor.handmoveamount>
+  <charactereditor.tailmovementspeed>Tail movement speed</charactereditor.tailmovementspeed>
+  <charactereditor.tailmovementamount>Tail movement amount</charactereditor.tailmovementamount>
+  <charactereditor.legmovementspeed>Leg movement speed</charactereditor.legmovementspeed>
+  <charactereditor.legmovementamount>Leg movement amount</charactereditor.legmovementamount>
+  <charactereditor.handmovementamount>Hand movement amount</charactereditor.handmovementamount>
+  <charactereditor.holdleftalttomanipulatejoint>Hold 'Left Alt' to manipulate the other end of the joint</charactereditor.holdleftalttomanipulatejoint>
   <charactereditor.origin>Origin</charactereditor.origin>
   <charactereditor.position>Position: [coordinates]</charactereditor.position>
   <charactereditor.size>Size</charactereditor.size>
-  <charactereditor.upperlimit>Upper Limit</charactereditor.upperlimit>
-  <charactereditor.lowerlimit>Lower Limit</charactereditor.lowerlimit>
+  <charactereditor.upperlimit>Upper limit</charactereditor.upperlimit>
+  <charactereditor.lowerlimit>Lower limit</charactereditor.lowerlimit>
   <charactereditor.defaultname>Character X</charactereditor.defaultname>
-  <charactereditor.ishumanoid>Is a Humanoid?</charactereditor.ishumanoid>
-  <charactereditor.canentersubmarines>Can Enter Submarines (and can walk)?</charactereditor.canentersubmarines>
-  <charactereditor.configfileoutput>Config File Output</charactereditor.configfileoutput>
-  <charactereditor.texturepath>Texture Path</charactereditor.texturepath>
-  <charactereditor.contentpackagename>Content Package Name</charactereditor.contentpackagename>
+  <charactereditor.ishumanoid>Is a humanoid?</charactereditor.ishumanoid>
+  <charactereditor.canentersubmarines>Can enter submarines (and walk)?</charactereditor.canentersubmarines>
+  <charactereditor.configfileoutput>Config file output</charactereditor.configfileoutput>
+  <charactereditor.texturepath>Texture path</charactereditor.texturepath>
+  <charactereditor.contentpackagename>Content package name</charactereditor.contentpackagename>
   <charactereditor.texturedoesnotexist>The texture file does not exist!</charactereditor.texturedoesnotexist>
-  <charactereditor.defineragdoll>Define Ragdoll</charactereditor.defineragdoll>
-  <charactereditor.loadfromhtml>Load From HTML</charactereditor.loadfromhtml>
+  <charactereditor.defineragdoll>Define ragdoll</charactereditor.defineragdoll>
+  <charactereditor.loadfromhtml>Load from HTML</charactereditor.loadfromhtml>
   <charactereditor.limbs>Limbs</charactereditor.limbs>
   <charactereditor.limb>Limb</charactereditor.limb>
   <charactereditor.joints>Joints</charactereditor.joints>
   <charactereditor.joint>Joint</charactereditor.joint>
   <charactereditor.loadhtml>Load HTML</charactereditor.loadhtml>
-  <charactereditor.htmlpath>HTML Path</charactereditor.htmlpath>
-  <charactereditor.multipletorsosdefined>You need to define one and only one limb as Torso!</charactereditor.multipletorsosdefined>
-  <charactereditor.charactercreated>Character [name] Created</charactereditor.charactercreated>
-  <charactereditor.limbtype>Limb Type</charactereditor.limbtype>
-  <charactereditor.sourcerectangle>Source Rectangle</charactereditor.sourcerectangle>
+  <charactereditor.htmlpath>HTML path</charactereditor.htmlpath>
+  <charactereditor.multipletorsosdefined>You need to define one and only one limb as 'Torso'!</charactereditor.multipletorsosdefined>
+  <charactereditor.charactercreated>Character [name] created</charactereditor.charactercreated>
+  <charactereditor.limbtype>Limb type</charactereditor.limbtype>
+  <charactereditor.sourcerectangle>Source rectangle</charactereditor.sourcerectangle>
   <charactereditor.id>Identifier</charactereditor.id>
   <charactereditor.limbwithindex>Limb [index]</charactereditor.limbwithindex>
-  <charactereditor.limbwithindexanchor>Limb [index] Anchor</charactereditor.limbwithindexanchor>
-  <charactereditor.failedtoreadhtml>Character Editor Screen: Failed to read HTML at [path]</charactereditor.failedtoreadhtml>
+  <charactereditor.limbwithindexanchor>Limb [index] anchor</charactereditor.limbwithindexanchor>
+  <charactereditor.failedtoreadhtml>Failed to read HTML at [path]</charactereditor.failedtoreadhtml>
   <charactereditor.multipleitemswithsamehierarchy>Multiple items with the same hierarchy [hierarchy] found ([name]). Cannot continue.</charactereditor.multipleitemswithsamehierarchy>
-  <charactereditor.cannoteditvanillacharacters>Cannot edit the characters defined in the Vanilla content package!</charactereditor.cannoteditvanillacharacters>
+  <charactereditor.cannoteditvanillacharacters>Cannot edit the characters defined in the 'Vanilla' content package!</charactereditor.cannoteditvanillacharacters>
   <charactereditor.existingcharacterfoundreplaceverification>An existing character with the same name was found. Do you want to replace it?</charactereditor.existingcharacterfoundreplaceverification>
   <charactereditor.existingcharacterfound>An existing character with the same name was found.</charactereditor.existingcharacterfound>
   <charactereditor.modespanel>Modes</charactereditor.modespanel>
