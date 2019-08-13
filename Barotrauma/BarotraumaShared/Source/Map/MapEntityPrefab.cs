@@ -43,13 +43,13 @@ namespace Barotrauma
         public string GetItemNameTextId()
         {
             var textId = $"entityname.{Identifier}";
-            return TextManager.Get(textId) != null ? textId : null;
+            return TextManager.ContainsTag(textId) ? textId : null;
         }
 
         public string GetHullNameTextId()
         {
             var textId = $"roomname.{Identifier}";
-            return TextManager.Get(textId) != null ? textId : null;
+            return TextManager.ContainsTag(textId) ? textId : null;
         }
 
         //Used to differentiate between items when saving/loading
