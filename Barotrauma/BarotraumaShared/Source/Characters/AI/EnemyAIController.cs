@@ -208,7 +208,7 @@ namespace Barotrauma
         }
 
         private AIParams AIParams => Character.Params.AI;
-        private TargetParams GetTargetingPriority(string targetTag) => AIParams.GetTarget(targetTag);
+        private TargetParams GetTargetingPriority(string targetTag) => AIParams.GetTarget(targetTag, false);
 
         public override void SelectTarget(AITarget target)
         {

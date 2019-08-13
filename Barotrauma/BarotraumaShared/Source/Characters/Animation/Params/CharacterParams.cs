@@ -285,11 +285,14 @@ namespace Barotrauma
             return target != null;
         }
 
-        public TargetParams GetTarget(string targetTag)
+        public TargetParams GetTarget(string targetTag, bool throwError = true)
         {
             if (!TryGetTarget(targetTag, out TargetParams target))
             {
-                DebugConsole.ThrowError($"Cannot find a target with the tag {targetTag}!");
+                if (throwError)
+                {
+                    DebugConsole.ThrowError($"Cannot find a target with the tag {targetTag}!");
+                }
             }
             return target;
         }
