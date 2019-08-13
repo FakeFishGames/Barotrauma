@@ -186,7 +186,7 @@ namespace Barotrauma
             if (target.IsDead || target.Removed) { return; }
 
             bool isEnemy = target.AIController is EnemyAIController || target.TeamID != attacker.TeamID;
-            if (GameMain.Server.TraitorManager != null)
+            if (GameMain.Server.TraitorManager?.Traitors != null)
             {
                 if (GameMain.Server.TraitorManager.Traitors.Any(t => t.Character == target))
                 {
