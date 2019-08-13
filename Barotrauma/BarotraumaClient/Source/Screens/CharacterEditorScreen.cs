@@ -288,13 +288,21 @@ namespace Barotrauma
             {
                 if (PlayerInput.KeyHit(Keys.D1))
                 {
-                    SetToggle(limbsToggle, true);
+                    SetToggle(characterInfoToggle, true);
                 }
                 else if (PlayerInput.KeyHit(Keys.D2))
                 {
-                    SetToggle(jointsToggle, true);
+                    SetToggle(ragdollToggle, true);
                 }
                 else if (PlayerInput.KeyHit(Keys.D3))
+                {
+                    SetToggle(limbsToggle, true);
+                }
+                else if (PlayerInput.KeyHit(Keys.D4))
+                {
+                    SetToggle(jointsToggle, true);
+                }
+                else if (PlayerInput.KeyHit(Keys.D5))
                 {
                     SetToggle(animsToggle, true);
                 }
