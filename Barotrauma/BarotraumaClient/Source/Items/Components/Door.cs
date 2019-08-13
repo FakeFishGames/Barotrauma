@@ -134,12 +134,12 @@ namespace Barotrauma.Items.Components
                 if (item.Submarine != null) pos += item.Submarine.DrawPosition;
                 pos.Y = -pos.Y;
 
-                if (brokenSprite == null || item.Health > brokenThreshold)
+                if (brokenSprite == null || item.Health > 0.0f)
                 {
                     spriteBatch.Draw(doorSprite.Texture, pos,
-                        new Rectangle((int)(doorSprite.SourceRect.X + doorSprite.size.X * openState),
-                            (int)doorSprite.SourceRect.Y,
-                            (int)(doorSprite.size.X * (1.0f - openState)), (int)doorSprite.size.Y),
+                        new Rectangle((int) (doorSprite.SourceRect.X + doorSprite.size.X * openState),
+                            (int) doorSprite.SourceRect.Y,
+                            (int) (doorSprite.size.X * (1.0f - openState)), (int) doorSprite.size.Y),
                         color, 0.0f, doorSprite.Origin, item.Scale, SpriteEffects.None, doorSprite.Depth);
                 }
 
@@ -160,15 +160,14 @@ namespace Barotrauma.Items.Components
                 if (item.Submarine != null) pos += item.Submarine.DrawPosition;
                 pos.Y = -pos.Y;
 
-
-                if (brokenSprite == null || item.Health > brokenThreshold)
+                if (brokenSprite == null || item.Health > 0.0f)
                 {
                     spriteBatch.Draw(doorSprite.Texture, pos,
                         new Rectangle(doorSprite.SourceRect.X,
-                            (int)(doorSprite.SourceRect.Y + doorSprite.size.Y * openState),
-                            (int)doorSprite.size.X, (int)(doorSprite.size.Y * (1.0f - openState))),
-                            color, 0.0f, doorSprite.Origin, item.Scale, SpriteEffects.None, doorSprite.Depth);
-                }            
+                            (int) (doorSprite.SourceRect.Y + doorSprite.size.Y * openState),
+                            (int) doorSprite.size.X, (int) (doorSprite.size.Y * (1.0f - openState))),
+                        color, 0.0f, doorSprite.Origin, item.Scale, SpriteEffects.None, doorSprite.Depth);
+                }
 
                 if (brokenSprite != null && item.Health < item.Prefab.Health)
                 {
