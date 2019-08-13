@@ -3356,8 +3356,8 @@
   <servertagline>Tagline</servertagline>
 
   <!-- MODIFIED -->
-  <missiondescription.killcrawlerswarm1>A small swarm of [monster] has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew who can neutralize it.</missiondescription.killcrawlerswarm1>
-  <missiondescription.killcrawlerswarm2>A large swarm of [monster] has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew who can neutralize it.</missiondescription.killcrawlerswarm2>
+  <missiondescription.killcrawlerswarm1>A small swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew who can neutralize it.</missiondescription.killcrawlerswarm1>
+  <missiondescription.killcrawlerswarm2>A large swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew who can neutralize it.</missiondescription.killcrawlerswarm2>
   <missiondescription.cargochemicals>Researchers of [location1] need someone to deliver some dangerous chemicals to [location2] for a reward of [reward] credits.</missiondescription.cargochemicals>
   <missionsuccess.pvpmission>The [loser] vessel has been defeated by the [winner] crew!</missionsuccess.pvpmission>
   <workshopitemrefreshfilelisttooltip>Reload the configuration file of the Workshop item (filelist.xml inside the item's folder) and add all new files in it to the file list.</workshopitemrefreshfilelisttooltip>
