@@ -14,7 +14,7 @@ namespace Barotrauma
             private readonly bool matchInventory;
 
             public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[percentage]", "[tag]" });
-            public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { string.Format("{0:0}", DestroyPercent * 100.0f), tag });
+            public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { string.Format("{0:0}", DestroyPercent * 100.0f), tagPrefabName });
 
             private readonly float destroyPercent;
             protected float DestroyPercent => destroyPercent;
@@ -24,6 +24,7 @@ namespace Barotrauma
 
             private int totalCount = 0;
             private int targetCount = 0;
+            private string tagPrefabName = null;
 
             protected int CountMatchingItems()
             {
@@ -48,7 +49,13 @@ namespace Barotrauma
                     {
                         continue;
                     }
-                    if ((matchIdentifier && item.prefab.Identifier == tag) || (matchTag && item.HasTag(tag)))
+                    var identifierMatches = matchIdentifier && item.prefab.Identifier == tag;
+                    if (identifierMatches && tagPrefabName == null)
+                    {
+                        var textId = $"entityname.{tag}";
+                        tagPrefabName = TextManager.Get(textId) != null ? textId : tag;
+                    }
+                    if (identifierMatches || (matchTag && item.HasTag(tag)))
                     {
                         ++result;
                     }
