@@ -1,0 +1,661 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Conversations identifier="vanillaconversations" Language="Russian">
+
+<!-- Personality traits -->
+<PersonalityTrait name="Professional" alloweddialogtags="professional,none" commonness="1" />
+<PersonalityTrait name="Laid-back" alloweddialogtags="laid-back,none" commonness="1" />
+<PersonalityTrait name="Rude" alloweddialogtags="rude,none" commonness="1" />
+<PersonalityTrait name="Tough" alloweddialogtags="tough,none" commonness="1" />
+<PersonalityTrait name="Joker" alloweddialogtags="joker,none" commonness="1" />
+<PersonalityTrait name="Broken English" alloweddialogtags="brokenenglish" commonness="1" />
+<PersonalityTrait name="Fearful" alloweddialogtags="fearful,none" commonness="1" />
+<PersonalityTrait name="Crazy" alloweddialogtags="crazy,none" commonness="1" />
+
+<!-- Generic conversation -->
+<Conversation line="Ну, что ребята, прокатимся!" speaker="0" flags="Initial" allowedjobs="captain">
+	<Conversation line="" speaker="0"/>
+	<Conversation line="Так точно." speaker="1">
+		<Conversation line="Слушаюсь!" speaker="2"/>
+		<Conversation line="Да, капитан" speaker="2" speakertags="brokenenglish"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Те, кто ходит в море на кораблях;" speaker="0" flags="Initial" allowedjobs="captain">
+	<Conversation line="Трудятся в бескрайних водах;" speaker="0">
+		<Conversation line="Они видят творения Божьи и чудеса его, что таятся в глубине." speaker="0">
+			<Conversation line="В добрый путь! Удачи, ребята!" speaker="0"/>
+			<Conversation line="Здесь внизу творений Божьих нет." speaker="1" speakertags="joker,tough,professional"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Засучим рукава, у нас впереди долгий путь!" speaker="0" flags="Initial" allowedjobs="captain">
+	<Conversation line="Слушаюсь!" speaker="1"/>
+	<Conversation line="Так точно!" speaker="1"/>
+	<Conversation line="Удачи, ребята!" speaker="1" allowedjobs="watchman"/>
+</Conversation>
+
+<Conversation line="Добро пожаловать на борт. В целях вашей безопасности не высовывайте руки за пределы судна." speaker="0" flags="Initial" allowedjobs="captain" speakertags="joker">
+	<Conversation line="Слушаюсь!" speaker="1"/>
+	<Conversation line="Так точно!" speaker="1"/>
+</Conversation>
+
+<Conversation line="Всему экипажу приготовиться, впереди у нас долгий путь!" speaker="0" flags="Initial" allowedjobs="captain" speakertags="brokenenglish">
+	<Conversation line="Слушаюсь!" speaker="1"/>
+	<Conversation line="Так точно!" speaker="1"/>
+	<Conversation line="Пресвятой красный нос, помилуй наши души." speaker="1" speakertags="crazy"/>
+	<Conversation line="Удачи, ребята!" speaker="1" allowedjobs="watchman"/>
+</Conversation>
+
+<Conversation line="Говорит капитан! Экипажу приготовиться к плаванью. Желаю удачи!" speaker="0" flags="Initial" allowedjobs="captain" speakertags="brokenenglish">
+	<Conversation line="Слушаюсь!" speaker="1"/>
+	<Conversation line="Так точно!" speaker="1">
+		<Conversation line="Есть!" speaker="2"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Посмотри, что океан нам на этот раз уготовил!" speaker="0" flags="Initial" allowedjobs="captain">
+	<Conversation line="Я ставлю на жутких кошмарных чудищ, жуткую смерть и вечную тьму." speaker="1" speakertags="joker,fearful">
+		<Conversation line="Помалкивай. Нам сейчас не до твоего сарказма." speaker="0" speakertags="professional"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Все готовы? Очень на это надеюсь. Назад мы поворачивать не будем." speaker="0" flags="Initial" allowedjobs="captain">
+	<Conversation line="" speaker="0"/>
+	<Conversation line="Слушаюсь!" speaker="1">
+		<Conversation line="За дело!" speaker="2"/>
+		<Conversation line="Всегда готовы!" speaker="2" speakertags="brokenenglish"/>
+		<Conversation line="А-а-а! Мы все умрем!" speaker="2" speakertags="crazy"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Мне холодно." speaker="0" maxintensity="0.4"/>
+
+<Conversation line="У меня дурное предчувствие..." speaker="0" speakertags="fearful" maxintensity="0.4">
+	<Conversation line="Помню, был один старый капитан. Он всегда говорил..." speaker="1" speakertags="professional,tough">
+		<Conversation line="Нельзя унять бурю, так что даже не пытайся." speaker="1">
+			<Conversation line="Лучше уйми свой страх. А буря сама пройдет." speaker="1">
+				<Conversation line="Ну ты и трепло..." speaker="0" speakertags="rude,fearful"/>
+			</Conversation>
+		</Conversation>
+	</Conversation>
+	<Conversation line="Как и у всех нас." speaker="1"/>
+	<Conversation line="У тебя что, опять приступ метеоризма?" speaker="1" speakertags="joker"/>
+</Conversation>
+
+<Conversation line="Я слышу, как скрипит корпус." speaker="0" speakertags="fearful" maxintensity="0.4">
+	<Conversation line="Я тоже это слышу." speaker="1" speakertags="brokenenglish"/>
+	<Conversation line="" speaker="1" speakertags="joker"/>
+</Conversation>
+
+<Conversation line="Поскорей бы вернуться домой и откупорить бутылочку «Старого Кадма»." speaker="0" speakertags="laid-back" maxintensity="0.2">
+	<Conversation line="Ты лучше о работе думай. Иначе окажешься там же, где твоя бутылка - в ящике." speaker="1" speakertags="professional,tough,rude">
+		<Conversation line="Ха-ха! А, кстати, давно уже в ящике никого не хоронили!" speaker="2" speakertags="laid-back,joker"/>
+	</Conversation>
+	<Conversation line="Сейчас не время горевать по дому. Впереди у нас еще долгий путь." speaker="1" speakertags="professional,tough"/>
+	<Conversation line="«Кадм» - рыбья моча. Я предпочитаю что покрепче." speaker="1" speakertags="brokenenglish"/>
+</Conversation>
+
+<Conversation line="Помню, на Земле моряки говорили..." speaker="0" allowedjobs="captain" speakertags="professional,tough" maxintensity="0.3">
+	<Conversation line="Ты либо делаешь все правильно, либо делаешь все по новой." speaker="0">
+		<Conversation line="Но здесь так не пойдет. Европа не дает второго шанса." speaker="0">
+			<Conversation line="Так что, народ, сосредоточьтесь на своей работе." speaker="0"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Меня укусила акула!" speaker="0" allowedjobs="medicaldoctor" speakertags="laid-back,joker" maxintensity="0.2">
+	<Conversation line="Когда я стоял в океане!" speaker="0">
+		<Conversation line="Док, хватит лазить в ящик со спиртом!" speaker="1">
+			<Conversation line="Ладно, ладно." speaker="0"/>
+			<Conversation line="Простите великодушно, что мне захотелось немного разрядить обстановку." speaker="0"/>
+		</Conversation>
+	</Conversation>
+	<Conversation line="Никаких песен на моем судне." speaker="1" allowedjobs="captain" speakertags="professional,tough"/>
+</Conversation>
+
+<Conversation line="Я скучаю по солнцу." speaker="0" maxintensity="0.2">
+	<Conversation line="" speaker="0" flags="Casual"/>
+	<Conversation line="Говорят, солнце вызывает рак кожи. Так что без него даже лучше." speaker="1">
+		<Conversation line="Юпитер тоже рак вызывает. Так что мне уж лучше солнце." speaker="0">
+			<Conversation line="Завязывай." speaker="2" speakertags="professional,tough"/>
+		</Conversation>
+	</Conversation>
+	<Conversation line="Завязывай." speaker="1" speakertags="professional,tough"/>
+</Conversation>
+
+<Conversation line="От этих Оболочек у меня мороз по коже." speaker="0" speakertags="fearful" maxintensity="0.2">
+	<Conversation line="" speaker="0" flags="Casual"/>
+	<Conversation line="У меня тоже. Пообещай, что, если я вдруг заражусь, ты, не раздумывая, всадишь мне гарпун в голову." speaker="1">
+		<Conversation line="Лучше я тебе укол каликсадина всажу." speaker="2" allowedjobs="medicaldoctor"/>
+		<Conversation line="По мне, так лучше каликсадин. Хотя и гарпун тоже сгодится." speaker="2" allowedjobs="medicaldoctor" speakertags="rude"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Кто-нибудь слышал что-нибудь о профсоюзах?" speaker="0" maxintensity="0.2">
+	<Conversation line="Торговля, обмен. Улучшение увеличения. Честность на честность. Монополия честности. Честность монополии. Монополия монополии." speaker="0" flags="Psychosis">
+		<Conversation line="Вечно что-то выторговывают: высокие стандарты безопасности, пенсии, пенсии, пенсии, рабочие. Ремесло. Улучшение рабочих." speaker="0" flags="Psychosis"/>
+	</Conversation>
+	<Conversation line="Это все болтовня для коммунистов. У нас есть Коалиция. Другой союз нам не нужен." speaker="1" allowedjobs="captain" speakertags="professional,tough,rude"/>
+	<Conversation line="Да, и что с того?" speaker="1">
+		<Conversation line="Думаю, нам надо создать профсоюз." speaker="0">
+			<Conversation line="Было бы неплохо повысить стандарты безопасности, увеличить зарплаты, добиться достойной пенсии..." speaker="0">
+				<Conversation line="Думаешь, ты доживешь до пенсии?" speaker="1">
+					<Conversation line="Я на это очень надеюсь." speaker="0"/>
+					<Conversation line="Справедливо." speaker="0"/>
+				</Conversation>
+				<Conversation line="Стандарты безопасности? Не пойму, профсоюзы что ли буду Молохов от нас отгонять? Или подавать тебе инструменты, пока ты устраняешь протечку?" speaker="1" speakertags="rude,tough">
+					<Conversation line="Я не это имею в виду." speaker="0"/>
+					<Conversation line="Звучит разумно." speaker="0"/>
+				</Conversation>
+			</Conversation>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Знаешь, что глубинное давление делает с телом человека?" speaker="0" speakertags="fearful" maxintensity="0.2">
+	<Conversation line="Скоро узнаешь." speaker="0" flags="Psychosis">
+		<Conversation line="Да, я с тобой говорю." speaker="0" flags="Psychosis"/>
+	</Conversation>
+	<Conversation line="Могу представить." speaker="1">
+		<Conversation line="Никак не могу выкинуть эту картину у себя из головы." speaker="0">
+			<Conversation line="Мешок с мясом и костями под гидравлическим прессом. Только так я могу это описать." speaker="0"/>
+			<Conversation line="Любящие объятия Европы." speaker="2" speakertags="crazy"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Веди ее по морю, веди ее на дно..." speaker="0" flags="Casual" speakertags="joker,laid-back" maxintensity="0.3">
+	<Conversation line="Веди ее туда, где рыбы спят давно!" speaker="0">
+		<Conversation line="Проклятое давленье сотней острых игл..." speaker="0">
+			<Conversation line="Рвет тебя на части, как Акулий тигр!" speaker="0">
+				<Conversation line="Никаких песен на моем судне." speaker="1" allowedjobs="captain" speakertags="professional,tough">
+					<Conversation line="" speaker="0"/>
+					<Conversation line="Ладно, ладно, больше не буду пытаться разрядить обстановку!" speaker="0"/>
+				</Conversation>
+				<Conversation line="На Земле же моряки поют песни! Чем мы хуже!" speaker="1"/>
+			</Conversation>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Мы уже приплыли?" speaker="0" speakertags="joker" maxintensity="0.2">
+	<Conversation line="" speaker="0" flags="Casual"/>
+	<Conversation line="Замолчи." speaker="1" speakertags="rude"/>
+	<Conversation line="Это не смешно." speaker="1"/>
+	<Conversation line="Эт нисмишно." speaker="1" speakertags="brokenenglish"/>
+</Conversation>
+
+<Conversation line="Кто-нибудь еще помнит Землю?" speaker="0" maxintensity="0.2">
+	<Conversation line="Земля, Земля, Земля. Жаль, ты больше ее не увидишь." speaker="0" flags="Psychosis"/>
+	<Conversation line="Я, конечно, стар, но не настолько." speaker="1"/>
+	<Conversation line="Мой дед был с Земли." speaker="1">
+		<Conversation line="Мне нравилось слушать его рассказы, хотя наверняка половину своих баек он выдумал." speaker="1">
+			<Conversation line="Только представь: выходишь из дома, а вокруг голубое небо." speaker="1">
+				<Conversation line="Просто невероятно." speaker="0">
+					<Conversation line="Поднимаешь глаза вверх и не боишься, что сгореть в мощном радиационном фоне газового гиганта..." speaker="2"/>
+				</Conversation>
+			</Conversation>
+			<Conversation line="Вот бы посмотреть на птиц." speaker="1">
+				<Conversation line="И на собак. И на слонов." speaker="0"/>
+				<Conversation line="И на носорогов!" speaker="2" speakertags="brokenenglish"/>
+			</Conversation>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Ты не задумываешься о том, что же произошло с теми, кто построил эти руины?" speaker="0" maxintensity="0.2">
+	<Conversation line="Бесконечные своды, скрытые в безграничной тьме ночного кошмара. Неисчислимые и ушедшие, быр, быр, быр!" speaker="0" flags="Psychosis"/>
+	<Conversation line="Я думаю, все об этом задумываются." speaker="1"/>
+	<Conversation line="Но пускай лучше этим занимаются исследователи." speaker="1">
+		<Conversation line="А у меня тут и так забот хватает." speaker="1"/>
+	</Conversation>
+	<Conversation line="Лишь бездна знает." speaker="1" speakertags="crazy"/>
+	<Conversation line="Я об этом думаю, но по мне так, правды нихто не знаит." speaker="2" speakertags="brokenenglish"/>
+</Conversation>
+
+<Conversation line="Тебе доводилось видеть эти штуковины, которые охраняют руины?" speaker="0" maxintensity="0.2">
+	<Conversation line="Да, и я жалею, что не могу этого забыть." speaker="1" speakertags="fearful"/>
+	<Conversation line="Да, в институте." speaker="1">
+		<Conversation line="Говорят, они неорганические - это скорее машина, чем животное." speaker="1">
+			<Conversation line="Крови у них точно нет." speaker="0"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Сигареты нынче такие дорогие." speaker="0" speakertags="laid-back" maxintensity="0.2">
+	<Conversation line="И не говори." speaker="1"/>
+	<Conversation line="Ну да, гидропонная ферма - штука недешевая." speaker="1">
+		<Conversation line="Логично, что на них выращивают более ценные культуры, чем табак." speaker="1"/>
+		<Conversation line="Што значит «гидрапонная»?" speaker="2" speakertags="brokenenglish">
+			<Conversation line="Значит «выращивание в воде». Здесь, вообще, нет ничего кроме воды." speaker="1"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Слышишь?" speaker="0" maxintensity="0.4">
+	<Conversation line="Что?" speaker="1">
+		<Conversation line="Как будто что-то скребется когтями по корпусу." speaker="0">
+			<Conversation line="Наверное, воображение разыгралось." speaker="0"/>
+		</Conversation>
+		<Conversation line="Какой-то гулкий рев снаружи подлодки." speaker="0">
+			<Conversation line="Люди-крабы. А вы мне не верили." speaker="1" speakertags="crazy"/>
+			<Conversation line="Да просто корпус поскрипывает. Расслабься." speaker="1"/>
+			<Conversation line="У тебя что, опять приступ метеоризма?" speaker="1" speakertags="joker"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Мне на днях в руки попала старая памятка для моряков." speaker="0" maxintensity="0.2">
+	<Conversation line="И я из-за этой странной древней терминологии многих вещей там, вообще, не пойму." speaker="0">
+		<Conversation line="Вот, например, что такое астролябия?" speaker="0">
+			<Conversation line="Представления не имею." speaker="1"/>
+			<Conversation line="Но явно это как-то связано со звездами." speaker="1"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="У тебя не бывает такого, что кажется, будто вся эта луна против нас?" speaker="0" maxintensity="0.3">
+	<Conversation line="Совсем как ты." speaker="0" flags="Psychosis">
+		<Conversation line="Да, я с тобой говорю." speaker="0" flags="Psychosis"/>
+	</Conversation>
+	<Conversation line="Ну, это, конечно, не самое дружелюбное место." speaker="1">
+		<Conversation line="Учитывая все обстоятельства, да, думаю, так оно и есть." speaker="2">
+			<Conversation line="Ты прекрасно понимаешь, о чем я говорю." speaker="1"/>
+		</Conversation>
+	</Conversation>
+	<Conversation line="Волны остановить нельзя, но можно научиться на них скользить." speaker="1"/>
+	<Conversation line="Нам тут не место - это точно." speaker="1">
+		<Conversation line="" speaker="0" flags="Casual"/>
+		<Conversation line="Что бы мы ни делали, постоянно что-то идет не так." speaker="0">
+			<Conversation line="Достаточно, это уже смахивает на какую-то сектантскую ересь." speaker="2" speakertags="professional"/>
+		</Conversation>
+		<Conversation line="Достаточно, это уже смахивает на какую-то сектантскую ересь." speaker="2" speakertags="professional"/>
+	</Conversation>
+	<Conversation line="Довольно." speaker="1" speakertags="professional,tough"/>
+</Conversation>
+
+<Conversation line="Земля в иллюминаторе, Земля в иллюминаторе..." speaker="0" speakertags="laid-back,crazy" maxintensity="0.2">
+	<Conversation line="Земля в иллюминаторе видна..." speaker="0">
+		<Conversation line="" speaker="0" flags="Casual"/>
+		<Conversation line="Если хочешь петь, ты хотя бы эфир не засоряй." speaker="1" speakertags="professional"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Как здесь паршиво!" speaker="0" speakertags="fearful">
+	<Conversation line="Я хочу домой!" speaker="0"/>
+</Conversation>
+
+<Conversation line="Мне скучно!" speaker="0" speakertags="tough" maxintensity="0.2"/>
+
+<Conversation line="Спокойное море моряка ничему не научит." speaker="0" speakertags="tough">
+	<Conversation line="Суровое море моряка погубит!" speaker="1" speakertags="brokenenglish"/>
+</Conversation>
+
+<Conversation line="Надо бы нам кофеварку здесь завести." speaker="0" speakertags="laid-back" maxintensity="0.2">
+	<Conversation line="Думаешь, я не понимаю, что ты хочешь сказать?" speaker="1" flags="PsychosisSelf">
+		<Conversation line="Кофе? Да, как же..." speaker="1" flags="PsychosisSelf">
+			<Conversation line="Скоро все это закончится." speaker="1" flags="PsychosisSelf"/>
+		</Conversation>
+	</Conversation>
+	<Conversation line="Соглашусь." speaker="1"/>
+	<Conversation line="Я не пью кофе." speaker="1"/>
+	<Conversation line="" speaker="0"/>
+</Conversation>
+
+<Conversation line="Мне довелось на днях увидеть ползуна. Жуткие твари." speaker="0" speakertags="joker,crazy" maxintensity="0.2"/>
+
+<Conversation line="Дай человеку рыбу, и он будет сыт один день;" speaker="0" speakertags="joker" maxintensity="0.4">
+	<Conversation line="Дай рыбе человека, и она будет сыта один день." speaker="0" flags="Psychosis">
+		<Conversation line="Дай рыбе день, и человек будет сыт." speaker="0" flags="Psychosis">
+			<Conversation line="Дай рыбе." speaker="0" flags="Psychosis">
+				<Conversation line="Дай рыбу." speaker="0" flags="Psychosis">
+					<Conversation line="Дай рыбу рыбе." speaker="0" flags="Psychosis">
+						<Conversation line="Нет!" speaker="1" flags="PsychosisSelf"/>
+					</Conversation>
+				</Conversation>
+			</Conversation>
+		</Conversation>
+	</Conversation>
+	<Conversation line="Научи его ловить рыбу, и он, скорее всего, погибнет от жуткого несчастного случая." speaker="0" speakertags="joker">
+		<Conversation line="По-моему, там как-то по-другому было." speaker="1">
+			<Conversation line="К сожалению, у нас все может быть только так." speaker="0"/>
+		</Conversation>
+		<Conversation line="Хватит шутить." speaker="0" speakertags="professional,rude"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Знаешь, мне на днях пришла отличная предпринимательская идея." speaker="0" speakertags="joker,laid-back" maxintensity="0.2">
+	<Conversation line="Одна идея на несколько дней." speaker="0" flags="Psychosis">
+		<Conversation line="Только одна - и ни единой больше." speaker="0" flags="Psychosis"/>
+	</Conversation>
+	<Conversation line="Вот послушай. Мы станем богачами." speaker="0">
+		<Conversation line="Что если кто-то начнет делать кислородные баллоны большего размера?" speaker="0">
+			<Conversation line="Чтобы воздуха хватало на час или даже на два?" speaker="0">
+				<Conversation line="Я, конечно, не эксперт, но, думаю, технически это выполнимо." speaker="0">
+					<Conversation line="Эй, а, может, все-таки займемся делом? У нас тут работы хватает." speaker="1" speakertags="professional"/>
+					<Conversation line="Даже не знаю... Я думаю, тут все не так просто. Иначе бы их уже давно начали производить." speaker="1"/>
+					<Conversation line="Класная идея!" speaker="1" speakertags="brokenenglish">
+						<Conversation line="Эй, а, может, все-таки займемся делом? У нас тут работы хватает." speaker="2" speakertags="professional"/>
+					</Conversation>
+				</Conversation>
+			</Conversation>
+		</Conversation>
+		<Conversation line="Водонепроницаемые кабельные коробки!" speaker="0">
+			<Conversation line="Гениально, да?" speaker="0">
+				<Conversation line="Эй, а, может, все-таки займемся делом? У нас тут работы хватает." speaker="1" speakertags="professional"/>
+				<Conversation line="Не просто же так в них оставляют крохотные вентиляционные отверстия. Они для чего-то нужны." speaker="1">
+					<Conversation line="Иначе бы их давно сделали водонепроницаемыми." speaker="1"/>
+				</Conversation>
+				<Conversation line="Класная идея!" speaker="1" speakertags="brokenenglish">
+					<Conversation line="Эй, а, может, все-таки займемся делом? У нас тут работы хватает." speaker="2" speakertags="professional"/>
+				</Conversation>
+			</Conversation>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Здесь ужасно тихо." speaker="0" maxintensity="0.3">
+	<Conversation line="А-А-А-А-А-А-А-А-А-А-А-А-А-А-А-А-А-А-А!" speaker="0" flags="Psychosis">
+		<Conversation line="А-А-А-А-А-А-А-А-А-А-А-А-А-А-А-А-А-А-А!" speaker="0" flags="Psychosis">
+			<Conversation line="А-А-А-А-А-А-А-А-А-А-А-А-А-А-А-А-А-А-А!" speaker="0" flags="Psychosis"/>
+		</Conversation>
+	</Conversation>
+	<Conversation line="У меня наушник, вообще, работает?" speaker="0">
+		<Conversation line="Работает. Пожалуйста, не засоряй эфир." speaker="1" speakertags="professional"/>
+		<Conversation line="Слышу тебя четко и ясно." speaker="1"/>
+		<Conversation line="Да тибя слышна!" speaker="1" speakertags="brokenenglish"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Проверка связи." speaker="0" speakertags="professional" maxintensity="0.3">
+	<Conversation line="Проверка связи." speaker="1" flags="PsychosisSelf">
+		<Conversation line="Связь проверки." speaker="1" flags="PsychosisSelf">
+			<Conversation line="Связывание. Сковывание." speaker="1" flags="PsychosisSelf">
+				<Conversation line="Связь!" speaker="1" flags="PsychosisSelf">
+					<Conversation line="Связь." speaker="1" flags="PsychosisSelf"/>
+				</Conversation>
+			</Conversation>
+		</Conversation>
+	</Conversation>
+	<Conversation line="Четко и ясно." speaker="1" speakertags="professional"/>
+	<Conversation line="Есть контакт." speaker="1" speakertags="professional"/>
+	<Conversation line="Все хорошо!" speaker="1"/>
+	<Conversation line="Да тибя слышна!" speaker="1" speakertags="brokenenglish"/>
+</Conversation>
+
+<Conversation line="Слышишь, как поют люди-крабы?" speaker="0" speakertags="crazy" maxintensity="0.2">
+	<Conversation line="" speaker="0"/>
+	<Conversation line="Нет." speaker="1"/>
+	<Conversation line="Последний раз говорю: нет никаких людей-крабов." speaker="1"/>
+</Conversation>
+
+<Conversation line="Внутрь." speaker="0" speakertags="crazy" maxintensity="0.2">
+	<Conversation line="Нырять глубже? Нет, нырять внутрь." speaker="0" speakertags="crazy" maxintensity="0.2">
+		<Conversation line="" speaker="0"/>
+		<Conversation line="Что за каша у тебя в голове?" speaker="1" speakertags="rude"/>
+		<Conversation line="Я не понимаю." speaker="1" speakertags="brokenenglish"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Видит ли Бог, что происходит под толщей льда?" speaker="0" speakertags="crazy" maxintensity="0.2">
+	<Conversation line="Видит ли это Юпитер?" speaker="0" speakertags="crazy">
+		<Conversation line="" speaker="0"/>
+		<Conversation line="Что за бред." speaker="1"/>
+	</Conversation>
+	<Conversation line="Или, быть может, это бездна? Бездна видит все." speaker="0" speakertags="crazy">
+		<Conversation line="В одном культ прав - там внизу что-то есть." speaker="0" speakertags="crazy">
+			<Conversation line="" speaker="0"/>
+			<Conversation line="Брось." speaker="1"/>
+			<Conversation line="Все может быть." speaker="1">
+				<Conversation line="Но сейчас у нас есть заботы поважнее." speaker="1"/>
+			</Conversation>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Иногда мне кажется, что мы просто марионетки на ниточках." speaker="0" speakertags="crazy" maxintensity="0.3">
+	<Conversation line="Пляшем и умираем на потеху неведомой сущности, притаившейся где-то за занавесом." speaker="0">
+		<Conversation line="" speaker="1"/>
+		<Conversation line="Попрошу на моем судне обойтись без танцев и смерти." speaker="1" allowedjobs="captain"/>
+		<Conversation line="На мой вкус, так себе потеха." speaker="1" speakertags="professional"/>
+		<Conversation line="Ох." speaker="1"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Сейчас нас потрясет как следует." speaker="0" minintensity="0.3" maxintensity="0.5"/>
+
+<Conversation line="Обстановка накаляется." speaker="0" minintensity="0.3" maxintensity="0.6"/>
+
+<Conversation line="Мы справимся." speaker="0" minintensity="0.3"/>
+
+<Conversation line="Наконец-то, хоть что-то интересное!" speaker="0" speakertags="tough" minintensity="0.3"/>
+
+<Conversation line="Яви нам свою силу!" speaker="0" speakertags="crazy" minintensity="0.3" maxintensity="0.6"/>
+
+<Conversation line="Ой-ой." speaker="0" minintensity="0.5"/>
+
+<Conversation line="Пустяки!" speaker="0" speakertags="tough" minintensity="0.5"/>
+
+<Conversation line="Как быстро все переменилось." speaker="0" minintensity="0.5"/>
+
+<Conversation line="Плоха!" speaker="0" speakertags="brokenenglish" minintensity="0.5"/>
+
+<Conversation line="Нихарашо!" speaker="0" speakertags="brokenenglish" minintensity="0.5"/>
+
+<Conversation line="Иди служить на флот, говорили они! Будет весело, говорили они!" speaker="0" speakertags="joker" minintensity="0.5"/>
+
+<Conversation line="Когда все закончится, надо будет выпить!" speaker="0" speakertags="joker,laid-back" minintensity="0.5"/>
+
+<Conversation line="Ладно, народ, покажите мне, из какого вы теста!" speaker="0" allowedjobs="captain" speakertags="professional,tough,laid-back" minintensity="0.5"/>
+
+<Conversation line="Радоваться пока рано!" speaker="0" allowedjobs="captain" minintensity="0.5"/>
+
+<Conversation line="Я не хочу умирать!" speaker="0" speakertags="fearful" minintensity="0.6"/>
+
+<Conversation line="Надо было в ботаники идти!" speaker="0" speakertags="joker" minintensity="0.6"/>
+
+<Conversation line="Держитесь, ребята! Нам это по плечу!" speaker="0" speakertags="tough" minintensity="0.6">
+	<Conversation line="Думаешь?" speaker="1" speakertags="fearful"/>
+</Conversation>
+
+<Conversation line="Меня тошнит от этого дерьма!" speaker="0" speakertags="rude" minintensity="0.6"/>
+
+<Conversation line="Если я не выживу, передайте мамуле, что я ее люблю!" speaker="0" speakertags="fearful" minintensity="0.6">
+	<Conversation line="Заткнись, на хрен!" speaker="1" speakertags="rude"/>
+	<Conversation line="Перестань! Ты выживешь!" speaker="1" speakertags="professional"/>
+</Conversation>
+
+<Conversation line="Если останусь в живых, подам в отставку!" speaker="0" speakertags="joker,laid-back" minintensity="0.6"/>
+
+<Conversation line="Вот так жизни и обрываются. Зато бездна утолит свою жажду..." speaker="0" speakertags="crazy" minintensity="0.7"/>
+
+<Conversation line="На этот раз нам хана." speaker="0" speakertags="rude" minintensity="0.8"/>
+
+<Conversation line="Господи." speaker="0" minintensity="0.8"/>
+
+<Conversation line="Ну и ну." speaker="0" speakertags="joker" minintensity="0.8"/>
+
+<Conversation line="Ребята, для меня была честь - служить с вами." speaker="0" speakertags="professional" minintensity="0.8"/>
+
+<Conversation line="Мне всегда не по себе, когда мы спускаемся на такую глубину." speaker="0" flags="SubmarineDeep">
+	<Conversation line="" speaker="0" flags="Casual"/>
+	<Conversation line="Все будет в порядке. Эта крошка и глубже спускалась." speaker="1" speakertags="tough"/>
+</Conversation>
+
+<Conversation line="Страшна, когда так глубако." speaker="0" flags="SubmarineDeep" speakertags="brokenenglish">
+	<Conversation line="" speaker="0" flags="Casual"/>
+	<Conversation line="Вот и моя жена так говорит." speaker="1" speakertags="joker"/>
+	<Conversation line="Все будет в порядке. Эта крошка и глубже спускалась." speaker="1" speakertags="tough"/>
+</Conversation>
+
+<Conversation line="Слышишь, как корпус гудит? Это точно безопасно?" speaker="0" flags="SubmarineDeep" speakertags="fearful">
+	<Conversation line="Если ты так боишься за свою жизнь, на флот тебе идти не стоило." speaker="1" speakertags="tough,rude"/>
+	<Conversation line="Прорвемся. Эта крошка и глубже спускалась." speaker="1" speakertags="tough"/>
+	<Conversation line="Все будет в порядке. Но сварочный аппарат лучше держать наготове." speaker="1"/>
+</Conversation>
+
+<!-- Afflictions -->
+<Conversation line="У меня голова кружится." speaker="0" flags="Bloodloss"/>
+
+<Conversation line="Что-то мне нехорошо." speaker="0" flags="Bloodloss"/>
+
+<Conversation line="Кажется, мне нужна плазма крови." speaker="0" flags="Bloodloss"/>
+
+<Conversation line="Ик." speaker="0" flags="DrunkMedium"/>
+
+<Conversation line="Я нечасто это говорю, но вы, ребята, такие классные." speaker="0" flags="DrunkMedium">
+	<Conversation line="О лучше команде и мечтать нельзя!" speaker="0" flags="DrunkMedium">
+		<Conversation line="Да ты в стельку!" speaker="1" flags="DrunkMedium">
+			<Conversation line="Расслабься, все хо-о-орошо!" speaker="2" flags="DrunkMedium"/>
+			<Conversation line="Нет, конечно. Мне только горло удалось промочить." speaker="0" flags="DrunkMedium"/>
+			<Conversation line="Что?! Я просто хочу сказать, как сильно я вас всех ценю и уважаю!" speaker="0" flags="DrunkMedium"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Хе-хе..." speaker="0" flags="DrunkMedium"/>
+
+<Conversation line="Пслушай мня... Мы... Мы с тобой выбермся отсюда!" speaker="0" flags="DrunkMedium" minintensity="0.5"/>
+
+<Conversation line="Мне бы надо... Прилечь..." speaker="0" flags="DrunkHigh">
+	<Conversation line="Елки-палки. Не подходи ко мне, пока не протрезвеешь." speaker="1" speakertags="professional,tough,rude"/>
+	<Conversation line="" speaker="0"/>
+</Conversation>
+
+<Conversation line="Что же нам делать с пьяным матросом, что же нам делать с пьяным матросом..." speaker="0" flags="DrunkHigh">
+	<Conversation line="Ранним-ранним утром!" speaker="0" flags="DrunkHigh">
+		<Conversation line="Ты не в состоянии исполнять свои обязанности. Когда ты протрезвеешь, нас ждет серьезный разговор." speaker="1" allowedjobs="captain" speakertags="professional,tough,rude">
+			<Conversation line="Да не, все впарядке!" speaker="0" flags="DrunkHigh"/>
+		</Conversation>
+		<Conversation line="Вижу, у кого-то хорошее настроение!" speaker="1" speakertags="joker"/>
+		<Conversation line="Елки-палки. Не подходи ко мне, пока не протрезвеешь." speaker="1" speakertags="professional,tough,rude"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Чего это лодку так болта-а-ает?" speaker="0" flags="DrunkHigh">
+	<Conversation line="По-моему, это просто тебя ноги не держат." speaker="1"/>
+	<Conversation line="Соберись!" speaker="1"/>
+	<Conversation line="" speaker="0"/>
+</Conversation>
+
+<Conversation line="Что-то мне нехорошо." speaker="0" flags="OpiateWithdrawalLow"/>
+
+<Conversation line="Меня тошнит..." speaker="0" flags="OpiateWithdrawalLow"/>
+
+<Conversation line="Так нога разболелась. Можно мне морфина?" speaker="0" flags="OpiateWithdrawalMedium">
+	<Conversation line="С ногой у тебя все в порядке. А вот с морфином пора завязывать." speaker="1" allowedjobs="medicaldoctor"/>
+	<Conversation line="С ногой у тебя все в порядке. Наркоша." speaker="1" speakertags="rude"/>
+</Conversation>
+
+<Conversation line="У меня получится." speaker="0" flags="OpiateWithdrawalMedium"/>
+
+<Conversation line="Кажется, меня сейчас вырвет." speaker="0" flags="OpiateWithdrawalMedium"/>
+
+<Conversation line="Мне здесь не место. Я хочу домой." speaker="0" flags="OpiateWithdrawalMedium"/>
+
+<Conversation line="Кажется, я умираю. Я справлюсь!" speaker="0" flags="OpiateWithdrawalHigh">
+	<Conversation line="Думаю, тебе лучше принять налоксон." speaker="1" allowedjobs="medicaldoctor"/>
+	<Conversation line="Завязывай." speaker="1" speakertags="rude"/>
+	<Conversation line="" speaker="0"/>
+</Conversation>
+
+<Conversation line="Нелегко найти черную кошку в темной комнате." speaker="0" flags="Psychosis">
+	<Conversation line="Но она там есть - вон она сидит." speaker="0">
+		<Conversation line="Это слишком опасно. Посмотри, какие у нее зубы. Рано или поздно она кого-то убьет." speaker="0">
+			<Conversation line="Если мы ее не опередим." speaker="1"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Отсюда надо выбираться." speaker="0" flags="PsychosisSelf">
+	<Conversation line="Сейчас же." speaker="0" flags="PsychosisSelf"/>
+</Conversation>
+
+<Conversation line="Аптайся наследник и создатель, загадки зигачут истово хлыстают мы они его но больше нет." speaker="0" flags="Psychosis">
+	<Conversation line="Прислушайся, это не метафора." speaker="0" flags="Psychosis">
+		<Conversation line="Нукец близок, воля лож, три ее, но не тронь." speaker="0" flags="Psychosis"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Реальтность; но однажды, складывая кусочки, создать любую реальность, какую захочешь." speaker="0" flags="Psychosis">
+	<Conversation line="Безопаснее открывшегося знания." speaker="0" flags="Psychosis">
+		<Conversation line="Мы живем в день будущего и прошлого, собственный путь, бегство от неспособности." speaker="0" flags="Psychosis"/>
+		<Conversation line="И главное в пустых морях пустые знания откроют ужасы, которые призовут нас." speaker="0" flags="Psychosis"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="БУМ! И мы посмотрели." speaker="0" flags="Psychosis">
+	<Conversation line="И наша рыба спустилась. Вместе с кораблем." speaker="0" flags="Psychosis">
+		<Conversation line="Ни капельки! Нашу рыбу он позвал, и наша рыба явилась." speaker="0" flags="Psychosis">
+			<Conversation line="Ни капельки! Мне это не нравится ни капельки. Нет." speaker="0" flags="Psychosis"/>
+			<Conversation line="Нет, этого так быть не должно, - сказала рыба." speaker="0" flags="Psychosis">
+				<Conversation line="Но это неправильно, и ты это знаешь." speaker="1" flags="Psychosis"/>
+			</Conversation>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Где, черт побери, морфин?" speaker="0" flags="OpiateWithdrawalHigh">
+	<Conversation line="Тебе он больше не нужен. Тебе надо принять налоксон." speaker="1" allowedjobs="medicaldoctor"/>
+	<Conversation line="Надеюсь, там, где ты его не найдешь." speaker="1" speakertags="rude"/>
+	<Conversation line="В чем дело? Тебе нехорошо?" speaker="1">
+		<Conversation line="Я сейчас подохну, мать твою. Мне нужна доза." speaker="0"/>
+		<Conversation line="Мышцы сводит. Сердце вот-вот из груди выскочит! Я так больше не могу!" speaker="0"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Меня ранили! Мне нужны бинты!" speaker="0" flags="GunshotWound"/>
+
+<Conversation line="На помощь, меня ранили!" speaker="0" flags="GunshotWound"/>
+
+<!-- Outpost Watchmen -->
+<Conversation line="Привет, моряки!" speaker="0" flags="EnterEndOutpost" allowedjobs="watchman">
+	<Conversation line="Строительство аванпоста еще не завершено, заглядывайте через несколько месяцев!" speaker="0">
+		<Conversation line="Хотя я могу показать вам каталог припасов, которые можно у нас купить. А еще у нас есть люди, которые ищут работу." speaker="0">
+			<Conversation line="Как будете готовы, я могу дать вам пару советов по навигации в этом районе." speaker="0"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Всегда приятно видеть знакомое лицо! У нас тут гости нечасто бывают." speaker="0" flags="EnterEndOutpost" allowedjobs="watchman">
+	<Conversation line="Строительство аванпоста еще не завершено, заглядывайте через несколько месяцев!" speaker="0">
+		<Conversation line="Но если вам нужны припасы или работники, дайте знать." speaker="0">
+			<Conversation line="А как будете готовы, я могу дать вам пару советов по навигации в этом районе." speaker="0"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Уже уходите?" speaker="0" flags="EnterStartOutpost" allowedjobs="watchman">
+	<Conversation line="Если понадобятся припасы или новые члены экипажа... Или если захотите узнать, как добраться до того или иного места, дайте знать." speaker="0"/>
+</Conversation>
+
+<Conversation line="Чем могу помочь?" speaker="0" flags="WatchmanInteract" allowedjobs="watchman"/>
+
+<Conversation line="Чего изволите?" speaker="0" flags="WatchmanInteract" allowedjobs="watchman"/>
+
+<Conversation line="Ладно, займемся делом. У меня еще полно работы." speaker="0" flags="WatchmanInteract" allowedjobs="watchman"/>
+
+<Conversation line="Простите, мне нужно поговорить с вышестоящим офицером. У вас в команде есть человек, уполномоченный руководить кампанией?" speaker="0" flags="WatchmanInteractNotAllowed" allowedjobs="watchman"/>
+
+<Conversation line="Я не могу вас впустить, пока вы не выполнили стыковку по всем правилам. Хотя бы подойдите ближе к аванпосту." speaker="0" flags="WatchmanInteractNoLeavingSub" allowedjobs="watchman"/>
+
+<Conversation line="Хотите оставить свою подлодку здесь? Пожалуйста, подведите ее ближе к аванпосту." speaker="0" flags="WatchmanInteractNoLeavingSub" allowedjobs="watchman"/>
+
+<!-- Changed values -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- New additions -->
+
+</Conversations>

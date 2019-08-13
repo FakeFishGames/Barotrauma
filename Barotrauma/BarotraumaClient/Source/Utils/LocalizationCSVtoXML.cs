@@ -17,8 +17,8 @@ namespace Barotrauma
         private const string infoTextPath = "Content/Texts";
         private const string xmlHeader = "<?xml version=\"1.0\" encoding=\"utf-8\"?>";
 
-        private static string[,] translatedLanguageNames = new string[7, 2] { { "english", "English" }, { "french", "Français" }, { "german", "Deutsch" }, 
-            { "russian", "Русский" }, { "brazilianportuguese", "Português brasileiro" }, { "simplifiedchinese", "中文(简体)" }, { "traditionalchinese", "中文(繁體)" } };
+        private static string[,] translatedLanguageNames = new string[7, 2] { { "English", "English" }, { "French", "Français" }, { "German", "Deutsch" }, 
+            { "Russian", "Русский" }, { "Brazilian Portuguese", "Português brasileiro" }, { "Simplified Chinese", "中文(简体)" }, { "Traditional Chinese", "中文(繁體)" } };
 
         public static void Convert()
         {
@@ -34,13 +34,14 @@ namespace Barotrauma
             for (int i = 0; i < translatedLanguageNames.Length; i++)
             {
                 string language = translatedLanguageNames[i, 0];
+                string languageNoWhitespace = language.RemoveWhitespace();
 
-                foreach (string filePath in Directory.GetFiles(conversationsPath + $"/{language}", "*.csv", SearchOption.AllDirectories))
+                foreach (string filePath in Directory.GetFiles(conversationsPath + $"/{languageNoWhitespace}", "*.csv", SearchOption.AllDirectories))
                 {
                     conversationFiles.Add(filePath);
                 }
 
-                foreach (string filePath in Directory.GetFiles(infoTextPath + $"/{language}", "*.csv", SearchOption.AllDirectories))
+                foreach (string filePath in Directory.GetFiles(infoTextPath + $"/{languageNoWhitespace}", "*.csv", SearchOption.AllDirectories))
                 {
                     infoTextFiles.Add(filePath);
                 }
@@ -53,7 +54,7 @@ namespace Barotrauma
                         DebugConsole.ThrowError("NPCConversation Localization .csv to .xml conversion failed for: " + conversationFiles[j]);
                         continue;
                     }
-                    string xmlFileFullPath = $"{conversationsPath}/{language}/NpcConversations_{language}_NEW.xml";
+                    string xmlFileFullPath = $"{conversationsPath}/{languageNoWhitespace}/NpcConversations_{languageNoWhitespace}_NEW.xml";
                     File.WriteAllLines(xmlFileFullPath, xmlContent);
                     DebugConsole.NewMessage("Conversation localization .xml file successfully created at: " + xmlFileFullPath);
                 }
@@ -66,7 +67,7 @@ namespace Barotrauma
                         DebugConsole.ThrowError("InfoText Localization .csv to .xml conversion failed for: " + infoTextFiles[j]);
                         continue;
                     }
-                    string xmlFileFullPath = $"{infoTextPath}/{language}/{language}Vanilla_NEW.xml";
+                    string xmlFileFullPath = $"{infoTextPath}/{languageNoWhitespace}/{languageNoWhitespace}Vanilla_NEW.xml";
                     File.WriteAllLines(xmlFileFullPath, xmlContent);
                     DebugConsole.NewMessage("InfoText localization .xml file successfully created at: " + xmlFileFullPath);
                 }
@@ -86,15 +87,10 @@ namespace Barotrauma
             List<string> xmlContent = new List<string>();
             xmlContent.Add(xmlHeader);
 
-            bool nowhitespace = false;
+            string translatedName = GetTranslatedName(language);
+            bool nowhitespace = TextManager.IsCJK(translatedName);
 
-            for (int i = 0; i < csvContent.Length; i++)
-            {
-                nowhitespace = TextManager.IsCJK(csvContent[i]);
-                if (nowhitespace) break;
-            }
-
-            xmlContent.Add($"<infotexts language=\"{language}\" nowhitespace=\"{nowhitespace}\" translatedname=\"{GetTranslatedName(language)}\">");
+            xmlContent.Add($"<infotexts language=\"{language}\" nowhitespace=\"{nowhitespace}\" translatedname=\"{translatedName}\">");
 
             for (int i = 1; i < csvContent.Length; i++) // Start at one to ignore header
             {
@@ -148,13 +144,8 @@ namespace Barotrauma
             List<string> xmlContent = new List<string>();
             xmlContent.Add(xmlHeader);
 
-            bool nowhitespace = false;
-
-            for (int i = 0; i < csvContent.Length; i++)
-            {
-                nowhitespace = TextManager.IsCJK(csvContent[i]);
-                if (nowhitespace) break;
-            }
+            string translatedName = GetTranslatedName(language);
+            bool nowhitespace = TextManager.IsCJK(translatedName);
 
             xmlContent.Add($"<Conversations identifier=\"vanillaconversations\" Language=\"{language}\" nowhitespace=\"{nowhitespace}\">");
             xmlContent.Add(string.Empty);
