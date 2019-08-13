@@ -40,6 +40,18 @@ namespace Barotrauma
             get { return name; }
         }
 
+        public string GetItemNameTextId()
+        {
+            var textId = $"entityname.{Identifier}";
+            return TextManager.Get(textId) != null ? textId : null;
+        }
+
+        public string GetHullNameTextId()
+        {
+            var textId = $"roomname.{Identifier}";
+            return TextManager.Get(textId) != null ? textId : null;
+        }
+
         //Used to differentiate between items when saving/loading
         //Allows changing the name of an item without breaking existing subs or having multiple items with the same name
         public string Identifier

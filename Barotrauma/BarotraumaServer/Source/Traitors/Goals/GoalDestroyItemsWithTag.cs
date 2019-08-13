@@ -52,8 +52,8 @@ namespace Barotrauma
                     var identifierMatches = matchIdentifier && item.prefab.Identifier == tag;
                     if (identifierMatches && tagPrefabName == null)
                     {
-                        var textId = $"entityname.{tag}";
-                        tagPrefabName = TextManager.Get(textId) != null ? textId : tag;
+                        var textId = item.Prefab.GetNameTextId();
+                        tagPrefabName = textId != null ? TextManager.FormatServerMessage(textId) : item.Prefab.Name;
                     }
                     if (identifierMatches || (matchTag && item.HasTag(tag)))
                     {

@@ -12,12 +12,13 @@ namespace Barotrauma
             private readonly float conditionThreshold;
 
             public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[tag]", "[target]", "[threshold]" });
-            public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { tag, targetItems[0].prefab.Name, string.Format("{0:0}", conditionThreshold) });
+            public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { tag, targetItemPrefabName, string.Format("{0:0}", conditionThreshold) });
 
             private bool isCompleted = false;
             public override bool IsCompleted => isCompleted;
 
             private readonly List<Item> targetItems = new List<Item>();
+            private string targetItemPrefabName = null;
 
             public override bool Start(Traitor traitor)
             {
@@ -35,6 +36,11 @@ namespace Barotrauma
                     {
                         targetItems.Add(item);
                     }
+                }
+                if (targetItems.Count > 0)
+                {
+                    var textId = targetItems[0].Prefab.GetNameTextId();
+                    targetItemPrefabName = TextManager.FormatServerMessage(textId) ?? targetItems[0].Prefab.Name;
                 }
                 return targetItems.Count > 0;
             }
