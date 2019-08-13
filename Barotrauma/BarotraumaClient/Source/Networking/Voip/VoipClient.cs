@@ -113,14 +113,19 @@ namespace Barotrauma.Networking
                         client.VoipSound.UseMuffleFilter = SoundPlayer.ShouldMuffleSound(Character.Controlled, client.Character.WorldPosition, ChatMessage.SpeakRange, client.Character.CurrentHull);
                     }
                 }
+
                 GameMain.NetLobbyScreen.SetPlayerSpeaking(client);
                 GameMain.GameSession?.CrewManager?.SetClientSpeaking(client);
-                Vector3 clientPos = new Vector3(client.Character.WorldPosition.X, client.Character.WorldPosition.Y, 0.0f);
-                Vector3 listenerPos = GameMain.SoundManager.ListenerPosition;
-                float attenuationDist = client.VoipSound.Near*1.125f;
-                if (Vector3.DistanceSquared(clientPos,listenerPos)< attenuationDist*attenuationDist)
+
+                if (client.Character != null)
                 {
-                    GameMain.SoundManager.VoipAttenuatedGain = 0.2f;
+                    Vector3 clientPos = new Vector3(client.Character.WorldPosition.X, client.Character.WorldPosition.Y, 0.0f);
+                    Vector3 listenerPos = GameMain.SoundManager.ListenerPosition;
+                    float attenuationDist = client.VoipSound.Near * 1.125f;
+                    if (Vector3.DistanceSquared(clientPos, listenerPos) < attenuationDist * attenuationDist)
+                    {
+                        GameMain.SoundManager.VoipAttenuatedGain = 0.2f;
+                    }
                 }
             }
         }
