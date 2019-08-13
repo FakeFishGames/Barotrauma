@@ -49,13 +49,14 @@ namespace Barotrauma {
             private delegate bool TargetFilter(string value, Character character);
             private static Dictionary<string, TargetFilter> targetFilters = new Dictionary<string, TargetFilter>()
             {
-                { "job", (value, character) => value.Equals(character.Info.Job.Name, StringComparison.OrdinalIgnoreCase) },
+                { "job", (value, character) => value.Equals(character.Info.Job.Prefab.Identifier, StringComparison.OrdinalIgnoreCase) },
             };
 
             public Traitor.Goal Instantiate()
             {
                 Traitor.Goal goal = null;
-                switch (Config.GetAttributeString("type", "").ToLowerInvariant()) {
+                switch (Config.GetAttributeString("type", "").ToLowerInvariant())
+                {
                     case "killtarget":
                         {
                             List<Traitor.TraitorMission.CharacterFilter> filters = new List<Traitor.TraitorMission.CharacterFilter>();
