@@ -272,8 +272,6 @@ namespace Barotrauma.Items.Components
                             SkillIncreasePerSabotage / Math.Max(characterSkillLevel, 1.0f),
                             CurrentFixer.WorldPosition + Vector2.UnitY * 100.0f);
                     }
-                    // TODO(xxx): Sabotage achievements on steam?
-                    // SteamAchievementManager.OnItemSabotaged(item, currentFixer);
                     deteriorationTimer = 0.0f;
                     deteriorateAlwaysResetTimer = item.Condition / DeteriorationSpeed;
                     DeteriorateAlways = true;

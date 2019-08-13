@@ -14,6 +14,14 @@ namespace Barotrauma.Items.Components
         {
             if (c.Character == null) return;
             var fixAction = (FixActions)msg.ReadRangedInteger(0, 2);
+            if (!c.Character.IsTraitor && fixAction == FixActions.Sabotage)
+            {
+                if (GameSettings.VerboseLogging)
+                {
+                    DebugConsole.Log($"Non traitor \"{c.Character.Name}\" attempted to sabotage item.");
+                }
+                fixAction = FixActions.Repair;
+            }
             StartRepairing(c.Character, fixAction);
         }
 

@@ -39,7 +39,7 @@ namespace Barotrauma
                 }
                 if (targetItems.Count > 0)
                 {
-                    var textId = targetItems[0].Prefab.GetNameTextId();
+                    var textId = targetItems[0].Prefab.GetItemNameTextId();
                     targetItemPrefabName = TextManager.FormatServerMessage(textId) ?? targetItems[0].Prefab.Name;
                 }
                 return targetItems.Count > 0;
