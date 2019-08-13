@@ -3501,7 +3501,7 @@
   <flood_2_traitorobjectivestartmessage4>Quickly, capitalize on the confusion and take out the worst of those pigs while you can!\n[traitorgoalinfos]</flood_2_traitorobjectivestartmessage4>
   <flood_2_objectivesuccessmessage4>As you take their life you note, perhaps with a little bitterness, that your receiver has gone dead quite suddenly. Your comrades have left you to the mercy of Mother Europa.</flood_2_objectivesuccessmessage4>
 
-<!-- NEW ADDITIONS -->
+  <!-- NEW ADDITIONS -->
   <voipattenuation>Voice chat attenuation</voipattenuation>
   <voipattenuationtooltip>Lowers the game's volume when players are speaking.</voipattenuationtooltip>
 </infotexts>
