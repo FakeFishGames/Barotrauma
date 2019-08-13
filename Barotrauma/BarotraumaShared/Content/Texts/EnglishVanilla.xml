@@ -2952,6 +2952,7 @@
   <charactereditor.showparameters>Parameters</charactereditor.showparameters>
   <charactereditor.showspritesheet>Spritesheet</charactereditor.showspritesheet>
   <charactereditor.drawskeleton>Skeleton</charactereditor.drawskeleton>
+  <charactereditor.enablelights>Lights</charactereditor.enablelights>
   <charactereditor.drawdamagemodifiers>Damage Modifiers</charactereditor.drawdamagemodifiers>
   <charactereditor.editcharacter>CHARACTER</charactereditor.editcharacter>
   <charactereditor.editanimations>ANIMATIONS</charactereditor.editanimations>

@@ -1532,6 +1532,7 @@ namespace Barotrauma
         private GUITickBox jointsToggle;
         private GUITickBox spritesheetToggle;
         private GUITickBox skeletonToggle;
+        private GUITickBox lightsToggle;
         private GUITickBox damageModifiersToggle;
         private GUITickBox ikToggle;
 
@@ -1643,6 +1644,12 @@ namespace Barotrauma
             skeletonToggle.OnSelected = box =>
             {
                 drawSkeleton = box.Selected;
+                return true;
+            };
+            lightsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("EnableLights")) { Selected = GameMain.LightManager.LightingEnabled };
+            lightsToggle.OnSelected = box =>
+            {
+                GameMain.LightManager.LightingEnabled = box.Selected;
                 return true;
             };
             damageModifiersToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("DrawDamageModifiers")) { Selected = drawDamageModifiers };
