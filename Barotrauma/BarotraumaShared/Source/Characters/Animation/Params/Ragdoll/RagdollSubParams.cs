@@ -79,8 +79,8 @@ namespace Barotrauma
         public readonly SpriteParams damagedSpriteParams;
         public readonly SpriteParams deformSpriteParams;
 
-        // TODO: support for multiple attacks?
         public LimbAttackParams Attack { get; private set; }
+        public LimbSoundParams Sound { get; private set; }
         public List<DamageModifierParams> DamageModifiers { get; private set; } = new List<DamageModifierParams>();
 
         private string name;
@@ -200,7 +200,8 @@ namespace Barotrauma
             }
             foreach (var soundElement in element.GetChildElements("sound"))
             {
-                SubParams.Add(new LimbSoundParams(soundElement, ragdoll));
+                Sound = new LimbSoundParams(soundElement, ragdoll);
+                SubParams.Add(Sound);
             }
         }
 
@@ -250,6 +251,25 @@ namespace Barotrauma
             var last = DamageModifiers.LastOrDefault();
             if (last == null) { return false; }
             return RemoveDamageModifier(last);
+        }
+
+        public bool AddSound()
+        {
+            if (Sound != null) { return false; }
+            var element = new XElement("sound");
+            Element.Add(element);
+            Sound = new LimbSoundParams(element, Ragdoll);
+            SubParams.Add(Sound);
+            return Sound != null;
+        }
+
+        public bool RemoveSound()
+        {
+            if (Sound == null) { return false; }
+            Sound.Element.Remove();
+            SubParams.Remove(Sound);
+            Sound = null;
+            return Sound == null;
         }
     }
 
@@ -540,12 +560,12 @@ namespace Barotrauma
             {
                 foreach (var deformation in spriteParams.Deformation.Deformations.Keys)
                 {
-                    new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, deformation, inGame: false, showName: true);
+                    new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, deformation, inGame: false, showName: true, titleFont: GUI.LargeFont);
                 }
             }
             if (this is LimbAttackParams attackParams)
             {
-                SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, attackParams.Attack, inGame: false, showName: true);
+                SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, attackParams.Attack, inGame: false, showName: true, titleFont: GUI.LargeFont);
                 AfflictionEditors.Clear();
                 foreach (var affliction in attackParams.Attack.Afflictions.Keys)
                 {
@@ -556,7 +576,7 @@ namespace Barotrauma
             }
             else if (this is DamageModifierParams damageModifierParams)
             {
-                SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, damageModifierParams.DamageModifier, inGame: false, showName: true);
+                SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, damageModifierParams.DamageModifier, inGame: false, showName: true, titleFont: GUI.LargeFont);
             }
             if (recursive)
             {

@@ -165,10 +165,11 @@ namespace Barotrauma
             set { burnOverLayStrength = MathHelper.Clamp(value, 0.0f, 100.0f); }
         }
 
-        public string HitSoundTag { get; private set; }
+        public string HitSoundTag => limbParams?.Sound?.Tag;
 
         partial void InitProjSpecific(XElement element)
         {
+            // TODO: we could also parse the limb params?
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -212,14 +213,6 @@ namespace Barotrauma
                     case "lightsource":
                         LightSource = new LightSource(subElement);
                         InitialLightSourceColor = LightSource.Color;
-                        break;
-                    case "sound":
-                        HitSoundTag = subElement.GetAttributeString("tag", "");
-                        if (string.IsNullOrWhiteSpace(HitSoundTag))
-                        {
-                            //legacy support
-                            HitSoundTag = subElement.GetAttributeString("file", "");
-                        }
                         break;
                 }
             }

@@ -35,7 +35,7 @@ namespace Barotrauma.SpriteDeformations
             set;
         }
 
-        public string Name => GetType().Name;
+        public string Name => $"Deformation ({TypeName})";
 
         [Serialize(false, true), Editable]
         public bool UseMovementSine { get; set; }

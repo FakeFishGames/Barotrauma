@@ -2795,7 +2795,7 @@ namespace Barotrauma
                     {
                         CanBeFocused = false
                     };
-                    new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), buttonParent.RectTransform, Anchor.CenterLeft), "Add New Target")
+                    new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), buttonParent.RectTransform, Anchor.CenterLeft), "Add Target")
                     {
                         OnClicked = (button, data) =>
                         {
@@ -2875,6 +2875,40 @@ namespace Barotrauma
                                     };
                                     modifierEditor.AddCustomContent(buttonParent, 0);
                                 }
+                            }
+                            if (limb.limbParams.Sound == null)
+                            {
+                                var buttonParent = new GUIFrame(new RectTransform(new Point(mainEditor.EditorBox.Rect.Width, 40), mainEditor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
+                                {
+                                    CanBeFocused = false
+                                };
+                                new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), buttonParent.RectTransform, Anchor.Center), "Add Sound")
+                                {
+                                    OnClicked = (button, data) =>
+                                    {
+                                        limb.limbParams.AddSound();
+                                        ResetParamsEditor();
+                                        return true;
+                                    }
+                                };
+                            }
+                            else
+                            {
+                                var soundEditor = limb.limbParams.Sound.SerializableEntityEditor;
+                                var buttonParent = new GUIFrame(new RectTransform(new Point(soundEditor.Rect.Width, 40), soundEditor.RectTransform), style: null, color: new Color(20, 20, 20, 255))
+                                {
+                                    CanBeFocused = false
+                                };
+                                new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), buttonParent.RectTransform, Anchor.Center), "Remove Sound", color: Color.Red)
+                                {
+                                    OnClicked = (button, data) =>
+                                    {
+                                        limb.limbParams.RemoveSound();
+                                        ResetParamsEditor();
+                                        return true;
+                                    }
+                                };
+                                soundEditor.AddCustomContent(buttonParent, soundEditor.ContentCount);
                             }
                             if (limb.limbParams.Attack == null)
                             {
