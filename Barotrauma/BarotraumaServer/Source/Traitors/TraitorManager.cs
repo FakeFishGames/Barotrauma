@@ -14,6 +14,9 @@ namespace Barotrauma
 
         public Dictionary<string, Traitor>.ValueCollection Traitors => Mission.Traitors.Values;
 
+        private float startCountdown = 0.0f;
+        private GameServer server;
+
         public bool IsTraitor(Character character)
         {
             return Traitors.Any(traitor => traitor.Character == character);
@@ -36,12 +39,8 @@ namespace Barotrauma
             if (server == null) return;
             
             Traitor.TraitorMission.InitializeRandom();
-            Mission = TraitorMissionPrefab.RandomPrefab()?.Instantiate();
-            
-            if (Mission != null)
-            {
-                Mission.Start(server, "traitor");
-            }
+            this.server = server;
+            startCountdown = 90.0f;
         }
 
         public void Update(float deltaTime)
@@ -52,6 +51,20 @@ namespace Barotrauma
             if (Mission != null)
             {
                 Mission.Update(deltaTime);
+            }
+            else if (startCountdown > 0.0f && server.GameStarted)
+            {
+                startCountdown -= deltaTime;
+                System.Console.WriteLine("Countdown: " + startCountdown);
+                if (startCountdown <= 0.0f)
+                {
+                    Mission = TraitorMissionPrefab.RandomPrefab()?.Instantiate();
+                    if (Mission != null)
+                    {
+                        System.Console.WriteLine("Starting mission...");
+                        Mission.Start(server, "traitor");
+                    }
+                }
             }
         }
     

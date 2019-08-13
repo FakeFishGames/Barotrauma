@@ -478,7 +478,7 @@ namespace Barotrauma.Networking
                     }
                 }
 
-                if (TraitorManager != null && TraitorManager.Traitors != null)
+                if (TraitorManager != null)
                 {
                     TraitorManager.Update(deltaTime);
                 }
