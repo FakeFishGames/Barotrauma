@@ -12,13 +12,17 @@ namespace Barotrauma
         public string CodeWords => Mission?.CodeWords;
         public string CodeResponse => Mission?.CodeResponse;
 
-        public Dictionary<string, Traitor>.ValueCollection Traitors => Mission.Traitors.Values;
+        public Dictionary<string, Traitor>.ValueCollection Traitors => Mission?.Traitors.Values;
 
         private float startCountdown = 0.0f;
         private GameServer server;
 
         public bool IsTraitor(Character character)
         {
+            if (Traitors == null)
+            {
+                return false;
+            }
             return Traitors.Any(traitor => traitor.Character == character);
         }
 
@@ -51,17 +55,22 @@ namespace Barotrauma
             if (Mission != null)
             {
                 Mission.Update(deltaTime);
+                /*
+                if (Mission.IsCompleted)
+                {
+                    Mission = null;
+                    startCountdown = 30.0f;
+                }
+                */
             }
             else if (startCountdown > 0.0f && server.GameStarted)
             {
                 startCountdown -= deltaTime;
-                System.Console.WriteLine("Countdown: " + startCountdown);
                 if (startCountdown <= 0.0f)
                 {
                     Mission = TraitorMissionPrefab.RandomPrefab()?.Instantiate();
                     if (Mission != null)
                     {
-                        System.Console.WriteLine("Starting mission...");
                         Mission.Start(server, "traitor");
                     }
                 }
