@@ -16,9 +16,12 @@ namespace Barotrauma
             private Item targetContainer;
             private Item target;
             private HashSet<Item> existingItems = new HashSet<Item>();
+            private string targetNameText;
+            private string targetContainerNameText;
+            private string targetHullNameText;
 
             public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[identifier]", "[target]", "[targethullname]" });
-            public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { targetPrefab.Name, targetContainer.Prefab.Name, targetContainer.CurrentHull.DisplayName });
+            public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { targetNameText, targetContainerNameText, targetHullNameText });
 
             public override bool IsCompleted => target != null && target.ParentInventory == Traitor.Character.Inventory;
             public override bool CanBeCompleted {
@@ -87,12 +90,17 @@ namespace Barotrauma
                 {
                     return false;
                 }
+                var targetPrefabTextId = targetPrefab.GetItemNameTextId();
+                targetNameText = targetPrefabTextId != null ? TextManager.FormatServerMessage(targetPrefabTextId) : targetPrefab.Name;
                 targetContainer = FindRandomContainer();
                 if (targetContainer == null)
                 {
                     return false;
                 }
-
+                var containerPrefabTextId = targetContainer.Prefab.GetItemNameTextId();
+                targetContainerNameText = containerPrefabTextId != null ? TextManager.FormatServerMessage(containerPrefabTextId) : targetContainer.Prefab.Name;
+                var targetHullTextId = targetContainer.CurrentHull != null ? targetContainer.CurrentHull.prefab.GetHullNameTextId() : null;
+                targetHullNameText = targetHullTextId != null ? TextManager.FormatServerMessage(targetHullTextId) : targetContainer?.CurrentHull?.DisplayName ?? "";
                 existingItems.Clear();
                 foreach (var item in targetContainer.OwnInventory.Items)
                 {
