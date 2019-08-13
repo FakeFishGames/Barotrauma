@@ -126,6 +126,24 @@ namespace Barotrauma
             }
         }
 
+        public delegate bool InventoryFilter(Inventory inventory);
+        public Inventory FindParentInventory(InventoryFilter filter)
+        {
+            if (parentInventory != null)
+            {
+                if (filter(parentInventory))
+                {
+                    return parentInventory;
+                }
+                var owner = parentInventory.Owner as Item;
+                if (owner != null)
+                {
+                    return owner.FindParentInventory(filter);
+                }
+            }
+            return null;
+        }
+
         private Item container;
         public Item Container
         {

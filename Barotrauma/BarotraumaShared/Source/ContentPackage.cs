@@ -36,7 +36,8 @@ namespace Barotrauma
         Afflictions,
         Buffs,
         Tutorials,
-        UIStyle
+        UIStyle,
+        TraitorMissions
     }
 
     public class ContentPackage
@@ -79,6 +80,7 @@ namespace Barotrauma
             ContentType.LevelGenerationParameters,
             ContentType.RandomEvents,
             ContentType.Missions,
+            ContentType.TraitorMissions,
             ContentType.BackgroundCreaturePrefabs,
             ContentType.RuinConfig,
             ContentType.NPCConversations,

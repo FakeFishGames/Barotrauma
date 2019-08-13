@@ -413,6 +413,15 @@ namespace Barotrauma
 
             return character;
         }
+
+        private void ReadTraitorStatus(IReadMessage msg)
+        {
+            IsTraitor = msg.ReadBoolean();
+            if (IsTraitor)
+            {
+                TraitorCurrentObjective = msg.ReadString();
+            }
+        }
         
         private void ReadStatus(IReadMessage msg)
         {
@@ -449,7 +458,7 @@ namespace Barotrauma
             else
             {
                 if (IsDead) Revive();
-                
+
                 CharacterHealth.ClientRead(msg);
             }
         }

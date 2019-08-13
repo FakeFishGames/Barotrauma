@@ -1,4 +1,6 @@
-﻿using Barotrauma.Items.Components;
+﻿#define ALLOW_BOT_TRAITORS
+using Barotrauma.Items.Components;
+using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using RestSharp;
 using System;
@@ -474,6 +476,11 @@ namespace Barotrauma.Networking
                     {
                         SetClientCharacter(owner, character);
                     }
+                }
+
+                if (TraitorManager != null)
+                {
+                    TraitorManager.Update(deltaTime);
                 }
 
                 bool isCrewDead =
@@ -1824,7 +1831,7 @@ namespace Barotrauma.Networking
                     bots.Add(botInfo);
                 }
                 AssignBotJobs(bots, teamID);
-                
+
                 WayPoint[] assignedWayPoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSubs[n]);
                 for (int i = 0; i < teamClients.Count; i++)
                 {
@@ -1880,15 +1887,10 @@ namespace Barotrauma.Networking
                 
                 int max = Math.Max(serverSettings.TraitorUseRatio ? (int)Math.Round(characters.Count * serverSettings.TraitorRatio, 1) : 1, 1);
                 int traitorCount = Rand.Range(1, max + 1);
-                TraitorManager = new TraitorManager(this, traitorCount);
+                              
+                TraitorManager = new TraitorManager();
 
-                if (TraitorManager.TraitorList.Count > 0)
-                {
-                    for (int i = 0; i < TraitorManager.TraitorList.Count; i++)
-                    {
-                        Log(TraitorManager.TraitorList[i].Character.Name + " is the traitor and the target is " + TraitorManager.TraitorList[i].TargetCharacter.Name, ServerLog.MessageType.ServerMessage);
-                    }
-                }
+                TraitorManager.Start(this, traitorCount);
             }
 
             GameAnalyticsManager.AddDesignEvent("Traitors:" + (TraitorManager == null ? "Disabled" : "Enabled"));
@@ -1955,19 +1957,6 @@ namespace Barotrauma.Networking
             msg.Write(serverSettings.AllowDisguises);
             msg.Write(serverSettings.AllowRewiring);
 
-            Traitor traitor = null;
-            if (TraitorManager != null && TraitorManager.TraitorList.Count > 0)
-                traitor = TraitorManager.TraitorList.Find(t => t.Character == client.Character);
-            if (traitor != null)
-            {
-                msg.Write(true);
-                msg.Write(traitor.TargetCharacter.Name);
-            }
-            else
-            {
-                msg.Write(false);
-            }
-
             msg.Write(serverSettings.AllowRagdollButton);
 
             serverSettings.WriteMonsterEnabled(msg);
@@ -1988,12 +1977,7 @@ namespace Barotrauma.Networking
                 Log("Ending the round...", ServerLog.MessageType.ServerMessage);
             }
 
-            string endMessage = "The round has ended." + '\n';
-
-            if (TraitorManager != null)
-            {
-                endMessage += TraitorManager.GetEndMessage();
-            }
+            string endMessage = TextManager.FormatServerMessage("RoundSummaryRoundHasEnded", new string[] { "[traitorinfo]" }, new string[] { TraitorManager != null ? TraitorManager.GetEndMessage() : "" });
 
             Mission mission = GameMain.GameSession.Mission;
             GameMain.GameSession.GameMode.End(endMessage);
@@ -2678,6 +2662,22 @@ namespace Barotrauma.Networking
             msg.Write(achievementIdentifier);
             
             serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
+        }
+
+        public void SendTraitorMessage(Client client, string message, bool isObjective, bool createMessageBox)
+        {
+            if (client == null) { return; }
+            if (!TraitorManager.IsTraitor(client.Character) && client.Connection != OwnerConnection)
+            {
+                return;
+            }
+            var msg = new WriteOnlyMessage(); 
+            msg.Write((byte)ServerPacketHeader.TRAITOR_MESSAGE);
+            msg.Write(isObjective);
+            msg.Write(createMessageBox);
+            msg.Write(message);
+
+            serverPeer.Send(msg, client.Connection, DeliveryMethod.ReliableOrdered);
         }
 
         public void UpdateCheatsEnabled()

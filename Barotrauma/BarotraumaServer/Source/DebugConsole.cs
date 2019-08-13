@@ -916,22 +916,36 @@ namespace Barotrauma
             {
                 if (GameMain.Server == null) return;
                 TraitorManager traitorManager = GameMain.Server.TraitorManager;
-                if (traitorManager == null) return;
-                foreach (Traitor t in traitorManager.TraitorList)
+                if (traitorManager == null || traitorManager.Traitors == null) return;
+                foreach (Traitor t in traitorManager.Traitors)
                 {
-                    NewMessage("- Traitor " + t.Character.Name + "'s target is " + t.TargetCharacter.Name + ".", Color.Cyan);
+                    if (t.CurrentObjective != null)
+                    {
+                        NewMessage(string.Format("- Traitor {0}'s current goals are:\n{1}", t.Character.Name, t.CurrentObjective.GoalInfos), Color.Cyan);
+                    }
+                    else
+                    {
+                        NewMessage(string.Format("- Traitor {0} has no current objective.", t.Character.Name), Color.Cyan);
+                    }
                 }
-                NewMessage("The code words are: " + traitorManager.codeWords + ", response: " + traitorManager.codeResponse + ".", Color.Cyan);
+                NewMessage("The code words are: " + traitorManager.CodeWords + ", response: " + traitorManager.CodeResponse + ".", Color.Cyan);
             }));
             AssignOnClientRequestExecute("traitorlist", (Client client, Vector2 cursorPos, string[] args) =>
             {
                 TraitorManager traitorManager = GameMain.Server.TraitorManager;
-                if (traitorManager == null) return;
-                foreach (Traitor t in traitorManager.TraitorList)
+                if (traitorManager == null || traitorManager.Traitors == null) return;
+                foreach (Traitor t in traitorManager.Traitors)
                 {
-                    GameMain.Server.SendConsoleMessage("- Traitor " + t.Character.Name + "'s target is " + t.TargetCharacter.Name + ".", client);
+                    if (t.CurrentObjective != null)
+                    {
+                        GameMain.Server.SendConsoleMessage(string.Format("- Traitor {0}'s current goals are:\n{1}.", t.Character.Name, t.CurrentObjective.GoalInfos), client);
+                    }
+                    else
+                    {
+                        GameMain.Server.SendConsoleMessage(string.Format("- Traitor {0} has no current objective.", t.Character.Name), client);
+                    }
                 }
-                GameMain.Server.SendConsoleMessage("The code words are: " + traitorManager.codeWords + ", response: " + traitorManager.codeResponse + ".", client);
+                GameMain.Server.SendConsoleMessage("The code words are: " + traitorManager.CodeWords + ", response: " + traitorManager.CodeResponse + ".", client);
             });
 
             commands.Add(new Command("setpassword|setserverpassword|password", "setpassword [password]: Changes the password of the server that's being hosted.", (string[] args) =>

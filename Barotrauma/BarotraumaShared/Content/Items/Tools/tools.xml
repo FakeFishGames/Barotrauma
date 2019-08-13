@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Items>
   <Item name="Toolbox" identifier="toolbox" category="Equipment" tags="smallitem" fireproof="true" description="" impactsoundtag="impact_metal_heavy">
     <Deconstruct time="10">
@@ -43,7 +43,9 @@
     <!-- physics body -->
     <Body width="215" height="119" density="40" />
     <!-- the character will hold the item 50 pixels in front of him, with his hands at the handle1 and handle2 positions -->
-    <Holdable slots="Any,RightHand+LeftHand" controlpose="true" aimpos="50,0" handle1="-85,-35" handle2="0,-27" msg="ItemMsgPickUpSelect" />
+    <Holdable slots="Any,RightHand+LeftHand" controlpose="true"
+			  aimpos="50,0" handle1="-85,-
+									 35" handle2="0,-27" msg="ItemMsgPickUpSelect" />
     <RepairTool structurefixamount="5.0" range="150" barrelpos="35,13" particles="weld" repairmultiple="true" repairthroughwalls="false" combatpriority="20">
       <!-- the item must contain a welding fuel tank for it to work -->
       <RequiredItems identifier="weldingfueltank,incendiumfueltank" type="Contained" msg="ItemMsgWeldingFuelRequired" />
@@ -428,4 +430,46 @@
     </LightComponent>
     <AiTarget />
   </Item>
+
+  <Item name="Sledgehammer" identifier="sledgehammer" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
+    <Price locationtype="City" buyprice="10" />
+    <Price locationtype="Research" buyprice="10" />
+    <Price locationtype="Military" buyprice="10" />
+    <Price locationtype="Outpost" buyprice="10" />
+    <Price locationtype="Mine" buyprice="10" />
+    <Deconstruct time="10">
+      <Item identifier="iron" />
+    </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="10">
+      <RequiredItem identifier="iron"/>
+    </Fabricate>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="450,0,64,64" />
+    <Sprite texture="tools.png" sourcerect="0,47,32,10" depth="0.55" origin="0.5,0.5" />
+    <Body width="30" height="7" density="50" />
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="40,5" handle1="-12,-5" holdangle="60" reload="1.0" range="50" combatpriority="10" msg="ItemMsgPickUpSelect">
+      <Attack structuredamage="5" stun="0.2">
+        <Affliction identifier="internaldamage" strength="4" />
+        <Sound file="Content/Items/Weapons/Smack1.ogg" range="800" />
+      </Attack>
+    </MeleeWeapon>
+  </Item>
+
+  <Item name="Wire Cutters" identifier="wirecutters" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
+    <Price locationtype="City" buyprice="10" />
+    <Price locationtype="Research" buyprice="10" />
+    <Price locationtype="Military" buyprice="10" />
+    <Price locationtype="Outpost" buyprice="10" />
+    <Price locationtype="Mine" buyprice="10" />
+    <Deconstruct time="10">
+      <Item identifier="iron" />
+    </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="10">
+      <RequiredItem identifier="iron"/>
+    </Fabricate>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,0,64,64" />
+    <Sprite texture="tools.png" sourcerect="0,57,32,7" depth="0.55" origin="0.5,0.5" />
+    <Body width="31" height="6" density="50" />
+    <Holdable slots="Any,RightHand,LeftHand" holdangle="30" handle1="-10,-5" msg="ItemMsgPickUpSelect"/>
+  </Item>
+
 </Items>
