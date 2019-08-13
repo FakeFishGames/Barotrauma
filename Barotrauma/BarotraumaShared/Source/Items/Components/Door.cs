@@ -316,8 +316,7 @@ namespace Barotrauma.Items.Components
                         PredictedState = null;
                     }
                 }
-
-                LinkedGap.Open = openState;
+                LinkedGap.Open = isBroken ? 1.0f : openState;
             }
             
             if (isClosing)
@@ -374,7 +373,7 @@ namespace Barotrauma.Items.Components
             {
                 LinkedGap.AutoOrient();
             }
-            LinkedGap.Open = openState;
+            LinkedGap.Open = isBroken ? 1.0f : openState;
             LinkedGap.PassAmbientLight = Window != Rectangle.Empty;
         }
 
