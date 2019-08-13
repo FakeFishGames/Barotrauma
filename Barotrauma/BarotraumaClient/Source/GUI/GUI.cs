@@ -406,6 +406,10 @@ namespace Barotrauma
                 {
                     debugDrawEvents = !debugDrawEvents;
                 }
+                if (MouseOn != null)
+                {
+                    DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 500, 20), $"Selected UI Element: {MouseOn.GetType().ToString()}", Color.LightGreen, Color.Black * 0.5f, 0, SmallFont);
+                }
             }
 
             if (HUDLayoutSettings.DebugDraw) HUDLayoutSettings.Draw(spriteBatch);
