@@ -285,7 +285,8 @@ namespace Barotrauma
         public bool AddLight()
         {
             if (LightSource != null) { return false; }
-            var lightSourceElement = new XElement("lightsource");
+            var lightSourceElement = new XElement("lightsource", 
+                new XElement("lighttexture", new XAttribute("texture", "Content/Lights/light.png")));
             Element.Add(lightSourceElement);
             LightSource = new LimbLightSourceParams(lightSourceElement, Ragdoll);
             SubParams.Add(LightSource);
@@ -430,8 +431,14 @@ namespace Barotrauma
         {
             public override string Name => "Light Texture";
 
-            [Serialize("Content/Lights/light.png", true), Editable]
+            [Serialize("", true), Editable]
             public string Texture { get; private set; }
+
+            [Serialize("0.5, 0.5", true), Editable(DecimalCount = 2)]
+            public Vector2 Origin { get; set; }
+
+            [Serialize("1.0, 1.0", true), Editable(DecimalCount = 2)]
+            public Vector2 Size { get; set; }
 
             public LightTexture(XElement element, RagdollParams ragdoll) : base(element, ragdoll) { }
         }
