@@ -134,7 +134,7 @@ namespace Barotrauma.Items.Components
                 if (item.Submarine != null) pos += item.Submarine.DrawPosition;
                 pos.Y = -pos.Y;
 
-                if (brokenSprite == null || item.Health > 0.0f)
+                if (brokenSprite == null || !IsBroken)
                 {
                     spriteBatch.Draw(doorSprite.Texture, pos,
                         new Rectangle((int) (doorSprite.SourceRect.X + doorSprite.size.X * openState),
@@ -160,7 +160,7 @@ namespace Barotrauma.Items.Components
                 if (item.Submarine != null) pos += item.Submarine.DrawPosition;
                 pos.Y = -pos.Y;
 
-                if (brokenSprite == null || item.Health > 0.0f)
+                if (brokenSprite == null || !IsBroken)
                 {
                     spriteBatch.Draw(doorSprite.Texture, pos,
                         new Rectangle(doorSprite.SourceRect.X,
