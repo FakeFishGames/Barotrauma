@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <infotexts language="Simplified Chinese" nowhitespace="true" translatedname="中文(简体)">
 
 <!-- Loading Screen -->
@@ -6,20 +6,20 @@
 <pressanykey>按任意键以继续</pressanykey>
 
 <!-- Loading Screen tips -->
-<loadingscreentip>如果货物在运输过程中丢失或损坏，您将不会受到运费。</loadingscreentip>
+<loadingscreentip>如果货物在运输过程中丢失或损坏，您将不会收到运费。</loadingscreentip>
 <loadingscreentip>超出潜艇设备需求的超载电力可能会烧毁接线盒或引发火灾。</loadingscreentip>
 <loadingscreentip>接线盒与其他电器在水中浸泡太久可能会损坏。</loadingscreentip>
-<loadingscreentip>潜艇的核反应堆过热可能会引发火灾，如果过热的反应堆不关闭，最终将导致核反应堆熔毁。</loadingscreentip>
+<loadingscreentip>潜艇的核反应堆过热可能会引发火灾，如果不关闭过热的反应堆，最终将导致核反应堆熔毁。</loadingscreentip>
 <loadingscreentip>大多数潜艇都配备了蓄电池，作为反应堆发生故障时的临时备用电源。</loadingscreentip>
-<loadingscreentip>潜艇的轨道炮炮弹和深水炸弹包含一个可容纳更多炸药的舱室。</loadingscreentip>
-<loadingscreentip>被动声呐可在不引发不必要注意的前提下探测附近的声源。你也可以通过冰墙反射的声波来大致了解周边环境。</loadingscreentip>
+<loadingscreentip>潜艇的轨道炮炮弹和深水炸弹包含一个可容纳额外炸药的隔层。</loadingscreentip>
+<loadingscreentip>被动声纳可在不引发不必要注意的前提下探测附近的声源。你也可以通过冰墙反射的声波来大致了解周边环境。</loadingscreentip>
 <loadingscreentip>面对闭锁的门，你可以选择用撬棍撬开，也可以将其连接到你有使用权限的按钮之上。</loadingscreentip>
 <loadingscreentip>蓄电池一般都配有充电基座。</loadingscreentip>
 <loadingscreentip>制氧机配备有独立接口，可用于补充氧气罐。</loadingscreentip>
 <loadingscreentip>超级电容器不能像电池那样储存很多电能，但能在瞬间释放高压脉冲电流，一般用于驱动轨道炮或其他需要高压脉冲电流的设备。</loadingscreentip>
 <loadingscreentip>核反应堆配备有自动调控功率水平的自动控制系统，不过，该系统面对电力消耗大幅波动的情况时，反应常常有些迟缓。</loadingscreentip>
-<loadingscreentip>如果导航终端受损，声呐成像可能变得不太可靠——让工程师确保终端运转良好！</loadingscreentip>
-<loadingscreentip>关闭主动声呐才能让部署的诱饵产生效果。</loadingscreentip>
+<loadingscreentip>如果导航终端受损，声纳成像可能变得不太可靠——让工程师确保终端运转良好！</loadingscreentip>
+<loadingscreentip>关闭主动声纳才能让部署的诱饵发挥最佳效果。</loadingscreentip>
 <loadingscreentip>没有足够电气工程技能的角色强行重新布线可能会触电。</loadingscreentip>
 <loadingscreentip>焊接工具非常简单，潜艇上的船员都可以使用，但熟练的机修工往往是高效率低风险的焊工，能不受伤、快速地完成相关工作。</loadingscreentip>
 <loadingscreentip>潜艇上的船员都接受过电气设备基本维修培训，不过电气工程师精于此道。</loadingscreentip>
@@ -32,31 +32,31 @@
 <loadingscreentip>将异星文物带到潜艇上来时，务必多加小心。</loadingscreentip>
 <loadingscreentip>据推测，某个灭绝的外星文明建造了遍布整个木卫二的文明遗迹，但人类对该文明知之甚少。由于异星建筑与设备的自我修复特性，人类对遗迹年代的测定毫无进展。</loadingscreentip>
 <loadingscreentip>在遍布整个木卫二的文明遗迹中，人类未能发现任何外星生命的痕迹。在遗迹内部能发现的唯一生命是用于守卫遗迹的生化造物。</loadingscreentip>
-<loadingscreentip>在探索遗迹或洞穴时，如果要匆匆离开，记得多投下照明弹以标记可行路径。</loadingscreentip>
-<loadingscreentip>类投足类的独目观察者性情温驯，但受到挑衅时依然会攻击对方。</loadingscreentip>
+<loadingscreentip>在探索遗迹或洞穴时，如果需要紧急脱离，记得多投下照明弹以标记可行路径。</loadingscreentip>
+<loadingscreentip>类头足生物的独目观察者性情温驯，但受到挑衅时依然会攻击对方。</loadingscreentip>
 <loadingscreentip>同类相食在藻鬃爬行者之间很常见。如果你杀死一只爬行者，其他爬行者可能会抛下你，对进食的渴望会促使它们争抢同类的尸体。</loadingscreentip>
 <loadingscreentip>泥偶迅猛龙可以用它们锋利的喙轻松地破坏金属门。</loadingscreentip>
 <loadingscreentip>这种名为画皮的外壳寄生虫会慢慢吞噬宿主的躯体，最终将其变为一具完全由寄生虫控制的空壳。</loadingscreentip>
 <loadingscreentip>木卫二上的大部分生物都有着坚硬、难以被常规武器破坏的外骨骼。不过，他们的“盔甲”也存在可以轻易击破的弱点。</loadingscreentip>
-<loadingscreentip>嘈杂的设备声或声呐脉冲可能会惊醒附近的生物。</loadingscreentip>
+<loadingscreentip>嘈杂的设备声或声纳脉冲可能会引起附近生物警觉。</loadingscreentip>
 <loadingscreentip>若没有足够的医疗技能，进行心肺复苏会对患者的内脏造成损伤。</loadingscreentip>
-<loadingscreentip>吗啡与芬太尼等阿片类药物是紧急治疗的最有效办法，但经常使用会令患者成瘾，产生非常危险的戒断症状。</loadingscreentip>
+<loadingscreentip>吗啡与芬太尼等阿片类药物是紧急治疗的有效方法之一，但经常使用会令患者成瘾，产生非常危险的戒断症状。</loadingscreentip>
 <loadingscreentip>窒死毒剂是一种强效神经毒素，甚至能轻松杀死木卫二上那些体型巨大的食肉生物。一位训练有素的医生可以用医药加工台较为轻松地制造此类毒素。</loadingscreentip>
-<loadingscreentip>抽血伤口可用绷带或止血剂治疗。病人可以用生理盐水或血袋来补充流失的血液。</loadingscreentip>
+<loadingscreentip>出血伤口可用绷带或止血剂治疗。病人可以用生理盐水或血袋来补充流失的血液。</loadingscreentip>
 <loadingscreentip>非常不幸的是，精神病等精神障碍在潜艇船员中很常见，尤其是在遗迹探险之后。如果你的船员开始看到或听到其他人无法认知的事物，立即向医生报告。</loadingscreentip>
-<loadingscreentip>医生们的主要任务是保证船员们的身体状况，但在有入侵者侵入时，有着注射器枪与毒药知识的医生不容忽视。</loadingscreentip>
+<loadingscreentip>医生们的主要任务是保证船员们的身体健康，但在有入侵者侵入时，有着注射器枪与毒药知识的医生不容忽视。</loadingscreentip>
 <loadingscreentip>在没有足够医疗知识的情况下使用药物，可能会减少单只注射器提供的剂量，也可能降低药效。</loadingscreentip>
 <loadingscreentip>许多药物有着意想不到的副作用。请密切关注病人情况，随时准备用其他药物来抵消这些副作用。</loadingscreentip>
 <loadingscreentip>在使用潜水面罩时，注意不要把焊接油箱和氧气罐弄混。</loadingscreentip>
-<loadingscreentip>潜水面罩可以让你在水下呼吸，但不能帮助你低于深海水压。如果船体有较大的结构破损，请立即换上潜水衣。</loadingscreentip>
+<loadingscreentip>潜水面罩可以让你在水下呼吸，但不能帮助你抵御深海水压。如果船体有较大的结构破损，请立即换上潜水衣。</loadingscreentip>
 <loadingscreentip>一旦发生火灾，比烧伤更需要注意的是潜艇内的氧气含量。</loadingscreentip>
-<loadingscreentip>所谓的热液废物时需要多加小心，这些区域生物数量丰富，地热活动引发的水流变化使得航行更加危险。</loadingscreentip>
-<loadingscreentip>木卫二上的一些固着生物会发出干扰潜艇声呐的低频声波。</loadingscreentip>
-<loadingscreentip>注意下潜深度。大多数潜艇的外部结构都会在2000米的深度开始分崩离析。</loadingscreentip>
-<loadingscreentip>木卫二拥有丰富的自然资源，等待着以为目光敏锐、富有进取心的船长与一台等离子切割机去发现。</loadingscreentip>
+<loadingscreentip>穿越这片被称为热液废土的地形时需格外小心，这些区域生物数量丰富，地热活动引发的水流变化使航行变得更加危险。</loadingscreentip>
+<loadingscreentip>木卫二上的一些固着生物会发出干扰潜艇声纳的低频声波。</loadingscreentip>
+<loadingscreentip>注意下潜深度。大多数潜艇的外部结构都会在约2000米的深度开始分崩离析。</loadingscreentip>
+<loadingscreentip>木卫二拥有丰富的自然资源，唯有目光敏锐、富有进取心的船长与等离子切割机才能坚持到收获之时。</loadingscreentip>
 <loadingscreentip>你可以将自己伪装成其他人，只要带上他们的身份证与一些面部的伪装。</loadingscreentip>
 <loadingscreentip>你可以在潜艇编辑器中将wifi组件连接到无线电聊天模块，以构建语音控制系统。</loadingscreentip>
-<loadingscreentip>木星周围的星环使得在木卫二表面建立永久定居点变得不现实，因此所有的木卫二前哨站都位于地表冰壳之下。</loadingscreentip>
+<loadingscreentip>木星周围的辐射带得在木卫二表面建立永久定居点变得不现实，因此所有的木卫二前哨站都位于地表冰壳之下。</loadingscreentip>
 <loadingscreentip>木卫二的水下生态系统链条尚未完全明确，但人们相信食物链的基础是渺小的化学合成细菌。</loadingscreentip>
 <loadingscreentip>木卫二联盟最初是两个最大的木卫二定居点与几个私人准军事组织之间的贸易合作协定，但后来逐渐发展为木卫二政府。</loadingscreentip>
 <loadingscreentip>有人计划在潜艇中派驻专业娱乐人员来缓解船员压力，不过这项计划很快被认定是失败的，并在人们的嘲讽声中终止了。</loadingscreentip>
@@ -93,13 +93,13 @@
 <serverport>服务器端口</serverport>
 <serverporttooltip>该端口用于客户端互联。如果本地客户端无法连接到您的服务器，您可能需要启用UPnP端口转发或手动转发端口。</serverporttooltip>
 <serverqueryport>查询端口</serverqueryport>
-<serverqueryporttooltip>该端口用于与Steam服务器链接，并相应来自其他客户端的信息。如果其他本地客户端未能在服务器列表中看到您的服务器，或出现Steam ID验证失败的情况，请尝试启用UPnP端口转发或手动转发端口。</serverqueryporttooltip>
+<serverqueryporttooltip>该端口用于与Steam服务器链接，并响应来自其他客户端的信息。如果其他本地客户端未能在服务器列表中看到您的服务器，或出现Steam ID验证失败的情况，请尝试启用UPnP端口转发或手动转发端口。</serverqueryporttooltip>
 <maxplayers>玩家数量上限</maxplayers>
 <password>密码</password>
 <publicserver>公共服务器</publicserver>
 <publicservertooltip>公共服务器将出现在“加入服务器”页面中的可选服务器列表中。</publicservertooltip>
 <attemptupnp>尝试UPnP端口转发</attemptupnp>
-<attemptupnptooltip>UPnP可用于转发路由器设置的端口，以方便玩家加入服务器。当然，并非所有路由器都支持该功能，因此若玩家仍然无法加入服务器，您可能需要手抖设置端口转发。</attemptupnptooltip>
+<attemptupnptooltip>UPnP可用于转发路由器设置的端口，以方便玩家加入服务器。但不是所有路由器都支持UPnP,如果有玩家无法加入服务器，你可能需要手动设置端口转发。</attemptupnptooltip>
 <startserverbutton>开始</startserverbutton>
 <pleasewaitupnp>请稍后…</pleasewaitupnp>
 <attemptingupnp>正在尝试UPnP端口转发…</attemptingupnp>
@@ -111,7 +111,7 @@
 <gamemode.tutorial>新手教程</gamemode.tutorial>
 <gamemode.devsandbox>开发沙盒</gamemode.devsandbox>
 <gamemode.sandbox>沙盒模式</gamemode.sandbox>
-<gamemode.mission>人物模式</gamemode.mission>
+<gamemode.mission>任务模式</gamemode.mission>
 <gamemode.multiplayercampaign>战役模式</gamemode.multiplayercampaign>
 
 <!-- Steam Workshop menu -->
@@ -145,7 +145,7 @@
 <workshopitempreviewimage>预览图</workshopitempreviewimage>
 <workshopitembrowse>浏览…</workshopitembrowse>
 <workshopitemcorepackage>核心内容包</workshopitemcorepackage>
-<workshopitemcorepackagetooltip>核心内容包是包含全部核心文件（可执行文件、配置文件等）的特殊内容包。玩家仅可选择使用一个核心内容包。仅向游戏本体或其他核心包添加内容的Mod不应标记为核心内容包，除非您认为您的Mod会替换所有普通文件。</workshopitemcorepackagetooltip>
+<workshopitemcorepackagetooltip>只有在您创建的Mod会替换游戏本体文件的情况下选择此标记。仅向游戏或其他核心内容包添加内容的Mod不应被标记为核心内容包。</workshopitemcorepackagetooltip>
 <workshopitemfiles>项目中包含的文件</workshopitemfiles>
 <workshopitemshowfolder>显示文件夹</workshopitemshowfolder>
 <workshopitemchangenote>修改说明文件</workshopitemchangenote>
@@ -161,7 +161,7 @@
 <workshopitemfileincluded>文件将被包含在创意工坊项目中。</workshopitemfileincluded>
 <workshopitemfilenotincluded>未能在项目文件夹中找到相应文件，创意工坊项目中将不会包含该文件。如果你想让Mod使用玩家已拥有的本地文件，请继续；不然请将相应文件复制到项目文件夹中。</workshopitemfilenotincluded>
 <workshopitemfilenotfound>未找到相应文件</workshopitemfilenotfound>
-<workshopitemillegalpath>创意工坊项目只允许修改Mod文件夹中的文件，或在潜艇文件夹中添加新潜艇文件。轻微这些文件保存于独立的子文件夹。</workshopitemillegalpath>
+<workshopitemillegalpath>创意工坊项目只允许修改Mod文件夹中的文件，或在潜艇文件夹中添加新潜艇文件。请为这些文件创建独立的子文件夹。</workshopitemillegalpath>
 <workshopitemrefreshfilelisttooltip>重新加载创意工坊项目的配置文件（项目文件夹中的 metadata.xml），并将其中包含的所有新文件添加到文件列表中。</workshopitemrefreshfilelisttooltip>
 <workshoppublishpleasewait>请稍等</workshoppublishpleasewait>
 <workshoppublishinprogress>将 '[itemname]' 发布到Steam创意工坊</workshoppublishinprogress>
@@ -221,13 +221,13 @@
 <enablevsync>开启垂直同步</enablevsync>
 <enablevsynctooltip>将游戏帧率与显示器刷新率同步，以防止屏幕撕裂问题。</enablevsynctooltip>
 <particlelimit>粒子效果限制</particlelimit>
-<loseffect>视觉效果</loseffect>
+<loseffect>视距效果</loseffect>
 <losmodenone>无</losmodenone>
 <losmodetransparent>透明</losmodetransparent>
 <losmodeopaque>不透明</losmodeopaque>
-<lightmapscale>亮度</lightmapscale>
-<lightmapscaletooltip>该数值较低可提升性能，但会导致阴影像素化。</lightmapscaletooltip>
-<specularlighting>高光照明</specularlighting>
+<lightmapscale>光照分辨率</lightmapscale>
+<lightmapscaletooltip>降低该数值可提升性能，但会导致阴影像素化。</lightmapscaletooltip>
+<specularlighting>镜面高光</specularlighting>
 <specularlightingtooltip>启用该选项后，游戏内物品的光泽会更加明显。</specularlightingtooltip>
 <chromaticaberration>色差</chromaticaberration>
 <chromaticaberrationtooltip>在屏幕边缘产生轻微的颜色失真效果。</chromaticaberrationtooltip>
@@ -235,18 +235,18 @@
 <inventoryscale>物品栏大小调整</inventoryscale>
 
 <!-- Audio tab -->
-<settingstab.audio>音像</settingstab.audio>
-<soundvolume>效果音量</soundvolume>
+<settingstab.audio>音效</settingstab.audio>
+<soundvolume>音效音量</soundvolume>
 <musicvolume>音乐音量</musicvolume>
 <voicechatvolume>语音聊天音量</voicechatvolume>
-<microphonevolume>耳机音量</microphonevolume>
+<microphonevolume>麦克风音量</microphonevolume>
 <muteonfocuslost>切换窗口静音</muteonfocuslost>
 <muteonfocuslosttooltip>当切换窗口时，游戏自动静音</muteonfocuslosttooltip>
 <voicechat>语音聊天</voicechat>
 <currentdevice>当前设备</currentdevice>
 <currentdevicetooltip.osx>该设备将用于语音聊天。若您使用的是Mac OS X，受限于系统，输入设备将无法更改，只能使用默认设置。</currentdevicetooltip.osx>
 <refreshdefaultdevice>刷新默认设备</refreshdefaultdevice>
-<refreshdefaultdevicetooltip>刷新用于语音聊天的设备。在您变更音频系统设置或热插拔新设备后，按此以检测变更。</refreshdefaultdevicetooltip>
+<refreshdefaultdevicetooltip>刷新用于语音聊天的设备。在切换/热插拔系统默认语音输入设备之后，按此检测变更。</refreshdefaultdevicetooltip>
 <voicemode.disabled>禁用语音聊天</voicemode.disabled>
 <voicemode.disabledtooltip>语音聊天将被禁用。</voicemode.disabledtooltip>
 <voicemode.pushtotalk>按键开启语音</voicemode.pushtotalk>
@@ -255,12 +255,12 @@
 <voicemode.activitytooltip>只要设备声音超过噪音阈值后，就主动发送语音。</voicemode.activitytooltip>
 <noisegatethreshold>噪音阈值</noisegatethreshold>
 <directionalvoicechat>定向语音聊天</directionalvoicechat>
-<directionalvoicechattooltip>启动该模式后，语音聊天的声音会受说话者与你的方向与位置影响，产生拟真的距离感。</directionalvoicechattooltip>
+<directionalvoicechattooltip>启动该模式后，语音聊天的声音会受说话者相对于你所在位置的方向影响，产生拟真的距离感。</directionalvoicechattooltip>
 
 <!-- Controls tab -->
 <settingstab.controls>操作</settingstab.controls>
 <aimassist>辅助瞄准</aimassist>
-<aimassisttooltip>影响光标与选定项的距离，若设置为0%，则光标不受修正地精确显示在选定项目上。</aimassisttooltip>
+<aimassisttooltip>影响高亮显示物品所需的光标与目标的距离。如果设为0%，光标需要精确定位于目标之上才能高亮显示。</aimassisttooltip>
 <enablemouselook>启用鼠标视角移动</enablemouselook>
 <enablemouselooktooltip>当启用时，游戏视角会根据鼠标光标指向的方向移动。</enablemouselooktooltip>
 <inputtype.select>选择</inputtype.select>
@@ -277,11 +277,11 @@
 <inputtype.crouch>下蹲</inputtype.crouch>
 <inputtype.chat>聊天</inputtype.chat>
 <inputtype.infotab>状态栏</inputtype.infotab>
-<inputtype.radiochat>公共聊天</inputtype.radiochat>
+<inputtype.radiochat>无线电聊天</inputtype.radiochat>
 <inputtype.creworders>船员命令</inputtype.creworders>
 <inputtype.ragdoll>布娃娃</inputtype.ragdoll>
 <inputtype.health>生命</inputtype.health>
-<inputtype.grab>夺取</inputtype.grab>
+<inputtype.grab>抓取</inputtype.grab>
 <inputtype.selectnextcharacter>下一个角色</inputtype.selectnextcharacter>
 <inputtype.selectpreviouscharacter>上一个角色</inputtype.selectpreviouscharacter>
 <inputtype.voice>按下以语音聊天</inputtype.voice>
@@ -309,7 +309,7 @@
 <serversettingsmonsterspawns>怪物生成</serversettingsmonsterspawns>
 <serversettingsadditionalcargo>额外货物</serversettingsadditionalcargo>
 <serversettingsautorestartdelay>自动重启延迟：</serversettingsautorestartdelay>
-<serversettingsstartwhenclientsready>所以玩家准备后，开始游戏</serversettingsstartwhenclientsready>
+<serversettingsstartwhenclientsready>所有玩家准备就绪之后，开始游戏</serversettingsstartwhenclientsready>
 <serversettingsstartwhenclientsreadyratio>[percentage] %的玩家准备后，开始游戏</serversettingsstartwhenclientsreadyratio>
 <serversettingsallowspectating>允许观战</serversettingsallowspectating>
 <serversettingsallowvotekick>允许投票踢出队伍</serversettingsallowvotekick>
@@ -319,7 +319,7 @@
 <serversettingsrandomizeseed>不同巡回采用不同的随机种子</serversettingsrandomizeseed>
 <serversettingssavelogs>保存服务器日志</serversettingssavelogs>
 <serversettingsallowragdollbutton>允许布娃娃键</serversettingsallowragdollbutton>
-<serversettingsusetraitorratio>最多%的玩家作为叛徒</serversettingsusetraitorratio>
+<serversettingsusetraitorratio>最多可有%玩家成为叛徒</serversettingsusetraitorratio>
 <serversettingstraitorratio>叛徒比例：</serversettingstraitorratio>
 <serversettingstraitorcount>叛徒数量：</serversettingstraitorcount>
 <serversettingsusekarma>开启道德值系统</serversettingsusekarma>
@@ -340,7 +340,7 @@
 <roundsummaryprogress>[sub]设法到达[location]</roundsummaryprogress>
 <roundsummaryprogress>[sub]已经抵达[location]</roundsummaryprogress>
 <roundsummaryreturn>[sub]已经回到[location]</roundsummaryreturn>
-<roundsummarygameover>这片冰洋让[sub]和其上的船员永远地留下了</roundsummarygameover>
+<roundsummarygameover>冰洋吞没了[sub]及全体船员</roundsummarygameover>
 <roundsummarycrewstatus>船员状态</roundsummarycrewstatus>
 
 <!-- Character HUD -->
@@ -350,9 +350,9 @@
 <stun>眩晕</stun>
 <disguised>(伪装)</disguised>
 <useitembutton>使用</useitembutton>
-<grabhint>抓住[[key]]</grabhint>
-<healhint>治疗[[key]]</healhint>
-<talkhint>与[[key]]交流</talkhint>
+<grabhint>[[key]] 拿取</grabhint>
+<healhint>[[key]] 治疗</healhint>
+<talkhint>[[key]] 交谈</talkhint>
 <quickuseaction.equip>装备</quickuseaction.equip>
 <quickuseaction.unequip>解除装备</quickuseaction.unequip>
 <quickuseaction.drop>长按以丢弃</quickuseaction.drop>
@@ -365,9 +365,9 @@
 <!-- Limbs -->
 <lefthand>左手</lefthand>
 <righthand>右手</righthand>
-<hands>手掌</hands>
-<leftarm>左膝</leftarm>
-<rightarm>右膝</rightarm>
+<hands>双手</hands>
+<leftarm>左臂</leftarm>
+<rightarm>右臂</rightarm>
 <leftleg>左腿</leftleg>
 <rightleg>右腿</rightleg>
 <leftfoot>左脚</leftfoot>
@@ -381,12 +381,12 @@
 <waist>腰</waist>
 
 <!-- Misc -->
-<yes>是</yes>
+<yes>赞同</yes>
 <yestoall>全部赞同</yestoall>
-<no>否</no>
+<no>反对</no>
 <notoall>全部反对</notoall>
 <maybe>也许</maybe>
-<ok>确定</ok>
+<ok>可以</ok>
 <skills>技能</skills>
 <personalitytrait>特性</personalitytrait>
 <male>男性</male>
@@ -474,13 +474,13 @@
 <lastsaved>最近存档</lastsaved>
 <mapseed>地图种子</mapseed>
 <startcampaignbutton>潜入</startcampaignbutton>
-<campaignenteroutpostprompt>你想进入吗[locationname]？</campaignenteroutpostprompt>
+<campaignenteroutpostprompt>你想进入[locationname]吗？</campaignenteroutpostprompt>
 <selectmission>选择一个关卡</selectmission>
 <campaignstartingpleasewait>请稍等</campaignstartingpleasewait>
 <campaignstarting>等待战役开启</campaignstarting>
 <shuttleselected>已选择飞船</shuttleselected>
 <shuttlewarning>大多数航天飞船都没有面对异星深海的准备，你确定要选择飞船作为你的初始载具吗？</shuttlewarning>
-<contentpackagemismatch>缺少必须的内容包</contentpackagemismatch>
+<contentpackagemismatch>内容包不匹配</contentpackagemismatch>
 <contentpackagemismatchwarning>该潜艇与当前所选的内容包不匹配，缺少[requiredcontentpackages]。你确定要选择这艘潜艇吗？</contentpackagemismatchwarning>
 <campaignstartfailedsubnotfound>失败。找不到潜艇[subname]。</campaignstartfailedsubnotfound>
 
@@ -514,14 +514,14 @@
 
 <!-- In-game messages -->
 <endroundvotes>投票以决定是否结束巡回[votes]/[max]</endroundvotes>
-<respawnshuttledispatching>复活飞船将在[time]内到达</respawnshuttledispatching>
+<respawnshuttledispatching>复活飞船将于[time]内出发</respawnshuttledispatching>
 <respawningin>玩家将在[time]内复活</respawningin>
 <respawnshuttleleavingin>复活飞船将在[time]内离开</respawnshuttleleavingin>
 <camfollowsubmarine>跟随潜艇</camfollowsubmarine>
 <insufficientskills>你的技能等级未达到使用该物品的需求！需要[requiredskill]达到[requiredlevel]级。</insufficientskills>
 <skillincreased>[name]的[skillname]技能上升至[newlevel]级!</skillincreased>
 <endroundsubnotatlevelend>潜艇未停靠在海平面的两端，你确定要终止任务并结束这一巡回吗？</endroundsubnotatlevelend>
-<crewdeadnorespawns>服务器内全部玩家已死亡，在本巡回内不能复活。如果没有玩家上线或加入，服务器将在[time]秒后结束这一巡回。</crewdeadnorespawns>
+<crewdeadnorespawns>服务器内全部玩家已死亡，在本巡回内不能复活。如果没有玩家复活或加入，服务器将在[time]秒后结束这一巡回。</crewdeadnorespawns>
 <minimapoutpostdockinginfo>停靠在[outpost]。\若想操纵潜艇，请先离港。</minimapoutpostdockinginfo>
 <cargospawnnotification>所购物品已送到[roomname]</cargospawnnotification>
 
@@ -552,7 +552,7 @@
 <serverlistincompatiblecontentpackage>若想加入该服务器，需要内容组合包'[contentpackage]' (MD5: [hash]) </serverlistincompatiblecontentpackage>
 <serverlistcontentpackagenotenabled>若想加入该服务器，你需要在游戏设置中启用内容组合包'[contentpackage]'</serverlistcontentpackagenotenabled>
 <serverlistincompatiblecontentpackageworkshopavailable>若想加入该服务器，需要内容组合包'[contentpackage]'，你可以在Steam创意工坊里找到该组合包。</serverlistincompatiblecontentpackageworkshopavailable>
-<serverlistsubscribemissingpackages>从创意工坊中获取缺少的内容组合包。</serverlistsubscribemissingpackages>
+<serverlistsubscribemissingpackages>从创意工坊中获取缺少的内容组合包</serverlistsubscribemissingpackages>
 <serverlistsubscribemissingpackagestooltip>在Steam创意工坊中订阅缺少的内容包，然后进入创意工坊菜单下载并启用它们。</serverlistsubscribemissingpackagestooltip>
 <serverlistsubscribemissingpackagestooltipnosteam>缺少的内容包可以在Steam创意工坊中找到，但如果您没有在Steam上购买过本游戏的话，将无法使用Steam相关服务。</serverlistsubscribemissingpackagestooltipnosteam>
 <filterservers>筛选服务器</filterservers>
@@ -560,10 +560,10 @@
 <filterincompatibleservers>隐藏不兼容的服务器</filterincompatibleservers>
 <filterfullservers>隐藏已满服务器</filterfullservers>
 <filteremptyservers>隐藏空服务器</filteremptyservers>
-<nomatchingservers>未找到联机服务器</nomatchingservers>
+<nomatchingservers>未找到符合条件的服务器</nomatchingservers>
 <refreshingserverlist>刷新服务器列表…</refreshingserverlist>
 <noservers>无法找到服务器</noservers>
-<serverlistnosteamconnection>无法找到服务器（与Steam断开连接）</serverlistnosteamconnection>
+<serverlistnosteamconnection>无法找到服务器（未连接至Steam）</serverlistnosteamconnection>
 <masterservererrorlabel>连接错误</masterservererrorlabel>
 <masterservertimeouterror>无法连接主服务器（连接超时）</masterservertimeouterror>
 <masterservererrorexception>连接到主服务器时发生错误 { [error] }</masterservererrorexception>
@@ -571,7 +571,7 @@
 <masterservererrorunavailable>连接到主服务器时发生错误(505-服务不可用)。当前主服务器可能在停机维护或临时过载，请稍后再试。</masterservererrorunavailable>
 <masterservererrordefault>连接到主服务器时发生错误([statuscode]: [statusdescription])</masterservererrordefault>
 <couldnotconnecttoserver>无法连接到服务器</couldnotconnecttoserver>
-<invalidipaddress>[serverip]:[port]'解析地址失败，请确定您输入的IP地址是否可用。</invalidipaddress>
+<invalidipaddress>解析地址失败（[serverip]:[port]），请确定您输入的IP地址是否可用。</invalidipaddress>
 <connecting>正在连接中</connecting>
 <disconnecting>断开连接中</disconnecting>
 <passwordrequired>需要密码</passwordrequired>
@@ -590,7 +590,7 @@
 
 <!-- Disconnect reasons -->
 <disconnectreason.banned>你已被该服务器加入黑名单</disconnectreason.banned>
-<disconnectreason.kicked>你已被移除该服务器</disconnectreason.kicked>
+<disconnectreason.kicked>你已被该服务器移除</disconnectreason.kicked>
 <disconnectreason.servershutdown>该服务器已关闭</disconnectreason.servershutdown>
 <disconnectreason.serverfull>服务器已满</disconnectreason.serverfull>
 <disconnectreason.authenticationrequired>本地客户端未能正确发送身份验证申请</disconnectreason.authenticationrequired>
@@ -598,14 +598,14 @@
 <disconnectreason.steamauthenticationfailed>Steam身份验证失败</disconnectreason.steamauthenticationfailed>
 <disconnectreason.sessiontaken>您的会话已经被同一IP地址上的新连接占用</disconnectreason.sessiontaken>
 <disconnectreason.toomanyfailedlogins>登录失败次数过多</disconnectreason.toomanyfailedlogins>
-<disconnectreason.noname>无对应名字</disconnectreason.noname>
+<disconnectreason.noname>未命名。</disconnectreason.noname>
 <disconnectreason.invalidname>您的名字包含不可用字符</disconnectreason.invalidname>
 <disconnectreason.nametaken>该名字已被占用</disconnectreason.nametaken>
-<disconnectreason.invalidversion>不可连接的游戏版本</disconnectreason.invalidversion>
+<disconnectreason.invalidversion>游戏版本不匹配</disconnectreason.invalidversion>
 <disconnectreason.missingcontentpackage>缺少内容组合包</disconnectreason.missingcontentpackage>
-<disconnectreason.incompatiblecontentpackage>错误的内容组合包</disconnectreason.incompatiblecontentpackage>
+<disconnectreason.incompatiblecontentpackage>内容组合包不兼容</disconnectreason.incompatiblecontentpackage>
 <disconnectreason.notonwhitelist>您不在该服务器的白名单上</disconnectreason.notonwhitelist>
-<disconnectmessage.afk>您已经无操作太久</disconnectmessage.afk>
+<disconnectmessage.afk>您的闲置时间过长</disconnectmessage.afk>
 <disconnectmessage.steamauthnolongervalid>Steam身份验证失效 ([status])</disconnectmessage.steamauthnolongervalid>
 <disconnectmessage.toomanyfailedlogins>登录失败次数过多</disconnectmessage.toomanyfailedlogins>
 <disconnectmessage.invalidversion>若想连接到该服务器，需要游戏版本为'[version]'（您的版本为'[clientversion]'）</disconnectmessage.invalidversion>
@@ -615,15 +615,15 @@
 <disconnectmessage.incompatiblecontentpackages>在加入服务器前，你需要禁用下列内容组合包[incompatiblecontentpackages]</disconnectmessage.incompatiblecontentpackages>
 
 <!-- Server lobby -->
-<restartingin>正在重启中</restartingin>
+<restartingin>即将重启</restartingin>
 <votes>投票</votes>
-<manual>之南</manual>
+<manual>指南</manual>
 <vote>投票</vote>
 <gamemode>游戏模式</gamemode>
 <missiontype>任务类型</missiontype>
 <random>随机</random>
-<levelseed>海平面种子</levelseed>
-<leveldifficulty>海平面难度</leveldifficulty>
+<levelseed>关卡种子</levelseed>
+<leveldifficulty>关卡难度</leveldifficulty>
 <traitors>叛徒</traitors>
 <botcount>Bot 数量</botcount>
 <botspawnmode>Bot生成模式</botspawnmode>
@@ -671,7 +671,7 @@
 <permittedconsolecommands>可运行的控制台指令：</permittedconsolecommands>
 <pleasewaitroundrunning>请稍等</pleasewaitroundrunning>
 <roundrunningspectatedisabled>当前有一个巡回正在进行，管理员已禁用观看模式，请等待新巡回的开始。</roundrunningspectatedisabled>
-<roundrunningspectateenabled>当前有一个巡回正在进行，你可以进入观看模式，一边旁观一边等待新巡回的开始。</roundrunningspectateenabled>
+<roundrunningspectateenabled>当前有一个巡回正在进行，但你可以在观看模式下等待重生飞船或新巡回开始。</roundrunningspectateenabled>
 <serverdownloadfinished>下载完成</serverdownloadfinished>
 <downloadingfile>正在下载[filename]</downloadingfile>
 <filedownloadednotification>文件'[filename]'已下载成功</filedownloadednotification>
@@ -770,41 +770,41 @@
 <missionheader0.salvagenasonovartifactcave>已收容异星遗物</missionheader0.salvagenasonovartifactcave>
 <missionmessage0.salvagenasonovartifactcave>异星遗物已经成功收容，驾驶潜艇返航，以领取相应的奖励。</missionmessage0.salvagenasonovartifactcave>
 <missionname.killmoloch>猎杀摩螺克</missionname.killmoloch>
-<missiondescription.killmoloch>一只攻击性很强的摩螺克在这片海域穿行，严重影响到[location1]与[location2]之间的船运安全，有人承诺给杀死它的人一大笔赏金。</missiondescription.killmoloch>
+<missiondescription.killmoloch>一只攻击性很强的摩螺克在这片海域穿行，严重影响到[location1]与[location2]之间的船运安全，有人承诺给杀死它的人一笔高达[reward]的赏金</missiondescription.killmoloch>
 <missionsonarlabel.killmoloch>摩螺克</missionsonarlabel.killmoloch>
 <missionsuccess.killmoloch>这只臭名昭著的摩螺克已经死了</missionsuccess.killmoloch>
 <missionheader0.killmoloch>目标已清除</missionheader0.killmoloch>
 <missionmessage0.killmoloch>摩螺克已被击杀，驾驶潜艇返航，以领取相应奖励。</missionmessage0.killmoloch>
 <missionname.killtigerthresher>猎杀虎尾鱼蛇</missionname.killtigerthresher>
-<missiondescription.killtigerthresher>一只攻击性很强的虎尾鱼蛇在这片海域穿行，严重影响到[location1]与[location2]之间的船运安全，有人承诺给杀死它的人一大笔赏金。</missiondescription.killtigerthresher>
+<missiondescription.killtigerthresher>一只攻击性很强的虎尾鱼蛇在这片海域穿行，严重影响到[location1]与[location2]之间的船运安全，有人承诺给杀死它的人一笔高达[reward]的赏金。</missiondescription.killtigerthresher>
 <missionsonarlabel.killtigerthresher>虎尾鱼蛇</missionsonarlabel.killtigerthresher>
 <missionsuccess.killtigerthresher>这只臭名昭著的虎尾鱼蛇已经死了</missionsuccess.killtigerthresher>
 <missionheader0.killtigerthresher>目标已清除</missionheader0.killtigerthresher>
 <missionmessage0.killtigerthresher>虎尾鱼蛇已被击杀，驾驶潜艇返航，以领取相应奖励。</missionmessage0.killtigerthresher>
 <missionname.killhammerhead>猎杀锤头煞</missionname.killhammerhead>
-<missiondescription.killhammerhead>一只攻击性很强的锤头煞在这片海域穿行，严重影响到[location1]与[location2]之间的船运安全，有人承诺给杀死它的人一大笔赏金。</missiondescription.killhammerhead>
+<missiondescription.killhammerhead>一只攻击性很强的锤头煞在这片海域穿行，严重影响到[location1]与[location2]之间的船运安全，有人承诺给杀死它的人一笔高达[reward]的赏金。</missiondescription.killhammerhead>
 <missionsonarlabel.killhammerhead>锤头煞</missionsonarlabel.killhammerhead>
 <missionsuccess.killhammerhead>这只臭名昭著的锤头煞已经死了</missionsuccess.killhammerhead>
 <missionheader0.killhammerhead>目标已清除</missionheader0.killhammerhead>
 <missionmessage0.killhammerhead>锤头煞已被击杀，驾驶潜艇返航，以领取相应奖励。</missionmessage0.killhammerhead>
 <missionname.killcrawlerswarm1>猎杀藻鬃爬行者种群</missionname.killcrawlerswarm1>
-<missiondescription.killcrawlerswarm1>一小群饥饿的爬行者在这片海域穿行，严重影响到[location1]与[location2]之间的船运安全，有人承诺给杀死它的人一大笔赏金。</missiondescription.killcrawlerswarm1>
+<missiondescription.killcrawlerswarm1>一小群饥饿的爬行者在这片海域穿行，严重影响到[location1]与[location2]之间的船运安全，有人承诺给杀死它的人一笔高达[reward]的赏金。</missiondescription.killcrawlerswarm1>
 <missionsonarlabel.killcrawlerswarm1>藻鬃爬行者种群</missionsonarlabel.killcrawlerswarm1>
 <missionsuccess.killcrawlerswarm1>这群臭名昭著的藻鬃爬行者业已全军覆没</missionsuccess.killcrawlerswarm1>
 <missionheader0.killcrawlerswarm1>目标已清除</missionheader0.killcrawlerswarm1>
 <missionmessage0.killcrawlerswarm1>藻鬃爬行者种群已被覆灭，驾驶潜艇返航，以领取相应奖励。</missionmessage0.killcrawlerswarm1>
 <missionname.killcrawlerswarm2>猎杀藻鬃爬行者族群</missionname.killcrawlerswarm2>
-<missiondescription.killcrawlerswarm2>一大群饥饿的爬行者在这片海域穿行，严重影响到[location1]与[location2]之间的船运安全，有人承诺给杀死它的人一大笔赏金。</missiondescription.killcrawlerswarm2>
+<missiondescription.killcrawlerswarm2>一大群饥饿的爬行者在这片海域穿行，严重影响到[location1]与[location2]之间的船运安全，有人承诺给杀死它的人一笔高达[reward]的赏金。</missiondescription.killcrawlerswarm2>
 <missionsonarlabel.killcrawlerswarm2>藻鬃爬行者族群</missionsonarlabel.killcrawlerswarm2>
 <missionsuccess.killcrawlerswarm2>这群臭名昭著的藻鬃爬行者业已全军覆没</missionsuccess.killcrawlerswarm2>
 <missionheader0.killcrawlerswarm2>目标已清除</missionheader0.killcrawlerswarm2>
 <missionmessage0.killcrawlerswarm2>藻鬃爬行者族群已被覆灭，驾驶潜艇返航，以领取相应奖励。</missionmessage0.killcrawlerswarm2>
 <missionname.killendworm>深渊之兽</missionname.killendworm>
-<missiondescription.killendworm>最近频繁的地震数据标明，木卫二深处的一个大家伙出现在[location1]与[location2]之间的航线上。目前该航线上所有物流运输均被取消，直到地震源——那只深渊之兽被那些只认赏金的亡命徒击杀。</missiondescription.killendworm>
+<missiondescription.killendworm>最近频繁的地震数据标明，木卫二深处的一个大家伙出现在[location1]与[location2]之间的航线上。目前该航线上所有物流运输均被取消，直到有人愿为一笔高达[reward]的赏金击杀这只导致地震的深渊巨兽。</missiondescription.killendworm>
 <missionsonarlabel.killendworm>目标</missionsonarlabel.killendworm>
 <missionsuccess.killendworm>带来恐惧的末日蠕虫已死，航线回归正常。</missionsuccess.killendworm>
 <missionheader0.killendworm>目标已清除</missionheader0.killendworm>
-<missionmessage0.killendworm>来自深渊的巨兽已被击杀，驾驶潜艇返航，已领取相应奖励。</missionmessage0.killendworm>
+<missionmessage0.killendworm>来自深渊的巨兽已被击杀，驾驶潜艇返航，以领取相应奖励。</missionmessage0.killendworm>
 <missionname.salvagekillmoloch>打捞一件异星遗物</missionname.salvagekillmoloch>
 <missiondescription.salvagekillmoloch>[location1]的研究人员捕捉到一种次声波信号，该信号与之前在木卫二上发现的异星遗物发出的信号高度拟合。调查信号源，并尝试带回可能存在的异星遗物。</missiondescription.salvagekillmoloch>
 <missionsonarlabel.salvagekillmoloch>次声波信号</missionsonarlabel.salvagekillmoloch>
@@ -812,31 +812,31 @@
 <missionheader0.salvagekillmoloch>目标已清除</missionheader0.salvagekillmoloch>
 <missionmessage0.salvagekillmoloch>信号源竟然是一只摩螺克！你应该逃离这里并将结果告知研究人员。</missionmessage0.salvagekillmoloch>
 <missionname.salvagekillcarrier>打捞沉船</missionname.salvagekillcarrier>
-<missiondescription.salvagekillcarrier>两个月前，一艘小型货船在运输异星材料的过程中失踪。据推测，这艘船在从 [location1]到[location2]的航行中被深渊吞噬。最近，它的应急信号灯在[location2]附近发出了信号，找到这艘船，取回货物。</missiondescription.salvagekillcarrier>
-<missionsonarlabel.salvagekillcarrier>应急信号</missionsonarlabel.salvagekillcarrier>
+<missiondescription.salvagekillcarrier>两个月前，一艘小型货船在运输异星材料的过程中失踪。据推测，这艘船在从 [location1]到[location2]的航行中被深渊吞噬。最近，它的紧急救援信标在[location2]附近发出了信号，找到这艘船，取回货物。</missiondescription.salvagekillcarrier>
+<missionsonarlabel.salvagekillcarrier>紧急救援信号</missionsonarlabel.salvagekillcarrier>
 <missionsuccess.salvagekillcarrier>[location2]的研究人员似乎不愿回答关于这艘船的任何问题，却急切地想知道这次遭遇的相关信息。他们承诺，会额外提供1000点数作为“辛苦费”。</missionsuccess.salvagekillcarrier>
 <missionheader0.salvagekillcarrier>目标被摧毁</missionheader0.salvagekillcarrier>
 <missionmessage0.salvagekillcarrier>失事船只似乎已经被某种寄生生物占据了，它们还试图攻击你的潜艇。现在该船只已失去行动能力。你应该将相关信息报告给[location2]。</missionmessage0.salvagekillcarrier>
 <missionname.cargocompoundn>易爆货物</missionname.cargocompoundn>
-<missiondescription.cargocompoundn>当地一家军火商出[reward]点数，想让人帮忙吧两箱易爆货物送到[location2]的顾客手里。</missiondescription.cargocompoundn>
+<missiondescription.cargocompoundn>一家军火商开价[reward]点数，要求把两箱易爆货物送到[location2]的顾客手里。</missiondescription.cargocompoundn>
 <missionsuccess.cargocompoundn>易爆货物已成功送达。</missionsuccess.cargocompoundn>
 <missionname.cargovolatilecompoundn>易爆货物</missionname.cargovolatilecompoundn>
-<missiondescription.cargovolatilecompoundn>当地一家军火商出[reward]点数，想让人帮忙吧两箱易爆货物送到[location2]的顾客手里。</missiondescription.cargovolatilecompoundn>
+<missiondescription.cargovolatilecompoundn>一家军火商开价[reward]点数，要求把两箱易爆货物送到[location2]的顾客手里。</missiondescription.cargovolatilecompoundn>
 <missionsuccess.cargovolatilecompoundn>易爆货物已成功送达。</missionsuccess.cargovolatilecompoundn>
 <missionname.cargochemicals>化学品运输</missionname.cargochemicals>
-<missiondescription.cargochemicals>[location1]的研究人员想将一些危险的化学品运送到[location2]，他开价[reward]点数。</missiondescription.cargochemicals>
+<missiondescription.cargochemicals>[location1]的研究人员开价250点数，要求将一些危险的化学品运送到[location2]。</missiondescription.cargochemicals>
 <missionsuccess.cargochemicals>化学品已成功送达。</missionsuccess.cargochemicals>
-<missionname.cargohuskeggs>高危生化产品运输</missionname.cargohuskeggs>
-<missiondescription.cargohuskeggs>当地的研究人员想将一些画皮寄生虫的卵运送到[location2]，他能够提供的报酬是[reward]点数。</missiondescription.cargohuskeggs>
+<missionname.cargohuskeggs>生化危机</missionname.cargohuskeggs>
+<missiondescription.cargohuskeggs>本地研究人员开价[reward]点数，要求将一个装有画皮寄生虫卵的容器运到[location2]。</missiondescription.cargohuskeggs>
 <missionsuccess.cargohuskeggs>画皮寄生虫卵已成功送达。</missionsuccess.cargohuskeggs>
 <missionname.cargonitroglycerin>小心轻放</missionname.cargonitroglycerin>
-<missiondescription.cargonitroglycerin>当地的研究人员想将一大批硝化甘油运送到[location2]，他能够提供的报酬是[reward]点数。</missiondescription.cargonitroglycerin>
+<missiondescription.cargonitroglycerin>本地研究人员开价[reward]点数，要求将一大批硝化甘油运送到[location2]。</missiondescription.cargonitroglycerin>
 <missionsuccess.cargonitroglycerin>化学品已成功送达。</missionsuccess.cargonitroglycerin>
-<missionname.cargoclowngear>赞美滑稽之母亲</missionname.cargoclowngear>
-<missiondescription.cargoclowngear>当地的小丑工会想将一些小丑装扮运送到[location2]，他能够提供的报酬是[reward] 点数。</missiondescription.cargoclowngear>
+<missionname.cargoclowngear>赞美小丑圣母</missionname.cargoclowngear>
+<missiondescription.cargoclowngear>本地小丑集团开价[reward]点数，要求将一批小丑装扮运送到[location2]。</missiondescription.cargoclowngear>
 <missionsuccess.cargoclowngear>小丑装扮已成功送达。</missionsuccess.cargoclowngear>
 <missionname.cargoconstructionminerals>矿业中心建材运输</missionname.cargoconstructionminerals>
-<missiondescription.cargoconstructionminerals>这里的工头想将一批建筑材料运输到[location2]，他能够提供的报酬是[reward] 点数。</missiondescription.cargoconstructionminerals>
+<missiondescription.cargoconstructionminerals>这里的工头开价[reward]点数，要求将一批建筑材料运输到[location2]。</missiondescription.cargoconstructionminerals>
 <missionsuccess.cargoconstructionminerals>建筑材料已成功送达。</missionsuccess.cargoconstructionminerals>
 <missionname.cargosecurityminerals>矿业中心原材料运输</missionname.cargosecurityminerals>
 <missiondescription.cargosecurityminerals>[location2]的安保团队缺少用于制造武器的原材料。如果你能为他们提供相应补给，他们会支付 [reward] 点数。</missiondescription.cargosecurityminerals>
@@ -846,7 +846,7 @@
 <missionsuccess.cargomeditems>医疗物资已成功送达</missionsuccess.cargomeditems>
 <missionname.personneltransport>客运</missionname.personneltransport>
 <missiondescription.personneltransport>有几位当地的工作人员需要尽快赶到[location2]。如果你能将他们一次送达，他们会给你[reward]点数作为酬劳。</missiondescription.personneltransport>
-<missionsuccess.personneltransport>乘客们很满意</missionsuccess.personneltransport>
+<missionsuccess.personneltransport>乘客已安全送达目的地。</missionsuccess.personneltransport>
 <missionname.prospect>勘探工作</missionname.prospect>
 <missiondescription.prospect>据悉，[location1]与矿业中心[location2]之间埋藏着丰富的[resourcename]资源。如果你能在这里找到[quantity]单位的[resourcename]，想来此开矿的人员就会给你[reward]点数的报酬，还可以保留你自己的收获。</missiondescription.prospect>
 <missionsuccess.prospect>资源已探明，驾驶潜艇返航，以领取相应奖励。</missionsuccess.prospect>
@@ -858,12 +858,13 @@
 <missionsonarlabel.beacon>信标投放位置</missionsonarlabel.beacon>
 <missionsuccess.beacon>信标投放成功</missionsuccess.beacon>
 <missionname.pvpmission>探查并摧毁</missionname.pvpmission>
-<missiondescriptionneutral.pvpmission>一艘木卫二联盟的军舰将从[location1]出发，前往[location2]外围击沉一艘革命党的舰船。</missiondescriptionneutral.pvpmission>
+<missiondescriptionneutral.pvpmission>一艘木卫二联盟的军舰已从[location1]出发，前往[location2]外围击沉一艘革命党的舰船。</missiondescriptionneutral.pvpmission>
 <missiondescription1.pvpmission>我们在外围发现了一艘属于革命党的船。背叛木卫二联盟的叛徒将被处以极刑——不惜一切代价，消灭他们！</missiondescription1.pvpmission>
 <missiondescription2.pvpmission>你是反木卫二联盟革命组织的一员，根据你在[location1]的线人传来的情报，一艘联盟的军舰刚刚接到剿灭你的任务。动用一切手段，消灭他们！</missiondescription2.pvpmission>
 <missionteam1.pvpmission>联盟军</missionteam1.pvpmission>
 <missionteam2.pvpmission>革命党</missionteam2.pvpmission>
-<missionfailure.pvpmission>双方各有损伤。</missionfailure.pvpmission>
+<missionsuccess.pvpmission>解毒剂及时送达。</missionsuccess.pvpmission>
+<missionfailure.pvpmission>双方同归于尽。</missionfailure.pvpmission>
 
 <!-- Entity categories -->
 <mapentitycategory.all>全部</mapentitycategory.all>
@@ -875,7 +876,7 @@
 <mapentitycategory.misc>杂物</mapentitycategory.misc>
 <mapentitycategory.alien>异星</mapentitycategory.alien>
 <mapentitycategory.itemassembly>组合</mapentitycategory.itemassembly>
-<mapentitycategory.legacy><!-- No data --></mapentitycategory.legacy>
+<mapentitycategory.legacy>遗产</mapentitycategory.legacy>
 
 <!-- Display names -->
 <displayname.oxygentankempty>氧气罐（空）</displayname.oxygentankempty>
@@ -885,14 +886,14 @@
 <entityname.door>手动门</entityname.door>
 <entitydescription.door>一扇没有集成开关按钮的滑动门——需手动连接。</entitydescription.door>
 <entityname.windoweddoor>手动带窗门</entityname.windoweddoor>
-<entitydescription.windoweddoor>一扇没有集成开关按钮、但是带有窗口的滑动门——需手动连接。</entitydescription.windoweddoor>
+<entitydescription.windoweddoor>一扇带有窗口的滑动门。未集成开关按钮——需手动连接。</entitydescription.windoweddoor>
 <entityname.hatch>手动舱口</entityname.hatch>
 <entitydescription.hatch>一扇水平方向、未集成开关按钮的门——需手动连接。</entitydescription.hatch>
 <entityname.doorwbuttons>按钮门</entityname.doorwbuttons>
 <entitydescription.doorwbuttons>一扇带有两侧开关按钮的门。</entitydescription.doorwbuttons>
 <entityname.windoweddoorwbuttons>按钮带窗门</entityname.windoweddoorwbuttons>
 <entitydescription.windoweddoorwbuttons>一扇带有两侧开关按钮与窗口的滑动门。</entitydescription.windoweddoorwbuttons>
-<entityname.hatchwbuttons>按钮舱口</entityname.hatchwbuttons>
+<entityname.hatchwbuttons>按钮舱门</entityname.hatchwbuttons>
 <entitydescription.hatchwbuttons>一扇水平方向、带有两侧开关按钮的门。</entitydescription.hatchwbuttons>
 
 <!-- Machine -->
@@ -900,12 +901,12 @@
 <entitydescription.navterminal>用于设置潜艇航向的装置。</entitydescription.navterminal>
 <entityname.shuttlenavterminal>飞船导航终端</entityname.shuttlenavterminal>
 <entitydescription.shuttlenavterminal>用于设置飞船航向的装置。</entitydescription.shuttlenavterminal>
-<entityname.sonarmonitor>声呐监控器</entityname.sonarmonitor>
-<entitydescription.sonarmonitor>用于观察潜艇声呐反馈结果的仪器，不具备交互功能。</entitydescription.sonarmonitor>
+<entityname.sonarmonitor>声纳监控器</entityname.sonarmonitor>
+<entitydescription.sonarmonitor>用于观察潜艇声纳反馈结果的仪器，不具备交互功能。</entitydescription.sonarmonitor>
 <entityname.statusmonitor>状态监控器</entityname.statusmonitor>
 <entitydescription.statusmonitor>可以用来查看潜艇结构图与每个房间状态的仪器。</entitydescription.statusmonitor>
 <entityname.sonartransducer>声纳换能器</entityname.sonartransducer>
-<entitydescription.sonartransducer>让声呐监控器与导航终端接受指定声呐信号的转换仪器（适用于无人机与遥控飞船）</entitydescription.sonartransducer>
+<entitydescription.sonartransducer>让声纳监控器与导航终端接收指定声纳信号的转换仪器（适用于无人机与遥控飞船）</entitydescription.sonartransducer>
 <entityname.engine>引擎</entityname.engine>
 <entitydescription.engine>在水平方向上产生动能的装置。</entitydescription.engine>
 <entityname.largeengine>大型引擎</entityname.largeengine>
@@ -918,16 +919,16 @@
 <entitydescription.medicalfabricator>可合成多种医疗用品的机器。</entitydescription.medicalfabricator>
 <entityname.deconstructor>解构仪</entityname.deconstructor>
 <entitydescription.deconstructor>将物品分解成可用组件与原材料的机器。</entitydescription.deconstructor>
-<entityname.oxygenerator>氧气制氧机</entityname.oxygenerator>
+<entityname.oxygenerator>制氧机</entityname.oxygenerator>
 <entitydescription.oxygenerator>制造氧气的仪器，需要与氧气排放口相连，也可重新填充氧气罐。</entitydescription.oxygenerator>
 <entityname.shuttleoxygenerator>飞船制氧机</entityname.shuttleoxygenerator>
 <entitydescription.shuttleoxygenerator>制造氧气的仪器，需要与氧气排放口相连，也可重新填充氧气罐。</entitydescription.shuttleoxygenerator>
 <entityname.vent>氧气排放口</entityname.vent>
 <entitydescription.vent>氧气输出的管道口，必须与制氧机相连。</entitydescription.vent>
-<entityname.pump>泵机</entityname.pump>
-<entitydescription.pump>抽水用的机器。</entitydescription.pump>
-<entityname.smallpump>小泵机</entityname.smallpump>
-<entitydescription.smallpump>抽水用的机器。</entitydescription.smallpump>
+<entityname.pump>泵</entityname.pump>
+<entitydescription.pump>抽水用的设备。</entitydescription.pump>
+<entityname.smallpump>小型泵</entityname.smallpump>
+<entitydescription.smallpump>抽水用的设备。</entitydescription.smallpump>
 <entityname.searchlight>探照灯</entityname.searchlight>
 <entitydescription.searchlight>用于照明的灯具。</entitydescription.searchlight>
 <entityname.reactor1>核反应堆</entityname.reactor1>
@@ -935,23 +936,23 @@
 <entityname.coilgun>电磁枪</entityname.coilgun>
 <entitydescription.coilgun>以电磁动力推动金属弹丸进行高速射击的小型动能武器，对小型目标有奇效，对大型或重甲目标效果不佳。</entitydescription.coilgun>
 <entityname.coilgunloader>电磁枪装弹器</entityname.coilgunloader>
-<entitydescription.coilgunloader>为已连接的电磁枪填充弹药的机器。</entitydescription.coilgunloader>
-<entityname.depthchargetube>深潜投放器</entityname.depthchargetube>
+<entitydescription.coilgunloader>为已链接的电磁枪装填弹药的装置。</entitydescription.coilgunloader>
+<entityname.depthchargetube>深水炸弹投放器</entityname.depthchargetube>
 <entitydescription.depthchargetube>可用于部署深水炸弹与诱饵。</entitydescription.depthchargetube>
-<entityname.depthchargeloader>深潜装弹器</entityname.depthchargeloader>
-<entitydescription.depthchargeloader>为深潜投放器填充深水炸弹或诱饵的机器。</entitydescription.depthchargeloader>
+<entityname.depthchargeloader>深水炸弹装弹器</entityname.depthchargeloader>
+<entitydescription.depthchargeloader>为投放器填充深水炸弹或诱饵的装置。</entitydescription.depthchargeloader>
 <entityname.dischargecoil>电磁线圈</entityname.dischargecoil>
-<entitydescription.dischargecoil>在船体周边产生一个能产生伤害的带电区域。</entitydescription.dischargecoil>
+<entitydescription.dischargecoil>在船体周边产生一个能造成伤害的带电区域。</entitydescription.dischargecoil>
 <entityname.railgun>轨道炮</entityname.railgun>
 <entitydescription.railgun>以电磁动力推动金属弹丸进行高速射击的大型动能武器，发射瞬间需要超高压电流脉冲推动（一般由超级电容器产生），因此开火速度很慢，仅适用于针对大型或重甲目标。</entitydescription.railgun>
 <entityname.periscope>潜望镜</entityname.periscope>
 <entitydescription.periscope>可与摄像机连接，用于观察潜艇外部情况的装置；也可以与电磁枪、轨道炮相连用以控制武器。</entitydescription.periscope>
 <entityname.railgunloader>轨道炮装弹器</entityname.railgunloader>
 <entitydescription.railgunloader>为已连接的轨道炮填充炮弹的机器。</entitydescription.railgunloader>
-<entityname.railgunloadersinglevertical>单发式电磁枪装弹器（竖直放置）</entityname.railgunloadersinglevertical>
-<entitydescription.railgunloadersinglevertical>为已连接的电磁枪填充弹药的机器。仅支持单发点射。</entitydescription.railgunloadersinglevertical>
-<entityname.railgunloadersinglehorizontal>单发式电磁枪装弹器（水平放置）</entityname.railgunloadersinglehorizontal>
-<entitydescription.railgunloadersinglehorizontal>为已连接的电磁枪填充弹药的机器。仅支持单发点射。</entitydescription.railgunloadersinglehorizontal>
+<entityname.railgunloadersinglevertical>单发式轨道炮装弹器（竖直放置）</entityname.railgunloadersinglevertical>
+<entitydescription.railgunloadersinglevertical>为已连接的轨道炮填充弹药的机器。仅支持单发点射。</entitydescription.railgunloadersinglevertical>
+<entityname.railgunloadersinglehorizontal>单发式轨道炮装弹器（水平放置）</entityname.railgunloadersinglehorizontal>
+<entitydescription.railgunloadersinglehorizontal>为已连接的轨道炮填充弹药的机器。仅支持单发点射。</entitydescription.railgunloadersinglehorizontal>
 
 <!-- Equipment -->
 <entityname.idcard>ID卡</entityname.idcard>
@@ -975,9 +976,9 @@
 <entityname.headset>耳机</entityname.headset>
 <entitydescription.headset>允许船员之间进行远程交流。</entitydescription.headset>
 <entityname.clownmask>小丑面具</entityname.clownmask>
-<entitydescription.clownmask>赞美Honkmother</entitydescription.clownmask>
+<entitydescription.clownmask>赞美小丑圣母</entitydescription.clownmask>
 <entityname.clowncostume>小丑服</entityname.clowncostume>
-<entitydescription.clowncostume>赞美Honkmother</entitydescription.clowncostume>
+<entitydescription.clowncostume>赞美小丑圣母</entitydescription.clowncostume>
 <entityname.assistantclothes>助手服</entityname.assistantclothes>
 <entitydescription.assistantclothes>当然，助手也需要穿衣服</entitydescription.assistantclothes>
 <entityname.watchmanclothes>保安服</entityname.watchmanclothes>
@@ -1011,17 +1012,17 @@
 <entityname.weldingfueltank>焊接油箱</entityname.weldingfueltank>
 <entitydescription.weldingfueltank>焊接工具的燃料。</entitydescription.weldingfueltank>
 <entityname.extinguisher>灭火器</entityname.extinguisher>
-<entitydescription.extinguisher>手持式干粉灭火器。</entitydescription.extinguisher>
+<entitydescription.extinguisher>二氧化碳灭火器。</entitydescription.extinguisher>
 <entityname.screwdriver>螺丝刀</entityname.screwdriver>
 <entitydescription.screwdriver>用于电器维修与重新布线的工具。</entitydescription.screwdriver>
 <entityname.wrench>扳手</entityname.wrench>
 <entitydescription.wrench>用于机械维修的工具。</entitydescription.wrench>
 <entityname.crowbar>撬棍</entityname.crowbar>
-<entitydescription.crowbar>可以撬开门和舱口，也可以作为钝器使用。</entitydescription.crowbar>
-<entityname.handheldsonar>手持声呐</entityname.handheldsonar>
-<entitydescription.handheldsonar>便携式声呐，便于探测。</entitydescription.handheldsonar>
-<entityname.sonarbeacon>声呐信标</entityname.sonarbeacon>
-<entitydescription.sonarbeacon>产生一个可由声呐监控器、手持声呐、导航终端检测到的固定局部信号标识。</entitydescription.sonarbeacon>
+<entitydescription.crowbar>可以撬开门和舱门，也可以作为钝器使用。</entitydescription.crowbar>
+<entityname.handheldsonar>手持声纳</entityname.handheldsonar>
+<entitydescription.handheldsonar>便携式声纳，便于探测。</entitydescription.handheldsonar>
+<entityname.sonarbeacon>声纳信标</entityname.sonarbeacon>
+<entitydescription.sonarbeacon>产生一个可由声纳监控器、手持声纳、导航终端检测到的固定局部信号标识。</entitydescription.sonarbeacon>
 <entityname.flashlight>手电筒</entityname.flashlight>
 <entitydescription.flashlight>手持光源。</entitydescription.flashlight>
 <entityname.flare>照明弹</entityname.flare>
@@ -1048,12 +1049,12 @@
 <entitydescription.alienspear>鱼叉枪的“弹药”。</entitydescription.alienspear>
 <entityname.explosivespear>爆炸鱼叉</entityname.explosivespear>
 <entitydescription.explosivespear>鱼叉枪的“弹药”。</entitydescription.explosivespear>
-<entityname.harpoongun>鱼叉枪用的鱼叉。</entityname.harpoongun>
+<entityname.harpoongun>鱼叉枪用的鱼叉枪。</entityname.harpoongun>
 <entitydescription.harpoongun>可发射鱼叉、爆炸鱼叉、异星鱼叉。</entitydescription.harpoongun>
 <entityname.syringegun>注射器枪</entityname.syringegun>
 <entitydescription.syringegun>发射包含药物或毒液的注射器。</entitydescription.syringegun>
 <entityname.revolverround>左轮子弹</entityname.revolverround>
-<entitydescription.revolverround>.38口径，此路不通…</entitydescription.revolverround>
+<entitydescription.revolverround>.38口径，可能对人有效…</entitydescription.revolverround>
 <entityname.revolver>左轮手枪</entityname.revolver>
 <entitydescription.revolver>.38口径。</entitydescription.revolver>
 <entityname.stungrenade>震撼手榴弹</entityname.stungrenade>
@@ -1075,7 +1076,7 @@
 <entityname.batterycell>电池</entityname.batterycell>
 <entitydescription.batterycell>各种手持设备的电源。大多数潜艇都有备用的蓄电池与充电坞站。</entitydescription.batterycell>
 <entityname.fulguriumbatterycell>雷素电池</entityname.fulguriumbatterycell>
-<entitydescription.fulguriumbatterycell>一种罕有人知的、由雷素构成的电池。</entitydescription.fulguriumbatterycell>
+<entitydescription.fulguriumbatterycell>由非常罕见，且人类对其知之甚少的雷素构成的电池。</entitydescription.fulguriumbatterycell>
 <entityname.alienarmor>刚素防弹衣</entityname.alienarmor>
 <entitydescription.alienarmor>用异星材料制成的高性能防弹衣。</entitydescription.alienarmor>
 <entityname.alienhelmet>刚素头盔</entityname.alienhelmet>
@@ -1089,11 +1090,11 @@
 <entityname.shuttlebattery>飞船电池</entityname.shuttlebattery>
 <entitydescription.shuttlebattery>用于反应堆发生故障时应急的备用电源。</entitydescription.shuttlebattery>
 <entityname.supercapacitor>超级电容器</entityname.supercapacitor>
-<entitydescription.supercapacitor>快速充放电、低储能率的高效电容器。</entitydescription.supercapacitor>
+<entitydescription.supercapacitor>拥有比电池更高的充能效率。</entitydescription.supercapacitor>
 <entityname.chargingdock>充电坞站</entityname.chargingdock>
 <entitydescription.chargingdock>壁挂式电池充电坞。</entitydescription.chargingdock>
 <entityname.fpgacircuit>FPGA电路</entityname.fpgacircuit>
-<entitydescription.fpgacircuit>现场可编程电路逻辑——一种可以自定义的多用途电路板，可用于各种电气设备。</entitydescription.fpgacircuit>
+<entitydescription.fpgacircuit>现场可编程门阵列——一种可以自定义的多用途电路板，可用于各种电气设备。</entitydescription.fpgacircuit>
 <entityname.andcomponent>与逻辑门</entityname.andcomponent>
 <entitydescription.andcomponent>当两个输入端在设定时间内都接收到信号时，输出一个信号。</entitydescription.andcomponent>
 <entityname.addercomponent>加法逻辑门</entityname.addercomponent>
@@ -1103,15 +1104,15 @@
 <entityname.notcomponent>否逻辑门</entityname.notcomponent>
 <entitydescription.notcomponent>若输入端未接收到信号时，输出一个信号。</entitydescription.notcomponent>
 <entityname.relaycomponent>继电逻辑门</entityname.relaycomponent>
-<entitydescription.relaycomponent>当接通时，讲所有从输入端接收到的信号转发到输出端。</entitydescription.relaycomponent>
+<entitydescription.relaycomponent>当接通时，将所有从输入端接收到的信号转发到输出端。</entitydescription.relaycomponent>
 <entityname.delaycomponent>延迟逻辑门</entityname.delaycomponent>
 <entitydescription.delaycomponent>将所有接收到的信号延迟一定时间。</entitydescription.delaycomponent>
 <entityname.oxygendetector>氧含量传感器</entityname.oxygendetector>
 <entitydescription.oxygendetector>根据周围氧含量输出数值，输出范围为0-100。</entitydescription.oxygendetector>
 <entityname.waterdetector>水传感器</entityname.waterdetector>
-<entitydescription.waterdetector>与水接触时输出信号。</entitydescription.waterdetector>
+<entitydescription.waterdetector>当传感器被水淹没时输出信号。</entitydescription.waterdetector>
 <entityname.smokedetector>烟雾传感器</entityname.smokedetector>
-<entitydescription.smokedetector>与烟雾接触时输出信号。</entitydescription.smokedetector>
+<entitydescription.smokedetector>检测到烟雾时输出信号。</entitydescription.smokedetector>
 <entityname.motiondetector>位移传感器</entityname.motiondetector>
 <entitydescription.motiondetector>当检测到运动位移时输出信号。</entitydescription.motiondetector>
 <entityname.signalcheckcomponent>信号检查组件</entityname.signalcheckcomponent>
@@ -1127,7 +1128,7 @@
 <entityname.button>按钮</entityname.button>
 <entitydescription.button>产生一个切换设备或门状态的短期信号。</entitydescription.button>
 <entityname.switch>开关</entityname.switch>
-<entitydescription.switch>产生一个切换设备或门状态的状态信号。</entitydescription.switch>
+<entitydescription.switch>产生一个切换设备或门状态的持续信号。</entitydescription.switch>
 <entityname.lamp>照明灯</entityname.lamp>
 <entitydescription.lamp>安装在墙上的照明设备。</entitydescription.lamp>
 <entityname.emergencylight>应急灯</entityname.emergencylight>
@@ -1157,7 +1158,7 @@
 
 <!-- Material -->
 <entityname.alienblood>异星血浆</entityname.alienblood>
-<entitydescription.alienblood>从某种木卫二原生种身体中提取的血浆，可以进一步加工成血浆制品，用以治疗缺血。</entitydescription.alienblood>
+<entitydescription.alienblood>从某种木卫二原生种身体中提取的血浆，可以进一步加工成血浆制品，用以治疗失血。</entitydescription.alienblood>
 <entityname.huskeggs>萼形体内转续拟寄生物卵</entityname.huskeggs>
 <entitydescription.huskeggs>木卫二某种寄生虫处于休眠状态的卵，一般人们称其为“画皮寄生虫”。</entitydescription.huskeggs>
 <entityname.carbon>碳</entityname.carbon>
@@ -1169,7 +1170,7 @@
 <entityname.lead>铅</entityname.lead>
 <entitydescription.lead>可用于制作各种弹药。</entitydescription.lead>
 <entityname.phosphorus>磷</entityname.phosphorus>
-<entitydescription.phosphorus>用于制作照明、炸药与一些医用化合物。</entitydescription.phosphorus>
+<entitydescription.phosphorus>用于制作照明设备、炸药与一些医用化合物。</entitydescription.phosphorus>
 <entityname.copper>铜</entityname.copper>
 <entitydescription.copper>可用于制作导线。</entitydescription.copper>
 <entityname.zinc>锌</entityname.zinc>
@@ -1185,7 +1186,7 @@
 <entityname.magnesium>镁</entityname.magnesium>
 <entitydescription.magnesium>用于制作炸药与医用化合物，与水接触后剧烈反应。</entitydescription.magnesium>
 <entityname.lithium>锂</entityname.lithium>
-<entitydescription.lithium>常用于制作电池与抗抑郁药物。</entitydescription.lithium>
+<entitydescription.lithium>常用于制作电池与抗精神病药物。</entitydescription.lithium>
 <entityname.chlorine>氯</entityname.chlorine>
 <entitydescription.chlorine>常用于制作生理盐水（治疗失血）与水合三氯乙醛（强力镇静剂）。</entitydescription.chlorine>
 <entityname.slimebacteria>史莱姆变形细菌</entityname.slimebacteria>
@@ -1213,7 +1214,7 @@
 <entityname.ilmenite>钛铁矿</entityname.ilmenite>
 <entitydescription.ilmenite>含钛的富集矿物。</entitydescription.ilmenite>
 <entityname.stannite>黄锡矿</entityname.stannite>
-<entitydescription.stannite>含锡的富集矿物。</entitydescription.stannite>
+<entitydescription.stannite>含有铜、铁、锡成份的矿物。</entitydescription.stannite>
 <entityname.chalcopyrite>黄铜矿</entityname.chalcopyrite>
 <entitydescription.chalcopyrite>含铜的富集矿物。</entitydescription.chalcopyrite>
 <entityname.esperite>硅钙铅锌矿</entityname.esperite>
@@ -1248,7 +1249,7 @@
 <entitydescription.chrysoprase>含硅的富集矿物。</entitydescription.chrysoprase>
 <entityname.opium>药用鸦片</entityname.opium>
 <entitydescription.opium>从水培罂粟中提取的药用阿片类物质，常用于制造吗啡与芬太尼。</entitydescription.opium>
-<entityname.antibiotics>光谱抗生素</entityname.antibiotics>
+<entityname.antibiotics>广谱抗生素</entityname.antibiotics>
 <entitydescription.antibiotics>一种作用效果广泛的抗生素，但有着损伤内脏的副作用。可用于合成很多药物。</entitydescription.antibiotics>
 <entityname.stabilozine>疗素</entityname.stabilozine>
 <entitydescription.stabilozine>用以制造多种药物的原材料，也可小剂量直接用于治疗内脏损伤与烧伤，对缺氧有一定的缓解作用。</entitydescription.stabilozine>
@@ -1269,7 +1270,7 @@
 <entityname.calyxanide>皮虫净</entityname.calyxanide>
 <entitydescription.calyxanide>用于治疗画皮寄生虫感染的抗寄生虫药物，若患者已进入后期感染阶段，需要加大剂量。</entitydescription.calyxanide>
 <entityname.antipsychosis>氟哌啶醇</entityname.antipsychosis>
-<entitydescription.antipsychosis>一种强效的抗精神病药物，主要适用于偏执型精神分裂症，也可用于其他精神病症。</entitydescription.antipsychosis>
+<entitydescription.antipsychosis>一种强效的抗精神病药物。</entitydescription.antipsychosis>
 <entityname.antinarc>烯丙羟吗啡酮</entityname.antinarc>
 <entitydescription.antinarc>阿片类药物拮抗剂，用于治疗阿片类药物的过量使用与戒断反应。</entitydescription.antinarc>
 <entityname.morbusineantidote>窒死毒剂解毒剂</entityname.morbusineantidote>
@@ -1279,7 +1280,7 @@
 <entityname.tonicliquid>内用辅液</entityname.tonicliquid>
 <entitydescription.tonicliquid>一种药效温和的、用于治疗内脏损伤的药用溶剂，常用于合成更为复杂的药物。</entitydescription.tonicliquid>
 <entityname.meth>兴奋粉剂</entityname.meth>
-<entitydescription.meth>一种强效的神经兴奋剂，具有成瘾性。</entitydescription.meth>
+<entitydescription.meth>一种强效的神经兴奋剂。</entitydescription.meth>
 <entityname.steroids>合成代谢类固醇</entityname.steroids>
 <entitydescription.steroids>暂时增强肌肉强度与身体力量的合成激素。</entitydescription.steroids>
 <entityname.hyperzine>加速粉剂</entityname.hyperzine>
@@ -1396,12 +1397,12 @@
 <entitydescription.weaponholder>放置武器的地方。</entitydescription.weaponholder>
 <entityname.windoweddoor>玻璃推拉门</entityname.windoweddoor>
 <entitydescription.windoweddoor>窗门一体。</entitydescription.windoweddoor>
-<entityname.hatch>舱口</entityname.hatch>
+<entityname.hatch>舱门</entityname.hatch>
 <entitydescription.hatch>一扇水平方向的门。</entitydescription.hatch>
-<entityname.dockingport>横向对接舱口</entityname.dockingport>
-<entitydescription.dockingport>一个水平方向的对接舱口，与另一个舱口对接锁定后，形成水密密封，构成潜艇、飞船、建筑物之间的通道。</entitydescription.dockingport>
-<entityname.dockinghatch>纵向对接舱口</entityname.dockinghatch>
-<entitydescription.dockinghatch>一个竖直方向的对接舱口，与另一个舱口对接锁定后，形成水密密封，构成潜艇、飞船、建筑物之间的通道。</entitydescription.dockinghatch>
+<entityname.dockingport>纵向对接舱口</entityname.dockingport>
+<entitydescription.dockingport>一个竖直方向的对接舱口，与另一个舱口对接锁定后，形成水密密封，构成潜艇、飞船、建筑物之间的通道。</entitydescription.dockingport>
+<entityname.dockinghatch>横向对接舱口</entityname.dockinghatch>
+<entitydescription.dockinghatch>一个水平方向的对接舱口，与另一个舱口对接锁定后，形成水密密封，构成潜艇、飞船、建筑物之间的通道。</entitydescription.dockinghatch>
 <entityname.ductblock>排水口</entityname.ductblock>
 <entitydescription.ductblock>可机械开闭、让水排入排出的管口。</entitydescription.ductblock>
 <entityname.label>标签</entityname.label>
@@ -1457,14 +1458,14 @@
 <entityname.ancientweapon>远古兵器</entityname.ancientweapon>
 <entitydescription.ancientweapon>一柄强而有力的武器。</entitydescription.ancientweapon>
 <entityname.alienhatch>异星舱口</entityname.alienhatch>
-<entitydescription.alienhatch>竖直方向的异星遗迹入口。</entitydescription.alienhatch>
+<entitydescription.alienhatch>水平方向的异星遗迹入口。</entitydescription.alienhatch>
 <entityname.aliendoor>异星门扉</entityname.aliendoor>
-<entitydescription.aliendoor>水平方向的异星遗迹入口。</entitydescription.aliendoor>
+<entitydescription.aliendoor>竖直方向的异星遗迹入口。</entitydescription.aliendoor>
 <entityname.alienmotionsensor>异星运动传感器</entityname.alienmotionsensor>
 <entitydescription.alienmotionsensor>外星人使用的运动传感器。</entitydescription.alienmotionsensor>
 <entityname.artifactholder>遗物柜</entityname.artifactholder>
 <entitydescription.artifactholder>用于保存关键遗物的容器。</entitydescription.artifactholder>
-<entityname.aliengenerator>异星能源核心</entityname.aliengenerator>
+<entityname.aliengenerator>异星发电机</entityname.aliengenerator>
 <entitydescription.aliengenerator>能将异星动力电池转化成可利用的电能。</entitydescription.aliengenerator>
 <entityname.alienpowercell>异星动力电池</entityname.alienpowercell>
 <entitydescription.alienpowercell>一种异星能源。</entitydescription.alienpowercell>
@@ -1489,8 +1490,8 @@
 
 <!-- Room names -->
 <roomname.reactorroom>反应堆机房</roomname.reactorroom>
-<roomname.engineroom>机舱</roomname.engineroom>
-<roomname.commandroom>舰桥</roomname.commandroom>
+<roomname.engineroom>引擎舱</roomname.engineroom>
+<roomname.commandroom>指挥室</roomname.commandroom>
 <roomname.airlock>气闸</roomname.airlock>
 <roomname.ballast>压舱物</roomname.ballast>
 <roomname.subtopleft>上层艉</roomname.subtopleft>
@@ -1507,7 +1508,7 @@
 <roomname.ballasttank2>压载舱B</roomname.ballasttank2>
 <roomname.ballasttank3>压载舱C</roomname.ballasttank3>
 <roomname.ballasttank4>压载舱E</roomname.ballasttank4>
-<roomname.stowage>积载舱</roomname.stowage>
+<roomname.stowage>储物舱</roomname.stowage>
 <roomname.berthing>住舱</roomname.berthing>
 <roomname.utility>多功能舱</roomname.utility>
 <roomname.rearballast>后压舱物</roomname.rearballast>
@@ -1519,7 +1520,7 @@
 <roomname.dockingport>对接舱口</roomname.dockingport>
 <roomname.upperdockingport>上层对接舱口</roomname.upperdockingport>
 <roomname.lowerdockingport>下层对接舱口</roomname.lowerdockingport>
-<roomname.cargo>货仓</roomname.cargo>
+<roomname.cargo>货物</roomname.cargo>
 <roomname.brig>禁闭室</roomname.brig>
 <roomname.crewquarters>船员宿舍</roomname.crewquarters>
 <roomname.junctioncompartment>接线舱室</roomname.junctioncompartment>
@@ -1549,7 +1550,7 @@
 <label.activatelowerdischargecoil>下层放电线圈</label.activatelowerdischargecoil>
 <label.exteriorcamera>外层摄影机视图</label.exteriorcamera>
 <label.ventralcamera>船腹摄影机视图</label.ventralcamera>
-<label.dorsalcamera>船北摄影机视图</label.dorsalcamera>
+<label.dorsalcamera>船背摄影机视图</label.dorsalcamera>
 <label.reactortemp>反应堆温度</label.reactortemp>
 <label.letwaterdrain>离开前将水排干</label.letwaterdrain>
 <label.alphadeck>主甲板</label.alphadeck>
@@ -1592,7 +1593,7 @@
 <submarine.name.humpback>Humpback</submarine.name.humpback>
 <submarine.description.humpback>前军舰WH4-L3“Humpback”已准备待命，它能对抗木卫二深处的大多数危险。该舰速度较高，但机动性差，旧型号的反应堆勉强能提供引擎所需的能源，如果你想安装新设备，最好在舰上加装一个备用电池阵列。</submarine.description.humpback>
 <submarine.name.bunyip>Bunyip</submarine.name.bunyip>
-<submarine.description.bunyip>这艘船最初的设计目的是应用于客运，可以在潜艇与固定设施间快速转移人员。为了保证速度与机动性，Bunyip上未加装武器，很容易被武装到牙齿的其他舰船攻击。</submarine.description.bunyip>
+<submarine.description.bunyip>这艘船最初的设计目的是应用于客运，可以在潜艇与固定设施间快速转移人员。为了保证速度与机动性，Bunyip上未加装武器，因此防御力较弱。</submarine.description.bunyip>
 <submarine.name.muikku>Muikku</submarine.name.muikku>
 <submarine.description.muikku>作为木卫二殖民地的主力飞船，这种小型飞船具有不错的速度与良好的浮潜性能，另一方面，它们脆弱而“短腿”——上面装载的低容量电池限制了它们的航程距离。</submarine.description.muikku>
 <submarine.name.orca>Orca</submarine.name.orca>
@@ -1600,7 +1601,7 @@
 <submarine.name.remora>Remora</submarine.name.remora>
 <submarine.description.remora>Remora有着较大的自由定制空间，主要船体结构包括一个可拆卸的压载舱和一架遥控无人机，想要玩转这艘潜艇，你需要雇佣大量人力。</submarine.description.remora>
 <submarine.name.typhon>Typhon</submarine.name.typhon>
-<submarine.description.typhon>Typhon级潜艇外形粗犷、性能可靠、轻重火力兼备，不过，船长们都知道这种潜艇有着糟糕的最高航速与浮潜速度。</submarine.description.typhon>
+<submarine.description.typhon>Typhon级潜艇外形粗犷、性能可靠、轻重火力兼备，不过，船长们都知道这种潜艇有着糟糕的极限航速与浮潜速度。</submarine.description.typhon>
 <submarine.name.dugong>Dugong</submarine.name.dugong>
 <submarine.description.dugong>Dugong潜艇有着最佳的性价比——虽然它各方面性能都稍逊一筹。缺乏火力与速度的问题只能靠灵活机动来弥补。</submarine.description.dugong>
 <submarine.name.selkie>Selkie</submarine.name.selkie>
@@ -1619,7 +1620,7 @@
 <idcardtags>ID卡权限标签</idcardtags>
 <idcardtagstooltip>在该出生点出生的角色随身携带的ID卡会添加标签，可以用于限制他们在潜艇上的通行权限。</idcardtagstooltip>
 <spawnpointjobs>工作委托</spawnpointjobs>
-<spawnpointjobstooltip>有指定工作的角色才可在此出生点出生。</spawnpointjobstooltip>
+<spawnpointjobstooltip>只有特定职业的角色会出现在此出生点。</spawnpointjobstooltip>
 
 <!-- Linked submarines -->
 <linkedsub>已连通潜艇</linkedsub>
@@ -1629,7 +1630,7 @@
 <reloadlinkedsuberror>无法找到潜艇文件[file]！</reloadlinkedsuberror>
 
 <!-- Chat -->
-<spamfilterkicked>您已被垃圾信息过滤系统提出服务器。</spamfilterkicked>
+<spamfilterkicked>您已被垃圾信息过滤系统踢出服务器。</spamfilterkicked>
 <spamfilterblocked>你已经被垃圾信息过滤系统冻结，请在十秒后重试。</spamfilterblocked>
 
 <!-- Item HUDs -->
@@ -1673,12 +1674,12 @@
 <reactorwarninglowoutput>输出过低</reactorwarninglowoutput>
 <reactorwarninghighoutput>输出过高</reactorwarninghighoutput>
 <reactorwarninglowfuel>燃料供应不足</reactorwarninglowfuel>
-<reactorwarningfuelout>燃料供应超载</reactorwarningfuelout>
+<reactorwarningfuelout>燃料耗尽</reactorwarningfuelout>
 <reactorwarningmeltdown>崩溃</reactorwarningmeltdown>
 <reactorwarningscram>紧急停堆</reactorwarningscram>
 <reactortipfissionrate>提升裂变效率会让反应堆消耗更多燃料，产生更多热量。热量将用于旋转涡轮以产生电力。</reactortipfissionrate>
 <reactortipturbineoutput>涡轮机功率越高，反应堆产生的电能就越多，如果输出功率高于裂变效率，反应堆会冷却；如果输出功率低于裂变效率，反应堆会过热。</reactortipturbineoutput>
-<reactortiptemperature>反应堆堆芯的温度。红色区代表最佳温度区间。</reactortiptemperature>
+<reactortiptemperature>反应堆堆芯的温度。红色标记之间代表最佳温度区间。</reactortiptemperature>
 <reactortipload>目前连接到反应堆的设备消耗的功率总和。</reactortipload>
 <reactortippower>目前反应堆产生的电力功率。</reactortippower>
 <reactortipautotemp>启用自动控制时，反应堆将根据功耗自动调节功率。在功率大幅波动时，为避免自动控制延迟，应启用人工调控。</reactortipautotemp>
@@ -1693,14 +1694,14 @@
 <steeringnopowertip>警告：电力供应不足</steeringnopowertip>
 <steeringautopilotmaintainpostip>自动驾驶已启用\n正在保持当前位置，点击选择需要维持的位置。</steeringautopilotmaintainpostip>
 <steeringautopilotlocationtip>自动驾驶已启用\n已设置自动驶向[locationname]。</steeringautopilotlocationtip>
-<sonaractive>主动声呐</sonaractive>
-<sonarpassive>被动声呐</sonarpassive>
+<sonaractive>主动声纳</sonaractive>
+<sonarpassive>被动声纳</sonarpassive>
 <sonarzoom>缩放</sonarzoom>
 <sonardirectionalping>定向脉冲信号</sonardirectionalping>
 <sonarsignalweak>信号较弱</sonarsignalweak>
 <sonarnosignal>无信号</sonarnosignal>
-<sonartipactive>主动声呐开启时，声呐应答器会发出脉冲信号，根据附近障碍物反射信号来确定周边情况。脉冲信号也可能会惊扰到敌方潜艇或生物察觉。</sonartipactive>
-<sonartippassive>被动声呐开启时，声呐不主动发出信号，只能接收到附近障碍物传来或反射的声波信号。</sonartippassive>
+<sonartipactive>主动声纳开启时，声纳应答器会发出脉冲信号，根据附近障碍物反射信号来确定周边情况。脉冲信号也可能会惊扰到敌方潜艇或生物察觉。</sonartipactive>
+<sonartippassive>被动声纳开启时，声纳不主动发出信号，只能接收到附近障碍物传来或反射的声波信号。</sonartippassive>
 <powercontainercharge>充电中：[charge] kWm ([percentage] %)</powercontainercharge>
 <powercontainerrechargerate>充电率 [rate] %</powercontainerrechargerate>
 <uilabel.chargingdock>充电坞站</uilabel.chargingdock>
@@ -1727,7 +1728,7 @@
 <afflictionstrengthlow>轻微</afflictionstrengthlow>
 <afflictionstrengthmedium>中度</afflictionstrengthmedium>
 <afflictionstrengthhigh>严重</afflictionstrengthhigh>
-<lowmedicalskillwarning>医疗技能过低！当前治疗清单可能无法完成。</lowmedicalskillwarning>
+<lowmedicalskillwarning>医疗技能过低！对应治疗方法可能不准确。</lowmedicalskillwarning>
 <healthlimbname.head>头部</healthlimbname.head>
 <healthlimbname.torso>躯干</healthlimbname.torso>
 <healthlimbname.leftarm>左臂</healthlimbname.leftarm>
@@ -1740,7 +1741,7 @@
 <fixbutton>修复</fixbutton>
 <repair>修复</repair>
 <repairallwalls>修复所有船体结构</repairallwalls>
-<repairallitems>修武所有物品</repairallitems>
+<repairallitems>修复所有物品</repairallitems>
 
 <!-- Traitors -->
 <newtraitor>背叛者新人</newtraitor>
@@ -1748,10 +1749,10 @@
 <traitormoreagentsmessage>这艘潜艇上可能还潜藏着其他的叛徒。你不知道他们的名字，但你知道接头方法。用口令辨别特工，并验证回应口令。你可以在日常对话中夹杂口令，以避免船员产生怀疑。\n\n口令是：[codewords]\n回应口令是：[coderesponse]。</traitormoreagentsmessage>
 <traitorstartmessageserver>[traitorname]是叛徒。他的任务目标是[targetname]。</traitorstartmessageserver>
 <traitorendmessagesuccess>[traitorname]是叛徒！ [Genderpronounpossessive] 任务是暗杀[targetname]。任务已完成。</traitorendmessagesuccess>
-<traitorendmessagesuccesstraitordead>[traitorname]是叛徒！ [Genderpronounpossessive] 任务是暗杀[targetname]。任务已完成，但代价是叛徒的姓名。</traitorendmessagesuccesstraitordead>
+<traitorendmessagesuccesstraitordead>[traitorname]是叛徒！ [Genderpronounpossessive] 任务是暗杀[targetname]。任务已完成，但叛徒也未能生还。</traitorendmessagesuccesstraitordead>
 <traitorendmessagesuccesstraitordetained>[traitorname]是叛徒！ [Genderpronounpossessive] 任务是暗杀[targetname]。任务已完成，但叛徒被逮捕了。</traitorendmessagesuccesstraitordetained>
 <traitorendmessagefailure>[traitorname]是叛徒！ [Genderpronounpossessive] 任务是暗杀[targetname]。任务失败。</traitorendmessagefailure>
-<traitorendmessagefailuretraitordead>[traitorname]是叛徒！ [Genderpronounpossessive] 任务是暗杀[targetname]。可是，[genderpronoun] 在完成任务前就自杀了。</traitorendmessagefailuretraitordead>
+<traitorendmessagefailuretraitordead>[traitorname]是叛徒！ [Genderpronounpossessive] 任务是暗杀[targetname]。可是，[genderpronoun]在完成任务前就殉职了。</traitorendmessagefailuretraitordead>
 <traitorendmessagefailuretraitordetained>[traitorname]是叛徒！ [Genderpronounpossessive] 任务是暗杀[targetname]。任务失败，[genderpronoun] 被逮捕了。</traitorendmessagefailuretraitordetained>
 <traitorrespawnmessage>你的任务目标已失效。你不再是叛徒了，前路海阔天空！</traitorrespawnmessage>
 <traitortargetmessage>[traitorname]的秘密任务是暗杀你——现在[traitorname]的任务完成了。</traitortargetmessage>
@@ -1790,7 +1791,7 @@
 
 <!-- Character dialogue -->
 <dialogaffirmative>好呀好呀！</dialogaffirmative>
-<dialogaffirmative>收到，先生！</dialogaffirmative>
+<dialogaffirmative>收到，长官！</dialogaffirmative>
 <dialogaffirmative>知道啦！</dialogaffirmative>
 <dialogaffirmative>了解！</dialogaffirmative>
 <dialogaffirmative>当然！</dialogaffirmative>
@@ -1802,8 +1803,8 @@
 <dialogreactortaken>嘿，我正在操作反应堆！</dialogreactortaken>
 <dialogreactortaken>请放手！这是我的！</dialogreactortaken>
 <dialogreactortaken>嘿，我们两个人无法同时操作反应堆！</dialogreactortaken>
-<dialogcantfindcontroller>我不知道如何操作[item]。</dialogcantfindcontroller>
-<dialogcantfindcontroller>我不知道如何控制[item]。</dialogcantfindcontroller>
+<dialogcantfindcontroller>我不知道如何操作[item]！</dialogcantfindcontroller>
+<dialogcantfindcontroller>我不知道如何控制[item]！</dialogcantfindcontroller>
 <dialogloadturret>给[itemname]装弹！</dialogloadturret>
 <dialogfireturret>开火！</dialogfireturret>
 <dialogfireturret>已投弹！</dialogfireturret>
@@ -1846,18 +1847,18 @@
 <dialogputoutfire>去[roomname]灭火！</dialogputoutfire>
 <dialognofire>火在哪儿？</dialognofire>
 <dialognofire>虚惊一场，没有险情。</dialognofire>
-<dialognofire>并没有需要扑灭的活在。</dialognofire>
+<dialognofire>并没有失火。</dialognofire>
 <dialogsteeringtaken>嘿，现在掌舵人是我。</dialogsteeringtaken>
 <dialogsteeringtaken>放开！现在我在掌舵！</dialogsteeringtaken>
 <dialogsteeringtaken>嘿，两个人没法同时掌舵！</dialogsteeringtaken>
-<dialogsonartarget>声呐显示，目标出现在[direction]！</dialogsonartarget>
-<dialogsonartarget>声呐显示，[direction]出现了一个光点！</dialogsonartarget>
-<dialogsonartarget>声呐显示，[direction]有什么东西！</dialogsonartarget>
+<dialogsonartarget>声纳显示，目标出现在[direction]！</dialogsonartarget>
+<dialogsonartarget>声纳显示，[direction]出现了一个光点！</dialogsonartarget>
+<dialogsonartarget>声纳显示，[direction]有什么东西！</dialogsonartarget>
 <dialogsonartarget>[direction]发现目标！</dialogsonartarget>
-<dialogsonartargetlarge>声呐显示，[direction]出现了大型目标！</dialogsonartargetlarge>
+<dialogsonartargetlarge>声纳显示，[direction]出现了大型目标！</dialogsonartargetlarge>
 <dialogsonartargetlarge>[direction]刚刚发出一声巨响！</dialogsonartargetlarge>
-<dialogsonartargetlarge>声呐显示，[direction]有个大家伙！</dialogsonartargetlarge>
-<dialogsonartargetmultiple>声呐显示，[direction]出现了[count]个目标！</dialogsonartargetmultiple>
+<dialogsonartargetlarge>声纳显示，[direction]有个大家伙！</dialogsonartargetlarge>
+<dialogsonartargetmultiple>声纳显示，[direction]出现了[count]个目标！</dialogsonartargetmultiple>
 <dialogsonartargetmultiple>我们发现，[direction]出现了[count]个目标！</dialogsonartargetmultiple>
 <dialogfoundunconscioustarget>发现[targetname]在[roomname]不省人事！</dialogfoundunconscioustarget>
 <dialogfoundunconscioustarget>对[roomname]的[targetname]进行急救！</dialogfoundunconscioustarget>
@@ -1871,10 +1872,10 @@
 <orderdialog.wait>[name]，在这儿等着！</orderdialog.wait>
 <orderdialog.wait>[name]，待在原地别动！</orderdialog.wait>
 <orderdialogself.wait>我在这儿等着！</orderdialogself.wait>
-<orderdialog.dismissed>[name]，你被解雇了！</orderdialog.dismissed>
+<orderdialog.dismissed>[name]，解散！</orderdialog.dismissed>
 <orderdialogself.dismissed><!-- No data --></orderdialogself.dismissed>
 <orderdialog.operatereactor>[name]，去操作反应堆！</orderdialog.operatereactor>
-<orderdialog.operatereactor>[name]伙计，去看看反应堆！</orderdialog.operatereactor>
+<orderdialog.operatereactor>[name]，你负责反应堆！</orderdialog.operatereactor>
 <orderdialogself.operatereactor>我去看看反应堆！</orderdialogself.operatereactor>
 <orderdialogself.operatereactor>我会操作好反应堆的！</orderdialogself.operatereactor>
 <orderdialog.operatereactor.powerup>[name]，启动反应堆！</orderdialog.operatereactor.powerup>
@@ -1896,7 +1897,7 @@
 <orderdialog.steer.maintainposition>[name]，保持原位置！</orderdialog.steer.maintainposition>
 <orderdialog.steer.maintainposition>[name]，原地不动！</orderdialog.steer.maintainposition>
 <orderdialogself.steer.maintainposition>我会让舰船停在原地！</orderdialogself.steer.maintainposition>
-<orderdialog.steer.navigateback>[name]，后拉航线！</orderdialog.steer.navigateback>
+<orderdialog.steer.navigateback>[name]，向后退！</orderdialog.steer.navigateback>
 <orderdialogself.steer.navigateback>我要让舰船向后进发了！</orderdialogself.steer.navigateback>
 <orderdialog.steer.navigatetodestination>[name]，继续前进！</orderdialog.steer.navigatetodestination>
 <orderdialog.steer.navigatetodestination>[name]，向前进！</orderdialog.steer.navigatetodestination>
@@ -1939,7 +1940,7 @@
 <orderdialog.reportbreach>[roomname]出现了船体泄露！</orderdialog.reportbreach>
 <orderdialog.reportbreach>[roomname]处有船体漏洞！</orderdialog.reportbreach>
 <orderdialog.reportintruders>在[roomname]有入侵者！</orderdialog.reportintruders>
-<orderdialog.reportintruders>[roomname]有歹徒出现！</orderdialog.reportintruders>
+<orderdialog.reportintruders>[roomname]有敌人出现！</orderdialog.reportintruders>
 <orderdialog.reportbrokendevices>[roomname]出现设备损坏！</orderdialog.reportbrokendevices>
 <orderdialog.reportbrokendevices>谁去修理一下[roomname]的受损设备！</orderdialog.reportbrokendevices>
 <orderdialog.requestfirstaid>[roomname]需要医生！</orderdialog.requestfirstaid>
@@ -2015,7 +2016,7 @@
 <afflictionname.internaldamage>内脏损伤</afflictionname.internaldamage>
 <afflictiondescription.internaldamage>这片淤青摸起来很痛，有内部出血点，可能存在骨折症状。</afflictiondescription.internaldamage>
 <afflictioncauseofdeath.internaldamage>死于内脏损伤</afflictioncauseofdeath.internaldamage>
-<afflictioncauseofdeathself.internaldamage>你因长期未治疗的内脏损伤而死。</afflictioncauseofdeathself.internaldamage>
+<afflictioncauseofdeathself.internaldamage>你因内脏损伤而死。</afflictioncauseofdeathself.internaldamage>
 <afflictionname.bleeding>出血</afflictionname.bleeding>
 <afflictiondescription.bleeding>血液从这个开放性伤口喷涌而出。</afflictiondescription.bleeding>
 <afflictioncauseofdeath.bleeding>失血而死</afflictioncauseofdeath.bleeding>
@@ -2027,13 +2028,13 @@
 <afflictionname.oxygenlow>缺氧</afflictionname.oxygenlow>
 <afflictiondescription.oxygenlow>嘴唇发青，皮肤苍白，大量出汗。</afflictiondescription.oxygenlow>
 <afflictioncauseofdeath.oxygenlow>窒息而死</afflictioncauseofdeath.oxygenlow>
-<afflictioncauseofdeathself.oxygenlow>你因长期缺氧窒息而死。</afflictioncauseofdeathself.oxygenlow>
+<afflictioncauseofdeathself.oxygenlow>你因缺氧窒息而死。</afflictioncauseofdeathself.oxygenlow>
 <afflictionname.bloodloss>失血</afflictionname.bloodloss>
-<afflictiondescription.bloodloss>患者脸色苍白，体温极低，心率高企不下。</afflictiondescription.bloodloss>
+<afflictiondescription.bloodloss>患者脸色苍白，体温极低，心率居高不下。</afflictiondescription.bloodloss>
 <afflictioncauseofdeath.bloodloss>失血而死</afflictioncauseofdeath.bloodloss>
 <afflictioncauseofdeathself.bloodloss>你因流血过多而死。</afflictioncauseofdeathself.bloodloss>
 <afflictionname.stun>眩晕</afflictionname.stun>
-<afflictiondescription.stun>患者头晕目眩，对外界刺激缺乏反映。</afflictiondescription.stun>
+<afflictiondescription.stun>患者头晕目眩，对外界刺激缺乏反应。</afflictiondescription.stun>
 <afflictionname.pressure>恶性水压创伤</afflictionname.pressure>
 <afflictiondescription.pressure>明显脏器损伤，眼部血管破裂，呈血目状。</afflictiondescription.pressure>
 <afflictioncauseofdeath.pressure>水压压损而死</afflictioncauseofdeath.pressure>
@@ -2057,7 +2058,7 @@
 <afflictioncauseofdeath.opiateoverdose>死于阿片类药物中毒</afflictioncauseofdeath.opiateoverdose>
 <afflictioncauseofdeathself.opiateoverdose>患者死于阿片类药物中毒。</afflictioncauseofdeathself.opiateoverdose>
 <afflictionname.opiateaddiction>阿片类药物成瘾</afflictionname.opiateaddiction>
-<afflictiondescription.opiateaddiction>患者精神不能集中，存在明显的躁狂症状，对阿片类药物有着狂热需求。</afflictiondescription.opiateaddiction>
+<afflictiondescription.opiateaddiction>如果不能满足需求，患者将持续抑郁。</afflictiondescription.opiateaddiction>
 <afflictionname.gunshotwound>枪伤</afflictionname.gunshotwound>
 <afflictiondescription.gunshotwound>贯通伤，入创口为有灼伤痕迹的小型孔洞，有出血。出创口存在大面积组织外露，流血较多。</afflictiondescription.gunshotwound>
 <afflictioncauseofdeath.gunshotwound>中枪身亡</afflictioncauseofdeath.gunshotwound>
@@ -2136,8 +2137,8 @@
 <locationnameformat.mine>[name]采矿公司</locationnameformat.mine>
 <locationnameformat.mine>[name]勘探前哨站</locationnameformat.mine>
 <locationnameformat.mine>[name]矿</locationnameformat.mine>
-<locationname.lair>富矿区</locationname.lair>
-<locationnameformat.lair>[name]富矿区</locationnameformat.lair>
+<locationname.lair>繁殖地</locationname.lair>
+<locationnameformat.lair>[name]繁殖地</locationnameformat.lair>
 <locationnameformat.lair>[name]巢穴</locationnameformat.lair>
 <locationchange.lair.changeto.none>[name]已消失。</locationchange.lair.changeto.none>
 <locationname.ruins>异星遗迹</locationname.ruins>
@@ -2165,7 +2166,7 @@
 
 <!-- Job descriptions -->
 <tutorial.mechanictitle>机修工——胶水，管道胶带和你的谨慎是船员生存的最后保障</tutorial.mechanictitle>
-<tutorial.mechanicdescription>在冰洋中，计划依序进行、设备正常运行比你离开这鬼地方都难。你没有休息时间，因为设备随时会坏掉。就算没坏掉，你也得不停维护、维护、维护。最大的奇迹的是安全到达下一个目的地，而你就是实现这一奇迹的人。不过可别指望你的”同事们对你产生感激崇敬之情，他们只会嘲讽讥笑脏兮兮的技工——不过没关系。这里是你的老窝，如果他们之中有人也这么觉得…好吧，祝他们好运。</tutorial.mechanicdescription>
+<tutorial.mechanicdescription>在冰洋中，计划依序进行、设备正常运行比你离开这鬼地方都难。你没有休息时间，因为设备随时会坏掉。就算没坏掉，你也得不停维护、维护、维护。最大的奇迹的是安全到达下一个目的地，而你就是实现这一奇迹的人。不过可别指望你的“同事”们对你产生感激崇敬之情，他们只会嘲讽讥笑脏兮兮的技工——不过没关系。这里是你的老窝，如果他们之中有人也这么觉得…好吧，祝他们好运。</tutorial.mechanicdescription>
 <tutorial.mechanicresponsibilities>职责\n-维修机械\n-修复漏洞</tutorial.mechanicresponsibilities>
 <tutorial.engineertitle>工程师——运用自然力量之人</tutorial.engineertitle>
 <tutorial.engineerdescription>能源、氧气，缺一不可。若有所缺，舰船难行，生息休止。抛却那些花言巧语与矫揉造作，你才是那个让潜艇运作起来的人，懂吗？坚信真理，理性思考。要小心那个总妄想成为工程师、只知道修修补补的机修工。不要去听医生那毫无意义的心理辅导呓语，他只是个内心细腻的娘炮废物。舰长和安全官人畜无害，他们的智力远逊于你。一切显而易见，不是吗？</tutorial.engineerdescription>
@@ -2174,15 +2175,15 @@
 <tutorial.securityofficerdescription>据说长期压力会让人暴露他们最卑劣的一面，不是所有人都有如你一般的道德操守——该死，他们中的大多数人都是思维扭曲、连活着都会造成安全风险的的危险分子。让他们把愤怒发泄到冰洋的怪物身上，千万不能相信他们的本性。时刻保持警惕，准备好手铐和电击甩棍，时不时让他们尝尝禁闭的味道，让他们知道谁说了算！</tutorial.securityofficerdescription>
 <tutorial.securityofficerresponsibilities>职责\n-维持秩序\n-击退入侵者</tutorial.securityofficerresponsibilities>
 <tutorial.medicaldoctortitle>医生——维护关键资源：人</tutorial.medicaldoctortitle>
-<tutorial.medicaldoctordescription>武器、引擎和反应堆并不是舰船运行的关键，只有人才是。让枪手活着，让炮手活着，让船长活着驾驶这艘潜艇，这都是你的功劳。记住，你的工作不仅仅是保障船员的身体健康。在深沉幽暗的冰洋之下，我们挤在狭小的潜艇中生存，当灯火熄灭，船员们进入梦乡，深海中的黑暗会侵蚀他们的灵魂。让他们清醒地活着，或者让他们陷入歇斯底里的暴怒，由你来决定。</tutorial.medicaldoctordescription>
-<tutorial.medicaldoctorresponsibilities>职责\n-急救\n-制毒与解读</tutorial.medicaldoctorresponsibilities>
+<tutorial.medicaldoctordescription>武器、引擎和反应堆并不是舰船运行的关键，只有人才是。让枪手活着，让炮手活着开炮，让船长活着驾驶这艘潜艇，这都是你的功劳。记住，你的工作不仅仅是保障船员的身体健康。在深沉幽暗的冰洋之下，我们挤在狭小的潜艇中生存，当灯火熄灭，船员们进入梦乡，深海中的黑暗会侵蚀他们的灵魂。让他们清醒地活着，或者让他们陷入歇斯底里的暴怒，由你来决定。</tutorial.medicaldoctordescription>
+<tutorial.medicaldoctorresponsibilities>职责\n-急救\n-制毒与解毒</tutorial.medicaldoctorresponsibilities>
 <tutorial.captaintitle>舰长——富有远见卓识的海军将领，航海家，天才（大概是）</tutorial.captaintitle>
-<tutorial.captaindescription>亚哈船长曾经说过，“地狱就是首先由不易消化的苹果馅汤团而产生出来的一种心象。”你知道那是什么意思吗？不。船员认为你是深不可测的天才吗？当然。你是地图，是指南针，是胸怀冰洋的人。指引方向，审慎抉择，记住，你与前哨站的领导人之间仅有几步之遥，如果需要牺牲几个人才能前进的话——不也挺好吗？</tutorial.captaindescription>
+<tutorial.captaindescription>亚哈船长曾经说过，“地狱的观念本来就起源于一个难以消化的苹果馅饼。”你知道那是什么意思吗？不。船员认为你是深不可测的天才吗？当然。你是地图，是指南针，是胸怀冰洋的人。指引方向，审慎抉择，记住，你与前哨站的领导人之间仅有几步之遥，如果需要牺牲几个人才能前进的话——不也挺好吗？</tutorial.captaindescription>
 <tutorial.captainresponsibilities>责任\n-掌舵\n-下达指令</tutorial.captainresponsibilities>
 
 <!-- Tutorial extras -->
 <tutorial.airlocktitle>气闸</tutorial.airlocktitle>
-<tutorial.airlockdescription>每艘潜艇都配备有安全气闸，以便于船员安全离开潜艇。\n\n船员应提前配备潜水服与其他必要装备（如手持声呐、武器、一两个氧气罐）后前往气闸。务必先关好两侧闸门后开启舱外通道，以免水涌入船舱。船员需要返回潜艇时，记得提前排空气闸内水分，将设备归位，更换氧气罐。</tutorial.airlockdescription>
+<tutorial.airlockdescription>每艘潜艇都配备有安全气闸，以便于船员安全离开潜艇。\n\n船员应提前配备潜水服与其他必要装备（如手持声纳、武器、一两个氧气罐）后前往气闸。务必先关好两侧闸门后开启舱外通道，以免水涌入船舱。船员需要返回潜艇时，记得提前排空气闸内水分，将设备归位，更换氧气罐。</tutorial.airlockdescription>
 <tutorial.railguntitle>轨道炮</tutorial.railguntitle>
 <tutorial.railgundescription>轨道炮工作原理类同于电磁枪，只是其配备的大型炮弹可以进行爆炸物升级。\n\n轨道炮装弹器只能单发装弹，而非电磁枪的弹药箱制式，不过，操作方法是类似的：通过潜望镜瞄准目标，按{0}开火，按{1}停止瞄准。</tutorial.railgundescription>
 <tutorial.syringeguntitle>注射器枪</tutorial.syringeguntitle>
@@ -2192,13 +2193,13 @@
 <tutorial.crowbartitle>撬棍</tutorial.crowbartitle>
 <tutorial.crowbardescription>一种用于强行撬开舱门的工具。当你想强行进入禁行舱室或有人切断了舱门的开关导线时，撬棍是一件很实用的工具。装备撬棍后，可以按({0}) 撬开一扇紧闭的门。</tutorial.crowbardescription>
 <tutorial.mineralstitle>矿物</tutorial.mineralstitle>
-<tutorial.mineralsdescription>加工制作的基本原料，可以在前哨站购买、分解原材料或物品获得、抑或从冰壁和洞穴中开采。在相应的矿物矿区，捏可以用等离子切割机切割矿物并拾取。</tutorial.mineralsdescription>
+<tutorial.mineralsdescription>加工制作的基本原料，可以在前哨站购买、分解原材料或物品获得、抑或从冰壁和洞穴中开采。在相应的矿物矿区，你也可以用等离子切割机切割矿物并拾取。</tutorial.mineralsdescription>
 <tutorial.psychosistitle>精神病</tutorial.psychosistitle>
 <tutorial.psychosisdescription>当玩家接触某些兴奋剂或受到异星影响后，可能会罹患精神病，产生幻视、幻听、幻痛。\n\n氟哌啶醇可以用以治疗精神病。</tutorial.psychosisdescription>
 <tutorial.opiatestitle>阿片类药物成瘾与戒断反应</tutorial.opiatestitle>
 <tutorial.opiatesdescription>过度使用阿片类药物会使得船员药物成瘾，最终导致戒断反应。戒断反应可通过短期摄入来缓解，但若想根除，必须完全停服药物或服用烯丙羟吗啡酮治疗。</tutorial.opiatesdescription>
 <tutorial.oxygentitle>氧气</tutorial.oxygentitle>
-<tutorial.oxygendescription>在木卫二冰洋中，氧气是硬通货。制氧机可以为潜艇提供氧气，将氧气泵送到各个舱室，也可以为氧气罐充氧。\n\n为氧气罐充氧时，点选制氧机([InteractType.Use])打开相应界面，将空的氧气罐插入槽位中，开始充氧；充氧完成后，将其拖动会库存或你的潜水服/面罩中。</tutorial.oxygendescription>
+<tutorial.oxygendescription>在木卫二冰洋中，氧气是硬通货。制氧机可以为潜艇提供氧气，将氧气泵送到各个舱室，也可以为氧气罐充氧。\n\n为氧气罐充氧时，点选制氧机([InteractType.Use])打开相应界面，将空的氧气罐插入槽位中，开始充氧；充氧完成后，将其拖动回库存或你的潜水服/面罩中。</tutorial.oxygendescription>
 <tutorial.laddertitle>梯子</tutorial.laddertitle>
 <tutorial.ladderdescription>按{0}抓住梯子，再按一次{3}松开梯子。按{1}、{2}在梯子上爬动。</tutorial.ladderdescription>
 
@@ -2206,7 +2207,7 @@
 <!-- Radio -->
 <mechanic.radio.wakeup>你还好吗？站起来走两步。赶紧去你的潜艇报道！</mechanic.radio.wakeup>
 <mechanic.radio.equipment>记得翻翻储物柜，带好你的装备，能拿多少拿多少，我们有大麻烦了。</mechanic.radio.equipment>
-<mechanic.radio.breach>嘿，我看到你们的船体上有些裂缝。最好尽快与他们取得联系，来给我们争取一点应急时间。</mechanic.radio.breach>
+<mechanic.radio.breach>嘿，我看到你们的船体上有些裂缝。最好快点堵上，来给我们争取一点应急时间。</mechanic.radio.breach>
 <mechanic.radio.news>好吧，能听到吗？我有一个好消息和一个坏消息。</mechanic.radio.news>
 <mechanic.radio.fire>坏消息是前面大火封路。好消息是，附近的废料足以组装一个灭火器。</mechanic.radio.fire>
 <mechanic.radio.diving>快到了。多加小心——下一个漏洞足以使舱室内压力骤降。去找一件潜水服来保护你那脆弱的身体。</mechanic.radio.diving>
@@ -2228,7 +2229,7 @@
 <mechanic.weldingobjective>修复漏洞</mechanic.weldingobjective>
 <mechanic.weldingtext>若要修复船体上漏水的漏洞，请双击装备焊接工具，再次双击可解除装备。需要注意的是，包括焊接工具在内的部分工具需要双手握持。\n\n装备好焊接工具后，按{0}瞄准，瞄准完成后，按{1}开始焊接。</mechanic.weldingtext>
 <mechanic.drain>水泵</mechanic.drain>
-<mechanic.drainobjective>大概附近的水泵，排出废水</mechanic.drainobjective>
+<mechanic.drainobjective>打开附近的水泵，排出废水</mechanic.drainobjective>
 <mechanic.draintext>潜艇进水后，可以用水泵排出废水。水泵一般与附近的水传感器或导航终端相连，但有些可以手动操作。这台水泵已经设置好了抽水的程序，按下({0})与水泵交互，将开关切换至“ON”档。</mechanic.draintext>
 
 <!-- Room 4 -->
@@ -2242,7 +2243,7 @@
 <!-- Room 5 -->
 <mechanic.extinguisher>火灾</mechanic.extinguisher>
 <mechanic.extinguisherobjective>灭火</mechanic.extinguisherobjective>
-<mechanic.extinguishertext>灭火器的装备方式与焊接工具一样。装备后按下{0}对准火源{1}，再按下灭火。</mechanic.extinguishertext>
+<mechanic.extinguishertext>灭火器的装备方式与焊接工具一样。装备后按住{0}对准火源，再按住{1}灭火。</mechanic.extinguishertext>
 <mechanic.dropextinguisher>放下物品</mechanic.dropextinguisher>
 <mechanic.dropextinguisherobjective>放下灭火器</mechanic.dropextinguisherobjective>
 <mechanic.dropextinguishertext>灭火器等较大物品无法随身携带。若想放下灭火器，将其从个人库存中拖出，并放开鼠标按键。</mechanic.dropextinguishertext>
@@ -2305,8 +2306,8 @@
 <officer.radio.wakeup>还有安全官活着吗？我们发现了一个船体漏洞和一些不速之客</officer.radio.wakeup>
 <officer.radio.equipment>找到消灭这些怪物的方法。</officer.radio.equipment>
 <officer.radio.crawlerdead>干得好，但那只是爬行者幼体，我看到前面有个更大的家伙，小心点！</officer.radio.crawlerdead>
-<officer.radio.somethingbig>我在声呐上看到一些大麻烦。给电磁枪上弹，然后想办法把它取下来。</officer.radio.somethingbig>
-<officer.radio.hammerheaddead>射的很准。不过坏消息是，这个站点没救了，来地下室吧——我们马上要离开了。</officer.radio.hammerheaddead>
+<officer.radio.somethingbig>我在声纳上看到一些大麻烦。电磁枪上弹，争取把它干掉。</officer.radio.somethingbig>
+<officer.radio.hammerheaddead>射的很准。不过坏消息是，这个站点没救了，来上潜艇吧——我们得赶紧离开。</officer.radio.hammerheaddead>
 <officer.radio.submarine>欢迎登舰。我需要你确保我们已经为接下来的航行做好万全准备。检查一下武器库存。</officer.radio.submarine>
 <officer.radio.complete>优秀。现在做好准备，等其他船员登舰后，我们就离开这里。</officer.radio.complete>
 
@@ -2321,7 +2322,7 @@
 <!-- Room 3 -->
 <officer.crawler>藻鬃爬行者</officer.crawler>
 <officer.crawlerobjective>杀死藻鬃爬行者</officer.crawlerobjective>
-<officer.crawlertext>有一只藻鬃爬行者侵入了隔壁房间。用电击甩棍击杀这只怪物。点击甩棍可以令敌人短暂眩晕，抓住机会！</officer.crawlertext>
+<officer.crawlertext>有一只藻鬃爬行者侵入了隔壁房间。用电击甩棍击杀这只怪物。电击甩棍可以令敌人短暂眩晕，抓住机会！</officer.crawlertext>
 
 <!-- Room 4 -->
 <officer.somethingbig>电磁枪，第一课</officer.somethingbig>
@@ -2329,12 +2330,12 @@
 <officer.somethingbigtext>电磁枪是大多数潜艇的标配火力，它们需要短时高频电压和成箱的弹药。\n\n要使用电磁枪，先要确保超级电容器功率达标。设置足够高的充电率（通常50%就够了），然后将新的弹药箱插入电磁枪装弹器。\n\n现在电磁枪里的弹药箱应该是空的，你需要先将空弹匣从装弹器里卸载下来。装备好后，按住弹药箱上面的绿色箭头，将空弹匣弃置在地上。\n\n弹药箱又大又沉，你必须双手握持，且不可随身携带。若想放下弹药箱，请将其拖离开装备槽，或按下“解除装备”。</officer.somethingbigtext>
 <officer.hammerhead>电磁枪，第二课</officer.hammerhead>
 <officer.hammerheadobjective>杀死来袭的锤头煞</officer.hammerheadobjective>
-<officer.hammerheadtext>（{0}）与潜望镜交互，以使用电磁枪。在潜望镜视图下，用鼠标瞄准，按{1}开火，按{2}停止瞄准。\n\n这支武器耗电量较大，所以请谨慎开火，避免超级电容器功率不足。</officer.hammerheadtext>
+<officer.hammerheadtext>按\n\n与潜望镜交互，以使用电磁枪。在潜望镜视图下，用鼠标瞄准，按{1}开火，按{2}停止瞄准。\n\n这支武器耗电量较大，所以请谨慎开火，避免超级电容器功率不足。</officer.hammerheadtext>
 
 <!-- Room 5 -->
 <officer.rangedweapon>远程武器</officer.rangedweapon>
 <officer.rangedweaponobjective>拿取一些远程武器</officer.rangedweaponobjective>
-<officer.rangedweapontext>远程武器与近战武器大致相近，不过其准度更依赖于角色的武器操作水平。按瞄准，按射击。\n\n远程武器需要装填弹药，将鼠标光标悬停在远程武器上可查看当前装载的子弹/鱼叉等。将弹药拖动到弹匣或武器上以装填弹药。</officer.rangedweapontext>
+<officer.rangedweapontext>远程武器与近战武器大致相近，不过其准度更依赖于角色的武器操作水平。按{0}瞄准，按{1}射击。\n\n远整武器需要装填弹药，将鼠标光标悬停在远程武器上可查看当前装载的子弹/鱼叉等。将弹药拖动到弹匣或武器上以装填弹药。</officer.rangedweapontext>
 
 <!-- Room 6 -->
 <officer.mudraptor>泥偶迅猛龙</officer.mudraptor>
@@ -2362,18 +2363,18 @@
 <doctor.openmedicalinterfaceobjective>打开医疗界面</doctor.openmedicalinterfaceobjective>
 <doctor.openmedicalinterfacetext>按下{0}或点击你的健康条以进入医疗界面。</doctor.openmedicalinterfacetext>
 <doctor.firstaidself>急救</doctor.firstaidself>
-<doctor.firstaidselfobjective>治疗你自己的受的伤</doctor.firstaidselfobjective>
+<doctor.firstaidselfobjective>治疗你的伤痛</doctor.firstaidselfobjective>
 <doctor.firstaidselftext>在左侧列表可查看影响角色的伤痛疾病，部分伤痛局限于部分肢体，可以点击检查各肢体。\n\n若要治疗伤痛疾病，请将医疗用品拖入高亮显示的区域，界面上会显示一些治疗建议。需要注意的是，若角色的医疗技能水平较低，可能无法获得正确的治疗建议。就目前来看，你有一些轻微的内脏损伤，可以用吗啡解决。</doctor.firstaidselftext>
 
 <!-- Room 4 -->
 <doctor.medbay>下达指令</doctor.medbay>
 <doctor.medbayobjective>带船员去医疗舱室</doctor.medbayobjective>
-<doctor.medbaytext>有时你会遇到未携带对应药物的情况，让病人跟随你前往医疗用品更多的医疗舱室是更好的选择。\n\n在左侧的船员名单中找到患者，点击“跟随”按钮，该角色会跟着你知道再点一次。\n\n“跟随”只是你可以向其他角色下达的指令之一，你可以在游戏中尝试其他指令。</doctor.medbaytext>
+<doctor.medbaytext>有时你会遇到未携带对应药物的情况，让病人跟随你前往医疗用品更多的医疗舱室是更好的选择。\n\n在左侧的船员名单中找到患者，点击“跟随”按钮，该角色会一直跟着你，直到再点一次。\n\n“跟随”只是你可以向其他角色下达的指令之一，你可以在游戏中尝试其他指令。</doctor.medbaytext>
 
 <!-- Room 5 -->
 <doctor.treatburns>治疗烧伤</doctor.treatburns>
 <doctor.treatburnsobjective>治疗受伤的船员</doctor.treatburnsobjective>
-<doctor.treatburnstext>急救也可解决其他伤患。选定目标角色并按下{0}来进行急救。左侧的界面将显示他们的状态。\n\n将正确的物品拖动到医疗界面以治疗伤痛。在治疗前注意选择正确的受伤肢体。绷带可以治愈烧伤，在高亮的柜子里找到绷带。</doctor.treatburnstext>
+<doctor.treatburnstext>你也可对其他伤患进行急救。选定目标角色并按下{0}来进行急救。左侧的界面将显示他们的状态。\n\n将正确的物品拖动到医疗界面以治疗伤痛。在治疗前注意选择正确的受伤肢体。绷带可以治愈烧伤，在高亮的柜子里找到绷带。</doctor.treatburnstext>
 
 <!-- Room 6 -->
 <doctor.cpr>复苏</doctor.cpr>
@@ -2393,7 +2394,7 @@
 <!-- Room 2 -->
 <captain.commandmedic>命令，第一课</captain.commandmedic>
 <captain.commandmedicobjective>命令医护人员跟上</captain.commandmedicobjective>
-<captain.commandmedictext>在左侧的船员名单中找到医生，在头像旁的命令界面找到“跟随”按钮，点击。在再次点击该按钮钱，这个角色会跟随你行动。</captain.commandmedictext>
+<captain.commandmedictext>在左侧的船员名单中找到医生，在头像旁的命令界面找到“跟随”按钮，点击。在再次点击该按钮之前，这个角色会跟随你行动。</captain.commandmedictext>
 
 <!-- Submarine -->
 <captain.commandmechanic>命令，第二课</captain.commandmechanic>
@@ -2410,10 +2411,10 @@
 <captain.undocktext>在航行前，你需要先脱离前哨站。点选导航终端，然后按下“切换接驳状态”来完成该指令。</captain.undocktext>
 <captain.navigate>导航</captain.navigate>
 <captain.navigateobjective>导航到目的地</captain.navigateobjective>
-<captain.navigatetext>点击声呐显示器为潜艇定制航线。导航终端会自发地调整压载量与引擎动力。\n\n在显示器旁声呐设置一栏中，将“被动声呐”切换至“主动声呐”即可打开主动声呐来查看航向。小心航行，航速越快，越难减速。与岩壁碰撞会损坏船体、产生漏洞。\n\n教学模式中，船体将不会被破坏。</captain.navigatetext>
+<captain.navigatetext>点击声纳显示器为潜艇定制航线。导航终端会自发地调整压载量与引擎动力。\n\n在显示器旁声纳设置一栏中，将“被动声纳”切换至“主动声纳”即可打开主动声纳来查看航向。小心航行，航速越快，越难减速。与岩壁碰撞会损坏船体、产生漏洞。\n\n教学模式中，船体将不会被破坏。</captain.navigatetext>
 <captain.dock>对接</captain.dock>
 <captain.dockobjective>与目的地前哨站对接</captain.dockobjective>
-<captain.docktext>想要停靠到前哨站，先将潜艇对接口与前哨站对接口接近，并切换对接端口。声呐显示器上对接口显示为绿色。\n\n当两个对接口很接近时，声呐显示器上会显示一条线，注意，当这条线完全变成绿色时，按下切换接驳状态按钮以锁定对接端口。然后潜艇将固定位置，对接端口保持锁定，对接舱口打开。\n\n对接过程中，剧烈运动容易让你错过目标。缓慢移动， 以避免与前哨站发生碰撞。开启自动驾驶仪原图保持现有位置有助于移动潜艇到特定位置。</captain.docktext>
+<captain.docktext>想要停靠到前哨站，先将潜艇对接口与前哨站对接口接近，并切换对接端口。声纳显示器上对接口显示为绿色。\n\n当两个对接口很接近时，声纳显示器上会显示一条线，注意，当这条线完全变成绿色时，按下切换接驳状态按钮以锁定对接端口。然后潜艇将固定位置，对接端口保持锁定，对接舱口打开。\n\n对接过程中，剧烈运动容易让你错过目标。缓慢移动， 以避免与前哨站发生碰撞。开启自动驾驶仪保持现有位置有助于移动潜艇到特定位置。</captain.docktext>
 
 <!-- Karma system -->
 <karma>道德值</karma>
@@ -2426,10 +2427,10 @@
 <karmajobdisallowed>你无法选择该工作，你的道德值太低了 ([yourkarma]/[minkarma])。</karmajobdisallowed>
 
 <!-- Disclaimers -->
-<campaigndisclaimertitle>欢迎来到木卫二！</campaigndisclaimertitle>
+<campaigndisclaimertitle>欢迎游玩《潜渊证》！</campaigndisclaimertitle>
 <campaigndisclaimertext>请注意游戏尚处于EA阶段，游戏仍存在很多不完善之处，我们仍在不断改进中。\n\n战役模式目前缺少很多玩法模块，可能没有多人游戏那样有趣。当前版本中，单人游戏对新玩家可能略有困难——尽管AI们能帮助你完成一些任务，但他们仍比不上真人玩家。如果您对游戏的未来更新感兴趣，可以点击下面的“更新路线图”。\n\n不过，我们建议您在开始多人游戏之前，先完成单人教学关卡。祝你好运，航海家！</campaigndisclaimertext>
 <campaignroadmaptitle>更新路线图</campaignroadmaptitle>
-<campaignroadmaptext>-探索地点:当前战役地图上的地点只能购买补给、雇佣船员,但在EA期间,它们将成为可以实际探索的场景。\n\n-扩展故事:通过与NPC互动,探索前哨站与非人造建筑,在此过程中,你能对这个冰洋中的世界产生更深的理解…\n\n-新的任务类型：我们正尝试设计一些新的任务类型，比如说人员运输与沉船打捞。\n\n-游戏平衡：目前游戏内的点数系统并不是非常平衡，我们将在内容更加丰富后考虑改进它。\n\n-最终目标：虽然完成战役模式有些不现实，但在未来的版本中，地图中心的神秘位置将变得触手可及...</campaignroadmaptext>
+<campaignroadmaptext>-探索地点:当前战役地图上的地点只能购买补给、雇佣船员,但在EA期间,它们将成为可以实际探索的场景。\n\n-扩展故事:通过与NPC互动,探索前哨站与非人造建筑,在此过程中,你能对这个冰洋中的世界产生更深的理解…\n\n-新的任务类型：我们正尝试设计一些新的任务类型，比如说人员运输与沉船打捞。\n\n-游戏平衡：目前游戏内的经济系统并不是非常平衡，我们将在内容更加丰富后考虑改进它。\n\n-最终目标：虽然完成战役模式有些不现实，但在未来的版本中，地图中心的神秘位置将变得触手可及...</campaignroadmaptext>
 <editordisclaimertitle>编辑器</editordisclaimertitle>
 <editordisclaimertext>潜艇与角色编辑器是一种内容自定义工具，你可以自由创造属于你自己的潜艇或生物来拓展游戏内容。你可以通过Steam创意工坊分享你的作品。\n\n目前编辑器只有英文版本。构建一个独立运行的潜艇或异常强大的怪物可能会相当复杂。不幸的是，目前我们还没有为编辑器准备教程文档，如果你想尝试用编辑器创建你自己的游戏内容，可以通过如下链接寻找帮助。</editordisclaimertext>
 <editordisclaimerwikilink>百科</editordisclaimerwikilink>
@@ -2445,12 +2446,12 @@
 
 <!-- New additions -->
 <creditsbutton>制作人员名单</creditsbutton>
-<orderoptions.operatereactor>开启,关停</orderoptions.operatereactor>
-<orderoptions.operateweapons>开火,停火</orderoptions.operateweapons>
-<orderoptions.steer>原地停留,返程,向目的地的进发</orderoptions.steer>
-<orderoptions.chargebatteries>开始充电,停止充电</orderoptions.chargebatteries>
-<orderoptions.pumpwater>开启泵机,关闭泵机</orderoptions.pumpwater>
-<orderoptions.repairsystems>修理指定设备,修理全部设备</orderoptions.repairsystems>
+<orderoptions.operatereactor>开启，关停。</orderoptions.operatereactor>
+<orderoptions.operateweapons>开火，停火。</orderoptions.operateweapons>
+<orderoptions.steer>原地停留，返程，向目的地的进发。</orderoptions.steer>
+<orderoptions.chargebatteries>开始充电，停止充电。</orderoptions.chargebatteries>
+<orderoptions.pumpwater>开启泵机，关闭泵机。</orderoptions.pumpwater>
+<orderoptions.repairsystems>修理指定设备，修理全部设备。</orderoptions.repairsystems>
 
 <ordername.dismissed>已驳回</ordername.dismissed>
 <ordername.follow>跟随</ordername.follow>
@@ -2578,14 +2579,318 @@
 <connection.waterdatain>水接触信息输入</connection.waterdatain>
 <connection.oxygendatain>氧含量信息输入</connection.oxygendatain>
 
-<!-- NEW VALUES -->
+<!-- *** New additions *** -->
+<itemmsgoxygenrefill>插入氧气罐来进行补给</itemmsgoxygenrefill>
+<missionfailed>任务失败</missionfailed>
+<label.highpressurewarning>警告：高压</label.highpressurewarning>
+<label.reactortempwarning>反应堆高温警告</label.reactortempwarning>
+<addercomponent.timeframe>时间表</addercomponent.timeframe>
+<addercomponent.clampmin>最低端口</addercomponent.clampmin>
+<addercomponent.clampmax>最高端口</addercomponent.clampmax>
+<equalscomponent.timeframe>时间表</equalscomponent.timeframe>
+<equalscomponent.output>输出</equalscomponent.output>
+<equalscomponent.falseoutput>假输出</equalscomponent.falseoutput>
+<andcomponent.timeframe>时间表</andcomponent.timeframe>
+<andcomponentcomponent.output>输出</andcomponentcomponent.output>
+<andcomponentcomponent.falseoutput>假输出</andcomponentcomponent.falseoutput>
+<oscillatorcomponent.timeframe>时间表</oscillatorcomponent.timeframe>
+<oscillatorcomponent.outputtype>输出类型</oscillatorcomponent.outputtype>
+<delaycomponent.delay>延迟</delaycomponent.delay>
+<delaycomponent.resetwhensignalreceived>收到信号时重置</delaycomponent.resetwhensignalreceived>
+<delaycomponent.resetwhendifferentsignalreceived>收到不同信号时重置</delaycomponent.resetwhendifferentsignalreceived>
+<regexfindcomponent.output>输出</regexfindcomponent.output>
+<regexfindcomponent.falseoutput>假输出</regexfindcomponent.falseoutput>
+<regexfindcomponent.expression>表达式</regexfindcomponent.expression>
+<regexfindcomponent.continuousoutput>连续输出</regexfindcomponent.continuousoutput>
+<memorycomponent.value>值</memorycomponent.value>
+<motionsensor.output>输出</motionsensor.output>
+<motionsensor.falseoutput>假输出</motionsensor.falseoutput>
+<motionsensor.rangex>距离X</motionsensor.rangex>
+<motionsensor.rangey>距离Y</motionsensor.rangey>
+<signalcheckcomponent.targetsignal>目标信号</signalcheckcomponent.targetsignal>
+<signalcheckcomponent.output>输出</signalcheckcomponent.output>
+<signalcheckcomponent.falseoutput>假输出</signalcheckcomponent.falseoutput>
+<waterdetector.output>输出</waterdetector.output>
+<waterdetector.falseoutput>假输出</waterdetector.falseoutput>
+<wificomponent.channel>频道</wificomponent.channel>
+<quickuseaction.holdtounequip>长按以解除装备</quickuseaction.holdtounequip>
+<entityname.incendiumfueltank>燃素燃料罐</entityname.incendiumfueltank>
+<entityname.physicoriumammobox>刚素弹药箱</entityname.physicoriumammobox>
+<entityname.physicoriumbolt>刚素矢</entityname.physicoriumbolt>
+<statisticspromptheader>想帮助我们将游戏做得更好吗？</statisticspromptheader>
+<statisticsprompttext>是否允许游戏将使用数据和报错发送给开发商？发送内容是佚名的，并且不会包含任何个人信息，且只会被用于帮助我们改进游戏。</statisticsprompttext>
+<centerarealockedheader>前路未知...</centerarealockedheader>
+<centerarealockedtext>此区域在当前版本无法进入。请静待未来更新！</centerarealockedtext>
+<connection.dockingproximitysensor>proximity_sensor</connection.dockingproximitysensor>
+<connection.signalx>signal_[num]</connection.signalx>
+<connection.set_text>signal_[num]</connection.set_text>
+<connection.stateout>state_out</connection.stateout>
+<connection.turretaimingout>position_out</connection.turretaimingout>
+<connection.turrettriggerout>trigger_out</connection.turrettriggerout>
+<connection.sonardataout>data_out</connection.sonardataout>
+<label.outpostinfodisplay1>欢迎。氧气水平：正常。能量水平：正常。辐射水平：超量。本日天气预报：阴冷潮湿。</label.outpostinfodisplay1>
+<label.navterminaldock>停靠</label.navterminaldock>
+<label.navterminaldock>离港</label.navterminaldock>
+<connectionerrornoresponse>服务器无响应。可能是与服务器的连接出现了问题。</connectionerrornoresponse>
+<dialognorescuetargets>目前似乎没有人需要医疗！</dialognorescuetargets>
+<dialognorescuetargets>我想现在好像没有人需要医疗！</dialognorescuetargets>
+<workshoppublisherror.limitexceeded>发布工坊项目失败（超过上限）。请确定你激活了Steam云储存功能并且没有超过储存上限。</workshoppublisherror.limitexceeded>
+<workshoppublisherror.limiteduseraccount>发布工坊项目失败。受限Steam帐号无法向Steam工坊发布项目。你需要在Steam花费至少5美元以激活你的账号。此限制与本游戏无关。</workshoppublisherror.limiteduseraccount>
+<workshoppublisherror.banned>发布工坊项目失败，因为你的账号已被封禁。</workshoppublisherror.banned>
+<workshoppublisherror.insufficientprivilege>发布工坊项目失败（权限不足）。这可能是由于社群封禁，帐号封禁或社区封禁造成的。请联系steam客服以解决此问题。</workshoppublisherror.insufficientprivilege>
+<workshoppublisherror.serviceunavailable>发布工坊项目失败（服务器不可用）。工坊服务器可能遇到了问题。请稍后重试。</workshoppublisherror.serviceunavailable>
+<workshopitemupdated>工坊项目 [itemname] 更新成功。</workshopitemupdated>
+<workshopitemupdatefailed>工坊项目 [itemname] 更新失败。[errormessage]</workshopitemupdatefailed>
+<workshopfilenotfound>文件 [path] 未找到。</workshopfilenotfound>
+<debugconsolehelptext>Debug控制台 - 按下F3打开/关闭；输入help来获取可用指令列表</debugconsolehelptext>
+<voipnodevices>未找到音频捕捉设备</voipnodevices>
+<wrongfiletype>文件类型错误</wrongfiletype>
+<charactereditor.contentpackagenameinuse>已经有同名内容包存在。请选择另一个名字，或者选择既存内容包。</charactereditor.contentpackagenameinuse>
+<servermessage.previousclientname>[client] 之前在服务器上使用过名称 [previousname] </servermessage.previousclientname>
+<serverlistdirectjoin>直接加入</serverlistdirectjoin>
+<causeofdeath.unknown>未知</causeofdeath.unknown>
+<self_causeofdeathdescription.unknown>你死了</self_causeofdeathdescription.unknown>
 
-<privacypolicy>隐私政策</privacypolicy>
+<!-- Generic strings (new) -->
+<pending>等待中</pending>
+<inprogress>进行中</inprogress>
+<complete>完成</complete>
 
-<lightcomponent.lightcolor>颜色</lightcomponent.lightcolor>
+<!-- Traitor mission (new) -->
+<traitormissionstartmessage>你是叛徒！你成功的渗透进了潜艇，现在是时候进行你的计划了。</traitormissionstartmessage>
+<traitormissionfailuremessage>你的任务失败了。作为结果，任务已被取消，你现在是正常船员的一份子。保持低调，直到接收下一个任务。</traitormissionfailuremessage>
+<traitormissionsuccessmessage>你成功的破坏了船员们的行动。一艘逃生艇已经向你派出。</traitormissionsuccessmessage>
 
-<connection.batterychargestatusout>充电中</connection.batterychargestatusout>
-<connection.batterychargepercentage>充电中分比</connection.batterychargepercentage>
-<connection.batterysetrechargespeed>设置充电率</connection.batterysetrechargespeed>
-<connection.batteryrechargespeedout>输出充电率</connection.batteryrechargespeedout>
+<!-- Traitor objectives (new) -->
+<traitorobjectivestartmessage>你有一个新目标。以下目标需要完成:\n[traitorgoalinfos]</traitorobjectivestartmessage>
+<traitorobjectivestartmessageserver>[traitorname] 是叛徒并有着以下目标:\n[traitorgoalinfos]</traitorobjectivestartmessageserver>
+<traitorobjectiveendmessagesuccess>[traitorname] 是叛徒并成功的完成了以下目标:\n [traitorgoalinfos]</traitorobjectiveendmessagesuccess>
+<traitorobjectiveendmessagesuccessdead>[traitorname] 是叛徒并成功地完成了以下目标，但在过程中死亡:\n[traitorgoalinfos]</traitorobjectiveendmessagesuccessdead>
+<traitorobjectiveendmessagesuccessdetained>[traitorname] 是叛徒并成功地完成了以下目标，但已被拘禁:\n[traitorgoalinfos]</traitorobjectiveendmessagesuccessdetained>
+<traitorobjectiveendmessagefailure>[traitorname] 是叛徒但未能完成给定目标:\n[traitorgoalinfos]</traitorobjectiveendmessagefailure>
+<traitorobjectiveendmessagefailuredead>[traitorname] 是叛徒但未能完成给定目标，并且死亡:\n[traitorgoalinfos]</traitorobjectiveendmessagefailuredead>
+<traitorobjectiveendmessagefailuredetained>[traitorname] 是叛徒但未能完成给定目标，并被拘禁:\n[traitorgoalinfos]</traitorobjectiveendmessagefailuredetained>
+<traitorobjectivegoalinfoformat>- [statustext]\n</traitorobjectivegoalinfoformat>
+
+<!-- Traitor goals (new) -->
+<traitorgoalstatustextformat>[infotext] ([status])</traitorgoalstatustextformat>
+<traitorgoaltimelimitfailure>你未能及时完成给你的目标。</traitorgoaltimelimitfailure>
+<traitorgoalkilltargetinfo>刺杀 [targetname]。</traitorgoalkilltargetinfo>
+<traitorgoalkilleveryoneinfo>杀死所有船员。</traitorgoalkilleveryoneinfo>
+<traitorgoalfinditeminfo>在 [targethullname] 找到一个 [identifier] 。</traitorgoalfinditeminfo>
+<traitorgoalcausereactormeltdown>造成一次引擎溶毁。</traitorgoalcausereactormeltdown>
+<traitorgoaldestroyitems>摧毁潜艇上至少百分之[percentage]的非物品栏 [tag] 。</traitorgoaldestroyitems>
+<traitorgoalfloodpercentofsub>导致至少潜艇百分之[percentage]部分进水。</traitorgoalfloodpercentofsub>
+<traitorgoaljamsonarinfo>在潜艇中隐藏一个主动声呐干扰器并保证其有至少[duration]秒不被发现。</traitorgoaljamsonarinfo>
+<traitorgoaljamsonarinfoalt>干扰潜艇声呐至少[duration]秒。</traitorgoaljamsonarinfoalt>
+<traitorgoalsabotageinfo>破坏 [target] ，使其状态低于 [threshold]%。</traitorgoalsabotageinfo>
+<traitorgoalpoisoninfo>向 [targetname] 注射 [poison]。</traitorgoalpoisoninfo>
+<traitorgoaltamperoxygeninfo>用焊接燃料替换百分之[percentage]的潜水装备氧气罐。</traitorgoaltamperoxygeninfo>
+<traitorgoaltampercoilguninfo>将所有电磁枪装弹器中装入假弹。</traitorgoaltampercoilguninfo>
+<traitorgoaltampercoilguninfomulti>将[number]把电磁枪装弹器中装入假弹。</traitorgoaltampercoilguninfomulti>
+<traitorgoaltamperrailguninfo>将所有电磁枪装弹器中装入一枚假弹。</traitorgoaltamperrailguninfo>
+<traitorgoaltamperrailguninfomulti>向一把电磁枪装弹器中装入[number]枚假弹。</traitorgoaltamperrailguninfomulti>
+
+<!-- Items (new) -->
+<entityname.flamer>喷火器</entityname.flamer>
+<entitydescription.flamer>一把喷火武器，会喷出燃烧的焊接燃料。</entitydescription.flamer>
+<entityname.smg>冲锋枪</entityname.smg>
+<entitydescription.smg>一把.45口径冲锋枪。</entitydescription.smg>
+<entityname.smgmagazine>冲锋枪弹夹</entityname.smgmagazine>
+<entitydescription.smgmagazine>装有15发.45弹药的弹夹。</entitydescription.smgmagazine>
+<entityname.smground>冲锋枪弹药</entityname.smground>
+<entitydescription.smground>一枚.45口径冲锋枪弹药。</entitydescription.smground>
+<entityname.grenadelauncher>榴弹发射器</entityname.grenadelauncher>
+<entitydescription.grenadelauncher>一把便携榴弹发射器，可以使用40mm榴弹。</entitydescription.grenadelauncher>
+<entityname.40mmgrenade>40mm榴弹</entityname.40mmgrenade>
+<entitydescription.40mmgrenade>榴弹发射器弹药。</entitydescription.40mmgrenade>
+<entityname.40mmstungrenade>40mm震撼榴弹</entityname.40mmstungrenade>
+<entitydescription.40mmstungrenade>榴弹发射器弹药。非致命。</entitydescription.40mmstungrenade>
+<entityname.shotgun>防暴霰弹枪</entityname.shotgun>
+<entitydescription.shotgun>旨在控制人群的霰弹枪。</entitydescription.shotgun>
+<entityname.shotgunshell>霰弹枪弹药</entityname.shotgunshell>
+<entitydescription.shotgunshell>霰弹枪弹药。致命。</entitydescription.shotgunshell>
+<entityname.stungun>电击枪</entityname.stungun>
+<entitydescription.stungun>发射电击针的装置。</entitydescription.stungun>
+<entityname.stungundart>电击枪</entityname.stungundart>
+<entitydescription.stungundart>造成电击，使目标失能。非致命。</entitydescription.stungundart>
+<entityname.toyhammer>玩具锤子</entityname.toyhammer>
+<entitydescription.toyhammer>非致命武器，但极其烦人。</entitydescription.toyhammer>
+<entityname.coilgunammoboxexplosive>爆破弹药箱</entityname.coilgunammoboxexplosive>
+<entitydescription.coilgunammoboxexplosive>电磁枪弹药。命中时爆炸。</entitydescription.coilgunammoboxexplosive>
+<entityname.coilgunammoboxpiercing>穿甲弹药箱</entityname.coilgunammoboxpiercing>
+<entitydescription.coilgunammoboxpiercing>电磁枪弹药。具有穿甲效果。</entitydescription.coilgunammoboxpiercing>
+<entityname.coilgunboltexplosive>爆破电磁枪矢</entityname.coilgunboltexplosive>
+<entitydescription.coilgunboltexplosive>电磁枪弹药。命中时爆炸。</entitydescription.coilgunboltexplosive>
+<entityname.coilgunboltpiercing>穿甲电磁枪矢</entityname.coilgunboltpiercing>
+<entitydescription.coilgunboltpiercing>电磁枪弹药。具有穿甲效果。</entitydescription.coilgunboltpiercing>
+<entityname.crawlermask>藻鬃爬行者面具</entityname.crawlermask>
+<entitydescription.crawlermask>使穿着者身份不会暴露。某些变装派对上的出彩装扮。</entitydescription.crawlermask>
+<entityname.huskstinger>外壳寄生虫蛰针</entityname.huskstinger>
+<entitydescription.huskstinger>临时刺杀用具</entitydescription.huskstinger>
+<entityname.shellshield>摩螺克甲壳碎片</entityname.shellshield>
+<entitydescription.shellshield>一块结实的摩螺克甲壳。</entitydescription.shellshield>
+<entityname.mudraptorshell>泥偶迅猛龙甲壳</entityname.mudraptorshell>
+<entitydescription.mudraptorshell>泥偶迅猛龙的结实甲壳。</entitydescription.mudraptorshell>
+<entityname.accordion>手风琴</entityname.accordion>
+<entitydescription.accordion>一把老旧的手制手风琴。</entitydescription.accordion>
+<entityname.bongodrums>邦戈手鼓</entityname.bongodrums>
+<entitydescription.bongodrums>一对老旧的邦戈手鼓。</entitydescription.bongodrums>
+<entityname.captainspipe>船长的烟斗</entityname.captainspipe>
+<entitydescription.captainspipe>波涛汹涌，临危不乱。</entitydescription.captainspipe>
+
+<workshop.contenttag.eventset>事件组</workshop.contenttag.eventset>
+<workshop.contenttag.totalconversion>总转化</workshop.contenttag.totalconversion>
+<workshop.contenttag.itemassembly>物品组合</workshop.contenttag.itemassembly>
+<workshop.contenttag.language>语言</workshop.contenttag.language>
+
+<New July>serverplaystyle|玩法</New July>
+<servertags>服务器tag</servertags>
+<servermotd>本日信息</servermotd>
+<serverbanner>服务器旗帜</serverbanner>
+<serverlogo>服务器logo</serverlogo>
+<servertagline>标语</servertagline>
+
+
+<!-- *** August additions *** -->
+<!-- Server -->
+<serversettingsgeneraltab>通常</serversettingsgeneraltab>
+<serversettingsantigriefingtab>反恶意行为</serversettingsantigriefingtab>
+<serverprocessclosed>服务器进程意外终止。游戏根目录下可能生成了一份崩溃报告 (servercrashreport.log) 。</serverprocessclosed>
+<serverprocesscrashed>服务器进程崩溃。游戏根目录下可能生成了一份崩溃报告 (servercrashreport.log) 。</serverprocesscrashed>
+<disconnectreason.servercrashed>服务器崩溃了。</disconnectreason.servercrashed>
+
+<!-- Workshop -->
+<workshoperroronenable>无法启用工坊项目'[itemname]'。</workshoperroronenable>
+
+<!-- Audio -->
+<dynamicrangecompression>动态距离压缩</dynamicrangecompression>
+<dynamicrangecompressiontooltip>自动调整游戏音量，防止音效混淆。</dynamicrangecompressiontooltip>
+<voipnodevices>未找到音频捕捉设备</voipnodevices>
+
+<!-- Misc -->
+<pumpautocontrol>自动控制</pumpautocontrol>
+<viewsteamprofile>浏览Steam档案</viewsteamprofile>
+<deletefileverification>你想删除[filename]吗？</deletefileverification>
+<connection.activate>激活</connection.activate>
+
+<!-- Submarine labels -->
+<label.betadeck>甲板B</label.betadeck>
+<label.airlock>气闸</label.airlock>
+<label.dockingport>停靠港</label.dockingport>
+<label.weapons>武器</label.weapons>
+<label.cargo>货仓</label.cargo>
+<label.crewquarters>船员室</label.crewquarters>
+<label.electrical1>电器室#1</label.electrical1>
+<label.electrical2>电器室#2</label.electrical2>
+<label.medical>医疗站</label.medical>
+<label.engineering>工程站</label.engineering>
+<label.ballast>压舱物</label.ballast>
+<label.reactor>反应堆</label.reactor>
+<label.armory>军火库</label.armory>
+<label.batteryoutput>电池输出</label.batteryoutput>
+<label.onoff>开/关</label.onoff>
+<label.bilge>舱底</label.bilge>
+<label.powermainline>主电源线</label.powermainline>
+<label.command>指挥室</label.command>
+<label.engine>引擎</label.engine>
+
+<!-- Karma system -->
+<karma.kickbanthreshold>封禁阈值</karma.kickbanthreshold>
+<karma.kickbanthresholdtooltip>道德值低于此值的玩家将被此服务器自动封禁。</karma.kickbanthresholdtooltip>
+<karma.karmadecay>道德值下降速度</karma.karmadecay>
+<karma.karmadecaytooltip>当道德值高于阈值时超出部分的下降速度。</karma.karmadecaytooltip>
+<karma.karmadecaythreshold>道德值下降阈值</karma.karmadecaythreshold>
+<karma.karmadecaythresholdtooltip>当道德值高于阈值时超出部分将会自动流失。</karma.karmadecaythresholdtooltip>
+<karma.karmaincrease>道德值提升速度</karma.karmaincrease>
+<karma.karmaincreasetooltip>道德值出于提升阈值以下时提升的速度。</karma.karmaincreasetooltip>
+<karma.karmaincreasethreshold>道德值提升阈值</karma.karmaincreasethreshold>
+<karma.karmaincreasethresholdtooltip>道德值出于提升阈值以下时将会自动提升。</karma.karmaincreasethresholdtooltip>
+<karma.structurerepairkarmaincrease>修复结构</karma.structurerepairkarmaincrease>
+<karma.structurerepairkarmaincreasetooltip>决定修复结构时获得的道德值（按每点生命值结算。举例来说，如果设为0.05，那么将一个结构从0修复到100将获得5点道德值）。</karma.structurerepairkarmaincreasetooltip>
+<karma.structuredamagekarmadecrease>破坏结构</karma.structuredamagekarmadecrease>
+<karma.structuredamagekarmadecreasetooltip>决定破坏结构时失去的道德值（按每点生命值结算。举例来说，如果设为0.05，那么将一个结构从100破坏到0将失去5点道德值）。</karma.structuredamagekarmadecreasetooltip>
+<karma.itemrepairkarmaincrease>修复装置</karma.itemrepairkarmaincrease>
+<karma.itemrepairkarmaincreasetooltip>决定修复装置时获得的道德值（按每点生命值结算。举例来说，如果设为0.05，那么将一个装置从0修复到100将获得5点道德值）。</karma.itemrepairkarmaincreasetooltip>
+<karma.damageenemykarmaincrease>对敌伤害</karma.damageenemykarmaincrease>
+<karma.damageenemykarmaincreasetooltip>对敌人造成伤害时获得的道德值（按每点伤害结算）</karma.damageenemykarmaincreasetooltip>
+<karma.healfriendlykarmaincrease>治疗友军</karma.healfriendlykarmaincrease>
+<karma.healfriendlykarmaincreasetooltip>治疗友军时获得的道德值（按每点伤害结算）</karma.healfriendlykarmaincreasetooltip>
+<karma.damagefriendlykarmadecrease>伤害友军</karma.damagefriendlykarmadecrease>
+<karma.damagefriendlykarmadecreasetooltip>伤害友军时失去的道德值（按每点伤害结算）</karma.damagefriendlykarmadecreasetooltip>
+<karma.reactormeltdownkarmadecrease>引擎溶毁</karma.reactormeltdownkarmadecrease>
+<karma.reactormeltdownkarmadecreasetooltip>玩家造成一次引擎溶毁时失去的道德值。</karma.reactormeltdownkarmadecreasetooltip>
+<karma.reactoroverheatkarmadecrease>引擎过热</karma.reactoroverheatkarmadecrease>
+<karma.reactoroverheatkarmadecreasetooltip>玩家负责的引擎过热时每秒失去的道德值。</karma.reactoroverheatkarmadecreasetooltip>
+<karma.extinguishfirekarmaincrease>灭火</karma.extinguishfirekarmaincrease>
+<karma.extinguishfirekarmaincreasetooltip>灭火时每秒获得的道德值。</karma.extinguishfirekarmaincreasetooltip>
+<karma.allowedwiredisconnectionsperminute>电路断线数量阈值</karma.allowedwiredisconnectionsperminute>
+<karma.allowedwiredisconnectionsperminutetooltip>玩家每分钟允许切断的电路数量，超过既会开始失去道德值。</karma.allowedwiredisconnectionsperminutetooltip>
+<karma.wiredisconnectionkarmadecrease>电路断线</karma.wiredisconnectionkarmadecrease>
+<karma.wiredisconnectionkarmadecreasetooltip>如果超过每分钟电路断线数量阀值，玩家将失去的道德值</karma.wiredisconnectionkarmadecreasetooltip>
+<karma.spamfilterkarmadecrease>公屏刷屏</karma.spamfilterkarmadecrease>
+<karma.spamfilterkarmadecreasetooltip>玩家触发公屏刷屏处罚时失去的道德值。</karma.spamfilterkarmadecreasetooltip>
+<karma.herpesthreshold>太空疱疹阈值</karma.herpesthreshold>
+<karma.herpesthresholdtooltip>玩家道德值低于多少时会得太空疱疹。</karma.herpesthresholdtooltip>
+<karma.positiveactions>正面行为</karma.positiveactions>
+<karma.negativeactions>负面行为</karma.negativeactions>
+<karmapreset.default>默认</karmapreset.default>
+<karmapreset.strict>严格</karmapreset.strict>
+<karmapreset.custom>自定义</karmapreset.custom>
+<karmadecreasedunknownamount>你的道德值降低了。</karmadecreasedunknownamount>
+<karmaincreasedunknownamount>你的道德值提高了。</karmaincreasedunknownamount>
+<afflictionname.spaceherpes>太空疱疹</afflictionname.spaceherpes>
+<afflictiondescription.spaceherpes>病人的脸上满是恶心的脓包。</afflictiondescription.spaceherpes>
+<afflictionname.invertcontrols>晕眩</afflictionname.invertcontrols>
+<afflictiondescription.invertcontrols>病人头晕目眩，无法正确感知周围环境。</afflictiondescription.invertcontrols>
+
+
+<damagebutton>伤害</damagebutton>
+<pending>等待中</pending>
+<inprogress>进行中</inprogress>
+<complete>完成</complete>
+
+<!-- Traitor goals -->
+<traitorgoalfindcontainerinfo>在[targethullname]的一个[target]里找到你的下一项目标。</traitorgoalfindcontainerinfo>
+<traitorgoaldestroyoxygen>摧毁潜艇上至少百分之[percentage]的非物品栏氧气罐。</traitorgoaldestroyoxygen>
+<traitorgoalsabotagedurationinfo>破坏 [tag] ，使其状态低于[threshold]%至少[duration]秒</traitorgoalsabotagedurationinfo>
+<traitorgoalescape>使用逃生舱逃脱。</traitorgoalescape>
+
+<!-- MVP traitor mission text package -->
+<mvptraitormissionstartinfotext>你脑袋里的一个声音吓了你一跳：“寄生虫教召唤你的服务！”</mvptraitormissionstartinfotext>
+<mvptraitorobjectivestartmessage1>你的脑海中涌出了一个想法，尽管平庸无比，但还是占据了你的心志：\n[traitorgoalinfos]</mvptraitorobjectivestartmessage1>
+<mvp_goalinfotext_1>寻找储藏柜 - 给你的特别消息就藏在一个备用氧气罐下面。</mvp_goalinfotext_1>
+<mvpobjectivesuccessmessage1>不知怎么，氧气罐下面真的藏着一张肮脏的纸片。上面涂抹着原始的字样，但你本能的理解了上面的内容。</mvpobjectivesuccessmessage1>
+<mvptraitorobjectivestartmessage2>你的第一个任务是：\n[traitorgoalinfos]</mvptraitorobjectivestartmessage2>
+<mvpobjectivesuccessmessage2>你完成第一个任务之后，一阵快感向潮水一般冲刷着你。你的脑海中想起了干涸而又疯狂的笑声，随后逐渐变为了细不可闻的滴答声。</mvpobjectivesuccessmessage2>
+<mvptraitorobjectivestartmessage3>你阅读了下一项加密指示:\n[traitorgoalinfos]</mvptraitorobjectivestartmessage3>
+<mvpobjectivesuccessmessage3>现在，已经没有什么要做的了。潜艇陷入了混乱，你脑海中的声音消失了，你的命运已然确定。</mvpobjectivesuccessmessage3>
+
+<!-- flood_1 traitor mission text package -->
+<flood_1_traitormissionstartinfotext>赞美小丑圣母！</flood_1_traitormissionstartinfotext>
+<flood_1_traitorobjectivestartmessage1>是时候了。按照在米诺斯·黎涅港口那个脸上涂抹着奇异油彩的人所指示的那样，你要开始工作了:\n[traitorgoalinfos]</flood_1_traitorobjectivestartmessage1>
+<flood_1_goalinfotext_1>搜寻所有舱室里的每一个紧急补给箱。一个内应在里面藏了一个纽扣零件。</flood_1_goalinfotext_1>
+<flood_1_objectivesuccessmessage1>你快速的将口袋里的纽扣藏了进去，然后假装一幅自然的样子。哔哔！</flood_1_objectivesuccessmessage1>
+<flood_1_traitorobjectivestartmessage2>接下来，你要在别人之前找到爆破物!\n[traitorgoalinfos]</flood_1_traitorobjectivestartmessage2>
+<flood_1_goalinfotext_2>从医疗站获取爆破物。</flood_1_goalinfotext_2>
+<flood_1_objectivesuccessmessage2>计划完美执行。你弄到了爆破物，差点笑出了声。</flood_1_objectivesuccessmessage2>
+<flood_1_traitorobjectivestartmessage3>最后，那个油彩脸说你要找到能把这东西引爆的工具！\n[traitorgoalinfos]</flood_1_traitorobjectivestartmessage3>
+<flood_1_goalinfotext_3>搜寻潜艇各处的钢柜并获取引爆器。</flood_1_goalinfotext_3>
+<flood_1_objectivesuccessmessage3>那个内应也太厉害了吧！你现在弄到了需要的一切，可以开始派对了。</flood_1_objectivesuccessmessage3>
+<flood_1_traitorobjectivestartmessage4>你需要找个好地方将引爆器设置在墙上，将按钮放在安全的距离外，然后将两者用电线连起来。然后引爆它，沉了这个破铁桶!\n[traitorgoalinfos]</flood_1_traitorobjectivestartmessage4>
+<flood_1_objectivesuccessmessage4>哔哔！现在这个潜艇里已经灌满了水，神仙难救了。不知道你要花多长时间才能游回最近的哨所并向那个油彩脸汇报...</flood_1_objectivesuccessmessage4>
+
+<!-- flood_2 traitor mission text package -->
+<flood_2_traitormissionstartinfotext>你紧张的审视周围，发现没有人在看着你 - 是开始行动的时候了。</flood_2_traitormissionstartinfotext>
+<flood_2_traitorobjectivestartmessage1>你花了几个月时间获得船员们的信任，现在终于是收获果实的时候了:\n[traitorgoalinfos]</flood_2_traitorobjectivestartmessage1>
+<flood_2_goalinfotext_1>搜寻所有舱室里的每一个紧急补给箱。其中一个潜水面罩里藏了一个小型低频收音器，你要用它来完成你的目标。</flood_2_goalinfotext_1>
+<flood_2_objectivesuccessmessage1>你找到了小型收音器并激活了它。</flood_2_objectivesuccessmessage1>
+<flood_2_traitorobjectivestartmessage2>收音器吱嘎作响，最后收到了一个微弱的信号：“这是欧罗巴抵抗军的直接指令，你可以开始行动了。首先，创造一个分散注意力的事件：\n[traitorgoalinfos]”</flood_2_traitorobjectivestartmessage2>
+<flood_2_objectivesuccessmessage2>干得好。没有了氧气，这些猪猡很快就会陷入混乱。</flood_2_objectivesuccessmessage2>
+<flood_2_traitorobjectivestartmessage3>现在往潜艇里灌点水，看着他们哼唧:\n[traitorgoalinfos]</flood_2_traitorobjectivestartmessage3>
+<flood_2_objectivesuccessmessage3>非常好！记住同志，没有糟糕的战术，只有糟糕的目标！</flood_2_objectivesuccessmessage3>
+<flood_2_traitorobjectivestartmessage4>快，利用这场混乱，干掉那些猪猡！\n[traitorgoalinfos]</flood_2_traitorobjectivestartmessage4>
+<flood_2_objectivesuccessmessage4>你完成了杀戮之后苦涩地注意到，你的收音器完全沉默了。你的同志把你的命运交给了欧罗巴母亲。</flood_2_objectivesuccessmessage4>
+
+
 </infotexts>
