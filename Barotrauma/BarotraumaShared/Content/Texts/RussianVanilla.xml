@@ -2744,7 +2744,7 @@
 <workshop.contenttag.itemassembly>Сборка предмета</workshop.contenttag.itemassembly>
 <workshop.contenttag.language>Язык</workshop.contenttag.language>
 
-<New July>serverplaystyle|Игровой стиль</New July>
+<serverplaystyle>Игровой стиль</serverplaystyle>
 <servertags>Хештеги сервера</servertags>
 <servermotd>Сообщение дня</servermotd>
 <serverbanner>Баннер сервера</serverbanner>

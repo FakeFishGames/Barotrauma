@@ -2744,7 +2744,7 @@
 <workshop.contenttag.itemassembly>物品組合</workshop.contenttag.itemassembly>
 <workshop.contenttag.language>語言</workshop.contenttag.language>
 
-<New July>serverplaystyle|玩法</New July>
+<serverplaystyle>玩法</serverplaystyle>
 <servertags>伺服器tag</servertags>
 <servermotd>本日信息</servermotd>
 <serverbanner>伺服器旗幟</serverbanner>

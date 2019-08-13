@@ -2744,7 +2744,7 @@
 <workshop.contenttag.itemassembly>Objektkonstruktion</workshop.contenttag.itemassembly>
 <workshop.contenttag.language>Sprache</workshop.contenttag.language>
 
-<New July>serverplaystyle|Spielstil</New July>
+<serverplaystyle>Spielstil</serverplaystyle>
 <servertags>Server-Tags</servertags>
 <servermotd>Nachricht des Tages</servermotd>
 <serverbanner>Server-Banner</serverbanner>

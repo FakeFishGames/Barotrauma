@@ -2744,7 +2744,7 @@
 <workshop.contenttag.itemassembly>Eşya toplama</workshop.contenttag.itemassembly>
 <workshop.contenttag.language>Dil</workshop.contenttag.language>
 
-<New July>serverplaystyle|Oyun tarzı</New July>
+<serverplaystyle>Oyun tarzı</serverplaystyle>
 <servertags>Sunucu etiketleri</servertags>
 <servermotd>Günün mesajı</servermotd>
 <serverbanner>Sunucu başlığı</serverbanner>
