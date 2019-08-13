@@ -2789,36 +2789,39 @@ namespace Barotrauma
             {
                 var editor = ParamsEditor.Instance;
                 CharacterParams.AddToEditor(editor);
-                var buttonParent = new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 40), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
+                if (CharacterParams.AI != null)
                 {
-                    CanBeFocused = false
-                };
-                new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), buttonParent.RectTransform, Anchor.CenterLeft), "Add New Target")
-                {
-                    OnClicked = (button, data) =>
-                    {
-                        CharacterParams.AI.TryAddEmptyTarget(out _);
-                        ResetParamsEditor();
-                        return true;
-                    }
-                };
-                foreach (var target in CharacterParams.AI.Targets)
-                {
-                    var targetEditor = target.SerializableEntityEditor;
-                    var parent = new GUIFrame(new RectTransform(new Point(targetEditor.Rect.Width, 30), targetEditor.RectTransform), style: null)
+                    var buttonParent = new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 40), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
                     {
                         CanBeFocused = false
                     };
-                    new GUIButton(new RectTransform(new Vector2(0.08f, 0.8f), parent.RectTransform, Anchor.BottomRight), "X", color: Color.Red)
+                    new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), buttonParent.RectTransform, Anchor.CenterLeft), "Add New Target")
                     {
                         OnClicked = (button, data) =>
                         {
-                            CharacterParams.AI.TryRemoveTarget(target);
+                            CharacterParams.AI.TryAddEmptyTarget(out _);
                             ResetParamsEditor();
                             return true;
                         }
                     };
-                    targetEditor.AddCustomContent(parent, 0);
+                    foreach (var target in CharacterParams.AI.Targets)
+                    {
+                        var targetEditor = target.SerializableEntityEditor;
+                        var parent = new GUIFrame(new RectTransform(new Point(targetEditor.Rect.Width, 30), targetEditor.RectTransform), style: null)
+                        {
+                            CanBeFocused = false
+                        };
+                        new GUIButton(new RectTransform(new Vector2(0.08f, 0.8f), parent.RectTransform, Anchor.BottomRight), "X", color: Color.Red)
+                        {
+                            OnClicked = (button, data) =>
+                            {
+                                CharacterParams.AI.TryRemoveTarget(target);
+                                ResetParamsEditor();
+                                return true;
+                            }
+                        };
+                        targetEditor.AddCustomContent(parent, 0);
+                    }
                 }
             }
             else if (editAnimations)
