@@ -273,5 +273,33 @@
       </StatusEffect>
     </Projectile>
   </Item>
+  
+  <Item name="Dummy Ammunition Box" identifier="dummycoilgunammobox" scale="0.5" tags="coilgunequipment,coilgunammo" category="Equipment" linkable="true" impactsoundtag="impact_metal_heavy">
+    <Price locationtype="Outpost" buyprice="200" />
+    <Price locationtype="Military" buyprice="150" />
+    <Price locationtype="City" buyprice="200" />
+    <Deconstruct time="10">
+      <Item identifier="steel" copycondition="true"/>
+      <Item identifier="aluminium" />
+    </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="20">
+      <RequiredSkill identifier="mechanical" level="25"/>
+      <RequiredItem identifier="aluminium"/>
+    </Fabricate>
+    <!--<InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64" />-->
+    <Sprite texture="Content/Items/Containers/crates.png" depth="0.54" sourcerect="344,197,117,89" origin="0.5,0.5" />
+    <Body width="115" height="88" density="50" />
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-40,30" handle2="40,30" aimable="false" msg="ItemMsgPickUpSelect"/>
+    <ItemContainer hideitems="true" capacity="1" drawinventory="false" canbeselected="false" ShowConditionInContainedStateIndicator="true">
+      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
+      <!-- we cheat a bit with ammunition boxes - they don't actually contain hundreds of rounds, 
+      but spawn a new round every time the OnUse effect is triggered. OnUse also reduces the condition
+      of the item, and when the condition is 0, the box is considered empty. -->
+      <!--  -0.5 per usage = 200 shots per box -->
+      <StatusEffect type="OnUse" target="Parent" condition="-100" disabledeltatime="true">
+        <Explosion range="250.0" structuredamage="0" force="2" camerashake="5.0" flames="true" smoke="true" sparks="true" underwaterbubble="false" />
+      </StatusEffect>
+    </ItemContainer>
+  </Item>
 
 </Items>

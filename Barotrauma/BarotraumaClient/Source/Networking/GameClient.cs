@@ -75,6 +75,9 @@ namespace Barotrauma.Networking
         //has the client been given a character to control this round
         public bool HasSpawned;
 
+        public bool SpawnAsTraitor;
+        public string TraitorFirstObjective;
+
         public byte ID
         {
             get { return myID; }
@@ -673,7 +676,6 @@ namespace Barotrauma.Networking
                     {
                         saveFiles.Add(inc.ReadString());
                     }
-
                     GameMain.NetLobbyScreen.CampaignSetupUI = MultiPlayerCampaign.StartCampaignSetup(serverSubmarines, saveFiles);
                     break;
                 case ServerPacketHeader.PERMISSIONS:
@@ -701,6 +703,9 @@ namespace Barotrauma.Networking
                     break;
                 case ServerPacketHeader.FILE_TRANSFER:
                     fileReceiver.ReadMessage(inc);
+                    break;
+                case ServerPacketHeader.TRAITOR_MESSAGE:
+                    ReadTraitorMessage(inc);
                     break;
             }
         }
@@ -858,6 +863,36 @@ namespace Barotrauma.Networking
             SteamAchievementManager.UnlockAchievement(achievementIdentifier);
         }
 
+        private void ReadTraitorMessage(IReadMessage inc)
+        {
+            bool isObjective = inc.ReadBoolean();
+            bool createMessageBox = inc.ReadBoolean();
+            string message = inc.ReadString();
+            message = TextManager.GetServerMessage(message);
+
+            if (isObjective)
+            {
+                if (Character != null)
+                {
+                    Character.IsTraitor = true;
+                    Character.TraitorCurrentObjective = message;
+                }
+                else
+                {
+                    SpawnAsTraitor = true;
+                    TraitorFirstObjective = message;
+                }
+            }
+            else if (createMessageBox)
+            {
+                new GUIMessageBox("", message);
+            }
+            else
+            {
+                GameMain.Client.AddChatMessage(message, ChatMessageType.Server);
+            }
+        }
+
         private void ReadPermissions(IReadMessage inc)
         {
             List<string> permittedConsoleCommands = new List<string>();
@@ -979,8 +1014,6 @@ namespace Barotrauma.Networking
 
             bool disguisesAllowed   = inc.ReadBoolean();
             bool rewiringAllowed    = inc.ReadBoolean();
-            bool isTraitor          = inc.ReadBoolean();
-            string traitorTargetName = isTraitor ? inc.ReadString() : null;
 
             bool allowRagdollButton = inc.ReadBoolean();
 

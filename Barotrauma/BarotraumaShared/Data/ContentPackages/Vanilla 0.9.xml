@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <contentpackage name="Vanilla 0.9" path="Data/ContentPackages/Vanilla 0.9" corepackage="true" hideinworkshopmenu="true" gameversion="0.9.0.0">
   <Item file="Content/Items/idcard.xml" />
   <Item file="Content/Items/Alien/alienitems.xml" />
@@ -109,6 +109,7 @@
   <MapGenerationParameters file="Content/Map/MapGenerationParameters.xml" />
   <LevelGenerationParameters file="Content/Map/LevelGenerationParameters.xml" />  
   <Missions file="Content/Missions.xml" />
+  <TraitorMissions file="Content/TraitorMissions.xml" />
   <NPCConversations file="Content/NPCConversations/NpcConversations_English.xml"/>
   <NPCConversations file="Content/NPCConversations/NpcConversations_German.xml"/>
   <NPCConversations file="Content/NPCConversations/NpcConversations_French.xml"/>

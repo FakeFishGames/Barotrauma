@@ -802,7 +802,10 @@ namespace Barotrauma
 #else
             joinServerButton.Enabled = true;
             hostServerButton.Enabled = true;
-            steamWorkshopButton.Enabled = true;
+            if (Steam.SteamManager.USE_STEAM)
+            {
+                steamWorkshopButton.Enabled = true;
+            }
 #endif
         }
 

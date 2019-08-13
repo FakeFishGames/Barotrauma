@@ -14,6 +14,11 @@ namespace Barotrauma.Items.Components
             get { return repairButton; }
         }
         private GUIButton repairButton;
+        public GUIButton SabotageButton
+        {
+            get { return sabotageButton; }
+        }
+        private GUIButton sabotageButton;
         private GUIProgressBar progressBar;
 
         private List<ParticleEmitter> particleEmitters = new List<ParticleEmitter>();
@@ -21,6 +26,7 @@ namespace Barotrauma.Items.Components
         private List<Vector2> particleEmitterConditionRanges = new List<Vector2>();
 
         private string repairButtonText, repairingText;
+        private string sabotageButtonText, sabotagingText;
 
         [Serialize("", false)]
         public string Description
@@ -38,7 +44,7 @@ namespace Barotrauma.Items.Components
         public override bool ShouldDrawHUD(Character character)
         {
             if (!HasRequiredItems(character, false) || character.SelectedConstruction != item) return false;
-            return (item.Condition < ShowRepairUIThreshold || (currentFixer == character && !item.IsFullCondition));
+            return item.Condition < ShowRepairUIThreshold || character.IsTraitor && item.Condition > MinDeteriorationCondition || (currentFixer == character && (!item.IsFullCondition || (character.IsTraitor && item.Condition > MinDeteriorationCondition)));
         }
 
         partial void InitProjSpecific(XElement element)
@@ -60,24 +66,36 @@ namespace Barotrauma.Items.Components
             for (int i = 0; i < requiredSkills.Count; i++)
             {
                 var skillText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform),
-                    "   - " + TextManager.AddPunctuation(':', TextManager.Get("SkillName." + requiredSkills[i].Identifier), ((int)requiredSkills[i].Level).ToString()), 
+                    "   - " + TextManager.AddPunctuation(':', TextManager.Get("SkillName." + requiredSkills[i].Identifier), ((int) requiredSkills[i].Level).ToString()),
                     font: GUI.SmallFont)
                 {
                     UserData = requiredSkills[i]
                 };
             }
 
-            progressBar = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform), 
+            progressBar = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform),
                 color: Color.Green, barSize: 0.0f);
 
             repairButtonText = TextManager.Get("RepairButton");
             repairingText = TextManager.Get("Repairing");
-            repairButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.15f), paddedFrame.RectTransform, Anchor.TopCenter),
-                repairButtonText)
+            repairButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.15f), paddedFrame.RectTransform, Anchor.TopCenter), repairButtonText)
             {
                 OnClicked = (btn, obj) =>
                 {
                     currentFixer = Character.Controlled;
+                    CurrentFixerAction = FixActions.Repair;
+                    item.CreateClientEvent(this);
+                    return true;
+                }
+            };
+            sabotageButtonText = TextManager.Get("SabotageButton");
+            sabotagingText = TextManager.Get("Sabotaging");
+            sabotageButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.15f), paddedFrame.RectTransform, Anchor.BottomCenter), sabotageButtonText)
+            {
+                OnClicked = (btn, obj) =>
+                {
+                    currentFixer = Character.Controlled;
+                    CurrentFixerAction = FixActions.Sabotage;
                     item.CreateClientEvent(this);
                     return true;
                 }
@@ -116,10 +134,16 @@ namespace Barotrauma.Items.Components
             progressBar.BarSize = item.Condition / item.MaxCondition;
             progressBar.Color = ToolBox.GradientLerp(progressBar.BarSize, Color.Red, Color.Orange, Color.Green);
 
-            repairButton.Enabled = currentFixer == null;
-            repairButton.Text = currentFixer == null ? 
+            repairButton.Enabled = currentFixer == null && item.Condition <= ShowRepairUIThreshold;
+            repairButton.Text = (currentFixer == null || currentFixerAction != FixActions.Repair) ? 
                 repairButtonText : 
                 repairingText + new string('.', ((int)(Timing.TotalTime * 2.0f) % 3) + 1);
+
+            sabotageButton.Visible = character.IsTraitor;
+            sabotageButton.Enabled = currentFixer == null && character.IsTraitor && item.Condition > MinDeteriorationCondition;
+            sabotageButton.Text = (currentFixer == null || currentFixerAction != FixActions.Sabotage || !character.IsTraitor) ?
+                sabotageButtonText :
+                sabotagingText + new string('.', ((int)(Timing.TotalTime * 2.0f) % 3) + 1);
 
             System.Diagnostics.Debug.Assert(GuiFrame.GetChild(0) is GUILayoutGroup, "Repair UI hierarchy has changed, could not find skill texts");
             foreach (GUIComponent c in GuiFrame.GetChild(0).Children)
@@ -141,11 +165,14 @@ namespace Barotrauma.Items.Components
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             deteriorationTimer = msg.ReadSingle();
+            deteriorateAlwaysResetTimer = msg.ReadSingle();
+            DeteriorateAlways = msg.ReadBoolean();
         }
 
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)
         {
             //no need to write anything, just letting the server know we started repairing
+            msg.WriteRangedInteger((int)currentFixerAction, 0, 2);
         }
 
         public void Draw(SpriteBatch spriteBatch, bool editing)

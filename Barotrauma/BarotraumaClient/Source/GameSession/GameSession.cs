@@ -110,21 +110,33 @@ namespace Barotrauma
         {
             infoFrameContent.ClearChildren();
 
-            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), infoFrameContent.RectTransform))
+            var isTraitor = GameMain.Client?.Character?.IsTraitor ?? false;
+
+            var missionFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, isTraitor ? 0.95f : 0.45f), infoFrameContent.RectTransform))
             {
                 RelativeSpacing = 0.05f
             };
 
-            if (Mission == null)
+            if (Mission != null)
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), paddedFrame.RectTransform, Anchor.TopCenter), TextManager.Get("NoMission"));
-                return;
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), missionFrame.RectTransform), Mission.Name, font: GUI.LargeFont);
+
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), missionFrame.RectTransform), TextManager.GetWithVariable("MissionReward", "[reward]", Mission.Reward.ToString()));
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionFrame.RectTransform), Mission.Description, wrap: true);
             }
-
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), paddedFrame.RectTransform), Mission.Name, font: GUI.LargeFont);
-
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), paddedFrame.RectTransform), TextManager.GetWithVariable("MissionReward", "[reward]", Mission.Reward.ToString()));
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform), Mission.Description, wrap: true);
+            else
+            {
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), missionFrame.RectTransform, Anchor.TopCenter), TextManager.Get("NoMission"), font: GUI.LargeFont);
+            }
+            if (isTraitor)
+            {
+                var traitorFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.45f), infoFrameContent.RectTransform, Anchor.BottomLeft))
+                {
+                    RelativeSpacing = 0.05f
+                };
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), traitorFrame.RectTransform), TextManager.Get("Traitors"), font: GUI.LargeFont);
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), traitorFrame.RectTransform), GameMain.Client.Character.TraitorCurrentObjective, wrap: true);
+            }
         }
 
         public void AddToGUIUpdateList()

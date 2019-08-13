@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
@@ -2391,6 +2391,9 @@
     <None Include="$(MSBuildThisFileDirectory)Submarines\Dugong_Tutorial.sub">
     </None>
     <None Include="$(MSBuildThisFileDirectory)Submarines\TutorialOutpost.sub" />
+    <None Include="$(MSBuildThisFileDirectory)Content\TraitorMissions.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)Content\Characters\Carrier\CARRIER_alarmLoop.ogg">
