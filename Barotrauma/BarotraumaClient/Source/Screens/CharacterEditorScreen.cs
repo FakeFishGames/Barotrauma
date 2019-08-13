@@ -5395,7 +5395,7 @@ namespace Barotrauma
                             htmlBox.Header.Font = GUI.LargeFont;
                             var element = new GUIFrame(new RectTransform(new Vector2(0.8f, 0.05f), htmlBox.Content.RectTransform), style: null, color: Color.Gray * 0.25f);
                             new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), element.RectTransform), GetCharacterEditorTranslation("HTMLPath"));
-                            var htmlPathElement = new GUITextBox(new RectTransform(new Vector2(0.5f, 1), element.RectTransform, Anchor.TopRight), $"Content/Characters/{Name}/{Name}.html");
+                            var htmlPathElement = new GUITextBox(new RectTransform(new Vector2(0.5f, 1), element.RectTransform, Anchor.TopRight), XMLPath.Replace(".xml", ".html"));
                             var list = new GUIListBox(new RectTransform(new Vector2(1, 0.8f), htmlBox.Content.RectTransform));
                             var htmlOutput = new GUITextBlock(new RectTransform(Vector2.One, list.Content.RectTransform), string.Empty) { CanBeFocused = false };
                             htmlBox.Buttons[0].OnClicked += (_b, _d) =>
