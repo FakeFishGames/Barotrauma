@@ -31,7 +31,7 @@ namespace Barotrauma
                 int result = 0;
                 foreach (var item in Item.ItemList)
                 {
-                    if (!matchInventory && item.ParentInventory?.Owner is Character && item.ParentInventory?.Owner != Traitor.Character)
+                    if (!matchInventory && item.FindParentInventory(inventory => inventory.Owner is Character && inventory.Owner != Traitor.Character) != null)
                     {
                         continue;
                     }

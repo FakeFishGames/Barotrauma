@@ -29,7 +29,7 @@ namespace Barotrauma
                     {
                         continue;
                     }
-                    if (item.ParentInventory?.Owner is Character)
+                    if (item.FindParentInventory(inventory => inventory.Owner is Character) != null)
                     {
                         continue;
                     }

@@ -57,7 +57,7 @@ namespace Barotrauma
                 }
             }
 
-            public override bool IsEnemy(Character character) => base.IsEnemy(character) || (target != null && target.ParentInventory == character.Inventory);
+            public override bool IsEnemy(Character character) => base.IsEnemy(character) || (target != null && target.FindParentInventory(inventory => inventory == character.Inventory) != null);
 
             protected ItemPrefab FindItemPrefab(string identifier)
             {
