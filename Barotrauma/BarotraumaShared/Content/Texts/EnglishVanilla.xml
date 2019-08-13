@@ -3537,4 +3537,7 @@
   <!-- NEW ADDITIONS -->
   <voipattenuation>Voice chat attenuation</voipattenuation>
   <voipattenuationtooltip>Lowers the game's volume when players are speaking.</voipattenuationtooltip>
+
+  <sabotagebutton>Sabotage</sabotagebutton>
+  <sabotaging>Sabotaging</sabotaging>
 </infotexts>
