@@ -31,7 +31,7 @@ namespace Barotrauma
             List<string> conversationFiles = new List<string>();
             List<string> infoTextFiles = new List<string>();
             
-            for (int i = 0; i < translatedLanguageNames.Length; i++)
+            for (int i = 0; i < translatedLanguageNames.GetUpperBound(0); i++)
             {
                 string language = translatedLanguageNames[i, 0];
                 string languageNoWhitespace = language.RemoveWhitespace();
@@ -74,7 +74,8 @@ namespace Barotrauma
 
                 if (conversationFiles.Count == 0 && infoTextFiles.Count == 0)
                 {
-                    DebugConsole.ThrowError("No .csv files found to convert.");
+                    DebugConsole.ThrowError("No .csv files found to convert for: " + language);
+                    continue;
                 }
 
                 conversationFiles.Clear();
@@ -128,8 +129,6 @@ namespace Barotrauma
 
         private static string GetTranslatedName(string language)
         {
-            language = language.ToLower().RemoveWhitespace();
-
             for (int i = 0; i < translatedLanguageNames.Length; i++)
             {
                 if (translatedLanguageNames[i, 0] == language) return translatedLanguageNames[i, 1];
@@ -166,19 +165,19 @@ namespace Barotrauma
             {
                 if (csvContent[i].StartsWith("Generic"))
                 {
-                    conversationStart = i + 1;
+                    conversationStart = i;
                     break;
                 }
             }
 
-            /*if (traitStart == -1)
+            if (traitStart == -1)
             {
                 DebugConsole.ThrowError("Invalid formatting of NPCConversations, no traits found!");
                 return null;
-            }*/
+            }
 
             //DebugConsole.NewMessage("Count: " + NPCPersonalityTrait.List.Count);
-            /*for (int i = 0; i < conversationStart; i++) // Traits
+            for (int i = 0; i < NPCPersonalityTrait.List.Count; i++) // Traits
             {
                 //string[] split = SplitCSV(csvContent[traitStart + i].Trim(separator));
                 string[] split = csvContent[traitStart + i].Split(separator);
@@ -187,13 +186,12 @@ namespace Barotrauma
                     $"{GetVariable("name", split[1])}" +
                     $"{GetVariable("alloweddialogtags", string.Join(",", NPCPersonalityTrait.List[i].AllowedDialogTags))}" +
                     $"{GetVariable("commonness", NPCPersonalityTrait.List[i].Commonness.ToString())}/>");
-            }*/
+            }
+
+            xmlContent.Add(string.Empty);
 
             for (int i = conversationStart; i < csvContent.Length; i++) // Conversations
             {
-                //string[] presplit = csvContent[i].Split(separator); // Handling speaker index fetching, somehow doesn't work with the regex
-                //string[] split = SplitCSV(csvContent[i]);
-
                 string[] split = csvContent[i].Split(separator);
 
                 int emptyFields = 0;
