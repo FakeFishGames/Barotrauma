@@ -1231,10 +1231,9 @@ namespace Barotrauma
                 NPCConversation.WriteToCSV();
             }));
 
-            commands.Add(new Command("csvtoxml", "csvtoxml [language] -> Converts .csv localization files in Content/NPCConversations & Content/Texts to .xml for use in-game.", (string[] args) =>
+            commands.Add(new Command("csvtoxml", "Converts .csv localization files in Content/NPCConversations/language & Content/Texts/language to .xml files for use in-game.", (string[] args) =>
             {
-                if (args.Length == 0) return;
-                LocalizationCSVtoXML.Convert(args[0]);
+                LocalizationCSVtoXML.Convert();
             }));
 
             commands.Add(new Command("guimessagebox", "guimessagebox [msg] -> Creates a message box with the parameter as a message.", (string[] args) =>
