@@ -257,7 +257,7 @@
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="flood_2_objectiveSuccessMessage2"/>
       <StartMessage id="flood_2_traitorobjectivestartmessage2"/>
-      <Goal type="destroyitems" tag="oxygensource" percentage="50">
+      <Goal type="destroyitems" tag="oxygentank" percentage="50">
         <InfoText id="traitorgoaldestroyitems" />
       </Goal>
     </Objective>
