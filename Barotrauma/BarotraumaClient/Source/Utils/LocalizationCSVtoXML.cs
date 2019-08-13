@@ -91,7 +91,7 @@ namespace Barotrauma
             string translatedName = GetTranslatedName(language);
             bool nowhitespace = TextManager.IsCJK(translatedName);
 
-            xmlContent.Add($"<infotexts language=\"{language}\" nowhitespace=\"{nowhitespace}\" translatedname=\"{translatedName}\">");
+            xmlContent.Add($"<infotexts language=\"{language}\" nowhitespace=\"{nowhitespace.ToString().ToLower()}\" translatedname=\"{translatedName}\">");
 
             for (int i = 1; i < csvContent.Length; i++) // Start at one to ignore header
             {
