@@ -134,13 +134,13 @@ namespace Barotrauma.Items.Components
             progressBar.BarSize = item.Condition / item.MaxCondition;
             progressBar.Color = ToolBox.GradientLerp(progressBar.BarSize, Color.Red, Color.Orange, Color.Green);
 
-            repairButton.Enabled = currentFixer == null;
+            repairButton.Enabled = currentFixer == null && item.Condition <= ShowRepairUIThreshold;
             repairButton.Text = (currentFixer == null || currentFixerAction != FixActions.Repair) ? 
                 repairButtonText : 
                 repairingText + new string('.', ((int)(Timing.TotalTime * 2.0f) % 3) + 1);
 
             sabotageButton.Visible = character.IsTraitor;
-            sabotageButton.Enabled = currentFixer == null && character.IsTraitor;
+            sabotageButton.Enabled = currentFixer == null && character.IsTraitor && item.Condition > MinDeteriorationCondition;
             sabotageButton.Text = (currentFixer == null || currentFixerAction != FixActions.Sabotage || !character.IsTraitor) ?
                 sabotageButtonText :
                 sabotagingText + new string('.', ((int)(Timing.TotalTime * 2.0f) % 3) + 1);

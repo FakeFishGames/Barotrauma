@@ -55,13 +55,11 @@ namespace Barotrauma
             if (Mission != null)
             {
                 Mission.Update(deltaTime);
-                /*
                 if (Mission.IsCompleted)
                 {
                     Mission = null;
-                    startCountdown = 30.0f;
+                    startCountdown = 60.0f;
                 }
-                */
             }
             else if (startCountdown > 0.0f && server.GameStarted)
             {
