@@ -92,6 +92,10 @@
   <Text file="Content/Texts/BrazilianPortuguese/BrazilianPortugueseVanilla.xml" />
   <Text file="Content/Texts/SimplifiedChinese/SimplifiedChineseVanilla.xml" />
   <Text file="Content/Texts/TraditionalChinese/TraditionalChineseVanilla.xml" />
+  <Text file="Content/Texts/CastilianSpanish/CastilianSpanishVanilla.xml" />
+  <Text file="Content/Texts/LatinamericanSpanish/LatinamericanSpanishVanilla.xml" />
+  <Text file="Content/Texts/Polish/PolishVanilla.xml" />
+  <Text file="Content/Texts/Turkish/TurkishVanilla.xml" />
   <UIStyle file="Content/UI/style.xml"/>  
   <Afflictions file="Content/Afflictions.xml"/>
   <Structure file="Content/Map/StructurePrefabs.xml" />
