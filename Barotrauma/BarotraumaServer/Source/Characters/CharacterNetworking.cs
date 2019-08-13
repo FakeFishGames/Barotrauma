@@ -406,17 +406,6 @@ namespace Barotrauma
             }
         }
 
-        private void WriteTraitorStatus(IWriteMessage msg)
-        {
-            msg.Write(IsTraitor);
-            if (IsTraitor)
-            {
-                // TODO(xxx): Proper handling that avoids net packet buffer length issues
-                var text = TraitorCurrentObjective ?? "";
-                msg.Write(text.Substring(0, Math.Min(text.Length, 200)));
-            }
-        }
-
         private void WriteStatus(IWriteMessage msg)
         {
             msg.Write(IsDead);
