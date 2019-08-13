@@ -81,7 +81,7 @@ namespace Barotrauma
 #endif
                 CodeWords = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
                 CodeResponse = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
-
+                Traitors.Clear();
                 foreach (var role in traitorRoles)
                 {
 
