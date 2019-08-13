@@ -134,7 +134,7 @@ namespace Barotrauma
             public override void Update(float deltaTime)
             {
                 base.Update(deltaTime);
-                if (target != null)
+                if (target == null)
                 {
                     target = targetContainer.OwnInventory.Items.FirstOrDefault(item => item != null && item.Prefab.Identifier == identifier && !existingItems.Contains(item));
                     if (target != null)
