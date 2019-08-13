@@ -2910,6 +2910,40 @@ namespace Barotrauma
                                 };
                                 soundEditor.AddCustomContent(buttonParent, 0);
                             }
+                            if (limb.limbParams.LightSource == null)
+                            {
+                                var buttonParent = new GUIFrame(new RectTransform(new Point(mainEditor.EditorBox.Rect.Width, 50), mainEditor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
+                                {
+                                    CanBeFocused = false
+                                };
+                                new GUIButton(new RectTransform(new Vector2(0.45f, 0.6f), buttonParent.RectTransform, Anchor.Center), "Add Light")
+                                {
+                                    OnClicked = (button, data) =>
+                                    {
+                                        limb.limbParams.AddLight();
+                                        ResetParamsEditor();
+                                        return true;
+                                    }
+                                };
+                            }
+                            else
+                            {
+                                var lightEditor = limb.limbParams.LightSource.SerializableEntityEditor;
+                                var buttonParent = new GUIFrame(new RectTransform(new Point(lightEditor.Rect.Width, 30), lightEditor.RectTransform), style: null)
+                                {
+                                    CanBeFocused = false
+                                };
+                                new GUIButton(new RectTransform(new Vector2(0.08f, 0.8f), buttonParent.RectTransform, Anchor.BottomRight), "X", color: Color.Red)
+                                {
+                                    OnClicked = (button, data) =>
+                                    {
+                                        limb.limbParams.RemoveLight();
+                                        ResetParamsEditor();
+                                        return true;
+                                    }
+                                };
+                                lightEditor.AddCustomContent(buttonParent, 0);
+                            }
                             if (limb.limbParams.Attack == null)
                             {
                                 var buttonParent = new GUIFrame(new RectTransform(new Point(mainEditor.EditorBox.Rect.Width, 50), mainEditor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))

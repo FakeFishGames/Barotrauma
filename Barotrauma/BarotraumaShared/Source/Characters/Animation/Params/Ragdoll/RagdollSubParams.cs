@@ -4,6 +4,8 @@ using System.Xml.Linq;
 using System.Linq;
 using Barotrauma.Extensions;
 #if CLIENT
+using Barotrauma.Particles;
+using Barotrauma.Lights;
 using Barotrauma.SpriteDeformations;
 #endif
 
@@ -81,6 +83,7 @@ namespace Barotrauma
 
         public LimbAttackParams Attack { get; private set; }
         public LimbSoundParams Sound { get; private set; }
+        public LimbLightSourceParams LightSource { get; private set; }
         public List<DamageModifierParams> DamageModifiers { get; private set; } = new List<DamageModifierParams>();
 
         private string name;
@@ -198,10 +201,17 @@ namespace Barotrauma
                 DamageModifiers.Add(damageModifier);
                 SubParams.Add(damageModifier);
             }
-            foreach (var soundElement in element.GetChildElements("sound"))
+            var soundElement = element.GetChildElement("sound");
+            if (soundElement != null)
             {
                 Sound = new LimbSoundParams(soundElement, ragdoll);
                 SubParams.Add(Sound);
+            }
+            var lightElement = element.GetChildElement("lightsource");
+            if (lightElement != null)
+            {
+                LightSource = new LimbLightSourceParams(lightElement, ragdoll);
+                SubParams.Add(LightSource);
             }
         }
 
@@ -269,7 +279,26 @@ namespace Barotrauma
             Sound.Element.Remove();
             SubParams.Remove(Sound);
             Sound = null;
-            return Sound == null;
+            return true;
+        }
+
+        public bool AddLight()
+        {
+            if (LightSource != null) { return false; }
+            var lightSourceElement = new XElement("lightsource");
+            Element.Add(lightSourceElement);
+            LightSource = new LimbLightSourceParams(lightSourceElement, Ragdoll);
+            SubParams.Add(LightSource);
+            return LightSource != null;
+        }
+
+        public bool RemoveLight()
+        {
+            if (LightSource == null) { return false; }
+            LightSource.Element.Remove();
+            SubParams.Remove(LightSource);
+            LightSource = null;
+            return true;
         }
     }
 
@@ -393,6 +422,60 @@ namespace Barotrauma
         {
             Name = name;
         }
+    }
+
+    class LimbLightSourceParams : RagdollSubParams
+    {
+        public class LightTexture : RagdollSubParams
+        {
+            public override string Name => "Light Texture";
+
+            [Serialize("Content/Lights/light.png", true), Editable]
+            public string Texture { get; private set; }
+
+            public LightTexture(XElement element, RagdollParams ragdoll) : base(element, ragdoll) { }
+        }
+
+        public LightTexture Texture { get; private set; }
+
+#if CLIENT
+        public LightSourceParams LightSource { get; private set; }
+#endif
+
+        public LimbLightSourceParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
+        {
+#if CLIENT
+            LightSource = new LightSourceParams(element);
+#endif
+            var lightTextureElement = element.GetChildElement("lighttexture");
+            if (lightTextureElement != null)
+            {
+                Texture = new LightTexture(lightTextureElement, ragdoll);
+                SubParams.Add(Texture);
+            }
+        }
+
+#if CLIENT
+        public override bool Deserialize(XElement element = null, bool recursive = true)
+        {
+            base.Deserialize(element, recursive);
+            LightSource.Deserialize(element ?? Element);
+            return SerializableProperties != null;
+        }
+
+        public override bool Serialize(XElement element = null, bool recursive = true)
+        {
+            base.Serialize(element, recursive);
+            LightSource.Serialize(element ?? Element);
+            return true;
+        }
+
+        public override void Reset()
+        {
+            base.Reset();
+            LightSource.Serialize(OriginalElement);
+        }
+#endif
     }
 
     // TODO: conditionals?
@@ -563,7 +646,7 @@ namespace Barotrauma
                     new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, deformation, inGame: false, showName: true, titleFont: GUI.LargeFont);
                 }
             }
-            if (this is LimbAttackParams attackParams)
+            else if (this is LimbAttackParams attackParams)
             {
                 SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, attackParams.Attack, inGame: false, showName: true, titleFont: GUI.LargeFont);
                 AfflictionEditors.Clear();
@@ -573,6 +656,10 @@ namespace Barotrauma
                     AfflictionEditors.Add(affliction, afflictionEditor);
                     SerializableEntityEditor.AddCustomContent(afflictionEditor, SerializableEntityEditor.ContentCount);
                 }
+            }
+            else if (this is LimbLightSourceParams lightParams)
+            {
+                SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, lightParams.LightSource, inGame: false, showName: true, titleFont: GUI.LargeFont);
             }
             else if (this is DamageModifierParams damageModifierParams)
             {
