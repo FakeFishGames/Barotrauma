@@ -568,7 +568,8 @@ namespace Barotrauma.Networking
             get;
             set;
         }
-        
+
+        [Serialize(BotSpawnMode.Normal, true)]
         public BotSpawnMode BotSpawnMode
         {
             get;
@@ -603,6 +604,7 @@ namespace Barotrauma.Networking
         }
 
         private YesNoMaybe traitorsEnabled;
+        [Serialize(YesNoMaybe.No, true)]
         public YesNoMaybe TraitorsEnabled
         {
             get { return traitorsEnabled; }

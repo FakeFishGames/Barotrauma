@@ -1838,6 +1838,7 @@ namespace Barotrauma.Networking
                     }
                     else
                     {
+                        characterData.HasSpawned = true;
                         characterData.SpawnInventoryItems(spawnedCharacter.Info, spawnedCharacter.Inventory);
                     }
 

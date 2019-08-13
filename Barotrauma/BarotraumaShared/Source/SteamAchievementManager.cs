@@ -303,13 +303,11 @@ namespace Barotrauma
                 }
             }
 
-#if CLIENT
-            if (GameMain.Client != null) { return; }
-#endif
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
 
             if (gameSession.Mission != null)
             {
-                if (gameSession.Mission is CombatMission combatMission)
+                if (gameSession.Mission is CombatMission combatMission && GameMain.GameSession.WinningTeam.HasValue)
                 {
                     //all characters that are alive and in the winning team get an achievement
                     UnlockAchievement(gameSession.Mission.Prefab.AchievementIdentifier + (int)GameMain.GameSession.WinningTeam, true, 
