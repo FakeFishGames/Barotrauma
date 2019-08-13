@@ -194,7 +194,7 @@
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Outpost" buyprice="50" />
     <Price locationtype="Mine" buyprice="35" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="900,192,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="898,192,61,63" origin="0.5,0.5" />
     <Sprite texture="CraftingElements1.png" sourcerect="8,260,98,82" depth="0.55" origin="0.5,0.5" />
     <Body width="90" height="65" density="50" />
     <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
@@ -470,7 +470,7 @@
   <Item name="Incendium Bar" identifier="incendium" category="Material" Tags="smallitem" cargocontaineridentifier="metalcrate" canbepicked="true" scale="0.5" impactsoundtag="impact_metal_light">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="200" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="260,835,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="260,835,53,61" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Alien/AlienMaterials.png" sourcerect="105,439,52,61" depth="0.55" origin="0.5,0.5" />
     <Body width="60" height="26" density="60" />
     <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" characterusable="false" msg="ItemMsgPickUpSelect">
@@ -489,7 +489,7 @@
   <Item name="Fulgurium Bar" identifier="fulgurium" category="Material" Tags="smallitem" cargocontaineridentifier="metalcrate" canbepicked="true" scale="0.5" impactsoundtag="impact_metal_light">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="200" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="325,835,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="328,833,51,63" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Alien/AlienMaterials.png" sourcerect="186,351,59,67" depth="0.55" origin="0.5,0.5" />
     <Body width="60" height="26" density="50" />
     <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
