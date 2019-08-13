@@ -175,16 +175,18 @@ namespace Barotrauma
             public delegate bool CharacterFilter(Character character);
             public Character FindKillTarget(Character traitor, CharacterFilter filter)
             {
-                int charactersCount = Character.CharacterList.Count;
-                int targetIndex = Random(charactersCount);
-                for (int i = 0; i < charactersCount; ++i)
+                if (traitor == null) { return null; }
+
+                List<Character> validCharacters = Character.CharacterList.FindAll(c => 
+                    c.TeamID == traitor.TeamID && 
+                    !c.IsDead && 
+                    (filter == null || filter(c)));
+
+                if (validCharacters.Count > 0)
                 {
-                    var character = Character.CharacterList[(targetIndex + i) % charactersCount];
-                    if (character != null && character != traitor && (filter == null || filter(character)))
-                    {
-                        return character;
-                    }
+                    return validCharacters[Random(validCharacters.Count)];
                 }
+
 #if ALLOW_SOLO_TRAITOR
                 return traitor;
 #else
