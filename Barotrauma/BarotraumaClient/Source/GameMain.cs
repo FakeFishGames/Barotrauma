@@ -363,11 +363,11 @@ namespace Barotrauma
             }
 
             SoundManager = new Sounds.SoundManager();
-            SoundManager.SetCategoryGainMultiplier("default", Config.SoundVolume);
-            SoundManager.SetCategoryGainMultiplier("ui", Config.SoundVolume);
-            SoundManager.SetCategoryGainMultiplier("waterambience", Config.SoundVolume);
-            SoundManager.SetCategoryGainMultiplier("music", Config.MusicVolume);
-            SoundManager.SetCategoryGainMultiplier("voip", Config.VoiceChatVolume * 20.0f);
+            SoundManager.SetCategoryGainMultiplier("default", Config.SoundVolume, 0);
+            SoundManager.SetCategoryGainMultiplier("ui", Config.SoundVolume, 0);
+            SoundManager.SetCategoryGainMultiplier("waterambience", Config.SoundVolume, 0);
+            SoundManager.SetCategoryGainMultiplier("music", Config.MusicVolume, 0);
+            SoundManager.SetCategoryGainMultiplier("voip", Config.VoiceChatVolume * 20.0f, 0);
 
             if (ConsoleArguments.Contains("-skipintro")) {
                 Config.EnableSplashScreen = false;
@@ -641,7 +641,7 @@ namespace Barotrauma
             {
                 if (WindowActive || !Config.MuteOnFocusLost)
                 {
-                    SoundManager.ListenerGain = 1.0f;
+                    SoundManager.ListenerGain = SoundManager.CompressionDynamicRangeGain;
                 }
                 else
                 {
@@ -790,6 +790,8 @@ namespace Barotrauma
                 CoroutineManager.Update((float)Timing.Step, paused ? 0.0f : (float)Timing.Step);
 
                 SteamManager.Update((float)Timing.Step);
+
+                SoundManager?.Update();
 
                 Timing.Accumulator -= Timing.Step;
 

@@ -25,7 +25,7 @@ namespace Barotrauma.Sounds
         }
 
         private VoipQueue queue;
-        public int bufferID = 0;
+        private int bufferID = 0;
         
         private SoundChannel soundChannel;
 
@@ -68,6 +68,11 @@ namespace Barotrauma.Sounds
 
             SoundChannel chn = new SoundChannel(this, 1.0f, null, 0.4f, 1.0f, "voip", false);
             soundChannel = chn;
+        }
+
+        public override float GetAmplitudeAtPlaybackPos(int playbackPos)
+        {
+            throw new NotImplementedException(); //TODO: implement?
         }
 
         public void SetPosition(Vector3? pos)
