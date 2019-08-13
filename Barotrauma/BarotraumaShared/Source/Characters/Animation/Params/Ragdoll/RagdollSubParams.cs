@@ -198,6 +198,10 @@ namespace Barotrauma
                 DamageModifiers.Add(damageModifier);
                 SubParams.Add(damageModifier);
             }
+            foreach (var soundElement in element.GetChildElements("sound"))
+            {
+                SubParams.Add(new LimbSoundParams(soundElement, ragdoll));
+            }
         }
 
         public bool AddAttack()
@@ -264,6 +268,8 @@ namespace Barotrauma
         public string Texture { get; set; }
 
         public LimbDeformationParams Deformation { get; set; }
+
+        public override string Name => "Sprite";
 
         public SpriteParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll) { }
     }
@@ -460,6 +466,16 @@ namespace Barotrauma
         }
     }
 
+    class LimbSoundParams : RagdollSubParams
+    {
+        public override string Name => "Sound";
+
+        [Serialize("", true), Editable]
+        public string Tag { get; private set; }
+
+        public LimbSoundParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll) { }
+    }
+
     abstract class RagdollSubParams : ISerializableEntity
     {
         public virtual string Name { get; set; }
@@ -513,7 +529,6 @@ namespace Barotrauma
             Deserialize(OriginalElement, false);
             SubParams.ForEach(sp => sp.Reset());
         }
-
 
 #if CLIENT
         public SerializableEntityEditor SerializableEntityEditor { get; protected set; }
