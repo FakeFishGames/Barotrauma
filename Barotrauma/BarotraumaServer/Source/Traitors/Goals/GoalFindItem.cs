@@ -10,6 +10,7 @@ namespace Barotrauma
         public class GoalFindItem : Goal
         {
             private readonly string identifier;
+            private readonly bool allowExisting;
             private readonly HashSet<string> allowedContainerIdentifiers = new HashSet<string>();
 
             private ItemPrefab targetPrefab;
@@ -68,6 +69,7 @@ namespace Barotrauma
             {
                 int itemsCount = Item.ItemList.Count;
                 int startIndex = TraitorMission.Random(itemsCount);
+                Item fallback = null;
                 for (int i = 0; i < itemsCount; ++i)
                 {
                     var item = Item.ItemList[(i + startIndex) % itemsCount];
@@ -75,12 +77,19 @@ namespace Barotrauma
                     {
                         continue;
                     }
-                    if (item.GetComponent<ItemContainer>() != null && !item.OwnInventory.IsFull() && allowedContainerIdentifiers.Contains(item.prefab.Identifier))
+                    if (item.GetComponent<ItemContainer>() != null && allowedContainerIdentifiers.Contains(item.prefab.Identifier))
                     {
-                        return item;
+                        if (!item.OwnInventory.IsFull())
+                        {
+                            return item;
+                        }
+                        if (fallback == null && allowExisting && item.OwnInventory.FindItemByIdentifier(targetPrefab.Identifier) != null)
+                        {
+                            fallback = item;
+                        }
                     }
                 }
-                return null;
+                return fallback;
             }
 
             public override bool Start(Traitor traitor)
@@ -105,13 +114,20 @@ namespace Barotrauma
                 targetContainerNameText = containerPrefabTextId != null ? TextManager.FormatServerMessage(containerPrefabTextId) : targetContainer.Prefab.Name;
                 var targetHullTextId = targetContainer.CurrentHull != null ? targetContainer.CurrentHull.prefab.GetHullNameTextId() : null;
                 targetHullNameText = targetHullTextId != null ? TextManager.FormatServerMessage(targetHullTextId) : targetContainer?.CurrentHull?.DisplayName ?? "";
-                existingItems.Clear();
-                foreach (var item in targetContainer.OwnInventory.Items)
+                if (!targetContainer.OwnInventory.IsFull())
                 {
-                    existingItems.Add(item);
+                    existingItems.Clear();
+                    foreach (var item in targetContainer.OwnInventory.Items)
+                    {
+                        existingItems.Add(item);
+                    }
+                    Entity.Spawner.AddToSpawnQueue(targetPrefab, targetContainer.OwnInventory);
+                    target = null;
                 }
-                Entity.Spawner.AddToSpawnQueue(targetPrefab, targetContainer.OwnInventory);
-                target = null;
+                else if (allowExisting)
+                {
+                    target = targetContainer.OwnInventory.FindItemByIdentifier(targetPrefab.Identifier);
+                }
                 return true;
             }
 
@@ -128,9 +144,10 @@ namespace Barotrauma
                 }
             }
 
-            public GoalFindItem(string identifier, params string[] allowedContainerIdentifiers)
+            public GoalFindItem(string identifier, bool allowExisting, params string[] allowedContainerIdentifiers)
             {
                 this.identifier = identifier;
+                this.allowExisting = allowExisting;
                 this.allowedContainerIdentifiers.UnionWith(allowedContainerIdentifiers);
             }
         }
