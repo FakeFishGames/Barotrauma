@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<infotexts language="English" translatedname="English">
+<infotexts language="English" nowhitespace="false" translatedname="English">
 
   <!-- Loading Screen -->
   <loading>Loading...</loading>
@@ -66,11 +66,13 @@
   <campaignlabel>Campaign</campaignlabel>
   <multiplayerlabel>Multiplayer</multiplayerlabel>
   <customizelabel>Customize</customizelabel>
+  <privacypolicy>Privacy policy</privacypolicy>
 
   <!-- Main menu buttons -->
   <tutorialbutton>Training</tutorialbutton>
   <newgamebutton>New Game</newgamebutton>
   <loadgamebutton>Load Game</loadgamebutton>
+  <joinserverbutton>Server browser</joinserverbutton>
   <hostserverbutton>Host Server</hostserverbutton>
   <subeditorbutton>Submarine Editor</subeditorbutton>
   <charactereditorbutton>Character Editor</charactereditorbutton>
@@ -97,6 +99,7 @@
   <maxplayers>Max players</maxplayers>
   <password>Password</password>
   <publicserver>Public server</publicserver>
+  <publicservertooltip>Public servers are shown in the list of available servers in the 'Server Browser'.</publicservertooltip>
   <attemptupnp>Attempt UPnP port forwarding</attemptupnp>
   <attemptupnptooltip>UPnP can be used for forwarding ports on your router to allow players to join the server. However, UPnP isn't supported by all routers, so you may need to setup port forwards manually if players are unable to join the server (see the readme for instructions).</attemptupnptooltip>
   <startserverbutton>Start</startserverbutton>
@@ -119,6 +122,7 @@
   <modstab>Subscribed Mods</modstab>
   <downloadbutton>Subscribe</downloadbutton>
   <subscribedmods>Mods</subscribedmods>
+  <nosubscribedmods>You haven't subscribed to any mods on the Steam Workshop. Select the 'Popular Mods' tab to find some!</nosubscribedmods>
   <popularmods>Popular mods</popularmods>
   <findmodsbutton>Find more mods...</findmodsbutton>
   <workshopitemunsubscribe>Unsubscribe</workshopitemunsubscribe>
@@ -160,6 +164,7 @@
   <workshopitemfilenotincluded>File is not present in the Workshop item folder and will not be included in the Workshop item. This may be desirable if you want the mod to use Vanilla files that the players already have—otherwise you should copy the file to the Workshop item folder.</workshopitemfilenotincluded>
   <workshopitemfilenotfound>File not found.</workshopitemfilenotfound>
   <workshopitemillegalpath>Workshop items are only allowed to modify files in the Mod folder or add submarine files to the Submarines folder. Please create a separate subfolder for the files.</workshopitemillegalpath>
+  <workshopitemrefreshfilelisttooltip>Reload the configuration file of the Workshop item (filelist.xml inside the item's folder) and add all new files in it to the file list.</workshopitemrefreshfilelisttooltip>
   <workshoppublishpleasewait>Please wait</workshoppublishpleasewait>
   <workshoppublishinprogress>Publishing '[itemname]' in the Steam Workshop.</workshoppublishinprogress>
   <workshopitempublished>[itemname] is now available in the Steam Workshop!</workshopitempublished>
@@ -179,6 +184,19 @@
   <workshop.contenttag.environment>Environment</workshop.contenttag.environment>
   <workshop.contenttag.monster>Monster</workshop.contenttag.monster>
   <workshop.contenttag.mission>Mission</workshop.contenttag.mission>
+  <workshop.contenttag.eventset>Event set</workshop.contenttag.eventset>
+  <workshop.contenttag.totalconversion>Total conversion</workshop.contenttag.totalconversion>
+  <workshop.contenttag.itemassembly>Item assembly</workshop.contenttag.itemassembly>
+  <workshop.contenttag.language>Language</workshop.contenttag.language>
+  <workshoperroronenable>Cannot enable Workshop item '[itemname]'.</workshoperroronenable>
+  <workshoppublisherror.limitexceeded>Publishing the Workshop item failed (limit exceeded). Make sure you have enabled Steam Cloud and haven't exceeded your Steam Cloud quota.</workshoppublisherror.limitexceeded>
+  <workshoppublisherror.limiteduseraccount>Publishing the Workshop item failed. Limited user accounts are not allowed to publish items in the Steam Workshop. You need to spend at least $5 in the Steam store to become a non-limited user.</workshoppublisherror.limiteduseraccount>
+  <workshoppublisherror.banned>Publishing the Workshop item failed because your account has been banned.</workshoppublisherror.banned>
+  <workshoppublisherror.insufficientprivilege>Publishing the Workshop item failed (insufficient privileges). This can happen due to a hub ban, account lock or a community ban. You may need to contact Steam Support.</workshoppublisherror.insufficientprivilege>
+  <workshoppublisherror.serviceunavailable>Publishing the Workshop item failed (service unavailable). The workshop servers may be having issues. Please try again in a moment.</workshoppublisherror.serviceunavailable>
+  <workshopitemupdated>Workshop item [itemname] was updated successfully.</workshopitemupdated>
+  <workshopitemupdatefailed>Failed to update Workshop item [itemname]. [errormessage]</workshopitemupdatefailed>
+  <workshopfilenotfound>File [path] not found.</workshopfilenotfound>
 
   <!-- Settings Menu -->
   <settings>Settings</settings>
@@ -256,6 +274,9 @@
   <noisegatethreshold>Noise gate threshold</noisegatethreshold>
   <directionalvoicechat>Directional voice chat</directionalvoicechat>
   <directionalvoicechattooltip>When enabled, voice chat messages are panned according to the direction of the speaker relative to your position.</directionalvoicechattooltip>
+  <dynamicrangecompression>Dynamic range compression</dynamicrangecompression>
+  <dynamicrangecompressiontooltip>Adjusts the game's volume automatically to prevent audio distortion.</dynamicrangecompressiontooltip>
+  <voipnodevices>No audio capture devices found</voipnodevices>
 
   <!-- Controls tab -->
   <settingstab.controls>Controls</settingstab.controls>
@@ -291,6 +312,10 @@
   <setlegacybindingstooltip>Set key bindings to ones that were used in the old pre-alpha versions of Barotrauma (E to select and deselect items, left mouse button to use item the in hand).</setlegacybindingstooltip>
 
   <!-- Server settings -->
+  <serversettingsgeneraltab>General</serversettingsgeneraltab>
+  <serversettingsantigriefingtab>Anti-griefing</serversettingsantigriefingtab>
+  <serversettingsroundstab>Gameplay</serversettingsroundstab>
+  <serversettingsservertab>Server</serversettingsservertab>
   <serversettingsbanlisttab>Banlist</serversettingsbanlisttab>
   <serversettingswhitelisttab>Whitelist</serversettingswhitelisttab>
   <serversettingssubselection>Submarine selection</serversettingssubselection>
@@ -334,7 +359,6 @@
   <banreason>Reason:</banreason>
 
   <!-- Round summary -->
-
   <roundsummaryprogress>[sub] has made its way to [location].</roundsummaryprogress>
   <roundsummaryprogress>[sub] has arrived at [location].</roundsummaryprogress>
   <roundsummaryreturn>[sub] has returned to [location].</roundsummaryreturn>
@@ -359,6 +383,7 @@
   <quickuseaction.puttocontainer>Put to container</quickuseaction.puttocontainer>
   <quickuseaction.puttocharacter>Put to selected character</quickuseaction.puttocharacter>
   <quickuseaction.usetreatment>Use as treatment</quickuseaction.usetreatment>
+  <quickuseaction.holdtounequip>Hold to unequip</quickuseaction.holdtounequip>
 
   <!-- Limbs -->
   <lefthand>Left hand</lefthand>
@@ -416,6 +441,7 @@
   <unlimited>Unlimited</unlimited>
   <deletedialoglabel>Delete file?</deletedialoglabel>
   <deletedialogquestion>Are you sure you want to delete '[file]'?</deletedialogquestion>
+  <deletefileverification>Do you want to delete [filename]?</deletefileverification>
   <deletefileerror>Could not delete file '[file]'!</deletefileerror>
   <steamdllnotfound>Initializing Steam client failed (steam_api64.dll not found). All Steam features have been disabled—you will not be able to use the Steam Workshop or join servers that use Steam.</steamdllnotfound>
   <steamclientinitfailed>Initializing Steam client failed. Please make sure Steam is running and you are logged in to an account. All Steam features have been disabled—you will not be able to use the Steam Workshop or join servers that use Steam.</steamclientinitfailed>
@@ -426,7 +452,596 @@
   <dontshownotificationagain>Don't show this again</dontshownotificationagain>
   <video>Video</video>
   <search>Search</search>
+  <damagebutton>Damage</damagebutton>
+  <pending>Pending</pending>
+  <inprogress>In progress</inprogress>
+  <complete>Complete</complete>
+  <wrongfiletype>Wrong file type!</wrongfiletype>
+  <debugconsolehelptext>Debug console—press F3 to open/close; enter help for a list of available commands</debugconsolehelptext>
 
+  <!-- Editor -->
+  
+  <!-- Links -->
+  <editordisclaimerwikiurl>https://barotrauma.gamepedia.com/Barotrauma_Wiki</editordisclaimerwikiurl>
+  <editordisclaimerdiscordurl>https://discordapp.com/invite/xjeSzWU</editordisclaimerdiscordurl>
+  <editordisclaimerforumurl>https://undertowgames.com/forum/viewforum.php?f=17</editordisclaimerforumurl>
+  
+  <!-- Structure -->
+  <entityname.hull>Hull</entityname.hull>
+  <entitydescription.hull>Hulls determine which parts are considered to be 'inside the sub'. Generally every room should be enclosed by a hull.</entitydescription.hull>
+  <entityname.gap>Gap</entityname.gap>
+  <entitydescription.gap>Gaps allow water and air to flow between two hulls.</entitydescription.gap>
+  <entityname.waypoint>Waypoint</entityname.waypoint>
+  <entitydescription.waypoint>Used by AI characters to navigate inside the submarine.</entitydescription.waypoint>
+  <entityname.spawnpoint>Spawnpoint</entityname.spawnpoint>
+  <entitydescription.spawnpoint>Determines which rooms the crew spawns inside.</entitydescription.spawnpoint>
+  <entityname.ff_x_wall>Large Horizontal Inside Wall</entityname.ff_x_wall>
+  <entitydescription.ff_x_wall>A large horizontal wall with collision detection.</entitydescription.ff_x_wall>
+  <entityname.ff_x_wall_cables>Large Horizontal Inside Wall with Cables</entityname.ff_x_wall_cables>
+  <entitydescription.ff_x_wall_cables>A large horizontal wall with collision detection.</entitydescription.ff_x_wall_cables>
+  <entityname.ff_y_wall>Large Vertical Inside Wall</entityname.ff_y_wall>
+  <entitydescription.ff_y_wall>A large vertical wall with collision detection.</entitydescription.ff_y_wall>
+  <entityname.inwalll90cables>Large Vertical Inside Wall with Cables</entityname.inwalll90cables>
+  <entitydescription.inwalll90cables>A large vertical wall with collision detection.</entitydescription.inwalll90cables>
+  <entityname.inwalllcaph1>Large Inside Wall Cap H1</entityname.inwalllcaph1>
+  <entitydescription.inwalllcaph1>A large wall cap.</entitydescription.inwalllcaph1>
+  <entityname.inwalllcaph2>Large Inside Wall Cap H2</entityname.inwalllcaph2>
+  <entitydescription.inwalllcaph2>A large wall cap.</entitydescription.inwalllcaph2>
+  <entityname.inwalllcaph3>Large Inside Wall Cap H3</entityname.inwalllcaph3>
+  <entitydescription.inwalllcaph3>A large wall cap.</entitydescription.inwalllcaph3>
+  <entityname.inwalllcapy1>Large Inside Wall Cap V1</entityname.inwalllcapy1>
+  <entitydescription.inwalllcapy1>A large wall cap.</entitydescription.inwalllcapy1>
+  <entityname.inwalllcapy2>Large Inside Wall Cap V2</entityname.inwalllcapy2>
+  <entitydescription.inwalllcapy2>A large wall cap.</entitydescription.inwalllcapy2>
+  <entityname.inwalllcapy4>Large Inside Wall Cap V4</entityname.inwalllcapy4>
+  <entitydescription.inwalllcapy4>A large wall cap.</entitydescription.inwalllcapy4>
+  <entityname.inwallltieh1>Large Inside Wall Tie H1</entityname.inwallltieh1>
+  <entitydescription.inwallltieh1>A large wall cap.</entitydescription.inwallltieh1>
+  <entityname.inwallltieh2>Large Inside Wall Tie H2</entityname.inwallltieh2>
+  <entitydescription.inwallltieh2>A large wall cap.</entitydescription.inwallltieh2>
+  <entityname.inwallltieh3>Large Inside Wall Tie H3</entityname.inwallltieh3>
+  <entitydescription.inwallltieh3>A large wall cap.</entitydescription.inwallltieh3>
+  <entityname.inwallltiev1>Large Inside Wall Tie V1</entityname.inwallltiev1>
+  <entitydescription.inwallltiev1>A large wall cap.</entitydescription.inwallltiev1>
+  <entityname.inwallltiev2>Large Inside Wall Tie V2</entityname.inwallltiev2>
+  <entitydescription.inwallltiev2>A large wall cap.</entitydescription.inwallltiev2>
+  <entityname.inwallltiev3>Large Inside Wall Tie V3</entityname.inwallltiev3>
+  <entitydescription.inwallltiev3>A large wall cap.</entitydescription.inwallltiev3>
+  <entityname.ff_wall_b>Back Wall Ballast A1</entityname.ff_wall_b>
+  <entitydescription.ff_wall_b>Ballast back wall.</entitydescription.ff_wall_b>
+  <entityname.ff_wall_bp>Back Wall Ballast A2</entityname.ff_wall_bp>
+  <entitydescription.ff_wall_bp>Ballast back wall with pipe.</entitydescription.ff_wall_bp>
+  <entityname.bwbc>Back Wall Ballast C</entityname.bwbc>
+  <entitydescription.bwbc>Ballast back wall with pipe.</entitydescription.bwbc>
+  <entityname.ff_wall_c1>Back Wall C1</entityname.ff_wall_c1>
+  <entitydescription.ff_wall_c1>Mushy grey wall.</entitydescription.ff_wall_c1>
+  <entityname.ff_wall_c2>Back Wall C2</entityname.ff_wall_c2>
+  <entitydescription.ff_wall_c2>Mushy grey wall.</entitydescription.ff_wall_c2>
+  <entityname.ff_wall_c3>Back Wall C3</entityname.ff_wall_c3>
+  <entitydescription.ff_wall_c3>Mushy grey Greeble wall.</entitydescription.ff_wall_c3>
+  <entityname.ff_wall_d1>Back Wall D1</entityname.ff_wall_d1>
+  <entitydescription.ff_wall_d1>Metal wall.</entitydescription.ff_wall_d1>
+  <entityname.ff_wall_d2>Back Wall D2</entityname.ff_wall_d2>
+  <entitydescription.ff_wall_d2>Metal wall.</entitydescription.ff_wall_d2>
+  <entityname.ff_wall_d3>Back Wall D3</entityname.ff_wall_d3>
+  <entitydescription.ff_wall_d3>Metal wall.</entitydescription.ff_wall_d3>
+  <entityname.ff_wall_e>Back Wall E</entityname.ff_wall_e>
+  <entitydescription.ff_wall_e>Block wall lit.</entitydescription.ff_wall_e>
+  <entityname.ff_wall_g1>Back Wall G1</entityname.ff_wall_g1>
+  <entitydescription.ff_wall_g1>General grey back wall.</entitydescription.ff_wall_g1>
+  <entityname.ff_wall_g2>Back Wall G2</entityname.ff_wall_g2>
+  <entitydescription.ff_wall_g2>General grey back wall.</entitydescription.ff_wall_g2>
+  <entityname.ff_wall_g3>Back Wall G3</entityname.ff_wall_g3>
+  <entitydescription.ff_wall_g3>General grey back wall.</entitydescription.ff_wall_g3>
+  <entityname.ff_wall_h1>Back Wall H1</entityname.ff_wall_h1>
+  <entitydescription.ff_wall_h1>Airlock Background.</entitydescription.ff_wall_h1>
+  <entityname.exta_tail>Tail Fin Old A</entityname.exta_tail>
+  <entitydescription.exta_tail>Submarine tail.</entitydescription.exta_tail>
+  <entityname.tailfina>Tail Fin A</entityname.tailfina>
+  <entitydescription.tailfina>Submarine tail.</entitydescription.tailfina>
+  <entityname.tailfinb>Tail Fin B</entityname.tailfinb>
+  <entitydescription.tailfinb>Submarine tail.</entitydescription.tailfinb>
+  <entityname.tailfinc>Tail Fin C</entityname.tailfinc>
+  <entitydescription.tailfinc>Submarine tail.</entitydescription.tailfinc>
+  <entityname.tailfind>Tail Fin D</entityname.tailfind>
+  <entitydescription.tailfind>Submarine tail.</entitydescription.tailfind>
+  <entityname.exta_front>Submarine Front A</entityname.exta_front>
+  <entitydescription.exta_front>Front.</entitydescription.exta_front>
+  <entityname.subfrontb>Submarine Front B</entityname.subfrontb>
+  <entitydescription.subfrontb>Front.</entitydescription.subfrontb>
+  <entityname.shella90deg>Shell A 90 Degrees</entityname.shella90deg>
+  <entitydescription.shella90deg>Submarine wall.</entitydescription.shella90deg>
+  <entityname.shella16deg>Shell A 16 Degrees</entityname.shella16deg>
+  <entitydescription.shella16deg>Submarine wall.</entitydescription.shella16deg>
+  <entityname.shella34deg>Shell A 34 Degrees</entityname.shella34deg>
+  <entitydescription.shella34deg>Submarine wall.</entitydescription.shella34deg>
+  <entityname.shella0deg>Shell A 0 Degrees</entityname.shella0deg>
+  <entitydescription.shella0deg>Submarine wall.</entitydescription.shella0deg>
+  <entityname.shella04deg>Shell A 04 Degrees</entityname.shella04deg>
+  <entitydescription.shella04deg>Submarine wall.</entitydescription.shella04deg>
+  <entityname.shella14adeg>Shell A 14 Degrees</entityname.shella14adeg>
+  <entitydescription.shella14adeg>Submarine wall.</entitydescription.shella14adeg>
+  <entityname.shella52deg>Shell A 52 Degrees</entityname.shella52deg>
+  <entitydescription.shella52deg>Submarine wall.</entitydescription.shella52deg>
+  <entityname.shella16degb>Shell A 16 Degrees B</entityname.shella16degb>
+  <entitydescription.shella16degb>Submarine wall.</entitydescription.shella16degb>
+  <entityname.shella25deg>Shell A 25 Degrees</entityname.shella25deg>
+  <entitydescription.shella25deg>Submarine wall.</entitydescription.shella25deg>
+  <entityname.shella45deg>Shell A 45 Degrees</entityname.shella45deg>
+  <entitydescription.shella45deg>Submarine wall.</entitydescription.shella45deg>
+  <entityname.shella32deg>Shell A 32 Degrees</entityname.shella32deg>
+  <entitydescription.shella32deg>Submarine wall.</entitydescription.shella32deg>
+  <entityname.shella14degb>Shell A 14 Degrees B</entityname.shella14degb>
+  <entitydescription.shella14degb>Submarine wall.</entitydescription.shella14degb>
+  <entityname.shella43deg>Shell A 43 Degrees</entityname.shella43deg>
+  <entitydescription.shella43deg>Submarine wall.</entitydescription.shella43deg>
+  <entityname.shella51deg>Shell A 51 Degrees</entityname.shella51deg>
+  <entitydescription.shella51deg>Submarine wall.</entitydescription.shella51deg>
+  <entityname.shella47deg>Shell A 47 Degrees</entityname.shella47deg>
+  <entitydescription.shella47deg>Submarine wall.</entitydescription.shella47deg>
+  <entityname.shella60deg>Shell A 60 Degrees</entityname.shella60deg>
+  <entitydescription.shella60deg>Submarine wall.</entitydescription.shella60deg>
+  <entityname.shella18deg>Shell A 18 Degrees</entityname.shella18deg>
+  <entitydescription.shella18deg>Submarine wall.</entitydescription.shella18deg>
+  <entityname.shella70deg>Shell A 70 Degrees</entityname.shella70deg>
+  <entitydescription.shella70deg>Submarine wall.</entitydescription.shella70deg>
+  <entityname.shella90degcurve>Shell A 90 Degrees Curve</entityname.shella90degcurve>
+  <entitydescription.shella90degcurve>Submarine wall.</entitydescription.shella90degcurve>
+  <entityname.shella45degb>Shell A 45 Degrees B</entityname.shella45degb>
+  <entitydescription.shella45degb>Submarine wall.</entitydescription.shella45degb>
+  <entityname.shella57deg>Shell A 57 Degrees</entityname.shella57deg>
+  <entitydescription.shella57deg>Submarine wall.</entitydescription.shella57deg>
+  <entityname.shella40deg>Shell A 40 Degrees</entityname.shella40deg>
+  <entitydescription.shella40deg>Submarine wall.</entitydescription.shella40deg>
+  <entityname.shella61deg>Shell A 61 Degrees</entityname.shella61deg>
+  <entitydescription.shella61deg>Submarine wall.</entitydescription.shella61deg>
+  <entityname.shella17deg>Shell A 17 Degrees</entityname.shella17deg>
+  <entitydescription.shella17deg>Submarine wall.</entitydescription.shella17deg>
+  <entityname.shella34degb>Shell A 34 Degrees B</entityname.shella34degb>
+  <entitydescription.shella34degb>Submarine wall.</entitydescription.shella34degb>
+  <entityname.shella26deg>Shell A 26 Degrees</entityname.shella26deg>
+  <entitydescription.shella26deg>Submarine wall.</entitydescription.shella26deg>
+  <entityname.shella54deg>Shell A 54 Degrees</entityname.shella54deg>
+  <entitydescription.shella54deg>Submarine wall.</entitydescription.shella54deg>
+  <entityname.shella38deg>Shell A 38 Degrees</entityname.shella38deg>
+  <entitydescription.shella38deg>Submarine wall.</entitydescription.shella38deg>
+  <entityname.shellacombo11>Shell A Combo 1 1</entityname.shellacombo11>
+  <entitydescription.shellacombo11>Submarine wall.</entitydescription.shellacombo11>
+  <entityname.shellacombo12>Shell A Combo 1 2</entityname.shellacombo12>
+  <entitydescription.shellacombo12>Submarine wall.</entitydescription.shellacombo12>
+  <entityname.sshella01>Shuttle Shell A01</entityname.sshella01>
+  <entitydescription.sshella01>Shuttle wall.</entitydescription.sshella01>
+  <entityname.sshella02>Shuttle Shell A02</entityname.sshella02>
+  <entitydescription.sshella02>Shuttle wall.</entitydescription.sshella02>
+  <entityname.sshella04>Shuttle Shell A04</entityname.sshella04>
+  <entitydescription.sshella04>Shuttle wall.</entitydescription.sshella04>
+  <entityname.sshella05>Shuttle Shell A05</entityname.sshella05>
+  <entitydescription.sshella05>Shuttle wall.</entitydescription.sshella05>
+  <entityname.sshellaa06>Shuttle Shell A06</entityname.sshellaa06>
+  <entitydescription.sshellaa06>Shuttle wall.</entitydescription.sshellaa06>
+  <entityname.sshella07>Shuttle Shell A07</entityname.sshella07>
+  <entitydescription.sshella07>Shuttle wall.</entitydescription.sshella07>
+  <entityname.sshella08>Shuttle Shell A08</entityname.sshella08>
+  <entitydescription.sshella08>Shuttle wall.</entitydescription.sshella08>
+  <entityname.sshella09>Shuttle Shell A09</entityname.sshella09>
+  <entitydescription.sshella09>Shuttle wall.</entitydescription.sshella09>
+  <entityname.sshella10>Shuttle Shell A10</entityname.sshella10>
+  <entitydescription.sshella10>Shuttle wall.</entitydescription.sshella10>
+  <entityname.sshella11>Shuttle Shell A11</entityname.sshella11>
+  <entitydescription.sshella11>Shuttle wall.</entitydescription.sshella11>
+  <entityname.sshella14>Shuttle Shell A14</entityname.sshella14>
+  <entitydescription.sshella14>Shuttle wall.</entitydescription.sshella14>
+  <entityname.sshella15a>Shuttle Shell A15a</entityname.sshella15a>
+  <entitydescription.sshella15a>Shuttle Fin.</entitydescription.sshella15a>
+  <entityname.sshella15b>Shuttle Shell A15b</entityname.sshella15b>
+  <entitydescription.sshella15b>Shuttle Fin.</entitydescription.sshella15b>
+  <entityname.sshella15c>Shuttle Shell A15c</entityname.sshella15c>
+  <entitydescription.sshella15c>Shuttle Fin.</entitydescription.sshella15c>
+  <entityname.sshella17a>Shuttle Shell A17a</entityname.sshella17a>
+  <entitydescription.sshella17a>Shuttle wall.</entitydescription.sshella17a>
+  <entityname.sshella17b>Shuttle Shell A17b</entityname.sshella17b>
+  <entitydescription.sshella17b>Shuttle wall.</entitydescription.sshella17b>
+  <entityname.sshella17c>Shuttle Shell A17c</entityname.sshella17c>
+  <entitydescription.sshella17c>Shuttle wall.</entitydescription.sshella17c>
+  <entityname.sshella18>Shuttle Shell A18</entityname.sshella18>
+  <entitydescription.sshella18>Shuttle wall.</entitydescription.sshella18>
+  <entityname.sshella19>Shuttle Shell A19</entityname.sshella19>
+  <entitydescription.sshella19>Shuttle wall.</entitydescription.sshella19>
+  <entityname.sshella20>Shuttle Shell A20</entityname.sshella20>
+  <entitydescription.sshella20>Shuttle wall.</entitydescription.sshella20>
+  <entityname.sshella21>Shuttle Shell A21</entityname.sshella21>
+  <entitydescription.sshella21>Shuttle wall.</entitydescription.sshella21>
+  <entityname.sshella22>Shuttle Shell A22</entityname.sshella22>
+  <entitydescription.sshella22>Shuttle wall.</entitydescription.sshella22>
+  <entityname.sshella23>Shuttle Shell A23</entityname.sshella23>
+  <entitydescription.sshella23>Shuttle wall.</entitydescription.sshella23>
+  <entityname.sshella24>Shuttle Shell A24</entityname.sshella24>
+  <entitydescription.sshella24>Shuttle wall.</entitydescription.sshella24>
+  <entityname.sshella25>Shuttle Shell A25</entityname.sshella25>
+  <entitydescription.sshella25>Shuttle wall.</entitydescription.sshella25>
+  <entityname.sshella26>Shuttle Shell A26</entityname.sshella26>
+  <entitydescription.sshella26>Shuttle wall.</entitydescription.sshella26>
+  <entityname.sshella27>Shuttle Shell A27</entityname.sshella27>
+  <entitydescription.sshella27>Shuttle wall.</entitydescription.sshella27>
+  <entityname.sshella28>Shuttle Shell A28</entityname.sshella28>
+  <entitydescription.sshella28>Shuttle wall.</entitydescription.sshella28>
+  <entityname.sshella30>Shuttle Shell A30</entityname.sshella30>
+  <entitydescription.sshella30>Shuttle wall.</entitydescription.sshella30>
+  <entityname.sshella32b>Shuttle Shell A32b</entityname.sshella32b>
+  <entitydescription.sshella32b>Shuttle wall.</entitydescription.sshella32b>
+  <entityname.sshella32c>Shuttle Shell A32c</entityname.sshella32c>
+  <entitydescription.sshella32c>Shuttle wall.</entitydescription.sshella32c>
+  <entityname.sshella32d>Shuttle Shell A32d</entityname.sshella32d>
+  <entitydescription.sshella32d>Shuttle wall.</entitydescription.sshella32d>
+  <entityname.sshella36>Shuttle Shell A36</entityname.sshella36>
+  <entitydescription.sshella36>Shuttle wall.</entitydescription.sshella36>
+  <entityname.sshella37>Shuttle Shell A37</entityname.sshella37>
+  <entitydescription.sshella37>Shuttle wall.</entitydescription.sshella37>
+  <entityname.sshella38>Shuttle Shell A38</entityname.sshella38>
+  <entitydescription.sshella38>Shuttle wall.</entitydescription.sshella38>
+  <entityname.sshella39>Shuttle Shell A39</entityname.sshella39>
+  <entitydescription.sshella39>Shuttle wall.</entitydescription.sshella39>
+  <entityname.sshella40>Shuttle Shell A40</entityname.sshella40>
+  <entitydescription.sshella40>Shuttle wall.</entitydescription.sshella40>
+  <entityname.sshella41>Shuttle Shell A41</entityname.sshella41>
+  <entitydescription.sshella41>Shuttle wall.</entitydescription.sshella41>
+  <entityname.sshellalightsa>Shuttle Lights A</entityname.sshellalightsa>
+  <entitydescription.sshellalightsa>Shuttle wall.</entitydescription.sshellalightsa>
+  <entityname.sshellaplatea>Shuttle Plate A</entityname.sshellaplatea>
+  <entitydescription.sshellaplatea>Shuttle wall.</entitydescription.sshellaplatea>
+  <entityname.sshellaplateb>Shuttle Plate B</entityname.sshellaplateb>
+  <entitydescription.sshellaplateb>Shuttle wall.</entitydescription.sshellaplateb>
+  <entityname.sshellabumpera>Shuttle Bumper A</entityname.sshellabumpera>
+  <entitydescription.sshellabumpera>Shuttle wall.</entitydescription.sshellabumpera>
+  <entityname.sshellabumperb>Shuttle Bumper B</entityname.sshellabumperb>
+  <entitydescription.sshellabumperb>Shuttle wall.</entitydescription.sshellabumperb>
+  <entityname.sshellaglassa>Shuttle Shell A Glass A</entityname.sshellaglassa>
+  <entitydescription.sshellaglassa>Shuttle wall.</entitydescription.sshellaglassa>
+  <entityname.sshellaglassb>Shuttle Shell A Glass B</entityname.sshellaglassb>
+  <entitydescription.sshellaglassb>Shuttle wall.</entitydescription.sshellaglassb>
+  <entityname.sshellaglassc>Shuttle Shell A Glass C</entityname.sshellaglassc>
+  <entitydescription.sshellaglassc>Shuttle wall.</entitydescription.sshellaglassc>
+  <entityname.sshellaglassd>Shuttle Shell A Glass D</entityname.sshellaglassd>
+  <entitydescription.sshellaglassd>Shuttle wall.</entitydescription.sshellaglassd>
+  <entityname.sshellaglasse>Shuttle Shell A Glass E</entityname.sshellaglasse>
+  <entitydescription.sshellaglasse>Shuttle wall.</entitydescription.sshellaglasse>
+  <entityname.sshellaglassf>Shuttle Shell A Glass F</entityname.sshellaglassf>
+  <entitydescription.sshellaglassf>Shuttle wall.</entitydescription.sshellaglassf>
+  <entityname.sshellafina>Shuttle Fin A</entityname.sshellafina>
+  <entitydescription.sshellafina>Shuttle wall.</entitydescription.sshellafina>
+  <entityname.sshellafinb>Shuttle Fin B</entityname.sshellafinb>
+  <entitydescription.sshellafinb>Shuttle wall.</entitydescription.sshellafinb>
+  <entityname.sshellafinc>Shuttle Fin C</entityname.sshellafinc>
+  <entitydescription.sshellafinc>Shuttle wall.</entitydescription.sshellafinc>
+  <entityname.sshellafind>Shuttle Fin D</entityname.sshellafind>
+  <entitydescription.sshellafind>Shuttle wall.</entitydescription.sshellafind>
+  <entityname.sshellagromita>Shuttle Gromit A</entityname.sshellagromita>
+  <entitydescription.sshellagromita>Shuttle wall.</entitydescription.sshellagromita>
+  <entityname.sshellagromitb>Shuttle Gromit B</entityname.sshellagromitb>
+  <entitydescription.sshellagromitb>Shuttle gromit.</entitydescription.sshellagromitb>
+  <entityname.sshellagromitc>Shuttle Gromit C</entityname.sshellagromitc>
+  <entitydescription.sshellagromitc>Shuttle gromit.</entitydescription.sshellagromitc>
+  <entityname.sshellagromitd>Shuttle Gromit D</entityname.sshellagromitd>
+  <entitydescription.sshellagromitd>Shuttle gromit.</entitydescription.sshellagromitd>
+  <entityname.largehorizontalback>Large Horizontal Back</entityname.largehorizontalback>
+  <entitydescription.largehorizontalback>A decorative structure with no collision detection.</entitydescription.largehorizontalback>
+  <entityname.smallhorizontalback>Small Horizontal Back</entityname.smallhorizontalback>
+  <entitydescription.smallhorizontalback>A decorative structure with no collision detection.</entitydescription.smallhorizontalback>
+  <entityname.largeverticalback>Large Vertical Back</entityname.largeverticalback>
+  <entitydescription.largeverticalback>A decorative structure with no collision detection.</entitydescription.largeverticalback>
+  <entityname.largeverticalback2>Large Vertical Back 2</entityname.largeverticalback2>
+  <entitydescription.largeverticalback2>A decorative structure with no collision detection.</entitydescription.largeverticalback2>
+  <entityname.smallverticalback>Small Vertical Back</entityname.smallverticalback>
+  <entitydescription.smallverticalback>A decorative structure with no collision detection.</entitydescription.smallverticalback>
+  <entityname.smallverticalback2>Small Vertical Back 2</entityname.smallverticalback2>
+  <entitydescription.smallverticalback2>A decorative structure with no collision detection.</entitydescription.smallverticalback2>
+  <entityname.engineeringlabel>Engineering Label</entityname.engineeringlabel>
+  <entitydescription.engineeringlabel>Decorative label.</entitydescription.engineeringlabel>
+  <entityname.commandlabel>Command Label</entityname.commandlabel>
+  <entitydescription.commandlabel>Decorative label.</entitydescription.commandlabel>
+  <entityname.airlocklabel>Airlock Label</entityname.airlocklabel>
+  <entitydescription.airlocklabel>Decorative label.</entitydescription.airlocklabel>
+  <entityname.cabinslabel>Cabins Label</entityname.cabinslabel>
+  <entitydescription.cabinslabel>Decorative label.</entitydescription.cabinslabel>
+  <entityname.medicallabel>Medical Label</entityname.medicallabel>
+  <entitydescription.medicallabel>Decorative label.</entitydescription.medicallabel>
+  <entityname.arrowup>Arrow Up</entityname.arrowup>
+  <entitydescription.arrowup>Decorative label.</entitydescription.arrowup>
+  <entityname.arrowdown>Arrow Down</entityname.arrowdown>
+  <entitydescription.arrowdown>Decorative label.</entitydescription.arrowdown>
+  <entityname.arrowleft>Arrow Left</entityname.arrowleft>
+  <entitydescription.arrowleft>Decorative label.</entitydescription.arrowleft>
+  <entityname.arrowright>Arrow Right</entityname.arrowright>
+  <entitydescription.arrowright>Decorative label.</entitydescription.arrowright>
+  <entityname.cableholderhorizontal>Cable Holder Horizontal</entityname.cableholderhorizontal>
+  <entitydescription.cableholderhorizontal>Decorative strip for stowing wires neatly.</entitydescription.cableholderhorizontal>
+  <entityname.cableholdervertical>Cable Holder Vertical</entityname.cableholdervertical>
+  <entitydescription.cableholdervertical>Decorative strip for stowing wires neatly.</entitydescription.cableholdervertical>
+  <entityname.topwindow>Window Top</entityname.topwindow>
+  <entitydescription.topwindow>Top facing glass window.</entitydescription.topwindow>
+  <entityname.verticalwindow>Window Vertical</entityname.verticalwindow>
+  <entitydescription.verticalwindow>Side facing glass window.</entitydescription.verticalwindow>
+  <entityname.largeplatform>Platform Large</entityname.largeplatform>
+  <entitydescription.largeplatform>Walkable platform that a character may optionally drop down from or climb on.</entitydescription.largeplatform>
+  <entityname.platform>Platform Basic</entityname.platform>
+  <entitydescription.platform>Walkable platform which a character may optionally drop down from or climb on.</entitydescription.platform>
+  <entityname.roughbgwall>Back Wall Rough</entityname.roughbgwall>
+  <entitydescription.roughbgwall><!-- No data --></entitydescription.roughbgwall>
+  <entityname.cleanbgwall>Back Wall Clean</entityname.cleanbgwall>
+  <entitydescription.cleanbgwall><!-- No data --></entitydescription.cleanbgwall>
+  <entityname.bgpanels>Back Wall Panels</entityname.bgpanels>
+  <entitydescription.bgpanels><!-- No data --></entitydescription.bgpanels>
+  <entityname.bgpanelswindow>Back Wall Window</entityname.bgpanelswindow>
+  <entitydescription.bgpanelswindow><!-- No data --></entitydescription.bgpanelswindow>
+  <entityname.bgorangepanels>Back Wall Orange Panels</entityname.bgorangepanels>
+  <entitydescription.bgorangepanels><!-- No data --></entitydescription.bgorangepanels>
+  <entityname.bgorangepanelwindow>Back Wall Orange Panels Window</entityname.bgorangepanelwindow>
+  <entitydescription.bgorangepanelwindow><!-- No data --></entitydescription.bgorangepanelwindow>
+  <entityname.pipesbackground>Back Wall Pipes</entityname.pipesbackground>
+  <entitydescription.pipesbackground><!-- No data --></entitydescription.pipesbackground>
+  <entityname.slopeforward>Slope Forwards</entityname.slopeforward>
+  <entitydescription.slopeforward><!-- No data --></entitydescription.slopeforward>
+  <entityname.slopeback>Slope Backwards</entityname.slopeback>
+  <entitydescription.slopeback><!-- No data --></entitydescription.slopeback>
+  <entityname.stairsright>Stairs Right</entityname.stairsright>
+  <entitydescription.stairsright><!-- No data --></entitydescription.stairsright>
+  <entityname.stairsleft>Stairs Left</entityname.stairsleft>
+  <entitydescription.stairsleft><!-- No data --></entitydescription.stairsleft>
+  <entityname.bunk>Bunk</entityname.bunk>
+  <entitydescription.bunk>Crew can sleep here.</entitydescription.bunk>
+  <entityname.ruinwallhorizontal>Ruin Wall Horizontal</entityname.ruinwallhorizontal>
+  <entitydescription.ruinwallhorizontal>A basic wall with collision for alien ruins.</entitydescription.ruinwallhorizontal>
+  <entityname.ruinwallvertical>Ruin Wall Vertical</entityname.ruinwallvertical>
+  <entitydescription.ruinwallvertical>A basic wall with collision for alien ruins.</entitydescription.ruinwallvertical>
+  <entityname.ruinwallheavyhorizontal>Ruin Wall Heavy Horizontal</entityname.ruinwallheavyhorizontal>
+  <entitydescription.ruinwallheavyhorizontal>A heavy wall with collision for alien ruins.</entitydescription.ruinwallheavyhorizontal>
+  <entityname.ruinwallheavyvertical>Ruin Wall Heavy Vertical</entityname.ruinwallheavyvertical>
+  <entitydescription.ruinwallheavyvertical>A heavy wall with collision for alien ruins.</entitydescription.ruinwallheavyvertical>
+  <entityname.ruinwallhorizontalsmall>Ruin Wall Small Horizontal</entityname.ruinwallhorizontalsmall>
+  <entitydescription.ruinwallhorizontalsmall>A small wall with collision for alien ruins.</entitydescription.ruinwallhorizontalsmall>
+  <entityname.ruinwallverticalsmall>Ruin Wall Small Vertical</entityname.ruinwallverticalsmall>
+  <entitydescription.ruinwallverticalsmall>A small wall with collision for alien ruins.</entitydescription.ruinwallverticalsmall>
+  <entityname.ruinback>Ruin Back Wall Basic</entityname.ruinback>
+  <entitydescription.ruinback>A back wall for alien ruins.</entitydescription.ruinback>
+  <entityname.ruinbackcarvings>Ruin Back Wall Carvings</entityname.ruinbackcarvings>
+  <entitydescription.ruinbackcarvings>A back wall with carved symbols for alien ruins.</entitydescription.ruinbackcarvings>
+  <entityname.ruinbackfractal>Ruin Back Wall Fractal</entityname.ruinbackfractal>
+  <entitydescription.ruinbackfractal>A back wall with fractal pattern for alien ruins.</entitydescription.ruinbackfractal>
+  <entityname.ruinblock>Ruin Prop Block</entityname.ruinblock>
+  <entitydescription.ruinblock>A decorative prop for alien ruins.</entitydescription.ruinblock>
+  <entityname.ruinfractalball>Ruin Prop Fractalball</entityname.ruinfractalball>
+  <entitydescription.ruinfractalball>A decorative prop for alien ruins.</entitydescription.ruinfractalball>
+  <entityname.ruinclaw>Ruin Prop Claw</entityname.ruinclaw>
+  <entitydescription.ruinclaw>A decorative prop for alien ruins.</entitydescription.ruinclaw>
+
+  <!-- Particle editor -->
+  <particleeditorsaveall>Save all</particleeditorsaveall>
+  <particleeditorcopytoclipboard>Copy to clipboard</particleeditorcopytoclipboard>
+
+  <!-- Level editor -->
+  <leveleditorsaveall>Save all</leveleditorsaveall>
+  <leveleditorlevelseed>Level seed</leveleditorlevelseed>
+  <leveleditorgenerate>Generate</leveleditorgenerate>
+  <leveleditorlightingenabled>Enable lighting</leveleditorlightingenabled>
+  <leveleditorcursorlightenabled>Enable cursor light</leveleditorcursorlightenabled>
+  <leveleditorreloadtextures>Reload textures</leveleditorreloadtextures>
+  <leveleditorspriteeditdone>Done</leveleditorspriteeditdone>
+  <leveleditorlevelobjcommonness>Commonness in [leveltype]</leveleditorlevelobjcommonness>
+  <leveleditoreditsprite>Edit sprite</leveleditoreditsprite>
+  <leveleditorchildobjects>Child objects</leveleditorchildobjects>
+  <leveleditoraddchildobject>Add child object</leveleditoraddchildobject>
+  <leveleditorlightsources>Light sources</leveleditorlightsources>
+  <leveleditoraddlightsource>Add light source</leveleditoraddlightsource>
+  <leveleditorcreatelevelobj>Create a new level object</leveleditorcreatelevelobj>
+  <leveleditorlevelobjname>Name</leveleditorlevelobjname>
+  <leveleditorlevelobjtexturepath>Texture path</leveleditorlevelobjtexturepath>
+  <leveleditorlevelobjnameempty>Please enter a name for the level object.</leveleditorlevelobjnameempty>
+  <leveleditorlevelobjnametaken>The selected name is already in use.</leveleditorlevelobjnametaken>
+  <leveleditorlevelobjtexturenotfound>Could not find the selected texture file.</leveleditorlevelobjtexturenotfound>
+
+  <!-- Character editor -->
+  <charactereditor.contentpackagenameinuse>A content package with the same name already exists. Please choose another name or select the existing content package from the dropdown if you want to add the character to it.</charactereditor.contentpackagenameinuse>
+  <charactereditor.creatingnewjoint>Creating a new joint</charactereditor.creatingnewjoint>
+  <charactereditor.frozen>Frozen</charactereditor.frozen>
+  <charactereditor.animationtestposeenabled>Animation Test Pose Enabled</charactereditor.animationtestposeenabled>
+  <charactereditor.spritesheetorientation>Spritesheet Orientation</charactereditor.spritesheetorientation>
+  <charactereditor.cantaddjointsnolimbelements>Cannot add joints, because no limb elements were found!</charactereditor.cantaddjointsnolimbelements>
+  <charactereditor.humanoidlimbdeletiondisabled>Deleting limbs from a humanoid is currently disabled due to crashing</charactereditor.humanoidlimbdeletiondisabled>
+  <charactereditor.tryingtospawncharacter>Trying to spawn [config]</charactereditor.tryingtospawncharacter>
+  <charactereditor.nocontentpackageselected>No content package selected!</charactereditor.nocontentpackageselected>
+  <charactereditor.contentpackagesaved>Content package saved at: [path]</charactereditor.contentpackagesaved>
+  <charactereditor.backgroundcolor>Background \nColor</charactereditor.backgroundcolor>
+  <charactereditor.spritesheetzoom>Spritesheet Zoom</charactereditor.spritesheetzoom>
+  <charactereditor.reset>Reset</charactereditor.reset>
+  <charactereditor.hidebodysprites>Hide Body Sprites</charactereditor.hidebodysprites>
+  <charactereditor.showwearables>Show Wearables</charactereditor.showwearables>
+  <charactereditor.lockspriteorigin>Lock Sprite Origin</charactereditor.lockspriteorigin>
+  <charactereditor.lockspriteposition>Lock Sprite Position</charactereditor.lockspriteposition>
+  <charactereditor.lockspritesize>Lock Sprite Size</charactereditor.lockspritesize>
+  <charactereditor.adjustcollider>Adjust Collider</charactereditor.adjustcollider>
+  <charactereditor.uniformscale>Uniform Scale</charactereditor.uniformscale>
+  <charactereditor.copyjointsettings>Copy Joint Settings</charactereditor.copyjointsettings>
+  <charactereditor.copyjointsettingstooltip>Copies the currently tweaked settings to all selected joints.</charactereditor.copyjointsettingstooltip>
+  <charactereditor.jointscale>Joint Scale</charactereditor.jointscale>
+  <charactereditor.limbscale>Limb Scale</charactereditor.limbscale>
+  <charactereditor.selectedanimation>Selected Animation</charactereditor.selectedanimation>
+  <charactereditor.previouscharacter>Previous</charactereditor.previouscharacter>
+  <charactereditor.nextcharacter>Next</charactereditor.nextcharacter>
+  <charactereditor.showparameters>Parameters</charactereditor.showparameters>
+  <charactereditor.showspritesheet>Spritesheet</charactereditor.showspritesheet>
+  <charactereditor.showragdoll>Ragdoll</charactereditor.showragdoll>
+  <charactereditor.editanimations>ANIMATIONS</charactereditor.editanimations>
+  <charactereditor.editlimbs>LIMBS</charactereditor.editlimbs>
+  <charactereditor.editjoints>JOINTS</charactereditor.editjoints>
+  <charactereditor.editiktargets>IK Targets</charactereditor.editiktargets>
+  <charactereditor.freeze>Freeze</charactereditor.freeze>
+  <charactereditor.autofreeze>Auto Freeze</charactereditor.autofreeze>
+  <charactereditor.limbpairediting>Limb Pair Editing</charactereditor.limbpairediting>
+  <charactereditor.animationtestpose>Animation Test Pose</charactereditor.animationtestpose>
+  <charactereditor.automove>Auto Move</charactereditor.automove>
+  <charactereditor.followcursor>Follow Cursor</charactereditor.followcursor>
+  <charactereditor.showcolliders>Colliders</charactereditor.showcolliders>
+  <charactereditor.editbackgroundcolor>Edit Background Color</charactereditor.editbackgroundcolor>
+  <charactereditor.quicksaveanimations>Quick Save Animations</charactereditor.quicksaveanimations>
+  <charactereditor.canteditvanillacontent>Can't edit Vanilla content!</charactereditor.canteditvanillacontent>
+  <charactereditor.allanimationssaved>All animations saved</charactereditor.allanimationssaved>
+  <charactereditor.quicksaveragdoll>Quick Save Ragdoll</charactereditor.quicksaveragdoll>
+  <charactereditor.ragdollsavedto>Ragdoll saved to [path]</charactereditor.ragdollsavedto>
+  <charactereditor.resetanimations>Reset Animations</charactereditor.resetanimations>
+  <charactereditor.allanimationsreset>All animations reset</charactereditor.allanimationsreset>
+  <charactereditor.resetragdoll>Reset Ragdoll</charactereditor.resetragdoll>
+  <charactereditor.ragdollreset>Ragdoll reset</charactereditor.ragdollreset>
+  <charactereditor.saveragdoll>Save Ragdoll</charactereditor.saveragdoll>
+  <charactereditor.providefilename>Please provide a name for the file</charactereditor.providefilename>
+  <charactereditor.loadragdoll>Load Ragdoll</charactereditor.loadragdoll>
+  <charactereditor.couldntopendirectory>Couldn't open directory [folder]!</charactereditor.couldntopendirectory>
+  <charactereditor.ragdolldeletedfrom>Ragdoll deleted from [file]</charactereditor.ragdolldeletedfrom>
+  <charactereditor.ragdollloadedfrom>Ragdoll loaded from [file]</charactereditor.ragdollloadedfrom>
+  <charactereditor.saveanimation>Save Animation</charactereditor.saveanimation>
+  <charactereditor.selectanimationtype>Select Animation Type</charactereditor.selectanimationtype>
+  <charactereditor.animationoftypesavedto>Animation of type [type] saved to [path]</charactereditor.animationoftypesavedto>
+  <charactereditor.loadanimation>Load Animation</charactereditor.loadanimation>
+  <charactereditor.animationoftypedeleted>Animation of type [type] at [file] deleted</charactereditor.animationoftypedeleted>
+  <charactereditor.animationtypenotimplemented>Animation type [type] not implemented!</charactereditor.animationtypenotimplemented>
+  <charactereditor.animationoftypeloaded>Animation of type [type] loaded from [file]</charactereditor.animationoftypeloaded>
+  <charactereditor.reloadtextures>Reload Textures</charactereditor.reloadtextures>
+  <charactereditor.recreateragdoll>Recreate Ragdoll</charactereditor.recreateragdoll>
+  <charactereditor.recreateragdolltooltip>Many of the parameters requires recreation of the ragdoll. If adjusting the parameter doesn't seem to have effect, click this button.</charactereditor.recreateragdolltooltip>
+  <charactereditor.createnewcharacter>Create New Character</charactereditor.createnewcharacter>
+  <charactereditor.nofieldforparameterfound>No field for [parameter] found!</charactereditor.nofieldforparameterfound>
+  <charactereditor.selecttargetlimbforjointend>Left click to select the target limb for the other end of the joint.</charactereditor.selecttargetlimbforjointend>
+  <charactereditor.holdleftalttoadjustcyclespeed>Hold Left Alt to adjust cycle speed</charactereditor.holdleftalttoadjustcyclespeed>
+  <charactereditor.cyclespeed>Cycle Speed</charactereditor.cyclespeed>
+  <charactereditor.movementspeed>Movement Speed</charactereditor.movementspeed>
+  <charactereditor.headangle>Head Angle</charactereditor.headangle>
+  <charactereditor.head>Head</charactereditor.head>
+  <charactereditor.headposition>Head Position</charactereditor.headposition>
+  <charactereditor.torsoangle>Torso Angle</charactereditor.torsoangle>
+  <charactereditor.torso>Torso</charactereditor.torso>
+  <charactereditor.torsoposition>Torso Position</charactereditor.torsoposition>
+  <charactereditor.tailangle>Tail Angle</charactereditor.tailangle>
+  <charactereditor.footangle>Foot Angle</charactereditor.footangle>
+  <charactereditor.stepsize>Step Size</charactereditor.stepsize>
+  <charactereditor.handmoveamount>Hand Move Amount</charactereditor.handmoveamount>
+  <charactereditor.tailmovementspeed>Tail Movement Speed</charactereditor.tailmovementspeed>
+  <charactereditor.tailmovementamount>Tail Movement Amount</charactereditor.tailmovementamount>
+  <charactereditor.legmovementspeed>Leg Movement Speed</charactereditor.legmovementspeed>
+  <charactereditor.legmovementamount>Leg Movement Amount</charactereditor.legmovementamount>
+  <charactereditor.handmovementamount>Hand Movement Amount</charactereditor.handmovementamount>
+  <charactereditor.holdleftalttomanipulatejoint>Hold Left Alt to manipulate the other end of the joint</charactereditor.holdleftalttomanipulatejoint>
+  <charactereditor.origin>Origin</charactereditor.origin>
+  <charactereditor.position>Position: [coordinates]</charactereditor.position>
+  <charactereditor.size>Size</charactereditor.size>
+  <charactereditor.upperlimit>Upper Limit</charactereditor.upperlimit>
+  <charactereditor.lowerlimit>Lower Limit</charactereditor.lowerlimit>
+  <charactereditor.defaultname>Character X</charactereditor.defaultname>
+  <charactereditor.ishumanoid>Is a Humanoid?</charactereditor.ishumanoid>
+  <charactereditor.canentersubmarines>Can Enter Submarines (and can walk)?</charactereditor.canentersubmarines>
+  <charactereditor.configfileoutput>Config File Output</charactereditor.configfileoutput>
+  <charactereditor.texturepath>Texture Path</charactereditor.texturepath>
+  <charactereditor.contentpackagename>Content Package Name</charactereditor.contentpackagename>
+  <charactereditor.texturedoesnotexist>The texture file does not exist!</charactereditor.texturedoesnotexist>
+  <charactereditor.defineragdoll>Define Ragdoll</charactereditor.defineragdoll>
+  <charactereditor.loadfromhtml>Load From HTML</charactereditor.loadfromhtml>
+  <charactereditor.limbs>Limbs</charactereditor.limbs>
+  <charactereditor.limb>Limb</charactereditor.limb>
+  <charactereditor.joints>Joints</charactereditor.joints>
+  <charactereditor.joint>Joint</charactereditor.joint>
+  <charactereditor.loadhtml>Load HTML</charactereditor.loadhtml>
+  <charactereditor.htmlpath>HTML Path</charactereditor.htmlpath>
+  <charactereditor.multipletorsosdefined>You need to define one and only one limb as Torso!</charactereditor.multipletorsosdefined>
+  <charactereditor.charactercreated>Character [name] Created</charactereditor.charactercreated>
+  <charactereditor.limbtype>Limb Type</charactereditor.limbtype>
+  <charactereditor.sourcerectangle>Source Rectangle</charactereditor.sourcerectangle>
+  <charactereditor.id>Identifier</charactereditor.id>
+  <charactereditor.limbwithindex>Limb [index]</charactereditor.limbwithindex>
+  <charactereditor.limbwithindexanchor>Limb [index] Anchor</charactereditor.limbwithindexanchor>
+  <charactereditor.failedtoreadhtml>Character Editor Screen: Failed to read HTML at [path]</charactereditor.failedtoreadhtml>
+  <charactereditor.multipleitemswithsamehierarchy>Multiple items with the same hierarchy [hierarchy] found ([name]). Cannot continue.</charactereditor.multipleitemswithsamehierarchy>
+  <charactereditor.cannoteditvanillacharacters>Cannot edit the characters defined in the Vanilla content package!</charactereditor.cannoteditvanillacharacters>
+  <charactereditor.existingcharacterfoundreplaceverification>An existing character with the same name was found. Do you want to replace it?</charactereditor.existingcharacterfoundreplaceverification>
+  <charactereditor.existingcharacterfound>An existing character with the same name was found.</charactereditor.existingcharacterfound>
+  <charactereditor.modespanel>Modes</charactereditor.modespanel>
+  <charactereditor.fileeditpanel>Files</charactereditor.fileeditpanel>
+  <charactereditor.optionspanel>Options</charactereditor.optionspanel>
+  <charactereditor.characterpanel>Character</charactereditor.characterpanel>
+  <charactereditor.toolspanel>Tools</charactereditor.toolspanel>
+  <charactereditor.addmultiplelimbsbutton>Add Multiple</charactereditor.addmultiplelimbsbutton>
+
+  <!-- Submarine editor -->
+  <items>Items</items>
+  <structures>Structures</structures>
+  <totalhullvolume>Total hull volume</totalhullvolume>
+  <selectedhullvolume>Selected hull volume</selectedhullvolume>
+  <optimalballastlevel>optimal neutral ballast level is [value]</optimalballastlevel>
+  <saveitemassembly>Save as item assembly</saveitemassembly>
+  <insufficientballast>insufficient volume for buoyancy control</insufficientballast>
+  <physicsbodies>Physics bodies</physicsbodies>
+  <opensubbutton>Open...</opensubbutton>
+  <savesubbutton>Save</savesubbutton>
+  <addsubbutton>Add submarine</addsubbutton>
+  <addsubtooltip>Places another submarine into the current submarine file. Can be used for adding things such as smaller vessels, escape pods or detachable sections into the main submarine.</addsubtooltip>
+  <holdtolink>Hold space and click with the mouse to link to another item.</holdtolink>
+  <allowedlinks>Allowed links</allowedlinks>
+  <filtermapentities>Filter</filtermapentities>
+  <charactermodebutton>Character mode</charactermodebutton>
+  <charactermodetooltip>Allows you to pick up and use items. Useful for things such as placing items inside closets, turning devices on/off and doing the wiring.</charactermodetooltip>
+  <wiringmodebutton>Wiring mode</wiringmodebutton>
+  <wiringmodetooltip>Allows you to connect wires between items.</wiringmodetooltip>
+  <generatewaypointsbutton>Generate waypoints</generatewaypointsbutton>
+  <generatewaypointstooltip>AI controlled crew members require waypoints to navigate around the sub.</generatewaypointstooltip>
+  <showentitieslabel>Show</showentitieslabel>
+  <showwalls>Walls</showwalls>
+  <showstructures>Structures</showstructures>
+  <showitems>Items</showitems>
+  <showlighting>Lighting</showlighting>
+  <showwaypoints>Waypoints</showwaypoints>
+  <showspawnpoints>Spawnpoints</showspawnpoints>
+  <showlinks>Links</showlinks>
+  <showhulls>Hulls</showhulls>
+  <showgaps>Gaps</showgaps>
+  <previouslyusedlabel>Previously used</previouslyusedlabel>
+  <subnamemissingwarning>Name your submarine before saving it.</subnamemissingwarning>
+  <subnameillegalcharswarning>Illegal symbols in filename ([illegalchar])</subnameillegalcharswarning>
+  <subsavednotification>Submarine saved to [filepath].</subsavednotification>
+  <savesubdialogheader>Save submarine</savesubdialogheader>
+  <savesubdialogname>Name</savesubdialogname>
+  <savesubdialogdescription>Description</savesubdialogdescription>
+  <savesubdialogsettings>Settings</savesubdialogsettings>
+  <saveitemassemblydialogheader>Save assembly</saveitemassemblydialogheader>
+  <saveitemassemblyhideinmenus>Hide in menus</saveitemassemblyhideinmenus>
+  <saveitemassemblydialogname>Name</saveitemassemblydialogname>
+  <saveitemassemblydialogdescription>Description</saveitemassemblydialogdescription>
+  <itemassemblynamemissingwarning>Name your item assembly before saving it.</itemassemblynamemissingwarning>
+  <itemassemblyfileexistswarning>There's already an item assembly with the same name. Do you want to replace the existing assembly?</itemassemblyfileexistswarning>
+  <itemassemblynameillegalcharswarning>Illegal symbols in filename ([illegalchar])</itemassemblynameillegalcharswarning>
+  <nohullswarning>No hulls found in the submarine. Hulls determine the 'borders' of an individual room and are required for water and air distribution to work correctly.</nohullswarning>
+  <disconnectedventswarning>The submarine contains vents which haven't been linked to an oxygen generator. Select a vent and click an oxygen generator while holding space to link them.</disconnectedventswarning>
+  <disconnectedturretswarning>The submarine contains [itemname]s which haven't been linked to an ammunition loader. Select the item and click a loader while holding space to link them.</disconnectedturretswarning>
+  <nowaypointswarning>No waypoints found in the submarine. AI controlled crew members won't be able to navigate without waypoints.</nowaypointswarning>
+  <nocargospawnpointwarning>The submarine does not have spawnpoints for cargo (which are used for determining where to place bought items). To fix this, create a new spawnpoint and change its spawn type' parameter to 'cargo'.</nocargospawnpointwarning>
+  <farawayentitieswarning>One or more structures/items have been placed very far from the submarine. Do you want to move the camera to them?</farawayentitieswarning>
+  <adjustlightsprompt>This submarine was saved using an older version of Barotrauma, which used a different formula to calculate lighting. The lighting in the submarine may now appear too bright. Do you want to automatically readjust the lighting for the new lighting formula?</adjustlightsprompt>
+  <adjustedlightsnotification>The brightness of the lights has been adjusted. Areas with multiple light sources may still appear too bright and require reducing the range or brightness of the lights manually. You may also use the console command 'multiplylights' to adjust the brightness of all the lights as once. For example, 'multiplylights 1,1,1,0.5' would decrease the brightness by 50%.</adjustedlightsnotification>
+  <noballasttagswarning>You should add the tag 'ballast' to the ballast pumps to allow AI characters to identify which pumps are used for controlling the buoyancy of the submarine.</noballasttagswarning>
+  <nohullnameswarning>No names given to any of the hulls, using autogenerated names. Characters use the names to refer to different rooms when reporting things such as hull breaches.</nohullnameswarning>
+  <deletingcontainerwithitems>A container with items inside was deleted, delete contained items as well?\n\nContained items:\n\n</deletingcontainerwithitems>
+  <shuttle>Shuttle</shuttle>
+  <hideinmenus>Hide in menus</hideinmenus>
+  <unspecifiedsubfilename>Unnamed</unspecifiedsubfilename>
+  <reloadsprite>Reload Sprite</reloadsprite>
+  <resettoprefab>Reset to prefab</resettoprefab>
+  <mirrorentityx>Mirror X</mirrorentityx>
+  <mirrorentityxtooltip>Mirror the entity horizontally. You can also use the shortcut Ctrl + N.</mirrorentityxtooltip>
+  <mirrorentityy>Mirror Y</mirrorentityy>
+  <mirrorentityytooltip>Mirror the entity horizontally. You can also use the shortcut Ctrl + M.</mirrorentityytooltip>
+  <nonlinkedgapswarning>The submarine contains gaps that aren't linked to any hulls. Gaps should always overlap with at least one hull (= a gap that leads outside the sub) or two hulls if it's a gap between rooms.</nonlinkedgapswarning>
+  <cannoteditvanillasubs>Cannot edit the submarines defined in the Vanilla content package!</cannoteditvanillasubs>
+
+  <!-- Entity editor -->
+  <stringpropertytranslate>This text will be translated to [translation].</stringpropertytranslate>
+  <stringpropertycannottranslate>This text will not be translated - text with the tag [tag] not found in the language files.</stringpropertycannottranslate>
+  
   <!-- Characters -->
   <MyCharacter>My character</MyCharacter>
   <character.carrier>Carrier</character.carrier>
@@ -523,12 +1138,16 @@
   <crewdeadnorespawns>No living players on the server and respawning is not enabled during this round. If no characters revive or rejoin, the server will end round in [time] seconds.</crewdeadnorespawns>
   <minimapoutpostdockinginfo>Docked to [outpost].\nUndock before attempting to maneuver the submarine.</minimapoutpostdockinginfo>
   <cargospawnnotification>The purchased supplies have been delivered to [roomname].</cargospawnnotification>
+  <connectionerrornoresponse>No response from the server. There may be a connection issue at the server's end.</connectionerrornoresponse>
 
   <!-- Server list -->
+  <joinserver>Server browser</joinserver>
+  <yourname>Player name</yourname>
   <serverip>Server IP</serverip>
   <serverlistname>Name</serverlistname>
   <serverlistplayers>Players</serverlistplayers>
   <serverlistversion>Game version</serverlistversion>
+  <serverlisthaspassword>Password</serverlisthaspassword>
   <serverlistusingwhitelist>Using whitelist</serverlistusingwhitelist>
   <serverlistcontentpackages>Content packages</serverlistcontentpackages>
   <serverlistsubselection>Submarine selection</serverlistsubselection>
@@ -539,7 +1158,9 @@
   <serverlistroundstarted>Round started</serverlistroundstarted>
   <serverlistroundnotstarted>Round has not started</serverlistroundnotstarted>
   <serverlistinfo>Info</serverlistinfo>
+  <serverlistrefresh>Scan Servers</serverlistrefresh>
   <serverlistjoin>Join</serverlistjoin>
+  <serverlistdirectjoin>Direct Join</serverlistdirectjoin>
   <serverlistunknownversion>Could not determine compatibility (unknown game version)</serverlistunknownversion>
   <serverlistnosteamqueryresponse>Could not determine compatibility with the server because it did not respond to queries. This may happen if the server is down or if the host has not forwarded their query port, but you may still attempt to connect to the server.</serverlistnosteamqueryresponse>
   <serverlistunknowncontentpackage>Could not determine compatibility (unknown content package)</serverlistunknowncontentpackage>
@@ -551,6 +1172,10 @@
   <serverlistsubscribemissingpackagestooltip>Subscribe to the missing content packages in the Steam Workshop and open the Workshop menu where you can download and enable them.</serverlistsubscribemissingpackagestooltip>
   <serverlistsubscribemissingpackagestooltipnosteam>The missing content packages are available in the Steam Workshop, but Steam features are not available if you don't own Barotrauma on Steam.</serverlistsubscribemissingpackagestooltipnosteam>
   <filterservers>Filter servers</filterservers>
+  <filterpassword>No password</filterpassword>
+  <filterincompatibleservers>Hide incompatible</filterincompatibleservers>
+  <filterfullservers>Hide full</filterfullservers>
+  <filteremptyservers>Hide empty</filteremptyservers>
   <nomatchingservers>No matching servers found.</nomatchingservers>
   <refreshingserverlist>Refreshing server list...</refreshingserverlist>
   <noservers>Could not find any servers.</noservers>
@@ -578,6 +1203,12 @@
   <cheatsenabledtitle>Cheats enabled.</cheatsenabledtitle>
   <cheatsenableddescription>Cheat commands have been enabled on this server. You cannot get Steam Achievements during this play session.</cheatsenableddescription>
   <pleasewait>Please wait</pleasewait>
+  <serverplaystyle>Playstyle</serverplaystyle>
+  <servertags>Server tags</servertags>
+  <servermotd>Message of the day</servermotd>
+  <serverbanner>Server banner</serverbanner>
+  <serverlogo>Server logo</serverlogo>
+  <servertagline>Tagline</servertagline>
 
   <!-- Disconnect reasons -->
   <disconnectreason.banned>You have been banned from the server.</disconnectreason.banned>
@@ -596,6 +1227,7 @@
   <disconnectreason.missingcontentpackage>Missing content package.</disconnectreason.missingcontentpackage>
   <disconnectreason.incompatiblecontentpackage>Incompatible content package.</disconnectreason.incompatiblecontentpackage>
   <disconnectreason.notonwhitelist>You are not on the server's whitelist.</disconnectreason.notonwhitelist>
+  <disconnectreason.servercrashed>The server has crashed.</disconnectreason.servercrashed>
   <disconnectmessage.afk>You have been away from keyboard for too long.</disconnectmessage.afk>
   <disconnectmessage.steamauthnolongervalid>Steam authentication is no longer valid ([status]).</disconnectmessage.steamauthnolongervalid>
   <disconnectmessage.toomanyfailedlogins>Too many failed login attempts.</disconnectmessage.toomanyfailedlogins>
@@ -673,6 +1305,9 @@
   <mutedglobally>Muted Globally</mutedglobally>
   <mutedbyserver>You have been muted by the server.</mutedbyserver>
   <unmutedbyserver>You have been unmuted by the server.</unmutedbyserver>
+  <serverprocessclosed>The server process has closed unexpectedly. A crash report (servercrashreport.log) may have been generated in the game's root directory.</serverprocessclosed>
+  <serverprocesscrashed>The server process has crashed. A crash report (servercrashreport.log) has been generated in the game's root directory.</serverprocesscrashed>
+  <viewsteamprofile>View Steam profile</viewsteamprofile>
 
   <!-- Server log -->
   <serverlog.filter>Filter</serverlog.filter>
@@ -705,6 +1340,7 @@
   <servermessage.shuttleleaving>The shuttle will automatically return back to the outpost. Please leave the shuttle immediately.</servermessage.shuttleleaving>
   <servermessage.howtocommunicate>Press [chatbutton] to chat. Use [radiobutton] to talk through the radio.</servermessage.howtocommunicate>
   <servermessage.playernotfound>Player [player] not found!</servermessage.playernotfound>
+  <servermessage.previousclientname>[client] previously used the name [previousname] on the server.</servermessage.previousclientname>
 
   <!-- Client permissions -->
   <clientpermission.none>None</clientpermission.none>
@@ -721,7 +1357,6 @@
   <clientpermission.manageround>Manage round</clientpermission.manageround>
   <clientpermission.managesettings>Manage settings</clientpermission.managesettings>
   <clientpermission.managepermissions>Manage permissions</clientpermission.managepermissions>
-  <clientpermission.karmaimmunity>Karma immunity</clientpermission.karmaimmunity>
 
   <!-- Mission types -->
   <missiontype.none>None</missiontype.none>
@@ -782,13 +1417,13 @@
   <missionheader0.killhammerhead>Target terminated</missionheader0.killhammerhead>
   <missionmessage0.killhammerhead>The Hammerhead is dead. Navigate the submarine out of the cavern to claim the reward.</missionmessage0.killhammerhead>
   <missionname.killcrawlerswarm1>Terminate a Swarm</missionname.killcrawlerswarm1>
-  <!--<missiondescription.killcrawlerswarm1>A small swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew who can neutralize it.</missiondescription.killcrawlerswarm1>-->
+  <missiondescription.killcrawlerswarm1>A small swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew that can neutralize it.</missiondescription.killcrawlerswarm1>
   <missionsonarlabel.killcrawlerswarm1>Swarm</missionsonarlabel.killcrawlerswarm1>
   <missionsuccess.killcrawlerswarm1>The swarm has been terminated.</missionsuccess.killcrawlerswarm1>
   <missionheader0.killcrawlerswarm1>Target terminated</missionheader0.killcrawlerswarm1>
   <missionmessage0.killcrawlerswarm1>The swarm is terminated. Navigate the submarine out of the cavern to claim the reward.</missionmessage0.killcrawlerswarm1>
   <missionname.killcrawlerswarm2>Terminate a Swarm</missionname.killcrawlerswarm2>
-  <!--<missiondescription.killcrawlerswarm2>A large swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew who can neutralize it.</missiondescription.killcrawlerswarm2>-->
+  <missiondescription.killcrawlerswarm2>A large swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew that can neutralize it.</missiondescription.killcrawlerswarm2>
   <missionsonarlabel.killcrawlerswarm2>Swarm</missionsonarlabel.killcrawlerswarm2>
   <missionsuccess.killcrawlerswarm2>The swarm has been terminated.</missionsuccess.killcrawlerswarm2>
   <missionheader0.killcrawlerswarm2>Target terminated</missionheader0.killcrawlerswarm2>
@@ -818,7 +1453,7 @@
   <missiondescription.cargovolatilecompoundn>A local arms dealer is offering [reward] credits in exchange for delivering two crates of high explosives to a customer in [location2].</missiondescription.cargovolatilecompoundn>
   <missionsuccess.cargovolatilecompoundn>The explosives have been successfully delivered.</missionsuccess.cargovolatilecompoundn>
   <missionname.cargochemicals>Chemical shipment</missionname.cargochemicals>
-  <!--<missiondescription.cargochemicals>Researchersof [location1] need someone to deliver some dangerous chemicals to [location2] for a reward of 250 credits. </missiondescription.cargochemicals>-->
+  <missiondescription.cargochemicals>Researchers of [location1] need someone to deliver some dangerous chemicals to [location2] for a reward of [reward] credits.</missiondescription.cargochemicals>
   <missionsuccess.cargochemicals>The chemicals have been successfully delivered.</missionsuccess.cargochemicals>
   <missionname.cargohuskeggs>Biohazard</missionname.cargohuskeggs>
   <missiondescription.cargohuskeggs>Local researchers are offering [reward] credits for delivering a container of husk parasite eggs to [location2].</missiondescription.cargohuskeggs>
@@ -857,7 +1492,9 @@
   <missiondescription2.pvpmission>You're a member of a renegade group opposing the Europa Coalition. According to your informants at [location1], a Coalition vessel has just been dispatched on a mission to take down your boat. Eliminate their crew by any means necessary.</missiondescription2.pvpmission>
   <missionteam1.pvpmission>Coalition</missionteam1.pvpmission>
   <missionteam2.pvpmission>Renegade</missionteam2.pvpmission>
+  <missionsuccess.pvpmission>The [loser] vessel has been defeated by the [winner] crew!</missionsuccess.pvpmission>
   <missionfailure.pvpmission>Both crews have perished.</missionfailure.pvpmission>
+  <missionfailed>Mission failed</missionfailed>
 
   <!-- Entity categories -->
   <mapentitycategory.all>All</mapentitycategory.all>
@@ -1026,6 +1663,14 @@
   <entitydescription.alienflare>Temporary handheld light. Useful for marking a path while exploring outside the sub. Burns for longer than a regular flare.</entitydescription.alienflare>
   <entityname.coilgunammobox>Coilgun Ammunition Box</entityname.coilgunammobox>
   <entitydescription.coilgunammobox>Ammunition for the coilgun.</entitydescription.coilgunammobox>
+  <entityname.coilgunammoboxexplosive>Exploding Ammunition Box</entityname.coilgunammoboxexplosive>
+  <entitydescription.coilgunammoboxexplosive>Ammunition for the coilgun. Explodes on impact.</entitydescription.coilgunammoboxexplosive>
+  <entityname.coilgunammoboxpiercing>Piercing Ammunition Box</entityname.coilgunammoboxpiercing>
+  <entitydescription.coilgunammoboxpiercing>Coilgun ammo that has piercing capabilities.</entitydescription.coilgunammoboxpiercing>
+  <entityname.coilgunboltexplosive>Exploding Coilgun Bolt</entityname.coilgunboltexplosive>
+  <entitydescription.coilgunboltexplosive>Ammunition for the coilgun. Explodes on impact.</entitydescription.coilgunboltexplosive>
+  <entityname.coilgunboltpiercing>Piercing Coilgun Bolt</entityname.coilgunboltpiercing>
+  <entitydescription.coilgunboltpiercing>Coilgun ammo that has piercing capabilities.</entitydescription.coilgunboltpiercing>
   <entityname.uex>UEX</entityname.uex>
   <entitydescription.uex>A simple explosive compound made of sodium and phosphorus.</entitydescription.uex>
   <entityname.c4block>C-4 Block</entityname.c4block>
@@ -1076,6 +1721,47 @@
   <entitydescription.alienarmor>A body armor fabricated from an alien metamaterial.</entitydescription.alienarmor>
   <entityname.alienhelmet>Physicorium Helmet</entityname.alienhelmet>
   <entitydescription.alienhelmet>A helmet fabricated from an alien metamaterial.</entitydescription.alienhelmet>
+  <entityname.flamer>Flamer</entityname.flamer>
+  <entitydescription.flamer>An incendiary weapon that fires a stream of burning welding fuel.</entitydescription.flamer>
+  <entityname.smg>SMG</entityname.smg>
+  <entitydescription.smg>A .45 caliber submachine gun.</entitydescription.smg>
+  <entityname.smgmagazine>SMG Magazine</entityname.smgmagazine>
+  <entitydescription.smgmagazine>A magazine for 15 .45 caliber rounds.</entitydescription.smgmagazine>
+  <entityname.smground>SMG Round</entityname.smground>
+  <entitydescription.smground>A .45 caliber submachine gun round.</entitydescription.smground>
+  <entityname.grenadelauncher>Grenade Launcher</entityname.grenadelauncher>
+  <entitydescription.grenadelauncher>A portable grenade launcher for 40mm grenades.</entitydescription.grenadelauncher>
+  <entityname.40mmgrenade>40mm Grenade</entityname.40mmgrenade>
+  <entitydescription.40mmgrenade>Ammunition for grenade launcher.</entitydescription.40mmgrenade>
+  <entityname.40mmstungrenade>40mm Stun Grenade</entityname.40mmstungrenade>
+  <entitydescription.40mmstungrenade>Ammunition for grenade launcher. Non-lethal.</entitydescription.40mmstungrenade>
+  <entityname.shotgun>Riot Shotgun</entityname.shotgun>
+  <entitydescription.shotgun>A shotgun designed for crowd control.</entitydescription.shotgun>
+  <entityname.shotgunshell>Shotgun Shell</entityname.shotgunshell>
+  <entitydescription.shotgunshell>Ammunition for a shotgun. Lethal.</entitydescription.shotgunshell>
+  <entityname.stungun>Stun Gun</entityname.stungun>
+  <entitydescription.stungun>A device for firing electrified darts.</entitydescription.stungun>
+  <entityname.stungundart>Stun Gun Dart</entityname.stungundart>
+  <entitydescription.stungundart>Causes electric shock to incapacitate a target. Non-lethal.</entitydescription.stungundart>
+  <entityname.toyhammer>Toy Hammer</entityname.toyhammer>
+  <entitydescription.toyhammer>Non-lethal but extremely annoying.</entitydescription.toyhammer>
+  <entityname.crawlermask>Crawler Mask</entityname.crawlermask>
+  <entitydescription.crawlermask>Protects wearer's identity. Fun at certain parties.</entitydescription.crawlermask>
+  <entityname.huskstinger>Husk Stinger</entityname.huskstinger>
+  <entitydescription.huskstinger>A makeshift stabbing tool.</entitydescription.huskstinger>
+  <entityname.shellshield>Moloch Shell Fragment</entityname.shellshield>
+  <entitydescription.shellshield>A sturdy piece of a moloch's shell.</entitydescription.shellshield>
+  <entityname.mudraptorshell>Mudraptor Shell</entityname.mudraptorshell>
+  <entitydescription.mudraptorshell>A protective shell of a mudraptor.</entitydescription.mudraptorshell>
+  <entityname.accordion>Accordion</entityname.accordion>
+  <entitydescription.accordion>An old handmade accordion.</entitydescription.accordion>
+  <entityname.bongodrums>Bongo Drums</entityname.bongodrums>
+  <entitydescription.bongodrums>An old handmade pair of bongo drums.</entitydescription.bongodrums>
+  <entityname.captainspipe>Captain's Pipe</entityname.captainspipe>
+  <entitydescription.captainspipe>For calming the nerves when the sea is stormy.</entitydescription.captainspipe>
+  <entityname.incendiumfueltank>Incendium Fuel Tank</entityname.incendiumfueltank>
+  <entityname.physicoriumammobox>Physicorium Ammunition Box</entityname.physicoriumammobox>
+  <entityname.physicoriumbolt>Physicorium Bolt</entityname.physicoriumbolt>
 
   <!-- Electrical -->
   <entityname.junctionbox>Junction Box</entityname.junctionbox>
@@ -1159,6 +1845,7 @@
   <entityname.brownwire>Brown Wire</entityname.brownwire>
   <entitydescription.brownwire>Connects an output from one piece of equipment to an input on another.</entitydescription.brownwire>
   <entityname.lightcomponent>Light Component</entityname.lightcomponent>
+  <lightcomponent.lightcolor>Color</lightcomponent.lightcolor>
   <entitydescription.lightcomponent>General purpose lighting. Requires no electrical input.</entitydescription.lightcomponent>
   <entityname.emergencysiren>Emergency Siren</entityname.emergencysiren>
   <entitydescription.emergencysiren>Can be triggered to make a terrible noise.</entitydescription.emergencysiren>
@@ -1205,6 +1892,7 @@
   <entityname.titanite>Titanite</entityname.titanite>
   <entitydescription.titanite>A mineral containing titanium and iron.</entitydescription.titanite>
   <entityname.brockite>Brockite</entityname.brockite>
+  <entitydescription.brockite>A mineral containing thorium and phosphorus.</entitydescription.brockite>
   <entityname.thorianite>Thorianite</entityname.thorianite>
   <entitydescription.thorianite>A rare mineral containing thorium.</entitydescription.thorianite>
   <entityname.amblygonite>Amblygonite</entityname.amblygonite>
@@ -1370,21 +2058,13 @@
   <entityname.harmonica>Harmonica</entityname.harmonica>
   <entitydescription.harmonica>An old handmade harmonica.</entitydescription.harmonica>
   <entityname.bgrock1>Background Rock 1</entityname.bgrock1>
-  <entitydescription.bgrock1>
-    <!-- No data -->
-  </entitydescription.bgrock1>
+  <entitydescription.bgrock1><!-- No data --></entitydescription.bgrock1>
   <entityname.bgrock2>Background Rock 2</entityname.bgrock2>
-  <entitydescription.bgrock2>
-    <!-- No data -->
-  </entitydescription.bgrock2>
+  <entitydescription.bgrock2><!-- No data --></entitydescription.bgrock2>
   <entityname.bgrock3>Background Rock 3</entityname.bgrock3>
-  <entitydescription.bgrock3>
-    <!-- No data -->
-  </entitydescription.bgrock3>
+  <entitydescription.bgrock3><!-- No data --></entitydescription.bgrock3>
   <entityname.bgrock4>Background Rock 4</entityname.bgrock4>
-  <entitydescription.bgrock4>
-    <!-- No data -->
-  </entitydescription.bgrock4>
+  <entitydescription.bgrock4><!-- No data --></entitydescription.bgrock4>
   <entityname.suppliescabinet>Supplies Cabinet</entityname.suppliescabinet>
   <entitydescription.suppliescabinet>Storage for small- and medium-sized items.</entitydescription.suppliescabinet>
   <entityname.mediumsteelcabinet>Medium Steel Cabinet</entityname.mediumsteelcabinet>
@@ -1458,6 +2138,7 @@
   <entityname.nuclearshell>Nuclear Shell</entityname.nuclearshell>
   <entitydescription.nuclearshell>A nuclear shell for use with a railgun.</entitydescription.nuclearshell>
   <entityname.alienshell>Physicorium Shell</entityname.alienshell>
+  <entitydescription.alienshell>For firing from a railgun.</entitydescription.alienshell>
 
   <!-- Alien -->
   <entityname.skyholderartifact>Sky Alien Artifact</entityname.skyholderartifact>
@@ -1554,7 +2235,7 @@
   <roomname.forwardaccessshaft>Forward access shaft</roomname.forwardaccessshaft>
   <roomname.aftaccessshaft>Aft access shaft</roomname.aftaccessshaft>
 
-  <!-- Submarine labels -->
+  <!-- Submarine & outpost labels -->
   <label.ventralcoilguncontrol>Ventral Coilgun Control</label.ventralcoilguncontrol>
   <label.dorsalcoilguncontrol>Dorsal Coilgun Control</label.dorsalcoilguncontrol>
   <label.rearcoilguncontrol>Rear Coilgun Control</label.rearcoilguncontrol>
@@ -1597,6 +2278,30 @@
   <label.openlabel>Open</label.openlabel>
   <label.closelabel>Close</label.closelabel>
   <label.ballasthatch>Ballast hatch</label.ballasthatch>
+  <label.betadeck>Beta Deck</label.betadeck>
+  <label.airlock>Airlock</label.airlock>
+  <label.dockingport>Docking Port</label.dockingport>
+  <label.weapons>Weapons</label.weapons>
+  <label.cargo>Cargo Bay</label.cargo>
+  <label.crewquarters>Crew Quarters</label.crewquarters>
+  <label.electrical1>Electrical #1</label.electrical1>
+  <label.electrical2>Electrical #2</label.electrical2>
+  <label.medical>Medical</label.medical>
+  <label.engineering>Engineering</label.engineering>
+  <label.ballast>Ballast</label.ballast>
+  <label.reactor>Reactor</label.reactor>
+  <label.armory>Armory</label.armory>
+  <label.batteryoutput>Battery Output</label.batteryoutput>
+  <label.onoff>On/Off</label.onoff>
+  <label.bilge>Bilge</label.bilge>
+  <label.powermainline>Power Mainline</label.powermainline>
+  <label.command>Command</label.command>
+  <label.engine>Engine</label.engine>
+  <label.outpostinfodisplay1>Welcome. Oxygen Levels: Nominal. Power Levels: Nominal. Radiation Levels: Suboptimal. Weather Forecast for Today: Cold and Damp.</label.outpostinfodisplay1>
+  <label.navterminaldock>Dock</label.navterminaldock>
+  <label.navterminaldock>Undock</label.navterminaldock>
+  <label.highpressurewarning>WARNING: High pressure</label.highpressurewarning>
+  <label.reactortempwarning>Reactor temp. caution</label.reactortempwarning>
 
   <!-- Submarine description -->
   <dimensions>Dimensions</dimensions>
@@ -1688,6 +2393,7 @@
   <pumpin>IN</pumpin>
   <pumpout>OUT</pumpout>
   <pumpspeed>Pumping speed</pumpspeed>
+  <pumpautocontrol>Automatic control</pumpautocontrol>
   <reactorautotemp>Automatic control</reactorautotemp>
   <reactoroutput>Output: [kw] kW</reactoroutput>
   <reactorload>Load: [kw] kW</reactorload>
@@ -1796,6 +2502,7 @@
   <causeofdeath.burn>Burn</causeofdeath.burn>
   <causeofdeath.husk>Husk infection</causeofdeath.husk>
   <causeofdeath.disconnected>Brain dead</causeofdeath.disconnected>
+  <causeofdeath.unknown>Unknown</causeofdeath.unknown>
   <causeofdeathdescription.damage>Succumbed to their injuries</causeofdeathdescription.damage>
   <causeofdeathdescription.bloodloss>Bled out</causeofdeathdescription.bloodloss>
   <causeofdeathdescription.drowning>Drowned</causeofdeathdescription.drowning>
@@ -1813,6 +2520,7 @@
   <self_causeofdeathdescription.burn>You have burned to death.</self_causeofdeathdescription.burn>
   <self_causeofdeathdescription.husk>The parasite has taken over your body.</self_causeofdeathdescription.husk>
   <self_causeofdeathdescription.disconnected>You were disconnected from the server.</self_causeofdeathdescription.disconnected>
+  <self_causeofdeathdescription.unknown>You have died.</self_causeofdeathdescription.unknown>
   <giveinbutton>Give in</giveinbutton>
   <giveinhelpmultiplayer>Let go of your character and enter spectator mode (other players will no longer be able to revive you)</giveinhelpmultiplayer>
   <giveinhelpsingleplayer>The character can no longer be revived if you give in.</giveinhelpsingleplayer>
@@ -1909,16 +2617,17 @@
   <dialognoleaks>What leaks?</dialognoleaks>
   <dialogfoundwoundedtarget>Giving first aid to [targetname] in [roomname]!</dialogfoundwoundedtarget>
   <dialogfoundwoundedtarget>Treating [targetname] in [roomname]!</dialogfoundwoundedtarget>
+  <dialognorescuetargets>No one seems to be in need of medical attention at the moment!</dialognorescuetargets>
+  <dialognorescuetargets>I don't think anyone needs medical attention at the moment.</dialognorescuetargets>
 
+  <!-- Character orders -->
   <orderdialog.follow>[name], follow me!</orderdialog.follow>
   <orderdialogself.follow>Lead the way!</orderdialogself.follow>
   <orderdialog.wait>[name], wait there!</orderdialog.wait>
   <orderdialog.wait>[name], stay where you are!</orderdialog.wait>
   <orderdialogself.wait>I'll wait here!</orderdialogself.wait>
   <orderdialog.dismissed>[name], you are dismissed!</orderdialog.dismissed>
-  <orderdialogself.dismissed>
-    <!-- No data -->
-  </orderdialogself.dismissed>
+  <orderdialogself.dismissed><!-- No data --></orderdialogself.dismissed>
   <orderdialog.operatereactor>[name], operate the reactor!</orderdialog.operatereactor>
   <orderdialog.operatereactor>[name], man the reactor!</orderdialog.operatereactor>
   <orderdialogself.operatereactor>I'll operate the reactor!</orderdialogself.operatereactor>
@@ -2086,6 +2795,7 @@
   <idcardnamejob>This belongs to [name], the [job].</idcardnamejob>
   <dropitem>Drop</dropitem>
   <putitemin>Put in [itemname]</putitemin>
+  <itemmsgoxygenrefill>Insert oxygen tank to refill it</itemmsgoxygenrefill>
 
   <!-- Afflictions -->
   <afflictionname.internaldamage>Internal damage</afflictionname.internaldamage>
@@ -2179,9 +2889,7 @@
   <jobname.assistant>Assistant</jobname.assistant>
   <jobdescription.assistant>Assistants don't have any specific responsibilities or areas of expertise. This job is a good choice for newcomers who want to get a hang of working on board the submarine without taking up tasks that they aren't qualified for.</jobdescription.assistant>
   <jobname.watchman>Watchman</jobname.watchman>
-  <jobdescription.watchman>
-    <!-- No data -->
-  </jobdescription.watchman>
+  <jobdescription.watchman></jobdescription.watchman>
 
   <!-- Locations -->
   <locationname.none>Natural Formation</locationname.none>
@@ -2499,932 +3207,9 @@
   <resetkarma>Reset Karma</resetkarma>
   <karmadecreased>Your Karma decreased by [karmadecrease].</karmadecreased>
   <karmaincreased>Your Karma increased by [karmaincrease].</karmaincreased>
+  <karmabanwarning>WARNING: Your karma is dangerously low. You will be banned from the server if it decreases further.</karmabanwarning>
   <karmabanned>You have been banned from the server because your Karma decreased below [banthreshold].</karmabanned>
   <karmajobdisallowed>You are not allowed to select this job because your Karma is too low ([yourkarma]/[minkarma]).</karmajobdisallowed>
-
-  <!-- Disclaimers -->
-  <campaigndisclaimertitle>Welcome to Barotrauma!</campaigndisclaimertitle>
-  <campaigndisclaimertext>Please note that Barotrauma is still in Early Access, and that many aspects of the game are incomplete and still being worked on.\n\nThe Campaign Mode is still lacking many of the features we've planned for the full version, and is not yet as enjoyable as the multiplayer. In the current version, playing the game solo can also be more challenging to new players than playing it with other people—even though the AI crew can give you a hand with some tasks, they are usually not as useful as real human players. If you're interested in what's to come in future updates, click the Campaign Roadmap button below.\n\nWe do, however, recommend that you at least play the single-player tutorial before diving into the multiplayer. Good luck, sailor!</campaigndisclaimertext>
-  <campaignroadmaptitle>Campaign Roadmap</campaignroadmaptitle>
-  <campaignroadmaptext>- Explorable locations: As of now, the locations on the campaign map are essentially just menus where you can buy supplies and hire new crew members, but during the Early Access period they will become actual physical locations you can enter and explore.\n\n- Expanded story: You will be able to learn more about the world of Barotrauma by interacting with NPCs and by exploring the outposts and non-man-made locations.\n\n- New mission types: We have plans for several completely new mission types, including personnel transport missions and salvage missions into shipwrecks.\n\n- Balancing: Currently the campaign economy is not very well balanced, but we will start to put more focus into it when we have more of the content in.\n\n- End goal: At the moment it’s not possible to complete the campaign, but in future versions the mysterious location at the center of the map will become reachable...</campaignroadmaptext>
-  <editordisclaimertitle>Editors</editordisclaimertitle>
-  <editordisclaimertext>The submarine and character editors are modding tools that can be used to expand the core game by creating your own submarines and monsters. The custom creations can be shared in the Steam Workshop.\n\nAt the moment the editors are only available in English. The process of building a fully playable submarine or a functional monster can be quite involved, and unfortunately we don’t offer in-game tutorials or documentation for the editors yet. If you want to take a shot at creating your own custom content with the editors, you may be able to find help through the following links:</editordisclaimertext>
-  <editordisclaimerwikilink>Barotrauma Wiki</editordisclaimerwikilink>
-  <editordisclaimerdiscordlink>Barotrauma Discord Server</editordisclaimerdiscordlink>
-  <editordisclaimerforumlink>Barotrauma Forums</editordisclaimerforumlink>
-  <bugreportgithubform>GitHub issue form</bugreportgithubform>
-  <bugreportfeedbackform>Barotrauma feedback form</bugreportfeedbackform>
-  <bugreportbutton>Report a bug</bugreportbutton>
-
-  <!-- Connections -->
-  <connection.power>power</connection.power>
-  <connection.powerin>power_in</connection.powerin>
-  <connection.powerout>power_out</connection.powerout>
-  <connection.setstate>set_state</connection.setstate>
-  <connection.togglestate>toggle_state</connection.togglestate>
-  <connection.setpumpingspeed>set_speed</connection.setpumpingspeed>
-  <connection.settargetwaterlevel>set_targetlevel</connection.settargetwaterlevel>
-  <connection.signalin>signal_in</connection.signalin>
-  <connection.signalout>signal_out</connection.signalout>
-  <connection.signalinx>signal_in_[num]</connection.signalinx>
-  <connection.signaloutx>signal_out_[num]</connection.signaloutx>
-  <connection.turretaimingin>position_in</connection.turretaimingin>
-  <connection.turrettriggerin>trigger_in</connection.turrettriggerin>
-  <connection.togglelight>toggle_light</connection.togglelight>
-  <connection.setcolor>set_color</connection.setcolor>
-  <connection.shutdown>shutdown</connection.shutdown>
-  <connection.temperatureout>temperature_out</connection.temperatureout>
-  <connection.meltdownwarning>meltdown_warning</connection.meltdownwarning>
-  <connection.signalr>signal_r</connection.signalr>
-  <connection.signalg>signal_g</connection.signalg>
-  <connection.signalb>signal_b</connection.signalb>
-  <connection.signala>signal_a</connection.signala>
-  <connection.setoutput>set_output</connection.setoutput>
-  <connection.signalstore>signal_store</connection.signalstore>
-  <connection.settargetsignal>set_targetsignal</connection.settargetsignal>
-  <connection.setfrequency>set_frequency</connection.setfrequency>
-  <connection.setoutputtype>set_outputtype</connection.setoutputtype>
-  <connection.controlin>control_in</connection.controlin>
-  <connection.setforce>set_force</connection.setforce>
-  <connection.sonartransducerin>transducer_in</connection.sonartransducerin>
-  <connection.steeringvelocityin>velocity_in</connection.steeringvelocityin>
-  <connection.velocityxout>velocity_x_out</connection.velocityxout>
-  <connection.velocityyout>velocity_y_out</connection.velocityyout>
-  <connection.toggledocking>toggle_docking</connection.toggledocking>
-  <connection.waterdatain>water_data_in</connection.waterdatain>
-  <connection.oxygendatain>oxygen_data_in</connection.oxygendatain>
-
-  <editordisclaimerwikiurl>https://barotrauma.gamepedia.com/Barotrauma_Wiki</editordisclaimerwikiurl>
-  <editordisclaimerdiscordurl>https://discordapp.com/invite/xjeSzWU</editordisclaimerdiscordurl>
-  <editordisclaimerforumurl>https://undertowgames.com/forum/viewforum.php?f=17</editordisclaimerforumurl>
-
-  <!-- Structure -->
-  <entityname.hull>Hull</entityname.hull>
-  <entitydescription.hull>Hulls determine which parts are considered to be 'inside the sub'. Generally every room should be enclosed by a hull.</entitydescription.hull>
-  <entityname.gap>Gap</entityname.gap>
-  <entitydescription.gap>Gaps allow water and air to flow between two hulls.</entitydescription.gap>
-  <entityname.waypoint>Waypoint</entityname.waypoint>
-  <entitydescription.waypoint>Used by AI characters to navigate inside the submarine.</entitydescription.waypoint>
-  <entityname.spawnpoint>Spawnpoint</entityname.spawnpoint>
-  <entitydescription.spawnpoint>Determines which rooms the crew spawns inside.</entitydescription.spawnpoint>
-  <entityname.ff_x_wall>Large Horizontal Inside Wall</entityname.ff_x_wall>
-  <entitydescription.ff_x_wall>A large horizontal wall with collision detection.</entitydescription.ff_x_wall>
-  <entityname.ff_x_wall_cables>Large Horizontal Inside Wall with Cables</entityname.ff_x_wall_cables>
-  <entitydescription.ff_x_wall_cables>A large horizontal wall with collision detection.</entitydescription.ff_x_wall_cables>
-  <entityname.ff_y_wall>Large Vertical Inside Wall</entityname.ff_y_wall>
-  <entitydescription.ff_y_wall>A large vertical wall with collision detection.</entitydescription.ff_y_wall>
-  <entityname.inwalll90cables>Large Vertical Inside Wall with Cables</entityname.inwalll90cables>
-  <entitydescription.inwalll90cables>A large vertical wall with collision detection.</entitydescription.inwalll90cables>
-  <entityname.inwalllcaph1>Large Inside Wall Cap H1</entityname.inwalllcaph1>
-  <entitydescription.inwalllcaph1>A large wall cap.</entitydescription.inwalllcaph1>
-  <entityname.inwalllcaph2>Large Inside Wall Cap H2</entityname.inwalllcaph2>
-  <entitydescription.inwalllcaph2>A large wall cap.</entitydescription.inwalllcaph2>
-  <entityname.inwalllcaph3>Large Inside Wall Cap H3</entityname.inwalllcaph3>
-  <entitydescription.inwalllcaph3>A large wall cap.</entitydescription.inwalllcaph3>
-  <entityname.inwalllcapy1>Large Inside Wall Cap V1</entityname.inwalllcapy1>
-  <entitydescription.inwalllcapy1>A large wall cap.</entitydescription.inwalllcapy1>
-  <entityname.inwalllcapy2>Large Inside Wall Cap V2</entityname.inwalllcapy2>
-  <entitydescription.inwalllcapy2>A large wall cap.</entitydescription.inwalllcapy2>
-  <entityname.inwalllcapy4>Large Inside Wall Cap V4</entityname.inwalllcapy4>
-  <entitydescription.inwalllcapy4>A large wall cap.</entitydescription.inwalllcapy4>
-  <entityname.inwallltieh1>Large Inside Wall Tie H1</entityname.inwallltieh1>
-  <entitydescription.inwallltieh1>A large wall cap.</entitydescription.inwallltieh1>
-  <entityname.inwallltieh2>Large Inside Wall Tie H2</entityname.inwallltieh2>
-  <entitydescription.inwallltieh2>A large wall cap.</entitydescription.inwallltieh2>
-  <entityname.inwallltieh3>Large Inside Wall Tie H3</entityname.inwallltieh3>
-  <entitydescription.inwallltieh3>A large wall cap.</entitydescription.inwallltieh3>
-  <entityname.inwallltiev1>Large Inside Wall Tie V1</entityname.inwallltiev1>
-  <entitydescription.inwallltiev1>A large wall cap.</entitydescription.inwallltiev1>
-  <entityname.inwallltiev2>Large Inside Wall Tie V2</entityname.inwallltiev2>
-  <entitydescription.inwallltiev2>A large wall cap.</entitydescription.inwallltiev2>
-  <entityname.inwallltiev3>Large Inside Wall Tie V3</entityname.inwallltiev3>
-  <entitydescription.inwallltiev3>A large wall cap.</entitydescription.inwallltiev3>
-  <entityname.ff_wall_b>Back Wall Ballast A1</entityname.ff_wall_b>
-  <entitydescription.ff_wall_b>Ballast back wall.</entitydescription.ff_wall_b>
-  <entityname.ff_wall_bp>Back Wall Ballast A2</entityname.ff_wall_bp>
-  <entitydescription.ff_wall_bp>Ballast back wall with pipe.</entitydescription.ff_wall_bp>
-  <entityname.bwbc>Back Wall Ballast C</entityname.bwbc>
-  <entitydescription.bwbc>Ballast back wall with pipe.</entitydescription.bwbc>
-  <entityname.ff_wall_c1>Back Wall C1</entityname.ff_wall_c1>
-  <entitydescription.ff_wall_c1>Mushy grey wall.</entitydescription.ff_wall_c1>
-  <entityname.ff_wall_c2>Back Wall C2</entityname.ff_wall_c2>
-  <entitydescription.ff_wall_c2>Mushy grey wall.</entitydescription.ff_wall_c2>
-  <entityname.ff_wall_c3>Back Wall C3</entityname.ff_wall_c3>
-  <entitydescription.ff_wall_c3>Mushy grey Greeble wall.</entitydescription.ff_wall_c3>
-  <entityname.ff_wall_d1>Back Wall D1</entityname.ff_wall_d1>
-  <entitydescription.ff_wall_d1>Metal wall.</entitydescription.ff_wall_d1>
-  <entityname.ff_wall_d2>Back Wall D2</entityname.ff_wall_d2>
-  <entitydescription.ff_wall_d2>Metal wall.</entitydescription.ff_wall_d2>
-  <entityname.ff_wall_d3>Back Wall D3</entityname.ff_wall_d3>
-  <entitydescription.ff_wall_d3>Metal wall.</entitydescription.ff_wall_d3>
-  <entityname.ff_wall_e>Back Wall E</entityname.ff_wall_e>
-  <entitydescription.ff_wall_e>Block wall lit.</entitydescription.ff_wall_e>
-  <entityname.ff_wall_g1>Back Wall G1</entityname.ff_wall_g1>
-  <entitydescription.ff_wall_g1>General grey back wall.</entitydescription.ff_wall_g1>
-  <entityname.ff_wall_g2>Back Wall G2</entityname.ff_wall_g2>
-  <entitydescription.ff_wall_g2>General grey back wall.</entitydescription.ff_wall_g2>
-  <entityname.ff_wall_g3>Back Wall G3</entityname.ff_wall_g3>
-  <entitydescription.ff_wall_g3>General grey back wall.</entitydescription.ff_wall_g3>
-  <entityname.ff_wall_h1>Back Wall H1</entityname.ff_wall_h1>
-  <entitydescription.ff_wall_h1>Airlock Background.</entitydescription.ff_wall_h1>
-  <entityname.exta_tail>Tail Fin Old A</entityname.exta_tail>
-  <entitydescription.exta_tail>Submarine tail.</entitydescription.exta_tail>
-  <entityname.tailfina>Tail Fin A</entityname.tailfina>
-  <entitydescription.tailfina>Submarine tail.</entitydescription.tailfina>
-  <entityname.tailfinb>Tail Fin B</entityname.tailfinb>
-  <entitydescription.tailfinb>Submarine tail.</entitydescription.tailfinb>
-  <entityname.tailfinc>Tail Fin C</entityname.tailfinc>
-  <entitydescription.tailfinc>Submarine tail.</entitydescription.tailfinc>
-  <entityname.tailfind>Tail Fin D</entityname.tailfind>
-  <entitydescription.tailfind>Submarine tail.</entitydescription.tailfind>
-  <entityname.exta_front>Submarine Front A</entityname.exta_front>
-  <entitydescription.exta_front>Front.</entitydescription.exta_front>
-  <entityname.subfrontb>Submarine Front B</entityname.subfrontb>
-  <entitydescription.subfrontb>Front.</entitydescription.subfrontb>
-  <entityname.shella90deg>Shell A 90 Degrees</entityname.shella90deg>
-  <entitydescription.shella90deg>Submarine wall.</entitydescription.shella90deg>
-  <entityname.shella16deg>Shell A 16 Degrees</entityname.shella16deg>
-  <entitydescription.shella16deg>Submarine wall.</entitydescription.shella16deg>
-  <entityname.shella34deg>Shell A 34 Degrees</entityname.shella34deg>
-  <entitydescription.shella34deg>Submarine wall.</entitydescription.shella34deg>
-  <entityname.shella0deg>Shell A 0 Degrees</entityname.shella0deg>
-  <entitydescription.shella0deg>Submarine wall.</entitydescription.shella0deg>
-  <entityname.shella04deg>Shell A 04 Degrees</entityname.shella04deg>
-  <entitydescription.shella04deg>Submarine wall.</entitydescription.shella04deg>
-  <entityname.shella14adeg>Shell A 14 Degrees</entityname.shella14adeg>
-  <entitydescription.shella14adeg>Submarine wall.</entitydescription.shella14adeg>
-  <entityname.shella52deg>Shell A 52 Degrees</entityname.shella52deg>
-  <entitydescription.shella52deg>Submarine wall.</entitydescription.shella52deg>
-  <entityname.shella16degb>Shell A 16 Degrees B</entityname.shella16degb>
-  <entitydescription.shella16degb>Submarine wall.</entitydescription.shella16degb>
-  <entityname.shella25deg>Shell A 25 Degrees</entityname.shella25deg>
-  <entitydescription.shella25deg>Submarine wall.</entitydescription.shella25deg>
-  <entityname.shella45deg>Shell A 45 Degrees</entityname.shella45deg>
-  <entitydescription.shella45deg>Submarine wall.</entitydescription.shella45deg>
-  <entityname.shella32deg>Shell A 32 Degrees</entityname.shella32deg>
-  <entitydescription.shella32deg>Submarine wall.</entitydescription.shella32deg>
-  <entityname.shella14degb>Shell A 14 Degrees B</entityname.shella14degb>
-  <entitydescription.shella14degb>Submarine wall.</entitydescription.shella14degb>
-  <entityname.shella43deg>Shell A 43 Degrees</entityname.shella43deg>
-  <entitydescription.shella43deg>Submarine wall.</entitydescription.shella43deg>
-  <entityname.shella51deg>Shell A 51 Degrees</entityname.shella51deg>
-  <entitydescription.shella51deg>Submarine wall.</entitydescription.shella51deg>
-  <entityname.shella47deg>Shell A 47 Degrees</entityname.shella47deg>
-  <entitydescription.shella47deg>Submarine wall.</entitydescription.shella47deg>
-  <entityname.shella60deg>Shell A 60 Degrees</entityname.shella60deg>
-  <entitydescription.shella60deg>Submarine wall.</entitydescription.shella60deg>
-  <entityname.shella18deg>Shell A 18 Degrees</entityname.shella18deg>
-  <entitydescription.shella18deg>Submarine wall.</entitydescription.shella18deg>
-  <entityname.shella70deg>Shell A 70 Degrees</entityname.shella70deg>
-  <entitydescription.shella70deg>Submarine wall.</entitydescription.shella70deg>
-  <entityname.shella90degcurve>Shell A 90 Degrees Curve</entityname.shella90degcurve>
-  <entitydescription.shella90degcurve>Submarine wall.</entitydescription.shella90degcurve>
-  <entityname.shella45degb>Shell A 45 Degrees B</entityname.shella45degb>
-  <entitydescription.shella45degb>Submarine wall.</entitydescription.shella45degb>
-  <entityname.shella57deg>Shell A 57 Degrees</entityname.shella57deg>
-  <entitydescription.shella57deg>Submarine wall.</entitydescription.shella57deg>
-  <entityname.shella40deg>Shell A 40 Degrees</entityname.shella40deg>
-  <entitydescription.shella40deg>Submarine wall.</entitydescription.shella40deg>
-  <entityname.shella61deg>Shell A 61 Degrees</entityname.shella61deg>
-  <entitydescription.shella61deg>Submarine wall.</entitydescription.shella61deg>
-  <entityname.shella17deg>Shell A 17 Degrees</entityname.shella17deg>
-  <entitydescription.shella17deg>Submarine wall.</entitydescription.shella17deg>
-  <entityname.shella34degb>Shell A 34 Degrees B</entityname.shella34degb>
-  <entitydescription.shella34degb>Submarine wall.</entitydescription.shella34degb>
-  <entityname.shella26deg>Shell A 26 Degrees</entityname.shella26deg>
-  <entitydescription.shella26deg>Submarine wall.</entitydescription.shella26deg>
-  <entityname.shella54deg>Shell A 54 Degrees</entityname.shella54deg>
-  <entitydescription.shella54deg>Submarine wall.</entitydescription.shella54deg>
-  <entityname.shella38deg>Shell A 38 Degrees</entityname.shella38deg>
-  <entitydescription.shella38deg>Submarine wall.</entitydescription.shella38deg>
-  <entityname.shellacombo11>Shell A Combo 1 1</entityname.shellacombo11>
-  <entitydescription.shellacombo11>Submarine wall.</entitydescription.shellacombo11>
-  <entityname.shellacombo12>Shell A Combo 1 2</entityname.shellacombo12>
-  <entitydescription.shellacombo12>Submarine wall.</entitydescription.shellacombo12>
-  <entityname.sshella01>Shuttle Shell A01</entityname.sshella01>
-  <entitydescription.sshella01>Shuttle wall.</entitydescription.sshella01>
-  <entityname.sshella02>Shuttle Shell A02</entityname.sshella02>
-  <entitydescription.sshella02>Shuttle wall.</entitydescription.sshella02>
-  <entityname.sshella04>Shuttle Shell A04</entityname.sshella04>
-  <entitydescription.sshella04>Shuttle wall.</entitydescription.sshella04>
-  <entityname.sshella05>Shuttle Shell A05</entityname.sshella05>
-  <entitydescription.sshella05>Shuttle wall.</entitydescription.sshella05>
-  <entityname.sshellaa06>Shuttle Shell A06</entityname.sshellaa06>
-  <entitydescription.sshellaa06>Shuttle wall.</entitydescription.sshellaa06>
-  <entityname.sshella07>Shuttle Shell A07</entityname.sshella07>
-  <entitydescription.sshella07>Shuttle wall.</entitydescription.sshella07>
-  <entityname.sshella08>Shuttle Shell A08</entityname.sshella08>
-  <entitydescription.sshella08>Shuttle wall.</entitydescription.sshella08>
-  <entityname.sshella09>Shuttle Shell A09</entityname.sshella09>
-  <entitydescription.sshella09>Shuttle wall.</entitydescription.sshella09>
-  <entityname.sshella10>Shuttle Shell A10</entityname.sshella10>
-  <entitydescription.sshella10>Shuttle wall.</entitydescription.sshella10>
-  <entityname.sshella11>Shuttle Shell A11</entityname.sshella11>
-  <entitydescription.sshella11>Shuttle wall.</entitydescription.sshella11>
-  <entityname.sshella14>Shuttle Shell A14</entityname.sshella14>
-  <entitydescription.sshella14>Shuttle wall.</entitydescription.sshella14>
-  <entityname.sshella15a>Shuttle Shell A15a</entityname.sshella15a>
-  <entitydescription.sshella15a>Shuttle Fin.</entitydescription.sshella15a>
-  <entityname.sshella15b>Shuttle Shell A15b</entityname.sshella15b>
-  <entitydescription.sshella15b>Shuttle Fin.</entitydescription.sshella15b>
-  <entityname.sshella15c>Shuttle Shell A15c</entityname.sshella15c>
-  <entitydescription.sshella15c>Shuttle Fin.</entitydescription.sshella15c>
-  <entityname.sshella17a>Shuttle Shell A17a</entityname.sshella17a>
-  <entitydescription.sshella17a>Shuttle wall.</entitydescription.sshella17a>
-  <entityname.sshella17b>Shuttle Shell A17b</entityname.sshella17b>
-  <entitydescription.sshella17b>Shuttle wall.</entitydescription.sshella17b>
-  <entityname.sshella17c>Shuttle Shell A17c</entityname.sshella17c>
-  <entitydescription.sshella17c>Shuttle wall.</entitydescription.sshella17c>
-  <entityname.sshella18>Shuttle Shell A18</entityname.sshella18>
-  <entitydescription.sshella18>Shuttle wall.</entitydescription.sshella18>
-  <entityname.sshella19>Shuttle Shell A19</entityname.sshella19>
-  <entitydescription.sshella19>Shuttle wall.</entitydescription.sshella19>
-  <entityname.sshella20>Shuttle Shell A20</entityname.sshella20>
-  <entitydescription.sshella20>Shuttle wall.</entitydescription.sshella20>
-  <entityname.sshella21>Shuttle Shell A21</entityname.sshella21>
-  <entitydescription.sshella21>Shuttle wall.</entitydescription.sshella21>
-  <entityname.sshella22>Shuttle Shell A22</entityname.sshella22>
-  <entitydescription.sshella22>Shuttle wall.</entitydescription.sshella22>
-  <entityname.sshella23>Shuttle Shell A23</entityname.sshella23>
-  <entitydescription.sshella23>Shuttle wall.</entitydescription.sshella23>
-  <entityname.sshella24>Shuttle Shell A24</entityname.sshella24>
-  <entitydescription.sshella24>Shuttle wall.</entitydescription.sshella24>
-  <entityname.sshella25>Shuttle Shell A25</entityname.sshella25>
-  <entitydescription.sshella25>Shuttle wall.</entitydescription.sshella25>
-  <entityname.sshella26>Shuttle Shell A26</entityname.sshella26>
-  <entitydescription.sshella26>Shuttle wall.</entitydescription.sshella26>
-  <entityname.sshella27>Shuttle Shell A27</entityname.sshella27>
-  <entitydescription.sshella27>Shuttle wall.</entitydescription.sshella27>
-  <entityname.sshella28>Shuttle Shell A28</entityname.sshella28>
-  <entitydescription.sshella28>Shuttle wall.</entitydescription.sshella28>
-  <entityname.sshella30>Shuttle Shell A30</entityname.sshella30>
-  <entitydescription.sshella30>Shuttle wall.</entitydescription.sshella30>
-  <entityname.sshella32b>Shuttle Shell A32b</entityname.sshella32b>
-  <entitydescription.sshella32b>Shuttle wall.</entitydescription.sshella32b>
-  <entityname.sshella32c>Shuttle Shell A32c</entityname.sshella32c>
-  <entitydescription.sshella32c>Shuttle wall.</entitydescription.sshella32c>
-  <entityname.sshella32d>Shuttle Shell A32d</entityname.sshella32d>
-  <entitydescription.sshella32d>Shuttle wall.</entitydescription.sshella32d>
-  <entityname.sshella36>Shuttle Shell A36</entityname.sshella36>
-  <entitydescription.sshella36>Shuttle wall.</entitydescription.sshella36>
-  <entityname.sshella37>Shuttle Shell A37</entityname.sshella37>
-  <entitydescription.sshella37>Shuttle wall.</entitydescription.sshella37>
-  <entityname.sshella38>Shuttle Shell A38</entityname.sshella38>
-  <entitydescription.sshella38>Shuttle wall.</entitydescription.sshella38>
-  <entityname.sshella39>Shuttle Shell A39</entityname.sshella39>
-  <entitydescription.sshella39>Shuttle wall.</entitydescription.sshella39>
-  <entityname.sshella40>Shuttle Shell A40</entityname.sshella40>
-  <entitydescription.sshella40>Shuttle wall.</entitydescription.sshella40>
-  <entityname.sshella41>Shuttle Shell A41</entityname.sshella41>
-  <entitydescription.sshella41>Shuttle wall.</entitydescription.sshella41>
-  <entityname.sshellalightsa>Shuttle Lights A</entityname.sshellalightsa>
-  <entitydescription.sshellalightsa>Shuttle wall.</entitydescription.sshellalightsa>
-  <entityname.sshellaplatea>Shuttle Plate A</entityname.sshellaplatea>
-  <entitydescription.sshellaplatea>Shuttle wall.</entitydescription.sshellaplatea>
-  <entityname.sshellaplateb>Shuttle Plate B</entityname.sshellaplateb>
-  <entitydescription.sshellaplateb>Shuttle wall.</entitydescription.sshellaplateb>
-  <entityname.sshellabumpera>Shuttle Bumper A</entityname.sshellabumpera>
-  <entitydescription.sshellabumpera>Shuttle wall.</entitydescription.sshellabumpera>
-  <entityname.sshellabumperb>Shuttle Bumper B</entityname.sshellabumperb>
-  <entitydescription.sshellabumperb>Shuttle wall.</entitydescription.sshellabumperb>
-  <entityname.sshellaglassa>Shuttle Shell A Glass A</entityname.sshellaglassa>
-  <entitydescription.sshellaglassa>Shuttle wall.</entitydescription.sshellaglassa>
-  <entityname.sshellaglassb>Shuttle Shell A Glass B</entityname.sshellaglassb>
-  <entitydescription.sshellaglassb>Shuttle wall.</entitydescription.sshellaglassb>
-  <entityname.sshellaglassc>Shuttle Shell A Glass C</entityname.sshellaglassc>
-  <entitydescription.sshellaglassc>Shuttle wall.</entitydescription.sshellaglassc>
-  <entityname.sshellaglassd>Shuttle Shell A Glass D</entityname.sshellaglassd>
-  <entitydescription.sshellaglassd>Shuttle wall.</entitydescription.sshellaglassd>
-  <entityname.sshellaglasse>Shuttle Shell A Glass E</entityname.sshellaglasse>
-  <entitydescription.sshellaglasse>Shuttle wall.</entitydescription.sshellaglasse>
-  <entityname.sshellaglassf>Shuttle Shell A Glass F</entityname.sshellaglassf>
-  <entitydescription.sshellaglassf>Shuttle wall.</entitydescription.sshellaglassf>
-  <entityname.sshellafina>Shuttle Fin A</entityname.sshellafina>
-  <entitydescription.sshellafina>Shuttle wall.</entitydescription.sshellafina>
-  <entityname.sshellafinb>Shuttle Fin B</entityname.sshellafinb>
-  <entitydescription.sshellafinb>Shuttle wall.</entitydescription.sshellafinb>
-  <entityname.sshellafinc>Shuttle Fin C</entityname.sshellafinc>
-  <entitydescription.sshellafinc>Shuttle wall.</entitydescription.sshellafinc>
-  <entityname.sshellafind>Shuttle Fin D</entityname.sshellafind>
-  <entitydescription.sshellafind>Shuttle wall.</entitydescription.sshellafind>
-  <entityname.sshellagromita>Shuttle Gromit A</entityname.sshellagromita>
-  <entitydescription.sshellagromita>Shuttle wall.</entitydescription.sshellagromita>
-  <entityname.sshellagromitb>Shuttle Gromit B</entityname.sshellagromitb>
-  <entitydescription.sshellagromitb>Shuttle gromit.</entitydescription.sshellagromitb>
-  <entityname.sshellagromitc>Shuttle Gromit C</entityname.sshellagromitc>
-  <entitydescription.sshellagromitc>Shuttle gromit.</entitydescription.sshellagromitc>
-  <entityname.sshellagromitd>Shuttle Gromit D</entityname.sshellagromitd>
-  <entitydescription.sshellagromitd>Shuttle gromit.</entitydescription.sshellagromitd>
-  <entityname.largehorizontalback>Large Horizontal Back</entityname.largehorizontalback>
-  <entitydescription.largehorizontalback>A decorative structure with no collision detection.</entitydescription.largehorizontalback>
-  <entityname.smallhorizontalback>Small Horizontal Back</entityname.smallhorizontalback>
-  <entitydescription.smallhorizontalback>A decorative structure with no collision detection.</entitydescription.smallhorizontalback>
-  <entityname.largeverticalback>Large Vertical Back</entityname.largeverticalback>
-  <entitydescription.largeverticalback>A decorative structure with no collision detection.</entitydescription.largeverticalback>
-  <entityname.largeverticalback2>Large Vertical Back 2</entityname.largeverticalback2>
-  <entitydescription.largeverticalback2>A decorative structure with no collision detection.</entitydescription.largeverticalback2>
-  <entityname.smallverticalback>Small Vertical Back</entityname.smallverticalback>
-  <entitydescription.smallverticalback>A decorative structure with no collision detection.</entitydescription.smallverticalback>
-  <entityname.smallverticalback2>Small Vertical Back 2</entityname.smallverticalback2>
-  <entitydescription.smallverticalback2>A decorative structure with no collision detection.</entitydescription.smallverticalback2>
-  <entityname.engineeringlabel>Engineering Label</entityname.engineeringlabel>
-  <entitydescription.engineeringlabel>Decorative label.</entitydescription.engineeringlabel>
-  <entityname.commandlabel>Command Label</entityname.commandlabel>
-  <entitydescription.commandlabel>Decorative label.</entitydescription.commandlabel>
-  <entityname.airlocklabel>Airlock Label</entityname.airlocklabel>
-  <entitydescription.airlocklabel>Decorative label.</entitydescription.airlocklabel>
-  <entityname.cabinslabel>Cabins Label</entityname.cabinslabel>
-  <entitydescription.cabinslabel>Decorative label.</entitydescription.cabinslabel>
-  <entityname.medicallabel>Medical Label</entityname.medicallabel>
-  <entitydescription.medicallabel>Decorative label.</entitydescription.medicallabel>
-  <entityname.arrowup>Arrow Up</entityname.arrowup>
-  <entitydescription.arrowup>Decorative label.</entitydescription.arrowup>
-  <entityname.arrowdown>Arrow Down</entityname.arrowdown>
-  <entitydescription.arrowdown>Decorative label.</entitydescription.arrowdown>
-  <entityname.arrowleft>Arrow Left</entityname.arrowleft>
-  <entitydescription.arrowleft>Decorative label.</entitydescription.arrowleft>
-  <entityname.arrowright>Arrow Right</entityname.arrowright>
-  <entitydescription.arrowright>Decorative label.</entitydescription.arrowright>
-  <entityname.cableholderhorizontal>Cable Holder Horizontal</entityname.cableholderhorizontal>
-  <entitydescription.cableholderhorizontal>Decorative strip for stowing wires neatly.</entitydescription.cableholderhorizontal>
-  <entityname.cableholdervertical>Cable Holder Vertical</entityname.cableholdervertical>
-  <entitydescription.cableholdervertical>Decorative strip for stowing wires neatly.</entitydescription.cableholdervertical>
-  <entityname.topwindow>Window Top</entityname.topwindow>
-  <entitydescription.topwindow>Top facing glass window.</entitydescription.topwindow>
-  <entityname.verticalwindow>Window Vertical</entityname.verticalwindow>
-  <entitydescription.verticalwindow>Side facing glass window.</entitydescription.verticalwindow>
-  <entityname.largeplatform>Platform Large</entityname.largeplatform>
-  <entitydescription.largeplatform>Walkable platform that a character may optionally drop down from or climb on.</entitydescription.largeplatform>
-  <entityname.platform>Platform Basic</entityname.platform>
-  <entitydescription.platform>Walkable platform which a character may optionally drop down from or climb on.</entitydescription.platform>
-  <entityname.roughbgwall>Back Wall Rough</entityname.roughbgwall>
-  <entitydescription.roughbgwall>
-    <!-- No data -->
-  </entitydescription.roughbgwall>
-  <entityname.cleanbgwall>Back Wall Clean</entityname.cleanbgwall>
-  <entitydescription.cleanbgwall>
-    <!-- No data -->
-  </entitydescription.cleanbgwall>
-  <entityname.bgpanels>Back Wall Panels</entityname.bgpanels>
-  <entitydescription.bgpanels>
-    <!-- No data -->
-  </entitydescription.bgpanels>
-  <entityname.bgpanelswindow>Back Wall Window</entityname.bgpanelswindow>
-  <entitydescription.bgpanelswindow>
-    <!-- No data -->
-  </entitydescription.bgpanelswindow>
-  <entityname.bgorangepanels>Back Wall Orange Panels</entityname.bgorangepanels>
-  <entitydescription.bgorangepanels>
-    <!-- No data -->
-  </entitydescription.bgorangepanels>
-  <entityname.bgorangepanelwindow>Back Wall Orange Panels Window</entityname.bgorangepanelwindow>
-  <entitydescription.bgorangepanelwindow>
-    <!-- No data -->
-  </entitydescription.bgorangepanelwindow>
-  <entityname.pipesbackground>Back Wall Pipes</entityname.pipesbackground>
-  <entitydescription.pipesbackground>
-    <!-- No data -->
-  </entitydescription.pipesbackground>
-  <entityname.slopeforward>Slope Forwards</entityname.slopeforward>
-  <entitydescription.slopeforward>
-    <!-- No data -->
-  </entitydescription.slopeforward>
-  <entityname.slopeback>Slope Backwards</entityname.slopeback>
-  <entitydescription.slopeback>
-    <!-- No data -->
-  </entitydescription.slopeback>
-  <entityname.stairsright>Stairs Right</entityname.stairsright>
-  <entitydescription.stairsright>
-    <!-- No data -->
-  </entitydescription.stairsright>
-  <entityname.stairsleft>Stairs Left</entityname.stairsleft>
-  <entitydescription.stairsleft>
-    <!-- No data -->
-  </entitydescription.stairsleft>
-  <entityname.bunk>Bunk</entityname.bunk>
-  <entitydescription.bunk>Crew can sleep here.</entitydescription.bunk>
-  <entityname.ruinwallhorizontal>Ruin Wall Horizontal</entityname.ruinwallhorizontal>
-  <entitydescription.ruinwallhorizontal>A basic wall with collision for alien ruins.</entitydescription.ruinwallhorizontal>
-  <entityname.ruinwallvertical>Ruin Wall Vertical</entityname.ruinwallvertical>
-  <entitydescription.ruinwallvertical>A basic wall with collision for alien ruins.</entitydescription.ruinwallvertical>
-  <entityname.ruinwallheavyhorizontal>Ruin Wall Heavy Horizontal</entityname.ruinwallheavyhorizontal>
-  <entitydescription.ruinwallheavyhorizontal>A heavy wall with collision for alien ruins.</entitydescription.ruinwallheavyhorizontal>
-  <entityname.ruinwallheavyvertical>Ruin Wall Heavy Vertical</entityname.ruinwallheavyvertical>
-  <entitydescription.ruinwallheavyvertical>A heavy wall with collision for alien ruins.</entitydescription.ruinwallheavyvertical>
-  <entityname.ruinwallhorizontalsmall>Ruin Wall Small Horizontal</entityname.ruinwallhorizontalsmall>
-  <entitydescription.ruinwallhorizontalsmall>A small wall with collision for alien ruins.</entitydescription.ruinwallhorizontalsmall>
-  <entityname.ruinwallverticalsmall>Ruin Wall Small Vertical</entityname.ruinwallverticalsmall>
-  <entitydescription.ruinwallverticalsmall>A small wall with collision for alien ruins.</entitydescription.ruinwallverticalsmall>
-  <entityname.ruinback>Ruin Back Wall Basic</entityname.ruinback>
-  <entitydescription.ruinback>A back wall for alien ruins.</entitydescription.ruinback>
-  <entityname.ruinbackcarvings>Ruin Back Wall Carvings</entityname.ruinbackcarvings>
-  <entitydescription.ruinbackcarvings>A back wall with carved symbols for alien ruins.</entitydescription.ruinbackcarvings>
-  <entityname.ruinbackfractal>Ruin Back Wall Fractal</entityname.ruinbackfractal>
-  <entitydescription.ruinbackfractal>A back wall with fractal pattern for alien ruins.</entitydescription.ruinbackfractal>
-  <entityname.ruinblock>Ruin Prop Block</entityname.ruinblock>
-  <entitydescription.ruinblock>A decorative prop for alien ruins.</entitydescription.ruinblock>
-  <entityname.ruinfractalball>Ruin Prop Fractalball</entityname.ruinfractalball>
-  <entitydescription.ruinfractalball>A decorative prop for alien ruins.</entitydescription.ruinfractalball>
-  <entityname.ruinclaw>Ruin Prop Claw</entityname.ruinclaw>
-  <entitydescription.ruinclaw>A decorative prop for alien ruins.</entitydescription.ruinclaw>
-
-  <!-- Particle editor -->
-  <particleeditorsaveall>Save all</particleeditorsaveall>
-  <particleeditorcopytoclipboard>Copy to clipboard</particleeditorcopytoclipboard>
-
-  <!-- Level editor -->
-  <leveleditorsaveall>Save all</leveleditorsaveall>
-  <leveleditorlevelseed>Level seed</leveleditorlevelseed>
-  <leveleditorgenerate>Generate</leveleditorgenerate>
-  <leveleditorlightingenabled>Enable lighting</leveleditorlightingenabled>
-  <leveleditorcursorlightenabled>Enable cursor light</leveleditorcursorlightenabled>
-  <leveleditorreloadtextures>Reload textures</leveleditorreloadtextures>
-  <leveleditorspriteeditdone>Done</leveleditorspriteeditdone>
-  <leveleditorlevelobjcommonness>Commonness in [leveltype]</leveleditorlevelobjcommonness>
-  <leveleditoreditsprite>Edit sprite</leveleditoreditsprite>
-  <leveleditorchildobjects>Child objects</leveleditorchildobjects>
-  <leveleditoraddchildobject>Add child object</leveleditoraddchildobject>
-  <leveleditorlightsources>Light sources</leveleditorlightsources>
-  <leveleditoraddlightsource>Add light source</leveleditoraddlightsource>
-  <leveleditorcreatelevelobj>Create a new level object</leveleditorcreatelevelobj>
-  <leveleditorlevelobjname>Name</leveleditorlevelobjname>
-  <leveleditorlevelobjtexturepath>Texture path</leveleditorlevelobjtexturepath>
-  <leveleditorlevelobjnameempty>Please enter a name for the level object.</leveleditorlevelobjnameempty>
-  <leveleditorlevelobjnametaken>The selected name is already in use.</leveleditorlevelobjnametaken>
-  <leveleditorlevelobjtexturenotfound>Could not find the selected texture file.</leveleditorlevelobjtexturenotfound>
-
-  <!-- Character editor -->
-  <charactereditor.creatingnewjoint>Creating a new joint</charactereditor.creatingnewjoint>
-  <charactereditor.frozen>Frozen</charactereditor.frozen>
-  <charactereditor.animationtestposeenabled>Animation Test Pose Enabled</charactereditor.animationtestposeenabled>
-  <charactereditor.spritesheetorientation>Spritesheet Orientation</charactereditor.spritesheetorientation>
-  <charactereditor.cantaddjointsnolimbelements>Cannot add joints, because no limb elements were found!</charactereditor.cantaddjointsnolimbelements>
-  <charactereditor.humanoidlimbdeletiondisabled>Deleting limbs from a humanoid is currently disabled due to crashing</charactereditor.humanoidlimbdeletiondisabled>
-  <charactereditor.tryingtospawncharacter>Trying to spawn [config]</charactereditor.tryingtospawncharacter>
-  <charactereditor.nocontentpackageselected>No content package selected!</charactereditor.nocontentpackageselected>
-  <charactereditor.contentpackagesaved>Content package saved at: [path]</charactereditor.contentpackagesaved>
-  <charactereditor.backgroundcolor>Background \nColor</charactereditor.backgroundcolor>
-  <charactereditor.spritesheetzoom>Spritesheet Zoom</charactereditor.spritesheetzoom>
-  <charactereditor.reset>Reset</charactereditor.reset>
-  <charactereditor.hidebodysprites>Hide Body Sprites</charactereditor.hidebodysprites>
-  <charactereditor.showwearables>Show Wearables</charactereditor.showwearables>
-  <charactereditor.lockspriteorigin>Lock Sprite Origin</charactereditor.lockspriteorigin>
-  <charactereditor.lockspriteposition>Lock Sprite Position</charactereditor.lockspriteposition>
-  <charactereditor.lockspritesize>Lock Sprite Size</charactereditor.lockspritesize>
-  <charactereditor.adjustcollider>Adjust Collider</charactereditor.adjustcollider>
-  <charactereditor.uniformscale>Uniform Scale</charactereditor.uniformscale>
-  <charactereditor.copyjointsettings>Copy Joint Settings</charactereditor.copyjointsettings>
-  <charactereditor.copyjointsettingstooltip>Copies the currently tweaked settings to all selected joints.</charactereditor.copyjointsettingstooltip>
-  <charactereditor.jointscale>Joint Scale</charactereditor.jointscale>
-  <charactereditor.limbscale>Limb Scale</charactereditor.limbscale>
-  <charactereditor.selectedanimation>Selected Animation</charactereditor.selectedanimation>
-  <charactereditor.previouscharacter>Previous</charactereditor.previouscharacter>
-  <charactereditor.nextcharacter>Next</charactereditor.nextcharacter>
-  <charactereditor.showparameters>Parameters</charactereditor.showparameters>
-  <charactereditor.showspritesheet>Spritesheet</charactereditor.showspritesheet>
-  <charactereditor.showragdoll>Ragdoll</charactereditor.showragdoll>
-  <charactereditor.editanimations>ANIMATIONS</charactereditor.editanimations>
-  <charactereditor.editlimbs>LIMBS</charactereditor.editlimbs>
-  <charactereditor.editjoints>JOINTS</charactereditor.editjoints>
-  <charactereditor.editiktargets>IK Targets</charactereditor.editiktargets>
-  <charactereditor.freeze>Freeze</charactereditor.freeze>
-  <charactereditor.autofreeze>Auto Freeze</charactereditor.autofreeze>
-  <charactereditor.limbpairediting>Limb Pair Editing</charactereditor.limbpairediting>
-  <charactereditor.animationtestpose>Animation Test Pose</charactereditor.animationtestpose>
-  <charactereditor.automove>Auto Move</charactereditor.automove>
-  <charactereditor.followcursor>Follow Cursor</charactereditor.followcursor>
-  <charactereditor.showcolliders>Colliders</charactereditor.showcolliders>
-  <charactereditor.editbackgroundcolor>Edit Background Color</charactereditor.editbackgroundcolor>
-  <charactereditor.quicksaveanimations>Quick Save Animations</charactereditor.quicksaveanimations>
-  <charactereditor.canteditvanillacontent>Can't edit Vanilla content!</charactereditor.canteditvanillacontent>
-  <charactereditor.allanimationssaved>All animations saved</charactereditor.allanimationssaved>
-  <charactereditor.quicksaveragdoll>Quick Save Ragdoll</charactereditor.quicksaveragdoll>
-  <charactereditor.ragdollsavedto>Ragdoll saved to [path]</charactereditor.ragdollsavedto>
-  <charactereditor.resetanimations>Reset Animations</charactereditor.resetanimations>
-  <charactereditor.allanimationsreset>All animations reset</charactereditor.allanimationsreset>
-  <charactereditor.resetragdoll>Reset Ragdoll</charactereditor.resetragdoll>
-  <charactereditor.ragdollreset>Ragdoll reset</charactereditor.ragdollreset>
-  <charactereditor.saveragdoll>Save Ragdoll</charactereditor.saveragdoll>
-  <charactereditor.providefilename>Please provide a name for the file</charactereditor.providefilename>
-  <charactereditor.loadragdoll>Load Ragdoll</charactereditor.loadragdoll>
-  <charactereditor.couldntopendirectory>Couldn't open directory [folder]!</charactereditor.couldntopendirectory>
-  <charactereditor.ragdolldeletedfrom>Ragdoll deleted from [file]</charactereditor.ragdolldeletedfrom>
-  <charactereditor.ragdollloadedfrom>Ragdoll loaded from [file]</charactereditor.ragdollloadedfrom>
-  <charactereditor.saveanimation>Save Animation</charactereditor.saveanimation>
-  <charactereditor.selectanimationtype>Select Animation Type</charactereditor.selectanimationtype>
-  <charactereditor.animationoftypesavedto>Animation of type [type] saved to [path]</charactereditor.animationoftypesavedto>
-  <charactereditor.loadanimation>Load Animation</charactereditor.loadanimation>
-  <charactereditor.animationoftypedeleted>Animation of type [type] at [file] deleted</charactereditor.animationoftypedeleted>
-  <charactereditor.animationtypenotimplemented>Animation type [type] not implemented!</charactereditor.animationtypenotimplemented>
-  <charactereditor.animationoftypeloaded>Animation of type [type] loaded from [file]</charactereditor.animationoftypeloaded>
-  <charactereditor.reloadtextures>Reload Textures</charactereditor.reloadtextures>
-  <charactereditor.recreateragdoll>Recreate Ragdoll</charactereditor.recreateragdoll>
-  <charactereditor.recreateragdolltooltip>Many of the parameters requires recreation of the ragdoll. If adjusting the parameter doesn't seem to have effect, click this button.</charactereditor.recreateragdolltooltip>
-  <charactereditor.createnewcharacter>Create New Character</charactereditor.createnewcharacter>
-  <charactereditor.nofieldforparameterfound>No field for [parameter] found!</charactereditor.nofieldforparameterfound>
-  <charactereditor.selecttargetlimbforjointend>Left click to select the target limb for the other end of the joint.</charactereditor.selecttargetlimbforjointend>
-  <charactereditor.holdleftalttoadjustcyclespeed>Hold Left Alt to adjust cycle speed</charactereditor.holdleftalttoadjustcyclespeed>
-  <charactereditor.cyclespeed>Cycle Speed</charactereditor.cyclespeed>
-  <charactereditor.movementspeed>Movement Speed</charactereditor.movementspeed>
-  <charactereditor.headangle>Head Angle</charactereditor.headangle>
-  <charactereditor.head>Head</charactereditor.head>
-  <charactereditor.headposition>Head Position</charactereditor.headposition>
-  <charactereditor.torsoangle>Torso Angle</charactereditor.torsoangle>
-  <charactereditor.torso>Torso</charactereditor.torso>
-  <charactereditor.torsoposition>Torso Position</charactereditor.torsoposition>
-  <charactereditor.tailangle>Tail Angle</charactereditor.tailangle>
-  <charactereditor.footangle>Foot Angle</charactereditor.footangle>
-  <charactereditor.stepsize>Step Size</charactereditor.stepsize>
-  <charactereditor.handmoveamount>Hand Move Amount</charactereditor.handmoveamount>
-  <charactereditor.tailmovementspeed>Tail Movement Speed</charactereditor.tailmovementspeed>
-  <charactereditor.tailmovementamount>Tail Movement Amount</charactereditor.tailmovementamount>
-  <charactereditor.legmovementspeed>Leg Movement Speed</charactereditor.legmovementspeed>
-  <charactereditor.legmovementamount>Leg Movement Amount</charactereditor.legmovementamount>
-  <charactereditor.handmovementamount>Hand Movement Amount</charactereditor.handmovementamount>
-  <charactereditor.holdleftalttomanipulatejoint>Hold Left Alt to manipulate the other end of the joint</charactereditor.holdleftalttomanipulatejoint>
-  <charactereditor.origin>Origin</charactereditor.origin>
-  <charactereditor.position>Position: [coordinates]</charactereditor.position>
-  <charactereditor.size>Size</charactereditor.size>
-  <charactereditor.upperlimit>Upper Limit</charactereditor.upperlimit>
-  <charactereditor.lowerlimit>Lower Limit</charactereditor.lowerlimit>
-  <charactereditor.defaultname>Character X</charactereditor.defaultname>
-  <charactereditor.ishumanoid>Is a Humanoid?</charactereditor.ishumanoid>
-  <charactereditor.canentersubmarines>Can Enter Submarines (and can walk)?</charactereditor.canentersubmarines>
-  <charactereditor.configfileoutput>Config File Output</charactereditor.configfileoutput>
-  <charactereditor.texturepath>Texture Path</charactereditor.texturepath>
-  <charactereditor.contentpackagename>Content Package Name</charactereditor.contentpackagename>
-  <charactereditor.texturedoesnotexist>The texture file does not exist!</charactereditor.texturedoesnotexist>
-  <charactereditor.defineragdoll>Define Ragdoll</charactereditor.defineragdoll>
-  <charactereditor.loadfromhtml>Load From HTML</charactereditor.loadfromhtml>
-  <charactereditor.limbs>Limbs</charactereditor.limbs>
-  <charactereditor.limb>Limb</charactereditor.limb>
-  <charactereditor.joints>Joints</charactereditor.joints>
-  <charactereditor.joint>Joint</charactereditor.joint>
-  <charactereditor.loadhtml>Load HTML</charactereditor.loadhtml>
-  <charactereditor.htmlpath>HTML Path</charactereditor.htmlpath>
-  <charactereditor.multipletorsosdefined>You need to define one and only one limb as Torso!</charactereditor.multipletorsosdefined>
-  <charactereditor.charactercreated>Character [name] Created</charactereditor.charactercreated>
-  <charactereditor.limbtype>Limb Type</charactereditor.limbtype>
-  <charactereditor.sourcerectangle>Source Rectangle</charactereditor.sourcerectangle>
-  <charactereditor.id>Identifier</charactereditor.id>
-  <charactereditor.limbwithindex>Limb [index]</charactereditor.limbwithindex>
-  <charactereditor.limbwithindexanchor>Limb [index] Anchor</charactereditor.limbwithindexanchor>
-  <charactereditor.failedtoreadhtml>Character Editor Screen: Failed to read HTML at [path]</charactereditor.failedtoreadhtml>
-  <charactereditor.multipleitemswithsamehierarchy>Multiple items with the same hierarchy [hierarchy] found ([name]). Cannot continue.</charactereditor.multipleitemswithsamehierarchy>
-  <charactereditor.cannoteditvanillacharacters>Cannot edit the characters defined in the Vanilla content package!</charactereditor.cannoteditvanillacharacters>
-  <charactereditor.existingcharacterfoundreplaceverification>An existing character with the same name was found. Do you want to replace it?</charactereditor.existingcharacterfoundreplaceverification>
-  <charactereditor.existingcharacterfound>An existing character with the same name was found.</charactereditor.existingcharacterfound>
-  <charactereditor.modespanel>Modes</charactereditor.modespanel>
-  <charactereditor.fileeditpanel>Files</charactereditor.fileeditpanel>
-  <charactereditor.optionspanel>Options</charactereditor.optionspanel>
-  <charactereditor.characterpanel>Character</charactereditor.characterpanel>
-  <charactereditor.toolspanel>Tools</charactereditor.toolspanel>
-  <charactereditor.addmultiplelimbsbutton>Add Multiple</charactereditor.addmultiplelimbsbutton>
-
-  <!-- Submarine editor -->
-  <items>Items</items>
-  <structures>Structures</structures>
-  <totalhullvolume>Total hull volume</totalhullvolume>
-  <selectedhullvolume>Selected hull volume</selectedhullvolume>
-  <optimalballastlevel>optimal neutral ballast level is [value]</optimalballastlevel>
-  <saveitemassembly>Save as item assembly</saveitemassembly>
-  <insufficientballast>insufficient volume for buoyancy control</insufficientballast>
-  <physicsbodies>Physics bodies</physicsbodies>
-  <opensubbutton>Open...</opensubbutton>
-  <savesubbutton>Save</savesubbutton>
-  <addsubbutton>Add submarine</addsubbutton>
-  <addsubtooltip>Places another submarine into the current submarine file. Can be used for adding things such as smaller vessels, escape pods or detachable sections into the main submarine.</addsubtooltip>
-  <holdtolink>Hold space and click with the mouse to link to another item.</holdtolink>
-  <allowedlinks>Allowed links</allowedlinks>
-  <filtermapentities>Filter</filtermapentities>
-  <charactermodebutton>Character mode</charactermodebutton>
-  <charactermodetooltip>Allows you to pick up and use items. Useful for things such as placing items inside closets, turning devices on/off and doing the wiring.</charactermodetooltip>
-  <wiringmodebutton>Wiring mode</wiringmodebutton>
-  <wiringmodetooltip>Allows you to connect wires between items.</wiringmodetooltip>
-  <generatewaypointsbutton>Generate waypoints</generatewaypointsbutton>
-  <generatewaypointstooltip>AI controlled crew members require waypoints to navigate around the sub.</generatewaypointstooltip>
-  <showentitieslabel>Show</showentitieslabel>
-  <showwalls>Walls</showwalls>
-  <showstructures>Structures</showstructures>
-  <showitems>Items</showitems>
-  <showlighting>Lighting</showlighting>
-  <showwaypoints>Waypoints</showwaypoints>
-  <showspawnpoints>Spawnpoints</showspawnpoints>
-  <showlinks>Links</showlinks>
-  <showhulls>Hulls</showhulls>
-  <showgaps>Gaps</showgaps>
-  <previouslyusedlabel>Previously used</previouslyusedlabel>
-  <subnamemissingwarning>Name your submarine before saving it.</subnamemissingwarning>
-  <subnameillegalcharswarning>Illegal symbols in filename ([illegalchar])</subnameillegalcharswarning>
-  <subsavednotification>Submarine saved to [filepath].</subsavednotification>
-  <savesubdialogheader>Save submarine</savesubdialogheader>
-  <savesubdialogname>Name</savesubdialogname>
-  <savesubdialogdescription>Description</savesubdialogdescription>
-  <savesubdialogsettings>Settings</savesubdialogsettings>
-  <saveitemassemblydialogheader>Save assembly</saveitemassemblydialogheader>
-  <saveitemassemblyhideinmenus>Hide in menus</saveitemassemblyhideinmenus>
-  <saveitemassemblydialogname>Name</saveitemassemblydialogname>
-  <saveitemassemblydialogdescription>Description</saveitemassemblydialogdescription>
-  <itemassemblynamemissingwarning>Name your item assembly before saving it.</itemassemblynamemissingwarning>
-  <itemassemblyfileexistswarning>There's already an item assembly with the same name. Do you want to replace the existing assembly?</itemassemblyfileexistswarning>
-  <itemassemblynameillegalcharswarning>Illegal symbols in filename ([illegalchar])</itemassemblynameillegalcharswarning>
-  <nohullswarning>No hulls found in the submarine. Hulls determine the 'borders' of an individual room and are required for water and air distribution to work correctly.</nohullswarning>
-  <disconnectedventswarning>The submarine contains vents which haven't been linked to an oxygen generator. Select a vent and click an oxygen generator while holding space to link them.</disconnectedventswarning>
-  <disconnectedturretswarning>The submarine contains [itemname]s which haven't been linked to an ammunition loader. Select the item and click a loader while holding space to link them.</disconnectedturretswarning>
-  <nowaypointswarning>No waypoints found in the submarine. AI controlled crew members won't be able to navigate without waypoints.</nowaypointswarning>
-  <nocargospawnpointwarning>The submarine does not have spawnpoints for cargo (which are used for determining where to place bought items). To fix this, create a new spawnpoint and change its spawn type' parameter to 'cargo'.</nocargospawnpointwarning>
-  <farawayentitieswarning>One or more structures/items have been placed very far from the submarine. Do you want to move the camera to them?</farawayentitieswarning>
-  <adjustlightsprompt>This submarine was saved using an older version of Barotrauma, which used a different formula to calculate lighting. The lighting in the submarine may now appear too bright. Do you want to automatically readjust the lighting for the new lighting formula?</adjustlightsprompt>
-  <adjustedlightsnotification>The brightness of the lights has been adjusted. Areas with multiple light sources may still appear too bright and require reducing the range or brightness of the lights manually. You may also use the console command 'multiplylights' to adjust the brightness of all the lights as once. For example, 'multiplylights 1,1,1,0.5' would decrease the brightness by 50%.</adjustedlightsnotification>
-  <noballasttagswarning>You should add the tag 'ballast' to the ballast pumps to allow AI characters to identify which pumps are used for controlling the buoyancy of the submarine.</noballasttagswarning>
-  <nohullnameswarning>No names given to any of the hulls, using autogenerated names. Characters use the names to refer to different rooms when reporting things such as hull breaches.</nohullnameswarning>
-  <deletingcontainerwithitems>A container with items inside was deleted, delete contained items as well?\n\nContained items:\n\n</deletingcontainerwithitems>
-  <shuttle>Shuttle</shuttle>
-  <hideinmenus>Hide in menus</hideinmenus>
-  <unspecifiedsubfilename>Unnamed</unspecifiedsubfilename>
-  <reloadsprite>Reload Sprite</reloadsprite>
-  <resettoprefab>Reset to prefab</resettoprefab>
-  <mirrorentityx>Mirror X</mirrorentityx>
-  <mirrorentityxtooltip>Mirror the entity horizontally. You can also use the shortcut Ctrl + N.</mirrorentityxtooltip>
-  <mirrorentityy>Mirror Y</mirrorentityy>
-  <mirrorentityytooltip>Mirror the entity horizontally. You can also use the shortcut Ctrl + M.</mirrorentityytooltip>
-  <nonlinkedgapswarning>The submarine contains gaps that aren't linked to any hulls. Gaps should always overlap with at least one hull (= a gap that leads outside the sub) or two hulls if it's a gap between rooms.</nonlinkedgapswarning>
-  <cannoteditvanillasubs>Cannot edit the submarines defined in the Vanilla content package!</cannoteditvanillasubs>
-
-  <!-- Entity editor -->
-  <stringpropertytranslate>This text will be translated to [translation].</stringpropertytranslate>
-  <stringpropertycannottranslate>This text will not be translated - text with the tag [tag] not found in the language files.</stringpropertycannottranslate>
-
-  <!-- *** JULY (translations coming 12.8.) *** -->
-  <!-- NEW ADDITIONS -->
-  <itemmsgoxygenrefill>Insert oxygen tank to refill it</itemmsgoxygenrefill>
-  <missiondescription.cargochemicals>Researchers of [location1] need someone to deliver some dangerous chemicals to [location2] for a reward of [reward] credits.</missiondescription.cargochemicals>
-  <privacypolicy>Privacy policy</privacypolicy>
-  <missionfailed>Mission failed</missionfailed>
-  <label.highpressurewarning>WARNING: High pressure</label.highpressurewarning>
-  <label.reactortempwarning>Reactor temp. caution</label.reactortempwarning>
-  <addercomponent.timeframe>Timeframe</addercomponent.timeframe>
-  <addercomponent.clampmin>Clamp min</addercomponent.clampmin>
-  <addercomponent.clampmax>Clamp max</addercomponent.clampmax>
-  <equalscomponent.timeframe>Timeframe</equalscomponent.timeframe>
-  <equalscomponent.output>Output</equalscomponent.output>
-  <equalscomponent.falseoutput>False output</equalscomponent.falseoutput>
-  <andcomponent.timeframe>Timeframe</andcomponent.timeframe>
-  <andcomponentcomponent.output>Output</andcomponentcomponent.output>
-  <andcomponentcomponent.falseoutput>False output</andcomponentcomponent.falseoutput>
-  <oscillatorcomponent.timeframe>Timeframe</oscillatorcomponent.timeframe>
-  <oscillatorcomponent.outputtype>Output type</oscillatorcomponent.outputtype>
-  <lightcomponent.lightcolor>Color</lightcomponent.lightcolor>
-  <delaycomponent.delay>Delay</delaycomponent.delay>
-  <delaycomponent.resetwhensignalreceived>Reset when signal received</delaycomponent.resetwhensignalreceived>
-  <delaycomponent.resetwhendifferentsignalreceived>Reset when different signal received</delaycomponent.resetwhendifferentsignalreceived>
-  <regexfindcomponent.output>Output</regexfindcomponent.output>
-  <regexfindcomponent.falseoutput>False output</regexfindcomponent.falseoutput>
-  <regexfindcomponent.expression>Expression</regexfindcomponent.expression>
-  <regexfindcomponent.continuousoutput>Continuous output</regexfindcomponent.continuousoutput>
-  <memorycomponent.value>Value</memorycomponent.value>
-  <motionsensor.output>Output</motionsensor.output>
-  <motionsensor.falseoutput>False output</motionsensor.falseoutput>
-  <motionsensor.rangex>Range X</motionsensor.rangex>
-  <motionsensor.rangey>Range Y</motionsensor.rangey>
-  <signalcheckcomponent.targetsignal>Target signal</signalcheckcomponent.targetsignal>
-  <signalcheckcomponent.output>Output</signalcheckcomponent.output>
-  <signalcheckcomponent.falseoutput>False output</signalcheckcomponent.falseoutput>
-  <waterdetector.output>Output</waterdetector.output>
-  <waterdetector.falseoutput>False output</waterdetector.falseoutput>
-  <wificomponent.channel>Channel</wificomponent.channel>
-  <quickuseaction.holdtounequip>Hold to unequip</quickuseaction.holdtounequip>
-  <entityname.incendiumfueltank>Incendium Fuel Tank</entityname.incendiumfueltank>
-  <entityname.physicoriumammobox>Physicorium Ammunition Box</entityname.physicoriumammobox>
-  <entityname.physicoriumbolt>Physicorium Bolt</entityname.physicoriumbolt>
-  <statisticspromptheader>Do you want to help us make Barotrauma better?</statisticspromptheader>
-  <statisticsprompttext>Do you allow Barotrauma to send usage statistics and error reports to the developers? The data is anonymous, does not contain any personal information and is only used to help us diagnose issues and improve Barotrauma.</statisticsprompttext>
-  <centerarealockedheader>Mysteries lie ahead...</centerarealockedheader>
-  <centerarealockedtext>This area is unreachable in this version of Barotrauma. Please wait for future updates!</centerarealockedtext>
-  <connection.batterychargestatusout>charge_out</connection.batterychargestatusout>
-  <connection.batterychargepercentage>charge_%</connection.batterychargepercentage>
-  <connection.batterysetrechargespeed>set_charge_rate</connection.batterysetrechargespeed>
-  <connection.batteryrechargespeedout>charge_rate_out</connection.batteryrechargespeedout>
-  <connection.dockingproximitysensor>proximity_sensor</connection.dockingproximitysensor>
-  <connection.signalx>signal_[num]</connection.signalx>
-  <connection.set_text>signal_[num]</connection.set_text>
-  <connection.stateout>state_out</connection.stateout>
-  <connection.turretaimingout>position_out</connection.turretaimingout>
-  <connection.turrettriggerout>trigger_out</connection.turrettriggerout>
-  <connection.sonardataout>data_out</connection.sonardataout>
-
-  <label.outpostinfodisplay1>Welcome. Oxygen Levels: Nominal. Power Levels: Nominal. Radiation Levels: Suboptimal. Weather Forecast For Today: Cold and Damp.</label.outpostinfodisplay1>
-  <label.navterminaldock>Dock</label.navterminaldock>
-  <label.navterminaldock>Undock</label.navterminaldock>
-
-  <connectionerrornoresponse>No response from the server. There may be a connection issue at the server's end.</connectionerrornoresponse>
-
-  <dialognorescuetargets>No-one seems to be in need of medical attention at the moment!</dialognorescuetargets>
-  <dialognorescuetargets>I don't think anyone needs medical attention at the moment.</dialognorescuetargets>
-
-  <workshoppublisherror.limitexceeded>Publishing the workshop item failed (limit exceeded). Make sure you have enabled Steam Cloud and haven't exceeded your Steam Cloud quota.</workshoppublisherror.limitexceeded>
-  <workshoppublisherror.limiteduseraccount>Publishing the workshop item failed. Limited user accounts are not allowed to publish items in the Steam Workshop. You need to spend at least $5 in the Steam store to become a non-limited user.</workshoppublisherror.limiteduseraccount>
-  <workshoppublisherror.banned>Publishing the workshop item failed because your account has been banned.</workshoppublisherror.banned>
-  <workshoppublisherror.insufficientprivilege>Publishing the workshop item failed (insufficient privileges). This can happen due to a hub ban, account lock or a community ban. You may need to contact Steam Support.</workshoppublisherror.insufficientprivilege>
-  <workshoppublisherror.serviceunavailable>Publishing the workshop item failed (service unavailable). The workshop servers may be having issues, please try again in a moment.</workshoppublisherror.serviceunavailable>
-
-  <workshopitemupdated>Workshop item [itemname] was updated successfully.</workshopitemupdated>
-  <workshopitemupdatefailed>Failed to update workshop item [itemname]. [errormessage]</workshopitemupdatefailed>
-  <workshopfilenotfound>File [path] not found.</workshopfilenotfound>
-
-  <debugconsolehelptext> Debug console - Press F3 to open/close, enter "help" for a list of available commands</debugconsolehelptext>
-
-  <wrongfiletype>Wrong file type!</wrongfiletype>
-
-  <charactereditor.contentpackagenameinuse>A content package with the same name already exists. Please choose another name or select the existing content package from the dropdown if you want to add the character to it.</charactereditor.contentpackagenameinuse>
-
-  <servermessage.previousclientname>[client] previously used the name [previousname] on the server.</servermessage.previousclientname>
-
-  <serverlistdirectjoin>Direct Join</serverlistdirectjoin>
-
-  <causeofdeath.unknown>Unknown</causeofdeath.unknown>
-  <self_causeofdeathdescription.unknown>You have died.</self_causeofdeathdescription.unknown>
-
-  <!-- New generic strings -->
-  <pending>Pending</pending>
-  <inprogress>In progress</inprogress>
-  <complete>Complete</complete>
-
-  <!-- Traitor mission (new) -->
-  <traitormissionstartmessage>You are the traitor! You have successfully infiltrated the submarine and now it's time to put the plans in motion.</traitormissionstartmessage>
-  <traitormissionfailuremessage>You have failed in your mission. As a result, the mission has been canceled and you are now part of the crew. Keep a low profile until you are contacted again.</traitormissionfailuremessage>
-  <traitormissionsuccessmessage>You have successfully sabotaged the crew's efforts. An escape shuttle has been dispatched for you.</traitormissionsuccessmessage>
-
-  <!-- Traitor objectives (new) -->
-  <traitorobjectivestartmessage>You have a new objective, following goals need to be completed:\n[traitorgoalinfos]</traitorobjectivestartmessage>
-  <traitorobjectivestartmessageserver>[traitorname] is the traitor and has the following goals:\n[traitorgoalinfos]</traitorobjectivestartmessageserver>
-  <traitorobjectiveendmessagesuccess>[traitorname] was a traitor and succeeded in completing the given goals:\n [traitorgoalinfos]</traitorobjectiveendmessagesuccess>
-  <traitorobjectiveendmessagesuccessdead>[traitorname] was a traitor and succeeded in completing the given goals but regrettably died in the process, goals:\n[traitorgoalinfos]</traitorobjectiveendmessagesuccessdead>
-  <traitorobjectiveendmessagesuccessdetained>[traitorname] was a traitor and succeeded in completing the given goals but was detained, goals:\n[traitorgoalinfos]</traitorobjectiveendmessagesuccessdetained>
-  <traitorobjectiveendmessagefailure>[traitorname] was a traitor but failed to complete the given goals:\n[traitorgoalinfos]</traitorobjectiveendmessagefailure>
-  <traitorobjectiveendmessagefailuredead>[traitorname] was a traitor but died while failing to complete the given goals:\n[traitorgoalinfos]</traitorobjectiveendmessagefailuredead>
-  <traitorobjectiveendmessagefailuredetained>[traitorname] was a traitor but got detained while failing to complete the given goals:\n[traitorgoalinfos]</traitorobjectiveendmessagefailuredetained>
-  <traitorobjectivegoalinfoformat>- [statustext]\n</traitorobjectivegoalinfoformat>
-
-  <!-- Traitor goals (new) -->
-  <traitorgoalstatustextformat>[infotext] ([status])</traitorgoalstatustextformat>
-  <traitorgoaltimelimitfailure>You failed to complete your objective in time.</traitorgoaltimelimitfailure>
-  <traitorgoalkilltargetinfo>Assassinate [targetname].</traitorgoalkilltargetinfo>
-  <traitorgoalkilleveryoneinfo>Kill all crew members.</traitorgoalkilleveryoneinfo>
-  <traitorgoalcausereactormeltdown>Cause a reactor meltdown.</traitorgoalcausereactormeltdown>
-  <traitorgoaldestroyitems>Destroy at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>
-  <traitorgoaljamsonarinfo>Hide an active sonar jammer somewhere it can't be found for [duration] seconds.</traitorgoaljamsonarinfo>
-  <traitorgoaljamsonarinfoalt>Jam the submarine's sonar for [duration] seconds.</traitorgoaljamsonarinfoalt>
-  <traitorgoalpoisoninfo>Inject [targetname] with [poison].</traitorgoalpoisoninfo>
-  <traitorgoaltampercoilguninfomulti>Load dummy ammunition into [number] coilgun loaders.</traitorgoaltampercoilguninfomulti>
-
-  <!-- New items -->
-  <entityname.flamer>Flamer</entityname.flamer>
-  <entitydescription.flamer>An incendiary weapon that fires a stream of burning welding fuel.</entitydescription.flamer>
-
-  <entityname.smg>SMG</entityname.smg>
-  <entitydescription.smg>A .45 caliber submachine gun.</entitydescription.smg>
-
-  <entityname.smgmagazine>SMG Magazine</entityname.smgmagazine>
-  <entitydescription.smgmagazine>A magazine for 15 .45 caliber rounds.</entitydescription.smgmagazine>
-
-  <entityname.smground>SMG Round</entityname.smground>
-  <entitydescription.smground>A .45 caliber submachine gun round.</entitydescription.smground>
-
-  <entityname.grenadelauncher>Grenade Launcher</entityname.grenadelauncher>
-  <entitydescription.grenadelauncher>A portable grenade launcher for 40mm grenades.</entitydescription.grenadelauncher>
-
-  <entityname.40mmgrenade>40mm Grenade</entityname.40mmgrenade>
-  <entitydescription.40mmgrenade>Ammunition for grenade launcher.</entitydescription.40mmgrenade>
-
-  <entityname.40mmstungrenade>40mm Stun Grenade</entityname.40mmstungrenade>
-  <entitydescription.40mmstungrenade>Ammunition for grenade launcher. Non-lethal.</entitydescription.40mmstungrenade>
-
-  <entityname.shotgun>Riot Shotgun</entityname.shotgun>
-  <entitydescription.shotgun>A shotgun designed for crowd control.</entitydescription.shotgun>
-
-  <entityname.shotgunshell>Shotgun Shell</entityname.shotgunshell>
-  <entitydescription.shotgunshell>Ammunition for a shotgun. Lethal.</entitydescription.shotgunshell>
-
-  <entityname.stungun>Stun Gun</entityname.stungun>
-  <entitydescription.stungun>A device for firing electrified darts.</entitydescription.stungun>
-
-  <entityname.stungundart>Stun Gun Dart</entityname.stungundart>
-  <entitydescription.stungundart>Causes electric shock to incapacitate a target. Non-lethal.</entitydescription.stungundart>
-
-  <entityname.toyhammer>Toy Hammer</entityname.toyhammer>
-  <entitydescription.toyhammer>Non-lethal but extremely annoying.</entitydescription.toyhammer>
-
-  <entityname.coilgunammoboxexplosive>Exploding Ammunition Box</entityname.coilgunammoboxexplosive>
-  <entitydescription.coilgunammoboxexplosive>Ammunition for the coilgun. Explodes on impact.</entitydescription.coilgunammoboxexplosive>
-
-  <entityname.coilgunammoboxpiercing>Piercing Ammunition Box</entityname.coilgunammoboxpiercing>
-  <entitydescription.coilgunammoboxpiercing>Coilgun ammo that has piercing capabilities.</entitydescription.coilgunammoboxpiercing>
-
-  <entityname.coilgunboltexplosive>Exploding Coilgun Bolt</entityname.coilgunboltexplosive>
-  <entitydescription.coilgunboltexplosive>Ammunition for the coilgun. Explodes on impact.</entitydescription.coilgunboltexplosive>
-
-  <entityname.coilgunboltpiercing>Piercing Coilgun Bolt</entityname.coilgunboltpiercing>
-  <entitydescription.coilgunboltpiercing>Coilgun ammo that has piercing capabilities.</entitydescription.coilgunboltpiercing>
-
-  <entityname.crawlermask>Crawler Mask</entityname.crawlermask>
-  <entitydescription.crawlermask>Protects wearer's identity. Fun at certain parties.</entitydescription.crawlermask>
-
-  <entityname.huskstinger>Husk Stinger</entityname.huskstinger>
-  <entitydescription.huskstinger>A makeshift stabbing tool.</entitydescription.huskstinger>
-
-  <entityname.shellshield>Moloch Shell Fragment</entityname.shellshield>
-  <entitydescription.shellshield>A sturdy piece of a moloch's shell.</entitydescription.shellshield>
-
-  <entityname.mudraptorshell>Mudraptor Shell</entityname.mudraptorshell>
-  <entitydescription.mudraptorshell>A protective shell of a mudraptor.</entitydescription.mudraptorshell>
-
-  <entityname.accordion>Accordion</entityname.accordion>
-  <entitydescription.accordion>An old handmade accordion.</entitydescription.accordion>
-
-  <entityname.bongodrums>Bongo Drums</entityname.bongodrums>
-  <entitydescription.bongodrums>An old handmade pair of bongo drums.</entitydescription.bongodrums>
-
-  <entityname.captainspipe>Captain's Pipe</entityname.captainspipe>
-  <entitydescription.captainspipe>For calming the nerves when the sea is stormy.</entitydescription.captainspipe>
-
-  <serverplaystyle>Play style</serverplaystyle>
-  <servertags>Server tags</servertags>
-  <servermotd>Message of the day</servermotd>
-  <serverbanner>Server banner</serverbanner>
-  <serverlogo>Server logo</serverlogo>
-  <servertagline>Tagline</servertagline>
-
-  <!-- MODIFIED -->
-  <missiondescription.killcrawlerswarm1>A small swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew who can neutralize it.</missiondescription.killcrawlerswarm1>
-  <missiondescription.killcrawlerswarm2>A large swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew who can neutralize it.</missiondescription.killcrawlerswarm2>
-  <missiondescription.cargochemicals>Researchers of [location1] need someone to deliver some dangerous chemicals to [location2] for a reward of [reward] credits.</missiondescription.cargochemicals>
-  <missionsuccess.pvpmission>The [loser] vessel has been defeated by the [winner] crew!</missionsuccess.pvpmission>
-  <workshopitemrefreshfilelisttooltip>Reload the configuration file of the Workshop item (filelist.xml inside the item's folder) and add all new files in it to the file list.</workshopitemrefreshfilelisttooltip>
-  <entitydescription.alienshell>For firing from a railgun.</entitydescription.alienshell>
-
-  <workshop.contenttag.eventset>Event set</workshop.contenttag.eventset>
-  <workshop.contenttag.totalconversion>Total conversion</workshop.contenttag.totalconversion>
-  <workshop.contenttag.itemassembly>Item assembly</workshop.contenttag.itemassembly>
-  <workshop.contenttag.language>Language</workshop.contenttag.language>
-  <entitydescription.brockite>A mineral containing thorium and phosphorus.</entitydescription.brockite>
-
-  <serverlisthaspassword>Password</serverlisthaspassword>
-  <filterpassword>No password</filterpassword>
-  <filterincompatibleservers>Hide incompatible</filterincompatibleservers>
-  <filterfullservers>Hide full</filterfullservers>
-  <filteremptyservers>Hide empty</filteremptyservers>
-  <serverlistrefresh>Scan Servers</serverlistrefresh>
-  <yourname>Player name</yourname>
-  <joinserver>Server browser</joinserver>
-  <joinserverbutton>Server browser</joinserverbutton>
-
-  <!-- *** AUGUST *** (Will be sent to localization asap) -->
-  <!-- NEW ADDITIONS-->
-  <!-- Server -->
-  <!-- Server -->
-  <serversettingsgeneraltab>General</serversettingsgeneraltab>
-  <serversettingsantigriefingtab>Anti-griefing</serversettingsantigriefingtab>
-  <serverprocessclosed>The server process has closed unexpectedly. A crash report (servercrashreport.log) may have been generated in the game's root directory.</serverprocessclosed>
-  <serverprocesscrashed>The server process has crashed. A crash report (servercrashreport.log) has been generated in the game's root directory.</serverprocesscrashed>
-  <disconnectreason.servercrashed>The server has crashed.</disconnectreason.servercrashed>
-
-  <!-- Workshop -->
-  <workshoperroronenable>Cannot enable Workshop item '[itemname]'.</workshoperroronenable>
-
-  <!-- Audio -->
-  <dynamicrangecompression>Dynamic range compression</dynamicrangecompression>
-  <dynamicrangecompressiontooltip>Adjusts the game's volume automatically to prevent audio distortion.</dynamicrangecompressiontooltip>
-  <voipnodevices>No audio capture devices found</voipnodevices>
-
-  <!-- Misc -->
-  <pumpautocontrol>Automatic control</pumpautocontrol>
-  <viewsteamprofile>View Steam profile</viewsteamprofile>
-  <deletefileverification>Do you want to delete [filename]?</deletefileverification>
-  <connection.activate>activate</connection.activate>
-
-  <!-- Submarine labels -->
-  <label.betadeck>Beta Deck</label.betadeck>
-  <label.airlock>Airlock</label.airlock>
-  <label.dockingport>Docking Port</label.dockingport>
-  <label.weapons>Weapons</label.weapons>
-  <label.cargo>Cargo Bay</label.cargo>
-  <label.crewquarters>Crew Quarters</label.crewquarters>
-  <label.electrical1>Electrical #1</label.electrical1>
-  <label.electrical2>Electrical #2</label.electrical2>
-  <label.medical>Medical</label.medical>
-  <label.engineering>Engineering</label.engineering>
-  <label.ballast>Ballast</label.ballast>
-  <label.reactor>Reactor</label.reactor>
-  <label.armory>Armory</label.armory>
-  <label.batteryoutput>Battery Output</label.batteryoutput>
-  <label.onoff>On/Off</label.onoff>
-  <label.bilge>Bilge</label.bilge>
-  <label.powermainline>Power Mainline</label.powermainline>
-  <label.command>Command</label.command>
-  <label.engine>Engine</label.engine>
-
-  <!-- Karma system -->
   <karma.kickbanthreshold>Ban threshold</karma.kickbanthreshold>
   <karma.kickbanthresholdtooltip>The players whose karma decrease below this threshold get automatically banned from the server.</karma.kickbanthresholdtooltip>
   <karma.karmadecay>Karma decay speed</karma.karmadecay>
@@ -3473,10 +3258,108 @@
   <afflictionname.invertcontrols>Disoriented</afflictionname.invertcontrols>
   <afflictiondescription.invertcontrols>The patient's eyes are darting around and they seem to be having trouble orienting to their surroundings.</afflictiondescription.invertcontrols>
 
-  <damagebutton>Damage</damagebutton>
-  <pending>Pending</pending>
-  <inprogress>In progress</inprogress>
-  <complete>Complete</complete>
+  <!-- Disclaimers -->
+  <campaigndisclaimertitle>Welcome to Barotrauma!</campaigndisclaimertitle>
+  <campaigndisclaimertext>Please note that Barotrauma is still in Early Access, and that many aspects of the game are incomplete and still being worked on.\n\nThe Campaign Mode is still lacking many of the features we've planned for the full version, and is not yet as enjoyable as the multiplayer. In the current version, playing the game solo can also be more challenging to new players than playing it with other people—even though the AI crew can give you a hand with some tasks, they are usually not as useful as real human players. If you're interested in what's to come in future updates, click the Campaign Roadmap button below.\n\nWe do, however, recommend that you at least play the single-player tutorial before diving into the multiplayer. Good luck, sailor!</campaigndisclaimertext>
+  <campaignroadmaptitle>Campaign Roadmap</campaignroadmaptitle>
+  <campaignroadmaptext>- Explorable locations: As of now, the locations on the campaign map are essentially just menus where you can buy supplies and hire new crew members, but during the Early Access period they will become actual physical locations you can enter and explore.\n\n- Expanded story: You will be able to learn more about the world of Barotrauma by interacting with NPCs and by exploring the outposts and non-man-made locations.\n\n- New mission types: We have plans for several completely new mission types, including personnel transport missions and salvage missions into shipwrecks.\n\n- Balancing: Currently the campaign economy is not very well balanced, but we will start to put more focus into it when we have more of the content in.\n\n- End goal: At the moment it’s not possible to complete the campaign, but in future versions the mysterious location at the center of the map will become reachable...</campaignroadmaptext>
+  <editordisclaimertitle>Editors</editordisclaimertitle>
+  <editordisclaimertext>The submarine and character editors are modding tools that can be used to expand the core game by creating your own submarines and monsters. The custom creations can be shared in the Steam Workshop.\n\nAt the moment the editors are only available in English. The process of building a fully playable submarine or a functional monster can be quite involved, and unfortunately we don’t offer in-game tutorials or documentation for the editors yet. If you want to take a shot at creating your own custom content with the editors, you may be able to find help through the following links:</editordisclaimertext>
+  <editordisclaimerwikilink>Barotrauma Wiki</editordisclaimerwikilink>
+  <editordisclaimerdiscordlink>Barotrauma Discord Server</editordisclaimerdiscordlink>
+  <editordisclaimerforumlink>Barotrauma Forums</editordisclaimerforumlink>
+  <bugreportgithubform>GitHub issue form</bugreportgithubform>
+  <bugreportfeedbackform>Barotrauma feedback form</bugreportfeedbackform>
+  <bugreportbutton>Report a bug</bugreportbutton>
+  <centerarealockedheader>Mysteries lie ahead...</centerarealockedheader>
+  <centerarealockedtext>This area is unreachable in this version of Barotrauma. Please wait for future updates!</centerarealockedtext>
+  <statisticspromptheader>Do you want to help us make Barotrauma better?</statisticspromptheader>
+  <statisticsprompttext>Do you allow Barotrauma to send usage statistics and error reports to the developers? The data is anonymous, does not contain any personal information and is only used to help us diagnose issues and improve Barotrauma.</statisticsprompttext>
+
+  <!-- Connections -->
+  <connection.power>power</connection.power>
+  <connection.powerin>power_in</connection.powerin>
+  <connection.powerout>power_out</connection.powerout>
+  <connection.setstate>set_state</connection.setstate>
+  <connection.togglestate>toggle_state</connection.togglestate>
+  <connection.setpumpingspeed>set_speed</connection.setpumpingspeed>
+  <connection.settargetwaterlevel>set_targetlevel</connection.settargetwaterlevel>
+  <connection.signalin>signal_in</connection.signalin>
+  <connection.signalout>signal_out</connection.signalout>
+  <connection.signalinx>signal_in_[num]</connection.signalinx>
+  <connection.signaloutx>signal_out_[num]</connection.signaloutx>
+  <connection.turretaimingin>position_in</connection.turretaimingin>
+  <connection.turrettriggerin>trigger_in</connection.turrettriggerin>
+  <connection.togglelight>toggle_light</connection.togglelight>
+  <connection.setcolor>set_color</connection.setcolor>
+  <connection.shutdown>shutdown</connection.shutdown>
+  <connection.temperatureout>temperature_out</connection.temperatureout>
+  <connection.meltdownwarning>meltdown_warning</connection.meltdownwarning>
+  <connection.signalr>signal_r</connection.signalr>
+  <connection.signalg>signal_g</connection.signalg>
+  <connection.signalb>signal_b</connection.signalb>
+  <connection.signala>signal_a</connection.signala>
+  <connection.setoutput>set_output</connection.setoutput>
+  <connection.signalstore>signal_store</connection.signalstore>
+  <connection.settargetsignal>set_targetsignal</connection.settargetsignal>
+  <connection.setfrequency>set_frequency</connection.setfrequency>
+  <connection.setoutputtype>set_outputtype</connection.setoutputtype>
+  <connection.controlin>control_in</connection.controlin>
+  <connection.setforce>set_force</connection.setforce>
+  <connection.sonartransducerin>transducer_in</connection.sonartransducerin>
+  <connection.steeringvelocityin>velocity_in</connection.steeringvelocityin>
+  <connection.velocityxout>velocity_x_out</connection.velocityxout>
+  <connection.velocityyout>velocity_y_out</connection.velocityyout>
+  <connection.toggledocking>toggle_docking</connection.toggledocking>
+  <connection.waterdatain>water_data_in</connection.waterdatain>
+  <connection.oxygendatain>oxygen_data_in</connection.oxygendatain>
+  <connection.batterychargestatusout>charge_out</connection.batterychargestatusout>
+  <connection.batterychargepercentage>charge_%</connection.batterychargepercentage>
+  <connection.batterysetrechargespeed>set_charge_rate</connection.batterysetrechargespeed>
+  <connection.batteryrechargespeedout>charge_rate_out</connection.batteryrechargespeedout>
+  <connection.activate>activate</connection.activate>
+  <connection.dockingproximitysensor>proximity_sensor</connection.dockingproximitysensor>
+  <connection.signalx>signal_[num]</connection.signalx>
+  <connection.set_text>signal_[num]</connection.set_text>
+  <connection.stateout>state_out</connection.stateout>
+  <connection.turretaimingout>position_out</connection.turretaimingout>
+  <connection.turrettriggerout>trigger_out</connection.turrettriggerout>
+  <connection.sonardataout>data_out</connection.sonardataout>
+
+  <!-- Traitor system -->
+  <traitormissionstartmessage>You are the traitor! You have successfully infiltrated the submarine and now it's time to put the plans in motion.</traitormissionstartmessage>
+  <traitormissionfailuremessage>You have failed in your mission. As a result, the mission has been canceled and you are now part of the crew. Keep a low profile until you are contacted again.</traitormissionfailuremessage>
+  <traitormissionsuccessmessage>You have successfully sabotaged the crew's efforts. An escape shuttle has been dispatched for you.</traitormissionsuccessmessage>
+
+  <!-- Traitor objectives -->
+  <traitorobjectivestartmessage>You have a new objective. The following goals need to be completed:\n[traitorgoalinfos]</traitorobjectivestartmessage>
+  <traitorobjectivestartmessageserver>[traitorname] is the traitor and has the following goals:\n[traitorgoalinfos]</traitorobjectivestartmessageserver>
+  <traitorobjectiveendmessagesuccess>[traitorname] was a traitor and succeeded in completing the given goals:\n [traitorgoalinfos]</traitorobjectiveendmessagesuccess>
+  <traitorobjectiveendmessagesuccessdead>[traitorname] was a traitor and succeeded in completing the given goals but regrettably died in the process. Goals:\n[traitorgoalinfos]</traitorobjectiveendmessagesuccessdead>
+  <traitorobjectiveendmessagesuccessdetained>[traitorname] was a traitor and succeeded in completing the given goals but was detained. Goals:\n[traitorgoalinfos]</traitorobjectiveendmessagesuccessdetained>
+  <traitorobjectiveendmessagefailure>[traitorname] was a traitor but failed to complete the given goals:\n[traitorgoalinfos]</traitorobjectiveendmessagefailure>
+  <traitorobjectiveendmessagefailuredead>[traitorname] was a traitor but died while failing to complete the given goals:\n[traitorgoalinfos]</traitorobjectiveendmessagefailuredead>
+  <traitorobjectiveendmessagefailuredetained>[traitorname] was a traitor but got detained while failing to complete the given goals:\n[traitorgoalinfos]</traitorobjectiveendmessagefailuredetained>
+  <traitorobjectivegoalinfoformat>- [statustext]\n</traitorobjectivegoalinfoformat>
+
+  <!-- Traitor goals (new) -->
+  <traitorgoalstatustextformat>[infotext] ([status])</traitorgoalstatustextformat>
+  <traitorgoaltimelimitfailure>You failed to complete your objective in time.</traitorgoaltimelimitfailure>
+  <traitorgoalkilltargetinfo>Assassinate [targetname].</traitorgoalkilltargetinfo>
+  <traitorgoalkilleveryoneinfo>Kill all crew members.</traitorgoalkilleveryoneinfo>
+  <traitorgoalfinditeminfo>Find a [identifier] in [targethullname].</traitorgoalfinditeminfo>
+  <traitorgoalcausereactormeltdown>Cause a reactor meltdown.</traitorgoalcausereactormeltdown>
+  <traitorgoaldestroyitems>Destroy at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>
+  <traitorgoalfloodpercentofsub>Flood at least [percentage] percent of the submarine.</traitorgoalfloodpercentofsub>
+  <traitorgoaljamsonarinfo>Hide an active sonar jammer somewhere it can't be found for [duration] seconds.</traitorgoaljamsonarinfo>
+  <traitorgoaljamsonarinfoalt>Jam the submarine's sonar for [duration] seconds.</traitorgoaljamsonarinfoalt>
+  <traitorgoalsabotageinfo>Sabotage the [target] so that its condition is under [threshold]%.</traitorgoalsabotageinfo>
+  <traitorgoalpoisoninfo>Inject [targetname] with [poison].</traitorgoalpoisoninfo>
+  <traitorgoaltamperoxygeninfo>Swap at least [percentage] percent of oxygen tanks inside diving equipment with welding fuel.</traitorgoaltamperoxygeninfo>
+  <traitorgoaltampercoilguninfo>Load dummy ammunition into all coilgun loaders.</traitorgoaltampercoilguninfo>
+  <traitorgoaltampercoilguninfomulti>Load dummy ammunition into [number] coilgun loaders.</traitorgoaltampercoilguninfomulti>
+  <traitorgoaltamperrailguninfo>Load a dummy shell into all railgun loaders.</traitorgoaltamperrailguninfo>
+  <traitorgoaltamperrailguninfomulti>Load [number] dummy shells into a railgun loader.</traitorgoaltamperrailguninfomulti>
 
   <!-- Traitor goals -->
   <traitorgoalfindcontainerinfo>Find your next objective inside a [target] in [targethullname].</traitorgoalfindcontainerinfo>
@@ -3520,24 +3403,53 @@
   <flood_2_traitorobjectivestartmessage4>Quickly, capitalize on the confusion and take out the worst of those pigs while you can!\n[traitorgoalinfos]</flood_2_traitorobjectivestartmessage4>
   <flood_2_objectivesuccessmessage4>As you take their life you note, perhaps with a little bitterness, that your receiver has gone dead quite suddenly. Your comrades have left you to the mercy of Mother Europa.</flood_2_objectivesuccessmessage4>
 
-  <!-- MODIFIED -->
-  <karmabanwarning>WARNING: Your karma is dangerously low. You will be banned from the server if it decreases further.</karmabanwarning>
-  <publicservertooltip>Public servers are shown in the list of available servers in the 'Server Browser'.</publicservertooltip>
-  <serversettingsroundstab>Gameplay</serversettingsroundstab>
-  <nosubscribedmods>You haven't subscribed to any mods on the Steam Workshop. Select the 'Popular mods' tab to find some!</nosubscribedmods>
+  <!-- Component labels -->
+  <addercomponent.timeframe>Timeframe</addercomponent.timeframe>
+  <addercomponent.clampmin>Clamp min</addercomponent.clampmin>
+  <addercomponent.clampmax>Clamp max</addercomponent.clampmax>
+  <equalscomponent.timeframe>Timeframe</equalscomponent.timeframe>
+  <equalscomponent.output>Output</equalscomponent.output>
+  <equalscomponent.falseoutput>False output</equalscomponent.falseoutput>
+  <andcomponent.timeframe>Timeframe</andcomponent.timeframe>
+  <andcomponentcomponent.output>Output</andcomponentcomponent.output>
+  <andcomponentcomponent.falseoutput>False output</andcomponentcomponent.falseoutput>
+  <oscillatorcomponent.timeframe>Timeframe</oscillatorcomponent.timeframe>
+  <oscillatorcomponent.outputtype>Output type</oscillatorcomponent.outputtype>
+  <delaycomponent.delay>Delay</delaycomponent.delay>
+  <delaycomponent.resetwhensignalreceived>Reset when signal received</delaycomponent.resetwhensignalreceived>
+  <delaycomponent.resetwhendifferentsignalreceived>Reset when different signal received</delaycomponent.resetwhendifferentsignalreceived>
+  <regexfindcomponent.output>Output</regexfindcomponent.output>
+  <regexfindcomponent.falseoutput>False output</regexfindcomponent.falseoutput>
+  <regexfindcomponent.expression>Expression</regexfindcomponent.expression>
+  <regexfindcomponent.continuousoutput>Continuous output</regexfindcomponent.continuousoutput>
+  <memorycomponent.value>Value</memorycomponent.value>
+  <motionsensor.output>Output</motionsensor.output>
+  <motionsensor.falseoutput>False output</motionsensor.falseoutput>
+  <motionsensor.rangex>Range X</motionsensor.rangex>
+  <motionsensor.rangey>Range Y</motionsensor.rangey>
+  <signalcheckcomponent.targetsignal>Target signal</signalcheckcomponent.targetsignal>
+  <signalcheckcomponent.output>Output</signalcheckcomponent.output>
+  <signalcheckcomponent.falseoutput>False output</signalcheckcomponent.falseoutput>
+  <waterdetector.output>Output</waterdetector.output>
+  <waterdetector.falseoutput>False output</waterdetector.falseoutput>
+  <wificomponent.channel>Channel</wificomponent.channel>
 
-  <traitorgoalfinditeminfo>Find a [identifier] in [targethullname].</traitorgoalfinditeminfo>
-  <traitorgoalfloodpercentofsub>Flood at least [percentage] percent of the submarine.</traitorgoalfloodpercentofsub>
-  <traitorgoalsabotageinfo>Sabotage the [target] so that its condition is under [threshold]%.</traitorgoalsabotageinfo>
-  <traitorgoaltamperoxygeninfo>Swap at least [percentage] percent of oxygen tanks inside diving equipment with welding fuel.</traitorgoaltamperoxygeninfo>
-  <traitorgoaltampercoilguninfo>Load dummy ammunition into all coilgun loaders.</traitorgoaltampercoilguninfo>
-  <traitorgoaltamperrailguninfo>Load a dummy shell into all railgun loaders.</traitorgoaltamperrailguninfo>
-  <traitorgoaltamperrailguninfomulti>Load [number] dummy shells into a railgun loader.</traitorgoaltamperrailguninfomulti>
-
-  <!-- NEW ADDITIONS -->
+  <!-- New Additions 13th of August -->
+  <connection.batterychargestatusout>charge_out</connection.batterychargestatusout>
+  <connection.batterychargepercentage>charge_%</connection.batterychargepercentage>
+  <connection.batterysetrechargespeed>set_charge_rate</connection.batterysetrechargespeed>
+  <connection.batteryrechargespeedout>charge_rate_out</connection.batteryrechargespeedout>
+  <personalitytrait.professional>Professional</personalitytrait.professional>
+  <personalitytrait.laidback>Laid-back</personalitytrait.laidback>
+  <personalitytrait.rude>Rude</personalitytrait.rude>
+  <personalitytrait.tough>Tough</personalitytrait.tough>
+  <personalitytrait.joker>Joker</personalitytrait.joker>
+  <personalitytrait.brokenenglish>Broken English</personalitytrait.brokenenglish>
+  <personalitytrait.fearful>Fearful</personalitytrait.fearful>
+  <personalitytrait.crazy>Crazy</personalitytrait.crazy>
+  <sabotagebutton>Sabotage</sabotagebutton>
+  <sabotaging>Sabotaging</sabotaging>
   <voipattenuation>Voice chat attenuation</voipattenuation>
   <voipattenuationtooltip>Lowers the game's volume when players are speaking.</voipattenuationtooltip>
 
-  <sabotagebutton>Sabotage</sabotagebutton>
-  <sabotaging>Sabotaging</sabotaging>
 </infotexts>
