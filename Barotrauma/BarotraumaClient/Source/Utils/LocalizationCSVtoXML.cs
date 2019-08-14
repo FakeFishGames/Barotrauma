@@ -103,9 +103,9 @@ namespace Barotrauma
                 }
                 else
                 {
-                    string[] split = csvContent[i].Split(separator, 2);
+                    string[] split = csvContent[i].Split(separator, 3);
 
-                    if (split.Length == 2)
+                    if (split.Length >= 2) // >= 2 = has comments, -> ignored
                     {
                         split[1] = split[1].Replace("\"", ""); // Replaces quotation marks around data that are added when exporting via excel
                         xmlContent.Add($"<{split[0]}>{split[1]}</{split[0]}>");
