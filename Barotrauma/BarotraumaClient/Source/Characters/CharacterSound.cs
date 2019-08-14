@@ -1,6 +1,4 @@
-﻿using System;
-using System.Xml.Linq;
-using Barotrauma.Sounds;
+﻿using Barotrauma.Sounds;
 
 namespace Barotrauma
 {
@@ -12,7 +10,7 @@ namespace Barotrauma
         }
 
         private readonly RoundSound roundSound;
-        public readonly CharacterSoundParams Params;
+        public readonly CharacterParams.SoundParams Params;
 
         public SoundType Type => Params.State;
         public Gender Gender => Params.Gender;
@@ -20,7 +18,7 @@ namespace Barotrauma
         public float Range => roundSound.Range;
         public Sound Sound => roundSound?.Sound;
 
-        public CharacterSound(CharacterSoundParams soundParams)
+        public CharacterSound(CharacterParams.SoundParams soundParams)
         {
             Params = soundParams;
             roundSound = Submarine.LoadRoundSound(soundParams.Element);

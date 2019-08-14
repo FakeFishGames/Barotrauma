@@ -207,8 +207,8 @@ namespace Barotrauma
             }
         }
 
-        private AIParams AIParams => Character.Params.AI;
-        private TargetParams GetTargetingPriority(string targetTag) => AIParams.GetTarget(targetTag, false);
+        private CharacterParams.AIParams AIParams => Character.Params.AI;
+        private CharacterParams.TargetParams GetTargetingPriority(string targetTag) => AIParams.GetTarget(targetTag, false);
 
         public override void SelectTarget(AITarget target)
         {
@@ -253,7 +253,7 @@ namespace Barotrauma
             }
             else
             {
-                UpdateTargets(Character, out TargetParams targetingPriority);
+                UpdateTargets(Character, out CharacterParams.TargetParams targetingPriority);
                 updateTargetsTimer = UpdateTargetsInterval;
 
                 if (SelectedAiTarget == null)
@@ -886,7 +886,7 @@ namespace Barotrauma
             if (attackResult.Damage > 0.0f && Character.Params.AI.AttackOnlyWhenProvoked)
             {
                 string tag = attacker.SpeciesName.ToLowerInvariant();
-                if (AIParams.TryGetTarget(tag, out TargetParams target))
+                if (AIParams.TryGetTarget(tag, out CharacterParams.TargetParams target))
                 {
                     target.State = AIState.Attack;
                     target.Priority = 100f;
@@ -897,7 +897,7 @@ namespace Barotrauma
                 }
                 if (attacker.Submarine != null && attacker.IsHuman)
                 {
-                    if (AIParams.TryGetTarget("room", out TargetParams room))
+                    if (AIParams.TryGetTarget("room", out CharacterParams.TargetParams room))
                     {
                         room.State = AIState.Attack;
                         room.Priority = 100f;
@@ -1020,7 +1020,7 @@ namespace Barotrauma
         //goes through all the AItargets, evaluates how preferable it is to attack the target,
         //whether the Character can see/hear the target and chooses the most preferable target within
         //sight/hearing range
-        public AITarget UpdateTargets(Character character, out TargetParams priority)
+        public AITarget UpdateTargets(Character character, out CharacterParams.TargetParams priority)
         {
             if ((SelectedAiTarget != null || wallTarget != null) && IsLatchedOnSub)
             {
@@ -1148,7 +1148,7 @@ namespace Barotrauma
                         }
 
                         door = item.GetComponent<Door>();
-                        foreach (TargetParams prio in AIParams.Targets)
+                        foreach (var prio in AIParams.Targets)
                         {
                             if (item.HasTag(prio.Tag))
                             {

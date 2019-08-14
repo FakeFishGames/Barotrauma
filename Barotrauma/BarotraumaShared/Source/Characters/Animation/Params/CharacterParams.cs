@@ -39,9 +39,9 @@ namespace Barotrauma
 
         public readonly string File;
 
-        public List<CharacterSubParams> SubParams { get; private set; } = new List<CharacterSubParams>();
+        public List<SubParam> SubParams { get; private set; } = new List<SubParam>();
 
-        public List<CharacterSoundParams> Sounds { get; private set; } = new List<CharacterSoundParams>();
+        public List<SoundParams> Sounds { get; private set; } = new List<SoundParams>();
 
         public HealthParams Health { get; private set; }
 
@@ -102,12 +102,12 @@ namespace Barotrauma
             }
             foreach (var soundElement in MainElement.GetChildElements("sound"))
             {
-                var sound = new CharacterSoundParams(soundElement, this);
+                var sound = new SoundParams(soundElement, this);
                 Sounds.Add(sound);
                 SubParams.Add(sound);
             }
 
-            // TODO: bloodemitter, gibemitter, sounds, inventory
+            // TODO: inventory
         }
 
         protected bool Deserialize(XElement element = null, bool alsoChildren = true, bool recursive = true)
@@ -153,18 +153,17 @@ namespace Barotrauma
             }
         }
 #endif
-
-        public bool TryAddSound(out CharacterSoundParams soundParams)
+        public bool TryAddSound(out SoundParams soundParams)
         {
             var element = new XElement("sound");
             MainElement.Add(element);
-            soundParams = new CharacterSoundParams(element, this);
+            soundParams = new SoundParams(element, this);
             SubParams.Add(soundParams);
             Sounds.Add(soundParams);
             return soundParams != null;
         }
 
-        public bool RemoveSound(CharacterSoundParams soundParams)
+        public bool RemoveSound(SoundParams soundParams)
         {
             if (soundParams == null || soundParams.Element == null || soundParams.Element.Parent == null) { return false; }
             if (!Sounds.Contains(soundParams)) { return false; }
@@ -174,254 +173,256 @@ namespace Barotrauma
             soundParams.Element.Remove();
             return true;
         }
-    }
 
-    class CharacterSoundParams : CharacterSubParams
-    {
-        public override string Name => "Sound";
+        #region Subparams
+        public class SoundParams : SubParam
+        {
+            public override string Name => "Sound";
 
-        [Serialize("", true), Editable]
-        public string File { get; private set; }
+            [Serialize("", true), Editable]
+            public string File { get; private set; }
 
 #if CLIENT
-        [Serialize(SoundType.Idle, true), Editable]
-        public SoundType State { get; private set; }
+            [Serialize(SoundType.Idle, true), Editable]
+            public SoundType State { get; private set; }
 #endif
 
-        [Serialize(1000f, true), Editable]
-        public float Range { get; private set; }
+            [Serialize(1000f, true), Editable]
+            public float Range { get; private set; }
 
-        [Serialize(1.0f, true), Editable]
-        public float Volume { get; private set; }
+            [Serialize(1.0f, true), Editable]
+            public float Volume { get; private set; }
 
-        [Serialize(Gender.None, true), Editable]
-        public Gender Gender { get; private set; }
+            [Serialize(Gender.None, true), Editable]
+            public Gender Gender { get; private set; }
 
-        public CharacterSoundParams(XElement element, CharacterParams character) : base(element, character) { }
-    }
-
-    class HealthParams : CharacterSubParams
-    {
-        public override string Name => "Health";
-
-        [Serialize(100f, true), Editable]
-        public float Vitality { get; set; }
-
-        [Serialize(true, true), Editable]
-        public bool DoesBleed { get; set; }
-
-        [Serialize(float.NegativeInfinity, true), Editable]
-        public float CrushDepth { get; set; }
-
-        // Make editable?
-        [Serialize(false, true)]
-        public bool UseHealthWindow { get; set; }
-
-        // TODO: limbhealths, sprite?
-
-        public HealthParams(XElement element, CharacterParams character) : base(element, character) { }
-    }
-
-    class TargetParams : CharacterSubParams
-    {
-        public override string Name => "Target";
-
-        [Serialize("", true), Editable]
-        public string Tag { get; private set; }
-
-        [Serialize(AIState.Idle, true), Editable]
-        public AIState State { get; set; }
-
-        [Serialize(0f, true), Editable]
-        public float Priority { get; set; }
-
-        public TargetParams(XElement element, CharacterParams character) : base(element, character) { }
-
-        public TargetParams(string tag, AIState state, float priority, CharacterParams character) : base(CreateNewElement(tag, state, priority), character) { }
-
-        public static XElement CreateNewElement(string tag, AIState state, float priority)
-        {
-            return new XElement("target",
-                        new XAttribute("tag", tag),
-                        new XAttribute("state", state),
-                        new XAttribute("priority", priority));
-        }
-    }
-
-    class AIParams : CharacterSubParams
-    {
-        public override string Name => "AI";
-
-        [Serialize(1.0f, true), Editable]
-        public float CombatStrength { get; private set; }
-
-        [Serialize(1.0f, true), Editable(minValue: 0f, maxValue: 2f)]
-        public float Sight { get; private set; }
-
-        [Serialize(1.0f, true), Editable(minValue: 0f, maxValue: 2f)]
-        public float Hearing { get; private set; }
-
-        [Serialize(100f, true), Editable]
-        public float AggressionHurt { get; private set; }
-
-        [Serialize(10f, true), Editable]
-        public float AggressionGreed { get; private set; }
-
-        [Serialize(0f, true), Editable]
-        public float FleeHealthThreshold { get; private set; }
-
-        [Serialize(false, true), Editable]
-        public bool AttackOnlyWhenProvoked { get; private set; }
-
-        [Serialize(false, true), Editable]
-        public bool AggressiveBoarding { get; private set; }
-
-        // TODO: latchonto, swarming
-
-        public IEnumerable<TargetParams> Targets => targets;
-        protected readonly List<TargetParams> targets = new List<TargetParams>();
-
-        public AIParams(XElement element, CharacterParams character) : base(element, character)
-        {
-            element.GetChildElements("target").ForEach(t => TryAddTarget(t, out _));
-            element.GetChildElements("targetpriority").ForEach(t => TryAddTarget(t, out _));
+            public SoundParams(XElement element, CharacterParams character) : base(element, character) { }
         }
 
-        private bool TryAddTarget(XElement targetElement, out TargetParams target)
+        public class HealthParams : SubParam
         {
-            string tag = targetElement.GetAttributeString("tag", null);
-            if (!CheckTag(tag))
+            public override string Name => "Health";
+
+            [Serialize(100f, true), Editable]
+            public float Vitality { get; set; }
+
+            [Serialize(true, true), Editable]
+            public bool DoesBleed { get; set; }
+
+            [Serialize(float.NegativeInfinity, true), Editable]
+            public float CrushDepth { get; set; }
+
+            // Make editable?
+            [Serialize(false, true)]
+            public bool UseHealthWindow { get; set; }
+
+            // TODO: limbhealths, sprite?
+
+            public HealthParams(XElement element, CharacterParams character) : base(element, character) { }
+        }
+
+        public class AIParams : SubParam
+        {
+            public override string Name => "AI";
+
+            [Serialize(1.0f, true), Editable]
+            public float CombatStrength { get; private set; }
+
+            [Serialize(1.0f, true), Editable(minValue: 0f, maxValue: 2f)]
+            public float Sight { get; private set; }
+
+            [Serialize(1.0f, true), Editable(minValue: 0f, maxValue: 2f)]
+            public float Hearing { get; private set; }
+
+            [Serialize(100f, true), Editable]
+            public float AggressionHurt { get; private set; }
+
+            [Serialize(10f, true), Editable]
+            public float AggressionGreed { get; private set; }
+
+            [Serialize(0f, true), Editable]
+            public float FleeHealthThreshold { get; private set; }
+
+            [Serialize(false, true), Editable]
+            public bool AttackOnlyWhenProvoked { get; private set; }
+
+            [Serialize(false, true), Editable]
+            public bool AggressiveBoarding { get; private set; }
+
+            // TODO: latchonto, swarming
+
+            public IEnumerable<TargetParams> Targets => targets;
+            protected readonly List<TargetParams> targets = new List<TargetParams>();
+
+            public AIParams(XElement element, CharacterParams character) : base(element, character)
             {
-                target = null;
-                DebugConsole.ThrowError($"Multiple targets with the same tag ('{tag}') defined! Only the first will be used!");
-                return false;
+                element.GetChildElements("target").ForEach(t => TryAddTarget(t, out _));
+                element.GetChildElements("targetpriority").ForEach(t => TryAddTarget(t, out _));
             }
-            else
+
+            private bool TryAddTarget(XElement targetElement, out TargetParams target)
             {
-                target = new TargetParams(targetElement, Character);
-                targets.Add(target);
-                SubParams.Add(target);
-                return true;
-            }
-        }
-
-        public bool TryAddEmptyTarget(out TargetParams targetParams) => TryAddNewTarget("newtarget" + targets.Count, AIState.Attack, 0f, out targetParams);
-
-        public bool TryAddNewTarget(string tag, AIState state, float priority, out TargetParams targetParams)
-        {
-            var element = TargetParams.CreateNewElement(tag, state, priority);
-            if (TryAddTarget(element, out targetParams))
-            {
-                Element.Add(element);
-            }
-            return targetParams != null;
-        }
-
-        private bool CheckTag(string tag)
-        {
-            if (tag == null) { return false; }
-            tag = tag.ToLowerInvariant();
-            return targets.None(t => t.Tag == tag);
-        }
-
-        public bool RemoveTarget(TargetParams target)
-        {
-            if (target == null || target.Element == null || target.Element.Parent == null) { return false; }
-            if (!targets.Contains(target)) { return false; }
-            if (!SubParams.Contains(target)) { return false; }
-            targets.Remove(target);
-            SubParams.Remove(target);
-            target.Element.Remove();
-            return true;
-        }
-
-        public bool RemoveLastTarget()
-        {
-            if (targets.None()) { return false; }
-            var last = targets.LastOrDefault();
-            if (last == null) { return false; }
-            return RemoveTarget(last);
-        }
-
-        public bool TryGetTarget(string targetTag, out TargetParams target)
-        {
-            target = targets.FirstOrDefault(t => t.Tag == targetTag);
-            return target != null;
-        }
-
-        public TargetParams GetTarget(string targetTag, bool throwError = true)
-        {
-            if (!TryGetTarget(targetTag, out TargetParams target))
-            {
-                if (throwError)
+                string tag = targetElement.GetAttributeString("tag", null);
+                if (!CheckTag(tag))
                 {
-                    DebugConsole.ThrowError($"Cannot find a target with the tag {targetTag}!");
+                    target = null;
+                    DebugConsole.ThrowError($"Multiple targets with the same tag ('{tag}') defined! Only the first will be used!");
+                    return false;
+                }
+                else
+                {
+                    target = new TargetParams(targetElement, Character);
+                    targets.Add(target);
+                    SubParams.Add(target);
+                    return true;
                 }
             }
-            return target;
-        }
-    }
 
-    abstract class CharacterSubParams : ISerializableEntity
-    {
-        public virtual string Name { get; set; }
-        public Dictionary<string, SerializableProperty> SerializableProperties { get; private set; }
-        public XElement Element { get; set; }
-        public List<CharacterSubParams> SubParams { get; set; } = new List<CharacterSubParams>();
+            public bool TryAddEmptyTarget(out TargetParams targetParams) => TryAddNewTarget("newtarget" + targets.Count, AIState.Attack, 0f, out targetParams);
 
-        public CharacterParams Character { get; private set; }
-
-        public CharacterSubParams(XElement element, CharacterParams character)
-        {
-            Element = element;
-            Character = character;
-            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
-        }
-
-        public virtual bool Deserialize(bool recursive = true)
-        {
-            SerializableProperties = SerializableProperty.DeserializeProperties(this, Element);
-            if (recursive)
+            public bool TryAddNewTarget(string tag, AIState state, float priority, out TargetParams targetParams)
             {
-                SubParams.ForEach(sp => sp.Deserialize(true));
+                var element = TargetParams.CreateNewElement(tag, state, priority);
+                if (TryAddTarget(element, out targetParams))
+                {
+                    Element.Add(element);
+                }
+                return targetParams != null;
             }
-            return SerializableProperties != null;
-        }
 
-        public virtual bool Serialize(bool recursive = true)
-        {
-            SerializableProperty.SerializeProperties(this, Element, true);
-            if (recursive)
+            private bool CheckTag(string tag)
             {
-                SubParams.ForEach(sp => sp.Serialize(true));
+                if (tag == null) { return false; }
+                tag = tag.ToLowerInvariant();
+                return targets.None(t => t.Tag == tag);
             }
-            return true;
+
+            public bool RemoveTarget(TargetParams target)
+            {
+                if (target == null || target.Element == null || target.Element.Parent == null) { return false; }
+                if (!targets.Contains(target)) { return false; }
+                if (!SubParams.Contains(target)) { return false; }
+                targets.Remove(target);
+                SubParams.Remove(target);
+                target.Element.Remove();
+                return true;
+            }
+
+            public bool RemoveLastTarget()
+            {
+                if (targets.None()) { return false; }
+                var last = targets.LastOrDefault();
+                if (last == null) { return false; }
+                return RemoveTarget(last);
+            }
+
+            public bool TryGetTarget(string targetTag, out TargetParams target)
+            {
+                target = targets.FirstOrDefault(t => t.Tag == targetTag);
+                return target != null;
+            }
+
+            public TargetParams GetTarget(string targetTag, bool throwError = true)
+            {
+                if (!TryGetTarget(targetTag, out TargetParams target))
+                {
+                    if (throwError)
+                    {
+                        DebugConsole.ThrowError($"Cannot find a target with the tag {targetTag}!");
+                    }
+                }
+                return target;
+            }
         }
 
-        public virtual void Reset()
+        public class TargetParams : SubParam
         {
-            // Don't use recursion, because the reset method might be overriden
-            Deserialize(false);
-            SubParams.ForEach(sp => sp.Reset());
+            public override string Name => "Target";
+
+            [Serialize("", true), Editable]
+            public string Tag { get; private set; }
+
+            [Serialize(AIState.Idle, true), Editable]
+            public AIState State { get; set; }
+
+            [Serialize(0f, true), Editable]
+            public float Priority { get; set; }
+
+            public TargetParams(XElement element, CharacterParams character) : base(element, character) { }
+
+            public TargetParams(string tag, AIState state, float priority, CharacterParams character) : base(CreateNewElement(tag, state, priority), character) { }
+
+            public static XElement CreateNewElement(string tag, AIState state, float priority)
+            {
+                return new XElement("target",
+                            new XAttribute("tag", tag),
+                            new XAttribute("state", state),
+                            new XAttribute("priority", priority));
+            }
         }
+
+        public abstract class SubParam : ISerializableEntity
+        {
+            public virtual string Name { get; set; }
+            public Dictionary<string, SerializableProperty> SerializableProperties { get; private set; }
+            public XElement Element { get; set; }
+            public List<SubParam> SubParams { get; set; } = new List<SubParam>();
+
+            public CharacterParams Character { get; private set; }
+
+            public SubParam(XElement element, CharacterParams character)
+            {
+                Element = element;
+                Character = character;
+                SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+            }
+
+            public virtual bool Deserialize(bool recursive = true)
+            {
+                SerializableProperties = SerializableProperty.DeserializeProperties(this, Element);
+                if (recursive)
+                {
+                    SubParams.ForEach(sp => sp.Deserialize(true));
+                }
+                return SerializableProperties != null;
+            }
+
+            public virtual bool Serialize(bool recursive = true)
+            {
+                SerializableProperty.SerializeProperties(this, Element, true);
+                if (recursive)
+                {
+                    SubParams.ForEach(sp => sp.Serialize(true));
+                }
+                return true;
+            }
+
+            public virtual void Reset()
+            {
+                // Don't use recursion, because the reset method might be overriden
+                Deserialize(false);
+                SubParams.ForEach(sp => sp.Reset());
+            }
 
 #if CLIENT
-        public SerializableEntityEditor SerializableEntityEditor { get; protected set; }
-        public virtual void AddToEditor(ParamsEditor editor, bool recursive = true, int space = 0, ScalableFont titleFont = null)
-        {
-            SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, this, inGame: false, showName: true, titleFont: titleFont ?? GUI.LargeFont);
-            if (recursive)
+            public SerializableEntityEditor SerializableEntityEditor { get; protected set; }
+            public virtual void AddToEditor(ParamsEditor editor, bool recursive = true, int space = 0, ScalableFont titleFont = null)
             {
-                SubParams.ForEach(sp => sp.AddToEditor(editor, true, titleFont: titleFont ?? GUI.SmallFont));
-            }
-            if (space > 0)
-            {
-                new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, space), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
+                SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, this, inGame: false, showName: true, titleFont: titleFont ?? GUI.LargeFont);
+                if (recursive)
                 {
-                    CanBeFocused = false
-                };
+                    SubParams.ForEach(sp => sp.AddToEditor(editor, true, titleFont: titleFont ?? GUI.SmallFont));
+                }
+                if (space > 0)
+                {
+                    new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, space), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
+                    {
+                        CanBeFocused = false
+                    };
+                }
             }
-        }
 #endif
+        }
+        #endregion
     }
 }
