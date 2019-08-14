@@ -2802,85 +2802,43 @@ namespace Barotrauma
             }
             if (editCharacterInfo)
             {
-                var editor = ParamsEditor.Instance;
-                CharacterParams.AddToEditor(editor);
+                var mainEditor = ParamsEditor.Instance;
+                CharacterParams.AddToEditor(mainEditor, space: 10);
+                var characterEditor = CharacterParams.SerializableEntityEditor;
+                // Add some space after the title
+                characterEditor.AddCustomContent(
+                    new GUIFrame(new RectTransform(new Point(characterEditor.Rect.Width, 10), characterEditor.RectTransform), style: null)
+                {
+                    CanBeFocused = false
+                }, 1);
                 if (CharacterParams.AI != null)
                 {
                     var aiEditor = CharacterParams.AI.SerializableEntityEditor;
-                    var parent = new GUIFrame(new RectTransform(new Point(aiEditor.Rect.Width, 40), aiEditor.RectTransform), style: null, color: new Color(20, 20, 20, 255))
-                    {
-                        CanBeFocused = false
-                    };
-                    new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), parent.RectTransform, Anchor.CenterLeft), "Add Target")
-                    {
-                        OnClicked = (button, data) =>
-                        {
-                            CharacterParams.AI.TryAddEmptyTarget(out _);
-                            ResetParamsEditor();
-                            return true;
-                        }
-                    };
-                    aiEditor.AddCustomContent(parent, aiEditor.ContentCount);
+                    CreateAddButton(aiEditor, () => CharacterParams.AI.TryAddEmptyTarget(out _), "Add Target");
                     foreach (var target in CharacterParams.AI.Targets)
                     {
                         var targetEditor = target.SerializableEntityEditor;
-                        AddCloseButton(targetEditor, () => CharacterParams.AI.RemoveTarget(target));
+                        CreateCloseButton(targetEditor, () => CharacterParams.AI.RemoveTarget(target));
                     }
                 }
                 foreach (var emitter in CharacterParams.BloodEmitters)
                 {
                     var emitterEditor = emitter.SerializableEntityEditor;
-                    AddCloseButton(emitterEditor, () => CharacterParams.RemoveBloodEmitter(emitter));
+                    CreateCloseButton(emitterEditor, () => CharacterParams.RemoveBloodEmitter(emitter));
                 }
                 foreach (var emitter in CharacterParams.GibEmitters)
                 {
                     var emitterEditor = emitter.SerializableEntityEditor;
-                    AddCloseButton(emitterEditor, () => CharacterParams.RemoveGibEmitter(emitter));
+                    CreateCloseButton(emitterEditor, () => CharacterParams.RemoveGibEmitter(emitter));
                 }
-                var buttonParent = new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 40), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
-                {
-                    CanBeFocused = false
-                };
-                new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), buttonParent.RectTransform, Anchor.Center), "Add Blood Emitter")
-                {
-                    OnClicked = (button, data) =>
-                    {
-                        CharacterParams.AddBloodEmitter();
-                        ResetParamsEditor();
-                        return true;
-                    }
-                };
-                buttonParent = new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 40), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
-                {
-                    CanBeFocused = false
-                };
-                new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), buttonParent.RectTransform, Anchor.Center), "Add Gib Emitter")
-                {
-                    OnClicked = (button, data) =>
-                    {
-                        CharacterParams.AddGibEmitter();
-                        ResetParamsEditor();
-                        return true;
-                    }
-                };
                 foreach (var sound in CharacterParams.Sounds)
                 {
                     var soundEditor = sound.SerializableEntityEditor;
-                    AddCloseButton(soundEditor, () => CharacterParams.RemoveSound(sound));
+                    CreateCloseButton(soundEditor, () => CharacterParams.RemoveSound(sound));
                 }
-                buttonParent = new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 40), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
-                {
-                    CanBeFocused = false
-                };
-                new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), buttonParent.RectTransform, Anchor.Center), "Add Sound")
-                {
-                    OnClicked = (button, data) =>
-                    {
-                        CharacterParams.TryAddSound(out _);
-                        ResetParamsEditor();
-                        return true;
-                    }
-                };
+                CreateAddButtonAtLast(mainEditor, () => CharacterParams.AddBloodEmitter(), "Add Blood Emitter");
+                CreateAddButtonAtLast(mainEditor, () => CharacterParams.AddGibEmitter(), "Add Gib Emitter");
+                CreateAddButtonAtLast(mainEditor, () => CharacterParams.TryAddSound(out _), "Add Sound");
             }
             else if (editAnimations)
             {
@@ -2911,72 +2869,37 @@ namespace Barotrauma
                         foreach (var limb in selectedLimbs)
                         {
                             var mainEditor = ParamsEditor.Instance;
+                            var limbEditor = limb.limbParams.SerializableEntityEditor;
                             limb.limbParams.AddToEditor(mainEditor, true, space: 0);
                             foreach (var damageModifier in limb.limbParams.DamageModifiers)
                             {
                                 var modifierEditor = damageModifier.SerializableEntityEditor;
                                 if (modifierEditor != null)
                                 {
-                                    AddCloseButton(modifierEditor, () => limb.limbParams.RemoveDamageModifier(damageModifier));
+                                    CreateCloseButton(modifierEditor, () => limb.limbParams.RemoveDamageModifier(damageModifier));
                                 }
                             }
                             if (limb.limbParams.Sound == null)
                             {
-                                var buttonParent = new GUIFrame(new RectTransform(new Point(mainEditor.EditorBox.Rect.Width, 50), mainEditor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
-                                {
-                                    CanBeFocused = false
-                                };
-                                new GUIButton(new RectTransform(new Vector2(0.45f, 0.6f), buttonParent.RectTransform, Anchor.Center), "Add Sound")
-                                {
-                                    OnClicked = (button, data) =>
-                                    {
-                                        limb.limbParams.AddSound();
-                                        ResetParamsEditor();
-                                        return true;
-                                    }
-                                };
+                                CreateAddButtonAtLast(mainEditor, () => limb.limbParams.AddSound(), "Add Sound");
                             }
                             else
                             {
                                 var soundEditor = limb.limbParams.Sound.SerializableEntityEditor;
-                                AddCloseButton(soundEditor, () => limb.limbParams.RemoveSound());
+                                CreateCloseButton(soundEditor, () => limb.limbParams.RemoveSound());
                             }
                             if (limb.limbParams.LightSource == null)
                             {
-                                var buttonParent = new GUIFrame(new RectTransform(new Point(mainEditor.EditorBox.Rect.Width, 50), mainEditor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
-                                {
-                                    CanBeFocused = false
-                                };
-                                new GUIButton(new RectTransform(new Vector2(0.45f, 0.6f), buttonParent.RectTransform, Anchor.Center), "Add Light")
-                                {
-                                    OnClicked = (button, data) =>
-                                    {
-                                        limb.limbParams.AddLight();
-                                        ResetParamsEditor();
-                                        return true;
-                                    }
-                                };
+                                CreateAddButtonAtLast(mainEditor, () => limb.limbParams.AddLight(), "Add Light");
                             }
                             else
                             {
                                 var lightEditor = limb.limbParams.LightSource.SerializableEntityEditor;
-                                AddCloseButton(lightEditor, () => limb.limbParams.RemoveLight());
+                                CreateCloseButton(lightEditor, () => limb.limbParams.RemoveLight());
                             }
                             if (limb.limbParams.Attack == null)
                             {
-                                var buttonParent = new GUIFrame(new RectTransform(new Point(mainEditor.EditorBox.Rect.Width, 50), mainEditor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
-                                {
-                                    CanBeFocused = false
-                                };
-                                new GUIButton(new RectTransform(new Vector2(0.45f, 0.6f), buttonParent.RectTransform, Anchor.Center), "Add Attack")
-                                {
-                                    OnClicked = (button, data) =>
-                                    {
-                                        limb.limbParams.AddAttack();
-                                        ResetParamsEditor();
-                                        return true;
-                                    }
-                                };
+                                CreateAddButtonAtLast(mainEditor, () => limb.limbParams.AddAttack(), "Add Attack");
                             }
                             else
                             {
@@ -2985,48 +2908,19 @@ namespace Barotrauma
                                 {
                                     if (attackParams.AfflictionEditors.TryGetValue(affliction.Key, out SerializableEntityEditor afflictionEditor))
                                     {
-                                        AddCloseButton(afflictionEditor, () => attackParams.RemoveAffliction(affliction.Value));
+                                        CreateCloseButton(afflictionEditor, () => attackParams.RemoveAffliction(affliction.Value));
                                     }
                                 }
-                                var attackEditor = limb.limbParams.Attack.SerializableEntityEditor;
-                                var parent = new GUIFrame(new RectTransform(new Point(attackEditor.Rect.Width, 50), attackEditor.RectTransform), style: null)
-                                {
-                                    CanBeFocused = false
-                                };
-                                new GUIButton(new RectTransform(new Vector2(0.45f, 0.5f), parent.RectTransform, Anchor.CenterLeft), "Add Affliction")
-                                {
-                                    OnClicked = (button, data) =>
-                                    {
-                                        limb.limbParams.Attack.AddNewAffliction();
-                                        ResetParamsEditor();
-                                        return true;
-                                    }
-                                };
-                                attackEditor.AddCustomContent(parent, attackEditor.ContentCount);
-                                AddCloseButton(attackEditor, () => limb.limbParams.RemoveAttack());
+                                var attackEditor = attackParams.SerializableEntityEditor;
+                                CreateAddButton(attackEditor, () => attackParams.AddNewAffliction(), "Add Affliction");
+                                CreateCloseButton(attackEditor, () => limb.limbParams.RemoveAttack());
                                 var space = new GUIFrame(new RectTransform(new Point(attackEditor.RectTransform.Rect.Width, 20), attackEditor.RectTransform), style: null, color: new Color(20, 20, 20, 255))
                                 {
                                     CanBeFocused = false
                                 };
                                 attackEditor.AddCustomContent(space, attackEditor.ContentCount);
                             }
-                            var modifierParent = new GUIFrame(new RectTransform(new Point(mainEditor.EditorBox.Rect.Width, 50), mainEditor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
-                            {
-                                CanBeFocused = false
-                            };
-                            new GUIButton(new RectTransform(new Vector2(0.45f, 0.6f), modifierParent.RectTransform, Anchor.Center), "Add Damage Modifier")
-                            {
-                                OnClicked = (button, data) =>
-                                {
-                                    limb.limbParams.AddNewDamageModifier();
-                                    ResetParamsEditor();
-                                    return true;
-                                }
-                            };
-                            //new GUIFrame(new RectTransform(new Point(mainEditor.EditorBox.Rect.Width, 20), mainEditor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
-                            //{
-                            //    CanBeFocused = false
-                            //};
+                            CreateAddButtonAtLast(mainEditor, () => limb.limbParams.AddNewDamageModifier(), "Add Damage Modifier");
                         }
                     }
                     else
@@ -3036,7 +2930,7 @@ namespace Barotrauma
                 }
             }
 
-            void AddCloseButton(SerializableEntityEditor editor, Action onButtonClicked)
+            void CreateCloseButton(SerializableEntityEditor editor, Action onButtonClicked)
             {
                 var parent = new GUIFrame(new RectTransform(new Point(editor.Rect.Width, 30), editor.RectTransform), style: null)
                 {
@@ -3052,6 +2946,41 @@ namespace Barotrauma
                     }
                 };
                 editor.AddCustomContent(parent, 0);
+            }
+
+            void CreateAddButtonAtLast(ParamsEditor editor, Action onButtonClicked, string text)
+            {
+                var parentFrame = new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 50), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
+                {
+                    CanBeFocused = false
+                };
+                new GUIButton(new RectTransform(new Vector2(0.45f, 0.6f), parentFrame.RectTransform, Anchor.Center), text)
+                {
+                    OnClicked = (button, data) =>
+                    {
+                        onButtonClicked();
+                        ResetParamsEditor();
+                        return true;
+                    }
+                };
+            }
+
+            void CreateAddButton(SerializableEntityEditor editor, Action onButtonClicked, string text)
+            {
+                var parent = new GUIFrame(new RectTransform(new Point(editor.Rect.Width, 40), editor.RectTransform), style: null)
+                {
+                    CanBeFocused = false
+                };
+                new GUIButton(new RectTransform(new Vector2(0.45f, 0.6f), parent.RectTransform, Anchor.CenterLeft), text)
+                {
+                    OnClicked = (button, data) =>
+                    {
+                        onButtonClicked();
+                        ResetParamsEditor();
+                        return true;
+                    }
+                };
+                editor.AddCustomContent(parent, editor.ContentCount);
             }
         }
 
