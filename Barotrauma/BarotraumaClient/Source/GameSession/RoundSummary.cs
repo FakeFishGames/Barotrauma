@@ -71,12 +71,8 @@ namespace Barotrauma
                 if (!string.IsNullOrEmpty(message))
                 {
                     //spacing
-
                     var spacingTransform = new RectTransform(new Vector2(1.0f, 0.1f), infoTextBox.Content.RectTransform);
-                    if (endText != null)
-                    {
-                        spacingTransform.MinSize = endText.Rect.Size;
-                    }
+
                     new GUIFrame(spacingTransform, style: null);
 
                     new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoTextBox.Content.RectTransform),
@@ -93,12 +89,7 @@ namespace Barotrauma
                     }  
                 }
             }
-
-            foreach (GUIComponent child in infoTextBox.Content.Children)
-            {
-                child.CanBeFocused = false;
-            }
-
+            
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform), 
                 TextManager.Get("RoundSummaryCrewStatus"), font: GUI.LargeFont);
 
@@ -172,6 +163,16 @@ namespace Barotrauma
                 RelativeSpacing = 0.05f,
                 UserData = "buttonarea"
             };
+
+            paddedFrame.Recalculate();
+            foreach (GUIComponent child in infoTextBox.Content.Children)
+            {
+                child.CanBeFocused = false;
+                if (child is GUITextBlock textBlock)
+                {
+                    textBlock.CalculateHeightFromText();
+                }
+            }
 
             return frame;
         }
