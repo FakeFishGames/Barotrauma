@@ -1981,7 +1981,7 @@ namespace Barotrauma.Networking
                 Log("Ending the round...", ServerLog.MessageType.ServerMessage);
             }
 
-            var traitorEndMessage = TraitorManager.GetEndMessage();
+            var traitorEndMessage = TraitorManager?.GetEndMessage() ?? "";
             var traitorEndMessageStart = traitorEndMessage.LastIndexOf('/') + 1;
 
             var roundSummary = TextManager.FormatServerMessage("RoundSummaryRoundHasEnded", new string[] {"[traitorinfo]"}, new string[] {"[endsummary.traitorinfo]" /*TraitorManager != null ? TraitorManager.GetEndMessage() : ""*/});
