@@ -127,6 +127,10 @@ namespace Barotrauma.Networking
                         GameMain.SoundManager.VoipAttenuatedGain = 0.5f;
                     }
                 }
+                else
+                {
+                    GameMain.SoundManager.VoipAttenuatedGain = 0.5f;
+                }
             }
         }
 
