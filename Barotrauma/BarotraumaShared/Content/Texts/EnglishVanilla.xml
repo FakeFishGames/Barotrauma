@@ -3440,7 +3440,7 @@
   <connection.batterysetrechargespeed>set_charge_rate</connection.batterysetrechargespeed>
   <connection.batteryrechargespeedout>charge_rate_out</connection.batteryrechargespeedout>
   <personalitytrait.professional>Professional</personalitytrait.professional>
-  <personalitytrait.laidback>Laid-back</personalitytrait.laidback>
+  <personalitytrait.laid-back>Laid-back</personalitytrait.laid-back>
   <personalitytrait.rude>Rude</personalitytrait.rude>
   <personalitytrait.tough>Tough</personalitytrait.tough>
   <personalitytrait.joker>Joker</personalitytrait.joker>
@@ -3451,5 +3451,5 @@
   <sabotaging>Sabotaging</sabotaging>
   <voipattenuation>Voice chat attenuation</voipattenuation>
   <voipattenuationtooltip>Lowers the game's volume when players are speaking.</voipattenuationtooltip>
-
+  <roundsummaryroundhasended>The round has ended.</roundsummaryroundhasended>  
 </infotexts>

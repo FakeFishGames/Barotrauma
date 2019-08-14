@@ -113,14 +113,12 @@
   </Item>
   
   <Item name="Physicorium Ammunition Box" identifier="physicoriumammobox" scale="0.5" tags="coilgunequipment,coilgunammo" category="Equipment" linkable="true" impactsoundtag="impact_metal_heavy">
-    <!--
-    TODO: reallow fabrication after the name has been translated
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
       <RequiredSkill identifier="mechanical" level="30"/>
       <RequiredItem identifier="steel"/>
       <RequiredItem identifier="physicorium"/>
       <RequiredItem identifier="aluminium"/>
-    </Fabricate>-->
+    </Fabricate>
     <Deconstruct time="10">
       <Item identifier="aluminium" />
     </Deconstruct>
