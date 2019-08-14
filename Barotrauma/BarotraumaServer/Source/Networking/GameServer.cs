@@ -1994,9 +1994,7 @@ namespace Barotrauma.Networking
                 "[endsummary]=" + roundSummary.Substring(roundSummaryStart),
                 "[endsummary]\n\n[endsummary.traitorinfo]"
             }.Where(s => !string.IsNullOrEmpty(s)));
-
-        Console.WriteLine("*** EM: " + endMessage);
-
+            
             Mission mission = GameMain.GameSession.Mission;
             GameMain.GameSession.GameMode.End(endMessage);
             
