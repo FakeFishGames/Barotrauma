@@ -319,7 +319,7 @@ namespace Barotrauma
                 StartNewGame = StartGame
             };
 
-            var hostServerScale = new Vector2(0.7f, 1.0f);
+            var hostServerScale = new Vector2(0.7f, 0.6f);
             menuTabs[(int)Tab.HostServer] = new GUIFrame(new RectTransform(
                 Vector2.Multiply(relativeSize, hostServerScale), GUI.Canvas, anchor, pivot, minSize.Multiply(hostServerScale), maxSize.Multiply(hostServerScale)) { RelativeOffset = relativeSpacing });
 
