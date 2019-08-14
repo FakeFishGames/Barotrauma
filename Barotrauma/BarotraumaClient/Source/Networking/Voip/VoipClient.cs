@@ -124,7 +124,7 @@ namespace Barotrauma.Networking
                     float attenuationDist = client.VoipSound.Near * 1.125f;
                     if (Vector3.DistanceSquared(clientPos, listenerPos) < attenuationDist * attenuationDist)
                     {
-                        GameMain.SoundManager.VoipAttenuatedGain = 0.2f;
+                        GameMain.SoundManager.VoipAttenuatedGain = 0.5f;
                     }
                 }
             }
