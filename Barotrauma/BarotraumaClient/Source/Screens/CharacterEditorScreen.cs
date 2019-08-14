@@ -2810,7 +2810,7 @@ namespace Barotrauma
                 if (CharacterParams.AI != null)
                 {
                     var aiEditor = CharacterParams.AI.SerializableEntityEditor;
-                    CreateAddButton(aiEditor, () => CharacterParams.AI.TryAddEmptyTarget(out _), "Add Target");
+                    CreateAddButton(aiEditor, () => CharacterParams.AI.TryAddEmptyTarget(out _), GetCharacterEditorTranslation("AddAITarget"));
                     foreach (var target in CharacterParams.AI.Targets)
                     {
                         var targetEditor = target.SerializableEntityEditor;
@@ -2832,9 +2832,9 @@ namespace Barotrauma
                     var soundEditor = sound.SerializableEntityEditor;
                     CreateCloseButton(soundEditor, () => CharacterParams.RemoveSound(sound));
                 }
-                CreateAddButtonAtLast(mainEditor, () => CharacterParams.AddBloodEmitter(), "Add Blood Emitter");
-                CreateAddButtonAtLast(mainEditor, () => CharacterParams.AddGibEmitter(), "Add Gib Emitter");
-                CreateAddButtonAtLast(mainEditor, () => CharacterParams.TryAddSound(out _), "Add Sound");
+                CreateAddButtonAtLast(mainEditor, () => CharacterParams.AddBloodEmitter(), GetCharacterEditorTranslation("AddBloodEmitter"));
+                CreateAddButtonAtLast(mainEditor, () => CharacterParams.AddGibEmitter(), GetCharacterEditorTranslation("AddGibEmitter"));
+                CreateAddButtonAtLast(mainEditor, () => CharacterParams.TryAddSound(out _), GetCharacterEditorTranslation("AddSound"));
             }
             else if (editAnimations)
             {
@@ -2877,7 +2877,7 @@ namespace Barotrauma
                             }
                             if (limb.limbParams.Sound == null)
                             {
-                                CreateAddButtonAtLast(mainEditor, () => limb.limbParams.AddSound(), "Add Sound");
+                                CreateAddButtonAtLast(mainEditor, () => limb.limbParams.AddSound(), GetCharacterEditorTranslation("AddSound"));
                             }
                             else
                             {
@@ -2886,7 +2886,7 @@ namespace Barotrauma
                             }
                             if (limb.limbParams.LightSource == null)
                             {
-                                CreateAddButtonAtLast(mainEditor, () => limb.limbParams.AddLight(), "Add Light");
+                                CreateAddButtonAtLast(mainEditor, () => limb.limbParams.AddLight(), GetCharacterEditorTranslation("AddLightSource"));
                             }
                             else
                             {
@@ -2895,7 +2895,7 @@ namespace Barotrauma
                             }
                             if (limb.limbParams.Attack == null)
                             {
-                                CreateAddButtonAtLast(mainEditor, () => limb.limbParams.AddAttack(), "Add Attack");
+                                CreateAddButtonAtLast(mainEditor, () => limb.limbParams.AddAttack(), GetCharacterEditorTranslation("AddAttack"));
                             }
                             else
                             {
@@ -2908,7 +2908,7 @@ namespace Barotrauma
                                     }
                                 }
                                 var attackEditor = attackParams.SerializableEntityEditor;
-                                CreateAddButton(attackEditor, () => attackParams.AddNewAffliction(), "Add Affliction");
+                                CreateAddButton(attackEditor, () => attackParams.AddNewAffliction(), GetCharacterEditorTranslation("AddAffliction"));
                                 CreateCloseButton(attackEditor, () => limb.limbParams.RemoveAttack());
                                 var space = new GUIFrame(new RectTransform(new Point(attackEditor.RectTransform.Rect.Width, 20), attackEditor.RectTransform), style: null, color: new Color(20, 20, 20, 255))
                                 {
@@ -2916,7 +2916,7 @@ namespace Barotrauma
                                 };
                                 attackEditor.AddCustomContent(space, attackEditor.ContentCount);
                             }
-                            CreateAddButtonAtLast(mainEditor, () => limb.limbParams.AddNewDamageModifier(), "Add Damage Modifier");
+                            CreateAddButtonAtLast(mainEditor, () => limb.limbParams.AddNewDamageModifier(), GetCharacterEditorTranslation("AddDamageModifier"));
                         }
                     }
                     else

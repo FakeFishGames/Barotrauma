@@ -3050,8 +3050,15 @@
   <charactereditor.characterpanel>Character</charactereditor.characterpanel>
   <charactereditor.toolspanel>Tools</charactereditor.toolspanel>
   <charactereditor.addmultiplelimbsbutton>Add Multiple</charactereditor.addmultiplelimbsbutton>
-  <charactereditor.contentpackagenameinuse>A content package with the same name already exists. Please choose another name or select the existing content package from the dropdown if you want to add the character to it.</charactereditor.contentpackagenameinuse>
-
+  <charactereditor.contentpackagenameinuse>A content package with the same name already exists. Please choose another name or select the existing content package from the dropdown if you want to add the character to it.</charactereditor.contentpackagenameinuse> 
+  <charactereditor.addaitarget>Add Target</charactereditor.addaitarget>
+  <charactereditor.addbloodemitter>Add Blood Emitter</charactereditor.addbloodemitter>
+  <charactereditor.addgibemitter>Add Gib Emitter</charactereditor.addgibemitter>
+  <charactereditor.addsound>Add Sound</charactereditor.addsound>
+  <charactereditor.addlightsource>Add Light</charactereditor.addlightsource>
+  <charactereditor.addattack>Add Attack</charactereditor.addattack>
+  <charactereditor.addaffliction>Add Affliction</charactereditor.addaffliction>
+  <charactereditor.adddamagemodifier>Add Damage Modifier</charactereditor.adddamagemodifier>
 
   <!-- Submarine editor -->
   <items>Items</items>
