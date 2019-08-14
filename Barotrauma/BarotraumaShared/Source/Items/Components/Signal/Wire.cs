@@ -281,7 +281,7 @@ namespace Barotrauma.Items.Components
                     Structure attachTarget = Structure.GetAttachTarget(item.WorldPosition);
                     canPlaceNode = attachTarget != null;
 
-                    sub = attachTarget?.Submarine;
+                    sub = sub ?? attachTarget?.Submarine;
                     newNodePos = sub == null ? 
                         item.WorldPosition :
                         item.WorldPosition - sub.Position - sub.HiddenSubPosition;
