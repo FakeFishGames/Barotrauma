@@ -332,7 +332,8 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                newNodePos = RoundNode(item.Position, item.CurrentHull) - sub.HiddenSubPosition;
+                newNodePos = RoundNode(item.Position, item.CurrentHull);
+                if (sub != null) { newNodePos -= sub.HiddenSubPosition; }
                 canPlaceNode = true;
             }
 
