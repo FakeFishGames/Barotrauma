@@ -239,7 +239,7 @@ namespace Barotrauma
             {
                 if (limbElements.TryGetValue(jointElement.GetAttributeString("limb2", null), out XElement limbElement))
                 {
-                    JointParams jointParams = new JointParams(jointElement, ragdoll.RagdollParams);
+                    var jointParams = new RagdollParams.JointParams(jointElement, ragdoll.RagdollParams);
                     Limb attachLimb = null;
                     if (matchingAffliction.AttachLimbId > -1)
                     {
@@ -261,7 +261,7 @@ namespace Barotrauma
                     if (attachLimb != null)
                     {
                         jointParams.Limb1 = attachLimb.limbParams.ID;
-                        var appendageLimbParams = new LimbParams(limbElement, ragdoll.RagdollParams)
+                        var appendageLimbParams = new RagdollParams.LimbParams(limbElement, ragdoll.RagdollParams)
                         {
                             // Ensure that we have a valid id for the new limb
                             ID = ragdoll.Limbs.Length

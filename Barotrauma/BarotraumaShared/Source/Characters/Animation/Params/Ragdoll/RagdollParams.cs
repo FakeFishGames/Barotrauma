@@ -6,6 +6,9 @@ using System.Linq;
 using System.IO;
 using System.Xml;
 using Barotrauma.Extensions;
+#if CLIENT
+using Barotrauma.SpriteDeformations;
+#endif
 
 namespace Barotrauma
 {
@@ -22,6 +25,7 @@ namespace Barotrauma
 
     class RagdollParams : EditableParams, IMemorizable<RagdollParams>
     {
+        #region Ragdoll
         public const float MIN_SCALE = 0.1f;
         public const float MAX_SCALE = 2;
 
@@ -56,14 +60,14 @@ namespace Barotrauma
 
         private static Dictionary<string, Dictionary<string, RagdollParams>> allRagdolls = new Dictionary<string, Dictionary<string, RagdollParams>>();
 
-        public List<ColliderParams> ColliderParams { get; private set; } = new List<ColliderParams>();
+        public List<ColliderParams> Colliders { get; private set; } = new List<ColliderParams>();
         public List<LimbParams> Limbs { get; private set; } = new List<LimbParams>();
         public List<JointParams> Joints { get; private set; } = new List<JointParams>();
 
-        protected IEnumerable<RagdollSubParams> GetAllSubParams() =>
-            ColliderParams.Select(c => c as RagdollSubParams)
-            .Concat(Limbs.Select(j => j as RagdollSubParams)
-            .Concat(Joints.Select(j => j as RagdollSubParams)));
+        protected IEnumerable<SubParam> GetAllSubParams() =>
+            Colliders.Select(c => c as SubParam)
+            .Concat(Limbs.Select(j => j as SubParam)
+            .Concat(Joints.Select(j => j as SubParam)));
 
         public static string GetDefaultFileName(string speciesName) => $"{speciesName.CapitaliseFirstInvariant()}DefaultRagdoll";
         public static string GetDefaultFile(string speciesName, ContentPackage contentPackage = null)
@@ -278,12 +282,12 @@ namespace Barotrauma
 
         protected void CreateColliders()
         {
-            ColliderParams.Clear();
+            Colliders.Clear();
             for (int i = 0; i < MainElement.GetChildElements("collider").Count(); i++)
             {
                 var element = MainElement.GetChildElements("collider").ElementAt(i);
                 string name = i > 0 ? "Secondary Collider" : "Main Collider";
-                ColliderParams.Add(new ColliderParams(element, this, name));
+                Colliders.Add(new ColliderParams(element, this, name));
             }
         }
 
@@ -353,6 +357,7 @@ namespace Barotrauma
             }
         }
 #endif
+        #endregion
 
         #region Memento
         public Memento<RagdollParams> Memento { get; protected set; } = new Memento<RagdollParams>();
@@ -411,6 +416,684 @@ namespace Barotrauma
                     // Since we cannot use recursion here, we have to go deeper manually, if necessary.
                 }
             }
+        }
+        #endregion
+
+        #region Subparams
+        public class JointParams : SubParam
+        {
+            private string name;
+            [Serialize("", true), Editable]
+            public override string Name
+            {
+                get
+                {
+                    if (string.IsNullOrWhiteSpace(name))
+                    {
+                        name = GenerateName();
+                    }
+                    return name;
+                }
+                set
+                {
+                    name = value;
+                }
+            }
+
+            public override string GenerateName() => $"Joint {Limb1} - {Limb2}";
+
+            [Serialize(-1, true), Editable]
+            public int Limb1 { get; set; }
+
+            [Serialize(-1, true), Editable]
+            public int Limb2 { get; set; }
+
+            /// <summary>
+            /// Should be converted to sim units.
+            /// </summary>
+            [Serialize("1.0, 1.0", true), Editable]
+            public Vector2 Limb1Anchor { get; set; }
+
+            /// <summary>
+            /// Should be converted to sim units.
+            /// </summary>
+            [Serialize("1.0, 1.0", true), Editable]
+            public Vector2 Limb2Anchor { get; set; }
+
+            [Serialize(true, true), Editable]
+            public bool CanBeSevered { get; set; }
+
+            [Serialize(true, true), Editable]
+            public bool LimitEnabled { get; set; }
+
+            /// <summary>
+            /// In degrees.
+            /// </summary>
+            [Serialize(0f, true), Editable]
+            public float UpperLimit { get; set; }
+
+            /// <summary>
+            /// In degrees.
+            /// </summary>
+            [Serialize(0f, true), Editable]
+            public float LowerLimit { get; set; }
+
+            [Serialize(0.25f, true), Editable]
+            public float Stiffness { get; set; }
+
+            public JointParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll) { }
+        }
+
+        public class LimbParams : SubParam
+        {
+            public readonly SpriteParams normalSpriteParams;
+            public readonly SpriteParams damagedSpriteParams;
+            public readonly SpriteParams deformSpriteParams;
+
+            public AttackParams Attack { get; private set; }
+            public SoundParams Sound { get; private set; }
+            public LightSourceParams LightSource { get; private set; }
+            public List<DamageModifierParams> DamageModifiers { get; private set; } = new List<DamageModifierParams>();
+
+            private string name;
+            [Serialize("", true), Editable]
+            public override string Name
+            {
+                get
+                {
+                    if (string.IsNullOrWhiteSpace(name))
+                    {
+                        name = GenerateName();
+                    }
+                    return name;
+                }
+                set
+                {
+                    name = value;
+                }
+            }
+
+            public override string GenerateName() => $"Limb {ID}";
+
+            /// <summary>
+            /// Note that editing this in-game doesn't currently have any effect (unless the ragdoll is recreated). It should be visible, but readonly in the editor.
+            /// </summary>
+            [Serialize(-1, true), Editable]
+            public int ID { get; set; }
+
+            [Serialize(LimbType.None, true), Editable]
+            public LimbType Type { get; set; }
+
+            [Serialize(true, true), Editable]
+            public bool Flip { get; set; }
+
+            [Serialize(0, true), Editable]
+            public int HealthIndex { get; set; }
+
+            [Serialize(0f, true), Editable(ToolTip = "Higher values make AI characters prefer attacking this limb.")]
+            public float AttackPriority { get; set; }
+
+            [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 500)]
+            public float SteerForce { get; set; }
+
+            [Serialize("0, 0", true), Editable(ToolTip = "Only applicable if this limb is a foot. Determines the \"neutral position\" of the foot relative to a joint determined by the \"RefJoint\" parameter. For example, a value of {-100, 0} would mean that the foot is positioned on the floor, 100 units behind the reference joint.")]
+            public Vector2 StepOffset { get; set; }
+
+            [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
+            public float Radius { get; set; }
+
+            [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
+            public float Height { get; set; }
+
+            [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
+            public float Width { get; set; }
+
+            [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 10000)]
+            public float Mass { get; set; }
+
+            [Serialize(10f, true), Editable(MinValueFloat = 0, MaxValueFloat = 100)]
+            public float Density { get; set; }
+
+            [Serialize("0, 0", true), Editable(ToolTip = "The position which is used to lead the IK chain to the IK goal. Only applicable if the limb is hand or foot.")]
+            public Vector2 PullPos { get; set; }
+
+            [Serialize(-1, true), Editable(ToolTip = "Only applicable if this limb is a foot. Determines which joint is used as the \"neutral x-position\" for the foot movement. For example in the case of a humanoid-shaped characters this would usually be the waist. The position can be offset using the StepOffset parameter.")]
+            public int RefJoint { get; set; }
+
+            [Serialize(false, true), Editable]
+            public bool IgnoreCollisions { get; set; }
+
+            [Serialize("", true), Editable]
+            public string Notes { get; set; }
+
+            // Non-editable ->
+            [Serialize(0.3f, true)]
+            public float Friction { get; set; }
+
+            [Serialize(0.05f, true)]
+            public float Restitution { get; set; }
+
+            public LimbParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
+            {
+                var spriteElement = element.GetChildElement("sprite");
+                if (spriteElement != null)
+                {
+                    normalSpriteParams = new SpriteParams(spriteElement, ragdoll);
+                    SubParams.Add(normalSpriteParams);
+                }
+                var damagedSpriteElement = element.GetChildElement("damagedsprite");
+                if (damagedSpriteElement != null)
+                {
+                    damagedSpriteParams = new SpriteParams(damagedSpriteElement, ragdoll);
+                    // Hide the damaged sprite params in the editor for now.
+                    //SubParams.Add(damagedSpriteParams);
+                }
+                var deformSpriteElement = element.GetChildElement("deformablesprite");
+                if (deformSpriteElement != null)
+                {
+                    deformSpriteParams = new SpriteParams(deformSpriteElement, ragdoll)
+                    {
+                        Deformation = new DeformationParams(deformSpriteElement, ragdoll)
+                    };
+                    deformSpriteParams.SubParams.Add(deformSpriteParams.Deformation);
+                    SubParams.Add(deformSpriteParams);
+                }
+                var attackElement = element.GetChildElement("attack");
+                if (attackElement != null)
+                {
+                    Attack = new AttackParams(attackElement, ragdoll);
+                    SubParams.Add(Attack);
+                }
+                foreach (var damageElement in element.GetChildElements("damagemodifier"))
+                {
+                    var damageModifier = new DamageModifierParams(damageElement, ragdoll);
+                    DamageModifiers.Add(damageModifier);
+                    SubParams.Add(damageModifier);
+                }
+                var soundElement = element.GetChildElement("sound");
+                if (soundElement != null)
+                {
+                    Sound = new SoundParams(soundElement, ragdoll);
+                    SubParams.Add(Sound);
+                }
+                var lightElement = element.GetChildElement("lightsource");
+                if (lightElement != null)
+                {
+                    LightSource = new LightSourceParams(lightElement, ragdoll);
+                    SubParams.Add(LightSource);
+                }
+            }
+
+            public bool AddAttack()
+            {
+                if (Attack != null) { return false; }
+                var element = new XElement("attack");
+                Element.Add(element);
+                Attack = new AttackParams(element, Ragdoll);
+                SubParams.Add(Attack);
+                return Attack != null;
+            }
+
+            public bool RemoveAttack()
+            {
+                if (Attack == null) { return false; }
+                Attack.Element.Remove();
+                SubParams.Remove(Attack);
+                Attack = null;
+                return Attack == null;
+            }
+
+            public bool AddNewDamageModifier()
+            {
+                Serialize();
+                var subElement = new XElement("damagemodifier");
+                Element.Add(subElement);
+                var damageModifier = new DamageModifierParams(subElement, Ragdoll);
+                DamageModifiers.Add(damageModifier);
+                SubParams.Add(damageModifier);
+                Serialize();
+                return true;
+            }
+
+            public bool RemoveDamageModifier(DamageModifierParams damageModifier)
+            {
+                if (!DamageModifiers.Contains(damageModifier)) { return false; }
+                Serialize();
+                SubParams.Remove(damageModifier);
+                DamageModifiers.Remove(damageModifier);
+                damageModifier.Element.Remove();
+                return Serialize();
+            }
+
+            public bool RemoveLastDamageModifier()
+            {
+                var last = DamageModifiers.LastOrDefault();
+                if (last == null) { return false; }
+                return RemoveDamageModifier(last);
+            }
+
+            public bool AddSound()
+            {
+                if (Sound != null) { return false; }
+                var element = new XElement("sound");
+                Element.Add(element);
+                Sound = new SoundParams(element, Ragdoll);
+                SubParams.Add(Sound);
+                return Sound != null;
+            }
+
+            public bool RemoveSound()
+            {
+                if (Sound == null) { return false; }
+                Sound.Element.Remove();
+                SubParams.Remove(Sound);
+                Sound = null;
+                return true;
+            }
+
+            public bool AddLight()
+            {
+                if (LightSource != null) { return false; }
+                var lightSourceElement = new XElement("lightsource",
+                    new XElement("lighttexture", new XAttribute("texture", "Content/Lights/light.png")));
+                Element.Add(lightSourceElement);
+                LightSource = new LightSourceParams(lightSourceElement, Ragdoll);
+                SubParams.Add(LightSource);
+                return LightSource != null;
+            }
+
+            public bool RemoveLight()
+            {
+                if (LightSource == null) { return false; }
+                LightSource.Element.Remove();
+                SubParams.Remove(LightSource);
+                LightSource = null;
+                return true;
+            }
+        }
+
+        public class SpriteParams : SubParam
+        {
+            [Serialize("0, 0, 0, 0", true), Editable]
+            public Rectangle SourceRect { get; set; }
+
+            [Serialize("0.5, 0.5", true), Editable(DecimalCount = 2, ToolTip = "Relative to the collider.")]
+            public Vector2 Origin { get; set; }
+
+            [Serialize(0f, true), Editable(DecimalCount = 3)]
+            public float Depth { get; set; }
+
+            [Serialize("", true)]
+            public string Texture { get; set; }
+
+            public DeformationParams Deformation { get; set; }
+
+            public override string Name => "Sprite";
+
+            public SpriteParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll) { }
+        }
+
+        public class DeformationParams : SubParam
+        {
+            public DeformationParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
+            {
+#if CLIENT
+                Deformations = new Dictionary<SpriteDeformationParams, XElement>();
+                foreach (var deformationElement in element.GetChildElements("spritedeformation"))
+                {
+                    string typeName = deformationElement.GetAttributeString("typename", null) ?? deformationElement.GetAttributeString("type", "");
+                    SpriteDeformationParams deformation = null;
+                    switch (typeName.ToLowerInvariant())
+                    {
+                        case "inflate":
+                            deformation = new InflateParams(deformationElement);
+                            break;
+                        case "custom":
+                            deformation = new CustomDeformationParams(deformationElement);
+                            break;
+                        case "noise":
+                            deformation = new NoiseDeformationParams(deformationElement);
+                            break;
+                        case "jointbend":
+                        case "bendjoint":
+                            deformation = new JointBendDeformationParams(deformationElement);
+                            break;
+                        case "reacttotriggerers":
+                            deformation = new PositionalDeformationParams(deformationElement);
+                            break;
+                        default:
+                            DebugConsole.ThrowError($"SpriteDeformationParams not implemented: '{typeName}'");
+                            break;
+                    }
+                    if (deformation != null)
+                    {
+                        deformation.TypeName = typeName;
+                    }
+                    Deformations.Add(deformation, deformationElement);
+                }
+#endif
+            }
+
+#if CLIENT
+            public Dictionary<SpriteDeformationParams, XElement> Deformations { get; private set; }
+
+            public override bool Deserialize(XElement element = null, bool recursive = true)
+            {
+                base.Deserialize(element, recursive);
+                Deformations.ForEach(d => d.Key.SerializableProperties = SerializableProperty.DeserializeProperties(d.Key, d.Value));
+                return SerializableProperties != null;
+            }
+
+            public override bool Serialize(XElement element = null, bool recursive = true)
+            {
+                base.Serialize(element, recursive);
+                Deformations.ForEach(d => SerializableProperty.SerializeProperties(d.Key, d.Value));
+                return true;
+            }
+
+            public override void Reset()
+            {
+                base.Reset();
+                Deformations.ForEach(d => d.Key.SerializableProperties = SerializableProperty.DeserializeProperties(d.Key, d.Value));
+            }
+#endif
+        }
+
+        public class ColliderParams : SubParam
+        {
+            private string name;
+            [Serialize("", true), Editable]
+            public override string Name
+            {
+                get
+                {
+                    if (string.IsNullOrWhiteSpace(name))
+                    {
+                        name = GenerateName();
+                    }
+                    return name;
+                }
+                set
+                {
+                    name = value;
+                }
+            }
+
+            [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
+            public float Radius { get; set; }
+
+            [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
+            public float Height { get; set; }
+
+            [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
+            public float Width { get; set; }
+
+            public ColliderParams(XElement element, RagdollParams ragdoll, string name = null) : base(element, ragdoll)
+            {
+                Name = name;
+            }
+        }
+
+        public class LightSourceParams : SubParam
+        {
+            public class LightTexture : SubParam
+            {
+                public override string Name => "Light Texture";
+
+                [Serialize("", true), Editable]
+                public string Texture { get; private set; }
+
+                [Serialize("0.5, 0.5", true), Editable(DecimalCount = 2)]
+                public Vector2 Origin { get; set; }
+
+                [Serialize("1.0, 1.0", true), Editable(DecimalCount = 2)]
+                public Vector2 Size { get; set; }
+
+                public LightTexture(XElement element, RagdollParams ragdoll) : base(element, ragdoll) { }
+            }
+
+            public LightTexture Texture { get; private set; }
+
+#if CLIENT
+            public Lights.LightSourceParams LightSource { get; private set; }
+#endif
+
+            public LightSourceParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
+            {
+#if CLIENT
+                LightSource = new Lights.LightSourceParams(element);
+#endif
+                var lightTextureElement = element.GetChildElement("lighttexture");
+                if (lightTextureElement != null)
+                {
+                    Texture = new LightTexture(lightTextureElement, ragdoll);
+                    SubParams.Add(Texture);
+                }
+            }
+
+#if CLIENT
+            public override bool Deserialize(XElement element = null, bool recursive = true)
+            {
+                base.Deserialize(element, recursive);
+                LightSource.Deserialize(element ?? Element);
+                return SerializableProperties != null;
+            }
+
+            public override bool Serialize(XElement element = null, bool recursive = true)
+            {
+                base.Serialize(element, recursive);
+                LightSource.Serialize(element ?? Element);
+                return true;
+            }
+
+            public override void Reset()
+            {
+                base.Reset();
+                LightSource.Serialize(OriginalElement);
+            }
+#endif
+        }
+
+        // TODO: conditionals?
+        public class AttackParams : SubParam
+        {
+            public Attack Attack { get; private set; }
+
+            public AttackParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
+            {
+                Attack = new Attack(element, ragdoll.SpeciesName);
+            }
+
+            public override bool Deserialize(XElement element = null, bool recursive = true)
+            {
+                base.Deserialize(element, recursive);
+                Attack.Deserialize(element ?? Element);
+                return SerializableProperties != null;
+            }
+
+            public override bool Serialize(XElement element = null, bool recursive = true)
+            {
+                base.Serialize(element, recursive);
+                Attack.Serialize(element ?? Element);
+                return true;
+            }
+
+            public override void Reset()
+            {
+                base.Reset();
+                Attack.Deserialize(OriginalElement);
+                Attack.ReloadAfflictions(OriginalElement);
+            }
+
+            public bool AddNewAffliction()
+            {
+                Serialize();
+                var subElement = new XElement("affliction",
+                    new XAttribute("identifier", "internaldamage"),
+                    new XAttribute("strength", 0f),
+                    new XAttribute("probability", 1.0f));
+                Element.Add(subElement);
+                Attack.ReloadAfflictions(Element);
+                Serialize();
+                return true;
+            }
+
+            public bool RemoveAffliction(XElement affliction)
+            {
+                Serialize();
+                affliction.Remove();
+                Attack.ReloadAfflictions(Element);
+                return Serialize();
+            }
+
+            public bool RemoveLastAffliction()
+            {
+                var afflictions = Element.GetChildElements("affliction");
+                var last = afflictions.LastOrDefault();
+                if (last == null) { return false; }
+                return RemoveAffliction(last);
+            }
+        }
+
+        public class DamageModifierParams : SubParam
+        {
+            public DamageModifier DamageModifier { get; private set; }
+
+            public DamageModifierParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
+            {
+                DamageModifier = new DamageModifier(element, ragdoll.SpeciesName);
+            }
+
+            public override bool Deserialize(XElement element = null, bool recursive = true)
+            {
+                base.Deserialize(element, recursive);
+                DamageModifier.Deserialize(element ?? Element);
+                return SerializableProperties != null;
+            }
+
+            public override bool Serialize(XElement element = null, bool recursive = true)
+            {
+                base.Serialize(element, recursive);
+                DamageModifier.Serialize(element ?? Element);
+                return true;
+            }
+
+            public override void Reset()
+            {
+                base.Reset();
+                DamageModifier.Deserialize(OriginalElement);
+            }
+        }
+
+        public class SoundParams : SubParam
+        {
+            public override string Name => "Sound";
+
+            [Serialize("", true), Editable]
+            public string Tag { get; private set; }
+
+            public SoundParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll) { }
+        }
+
+        public abstract class SubParam : ISerializableEntity
+        {
+            public virtual string Name { get; set; }
+            public Dictionary<string, SerializableProperty> SerializableProperties { get; private set; }
+            public XElement Element { get; set; }
+            public XElement OriginalElement { get; protected set; }
+            public List<SubParam> SubParams { get; set; } = new List<SubParam>();
+            public RagdollParams Ragdoll { get; private set; }
+
+            public virtual string GenerateName() => Element.Name.ToString();
+
+            public SubParam(XElement element, RagdollParams ragdoll)
+            {
+                Element = element;
+                OriginalElement = new XElement(element);
+                Ragdoll = ragdoll;
+                SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+            }
+
+            public virtual bool Deserialize(XElement element = null, bool recursive = true)
+            {
+                element = element ?? Element;
+                SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+                if (recursive)
+                {
+                    SubParams.ForEach(sp => sp.Deserialize(recursive: true));
+                }
+                return SerializableProperties != null;
+            }
+
+            public virtual bool Serialize(XElement element = null, bool recursive = true)
+            {
+                element = element ?? Element;
+                SerializableProperty.SerializeProperties(this, element, true);
+                if (recursive)
+                {
+                    SubParams.ForEach(sp => sp.Serialize(recursive: true));
+                }
+                return true;
+            }
+
+            public virtual void SetCurrentElementAsOriginalElement()
+            {
+                OriginalElement = Element;
+                SubParams.ForEach(sp => sp.SetCurrentElementAsOriginalElement());
+            }
+
+            public virtual void Reset()
+            {
+                // Don't use recursion, because the reset method might be overriden
+                Deserialize(OriginalElement, false);
+                SubParams.ForEach(sp => sp.Reset());
+            }
+
+#if CLIENT
+            public SerializableEntityEditor SerializableEntityEditor { get; protected set; }
+            public Dictionary<Affliction, SerializableEntityEditor> AfflictionEditors { get; private set; } = new Dictionary<Affliction, SerializableEntityEditor>();
+            public virtual void AddToEditor(ParamsEditor editor, bool recursive = true, int space = 0)
+            {
+                SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, this, inGame: false, showName: true, titleFont: GUI.LargeFont);
+                if (this is SpriteParams spriteParams && spriteParams.Deformation != null)
+                {
+                    foreach (var deformation in spriteParams.Deformation.Deformations.Keys)
+                    {
+                        new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, deformation, inGame: false, showName: true, titleFont: GUI.LargeFont);
+                    }
+                }
+                else if (this is AttackParams attackParams)
+                {
+                    SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, attackParams.Attack, inGame: false, showName: true, titleFont: GUI.LargeFont);
+                    AfflictionEditors.Clear();
+                    foreach (var affliction in attackParams.Attack.Afflictions.Keys)
+                    {
+                        var afflictionEditor = new SerializableEntityEditor(SerializableEntityEditor.RectTransform, affliction, inGame: false, showName: true);
+                        AfflictionEditors.Add(affliction, afflictionEditor);
+                        SerializableEntityEditor.AddCustomContent(afflictionEditor, SerializableEntityEditor.ContentCount);
+                    }
+                }
+                else if (this is LightSourceParams lightParams)
+                {
+                    SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, lightParams.LightSource, inGame: false, showName: true, titleFont: GUI.LargeFont);
+                }
+                else if (this is DamageModifierParams damageModifierParams)
+                {
+                    SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, damageModifierParams.DamageModifier, inGame: false, showName: true, titleFont: GUI.LargeFont);
+                }
+                if (recursive)
+                {
+                    SubParams.ForEach(sp => sp.AddToEditor(editor, true));
+                }
+                if (space > 0)
+                {
+                    new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, space), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
+                    {
+                        CanBeFocused = false
+                    };
+                }
+            }
+#endif
         }
         #endregion
     }

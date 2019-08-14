@@ -900,7 +900,7 @@ namespace Barotrauma
                 );
             var lastLimbElement = RagdollParams.MainElement.Elements("limb").Last();
             lastLimbElement.AddAfterSelf(newLimbElement);
-            var newLimbParams = new LimbParams(newLimbElement, RagdollParams);
+            var newLimbParams = new RagdollParams.LimbParams(newLimbElement, RagdollParams);
             RagdollParams.Limbs.Add(newLimbParams);
             character.AnimController.Recreate();
             CreateTextures();
@@ -946,7 +946,7 @@ namespace Barotrauma
                 return;
             }
             lastJointElement.AddAfterSelf(newJointElement);
-            var newJointParams = new JointParams(newJointElement, RagdollParams);
+            var newJointParams = new RagdollParams.JointParams(newJointElement, RagdollParams);
             RagdollParams.Joints.Add(newJointParams);
             character.AnimController.Recreate();
             CreateTextures();
@@ -1003,7 +1003,7 @@ namespace Barotrauma
                 }
             }
             // Refresh/recreate joints
-            var jointsToRemove = new List<JointParams>();
+            var jointsToRemove = new List<RagdollParams.JointParams>();
             for (int i = 0; i < RagdollParams.Joints.Count; i++)
             {
                 var joint = RagdollParams.Joints[i];
@@ -2881,7 +2881,7 @@ namespace Barotrauma
                 if (editRagdoll)
                 {
                     RagdollParams.AddToEditor(ParamsEditor.Instance, alsoChildren: false, space: 10);
-                    RagdollParams.ColliderParams.ForEach(c => c.AddToEditor(ParamsEditor.Instance, false, 10));
+                    RagdollParams.Colliders.ForEach(c => c.AddToEditor(ParamsEditor.Instance, false, 10));
                 }
                 else if (editJoints)
                 {
@@ -3107,7 +3107,7 @@ namespace Barotrauma
         private void TryUpdateJointParam(LimbJoint joint, string name, object value) => TryUpdateSubParam(joint.jointParams, name, value);
         private void TryUpdateLimbParam(Limb limb, string name, object value) => TryUpdateSubParam(limb.limbParams, name, value);
 
-        private void TryUpdateSubParam(RagdollSubParams ragdollSubParams, string name, object value)
+        private void TryUpdateSubParam(RagdollParams.SubParam ragdollSubParams, string name, object value)
         {
             if (ragdollSubParams.SerializableProperties.TryGetValue(name, out SerializableProperty p))
             {

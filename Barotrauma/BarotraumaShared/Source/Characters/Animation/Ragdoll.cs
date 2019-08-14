@@ -10,6 +10,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
+using LimbParams = Barotrauma.RagdollParams.LimbParams;
+using JointParams = Barotrauma.RagdollParams.JointParams;
 
 namespace Barotrauma
 {
@@ -327,7 +329,7 @@ namespace Barotrauma
                     limbParams.Radius = 10;
                 }
             }
-            foreach (var colliderParams in RagdollParams.ColliderParams)
+            foreach (var colliderParams in RagdollParams.Colliders)
             {
                 if (!PhysicsBody.IsValidShape(colliderParams.Radius, colliderParams.Height, colliderParams.Width))
                 {
@@ -381,7 +383,7 @@ namespace Barotrauma
             }
             DebugConsole.Log($"Creating colliders from {RagdollParams.Name}.");
             collider = new List<PhysicsBody>();
-            foreach (ColliderParams cParams in RagdollParams.ColliderParams)
+            foreach (var cParams in RagdollParams.Colliders)
             {
                 if (!PhysicsBody.IsValidShape(cParams.Radius, cParams.Height, cParams.Width))
                 {

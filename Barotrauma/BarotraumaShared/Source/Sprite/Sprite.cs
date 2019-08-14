@@ -5,6 +5,7 @@ using System.Xml.Linq;
 using System.Linq;
 using Barotrauma.Extensions;
 using System.IO;
+using SpriteParams = Barotrauma.RagdollParams.SpriteParams;
 
 namespace Barotrauma
 {

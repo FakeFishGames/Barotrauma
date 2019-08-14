@@ -9,6 +9,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Networking;
+using LimbParams = Barotrauma.RagdollParams.LimbParams;
+using JointParams = Barotrauma.RagdollParams.JointParams;
 
 namespace Barotrauma
 {
