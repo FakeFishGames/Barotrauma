@@ -75,6 +75,7 @@ namespace Barotrauma.Steam
             Joining,
             Joined
         }
+        private static UInt64 lobbyID = 0;
         private static LobbyState lobbyState = LobbyState.NotConnected;
         private static string lobbyIP = "";
         private static Thread lobbyIPRetrievalThread;
@@ -166,6 +167,7 @@ namespace Barotrauma.Steam
                 lobbyIPRetrievalThread.Start();
                 
                 lobbyState = LobbyState.Owner;
+                lobbyID = instance.client.Lobby.CurrentLobby;
                 UpdateLobby(serverSettings);
             };
             if (lobbyState != LobbyState.NotConnected) { return; }
@@ -233,19 +235,21 @@ namespace Barotrauma.Steam
 
             instance.client.Lobby.OnLobbyJoined = null;
         }
-        public static void JoinLobby(UInt64 lobbyId, bool joinServer)
+        public static void JoinLobby(UInt64 id, bool joinServer)
         {
-            if (instance.client.Lobby.CurrentLobby == lobbyId) { return; }
+            if (instance.client.Lobby.CurrentLobby == id) { return; }
+            if (lobbyID == id) { return; }
             instance.client.Lobby.OnLobbyJoined = (success) =>
             {
                 try
                 {
                     if (!success)
                     {
-                        DebugConsole.ThrowError("Failed to join Steam lobby: "+lobbyId.ToString());
+                        DebugConsole.ThrowError("Failed to join Steam lobby: "+id.ToString());
                         return;
                     }
                     lobbyState = LobbyState.Joined;
+                    lobbyID = instance.client.Lobby.CurrentLobby;
                     if (joinServer)
                     {
                         GameMain.Instance.ConnectLobby = 0;
@@ -259,7 +263,8 @@ namespace Barotrauma.Steam
                 }
             };
             lobbyState = LobbyState.Joining;
-            instance.client.Lobby.Join(lobbyId);
+            lobbyID = id;
+            instance.client.Lobby.Join(id);
         }
 
         public static ulong GetWorkshopItemIDFromUrl(string url)
