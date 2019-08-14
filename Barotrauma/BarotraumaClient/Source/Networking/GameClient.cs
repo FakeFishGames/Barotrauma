@@ -1263,7 +1263,12 @@ namespace Barotrauma.Networking
                         ConnectedClients.RemoveAt(i);
                     }
                 }
-                if (updateClientListId) LastClientListUpdateID = listId;
+                if (updateClientListId) { LastClientListUpdateID = listId; }
+
+                if (clientPeer is SteamP2POwnerPeer)
+                {
+                    Steam.SteamManager.UpdateLobby(serverSettings);
+                }
             }
         }
 
@@ -1330,10 +1335,6 @@ namespace Barotrauma.Networking
                                 settingsBuf.Write(settingsData, 0, settingsLen); settingsBuf.BitPosition = 0;
                                 serverSettings.ClientRead(settingsBuf);
 
-                                if (clientPeer is SteamP2POwnerPeer)
-                                {
-                                    Steam.SteamManager.UpdateLobby(serverSettings);
-                                }
 
                                 GameMain.NetLobbyScreen.LastUpdateID = updateID;
 
@@ -1361,6 +1362,11 @@ namespace Barotrauma.Networking
                                 serverSettings.VoiceChatEnabled = voiceChatEnabled;
                                 serverSettings.Voting.AllowSubVoting = allowSubVoting;
                                 serverSettings.Voting.AllowModeVoting = allowModeVoting;
+
+                                if (clientPeer is SteamP2POwnerPeer)
+                                {
+                                    Steam.SteamManager.UpdateLobby(serverSettings);
+                                }
 
                                 GUI.KeyboardDispatcher.Subscriber = prevDispatcher;
                             }
