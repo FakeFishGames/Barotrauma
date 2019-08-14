@@ -114,7 +114,7 @@ namespace Barotrauma.Networking
                     }
                 }
 
-                GameMain.NetLobbyScreen.SetPlayerSpeaking(client);
+                GameMain.NetLobbyScreen?.SetPlayerSpeaking(client);
                 GameMain.GameSession?.CrewManager?.SetClientSpeaking(client);
 
                 if (client.Character != null)
