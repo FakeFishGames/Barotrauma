@@ -285,8 +285,20 @@ namespace Barotrauma.Networking
                         break;
                 }
 
-                byte[] p2pData = new byte[inc.LengthBytes - p2pDataStart];
-                Array.Copy(inc.Data, p2pDataStart, p2pData, 0, p2pData.Length);
+                byte[] p2pData;
+
+                if (isConnectionInitializationStep)
+                {
+                    p2pData = new byte[inc.LengthBytes - p2pDataStart + 8];
+                    p2pData[0] = inc.Data[p2pDataStart];
+                    Lidgren.Network.NetBitWriter.WriteUInt64(Steam.SteamManager.Instance.Lobby.CurrentLobby, 64, p2pData, 8);
+                    Array.Copy(inc.Data, p2pDataStart+1, p2pData, 9, inc.LengthBytes - p2pDataStart);
+                }
+                else
+                {
+                    p2pData = new byte[inc.LengthBytes - p2pDataStart];
+                    Array.Copy(inc.Data, p2pDataStart, p2pData, 0, p2pData.Length);
+                }
 
                 if (p2pData.Length + 4 >= MsgConstants.MTU)
                 {
