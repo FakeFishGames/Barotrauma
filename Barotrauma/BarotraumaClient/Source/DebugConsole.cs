@@ -487,6 +487,8 @@ namespace Barotrauma
             AssignRelayToServer("setmaxplayers", true);
             commands.Add(new Command("setpassword|password", "", (string[] args) => { }));
             AssignRelayToServer("setpassword", true);
+            commands.Add(new Command("traitorlist", "", (string[] args) => { }));
+            AssignRelayToServer("traitorlist", true);
 
             AssignOnExecute("control", (string[] args) =>
             {

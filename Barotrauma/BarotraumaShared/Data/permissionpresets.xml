@@ -31,6 +31,7 @@
     <Command name="showkarma"/>
     <Command name="togglekarmatestmode"/>
     <Command name="respawnnow"/>
+    <Command name="traitorlist"/>
   </Preset>
 
   <Preset 
@@ -88,5 +89,6 @@
     <Command name="showkarma"/>
     <Command name="togglekarmatestmode"/>
     <Command name="respawnnow"/>
+    <Command name="traitorlist"/>
   </Preset>
 </PermissionPresets>

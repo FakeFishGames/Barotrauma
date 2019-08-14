@@ -916,7 +916,11 @@ namespace Barotrauma
             {
                 if (GameMain.Server == null) return;
                 TraitorManager traitorManager = GameMain.Server.TraitorManager;
-                if (traitorManager == null || traitorManager.Traitors == null) return;
+                if (traitorManager == null || traitorManager.Traitors == null)
+                {
+                    NewMessage("There are no traitors at the moment.", Color.Cyan);
+                    return;
+                }
                 foreach (Traitor t in traitorManager.Traitors)
                 {
                     if (t.CurrentObjective != null)
@@ -933,7 +937,11 @@ namespace Barotrauma
             AssignOnClientRequestExecute("traitorlist", (Client client, Vector2 cursorPos, string[] args) =>
             {
                 TraitorManager traitorManager = GameMain.Server.TraitorManager;
-                if (traitorManager == null || traitorManager.Traitors == null) return;
+                if (traitorManager == null || traitorManager.Traitors == null)
+                {
+                    GameMain.Server.SendConsoleMessage("There are no traitors at the moment.", client);
+                    return;
+                }
                 foreach (Traitor t in traitorManager.Traitors)
                 {
                     if (t.CurrentObjective != null)
