@@ -151,6 +151,15 @@ namespace Barotrauma.Networking
             {
                 if (incomingDataMessages.Count > 0)
                 {
+                    SteamManager.Instance.LobbyList.OnLobbyUpdated = (lobby) => {
+                        if (lobby.Owner == hostSteamId)
+                        {
+                            SteamManager.JoinLobby(lobby.LobbyID, false);
+                            SteamManager.Instance.LobbyList.OnLobbyUpdated = null;
+                        }
+                    };
+                    SteamManager.Instance.LobbyList.Refresh();
+
                     OnInitializationComplete?.Invoke();
                     initializationStep = ConnectionInitialization.Success;
                 }
@@ -303,6 +312,9 @@ namespace Barotrauma.Networking
         public override void Close(string msg = null)
         {
             if (!isActive) { return; }
+
+            SteamManager.LeaveLobby();
+            SteamManager.Instance.LobbyList.OnLobbyUpdated = null;
 
             isActive = false;
 

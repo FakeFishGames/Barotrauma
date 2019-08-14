@@ -224,12 +224,12 @@ namespace Barotrauma
             }
         }
 
-        public static void ParseConnectCommand(string[] args, out string name, out string endpoint)
+        public static void ParseConnectCommand(string[] args, out string name, out string endpoint, out UInt64 lobbyId)
         {
-            name = null; endpoint = null;
-            for (int i = 0; i < args.Length - 2; i++)
+            name = null; endpoint = null; lobbyId = 0;
+            for (int i = 0; i < args.Length - 1; i++)
             {
-                if (args[i].Trim().ToLower().Equals("-connect", StringComparison.InvariantCultureIgnoreCase))
+                if (i < args.Length-2 && args[i].Trim().ToLower().Equals("-connect", StringComparison.InvariantCultureIgnoreCase))
                 {
                     int j = i + 2;
 
@@ -237,15 +237,22 @@ namespace Barotrauma
                     if (args[i + 1].Trim()[0] == '"')
                     {
                         name = args[i + 1].Trim().Substring(1);
-                        for (; j < args.Length - 1; j++)
+                        if (!(name[name.Length - 1] == '"' && (name.Length < 2 || name[name.Length - 1] != '\\')))
                         {
-                            name += " " + args[j].Trim();
-                            if (name[name.Length - 1] == '"' && (name.Length < 2 || name[name.Length - 1] != '\\'))
+                            for (; j < args.Length - 1; j++)
                             {
-                                name = name.Substring(0, name.Length - 1).Replace("\\\"", "\"");
-                                j++;
-                                break;
+                                name += " " + args[j].Trim();
+                                if (name[name.Length - 1] == '"' && (name.Length < 2 || name[name.Length - 1] != '\\'))
+                                {
+                                    name = name.Substring(0, name.Length - 1).Replace("\\\"", "\"");
+                                    j++;
+                                    break;
+                                }
                             }
+                        }
+                        else
+                        {
+                            name = name.Substring(0, name.Length - 1);
                         }
                     }
                     else
@@ -254,6 +261,13 @@ namespace Barotrauma
                     }
                     endpoint = args[j].Trim();
                     
+                    break;
+                }
+                else if (args[i].Trim().ToLower().Equals("+connect_lobby", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    UInt64.TryParse(args[i + 1].Trim(), out lobbyId);
+                    endpoint = null;
+                    name = null;
                     break;
                 }
             }

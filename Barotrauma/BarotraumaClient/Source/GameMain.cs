@@ -101,8 +101,9 @@ namespace Barotrauma
 
         private GameTime fixedTime;
 
-        private string ConnectName;
-        private string ConnectEndpoint;
+        public string ConnectName;
+        public string ConnectEndpoint;
+        public UInt64 ConnectLobby;
 
         private static SpriteBatch spriteBatch;
 
@@ -180,8 +181,9 @@ namespace Barotrauma
 
             ConnectName = null;
             ConnectEndpoint = null;
+            ConnectLobby = 0;
 
-            ToolBox.ParseConnectCommand(ConsoleArguments, out ConnectName, out ConnectEndpoint);
+            ToolBox.ParseConnectCommand(ConsoleArguments, out ConnectName, out ConnectEndpoint, out ConnectLobby);
 
             GUI.KeyboardDispatcher = new EventInput.KeyboardDispatcher(Window);
 
@@ -506,6 +508,7 @@ namespace Barotrauma
                 if (SteamManager.IsInitialized)
                 {
                     SteamManager.Instance.Friends.OnInvitedToGame += OnInvitedToGame;
+                    SteamManager.Instance.Lobby.OnLobbyJoinRequested += OnLobbyJoinRequested;
                 }
             }
             SubEditorScreen         = new SubEditorScreen();
@@ -608,9 +611,14 @@ namespace Barotrauma
 
         public void OnInvitedToGame(Facepunch.Steamworks.SteamFriend friend, string connectCommand)
         {
-            ToolBox.ParseConnectCommand(connectCommand.Split(' '), out ConnectName, out ConnectEndpoint);
+            ToolBox.ParseConnectCommand(connectCommand.Split(' '), out ConnectName, out ConnectEndpoint, out ConnectLobby);
 
             DebugConsole.NewMessage(ConnectName+", "+ConnectEndpoint,Color.Yellow);
+        }
+
+        public void OnLobbyJoinRequested(UInt64 lobbyId)
+        {
+            SteamManager.JoinLobby(lobbyId, true);
         }
 
         /// <summary>
@@ -693,7 +701,22 @@ namespace Barotrauma
                 }
                 else if (hasLoaded)
                 {
-                    if (!string.IsNullOrWhiteSpace(ConnectEndpoint))
+                    if (ConnectLobby != 0)
+                    {
+                        if (Client != null)
+                        {
+                            Client.Disconnect();
+                            Client = null;
+
+                            GameMain.MainMenuScreen.Select();
+                        }
+                        Steam.SteamManager.JoinLobby(ConnectLobby, true);
+
+                        ConnectLobby = 0;
+                        ConnectEndpoint = null;
+                        ConnectName = null;
+                    }
+                    else if (!string.IsNullOrWhiteSpace(ConnectEndpoint))
                     {
                         if (Client != null)
                         {
@@ -707,6 +730,7 @@ namespace Barotrauma
                                                 serverSteamId != 0 ? null : ConnectEndpoint,
                                                 serverSteamId,
                                                 string.IsNullOrWhiteSpace(ConnectName) ? ConnectEndpoint : ConnectName);
+                        ConnectLobby = 0;
                         ConnectEndpoint = null;
                         ConnectName = null;
                     }

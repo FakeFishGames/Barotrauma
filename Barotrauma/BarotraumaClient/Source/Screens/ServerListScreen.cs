@@ -333,13 +333,13 @@ namespace Barotrauma
                 {
                     if (ipBox.UserData is ServerInfo selectedServer)
                     {
-                        if (selectedServer.SteamID == 0)
+                        if (selectedServer.LobbyID == 0)
                         {
                             JoinServer(selectedServer.IP + ":" + selectedServer.Port, selectedServer.ServerName);
                         }
                         else
                         {
-                            JoinServer(selectedServer.SteamID.ToString(), selectedServer.ServerName);
+                            Steam.SteamManager.JoinLobby(selectedServer.LobbyID, true);
                         }
                     }
                     else if (!string.IsNullOrEmpty(ipBox.Text))

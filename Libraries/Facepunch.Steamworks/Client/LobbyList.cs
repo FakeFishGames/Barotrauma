@@ -144,12 +144,14 @@ namespace Facepunch.Steamworks
 
                 //otherwise lobby data in general was updated and you should listen to see what changed
                 if (OnLobbiesUpdated != null) { OnLobbiesUpdated(); }
+                if (OnLobbyUpdated != null) { OnLobbyUpdated(lobby); }
             }
 
             
         }
 
         public Action OnLobbiesUpdated;
+        public Action<Lobby> OnLobbyUpdated;
 
         public void Dispose()
         {
