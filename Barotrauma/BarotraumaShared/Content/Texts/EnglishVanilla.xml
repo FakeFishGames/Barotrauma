@@ -2101,10 +2101,6 @@
   <entitydescription.extinguisherbracket>Holds a fire extinguisher to the wall.</entitydescription.extinguisherbracket>
   <entityname.weaponholder>Weapon Holder</entityname.weaponholder>
   <entitydescription.weaponholder>A place to stow your weapons neatly.</entitydescription.weaponholder>
-  <entityname.windoweddoor>Windowed Door</entityname.windoweddoor>
-  <entitydescription.windoweddoor>A sliding door with integrated window.</entitydescription.windoweddoor>
-  <entityname.hatch>Hatch</entityname.hatch>
-  <entitydescription.hatch>A door, but on the horizontal axis.</entitydescription.hatch>
   <entityname.dockingport>Docking Port</entityname.dockingport>
   <entitydescription.dockingport>A vertically aligned docking interface. Locks to another docking port to form a watertight seal and allow passage between subs, shuttles and locations.</entitydescription.dockingport>
   <entityname.dockinghatch>Docking Hatch</entityname.dockinghatch>
@@ -3313,10 +3309,6 @@
   <connection.toggledocking>toggle_docking</connection.toggledocking>
   <connection.waterdatain>water_data_in</connection.waterdatain>
   <connection.oxygendatain>oxygen_data_in</connection.oxygendatain>
-  <connection.batterychargestatusout>charge_out</connection.batterychargestatusout>
-  <connection.batterychargepercentage>charge_%</connection.batterychargepercentage>
-  <connection.batterysetrechargespeed>set_charge_rate</connection.batterysetrechargespeed>
-  <connection.batteryrechargespeedout>charge_rate_out</connection.batteryrechargespeedout>
   <connection.activate>activate</connection.activate>
   <connection.dockingproximitysensor>proximity_sensor</connection.dockingproximitysensor>
   <connection.signalx>signal_[num]</connection.signalx>
