@@ -3443,5 +3443,6 @@
   <sabotaging>Sabotaging</sabotaging>
   <voipattenuation>Voice chat attenuation</voipattenuation>
   <voipattenuationtooltip>Lowers the game's volume when players are speaking.</voipattenuationtooltip>
-  <roundsummaryroundhasended>The round has ended.</roundsummaryroundhasended>  
+  <roundsummaryroundhasended>The round has ended.</roundsummaryroundhasended>
+  <clientpermission.karmaimmunity>Karma immunity</clientpermission.karmaimmunity>
 </infotexts>
