@@ -482,6 +482,12 @@ namespace Barotrauma
             RefreshServers();
         }
 
+        public override void Deselect()
+        {
+            base.Deselect();
+            SteamManager.Instance.LobbyList.OnLobbiesUpdated = null;
+        }
+
         private void FilterServers()
         {
             serverList.Content.RemoveChild(serverList.Content.FindChild("noresults"));
