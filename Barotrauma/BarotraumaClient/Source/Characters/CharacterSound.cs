@@ -12,29 +12,18 @@ namespace Barotrauma
         }
 
         private readonly RoundSound roundSound;
+        public readonly CharacterSoundParams Params;
 
-        public readonly SoundType Type;
+        public SoundType Type => Params.State;
+        public Gender Gender => Params.Gender;
+        public float Volume => roundSound.Volume;
+        public float Range => roundSound.Range;
+        public Sound Sound => roundSound?.Sound;
 
-        public float Volume
+        public CharacterSound(CharacterSoundParams soundParams)
         {
-            get { return roundSound.Volume; }
-        }
-        public float Range
-        {
-            get { return roundSound.Range; }
-        }
-        public Sound Sound
-        {
-            get { return roundSound?.Sound; }
-        }
-
-        public readonly Gender Gender;
-
-        public CharacterSound(XElement element)
-        {
-            roundSound = Submarine.LoadRoundSound(element);
-            Enum.TryParse(element.GetAttributeString("state", "Idle"), true, out Type);
-            Enum.TryParse(element.GetAttributeString("gender", "None"), true, out Gender);
+            Params = soundParams;
+            roundSound = Submarine.LoadRoundSound(soundParams.Element);
         }
     }
 }

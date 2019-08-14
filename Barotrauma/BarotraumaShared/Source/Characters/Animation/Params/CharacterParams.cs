@@ -4,6 +4,10 @@ using System.Xml.Linq;
 using System.Xml;
 using System.Linq;
 using Barotrauma.Extensions;
+#if CLIENT
+using Barotrauma.Particles;
+using SoundType = Barotrauma.CharacterSound.SoundType;
+#endif
 
 namespace Barotrauma
 {
@@ -36,7 +40,11 @@ namespace Barotrauma
         public readonly string File;
 
         public List<CharacterSubParams> SubParams { get; private set; } = new List<CharacterSubParams>();
+
+        public List<CharacterSoundParams> Sounds { get; private set; } = new List<CharacterSoundParams>();
+
         public HealthParams Health { get; private set; }
+
         public AIParams AI { get; private set; }
 
         public CharacterParams(string file)
@@ -92,6 +100,12 @@ namespace Barotrauma
                 AI = new AIParams(ai, this);
                 SubParams.Add(AI);
             }
+            foreach (var soundElement in MainElement.GetChildElements("sound"))
+            {
+                var sound = new CharacterSoundParams(soundElement, this);
+                Sounds.Add(sound);
+                SubParams.Add(sound);
+            }
 
             // TODO: bloodemitter, gibemitter, sounds, inventory
         }
@@ -139,6 +153,51 @@ namespace Barotrauma
             }
         }
 #endif
+
+        public bool TryAddSound(out CharacterSoundParams soundParams)
+        {
+            var element = new XElement("sound");
+            MainElement.Add(element);
+            soundParams = new CharacterSoundParams(element, this);
+            SubParams.Add(soundParams);
+            Sounds.Add(soundParams);
+            return soundParams != null;
+        }
+
+        public bool RemoveSound(CharacterSoundParams soundParams)
+        {
+            if (soundParams == null || soundParams.Element == null || soundParams.Element.Parent == null) { return false; }
+            if (!Sounds.Contains(soundParams)) { return false; }
+            if (!SubParams.Contains(soundParams)) { return false; }
+            Sounds.Remove(soundParams);
+            SubParams.Remove(soundParams);
+            soundParams.Element.Remove();
+            return true;
+        }
+    }
+
+    class CharacterSoundParams : CharacterSubParams
+    {
+        public override string Name => "Sound";
+
+        [Serialize("", true), Editable]
+        public string File { get; private set; }
+
+#if CLIENT
+        [Serialize(SoundType.Idle, true), Editable]
+        public SoundType State { get; private set; }
+#endif
+
+        [Serialize(1000f, true), Editable]
+        public float Range { get; private set; }
+
+        [Serialize(1.0f, true), Editable]
+        public float Volume { get; private set; }
+
+        [Serialize(Gender.None, true), Editable]
+        public Gender Gender { get; private set; }
+
+        public CharacterSoundParams(XElement element, CharacterParams character) : base(element, character) { }
     }
 
     class HealthParams : CharacterSubParams
@@ -224,24 +283,22 @@ namespace Barotrauma
 
         public AIParams(XElement element, CharacterParams character) : base(element, character)
         {
-            element.GetChildElements("target").ForEach(t => TryAddTarget(t, character, out _));
-            element.GetChildElements("targetpriority").ForEach(t => TryAddTarget(t, character, out _));
+            element.GetChildElements("target").ForEach(t => TryAddTarget(t, out _));
+            element.GetChildElements("targetpriority").ForEach(t => TryAddTarget(t, out _));
         }
 
-        private bool TryAddTarget(XElement targetElement, CharacterParams character, out TargetParams target)
+        private bool TryAddTarget(XElement targetElement, out TargetParams target)
         {
-            target = null;
             string tag = targetElement.GetAttributeString("tag", null);
-            if (tag == null) { return false; }
-            tag = tag.ToLowerInvariant();
-            if (targets.Any(t => t.Tag == tag))
+            if (!CheckTag(tag))
             {
+                target = null;
                 DebugConsole.ThrowError($"Multiple targets with the same tag ('{tag}') defined! Only the first will be used!");
                 return false;
             }
             else
             {
-                target = new TargetParams(targetElement, character);
+                target = new TargetParams(targetElement, Character);
                 targets.Add(target);
                 SubParams.Add(target);
                 return true;
@@ -250,17 +307,24 @@ namespace Barotrauma
 
         public bool TryAddEmptyTarget(out TargetParams targetParams) => TryAddNewTarget("newtarget" + targets.Count, AIState.Attack, 0f, out targetParams);
 
-        public bool TryAddNewTarget(string tag, AIState state, float priority, out TargetParams targetParams, bool createNewElement = true)
+        public bool TryAddNewTarget(string tag, AIState state, float priority, out TargetParams targetParams)
         {
             var element = TargetParams.CreateNewElement(tag, state, priority);
-            if (TryAddTarget(element, Character, out targetParams))
+            if (TryAddTarget(element, out targetParams))
             {
                 Element.Add(element);
             }
             return targetParams != null;
         }
 
-        public bool TryRemoveTarget(TargetParams target)
+        private bool CheckTag(string tag)
+        {
+            if (tag == null) { return false; }
+            tag = tag.ToLowerInvariant();
+            return targets.None(t => t.Tag == tag);
+        }
+
+        public bool RemoveTarget(TargetParams target)
         {
             if (target == null || target.Element == null || target.Element.Parent == null) { return false; }
             if (!targets.Contains(target)) { return false; }
@@ -271,12 +335,12 @@ namespace Barotrauma
             return true;
         }
 
-        public bool TryRemoveLastTarget()
+        public bool RemoveLastTarget()
         {
             if (targets.None()) { return false; }
             var last = targets.LastOrDefault();
             if (last == null) { return false; }
-            return TryRemoveTarget(last);
+            return RemoveTarget(last);
         }
 
         public bool TryGetTarget(string targetTag, out TargetParams target)

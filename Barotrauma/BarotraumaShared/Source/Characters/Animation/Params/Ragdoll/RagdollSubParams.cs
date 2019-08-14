@@ -4,7 +4,6 @@ using System.Xml.Linq;
 using System.Linq;
 using Barotrauma.Extensions;
 #if CLIENT
-using Barotrauma.Particles;
 using Barotrauma.Lights;
 using Barotrauma.SpriteDeformations;
 #endif

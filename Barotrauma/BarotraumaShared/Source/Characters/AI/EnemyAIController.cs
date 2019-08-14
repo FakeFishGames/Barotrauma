@@ -893,7 +893,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    AIParams.TryAddNewTarget(tag, AIState.Attack, 100f, out target, createNewElement: false);
+                    AIParams.TryAddNewTarget(tag, AIState.Attack, 100f, out _);
                 }
                 if (attacker.Submarine != null && attacker.IsHuman)
                 {

@@ -2806,11 +2806,12 @@ namespace Barotrauma
                 CharacterParams.AddToEditor(editor);
                 if (CharacterParams.AI != null)
                 {
-                    var buttonParent = new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 40), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
+                    var aiEditor = CharacterParams.AI.SerializableEntityEditor;
+                    var parent = new GUIFrame(new RectTransform(new Point(aiEditor.Rect.Width, 40), aiEditor.RectTransform), style: null, color: new Color(20, 20, 20, 255))
                     {
                         CanBeFocused = false
                     };
-                    new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), buttonParent.RectTransform, Anchor.CenterLeft), "Add Target")
+                    new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), parent.RectTransform, Anchor.CenterLeft), "Add Target")
                     {
                         OnClicked = (button, data) =>
                         {
@@ -2819,10 +2820,11 @@ namespace Barotrauma
                             return true;
                         }
                     };
+                    aiEditor.AddCustomContent(parent, aiEditor.ContentCount);
                     foreach (var target in CharacterParams.AI.Targets)
                     {
                         var targetEditor = target.SerializableEntityEditor;
-                        var parent = new GUIFrame(new RectTransform(new Point(targetEditor.Rect.Width, 30), targetEditor.RectTransform), style: null)
+                        parent = new GUIFrame(new RectTransform(new Point(targetEditor.Rect.Width, 30), targetEditor.RectTransform), style: null)
                         {
                             CanBeFocused = false
                         };
@@ -2830,7 +2832,7 @@ namespace Barotrauma
                         {
                             OnClicked = (button, data) =>
                             {
-                                CharacterParams.AI.TryRemoveTarget(target);
+                                CharacterParams.AI.RemoveTarget(target);
                                 ResetParamsEditor();
                                 return true;
                             }
@@ -2838,6 +2840,37 @@ namespace Barotrauma
                         targetEditor.AddCustomContent(parent, 0);
                     }
                 }
+                foreach (var sound in CharacterParams.Sounds)
+                {
+                    var soundEditor = sound.SerializableEntityEditor;
+                    var parent = new GUIFrame(new RectTransform(new Point(soundEditor.Rect.Width, 30), soundEditor.RectTransform), style: null)
+                    {
+                        CanBeFocused = false
+                    };
+                    new GUIButton(new RectTransform(new Vector2(0.08f, 0.8f), parent.RectTransform, Anchor.BottomRight), "X", color: Color.Red)
+                    {
+                        OnClicked = (button, data) =>
+                        {
+                            CharacterParams.RemoveSound(sound);
+                            ResetParamsEditor();
+                            return true;
+                        }
+                    };
+                    soundEditor.AddCustomContent(parent, 0);
+                }
+                var buttonParent = new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 40), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
+                {
+                    CanBeFocused = false
+                };
+                new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), buttonParent.RectTransform, Anchor.CenterLeft), "Add Sound")
+                {
+                    OnClicked = (button, data) =>
+                    {
+                        CharacterParams.TryAddSound(out _);
+                        ResetParamsEditor();
+                        return true;
+                    }
+                };
             }
             else if (editAnimations)
             {

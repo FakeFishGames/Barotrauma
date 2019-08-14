@@ -139,14 +139,12 @@ namespace Barotrauma
             soundTimer = Rand.Range(0.0f, soundInterval);
 
             sounds = new List<CharacterSound>();
+            Params.Sounds.ForEach(s => sounds.Add(new CharacterSound(s)));
+
             foreach (XElement subElement in mainElement.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
-                    case "sound":
-                        var characterSound = new CharacterSound(subElement);
-                        if (characterSound.Sound != null) { sounds.Add(characterSound); }
-                        break;
                     case "damageemitter":
                         damageEmitters.Add(new ParticleEmitter(subElement));
                         break;
