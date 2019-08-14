@@ -54,6 +54,11 @@ namespace Barotrauma.Sounds
             }
         }
 
+        public float CurrentAmplitude
+        {
+            get { return soundChannel?.CurrentAmplitude ?? 0.0f; }
+        }
+
         public VoipSound(SoundManager owner, VoipQueue q) : base(owner, "voip", true, true)
         {
             VoipConfig.SetupEncoding();

@@ -117,19 +117,22 @@ namespace Barotrauma.Networking
                 GameMain.NetLobbyScreen?.SetPlayerSpeaking(client);
                 GameMain.GameSession?.CrewManager?.SetClientSpeaking(client);
 
-                if (client.Character != null)
+                if (client.VoipSound.CurrentAmplitude > 0.1f) //TODO: might need to tweak
                 {
-                    Vector3 clientPos = new Vector3(client.Character.WorldPosition.X, client.Character.WorldPosition.Y, 0.0f);
-                    Vector3 listenerPos = GameMain.SoundManager.ListenerPosition;
-                    float attenuationDist = client.VoipSound.Near * 1.125f;
-                    if (Vector3.DistanceSquared(clientPos, listenerPos) < attenuationDist * attenuationDist)
+                    if (client.Character != null)
+                    {
+                        Vector3 clientPos = new Vector3(client.Character.WorldPosition.X, client.Character.WorldPosition.Y, 0.0f);
+                        Vector3 listenerPos = GameMain.SoundManager.ListenerPosition;
+                        float attenuationDist = client.VoipSound.Near * 1.125f;
+                        if (Vector3.DistanceSquared(clientPos, listenerPos) < attenuationDist * attenuationDist)
+                        {
+                            GameMain.SoundManager.VoipAttenuatedGain = 0.5f;
+                        }
+                    }
+                    else
                     {
                         GameMain.SoundManager.VoipAttenuatedGain = 0.5f;
                     }
-                }
-                else
-                {
-                    GameMain.SoundManager.VoipAttenuatedGain = 0.5f;
                 }
             }
         }
