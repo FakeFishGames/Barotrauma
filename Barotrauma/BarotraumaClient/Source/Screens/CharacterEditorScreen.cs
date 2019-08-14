@@ -2806,11 +2806,7 @@ namespace Barotrauma
                 CharacterParams.AddToEditor(mainEditor, space: 10);
                 var characterEditor = CharacterParams.SerializableEntityEditor;
                 // Add some space after the title
-                characterEditor.AddCustomContent(
-                    new GUIFrame(new RectTransform(new Point(characterEditor.Rect.Width, 10), characterEditor.RectTransform), style: null)
-                {
-                    CanBeFocused = false
-                }, 1);
+                characterEditor.AddCustomContent(new GUIFrame(new RectTransform(new Point(characterEditor.Rect.Width, 10), characterEditor.RectTransform), style: null) { CanBeFocused = false }, 1);
                 if (CharacterParams.AI != null)
                 {
                     var aiEditor = CharacterParams.AI.SerializableEntityEditor;
