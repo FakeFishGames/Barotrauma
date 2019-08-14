@@ -235,6 +235,14 @@ namespace Barotrauma.Items.Components
 
         protected override void RemoveComponentSpecific()
         {
+            foreach (Wire wire in DisconnectedWires.ToList())
+            {
+                if (wire.OtherConnection(null) == null) //wire not connected to anything else
+                {
+                    wire.Item.Drop(null);
+                }
+            }
+
             DisconnectedWires.Clear();
             foreach (Connection c in Connections)
             {
