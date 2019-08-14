@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <infotexts language="English" nowhitespace="false" translatedname="English">
 
+  <!-- When adding new text, do it so at the bottom under the 'New additions' & 'Changed values' respectively. If it's a new tag entirely, put it under the new additions one; If it's an update to an existing value, put it under the changed values one. -->
+
   <!-- Loading Screen -->
   <loading>Loading...</loading>
   <pressanykey>Press any key to continue</pressanykey>
@@ -3426,7 +3428,7 @@
   <waterdetector.falseoutput>False output</waterdetector.falseoutput>
   <wificomponent.channel>Channel</wificomponent.channel>
 
-  <!-- New Additions 13th of August -->
+  <!-- New Additions as of 13th of August -->
   <connection.batterychargestatusout>charge_out</connection.batterychargestatusout>
   <connection.batterychargepercentage>charge_%</connection.batterychargepercentage>
   <connection.batterysetrechargespeed>set_charge_rate</connection.batterysetrechargespeed>
@@ -3445,4 +3447,7 @@
   <voipattenuationtooltip>Lowers the game's volume when players are speaking.</voipattenuationtooltip>
   <roundsummaryroundhasended>The round has ended.</roundsummaryroundhasended>
   <clientpermission.karmaimmunity>Karma immunity</clientpermission.karmaimmunity>
+
+  <!-- Changed values as of 13th of August -->
+
 </infotexts>
