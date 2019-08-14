@@ -191,7 +191,7 @@ namespace Barotrauma.Steam
             instance.client.Lobby.Name = serverSettings.ServerName;
             instance.client.Lobby.Owner = Steam.SteamManager.GetSteamID();
             instance.client.Lobby.MaxMembers = serverSettings.MaxPlayers;
-            instance.client.Lobby.CurrentLobbyData.SetData("currplayernum", (GameMain.Client?.ConnectedClients?.Count??0).ToString());
+            instance.client.Lobby.CurrentLobbyData.SetData("playercount", (GameMain.Client?.ConnectedClients?.Count??0).ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("maxplayernum", serverSettings.MaxPlayers.ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("hostipaddress", lobbyIP);
             instance.client.Lobby.CurrentLobbyData.SetData("connectsteamid", Steam.SteamManager.GetSteamID().ToString());
@@ -348,15 +348,11 @@ namespace Barotrauma.Steam
         {
             foreach (LobbyList.Lobby lobby in instance.client.LobbyList.Lobbies)
             {
-                bool hasPassword = false;
                 if (string.IsNullOrWhiteSpace(lobby.GetData("haspassword"))) { continue; }
-                bool.TryParse(lobby.GetData("haspassword"), out hasPassword);
-                int currPlayers = 1;
-                int.TryParse(lobby.GetData("currplayernum"), out currPlayers);
-                int maxPlayers = 1;
-                int.TryParse(lobby.GetData("maxplayernum"), out maxPlayers);
-                UInt64 connectSteamId = 0;
-                UInt64.TryParse(lobby.GetData("connectsteamid"), out connectSteamId);
+                bool.TryParse(lobby.GetData("haspassword"), out bool hasPassword);
+                int.TryParse(lobby.GetData("playercount"), out int currPlayers);
+                int.TryParse(lobby.GetData("maxplayernum"), out int maxPlayers);
+                UInt64.TryParse(lobby.GetData("connectsteamid"), out ulong connectSteamId);
                 string ip = lobby.GetData("hostipaddress");
                 if (string.IsNullOrWhiteSpace(ip)) { ip = ""; }
 
