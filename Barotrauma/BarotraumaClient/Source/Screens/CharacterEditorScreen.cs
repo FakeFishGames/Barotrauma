@@ -2840,6 +2840,69 @@ namespace Barotrauma
                         targetEditor.AddCustomContent(parent, 0);
                     }
                 }
+
+                foreach (var emitter in CharacterParams.BloodEmitters)
+                {
+                    var emitterEditor = emitter.SerializableEntityEditor;
+                    var parent = new GUIFrame(new RectTransform(new Point(emitterEditor.Rect.Width, 30), emitterEditor.RectTransform), style: null)
+                    {
+                        CanBeFocused = false
+                    };
+                    new GUIButton(new RectTransform(new Vector2(0.08f, 0.8f), parent.RectTransform, Anchor.BottomRight), "X", color: Color.Red)
+                    {
+                        OnClicked = (button, data) =>
+                        {
+                            CharacterParams.RemoveBloodEmitter(emitter);
+                            ResetParamsEditor();
+                            return true;
+                        }
+                    };
+                    emitterEditor.AddCustomContent(parent, 0);
+                }
+                foreach (var emitter in CharacterParams.GibEmitters)
+                {
+                    var emitterEditor = emitter.SerializableEntityEditor;
+                    var parent = new GUIFrame(new RectTransform(new Point(emitterEditor.Rect.Width, 30), emitterEditor.RectTransform), style: null)
+                    {
+                        CanBeFocused = false
+                    };
+                    new GUIButton(new RectTransform(new Vector2(0.08f, 0.8f), parent.RectTransform, Anchor.BottomRight), "X", color: Color.Red)
+                    {
+                        OnClicked = (button, data) =>
+                        {
+                            CharacterParams.RemoveGibEmitter(emitter);
+                            ResetParamsEditor();
+                            return true;
+                        }
+                    };
+                    emitterEditor.AddCustomContent(parent, 0);
+                }
+                var buttonParent = new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 40), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
+                {
+                    CanBeFocused = false
+                };
+                new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), buttonParent.RectTransform, Anchor.Center), "Add Blood Emitter")
+                {
+                    OnClicked = (button, data) =>
+                    {
+                        CharacterParams.AddBloodEmitter();
+                        ResetParamsEditor();
+                        return true;
+                    }
+                };
+                buttonParent = new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 40), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
+                {
+                    CanBeFocused = false
+                };
+                new GUIButton(new RectTransform(new Vector2(0.45f, 0.8f), buttonParent.RectTransform, Anchor.Center), "Add Gib Emitter")
+                {
+                    OnClicked = (button, data) =>
+                    {
+                        CharacterParams.AddGibEmitter();
+                        ResetParamsEditor();
+                        return true;
+                    }
+                };
                 foreach (var sound in CharacterParams.Sounds)
                 {
                     var soundEditor = sound.SerializableEntityEditor;

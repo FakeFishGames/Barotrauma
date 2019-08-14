@@ -5,7 +5,6 @@ using System.Xml;
 using System.Linq;
 using Barotrauma.Extensions;
 #if CLIENT
-using Barotrauma.Particles;
 using SoundType = Barotrauma.CharacterSound.SoundType;
 #endif
 
@@ -40,11 +39,10 @@ namespace Barotrauma
         public readonly string File;
 
         public List<SubParam> SubParams { get; private set; } = new List<SubParam>();
-
         public List<SoundParams> Sounds { get; private set; } = new List<SoundParams>();
-
+        public List<ParticleParams> BloodEmitters { get; private set; } = new List<ParticleParams>();
+        public List<ParticleParams> GibEmitters { get; private set; } = new List<ParticleParams>();
         public HealthParams Health { get; private set; }
-
         public AIParams AI { get; private set; }
 
         public CharacterParams(string file)
@@ -99,6 +97,18 @@ namespace Barotrauma
             {
                 AI = new AIParams(ai, this);
                 SubParams.Add(AI);
+            }
+            foreach (var element in MainElement.GetChildElements("bloodemitter"))
+            {
+                var emitter = new ParticleParams(element, this);
+                BloodEmitters.Add(emitter);
+                SubParams.Add(emitter);
+            }
+            foreach (var element in MainElement.GetChildElements("gibemitter"))
+            {
+                var emitter = new ParticleParams(element, this);
+                GibEmitters.Add(emitter);
+                SubParams.Add(emitter);
             }
             foreach (var soundElement in MainElement.GetChildElements("sound"))
             {
@@ -174,6 +184,40 @@ namespace Barotrauma
             return true;
         }
 
+        public void AddBloodEmitter() => AddEmitter(new XElement("bloodemitter"));
+        public void AddGibEmitter() => AddEmitter(new XElement("gibemitter"));
+        public bool RemoveBloodEmitter(ParticleParams emitter) => RemoveEmitter(emitter, BloodEmitters);
+        public bool RemoveGibEmitter(ParticleParams emitter) => RemoveEmitter(emitter, GibEmitters);
+
+        private void AddEmitter(XElement element)
+        {
+            MainElement.Add(element);
+            var emitter = new ParticleParams(element, this);
+            SubParams.Add(emitter);
+            string elementName = element.Name.ToString().ToLowerInvariant();
+            switch (elementName)
+            {
+                case "gibemitter":
+                    GibEmitters.Add(emitter);
+                    break;
+                case "bloodemitter":
+                    BloodEmitters.Add(emitter);
+                    break;
+                default: throw new System.NotImplementedException(elementName);
+            }
+        }
+
+        private bool RemoveEmitter(ParticleParams emitter, List<ParticleParams> collection)
+        {
+            if (emitter == null || emitter.Element == null || emitter.Element.Parent == null) { return false; }
+            if (!collection.Contains(emitter)) { return false; }
+            if (!SubParams.Contains(emitter)) { return false; }
+            collection.Remove(emitter);
+            SubParams.Remove(emitter);
+            emitter.Element.Remove();
+            return true;
+        }
+
         #region Subparams
         public class SoundParams : SubParam
         {
@@ -197,6 +241,60 @@ namespace Barotrauma
             public Gender Gender { get; private set; }
 
             public SoundParams(XElement element, CharacterParams character) : base(element, character) { }
+        }
+
+        public class ParticleParams : SubParam
+        {
+            private string name;
+            public override string Name
+            {
+                get
+                {
+                    if (name == null && Element != null)
+                    {
+                        name = Element.Name.ToString().FormatCamelCaseWithSpaces();
+                    }
+                    return name;
+                }
+            }
+
+            [Serialize("", true), Editable]
+            public string Particle { get; set; }
+
+            [Serialize(0f, true), Editable(-360f, 360f, decimals: 0)]
+            public float AngleMin { get; private set; }
+
+            [Serialize(0f, true), Editable(-360f, 360f, decimals: 0)]
+            public float AngleMax { get; private set; }
+
+            [Serialize(1.0f, true), Editable(0f, 100f, decimals: 2)]
+            public float ScaleMin { get; private set; }
+
+            [Serialize(1.0f, true), Editable(0f, 100f, decimals: 2)]
+            public float ScaleMax { get; private set; }
+
+            [Serialize(0f, true), Editable(0f, 10000f, decimals: 0)]
+            public float VelocityMin { get; private set; }
+
+            [Serialize(0f, true), Editable(0f, 10000f, decimals: 0)]
+            public float VelocityMax { get; private set; }
+
+            [Serialize(0f, true), Editable(0f, 100f, decimals: 2)]
+            public float EmitInterval { get; private set; }
+
+            [Serialize(0, true), Editable(0, 1000)]
+            public int ParticlesPerSecond { get; private set; }
+
+            [Serialize(0, true), Editable(0, 1000)]
+            public int ParticleAmount { get; private set; }
+
+            [Serialize(false, true), Editable]
+            public bool HighQualityCollisionDetection { get; private set; }
+
+            [Serialize(false, true), Editable]
+            public bool CopyEntityAngle { get; private set; }
+
+            public ParticleParams(XElement element, CharacterParams character) : base(element, character) { }
         }
 
         public class HealthParams : SubParam
