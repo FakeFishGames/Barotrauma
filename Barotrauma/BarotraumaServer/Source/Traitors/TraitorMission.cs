@@ -6,6 +6,7 @@ using Barotrauma.Networking;
 using Lidgren.Network;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -46,6 +47,40 @@ namespace Barotrauma
                     {
                         return pendingObjectives[0].EndMessageText;
                     }
+                }
+            }
+
+            public string GlobalEndMessageSuccessTextId { get; private set; }
+            public string GlobalEndMessageSuccessDeadTextId { get; private set; }
+            public string GlobalEndMessageSuccessDetainedTextId { get; private set; }
+            public string GlobalEndMessageFailureTextId { get; private set; }
+            public string GlobalEndMessageFailureDeadTextId { get; private set; }
+            public string GlobalEndMessageFailureDetainedTextId { get; private set; }
+
+            private readonly string objectiveGoalInfoFormat = "[index]. [goalinfos]\n";
+
+            public virtual IEnumerable<string> GlobalEndMessageKeys => new string[] { "[traitorname]", "[traitorgoalinfos]" };
+            public virtual IEnumerable<string> GlobalEndMessageValues => new string[] {
+                (Traitors.TryGetValue("traitor", out var traitor) ? traitor.Character?.Name : null) ?? "(unknown)",
+                (pendingObjectives.Count > 0 ? pendingObjectives[0] : completedObjectives.Count > 0 ? completedObjectives[0] : allObjectives.Count > 0 ? allObjectives[0] : null)?.GoalInfos ?? ""
+            };
+
+            public string GlobalEndMessage
+            {
+                get
+                {
+                    var traitor = Traitors["traitor"];
+                    if (allObjectives.Count > 0)
+                    {
+                        var isSuccess = completedObjectives.Count >= allObjectives.Count;
+                        var traitorIsDead = traitor.Character.IsDead;
+                        var traitorIsDetained = traitor.Character.LockHands;
+                        var messageId = isSuccess
+                            ? (traitorIsDead ? GlobalEndMessageSuccessDeadTextId : traitorIsDetained ? GlobalEndMessageSuccessDetainedTextId : GlobalEndMessageSuccessTextId)
+                            : (traitorIsDead ? GlobalEndMessageFailureDeadTextId : traitorIsDetained ? GlobalEndMessageFailureDetainedTextId : GlobalEndMessageFailureTextId);
+                        return TextManager.FormatServerMessageWithGenderPronouns(traitor.Character.Info.Gender, messageId, GlobalEndMessageKeys.ToArray(), GlobalEndMessageValues.ToArray()); 
+                    }
+                    return "";
                 }
             }
 
@@ -194,9 +229,15 @@ namespace Barotrauma
 #endif
             }
 
-            public TraitorMission(string startText, params Objective[] objectives)
+            public TraitorMission(string startText, string globalEndMessageSuccessTextId, string globalEndMessageSuccessDeadTextId, string globalEndMessageSuccessDetainedTextId, string globalEndMessageFailureTextId, string globalEndMessageFailureDeadTextId, string globalEndMessageFailureDetainedTextId, params Objective[] objectives)
             {
                 StartText = startText;
+                GlobalEndMessageSuccessTextId = globalEndMessageSuccessTextId;
+                GlobalEndMessageSuccessDeadTextId = globalEndMessageSuccessDeadTextId;
+                GlobalEndMessageSuccessDetainedTextId = globalEndMessageSuccessDetainedTextId;
+                GlobalEndMessageFailureTextId = globalEndMessageFailureTextId;
+                GlobalEndMessageFailureDeadTextId = globalEndMessageFailureDeadTextId;
+                GlobalEndMessageFailureDetainedTextId = globalEndMessageFailureDetainedTextId;
                 allObjectives.AddRange(objectives);
                 pendingObjectives.AddRange(objectives);
             }

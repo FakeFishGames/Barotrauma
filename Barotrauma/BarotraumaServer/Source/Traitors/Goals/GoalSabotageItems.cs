@@ -12,7 +12,7 @@ namespace Barotrauma
             private readonly float conditionThreshold;
 
             public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[tag]", "[target]", "[threshold]" });
-            public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { tag, targetItemPrefabName, string.Format("{0:0}", conditionThreshold) });
+            public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { tag ?? "", targetItemPrefabName ?? "", string.Format("{0:0}", conditionThreshold) });
 
             private bool isCompleted = false;
             public override bool IsCompleted => isCompleted;

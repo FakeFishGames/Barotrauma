@@ -233,12 +233,25 @@ namespace Barotrauma {
         */
         public readonly string Identifier;
         public readonly string StartText;
+        public readonly string EndMessageSuccessText;
+        public readonly string EndMessageSuccessDeadText;
+        public readonly string EndMessageSuccessDetainedText;
+        public readonly string EndMessageFailureText;
+        public readonly string EndMessageFailureDeadText;
+        public readonly string EndMessageFailureDetainedText;
+        
         public readonly List<Objective> Objectives = new List<Objective>();
 
         public Traitor.TraitorMission Instantiate()
         {
             return new Traitor.TraitorMission(
                 StartText ?? "TraitorMissionStartMessage", 
+                EndMessageSuccessText ?? "TraitorObjectiveEndMessageSuccess",
+                EndMessageSuccessDeadText ?? "TraitorObjectiveEndMessageSuccessDead",
+                EndMessageSuccessDetainedText ?? "TraitorObjectiveEndMessageSuccessDetained",
+                EndMessageFailureText ?? "TraitorObjectiveEndMessageFailure",
+                EndMessageFailureDeadText ?? "TraitorObjectiveEndMessageFailureDead",
+                EndMessageFailureDetainedText ?? "TraitorObjectiveEndMessageFailureDetained",
                 Objectives.ConvertAll(objective => objective.Instantiate()).ToArray());
         }
 
@@ -306,6 +319,24 @@ namespace Barotrauma {
                 {
                     case "startinfotext":
                         StartText = element.GetAttributeString("id", null);
+                        break;
+                    case "endmessagesuccess":
+                        EndMessageSuccessText = element.GetAttributeString("id", null);
+                        break;
+                    case "endmessagesuccessdead":
+                        EndMessageSuccessDeadText = element.GetAttributeString("id", null);
+                        break;
+                    case "endmessagesuccessdetained":
+                        EndMessageSuccessDetainedText = element.GetAttributeString("id", null);
+                        break;
+                    case "endmessagefailure":
+                        EndMessageFailureText = element.GetAttributeString("id", null);
+                        break;
+                    case "endmessagefailuredead":
+                        EndMessageFailureDeadText = element.GetAttributeString("id", null);
+                        break;
+                    case "endmessagefailuredetained":
+                        EndMessageFailureDetainedText = element.GetAttributeString("id", null);
                         break;
                     case "objective":
                         {

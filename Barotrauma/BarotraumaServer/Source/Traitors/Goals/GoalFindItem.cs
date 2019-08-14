@@ -22,7 +22,7 @@ namespace Barotrauma
             private string targetHullNameText;
 
             public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[identifier]", "[target]", "[targethullname]" });
-            public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { targetNameText, targetContainerNameText, targetHullNameText });
+            public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { targetNameText ?? "", targetContainerNameText ?? "", targetHullNameText ?? "" });
 
             public override bool IsCompleted => target != null && target.ParentInventory == Traitor.Character.Inventory;
             public override bool CanBeCompleted {

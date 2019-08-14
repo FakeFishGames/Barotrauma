@@ -82,7 +82,7 @@ namespace Barotrauma
 #endif
             if (GameMain.Server == null || Mission == null) return "";
 
-            return Mission.EndMessage;
+            return Mission.GlobalEndMessage;
         }
     }
 }

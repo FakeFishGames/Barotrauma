@@ -1966,7 +1966,11 @@ namespace Barotrauma.Networking
 
         public void EndGame()
         {
-            if (!gameStarted) { return; }
+            if (!gameStarted)
+            {
+                return;
+            }
+
             if (GameSettings.VerboseLogging)
             {
                 Log("Ending the round...\n" + Environment.StackTrace, ServerLog.MessageType.ServerMessage);
@@ -1977,7 +1981,21 @@ namespace Barotrauma.Networking
                 Log("Ending the round...", ServerLog.MessageType.ServerMessage);
             }
 
-            string endMessage = TextManager.FormatServerMessage("RoundSummaryRoundHasEnded", new string[] { "[traitorinfo]" }, new string[] { TraitorManager != null ? TraitorManager.GetEndMessage() : "" });
+            var traitorEndMessage = TraitorManager.GetEndMessage();
+            var traitorEndMessageStart = traitorEndMessage.LastIndexOf('/') + 1;
+
+            var roundSummary = TextManager.FormatServerMessage("RoundSummaryRoundHasEnded", new string[] {"[traitorinfo]"}, new string[] {"[endsummary.traitorinfo]" /*TraitorManager != null ? TraitorManager.GetEndMessage() : ""*/});
+            var roundSummaryStart = roundSummary.LastIndexOf('/') + 1;
+
+            string endMessage = string.Join("/",  new[] {
+                traitorEndMessage.Substring(0, traitorEndMessageStart),
+                "[endsummary.traitorinfo]=" + traitorEndMessage.Substring(traitorEndMessageStart),
+                roundSummary.Substring(0, roundSummaryStart),
+                "[endsummary]=" + roundSummary.Substring(roundSummaryStart),
+                "[endsummary]\n\n[endsummary.traitorinfo]"
+            }.Where(s => !string.IsNullOrEmpty(s)));
+
+        Console.WriteLine("*** EM: " + endMessage);
 
             Mission mission = GameMain.GameSession.Mission;
             GameMain.GameSession.GameMode.End(endMessage);

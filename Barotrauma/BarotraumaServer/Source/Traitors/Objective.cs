@@ -39,6 +39,16 @@ namespace Barotrauma
                     }).ToArray()),
                     string.Join("", activeGoals.Select((goal, index) => $"[{index}.sl]").ToArray()));
 
+            public string AllGoalInfos =>
+                string.Join("/",
+                    string.Join("/", allGoals.Select((goal, index) =>
+                    {
+                        var statusText = goal.StatusText;
+                        var startIndex = statusText.LastIndexOf('/') + 1;
+                        return $"{statusText.Substring(0, startIndex)}[{index}.st]={statusText.Substring(startIndex)}/[{index}.sl]={TextManager.FormatServerMessage(GoalInfoFormatId, new string[] { "[statustext]" }, new string[] { $"[{index}.st]" })}";
+                    }).ToArray()),
+                    string.Join("", allGoals.Select((goal, index) => $"[{index}.sl]").ToArray()));
+
             public virtual string StartMessageTextId { get; set; } = "TraitorObjectiveStartMessage";
             public virtual IEnumerable<string> StartMessageKeys => new string[] { "[traitorgoalinfos]" };
             public virtual IEnumerable<string> StartMessageValues => new string[] { GoalInfos };
