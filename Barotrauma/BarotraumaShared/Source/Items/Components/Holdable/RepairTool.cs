@@ -54,6 +54,9 @@ namespace Barotrauma.Items.Components
         [Serialize(false, false)]
         public bool RepairMultiple { get; set; }
 
+        [Serialize(false, false)]
+        public bool RepairThroughHoles { get; set; }
+
         [Serialize(0.0f, false)]
         public float FireProbability { get; set; }
 
@@ -214,7 +217,7 @@ namespace Barotrauma.Items.Components
             float lastPickedFraction = 0.0f;
             if (RepairMultiple)
             {
-                var bodies = Submarine.PickBodies(rayStart, rayEnd, ignoredBodies, collisionCategories, ignoreSensors: false, allowInsideFixture: true);
+                var bodies = Submarine.PickBodies(rayStart, rayEnd, ignoredBodies, collisionCategories, ignoreSensors: RepairThroughHoles, allowInsideFixture: true);
                 lastPickedFraction = Submarine.LastPickedFraction;
                 Type lastHitType = null;
                 hitCharacters.Clear();
@@ -254,7 +257,7 @@ namespace Barotrauma.Items.Components
             {
                 FixBody(user, deltaTime, degreeOfSuccess, 
                     Submarine.PickBody(rayStart, rayEnd, 
-                    ignoredBodies, collisionCategories, ignoreSensors: false, 
+                    ignoredBodies, collisionCategories, ignoreSensors: RepairThroughHoles, 
                     customPredicate: (Fixture f) => { return f?.Body?.UserData != null; },
                     allowInsideFixture: true));
                 lastPickedFraction = Submarine.LastPickedFraction;
