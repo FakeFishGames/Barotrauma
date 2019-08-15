@@ -744,6 +744,10 @@ namespace Barotrauma
             if (showSpritesheet)
             {
                 Limb firstLimb = selectedLimbs.FirstOrDefault();
+                if (firstLimb == null)
+                {
+                    firstLimb = selectedJoints.FirstOrDefault()?.LimbB;
+                }
                 if (firstLimb != null)
                 {
                     var topLeft = spriteSheetControls.RectTransform.TopLeft;
