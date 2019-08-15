@@ -31,7 +31,7 @@ namespace Barotrauma
 
         public string SpeciesName { get; private set; }
 
-        [Serialize(0f, true), Editable(-360, 360, ToolTip = "Rotation offset (in degrees) used for animations and widgets. If the sprites in the sheet are in different orientations, use the orientation of the torso for the final version of your character (while editing the character in the editor, you can change the orientation freely).")]
+        [Serialize(0f, true), Editable(-360, 360, ToolTip = "The orientation of the sprites as drawn on the sprite sheet. Can be overridden by setting a value for Limb's 'Sprite Orientation'. Used mainly for animations and widgets.")]
         public float SpritesheetOrientation { get; set; }
 
         private float limbScale;
@@ -523,6 +523,11 @@ namespace Barotrauma
 
             [Serialize(LimbType.None, true), Editable]
             public LimbType Type { get; set; }
+
+            [Serialize(float.NaN, true), Editable(-360, 360, ToolTip = "The orientation of the sprite as drawn on the sprite sheet. Overrides the value defined in the Ragdoll settings. Used mainly for animations and widgets.")]
+            public float SpriteOrientation { get; set; }
+
+            public float GetSpriteOrientation() => MathHelper.ToRadians(float.IsNaN(SpriteOrientation) ? Ragdoll.SpritesheetOrientation : SpriteOrientation);
 
             [Serialize(true, true), Editable]
             public bool Flip { get; set; }

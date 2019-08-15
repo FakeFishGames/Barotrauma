@@ -466,7 +466,7 @@ namespace Barotrauma
                     from.Y = -from.Y;
                     Vector2 to = ConvertUnits.ToDisplayUnits(attachJoint.WorldAnchorB);
                     to.Y = -to.Y;
-                    var localFront = body.GetLocalFront(MathHelper.ToRadians(limbParams.Ragdoll.SpritesheetOrientation));
+                    var localFront = body.GetLocalFront(limbParams.GetSpriteOrientation());
                     var front = ConvertUnits.ToDisplayUnits(body.FarseerBody.GetWorldPoint(localFront));
                     front.Y = -front.Y;
                     GUI.DrawLine(spriteBatch, bodyDrawPos, front, Color.Yellow, width: 2);
@@ -477,7 +477,7 @@ namespace Barotrauma
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)to.X, (int)to.Y, 10, 10), Color.Red, true);
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)front.X, (int)front.Y, 10, 10), Color.Yellow, true);
 
-                    //Vector2 mainLimbFront = ConvertUnits.ToDisplayUnits(ragdoll.MainLimb.body.FarseerBody.GetWorldPoint(ragdoll.MainLimb.body.GetFrontLocal(MathHelper.ToRadians(ragdoll.RagdollParams.SpritesheetOrientation))));
+                    //Vector2 mainLimbFront = ConvertUnits.ToDisplayUnits(ragdoll.MainLimb.body.FarseerBody.GetWorldPoint(ragdoll.MainLimb.body.GetFrontLocal(MathHelper.ToRadians(limbParams.Orientation))));
                     //mainLimbFront.Y = -mainLimbFront.Y;
                     //var mainLimbDrawPos = ragdoll.MainLimb.body.DrawPosition;
                     //mainLimbDrawPos.Y = -mainLimbDrawPos.Y;

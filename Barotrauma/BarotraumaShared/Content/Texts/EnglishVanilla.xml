@@ -2926,6 +2926,7 @@
   <charactereditor.creatingnewjoint>Creating a new joint</charactereditor.creatingnewjoint>
   <charactereditor.frozen>Frozen</charactereditor.frozen>
   <charactereditor.animationtestposeenabled>Animation Test Pose Enabled</charactereditor.animationtestposeenabled>
+  <charactereditor.spriteorientation>Sprite Orientation</charactereditor.spriteorientation>
   <charactereditor.spritesheetorientation>Spritesheet Orientation</charactereditor.spritesheetorientation>
   <charactereditor.cantaddjointsnolimbelements>Cannot add joints, because no limb elements were found!</charactereditor.cantaddjointsnolimbelements>
   <charactereditor.humanoidlimbdeletiondisabled>Deleting limbs from a humanoid is currently disabled due to crashing</charactereditor.humanoidlimbdeletiondisabled>

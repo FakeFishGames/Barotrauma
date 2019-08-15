@@ -743,12 +743,23 @@ namespace Barotrauma
             }
             if (showSpritesheet)
             {
-                var topLeft = spriteSheetControls.RectTransform.TopLeft;
-                GUI.DrawString(spriteBatch, new Vector2(topLeft.X + 300, GameMain.GraphicsHeight - 80), GetCharacterEditorTranslation("SpriteSheetOrientation") + ":", Color.White, Color.Gray * 0.5f, 10, GUI.Font);
-                DrawRadialWidget(spriteBatch, new Vector2(topLeft.X + 510, GameMain.GraphicsHeight - 60), RagdollParams.SpritesheetOrientation, string.Empty, Color.White,
-                    angle => TryUpdateRagdollParam("spritesheetorientation", angle), circleRadius: 40, widgetSize: 15, rotationOffset: MathHelper.Pi, autoFreeze: false);
+                Limb firstLimb = selectedLimbs.FirstOrDefault();
+                if (firstLimb != null)
+                {
+                    var topLeft = spriteSheetControls.RectTransform.TopLeft;
+                    GUI.DrawString(spriteBatch, new Vector2(topLeft.X + 300, GameMain.GraphicsHeight - 80), GetCharacterEditorTranslation("SpriteOrientation") + ":", Color.Yellow, Color.Gray * 0.5f, 10, GUI.Font);
+                    float orientation = float.IsNaN(firstLimb.limbParams.SpriteOrientation) ? 0 : firstLimb.limbParams.SpriteOrientation;
+                    DrawRadialWidget(spriteBatch, new Vector2(topLeft.X + 510, GameMain.GraphicsHeight - 60), orientation, string.Empty, Color.Yellow,
+                        angle => selectedLimbs.ForEach(l => TryUpdateSubParam(l.limbParams, "spriteorientation", angle)), circleRadius: 40, widgetSize: 15, rotationOffset: MathHelper.Pi, autoFreeze: false);
+                }
+                else
+                {
+                    var topLeft = spriteSheetControls.RectTransform.TopLeft;
+                    GUI.DrawString(spriteBatch, new Vector2(topLeft.X + 300, GameMain.GraphicsHeight - 80), GetCharacterEditorTranslation("SpriteSheetOrientation") + ":", Color.White, Color.Gray * 0.5f, 10, GUI.Font);
+                    DrawRadialWidget(spriteBatch, new Vector2(topLeft.X + 510, GameMain.GraphicsHeight - 60), RagdollParams.SpritesheetOrientation, string.Empty, Color.White,
+                        angle => TryUpdateRagdollParam("spritesheetorientation", angle), circleRadius: 40, widgetSize: 15, rotationOffset: MathHelper.Pi, autoFreeze: false);
+                }
             }
-
             // Debug
             if (GameMain.DebugDraw)
             {
@@ -4004,7 +4015,7 @@ namespace Barotrauma
                                 DrawJointLimitWidgets(spriteBatch, limb, joint, tformedJointPos, autoFreeze: true, allowPairEditing: true, rotationOffset: limb.Rotation);
                             }
                             // Is the direction inversed incorrectly?
-                            Vector2 to = tformedJointPos + VectorExtensions.ForwardFlipped(joint.LimbB.Rotation + MathHelper.ToRadians(-RagdollParams.SpritesheetOrientation), 20);
+                            Vector2 to = tformedJointPos + VectorExtensions.ForwardFlipped(joint.LimbB.Rotation + MathHelper.ToRadians(-joint.LimbB.limbParams.GetSpriteOrientation()), 20);
                             GUI.DrawLine(spriteBatch, tformedJointPos, to, Color.Magenta, width: 2);
                             var dotSize = new Vector2(5, 5);
                             var rect = new Rectangle((tformedJointPos - dotSize / 2).ToPoint(), dotSize.ToPoint());
@@ -4590,7 +4601,7 @@ namespace Barotrauma
 
         private void DrawJointLimitWidgets(SpriteBatch spriteBatch, Limb limb, LimbJoint joint, Vector2 drawPos, bool autoFreeze, bool allowPairEditing, float rotationOffset = 0)
         {
-            rotationOffset += MathHelper.ToRadians(RagdollParams.SpritesheetOrientation);
+            rotationOffset += MathHelper.ToRadians(limb.limbParams.SpriteOrientation);
             Color angleColor = joint.UpperLimit - joint.LowerLimit > 0 ? Color.LightGreen * 0.5f : Color.Red;
             DrawRadialWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.UpperLimit), $"joint.jointParams.Name {GetCharacterEditorTranslation("UpperLimit")}", Color.Cyan, angle =>
             {
