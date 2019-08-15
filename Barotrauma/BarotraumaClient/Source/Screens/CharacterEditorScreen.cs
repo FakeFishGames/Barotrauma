@@ -751,9 +751,10 @@ namespace Barotrauma
                 if (firstLimb != null)
                 {
                     var topLeft = spriteSheetControls.RectTransform.TopLeft;
-                    GUI.DrawString(spriteBatch, new Vector2(topLeft.X + 300, GameMain.GraphicsHeight - 80), GetCharacterEditorTranslation("SpriteOrientation") + ":", Color.Yellow, Color.Gray * 0.5f, 10, GUI.Font);
-                    float orientation = float.IsNaN(firstLimb.Params.SpriteOrientation) ? 0 : firstLimb.Params.SpriteOrientation;
-                    DrawRadialWidget(spriteBatch, new Vector2(topLeft.X + 510, GameMain.GraphicsHeight - 60), orientation, string.Empty, Color.Yellow,
+                    bool useSpritesheetOrientation = float.IsNaN(firstLimb.Params.SpriteOrientation);
+                    GUI.DrawString(spriteBatch, new Vector2(topLeft.X + 300, GameMain.GraphicsHeight - 80), GetCharacterEditorTranslation("SpriteOrientation") + ":", useSpritesheetOrientation ? Color.White : Color.Yellow, Color.Gray * 0.5f, 10, GUI.Font);
+                    float orientation = useSpritesheetOrientation ? RagdollParams.SpritesheetOrientation : firstLimb.Params.SpriteOrientation;
+                    DrawRadialWidget(spriteBatch, new Vector2(topLeft.X + 510, GameMain.GraphicsHeight - 60), orientation, string.Empty, useSpritesheetOrientation ? Color.White : Color.Yellow,
                         angle => selectedLimbs.ForEach(l => TryUpdateSubParam(l.Params, "spriteorientation", angle)), circleRadius: 40, widgetSize: 15, rotationOffset: MathHelper.Pi, autoFreeze: false);
                 }
                 else
@@ -4609,7 +4610,7 @@ namespace Barotrauma
 
         private void DrawJointLimitWidgets(SpriteBatch spriteBatch, Limb limb, LimbJoint joint, Vector2 drawPos, bool autoFreeze, bool allowPairEditing, float rotationOffset = 0)
         {
-            rotationOffset += MathHelper.ToRadians(limb.Params.SpriteOrientation);
+            rotationOffset += limb.Params.GetSpriteOrientation();
             Color angleColor = joint.UpperLimit - joint.LowerLimit > 0 ? Color.LightGreen * 0.5f : Color.Red;
             DrawRadialWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.UpperLimit), $"joint.jointParams.Name {GetCharacterEditorTranslation("UpperLimit")}", Color.Cyan, angle =>
             {
