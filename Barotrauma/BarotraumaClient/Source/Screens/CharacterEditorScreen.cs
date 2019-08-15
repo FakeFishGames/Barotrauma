@@ -758,6 +758,10 @@ namespace Barotrauma
                 }
                 else
                 {
+                    if (RagdollParams.SerializableEntityEditor == null)
+                    {
+                        RagdollParams.AddToEditor(ParamsEditor.Instance);
+                    }
                     var topLeft = spriteSheetControls.RectTransform.TopLeft;
                     GUI.DrawString(spriteBatch, new Vector2(topLeft.X + 300, GameMain.GraphicsHeight - 80), GetCharacterEditorTranslation("SpriteSheetOrientation") + ":", Color.White, Color.Gray * 0.5f, 10, GUI.Font);
                     DrawRadialWidget(spriteBatch, new Vector2(topLeft.X + 510, GameMain.GraphicsHeight - 60), RagdollParams.SpritesheetOrientation, string.Empty, Color.White,
