@@ -85,7 +85,7 @@ namespace Barotrauma.Items.Components
             set
             {
                 if (currentFixer == value) return;
-                if (currentFixer != null && currentFixer.IsTraitor && !currentFixer.IsDead) return;
+                if (value != null && currentFixer != null && !currentFixer.IsDead) return;
                 if (currentFixer != null) currentFixer.AnimController.Anim = AnimController.Animation.None;
                 currentFixer = value;
                 if (currentFixer == null)
@@ -192,14 +192,14 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            if ((currentFixerAction == FixActions.Sabotage && item.Condition <= MinDeteriorationCondition) ||
-                (currentFixerAction == FixActions.Repair && item.IsFullCondition) || 
-                CurrentFixer.SelectedConstruction != item || 
-                !currentFixer.CanInteractWith(item))
+            if (currentFixer != null && (currentFixer.SelectedConstruction != item || !currentFixer.CanInteractWith(item)))
             {
                 currentFixer.AnimController.Anim = AnimController.Animation.None;
                 currentFixer = null;
                 currentFixerAction = FixActions.None;
+#if SERVER
+                item.CreateServerEvent(this);
+#endif
                 return;
             }
 
@@ -234,18 +234,25 @@ namespace Barotrauma.Items.Components
                     GameMain.Server.KarmaManager.OnItemRepaired(CurrentFixer, this, conditionIncrease);
 #endif
                 }
-                if (wasBroken && item.IsFullCondition)
+
+                if (item.IsFullCondition)
                 {
-                    foreach (Skill skill in requiredSkills)
+                    if (wasBroken)
                     {
-                        float characterSkillLevel = CurrentFixer.GetSkillLevel(skill.Identifier);
-                        CurrentFixer.Info.IncreaseSkillLevel(skill.Identifier,
-                            SkillIncreasePerRepair / Math.Max(characterSkillLevel, 1.0f),
-                            CurrentFixer.WorldPosition + Vector2.UnitY * 100.0f);
+                        foreach (Skill skill in requiredSkills)
+                        {
+                            float characterSkillLevel = CurrentFixer.GetSkillLevel(skill.Identifier);
+                            CurrentFixer.Info.IncreaseSkillLevel(skill.Identifier,
+                                SkillIncreasePerRepair / Math.Max(characterSkillLevel, 1.0f),
+                                CurrentFixer.WorldPosition + Vector2.UnitY * 100.0f);
+                        }
+
+                        SteamAchievementManager.OnItemRepaired(item, currentFixer);
+                        deteriorationTimer = Rand.Range(MinDeteriorationDelay, MaxDeteriorationDelay);
+                        wasBroken = false;
                     }
-                    SteamAchievementManager.OnItemRepaired(item, currentFixer);
-                    deteriorationTimer = Rand.Range(MinDeteriorationDelay, MaxDeteriorationDelay);
-                    wasBroken = false;
+                    currentFixer = null;
+                    currentFixerAction = FixActions.None;
 #if SERVER
                     item.CreateServerEvent(this);
 #endif
@@ -263,22 +270,26 @@ namespace Barotrauma.Items.Components
                     item.Condition -= conditionDecrease;
                 }
 
-                if (wasGoodCondition && item.Condition <= MinDeteriorationCondition)
+                if (item.Condition <= MinDeteriorationCondition)
                 {
-                    foreach (Skill skill in requiredSkills)
+                    if (wasGoodCondition)
                     {
-                        float characterSkillLevel = CurrentFixer.GetSkillLevel(skill.Identifier);
-                        CurrentFixer.Info.IncreaseSkillLevel(skill.Identifier,
-                            SkillIncreasePerSabotage / Math.Max(characterSkillLevel, 1.0f),
-                            CurrentFixer.WorldPosition + Vector2.UnitY * 100.0f);
-                    }
-                    deteriorationTimer = 0.0f;
-                    deteriorateAlwaysResetTimer = item.Condition / DeteriorationSpeed;
-                    DeteriorateAlways = true;
-                    item.Condition = MinDeteriorationCondition;
-                    currentFixer = null;
+                        foreach (Skill skill in requiredSkills)
+                        {
+                            float characterSkillLevel = CurrentFixer.GetSkillLevel(skill.Identifier);
+                            CurrentFixer.Info.IncreaseSkillLevel(skill.Identifier,
+                                SkillIncreasePerSabotage / Math.Max(characterSkillLevel, 1.0f),
+                                CurrentFixer.WorldPosition + Vector2.UnitY * 100.0f);
+                        }
 
-                    wasGoodCondition = false;
+                        deteriorationTimer = 0.0f;
+                        deteriorateAlwaysResetTimer = item.Condition / DeteriorationSpeed;
+                        DeteriorateAlways = true;
+                        item.Condition = MinDeteriorationCondition;
+                        wasGoodCondition = false;
+                    }
+                    currentFixer = null;
+                    currentFixerAction = FixActions.None;
 #if SERVER
                     item.CreateServerEvent(this);
 #endif
