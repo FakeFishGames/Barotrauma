@@ -2340,7 +2340,7 @@ namespace Barotrauma.Networking
                                         var chatMsg = ChatMessage.Create(
                                             "", $"ServerMessage.PlayerNotFound~[player]={command}",
                                             ChatMessageType.Error, null);
-                                        SendDirectChatMessage(chatMsg, targetClient);
+                                        SendDirectChatMessage(chatMsg, senderClient);
                                     }
                                     else
                                     {
