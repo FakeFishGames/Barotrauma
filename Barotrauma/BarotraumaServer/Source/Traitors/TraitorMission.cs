@@ -214,6 +214,7 @@ namespace Barotrauma
 
                 List<Character> validCharacters = Character.CharacterList.FindAll(c => 
                     c.TeamID == traitor.TeamID && 
+                    c != traitor &&
                     !c.IsDead && 
                     (filter == null || filter(c)));
 
