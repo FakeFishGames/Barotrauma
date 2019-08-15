@@ -27,7 +27,7 @@ namespace Barotrauma.Particles
             {
                 if (subElement.Name.ToString().ToLowerInvariant() == "sprite")
                 {
-                    Sprites.Add(new Sprite(subElement, lazyLoad: true));             
+                    Sprites.Add(new Sprite(subElement));             
                 }
             }  
             

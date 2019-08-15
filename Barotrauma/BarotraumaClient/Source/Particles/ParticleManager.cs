@@ -63,7 +63,7 @@ namespace Barotrauma.Particles
 
         public void LoadPrefabs()
         {
-            prefabs = new Dictionary<string, ParticlePrefab>();
+            var particleElements = new Dictionary<string, XElement>();
             foreach (string configFile in GameMain.Instance.GetFilesOfType(ContentType.Particles))
             {
                 XDocument doc = XMLExtensions.TryLoadXml(configFile);
@@ -81,12 +81,12 @@ namespace Barotrauma.Particles
                 {
                     var element = sourceElement.IsOverride() ? sourceElement.FirstElement() : sourceElement;
                     string name = element.Name.ToString().ToLowerInvariant();
-                    if (prefabs.TryGetValue(name, out ParticlePrefab duplicate))
+                    if (particleElements.ContainsKey(name))
                     {
                         if (allowOverriding || sourceElement.IsOverride())
                         {
                             DebugConsole.NewMessage($"Overriding the existing particle prefab '{name}' using the file '{configFile}'", Color.Yellow);
-                            prefabs.Remove(name);
+                            particleElements.Remove(name);
                         }
                         else
                         {
@@ -96,9 +96,15 @@ namespace Barotrauma.Particles
                         }
 
                     }
-                    prefabs.Add(name, new ParticlePrefab(element));
+                    particleElements.Add(name, element);
                 }
-            }         
+            }
+            //prefabs = particleElements.ToDictionary(p => p.Key, p => new ParticlePrefab(p.Value));
+            prefabs = new Dictionary<string, ParticlePrefab>();
+            foreach (var kvp in particleElements)
+            {
+                prefabs.Add(kvp.Key, new ParticlePrefab(kvp.Value));
+            }
         }
 
         public Particle CreateParticle(string prefabName, Vector2 position, float angle, float speed, Hull hullGuess = null)
