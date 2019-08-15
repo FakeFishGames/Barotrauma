@@ -872,6 +872,14 @@ namespace Barotrauma.Steam
             }
 
             string metaDataFilePath = Path.Combine(item.Directory.FullName, MetadataFileName);
+
+            if (!File.Exists(metaDataFilePath))
+            {
+                errorMsg = TextManager.GetWithVariable("WorkshopErrorInstallRequiredToEnable", "[itemname]", item.Title);
+                DebugConsole.ThrowError(errorMsg);
+                return false;
+            }
+
             ContentPackage contentPackage = new ContentPackage(metaDataFilePath);
             string newContentPackagePath = GetWorkshopItemContentPackagePath(contentPackage);
 
@@ -1154,7 +1162,14 @@ namespace Barotrauma.Steam
 
         public static bool CheckWorkshopItemEnabled(Workshop.Item item, bool checkContentFiles = true)
         {
-            if (!item.Installed) return false;
+            if (!item.Installed) { return false; }
+
+            if (!Directory.Exists(item.Directory.FullName))
+            {
+                DebugConsole.ThrowError("Workshop item \"" + item.Title + "\" has been installed but the install directory cannot be found. Attempting to redownload...");
+                item.ForceDownload();
+                return false;                
+            }
 
             string metaDataPath = Path.Combine(item.Directory.FullName, MetadataFileName);
             if (!File.Exists(metaDataPath))
