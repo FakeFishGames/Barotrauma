@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 using System.Xml;
@@ -38,10 +39,11 @@ namespace Barotrauma
 
         public readonly string File;
 
-        public List<SubParam> SubParams { get; private set; } = new List<SubParam>();
-        public List<SoundParams> Sounds { get; private set; } = new List<SoundParams>();
-        public List<ParticleParams> BloodEmitters { get; private set; } = new List<ParticleParams>();
-        public List<ParticleParams> GibEmitters { get; private set; } = new List<ParticleParams>();
+        public readonly List<SubParam> SubParams = new List<SubParam>();
+        public readonly List<SoundParams> Sounds = new List<SoundParams>();
+        public readonly List<ParticleParams> BloodEmitters = new List<ParticleParams>();
+        public readonly List<ParticleParams> GibEmitters = new List<ParticleParams>();
+        public readonly List<InventoryParams> Inventories = new List<InventoryParams>();
         public HealthParams Health { get; private set; }
         public AIParams AI { get; private set; }
 
@@ -116,8 +118,12 @@ namespace Barotrauma
                 Sounds.Add(sound);
                 SubParams.Add(sound);
             }
-
-            // TODO: inventory
+            foreach (var inventoryElement in MainElement.GetChildElements("inventory"))
+            {
+                var inventory = new InventoryParams(inventoryElement, this);
+                Inventories.Add(inventory);
+                SubParams.Add(inventory);
+            }
         }
 
         protected bool Deserialize(XElement element = null, bool alsoChildren = true, bool recursive = true)
@@ -163,59 +169,55 @@ namespace Barotrauma
             }
         }
 #endif
-        public bool TryAddSound(out SoundParams soundParams)
-        {
-            var element = new XElement("sound");
-            MainElement.Add(element);
-            soundParams = new SoundParams(element, this);
-            SubParams.Add(soundParams);
-            Sounds.Add(soundParams);
-            return soundParams != null;
-        }
 
-        public bool RemoveSound(SoundParams soundParams)
-        {
-            if (soundParams == null || soundParams.Element == null || soundParams.Element.Parent == null) { return false; }
-            if (!Sounds.Contains(soundParams)) { return false; }
-            if (!SubParams.Contains(soundParams)) { return false; }
-            Sounds.Remove(soundParams);
-            SubParams.Remove(soundParams);
-            soundParams.Element.Remove();
-            return true;
-        }
+        public bool AddSound() => TryAddSubParam(new XElement("sound"), (e, c) => new SoundParams(e, c), out _, Sounds);
 
-        public void AddBloodEmitter() => AddEmitter(new XElement("bloodemitter"));
-        public void AddGibEmitter() => AddEmitter(new XElement("gibemitter"));
-        public bool RemoveBloodEmitter(ParticleParams emitter) => RemoveEmitter(emitter, BloodEmitters);
-        public bool RemoveGibEmitter(ParticleParams emitter) => RemoveEmitter(emitter, GibEmitters);
+        public void AddInventory() => TryAddSubParam(new XElement("inventory", new XElement("item")), (e, c) => new InventoryParams(e, c), out _, Inventories);
 
-        private void AddEmitter(XElement element)
+        public void AddBloodEmitter() => AddEmitter("bloodemitter");
+        public void AddGibEmitter() => AddEmitter("gibemitter");
+
+        private void AddEmitter(string type)
         {
-            MainElement.Add(element);
-            var emitter = new ParticleParams(element, this);
-            SubParams.Add(emitter);
-            string elementName = element.Name.ToString().ToLowerInvariant();
-            switch (elementName)
+            switch (type)
             {
                 case "gibemitter":
-                    GibEmitters.Add(emitter);
+                    TryAddSubParam(new XElement(type), (e, c) => new ParticleParams(e, c), out _, GibEmitters);
                     break;
                 case "bloodemitter":
-                    BloodEmitters.Add(emitter);
+                    TryAddSubParam(new XElement(type), (e, c) => new ParticleParams(e, c), out _, BloodEmitters);
                     break;
-                default: throw new System.NotImplementedException(elementName);
+                default: throw new NotImplementedException(type);
             }
         }
 
-        private bool RemoveEmitter(ParticleParams emitter, List<ParticleParams> collection)
+        public bool RemoveSound(SoundParams soundParams) => RemoveSubParam(soundParams);
+        public bool RemoveBloodEmitter(ParticleParams emitter) => RemoveSubParam(emitter, BloodEmitters);
+        public bool RemoveGibEmitter(ParticleParams emitter) => RemoveSubParam(emitter, GibEmitters);
+        public bool RemoveInventory(InventoryParams inventory) => RemoveSubParam(inventory, Inventories);
+
+        protected bool RemoveSubParam<T>(T subParam, IList<T> collection = null) where T : SubParam
         {
-            if (emitter == null || emitter.Element == null || emitter.Element.Parent == null) { return false; }
-            if (!collection.Contains(emitter)) { return false; }
-            if (!SubParams.Contains(emitter)) { return false; }
-            collection.Remove(emitter);
-            SubParams.Remove(emitter);
-            emitter.Element.Remove();
-            return true;
+            if (subParam == null || subParam.Element == null || subParam.Element.Parent == null) { return false; }
+            if (collection != null && !collection.Contains(subParam)) { return false; }
+            if (!SubParams.Contains(subParam)) { return false; }
+            collection?.Remove(subParam);
+            SubParams.Remove(subParam);
+            subParam.Element.Remove();
+            return  true;
+        }
+
+        protected bool TryAddSubParam<T>(XElement element, Func<XElement, CharacterParams, T> constructor, out T subParam, IList<T> collection = null, Func<IList<T>, bool> filter = null) where T : SubParam
+        {
+            subParam = constructor(element, this);
+            if (collection != null && filter != null)
+            {
+                if (filter(collection)) { return false; }
+            }
+            MainElement.Add(element);
+            SubParams.Add(subParam);
+            collection?.Add(subParam);
+            return subParam != null;
         }
 
         #region Subparams
@@ -319,6 +321,54 @@ namespace Barotrauma
             public HealthParams(XElement element, CharacterParams character) : base(element, character) { }
         }
 
+        public class InventoryParams : SubParam
+        {
+            public class InventoryItem : SubParam
+            {
+                public override string Name => "Item";
+
+                [Serialize("", true), Editable]
+                public string Identifier { get; private set; }
+
+                public InventoryItem(XElement element, CharacterParams character) : base(element, character) { }
+            }
+
+            public override string Name => "Inventory";
+
+            [Serialize("Any, Any", true), Editable]
+            public string Slots { get; private set; }
+
+            [Serialize(false, true), Editable]
+            public bool AccessibleWhenAlive { get; private set; }
+
+            [Serialize(1.0f, true), Editable]
+            public float Commonness { get; private set; }
+
+            public List<InventoryItem> Items { get; private set; } = new List<InventoryItem>();
+
+            public InventoryParams(XElement element, CharacterParams character) : base(element, character)
+            {
+                foreach (var itemElement in element.GetChildElements("item"))
+                {
+                    var item = new InventoryItem(itemElement, character);
+                    SubParams.Add(item);
+                    Items.Add(item);
+                }
+            }
+
+            public void AddItem(string identifier = null)
+            {
+                identifier = identifier ?? "";
+                var element = new XElement("item", new XAttribute("identifier", identifier));
+                Element.Add(element);
+                var item = new InventoryItem(element, Character);
+                SubParams.Add(item);
+                Items.Add(item);
+            }
+
+            public bool RemoveItem(InventoryItem item) => RemoveSubParam(item, Items);
+        }
+
         public class AIParams : SubParam
         {
             public override string Name => "AI";
@@ -395,24 +445,7 @@ namespace Barotrauma
                 return targets.None(t => t.Tag == tag);
             }
 
-            public bool RemoveTarget(TargetParams target)
-            {
-                if (target == null || target.Element == null || target.Element.Parent == null) { return false; }
-                if (!targets.Contains(target)) { return false; }
-                if (!SubParams.Contains(target)) { return false; }
-                targets.Remove(target);
-                SubParams.Remove(target);
-                target.Element.Remove();
-                return true;
-            }
-
-            public bool RemoveLastTarget()
-            {
-                if (targets.None()) { return false; }
-                var last = targets.LastOrDefault();
-                if (last == null) { return false; }
-                return RemoveTarget(last);
-            }
+            public bool RemoveTarget(TargetParams target) => RemoveSubParam(target, targets);
 
             public bool TryGetTarget(string targetTag, out TargetParams target)
             {
@@ -500,6 +533,17 @@ namespace Barotrauma
                 // Don't use recursion, because the reset method might be overriden
                 Deserialize(false);
                 SubParams.ForEach(sp => sp.Reset());
+            }
+
+            protected bool RemoveSubParam<T>(T subParam, IList<T> collection = null) where T : SubParam
+            {
+                if (subParam == null || subParam.Element == null || subParam.Element.Parent == null) { return false; }
+                if (collection != null && !collection.Contains(subParam)) { return false; }
+                if (!SubParams.Contains(subParam)) { return false; }
+                collection?.Remove(subParam);
+                SubParams.Remove(subParam);
+                subParam.Element.Remove();
+                return true;
             }
 
 #if CLIENT

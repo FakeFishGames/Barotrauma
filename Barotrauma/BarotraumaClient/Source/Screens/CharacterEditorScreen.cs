@@ -2809,32 +2809,38 @@ namespace Barotrauma
                 characterEditor.AddCustomContent(new GUIFrame(new RectTransform(new Point(characterEditor.Rect.Width, 10), characterEditor.RectTransform), style: null) { CanBeFocused = false }, 1);
                 if (CharacterParams.AI != null)
                 {
-                    var aiEditor = CharacterParams.AI.SerializableEntityEditor;
-                    CreateAddButton(aiEditor, () => CharacterParams.AI.TryAddEmptyTarget(out _), GetCharacterEditorTranslation("AddAITarget"));
+                    CreateAddButton(CharacterParams.AI.SerializableEntityEditor, () => CharacterParams.AI.TryAddEmptyTarget(out _), GetCharacterEditorTranslation("AddAITarget"));
                     foreach (var target in CharacterParams.AI.Targets)
                     {
-                        var targetEditor = target.SerializableEntityEditor;
-                        CreateCloseButton(targetEditor, () => CharacterParams.AI.RemoveTarget(target));
+                        CreateCloseButton(target.SerializableEntityEditor, () => CharacterParams.AI.RemoveTarget(target));
                     }
                 }
                 foreach (var emitter in CharacterParams.BloodEmitters)
                 {
-                    var emitterEditor = emitter.SerializableEntityEditor;
-                    CreateCloseButton(emitterEditor, () => CharacterParams.RemoveBloodEmitter(emitter));
+                    CreateCloseButton(emitter.SerializableEntityEditor, () => CharacterParams.RemoveBloodEmitter(emitter));
                 }
                 foreach (var emitter in CharacterParams.GibEmitters)
                 {
-                    var emitterEditor = emitter.SerializableEntityEditor;
-                    CreateCloseButton(emitterEditor, () => CharacterParams.RemoveGibEmitter(emitter));
+                    CreateCloseButton(emitter.SerializableEntityEditor, () => CharacterParams.RemoveGibEmitter(emitter));
                 }
                 foreach (var sound in CharacterParams.Sounds)
                 {
-                    var soundEditor = sound.SerializableEntityEditor;
-                    CreateCloseButton(soundEditor, () => CharacterParams.RemoveSound(sound));
+                    CreateCloseButton(sound.SerializableEntityEditor, () => CharacterParams.RemoveSound(sound));
+                }
+                foreach (var inventory in CharacterParams.Inventories)
+                {
+                    var editor = inventory.SerializableEntityEditor;
+                    CreateCloseButton(editor, () => CharacterParams.RemoveInventory(inventory));
+                    foreach (var item in inventory.Items)
+                    {
+                        CreateCloseButton(item.SerializableEntityEditor, () => inventory.RemoveItem(item));
+                    }
+                    CreateAddButton(editor, () => inventory.AddItem(), GetCharacterEditorTranslation("AddInventoryItem"));
                 }
                 CreateAddButtonAtLast(mainEditor, () => CharacterParams.AddBloodEmitter(), GetCharacterEditorTranslation("AddBloodEmitter"));
                 CreateAddButtonAtLast(mainEditor, () => CharacterParams.AddGibEmitter(), GetCharacterEditorTranslation("AddGibEmitter"));
-                CreateAddButtonAtLast(mainEditor, () => CharacterParams.TryAddSound(out _), GetCharacterEditorTranslation("AddSound"));
+                CreateAddButtonAtLast(mainEditor, () => CharacterParams.AddSound(), GetCharacterEditorTranslation("AddSound"));
+                CreateAddButtonAtLast(mainEditor, () => CharacterParams.AddInventory(), GetCharacterEditorTranslation("AddInventory"));
             }
             else if (editAnimations)
             {
@@ -2869,11 +2875,7 @@ namespace Barotrauma
                             limb.limbParams.AddToEditor(mainEditor, true, space: 0);
                             foreach (var damageModifier in limb.limbParams.DamageModifiers)
                             {
-                                var modifierEditor = damageModifier.SerializableEntityEditor;
-                                if (modifierEditor != null)
-                                {
-                                    CreateCloseButton(modifierEditor, () => limb.limbParams.RemoveDamageModifier(damageModifier));
-                                }
+                                CreateCloseButton(damageModifier.SerializableEntityEditor, () => limb.limbParams.RemoveDamageModifier(damageModifier));
                             }
                             if (limb.limbParams.Sound == null)
                             {
@@ -2881,8 +2883,7 @@ namespace Barotrauma
                             }
                             else
                             {
-                                var soundEditor = limb.limbParams.Sound.SerializableEntityEditor;
-                                CreateCloseButton(soundEditor, () => limb.limbParams.RemoveSound());
+                                CreateCloseButton(limb.limbParams.Sound.SerializableEntityEditor, () => limb.limbParams.RemoveSound());
                             }
                             if (limb.limbParams.LightSource == null)
                             {
@@ -2890,8 +2891,7 @@ namespace Barotrauma
                             }
                             else
                             {
-                                var lightEditor = limb.limbParams.LightSource.SerializableEntityEditor;
-                                CreateCloseButton(lightEditor, () => limb.limbParams.RemoveLight());
+                                CreateCloseButton(limb.limbParams.LightSource.SerializableEntityEditor, () => limb.limbParams.RemoveLight());
                             }
                             if (limb.limbParams.Attack == null)
                             {
@@ -2916,7 +2916,7 @@ namespace Barotrauma
                                 };
                                 attackEditor.AddCustomContent(space, attackEditor.ContentCount);
                             }
-                            CreateAddButtonAtLast(mainEditor, () => limb.limbParams.AddNewDamageModifier(), GetCharacterEditorTranslation("AddDamageModifier"));
+                            CreateAddButtonAtLast(mainEditor, () => limb.limbParams.AddDamageModifier(), GetCharacterEditorTranslation("AddDamageModifier"));
                         }
                     }
                     else

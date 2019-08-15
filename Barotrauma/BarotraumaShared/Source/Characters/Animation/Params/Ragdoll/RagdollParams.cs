@@ -627,68 +627,18 @@ namespace Barotrauma
             public bool AddAttack()
             {
                 if (Attack != null) { return false; }
-                var element = new XElement("attack");
-                Element.Add(element);
-                Attack = new AttackParams(element, Ragdoll);
-                SubParams.Add(Attack);
+                TryAddSubParam(new XElement("attack"), (e, c) => new AttackParams(e, c), out AttackParams newAttack);
+                Attack = newAttack;
                 return Attack != null;
             }
 
-            public bool RemoveAttack()
-            {
-                if (Attack == null) { return false; }
-                Attack.Element.Remove();
-                SubParams.Remove(Attack);
-                Attack = null;
-                return Attack == null;
-            }
-
-            public bool AddNewDamageModifier()
-            {
-                Serialize();
-                var subElement = new XElement("damagemodifier");
-                Element.Add(subElement);
-                var damageModifier = new DamageModifierParams(subElement, Ragdoll);
-                DamageModifiers.Add(damageModifier);
-                SubParams.Add(damageModifier);
-                Serialize();
-                return true;
-            }
-
-            public bool RemoveDamageModifier(DamageModifierParams damageModifier)
-            {
-                if (!DamageModifiers.Contains(damageModifier)) { return false; }
-                Serialize();
-                SubParams.Remove(damageModifier);
-                DamageModifiers.Remove(damageModifier);
-                damageModifier.Element.Remove();
-                return Serialize();
-            }
-
-            public bool RemoveLastDamageModifier()
-            {
-                var last = DamageModifiers.LastOrDefault();
-                if (last == null) { return false; }
-                return RemoveDamageModifier(last);
-            }
 
             public bool AddSound()
             {
                 if (Sound != null) { return false; }
-                var element = new XElement("sound");
-                Element.Add(element);
-                Sound = new SoundParams(element, Ragdoll);
-                SubParams.Add(Sound);
+                TryAddSubParam(new XElement("sound"), (e, c) => new SoundParams(e, c), out SoundParams newSound);
+                Sound = newSound;
                 return Sound != null;
-            }
-
-            public bool RemoveSound()
-            {
-                if (Sound == null) { return false; }
-                Sound.Element.Remove();
-                SubParams.Remove(Sound);
-                Sound = null;
-                return true;
             }
 
             public bool AddLight()
@@ -696,18 +646,66 @@ namespace Barotrauma
                 if (LightSource != null) { return false; }
                 var lightSourceElement = new XElement("lightsource",
                     new XElement("lighttexture", new XAttribute("texture", "Content/Lights/light.png")));
-                Element.Add(lightSourceElement);
-                LightSource = new LightSourceParams(lightSourceElement, Ragdoll);
-                SubParams.Add(LightSource);
+                TryAddSubParam(lightSourceElement, (e, c) => new LightSourceParams(e, c), out LightSourceParams newLightSource);
+                LightSource = newLightSource;
                 return LightSource != null;
+            }
+
+            public bool AddDamageModifier() => TryAddSubParam(new XElement("damagemodifier"), (e, c) => new DamageModifierParams(e, c), out _, DamageModifiers);
+
+            public bool RemoveAttack()
+            {
+                if (RemoveSubParam(Attack))
+                {
+                    Attack = null;
+                    return true;
+                }
+                return false;
+            }
+
+            public bool RemoveSound()
+            {
+                if (RemoveSubParam(Sound))
+                {
+                    Sound = null;
+                    return true;
+                }
+                return false;
             }
 
             public bool RemoveLight()
             {
-                if (LightSource == null) { return false; }
-                LightSource.Element.Remove();
-                SubParams.Remove(LightSource);
-                LightSource = null;
+                if (RemoveSubParam(LightSource))
+                {
+                    LightSource = null;
+                    return true;
+                }
+                return false;
+            }
+
+            public bool RemoveDamageModifier(DamageModifierParams damageModifier) => RemoveSubParam(damageModifier, DamageModifiers);
+
+            protected bool TryAddSubParam<T>(XElement element, Func<XElement, RagdollParams, T> constructor, out T subParam, IList<T> collection = null, Func<IList<T>, bool> filter = null) where T : SubParam
+            {
+                subParam = constructor(element, Ragdoll);
+                if (collection != null && filter != null)
+                {
+                    if (filter(collection)) { return false; }
+                }
+                Element.Add(element);
+                SubParams.Add(subParam);
+                collection?.Add(subParam);
+                return subParam != null;
+            }
+
+            protected bool RemoveSubParam<T>(T subParam, IList<T> collection = null) where T : SubParam
+            {
+                if (subParam == null || subParam.Element == null || subParam.Element.Parent == null) { return false; }
+                if (collection != null && !collection.Contains(subParam)) { return false; }
+                if (!SubParams.Contains(subParam)) { return false; }
+                collection?.Remove(subParam);
+                SubParams.Remove(subParam);
+                subParam.Element.Remove();
                 return true;
             }
         }
@@ -945,14 +943,6 @@ namespace Barotrauma
                 Attack.ReloadAfflictions(Element);
                 return Serialize();
             }
-
-            public bool RemoveLastAffliction()
-            {
-                var afflictions = Element.GetChildElements("affliction");
-                var last = afflictions.LastOrDefault();
-                if (last == null) { return false; }
-                return RemoveAffliction(last);
-            }
         }
 
         public class DamageModifierParams : SubParam
@@ -1051,7 +1041,7 @@ namespace Barotrauma
 
 #if CLIENT
             public SerializableEntityEditor SerializableEntityEditor { get; protected set; }
-            public Dictionary<Affliction, SerializableEntityEditor> AfflictionEditors { get; private set; } = new Dictionary<Affliction, SerializableEntityEditor>();
+            public Dictionary<Affliction, SerializableEntityEditor> AfflictionEditors { get; private set; }
             public virtual void AddToEditor(ParamsEditor editor, bool recursive = true, int space = 0)
             {
                 SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, this, inGame: false, showName: true, titleFont: GUI.LargeFont);
@@ -1065,7 +1055,14 @@ namespace Barotrauma
                 else if (this is AttackParams attackParams)
                 {
                     SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, attackParams.Attack, inGame: false, showName: true, titleFont: GUI.LargeFont);
-                    AfflictionEditors.Clear();
+                    if (AfflictionEditors == null)
+                    {
+                        AfflictionEditors = new Dictionary<Affliction, SerializableEntityEditor>();
+                    }
+                    else
+                    {
+                        AfflictionEditors.Clear();
+                    }
                     foreach (var affliction in attackParams.Attack.Afflictions.Keys)
                     {
                         var afflictionEditor = new SerializableEntityEditor(SerializableEntityEditor.RectTransform, affliction, inGame: false, showName: true);

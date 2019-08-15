@@ -3059,6 +3059,8 @@
   <charactereditor.addattack>Add Attack</charactereditor.addattack>
   <charactereditor.addaffliction>Add Affliction</charactereditor.addaffliction>
   <charactereditor.adddamagemodifier>Add Damage Modifier</charactereditor.adddamagemodifier>
+  <charactereditor.addinventory>Add Inventory</charactereditor.addinventory>
+  <charactereditor.addinventoryitem>Add Inventory Item</charactereditor.addinventoryitem>
 
   <!-- Submarine editor -->
   <items>Items</items>
