@@ -100,7 +100,7 @@ namespace Barotrauma
 
         private void UpdateClient(Client client, float deltaTime)
         {
-            if (client.Character != null && !client.Character.Removed)
+            if (client.Character != null && !client.Character.Removed && !client.Character.IsDead)
             {
                 if (client.Karma > KarmaDecayThreshold)
                 {
