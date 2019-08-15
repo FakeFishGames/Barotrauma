@@ -60,10 +60,15 @@ namespace Barotrauma
             private readonly string objectiveGoalInfoFormat = "[index]. [goalinfos]\n";
 
             public virtual IEnumerable<string> GlobalEndMessageKeys => new string[] { "[traitorname]", "[traitorgoalinfos]" };
-            public virtual IEnumerable<string> GlobalEndMessageValues => new string[] {
-                (Traitors.TryGetValue("traitor", out var traitor) ? traitor.Character?.Name : null) ?? "(unknown)",
-                (pendingObjectives.Count > 0 ? pendingObjectives[0] : completedObjectives.Count > 0 ? completedObjectives[0] : allObjectives.Count > 0 ? allObjectives[0] : null)?.GoalInfos ?? ""
-            };
+            public virtual IEnumerable<string> GlobalEndMessageValues {
+                get {
+                    var isSuccess = completedObjectives.Count >= allObjectives.Count;
+                    return new string[] {
+                        (Traitors.TryGetValue("traitor", out var traitor) ? traitor.Character?.Name : null) ?? "(unknown)",
+                        (isSuccess ? completedObjectives.LastOrDefault() : pendingObjectives.FirstOrDefault())?.GoalInfos ?? ""
+                    };
+                }
+            }
 
             public string GlobalEndMessage
             {
