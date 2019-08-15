@@ -6,6 +6,10 @@ Easier server hosting:
 - Switched to Steam's networking API, which allows clients to connect to servers without the need for the
 host to forward their ports.
 
+Expanded traitor feature:
+- Multi-step traitor missions that not only make things more interesting to the traitors themselves but 
+also to give the rest of the crew a fighting chance of detecting the traitor.
+
 Anti-griefing:
 - Karma: a system that detects malicious actions and automatically creates a more challenging experience 
 for griefers, or potentially triggers a kickban. The feature is completely optional and the server hosts 
