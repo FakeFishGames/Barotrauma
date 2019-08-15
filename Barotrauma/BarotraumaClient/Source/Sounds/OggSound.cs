@@ -12,6 +12,9 @@ namespace Barotrauma.Sounds
         //key = sample rate, value = filter
         private static Dictionary<int, BiQuad> muffleFilters = new Dictionary<int, BiQuad>();
 
+        private static List<float> playbackAmplitude;
+        private const int AMPLITUDE_SAMPLE_COUNT = 4410; //100ms in a 44100hz file
+
         public OggSound(SoundManager owner, string filename, bool stream) : base(owner, filename, stream, true)
         {
             if (!ToolBox.IsProperFilenameCase(filename))
@@ -32,6 +35,18 @@ namespace Barotrauma.Sounds
                 short[] shortBuffer = new short[bufferSize];
 
                 int readSamples = reader.ReadSamples(floatBuffer, 0, bufferSize);
+
+                playbackAmplitude = new List<float>();
+                for (int i=0;i<bufferSize;i+=reader.Channels*AMPLITUDE_SAMPLE_COUNT)
+                {
+                    float maxAmplitude = 0.0f;
+                    for (int j=i;j<i+reader.Channels*AMPLITUDE_SAMPLE_COUNT;j++)
+                    {
+                        if (j >= bufferSize) { break; }
+                        maxAmplitude = Math.Max(maxAmplitude, Math.Abs(floatBuffer[j]));
+                    }
+                    playbackAmplitude.Add(maxAmplitude);
+                }
                 
                 CastBuffer(floatBuffer, shortBuffer, readSamples);
                 
@@ -59,6 +74,15 @@ namespace Barotrauma.Sounds
 
                 reader.Dispose();
             }
+        }
+
+        public override float GetAmplitudeAtPlaybackPos(int playbackPos)
+        {
+            if (playbackAmplitude == null || playbackAmplitude.Count == 0) { return 0.0f; }
+            int index = playbackPos / AMPLITUDE_SAMPLE_COUNT;
+            if (index < 0) { return 0.0f; }
+            if (index >= playbackAmplitude.Count) { index = playbackAmplitude.Count - 1; }
+            return playbackAmplitude[index];
         }
 
         public override int FillStreamBuffer(int samplePos, short[] buffer)

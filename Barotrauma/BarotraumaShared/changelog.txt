@@ -27,7 +27,7 @@ New items and structures:
 - Tons of new decorative submarine pieces for the sub editor.
 
 New submarine:
-- Berilia, a submarine for 16 players
+- Berilia, a submarine for 16 players.
 
 Bugfixes:
 - Fixed crashing when selecting doors or gaps in the sub editor.
@@ -36,7 +36,9 @@ Bugfixes:
 ports. Specifically, if a port needed to be docked to from below but was positioned above the center of
 the submarine (or vice versa), the docking interface would not activate on the navigation terminal.
 - Fixed docking port using the wrong submarine's position for joint adjustment, causing errors when 
-docking a submarine with greater mass to one with a smaller mass
+docking a submarine with greater mass to one with a smaller mass.
+- Fixed an issue that caused occasional ID mismatch errors if a client died during a multiplayer
+campaign round and disconnected before the round ended.
 - Fixed item editing panel not appearing in wiring mode when selecting a wire in the sub editor.
 - Fixed ability to throw throwable items while unconscious.
 - Fixed bots not using fire extinguishers client-side in multiplayer.
@@ -93,8 +95,12 @@ limb slot (for example, when moving a flashlight from a hand slot to the head sl
 - Fixed deconstructor losing some of the material from deconstructed items if the output container couldn't hold all of the new items.
 - Fixed discrepancies in door welding & repairing logic regarding collision.
 - Fixed a crash when retrieving lobby information with an uninitialized IP.
-- Fixed max player count in server list & duplicate lobby entries
-- Fixed arrow keys not changing caret position when typing
+- Fixed max player count in server list & duplicate lobby entries.
+- Fixed arrow keys not changing caret position when typing.
+- Fixed doors looking repaired as soon as the condition goes above 0%, even though the collisions aren't 
+re-enabled until the door gets above 50%.
+- Fixed water not leaking through broken doors.
+- Fixed inability to throw items through platforms.
 
 Misc additions and changes:
 - Respawn shuttles now spawn inside the level somewhere near the submarine, instead of always spawning

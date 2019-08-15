@@ -39,6 +39,12 @@ namespace Barotrauma.Networking
                     HasSpawned = true;
 #if CLIENT
                     GameMain.GameSession?.CrewManager?.SetPlayerVoiceIconState(this, muted, mutedLocally);
+
+                    if (character == GameMain.Client.Character && GameMain.Client.SpawnAsTraitor)
+                    {
+                        character.IsTraitor = true;
+                        character.TraitorCurrentObjective = GameMain.Client.TraitorFirstObjective;
+                    }
 #endif
                 }
             }

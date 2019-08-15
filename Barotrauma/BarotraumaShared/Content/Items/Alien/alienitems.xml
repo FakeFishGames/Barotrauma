@@ -214,7 +214,7 @@
       <Item identifier="liquidoxygenite" mincondition="0.5" />
       <Item identifier="liquidoxygenite" mincondition="0.9" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="200,835,64,64" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="200,835,50,56" origin="0.5,0.5" />
     <Sprite texture="AlienMaterials.png" depth="0.7" sourcerect="18,436,58,69" origin="0.5,0.5" />
     <Body width="9" height="32" density="15" />
     <Throwable slots="Any,RightHand,LeftHand" handle1="0,-5" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect">

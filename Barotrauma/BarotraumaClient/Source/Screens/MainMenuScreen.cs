@@ -203,10 +203,6 @@ namespace Barotrauma
                     UserData = Tab.SteamWorkshop,
                     OnClicked = SelectTab
                 };
-
-/*#if OSX && !DEBUG
-                steamWorkshopButton.Text += " (Not yet available on MacOS)";
-#endif*/
             }
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("SubEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
@@ -256,7 +252,7 @@ namespace Barotrauma
                 UserData = Tab.Settings,
                 OnClicked = SelectTab
             };
-            //TODO: translate
+
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), optionList.RectTransform), TextManager.Get("CreditsButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
                 ForceUpperCase = true,
@@ -323,7 +319,7 @@ namespace Barotrauma
                 StartNewGame = StartGame
             };
 
-            var hostServerScale = new Vector2(0.7f, 1.0f);
+            var hostServerScale = new Vector2(0.7f, 0.6f);
             menuTabs[(int)Tab.HostServer] = new GUIFrame(new RectTransform(
                 Vector2.Multiply(relativeSize, hostServerScale), GUI.Canvas, anchor, pivot, minSize.Multiply(hostServerScale), maxSize.Multiply(hostServerScale)) { RelativeOffset = relativeSpacing });
 
@@ -806,7 +802,10 @@ namespace Barotrauma
 #else
             joinServerButton.Enabled = true;
             hostServerButton.Enabled = true;
-            steamWorkshopButton.Enabled = true;
+            if (Steam.SteamManager.USE_STEAM)
+            {
+                steamWorkshopButton.Enabled = true;
+            }
 #endif
         }
 

@@ -94,7 +94,7 @@ namespace Barotrauma.Networking
                     client.VoipSound = new VoipSound(GameMain.SoundManager, client.VoipQueue);
                 }
 
-                if (client.Character != null && !client.Character.IsDead && !client.Character.IsDead && client.Character.SpeechImpediment <= 100.0f)
+                if (client.Character != null && !client.Character.IsDead && client.Character.SpeechImpediment <= 100.0f)
                 {
                     var messageType = ChatMessage.CanUseRadio(client.Character, out WifiComponent radio) ? ChatMessageType.Radio : ChatMessageType.Default;
                     client.Character.ShowSpeechBubble(1.25f, ChatMessage.MessageColor[(int)messageType]);
@@ -113,8 +113,27 @@ namespace Barotrauma.Networking
                         client.VoipSound.UseMuffleFilter = SoundPlayer.ShouldMuffleSound(Character.Controlled, client.Character.WorldPosition, ChatMessage.SpeakRange, client.Character.CurrentHull);
                     }
                 }
-                GameMain.NetLobbyScreen.SetPlayerSpeaking(client);
+
+                GameMain.NetLobbyScreen?.SetPlayerSpeaking(client);
                 GameMain.GameSession?.CrewManager?.SetClientSpeaking(client);
+
+                if (client.VoipSound.CurrentAmplitude > 0.1f) //TODO: might need to tweak
+                {
+                    if (client.Character != null)
+                    {
+                        Vector3 clientPos = new Vector3(client.Character.WorldPosition.X, client.Character.WorldPosition.Y, 0.0f);
+                        Vector3 listenerPos = GameMain.SoundManager.ListenerPosition;
+                        float attenuationDist = client.VoipSound.Near * 1.125f;
+                        if (Vector3.DistanceSquared(clientPos, listenerPos) < attenuationDist * attenuationDist)
+                        {
+                            GameMain.SoundManager.VoipAttenuatedGain = 0.5f;
+                        }
+                    }
+                    else
+                    {
+                        GameMain.SoundManager.VoipAttenuatedGain = 0.5f;
+                    }
+                }
             }
         }
 

@@ -58,9 +58,9 @@ namespace Facepunch.Steamworks
 
             lock (ListenChannels)
             {
-                foreach (var channel in ListenChannels)
+                for (int i = 0; i < ListenChannels.Count; i++)
                 {
-                    while (ReadP2PPacket(channel))
+                    while (ReadP2PPacket(ListenChannels[i]))
                     {
                         // Nothing Here.
                     }

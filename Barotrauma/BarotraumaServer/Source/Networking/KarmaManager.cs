@@ -186,18 +186,25 @@ namespace Barotrauma
             if (target.IsDead || target.Removed) { return; }
 
             bool isEnemy = target.AIController is EnemyAIController || target.TeamID != attacker.TeamID;
-            if (GameMain.Server.TraitorManager != null)
+            if (GameMain.Server.TraitorManager?.Traitors != null)
             {
-                if (GameMain.Server.TraitorManager.TraitorList.Any(t => t.Character == target))
+                if (GameMain.Server.TraitorManager.Traitors.Any(t => t.Character == target))
                 {
                     //traitors always count as enemies
                     isEnemy = true;
                 }
-                if (GameMain.Server.TraitorManager.TraitorList.Any(t => t.Character == attacker && t.TargetCharacter == target))
+                if (GameMain.Server.TraitorManager.Traitors.Any(t => t.Character == attacker && t.CurrentObjective.IsEnemy(target)))
                 {
                     //target counts as an enemy to the traitor
                     isEnemy = true;
                 }
+            }
+            
+            //attacking/healing clowns has a smaller effect on karma
+            if (target.HasEquippedItem("clownmask") &&
+                target.HasEquippedItem("clowncostume"))
+            {
+                damage *= 0.5f;
             }
 
             if (appliedAfflictions != null)
@@ -330,6 +337,13 @@ namespace Barotrauma
 
             Client client = GameMain.Server.ConnectedClients.Find(c => c.Character == target);
             if (client == null) { return; }
+
+            //all penalties/rewards are halved when wearing a clown costume
+            if (target.HasEquippedItem("clownmask") &&
+                target.HasEquippedItem("clowncostume"))
+            {
+                amount *= 0.5f;
+            }
 
             client.Karma += amount;
             if (TestMode)

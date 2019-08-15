@@ -50,6 +50,10 @@ namespace Barotrauma
 
         public string Get(string textTag)
         {
+            if (string.IsNullOrEmpty(textTag))
+            {
+                return null;
+            }
             if (!texts.TryGetValue(textTag.ToLowerInvariant(), out List<string> textList) || !textList.Any())
             {
                 return null;

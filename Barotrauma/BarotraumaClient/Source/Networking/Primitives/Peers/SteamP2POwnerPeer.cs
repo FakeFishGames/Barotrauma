@@ -354,9 +354,9 @@ namespace Barotrauma.Networking
 
         private void DisconnectPeer(RemotePeer peer, string msg)
         {
-            if (string.IsNullOrWhiteSpace(msg))
+            if (!string.IsNullOrWhiteSpace(msg))
             {
-                if (peer.DisconnectTime != null)
+                if (peer.DisconnectTime == null)
                 {
                     peer.DisconnectTime = Timing.TotalTime + 1.0;
                 }
