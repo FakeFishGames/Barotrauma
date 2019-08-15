@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using System.Linq;
 
 namespace Barotrauma.Particles
 {
@@ -10,7 +11,7 @@ namespace Barotrauma.Particles
 
         public DecalManager()
         {
-            prefabs = new Dictionary<string, DecalPrefab>();
+            var decalElements = new Dictionary<string, XElement>();
             foreach (string configFile in GameMain.Instance.GetFilesOfType(ContentType.Decals))
             {
                 XDocument doc = XMLExtensions.TryLoadXml(configFile);
@@ -28,12 +29,12 @@ namespace Barotrauma.Particles
                 {
                     var element = sourceElement.IsOverride() ? sourceElement.FirstElement() : sourceElement;
                     string name = element.Name.ToString().ToLowerInvariant();
-                    if (prefabs.TryGetValue(name, out DecalPrefab duplicate))
+                    if (decalElements.ContainsKey(name))
                     {
                         if (allowOverriding || sourceElement.IsOverride())
                         {
                             DebugConsole.NewMessage($"Overriding the existing decal prefab '{name}' using the file '{configFile}'", Color.Yellow);
-                            prefabs.Remove(name);
+                            decalElements.Remove(name);
                         }
                         else
                         {
@@ -43,9 +44,16 @@ namespace Barotrauma.Particles
                         }
 
                     }
-                    prefabs.Add(name, new DecalPrefab(element));
+                    decalElements.Add(name, element);
                 }
             }
+            //prefabs = decalElements.ToDictionary(d => d.Key, d => new DecalPrefab(d.Value));
+            prefabs = new Dictionary<string, DecalPrefab>();
+            foreach (var kvp in decalElements)
+            {
+                prefabs.Add(kvp.Key, new DecalPrefab(kvp.Value));
+            }
+
         }
 
         public Decal CreateDecal(string decalName, float scale, Vector2 worldPosition, Hull hull)

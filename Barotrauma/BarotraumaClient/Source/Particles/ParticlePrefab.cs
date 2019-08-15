@@ -202,11 +202,11 @@ namespace Barotrauma.Particles
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "sprite":
-                        Sprites.Add(new Sprite(subElement, lazyLoad: true));
+                        Sprites.Add(new Sprite(subElement));
                         break;
                     case "spritesheet":
                     case "animatedsprite":
-                        Sprites.Add(new SpriteSheet(subElement, lazyload: true));
+                        Sprites.Add(new SpriteSheet(subElement));
                         break;
                     case "particleemitter":
                     case "emitter":
