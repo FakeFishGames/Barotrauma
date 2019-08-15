@@ -207,7 +207,7 @@
     <Body width="48" height="48" density="20" />
     <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5" msg="ItemMsgPickUpSelect"></Holdable>
   </Item>
-  <Item name="Oxygenite Shard" identifier="oxygeniteshard" category="Alien" tags="alien,smallitem,oxygensource" impacttolerance="8" impactsoundtag="impact_metal_light">
+  <Item name="Oxygenite Shard" identifier="oxygeniteshard" category="Alien" scale="0.5" tags="alien,smallitem,oxygensource" impacttolerance="8" impactsoundtag="impact_metal_light">
     <Deconstruct time="20">
       <Item identifier="steel" />
       <Item identifier="liquidoxygenite" mincondition="0.1" />
@@ -216,7 +216,7 @@
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="200,835,50,56" origin="0.5,0.5" />
     <Sprite texture="AlienMaterials.png" depth="0.7" sourcerect="18,436,58,69" origin="0.5,0.5" />
-    <Body width="9" height="32" density="15" />
+    <Body radius="25" density="15" />
     <Throwable slots="Any,RightHand,LeftHand" handle1="0,-5" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect">
       <StatusEffect type="OnNotContained" target="Hull" oxygen="5000.0" />
       <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true">
@@ -233,7 +233,7 @@
       </StatusEffect>
     </Throwable>
   </Item>
-  <Item name="Sulphurite Shard" identifier="sulphuriteshard" category="Alien" tags="alien,smallitem" impacttolerance="8" impactsoundtag="impact_metal_light">
+  <Item name="Sulphurite Shard" identifier="sulphuriteshard" category="Alien" scale="0.5" tags="alien,smallitem" impacttolerance="8" impactsoundtag="impact_metal_light">
     <Deconstruct time="20">
       <Item identifier="steel" />
       <Item identifier="sulphuricacid" mincondition="0.1" />
@@ -241,8 +241,7 @@
       <Item identifier="sulphuricacid" mincondition="0.9" />
     </Deconstruct>
     <Sprite texture="AlienMaterials.png" depth="0.7" sourcerect="178,437,60,73" origin="0.5,0.5" />
-    <Body width="9" height="32" density="15" />
-    <Body width="8" height="32" density="15" />
+    <Body radius="25" density="15" />
     <Throwable slots="Any,RightHand,LeftHand" handle1="0,-5" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect">
       <StatusEffect type="OnBroken" target="This">
         <Remove />

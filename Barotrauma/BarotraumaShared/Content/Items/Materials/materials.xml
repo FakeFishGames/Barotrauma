@@ -491,7 +491,7 @@
     <Price locationtype="Research" buyprice="200" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="328,833,51,63" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Alien/AlienMaterials.png" sourcerect="186,351,59,67" depth="0.55" origin="0.5,0.5" />
-    <Body width="60" height="26" density="50" />
+    <Body radius="25" density="50" />
     <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -499,12 +499,12 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  <Item name="Physicorium Bar" identifier="physicorium" category="Material" Tags="smallitem" cargocontaineridentifier="metalcrate" canbepicked="true">
+  <Item name="Physicorium Bar" identifier="physicorium" category="Material" Tags="smallitem" scale="0.5" cargocontaineridentifier="metalcrate" canbepicked="true">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="200" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="70,835,64,64" />
     <Sprite texture="Content/Items/Alien/AlienMaterials.png" sourcerect="97,349,58,71" depth="0.55" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <Body radius="25" density="50" />
     <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -512,12 +512,12 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  <Item name="Dementonite Bar" identifier="dementonite" category="Material" Tags="smallitem" cargocontaineridentifier="metalcrate" canbepicked="true">
+  <Item name="Dementonite Bar" identifier="dementonite" category="Material" Tags="smallitem" scale="0.5" cargocontaineridentifier="metalcrate" canbepicked="true">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="200" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,830,64,64" />
     <Sprite texture="Content/Items/Alien/AlienMaterials.png" sourcerect="15,356,60,54" depth="0.55" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <Body radius="25" density="50" />
     <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
