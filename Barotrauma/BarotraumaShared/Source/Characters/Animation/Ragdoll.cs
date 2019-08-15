@@ -319,7 +319,7 @@ namespace Barotrauma
             }
             else
             {
-                items = limbs?.ToDictionary(l => l.limbParams, l => l.WearingItems);
+                items = limbs?.ToDictionary(l => l.Params, l => l.WearingItems);
             }
             foreach (var limbParams in RagdollParams.Limbs)
             {

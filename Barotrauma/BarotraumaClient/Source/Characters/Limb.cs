@@ -133,7 +133,7 @@ namespace Barotrauma
         public void LoadHuskSprite() => HuskSprite = GetWearableSprite(WearableType.Husk);
         public void LoadHerpesSprite() => HerpesSprite = GetWearableSprite(WearableType.Herpes);
 
-        public float TextureScale => limbParams.Ragdoll.TextureScale;
+        public float TextureScale => Params.Ragdoll.TextureScale;
 
         public Sprite DamagedSprite { get; private set; }
 
@@ -165,7 +165,7 @@ namespace Barotrauma
             set { burnOverLayStrength = MathHelper.Clamp(value, 0.0f, 100.0f); }
         }
 
-        public string HitSoundTag => limbParams?.Sound?.Tag;
+        public string HitSoundTag => Params?.Sound?.Tag;
 
         partial void InitProjSpecific(XElement element)
         {
@@ -256,9 +256,9 @@ namespace Barotrauma
         partial void LoadParamsProjSpecific()
         {
             bool isFlipped = dir == Direction.Left;
-            Sprite?.LoadParams(limbParams.normalSpriteParams, isFlipped);
-            DamagedSprite?.LoadParams(limbParams.damagedSpriteParams, isFlipped);
-            DeformSprite?.Sprite.LoadParams(limbParams.deformSpriteParams, isFlipped);
+            Sprite?.LoadParams(Params.normalSpriteParams, isFlipped);
+            DamagedSprite?.LoadParams(Params.damagedSpriteParams, isFlipped);
+            DeformSprite?.Sprite.LoadParams(Params.deformSpriteParams, isFlipped);
         }
 
         partial void AddDamageProjSpecific(Vector2 simPosition, List<Affliction> afflictions, bool playSound, List<DamageModifier> appliedDamageModifiers)
@@ -466,7 +466,7 @@ namespace Barotrauma
                     from.Y = -from.Y;
                     Vector2 to = ConvertUnits.ToDisplayUnits(attachJoint.WorldAnchorB);
                     to.Y = -to.Y;
-                    var localFront = body.GetLocalFront(limbParams.GetSpriteOrientation());
+                    var localFront = body.GetLocalFront(Params.GetSpriteOrientation());
                     var front = ConvertUnits.ToDisplayUnits(body.FarseerBody.GetWorldPoint(localFront));
                     front.Y = -front.Y;
                     GUI.DrawLine(spriteBatch, bodyDrawPos, front, Color.Yellow, width: 2);

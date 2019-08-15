@@ -748,9 +748,9 @@ namespace Barotrauma
                 {
                     var topLeft = spriteSheetControls.RectTransform.TopLeft;
                     GUI.DrawString(spriteBatch, new Vector2(topLeft.X + 300, GameMain.GraphicsHeight - 80), GetCharacterEditorTranslation("SpriteOrientation") + ":", Color.Yellow, Color.Gray * 0.5f, 10, GUI.Font);
-                    float orientation = float.IsNaN(firstLimb.limbParams.SpriteOrientation) ? 0 : firstLimb.limbParams.SpriteOrientation;
+                    float orientation = float.IsNaN(firstLimb.Params.SpriteOrientation) ? 0 : firstLimb.Params.SpriteOrientation;
                     DrawRadialWidget(spriteBatch, new Vector2(topLeft.X + 510, GameMain.GraphicsHeight - 60), orientation, string.Empty, Color.Yellow,
-                        angle => selectedLimbs.ForEach(l => TryUpdateSubParam(l.limbParams, "spriteorientation", angle)), circleRadius: 40, widgetSize: 15, rotationOffset: MathHelper.Pi, autoFreeze: false);
+                        angle => selectedLimbs.ForEach(l => TryUpdateSubParam(l.Params, "spriteorientation", angle)), circleRadius: 40, widgetSize: 15, rotationOffset: MathHelper.Pi, autoFreeze: false);
                 }
                 else
                 {
@@ -809,7 +809,7 @@ namespace Barotrauma
                             Vector2 anchor1 = ConvertUnits.ToDisplayUnits(selectedJoint.LocalAnchorB);
                             Vector2 anchor2 = (GetLimbSpritesheetRect(targetLimb).Center.ToVector2() - PlayerInput.MousePosition) / spriteSheetZoom;
                             anchor2.X = -anchor2.X;
-                            ExtrudeJoint(selectedJoint, targetLimb.limbParams.ID, anchor1, anchor2);
+                            ExtrudeJoint(selectedJoint, targetLimb.Params.ID, anchor1, anchor2);
                         }
                     }
                     else
@@ -819,7 +819,7 @@ namespace Barotrauma
                         {
                             Vector2 anchor1 = ConvertUnits.ToDisplayUnits(selectedJoint.LocalAnchorB);
                             Vector2 anchor2 = ConvertUnits.ToDisplayUnits(targetLimb.body.FarseerBody.GetLocalPoint(ScreenToSim(PlayerInput.MousePosition)));
-                            ExtrudeJoint(selectedJoint, targetLimb.limbParams.ID, anchor1, anchor2);
+                            ExtrudeJoint(selectedJoint, targetLimb.Params.ID, anchor1, anchor2);
                         }
                     }
                 }
@@ -849,7 +849,7 @@ namespace Barotrauma
                             anchor1.X = -anchor1.X;
                             Vector2 anchor2 = (GetLimbSpritesheetRect(targetLimb).Center.ToVector2() - PlayerInput.MousePosition) / spriteSheetZoom;
                             anchor2.X = -anchor2.X;
-                            CreateJoint(closestSelectedLimb.limbParams.ID, targetLimb.limbParams.ID, anchor1, anchor2);
+                            CreateJoint(closestSelectedLimb.Params.ID, targetLimb.Params.ID, anchor1, anchor2);
                             jointCreationMode = false;
                             closestSelectedLimb = null;
                         }
@@ -869,7 +869,7 @@ namespace Barotrauma
                         {
                             Vector2 anchor1 = anchor1Pos ?? Vector2.Zero;
                             Vector2 anchor2 = ConvertUnits.ToDisplayUnits(targetLimb.body.FarseerBody.GetLocalPoint(ScreenToSim(PlayerInput.MousePosition)));
-                            CreateJoint(closestSelectedLimb.limbParams.ID, targetLimb.limbParams.ID, anchor1, anchor2);
+                            CreateJoint(closestSelectedLimb.Params.ID, targetLimb.Params.ID, anchor1, anchor2);
                             jointCreationMode = false;
                             closestSelectedLimb = null;
                         }
@@ -894,17 +894,17 @@ namespace Barotrauma
             //RagdollParams.StoreState();
             // TODO: copy all params and sub params -> use a generic method?
             var rect = limb.ActiveSprite.SourceRect;
-            var spriteParams = limb.limbParams.normalSpriteParams;
+            var spriteParams = limb.Params.normalSpriteParams;
             if (spriteParams == null)
             {
-                spriteParams = limb.limbParams.deformSpriteParams;
+                spriteParams = limb.Params.deformSpriteParams;
             }
             var newLimbElement = new XElement("limb",
                 new XAttribute("id", RagdollParams.Limbs.Last().ID + 1),
-                new XAttribute("radius", limb.limbParams.Radius),
-                new XAttribute("width", limb.limbParams.Width),
-                new XAttribute("height", limb.limbParams.Height),
-                new XAttribute("mass", limb.limbParams.Mass),
+                new XAttribute("radius", limb.Params.Radius),
+                new XAttribute("width", limb.Params.Width),
+                new XAttribute("height", limb.Params.Height),
+                new XAttribute("mass", limb.Params.Mass),
                 new XElement("sprite",
                     new XAttribute("texture", spriteParams.Texture),
                     new XAttribute("sourcerect", $"{rect.X}, {rect.Y}, {rect.Size.X}, {rect.Size.Y}"))
@@ -918,7 +918,7 @@ namespace Barotrauma
             TeleportTo(spawnPosition);
             ClearWidgets();
             ClearSelection();
-            selectedLimbs.Add(character.AnimController.Limbs.Single(l => l.limbParams == newLimbParams));
+            selectedLimbs.Add(character.AnimController.Limbs.Single(l => l.Params == newLimbParams));
             ResetParamsEditor();
         }
 
@@ -995,9 +995,9 @@ namespace Barotrauma
                     DebugConsole.ThrowError("Can't remove the main limb, because it will cause unreveratable issues.");
                     continue;
                 }
-                removedIDs.Add(limb.limbParams.ID);
-                limb.limbParams.Element.Remove();
-                RagdollParams.Limbs.Remove(limb.limbParams);
+                removedIDs.Add(limb.Params.ID);
+                limb.Params.Element.Remove();
+                RagdollParams.Limbs.Remove(limb.Params);
             }
             // Recreate ids
             var renamedIDs = new Dictionary<int, int>();
@@ -1337,7 +1337,7 @@ namespace Barotrauma
             TeleportTo(spawnPosition);
             // For some reason Enumerable.Contains() method does not find the match, threfore the conversion to a list.
             var selectedJointParams = selectedJoints.Select(j => j.jointParams).ToList();
-            var selectedLimbParams = selectedLimbs.Select(l => l.limbParams).ToList();
+            var selectedLimbParams = selectedLimbs.Select(l => l.Params).ToList();
             CreateTextures();
             ClearWidgets();
             ClearSelection();
@@ -1350,7 +1350,7 @@ namespace Barotrauma
             }
             foreach (var limb in character.AnimController.Limbs)
             {
-                if (selectedLimbParams.Contains(limb.limbParams))
+                if (selectedLimbParams.Contains(limb.Params))
                 {
                     selectedLimbs.Add(limb);
                 }
@@ -2882,35 +2882,35 @@ namespace Barotrauma
                         foreach (var limb in selectedLimbs)
                         {
                             var mainEditor = ParamsEditor.Instance;
-                            var limbEditor = limb.limbParams.SerializableEntityEditor;
-                            limb.limbParams.AddToEditor(mainEditor, true, space: 0);
-                            foreach (var damageModifier in limb.limbParams.DamageModifiers)
+                            var limbEditor = limb.Params.SerializableEntityEditor;
+                            limb.Params.AddToEditor(mainEditor, true, space: 0);
+                            foreach (var damageModifier in limb.Params.DamageModifiers)
                             {
-                                CreateCloseButton(damageModifier.SerializableEntityEditor, () => limb.limbParams.RemoveDamageModifier(damageModifier));
+                                CreateCloseButton(damageModifier.SerializableEntityEditor, () => limb.Params.RemoveDamageModifier(damageModifier));
                             }
-                            if (limb.limbParams.Sound == null)
+                            if (limb.Params.Sound == null)
                             {
-                                CreateAddButtonAtLast(mainEditor, () => limb.limbParams.AddSound(), GetCharacterEditorTranslation("AddSound"));
-                            }
-                            else
-                            {
-                                CreateCloseButton(limb.limbParams.Sound.SerializableEntityEditor, () => limb.limbParams.RemoveSound());
-                            }
-                            if (limb.limbParams.LightSource == null)
-                            {
-                                CreateAddButtonAtLast(mainEditor, () => limb.limbParams.AddLight(), GetCharacterEditorTranslation("AddLightSource"));
+                                CreateAddButtonAtLast(mainEditor, () => limb.Params.AddSound(), GetCharacterEditorTranslation("AddSound"));
                             }
                             else
                             {
-                                CreateCloseButton(limb.limbParams.LightSource.SerializableEntityEditor, () => limb.limbParams.RemoveLight());
+                                CreateCloseButton(limb.Params.Sound.SerializableEntityEditor, () => limb.Params.RemoveSound());
                             }
-                            if (limb.limbParams.Attack == null)
+                            if (limb.Params.LightSource == null)
                             {
-                                CreateAddButtonAtLast(mainEditor, () => limb.limbParams.AddAttack(), GetCharacterEditorTranslation("AddAttack"));
+                                CreateAddButtonAtLast(mainEditor, () => limb.Params.AddLight(), GetCharacterEditorTranslation("AddLightSource"));
                             }
                             else
                             {
-                                var attackParams = limb.limbParams.Attack;
+                                CreateCloseButton(limb.Params.LightSource.SerializableEntityEditor, () => limb.Params.RemoveLight());
+                            }
+                            if (limb.Params.Attack == null)
+                            {
+                                CreateAddButtonAtLast(mainEditor, () => limb.Params.AddAttack(), GetCharacterEditorTranslation("AddAttack"));
+                            }
+                            else
+                            {
+                                var attackParams = limb.Params.Attack;
                                 foreach (var affliction in attackParams.Attack.Afflictions)
                                 {
                                     if (attackParams.AfflictionEditors.TryGetValue(affliction.Key, out SerializableEntityEditor afflictionEditor))
@@ -2920,19 +2920,19 @@ namespace Barotrauma
                                 }
                                 var attackEditor = attackParams.SerializableEntityEditor;
                                 CreateAddButton(attackEditor, () => attackParams.AddNewAffliction(), GetCharacterEditorTranslation("AddAffliction"));
-                                CreateCloseButton(attackEditor, () => limb.limbParams.RemoveAttack());
+                                CreateCloseButton(attackEditor, () => limb.Params.RemoveAttack());
                                 var space = new GUIFrame(new RectTransform(new Point(attackEditor.RectTransform.Rect.Width, 20), attackEditor.RectTransform), style: null, color: new Color(20, 20, 20, 255))
                                 {
                                     CanBeFocused = false
                                 };
                                 attackEditor.AddCustomContent(space, attackEditor.ContentCount);
                             }
-                            CreateAddButtonAtLast(mainEditor, () => limb.limbParams.AddDamageModifier(), GetCharacterEditorTranslation("AddDamageModifier"));
+                            CreateAddButtonAtLast(mainEditor, () => limb.Params.AddDamageModifier(), GetCharacterEditorTranslation("AddDamageModifier"));
                         }
                     }
                     else
                     {
-                        character.AnimController.Limbs.ForEach(l => l.limbParams.AddToEditor(ParamsEditor.Instance, false, space: 10));
+                        character.AnimController.Limbs.ForEach(l => l.Params.AddToEditor(ParamsEditor.Instance, false, space: 10));
                     }
                 }
             }
@@ -3003,7 +3003,7 @@ namespace Barotrauma
         }
 
         private void TryUpdateJointParam(LimbJoint joint, string name, object value) => TryUpdateSubParam(joint.jointParams, name, value);
-        private void TryUpdateLimbParam(Limb limb, string name, object value) => TryUpdateSubParam(limb.limbParams, name, value);
+        private void TryUpdateLimbParam(Limb limb, string name, object value) => TryUpdateSubParam(limb.Params, name, value);
 
         private void TryUpdateSubParam(RagdollParams.SubParam ragdollSubParams, string name, object value)
         {
@@ -3626,18 +3626,18 @@ namespace Barotrauma
                     {
                         if (limb.type != LimbType.LeftFoot && limb.type != LimbType.RightFoot) continue;
                         
-                        if (!fishParams.FootAnglesInRadians.ContainsKey(limb.limbParams.ID))
+                        if (!fishParams.FootAnglesInRadians.ContainsKey(limb.Params.ID))
                         {
-                            fishParams.FootAnglesInRadians[limb.limbParams.ID] = 0.0f;
+                            fishParams.FootAnglesInRadians[limb.Params.ID] = 0.0f;
                         }
 
                         DrawRadialWidget(spriteBatch, 
                             SimToScreen(new Vector2(limb.SimPosition.X, colliderBottom.Y)), 
-                            MathHelper.ToDegrees(fishParams.FootAnglesInRadians[limb.limbParams.ID]),
+                            MathHelper.ToDegrees(fishParams.FootAnglesInRadians[limb.Params.ID]),
                             GetCharacterEditorTranslation("FootAngle"), Color.White,
                             angle =>
                             {
-                                fishParams.FootAnglesInRadians[limb.limbParams.ID] = MathHelper.ToRadians(angle);
+                                fishParams.FootAnglesInRadians[limb.Params.ID] = MathHelper.ToRadians(angle);
                                 TryUpdateAnimParam("footangles", fishParams.FootAngles);
                             },
                             circleRadius: 25, rotationOffset: collider.Rotation, clockWise: dir < 0, wrapAnglePi: true);
@@ -3959,7 +3959,7 @@ namespace Barotrauma
                                 ResetParamsEditor();
                             }
                             limb.PullJointWorldAnchorA = ScreenToSim(PlayerInput.MousePosition);
-                            TryUpdateLimbParam(limb, "pullpos", ConvertUnits.ToDisplayUnits(limb.PullJointLocalAnchorA / limb.limbParams.Ragdoll.LimbScale));
+                            TryUpdateLimbParam(limb, "pullpos", ConvertUnits.ToDisplayUnits(limb.PullJointLocalAnchorA / limb.Params.Ragdoll.LimbScale));
                             GUI.DrawLine(spriteBatch, SimToScreen(limb.SimPosition), tformedPullPos, Color.MediumPurple);
                         });
                     }
@@ -4015,7 +4015,7 @@ namespace Barotrauma
                                 DrawJointLimitWidgets(spriteBatch, limb, joint, tformedJointPos, autoFreeze: true, allowPairEditing: true, rotationOffset: limb.Rotation);
                             }
                             // Is the direction inversed incorrectly?
-                            Vector2 to = tformedJointPos + VectorExtensions.ForwardFlipped(joint.LimbB.Rotation + MathHelper.ToRadians(-joint.LimbB.limbParams.GetSpriteOrientation()), 20);
+                            Vector2 to = tformedJointPos + VectorExtensions.ForwardFlipped(joint.LimbB.Rotation + MathHelper.ToRadians(-joint.LimbB.Params.GetSpriteOrientation()), 20);
                             GUI.DrawLine(spriteBatch, tformedJointPos, to, Color.Magenta, width: 2);
                             var dotSize = new Vector2(5, 5);
                             var rect = new Rectangle((tformedJointPos - dotSize / 2).ToPoint(), dotSize.ToPoint());
@@ -4289,7 +4289,7 @@ namespace Barotrauma
                             Vector2 GetTopLeft() => sprite.SourceRect.Location.ToVector2();
                             Vector2 GetTopRight() => new Vector2(GetTopLeft().X + sprite.SourceRect.Width, GetTopLeft().Y);
                             Vector2 GetBottomRight() => new Vector2(GetTopRight().X, GetTopRight().Y + sprite.SourceRect.Height);
-                            var originWidget = GetLimbEditWidget($"{limb.limbParams.ID}_origin", limb, widgetSize, Widget.Shape.Cross, initMethod: w =>
+                            var originWidget = GetLimbEditWidget($"{limb.Params.ID}_origin", limb, widgetSize, Widget.Shape.Cross, initMethod: w =>
                             {
                                 w.refresh = () => w.tooltip = $"{GetCharacterEditorTranslation("Origin")}: {sprite.RelativeOrigin.FormatDoubleDecimal()}";
                                 w.refresh();
@@ -4335,7 +4335,7 @@ namespace Barotrauma
                             originWidget.Draw(spriteBatch, deltaTime);
                             if (!lockSpritePosition)
                             {
-                                var positionWidget = GetLimbEditWidget($"{limb.limbParams.ID}_position", limb, widgetSize, Widget.Shape.Rectangle, initMethod: w =>
+                                var positionWidget = GetLimbEditWidget($"{limb.Params.ID}_position", limb, widgetSize, Widget.Shape.Rectangle, initMethod: w =>
                                 {
                                     w.refresh = () => w.tooltip = $"{GetCharacterEditorTranslation("Position")}: {limb.ActiveSprite.SourceRect.Location}";
                                     w.refresh();
@@ -4392,7 +4392,7 @@ namespace Barotrauma
                             }
                             if (!lockSpriteSize)
                             {
-                                var sizeWidget = GetLimbEditWidget($"{limb.limbParams.ID}_size", limb, widgetSize, Widget.Shape.Rectangle, initMethod: w =>
+                                var sizeWidget = GetLimbEditWidget($"{limb.Params.ID}_size", limb, widgetSize, Widget.Shape.Rectangle, initMethod: w =>
                                 {
                                     w.refresh = () => w.tooltip = $"{GetCharacterEditorTranslation("Size")}: {limb.ActiveSprite.SourceRect.Size}";
                                     w.refresh();
@@ -4601,7 +4601,7 @@ namespace Barotrauma
 
         private void DrawJointLimitWidgets(SpriteBatch spriteBatch, Limb limb, LimbJoint joint, Vector2 drawPos, bool autoFreeze, bool allowPairEditing, float rotationOffset = 0)
         {
-            rotationOffset += MathHelper.ToRadians(limb.limbParams.SpriteOrientation);
+            rotationOffset += MathHelper.ToRadians(limb.Params.SpriteOrientation);
             Color angleColor = joint.UpperLimit - joint.LowerLimit > 0 ? Color.LightGreen * 0.5f : Color.Red;
             DrawRadialWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.UpperLimit), $"joint.jointParams.Name {GetCharacterEditorTranslation("UpperLimit")}", Color.Cyan, angle =>
             {

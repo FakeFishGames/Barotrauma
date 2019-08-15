@@ -88,12 +88,12 @@ namespace Barotrauma
         /// Note that during the limb initialization, character.AnimController returns null, whereas this field is already assigned.
         /// </summary>
         public readonly Ragdoll ragdoll;
-        public readonly LimbParams limbParams;
+        public readonly LimbParams Params;
 
         //the physics body of the limb
         public PhysicsBody body;
                         
-        public Vector2 StepOffset => ConvertUnits.ToSimUnits(limbParams.StepOffset) * ragdoll.RagdollParams.JointScale;
+        public Vector2 StepOffset => ConvertUnits.ToSimUnits(Params.StepOffset) * ragdoll.RagdollParams.JointScale;
 
         public bool inWater;
 
@@ -113,11 +113,11 @@ namespace Barotrauma
 
         private Direction dir;
 
-        public int HealthIndex => limbParams.HealthIndex;
-        public float Scale => limbParams.Ragdoll.LimbScale;
-        public float AttackPriority => limbParams.AttackPriority;
-        public bool DoesFlip => limbParams.Flip;
-        public float SteerForce => limbParams.SteerForce;
+        public int HealthIndex => Params.HealthIndex;
+        public float Scale => Params.Ragdoll.LimbScale;
+        public float AttackPriority => Params.AttackPriority;
+        public bool DoesFlip => Params.Flip;
+        public float SteerForce => Params.SteerForce;
         
         public Vector2 DebugTargetPos;
         public Vector2 DebugRefPos;
@@ -178,7 +178,7 @@ namespace Barotrauma
             set { dir = (value == -1.0f) ? Direction.Left : Direction.Right; }
         }
 
-        public int RefJointIndex => limbParams.RefJoint;
+        public int RefJointIndex => Params.RefJoint;
 
         private List<WearableSprite> wearingItems;
         public List<WearableSprite> WearingItems
@@ -271,7 +271,7 @@ namespace Barotrauma
             get { return pullJoint.LocalAnchorA; }
         }
 
-        public string Name => limbParams.Name;
+        public string Name => Params.Name;
 
         public Dictionary<string, SerializableProperty> SerializableProperties
         {
@@ -283,7 +283,7 @@ namespace Barotrauma
         {
             this.ragdoll = ragdoll;
             this.character = character;
-            this.limbParams = limbParams;
+            this.Params = limbParams;
             wearingItems = new List<WearableSprite>();            
             dir = Direction.Right;
             body = new PhysicsBody(limbParams);
@@ -436,7 +436,7 @@ namespace Barotrauma
         protected float GetArmorSectorRotationOffset(Vector2 armorSector)
         {
             float midAngle = MathUtils.GetMidAngle(armorSector.X, armorSector.Y);
-            float spritesheetOrientation = limbParams.GetSpriteOrientation();
+            float spritesheetOrientation = Params.GetSpriteOrientation();
             return midAngle + spritesheetOrientation;
         }
 
@@ -585,7 +585,7 @@ namespace Barotrauma
                 if (structureBody != null && attack.StickChance > Rand.Range(0.0f, 1.0f, Rand.RandSync.Server))
                 {
                     // TODO: use the hit pos?
-                    var localFront = body.GetLocalFront(limbParams.GetSpriteOrientation());
+                    var localFront = body.GetLocalFront(Params.GetSpriteOrientation());
                     var from = body.FarseerBody.GetWorldPoint(localFront);
                     var to = from;
                     var drawPos = body.DrawPosition;
@@ -645,7 +645,7 @@ namespace Barotrauma
             {
                 PhysicsBody mainLimbBody = ragdoll.MainLimb.body;
                 Body colliderBody = ragdoll.Collider.FarseerBody;
-                Vector2 mainLimbLocalFront = mainLimbBody.GetLocalFront(ragdoll.MainLimb.limbParams.GetSpriteOrientation());
+                Vector2 mainLimbLocalFront = mainLimbBody.GetLocalFront(ragdoll.MainLimb.Params.GetSpriteOrientation());
                 if (Dir < 0)
                 {
                     mainLimbLocalFront.X = -mainLimbLocalFront.X;
@@ -695,7 +695,7 @@ namespace Barotrauma
 
         public void LoadParams()
         {
-            pullJoint.LocalAnchorA = ConvertUnits.ToSimUnits(limbParams.PullPos * Scale);
+            pullJoint.LocalAnchorA = ConvertUnits.ToSimUnits(Params.PullPos * Scale);
             LoadParamsProjSpecific();
         }
 

@@ -260,7 +260,7 @@ namespace Barotrauma
                     }
                     if (attachLimb != null)
                     {
-                        jointParams.Limb1 = attachLimb.limbParams.ID;
+                        jointParams.Limb1 = attachLimb.Params.ID;
                         var appendageLimbParams = new RagdollParams.LimbParams(limbElement, ragdoll.RagdollParams)
                         {
                             // Ensure that we have a valid id for the new limb
