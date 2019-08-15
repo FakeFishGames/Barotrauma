@@ -3449,5 +3449,6 @@
   <clientpermission.karmaimmunity>Karma immunity</clientpermission.karmaimmunity>
 
   <!-- Changed values as of 13th of August -->
+  <traitorgoaldestroyitems>Dispose of at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>
 
 </infotexts>
