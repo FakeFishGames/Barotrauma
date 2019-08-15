@@ -193,7 +193,10 @@ namespace Barotrauma
                     //traitors always count as enemies
                     isEnemy = true;
                 }
-                if (GameMain.Server.TraitorManager.Traitors.Any(t => t.Character == attacker && t.CurrentObjective.IsEnemy(target)))
+                if (GameMain.Server.TraitorManager.Traitors.Any(t => 
+                    t.Character == attacker &&
+                    t.CurrentObjective != null &&
+                    t.CurrentObjective.IsEnemy(target)))
                 {
                     //target counts as an enemy to the traitor
                     isEnemy = true;
@@ -253,6 +256,19 @@ namespace Barotrauma
             if (damageAmount > 0)
             {
                 if (StructureDamageKarmaDecrease <= 0.0f) { return; }
+
+                if (GameMain.Server.TraitorManager?.Traitors != null)
+                {                    
+                    if (GameMain.Server.TraitorManager.Traitors.Any(t => 
+                        t.Character == attacker && 
+                        t.CurrentObjective != null && 
+                        t.CurrentObjective.HasGoalsOfType<Traitor.GoalFloodPercentOfSub>()))
+                    {
+                        //traitor tasked to flood the sub -> damaging structures is ok
+                        return;
+                    }
+                }
+
                 Client client = GameMain.Server.ConnectedClients.Find(c => c.Character == attacker);
                 if (client != null)
                 {
