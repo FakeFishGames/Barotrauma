@@ -89,6 +89,9 @@ namespace Facepunch.Steamworks
             {
                 //add the lobby to the list of requests
                 ulong lobby = client.native.matchmaking.GetLobbyByIndex(i);
+
+                if (requests.Contains(lobby)) { continue; }
+                
                 requests.Add(lobby);
 
                 //cast to a LobbyList.Lobby
@@ -144,14 +147,10 @@ namespace Facepunch.Steamworks
 
                 //otherwise lobby data in general was updated and you should listen to see what changed
                 if (OnLobbiesUpdated != null) { OnLobbiesUpdated(); }
-                if (OnLobbyUpdated != null) { OnLobbyUpdated(lobby); }
             }
-
-            
         }
 
         public Action OnLobbiesUpdated;
-        public Action<Lobby> OnLobbyUpdated;
 
         public void Dispose()
         {

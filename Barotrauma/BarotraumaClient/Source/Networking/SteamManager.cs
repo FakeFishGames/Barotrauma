@@ -225,15 +225,19 @@ namespace Barotrauma.Steam
 
         public static void LeaveLobby()
         {
-            lobbyIPRetrievalThread?.Abort();
-            lobbyIPRetrievalThread?.Join();
-            lobbyIPRetrievalThread = null;
+            if (lobbyState != LobbyState.NotConnected)
+            {
+                lobbyIPRetrievalThread?.Abort();
+                lobbyIPRetrievalThread?.Join();
+                lobbyIPRetrievalThread = null;
 
-            instance.client.Lobby.Leave();
-            lobbyIP = "";
-            lobbyState = LobbyState.NotConnected;
+                instance.client.Lobby.Leave();
+                lobbyID = 0;
+                lobbyIP = "";
+                lobbyState = LobbyState.NotConnected;
 
-            instance.client.Lobby.OnLobbyJoined = null;
+                instance.client.Lobby.OnLobbyJoined = null;
+            }
         }
         public static void JoinLobby(UInt64 id, bool joinServer)
         {
