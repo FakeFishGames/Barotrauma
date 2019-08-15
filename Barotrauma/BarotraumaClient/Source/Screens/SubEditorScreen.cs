@@ -2374,11 +2374,7 @@ namespace Barotrauma
                 sub.UpdateTransform();
             }
 
-            spriteBatch.Begin(SpriteSortMode.BackToFront,
-                BlendState.AlphaBlend,
-                null, null, null, null,
-                cam.Transform);
-
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: cam.Transform);
             graphics.Clear(new Color(0.051f, 0.149f, 0.271f, 1.0f));
             if (GameMain.DebugDraw)
             {
@@ -2386,7 +2382,12 @@ namespace Barotrauma
                 GUI.DrawLine(spriteBatch, new Vector2(cam.WorldView.X, -Submarine.MainSub.HiddenSubPosition.Y), new Vector2(cam.WorldView.Right, -Submarine.MainSub.HiddenSubPosition.Y), Color.White * 0.5f, 1.0f, (int)(2.0f / cam.Zoom));
             }
            
-            Submarine.Draw(spriteBatch, true);
+            Submarine.DrawBack(spriteBatch, editing: true);
+
+            spriteBatch.End();
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: cam.Transform);
+
+            Submarine.DrawFront(spriteBatch, editing: true);
 
             if (!CharacterMode && !WiringMode && GUI.MouseOn == null)
             {
