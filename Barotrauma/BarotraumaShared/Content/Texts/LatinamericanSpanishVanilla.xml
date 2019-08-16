@@ -2630,7 +2630,7 @@
 <connection.sonardataout>datos_sal</connection.sonardataout>
 <label.outpostinfodisplay1>Te damos la bienvenida. Niveles de oxígeno: nominales. Niveles de energía: nominales. Niveles de radiación: subóptimos. Pronóstico del tiempo para hoy: frío y húmedo.</label.outpostinfodisplay1>
 <label.navterminaldock>Atracar</label.navterminaldock>
-<label.navterminaldock>Desatracar</label.navterminaldock>
+<label.navterminalundock>Desatracar</label.navterminalundock>
 <connectionerrornoresponse>No hay respuesta del servidor. Podría ser un problema de conexión por parte del servidor.</connectionerrornoresponse>
 <dialognorescuetargets>¡Nadie parece necesitar asistencia médica en este momento!</dialognorescuetargets>
 <dialognorescuetargets>No creo que nadie necesite asistencia médica por el momento.</dialognorescuetargets>

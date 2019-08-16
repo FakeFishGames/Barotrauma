@@ -2630,7 +2630,7 @@
 <connection.sonardataout>dados_saída</connection.sonardataout>
 <label.outpostinfodisplay1>Boas-vindas. Níveis de Oxigênio: Normais. Níveis de Potência: Normais. Níveis de Radiação: Inadequados. Previsão do Tempo de Hoje: Frio e Úmido.</label.outpostinfodisplay1>
 <label.navterminaldock>Acoplar</label.navterminaldock>
-<label.navterminaldock>Desacoplar</label.navterminaldock>
+<label.navterminalundock>Desacoplar</label.navterminalundock>
 <connectionerrornoresponse>Nenhuma resposta do servidor. Pode haver um problema de conexão no servidor.</connectionerrornoresponse>
 <dialognorescuetargets>Parece que ninguém precisa de atendimento médico no momento!</dialognorescuetargets>
 <dialognorescuetargets>Acho que ninguém precisa de atendimento médico no momento.</dialognorescuetargets>

@@ -2630,7 +2630,7 @@
 <connection.sonardataout>данные_выкл</connection.sonardataout>
 <label.outpostinfodisplay1>Добро пожаловать. Уровни кислорода: номинальные. Уровни энергии: номинальные. Уровни радиации: субоптимальные. Прогноз погоды на сегодня: холодно и мокро.</label.outpostinfodisplay1>
 <label.navterminaldock>Пристыковаться</label.navterminaldock>
-<label.navterminaldock>Отстыковаться</label.navterminaldock>
+<label.navterminalundock>Отстыковаться</label.navterminalundock>
 <connectionerrornoresponse>Нет ответа от сервера. Возможно, это проблема соединения со стороны сервера.</connectionerrornoresponse>
 <dialognorescuetargets>Сейчас никому не требуется медицинская помощь!</dialognorescuetargets>
 <dialognorescuetargets>Не думаю, что сейчас кому-то требуется медпомощь.</dialognorescuetargets>
