@@ -169,19 +169,29 @@ namespace Facepunch.Steamworks
         /// <summary>
         /// Updates the LobbyData property to have the data for the current lobby, if any
         /// </summary>
+        private bool suppressUpdateLobbyData = false;
         internal void UpdateLobbyData()
         {
-            int dataCount = client.native.matchmaking.GetLobbyDataCount( CurrentLobby );
-            CurrentLobbyData = new LobbyData( client, CurrentLobby );
-            for ( int i = 0; i < dataCount; i++ )
+            if (suppressUpdateLobbyData) { return; }
+            try
             {
-                if ( client.native.matchmaking.GetLobbyDataByIndex( CurrentLobby, i, out string key, out string value ) )
+                suppressUpdateLobbyData = true;
+                int dataCount = client.native.matchmaking.GetLobbyDataCount(CurrentLobby);
+                CurrentLobbyData = new LobbyData(client, CurrentLobby);
+                for (int i = 0; i < dataCount; i++)
                 {
-                    CurrentLobbyData.SetData( key, value );
+                    if (client.native.matchmaking.GetLobbyDataByIndex(CurrentLobby, i, out string key, out string value))
+                    {
+                        CurrentLobbyData.SetData(key, value);
+                    }
                 }
-            }
 
-            if ( OnLobbyDataUpdated != null ) { OnLobbyDataUpdated(); }
+                if (OnLobbyDataUpdated != null) { OnLobbyDataUpdated(); }
+            }
+            finally
+            {
+                suppressUpdateLobbyData = false;
+            }
         }
 
         /// <summary>

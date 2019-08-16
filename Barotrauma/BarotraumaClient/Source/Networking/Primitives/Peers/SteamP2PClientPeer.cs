@@ -96,7 +96,12 @@ namespace Barotrauma.Networking
 
             if (isConnectionInitializationStep)
             {
-                IReadMessage inc = new ReadOnlyMessage(data, false, 1, dataLength - 1, ServerConnection);
+                ulong low = Lidgren.Network.NetBitWriter.ReadUInt32(data, 32, 8);
+                ulong high = Lidgren.Network.NetBitWriter.ReadUInt32(data, 32, 8+32);
+                ulong lobbyId = low + (high << 32);
+
+                Steam.SteamManager.JoinLobby(lobbyId, false);
+                IReadMessage inc = new ReadOnlyMessage(data, false, 1+8, dataLength - 9, ServerConnection);
                 if (initializationStep != ConnectionInitialization.Success)
                 {
                     incomingInitializationMessages.Add(inc);
@@ -303,6 +308,8 @@ namespace Barotrauma.Networking
         public override void Close(string msg = null)
         {
             if (!isActive) { return; }
+
+            SteamManager.LeaveLobby();
 
             isActive = false;
 
