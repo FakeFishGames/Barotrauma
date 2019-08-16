@@ -18,6 +18,7 @@
         <sprite texture="Content/Items/Command/navigatorLightsBlinking.png" depth="0.025" origin="0.5,0.5" alpha="1.0" />
       </LightComponent>
     </Steering>
+    <aitarget sightrange="500" soundrange="10000"/>
     <Sonar canbeselected="true" powerconsumption="100" displaybordersize="-0.1">
       <GuiFrame relativesize="0.5,0.6" anchor="CenterLeft" absoluteoffset="30,0" />
       <sound file="Content/Items/Command/SonarPing.ogg" type="OnUse" range="1000.0" />
@@ -72,6 +73,7 @@
       <SteeringIndicator texture="Content/Items/Command/NavUI.png" sourcerect="0,135,362,16" origin="0,0.5"/>
       <poweronsound file="Content/Items/PowerOnLight2.ogg" range="1000" loop="false" />
     </Steering>
+    <aitarget sightrange="500" soundrange="5000"/>
     <Sonar canbeselected="true" powerconsumption="100" displaybordersize="-0.1">
       <GuiFrame relativesize="0.5,0.6" anchor="CenterLeft" absoluteoffset="30,0" />
       <sound file="Content/Items/Command/SonarPing.ogg" type="OnUse" range="1000.0" />
@@ -112,6 +114,7 @@
     <Sprite texture="Content/Items/Command/CommandDevices.png" depth="0.8" sourcerect="0,1,188,194" origin="0.5,0.5" />
     <BrokenSprite texture="Content/Items/Command/CommandDevices.png" sourcerect="188,1,188,194" depth="0.8" maxcondition="40" fadein="true" origin="0.5,0.5" />
     <BrokenSprite texture="Content/Items/Command/CommandDevices.png" sourcerect="376,1,188,194" depth="0.8" maxcondition="0" origin="0.5,0.5" />
+    <aitarget sightrange="500" soundrange="10000"/>
     <Sonar canbeselected="true" powerconsumption="100" displaybordersize="-0.1" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.5,0.6" anchor="CenterLeft" absoluteoffset="30,0" />
       <StatusEffect type="InWater" target="This" condition="-0.5" />

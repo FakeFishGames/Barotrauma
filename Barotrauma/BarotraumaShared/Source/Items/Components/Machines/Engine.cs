@@ -97,11 +97,17 @@ namespace Barotrauma.Items.Components
 
                 UpdatePropellerDamage(deltaTime);
 
+                if (item.AiTarget != null)
+                {
+                    var aiTarget = item.AiTarget;
+                    aiTarget.SoundRange = MathHelper.Lerp(aiTarget.MinSoundRange, aiTarget.MaxSoundRange, currForce.Length() / maxForce);
+                }
                 if (item.CurrentHull != null)
                 {
-                    item.CurrentHull.AiTarget.SoundRange = Math.Max(currForce.Length(), item.CurrentHull.AiTarget.SoundRange);
+                    var aiTarget = item.CurrentHull.AiTarget;
+                    float noise = MathHelper.Lerp(aiTarget.MinSoundRange, aiTarget.MaxSoundRange, currForce.Length() / maxForce);
+                    aiTarget.SoundRange = Math.Max(noise, aiTarget.SoundRange);
                 }
-
 #if CLIENT
                 for (int i = 0; i < 5; i++)
                 {
