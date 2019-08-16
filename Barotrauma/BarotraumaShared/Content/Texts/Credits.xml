@@ -173,12 +173,20 @@
   <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Synthesis</Text>
   <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">French translation, proofreading, LQA</Text>
   <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Synthesis</Text>
+  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">Castilian Spanish translation, proofreading, LQA</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Synthesis</Text>
+  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">Latin Spanish translation, proofreading, LQA</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Synthesis</Text>
+  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">Polish translation, proofreading, LQA</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Synthesis</Text>  
   <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">Russian translation, proofreading, LQA</Text>
   <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Uliana Erofeeva</Text>
   <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">Brazilian Portuguese translation, proofreading, LQA</Text>
   <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Synthesis</Text>
   <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">Chinese translation, proofreading, LQA</Text>
   <Text font="Font" color="150,150,150,255" alignment="CenterLeft">WhisperGames</Text>
+  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">Turkish translation, proofreading, LQA</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">AiBell Localization</Text>
     
   <spacing relativeheight="0.2"/>
   
