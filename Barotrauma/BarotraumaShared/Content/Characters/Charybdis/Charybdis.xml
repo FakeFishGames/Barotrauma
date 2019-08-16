@@ -16,7 +16,7 @@
 
   <ai
     combatstrength="2000"
-    sight="0.5"
+    sight="1.0"
     hearing="1.0">
     <targetpriority tag="decoy" state="Attack" priority="600" />
     <targetpriority tag="provocative" state="Attack" priority="300"/>

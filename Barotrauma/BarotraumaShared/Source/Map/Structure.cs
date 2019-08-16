@@ -372,7 +372,11 @@ namespace Barotrauma
             // Only add ai targets automatically to submarine/outpost walls 
             if (aiTarget == null && HasBody && Tags.Contains("wall") && submarine != null && !Prefab.NoAITarget)
             {
-                aiTarget = new AITarget(this);
+                aiTarget = new AITarget(this)
+                {
+                    MaxSightRange = AITarget.StaticSightRange,
+                    MaxSoundRange = 0
+                };
             }
 
             InsertToList();

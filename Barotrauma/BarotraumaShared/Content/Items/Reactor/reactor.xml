@@ -5,6 +5,7 @@
     <Sprite texture="reactor.png" sourcerect="0,0,321,192" depth="0.8" />
     <BrokenSprite texture="reactor.png" sourcerect="0,192,321,192" depth="0.8" maxcondition="40" />
     <BrokenSprite texture="reactor.png" sourcerect="0,384,321,192" depth="0.8" maxcondition="0" />
+    <aitarget sightrange="500" soundrange="7500"/>
     <Reactor canbeselected="true" firedelay="20" meltdowndelay="120" maxpoweroutput="10000" fuelconsumptionrate="0.2" vulnerabletoemp="false" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.5,0.38" minsize="900,400" maxsize="2688,1166" anchor="Center" style="ItemUI"/>
       <GraphLine texture="Content/Items/Reactor/graphLine.png"/>
