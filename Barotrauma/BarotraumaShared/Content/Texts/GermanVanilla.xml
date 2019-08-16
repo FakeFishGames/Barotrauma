@@ -2630,7 +2630,7 @@
 <connection.sonardataout>daten_aus</connection.sonardataout>
 <label.outpostinfodisplay1>Willkommen. Sauerstoffwert: Nominal. Stromwert: Nominal. Strahlungswert: Suboptimal. Aktuelle Wetterprognose: Kalt und feucht.</label.outpostinfodisplay1>
 <label.navterminaldock>Andocken</label.navterminaldock>
-<label.navterminaldock>Abdocken</label.navterminaldock>
+<label.navterminalundock>Abdocken</label.navterminalundock>
 <connectionerrornoresponse>Der Server antwortet nicht. Möglicherweise bestehen serverseitige Verbindungsprobleme.</connectionerrornoresponse>
 <dialognorescuetargets>Im Moment ist niemand auf medizinische Hilfe angewiesen!</dialognorescuetargets>
 <dialognorescuetargets>Ich glaube, im Moment benötigt niemand medizinische Hilfe.</dialognorescuetargets>

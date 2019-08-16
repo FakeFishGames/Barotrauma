@@ -2630,7 +2630,7 @@
 <connection.sonardataout>veri_çıktı</connection.sonardataout>
 <label.outpostinfodisplay1>Hoş geldin. Oksijen Seviyeleri: Önemsiz. Radyasyon Seviyesi: Standart Altı. Bugünün Hava Tahmini: Soğuk ve Nemli.</label.outpostinfodisplay1>
 <label.navterminaldock>Kenetlen</label.navterminaldock>
-<label.navterminaldock>Kenetlenmeden çık</label.navterminaldock>
+<label.navterminalundock>Kenetlenmeden çık</label.navterminalundock>
 <connectionerrornoresponse>Sunucudan yanıt gelmiyor. Sunucu tarafından bir bağlantı problemi olabilir.</connectionerrornoresponse>
 <dialognorescuetargets>Şu an kimsenin tıbbi yardıma ihtiyacı yok gibi duruyor.</dialognorescuetargets>
 <dialognorescuetargets>Şu an kimsenin tıbbi yardıma ihtiyacı olduğunu düşünmüyorum.</dialognorescuetargets>
