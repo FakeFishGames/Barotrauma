@@ -36,7 +36,7 @@
 
   <ai
     combatstrength="100"
-    sight="0.5"
+    sight="0.75"
     hearing="1.0"
     fleehealththreshold="10"
     aggressiveboarding="true"
