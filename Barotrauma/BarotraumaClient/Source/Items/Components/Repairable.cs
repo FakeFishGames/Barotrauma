@@ -84,8 +84,6 @@ namespace Barotrauma.Items.Components
             {
                 OnClicked = (btn, obj) =>
                 {
-                    // currentFixer = Character.Controlled;
-                    // CurrentFixerAction = FixActions.Repair;
                     requestStartFixAction = FixActions.Repair;
                     item.CreateClientEvent(this);
                     return true;
@@ -97,8 +95,6 @@ namespace Barotrauma.Items.Components
             {
                 OnClicked = (btn, obj) =>
                 {
-                    // currentFixer = Character.Controlled;
-                    // CurrentFixerAction = FixActions.Sabotage;
                     requestStartFixAction = FixActions.Sabotage;
                     item.CreateClientEvent(this);
                     return true;
@@ -122,6 +118,22 @@ namespace Barotrauma.Items.Components
 
         partial void UpdateProjSpecific(float deltaTime)
         {
+            if (!GameMain.IsMultiplayer)
+            {
+                switch (requestStartFixAction)
+                {
+                    case FixActions.Repair:
+                    case FixActions.Sabotage:
+                        CurrentFixer = Character.Controlled;
+                        CurrentFixerAction = requestStartFixAction;
+                        requestStartFixAction = FixActions.None;
+                        break;
+                    default:
+                        requestStartFixAction = FixActions.None;
+                        break;
+                }
+            }
+            
             for (int i = 0; i < particleEmitters.Count; i++)
             {
                 if (item.ConditionPercentage >= particleEmitterConditionRanges[i].X && item.ConditionPercentage <= particleEmitterConditionRanges[i].Y)
