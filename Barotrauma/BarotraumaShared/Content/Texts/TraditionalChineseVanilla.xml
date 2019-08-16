@@ -2630,7 +2630,7 @@
 <connection.sonardataout>data_out</connection.sonardataout>
 <label.outpostinfodisplay1>歡迎。氧氣水準：正常。能量水準：正常。輻射水準：超量。本日天氣預報：陰冷潮濕。</label.outpostinfodisplay1>
 <label.navterminaldock>停靠</label.navterminaldock>
-<label.navterminaldock>離港</label.navterminaldock>
+<label.navterminalundock>離港</label.navterminalundock>
 <connectionerrornoresponse>伺服器無回應。可能是與伺服器的連接出現了問題。</connectionerrornoresponse>
 <dialognorescuetargets>目前似乎沒有人需要醫療！</dialognorescuetargets>
 <dialognorescuetargets>我想現在好像沒有人需要醫療！</dialognorescuetargets>

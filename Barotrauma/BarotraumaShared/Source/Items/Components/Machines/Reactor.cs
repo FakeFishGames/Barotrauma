@@ -287,10 +287,17 @@ namespace Barotrauma.Items.Components
 
                 if (item.CurrentHull != null)
                 {
-                    //the sound can be heard from 20 000 display units away when running at full power
-                    item.CurrentHull.SoundRange = Math.Max(
-                        (-currPowerConsumption / MaxPowerOutput) * 20000.0f, 
-                        item.CurrentHull.AiTarget.SoundRange);
+                    var aiTarget = item.CurrentHull.AiTarget;
+                    float range = Math.Abs(currPowerConsumption) / MaxPowerOutput;
+                    float noise = MathHelper.Lerp(aiTarget.MinSoundRange, aiTarget.MaxSoundRange, range);
+                    aiTarget.SoundRange = Math.Max(aiTarget.SoundRange, noise);
+                }
+
+                if (item.AiTarget != null)
+                {
+                    var aiTarget = item.AiTarget;
+                    float range = Math.Abs(currPowerConsumption) / MaxPowerOutput;
+                    aiTarget.SoundRange = MathHelper.Lerp(aiTarget.MinSoundRange, aiTarget.MaxSoundRange, range);
                 }
             }
 

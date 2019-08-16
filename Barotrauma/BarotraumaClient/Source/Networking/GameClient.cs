@@ -865,31 +865,34 @@ namespace Barotrauma.Networking
 
         private void ReadTraitorMessage(IReadMessage inc)
         {
-            bool isObjective = inc.ReadBoolean();
-            bool createMessageBox = inc.ReadBoolean();
+            TraitorMessageType messageType = (TraitorMessageType)inc.ReadByte();
             string message = inc.ReadString();
             message = TextManager.GetServerMessage(message);
 
-            if (isObjective)
-            {
-                if (Character != null)
-                {
-                    Character.IsTraitor = true;
-                    Character.TraitorCurrentObjective = message;
-                }
-                else
-                {
-                    SpawnAsTraitor = true;
-                    TraitorFirstObjective = message;
-                }
-            }
-            else if (createMessageBox)
-            {
-                new GUIMessageBox("", message);
-            }
-            else
-            {
-                GameMain.Client.AddChatMessage(message, ChatMessageType.Server);
+            switch(messageType) {
+                case TraitorMessageType.Objective:
+                    if (Character != null)
+                    {
+                        Character.IsTraitor = true;
+                        Character.TraitorCurrentObjective = message;
+                    }
+                    else
+                    {
+                        SpawnAsTraitor = true;
+                        TraitorFirstObjective = message;
+                    }
+                    break;
+                case TraitorMessageType.Console:
+                    GameMain.Client.AddChatMessage(ChatMessage.Create("", message, ChatMessageType.Console, null));
+                    DebugConsole.NewMessage(message);
+                    break;
+                case TraitorMessageType.ServerMessageBox:
+                    new GUIMessageBox("", message);
+                    break;
+                case TraitorMessageType.Server:
+                default:
+                    GameMain.Client.AddChatMessage(message, ChatMessageType.Server);
+                    break;
             }
         }
 

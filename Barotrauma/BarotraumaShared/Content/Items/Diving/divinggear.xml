@@ -244,6 +244,6 @@
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,70,107,31" />
       <Containable identifiers="batterycell,fulguriumbatterycell" />
     </ItemContainer>
-    <AiTarget maxsoundrange="2000" minsoundrange="0" />
+    <AiTarget soundrange="2000"/>
   </Item>
 </Items>

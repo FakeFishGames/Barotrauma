@@ -71,6 +71,10 @@ namespace Barotrauma
                     {
                         Mission.Start(server, "traitor");
                     }
+                    else
+                    {
+                        startCountdown = 60.0f;
+                    }
                 }
             }
         }

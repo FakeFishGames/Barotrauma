@@ -2297,7 +2297,7 @@
   <label.engine>Engine</label.engine>
   <label.outpostinfodisplay1>Welcome. Oxygen Levels: Nominal. Power Levels: Nominal. Radiation Levels: Suboptimal. Weather Forecast for Today: Cold and Damp.</label.outpostinfodisplay1>
   <label.navterminaldock>Dock</label.navterminaldock>
-  <label.navterminaldock>Undock</label.navterminaldock>
+  <label.navterminalundock>Undock</label.navterminalundock>
   <label.highpressurewarning>WARNING: High pressure</label.highpressurewarning>
   <label.reactortempwarning>Reactor temp. caution</label.reactortempwarning>
 

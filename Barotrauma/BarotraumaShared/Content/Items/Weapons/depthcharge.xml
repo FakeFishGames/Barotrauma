@@ -110,7 +110,7 @@
     <Sprite texture="TurretsAndDepthCharges.png" sourcerect="138,380,129,88" depth="0.55" origin="0.5,0.5" />
     <Body width="128" height="85" density="30" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false" msg="ItemMsgPickUpSelect" />
-    <AiTarget maxsoundrange="15000" minsoundrange="0" fadeouttime="20" />
+    <AiTarget soundrange="15000" fadeouttime="20" />
     <Projectile characterusable="false" launchimpulse="5.0">
       <Attack structuredamage="1" damagetype="Blunt">
         <Affliction identifier="internaldamage" strength="10" />
@@ -144,7 +144,7 @@
     <Sprite texture="TurretsAndDepthCharges.png" sourcerect="138,380,129,88" depth="0.55" origin="0.5,0.5" />
     <Body width="128" height="85" density="30" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false" msg="ItemMsgPickUpSelect" />
-    <AiTarget maxsoundrange="15000" minsoundrange="0" fadeouttime="20" />
+    <AiTarget soundrange="15000" fadeouttime="20" />
     <Projectile characterusable="false" launchimpulse="5.0">
       <Attack structuredamage="1" damagetype="Blunt">
         <Affliction identifier="internaldamage" strength="10" />

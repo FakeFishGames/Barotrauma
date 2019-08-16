@@ -2630,7 +2630,7 @@
 <connection.sonardataout>data_out</connection.sonardataout>
 <label.outpostinfodisplay1>Witaj. Poziom tlenu: w normie. Energia: w normie. Promieniowanie: poniżej optymalnego poziomu. Prognoza na dziś: zimno i mokro.</label.outpostinfodisplay1>
 <label.navterminaldock>Cumuj</label.navterminaldock>
-<label.navterminaldock>Odcumuj</label.navterminaldock>
+<label.navterminalundock>Odcumuj</label.navterminalundock>
 <connectionerrornoresponse>Serwer nie odpowiada. Być może problem z połączeniem leży po stronie serwera.</connectionerrornoresponse>
 <dialognorescuetargets>W tej chwili nikt nie potrzebuje pomocy medycznej!</dialognorescuetargets>
 <dialognorescuetargets>Nie wydaje mi się, żeby ktokolwiek potrzebował teraz pomocy medycznej.</dialognorescuetargets>
