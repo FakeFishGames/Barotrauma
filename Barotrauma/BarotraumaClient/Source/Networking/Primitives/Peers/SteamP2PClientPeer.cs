@@ -110,7 +110,7 @@ namespace Barotrauma.Networking
             {
                 IReadMessage inc = new ReadOnlyMessage(data, false, 1, dataLength - 1, ServerConnection);
                 string msg = inc.ReadString();
-                OnDisconnect?.Invoke(msg);
+                Close(msg);
             }
             else
             {
@@ -143,7 +143,7 @@ namespace Barotrauma.Networking
 
             if (timeout < 0.0)
             {
-                Close(Lidgren.Network.NetConnection.NoResponseMessage);
+                Close("Timed out");
                 return;
             }
 
@@ -324,6 +324,8 @@ namespace Barotrauma.Networking
 
             steamAuthTicket?.Cancel(); steamAuthTicket = null;
             hostSteamId = 0;
+
+            OnDisconnect?.Invoke(msg);
         }
     }
 }

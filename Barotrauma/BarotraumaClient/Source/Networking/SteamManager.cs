@@ -507,14 +507,17 @@ namespace Barotrauma.Steam
             return true;
         }
 
+        private static Auth.Ticket currentTicket = null;
         public static Auth.Ticket GetAuthSessionTicket()
         {
             if (instance == null || !instance.isInitialized)
             {
                 return null;
             }
-            
-            return instance.client.Auth.GetAuthSessionTicket();
+
+            currentTicket?.Cancel();
+            currentTicket = instance.client.Auth.GetAuthSessionTicket();
+            return currentTicket;
         }
 
         public static ClientStartAuthSessionResult StartAuthSession(byte[] authTicketData, ulong clientSteamID)
