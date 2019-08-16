@@ -2692,7 +2692,7 @@ namespace Barotrauma.Networking
             serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
         }
 
-        public void SendTraitorMessage(Client client, string message, bool isObjective, bool createMessageBox)
+        public void SendTraitorMessage(Client client, string message, TraitorMessageType messageType)
         {
             if (client == null) { return; }
             if (!TraitorManager.IsTraitor(client.Character) && client.Connection != OwnerConnection)
@@ -2701,8 +2701,7 @@ namespace Barotrauma.Networking
             }
             var msg = new WriteOnlyMessage(); 
             msg.Write((byte)ServerPacketHeader.TRAITOR_MESSAGE);
-            msg.Write(isObjective);
-            msg.Write(createMessageBox);
+            msg.Write((byte)messageType);
             msg.Write(message);
 
             serverPeer.Send(msg, client.Connection, DeliveryMethod.ReliableOrdered);
