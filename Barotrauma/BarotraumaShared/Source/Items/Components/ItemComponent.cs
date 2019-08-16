@@ -799,6 +799,7 @@ namespace Barotrauma.Items.Components
         public virtual void Reset()
         {
             SerializableProperties = SerializableProperty.DeserializeProperties(this, originalElement);
+            if (this is Pickable) { canBePicked = true; }
             ParseMsg();
             OverrideRequiredItems(originalElement);
         }
