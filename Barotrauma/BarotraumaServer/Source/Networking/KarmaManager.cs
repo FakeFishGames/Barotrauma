@@ -66,7 +66,15 @@ namespace Barotrauma
 
             foreach (Client bannedClient in bannedClients)
             {
-                GameMain.Server.BanClient(bannedClient, $"KarmaBanned~[banthreshold]={(int)KickBanThreshold}", duration: TimeSpan.FromSeconds(GameMain.Server.ServerSettings.AutoBanTime));
+                if (bannedClient.KarmaKickCount < KicksBeforeBan)
+                {
+                    GameMain.Server.KickClient(bannedClient, $"KarmaKicked~[banthreshold]={(int)KickBanThreshold}", resetKarma: true);            
+                }
+                else
+                {
+                    GameMain.Server.BanClient(bannedClient, $"KarmaBanned~[banthreshold]={(int)KickBanThreshold}", duration: TimeSpan.FromSeconds(GameMain.Server.ServerSettings.AutoBanTime));
+                }
+                bannedClient.KarmaKickCount++;
             }
         }
 

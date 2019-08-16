@@ -250,6 +250,7 @@ namespace Barotrauma.Networking
             if (previousPlayer != null)
             {
                 newClient.Karma = previousPlayer.Karma;
+                newClient.KarmaKickCount = previousPlayer.KarmaKickCount;
                 foreach (Client c in previousPlayer.KickVoters)
                 {
                     if (!connectedClients.Contains(c)) { continue; }
@@ -2116,9 +2117,19 @@ namespace Barotrauma.Networking
             KickClient(client, reason);
         }
 
-        public void KickClient(Client client, string reason)
+        public void KickClient(Client client, string reason, bool resetKarma = false)
         {
             if (client == null || client.Connection == OwnerConnection) return;
+
+            if (resetKarma)
+            {
+                var previousPlayer = previousPlayers.Find(p => p.MatchesClient(client));
+                if (previousPlayer != null)
+                {
+                    previousPlayer.Karma = Math.Max(previousPlayer.Karma, 50.0f);
+                }
+                client.Karma = Math.Max(client.Karma, 50.0f);
+            }
 
             string msg = DisconnectReason.Kicked.ToString();
             string logMsg = $"ServerMessage.KickedFromServer~[client]={client.Name}";
@@ -2234,6 +2245,7 @@ namespace Barotrauma.Networking
             }
             previousPlayer.Name = client.Name;
             previousPlayer.Karma = client.Karma;
+            previousPlayer.KarmaKickCount = client.KarmaKickCount;
             previousPlayer.KickVoters.Clear();
             foreach (Client c in connectedClients)
             {
@@ -3055,6 +3067,7 @@ namespace Barotrauma.Networking
         public string EndPoint;
         public UInt64 SteamID;
         public float Karma;
+        public int KarmaKickCount;
         public readonly List<Client> KickVoters = new List<Client>();
 
         public PreviousPlayer(Client c)

@@ -3208,8 +3208,6 @@
   <karmabanwarning>WARNING: Your karma is dangerously low. You will be banned from the server if it decreases further.</karmabanwarning>
   <karmabanned>You have been banned from the server because your Karma decreased below [banthreshold].</karmabanned>
   <karmajobdisallowed>You are not allowed to select this job because your Karma is too low ([yourkarma]/[minkarma]).</karmajobdisallowed>
-  <karma.kickbanthreshold>Ban threshold</karma.kickbanthreshold>
-  <karma.kickbanthresholdtooltip>The players whose karma decrease below this threshold get automatically banned from the server.</karma.kickbanthresholdtooltip>
   <karma.karmadecay>Karma decay speed</karma.karmadecay>
   <karma.karmadecaytooltip>How much karma decreases per second when it's above the decay threshold.</karma.karmadecaytooltip>
   <karma.karmadecaythreshold>Karma decay threshold</karma.karmadecaythreshold>
@@ -3447,8 +3445,13 @@
   <voipattenuationtooltip>Lowers the game's volume when players are speaking.</voipattenuationtooltip>
   <roundsummaryroundhasended>The round has ended.</roundsummaryroundhasended>
   <clientpermission.karmaimmunity>Karma immunity</clientpermission.karmaimmunity>
+  <karmakicked>You have been kicked from the server because your Karma decreased below [banthreshold].</karmakicked>
+  <karma.kicksbeforeban>Number of kicks before a ban</karma.kicksbeforeban>
+  <karma.kicksbeforebantooltip>If the player has been kicked from the server due to low karma this many times, they will be banned if the karma drops below the kick/ban threshold again. A value of 0 means players will always get banned if their karma drops below the threshold.</karma.kicksbeforebantooltip>
 
   <!-- Changed values as of 13th of August -->
   <traitorgoaldestroyitems>Dispose of at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>
+  <karma.kickbanthreshold>Kick/Ban threshold</karma.kickbanthreshold>
+  <karma.kickbanthresholdtooltip>The players whose karma decrease below this threshold get automatically kicked and/or banned from the server (depending on the kick/ban settings below).</karma.kickbanthresholdtooltip>
 
 </infotexts>

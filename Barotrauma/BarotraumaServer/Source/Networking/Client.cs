@@ -61,6 +61,8 @@ namespace Barotrauma.Networking
         public NetworkConnection Connection { get; set; }
 
         public bool SpectateOnly;
+
+        public int KarmaKickCount;
         
         private float karma = 100.0f;
         public float Karma

@@ -30,6 +30,10 @@ namespace Barotrauma.Networking
                     else if (GUIComponent is GUIScrollBar scrollBar) return scrollBar.BarScrollValue;
                     else if (GUIComponent is GUIRadioButtonGroup radioButtonGroup) return radioButtonGroup.Selected;
                     else if (GUIComponent is GUIDropDown dropdown) return dropdown.SelectedData;
+                    else if (GUIComponent is GUINumberInput numInput)
+                    {
+                        if (numInput.InputType == GUINumberInput.NumberType.Int) { return numInput.IntValue; } else { return numInput.FloatValue; }
+                    }
                     return null;
                 }
                 set
@@ -37,9 +41,30 @@ namespace Barotrauma.Networking
                     if (GUIComponent == null) return;
                     else if (GUIComponent is GUITickBox tickBox) tickBox.Selected = (bool)value;
                     else if (GUIComponent is GUITextBox textBox) textBox.Text = (string)value;
-                    else if (GUIComponent is GUIScrollBar scrollBar) scrollBar.BarScrollValue = (float)value;
+                    else if (GUIComponent is GUIScrollBar scrollBar)
+                    {
+                        if (value.GetType() == typeof(int))
+                        {
+                            scrollBar.BarScrollValue = (int)value;
+                        }
+                        else
+                        {
+                            scrollBar.BarScrollValue = (float)value;
+                        }
+                    }
                     else if (GUIComponent is GUIRadioButtonGroup radioButtonGroup) radioButtonGroup.Selected = (Enum)value;
                     else if (GUIComponent is GUIDropDown dropdown) dropdown.SelectItem(value);
+                    else if (GUIComponent is GUINumberInput numInput)
+                    {
+                        if (numInput.InputType == GUINumberInput.NumberType.Int)
+                        {
+                            numInput.IntValue = (int)value;
+                        }
+                        else
+                        {
+                            numInput.FloatValue = (float)value;
+                        }
+                    }
                 }
             }
 
