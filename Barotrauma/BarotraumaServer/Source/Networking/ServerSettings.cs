@@ -237,8 +237,19 @@ namespace Barotrauma.Networking
             
             GameMain.NetLobbyScreen.SetTraitorsEnabled(traitorsEnabled);
             
-            //"65-90", "97-122", "48-59" = upper and lower case english alphabet and numbers
-            string[] allowedClientNameCharsStr = doc.Root.GetAttributeStringArray("AllowedClientNameChars", new string[] { "65-90", "97-122", "48-59" });
+            string[] allowedClientNameCharsStr = doc.Root.GetAttributeStringArray("AllowedClientNameChars",
+                new string[] {
+                    "32-33",
+                    "38-46",
+                    "48-57",
+                    "65-90",
+                    "91",
+                    "93",
+                    "95-122",
+                    "192-255",
+                    "384-591",
+                    "1024-1279"
+                });
             foreach (string allowedClientNameCharRange in allowedClientNameCharsStr)
             {
                 string[] splitRange = allowedClientNameCharRange.Split('-');
