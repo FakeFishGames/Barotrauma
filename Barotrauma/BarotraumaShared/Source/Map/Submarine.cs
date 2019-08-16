@@ -1142,7 +1142,6 @@ namespace Barotrauma
             savedSubmarines.Add(sub);
         }
 
-
         public static void RefreshSavedSub(string filePath)
         {
             string fullPath = Path.GetFullPath(filePath);
@@ -1153,12 +1152,15 @@ namespace Barotrauma
                     savedSubmarines[i].Dispose();
                 }
             }
-            var sub = new Submarine(filePath);
-            if (!sub.IsFileCorrupted)
+            if (File.Exists(filePath))
             {
-                savedSubmarines.Add(sub);
+                var sub = new Submarine(filePath);
+                if (!sub.IsFileCorrupted)
+                {
+                    savedSubmarines.Add(sub);
+                }
+                savedSubmarines = savedSubmarines.OrderBy(s => s.filePath ?? "").ToList();
             }
-            savedSubmarines = savedSubmarines.OrderBy(s => s.filePath ?? "").ToList();
         }
 
         public static void RefreshSavedSubs()

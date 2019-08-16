@@ -37,7 +37,11 @@ namespace Barotrauma
             public string EndMessage {
                 get
                 {
-                    var traitor = Traitors["traitor"];
+                    if (!Traitors.TryGetValue("traitor", out Traitor traitor))
+                    {
+                        return "";
+                    }
+
                     if (pendingObjectives.Count <= 0)
                     {
                         if (completedObjectives.Count <= 0) return "";
@@ -74,7 +78,11 @@ namespace Barotrauma
             {
                 get
                 {
-                    var traitor = Traitors["traitor"];
+                    if (!Traitors.TryGetValue("traitor", out Traitor traitor))
+                    {
+                        return "";
+                    }
+                    
                     if (allObjectives.Count > 0)
                     {
                         var isSuccess = completedObjectives.Count >= allObjectives.Count;
@@ -219,6 +227,7 @@ namespace Barotrauma
 
                 List<Character> validCharacters = Character.CharacterList.FindAll(c => 
                     c.TeamID == traitor.TeamID && 
+                    c != traitor &&
                     !c.IsDead && 
                     (filter == null || filter(c)));
 

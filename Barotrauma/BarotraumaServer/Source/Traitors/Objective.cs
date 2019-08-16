@@ -187,6 +187,11 @@ namespace Barotrauma
                 this.shuffleGoalsCount = shuffleGoalsCount;
                 allGoals.AddRange(goals);
             }
+
+            public bool HasGoalsOfType<T>() where T : Goal
+            {
+                return allGoals?.Any(g => g is T) ?? false;
+            }
         }
     }
 }

@@ -52,9 +52,19 @@ namespace Facepunch.Steamworks
                 return item;
             }
 
-            public bool Download( bool highPriority = true, Action onInstalled = null )
+            public bool Download(bool highPriority = true, Action onInstalled = null)
             {
-                if ( Installed ) return true;
+                return Download(highPriority, false, onInstalled);
+            }
+
+            public bool ForceDownload(bool highPriority = true, Action onInstalled = null)
+            {
+                return Download(highPriority, true, onInstalled);
+            }
+
+            private bool Download( bool highPriority = true, bool ignoreAlreadyInstalled = false, Action onInstalled = null )
+            {
+                if ( !ignoreAlreadyInstalled && Installed ) return true;
                 if ( Downloading ) return true;
 
                 if ( !workshop.ugc.DownloadItem( Id, highPriority ) )

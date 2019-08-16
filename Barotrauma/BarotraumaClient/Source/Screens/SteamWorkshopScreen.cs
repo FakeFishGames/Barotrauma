@@ -1054,11 +1054,12 @@ namespace Barotrauma
                 string previewImagePath = Path.Combine(Path.GetDirectoryName(itemContentPackage.Path), SteamManager.PreviewImageName);
                 if (File.Exists(previewImagePath))
                 {
-                    itemEditor.PreviewImage = previewImagePath;
+                    itemEditor.PreviewImage = Path.GetFullPath(previewImagePath);
                 }
             }
             if (!string.IsNullOrEmpty(itemEditor.PreviewImage))
             {
+                itemEditor.PreviewImage = Path.GetFullPath(itemEditor.PreviewImage);
                 if (itemPreviewSprites.ContainsKey(itemEditor.PreviewImage))
                 {
                     itemPreviewSprites[itemEditor.PreviewImage].Remove();
