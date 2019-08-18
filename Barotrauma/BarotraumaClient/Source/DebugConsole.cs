@@ -571,6 +571,7 @@ namespace Barotrauma
                         if (args.Length < 3)
                         {
                             ThrowError("Not enough arguments provided! At least three required.");
+                            return;
                         }
                         if (!byte.TryParse(args[0], out byte r))
                         {
