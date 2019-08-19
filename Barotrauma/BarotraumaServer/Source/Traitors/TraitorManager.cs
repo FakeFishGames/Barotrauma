@@ -59,6 +59,10 @@ namespace Barotrauma
                 Mission.Update(deltaTime);
                 if (Mission.IsCompleted)
                 {
+                    foreach (var traitor in Mission.Traitors.Values)
+                    {
+                        traitor.UpdateCurrentObjective("");
+                    }
                     Mission = null;
                     //TODO: configure countdowns in xml
                     startCountdown = MathHelper.Lerp(90.0f, 180.0f, (float)Traitor.TraitorMission.RandomDouble());
