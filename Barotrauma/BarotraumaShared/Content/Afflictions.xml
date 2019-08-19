@@ -515,7 +515,7 @@
     limbspecific="false"
     indicatorlimb="Torso"
     showiconthreshold="5"
-    karmachangeonapplied="-20"
+    karmachangeonapplied="-100"
     maxstrength="100">
     <!-- Slow down the character and decrease vitality -->
     <!-- Becomes lethal in ~50 seconds -->
@@ -544,7 +544,7 @@
     limbspecific="false"
     indicatorlimb="Torso"
     showiconthreshold="5"
-    karmachangeonapplied="-10"
+    karmachangeonapplied="-50"
     maxstrength="100">
     <!-- Slow down the character and decrease vitality -->
     <!-- Becomes lethal in ~50 seconds -->
@@ -573,7 +573,7 @@
     limbspecific="false"
     indicatorlimb="Torso"
     showiconthreshold="5"
-    karmachangeonapplied="-5"
+    karmachangeonapplied="-25"
     maxstrength="100">
     <!-- Slowly cause psychosis -->
     <!-- Non-lethal -->
@@ -595,7 +595,7 @@
     limbspecific="false"
     indicatorlimb="Torso"
     showiconthreshold="5"
-    karmachangeonapplied="-10"
+    karmachangeonapplied="-50"
     maxstrength="100">
     <!-- Decrease vitality, slow player down -->
     <!-- Becomes lethal in ~100 seconds -->
