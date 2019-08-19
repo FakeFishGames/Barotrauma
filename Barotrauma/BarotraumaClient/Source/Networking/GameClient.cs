@@ -259,6 +259,8 @@ namespace Barotrauma.Networking
             myCharacter = Character.Controlled;
             ChatMessage.LastID = 0;
 
+            clientPeer?.Close();
+            clientPeer = null;
             object translatedEndpoint = null;
             if (endpoint is string hostIP)
             {
@@ -457,7 +459,7 @@ namespace Barotrauma.Networking
 
                 if (DateTime.Now > timeOut)
                 {
-                    OnDisconnect(Lidgren.Network.NetConnection.NoResponseMessage);
+                    clientPeer?.Close(Lidgren.Network.NetConnection.NoResponseMessage);
                     reconnectBox?.Close(); reconnectBox = null;
                     break;
                 }

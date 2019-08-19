@@ -96,7 +96,12 @@ namespace Barotrauma.Networking
 
             if (isConnectionInitializationStep)
             {
-                IReadMessage inc = new ReadOnlyMessage(data, false, 1, dataLength - 1, ServerConnection);
+                ulong low = Lidgren.Network.NetBitWriter.ReadUInt32(data, 32, 8);
+                ulong high = Lidgren.Network.NetBitWriter.ReadUInt32(data, 32, 8+32);
+                ulong lobbyId = low + (high << 32);
+
+                Steam.SteamManager.JoinLobby(lobbyId, false);
+                IReadMessage inc = new ReadOnlyMessage(data, false, 1+8, dataLength - 9, ServerConnection);
                 if (initializationStep != ConnectionInitialization.Success)
                 {
                     incomingInitializationMessages.Add(inc);
@@ -110,7 +115,7 @@ namespace Barotrauma.Networking
             {
                 IReadMessage inc = new ReadOnlyMessage(data, false, 1, dataLength - 1, ServerConnection);
                 string msg = inc.ReadString();
-                OnDisconnect?.Invoke(msg);
+                Close(msg);
             }
             else
             {
@@ -143,7 +148,7 @@ namespace Barotrauma.Networking
 
             if (timeout < 0.0)
             {
-                Close(Lidgren.Network.NetConnection.NoResponseMessage);
+                Close("Timed out");
                 return;
             }
 
@@ -304,6 +309,8 @@ namespace Barotrauma.Networking
         {
             if (!isActive) { return; }
 
+            SteamManager.LeaveLobby();
+
             isActive = false;
 
             IWriteMessage outMsg = new WriteOnlyMessage();
@@ -324,6 +331,8 @@ namespace Barotrauma.Networking
 
             steamAuthTicket?.Cancel(); steamAuthTicket = null;
             hostSteamId = 0;
+
+            OnDisconnect?.Invoke(msg);
         }
     }
 }

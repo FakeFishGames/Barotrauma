@@ -18,6 +18,8 @@ namespace Barotrauma.Steam
         public Facepunch.Steamworks.Friends Friends => client?.Friends;
         public Facepunch.Steamworks.Overlay Overlay => client?.Overlay;
         public Facepunch.Steamworks.Auth Auth => client?.Auth;
+        public Facepunch.Steamworks.Lobby Lobby => client?.Lobby;
+        public Facepunch.Steamworks.LobbyList LobbyList => client?.LobbyList;
 
         private SteamManager()
         {
@@ -67,11 +69,14 @@ namespace Barotrauma.Steam
 
         private enum LobbyState
         {
-            NotOwner,
+            NotConnected,
             Creating,
-            Owner
+            Owner,
+            Joining,
+            Joined
         }
-        private static LobbyState lobbyState = LobbyState.NotOwner;
+        private static UInt64 lobbyID = 0;
+        private static LobbyState lobbyState = LobbyState.NotConnected;
         private static string lobbyIP = "";
         private static Thread lobbyIPRetrievalThread;
 
@@ -142,12 +147,13 @@ namespace Barotrauma.Steam
 
         public static void CreateLobby(ServerSettings serverSettings)
         {
+            instance.client.Lobby.OnLobbyJoined = null;
             instance.client.Lobby.OnLobbyCreated = (success) =>
             {
                 if (!success)
                 {
                     DebugConsole.ThrowError("Failed to create Steam lobby!");
-                    lobbyState = LobbyState.NotOwner;
+                    lobbyState = LobbyState.NotConnected;
                     return;
                 }
                 
@@ -161,11 +167,12 @@ namespace Barotrauma.Steam
                 lobbyIPRetrievalThread.Start();
                 
                 lobbyState = LobbyState.Owner;
+                lobbyID = instance.client.Lobby.CurrentLobby;
                 UpdateLobby(serverSettings);
             };
-            if (lobbyState != LobbyState.NotOwner) { return; }
+            if (lobbyState != LobbyState.NotConnected) { return; }
             lobbyState = LobbyState.Creating;
-            instance.client.Lobby.Create(serverSettings.isPublic ? Lobby.Type.Public : Lobby.Type.FriendsOnly, 1);
+            instance.client.Lobby.Create(serverSettings.isPublic ? Lobby.Type.Public : Lobby.Type.FriendsOnly, serverSettings.MaxPlayers);
             instance.client.Lobby.Joinable = true;
         }
         
@@ -176,7 +183,7 @@ namespace Barotrauma.Steam
                 LeaveLobby();
             }
 
-            if (lobbyState == LobbyState.NotOwner)
+            if (lobbyState == LobbyState.NotConnected)
             {
                 CreateLobby(serverSettings);
             }
@@ -194,7 +201,7 @@ namespace Barotrauma.Steam
             instance.client.Lobby.CurrentLobbyData.SetData("playercount", (GameMain.Client?.ConnectedClients?.Count??0).ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("maxplayernum", serverSettings.MaxPlayers.ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("hostipaddress", lobbyIP);
-            instance.client.Lobby.CurrentLobbyData.SetData("connectsteamid", Steam.SteamManager.GetSteamID().ToString());
+            //instance.client.Lobby.CurrentLobbyData.SetData("connectsteamid", Steam.SteamManager.GetSteamID().ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("haspassword", serverSettings.HasPassword.ToString());
 
             instance.client.Lobby.CurrentLobbyData.SetData("message", serverSettings.ServerMessageText);
@@ -218,28 +225,51 @@ namespace Barotrauma.Steam
 
         public static void LeaveLobby()
         {
-            lobbyIPRetrievalThread?.Abort();
-            lobbyIPRetrievalThread?.Join();
-            lobbyIPRetrievalThread = null;
+            if (lobbyState != LobbyState.NotConnected)
+            {
+                lobbyIPRetrievalThread?.Abort();
+                lobbyIPRetrievalThread?.Join();
+                lobbyIPRetrievalThread = null;
 
-            instance.client.Lobby.Leave();
-            lobbyIP = "";
-            lobbyState = LobbyState.NotOwner;
+                instance.client.Lobby.Leave();
+                lobbyID = 0;
+                lobbyIP = "";
+                lobbyState = LobbyState.NotConnected;
+
+                instance.client.Lobby.OnLobbyJoined = null;
+            }
         }
-
-        /*TODO: determine if we should have people join lobbies
-        public static void JoinLobby(UInt64 steamId)
+        public static void JoinLobby(UInt64 id, bool joinServer)
         {
+            if (instance.client.Lobby.CurrentLobby == id) { return; }
+            if (lobbyID == id) { return; }
             instance.client.Lobby.OnLobbyJoined = (success) =>
             {
-                if (!success)
+                try
                 {
-                    //allowing silent failure here
-                    //DebugConsole.ThrowError("Failed to join Steam lobby!");
+                    if (!success)
+                    {
+                        DebugConsole.ThrowError("Failed to join Steam lobby: "+id.ToString());
+                        return;
+                    }
+                    lobbyState = LobbyState.Joined;
+                    lobbyID = instance.client.Lobby.CurrentLobby;
+                    if (joinServer)
+                    {
+                        GameMain.Instance.ConnectLobby = 0;
+                        GameMain.Instance.ConnectName = instance.client.Lobby.Name;
+                        GameMain.Instance.ConnectEndpoint = instance.client.Lobby.Owner.ToString();
+                    }
+                }
+                finally
+                {
+                    instance.client.Lobby.OnLobbyJoined = null;
                 }
             };
-            instance.client.Lobby.Join(steamId);
-        }*/
+            lobbyState = LobbyState.Joining;
+            lobbyID = id;
+            instance.client.Lobby.Join(id);
+        }
 
         public static ulong GetWorkshopItemIDFromUrl(string url)
         {
@@ -352,7 +382,7 @@ namespace Barotrauma.Steam
                 bool.TryParse(lobby.GetData("haspassword"), out bool hasPassword);
                 int.TryParse(lobby.GetData("playercount"), out int currPlayers);
                 int.TryParse(lobby.GetData("maxplayernum"), out int maxPlayers);
-                UInt64.TryParse(lobby.GetData("connectsteamid"), out ulong connectSteamId);
+                //UInt64.TryParse(lobby.GetData("connectsteamid"), out ulong connectSteamId);
                 string ip = lobby.GetData("hostipaddress");
                 if (string.IsNullOrWhiteSpace(ip)) { ip = ""; }
 
@@ -365,7 +395,7 @@ namespace Barotrauma.Steam
                     MaxPlayers = maxPlayers,
                     HasPassword = hasPassword,
                     RespondedToSteamQuery = true,
-                    SteamID = connectSteamId
+                    LobbyID = lobby.LobbyID
                 };
                 serverInfo.PingChecked = false;
                 serverInfo.ServerMessage = lobby.GetData("message");
@@ -423,8 +453,6 @@ namespace Barotrauma.Steam
                     DebugConsole.Log(s.Name + " did not respond to server query.");
                 }
                 
-                UInt64 serverSteamId = 0;
-
                 if (s.Description == "Barotrauma IP Retrieval") { continue; }
 
                 var serverInfo = new ServerInfo()
@@ -439,7 +467,7 @@ namespace Barotrauma.Steam
                 };
                 serverInfo.PingChecked = true;
                 serverInfo.Ping = s.Ping;
-                serverInfo.SteamID = serverSteamId;
+                serverInfo.LobbyID = 0;
                 if (responded)
                 {
                     s.FetchRules();
@@ -507,14 +535,17 @@ namespace Barotrauma.Steam
             return true;
         }
 
+        private static Auth.Ticket currentTicket = null;
         public static Auth.Ticket GetAuthSessionTicket()
         {
             if (instance == null || !instance.isInitialized)
             {
                 return null;
             }
-            
-            return instance.client.Auth.GetAuthSessionTicket();
+
+            currentTicket?.Cancel();
+            currentTicket = instance.client.Auth.GetAuthSessionTicket();
+            return currentTicket;
         }
 
         public static ClientStartAuthSessionResult StartAuthSession(byte[] authTicketData, ulong clientSteamID)
@@ -872,6 +903,14 @@ namespace Barotrauma.Steam
             }
 
             string metaDataFilePath = Path.Combine(item.Directory.FullName, MetadataFileName);
+
+            if (!File.Exists(metaDataFilePath))
+            {
+                errorMsg = TextManager.GetWithVariable("WorkshopErrorInstallRequiredToEnable", "[itemname]", item.Title);
+                DebugConsole.ThrowError(errorMsg);
+                return false;
+            }
+
             ContentPackage contentPackage = new ContentPackage(metaDataFilePath);
             string newContentPackagePath = GetWorkshopItemContentPackagePath(contentPackage);
 
@@ -1154,7 +1193,14 @@ namespace Barotrauma.Steam
 
         public static bool CheckWorkshopItemEnabled(Workshop.Item item, bool checkContentFiles = true)
         {
-            if (!item.Installed) return false;
+            if (!item.Installed) { return false; }
+
+            if (!Directory.Exists(item.Directory.FullName))
+            {
+                DebugConsole.ThrowError("Workshop item \"" + item.Title + "\" has been installed but the install directory cannot be found. Attempting to redownload...");
+                item.ForceDownload();
+                return false;                
+            }
 
             string metaDataPath = Path.Combine(item.Directory.FullName, MetadataFileName);
             if (!File.Exists(metaDataPath))

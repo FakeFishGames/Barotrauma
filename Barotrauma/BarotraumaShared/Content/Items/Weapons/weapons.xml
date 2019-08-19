@@ -265,7 +265,7 @@
     <Body width="215" height="119" density="40" />
     <!-- the character will hold the item 50 pixels in front of him, with his hands at the handle1 and handle2 positions -->
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true" aimpos="50,0" handle1="-85,-35" handle2="0,-27" msg="ItemMsgPickUpSelect" />
-    <RepairTool structurefixamount="0.0" usablein="Air" range="500" barrelpos="35,10" fireprobability="0.2" repairmultiple="true" repairthroughwalls="false" combatpriority="20">
+    <RepairTool structurefixamount="0.0" usablein="Air" range="500" barrelpos="35,10" fireprobability="0.2" repairmultiple="true" repairthroughwalls="false"  repairthroughholes="true" combatpriority="20">
       <!-- the item must contain a welding fuel tank for it to work -->
       <RequiredItems identifier="weldingfueltank,incendiumfueltank" type="Contained" msg="ItemMsgWeldingFuelRequired" />
       <ParticleEmitterHitCharacter particle="fleshsmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100" />
@@ -332,7 +332,7 @@
     <Body width="26" height="50" density="30" />
     <!-- Empty itemcomponent that explodes the grenade when used by something else than a character (e.g. a detonator) -->
     <ItemComponent characterusable="false">
-      <StatusEffect type="OnUse" target="This" Condition="-100.0">
+      <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/StunGrenade.ogg" />
         <Explosion range="500" stun="25" force="0.1" smoke="false">
           <Affliction identifier="internaldamage" strength="5" />
@@ -340,7 +340,7 @@
       </StatusEffect>
     </ItemComponent>
     <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" msg="ItemMsgPickUpSelect">
-      <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="3.0">
+      <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="3.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/StunGrenade.ogg" />
         <Explosion range="500" stun="25" force="0.1" smoke="false">
           <Affliction identifier="internaldamage" strength="5" />
@@ -365,7 +365,7 @@
     <Body width="26" height="50" density="30" />
     <!-- Empty itemcomponent that explodes the grenade when used by something else than a character (e.g. a detonator) -->
     <ItemComponent characterusable="false">
-      <StatusEffect type="OnUse" target="This" Condition="-100.0">
+      <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" range="1000" selectionmode="All" />
         <sound file="Content/Items/Weapons/Emp.ogg" range="1000" />
         <Explosion range="500" stun="0.5" force="0.1" smoke="false" sparks="true" empstrength="10">
@@ -374,7 +374,7 @@
       </StatusEffect>
     </ItemComponent>
     <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" msg="ItemMsgPickUpSelect">
-      <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="3.0">
+      <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="3.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" range="1000" selectionmode="All" />
         <sound file="Content/Items/Weapons/Emp.ogg" range="1000" />
         <Explosion range="500" stun="0.5" force="0.1" smoke="false" sparks="true" empstrength="10">
@@ -399,7 +399,7 @@
     <Body width="40" height="60" density="30" />
     <!-- Empty itemcomponent that explodes the grenade when used by something else than a character (e.g. a detonator) -->
     <ItemComponent characterusable="false">
-      <StatusEffect type="OnUse" target="This" Condition="-100.0">
+      <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/ExplosionMedium1.ogg" type="OnUse" range="10000" selectionmode="All" />
         <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" type="OnUse" range="10000" />
         <Explosion range="600.0" structuredamage="5" stun="5" force="20.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5">
@@ -410,7 +410,7 @@
       </StatusEffect>
     </ItemComponent>
     <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" msg="ItemMsgPickUpSelect">
-      <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="3.0">
+      <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="3.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/ExplosionMedium1.ogg" type="OnUse" range="10000" selectionmode="All" />
         <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" type="OnUse" range="10000" />
         <Explosion range="600.0" structuredamage="5" stun="5" force="20.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5">
@@ -437,7 +437,7 @@
     <Body width="24" height="52" density="30" />
     <!-- Empty itemcomponent that explodes the grenade when used by something else than a character (e.g. a detonator) -->
     <ItemComponent characterusable="false">
-      <StatusEffect type="OnUse" target="This" Condition="-100.0">
+      <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/IncendiumGrenade.ogg" />
         <Explosion range="500" stun="25" force="0.1" smoke="false">
           <Affliction identifier="internaldamage" strength="5" />
@@ -447,7 +447,7 @@
       </StatusEffect>
     </ItemComponent>
     <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" msg="ItemMsgPickUpSelect">
-      <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="3.0">
+      <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="3.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/IncendiumGrenade.ogg" />
         <Explosion range="500" stun="1" force="0.1">
           <Affliction identifier="internaldamage" strength="5" />

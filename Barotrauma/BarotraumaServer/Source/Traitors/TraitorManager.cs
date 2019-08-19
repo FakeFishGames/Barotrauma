@@ -67,9 +67,10 @@ namespace Barotrauma
                 if (startCountdown <= 0.0f)
                 {
                     Mission = TraitorMissionPrefab.RandomPrefab()?.Instantiate();
-                    if (Mission != null)
+                    if (Mission == null || !Mission.Start(server, "traitor"))
                     {
-                        Mission.Start(server, "traitor");
+                        Mission = null;
+                        startCountdown = 60.0f;
                     }
                 }
             }

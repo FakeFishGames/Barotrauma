@@ -37,7 +37,11 @@ namespace Barotrauma
             public string EndMessage {
                 get
                 {
-                    var traitor = Traitors["traitor"];
+                    if (!Traitors.TryGetValue("traitor", out Traitor traitor))
+                    {
+                        return "";
+                    }
+
                     if (pendingObjectives.Count <= 0)
                     {
                         if (completedObjectives.Count <= 0) return "";
@@ -74,7 +78,11 @@ namespace Barotrauma
             {
                 get
                 {
-                    var traitor = Traitors["traitor"];
+                    if (!Traitors.TryGetValue("traitor", out Traitor traitor))
+                    {
+                        return "";
+                    }
+                    
                     if (allObjectives.Count > 0)
                     {
                         var isSuccess = completedObjectives.Count >= allObjectives.Count;
@@ -83,7 +91,7 @@ namespace Barotrauma
                         var messageId = isSuccess
                             ? (traitorIsDead ? GlobalEndMessageSuccessDeadTextId : traitorIsDetained ? GlobalEndMessageSuccessDetainedTextId : GlobalEndMessageSuccessTextId)
                             : (traitorIsDead ? GlobalEndMessageFailureDeadTextId : traitorIsDetained ? GlobalEndMessageFailureDetainedTextId : GlobalEndMessageFailureTextId);
-                        return TextManager.FormatServerMessageWithGenderPronouns(traitor.Character.Info.Gender, messageId, GlobalEndMessageKeys.ToArray(), GlobalEndMessageValues.ToArray()); 
+                        return TextManager.FormatServerMessageWithGenderPronouns(traitor.Character?.Info?.Gender ?? Gender.None, messageId, GlobalEndMessageKeys.ToArray(), GlobalEndMessageValues.ToArray()); 
                     }
                     return "";
                 }
@@ -94,7 +102,7 @@ namespace Barotrauma
                 return pendingObjectives.Count > 0 ? pendingObjectives[0] : null;
             }
 
-            public virtual void Start(GameServer server, params string[] traitorRoles)
+            public virtual bool Start(GameServer server, params string[] traitorRoles)
             {
                 List<Character> characters = new List<Character>(); //ANYONE can be a target.
                 List<Character> traitorCandidates = new List<Character>(); //Keep this to not re-pick traitors twice
@@ -111,12 +119,16 @@ namespace Barotrauma
                 else
 #endif
                 {
-                    traitorCandidates.AddRange(server.ConnectedClients.FindAll(c => c.Character != null).ConvertAll(client => client.Character));
+                    traitorCandidates.AddRange(server.ConnectedClients.FindAll(c => c.Character != null && !c.Character.IsDead).ConvertAll(client => client.Character));
+                }
+                if (traitorCandidates.Count <= 0)
+                {
+                    return false;
                 }
 #if !ALLOW_SOLO_TRAITOR
                 if (characters.Count < 2)
                 {
-                    return;
+                    return false;
                 }
 #endif
                 CodeWords = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
@@ -143,6 +155,7 @@ namespace Barotrauma
                     GameServer.Log(string.Format("{0} is the traitor and the current goals are:\n{1}", traitor.Character.Name, traitor.CurrentObjective?.GoalInfos != null ? TextManager.GetServerMessage(traitor.CurrentObjective?.GoalInfos) : "(empty)"), ServerLog.MessageType.ServerMessage);
                 }
 #endif
+                return true;
             }
 
             public virtual void Update(float deltaTime)
@@ -219,6 +232,7 @@ namespace Barotrauma
 
                 List<Character> validCharacters = Character.CharacterList.FindAll(c => 
                     c.TeamID == traitor.TeamID && 
+                    c != traitor &&
                     !c.IsDead && 
                     (filter == null || filter(c)));
 

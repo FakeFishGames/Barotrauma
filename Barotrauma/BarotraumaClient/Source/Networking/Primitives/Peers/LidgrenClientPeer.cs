@@ -135,7 +135,7 @@ namespace Barotrauma.Networking
             {
                 case NetConnectionStatus.Disconnected:
                     string disconnectMsg = inc.ReadString();
-                    OnDisconnect?.Invoke(disconnectMsg);
+                    Close(disconnectMsg);
                     break;
             }
         }
@@ -219,6 +219,7 @@ namespace Barotrauma.Networking
             netClient.Shutdown(msg ?? TextManager.Get("Disconnecting"));
             netClient = null;
             steamAuthTicket?.Cancel(); steamAuthTicket = null;
+            OnDisconnect?.Invoke(msg);
         }
 
         public override void Send(IWriteMessage msg, DeliveryMethod deliveryMethod)
