@@ -10,6 +10,8 @@ namespace Barotrauma
         public class GoalFindItem : HumanoidGoal
         {
             private readonly string identifier;
+            private readonly bool preferNew;
+            private readonly bool allowNew;
             private readonly bool allowExisting;
             private readonly HashSet<string> allowedContainerIdentifiers = new HashSet<string>();
 
@@ -65,7 +67,7 @@ namespace Barotrauma
                 return (ItemPrefab)MapEntityPrefab.List.Find(prefab => prefab is ItemPrefab && prefab.Identifier == identifier);
             }
 
-            protected Item FindRandomContainer()
+            protected Item FindRandomContainer(bool includeNew, bool includeExisting)
             {
                 int itemsCount = Item.ItemList.Count;
                 int startIndex = TraitorMission.Random(itemsCount);
@@ -77,19 +79,16 @@ namespace Barotrauma
                     {
                         continue;
                     }
+
                     if (item.GetComponent<ItemContainer>() != null && allowedContainerIdentifiers.Contains(item.prefab.Identifier))
                     {
-                        if (!item.OwnInventory.IsFull())
+                        if ((includeNew && !item.OwnInventory.IsFull()) || (includeExisting && item.OwnInventory.FindItemByIdentifier(targetPrefab.Identifier) != null))
                         {
                             return item;
                         }
-                        if (fallback == null && allowExisting && item.OwnInventory.FindItemByIdentifier(targetPrefab.Identifier) != null)
-                        {
-                            fallback = item;
-                        }
                     }
                 }
-                return fallback;
+                return null;
             }
 
             public override bool Start(Traitor traitor)
@@ -105,7 +104,15 @@ namespace Barotrauma
                 }
                 var targetPrefabTextId = targetPrefab.GetItemNameTextId();
                 targetNameText = targetPrefabTextId != null ? TextManager.FormatServerMessage(targetPrefabTextId) : targetPrefab.Name;
-                targetContainer = FindRandomContainer();
+                targetContainer = null;
+                if (preferNew)
+                {
+                    targetContainer = FindRandomContainer(true, false);
+                }
+                if (targetContainer == null)
+                {
+                    targetContainer = FindRandomContainer(allowNew, allowExisting);
+                }
                 if (targetContainer == null)
                 {
                     return false;
@@ -114,7 +121,7 @@ namespace Barotrauma
                 targetContainerNameText = containerPrefabTextId != null ? TextManager.FormatServerMessage(containerPrefabTextId) : targetContainer.Prefab.Name;
                 var targetHullTextId = targetContainer.CurrentHull != null ? targetContainer.CurrentHull.prefab.GetHullNameTextId() : null;
                 targetHullNameText = targetHullTextId != null ? TextManager.FormatServerMessage(targetHullTextId) : targetContainer?.CurrentHull?.DisplayName ?? "";
-                if (!targetContainer.OwnInventory.IsFull())
+                if (allowNew && !targetContainer.OwnInventory.IsFull())
                 {
                     existingItems.Clear();
                     foreach (var item in targetContainer.OwnInventory.Items)
@@ -144,9 +151,11 @@ namespace Barotrauma
                 }
             }
 
-            public GoalFindItem(string identifier, bool allowExisting, params string[] allowedContainerIdentifiers)
+            public GoalFindItem(string identifier, bool preferNew, bool allowNew, bool allowExisting, params string[] allowedContainerIdentifiers)
             {
                 this.identifier = identifier;
+                this.preferNew = preferNew;
+                this.allowNew = allowNew;
                 this.allowExisting = allowExisting;
                 this.allowedContainerIdentifiers.UnionWith(allowedContainerIdentifiers);
             }
