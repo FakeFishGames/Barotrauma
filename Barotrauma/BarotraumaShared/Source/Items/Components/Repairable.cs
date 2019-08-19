@@ -317,6 +317,10 @@ namespace Barotrauma.Items.Components
 #endif
                 }
             }
+            else
+            {
+                throw new NotImplementedException(currentFixerAction.ToString());
+            }
         }
 
         partial void UpdateProjSpecific(float deltaTime);
