@@ -102,7 +102,7 @@ namespace Barotrauma
                 return pendingObjectives.Count > 0 ? pendingObjectives[0] : null;
             }
 
-            public virtual void Start(GameServer server, params string[] traitorRoles)
+            public virtual bool Start(GameServer server, params string[] traitorRoles)
             {
                 List<Character> characters = new List<Character>(); //ANYONE can be a target.
                 List<Character> traitorCandidates = new List<Character>(); //Keep this to not re-pick traitors twice
@@ -119,12 +119,16 @@ namespace Barotrauma
                 else
 #endif
                 {
-                    traitorCandidates.AddRange(server.ConnectedClients.FindAll(c => c.Character != null).ConvertAll(client => client.Character));
+                    traitorCandidates.AddRange(server.ConnectedClients.FindAll(c => c.Character != null && !c.Character.IsDead).ConvertAll(client => client.Character));
+                }
+                if (traitorCandidates.Count <= 0)
+                {
+                    return false;
                 }
 #if !ALLOW_SOLO_TRAITOR
                 if (characters.Count < 2)
                 {
-                    return;
+                    return false;
                 }
 #endif
                 CodeWords = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
@@ -151,6 +155,7 @@ namespace Barotrauma
                     GameServer.Log(string.Format("{0} is the traitor and the current goals are:\n{1}", traitor.Character.Name, traitor.CurrentObjective?.GoalInfos != null ? TextManager.GetServerMessage(traitor.CurrentObjective?.GoalInfos) : "(empty)"), ServerLog.MessageType.ServerMessage);
                 }
 #endif
+                return true;
             }
 
             public virtual void Update(float deltaTime)
