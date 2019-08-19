@@ -117,16 +117,19 @@ namespace Barotrauma.Items.Components
             float progressBarState = targetItem.ConditionPercentage / 100.0f;
             if (!MathUtils.NearlyEqual(progressBarState, prevProgressBarState))
             {
-                Vector2 progressBarPos = targetItem.DrawPosition;
-                var progressBar = user.UpdateHUDProgressBar(
-                    targetItem,
-                    progressBarPos,
-                    progressBarState,
-                    Color.Red, Color.Green);
-                if (progressBar != null) { progressBar.Size = new Vector2(60.0f, 20.0f); }
+                var door = targetItem.GetComponent<Door>();
+                if (door == null || door.Stuck <= 0)
+                {
+                    Vector2 progressBarPos = targetItem.DrawPosition;
+                    var progressBar = user.UpdateHUDProgressBar(
+                        targetItem,
+                        progressBarPos,
+                        progressBarState,
+                        Color.Red, Color.Green);
+                    if (progressBar != null) { progressBar.Size = new Vector2(60.0f, 20.0f); }
+                }
+                prevProgressBarState = progressBarState;
             }
-
-            prevProgressBarState = progressBarState;
 
             Vector2 particlePos = ConvertUnits.ToDisplayUnits(pickedPosition);
             if (targetItem.Submarine != null) particlePos += targetItem.Submarine.DrawPosition;

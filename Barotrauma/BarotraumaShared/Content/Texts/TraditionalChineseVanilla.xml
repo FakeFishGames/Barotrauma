@@ -381,12 +381,12 @@
 <waist>腰</waist>
 
 <!-- Misc -->
-<yes>贊同</yes>
-<yestoall>全部贊同</yestoall>
+<yes>同意</yes>
+<yestoall>全部同意</yestoall>
 <no>反對</no>
 <notoall>全部反對</notoall>
 <maybe>也許</maybe>
-<ok>可以</ok>
+<ok>了解</ok>
 <skills>技能</skills>
 <personalitytrait>特性</personalitytrait>
 <male>男性</male>
@@ -2427,7 +2427,7 @@
 <karmajobdisallowed>你無法選擇該工作，你的道德值太低了 ([yourkarma]/[minkarma])。</karmajobdisallowed>
 
 <!-- Disclaimers -->
-<campaigndisclaimertitle>歡迎遊玩《潛淵證》！</campaigndisclaimertitle>
+<campaigndisclaimertitle>歡迎遊玩《潛淵症》！</campaigndisclaimertitle>
 <campaigndisclaimertext>請注意遊戲尚處於EA階段，遊戲仍存在很多不完善之處，我們仍在不斷改進中。\n\n戰役模式目前缺少很多玩法模組，可能沒有多人遊戲那樣有趣。當前版本中，單人遊戲對新玩家可能略有困難——儘管AI們能幫助你完成一些任務，但他們仍比不上真人玩家。如果您對遊戲的未來更新感興趣，可以點擊下面的“更新路線圖”。\n\n不過，我們建議您在開始多人遊戲之前，先完成單人教學關卡。祝你好運，航海家！</campaigndisclaimertext>
 <campaignroadmaptitle>更新路線圖</campaignroadmaptitle>
 <campaignroadmaptext>-探索地點:當前戰役地圖上的地點只能購買補給、雇傭船員,但在EA期間,它們將成為可以實際探索的場景。\n\n-擴展故事:通過與NPC互動,探索前哨站與非人造建築,在此過程中,你能對這個冰洋中的世界產生更深的理解…\n\n-新的任務類型：我們正嘗試設計一些新的任務類型，比如說人員運輸與沉船打撈。\n\n-遊戲平衡：目前遊戲內的經濟系統並不是非常平衡，我們將在內容更加豐富後考慮改進它。\n\n-最終目標：雖然完成戰役模式有些不現實，但在未來的版本中，地圖中心的神秘位置將變得觸手可及...</campaignroadmaptext>
@@ -2630,7 +2630,7 @@
 <connection.sonardataout>data_out</connection.sonardataout>
 <label.outpostinfodisplay1>歡迎。氧氣水準：正常。能量水準：正常。輻射水準：超量。本日天氣預報：陰冷潮濕。</label.outpostinfodisplay1>
 <label.navterminaldock>停靠</label.navterminaldock>
-<label.navterminalundock>離港</label.navterminalundock>
+  <label.navterminalundock>離港</label.navterminalundock>
 <connectionerrornoresponse>伺服器無回應。可能是與伺服器的連接出現了問題。</connectionerrornoresponse>
 <dialognorescuetargets>目前似乎沒有人需要醫療！</dialognorescuetargets>
 <dialognorescuetargets>我想現在好像沒有人需要醫療！</dialognorescuetargets>

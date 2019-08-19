@@ -29,7 +29,7 @@ namespace Barotrauma.Items.Components
         
         public override bool ShouldDrawHUD(Character character)
         {
-            return character == Character.Controlled && character == user;
+            return character == Character.Controlled && character == user && character.SelectedConstruction == item;
         }
         
         public override void AddToGUIUpdateList()
@@ -39,7 +39,7 @@ namespace Barotrauma.Items.Components
 
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
-            if (character != Character.Controlled || character != user) return;
+            if (character != Character.Controlled || character != user || character.SelectedConstruction != item) { return; }
             
             if (HighlightedWire != null)
             {
