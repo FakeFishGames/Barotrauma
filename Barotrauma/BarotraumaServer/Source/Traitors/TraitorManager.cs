@@ -1,4 +1,6 @@
 ﻿// #define DISABLE_MISSIONS
+
+using System;
 using Barotrauma.Networking;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
@@ -14,9 +16,30 @@ namespace Barotrauma
         public string CodeResponse => Mission?.CodeResponse;
 
         public Dictionary<string, Traitor>.ValueCollection Traitors => Mission?.Traitors.Values;
-
+        
         private float startCountdown = 0.0f;
         private GameServer server;
+        
+        private readonly Dictionary<ulong, int> traitorCountsBySteamId = new Dictionary<ulong, int>();
+        private readonly Dictionary<string, int> traitorCountsByEndPoint = new Dictionary<string, int>();
+
+        public int GetTraitorCount(Tuple<ulong, string> steamIdAndEndPoint)
+        {
+            if (steamIdAndEndPoint.Item1 > 0 && traitorCountsBySteamId.TryGetValue(steamIdAndEndPoint.Item1, out var steamIdResult))
+            {
+                return steamIdResult;
+            }
+            return traitorCountsByEndPoint.TryGetValue(steamIdAndEndPoint.Item2, out var endPointResult) ? endPointResult : 0;
+        }
+
+        public void SetTraitorCount(Tuple<ulong, string> steamIdAndEndPoint, int count)
+        {
+            if (steamIdAndEndPoint.Item1 > 0)
+            {
+                traitorCountsBySteamId[steamIdAndEndPoint.Item1] = count;
+            }
+            traitorCountsByEndPoint[steamIdAndEndPoint.Item2] = count;
+        }
 
         public bool IsTraitor(Character character)
         {
@@ -47,6 +70,8 @@ namespace Barotrauma
             this.server = server;
             //TODO: configure countdowns in xml
             startCountdown = MathHelper.Lerp(90.0f, 180.0f, (float)Traitor.TraitorMission.RandomDouble());
+            traitorCountsBySteamId.Clear();
+            traitorCountsByEndPoint.Clear();
         }
 
         public void Update(float deltaTime)
@@ -74,7 +99,7 @@ namespace Barotrauma
                 if (startCountdown <= 0.0f)
                 {
                     Mission = TraitorMissionPrefab.RandomPrefab()?.Instantiate();
-                    if (Mission == null || !Mission.Start(server, "traitor"))
+                    if (Mission == null || !Mission.Start(server, this, "traitor"))
                     {
                         Mission = null;
                         startCountdown = 60.0f;
@@ -91,6 +116,30 @@ namespace Barotrauma
             if (GameMain.Server == null || Mission == null) return "";
 
             return Mission.GlobalEndMessage;
+        }
+        
+        public static T WeightedRandom<T>(ICollection<T> collection, Func<int, int> random, Func<T, int> readSelectedWeight, Action<T, int> writeSelectedWeight, int entryWeight, int selectionWeight) where T : class
+        {
+            var count = collection.Count;
+            if (count <= 0)
+            {
+                return null;
+            }
+            var maxCount = entryWeight + collection.Max(readSelectedWeight);
+            var totalWeight = collection.Sum(entry => maxCount - readSelectedWeight(entry));
+            var selected = random(totalWeight);
+            foreach (var entry in collection)
+            {
+                var weight = readSelectedWeight(entry); 
+                selected -= maxCount;
+                selected += weight;
+                if (selected <= 0)
+                {
+                    writeSelectedWeight(entry, weight + selectionWeight);
+                    return entry;
+                }
+            }
+            return null;
         }
     }
 }

@@ -3027,6 +3027,16 @@ namespace Barotrauma.Networking
             }
         }
 
+        public Tuple<ulong, string> FindPreviousClientData(Client client)
+        {
+            var player = previousPlayers.Find(p => p.MatchesClient(client));
+            if (player != null)
+            {
+                return Tuple.Create(player.SteamID, player.EndPoint);
+            }
+            return null;
+        }
+
         public override void Disconnect()
         {
             if (started)
