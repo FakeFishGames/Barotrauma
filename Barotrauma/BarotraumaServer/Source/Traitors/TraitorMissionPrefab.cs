@@ -38,7 +38,7 @@ namespace Barotrauma {
 
         public static TraitorMissionPrefab RandomPrefab()
         {
-            return ListUtils.WeightedRandom(List, Traitor.TraitorMission.Random, entry => entry.SelectedWeight, (entry, weight) => entry.SelectedWeight = weight, 2, 3)?.Prefab;
+            return TraitorManager.WeightedRandom(List, Traitor.TraitorMission.Random, entry => entry.SelectedWeight, (entry, weight) => entry.SelectedWeight = weight, 2, 3)?.Prefab;
         }
 
         public class Context

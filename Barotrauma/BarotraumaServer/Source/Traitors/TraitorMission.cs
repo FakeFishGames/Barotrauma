@@ -139,7 +139,7 @@ namespace Barotrauma
                 Traitors.Clear();
                 foreach (var role in traitorRoles)
                 {
-                    var candidate = ListUtils.WeightedRandom(traitorCandidates, Random, t =>
+                    var candidate = TraitorManager.WeightedRandom(traitorCandidates, Random, t =>
                     {
                         return traitorManager.GetTraitorCount(server.FindPreviousClientData(t.Item1) ?? Tuple.Create(t.Item1.SteamID, t.Item1.Connection?.EndPointString ?? ""));
                     }, (t, c) =>
