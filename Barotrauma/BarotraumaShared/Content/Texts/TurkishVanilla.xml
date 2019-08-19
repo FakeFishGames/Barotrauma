@@ -218,7 +218,7 @@
 <fullscreen>Tam ekran</fullscreen>
 <windowed>Pencereli</windowed>
 <borderlesswindowed>Sınırsız pencereli</borderlesswindowed>
-<enablevsync>Düşey senkronizasyonu etkinleştir</enablevsync>
+<enablevsync>Dikey eşitlemeyi etkinleştir</enablevsync>
 <enablevsynctooltip>Oyunun kare hızını, monitörünüzün yenileme hızıyla senkronize eder. Ekran yırtılmalarını önlemeye yardımcı olur.</enablevsynctooltip>
 <particlelimit>Parçacık sınırı</particlelimit>
 <loseffect>Gözlem hattı etkisi</loseffect>
@@ -440,7 +440,7 @@
 <character.human>İnsan</character.human>
 <character.humanhusk>İnsan Kabuğu</character.humanhusk>
 <character.husk>Kabuk</character.husk>
-<character.mudraptor>Çamurkuşu</character.mudraptor>
+<character.mudraptor>Çamur Raptörü</character.mudraptor>
 <character.mantis>Peygamberdevesi</character.mantis>
 <character.moloch>Molek</character.moloch>
 <character.molochbaby>Bebek Molek</character.molochbaby>
@@ -461,10 +461,10 @@
 <!-- Campaign -->
 <campaignsetup>Mücadele Kurulumu</campaignsetup>
 <newcampaign>Yeni mücadele</newcampaign>
-<loadcampaign>Mücedele yükle</loadcampaign>
+<loadcampaign>Mücadele yükle</loadcampaign>
 <loadbutton>Yükle</loadbutton>
 <deletebutton>Sil</deletebutton>
-<subnotselected>Denizalrı seçilmedi!</subnotselected>
+<subnotselected>Denizaltı seçilmedi!</subnotselected>
 <selectsubrequest>Lütfen bir denizaltı seçin.</selectsubrequest>
 <selectedsub>Seçili denizaltı</selectedsub>
 <savenameinuseheader>Kayıt ismi zaten kullanılıyor</savenameinuseheader>
@@ -489,7 +489,7 @@
 <crew>Mürettebat</crew>
 <campaignmenucrew>Mürettebatınız</campaignmenucrew>
 <store>Mağaza</store>
-<outpost>Karakol</outpost>
+<outpost>Üs</outpost>
 <campaignmenuhireable>İşe alınabilir insanlar</campaignmenuhireable>
 <hirebutton>İşe al</hirebutton>
 <firebutton>Kov</firebutton>
@@ -709,7 +709,7 @@
 <servermessage.excessivedesyncoldevent>Aşırı senkronizasyon bozukluğu sorunu sebebiyle bağlantınız koptu (çok eski bir olay bekleniyor).</servermessage.excessivedesyncoldevent>
 <servermessage.excessivedesyncremovedevent>Aşırı senkronizasyon bozukluğu sorunu sebebiyle bağlantınız koptu (kaldırılmış bir olay bekleniyor).</servermessage.excessivedesyncremovedevent>
 <servermessage.synctimeout>İstemcinizin sunucuyla senkronize olması çok uzun sürdüğü için bağlantınız koptu.</servermessage.synctimeout>
-<servermessage.shuttleleaving>Araç, otomatik olarak karakola dönecek. Lütfen acilen araçtan ayrılın.</servermessage.shuttleleaving>
+<servermessage.shuttleleaving>Araç, otomatik olarak üsse dönecek. Lütfen acilen araçtan ayrılın.</servermessage.shuttleleaving>
 <servermessage.howtocommunicate>Sohbet için [chatbutton] tuşuna basın. Telsizden konuşmak için [radiobutton] tuşunu kullanın.</servermessage.howtocommunicate>
 <servermessage.playernotfound>[player] adlı oyuncu bulunamadı!</servermessage.playernotfound>
 
@@ -835,10 +835,10 @@
 <missionname.cargoclowngear>Kornanneye şükür</missionname.cargoclowngear>
 <missiondescription.cargoclowngear>Yerel bir palyaço sendikası, [location2] konumuna bir palyaço malzemesi teslim etmeniz karşılığında [reward] kredi değerinde ödül teklif ediyor.</missiondescription.cargoclowngear>
 <missionsuccess.cargoclowngear>Palyaço malzemesi başarıyla teslim edildi.</missionsuccess.cargoclowngear>
-<missionname.cargoconstructionminerals>Maden karakolu malzeme transferi</missionname.cargoconstructionminerals>
+<missionname.cargoconstructionminerals>Maden üssü malzeme transferi</missionname.cargoconstructionminerals>
 <missiondescription.cargoconstructionminerals>Yapı için gerekli malzemelerin [location2] konumuna transfer edilmesi gerekiyor ve burada bulunan mürettebat şefi çekeceğiniz sıkıntılar karşısında [reward] kredi ödemeye hazır.</missiondescription.cargoconstructionminerals>
 <missionsuccess.cargoconstructionminerals>Malzemeler başarıyla teslim edildi.</missionsuccess.cargoconstructionminerals>
-<missionname.cargosecurityminerals>Maden karakolu malzeme transferi</missionname.cargosecurityminerals>
+<missionname.cargosecurityminerals>Maden üssü malzeme transferi</missionname.cargosecurityminerals>
 <missiondescription.cargosecurityminerals>[location2] konumunda bulunan güvenlik ekibine, silah üretimi için yeniden malzeme ikmali yapılması gerekiyor. Eğer bu malzemeleri onlara götürürseniz [reward] kredi sizi bekliyor.</missiondescription.cargosecurityminerals>
 <missionsuccess.cargosecurityminerals>Malzemeler başarıyla teslim edildi.</missionsuccess.cargosecurityminerals>
 <missionname.cargomeditems>Tıbbi eşya transferi</missionname.cargomeditems>
@@ -1154,7 +1154,7 @@
 <entityname.alarmbuzzer>Alarm Uyarıcısı</entityname.alarmbuzzer>
 <entitydescription.alarmbuzzer>Korkunç bir ses çıkarmak için tetiklenebilir.</entitydescription.alarmbuzzer>
 <entityname.beacon>İşaret</entityname.beacon>
-<entitydescription.beacon>Konuşlandırılıp ve doğru konumda etkinleştirildiğinde, kolonicilerin gelip bir karakol kurması için sinyal gönderir.</entitydescription.beacon>
+<entitydescription.beacon>Konuşlandırılıp ve doğru konumda etkinleştirildiğinde, kolonicilerin gelip bir üs kurması için sinyal gönderir.</entitydescription.beacon>
 
 <!-- Material -->
 <entityname.alienblood>Yabancı Kan</entityname.alienblood>
@@ -1300,47 +1300,47 @@
 <entityname.nitroglycerin>Nitrogliserin</entityname.nitroglycerin>
 <entitydescription.nitroglycerin>Isıya veya fiziksel şoka maruz kaldığında patlayabilecek oldukça kararsız bir sıvı.</entitydescription.nitroglycerin>
 <entityname.calcium>Kalsiyum</entityname.calcium>
-<entitydescription.calcium>El işi için kullanışlı bir element.</entitydescription.calcium>
+<entitydescription.calcium>Zanaatkârlık için kullanışlı bir öge.</entitydescription.calcium>
 <entityname.aluminium>Alüminyum</entityname.aluminium>
-<entitydescription.aluminium>El işi için kullanışlı bir element.</entitydescription.aluminium>
+<entitydescription.aluminium>Zanaatkârlık için kullanışlı bir öge.</entitydescription.aluminium>
 <entityname.titanium>Titanyum</entityname.titanium>
-<entitydescription.titanium>El işi için kullanışlı bir element.</entitydescription.titanium>
+<entitydescription.titanium>Zanaatkârlık için kullanışlı bir öge.</entitydescription.titanium>
 <entityname.thorium>Toryum</entityname.thorium>
-<entitydescription.thorium>El işi için kullanışlı bir element.</entitydescription.thorium>
+<entitydescription.thorium>Zanaatkârlık için kullanışlı bir öge.</entitydescription.thorium>
 <entityname.steel>Çelik Çubuk</entityname.steel>
-<entitydescription.steel>El işi için kullanışlıdır.</entitydescription.steel>
+<entitydescription.steel>Zanaatkârlık için kullanışlıdır.</entitydescription.steel>
 <entityname.titaniumaluminiumalloy>Titanyum-Alüminyum Alaşımı</entityname.titaniumaluminiumalloy>
-<entitydescription.titaniumaluminiumalloy>El işi için kullanışlıdır.</entitydescription.titaniumaluminiumalloy>
+<entitydescription.titaniumaluminiumalloy>Zanaatkârlık için kullanışlıdır.</entitydescription.titaniumaluminiumalloy>
 <entityname.plastic>Plastik</entityname.plastic>
-<entitydescription.plastic>El işi için kullanışlıdır.</entitydescription.plastic>
+<entitydescription.plastic>Zanaatkârlık için kullanışlıdır.</entitydescription.plastic>
 <entityname.ballisticfiber>Balistik Elyaf</entityname.ballisticfiber>
-<entitydescription.ballisticfiber>El işi için kullanışlıdır.</entitydescription.ballisticfiber>
+<entitydescription.ballisticfiber>Zanaatkârlık için kullanışlıdır.</entitydescription.ballisticfiber>
 <entityname.organicfiber>Organik Fiber</entityname.organicfiber>
-<entitydescription.organicfiber>El işi için kullanışlıdır.</entitydescription.organicfiber>
+<entitydescription.organicfiber>Zanaatkârlık için kullanışlıdır.</entitydescription.organicfiber>
 <entityname.rubber>Kauçuk</entityname.rubber>
-<entitydescription.rubber>El işi için kullanışlıdır.</entitydescription.rubber>
+<entitydescription.rubber>Zanaatkârlık için kullanışlıdır.</entitydescription.rubber>
 <entityname.flashpowder>Flaş Tozu</entityname.flashpowder>
-<entitydescription.flashpowder>El işi için kullanışlıdır.</entitydescription.flashpowder>
+<entitydescription.flashpowder>Zanaatkârlık için kullanışlıdır.</entitydescription.flashpowder>
 <entityname.incendium>Incendium Çubuğu</entityname.incendium>
-<entitydescription.incendium>El işi için kullanışlıdır.</entitydescription.incendium>
+<entitydescription.incendium>Zanaatkârlık için kullanışlıdır.</entitydescription.incendium>
 <entityname.fulgurium>Fulgurium Çubuğu</entityname.fulgurium>
-<entitydescription.fulgurium>El işi için kullanışlıdır.</entitydescription.fulgurium>
+<entitydescription.fulgurium>Zanaatkârlık için kullanışlıdır.</entitydescription.fulgurium>
 <entityname.physicorium>Physicorium Çubuğu</entityname.physicorium>
-<entitydescription.physicorium>El işi için kullanışlıdır.</entitydescription.physicorium>
+<entitydescription.physicorium>Zanaatkârlık için kullanışlıdır.</entitydescription.physicorium>
 <entityname.dementonite>Dementonit Çubuğu</entityname.dementonite>
-<entitydescription.dementonite>El işi için kullanışlıdır.</entitydescription.dementonite>
+<entitydescription.dementonite>Zanaatkârlık için kullanışlıdır.</entitydescription.dementonite>
 <entityname.fiberplant>Elyaf Btkisi</entityname.fiberplant>
-<entitydescription.fiberplant>Bu bitki hindistan cevizinin dokusuna sahiptir ve lifleri sinirlerinin altında parmaklarınızın altında kendi kendine hareket eder. El işi için kullanışlıdır.</entitydescription.fiberplant>
+<entitydescription.fiberplant>Bu bitki hindistan cevizinin dokusuna sahiptir ve lifleri sinirlerinin altında parmaklarınızın altında kendi kendine hareket eder. Zanaatkârlık için kullanışlıdır.</entitydescription.fiberplant>
 <entityname.elastinplant>Elastin Bitkisi</entityname.elastinplant>
-<entitydescription.elastinplant>Bu bitkinin yaprakları kopmaz, sadece gerilir. El işi için kullanışlıdır.</entitydescription.elastinplant>
+<entitydescription.elastinplant>Bu bitkinin yaprakları kopmaz, sadece gerilir. Zanaatkârlık için kullanışlıdır.</entitydescription.elastinplant>
 <entityname.aquaticpoppy>Su Haşhaşı</entityname.aquaticpoppy>
-<entitydescription.aquaticpoppy>Dokunmak için biraz sıcak. El işi için kullanışlıdır.</entitydescription.aquaticpoppy>
+<entitydescription.aquaticpoppy>Dokunmak için biraz sıcak. Zanaatkârlık için kullanışlıdır.</entitydescription.aquaticpoppy>
 <entityname.yeastshroom>Deniz Maya Mantarı</entityname.yeastshroom>
-<entitydescription.yeastshroom>Sıcak bir günde kokusu, çürümüş etten daha beterdir. El işi için kullanışlıdır.</entitydescription.yeastshroom>
+<entitydescription.yeastshroom>Sıcak bir günde kokusu, çürümüş etten daha beterdir. Zanaatkârlık için kullanışlıdır.</entitydescription.yeastshroom>
 <entityname.elastin>Elastin</entityname.elastin>
-<entitydescription.elastin>Yüksek derecede elastik, doğal olarak oluşan bir protein. El işi için kullanışlıdır.</entitydescription.elastin>
+<entitydescription.elastin>Yüksek derecede elastik, doğal olarak oluşan bir protein. Zanaatkârlık için kullanışlıdır.</entitydescription.elastin>
 <entityname.adrenaline>Adrenalin</entityname.adrenaline>
-<entitydescription.adrenaline>Doğal olarak oluşan bir hormon. El işi için kullanışlıdır.</entitydescription.adrenaline>
+<entitydescription.adrenaline>Doğal olarak oluşan bir hormon. Zanaatkârlık için kullanışlıdır.</entitydescription.adrenaline>
 
 <!-- Misc -->
 <entityname.swimbladder>Hava Kesesi</entityname.swimbladder>
@@ -1607,7 +1607,7 @@
 <submarine.name.selkie>Selkie</submarine.name.selkie>
 <submarine.description.selkie>Kolonilerin beygir gücü olan bu küçük araçlar iyi hız ve dalış/tırmanma özelliklerine sahiptir ancak kırılgandırlar ve düşük kapasiteli bataryaları yüzünden menzilleri bir miktar sınırlıdır.</submarine.description.selkie>
 <submarine.name.venture>Venture</submarine.name.venture>
-<submarine.description.venture>Başlangıçta araştırma gemileri olarak tasarlanan Venture araçları, çıkışlar ve denizaltılar arasındaki seyahat için daha sağlam bir alternatif olarak seçilmiştir.</submarine.description.venture>
+<submarine.description.venture>Başlangıçta araştırma gemileri olarak tasarlanan Venture araçları, üsler ve denizaltılar arasındaki seyahat için daha sağlam bir alternatif olarak seçilmiştir.</submarine.description.venture>
 <submarine.name.berilia>Berilia</submarine.name.berilia>
 <submarine.description.berilia>Berilia, kütle ve ateş gücü söz konusu olduğunda listenin başında geliyor. İki motoru ve üç balastı çalıştırmak için çok miktarda güce ihtiyaç duyuyor. Makineleri çalışır durumda tutmak için orta seviyeli geniş bir ekipe ihtiyaç duyuyor.</submarine.description.berilia>
 <!-- Waypoints -->
@@ -1649,7 +1649,7 @@
 <uilabel.input>Girdi</uilabel.input>
 <uilabel.output>Çıktı</uilabel.output>
 <deconstructornopower>Yetersiz güç</deconstructornopower>
-<deconstructordeconstruct>Yık</deconstructordeconstruct>
+<deconstructordeconstruct>Parçala</deconstructordeconstruct>
 <deconstructorcancel>İptal</deconstructorcancel>
 <lvl>Svy</lvl>
 <minimaphullbreach>Karina çatlağı</minimaphullbreach>
@@ -1658,8 +1658,8 @@
 <minimapairquality>Hava kalitesi</minimapairquality>
 <minimapairqualityunavailable>Hava kalitesi verisi ulaşılabilir değil</minimapairqualityunavailable>
 <pumppowered>Güçlendirilmiş</pumppowered>
-<pumpin>İÇERİDE</pumpin>
-<pumpout>DIŞARIDA</pumpout>
+<pumpin>GELEN</pumpin>
+<pumpout>ÇIKAN</pumpout>
 <pumpspeed>Pompalama hızı</pumpspeed>
 <reactorautotemp>Otomatik kontrol</reactorautotemp>
 <reactoroutput>Çıktı: [kw] kW</reactoroutput>
@@ -1678,7 +1678,7 @@
 <reactorwarningmeltdown>Erime</reactorwarningmeltdown>
 <reactorwarningscram>DURDURMA</reactorwarningscram>
 <reactortipfissionrate>Füzyon oranını artırmak reaktörün daha fazla yakıt tüketmesine ve daha fazla ısı üretmesine sebep olur. Isı, türbini döndürmekte kullanılır ve bu da elektrik yaratır.</reactortipfissionrate>
-<reactortipturbineoutput>Türbin çıktısı ne kadar yüksek olursa, reaktör o kadar çok elektrik üretmeye çalışılr. Çıktı, füzyon oranına göre çok yüksekse reaktör soğur, çok düşükse de aşırı ısınır.</reactortipturbineoutput>
+<reactortipturbineoutput>Türbin çıktısı ne kadar yüksek olursa, reaktör o kadar çok elektrik üretmeye çalışır. Çıktı, füzyon oranına göre çok yüksekse reaktör soğur, çok düşükse de aşırı ısınır.</reactortipturbineoutput>
 <reactortiptemperature>Reaktör çekirdeğinin sıcaklığı. Çubuk kırmızı göstergelerin arasında olduğu sürece sıcaklık normal demektir.</reactortiptemperature>
 <reactortipload>Reaktöre bağlı aygıtlar tarafından tüketilen güç göstergesi.</reactortipload>
 <reactortippower>Reaktör tarafından yaratılmakta olan güç göstergesi.</reactortippower>
@@ -1710,8 +1710,8 @@
 <powertransferlowvoltage>Düşük voltaj</powertransferlowvoltage>
 <powertransferpowerlabel>Güç</powertransferpowerlabel>
 <powertransferpower>[power] kW</powertransferpower>
-<powertransferloadlabel>Yükle</powertransferloadlabel>
-<powertransferload>[yükle] kW</powertransferload>
+<powertransferloadlabel>Yük</powertransferloadlabel>
+<powertransferload>[load] kW</powertransferload>
 <powertransfertipovervoltage>Elektrik şebekesi tüketilenden daha fazla güçle beslendiğinde voltaj artar, bu da elektriksel aygıtlara hasar verebilir.</powertransfertipovervoltage>
 <powertransfertiplowvoltage>Yeterli güç olmadığı zaman voltaj düşer, bu da bazı aygıtların kapanmasına sebep olabilir.</powertransfertiplowvoltage>
 <powertransfertipload>Elektrik şebekesinde bağlı aygıtlar tarafından tüketilen toplam güç.</powertransfertipload>
@@ -1724,7 +1724,7 @@
 <!-- Health interface -->
 <vitality>Canlılık</vitality>
 <suitabletreatments>Mümkün tedaviler:</suitabletreatments>
-<healthitemusetip>Seçilen eklem üstünde kullanmak için eşyaları oraya bırak. Ayrıca envanter kısa yol tuşlarına atanmış eşyaları da kullanabilirsin veya onlara iki kere tıklayabilirsin.</healthitemusetip>
+<healthitemusetip>Seçilen uzuv üstünde kullanmak için eşyaları oraya bırak. Ayrıca envanter kısa yol tuşlarına atanmış eşyaları da kullanabilirsin veya onlara iki kere tıklayabilirsin.</healthitemusetip>
 <afflictionstrengthlow>Hafif</afflictionstrengthlow>
 <afflictionstrengthmedium>Orta</afflictionstrengthmedium>
 <afflictionstrengthhigh>Ağır</afflictionstrengthhigh>
@@ -2107,35 +2107,35 @@
 <jobdescription.watchman><!-- No data --></jobdescription.watchman>
 
 <!-- Locations -->
-<locationname.none>Doğal Formasyon</locationname.none>
+<locationname.none>Doğal Oluşum</locationname.none>
 <locationnameformat.none>[name]</locationnameformat.none>
-<locationchange.none.changeto.outpost>[previousname] konumunda yeni bir karakol kuruldu.</locationchange.none.changeto.outpost>
-<locationchange.none.changeto.military>[previousname] konumunda yeni bir askerî karakol kuruldu.</locationchange.none.changeto.military>
-<locationchange.none.changeto.research>[previousname] konumunda yeni bir araştırma karakolu kuruldu.</locationchange.none.changeto.research>
+<locationchange.none.changeto.outpost>[previousname] konumunda yeni bir üs kuruldu.</locationchange.none.changeto.outpost>
+<locationchange.none.changeto.military>[previousname] konumunda yeni bir askerî üs kuruldu.</locationchange.none.changeto.military>
+<locationchange.none.changeto.research>[previousname] konumunda yeni bir araştırma üssü kuruldu.</locationchange.none.changeto.research>
 <locationname.city>Koloni</locationname.city>
 <locationnameformat.city>[name]</locationnameformat.city>
 <locationnameformat.city>[name] şehri</locationnameformat.city>
 <locationnameformat.city>[name] şehri</locationnameformat.city>
 <locationnameformat.city>[name] İstasyonu</locationnameformat.city>
-<locationname.outpost>Mesken Karakolu</locationname.outpost>
-<locationnameformat.outpost>[name] Mesken Karakolu</locationnameformat.outpost>
-<locationnameformat.outpost>[name] Karakol</locationnameformat.outpost>
+<locationname.outpost>Mesken Üssü</locationname.outpost>
+<locationnameformat.outpost>[name] Mesken Üssü</locationnameformat.outpost>
+<locationnameformat.outpost>[name] Üssü</locationnameformat.outpost>
 <locationchange.outpost.changeto.city>[previousname] [name] oldu.</locationchange.outpost.changeto.city>
 <locationchange.outpost.changeto.city>[previousname] şehir oldu.</locationchange.outpost.changeto.city>
-<locationname.military>Askerî Karakol</locationname.military>
+<locationname.military>Askerî Üs</locationname.military>
 <locationnameformat.military>[name]</locationnameformat.military>
 <locationnameformat.military>[name] Tesisi</locationnameformat.military>
 <locationnameformat.military>[name] İstasyonu</locationnameformat.military>
 <locationnameformat.military>[name] İstihkâmı</locationnameformat.military>
-<locationname.research>Araştırma Karakolu</locationname.research>
+<locationname.research>Araştırma Üssü</locationname.research>
 <locationnameformat.research>[name] Araştırma Tesisi</locationnameformat.research>
 <locationnameformat.research>[name] Araştırma Merkezi</locationnameformat.research>
 <locationnameformat.research>[name] Astrobiyoloji Enstitüsü</locationnameformat.research>
 <locationnameformat.research>[name] Biyomedikal Araştırma Merkezi</locationnameformat.research>
-<locationname.mine>Maden Karakolu</locationname.mine>
+<locationname.mine>Maden Üssü</locationname.mine>
 <locationnameformat.mine>[name] Madencilik Tesisi</locationnameformat.mine>
 <locationnameformat.mine>[name] Maden İddiası</locationnameformat.mine>
-<locationnameformat.mine>[name] Arama Karakolu</locationnameformat.mine>
+<locationnameformat.mine>[name] Arama Üssü</locationnameformat.mine>
 <locationnameformat.mine>[name] Maden</locationnameformat.mine>
 <locationname.lair>Üreme Alanları</locationname.lair>
 <locationnameformat.lair>[name] Üreme Alanları</locationnameformat.lair>
@@ -2143,9 +2143,9 @@
 <locationchange.lair.changeto.none>[previousname] nüfusu azaltıldı.</locationchange.lair.changeto.none>
 <locationname.ruins>Uzaylı Enkazı</locationname.ruins>
 <locationnameformat.ruins>[name] Enkazı</locationnameformat.ruins>
-<locationchange.ruins.changeto.outpost>[previousname] konumunda bir karakol oluşturuldu.</locationchange.ruins.changeto.outpost>
-<locationchange.ruins.changeto.military>[previousname] konumunda askerî bir karakol oluşturuldu.</locationchange.ruins.changeto.military>
-<locationchange.ruins.changeto.research>[previousname] konumunda bir araştırma karakolu oluşturuldu.</locationchange.ruins.changeto.research>
+<locationchange.ruins.changeto.outpost>[previousname] konumunda bir üs oluşturuldu.</locationchange.ruins.changeto.outpost>
+<locationchange.ruins.changeto.military>[previousname] konumunda askerî bir üs oluşturuldu.</locationchange.ruins.changeto.military>
+<locationchange.ruins.changeto.research>[previousname] konumunda bir araştırma üssü oluşturuldu.</locationchange.ruins.changeto.research>
 
 <!-- Tutorials -->
 <!-- Generic -->
@@ -2178,7 +2178,7 @@
 <tutorial.medicaldoctordescription>Silahlar, motorlar ve reaktörler gemiyi ayakta tutmaz, insanlar tutar. Silahların başına geçecek adamı da, gemiyi yönetecek kaptanı da hayatta tutmak senin elinde. Ve unutma, işin sadece fiziksel bakımdan ibaret değil. Sıkışık alanlarda, buz altında, denizin içinde yaşıyoruz. Işıklar kapandığında ve badilerin uykuya daldığında, akıllarında türlü türlü karanlıklar dönecek. Onları hayatta ve aklı başında tutmak, veya köpek gibi uyutmak. Sana kalmış.</tutorial.medicaldoctordescription>
 <tutorial.medicaldoctorresponsibilities>Sorumluluklar\n-İlk yardım\n-Zehir ve antidotlar</tutorial.medicaldoctorresponsibilities>
 <tutorial.captaintitle>Kaptan - Deniz vizyoneri, maceracı, dâhi. Belki.</tutorial.captaintitle>
-<tutorial.captaindescription>Kaptan Ahab bir keresinde Cehennem, sindirilememiş bir elmalı hamur sonrasında akla gelmiş bir düşüncedir. demiştir. Bu ne demek biliyor musun? Bilmiyorsun. Mürettebat senin gizemli bir dâhi olduğunu mu düşünüyor? Aynen öyle. Bu işin bir kısmı da ne yapacağını bilmekten çok ne yapacağını biliyormuş gibi görünmek. Sen hem haritasın hem de pusula, büyük resmi gören adamsın. Yolculuk et ve zorlu kararları ver. Ve unutma, bir karakolun belediye başkanı olmana sadece birkaç adım kaldı. Bunun için birkaç arkadaşın ölmesi gerekiyorsa, öyle olsun!</tutorial.captaindescription>
+<tutorial.captaindescription>Kaptan Ahab bir keresinde Cehennem, sindirilememiş bir elmalı hamur sonrasında akla gelmiş bir düşüncedir. demiştir. Bu ne demek biliyor musun? Bilmiyorsun. Mürettebat senin gizemli bir dâhi olduğunu mu düşünüyor? Aynen öyle. Bu işin bir kısmı da ne yapacağını bilmekten çok ne yapacağını biliyormuş gibi görünmek. Sen hem haritasın hem de pusula, büyük resmi gören adamsın. Yolculuk et ve zorlu kararları ver. Ve unutma, bir üssün belediye başkanı olmana sadece birkaç adım kaldı. Bunun için birkaç arkadaşın ölmesi gerekiyorsa, öyle olsun!</tutorial.captaindescription>
 <tutorial.captainresponsibilities>Sorumluluklar\n-Gemiyi sürmek\n-Yetkili kişi</tutorial.captainresponsibilities>
 
 <!-- Tutorial extras -->
@@ -2193,11 +2193,11 @@
 <tutorial.crowbartitle>Levye</tutorial.crowbartitle>
 <tutorial.crowbardescription>Kapıları zorla açmak için ağır bir eşya. Birisi kapının kablolamasıyla uğraşırken veya girmemen gereken odalara girmek istediğine işe yarar. Bir kapıyı levyeyle zorla açmaya başlamak için ({0}) tuşuna bas. Bunu yapabilmek için levyenin kuşanılmış olması gerekir.</tutorial.crowbardescription>
 <tutorial.mineralstitle>Madenler</tutorial.mineralstitle>
-<tutorial.mineralsdescription>Zanaatkârlık için gereken temel materyaller satın alınabilir, yıkılan enkazlardan alınabilir veya dünyada bulunabilir.\n\nMadenler mağaralarda ve buz duvarlarında bulunabilir, plazma kesici kullanılarak kesilebilirler ve sonra toplanabilirler. Saf madenler parçalanarak zanaate uygun şeyler üretilebilir.</tutorial.mineralsdescription>
+<tutorial.mineralsdescription>Zanaatkârlık için gereken temel materyaller satın alınabilir, parçalanan enkazlardan alınabilir veya dünyada bulunabilir.\n\nMadenler mağaralarda ve buz duvarlarında bulunabilir, plazma kesici kullanılarak kesilebilirler ve sonra toplanabilirler. Saf madenler parçalanarak zanaate uygun şeyler üretilebilir.</tutorial.mineralsdescription>
 <tutorial.psychosistitle>Psikoz</tutorial.psychosistitle>
 <tutorial.psychosisdescription>Çeşitli performans artırıcı ilaçlar altındayken veya dünya dışı nüfuz altındayken, oyuncular psikoza girebilir. Bu da onları görsel ve işitsel çeşitli halüsinasyonlara, sahte acılara sokar.\n\nPsikoz haloperidol kullanarak tedavi edilebilir.</tutorial.psychosisdescription>
 <tutorial.opiatestitle>Afyon bağımlılığı ve yoksunluk</tutorial.opiatestitle>
-<tutorial.opiatesdescription>Ağrı kesicilerinin fazla kullanımı bağımlılığa yol açar ve bu da zamanla yoksunluğa sebep olur. Yoksunluk semptomları, bağımlılığı besleyerek azaltılabilir ama etkilerden tamamen kurtulmak için kişi ya ilaçları almayı tamamen bırakmalıdır ya da naloxone kullanmalıdır.</tutorial.opiatesdescription>
+<tutorial.opiatesdescription>Ağrı kesicilerinin fazla kullanımı bağımlılığa yol açar ve bu da zamanla yoksunluğa sebep olur. Yoksunluk semptomları, bağımlılığı besleyerek azaltılabilir ama etkilerden tamamen kurtulmak için kişi ya ilaçları almayı tamamen bırakmalıdır ya da nalokson kullanmalıdır.</tutorial.opiatesdescription>
 <tutorial.oxygentitle>Oksijen</tutorial.oxygentitle>
 <tutorial.oxygendescription>Oksijen, su altı Europa'sında önemli bir üründür. Denizaltlarındaki uzun yolculuklar için hep hazır olmalıdır, bu da oksijen jeneratörleri sayesinde mümkündür. Havalandırma sistemi aracılığıyla odalara hava pompalarlar ve bu oksijen tanklarını yeniden doldurmak için de kullanılabilir.\n\nOksijen tanklarını yeniden doldurmak için jeneratörle ([InteractType.Use]) etkileşime geçerek onun envanterini açın. Boş bir oksijen tankını yuvalardan birine koyup doldurmaya başlayın. Tank dolduğunda, envanterinize veya dalış kıyafetinize/maskenize sürükleyin.</tutorial.oxygendescription>
 <tutorial.laddertitle>Merdivenler</tutorial.laddertitle>
@@ -2211,7 +2211,7 @@
 <mechanic.radio.news>Tamam, beni duyabiliyor musun? İyi ve kötü haberlerim var.</mechanic.radio.news>
 <mechanic.radio.fire>Kötü haber şu ki önünde yangın var. İyi haber şu ki yakınlarında bir yangın söndürücü yapabilmen için muhtemelen yeterince eşya bulunuyor.</mechanic.radio.fire>
 <mechanic.radio.diving>Az kaldı. Ama dikkatli ol. Sıradaki sızıntı bütün odayı basınç altına alacak kadar güçlü. Bir dalış kıyafeti bul. Organlarını bu tür bir basınca karşı koruyacaktır.</mechanic.radio.diving>
-<mechanic.radio.submarine>Hoş geldin. Yapman gereken ilk şey motoru ve safra pompalarını kontrol etmek. Bakıma ihtiyaçları var mı diye bak.</mechanic.radio.submarine>
+<mechanic.radio.submarine>Hoş geldin. Yapman gereken ilk şey motoru ve balast pompalarını kontrol etmek. Bakıma ihtiyaçları var mı diye bak.</mechanic.radio.submarine>
 <mechanic.radio.complete>Tebrikler. Diğerlerinin buraya gelmelerini bekleyelim. Sadece ikimiz varken denizaltını iyi yönetemem.</mechanic.radio.complete>
 
 <!-- Room 1 -->
@@ -2220,22 +2220,22 @@
 <mechanic.opendoortext>{0}, {1}, {2}, {3} butonlarına basarak hareket et. {4} butonuyla eşyalarla ve aygıtlarla etkileşime geç.\n\nBu kapıyı açmak için, imlecin üzerindeyken, {5} butonuna bas.</mechanic.opendoortext>
 
 <!-- Room 2 -->
-<mechanic.equipment>Konteynırlar</mechanic.equipment>
+<mechanic.equipment>Konteynerlar</mechanic.equipment>
 <mechanic.equipmentobjective>Dolaptan ekipmanlarını al</mechanic.equipmentobjective>
-<mechanic.equipmenttext>Eşyalar farklı boyutlardaki konteynırlarda saklanırlar. İçlerinde ne olduğunu ({0}) tuşuyla onlarla etkileşime geçerek görebilirsin. Karakter ve konteynır arasındaki eşyaları sürükleyerek veya iki kere tıklayarak taşıyabilirsin.\n\nKarakterinin envanterindeyken, eşyalar iki kere tıklanarak ya da aynı anlama gelen çabuk tuşa basarak kuşanılabilirler.\n\nArayüzü kapatmak için, {1}'e bas.</mechanic.equipmenttext>
+<mechanic.equipmenttext>Eşyalar farklı boyutlardaki konteynerlarda saklanırlar. İçlerinde ne olduğunu ({0}) tuşuyla onlarla etkileşime geçerek görebilirsin. Karakter ve konteyner arasındaki eşyaları sürükleyerek veya iki kere tıklayarak taşıyabilirsin.\n\nKarakterinin envanterindeyken, eşyalar iki kere tıklanarak ya da aynı anlama gelen çabuk tuşa basarak kuşanılabilirler.\n\nArayüzü kapatmak için, {1}'e bas.</mechanic.equipmenttext>
 
 <!-- Room 3 -->
 <mechanic.welding>Sızıntılar</mechanic.welding>
 <mechanic.weldingobjective>Sızıntıyı onar</mechanic.weldingobjective>
-<mechanic.weldingtext>Karinadaki sızıntıları onarmak için, üstüne iki kez tıklayarak kaynak aletini kuşan. Bazı eşyalar, kaynak aleti gibi, kullanmak için iki el gerektirir. Bir eşyayı kuşanmayı bırakmak veya bırakmak için hâlâ kullanırken iki kere tıklaman yeterlidir.\n\nKaynak aleti kuşanılmış durumdayken nişan alırken {0} tuşuna basılı tut. Nişan alırken, kaynak yapmak için {1} tuşuna bas.</mechanic.weldingtext>
+<mechanic.weldingtext>Karinadaki sızıntıları onarmak için, üstüne iki kez tıklayarak kaynak aletini kuşan. Bazı eşyalar, kaynak aleti gibi, kullanmak için iki el gerektirir. Bir eşyayı kuşanmayı bırakmak veya eşyayı komple bırakmak için hâlâ kullanırken iki kere tıklaman yeterlidir.\n\nKaynak aleti kuşanılmış durumdayken nişan alırken {0} tuşuna basılı tut. Nişan alırken, kaynak yapmak için {1} tuşuna bas.</mechanic.weldingtext>
 <mechanic.drain>Su pompaları</mechanic.drain>
 <mechanic.drainobjective>Fazla suyu atmak için yakınlardaki pompayı aç</mechanic.drainobjective>
 <mechanic.draintext>Denizaltını su basmışken, fazla suyu çekmek için pompaları kullan. Normalde pompalar yakınlardaki su dedektörlerinden veya navigasyon terminallerinden sinyaller alırlar ama bazıları elle de kontrol edilebilir. Bu pompa sadece suyu dışarı pompalamaya programlanmıştır. ({0}) ile etkileşime geçerek ve anahtarı açık pozisyonuna getirerek aç.</mechanic.draintext>
 
 <!-- Room 4 -->
 <mechanic.deconstruct>Zanaatkârlık, kısım 1</mechanic.deconstruct>
-<mechanic.deconstructobjective>Ek oksijen takını yık</mechanic.deconstructobjective>
-<mechanic.deconstructtext>Fabrikatör, farklı materyalleri alıp işe yarar eşyalara çeviren bir aygıttır. Fabrikasyon için yeterli materyalin yoksa yıkıcı ile çeşitli eşyaları parçalayabilirsin. Üstteki yuvalardan birine bir eşyayı sürükle ve Parçala butonuna bas.\n\nBu durumda, bir yangın söndürücü fabrikasyonu alüminyum ve sodyum gerektiriyor. Sodyum hâlihazırda var ama alüminyum oksijen tanklarından parçalanarak alınmalı.</mechanic.deconstructtext>
+<mechanic.deconstructobjective>Ek oksijen takını parçala</mechanic.deconstructobjective>
+<mechanic.deconstructtext>Fabrikatör, farklı materyalleri alıp işe yarar eşyalara çeviren bir aygıttır. Fabrikasyon için yeterli materyalin yoksa parçalayıcı ile çeşitli eşyaları parçalayabilirsin. Üstteki yuvalardan birine bir eşyayı sürükle ve Parçala butonuna bas.\n\nBu durumda, bir yangın söndürücü fabrikasyonu alüminyum ve sodyum gerektiriyor. Sodyum hâlihazırda var ama alüminyum oksijen tanklarından parçalanarak alınmalı.</mechanic.deconstructtext>
 <mechanic.fabricate>Zanaatkârlık, kısım 2</mechanic.fabricate>
 <mechanic.fabricateobjective>Bir yangın söndürücü oluştur</mechanic.fabricateobjective>
 <mechanic.fabricatetext>Bütün gereken materyalleri topladığımıza göre bir yangın söndürücü üretebiliriz. Listede bul, fabrikatöre gereken materyalleri koy ve üretime başlamak için butona bas.\n\nİşin bittiğinde, ürettiğin eşya fabrikatörün çıktı yuvasından alınabilir.</mechanic.fabricatetext>
@@ -2260,14 +2260,14 @@
 
 <!-- Submarine -->
 <mechanic.repairsubmarine>Denizaltı bakımı</mechanic.repairsubmarine>
-<mechanic.repairsubmarineobjective>Motoru ve safra pompalarını onar</mechanic.repairsubmarineobjective>
-<mechanic.repairsubmarinetext>Artık denizaltındasın, Barotrauma'daki çoğu vaktini de burada harcayacaksın. Bu basit kısımlarından biri ama oyuna başlarken seçeceğin birden fazla denizaltı seçeneği olacak. Dalış kıyafetini artık çıkarabilirsin. (Ekipman yuvasının üstündeki çıkarma butonuna basarak veya basılı tutarak, ya da kıyafeti yuvadan uzakağa sürükleyerek.)\n\nBir denizaltının iç kısımları normalde sıkışıktır ve etrafına alışana kadar aradıklarını bulmak zor olabilir.\n\nMotoru (normalde denizaltının arka kısmında yer alır) ve safra pompalarını (dipte, bazı denizaltlarında birden fazla bulunur) bul .</mechanic.repairsubmarinetext>
+<mechanic.repairsubmarineobjective>Motoru ve balast pompalarını onar</mechanic.repairsubmarineobjective>
+<mechanic.repairsubmarinetext>Artık denizaltındasın, Barotrauma'daki çoğu vaktini de burada harcayacaksın. Bu basit kısımlarından biri ama oyuna başlarken seçeceğin birden fazla denizaltı seçeneği olacak. Dalış kıyafetini artık çıkarabilirsin. (Ekipman yuvasının üstündeki çıkarma butonuna basarak veya basılı tutarak, ya da kıyafeti yuvadan uzakağa sürükleyerek.)\n\nBir denizaltının iç kısımları normalde sıkışıktır ve etrafına alışana kadar aradıklarını bulmak zor olabilir.\n\nMotoru (normalde denizaltının arka kısmında yer alır) ve balast pompalarını (dipte, bazı denizaltlarında birden fazla bulunur) bul .</mechanic.repairsubmarinetext>
 
 <!-- Engineer tutorial -->
 <!-- Radio -->
 <engineer.radio.wakeup>Kıçını kaldır! Güce ihtiyacımız var!</engineer.radio.wakeup>
-<engineer.radio.equipment>Son darbe karakolun yarısında gücü kesti! Bizi yeniden elektriğe bağlamak için ihtiyacın olanı al.</engineer.radio.equipment>
-<engineer.radio.reactorstable>Şimdilik stabil görünüyorunuz. Bazı dağıtım kutularının sigortaları patlamış ve pompalar çalışmıyor. Onlara bir bakmalısın. Gitmeden önce reaktörü otomatiğe almayı unutma.</engineer.radio.reactorstable>
+<engineer.radio.equipment>Son darbe üssün yarısında gücü kesti! Bizi yeniden elektriğe bağlamak için ihtiyacın olanı al.</engineer.radio.equipment>
+<engineer.radio.reactorstable>Şimdilik stabil görünüyorunuz. Bazı bağlantı kutularının sigortaları patlamış ve pompalar çalışmıyor. Onlara bir bakmalısın. Gitmeden önce reaktörü otomatiğe almayı unutma.</engineer.radio.reactorstable>
 <engineer.radio.faultywiring>Kablolamalardan bazıları hatalı gibi görünüyor. Biraz kablo bul ve hemen düzelt, yoksa gücümüz olmayacak.</engineer.radio.faultywiring>
 <engineer.radio.changeofplans>Planlar değişti. Denizaltına gel. Bu tesisi patlatacağız.</engineer.radio.changeofplans>
 <engineer.radio.submarine>Elektrik odası çok iyi durumda görünmüyor. Çevrim içi hâle getirmeye çalış, daha sonra da reaktörü başlat.</engineer.radio.submarine>
@@ -2281,25 +2281,25 @@
 <!-- Room 3 -->
 <engineer.reactor>Reaktör</engineer.reactor>
 <engineer.reactorobjective>Reaktöre güç ver</engineer.reactorobjective>
-<engineer.reactortext>Nükleer reaktörler denizaltlarına ve karakollara güç sağlar. Isı yaratmak için yakıta, çıktıyı kontrol etmek için de bir mürettebat üyesine gereksinim duyar.\n\nBir yakıt çubuğunu sol taraftaki eşya yuvasına sürükle. Birden fazla yakıt çubuğu daha fazla ısı yaratır ama normal şartlarda bir tanesi yeterlidir ve daha fazlası aşırı ısınmaya sebep olabilir.\n\nFüzyon oranını ayarlayarak başla, iğne yeşilin üstünde olmalı, sonra aynısını türbin çıktısına da yap. Yükleme ve çıktı değerlerini sağdan görebilirsin. Çıktıyı, yüklemeye mümkün olduğunca yakın tutmaya çalış. Çıktı daha düşük olduğunda bu güç kesintilerine sebep olur. Daha yüksek olduğunda ise aşırı voltaj ve yangınlara sebep olur.\n\nReaktör operatörü arayüzü terk ettiğinde, otomatik kontrolü açması önerişlir. Şebeke yüklemesindeki değişimlere otomatik olarak da yanıt verebilir ama insan operatöre göre oldukça yavaştır.</engineer.reactortext>
+<engineer.reactortext>Nükleer reaktörler denizaltlarına ve üslere güç sağlar. Isı yaratmak için yakıta, çıktıyı kontrol etmek için de bir mürettebat üyesine gereksinim duyar.\n\nBir yakıt çubuğunu sol taraftaki eşya yuvasına sürükle. Birden fazla yakıt çubuğu daha fazla ısı yaratır ama normal şartlarda bir tanesi yeterlidir ve daha fazlası aşırı ısınmaya sebep olabilir.\n\nFüzyon oranını ayarlayarak başla, iğne yeşilin üstünde olmalı, sonra aynısını türbin çıktısına da yap. Yük ve çıktı değerlerini sağdan görebilirsin. Çıktıyı, yüke mümkün olduğunca yakın tutmaya çalış. Çıktı daha düşük olduğunda bu güç kesintilerine sebep olur. Daha yüksek olduğunda ise aşırı voltaj ve yangınlara sebep olur.\n\nReaktör operatörü arayüzü terk ettiğinde, otomatik kontrolü açması önerilir. Şebeke yükündeki değişimlere otomatik olarak da yanıt verebilir ama insan operatöre göre oldukça yavaştır.</engineer.reactortext>
 
 <!-- Room 4 -->
 <engineer.repairjunctionbox>Bakım</engineer.repairjunctionbox>
-<engineer.repairjunctionboxobjective>Bozuk dağıtım kutusunu onar</engineer.repairjunctionboxobjective>
-<engineer.repairjunctionboxtext>Mekanik eşyalar gibi dağıtım kutularının da bakıma ihtiyacı vardır. Zamanla yıpranmalarının yanı sıra su ve aşırı voltaj tarafından da hasar görürler.\n\nTornavida ile onarılabilirler, mekanik eşyalar ise anahtar ile onarılabilir. Onun dışında süreç aynıdır.ç Bir tornavidayı kuşan ve onarım arayüzünü görmek için ({0}) tuşuyla aygıtla etkileşime geç</engineer.repairjunctionboxtext>
+<engineer.repairjunctionboxobjective>Bozuk bağlantı kutusunu onar</engineer.repairjunctionboxobjective>
+<engineer.repairjunctionboxtext>Mekanik eşyalar gibi bağlantı kutularının da bakıma ihtiyacı vardır. Zamanla yıpranmalarının yanı sıra su ve aşırı voltaj tarafından da hasar görürler.\n\nTornavida ile onarılabilirler, mekanik eşyalar ise anahtar ile onarılabilir. Onun dışında süreç aynıdır. Bir tornavidayı kuşan ve onarım arayüzünü görmek için ({0}) tuşuyla aygıtla etkileşime geç</engineer.repairjunctionboxtext>
 
 <!-- Room 5 -->
 <engineer.wirejunctionboxes>Kablolama</engineer.wirejunctionboxes>
-<engineer.wirejunctionboxesobjective>Dağıtım kutularını bağla</engineer.wirejunctionboxesobjective>
-<engineer.wirejunctionboxestext>Dağıtım kutuları, denizaltı aygıtlarını elektrik şebekesine bağlamanın ana yoludur. Onları kablolarla birlikte bağlayarak gücün içlerinden geçmesini sağla.\n\nKabloları eşyalara bağlamak için bir eline tornavida, diğerine kablo al. Daha sonra kablo eklemek istediğin eşyayla ({0}) tuşuyla etkileşime geç. Aşağısından bağlantı pinleri ve kabloların çıktığı bir bağlantı paneli göreceksin. Kabloyu, güç pinine doğru sürükle, daha sonra paneli kapatmak için {1} tuşuna bas. Bu adımı sonraki eşyada da tekrar et.\n\nBağlantı paneli arayüzünde boşta bir kablo görmüyorsan, birini kuşandığından emin ol.</engineer.wirejunctionboxestext>
+<engineer.wirejunctionboxesobjective>Bağlantı kutularını bağla</engineer.wirejunctionboxesobjective>
+<engineer.wirejunctionboxestext>Bağlantı kutuları, denizaltı aygıtlarını elektrik şebekesine bağlamanın ana yoludur. Onları kablolarla birlikte bağlayarak gücün içlerinden geçmesini sağla.\n\nKabloları eşyalara bağlamak için bir eline tornavida, diğerine kablo al. Daha sonra kablo eklemek istediğin eşyayla ({0}) tuşuyla etkileşime geç. Aşağısından bağlantı pinleri ve kabloların çıktığı bir bağlantı paneli göreceksin. Kabloyu, güç pinine doğru sürükle, daha sonra paneli kapatmak için {1} tuşuna bas. Bu adımı sonraki eşyada da tekrar et.\n\nBağlantı paneli arayüzünde boşta bir kablo görmüyorsan, birini kuşandığından emin ol.</engineer.wirejunctionboxestext>
 
 <!-- Submarine -->
 <engineer.repairelectricalroom>Elektrik odası</engineer.repairelectricalroom>
 <engineer.repairelectricalroomobjective>Elektrik odasını onar</engineer.repairelectricalroomobjective>
-<engineer.repairelectricalroomtext>Denizaltının elektrik odasını bul ve dağıtım kutularını, bir tornavida tutarken onlarla etkileşime geçip Onar tuşuna basarak onar.</engineer.repairelectricalroomtext>
+<engineer.repairelectricalroomtext>Denizaltının elektrik odasını bul ve bağlantı kutularını, bir tornavida tutarken onlarla etkileşime geçip Onar tuşuna basarak onar.</engineer.repairelectricalroomtext>
 <engineer.powerupreactor>Reaktör</engineer.powerupreactor>
 <engineer.powerupreactorobjective>Denizaltı reaktörüne güç ver</engineer.powerupreactorobjective>
-<engineer.powerupreactortext>Nükleer reaktörler denizaltlarına ve karakollara güç sağlar. Isı yaratmak için yakıta, çıktıyı kontrol etmek için de bir mürettebat üyesine gereksinim duyar.\n\nBir yakıt çubuğunu sol taraftaki eşya yuvasına sürükle. Birden fazla yakıt çubuğu daha fazla ısı yaratır ama normal şartlarda bir tanesi yeterlidir ve daha fazlası aşırı ısınmaya sebep olabilir.\n\nFüzyon oranını ayarlayarak başla, iğne yeşilin üstünde olmalı, sonra aynısını türbin çıktısına da yap. Yükleme ve çıktı değerlerini sağdan görebilirsin. Çıktıyı, yüklemeye mümkün olduğunca yakın tutmaya çalış. Çıktı daha düşük olduğunda bu güç kesintilerine sebep olur. Daha yüksek olduğunda ise aşırı voltaj ve yangınlara sebep olur.\n\nReaktör operatörü arayüzü terk ettiğinde, otomatik kontrolü açması önerişlir. Şebeke yüklemesindeki değişimlere otomatik olarak da yanıt verebilir ama insan operatöre göre oldukça yavaştır.</engineer.powerupreactortext>
+<engineer.powerupreactortext>Nükleer reaktörler denizaltlarına ve üslere güç sağlar. Isı yaratmak için yakıta, çıktıyı kontrol etmek için de bir mürettebat üyesine gereksinim duyar.\n\nBir yakıt çubuğunu sol taraftaki eşya yuvasına sürükle. Birden fazla yakıt çubuğu daha fazla ısı yaratır ama normal şartlarda bir tanesi yeterlidir ve daha fazlası aşırı ısınmaya sebep olabilir.\n\nFüzyon oranını ayarlayarak başla, iğne yeşilin üstünde olmalı, sonra aynısını türbin çıktısına da yap. Yük ve çıktı değerlerini sağdan görebilirsin. Çıktıyı, yüke mümkün olduğunca yakın tutmaya çalış. Çıktı daha düşük olduğunda bu güç kesintilerine sebep olur. Daha yüksek olduğunda ise aşırı voltaj ve yangınlara sebep olur.\n\nReaktör operatörü arayüzü terk ettiğinde, otomatik kontrolü açması önerilir. Şebeke yükteki değişimlere otomatik olarak da yanıt verebilir ama insan operatöre göre oldukça yavaştır.</engineer.powerupreactortext>
 
 <!-- Security officer tutorial -->
 <!-- Radio -->
@@ -2314,7 +2314,7 @@
 <!-- Room 2 -->
 <officer.equipment>Konteynerlar</officer.equipment>
 <officer.equipmentobjective>Dolaptan ekipmanları al</officer.equipmentobjective>
-<officer.equipmenttext>Eşyalar farklı boyutlardaki konteynırlarda saklanırlar. İçlerinde ne olduğunu ({0}) tuşuyla onlarla etkileşime geçerek görebilirsin. Karakter ve konteynır arasındaki eşyaları sürükleyerek veya iki kere tıklayarak taşıyabilirsin.\n\nKarakterinin envanterindeyken, eşyalar iki kere tıklanarak ya da aynı anlama gelen çabuk tuşa basarak kuşanılabilirler.\n\nArayüzü kapatmak için, {1}'e bas.</officer.equipmenttext>
+<officer.equipmenttext>Eşyalar farklı boyutlardaki konteynerlarda saklanırlar. İçlerinde ne olduğunu ({0}) tuşuyla onlarla etkileşime geçerek görebilirsin. Karakter ve konteyner arasındaki eşyaları sürükleyerek veya iki kere tıklayarak taşıyabilirsin.\n\nKarakterinin envanterindeyken, eşyalar iki kere tıklanarak ya da aynı anlama gelen çabuk tuşa basarak kuşanılabilirler.\n\nArayüzü kapatmak için, {1}'e bas.</officer.equipmenttext>
 <officer.meleeweapon>Yakın saldırı silahları</officer.meleeweapon>
 <officer.meleeweaponobjective>Bir yakın saldırı silahı ve koruyucu teçhizat kuşan</officer.meleeweaponobjective>
 <officer.meleeweapontext>Bir silahı kuşanmak için envanterindeyken ona iki kere tıkla. Silahlar en azından bir tane boş el gerektirir. Giyilebilir ekipmanlar üstüne iki kere tıklanarak veya karakter envanterindeki uygun yuvaya sürüklenerek kuşanılabilir.\n\n{0} tuşuna basılı tutarak silahı hazırla ve  {1} tuşuna basılı tutarak savur.</officer.meleeweapontext>
@@ -2338,8 +2338,8 @@
 <officer.rangedweapontext>Menzilli silahlar da yakın saldırı silahları gibi çalışır, tek farkı menzilli silahların isabet oranı karakterin silah yeteneğine daha bağlıdır. {0} ile nişan alıp {1} ile ateş edebilirsiniz.\n\nBu silahlar ayrıca mühimmat ile doldurulmalıdır. Fare imlecinizini menzilli silahın üstüne getirdiğinizde kaç mermi, zıpkın vs. barındırdığını görebilirsiniz. Silahı doldurmak için yuvalara veya silahın kendisinin üstüne mühimmat bırakın.</officer.rangedweapontext>
 
 <!-- Room 6 -->
-<officer.mudraptor>Mudraptör</officer.mudraptor>
-<officer.mudraptorobjective>Mudraptörü öldür</officer.mudraptorobjective>
+<officer.mudraptor>Çamur Raptörü</officer.mudraptor>
+<officer.mudraptorobjective>Çamur Raptörü öldür</officer.mudraptorobjective>
 <officer.mudraptortext>Mudraptörler, sürünenlerden daha büyük, daha vahiş ve daha zırhlı yaratıklardır. Onları indirmek daha fazla silah gücü gerektirir. Ağızlarına veya karınlarına nişan al ve mesafeni koru.</officer.mudraptortext>
 
 <!-- Submarine -->
@@ -2350,7 +2350,7 @@
 <!-- Medical doctor tutorial -->
 <!-- Radio -->
 <doctor.radio.wakeup>Buraya sıhhiye lazım!</doctor.radio.wakeup>
-<doctor.radio.knockeddown>Bu büyüktü. İyi misin? Hemen pansumanını yap. Buraya sıhhiye gerek.</doctor.radio.knockeddown>
+<doctor.radio.knockeddown>Bu bayağı büyüktü. İyi misin? Hemen pansumanını yap. Buraya sıhhiye gerek.</doctor.radio.knockeddown>
 <doctor.radio.assistantburns>Fena yanıkları var. Yanında bandaj yok, değil mi? Sen gidip biraz bandaj bulurken onların seni takip etmesini sağla.</doctor.radio.assistantburns>
 <doctor.radio.assistantburnshealed>Sanırım bu iş görür. Denizaltına doğru gel, burada kalmak çok tehlikeli.</doctor.radio.assistantburnshealed>
 <doctor.radio.enteredsub>Güzel. Herkes burada. Biz denizaltını yolculuğa hazırlarken herkesi kontrol et.</doctor.radio.enteredsub>
@@ -2358,18 +2358,18 @@
 <!-- Room 3 -->
 <doctor.supplies>Konteynerlar</doctor.supplies>
 <doctor.suppliesobjective>Tıbbi malzemeler bul</doctor.suppliesobjective>
-<doctor.suppliestext>Eşyalar farklı boyutlardaki konteynırlarda saklanırlar. İçlerinde ne olduğunu ({0}) tuşuyla onlarla etkileşime geçerek görebilirsin. Karakter ve konteynır arasındaki eşyaları sürükleyerek veya iki kere tıklayarak taşıyabilirsin.\n\nKarakterinin envanterindeyken, eşyalar iki kere tıklanarak ya da aynı anlama gelen çabuk tuşa basarak kuşanılabilirler.\n\nArayüzü kapatmak için, {1}'e bas.</doctor.suppliestext>
+<doctor.suppliestext>Eşyalar farklı boyutlardaki konteynerlarda saklanırlar. İçlerinde ne olduğunu ({0}) tuşuyla onlarla etkileşime geçerek görebilirsin. Karakter ve konteyner arasındaki eşyaları sürükleyerek veya iki kere tıklayarak taşıyabilirsin.\n\nKarakterinin envanterindeyken, eşyalar iki kere tıklanarak ya da aynı anlama gelen çabuk tuşa basarak kuşanılabilirler.\n\nArayüzü kapatmak için, {1}'e bas.</doctor.suppliestext>
 <doctor.openmedicalinterface>Tıbbi arayüz</doctor.openmedicalinterface>
 <doctor.openmedicalinterfaceobjective>Tıbbi arayüzü aç</doctor.openmedicalinterfaceobjective>
 <doctor.openmedicalinterfacetext>Tıbbi arayüzü açmak için {0} tuşuna bas veya sağlık çubuğuna tıkla.</doctor.openmedicalinterfacetext>
 <doctor.firstaidself>İlk yardım</doctor.firstaidself>
 <doctor.firstaidselfobjective>Yaralarını iyileştir</doctor.firstaidselfobjective>
-<doctor.firstaidselftext>Karakteri etkileyen hastalıklar sol taraftaki listede gösterilir, gerçi bazı hastalıklar çeşitli eklemlere özel olabilir. Farklı eklemleri, üstlerine tıklayarak kontrol edebilirsin.\n\nBir hastalığı iyileştirmek için tıbbi bir eşyayı vurgulanan noktaya sürükle. Önerilen eşyalar arayüzde gösterilir ama dikkatli olmalısın çünkü bazı karakterlerin tıbbi yetenekleri doğru tedaviyi uygulamak için yeterli olmayabilir. Şu an hafif bir iç hasar almış durumdasın. Bu tür bir hastalığı iyileştirmenin en iyi yolu morfin almaktır.</doctor.firstaidselftext>
+<doctor.firstaidselftext>Karakteri etkileyen hastalıklar sol taraftaki listede gösterilir, gerçi bazı hastalıklar çeşitli uzuvlara özel olabilir. Farklı uzuvları, üstlerine tıklayarak kontrol edebilirsin.\n\nBir hastalığı iyileştirmek için tıbbi bir eşyayı vurgulanan noktaya sürükle. Önerilen eşyalar arayüzde gösterilir ama dikkatli olmalısın çünkü bazı karakterlerin tıbbi yetenekleri doğru tedaviyi uygulamak için yeterli olmayabilir. Şu an hafif bir iç hasar almış durumdasın. Bu tür bir hastalığı iyileştirmenin en iyi yolu morfin almaktır.</doctor.firstaidselftext>
 
 <!-- Room 4 -->
 <doctor.medbay>Emir vermek</doctor.medbay>
 <doctor.medbayobjective>Mürettebat üyesini revire götür</doctor.medbayobjective>
-<doctor.medbaytext>Bazen o an tedavi edemeyeceğin bazı hastalıklarla karşılaşacaksın. Bu durumlarda hastadan seni revire kadar takip etmesini istemen gerekir, orada onları tedavi edecek daha fazla malzeme bulabilirsin.\n\nSöz konusu karakteri, soldaki mürettebat listesindenbulabilirsin. Daha sonra Takip Et butonuna bas. Karakter artık sen yine aynı butona basıp bırakmasını isteyene dek seni takip edecektir.\n\nTakip Et emri, diğer karakterlere verebileceğin birçok emirden sadece bir tanesidir. Oynarken diğer emirleri de dene!</doctor.medbaytext>
+<doctor.medbaytext>Bazen o an tedavi edemeyeceğin bazı hastalıklarla karşılaşacaksın. Bu durumlarda hastadan seni revire kadar takip etmesini istemen gerekir, orada onları tedavi edecek daha fazla malzeme bulabilirsin.\n\nSöz konusu karakteri, soldaki mürettebat listesinden bulabilirsin. Daha sonra Takip Et butonuna bas. Karakter artık sen yine aynı butona basıp bırakmasını isteyene dek seni takip edecektir.\n\nTakip Et emri, diğer karakterlere verebileceğin birçok emirden sadece bir tanesidir. Oynarken diğer emirleri de dene!</doctor.medbaytext>
 
 <!-- Room 5 -->
 <doctor.treatburns>Yanık tedavisi</doctor.treatburns>
@@ -2408,13 +2408,13 @@
 <captain.commandengineertext>Birine reaktörü yönetmesini emretmek için emir arayüzünü açarak Reaktörü Yöneti seç, sonra Güç ver. Karakter reaktörle ilgilenecektir.</captain.commandengineertext>
 <captain.undock>Kenetlenmeyi açma</captain.undock>
 <captain.undockobjective>İstasyona kenetlenmeyi bırak</captain.undockobjective>
-<captain.undocktext>Harekete geçmek için, denizaltını karakoldan ayırmalısın. Navigasyon konsoluna gidip Kenetlenme açıp kapatma tuşuna basarak bunu yapabilirsin.</captain.undocktext>
+<captain.undocktext>Harekete geçmek için, denizaltını üsten ayırmalısın. Navigasyon konsoluna gidip Kenetlenme açıp kapatma tuşuna basarak bunu yapabilirsin.</captain.undocktext>
 <captain.navigate>Navigasyon</captain.navigate>
 <captain.navigateobjective>Hedef noktasına git</captain.navigateobjective>
 <captain.navigatetext>Sonar göstergesine tıklayarak denizaltı için bir rota çiz. Navigasyon terminali safrayı ve motorun gücünü uygun şekilde, otomatik olarak ayarlayacaktır.\n\nDenizaltının gittiği yeri görmek için aktif sonarı aç. Bunu göstergenin yanındaki sonar ayarlarını bulup pasiften aktife geçirerek yap.\n\nDikkatlice hareket et. Denizaltı ne kadar hızlı giderse yavaşlatması da o kadar zor olur. Mağara duvarlarına çarpmak karinana hasar verir ve sızıntılara sebep olur. Öğretme amacıyla, bu denizaltı karina çatlaklarına karşı korunacaktır.</captain.navigatetext>
 <captain.dock>Kenetlenme</captain.dock>
-<captain.dockobjective>Hedeflenen karakola kenetlen</captain.dockobjective>
-<captain.docktext>Denizaltını kenetlemek için gemiyi karakolun kenetlenme limanlarına yeterince yaklaştırın ve daha sonra kenetlenme  kıskaçlarına basın. Limanlar, sonar göstergesinde yeşil görünür.\n\nLimanlar birbirine yeterince yaklaşınca sonar göstergesinde bir şerit çıkar, bunu avantakına kulan. Şerit tamamen yeşil olduğunda kıskaçları kenetlenmeyi açıp kapatmaya basarak kapat. Denizaltı pozisyona kenetlenmiş olacak ve kıskaçlar tuttuğu sürece de kenetlenme kapağı açık olacak.\n\nDenizaltını kenetlenme için hareket ettirirken ani hareketler hedefini kaçırmana sebep olabilir. Yavaşça hareket et ve karakola çarpmamaya dikkat et. Otopilot kullanarak pozisyonunu koruyu seçmek denizaltını getirmek istediğin pozisyona getirmek için önemlidir.</captain.docktext>
+<captain.dockobjective>Hedeflenen üsse kenetlen</captain.dockobjective>
+<captain.docktext>Denizaltını kenetlemek için gemiyi üssün kenetlenme limanlarına yeterince yaklaştırın ve daha sonra kenetlenme  kıskaçlarına basın. Limanlar, sonar göstergesinde yeşil görünür.\n\nLimanlar birbirine yeterince yaklaşınca sonar göstergesinde bir şerit çıkar, bunu avantakına kulan. Şerit tamamen yeşil olduğunda kıskaçları kenetlenmeyi açıp kapatmaya basarak kapat. Denizaltı pozisyona kenetlenmiş olacak ve kıskaçlar tuttuğu sürece de kenetlenme kapağı açık olacak.\n\nDenizaltını kenetlenme için hareket ettirirken ani hareketler hedefini kaçırmana sebep olabilir. Yavaşça hareket et ve üsse çarpmamaya dikkat et. Otopilot kullanarak pozisyonunu koruyu seçmek denizaltını getirmek istediğin pozisyona getirmek için önemlidir.</captain.docktext>
 
 <!-- Karma system -->
 <karma>Karma</karma>
@@ -2430,7 +2430,7 @@
 <campaigndisclaimertitle>Barotrauma'ya hoş geldin!</campaigndisclaimertitle>
 <campaigndisclaimertext>Lütfen Barotrauma'nın hâlâ Erken Erişim'de olduğunu unutma, yani oyunun birçok kısmı tamamlanmamış durumda ve üstünde çalışılıyor.\n\nMücadele Modunda tam versiyon için planladığımız birçok özellik henüz bulunmuyor, bu yüzden çok oyunculu oynamak kadar zevkli değil. Mevcut versiyonda, oyunu tek başına oynamak yeni oyuncular için diğer oyuncularla birlikte oynamaktan daha zor olabilir. Yapay Zekâ mürettebatı sana bazı görevler verecek olsa da genelde gerçek insan oyuncular kadar işe yarar olmayacaklar. Sonraki güncellemelerde neler geleceğini merak ediyorsan aşağıdaki Mücadele Yol Haritası butonuna tıklayabilirsin.\n\nAma çok oyunculuya girmeden önce en azından tek oyunculu modunun öğretici modunu oynamanı öneririz. İyi şanslar, denizci!</campaigndisclaimertext>
 <campaignroadmaptitle>Mücadele Yol Haritası</campaignroadmaptitle>
-<campaignroadmaptext>- Şu an mücadele haritasındaki konumlar sadece malzeme satın alabileceğin ve yeni mürettebat üyeleri kiralayabileceğin menülerden ibaret durumda ama Erken Erişim süreci boyunca daha fazla gerçek fiziksel konumlar olacak ve oraları girip keşfedebileceksin.\n\n- Genişletilmiş hikâye: Barotrauma dünyası hakkında daha fazla bilgiyi NPC'lerle iletişime geçerek ve karakolları keşfederek, insan yapımı olmayan konumlara giderek öğrenebilecek ve bunlarla etkileşime geçebileceksin.\n\n- Yeni görev tipleri: Birkaç yepyeni görev tipiyle ilgili planlarımız var, bunlara personel taşıma görevleri ve gemi enkazlarını yağmalama görevleri de dâhil.\n\n- Dengeleme: Şu an mücadele ekonomisi çok iyi dengelenmiş durumda değil ama daha fazla içerik ekledikçe bununla da ilgileneceğiz.\n\n- Nihai hedef: Şu an mücadeleyi tamamlamak mümkün değil ama ileriki versiyonlarda haritanın ortasındaki gizemli bir konum erişilebilir olacak...</campaignroadmaptext>
+<campaignroadmaptext>- Şu an mücadele haritasındaki konumlar sadece malzeme satın alabileceğin ve yeni mürettebat üyeleri kiralayabileceğin menülerden ibaret durumda ama Erken Erişim süreci boyunca daha fazla gerçek fiziksel konumlar olacak ve oraları girip keşfedebileceksin.\n\n- Genişletilmiş hikâye: Barotrauma dünyası hakkında daha fazla bilgiyi NPC'lerle iletişime geçerek ve üsleri keşfederek, insan yapımı olmayan konumlara giderek öğrenebilecek ve bunlarla etkileşime geçebileceksin.\n\n- Yeni görev tipleri: Birkaç yepyeni görev tipiyle ilgili planlarımız var, bunlara personel taşıma görevleri ve gemi enkazlarını yağmalama görevleri de dâhil.\n\n- Dengeleme: Şu an mücadele ekonomisi çok iyi dengelenmiş durumda değil ama daha fazla içerik ekledikçe bununla da ilgileneceğiz.\n\n- Nihai hedef: Şu an mücadeleyi tamamlamak mümkün değil ama ileriki versiyonlarda haritanın ortasındaki gizemli bir konum erişilebilir olacak...</campaignroadmaptext>
 <editordisclaimertitle>Editörler</editordisclaimertitle>
 <editordisclaimertext>Denizaltı ve karakter editörleri, oyunun çekirdeiğini kendi denizaltılarınızı ve yaratıklarınızı yaratarak genişletmenizi sağlayan modlama aletleridir. Özel yaratımlar Steam Atölyesi'nde paylaşılabilir.\n\nŞu an editörler sadece İngilizce dilinde mevcuttur.  Tamamen oynanabilir bir denizaltı yapma ya da işlevsel bir canavar yapma çok zorlu olabilir ve maalesef editörler için henüz oyun içi öğreticiler veya dokümanlar sunamıyoruz. Kendi özel içeriğinizi editörlerle yaratmayı denemek istiyorsanız, şu linklerden yardım alabilirsiniz:</editordisclaimertext>
 <editordisclaimerwikilink>Barotrauma Wiki</editordisclaimerwikilink>
@@ -2730,8 +2730,8 @@
 <entitydescription.huskstinger>El yapımı bir bıçaklama aleti.</entitydescription.huskstinger>
 <entityname.shellshield>Molek Kabuk Parçası</entityname.shellshield>
 <entitydescription.shellshield>Molek kabuğundan sağlam bir parça.</entitydescription.shellshield>
-<entityname.mudraptorshell>Mudraptör Kabuğu</entityname.mudraptorshell>
-<entitydescription.mudraptorshell>Mudraptörün koruyucu kabuğu.</entitydescription.mudraptorshell>
+<entityname.mudraptorshell>Çamur Raptör kabuğu</entityname.mudraptorshell>
+<entitydescription.mudraptorshell>Çamur raptörün koruyucu kabuğu.</entitydescription.mudraptorshell>
 <entityname.accordion>Akordeon</entityname.accordion>
 <entitydescription.accordion>Eski bir el yapımı akordeon</entitydescription.accordion>
 <entityname.bongodrums>Bango Davullar</entityname.bongodrums>
@@ -2878,7 +2878,7 @@
 <flood_1_goalinfotext_3>Denizaltındaki çelik depo dolaplarını ara ve fünyeyi al.</flood_1_goalinfotext_3>
 <flood_1_objectivesuccessmessage3>Ajan sahiden başardı! Buradaki partiyi başlatmak için her şeyin hazır.</flood_1_objectivesuccessmessage3>
 <flood_1_traitorobjectivestartmessage4>Fünyeyi duvarda iyi bir noktaya koyman gerekecek, butona güvenli bir noktadan bas, ikisini birbirine bağla, sonra burayı cehenneme çevir!\n[traitorgoalinfos]</flood_1_traitorobjectivestartmessage4>
-<flood_1_objectivesuccessmessage4>DÜT DÜT! Şu an bu denizaltında, bu görevi erkenden bitirecek kadar fazla su var. En yakın karakola yüzerek boyalı adama rapor vermenin ne kadar süreceğini düşünüyorsun…</flood_1_objectivesuccessmessage4>
+<flood_1_objectivesuccessmessage4>DÜT DÜT! Şu an bu denizaltında, bu görevi erkenden bitirecek kadar fazla su var. En yakın üsse yüzerek boyalı adama rapor vermenin ne kadar süreceğini düşünüyorsun…</flood_1_objectivesuccessmessage4>
 
 <!-- flood_2 traitor mission text package -->
 <flood_2_traitormissionstartinfotext>Sinsice etrafı kesiyorsun, kimsenin sana bakmadığını fark ediyorsun. Bu da olayı başlatmak için mükemmel bir an olarak görünüyor.</flood_2_traitormissionstartinfotext>
