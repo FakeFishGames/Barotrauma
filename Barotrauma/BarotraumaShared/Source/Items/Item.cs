@@ -2208,6 +2208,7 @@ namespace Barotrauma
             SerializableProperties = SerializableProperty.DeserializeProperties(this, Prefab.ConfigElement);
             Sprite.ReloadXML();
             SpriteDepth = Sprite.Depth;
+            condition = Prefab.Health;
             components.ForEach(c => c.Reset());
         }
 
