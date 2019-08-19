@@ -130,10 +130,19 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific(XElement element);
         
-        public void StartRepairing(Character character, FixActions action)
+        public bool StartRepairing(Character character, FixActions action)
         {
-            CurrentFixer = character;
-            CurrentFixerAction = action;
+            if (character == null || character.IsDead || action == FixActions.None)
+            {
+                DebugConsole.ThrowError("Invalid repair command!");
+                return false;
+            }
+            else
+            {
+                CurrentFixer = character;
+                CurrentFixerAction = action;
+                return true;
+            }
         }
 
         public bool StopRepairing(Character character)
