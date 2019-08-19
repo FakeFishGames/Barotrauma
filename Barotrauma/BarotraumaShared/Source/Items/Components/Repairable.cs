@@ -210,7 +210,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            if (currentFixer != null && (currentFixer.SelectedConstruction != item || !currentFixer.CanInteractWith(item)))
+            if (currentFixer != null && (currentFixer.SelectedConstruction != item || !currentFixer.CanInteractWith(item) || currentFixer.IsDead))
             {
                 StopRepairing(currentFixer);
                 return;
