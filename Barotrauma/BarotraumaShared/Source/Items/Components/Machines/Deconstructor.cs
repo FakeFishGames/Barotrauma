@@ -198,6 +198,7 @@ namespace Barotrauma.Items.Components
             if (inputContainer.Inventory.Items.All(i => i == null)) { active = false; }
 
             IsActive = active;
+            currPowerConsumption = IsActive ? powerConsumption : 0.0f;
 
 #if SERVER
             if (user != null)

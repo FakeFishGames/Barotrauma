@@ -139,7 +139,6 @@ namespace Barotrauma
                 Traitors.Clear();
                 foreach (var role in traitorRoles)
                 {
-
                     int traitorIndex = Random(traitorCandidates.Count);
                     Character traitorCharacter = traitorCandidates[traitorIndex];
                     traitorCandidates.Remove(traitorCharacter);
@@ -150,6 +149,7 @@ namespace Barotrauma
                 Update(0.0f);
                 foreach (var traitor in Traitors.Values)
                 {
+                    if (traitor.CurrentObjective == null) { continue; }
                     traitor.Greet(server, CodeWords, CodeResponse);
                 }
 #if SERVER
