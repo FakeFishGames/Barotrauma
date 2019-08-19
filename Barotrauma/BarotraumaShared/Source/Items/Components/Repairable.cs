@@ -82,7 +82,7 @@ namespace Barotrauma.Items.Components
         public Character CurrentFixer
         {
             get { return currentFixer; }
-            set
+            private set
             {
                 if (currentFixer == value) return;
                 if (value != null && currentFixer != null && !currentFixer.IsDead) return;
@@ -134,6 +134,24 @@ namespace Barotrauma.Items.Components
         {
             CurrentFixer = character;
             CurrentFixerAction = action;
+        }
+
+        public bool StopRepairing(Character character)
+        {
+            if (CurrentFixer == character)
+            {
+                currentFixer.AnimController.Anim = AnimController.Animation.None;
+                currentFixer = null;
+                currentFixerAction = FixActions.None;
+#if SERVER
+                item.CreateServerEvent(this);
+#endif
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         public override void UpdateBroken(float deltaTime, Camera cam)
@@ -194,12 +212,7 @@ namespace Barotrauma.Items.Components
 
             if (currentFixer != null && (currentFixer.SelectedConstruction != item || !currentFixer.CanInteractWith(item)))
             {
-                currentFixer.AnimController.Anim = AnimController.Animation.None;
-                currentFixer = null;
-                currentFixerAction = FixActions.None;
-#if SERVER
-                item.CreateServerEvent(this);
-#endif
+                StopRepairing(currentFixer);
                 return;
             }
 

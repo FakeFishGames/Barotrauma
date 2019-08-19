@@ -149,7 +149,14 @@ namespace Barotrauma
                             character?.Speak(TextManager.GetWithVariable("DialogCannotRepair", "[itemname]", Item.Name, true), null, 0.0f, "cannotrepair", 10.0f);
                         }
                     }
-                    repairable.CurrentFixer = abandon && repairable.CurrentFixer == character ? null : character;
+                    if (abandon)
+                    {
+                        repairable.StopRepairing(character);
+                    }
+                    else
+                    {
+                        repairable.StartRepairing(character, Repairable.FixActions.Repair);
+                    }
                     break;
                 }
             }
