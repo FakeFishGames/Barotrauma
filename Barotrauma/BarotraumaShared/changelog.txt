@@ -8,11 +8,15 @@ v0.9.2.1
 - Fixed round summary and traitorlist command displaying incorrect traitor mission info.
 - Fixed inability to end the round if there's an active traitor mission but no traitors assigned.
 - Disabled traitors in campaign mode.
+- Fixed server crashing when attempting to greet a traitor with no objective.
+- Fixed dead characters being occasionally selected as traitors.
+- Fixed info menu still displaying the old traitor objective after a traitor dies and respawns.
 - Allow traitors to re-use the sabotage button when someone starts to repair the device without having 
 to re-open the interface.
 - Fixed grenades exploding multiple times when triggered using a detonator.
 - Scaled down alien materials (oxygenite, sulphurite, fulgurium, etc) and fixed their collider sizes.
 - Karma doesn't spontaneously decay/increase when dead.
+- Increased karma penalties for poisoning someone.
 - Option to kick clients with low karma from the server and ban them if they get kicked more than x times.
 - Space herpes randomly toggles inverted controls on/off to make it more difficult to bypass the effect 
 by modifying keybinds.
@@ -24,9 +28,12 @@ sub and then saving the copy.
 to send a private message to a non-existent client.
 - Enable dynamic range compression and VOIP attenuation by default.
 - Fixed inability to extinguish fires through holes in walls.
-- Fixed some texts not fitting on the submarine's wall labels in Spanish.
+- Fixed some texts not fitting on the submarine's wall labels in Spanish and Polish.
+- Fixed "Broken English" character trait not being translated.
 - Fixed missing "undock" text in the navigation terminal interface.
 - Fixed some of the items in Berilia and Bunyip being impossible to pick up.
+- Fixed crashing when less than 3 arguments are passed to the "color" console command.
+- Fixed crashing when attempting to rewire two linked devices at the same time.
 
 ---------------------------------------------------------------------------------------------------------
 v0.9.2.0
