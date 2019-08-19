@@ -1419,13 +1419,11 @@
   <missionheader0.killhammerhead>Target terminated</missionheader0.killhammerhead>
   <missionmessage0.killhammerhead>The Hammerhead is dead. Navigate the submarine out of the cavern to claim the reward.</missionmessage0.killhammerhead>
   <missionname.killcrawlerswarm1>Terminate a Swarm</missionname.killcrawlerswarm1>
-  <missiondescription.killcrawlerswarm1>A small swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew that can neutralize it.</missiondescription.killcrawlerswarm1>
   <missionsonarlabel.killcrawlerswarm1>Swarm</missionsonarlabel.killcrawlerswarm1>
   <missionsuccess.killcrawlerswarm1>The swarm has been terminated.</missionsuccess.killcrawlerswarm1>
   <missionheader0.killcrawlerswarm1>Target terminated</missionheader0.killcrawlerswarm1>
   <missionmessage0.killcrawlerswarm1>The swarm is terminated. Navigate the submarine out of the cavern to claim the reward.</missionmessage0.killcrawlerswarm1>
   <missionname.killcrawlerswarm2>Terminate a Swarm</missionname.killcrawlerswarm2>
-  <missiondescription.killcrawlerswarm2>A large swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew that can neutralize it.</missiondescription.killcrawlerswarm2>
   <missionsonarlabel.killcrawlerswarm2>Swarm</missionsonarlabel.killcrawlerswarm2>
   <missionsuccess.killcrawlerswarm2>The swarm has been terminated.</missionsuccess.killcrawlerswarm2>
   <missionheader0.killcrawlerswarm2>Target terminated</missionheader0.killcrawlerswarm2>
@@ -3453,5 +3451,6 @@
   <traitorgoaldestroyitems>Dispose of at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>
   <karma.kickbanthreshold>Kick/Ban threshold</karma.kickbanthreshold>
   <karma.kickbanthresholdtooltip>The players whose karma decrease below this threshold get automatically kicked and/or banned from the server (depending on the kick/ban settings below).</karma.kickbanthresholdtooltip>
-
+  <missiondescription.killcrawlerswarm1>A small swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew that can neutralize it.</missiondescription.killcrawlerswarm1>
+  <missiondescription.killcrawlerswarm2>A large swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew that can neutralize it.</missiondescription.killcrawlerswarm2>
 </infotexts>
