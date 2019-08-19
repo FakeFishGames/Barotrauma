@@ -2604,6 +2604,7 @@ namespace Barotrauma
             {
                 if (selectedItems[i] != null) selectedItems[i].Drop(this);            
             }
+            SelectedConstruction = null;
             
             AnimController.ResetPullJoints();
 
