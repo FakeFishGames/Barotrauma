@@ -19,7 +19,7 @@ namespace Barotrauma
 
         private static string[,] translatedLanguageNames = new string[11, 2] { { "English", "English" }, { "French", "Français" }, { "German", "Deutsch" }, 
             { "Russian", "Русский" }, { "Brazilian Portuguese", "Português brasileiro" }, { "Simplified Chinese", "中文(简体)" }, { "Traditional Chinese", "中文(繁體)" },
-            { "CastilianSpanish", "Castellano" }, { "LatinamericanSpanish", "Español Latinoamericano" }, { "Polish", "Polski" }, { "Turkish", "Türkçe" } };
+            { "Castilian Spanish", "Castellano" }, { "Latinamerican Spanish", "Español Latinoamericano" }, { "Polish", "Polski" }, { "Turkish", "Türkçe" } };
 
         public static void Convert()
         {
