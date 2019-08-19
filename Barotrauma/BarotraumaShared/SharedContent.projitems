@@ -28,6 +28,10 @@
     <Folder Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\Captain\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\Medic\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\Security\" />
+    <Folder Include="$(MSBuildThisFileDirectory)Content\Texts\LatinamericanSpanish\" />
+    <Folder Include="$(MSBuildThisFileDirectory)Content\Texts\CastilianSpanish\" />
+    <Folder Include="$(MSBuildThisFileDirectory)Content\Texts\Polish\" />
+    <Folder Include="$(MSBuildThisFileDirectory)Content\Texts\Turkish\" />
     <Folder Include="$(MSBuildThisFileDirectory)Data\Saves\" />
   </ItemGroup>
   <ItemGroup>

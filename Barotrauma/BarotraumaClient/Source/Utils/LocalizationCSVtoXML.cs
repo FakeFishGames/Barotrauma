@@ -17,8 +17,9 @@ namespace Barotrauma
         private const string infoTextPath = "Content/Texts";
         private const string xmlHeader = "<?xml version=\"1.0\" encoding=\"utf-8\"?>";
 
-        private static string[,] translatedLanguageNames = new string[7, 2] { { "English", "English" }, { "French", "Français" }, { "German", "Deutsch" }, 
-            { "Russian", "Русский" }, { "Brazilian Portuguese", "Português brasileiro" }, { "Simplified Chinese", "中文(简体)" }, { "Traditional Chinese", "中文(繁體)" } };
+        private static string[,] translatedLanguageNames = new string[11, 2] { { "English", "English" }, { "French", "Français" }, { "German", "Deutsch" }, 
+            { "Russian", "Русский" }, { "Brazilian Portuguese", "Português brasileiro" }, { "Simplified Chinese", "中文(简体)" }, { "Traditional Chinese", "中文(繁體)" },
+            { "CastilianSpanish", "Castellano" }, { "LatinamericanSpanish", "Español Latinoamericano" }, { "Polish", "Polski" }, { "Turkish", "Türkçe" } };
 
         public static void Convert()
         {
@@ -31,19 +32,43 @@ namespace Barotrauma
             List<string> conversationFiles = new List<string>();
             List<string> infoTextFiles = new List<string>();
             
-            for (int i = 0; i < translatedLanguageNames.GetUpperBound(0); i++)
+            for (int i = 0; i < translatedLanguageNames.GetUpperBound(0) + 1; i++)
             {
                 string language = translatedLanguageNames[i, 0];
                 string languageNoWhitespace = language.RemoveWhitespace();
 
-                foreach (string filePath in Directory.GetFiles(conversationsPath + $"/{languageNoWhitespace}", "*.csv", SearchOption.AllDirectories))
+                if (Directory.Exists(conversationsPath + $"/{languageNoWhitespace}"))
                 {
-                    conversationFiles.Add(filePath);
+                    string[] conversationFileArray = Directory.GetFiles(conversationsPath + $"/{languageNoWhitespace}", "*.csv", SearchOption.AllDirectories);
+
+                    if (conversationFileArray != null)
+                    {
+                        foreach (string filePath in conversationFileArray)
+                        {
+                            conversationFiles.Add(filePath);
+                        }
+                    }
+                }
+                else
+                {
+                    DebugConsole.ThrowError("Directory at: " + conversationsPath + $"/{languageNoWhitespace} does not exist!");
                 }
 
-                foreach (string filePath in Directory.GetFiles(infoTextPath + $"/{languageNoWhitespace}", "*.csv", SearchOption.AllDirectories))
+                if (Directory.Exists(infoTextPath + $"/{languageNoWhitespace}"))
                 {
-                    infoTextFiles.Add(filePath);
+                    string[] infoTextFileArray = Directory.GetFiles(infoTextPath + $"/{languageNoWhitespace}", "*.csv", SearchOption.AllDirectories);
+
+                    if (infoTextFileArray != null)
+                    {
+                        foreach (string filePath in infoTextFileArray)
+                        {
+                            infoTextFiles.Add(filePath);
+                        }
+                    }
+                }
+                else
+                {
+                    DebugConsole.ThrowError("Directory at: " + infoTextPath + $"/{languageNoWhitespace} does not exist!");
                 }
 
                 for (int j = 0; j < conversationFiles.Count; j++)
