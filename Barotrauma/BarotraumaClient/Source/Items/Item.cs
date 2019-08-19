@@ -781,7 +781,7 @@ namespace Barotrauma
                 {
                     if (ic is Repairable repairable)
                     {
-                        if (Condition < repairable.ShowRepairUIThreshold)
+                        if (ConditionPercentage < repairable.ShowRepairUIThreshold)
                         {
                             color = Color.Cyan;
                         }

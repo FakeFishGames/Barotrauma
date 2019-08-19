@@ -62,7 +62,7 @@
         <StatusEffect type="OnContaining" target="This" AvailableFuel="100.0" disabledeltatime="true" />
       </Containable>
     </ItemContainer>
-    <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="0.125" mindeteriorationdelay="120" maxdeteriorationdelay="720" MinDeteriorationCondition="10" ShowRepairUIThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWrench" hudpriority="10">
+    <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="0.125" mindeteriorationdelay="120" maxdeteriorationdelay="720" MinDeteriorationCondition="10" minsabotagecondition="10" ShowRepairUIThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="30" />
       <RequiredItem identifier="wrench" type="equipped" />

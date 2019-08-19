@@ -42,14 +42,21 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Serialize(50.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, ToolTip = "The item won't deteriorate spontaneously if the condition is below this value. For example, if set to 10, the condition will spontaneously drop to 10 and then stop dropping (unless the item is damaged further by external factors).")]
+        [Serialize(50.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, ToolTip = "The item won't deteriorate spontaneously if the condition is below this value. For example, if set to 10, the condition will spontaneously drop to 10 and then stop dropping (unless the item is damaged further by external factors). Percentages of max condition.")]
         public float MinDeteriorationCondition
         {
             get;
             set;
         }
 
-        [Serialize(80.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, ToolTip = "The condition of the item has to be below this before the repair UI becomes usable.")]
+        [Serialize(0f, true)]
+        public float MinSabotageCondition
+        {
+            get;
+            set;
+        }
+
+        [Serialize(80.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, ToolTip = "The condition of the item has to be below this before the repair UI becomes usable. Percentages of max condition.")]
         public float ShowRepairUIThreshold
         {
             get;
@@ -196,7 +203,7 @@ namespace Barotrauma.Items.Components
                         return;
                     }
 
-                    if (item.Condition > MinDeteriorationCondition)
+                    if (item.ConditionPercentage > MinDeteriorationCondition)
                     {
                         item.Condition -= DeteriorationSpeed * deltaTime;
                     }
@@ -217,11 +224,11 @@ namespace Barotrauma.Items.Components
             float successFactor = requiredSkills.Count == 0 ? 1.0f : 0.0f;
             
             //item must have been below the repair threshold for the player to get an achievement or XP for repairing it
-            if (item.Condition < ShowRepairUIThreshold)
+            if (item.ConditionPercentage < ShowRepairUIThreshold)
             {
                 wasBroken = true;
             }
-            if (item.Condition > MinDeteriorationCondition)
+            if (item.ConditionPercentage > MinSabotageCondition)
             {
                 wasGoodCondition = true;
             }
@@ -265,7 +272,7 @@ namespace Barotrauma.Items.Components
             {
                 if (fixDuration <= 0.0f)
                 {
-                    item.Condition = MinDeteriorationCondition;
+                    item.Condition = item.MaxCondition * (MinSabotageCondition / 100);
                 }
                 else
                 {
@@ -273,7 +280,7 @@ namespace Barotrauma.Items.Components
                     item.Condition -= conditionDecrease;
                 }
 
-                if (item.Condition <= MinDeteriorationCondition)
+                if (item.ConditionPercentage <= MinSabotageCondition)
                 {
                     if (wasGoodCondition)
                     {
@@ -288,7 +295,7 @@ namespace Barotrauma.Items.Components
                         deteriorationTimer = 0.0f;
                         deteriorateAlwaysResetTimer = item.Condition / DeteriorationSpeed;
                         DeteriorateAlways = true;
-                        item.Condition = MinDeteriorationCondition;
+                        item.Condition = item.MaxCondition * (MinSabotageCondition / 100);
                         wasGoodCondition = false;
                     }
                     StopRepairing(CurrentFixer);

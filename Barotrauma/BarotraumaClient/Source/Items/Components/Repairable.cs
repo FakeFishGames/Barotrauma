@@ -46,7 +46,7 @@ namespace Barotrauma.Items.Components
         public override bool ShouldDrawHUD(Character character)
         {
             if (!HasRequiredItems(character, false) || character.SelectedConstruction != item) return false;
-            return item.Condition < ShowRepairUIThreshold || character.IsTraitor && item.Condition > MinDeteriorationCondition || (CurrentFixer == character && (!item.IsFullCondition || (character.IsTraitor && item.Condition > MinDeteriorationCondition)));
+            return item.ConditionPercentage < ShowRepairUIThreshold || character.IsTraitor && item.ConditionPercentage > MinSabotageCondition || (CurrentFixer == character && (!item.IsFullCondition || (character.IsTraitor && item.ConditionPercentage > MinSabotageCondition)));
         }
 
         partial void InitProjSpecific(XElement element)
@@ -149,13 +149,13 @@ namespace Barotrauma.Items.Components
             progressBar.BarSize = item.Condition / item.MaxCondition;
             progressBar.Color = ToolBox.GradientLerp(progressBar.BarSize, Color.Red, Color.Orange, Color.Green);
 
-            repairButton.Enabled = (currentFixerAction == FixActions.None || (CurrentFixer == character && currentFixerAction != FixActions.Repair)) && item.Condition <= ShowRepairUIThreshold;
+            repairButton.Enabled = (currentFixerAction == FixActions.None || (CurrentFixer == character && currentFixerAction != FixActions.Repair)) && item.ConditionPercentage <= ShowRepairUIThreshold;
             repairButton.Text = (currentFixerAction == FixActions.None || CurrentFixer != character || currentFixerAction != FixActions.Repair) ? 
                 repairButtonText : 
                 repairingText + new string('.', ((int)(Timing.TotalTime * 2.0f) % 3) + 1);
 
             sabotageButton.Visible = character.IsTraitor;
-            sabotageButton.Enabled = (currentFixerAction == FixActions.None || (CurrentFixer == character && currentFixerAction != FixActions.Sabotage)) && character.IsTraitor && item.Condition > MinDeteriorationCondition;
+            sabotageButton.Enabled = (currentFixerAction == FixActions.None || (CurrentFixer == character && currentFixerAction != FixActions.Sabotage)) && character.IsTraitor && item.ConditionPercentage > MinSabotageCondition;
             sabotageButton.Text = (currentFixerAction == FixActions.None || CurrentFixer != character || currentFixerAction != FixActions.Sabotage || !character.IsTraitor) ?
                 sabotageButtonText :
                 sabotagingText + new string('.', ((int)(Timing.TotalTime * 2.0f) % 3) + 1);
