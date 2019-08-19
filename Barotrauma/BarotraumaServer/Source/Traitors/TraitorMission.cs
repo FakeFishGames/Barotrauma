@@ -21,6 +21,9 @@ namespace Barotrauma
             // All traitor related functionality should use the following interface for generating random values
             public static int Random(int n) => random.Next(n);
 
+            // All traitor related functionality should use the following interface for generating random values
+            public static double RandomDouble() => random.NextDouble();
+
             private static string wordsTxt = Path.Combine("Content", "CodeWords.txt");
 
             private readonly List<Objective> allObjectives = new List<Objective>();
