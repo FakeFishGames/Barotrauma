@@ -105,10 +105,10 @@ namespace Barotrauma
                 return pendingObjectives.Count > 0 ? pendingObjectives[0] : null;
             }
 
-            public virtual bool Start(GameServer server, params string[] traitorRoles)
+            public virtual bool Start(GameServer server, TraitorManager traitorManager, params string[] traitorRoles)
             {
                 List<Character> characters = new List<Character>(); //ANYONE can be a target.
-                List<Character> traitorCandidates = new List<Character>(); //Keep this to not re-pick traitors twice
+                List<Tuple<Client, Character>> traitorCandidates = new List<Tuple<Client,Character>>(); //Keep this to not re-pick traitors twice
 
                 foreach (var character in Character.CharacterList)
                 {
@@ -122,7 +122,7 @@ namespace Barotrauma
                 else
 #endif
                 {
-                    traitorCandidates.AddRange(server.ConnectedClients.FindAll(c => c.Character != null && !c.Character.IsDead).ConvertAll(client => client.Character));
+                    traitorCandidates.AddRange(server.ConnectedClients.FindAll(c => c.Character != null && !c.Character.IsDead).ConvertAll(client => Tuple.Create(client, client.Character)));
                 }
                 if (traitorCandidates.Count <= 0)
                 {
@@ -139,11 +139,16 @@ namespace Barotrauma
                 Traitors.Clear();
                 foreach (var role in traitorRoles)
                 {
-                    int traitorIndex = Random(traitorCandidates.Count);
-                    Character traitorCharacter = traitorCandidates[traitorIndex];
-                    traitorCandidates.Remove(traitorCharacter);
+                    var candidate = ListUtils.WeightedRandom(traitorCandidates, Random, t =>
+                    {
+                        return traitorManager.GetTraitorCount(server.FindPreviousClientData(t.Item1) ?? Tuple.Create(t.Item1.SteamID, t.Item1.Connection?.EndPointString ?? ""));
+                    }, (t, c) =>
+                    {
+                        traitorManager.SetTraitorCount(Tuple.Create(t.Item1.SteamID, t.Item1.Connection?.EndPointString ?? ""), c);
+                    }, 2, 3);  
+                    traitorCandidates.Remove(candidate);
 
-                    var traitor = new Traitor(this, role, traitorCharacter);
+                    var traitor = new Traitor(this, role, candidate.Item2);
                     Traitors.Add(role, traitor);
                 }
                 Update(0.0f);

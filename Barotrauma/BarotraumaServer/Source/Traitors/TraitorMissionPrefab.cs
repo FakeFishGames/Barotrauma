@@ -8,7 +8,18 @@ namespace Barotrauma {
 
     class TraitorMissionPrefab
     {
-        public static readonly List<TraitorMissionPrefab> List = new List<TraitorMissionPrefab>();
+        public class TraitorMissionEntry
+        {
+            public readonly TraitorMissionPrefab Prefab;
+            public int SelectedWeight;
+
+            public TraitorMissionEntry(XElement element)
+            {
+                Prefab = new TraitorMissionPrefab(element);
+                SelectedWeight = 0;
+            }
+        }
+        public static readonly List<TraitorMissionEntry> List = new List<TraitorMissionEntry>();
 
         public static void Init()
         {
@@ -20,14 +31,14 @@ namespace Barotrauma {
 
                 foreach (XElement element in doc.Root.Elements())
                 {
-                    List.Add(new TraitorMissionPrefab(element));
+                    List.Add(new TraitorMissionEntry(element));
                 }
             }
         }
 
         public static TraitorMissionPrefab RandomPrefab()
         {
-            return List.Count > 0 ? List[Traitor.TraitorMission.Random(List.Count)] : null;
+            return ListUtils.WeightedRandom(List, Traitor.TraitorMission.Random, entry => entry.SelectedWeight, (entry, weight) => entry.SelectedWeight = weight, 2, 3)?.Prefab;
         }
 
         public class Context
