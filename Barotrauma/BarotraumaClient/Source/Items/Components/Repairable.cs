@@ -46,7 +46,7 @@ namespace Barotrauma.Items.Components
         public override bool ShouldDrawHUD(Character character)
         {
             if (!HasRequiredItems(character, false) || character.SelectedConstruction != item) return false;
-            return item.Condition < ShowRepairUIThreshold || character.IsTraitor && item.Condition > MinDeteriorationCondition || (currentFixer == character && (!item.IsFullCondition || (character.IsTraitor && item.Condition > MinDeteriorationCondition)));
+            return item.Condition < ShowRepairUIThreshold || character.IsTraitor && item.Condition > MinDeteriorationCondition || (CurrentFixer == character && (!item.IsFullCondition || (character.IsTraitor && item.Condition > MinDeteriorationCondition)));
         }
 
         partial void InitProjSpecific(XElement element)
@@ -124,8 +124,7 @@ namespace Barotrauma.Items.Components
                 {
                     case FixActions.Repair:
                     case FixActions.Sabotage:
-                        CurrentFixer = Character.Controlled;
-                        CurrentFixerAction = requestStartFixAction;
+                        StartRepairing(Character.Controlled, requestStartFixAction);
                         requestStartFixAction = FixActions.None;
                         break;
                     default:
@@ -150,14 +149,14 @@ namespace Barotrauma.Items.Components
             progressBar.BarSize = item.Condition / item.MaxCondition;
             progressBar.Color = ToolBox.GradientLerp(progressBar.BarSize, Color.Red, Color.Orange, Color.Green);
 
-            repairButton.Enabled = (currentFixerAction == FixActions.None || (currentFixer == character && currentFixerAction != FixActions.Repair)) && item.Condition <= ShowRepairUIThreshold;
-            repairButton.Text = (currentFixerAction == FixActions.None || currentFixer != character || currentFixerAction != FixActions.Repair) ? 
+            repairButton.Enabled = (currentFixerAction == FixActions.None || (CurrentFixer == character && currentFixerAction != FixActions.Repair)) && item.Condition <= ShowRepairUIThreshold;
+            repairButton.Text = (currentFixerAction == FixActions.None || CurrentFixer != character || currentFixerAction != FixActions.Repair) ? 
                 repairButtonText : 
                 repairingText + new string('.', ((int)(Timing.TotalTime * 2.0f) % 3) + 1);
 
             sabotageButton.Visible = character.IsTraitor;
-            sabotageButton.Enabled = (currentFixerAction == FixActions.None || (currentFixer == character && currentFixerAction != FixActions.Sabotage)) && character.IsTraitor && item.Condition > MinDeteriorationCondition;
-            sabotageButton.Text = (currentFixerAction == FixActions.None || currentFixer != character || currentFixerAction != FixActions.Sabotage || !character.IsTraitor) ?
+            sabotageButton.Enabled = (currentFixerAction == FixActions.None || (CurrentFixer == character && currentFixerAction != FixActions.Sabotage)) && character.IsTraitor && item.Condition > MinDeteriorationCondition;
+            sabotageButton.Text = (currentFixerAction == FixActions.None || CurrentFixer != character || currentFixerAction != FixActions.Sabotage || !character.IsTraitor) ?
                 sabotageButtonText :
                 sabotagingText + new string('.', ((int)(Timing.TotalTime * 2.0f) % 3) + 1);
 
@@ -183,7 +182,7 @@ namespace Barotrauma.Items.Components
             deteriorationTimer = msg.ReadSingle();
             deteriorateAlwaysResetTimer = msg.ReadSingle();
             DeteriorateAlways = msg.ReadBoolean();
-            currentFixer = msg.ReadBoolean() ? Character.Controlled : null;
+            CurrentFixer = msg.ReadBoolean() ? Character.Controlled : null;
             currentFixerAction = (FixActions)msg.ReadRangedInteger(0, 2);
         }
 

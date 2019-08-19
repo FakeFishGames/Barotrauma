@@ -78,22 +78,7 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        private Character currentFixer;
-        public Character CurrentFixer
-        {
-            get { return currentFixer; }
-            private set
-            {
-                if (currentFixer == value) return;
-                if (value != null && currentFixer != null && !currentFixer.IsDead) return;
-                if (currentFixer != null) currentFixer.AnimController.Anim = AnimController.Animation.None;
-                currentFixer = value;
-                if (currentFixer == null)
-                {
-                    currentFixerAction = FixActions.None;
-                }
-            }
-        }
+        public Character CurrentFixer { get; private set; }
 
         public enum FixActions : int
         {
@@ -149,8 +134,8 @@ namespace Barotrauma.Items.Components
         {
             if (CurrentFixer == character)
             {
-                currentFixer.AnimController.Anim = AnimController.Animation.None;
-                currentFixer = null;
+                CurrentFixer.AnimController.Anim = AnimController.Animation.None;
+                CurrentFixer = null;
                 currentFixerAction = FixActions.None;
 #if SERVER
                 item.CreateServerEvent(this);
@@ -219,9 +204,9 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            if (currentFixer != null && (currentFixer.SelectedConstruction != item || !currentFixer.CanInteractWith(item) || currentFixer.IsDead))
+            if (CurrentFixer != null && (CurrentFixer.SelectedConstruction != item || !CurrentFixer.CanInteractWith(item) || CurrentFixer.IsDead))
             {
-                StopRepairing(currentFixer);
+                StopRepairing(CurrentFixer);
                 return;
             }
 
@@ -269,15 +254,11 @@ namespace Barotrauma.Items.Components
                                 CurrentFixer.WorldPosition + Vector2.UnitY * 100.0f);
                         }
 
-                        SteamAchievementManager.OnItemRepaired(item, currentFixer);
+                        SteamAchievementManager.OnItemRepaired(item, CurrentFixer);
                         deteriorationTimer = Rand.Range(MinDeteriorationDelay, MaxDeteriorationDelay);
                         wasBroken = false;
                     }
-                    currentFixer = null;
-                    currentFixerAction = FixActions.None;
-#if SERVER
-                    item.CreateServerEvent(this);
-#endif
+                    StopRepairing(CurrentFixer);
                 }
             }
             else if (currentFixerAction == FixActions.Sabotage)
@@ -310,11 +291,7 @@ namespace Barotrauma.Items.Components
                         item.Condition = MinDeteriorationCondition;
                         wasGoodCondition = false;
                     }
-                    currentFixer = null;
-                    currentFixerAction = FixActions.None;
-#if SERVER
-                    item.CreateServerEvent(this);
-#endif
+                    StopRepairing(CurrentFixer);
                 }
             }
             else

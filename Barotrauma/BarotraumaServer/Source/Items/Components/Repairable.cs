@@ -25,7 +25,7 @@ namespace Barotrauma.Items.Components
                     requestedFixAction = FixActions.Repair;
                 }
 
-                if (currentFixer == null || currentFixer == c.Character && requestedFixAction != currentFixerAction)
+                if (CurrentFixer == null || CurrentFixer == c.Character && requestedFixAction != currentFixerAction)
                 {
                     StartRepairing(c.Character, requestedFixAction);
                     item.CreateServerEvent(this);
@@ -38,7 +38,7 @@ namespace Barotrauma.Items.Components
             msg.Write(deteriorationTimer);
             msg.Write(deteriorateAlwaysResetTimer);
             msg.Write(DeteriorateAlways);
-            msg.Write(currentFixer == c.Character);
+            msg.Write(CurrentFixer == c.Character);
             msg.WriteRangedInteger((int)currentFixerAction, 0, 2);
         }
     }
