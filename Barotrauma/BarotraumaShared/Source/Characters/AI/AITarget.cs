@@ -14,11 +14,6 @@ namespace Barotrauma
             get;
             private set;
         }
-
-        /// <summary>
-        /// Use as a minimum or static sight range.
-        /// </summary>
-        public static float StaticSightRange = 2000;
         
         private float soundRange;
         private float sightRange;
@@ -142,15 +137,9 @@ namespace Barotrauma
             }
         }
 
-        public AITarget(Entity e, float sightRange = -1, float soundRange = 0)
+        public AITarget(Entity e)
         {
             Entity = e;
-            if (sightRange < 0)
-            {
-                sightRange = StaticSightRange;
-            }
-            SightRange = sightRange;
-            SoundRange = soundRange;
             List.Add(this);
         }
 

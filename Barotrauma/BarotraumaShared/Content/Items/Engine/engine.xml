@@ -7,7 +7,7 @@
     <BrokenSprite texture="BTart_EngineDiesel.png" sourcerect="0,436,590,218" depth="0.8" maxcondition="0" />
 	  -->
     <trigger x="200" y="-50" width="400" height="240" />
-    <aitarget sightrange="100" soundrange="10000"/>
+    <aitarget sightrange="500" soundrange="10000"/>
     <Engine minvoltage="0.5" powerconsumption="2000.0" maxforce="2000" canbeselected="true" propellerpos="-160,-15" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.2,0.15" minsize="400,160" maxsize="480,190" anchor="Center" style="ItemUI" />
       <StatusEffect type="InWater" target="This" condition="-1.0" />
@@ -39,7 +39,7 @@
     <BrokenSprite texture="BTart_EngineDiesel.png" sourcerect="0,436,590,218" depth="0.8" maxcondition="0" />
 	  -->
     <trigger x="375" y="-43" width="563" height="312" />
-    <aitarget sightrange="1000" soundrange="10000"/>
+    <aitarget sightrange="500" soundrange="10000"/>
     <Engine minvoltage="0.5" powerconsumption="4000.0" maxforce="4000" canbeselected="true" propellerpos="-380,20" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.2,0.15" minsize="400,160" maxsize="480,190" anchor="Center" style="ItemUI" />
       <StatusEffect type="InWater" target="This" condition="-1.0" />

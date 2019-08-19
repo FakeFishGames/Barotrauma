@@ -374,8 +374,11 @@ namespace Barotrauma
             {
                 aiTarget = new AITarget(this)
                 {
-                    MaxSightRange = AITarget.StaticSightRange,
-                    MaxSoundRange = 0
+                    MinSightRange = 1000,
+                    MaxSightRange = 4000,
+                    MaxSoundRange = 0,
+                    SoundRange = 0,
+                    SightRange = 1000
                 };
             }
 
@@ -1291,6 +1294,15 @@ namespace Barotrauma
         public virtual void Reset()
         {
             SerializableProperties = SerializableProperty.DeserializeProperties(this, Prefab.ConfigElement);
+        }
+
+        public override void Update(float deltaTime, Camera cam)
+        {
+            base.Update(deltaTime, cam);
+            if (aiTarget != null)
+            {
+                aiTarget.SightRange = Submarine == null ? aiTarget.MinSightRange : Submarine.Velocity.Length() / 2 * aiTarget.MaxSightRange;
+            }
         }
     }
 }
