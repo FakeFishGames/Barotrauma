@@ -7,7 +7,7 @@ namespace Barotrauma
 {
     partial class Traitor
     {
-        public class GoalFindItem : Goal
+        public class GoalFindItem : HumanoidGoal
         {
             private readonly string identifier;
             private readonly bool allowExisting;

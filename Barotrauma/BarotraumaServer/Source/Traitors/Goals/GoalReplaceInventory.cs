@@ -6,7 +6,7 @@ namespace Barotrauma
 {
     partial class Traitor
     {
-        public class GoalReplaceInventory : Goal
+        public class GoalReplaceInventory : HumanoidGoal
         {
             private readonly HashSet<string> sabotageContainerIds = new HashSet<string>();
             private readonly HashSet<string> validReplacementIds = new HashSet<string>();

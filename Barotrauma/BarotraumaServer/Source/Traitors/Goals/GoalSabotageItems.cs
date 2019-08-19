@@ -6,7 +6,7 @@ namespace Barotrauma
 {
     partial class Traitor
     {
-        public class GoalSabotageItems : Goal
+        public class GoalSabotageItems : HumanoidGoal
         {
             private readonly string tag;
             private readonly float conditionThreshold;

@@ -167,7 +167,6 @@ namespace Barotrauma
                 {
                     return;
                 }
-
                 foreach (var traitor in Traitors.Values)
                 {
                     if (traitor.Character.IsDead)

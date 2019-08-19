@@ -231,6 +231,7 @@
     <Compile Include="Source\Program.cs" />
     <Compile Include="Source\Screens\NetLobbyScreen.cs" />
     <Compile Include="Source\Screens\UnimplementedScreen.cs" />
+    <Compile Include="Source\Traitors\Goals\HumanoidGoal.cs" />
     <Compile Include="Source\Utils\MonogameTypes\Color.cs" />
     <Compile Include="Source\Utils\MonogameTypes\Graphics\SpriteEffects.cs" />
     <Compile Include="Source\Utils\MonogameTypes\Input\KeyboardState.cs" />
