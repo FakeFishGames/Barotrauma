@@ -873,14 +873,15 @@ namespace Barotrauma.Networking
 
             switch(messageType) {
                 case TraitorMessageType.Objective:
+                    var isTraitor = !string.IsNullOrEmpty(message); 
                     if (Character != null)
                     {
-                        Character.IsTraitor = true;
+                        Character.IsTraitor = isTraitor;
                         Character.TraitorCurrentObjective = message;
                     }
                     else
                     {
-                        SpawnAsTraitor = true;
+                        SpawnAsTraitor = isTraitor;
                         TraitorFirstObjective = message;
                     }
                     break;

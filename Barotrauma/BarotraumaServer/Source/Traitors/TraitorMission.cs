@@ -167,6 +167,14 @@ namespace Barotrauma
                 {
                     return;
                 }
+
+                foreach (var traitor in Traitors.Values)
+                {
+                    if (traitor.Character.IsDead)
+                    {
+                        traitor.UpdateCurrentObjective("");
+                    }
+                }
                 int previousCompletedCount = completedObjectives.Count;
                 int startedCount = 0;
                 while (pendingObjectives.Count > 0)
