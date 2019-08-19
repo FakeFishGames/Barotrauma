@@ -485,7 +485,10 @@ namespace Barotrauma
         public override void Deselect()
         {
             base.Deselect();
-            SteamManager.Instance.LobbyList.OnLobbiesUpdated = null;
+            if (SteamManager.IsInitialized && SteamManager.Instance.LobbyList != null)
+            {
+                SteamManager.Instance.LobbyList.OnLobbiesUpdated = null;
+            }
         }
 
         private void FilterServers()
