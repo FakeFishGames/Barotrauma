@@ -170,7 +170,7 @@
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="MVPobjectiveSuccessMessage1" />
       <StartMessage id="MVPtraitorobjectivestartmessage1"/>
-      <Goal type="finditem" identifier="oxygentank" allowedContainers="mediumsteelcabinet, mediumwindowedsteelcabinet, steelcabinet">
+      <Goal type="finditem" identifier="oxygentank" preferNew="false" allowNew="true" allowExisting="true" allowedContainers="mediumsteelcabinet, mediumwindowedsteelcabinet, steelcabinet">
         <InfoText id="MVP_GoalInfoText_1" />    
       </Goal>
     </Objective>
@@ -223,7 +223,7 @@
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="flood_1_objectiveSuccessMessage3"/>
       <StartMessage id="flood_1_traitorobjectivestartmessage3"/>
-      <Goal type="finditem" identifier="detonator" allowedContainers="mediumsteelcabinet, mediumwindowedsteelcabinet, steelcabinet">
+      <Goal type="finditem" identifier="detonator" preferNew="false" allowNew="true" allowExisting="true" allowedContainers="mediumsteelcabinet, mediumwindowedsteelcabinet, steelcabinet">
         <InfoText id="flood_1_GoalInfoText_3"/>
       </Goal>
     </Objective>
@@ -248,7 +248,7 @@
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="flood_2_objectiveSuccessMessage1"/>
       <StartMessage id="flood_2_traitorobjectivestartmessage1"/>
-      <Goal type="finditem" identifier="divingmask" allowedContainers="suppliescabinet">
+      <Goal type="finditem" identifier="divingmask" preferNew="false" allowNew="true" allowExisting="true" allowedContainers="suppliescabinet">
         <InfoText id="flood_2_GoalInfoText_1"/>
       </Goal>
     </Objective>
