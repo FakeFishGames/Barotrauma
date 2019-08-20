@@ -105,7 +105,7 @@ namespace Barotrauma
                 return pendingObjectives.Count > 0 ? pendingObjectives[0] : null;
             }
 
-            public virtual bool Start(GameServer server, TraitorManager traitorManager, params string[] traitorRoles)
+            public virtual bool Start(GameServer server, TraitorManager traitorManager, Character.TeamType team, params string[] traitorRoles)
             {
                 List<Character> characters = new List<Character>(); //ANYONE can be a target.
                 List<Tuple<Client, Character>> traitorCandidates = new List<Tuple<Client,Character>>(); //Keep this to not re-pick traitors twice
@@ -122,7 +122,7 @@ namespace Barotrauma
                 else
 #endif
                 {
-                    traitorCandidates.AddRange(server.ConnectedClients.FindAll(c => c.Character != null && !c.Character.IsDead).ConvertAll(client => Tuple.Create(client, client.Character)));
+                    traitorCandidates.AddRange(server.ConnectedClients.FindAll(c => c.Character != null && !c.Character.IsDead && (team == Character.TeamType.None || c.Character.TeamID == team)).ConvertAll(client => Tuple.Create(client, client.Character)));
                 }
                 if (traitorCandidates.Count <= 0)
                 {
@@ -141,7 +141,10 @@ namespace Barotrauma
                 {
                     var candidate = TraitorManager.WeightedRandom(traitorCandidates, Random, t =>
                     {
-                        return traitorManager.GetTraitorCount(server.FindPreviousClientData(t.Item1) ?? Tuple.Create(t.Item1.SteamID, t.Item1.Connection?.EndPointString ?? ""));
+                        var previousClient = server.FindPreviousClientData(t.Item1);
+                        return Math.Max(
+                            previousClient != null ? traitorManager.GetTraitorCount(previousClient) : 0,
+                            traitorManager.GetTraitorCount(Tuple.Create(t.Item1.SteamID, t.Item1.Connection?.EndPointString ?? "")));
                     }, (t, c) =>
                     {
                         traitorManager.SetTraitorCount(Tuple.Create(t.Item1.SteamID, t.Item1.Connection?.EndPointString ?? ""), c);
@@ -151,7 +154,7 @@ namespace Barotrauma
                     var traitor = new Traitor(this, role, candidate.Item2);
                     Traitors.Add(role, traitor);
                 }
-                Update(0.0f);
+                Update(0.0f, GameMain.Server.EndGame);
                 foreach (var traitor in Traitors.Values)
                 {
                     if (traitor.CurrentObjective == null) { continue; }
@@ -166,7 +169,9 @@ namespace Barotrauma
                 return true;
             }
 
-            public virtual void Update(float deltaTime)
+            public delegate void TraitorWinHandler();
+
+            public virtual void Update(float deltaTime, TraitorWinHandler winHandler)
             {
                 if (pendingObjectives.Count <= 0 || Traitors.Count <= 0)
                 {
@@ -236,7 +241,7 @@ namespace Barotrauma
                     {
                         SteamAchievementManager.OnTraitorWin(traitor.Value.Character);
                     }
-                    GameMain.Server.EndGame();
+                    winHandler();
                 }
             }
 

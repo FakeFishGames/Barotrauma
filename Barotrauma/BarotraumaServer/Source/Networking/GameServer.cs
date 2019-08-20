@@ -1887,12 +1887,8 @@ namespace Barotrauma.Networking
                     {
                         if (client.Character != null) characters.Add(client.Character);
                     }
-                
-                    int max = Math.Max(serverSettings.TraitorUseRatio ? (int)Math.Round(characters.Count * serverSettings.TraitorRatio, 1) : 1, 1);
-                    int traitorCount = Rand.Range(1, max + 1);
-                              
                     TraitorManager = new TraitorManager();
-                    TraitorManager.Start(this, traitorCount);
+                    TraitorManager.Start(this);
                 }
             }
 
