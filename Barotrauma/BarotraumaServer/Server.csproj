@@ -255,6 +255,7 @@
     <Compile Include="Source\Traitors\Goals\GoalFindItem.cs" />
     <Compile Include="Source\Traitors\Goals\GoalReplaceInventory.cs" />
     <Compile Include="Source\Traitors\Traitor.cs" />
+    <Compile Include="Source\Traitors\Goals\Modifiers\GoalWithTimeout.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Libraries\Facepunch.Steamworks\Facepunch.Steamworks.csproj">

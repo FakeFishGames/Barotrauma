@@ -137,9 +137,10 @@ namespace Barotrauma {
                                 switch (modifierType)
                                 {
                                     case "duration":
-                                        {
-                                            goal = new Traitor.GoalWithDuration(goal, element.GetAttributeFloat("duration", 5.0f), element.GetAttributeBool("cumulative", false));
-                                        }
+                                        goal = new Traitor.GoalWithDuration(goal, element.GetAttributeFloat("duration", 5.0f), element.GetAttributeBool("cumulative", false));
+                                        break;
+                                    case "timelimit":
+                                        goal = new Traitor.GoalWithTimeLimit(goal, element.GetAttributeFloat("timelimit", 180.0f));
                                         break;
                                 }
                             }
