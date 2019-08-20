@@ -2096,7 +2096,7 @@ namespace Barotrauma
                 }
             };
             // Ragdoll controls
-            ragdollControls = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.25f), centerArea.RectTransform) { AbsoluteOffset = new Point(0, jointControls.Rect.Bottom) }, style: null) { CanBeFocused = false };
+            ragdollControls = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.25f), centerArea.RectTransform), style: null) { CanBeFocused = false };
             var layoutGroupRagdoll = new GUILayoutGroup(new RectTransform(Vector2.One, ragdollControls.RectTransform), childAnchor: Anchor.TopLeft) { CanBeFocused = false };
             var uniformScalingToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupRagdoll.RectTransform), GetCharacterEditorTranslation("UniformScale"))
             {
@@ -2174,9 +2174,9 @@ namespace Barotrauma
             };
 
             // Ragdoll manipulation
-            extraRagdollControls = new GUIFrame(new RectTransform(new Point(140, 30), centerArea.RectTransform, Anchor.BottomRight)
+            extraRagdollControls = new GUIFrame(new RectTransform(new Point(140, 30), centerArea.RectTransform, Anchor.CenterRight)
             {
-                RelativeOffset = new Vector2(0.2f, 0.15f)
+                AbsoluteOffset = new Point(20, 0)
             }, style: null)
             {
                 CanBeFocused = false
