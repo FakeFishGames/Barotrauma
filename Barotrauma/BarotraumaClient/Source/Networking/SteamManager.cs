@@ -201,7 +201,6 @@ namespace Barotrauma.Steam
             instance.client.Lobby.CurrentLobbyData.SetData("playercount", (GameMain.Client?.ConnectedClients?.Count??0).ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("maxplayernum", serverSettings.MaxPlayers.ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("hostipaddress", lobbyIP);
-            //instance.client.Lobby.CurrentLobbyData.SetData("connectsteamid", Steam.SteamManager.GetSteamID().ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("haspassword", serverSettings.HasPassword.ToString());
 
             instance.client.Lobby.CurrentLobbyData.SetData("message", serverSettings.ServerMessageText);

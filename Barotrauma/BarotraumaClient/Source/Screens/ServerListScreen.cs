@@ -27,7 +27,18 @@ namespace Barotrauma
 
         private readonly GUIButton joinButton;
 
-        private readonly GUITextBox clientNameBox, ipBox;
+        private readonly GUITextBox clientNameBox;
+        private ServerInfo selectedServer;
+
+        private readonly GUILayoutGroup friendsHolder;
+        private struct FriendAvatar
+        {
+            public Sprite Sprite;
+            public GUIButton GUIButton;
+            public GUIImage GUIImage;
+        }
+        private List<FriendAvatar> friendAvatars;
+        private GUIListBox friendDropdown;
 
         private bool masterServerResponded;
         private IRestResponse masterServerResponse;
@@ -95,19 +106,8 @@ namespace Barotrauma
                 clientNameBox.Text = SteamManager.GetUsername();
             }
 
-            var ipBoxHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), infoHolder.RectTransform)) { RelativeSpacing = 0.05f };
-
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), ipBoxHolder.RectTransform), TextManager.Get("ServerIP"));
-            ipBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.5f), ipBoxHolder.RectTransform), "");
-            ipBox.OnTextChanged += (textBox, text) => { joinButton.Enabled = !string.IsNullOrEmpty(text); return true; };
-            ipBox.OnSelected += (sender, key) =>
-            {
-                if (sender.UserData is ServerInfo)
-                {
-                    sender.Text = "";
-                    sender.UserData = null;
-                }
-            };
+            friendsHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), infoHolder.RectTransform)) { RelativeSpacing = 0.01f, IsHorizontal = true };
+            friendAvatars = new List<FriendAvatar>();
 
             //-------------------------------------------------------------------------------------
             // Bottom row
@@ -257,8 +257,7 @@ namespace Barotrauma
                     if (obj is ServerInfo serverInfo)
                     {
                         joinButton.Enabled = true;
-                        ipBox.UserData = serverInfo;
-                        ipBox.Text = serverInfo.ServerName;
+                        selectedServer = serverInfo;
                         if (!serverPreview.Visible)
                         {
                             serverPreview.RectTransform.RelativeSize = new Vector2(0.3f, 1.0f);
@@ -331,7 +330,7 @@ namespace Barotrauma
             {
                 OnClicked = (btn, userdata) =>
                 {
-                    if (ipBox.UserData is ServerInfo selectedServer)
+                    if (selectedServer != null)
                     {
                         if (selectedServer.LobbyID == 0)
                         {
@@ -341,10 +340,6 @@ namespace Barotrauma
                         {
                             Steam.SteamManager.JoinLobby(selectedServer.LobbyID, true);
                         }
-                    }
-                    else if (!string.IsNullOrEmpty(ipBox.Text))
-                    {
-                        JoinServer(ipBox.Text, "");
                     }
                     return true;
                 },
@@ -491,6 +486,11 @@ namespace Barotrauma
             }
         }
 
+        public override void Update(double deltaTime)
+        {
+            base.Update(deltaTime);
+        }
+
         private void FilterServers()
         {
             serverList.Content.RemoveChild(serverList.Content.FindChild("noresults"));
@@ -564,14 +564,121 @@ namespace Barotrauma
             };
         }*/
 
+        private GUIFrame CreateFriendGameInfoFrame()
+        {
+            return null;
+        }
+
         private void RefreshServers()
         {
             if (waitingForRefresh) { return; }
+
+            if (Steam.SteamManager.IsInitialized)
+            {
+                Steam.SteamManager.Instance.Friends.Refresh();
+                foreach (var avatar in friendAvatars)
+                {
+                    avatar.Sprite.Remove();
+                }
+                friendAvatars.Clear();
+                friendsHolder.ClearChildren();
+
+                Color mainColor = new Color(40, 175, 65);
+                Color hoverColor = new Color(40, 255, 80);
+                Color pressColor = new Color(50, 150, 50);
+
+                int friendButtonCount = 0;
+                foreach (var friend in Steam.SteamManager.Instance.Friends.AllFriends)
+                {
+                    if (!friend.IsPlayingThisGame) { continue; }
+                    if (string.IsNullOrWhiteSpace(friend.GetRichPresence("connect"))) { continue; }
+                    friendButtonCount++;
+                    if (friendButtonCount>5) { break; }
+
+                    //TODO: pick an optimal AvatarSize based on current resolution
+                    var avatarImage = friend.GetAvatar(Facepunch.Steamworks.Friends.AvatarSize.Large);
+                    var tooltip = friend.GetRichPresence("status") ?? "Not playing on a server";
+                    if (avatarImage != null)
+                    {
+                        //TODO: create an avatar atlas?
+                        var avatarTexture = new Texture2D(GameMain.Instance.GraphicsDevice, avatarImage.Width, avatarImage.Height);
+                        avatarTexture.SetData(avatarImage.Data);
+
+                        var avatarSprite = new Sprite(avatarTexture, null, null);
+
+                        var guiButton = new GUIButton(new RectTransform(Vector2.One * 0.9f, friendsHolder.RectTransform, Anchor.BottomRight, Pivot.BottomRight, scaleBasis: ScaleBasis.BothHeight), style: null)
+                        {
+                            Color = mainColor,
+                            SelectedColor = mainColor,
+                            HoverColor = hoverColor,
+                            OutlineColor = Color.Transparent,
+                            PressedColor = pressColor,
+                        };
+                        
+                        guiButton.OnClicked = (button, userdata) =>
+                        {
+                            return false;
+                        };
+
+                        var guiImage = new GUIImage(new RectTransform(Vector2.One * 0.9f, guiButton.RectTransform, Anchor.Center), avatarSprite, null, true);
+                        guiImage.ToolTip = friend.Name + "\n" + tooltip;
+
+                        friendAvatars.Add(new FriendAvatar() { Sprite = avatarSprite, GUIButton = guiButton, GUIImage = guiImage });
+                    }
+                    else
+                    {
+                        //DebugConsole.ThrowError(friend.Name);
+                    }
+                }
+
+                mainColor = new Color(70, 125, 90);
+
+                foreach (var friend in Steam.SteamManager.Instance.Friends.AllFriends)
+                {
+                    //if (!friend.IsPlayingThisGame) { continue; }
+                    if (!string.IsNullOrWhiteSpace(friend.GetRichPresence("connect"))) { continue; }
+                    friendButtonCount++;
+                    if (friendButtonCount > 5) { break; }
+
+                    //TODO: pick an optimal AvatarSize based on current resolution
+                    var avatarImage = friend.GetAvatar(Facepunch.Steamworks.Friends.AvatarSize.Large);
+                    var tooltip = friend.GetRichPresence("status") ?? "Not playing on a server";
+                    if (avatarImage != null)
+                    {
+                        //TODO: create an avatar atlas?
+                        var avatarTexture = new Texture2D(GameMain.Instance.GraphicsDevice, avatarImage.Width, avatarImage.Height);
+                        avatarTexture.SetData(avatarImage.Data);
+
+                        var avatarSprite = new Sprite(avatarTexture, null, null);
+
+                        var guiButton = new GUIButton(new RectTransform(Vector2.One * 0.9f, friendsHolder.RectTransform, Anchor.BottomRight, Pivot.BottomRight, scaleBasis: ScaleBasis.BothHeight), style: null)
+                        {
+                            OutlineColor = Color.Transparent,
+                            Enabled = false,
+                        };
+                        guiButton.Color = mainColor;
+
+                        guiButton.OnClicked = (button, userdata) =>
+                        {
+                            return false;
+                        };
+
+                        var guiImage = new GUIImage(new RectTransform(Vector2.One * 0.9f, guiButton.RectTransform, Anchor.Center), avatarSprite, null, true);
+                        guiImage.ToolTip = friend.Name + "\n" + tooltip;
+
+                        friendAvatars.Add(new FriendAvatar() { Sprite = avatarSprite, GUIButton = guiButton, GUIImage = guiImage });
+                    }
+                    else
+                    {
+                        //DebugConsole.ThrowError(friend.Name);
+                    }
+                }
+            }
+
             serverList.ClearChildren();
             serverPreview.ClearChildren();
             joinButton.Enabled = false;
-            ipBox.UserData = null;
-            ipBox.Text = "";
+            selectedServer = null;
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), serverList.Content.RectTransform),
                 TextManager.Get("RefreshingServerList"), textAlignment: Alignment.Center)

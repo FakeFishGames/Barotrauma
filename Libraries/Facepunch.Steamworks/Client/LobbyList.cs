@@ -152,6 +152,11 @@ namespace Facepunch.Steamworks
 
         public Action OnLobbiesUpdated;
 
+        public Lobby GetLobbyFromID(ulong lobbyId)
+        {
+            return Lobby.FromSteam(client, lobbyId);
+        }
+
         public void Dispose()
         {
             client = null;
