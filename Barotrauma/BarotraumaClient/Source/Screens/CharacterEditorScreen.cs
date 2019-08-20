@@ -2737,6 +2737,7 @@ namespace Barotrauma
                     paramsToggle.Selected = false;
                     skeletonToggle.Selected = false;
                     damageModifiersToggle.Selected = false;
+                    recalculateColliderToggle.Selected = true;
                     Wizard.Instance.SelectTab(Wizard.Tab.Character);
                     return true;
                 }
