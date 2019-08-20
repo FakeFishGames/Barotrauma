@@ -17,12 +17,12 @@
   <sound file="Content/Characters/Watcher/attack2.ogg" state="Attack" range="500"/>
   <sound file="Content/Characters/Watcher/attack3.ogg" state="Attack" range="500"/>
   
-  <sound file="Content/Characters/Watcher/watch1.ogg" state="None" range="500"/>
-  <sound file="Content/Characters/Watcher/watch2.ogg" state="None" range="500"/>
-  <sound file="Content/Characters/Watcher/watch3.ogg" state="None" range="500"/>
-  <sound file="Content/Characters/Watcher/watch4.ogg" state="None" range="500"/>
-  <sound file="Content/Characters/Watcher/watch5.ogg" state="None" range="500"/>
-  <sound file="Content/Characters/Watcher/watch6.ogg" state="None" range="500"/>
+  <sound file="Content/Characters/Watcher/watch1.ogg" state="Idle" range="500"/>
+  <sound file="Content/Characters/Watcher/watch2.ogg" state="Idle" range="500"/>
+  <sound file="Content/Characters/Watcher/watch3.ogg" state="Idle" range="500"/>
+  <sound file="Content/Characters/Watcher/watch4.ogg" state="Idle" range="500"/>
+  <sound file="Content/Characters/Watcher/watch5.ogg" state="Idle" range="500"/>
+  <sound file="Content/Characters/Watcher/watch6.ogg" state="Idle" range="500"/>
 
   <ai
     attackpriorityhumans="0.0"

@@ -11,9 +11,9 @@
     vitality="10000.0"
     doesbleed="false"/>
 
-  <sound file="Content/Characters/Endworm/ENDWORM_idle1.ogg" state="None" range="10000" />
-  <sound file="Content/Characters/Endworm/ENDWORM_idle2.ogg" state="None" range="10000" />
-  <sound file="Content/Characters/Endworm/ENDWORM_idle3.ogg" state="None" range="10000" />
+  <sound file="Content/Characters/Endworm/ENDWORM_idle1.ogg" state="Idle" range="10000" />
+  <sound file="Content/Characters/Endworm/ENDWORM_idle2.ogg" state="Idle" range="10000" />
+  <sound file="Content/Characters/Endworm/ENDWORM_idle3.ogg" state="Idle" range="10000" />
 
   <sound file="Content/Characters/Endworm/ENDWORM_attack1.ogg" state="Attack" range="8000" />
   <sound file="Content/Characters/Endworm/ENDWORM_attack2.ogg" state="Attack" range="8000" />
