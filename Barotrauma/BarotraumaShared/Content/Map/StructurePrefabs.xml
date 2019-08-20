@@ -999,13 +999,13 @@
     <sprite texture="Content/Map/BackgroundWalls.png" sourcerect="0,688,512,256" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Wall_BC>
   <Wall_C1 name="BackWall C1" identifier="FF_Wall_C1" description="Mushy grey wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="0,0,512,224" depth="0.98" premultiplyalpha="false" />
+    <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="0,0,672,224" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Wall_C1>
   <Wall_C2 name="BackWall C2" identifier="FF_Wall_C2" description="Mushy grey wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="0,224,512,224" depth="0.98" premultiplyalpha="false" />
+    <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="0,224,672,224" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Wall_C2>
   <Wall_C3 name="BackWall C3" identifier="FF_Wall_C3" description="Mushy grey Greeble wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="0,448,512,224" depth="0.98" premultiplyalpha="false" />
+    <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="0,448,672,224" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Wall_C3>
   <Wall_D1 name="BackWall D1" identifier="FF_Wall_D1" description="Metal wall 1" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/BackgroundWalls.png" sourcerect="334,0,688,240" depth="0.98" premultiplyalpha="false" />
