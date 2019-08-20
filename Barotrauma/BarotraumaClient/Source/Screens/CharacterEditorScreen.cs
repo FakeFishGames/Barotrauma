@@ -1623,7 +1623,7 @@ namespace Barotrauma
 
         private void CreateModesPanel(Vector2 toggleSize)
         {
-            modesPanel = new GUIFrame(new RectTransform(new Vector2(0.6f, 0.3f), leftArea.RectTransform, Anchor.BottomLeft), style: null, color: panelColor);
+            modesPanel = new GUIFrame(new RectTransform(new Vector2(0.6f, 0.4f), leftArea.RectTransform, Anchor.BottomLeft), style: null, color: panelColor);
             var layoutGroup = new GUILayoutGroup(new RectTransform(new Point(modesPanel.Rect.Width - innerMargin.X, modesPanel.Rect.Height - innerMargin.Y),
                 modesPanel.RectTransform, Anchor.Center))
             {
@@ -1785,10 +1785,7 @@ namespace Barotrauma
         private void CreateToolsPanel()
         {
             Vector2 buttonSize = new Vector2(1, 0.06f);
-            toolsPanel = new GUIFrame(new RectTransform(new Vector2(0.6f, 0.15f), leftArea.RectTransform, Anchor.CenterLeft)
-            {
-                RelativeOffset = new Vector2(0, 0.1f)
-            }, style: null, color: panelColor);
+            toolsPanel = new GUIFrame(new RectTransform(new Vector2(0.6f, 0.15f), leftArea.RectTransform, Anchor.CenterLeft), style: null, color: panelColor);
             var layoutGroup = new GUILayoutGroup(new RectTransform(new Point(toolsPanel.Rect.Width - innerMargin.X, toolsPanel.Rect.Height - innerMargin.Y),
                 toolsPanel.RectTransform, Anchor.Center))
             {
