@@ -172,7 +172,7 @@ namespace Barotrauma.Steam
             };
             if (lobbyState != LobbyState.NotConnected) { return; }
             lobbyState = LobbyState.Creating;
-            instance.client.Lobby.Create(serverSettings.isPublic ? Lobby.Type.Public : Lobby.Type.FriendsOnly, serverSettings.MaxPlayers);
+            instance.client.Lobby.Create(serverSettings.isPublic ? Lobby.Type.Public : Lobby.Type.FriendsOnly, serverSettings.MaxPlayers+10);
             instance.client.Lobby.Joinable = true;
         }
         
@@ -197,7 +197,7 @@ namespace Barotrauma.Steam
             
             instance.client.Lobby.Name = serverSettings.ServerName;
             instance.client.Lobby.Owner = Steam.SteamManager.GetSteamID();
-            instance.client.Lobby.MaxMembers = serverSettings.MaxPlayers;
+            instance.client.Lobby.MaxMembers = serverSettings.MaxPlayers+10;
             instance.client.Lobby.CurrentLobbyData.SetData("playercount", (GameMain.Client?.ConnectedClients?.Count??0).ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("maxplayernum", serverSettings.MaxPlayers.ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("hostipaddress", lobbyIP);
