@@ -157,7 +157,7 @@ namespace Barotrauma
             autoFreeze = true;
             limbPairEditing = true;
             uniformScaling = true;
-            lockSpriteOrigin = false;
+            lockSpriteOrigin = true;
             lockSpritePosition = false;
             lockSpriteSize = false;
             recalculateCollider = false;
