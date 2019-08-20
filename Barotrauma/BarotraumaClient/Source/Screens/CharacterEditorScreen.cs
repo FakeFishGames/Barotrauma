@@ -256,6 +256,10 @@ namespace Barotrauma
             if (showSpritesheet)
             {
                 spriteSheetControls.AddToGUIUpdateList();
+                if (selectedLimbs.Any())
+                {
+                    resetSpriteOrientationButtonParent.AddToGUIUpdateList();
+                }
             }
             if (editRagdoll)
             {
@@ -752,9 +756,9 @@ namespace Barotrauma
                 {
                     var topLeft = spriteSheetControls.RectTransform.TopLeft;
                     bool useSpritesheetOrientation = float.IsNaN(firstLimb.Params.SpriteOrientation);
-                    GUI.DrawString(spriteBatch, new Vector2(topLeft.X + 300, GameMain.GraphicsHeight - 80), GetCharacterEditorTranslation("SpriteOrientation") + ":", useSpritesheetOrientation ? Color.White : Color.Yellow, Color.Gray * 0.5f, 10, GUI.Font);
+                    GUI.DrawString(spriteBatch, new Vector2(topLeft.X + 350 * GUI.xScale, GameMain.GraphicsHeight - 95 * GUI.yScale), GetCharacterEditorTranslation("SpriteOrientation") + ":", useSpritesheetOrientation ? Color.White : Color.Yellow, Color.Gray * 0.5f, 10, GUI.Font);
                     float orientation = useSpritesheetOrientation ? RagdollParams.SpritesheetOrientation : firstLimb.Params.SpriteOrientation;
-                    DrawRadialWidget(spriteBatch, new Vector2(topLeft.X + 510, GameMain.GraphicsHeight - 60), orientation, string.Empty, useSpritesheetOrientation ? Color.White : Color.Yellow,
+                    DrawRadialWidget(spriteBatch, new Vector2(topLeft.X + 560 * GUI.xScale, GameMain.GraphicsHeight - 75 * GUI.yScale), orientation, string.Empty, useSpritesheetOrientation ? Color.White : Color.Yellow,
                         angle => selectedLimbs.ForEach(l => TryUpdateSubParam(l.Params, "spriteorientation", angle)), circleRadius: 40, widgetSize: 15, rotationOffset: MathHelper.Pi, autoFreeze: false);
                 }
                 else
@@ -764,8 +768,8 @@ namespace Barotrauma
                         RagdollParams.AddToEditor(ParamsEditor.Instance);
                     }
                     var topLeft = spriteSheetControls.RectTransform.TopLeft;
-                    GUI.DrawString(spriteBatch, new Vector2(topLeft.X + 300, GameMain.GraphicsHeight - 80), GetCharacterEditorTranslation("SpriteSheetOrientation") + ":", Color.White, Color.Gray * 0.5f, 10, GUI.Font);
-                    DrawRadialWidget(spriteBatch, new Vector2(topLeft.X + 510, GameMain.GraphicsHeight - 60), RagdollParams.SpritesheetOrientation, string.Empty, Color.White,
+                    GUI.DrawString(spriteBatch, new Vector2(topLeft.X + 350 * GUI.xScale, GameMain.GraphicsHeight - 95 * GUI.yScale), GetCharacterEditorTranslation("SpriteSheetOrientation") + ":", Color.White, Color.Gray * 0.5f, 10, GUI.Font);
+                    DrawRadialWidget(spriteBatch, new Vector2(topLeft.X + 560 * GUI.xScale, GameMain.GraphicsHeight - 75 * GUI.yScale), RagdollParams.SpritesheetOrientation, string.Empty, Color.White,
                         angle => TryUpdateRagdollParam("spritesheetorientation", angle), circleRadius: 40, widgetSize: 15, rotationOffset: MathHelper.Pi, autoFreeze: false);
                 }
             }
@@ -1550,7 +1554,7 @@ namespace Barotrauma
         private GUIScrollBar spriteSheetZoomBar;
         private GUITickBox copyJointsToggle;
         private GUITickBox recalculateColliderToggle;
-
+        private GUIFrame resetSpriteOrientationButtonParent;
 
         private GUITickBox characterInfoToggle;
         private GUITickBox ragdollToggle;
@@ -2015,17 +2019,22 @@ namespace Barotrauma
                     return true;
                 }
             };
-            //new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteSheet.RectTransform), "Texture scale:", Color.White);
-            //new GUIScrollBar(new RectTransform(new Point((int)(elementSize.X * 1.75f), textAreaHeight), layoutGroupSpriteSheet.RectTransform), barSize: 0.2f)
-            //{
-            //    BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(textureMinScale, textureMaxScale, RagdollParams.TextureScale)),
-            //    Step = 0.01f,
-            //    OnMoved = (scrollBar, value) =>
-            //    {
-            //        RagdollParams.TextureScale = MathHelper.Lerp(textureMinScale, textureMaxScale, value);
-            //        return true;
-            //    }
-            //};
+            resetSpriteOrientationButtonParent = new GUIFrame(new RectTransform(new Vector2(0.1f, 0.025f), centerArea.RectTransform, Anchor.BottomCenter)
+            {
+                AbsoluteOffset = new Point(0, -5),
+                RelativeOffset = new Vector2(-0.05f, 0)
+            }, style: null)
+            {
+                CanBeFocused = false
+            };
+            new GUIButton(new RectTransform(Vector2.One, resetSpriteOrientationButtonParent.RectTransform, Anchor.TopRight), GetCharacterEditorTranslation("Reset"))
+            {
+                OnClicked = (box, data) =>
+                {
+                    selectedLimbs.ForEach(l => TryUpdateSubParam(l.Params, "spriteorientation", float.NaN));
+                    return true;
+                }
+            };
             // Limb controls
             limbControls = new GUIFrame(new RectTransform(Vector2.One, centerArea.RectTransform), style: null) { CanBeFocused = false };
             var layoutGroupLimbControls = new GUILayoutGroup(new RectTransform(Vector2.One, limbControls.RectTransform), childAnchor: Anchor.TopLeft) { CanBeFocused = false };
