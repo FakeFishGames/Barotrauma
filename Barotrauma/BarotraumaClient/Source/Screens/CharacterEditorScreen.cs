@@ -745,25 +745,29 @@ namespace Barotrauma
             }
             if (showSpritesheet)
             {
-                Limb firstLimb = selectedLimbs.FirstOrDefault();
-                if (firstLimb == null)
+                Limb lastLimb = selectedLimbs.LastOrDefault();
+                if (lastLimb == null)
                 {
-                    firstLimb = selectedJoints.FirstOrDefault()?.LimbB;
+                    var lastJoint = selectedJoints.LastOrDefault();
+                    if (lastJoint != null)
+                    {
+                        lastLimb = PlayerInput.KeyDown(Keys.LeftAlt) ? lastJoint.LimbA : lastJoint.LimbB;
+                    }
                 }
-                if (firstLimb != null)
+                if (lastLimb != null)
                 {
                     var topLeft = spriteSheetControls.RectTransform.TopLeft;
-                    bool useSpritesheetOrientation = float.IsNaN(firstLimb.Params.SpriteOrientation);
+                    bool useSpritesheetOrientation = float.IsNaN(lastLimb.Params.SpriteOrientation);
                     GUI.DrawString(spriteBatch, new Vector2(topLeft.X + 350 * GUI.xScale, GameMain.GraphicsHeight - 95 * GUI.yScale), GetCharacterEditorTranslation("SpriteOrientation") + ":", useSpritesheetOrientation ? Color.White : Color.Yellow, Color.Gray * 0.5f, 10, GUI.Font);
-                    float orientation = useSpritesheetOrientation ? RagdollParams.SpritesheetOrientation : firstLimb.Params.SpriteOrientation;
+                    float orientation = useSpritesheetOrientation ? RagdollParams.SpritesheetOrientation : lastLimb.Params.SpriteOrientation;
                     DrawRadialWidget(spriteBatch, new Vector2(topLeft.X + 560 * GUI.xScale, GameMain.GraphicsHeight - 75 * GUI.yScale), orientation, string.Empty, useSpritesheetOrientation ? Color.White : Color.Yellow,
                         angle =>
                         {
-                            TryUpdateSubParam(firstLimb.Params, "spriteorientation", angle);
+                            TryUpdateSubParam(lastLimb.Params, "spriteorientation", angle);
                             selectedLimbs.ForEach(l => TryUpdateSubParam(l.Params, "spriteorientation", angle));
                             if (limbPairEditing)
                             {
-                                UpdateOtherLimbs(firstLimb, l => TryUpdateSubParam(l.Params, "spriteorientation", angle));
+                                UpdateOtherLimbs(lastLimb, l => TryUpdateSubParam(l.Params, "spriteorientation", angle));
                             }
                         }, circleRadius: 40, widgetSize: 15, rotationOffset: MathHelper.Pi, autoFreeze: false);
                 }
