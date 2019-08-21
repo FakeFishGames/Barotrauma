@@ -960,7 +960,7 @@ namespace Barotrauma
                     {
                         GUI.DrawRectangle(spriteBatch, new Rectangle(rect.X, rect.Bottom - 8, rect.Width, 8), Color.Black * 0.8f, true);
                         GUI.DrawRectangle(spriteBatch,
-                            new Rectangle(rect.X, rect.Bottom - 8, (int)(rect.Width * item.Condition / item.MaxCondition), 8),
+                            new Rectangle(rect.X, rect.Bottom - 8, (int)(rect.Width * (item.Condition / item.MaxCondition)), 8),
                             Color.Lerp(Color.Red, Color.Green, item.Condition / item.MaxCondition) * 0.8f, true);
                     }
 

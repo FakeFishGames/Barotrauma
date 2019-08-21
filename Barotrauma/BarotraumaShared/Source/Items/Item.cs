@@ -2138,7 +2138,8 @@ namespace Barotrauma
             if (element.GetAttributeBool("flippedx", false)) item.FlipX(false);
             if (element.GetAttributeBool("flippedy", false)) item.FlipY(false);
 
-            item.condition = element.GetAttributeFloat("condition", item.Prefab.Health);
+            float condition = element.GetAttributeFloat("condition", item.MaxCondition);
+            item.condition = MathHelper.Clamp(condition, 0, item.MaxCondition);
             item.lastSentCondition = item.condition;
 
             item.SetActiveSprite();
