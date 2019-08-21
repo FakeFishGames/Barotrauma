@@ -305,10 +305,17 @@ namespace Barotrauma.Tutorials
             do
             {
                 float distance = Vector2.Distance(officer_coilgunPeriscope.WorldPosition, officer_hammerhead.WorldPosition);
+                if (distance > originalDistance * 1.5f)
+                {
+                    // Don't let the Hammerhead go too far.
+                    officer_hammerhead.TeleportTo(officer_hammerheadSpawnPos + new Vector2(0, -1000));
+                }
                 if (distance > originalDistance)
                 {
-                    // Don't let the Hammerhead go too far from the periscope.
-                    officer_hammerhead.TeleportTo(officer_hammerheadSpawnPos);
+                    // Ensure that the Hammerhead targets the player
+                    officer_hammerhead.AIController.SelectTarget(officer.AiTarget);
+                    var ai = officer_hammerhead.AIController as EnemyAIController;
+                    ai.sight = 2.0f;
                 }
                 yield return null;
             }
