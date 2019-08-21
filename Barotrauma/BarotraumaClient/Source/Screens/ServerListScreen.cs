@@ -38,7 +38,7 @@ namespace Barotrauma
             public GUIImage GUIImage;
         }
         private List<FriendAvatar> friendAvatars;
-        private GUIListBox friendDropdown;
+        private GUIFrame friendDropdown;
 
         private bool masterServerResponded;
         private IRestResponse masterServerResponse;
@@ -489,6 +489,11 @@ namespace Barotrauma
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
+
+            if (friendDropdown!=null && PlayerInput.LeftButtonClicked())
+            {
+                friendDropdown = null;
+            }
         }
 
         private void FilterServers()
@@ -587,17 +592,30 @@ namespace Barotrauma
                 Color hoverColor = new Color(40, 255, 80);
                 Color pressColor = new Color(50, 150, 50);
 
+                List<Facepunch.Steamworks.SteamFriend> notConnectedPlayingFriends = new List<Facepunch.Steamworks.SteamFriend>();
+
                 int friendButtonCount = 0;
                 foreach (var friend in Steam.SteamManager.Instance.Friends.AllFriends)
                 {
                     if (!friend.IsPlayingThisGame) { continue; }
-                    if (string.IsNullOrWhiteSpace(friend.GetRichPresence("connect"))) { continue; }
+                    var connectCommand = friend.GetRichPresence("connect");
+                    string connectName = null;
+                    string connectEndpoint = null;
+                    UInt64 connectLobby = 0;
+                    var status = friend.GetRichPresence("status");
+                    if (string.IsNullOrWhiteSpace(status) ||
+                        string.IsNullOrWhiteSpace(connectEndpoint))
+                    {
+                        notConnectedPlayingFriends.Add(friend);
+                        continue;
+                    }
                     friendButtonCount++;
                     if (friendButtonCount>5) { break; }
 
+                    ToolBox.ParseConnectCommand(connectCommand.Split(' '), out connectName, out connectEndpoint, out connectLobby);
+
                     //TODO: pick an optimal AvatarSize based on current resolution
                     var avatarImage = friend.GetAvatar(Facepunch.Steamworks.Friends.AvatarSize.Large);
-                    var tooltip = friend.GetRichPresence("status") ?? "Not playing on a server";
                     if (avatarImage != null)
                     {
                         //TODO: create an avatar atlas?
@@ -617,11 +635,40 @@ namespace Barotrauma
                         
                         guiButton.OnClicked = (button, userdata) =>
                         {
+                            friendDropdown = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas));
+                            var serverNameText = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), friendDropdown.RectTransform), connectName ?? "[Unnamed]");
+                            var joinButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), friendDropdown.RectTransform, Anchor.TopRight), "Join");
+                            joinButton.OnClicked = (btn, udt) =>
+                            {
+                                if (connectLobby != 0)
+                                {
+                                    GameMain.Instance.ConnectLobby = connectLobby;
+                                    GameMain.Instance.ConnectEndpoint = null;
+                                    GameMain.Instance.ConnectName = null;
+                                }
+                                else
+                                {
+                                    GameMain.Instance.ConnectLobby = 0;
+                                    GameMain.Instance.ConnectEndpoint = connectEndpoint;
+                                    GameMain.Instance.ConnectName = connectName;
+                                }
+                                return false;
+                            };
+
+                            Vector2 frameDims = joinButton.Font.MeasureString(connectName ?? "[Unnamed]");
+                            frameDims.X /= 0.6f;
+                            frameDims.Y *= 1.5f;
+                            friendDropdown.RectTransform.NonScaledSize = frameDims.ToPoint();
+                            friendDropdown.RectTransform.RelativeOffset = Vector2.Zero;
+                            friendDropdown.RectTransform.AbsoluteOffset = PlayerInput.MousePosition.ToPoint();
+                            friendDropdown.RectTransform.RecalculateChildren(true);
+                            friendDropdown.RectTransform.SetPosition(Anchor.TopLeft);
+
                             return false;
                         };
 
                         var guiImage = new GUIImage(new RectTransform(Vector2.One * 0.9f, guiButton.RectTransform, Anchor.Center), avatarSprite, null, true);
-                        guiImage.ToolTip = friend.Name + "\n" + tooltip;
+                        guiImage.ToolTip = friend.Name + "\n" + status;
 
                         friendAvatars.Add(new FriendAvatar() { Sprite = avatarSprite, GUIButton = guiButton, GUIImage = guiImage });
                     }
@@ -633,10 +680,8 @@ namespace Barotrauma
 
                 mainColor = new Color(70, 125, 90);
 
-                foreach (var friend in Steam.SteamManager.Instance.Friends.AllFriends)
+                foreach (var friend in notConnectedPlayingFriends)
                 {
-                    //if (!friend.IsPlayingThisGame) { continue; }
-                    if (!string.IsNullOrWhiteSpace(friend.GetRichPresence("connect"))) { continue; }
                     friendButtonCount++;
                     if (friendButtonCount > 5) { break; }
 
@@ -1163,6 +1208,8 @@ namespace Barotrauma
         public override void AddToGUIUpdateList()
         {
             menu.AddToGUIUpdateList();
+
+            friendDropdown?.AddToGUIUpdateList();
         }
         
     }
