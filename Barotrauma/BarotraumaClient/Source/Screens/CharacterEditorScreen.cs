@@ -4644,7 +4644,7 @@ namespace Barotrauma
         {
             rotationOffset += limb.Params.GetSpriteOrientation();
             Color angleColor = joint.UpperLimit - joint.LowerLimit > 0 ? Color.LightGreen * 0.5f : Color.Red;
-            DrawRadialWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.UpperLimit), $"joint.jointParams.Name {GetCharacterEditorTranslation("UpperLimit")}", Color.Cyan, angle =>
+            DrawRadialWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.UpperLimit), $"{joint.jointParams.Name}: {GetCharacterEditorTranslation("UpperLimit")}", Color.Cyan, angle =>
             {
                 joint.UpperLimit = MathHelper.ToRadians(angle);
                 ValidateJoint(joint);
@@ -4683,7 +4683,7 @@ namespace Barotrauma
                 DrawAngle(40, Color.Cyan);
                 GUI.DrawString(spriteBatch, drawPos, angle.FormatZeroDecimal(), Color.Black, backgroundColor: Color.Cyan, font: GUI.SmallFont);
             }, circleRadius: 40, rotationOffset: rotationOffset, displayAngle: false, clockWise: false);
-            DrawRadialWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.LowerLimit), $"joint.jointParams.Name {GetCharacterEditorTranslation("LowerLimit")}", Color.Yellow, angle =>
+            DrawRadialWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.LowerLimit), $"{joint.jointParams.Name}: {GetCharacterEditorTranslation("LowerLimit")}", Color.Yellow, angle =>
             {
                 joint.LowerLimit = MathHelper.ToRadians(angle);
                 ValidateJoint(joint);
