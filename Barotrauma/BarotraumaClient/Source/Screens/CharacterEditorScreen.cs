@@ -757,14 +757,18 @@ namespace Barotrauma
                     GUI.DrawString(spriteBatch, new Vector2(topLeft.X + 350 * GUI.xScale, GameMain.GraphicsHeight - 95 * GUI.yScale), GetCharacterEditorTranslation("SpriteOrientation") + ":", useSpritesheetOrientation ? Color.White : Color.Yellow, Color.Gray * 0.5f, 10, GUI.Font);
                     float orientation = useSpritesheetOrientation ? RagdollParams.SpritesheetOrientation : firstLimb.Params.SpriteOrientation;
                     DrawRadialWidget(spriteBatch, new Vector2(topLeft.X + 560 * GUI.xScale, GameMain.GraphicsHeight - 75 * GUI.yScale), orientation, string.Empty, useSpritesheetOrientation ? Color.White : Color.Yellow,
-                        angle => selectedLimbs.ForEach(l => TryUpdateSubParam(l.Params, "spriteorientation", angle)), circleRadius: 40, widgetSize: 15, rotationOffset: MathHelper.Pi, autoFreeze: false);
+                        angle =>
+                        {
+                            TryUpdateSubParam(firstLimb.Params, "spriteorientation", angle);
+                            selectedLimbs.ForEach(l => TryUpdateSubParam(l.Params, "spriteorientation", angle));
+                            if (limbPairEditing)
+                            {
+                                UpdateOtherLimbs(firstLimb, l => TryUpdateSubParam(l.Params, "spriteorientation", angle));
+                            }
+                        }, circleRadius: 40, widgetSize: 15, rotationOffset: MathHelper.Pi, autoFreeze: false);
                 }
                 else
                 {
-                    if (RagdollParams.SerializableEntityEditor == null)
-                    {
-                        RagdollParams.AddToEditor(ParamsEditor.Instance);
-                    }
                     var topLeft = spriteSheetControls.RectTransform.TopLeft;
                     GUI.DrawString(spriteBatch, new Vector2(topLeft.X + 350 * GUI.xScale, GameMain.GraphicsHeight - 95 * GUI.yScale), GetCharacterEditorTranslation("SpriteSheetOrientation") + ":", Color.White, Color.Gray * 0.5f, 10, GUI.Font);
                     DrawRadialWidget(spriteBatch, new Vector2(topLeft.X + 560 * GUI.xScale, GameMain.GraphicsHeight - 75 * GUI.yScale), RagdollParams.SpritesheetOrientation, string.Empty, Color.White,
@@ -2047,7 +2051,14 @@ namespace Barotrauma
             {
                 OnClicked = (box, data) =>
                 {
-                    selectedLimbs.ForEach(l => TryUpdateSubParam(l.Params, "spriteorientation", float.NaN));
+                    foreach (var limb in selectedLimbs)
+                    {
+                        TryUpdateSubParam(limb.Params, "spriteorientation", float.NaN);
+                        if (limbPairEditing)
+                        {
+                            UpdateOtherLimbs(limb, l => TryUpdateSubParam(l.Params, "spriteorientation", float.NaN));
+                        }
+                    }
                     return true;
                 }
             };
@@ -3027,9 +3038,13 @@ namespace Barotrauma
 
         private void TryUpdateParam(EditableParams editableParams, string name, object value)
         {
+            if (editableParams.SerializableEntityEditor == null)
+            {
+                editableParams.AddToEditor(ParamsEditor.Instance);
+            }
             if (editableParams.SerializableProperties.TryGetValue(name, out SerializableProperty p))
             {
-                editableParams.SerializableEntityEditor?.UpdateValue(p, value);
+                editableParams.SerializableEntityEditor.UpdateValue(p, value);
             }
         }
 
@@ -3038,9 +3053,13 @@ namespace Barotrauma
 
         private void TryUpdateSubParam(RagdollParams.SubParam ragdollSubParams, string name, object value)
         {
+            if (ragdollSubParams.SerializableEntityEditor == null)
+            {
+                ragdollSubParams.AddToEditor(ParamsEditor.Instance);
+            }
             if (ragdollSubParams.SerializableProperties.TryGetValue(name, out SerializableProperty p))
             {
-                ragdollSubParams.SerializableEntityEditor?.UpdateValue(p, value);
+                ragdollSubParams.SerializableEntityEditor.UpdateValue(p, value);
             }
             else
             {
@@ -3049,13 +3068,16 @@ namespace Barotrauma
                 {
                     if (subParams.SerializableProperties.TryGetValue(name, out p))
                     {
-                        subParams.SerializableEntityEditor?.UpdateValue(p, value);
+                        if (subParams.SerializableEntityEditor == null)
+                        {
+                            subParams.AddToEditor(ParamsEditor.Instance);
+                        }
+                        subParams.SerializableEntityEditor.UpdateValue(p, value);
                     }
                 }
                 else
                 {
                     DebugConsole.ThrowError(GetCharacterEditorTranslation("NoFieldForParameterFound").Replace("[parameter]", name));
-                    //ragdollParams.SubParams.ForEach(sp => sp.SerializableProperties.ForEach(prop => DebugConsole.ThrowError($"{sp.Name}: sub param field: {prop.Key}")));
                 }
             }
         }
