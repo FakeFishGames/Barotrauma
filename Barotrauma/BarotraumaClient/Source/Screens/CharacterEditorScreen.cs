@@ -274,13 +274,13 @@ namespace Barotrauma
             {
                 limbControls.AddToGUIUpdateList();
             }
-            if (showParamsEditor)
-            {
-                ParamsEditor.Instance.EditorBox.Parent.AddToGUIUpdateList();
-            }
             if (ShowExtraRagdollControls)
             {
                 extraRagdollControls.AddToGUIUpdateList();
+            }
+            if (showParamsEditor)
+            {
+                ParamsEditor.Instance.EditorBox.Parent.AddToGUIUpdateList();
             }
         }
 
