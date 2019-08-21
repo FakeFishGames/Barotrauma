@@ -122,6 +122,9 @@ namespace Barotrauma {
                     case "replaceinventory":
                         goal = new Traitor.GoalReplaceInventory(Config.GetAttributeStringArray("containers", new string[] { }), Config.GetAttributeStringArray("replacements", new string[] { }), Config.GetAttributeFloat("percentage", 100.0f) / 100.0f);
                         break;
+                    case "reachdistancefromsub":
+                        goal = new Traitor.GoalReachDistanceFromSub(Config.GetAttributeFloat("distance", 100.0f));
+                        break;
                 }
                 if (goal == null)
                 {

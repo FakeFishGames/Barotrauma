@@ -462,12 +462,12 @@
   <debugconsolehelptext>Debug console—press F3 to open/close; enter help for a list of available commands</debugconsolehelptext>
 
   <!-- Editor -->
-  
+
   <!-- Links -->
   <editordisclaimerwikiurl>https://barotrauma.gamepedia.com/Barotrauma_Wiki</editordisclaimerwikiurl>
   <editordisclaimerdiscordurl>https://discordapp.com/invite/xjeSzWU</editordisclaimerdiscordurl>
   <editordisclaimerforumurl>https://undertowgames.com/forum/viewforum.php?f=17</editordisclaimerforumurl>
-  
+
   <!-- Structure -->
   <entityname.hull>Hull</entityname.hull>
   <entitydescription.hull>Hulls determine which parts are considered to be 'inside the sub'. Generally every room should be enclosed by a hull.</entitydescription.hull>
@@ -1043,7 +1043,7 @@
   <!-- Entity editor -->
   <stringpropertytranslate>This text will be translated to [translation].</stringpropertytranslate>
   <stringpropertycannottranslate>This text will not be translated - text with the tag [tag] not found in the language files.</stringpropertycannottranslate>
-  
+
   <!-- Characters -->
   <MyCharacter>My character</MyCharacter>
   <character.carrier>Carrier</character.carrier>
@@ -3446,6 +3446,7 @@
   <karmakicked>You have been kicked from the server because your Karma decreased below [banthreshold].</karmakicked>
   <karma.kicksbeforeban>Number of kicks before a ban</karma.kicksbeforeban>
   <karma.kicksbeforebantooltip>If the player has been kicked from the server due to low karma this many times, they will be banned if the karma drops below the kick/ban threshold again. A value of 0 means players will always get banned if their karma drops below the threshold.</karma.kicksbeforebantooltip>
+  <traitorgoalreachdistancefromsub>Reach distance of [distance] from the sub.</traitorgoalreachdistancefromsub>
 
   <!-- Changed values as of 13th of August -->
   <traitorgoaldestroyitems>Dispose of at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>
