@@ -270,11 +270,14 @@ namespace Barotrauma
             return null;
         }
 
-        public override void SelectTarget(AITarget target)
+        public override void SelectTarget(AITarget target) => SelectTarget(target, 100);
+
+        public void SelectTarget(AITarget target, float priority)
         {
             SelectedAiTarget = target;
             selectedTargetMemory = GetTargetMemory(target);
-            targetValue = 100.0f;
+            selectedTargetMemory.Priority = priority;
+            targetValue = priority;
         }
         
         public override void Update(float deltaTime)
@@ -985,7 +988,7 @@ namespace Barotrauma
                 var aiTarget = wallTarget.Structure.AiTarget;
                 if (aiTarget != null && SelectedAiTarget != aiTarget)
                 {
-                    SelectTarget(aiTarget);
+                    SelectTarget(aiTarget, GetTargetMemory(SelectedAiTarget).Priority);
                 }
             }
             if (SelectedAiTarget.Entity is IDamageable damageTarget)
