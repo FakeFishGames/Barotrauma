@@ -374,11 +374,9 @@ namespace Barotrauma
             {
                 aiTarget = new AITarget(this)
                 {
-                    MinSightRange = 1000,
-                    MaxSightRange = 4000,
-                    MaxSoundRange = 0,
-                    SoundRange = 0,
-                    SightRange = 1000
+                    MinSightRange = 2000,
+                    MaxSightRange = 5000,
+                    MaxSoundRange = 0
                 };
             }
 
