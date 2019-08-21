@@ -142,6 +142,9 @@ namespace Barotrauma
             IsPathDirty = false;
         }
 
+        public Func<PathNode, bool> startNodeFilter;
+        public Func<PathNode, bool> endNodeFilter;
+
         protected override Vector2 DoSteeringSeek(Vector2 target, float weight)
         {
             bool needsNewPath = currentPath != null && currentPath.Unreachable || Vector2.DistanceSquared(target, currentTarget) > 1;
@@ -164,7 +167,7 @@ namespace Barotrauma
                     }
                 }
 
-                var newPath = pathFinder.FindPath(pos, target, character.Submarine, "(Character: " + character.Name + ")");
+                var newPath = pathFinder.FindPath(pos, target, character.Submarine, "(Character: " + character.Name + ")", startNodeFilter, endNodeFilter);
                 bool useNewPath = currentPath == null || needsNewPath;
                 if (!useNewPath && currentPath != null && currentPath.CurrentNode != null && newPath.Nodes.Any() && !newPath.Unreachable)
                 {
