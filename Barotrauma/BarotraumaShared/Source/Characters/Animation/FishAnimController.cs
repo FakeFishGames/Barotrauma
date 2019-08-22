@@ -132,7 +132,9 @@ namespace Barotrauma
         {
             if (Frozen) return;
             if (MainLimb == null) { return; }
-            
+
+            levitatingCollider = true;
+
             if (!character.AllowInput)
             {
                 levitatingCollider = false;
