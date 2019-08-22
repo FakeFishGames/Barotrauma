@@ -842,13 +842,16 @@
   <leveleditorlevelobjtexturenotfound>Could not find the selected texture file.</leveleditorlevelobjtexturenotfound>
 
   <!-- Character editor -->
-  <charactereditor.contentpackagenameinuse>A content package with the same name already exists. Please choose another name or select the existing content package from the dropdown if you want to add the character to it.</charactereditor.contentpackagenameinuse>
   <charactereditor.creatingnewjoint>Creating a new joint</charactereditor.creatingnewjoint>
+  <charactereditor.selectanchor1pos>Select the anchor position for the joint</charactereditor.selectanchor1pos>
+  <charactereditor.selectlimbtoconnect>Select another limb to connect it with the joint</charactereditor.selectlimbtoconnect>
   <charactereditor.frozen>Frozen</charactereditor.frozen>
   <charactereditor.animationtestposeenabled>Animation Test Pose Enabled</charactereditor.animationtestposeenabled>
+  <charactereditor.spriteorientation>Sprite Orientation</charactereditor.spriteorientation>
   <charactereditor.spritesheetorientation>Spritesheet Orientation</charactereditor.spritesheetorientation>
   <charactereditor.cantaddjointsnolimbelements>Cannot add joints, because no limb elements were found!</charactereditor.cantaddjointsnolimbelements>
   <charactereditor.humanoidlimbdeletiondisabled>Deleting limbs from a humanoid is currently disabled due to crashing</charactereditor.humanoidlimbdeletiondisabled>
+  <charactereditor.humanoidlimbdeletiondisabled>Deleting limbs from a humanoid is currently disabled to prevent crashing</charactereditor.humanoidlimbdeletiondisabled>
   <charactereditor.tryingtospawncharacter>Trying to spawn [config]</charactereditor.tryingtospawncharacter>
   <charactereditor.nocontentpackageselected>No content package selected!</charactereditor.nocontentpackageselected>
   <charactereditor.contentpackagesaved>Content package saved at: [path]</charactereditor.contentpackagesaved>
@@ -871,10 +874,14 @@
   <charactereditor.nextcharacter>Next</charactereditor.nextcharacter>
   <charactereditor.showparameters>Parameters</charactereditor.showparameters>
   <charactereditor.showspritesheet>Spritesheet</charactereditor.showspritesheet>
-  <charactereditor.showragdoll>Ragdoll</charactereditor.showragdoll>
+  <charactereditor.drawskeleton>Skeleton</charactereditor.drawskeleton>
+  <charactereditor.enablelights>Lights</charactereditor.enablelights>
+  <charactereditor.drawdamagemodifiers>Damage Modifiers</charactereditor.drawdamagemodifiers>
+  <charactereditor.editcharacter>CHARACTER</charactereditor.editcharacter>
   <charactereditor.editanimations>ANIMATIONS</charactereditor.editanimations>
   <charactereditor.editlimbs>LIMBS</charactereditor.editlimbs>
   <charactereditor.editjoints>JOINTS</charactereditor.editjoints>
+  <charactereditor.editragdoll>RAGDOLL</charactereditor.editragdoll>
   <charactereditor.editiktargets>IK Targets</charactereditor.editiktargets>
   <charactereditor.freeze>Freeze</charactereditor.freeze>
   <charactereditor.autofreeze>Auto Freeze</charactereditor.autofreeze>
@@ -884,15 +891,12 @@
   <charactereditor.followcursor>Follow Cursor</charactereditor.followcursor>
   <charactereditor.showcolliders>Colliders</charactereditor.showcolliders>
   <charactereditor.editbackgroundcolor>Edit Background Color</charactereditor.editbackgroundcolor>
-  <charactereditor.quicksaveanimations>Quick Save Animations</charactereditor.quicksaveanimations>
+  <charactereditor.savebutton>Save All</charactereditor.savebutton>
   <charactereditor.canteditvanillacontent>Can't edit Vanilla content!</charactereditor.canteditvanillacontent>
   <charactereditor.allanimationssaved>All animations saved</charactereditor.allanimationssaved>
-  <charactereditor.quicksaveragdoll>Quick Save Ragdoll</charactereditor.quicksaveragdoll>
   <charactereditor.ragdollsavedto>Ragdoll saved to [path]</charactereditor.ragdollsavedto>
-  <charactereditor.resetanimations>Reset Animations</charactereditor.resetanimations>
-  <charactereditor.allanimationsreset>All animations reset</charactereditor.allanimationsreset>
-  <charactereditor.resetragdoll>Reset Ragdoll</charactereditor.resetragdoll>
-  <charactereditor.ragdollreset>Ragdoll reset</charactereditor.ragdollreset>
+  <charactereditor.charactersavedto>Character config file saved to [path]</charactereditor.charactersavedto>
+  <charactereditor.resetbutton>Reset</charactereditor.resetbutton>
   <charactereditor.saveragdoll>Save Ragdoll</charactereditor.saveragdoll>
   <charactereditor.providefilename>Please provide a name for the file</charactereditor.providefilename>
   <charactereditor.loadragdoll>Load Ragdoll</charactereditor.loadragdoll>
@@ -908,7 +912,7 @@
   <charactereditor.animationoftypeloaded>Animation of type [type] loaded from [file]</charactereditor.animationoftypeloaded>
   <charactereditor.reloadtextures>Reload Textures</charactereditor.reloadtextures>
   <charactereditor.recreateragdoll>Recreate Ragdoll</charactereditor.recreateragdoll>
-  <charactereditor.recreateragdolltooltip>Many of the parameters requires recreation of the ragdoll. If adjusting the parameter doesn't seem to have effect, click this button.</charactereditor.recreateragdolltooltip>
+  <charactereditor.recreateragdolltooltip>Many of the parameters requires recreating the ragdoll. If adjusting the parameter doesn't seem to have effect, click this button.</charactereditor.recreateragdolltooltip>
   <charactereditor.createnewcharacter>Create New Character</charactereditor.createnewcharacter>
   <charactereditor.nofieldforparameterfound>No field for [parameter] found!</charactereditor.nofieldforparameterfound>
   <charactereditor.selecttargetlimbforjointend>Left click to select the target limb for the other end of the joint.</charactereditor.selecttargetlimbforjointend>
@@ -931,6 +935,7 @@
   <charactereditor.legmovementamount>Leg Movement Amount</charactereditor.legmovementamount>
   <charactereditor.handmovementamount>Hand Movement Amount</charactereditor.handmovementamount>
   <charactereditor.holdleftalttomanipulatejoint>Hold Left Alt to manipulate the other end of the joint</charactereditor.holdleftalttomanipulatejoint>
+  <charactereditor.holdleftalttomanipulatejoint>Hold "Left Alt" to manipulate the other end of the joint</charactereditor.holdleftalttomanipulatejoint>
   <charactereditor.origin>Origin</charactereditor.origin>
   <charactereditor.position>Position: [coordinates]</charactereditor.position>
   <charactereditor.size>Size</charactereditor.size>
@@ -960,7 +965,7 @@
   <charactereditor.limbwithindexanchor>Limb [index] Anchor</charactereditor.limbwithindexanchor>
   <charactereditor.failedtoreadhtml>Character Editor Screen: Failed to read HTML at [path]</charactereditor.failedtoreadhtml>
   <charactereditor.multipleitemswithsamehierarchy>Multiple items with the same hierarchy [hierarchy] found ([name]). Cannot continue.</charactereditor.multipleitemswithsamehierarchy>
-  <charactereditor.cannoteditvanillacharacters>Cannot edit the characters defined in the Vanilla content package!</charactereditor.cannoteditvanillacharacters>
+  <charactereditor.cannoteditvanillacharacters>Cannot edit the characters defined in the 'Vanilla' content package!</charactereditor.cannoteditvanillacharacters>
   <charactereditor.existingcharacterfoundreplaceverification>An existing character with the same name was found. Do you want to replace it?</charactereditor.existingcharacterfoundreplaceverification>
   <charactereditor.existingcharacterfound>An existing character with the same name was found.</charactereditor.existingcharacterfound>
   <charactereditor.modespanel>Modes</charactereditor.modespanel>
@@ -969,6 +974,17 @@
   <charactereditor.characterpanel>Character</charactereditor.characterpanel>
   <charactereditor.toolspanel>Tools</charactereditor.toolspanel>
   <charactereditor.addmultiplelimbsbutton>Add Multiple</charactereditor.addmultiplelimbsbutton>
+  <charactereditor.contentpackagenameinuse>A content package with the same name already exists. Please choose another name or select the existing content package from the dropdown if you want to add the character to it.</charactereditor.contentpackagenameinuse>
+  <charactereditor.addaitarget>Add Target</charactereditor.addaitarget>
+  <charactereditor.addbloodemitter>Add Blood Emitter</charactereditor.addbloodemitter>
+  <charactereditor.addgibemitter>Add Gib Emitter</charactereditor.addgibemitter>
+  <charactereditor.addsound>Add Sound</charactereditor.addsound>
+  <charactereditor.addlightsource>Add Light</charactereditor.addlightsource>
+  <charactereditor.addattack>Add Attack</charactereditor.addattack>
+  <charactereditor.addaffliction>Add Affliction</charactereditor.addaffliction>
+  <charactereditor.adddamagemodifier>Add Damage Modifier</charactereditor.adddamagemodifier>
+  <charactereditor.addinventory>Add Inventory</charactereditor.addinventory>
+  <charactereditor.addinventoryitem>Add Inventory Item</charactereditor.addinventoryitem>
 
   <!-- Submarine editor -->
   <items>Items</items>
