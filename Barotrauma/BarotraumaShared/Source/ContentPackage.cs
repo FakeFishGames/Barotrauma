@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -37,7 +38,9 @@ namespace Barotrauma
         Buffs,
         Tutorials,
         UIStyle,
-        TraitorMissions
+        TraitorMissions,
+        EventManagerSettings,
+        Orders
     }
 
     public class ContentPackage
@@ -61,7 +64,8 @@ namespace Barotrauma
             ContentType.LevelObjectPrefabs,
             ContentType.RuinConfig,
             ContentType.Outpost,
-            ContentType.Afflictions
+            ContentType.Afflictions,
+            ContentType.Orders
         };
 
         //at least one file of each these types is required in core content packages
@@ -85,7 +89,9 @@ namespace Barotrauma
             ContentType.RuinConfig,
             ContentType.NPCConversations,
             ContentType.Afflictions,
-            ContentType.UIStyle
+            ContentType.UIStyle,
+            ContentType.EventManagerSettings,
+            ContentType.Orders
         };
 
         public static IEnumerable<ContentType> CorePackageRequiredFiles
@@ -368,12 +374,18 @@ namespace Barotrauma
             {
                 case ContentType.Character:
                     XDocument doc = XMLExtensions.TryLoadXml(file.Path);
-                    string speciesName = doc.Root.GetAttributeString("name", "");
-                    //TODO: check non-default paths if defined
-                    filePaths.Add(RagdollParams.GetDefaultFile(speciesName, this));
-                    foreach (AnimationType animationType in Enum.GetValues(typeof(AnimationType)))
+                    var rootElement = doc.Root;
+                    var element = rootElement.IsOverride() ? rootElement.FirstElement() : rootElement;
+                    var speciesName = element.GetAttributeString("name", "");
+                    var ragdollFolder = RagdollParams.GetFolder(speciesName);
+                    if (Directory.Exists(ragdollFolder))
                     {
-                        filePaths.Add(AnimationParams.GetDefaultFile(speciesName, animationType, this));
+                        Directory.GetFiles(ragdollFolder, "*.xml").ForEach(f => filePaths.Add(f));
+                    }
+                    var animationFolder = AnimationParams.GetFolder(speciesName);
+                    if (Directory.Exists(animationFolder))
+                    {
+                        Directory.GetFiles(animationFolder, "*.xml").ForEach(f => filePaths.Add(f));
                     }
                     break;
             }
@@ -421,7 +433,7 @@ namespace Barotrauma
             switch (contentFile.Type)
             {
                 case ContentType.Submarine:
-                    return path == "Submarines" || path == "Mods";
+                    return path == "Submarines";
                 default:
                     return path == "Mods";
             }
@@ -445,7 +457,7 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Returns all xml files.
+        /// Returns all xml files from all the loaded content packages.
         /// </summary>
         public static IEnumerable<string> GetAllContentFiles(IEnumerable<ContentPackage> contentPackages)
         {
@@ -478,12 +490,13 @@ namespace Barotrauma
                 }
             }
 
+            string[] files = Directory.GetFiles(folder, "*.xml");
+
             List.Clear();
 
-            string[] files = Directory.GetFiles(folder, "*.xml");
             foreach (string filePath in files)
             {
-                List.Add(new ContentPackage(filePath));                               
+                List.Add(new ContentPackage(filePath));
             }
 
             string[] modDirectories = Directory.GetDirectories("Mods");
@@ -495,6 +508,21 @@ namespace Barotrauma
                 {
                     List.Add(new ContentPackage(modFilePath));
                 }
+            }
+        }
+
+        public static void SortContentPackages()
+        {
+            List = List
+                .OrderByDescending(p => p.CorePackage)
+                .ThenByDescending(p => GameMain.Config?.SelectedContentPackages.Contains(p))
+                .ThenBy(p => GameMain.Config?.SelectedContentPackages.IndexOf(p))
+                .ToList();
+
+            if (GameMain.Config != null)
+            {
+                var reportList = List.Where(p => GameMain.Config.SelectedContentPackages.Contains(p));
+                DebugConsole.NewMessage($"Content package load order: { new string(reportList.SelectMany(cp => cp.Name + "  |  ").ToArray()) }");
             }
         }
 
@@ -512,6 +540,7 @@ namespace Barotrauma
                 return;
             }
             List.Remove(this);
+            SortContentPackages();
         }
     }
 
