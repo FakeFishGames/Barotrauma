@@ -515,6 +515,8 @@ namespace Barotrauma
 
             public override string GenerateName() => $"Limb {ID}";
 
+            public SpriteParams GetSprite() => deformSpriteParams ?? normalSpriteParams;
+
             /// <summary>
             /// Note that editing this in-game doesn't currently have any effect (unless the ragdoll is recreated). It should be visible, but readonly in the editor.
             /// </summary>

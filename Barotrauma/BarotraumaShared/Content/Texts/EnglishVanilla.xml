@@ -983,6 +983,10 @@
   <charactereditor.addinventory>Add Inventory</charactereditor.addinventory>
   <charactereditor.addinventoryitem>Add Inventory Item</charactereditor.addinventoryitem>
   <charactereditor.selected>Selected</charactereditor.selected>
+  <charactereditor.duplicatelimb>Duplicate Limb</charactereditor.duplicatelimb>
+  <charactereditor.deleteselected>Delete Selected</charactereditor.deleteselected>
+  <charactereditor.createjoint>Create Joint</charactereditor.createjoint>
+  <charactereditor.createlimb>Create Limb</charactereditor.createlimb>
 
   <!-- Submarine editor -->
   <items>Items</items>
