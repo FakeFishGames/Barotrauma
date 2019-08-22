@@ -1365,6 +1365,11 @@ namespace Barotrauma
         {
             selectedLimbs.Clear();
             selectedJoints.Clear();
+            foreach (var w in jointSelectionWidgets.Values)
+            {
+                w.refresh();
+                w.linkedWidget?.refresh();
+            }
         }
 
         private void RecreateRagdoll(RagdollParams ragdoll = null)
