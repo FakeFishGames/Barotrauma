@@ -846,11 +846,10 @@
   <charactereditor.selectanchor1pos>Select the anchor position for the joint</charactereditor.selectanchor1pos>
   <charactereditor.selectlimbtoconnect>Select another limb to connect it with the joint</charactereditor.selectlimbtoconnect>
   <charactereditor.frozen>Frozen</charactereditor.frozen>
-  <charactereditor.animationtestposeenabled>Animation Test Pose Enabled</charactereditor.animationtestposeenabled>
+  <charactereditor.animationtestpose>Animation Test Pose</charactereditor.animationtestpose>
   <charactereditor.spriteorientation>Sprite Orientation</charactereditor.spriteorientation>
   <charactereditor.spritesheetorientation>Spritesheet Orientation</charactereditor.spritesheetorientation>
   <charactereditor.cantaddjointsnolimbelements>Cannot add joints, because no limb elements were found!</charactereditor.cantaddjointsnolimbelements>
-  <charactereditor.humanoidlimbdeletiondisabled>Deleting limbs from a humanoid is currently disabled due to crashing</charactereditor.humanoidlimbdeletiondisabled>
   <charactereditor.humanoidlimbdeletiondisabled>Deleting limbs from a humanoid is currently disabled to prevent crashing</charactereditor.humanoidlimbdeletiondisabled>
   <charactereditor.tryingtospawncharacter>Trying to spawn [config]</charactereditor.tryingtospawncharacter>
   <charactereditor.nocontentpackageselected>No content package selected!</charactereditor.nocontentpackageselected>
@@ -892,7 +891,6 @@
   <charactereditor.showcolliders>Colliders</charactereditor.showcolliders>
   <charactereditor.editbackgroundcolor>Edit Background Color</charactereditor.editbackgroundcolor>
   <charactereditor.savebutton>Save All</charactereditor.savebutton>
-  <charactereditor.canteditvanillacontent>Can't edit Vanilla content!</charactereditor.canteditvanillacontent>
   <charactereditor.allanimationssaved>All animations saved</charactereditor.allanimationssaved>
   <charactereditor.ragdollsavedto>Ragdoll saved to [path]</charactereditor.ragdollsavedto>
   <charactereditor.charactersavedto>Character config file saved to [path]</charactereditor.charactersavedto>
@@ -915,8 +913,7 @@
   <charactereditor.recreateragdolltooltip>Many of the parameters requires recreating the ragdoll. If adjusting the parameter doesn't seem to have effect, click this button.</charactereditor.recreateragdolltooltip>
   <charactereditor.createnewcharacter>Create New Character</charactereditor.createnewcharacter>
   <charactereditor.nofieldforparameterfound>No field for [parameter] found!</charactereditor.nofieldforparameterfound>
-  <charactereditor.selecttargetlimbforjointend>Left click to select the target limb for the other end of the joint.</charactereditor.selecttargetlimbforjointend>
-  <charactereditor.holdleftalttoadjustcyclespeed>Hold Left Alt to adjust cycle speed</charactereditor.holdleftalttoadjustcyclespeed>
+  <charactereditor.holdleftalttoadjustcyclespeed>Hold "Left Alt" to adjust the cycle speed</charactereditor.holdleftalttoadjustcyclespeed>
   <charactereditor.cyclespeed>Cycle Speed</charactereditor.cyclespeed>
   <charactereditor.movementspeed>Movement Speed</charactereditor.movementspeed>
   <charactereditor.headangle>Head Angle</charactereditor.headangle>
@@ -934,7 +931,6 @@
   <charactereditor.legmovementspeed>Leg Movement Speed</charactereditor.legmovementspeed>
   <charactereditor.legmovementamount>Leg Movement Amount</charactereditor.legmovementamount>
   <charactereditor.handmovementamount>Hand Movement Amount</charactereditor.handmovementamount>
-  <charactereditor.holdleftalttomanipulatejoint>Hold Left Alt to manipulate the other end of the joint</charactereditor.holdleftalttomanipulatejoint>
   <charactereditor.holdleftalttomanipulatejoint>Hold "Left Alt" to manipulate the other end of the joint</charactereditor.holdleftalttomanipulatejoint>
   <charactereditor.origin>Origin</charactereditor.origin>
   <charactereditor.position>Position: [coordinates]</charactereditor.position>
@@ -986,6 +982,7 @@
   <charactereditor.adddamagemodifier>Add Damage Modifier</charactereditor.adddamagemodifier>
   <charactereditor.addinventory>Add Inventory</charactereditor.addinventory>
   <charactereditor.addinventoryitem>Add Inventory Item</charactereditor.addinventoryitem>
+  <charactereditor.selected>Selected</charactereditor.selected>
 
   <!-- Submarine editor -->
   <items>Items</items>
