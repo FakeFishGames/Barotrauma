@@ -678,7 +678,7 @@ namespace Barotrauma
             {
                 DrawLimbEditor(spriteBatch);
             }
-            if (drawSkeleton || editRagdoll || editJoints || editLimbs)
+            if (drawSkeleton || editRagdoll || editJoints || editLimbs || editIK)
             {
                 DrawRagdoll(spriteBatch, (float)deltaTime);
             }
