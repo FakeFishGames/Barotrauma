@@ -967,7 +967,7 @@ namespace Barotrauma
         private void ExtrudeJoint(LimbJoint joint, int targetLimb, Vector2? anchor1 = null, Vector2? anchor2 = null)
         {
             if (joint == null) { return; }
-            CreateJoint(joint.jointParams.Limb2, targetLimb, anchor1, anchor2);
+            CreateJoint(joint.Params.Limb2, targetLimb, anchor1, anchor2);
         }
 
         /// <summary>
@@ -1003,7 +1003,7 @@ namespace Barotrauma
             TeleportTo(spawnPosition);
             ClearWidgets();
             ClearSelection();
-            selectedJoints.Add(character.AnimController.LimbJoints.Single(j => j.jointParams == newJointParams));
+            selectedJoints.Add(character.AnimController.LimbJoints.Single(j => j.Params == newJointParams));
             jointsToggle.Selected = true;
             ResetParamsEditor();
         }
@@ -1017,8 +1017,8 @@ namespace Barotrauma
             for (int i = 0; i < selectedJoints.Count; i++)
             {
                 var joint = selectedJoints[i];
-                joint.jointParams.Element.Remove();
-                RagdollParams.Joints.Remove(joint.jointParams);
+                joint.Params.Element.Remove();
+                RagdollParams.Joints.Remove(joint.Params);
             }
             var removedIDs = new List<int>();
             for (int i = 0; i < selectedLimbs.Count; i++)
@@ -1380,14 +1380,14 @@ namespace Barotrauma
             character.AnimController.Recreate(ragdoll);
             TeleportTo(spawnPosition);
             // For some reason Enumerable.Contains() method does not find the match, threfore the conversion to a list.
-            var selectedJointParams = selectedJoints.Select(j => j.jointParams).ToList();
+            var selectedJointParams = selectedJoints.Select(j => j.Params).ToList();
             var selectedLimbParams = selectedLimbs.Select(l => l.Params).ToList();
             CreateTextures();
             ClearWidgets();
             ClearSelection();
             foreach (var joint in character.AnimController.LimbJoints)
             {
-                if (selectedJointParams.Contains(joint.jointParams))
+                if (selectedJointParams.Contains(joint.Params))
                 {
                     selectedJoints.Add(joint);
                 }
@@ -2934,7 +2934,7 @@ namespace Barotrauma
                 {
                     if (selectedJoints.Any())
                     {
-                        selectedJoints.ForEach(j => j.jointParams.AddToEditor(ParamsEditor.Instance, true, space: 10));
+                        selectedJoints.ForEach(j => j.Params.AddToEditor(ParamsEditor.Instance, true, space: 10));
                     }
                     else
                     {
@@ -3072,7 +3072,7 @@ namespace Barotrauma
             }
         }
 
-        private void TryUpdateJointParam(LimbJoint joint, string name, object value) => TryUpdateSubParam(joint.jointParams, name, value);
+        private void TryUpdateJointParam(LimbJoint joint, string name, object value) => TryUpdateSubParam(joint.Params, name, value);
         private void TryUpdateLimbParam(Limb limb, string name, object value) => TryUpdateSubParam(limb.Params, name, value);
 
         private void TryUpdateSubParam(RagdollParams.SubParam ragdollSubParams, string name, object value)
@@ -3998,9 +3998,10 @@ namespace Barotrauma
         private void DrawRagdoll(SpriteBatch spriteBatch, float deltaTime)
         {
             bool altDown = PlayerInput.KeyDown(Keys.LeftAlt);
+
             if (!altDown && editJoints && selectedJoints.Any() && jointCreationMode == JointCreationMode.None)
             {
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 200, 250), GetCharacterEditorTranslation("HoldLeftAltToManipulateJoint"), Color.White, Color.Black * 0.5f, 10, GUI.Font);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 180, 250), GetCharacterEditorTranslation("HoldLeftAltToManipulateJoint"), Color.White, Color.Black * 0.5f, 10, GUI.Font);
             }
 
             foreach (Limb limb in character.AnimController.Limbs)
@@ -4066,7 +4067,7 @@ namespace Barotrauma
                         {
                             continue;
                         }
-                        var selectionWidget = GetJointSelectionWidget($"{joint.jointParams.Name} selection widget ragdoll", joint);
+                        var selectionWidget = GetJointSelectionWidget($"{joint.Params.Name} selection widget ragdoll", joint);
                         selectionWidget.DrawPos = tformedJointPos;
                         selectionWidget.Draw(spriteBatch, deltaTime);
                         if (selectedJoints.Contains(joint))
@@ -4084,7 +4085,7 @@ namespace Barotrauma
                             //GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + up * 20, Color.White, width: 3);
                             GUI.DrawLine(spriteBatch, limbScreenPos, tformedJointPos, Color.Yellow, width: 3);
                             //GUI.DrawRectangle(spriteBatch, inputRect, Color.Red);
-                            GUI.DrawString(spriteBatch, tformedJointPos + new Vector2(dotSize.X, -dotSize.Y) * 2, $"{joint.jointParams.Name} {jointPos.FormatZeroDecimal()}", Color.White, Color.Black * 0.5f);
+                            GUI.DrawString(spriteBatch, tformedJointPos + new Vector2(dotSize.X, -dotSize.Y) * 2, $"{joint.Params.Name} {jointPos.FormatZeroDecimal()}", Color.White, Color.Black * 0.5f);
                             if (PlayerInput.LeftButtonHeld())
                             {
                                 if (!selectionWidget.IsControlled) { continue; }
@@ -4588,10 +4589,10 @@ namespace Barotrauma
                 tformedJointPos.Y = -tformedJointPos.Y;
                 tformedJointPos.X *= character.AnimController.Dir;
                 tformedJointPos += limbScreenPos;
-                var jointSelectionWidget = GetJointSelectionWidget($"{joint.jointParams.Name} selection widget {anchorID}", joint, $"{joint.jointParams.Name} selection widget {otherID}");
+                var jointSelectionWidget = GetJointSelectionWidget($"{joint.Params.Name} selection widget {anchorID}", joint, $"{joint.Params.Name} selection widget {otherID}");
                 jointSelectionWidget.DrawPos = tformedJointPos;
                 jointSelectionWidget.Draw(spriteBatch, deltaTime);
-                var otherWidget = GetJointSelectionWidget($"{joint.jointParams.Name} selection widget {otherID}", joint, $"{joint.jointParams.Name} selection widget {anchorID}");
+                var otherWidget = GetJointSelectionWidget($"{joint.Params.Name} selection widget {otherID}", joint, $"{joint.Params.Name} selection widget {anchorID}");
                 if (anchorID == "2")
                 {
                     bool isSelected = selectedJoints.Contains(joint);
@@ -4668,7 +4669,7 @@ namespace Barotrauma
         {
             rotationOffset += limb.Params.GetSpriteOrientation();
             Color angleColor = joint.UpperLimit - joint.LowerLimit > 0 ? Color.LightGreen * 0.5f : Color.Red;
-            DrawRadialWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.UpperLimit), $"{joint.jointParams.Name}: {GetCharacterEditorTranslation("UpperLimit")}", Color.Cyan, angle =>
+            DrawRadialWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.UpperLimit), $"{joint.Params.Name}: {GetCharacterEditorTranslation("UpperLimit")}", Color.Cyan, angle =>
             {
                 joint.UpperLimit = MathHelper.ToRadians(angle);
                 ValidateJoint(joint);
@@ -4707,7 +4708,7 @@ namespace Barotrauma
                 DrawAngle(40, Color.Cyan);
                 GUI.DrawString(spriteBatch, drawPos, angle.FormatZeroDecimal(), Color.Black, backgroundColor: Color.Cyan, font: GUI.SmallFont);
             }, circleRadius: 40, rotationOffset: rotationOffset, displayAngle: false, clockWise: false);
-            DrawRadialWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.LowerLimit), $"{joint.jointParams.Name}: {GetCharacterEditorTranslation("LowerLimit")}", Color.Yellow, angle =>
+            DrawRadialWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.LowerLimit), $"{joint.Params.Name}: {GetCharacterEditorTranslation("LowerLimit")}", Color.Yellow, angle =>
             {
                 joint.LowerLimit = MathHelper.ToRadians(angle);
                 ValidateJoint(joint);
@@ -4973,7 +4974,7 @@ namespace Barotrauma
                         RagdollParams.StoreSnapshot();
                     }
                 };
-                widget.tooltip = joint.jointParams.Name;
+                widget.tooltip = joint.Params.Name;
                 jointSelectionWidgets.Add(ID, widget);
                 return widget;
             }
