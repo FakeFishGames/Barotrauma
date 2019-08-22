@@ -241,7 +241,8 @@ namespace Barotrauma
         {
             fileEditPanel.AddToGUIUpdateList();
             modesPanel.AddToGUIUpdateList();
-            toolsPanel.AddToGUIUpdateList();
+            minorModesPanel.AddToGUIUpdateList();
+            buttonsPanel.AddToGUIUpdateList();
             optionsPanel.AddToGUIUpdateList();
             characterSelectionPanel.AddToGUIUpdateList();
 
@@ -601,8 +602,9 @@ namespace Barotrauma
             optionsToggle?.UpdateOpenState((float)deltaTime, new Vector2(optionsPanel.Rect.Width + rightArea.RectTransform.AbsoluteOffset.X, 0), optionsPanel.RectTransform);
             fileEditToggle?.UpdateOpenState((float)deltaTime, new Vector2(-fileEditPanel.Rect.Width - rightArea.RectTransform.AbsoluteOffset.X, 0), fileEditPanel.RectTransform);
             characterPanelToggle?.UpdateOpenState((float)deltaTime, new Vector2(-characterSelectionPanel.Rect.Width - rightArea.RectTransform.AbsoluteOffset.X, 0), characterSelectionPanel.RectTransform);
+            minorModesToggle?.UpdateOpenState((float)deltaTime, new Vector2(-minorModesPanel.Rect.Width - leftArea.RectTransform.AbsoluteOffset.X, 0), minorModesPanel.RectTransform);
             modesToggle?.UpdateOpenState((float)deltaTime, new Vector2(-modesPanel.Rect.Width - leftArea.RectTransform.AbsoluteOffset.X, 0), modesPanel.RectTransform);
-            toolsToggle?.UpdateOpenState((float)deltaTime, new Vector2(-toolsPanel.Rect.Width - leftArea.RectTransform.AbsoluteOffset.X, 0), toolsPanel.RectTransform);
+            buttonsPanelToggle?.UpdateOpenState((float)deltaTime, new Vector2(-buttonsPanel.Rect.Width - leftArea.RectTransform.AbsoluteOffset.X, 0), buttonsPanel.RectTransform);
         }
 
         /// <summary>
@@ -1563,8 +1565,9 @@ namespace Barotrauma
         private GUIFrame characterSelectionPanel;
         private GUIFrame fileEditPanel;
         private GUIFrame modesPanel;
-        private GUIFrame toolsPanel;
+        private GUIFrame buttonsPanel;
         private GUIFrame optionsPanel;
+        private GUIFrame minorModesPanel;
 
         private GUIFrame ragdollControls;
         private GUIFrame jointControls;
@@ -1602,7 +1605,8 @@ namespace Barotrauma
         private GUIButton createJointButton;
 
         private ToggleButton modesToggle;
-        private ToggleButton toolsToggle;
+        private ToggleButton minorModesToggle;
+        private ToggleButton buttonsPanelToggle;
         private ToggleButton optionsToggle;
         private ToggleButton characterPanelToggle;
         private ToggleButton fileEditToggle;
@@ -1646,33 +1650,27 @@ namespace Barotrauma
             Vector2 toggleSize = new Vector2(0.03f, 0.03f);
 
             CreateCharacterSelectionPanel();
+            CreateMinorModesPanel(toggleSize);
             CreateModesPanel(toggleSize);
-            CreateToolsPanel();
+            CreateButtonsPanel();
             CreateFileEditPanel();
             CreateOptionsPanel(toggleSize);
             CreateContextualControls();
         }
 
-        private void CreateModesPanel(Vector2 toggleSize)
+        private void CreateMinorModesPanel(Vector2 toggleSize)
         {
-            modesPanel = new GUIFrame(new RectTransform(new Vector2(0.6f, 0.4f), leftArea.RectTransform, Anchor.BottomLeft), style: null, color: panelColor);
-            var layoutGroup = new GUILayoutGroup(new RectTransform(new Point(modesPanel.Rect.Width - innerMargin.X, modesPanel.Rect.Height - innerMargin.Y),
-                modesPanel.RectTransform, Anchor.Center))
+            minorModesPanel = new GUIFrame(new RectTransform(new Vector2(0.6f, 0.25f), leftArea.RectTransform, Anchor.BottomLeft)
+            {
+                RelativeOffset = new Vector2(0, 0.21f)
+            }, style: null, color: panelColor);
+            var layoutGroup = new GUILayoutGroup(new RectTransform(new Point(minorModesPanel.Rect.Width - innerMargin.X, minorModesPanel.Rect.Height - innerMargin.Y),
+                minorModesPanel.RectTransform, Anchor.Center))
             {
                 AbsoluteSpacing = 2,
                 Stretch = true
             };
-
-            new GUITextBlock(new RectTransform(new Vector2(0.03f, 0.06f), layoutGroup.RectTransform), GetCharacterEditorTranslation("ModesPanel"), font: GUI.LargeFont);
-            // Main modes
-            characterInfoToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("EditCharacter")) { Selected = editCharacterInfo };
-            ragdollToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("EditRagdoll")) { Selected = editRagdoll };
-            limbsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("EditLimbs")) { Selected = editLimbs };
-            jointsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("EditJoints")) { Selected = editJoints };
-            animsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("EditAnimations")) { Selected = editAnimations };
-            // Spacing
-            new GUIFrame(new RectTransform(toggleSize, layoutGroup.RectTransform), style: null) { CanBeFocused = false };
-            // Minor modes
+            new GUITextBlock(new RectTransform(new Vector2(0.03f, 0.06f), layoutGroup.RectTransform), GetCharacterEditorTranslation("MinorModesTitle"), font: GUI.LargeFont);
             paramsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("ShowParameters")) { Selected = showParamsEditor };
             paramsToggle.OnSelected = box =>
             {
@@ -1718,7 +1716,24 @@ namespace Barotrauma
                 drawDamageModifiers = box.Selected;
                 return true;
             };
+            minorModesToggle = new ToggleButton(new RectTransform(new Vector2(0.125f, 1), minorModesPanel.RectTransform, Anchor.CenterRight, Pivot.CenterLeft), Direction.Left);
+        }
 
+        private void CreateModesPanel(Vector2 toggleSize)
+        {
+            modesPanel = new GUIFrame(new RectTransform(new Vector2(0.6f, 0.2f), leftArea.RectTransform, Anchor.BottomLeft), style: null, color: panelColor);
+            var layoutGroup = new GUILayoutGroup(new RectTransform(new Point(modesPanel.Rect.Width - innerMargin.X, modesPanel.Rect.Height - innerMargin.Y),
+                modesPanel.RectTransform, Anchor.Center))
+            {
+                AbsoluteSpacing = 2,
+                Stretch = true
+            };
+            new GUITextBlock(new RectTransform(new Vector2(0.03f, 0.06f), layoutGroup.RectTransform), GetCharacterEditorTranslation("ModesPanel"), font: GUI.LargeFont);
+            characterInfoToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("EditCharacter")) { Selected = editCharacterInfo };
+            ragdollToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("EditRagdoll")) { Selected = editRagdoll };
+            limbsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("EditLimbs")) { Selected = editLimbs };
+            jointsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("EditJoints")) { Selected = editJoints };
+            animsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("EditAnimations")) { Selected = editAnimations };
             animsToggle.OnSelected = box =>
             {
                 editAnimations = box.Selected;
@@ -1814,17 +1829,19 @@ namespace Barotrauma
             toggle.Selected = value;
         }
 
-        private void CreateToolsPanel()
+        private void CreateButtonsPanel()
         {
             Vector2 buttonSize = new Vector2(1, 0.06f);
-            toolsPanel = new GUIFrame(new RectTransform(new Vector2(0.6f, 0.15f), leftArea.RectTransform, Anchor.CenterLeft), style: null, color: panelColor);
-            var layoutGroup = new GUILayoutGroup(new RectTransform(new Point(toolsPanel.Rect.Width - innerMargin.X, toolsPanel.Rect.Height - innerMargin.Y),
-                toolsPanel.RectTransform, Anchor.Center))
+            buttonsPanel = new GUIFrame(new RectTransform(new Vector2(0.6f, 0.1f), leftArea.RectTransform, Anchor.BottomLeft)
+            {
+                RelativeOffset = new Vector2(0, 0.47f)
+            }, style: null, color: panelColor);
+            var layoutGroup = new GUILayoutGroup(new RectTransform(new Point(buttonsPanel.Rect.Width - innerMargin.X, buttonsPanel.Rect.Height - innerMargin.Y),
+                buttonsPanel.RectTransform, Anchor.Center))
             {
                 AbsoluteSpacing = 2,
                 Stretch = true
             };
-            new GUITextBlock(new RectTransform(new Vector2(0.03f, 0.06f), layoutGroup.RectTransform), GetCharacterEditorTranslation("ToolsPanel"), font: GUI.LargeFont);
             var reloadTexturesButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("ReloadTextures"));
             reloadTexturesButton.OnClicked += (button, userData) =>
             {
@@ -1847,9 +1864,9 @@ namespace Barotrauma
                     return true;
                 }
             };
-
-            toolsToggle = new ToggleButton(new RectTransform(new Vector2(0.125f, 1), toolsPanel.RectTransform, Anchor.CenterRight, Pivot.CenterLeft), Direction.Left);
+            buttonsPanelToggle = new ToggleButton(new RectTransform(new Vector2(0.125f, 1), buttonsPanel.RectTransform, Anchor.CenterRight, Pivot.CenterLeft), Direction.Left);
         }
+
 
         private void CreateOptionsPanel(Vector2 toggleSize)
         {
@@ -1863,7 +1880,6 @@ namespace Barotrauma
                 AbsoluteSpacing = 2,
                 Stretch = true
             };
-
             new GUITextBlock(new RectTransform(new Vector2(0.03f, 0.06f), layoutGroup.RectTransform), GetCharacterEditorTranslation("OptionsPanel"), font: GUI.LargeFont);
             freezeToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("Freeze")) { Selected = isFreezed };
             var autoFreezeToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("AutoFreeze")) { Selected = autoFreeze };

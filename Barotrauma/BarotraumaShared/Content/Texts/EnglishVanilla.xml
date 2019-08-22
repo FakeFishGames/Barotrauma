@@ -968,11 +968,12 @@
   <charactereditor.cannoteditvanillacharacters>Cannot edit the characters defined in the 'Vanilla' content package!</charactereditor.cannoteditvanillacharacters>
   <charactereditor.existingcharacterfoundreplaceverification>An existing character with the same name was found. Do you want to replace it?</charactereditor.existingcharacterfoundreplaceverification>
   <charactereditor.existingcharacterfound>An existing character with the same name was found.</charactereditor.existingcharacterfound>
-  <charactereditor.modespanel>Modes</charactereditor.modespanel>
+  <charactereditor.modespanel>Edit</charactereditor.modespanel>
   <charactereditor.fileeditpanel>Files</charactereditor.fileeditpanel>
   <charactereditor.optionspanel>Options</charactereditor.optionspanel>
   <charactereditor.characterpanel>Character</charactereditor.characterpanel>
   <charactereditor.toolspanel>Tools</charactereditor.toolspanel>
+  <charactereditor.minormodestitle>Show</charactereditor.minormodestitle>
   <charactereditor.addmultiplelimbsbutton>Add Multiple</charactereditor.addmultiplelimbsbutton>
   <charactereditor.contentpackagenameinuse>A content package with the same name already exists. Please choose another name or select the existing content package from the dropdown if you want to add the character to it.</charactereditor.contentpackagenameinuse>
   <charactereditor.addaitarget>Add Target</charactereditor.addaitarget>
