@@ -18,7 +18,7 @@
      </Goal>
    </Objective>
    </TraitorMission>-->
-
+ 
 <!--
   <TraitorMission identifier="MeltdownMission">
     <StartInfoText id="traitormissionstartmessage"/>
@@ -28,7 +28,7 @@
     <Objective>
       <InfoText id="traitorobjectivestartmessage"/>
       <InfoTextFailure id="traitorobjectiveendmessagefailure"/>
-      <Goal type="finditem" identifier="wrench">
+      <Goal type="finditem" identifier="wrench"> 
         <InfoText id="traitorgoalfinditeminfo" />
         <InfoTextFailure id="traitorgoalfinditemfailure"/>
       </Goal>
@@ -58,9 +58,9 @@
 
   <!--<TraitorMission identifier="AllGoals">
     <StartInfoText id="traitormissionstartmessage"/>
-
+    
     <Objective>
-
+      
       <Goal type="finditem" identifier="sledgehammer">
         <InfoText id="traitorgoalfinditeminfo" />
       </Goal>
@@ -72,7 +72,7 @@
       <Goal type="floodsub" percentage="20">
         <InfoText id="traitorgoalfloodpercentofsub" />
       </Goal>
-
+    
       <Goal type="killtarget" job="captain">
         <InfoText id="traitorgoalkilltargetinfo" />
       </Goal>
@@ -90,7 +90,7 @@
 
 
   <!-- Daniel's missions
-
+  
   <TraitorMission identifier="SabotageReactor">
     <StartInfoText id="traitormissionstartmessage"/>
 
@@ -99,13 +99,13 @@
         <InfoText id="traitorgoalfinditeminfo" />
       </Goal>
     </Objective>
-
+    
     <Objective>
       <Goal type="destroyitems" tag="wrench" percentage="80" >
       <InfoText id="traitorgoaldestroyitems" />
     </Goal>
     </Objective>
-
+    
     <Objective>
       <Goal type="sabotage" tag="reactor" threshold="20">
         <InfoText id="traitorgoalsabotageinfo" />
@@ -161,20 +161,20 @@
         </Goal>
       </Objective>
     </TraitorMission> -->
-  <!--
+  
   <TraitorMission identifier="SabotageReactor_Assassinate">
 
     <StartInfoText id="MVPtraitormissionStartInfoText" />
-
+    
     <Objective>
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="MVPobjectiveSuccessMessage1" />
       <StartMessage id="MVPtraitorobjectivestartmessage1"/>
       <Goal type="finditem" identifier="oxygentank" preferNew="false" allowNew="true" allowExisting="true" allowedContainers="mediumsteelcabinet, mediumwindowedsteelcabinet, steelcabinet">
-        <InfoText id="MVP_GoalInfoText_1" />
+        <InfoText id="MVP_GoalInfoText_1" />    
       </Goal>
     </Objective>
-
+    
     <Objective>
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="MVPobjectiveSuccessMessage2" />
@@ -195,7 +195,7 @@
     </Objective>
 
   </TraitorMission>
-
+  
 
   <TraitorMission identifier="flood_1">
 
@@ -227,7 +227,7 @@
         <InfoText id="flood_1_GoalInfoText_3"/>
       </Goal>
     </Objective>
-
+    
     <Objective>
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="flood_1_objectiveSuccessMessage4"/>
@@ -238,7 +238,7 @@
     </Objective>
 
   </TraitorMission>
--->
+
 
   <TraitorMission identifier="flood2">
 
@@ -248,14 +248,11 @@
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="flood_2_objectiveSuccessMessage1"/>
       <StartMessage id="flood_2_traitorobjectivestartmessage1"/>
-	  <Goal type="reachdistancefromsub" distance="10000"></Goal>
-	  <!--
       <Goal type="finditem" identifier="divingmask" preferNew="false" allowNew="true" allowExisting="true" allowedContainers="suppliescabinet">
         <InfoText id="flood_2_GoalInfoText_1"/>
-		</Goal>
-		-->
+      </Goal>
     </Objective>
-<!--
+
     <Objective>
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="flood_2_objectiveSuccessMessage2"/>
@@ -282,7 +279,7 @@
         <InfoText id="traitorgoalkilltargetinfo" />
       </Goal>
     </Objective>
--->
+
   </TraitorMission>
 
 

@@ -3447,6 +3447,11 @@
   <karma.kicksbeforeban>Number of kicks before a ban</karma.kicksbeforeban>
   <karma.kicksbeforebantooltip>If the player has been kicked from the server due to low karma this many times, they will be banned if the karma drops below the kick/ban threshold again. A value of 0 means players will always get banned if their karma drops below the threshold.</karma.kicksbeforebantooltip>
   <traitorgoalreachdistancefromsub>Reach distance of [distance] from the sub.</traitorgoalreachdistancefromsub>
+  <traitorgoalisoptionalinfotext>Optional: [infotext]</traitorgoalisoptionalinfotext>
+  <traitorgoalwithtimelimitinfotext>[infotext] Complete this goal within [timelimit].</traitorgoalwithtimelimitinfotext>
+  <traitorgoalwithdurationinfotext>[infotext] The goal must be completed for [duration].</traitorgoalwithdurationinfotext>
+  <traitorgoalwithcumulativedurationinfotext>[infotext] The goal must be completed for total of [duration].</traitorgoalwithcumulativedurationinfotext>
+  <failed>Failed</failed>
 
   <!-- Changed values as of 13th of August -->
   <traitorgoaldestroyitems>Dispose of at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>

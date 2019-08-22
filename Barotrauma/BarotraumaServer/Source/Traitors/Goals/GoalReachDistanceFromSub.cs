@@ -8,13 +8,13 @@ namespace Barotrauma
 {
     partial class Traitor
     {
-        public class GoalReachDistanceFromSub : Goal
+        public sealed class GoalReachDistanceFromSub : Goal
         {
             private readonly float requiredDistance;
             private readonly float requiredDistanceSqr;
 
             public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[distance]" });
-            public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { $"{requiredDistance:2}" });
+            public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { $"{requiredDistance:0.00}" });
 
             public override bool IsCompleted
             {
@@ -27,14 +27,13 @@ namespace Barotrauma
                     var characterPosition = Traitor.Character.WorldPosition;
                     var submarinePosition = Traitor.Character.Submarine.WorldPosition;
                     var distance = Vector2.DistanceSquared(characterPosition, submarinePosition);
-                    Console.WriteLine("DISTANCE: " + distance + " >= " + requiredDistanceSqr);
                     return distance >= requiredDistanceSqr;
                 }
             }
 
             public GoalReachDistanceFromSub(float requiredDistance) : base()
             {
-                InfoTextId = "TraitorGoalReachDistanceFromSub"; /* TODO(xxx) */
+                InfoTextId = "TraitorGoalReachDistanceFromSub";
                 this.requiredDistance = requiredDistance;
                 requiredDistanceSqr = requiredDistance * requiredDistance;
             }

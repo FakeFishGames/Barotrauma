@@ -93,7 +93,7 @@ namespace Barotrauma
 
                 var allGoalsCount = allGoals.Count;
                 var indices = allGoals.Select((goal, index) => index).ToArray();
-                for(var i = allGoalsCount; i > 1;)
+                for (var i = allGoalsCount; i > 1;)
                 {
                     int j = TraitorMission.Random(i--);
                     var temp = indices[j];
@@ -108,7 +108,7 @@ namespace Barotrauma
                     {
                         activeGoals.Add(goal);
                         pendingGoals.Add(goal);
-                        if (pendingGoals.Count >= shuffleGoalsCount)
+                        if (shuffleGoalsCount > 0 && pendingGoals.Count >= shuffleGoalsCount)
                         {
                             break;
                         }
