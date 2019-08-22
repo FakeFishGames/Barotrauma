@@ -739,11 +739,19 @@ namespace Barotrauma
             GUI.Draw(Cam, spriteBatch);
             if (isFreezed)
             {
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 35, 200), GetCharacterEditorTranslation("Frozen"), Color.Blue, Color.White * 0.5f, 10, GUI.Font);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 35, 200), GetCharacterEditorTranslation("Frozen"), Color.Blue, Color.White * 0.5f, 10, GUI.LargeFont);
             }
             if (animTestPoseToggle.Selected)
             {
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 100, 300), GetCharacterEditorTranslation("AnimationTestPoseEnabled"), Color.Blue, Color.White * 0.5f, 10, GUI.Font);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 130, 300), GetCharacterEditorTranslation("AnimationTestPose"), Color.Blue, Color.White * 0.5f, 10, GUI.LargeFont);
+            }
+            if (selectedJoints.Count == 1)
+            {
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 20), $"{GetCharacterEditorTranslation("Selected")}: {selectedJoints.First().Params.Name}", Color.White, font: GUI.LargeFont);
+            }
+            if (selectedLimbs.Count == 1)
+            {
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 20), $"{GetCharacterEditorTranslation("Selected")}: {selectedLimbs.First().Params.Name}", Color.White, font: GUI.LargeFont);
             }
             if (showSpritesheet)
             {
