@@ -188,7 +188,6 @@
     <Compile Include="Source\GameSession\GameModes\CharacterCampaignData.cs" />
     <Compile Include="Source\GameSession\GameModes\MissionMode.cs" />
     <Compile Include="Source\GameSession\GameModes\MultiPlayerCampaign.cs" />
-    <Compile Include="Source\GameSession\GameModes\TraitorManager.cs" />
     <Compile Include="Source\Items\Components\Door.cs" />
     <Compile Include="Source\Items\Components\ItemComponent.cs" />
     <Compile Include="Source\Items\Components\ItemLabel.cs" />
@@ -242,6 +241,19 @@
     <Compile Include="Source\Utils\MonogameTypes\Rectangle.cs" />
     <Compile Include="Source\Utils\MonogameTypes\Vector4.cs" />
     <Compile Include="Source\Utils\XnaToConsoleColor.cs" />
+    <Compile Include="Source\Traitors\TraitorManager.cs" />
+    <Compile Include="Source\Traitors\TraitorMissionPrefab.cs" />
+    <Compile Include="Source\Traitors\Goals\Goal.cs" />
+    <Compile Include="Source\Traitors\Objective.cs" />
+    <Compile Include="Source\Traitors\TraitorMission.cs" />
+    <Compile Include="Source\Traitors\Goals\GoalKillTarget.cs" />
+    <Compile Include="Source\Traitors\Goals\Modifiers\GoalWithDuration.cs" />
+    <Compile Include="Source\Traitors\Goals\GoalSabotageItems.cs" />
+    <Compile Include="Source\Traitors\Goals\GoalDestroyItemsWithTag.cs" />
+    <Compile Include="Source\Traitors\Goals\GoalFloodPercentOfSub.cs" />
+    <Compile Include="Source\Traitors\Goals\GoalFindItem.cs" />
+    <Compile Include="Source\Traitors\Goals\GoalReplaceInventory.cs" />
+    <Compile Include="Source\Traitors\Traitor.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Libraries\Facepunch.Steamworks\Facepunch.Steamworks.csproj">
@@ -276,9 +288,6 @@
   <ItemGroup>
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
   <ItemGroup Condition="$(Configuration.EndsWith('Linux')) Or $(Configuration.EndsWith('Mac'))">
     <None Include="DedicatedServer">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -292,15 +301,15 @@
     <None Include="DedicatedServer.bin.osx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Source\Traitors\" />
+    <Folder Include="Source\Traitors\Goals\" />
+    <Folder Include="Source\Traitors\Goals\Modifiers\" />
   </ItemGroup>
   <Import Project="..\BarotraumaShared\SharedCode.projitems" Label="Shared" />
   <Import Project="..\BarotraumaShared\SharedContent.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\Libraries\NuGet\GameAnalytics.Mono.SDK.2.1.6\build\net45\GameAnalytics.Mono.SDK.targets" Condition="Exists('..\..\Libraries\NuGet\GameAnalytics.Mono.SDK.2.1.6\build\net45\GameAnalytics.Mono.SDK.targets')" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\..\Libraries\NuGet\GameAnalytics.Mono.SDK.2.1.6\build\net45\GameAnalytics.Mono.SDK.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\Libraries\NuGet\GameAnalytics.Mono.SDK.2.1.6\build\net45\GameAnalytics.Mono.SDK.targets'))" />
-  </Target>
 </Project>

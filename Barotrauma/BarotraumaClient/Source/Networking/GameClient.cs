@@ -75,6 +75,9 @@ namespace Barotrauma.Networking
         //has the client been given a character to control this round
         public bool HasSpawned;
 
+        public bool SpawnAsTraitor;
+        public string TraitorFirstObjective;
+
         public byte ID
         {
             get { return myID; }
@@ -256,6 +259,8 @@ namespace Barotrauma.Networking
             myCharacter = Character.Controlled;
             ChatMessage.LastID = 0;
 
+            clientPeer?.Close();
+            clientPeer = null;
             object translatedEndpoint = null;
             if (endpoint is string hostIP)
             {
@@ -339,7 +344,7 @@ namespace Barotrauma.Networking
             // Connect client, to endpoint previously requested from user
             try
             {
-                clientPeer.Start(translatedEndpoint);
+                clientPeer.Start(translatedEndpoint, ownerKey);
             }
             catch (Exception e)
             {
@@ -367,14 +372,23 @@ namespace Barotrauma.Networking
             return true;
         }
 
-        private bool ReturnToServerList(GUIButton button, object obj)
+        private bool ReturnToPreviousMenu(GUIButton button, object obj)
         {
             Disconnect();
 
             Submarine.Unload();
             GameMain.Client = null;
             GameMain.GameSession = null;
-            GameMain.ServerListScreen.Select();
+            if (IsServerOwner)
+            {
+                GameMain.MainMenuScreen.Select();
+            }
+            else
+            {
+                GameMain.ServerListScreen.Select();
+            }
+
+            GUIMessageBox.MessageBoxes.RemoveAll(m => true);
 
             return true;
         }
@@ -382,6 +396,12 @@ namespace Barotrauma.Networking
         private bool connectCancelled;
         private void CancelConnect()
         {
+            if (!(GameMain.ServerChildProcess?.HasExited??true))
+            {
+                GameMain.ServerChildProcess.Kill();
+                GameMain.ServerChildProcess = null;
+            }
+
             connectCancelled = true;
             clientPeer?.Close();
             clientPeer = null;
@@ -404,41 +424,51 @@ namespace Barotrauma.Networking
             string connectingText = TextManager.Get("Connecting");
             while (!canStart && !connectCancelled)
             {
-                if (reconnectBox == null)
+                if (reconnectBox == null && waitInServerQueueBox == null)
                 {
+                    string serverDisplayName = serverName;
+                    if (string.IsNullOrEmpty(serverDisplayName)) { serverDisplayName = serverIP; }
+                    if (string.IsNullOrEmpty(serverDisplayName) && clientPeer?.ServerConnection is SteamP2PConnection steamConnection)
+                    {
+                        serverDisplayName = steamConnection.SteamID.ToString();
+                        if (SteamManager.IsInitialized)
+                        {
+                            string steamUserName = SteamManager.Instance.Friends.GetName(steamConnection.SteamID);
+                            if (!string.IsNullOrEmpty(steamUserName) && steamUserName != "[unknown]")
+                            {
+                                serverDisplayName = steamUserName;
+                            }
+                        }
+                    }
+                    if (string.IsNullOrEmpty(serverDisplayName)) { serverDisplayName = TextManager.Get("Unknown"); }
+
                     reconnectBox = new GUIMessageBox(
                         connectingText,
-                        TextManager.GetWithVariable("ConnectingTo", "[serverip]", string.IsNullOrEmpty(serverName) ? serverIP : serverName),
+                        TextManager.GetWithVariable("ConnectingTo", "[serverip]", serverDisplayName),
                         new string[] { TextManager.Get("Cancel") });
                     reconnectBox.Buttons[0].OnClicked += (btn, userdata) => { CancelConnect(); return true; };
                     reconnectBox.Buttons[0].OnClicked += reconnectBox.Close;
                 }
 
-                reconnectBox.Header.Text = connectingText + new string('.', ((int)Timing.TotalTime % 3 + 1));
+                if (reconnectBox != null)
+                {
+                    reconnectBox.Header.Text = connectingText + new string('.', ((int)Timing.TotalTime % 3 + 1));
+                }
 
                 yield return CoroutineStatus.Running;
 
                 if (DateTime.Now > timeOut)
                 {
                     clientPeer?.Close(Lidgren.Network.NetConnection.NoResponseMessage);
-                    clientPeer = null;
-                    if (reconnectBox != null)
-                    {
-                        reconnectBox.Close(null, null);
-                        reconnectBox = null;
-                    }
+                    reconnectBox?.Close(); reconnectBox = null;
                     break;
                 }
                 
                 if (requiresPw && !canStart && !connectCancelled)
                 {
-                    if (reconnectBox != null)
-                    {
-                        reconnectBox.Close(null, null);
-                        reconnectBox = null;
-                    }
+                    reconnectBox?.Close(); reconnectBox = null;
 
-                    string pwMsg = "Password required "+pwRetries; //TODO: read from msg?
+                    string pwMsg = TextManager.Get("PasswordRequired");
 
                     var msgBox = new GUIMessageBox(pwMsg, "", new string[] { TextManager.Get("OK"), TextManager.Get("Cancel") },
                         relativeSize: new Vector2(0.25f, 0.2f), minSize: new Point(400, 150));
@@ -478,11 +508,7 @@ namespace Barotrauma.Networking
                 }
             }
 
-            if (reconnectBox != null)
-            {
-                reconnectBox.Close(null, null);
-                reconnectBox = null;
-            }
+            reconnectBox?.Close(); reconnectBox = null;
 
             if (connectCancelled) yield return CoroutineStatus.Success;
             
@@ -531,7 +557,7 @@ namespace Barotrauma.Networking
             
             try
             {
-                clientPeer?.Update();
+                clientPeer?.Update(deltaTime);
             }
             catch (Exception e)
             {
@@ -548,7 +574,7 @@ namespace Barotrauma.Networking
 
             if (reconnectBox != null)
             {
-                reconnectBox.Close(null, null);
+                reconnectBox.Close();
                 reconnectBox = null;
             }
 
@@ -573,6 +599,16 @@ namespace Barotrauma.Networking
             if (serverSettings.VoiceChatEnabled)
             {
                 VoipClient?.SendToServer();
+            }
+
+            if (IsServerOwner && connected && !connectCancelled)
+            {
+                if (GameMain.ServerChildProcess?.HasExited??true)
+                {
+                    Disconnect();
+                    var msgBox = new GUIMessageBox(TextManager.Get("ConnectionLost"), TextManager.Get("ServerProcessClosed"));
+                    msgBox.Buttons[0].OnClicked += ReturnToPreviousMenu;
+                }
             }
 
             // Update current time
@@ -642,7 +678,6 @@ namespace Barotrauma.Networking
                     {
                         saveFiles.Add(inc.ReadString());
                     }
-
                     GameMain.NetLobbyScreen.CampaignSetupUI = MultiPlayerCampaign.StartCampaignSetup(serverSubmarines, saveFiles);
                     break;
                 case ServerPacketHeader.PERMISSIONS:
@@ -670,6 +705,9 @@ namespace Barotrauma.Networking
                     break;
                 case ServerPacketHeader.FILE_TRANSFER:
                     fileReceiver.ReadMessage(inc);
+                    break;
+                case ServerPacketHeader.TRAITOR_MESSAGE:
+                    ReadTraitorMessage(inc);
                     break;
             }
         }
@@ -701,8 +739,13 @@ namespace Barotrauma.Networking
 
             if (disconnectReason == DisconnectReason.ServerFull)
             {
-                //already waiting for a slot to free up, do nothing
-                if (CoroutineManager.IsCoroutineRunning("WaitInServerQueue")) return;
+                CoroutineManager.StopCoroutines("WaitForStartingInfo");
+                //already waiting for a slot to free up, stop waiting for starting info and 
+                //let WaitInServerQueue reattempt connecting later
+                if (CoroutineManager.IsCoroutineRunning("WaitInServerQueue"))
+                {
+                    return;
+                }
 
                 reconnectBox?.Close(); reconnectBox = null;
 
@@ -758,10 +801,15 @@ namespace Barotrauma.Networking
                 {
                     DebugConsole.NewMessage("Do not attempt to reconnect (DisconnectReason doesn't allow reconnection).");
                     msg = TextManager.Get("DisconnectReason." + disconnectReason.ToString());
-
+                    
                     for (int i = 1; i < splitMsg.Length; i++)
                     {
                         msg += TextManager.GetServerMessage(splitMsg[i]);
+                    }
+
+                    if (disconnectReason == DisconnectReason.ServerCrashed && IsServerOwner)
+                    {
+                        msg = TextManager.Get("ServerProcessCrashed");
                     }
                 }
 
@@ -771,12 +819,12 @@ namespace Barotrauma.Networking
                 {
                     //display a generic "could not connect" popup if the message is Lidgren's "failed to establish connection"
                     var msgBox = new GUIMessageBox(TextManager.Get("ConnectionFailed"), TextManager.Get(allowReconnect ? "ConnectionLost" : "CouldNotConnectToServer"));
-                    msgBox.Buttons[0].OnClicked += ReturnToServerList;
+                    msgBox.Buttons[0].OnClicked += ReturnToPreviousMenu;
                 }
                 else
                 {
                     var msgBox = new GUIMessageBox(TextManager.Get(allowReconnect ? "ConnectionLost" : "CouldNotConnectToServer"), msg);
-                    msgBox.Buttons[0].OnClicked += ReturnToServerList;
+                    msgBox.Buttons[0].OnClicked += ReturnToPreviousMenu;
                 }
             }
         }
@@ -799,7 +847,7 @@ namespace Barotrauma.Networking
                 if (!CoroutineManager.IsCoroutineRunning("WaitForStartingInfo"))
                 {
                     ConnectToServer(serverEndpoint, serverName);
-                    yield return new WaitForSeconds(2.0f);
+                    yield return new WaitForSeconds(5.0f);
                 }
                 yield return new WaitForSeconds(0.5f);
             }
@@ -815,6 +863,36 @@ namespace Barotrauma.Networking
         {
             string achievementIdentifier = inc.ReadString();
             SteamAchievementManager.UnlockAchievement(achievementIdentifier);
+        }
+
+        private void ReadTraitorMessage(IReadMessage inc)
+        {
+            bool isObjective = inc.ReadBoolean();
+            bool createMessageBox = inc.ReadBoolean();
+            string message = inc.ReadString();
+            message = TextManager.GetServerMessage(message);
+
+            if (isObjective)
+            {
+                if (Character != null)
+                {
+                    Character.IsTraitor = true;
+                    Character.TraitorCurrentObjective = message;
+                }
+                else
+                {
+                    SpawnAsTraitor = true;
+                    TraitorFirstObjective = message;
+                }
+            }
+            else if (createMessageBox)
+            {
+                new GUIMessageBox("", message);
+            }
+            else
+            {
+                GameMain.Client.AddChatMessage(message, ChatMessageType.Server);
+            }
         }
 
         private void ReadPermissions(IReadMessage inc)
@@ -938,8 +1016,6 @@ namespace Barotrauma.Networking
 
             bool disguisesAllowed   = inc.ReadBoolean();
             bool rewiringAllowed    = inc.ReadBoolean();
-            bool isTraitor          = inc.ReadBoolean();
-            string traitorTargetName = isTraitor ? inc.ReadString() : null;
 
             bool allowRagdollButton = inc.ReadBoolean();
 
@@ -1189,7 +1265,12 @@ namespace Barotrauma.Networking
                         ConnectedClients.RemoveAt(i);
                     }
                 }
-                if (updateClientListId) LastClientListUpdateID = listId;
+                if (updateClientListId) { LastClientListUpdateID = listId; }
+
+                if (clientPeer is SteamP2POwnerPeer)
+                {
+                    Steam.SteamManager.UpdateLobby(serverSettings);
+                }
             }
         }
 
@@ -1256,6 +1337,7 @@ namespace Barotrauma.Networking
                                 settingsBuf.Write(settingsData, 0, settingsLen); settingsBuf.BitPosition = 0;
                                 serverSettings.ClientRead(settingsBuf);
 
+
                                 GameMain.NetLobbyScreen.LastUpdateID = updateID;
 
                                 serverSettings.ServerLog.ServerName = serverSettings.ServerName;
@@ -1282,6 +1364,11 @@ namespace Barotrauma.Networking
                                 serverSettings.VoiceChatEnabled = voiceChatEnabled;
                                 serverSettings.Voting.AllowSubVoting = allowSubVoting;
                                 serverSettings.Voting.AllowModeVoting = allowModeVoting;
+
+                                if (clientPeer is SteamP2POwnerPeer)
+                                {
+                                    Steam.SteamManager.UpdateLobby(serverSettings);
+                                }
 
                                 GUI.KeyboardDispatcher.Subscriber = prevDispatcher;
                             }
@@ -1544,15 +1631,25 @@ namespace Barotrauma.Networking
 
         public void CancelFileTransfer(FileReceiver.FileTransferIn transfer)
         {
-            CancelFileTransfer(transfer.SequenceChannel);
+            CancelFileTransfer(transfer.ID);
         }
 
-        public void CancelFileTransfer(int sequenceChannel)
+        public void UpdateFileTransfer(int id, int offset, bool reliable=false)
+        {
+            IWriteMessage msg = new WriteOnlyMessage();
+            msg.Write((byte)ClientPacketHeader.FILE_REQUEST);
+            msg.Write((byte)FileTransferMessageType.Data);
+            msg.Write((byte)id);
+            msg.Write(offset);
+            clientPeer.Send(msg, reliable ? DeliveryMethod.Reliable : DeliveryMethod.Unreliable);
+        }
+
+        public void CancelFileTransfer(int id)
         {
             IWriteMessage msg = new WriteOnlyMessage();
             msg.Write((byte)ClientPacketHeader.FILE_REQUEST);
             msg.Write((byte)FileTransferMessageType.Cancel);
-            msg.Write((byte)sequenceChannel);
+            msg.Write((byte)id);
             clientPeer.Send(msg, DeliveryMethod.Reliable);
         }
 
@@ -1681,6 +1778,12 @@ namespace Barotrauma.Networking
         public override void Disconnect()
         {
             allowReconnect = false;
+
+            if (clientPeer is SteamP2PClientPeer || clientPeer is SteamP2POwnerPeer)
+            {
+                SteamManager.LeaveLobby();
+            }
+
             clientPeer?.Close();
             clientPeer = null;
 

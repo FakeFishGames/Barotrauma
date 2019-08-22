@@ -187,7 +187,9 @@ namespace Barotrauma.Items.Components
 
             if (loopingSound != null)
             {
-                if (Vector3.DistanceSquared(GameMain.SoundManager.ListenerPosition, new Vector3(position.X, position.Y, 0.0f)) > loopingSound.Range * loopingSound.Range)
+                float targetGain = 0.0f;
+                if (Vector3.DistanceSquared(GameMain.SoundManager.ListenerPosition, new Vector3(position.X, position.Y, 0.0f)) > loopingSound.Range * loopingSound.Range ||
+                    (targetGain = GetSoundVolume(loopingSound)) <= 0.0001f)
                 {
                     if (loopingSoundChannel != null)
                     {
@@ -219,7 +221,6 @@ namespace Barotrauma.Items.Components
                         lastMuffleCheckTime = (float)Timing.TotalTime;
                     }
                     loopingSoundChannel.Muffled = shouldMuffleLooping;
-                    float targetGain = GetSoundVolume(loopingSound);
                     float gainDiff = targetGain - loopingSoundChannel.Gain;
                     loopingSoundChannel.Gain += Math.Abs(gainDiff) < 0.1f ? gainDiff : Math.Sign(gainDiff) * 0.1f;
                     loopingSoundChannel.Position = new Vector3(position.X, position.Y, 0.0f);
@@ -257,7 +258,6 @@ namespace Barotrauma.Items.Components
                 itemSound = matchingSounds[index];
                 PlaySound(matchingSounds[index], position, user);
             }
-
         }
 
 
@@ -277,6 +277,8 @@ namespace Barotrauma.Items.Components
                 }
                 if (loopingSoundChannel == null || !loopingSoundChannel.IsPlaying)
                 {
+                    float volume = GetSoundVolume(itemSound);
+                    if (volume <= 0.0001f) { return; }
                     loopingSoundChannel = loopingSound.RoundSound.Sound.Play(
                         new Vector3(position.X, position.Y, 0.0f), 
                         0.01f,
@@ -290,7 +292,7 @@ namespace Barotrauma.Items.Components
             else
             {
                 float volume = GetSoundVolume(itemSound);
-                if (volume <= 0.0f) { return; }
+                if (volume <= 0.0001f) { return; }
                 SoundPlayer.PlaySound(itemSound.RoundSound.Sound, position, volume, itemSound.Range, item.CurrentHull);
             }
         }

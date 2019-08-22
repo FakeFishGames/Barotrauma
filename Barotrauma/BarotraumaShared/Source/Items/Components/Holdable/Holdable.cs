@@ -285,14 +285,21 @@ namespace Barotrauma.Items.Components
                 item.SetTransform(rightHand.SimPosition, 0.0f);
             }
 
-            bool alreadySelected = character.HasEquippedItem(item);
-            if (picker.TrySelectItem(item) || picker.HasEquippedItem(item))
+            bool alreadyEquipped = character.HasEquippedItem(item);
+            bool canSelect = picker.TrySelectItem(item);
+
+            if (canSelect || picker.HasEquippedItem(item))
             {
+                if (!canSelect)
+                {
+                    character.DeselectItem(item);
+                }
+
                 item.body.Enabled = true;
                 IsActive = true;
 
 #if SERVER
-                if (!alreadySelected) GameServer.Log(character.LogName + " equipped " + item.Name, ServerLog.MessageType.ItemInteraction);
+                if (!alreadyEquipped) GameServer.Log(character.LogName + " equipped " + item.Name, ServerLog.MessageType.ItemInteraction);
 #endif
             }
         }

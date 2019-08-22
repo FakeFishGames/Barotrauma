@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Items>
   <Item name="Toolbox" identifier="toolbox" category="Equipment" tags="smallitem" fireproof="true" description="" impactsoundtag="impact_metal_heavy">
     <Deconstruct time="10">
@@ -43,7 +43,9 @@
     <!-- physics body -->
     <Body width="215" height="119" density="40" />
     <!-- the character will hold the item 50 pixels in front of him, with his hands at the handle1 and handle2 positions -->
-    <Holdable slots="Any,RightHand+LeftHand" controlpose="true" aimpos="50,0" handle1="-85,-35" handle2="0,-27" msg="ItemMsgPickUpSelect" />
+    <Holdable slots="Any,RightHand+LeftHand" controlpose="true"
+			  aimpos="50,0" handle1="-85,-
+									 35" handle2="0,-27" msg="ItemMsgPickUpSelect" />
     <RepairTool structurefixamount="5.0" range="150" barrelpos="35,13" particles="weld" repairmultiple="true" repairthroughwalls="false" combatpriority="20">
       <!-- the item must contain a welding fuel tank for it to work -->
       <RequiredItems identifier="weldingfueltank,incendiumfueltank" type="Contained" msg="ItemMsgWeldingFuelRequired" />
@@ -199,7 +201,7 @@
     <Sprite texture="Content/Items/InventoryIconAtlas.png" depth="0.55" sourcerect="0,0,64,64" origin="0.5,0.5" />
     <Body radius="10" height="45" density="5" />
     <Holdable slots="RightHand+LeftHand" controlpose="false" aimpos="40,-20" handle1="-2,30" msg="ItemMsgPickUpSelect" />
-    <RepairTool extinguishamount="60.0" range="500" barrelpos="21,25">
+    <RepairTool extinguishamount="60.0" range="500" barrelpos="21,25" repairthroughholes="true">
       <ParticleEmitter particle="extinguisher" velocitymin="500.0" velocitymax="650.0" particlespersecond="50" />
       <StatusEffect type="OnUse" target="This" Condition="-2.0" />
       <sound file="Content/Items/Tools/Extinguisher.ogg" type="OnUse" range="500.0" loop="true" />
@@ -239,7 +241,7 @@
     <Sprite texture="tools.png" sourcerect="0,47,32,10" depth="0.55" origin="0.5,0.5" />
     <Body width="30" height="7" density="50" />
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="40,5" handle1="-12,-5" holdangle="60" reload="1.0" range="50" combatpriority="10" msg="ItemMsgPickUpSelect">
-      <Attack structuredamage="5" stun="0.2">
+      <Attack structuredamage="2" stun="0.2">
         <Affliction identifier="internaldamage" strength="4" />
         <Sound file="Content/Items/Weapons/Smack1.ogg" range="800" />
       </Attack>
@@ -262,7 +264,7 @@
     <Sprite texture="tools.png" sourcerect="0,65,65,15" depth="0.55" origin="0.5,0.5" />
     <Body width="60" height="10" density="50" />
     <MeleeWeapon slots="RightHand+LeftHand,Any" controlpose="true" aimpos="45,10" handle1="-20,-7" handle2="-10,0" holdangle="60" reload="1" range="100" combatpriority="30" msg="ItemMsgPickUpSelect">
-      <Attack structuredamage="2" stun="0.6">
+      <Attack structuredamage="5" stun="0.6">
         <Affliction identifier="internaldamage" strength="8" />
         <Sound file="Content/Items/Weapons/Smack2.ogg" range="800" />
       </Attack>

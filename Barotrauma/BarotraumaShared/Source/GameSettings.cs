@@ -47,6 +47,8 @@ namespace Barotrauma
 
         public bool PauseOnFocusLost { get; set; }
         public bool MuteOnFocusLost { get; set; }
+        public bool DynamicRangeCompressionEnabled { get; set; }
+        public bool VoipAttenuationEnabled { get; set; }
         public bool UseDirectionalVoiceChat { get; set; }
 
         public enum VoiceMode
@@ -177,9 +179,9 @@ namespace Barotrauma
 #if CLIENT
                 if (GameMain.SoundManager != null)
                 {
-                    GameMain.SoundManager.SetCategoryGainMultiplier("default", soundVolume);
-                    GameMain.SoundManager.SetCategoryGainMultiplier("ui", soundVolume);
-                    GameMain.SoundManager.SetCategoryGainMultiplier("waterambience", soundVolume);
+                    GameMain.SoundManager.SetCategoryGainMultiplier("default", soundVolume, 0);
+                    GameMain.SoundManager.SetCategoryGainMultiplier("ui", soundVolume, 0);
+                    GameMain.SoundManager.SetCategoryGainMultiplier("waterambience", soundVolume, 0);
                 }
 #endif
             }
@@ -192,7 +194,7 @@ namespace Barotrauma
             {
                 musicVolume = MathHelper.Clamp(value, 0.0f, 1.0f);
 #if CLIENT
-                GameMain.SoundManager?.SetCategoryGainMultiplier("music", musicVolume);
+                GameMain.SoundManager?.SetCategoryGainMultiplier("music", musicVolume, 0);
 #endif
             }
         }
@@ -204,7 +206,7 @@ namespace Barotrauma
             {
                 voiceChatVolume = MathHelper.Clamp(value, 0.0f, 1.0f);
 #if CLIENT
-                GameMain.SoundManager?.SetCategoryGainMultiplier("voip", voiceChatVolume * 20.0f);
+                GameMain.SoundManager?.SetCategoryGainMultiplier("voip", voiceChatVolume * 20.0f, 0);
 #endif
             }
         }
@@ -305,7 +307,7 @@ namespace Barotrauma
 
         public GameSettings()
         {
-            ContentPackage.LoadAll(ContentPackage.Folder);
+            ContentPackage.LoadAll();
             CompletedTutorialNames = new List<string>();
 
             LoadDefaultConfig();
@@ -462,6 +464,11 @@ namespace Barotrauma
             LoadAudioSettings(doc);
             LoadControls(doc);
             LoadContentPackages(doc);
+
+#if DEBUG
+            WindowMode = WindowMode.Windowed;
+#endif
+
             UnsavedSettings = false;
         }
 
@@ -817,6 +824,8 @@ namespace Barotrauma
                 new XAttribute("voicechatvolume", voiceChatVolume),
                 new XAttribute("microphonevolume", microphoneVolume),
                 new XAttribute("muteonfocuslost", MuteOnFocusLost),
+                new XAttribute("dynamicrangecompressionenabled", DynamicRangeCompressionEnabled),
+                new XAttribute("voipattenuationenabled", VoipAttenuationEnabled),
                 new XAttribute("usedirectionalvoicechat", UseDirectionalVoiceChat),
                 new XAttribute("voicesetting", VoiceSetting),
                 new XAttribute("voicecapturedevice", VoiceCaptureDevice ?? ""),
@@ -1017,8 +1026,11 @@ namespace Barotrauma
             {
                 SoundVolume = audioSettings.GetAttributeFloat("soundvolume", SoundVolume);
                 MusicVolume = audioSettings.GetAttributeFloat("musicvolume", MusicVolume);
+                DynamicRangeCompressionEnabled = audioSettings.GetAttributeBool("dynamicrangecompressionenabled", DynamicRangeCompressionEnabled);
+                VoipAttenuationEnabled = audioSettings.GetAttributeBool("voipattenuationenabled", VoipAttenuationEnabled);
                 VoiceChatVolume = audioSettings.GetAttributeFloat("voicechatvolume", VoiceChatVolume);
                 MuteOnFocusLost = audioSettings.GetAttributeBool("muteonfocuslost", MuteOnFocusLost);
+
                 UseDirectionalVoiceChat = audioSettings.GetAttributeBool("usedirectionalvoicechat", UseDirectionalVoiceChat);
                 VoiceCaptureDevice = audioSettings.GetAttributeString("voicecapturedevice", VoiceCaptureDevice);
                 NoiseGateThreshold = audioSettings.GetAttributeFloat("noisegatethreshold", NoiseGateThreshold);

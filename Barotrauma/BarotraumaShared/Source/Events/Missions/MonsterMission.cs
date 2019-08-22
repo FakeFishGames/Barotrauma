@@ -28,6 +28,8 @@ namespace Barotrauma
         {
             monsterFile = prefab.ConfigElement.GetAttributeString("monsterfile", "");
             monsterCount = prefab.ConfigElement.GetAttributeInt("monstercount", 1);
+
+            description = description.Replace("[monster]", "character." + System.IO.Path.GetFileNameWithoutExtension(monsterFile));
         }
         
         public override void Start(Level level)

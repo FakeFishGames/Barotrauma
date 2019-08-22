@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.IO;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {
@@ -75,14 +76,13 @@ namespace Barotrauma
             }
         }
 
-        public void ReloadTexture()
-        {
-            var sprites = LoadedSprites.Where(s => s.Texture == texture).ToList();
-            texture.Dispose();
-            texture = null;
+        public void ReloadTexture(bool updateAllSprites = false) => ReloadTexture(updateAllSprites ? LoadedSprites.Where(s => s.Texture == texture) : new Sprite[] { this });
 
+        public void ReloadTexture(IEnumerable<Sprite> spritesToUpdate)
+        {
+            texture.Dispose();
             texture = TextureLoader.FromFile(FilePath, preMultipliedAlpha);
-            foreach (Sprite sprite in sprites)
+            foreach (Sprite sprite in spritesToUpdate)
             {
                 sprite.texture = texture;
             }

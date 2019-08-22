@@ -100,6 +100,47 @@ namespace Barotrauma.Sounds
                 }
             }
         }
+        
+        public float PlaybackAmplitude
+        {
+            get
+            {
+                float aggregateAmplitude = 0.0f;
+                //NOTE: this is obviously not entirely accurate;
+                //It assumes a linear falloff model, and assumes that audio
+                //is simply added together to produce the final result.
+                //Adjustments may be needed under certain scenarios.
+                for (int i=0;i<2;i++)
+                {
+                    foreach (SoundChannel soundChannel in playingChannels[i].Where(ch => ch != null))
+                    {
+                        float amplitude = soundChannel.CurrentAmplitude;
+                        amplitude *= soundChannel.Gain;
+                        float dist = Vector3.Distance(ListenerPosition, soundChannel.Position ?? ListenerPosition);
+                        if (dist > soundChannel.Near)
+                        {
+                            amplitude *= 1.0f - Math.Min(1.0f, (dist - soundChannel.Near) / (soundChannel.Far - soundChannel.Near));
+                        }
+                        aggregateAmplitude += amplitude;
+                    }
+                }
+                return aggregateAmplitude;
+            }
+        }
+        
+        public float CompressionDynamicRangeGain { get; private set; }
+
+        private float voipAttenuatedGain;
+        private double lastAttenuationTime;
+        public float VoipAttenuatedGain
+        {
+            get { return voipAttenuatedGain; }
+            set
+            {
+                lastAttenuationTime = Timing.TotalTime;
+                voipAttenuatedGain = value;
+            }
+        }
 
         public int LoadedSoundCount
         {
@@ -110,7 +151,43 @@ namespace Barotrauma.Sounds
             get { return loadedSounds.Select(s => s.Filename).Distinct().Count(); }
         }
 
-        private Dictionary<string, Pair<float, bool>> categoryModifiers;
+        private class CategoryModifier
+        {
+            public float[] GainMultipliers;
+            public bool Muffle;
+
+            public CategoryModifier(int gainMultiplierIndex, float gain, bool muffle)
+            {
+                Muffle = muffle;
+                GainMultipliers = new float[gainMultiplierIndex+1];
+                for (int i=0;i<GainMultipliers.Length;i++)
+                {
+                    if (i==gainMultiplierIndex)
+                    {
+                        GainMultipliers[i] = gain;
+                    }
+                    else
+                    {
+                        GainMultipliers[i] = 1.0f;
+                    }
+                }
+            }
+
+            public void SetGainMultiplier(int index, float gain)
+            {
+                if (GainMultipliers.Length < index+1)
+                {
+                    int oldLength = GainMultipliers.Length;
+                    Array.Resize(ref GainMultipliers, index + 1);
+                    for (int i=oldLength;i<GainMultipliers.Length;i++)
+                    {
+                        GainMultipliers[i] = 1.0f;
+                    }
+                }
+                GainMultipliers[index] = gain;
+            }
+        }
+        private Dictionary<string, CategoryModifier> categoryModifiers;
 
         public SoundManager()
         {
@@ -190,6 +267,8 @@ namespace Barotrauma.Sounds
             ListenerPosition = Vector3.Zero;
             ListenerTargetVector = new Vector3(0.0f, 0.0f, 1.0f);
             ListenerUpVector = new Vector3(0.0f, -1.0f, 0.0f);
+
+            CompressionDynamicRangeGain = 1.0f;
         }
 
         public Sound LoadSound(string filename, bool stream = false)
@@ -257,11 +336,12 @@ namespace Barotrauma.Sounds
         {
             if (Disabled) { return -1; }
 
+            //remove a channel that has stopped
+            //or hasn't even been assigned
             int poolIndex = (int)newChannel.Sound.SourcePoolIndex;
+
             lock (playingChannels[poolIndex])
             {
-                //remove a channel that has stopped
-                //or hasn't even been assigned
                 for (int i = 0; i < playingChannels[poolIndex].Length; i++)
                 {
                     if (playingChannels[poolIndex][i] == null || !playingChannels[poolIndex][i].IsPlaying)
@@ -271,10 +351,10 @@ namespace Barotrauma.Sounds
                         return i;
                     }
                 }
-
-                //we couldn't get a free source to assign to this channel!
-                return -1;
             }
+
+            //we couldn't get a free source to assign to this channel!
+            return -1;
         }
 
 #if DEBUG
@@ -371,19 +451,20 @@ namespace Barotrauma.Sounds
             }
         }
 
-        public void SetCategoryGainMultiplier(string category, float gain)
+        public void SetCategoryGainMultiplier(string category, float gain, int index=0)
         {
             if (Disabled) { return; }
             category = category.ToLower();
-            if (categoryModifiers == null) categoryModifiers = new Dictionary<string, Pair<float, bool>>();
+            if (categoryModifiers == null) categoryModifiers = new Dictionary<string, CategoryModifier>();
             if (!categoryModifiers.ContainsKey(category))
             {
-                categoryModifiers.Add(category, new Pair<float, bool>(gain, false));
+                categoryModifiers.Add(category, new CategoryModifier(index, gain, false));
             }
             else
             {
-                categoryModifiers[category].First = gain;
+                categoryModifiers[category].SetGainMultiplier(index, gain);
             }
+
             for (int i = 0; i < playingChannels.Length; i++)
             {
                 lock (playingChannels[i])
@@ -399,12 +480,24 @@ namespace Barotrauma.Sounds
             }
         }
 
-        public float GetCategoryGainMultiplier(string category)
+        public float GetCategoryGainMultiplier(string category, int index=-1)
         {
             if (Disabled) { return 0.0f; }
             category = category.ToLower();
             if (categoryModifiers == null || !categoryModifiers.ContainsKey(category)) return 1.0f;
-            return categoryModifiers[category].First;
+            if (index < 0)
+            {
+                float accumulatedMultipliers = 1.0f;
+                for (int i=0;i<categoryModifiers[category].GainMultipliers.Length;i++)
+                {
+                    accumulatedMultipliers *= categoryModifiers[category].GainMultipliers[i];
+                }
+                return accumulatedMultipliers;
+            }
+            else
+            {
+                return categoryModifiers[category].GainMultipliers[index];
+            }
         }
 
         public void SetCategoryMuffle(string category,bool muffle)
@@ -413,23 +506,26 @@ namespace Barotrauma.Sounds
 
             category = category.ToLower();
 
-            if (categoryModifiers == null) categoryModifiers = new Dictionary<string, Pair<float, bool>>();
+            if (categoryModifiers == null) categoryModifiers = new Dictionary<string, CategoryModifier>();
             if (!categoryModifiers.ContainsKey(category))
             {
-                categoryModifiers.Add(category, new Pair<float, bool>(1.0f, muffle));
+                categoryModifiers.Add(category, new CategoryModifier(0, 1.0f, muffle));
             }
             else
             {
-                categoryModifiers[category].Second = muffle;
+                categoryModifiers[category].Muffle = muffle;
             }
 
             for (int i = 0; i < playingChannels.Length; i++)
             {
-                for (int j = 0; j < playingChannels[i].Length; j++)
+                lock (playingChannels[i])
                 {
-                    if (playingChannels[i][j] != null && playingChannels[i][j].IsPlaying)
+                    for (int j = 0; j < playingChannels[i].Length; j++)
                     {
-                        if (playingChannels[i][j].Category.ToLower() == category) playingChannels[i][j].Muffled = muffle;
+                        if (playingChannels[i][j] != null && playingChannels[i][j].IsPlaying)
+                        {
+                            if (playingChannels[i][j].Category.ToLower() == category) playingChannels[i][j].Muffled = muffle;
+                        }
                     }
                 }
             }
@@ -441,7 +537,45 @@ namespace Barotrauma.Sounds
 
             category = category.ToLower();
             if (categoryModifiers == null || !categoryModifiers.ContainsKey(category)) return false;
-            return categoryModifiers[category].Second;
+            return categoryModifiers[category].Muffle;
+        }
+
+        public void Update()
+        {
+            if (GameMain.Client != null && GameMain.Config.VoipAttenuationEnabled)
+            {
+                if (Timing.TotalTime > lastAttenuationTime+0.2)
+                {
+                    voipAttenuatedGain = voipAttenuatedGain * 0.9f + 0.1f;
+                }
+            }
+            else
+            {
+                voipAttenuatedGain = 1.0f;
+            }
+            SetCategoryGainMultiplier("default", VoipAttenuatedGain, 1);
+            SetCategoryGainMultiplier("ui", VoipAttenuatedGain, 1);
+            SetCategoryGainMultiplier("waterambience", VoipAttenuatedGain, 1);
+            SetCategoryGainMultiplier("music", VoipAttenuatedGain, 1);
+
+            if (GameMain.Config.DynamicRangeCompressionEnabled)
+            {
+                float targetGain = (Math.Min(1.0f, 1.0f / PlaybackAmplitude) - 1.0f) * 0.5f + 1.0f;
+                if (targetGain < CompressionDynamicRangeGain)
+                {
+                    //if the target gain is lower than the current gain, lower the current gain immediately to prevent clipping
+                    CompressionDynamicRangeGain = targetGain;
+                }
+                else
+                {
+                    //otherwise, let it rise back smoothly
+                    CompressionDynamicRangeGain = (targetGain) * 0.05f + CompressionDynamicRangeGain * 0.95f;
+                }
+            }
+            else
+            {
+                CompressionDynamicRangeGain = 1.0f;
+            }
         }
 
         public void InitStreamThread()
@@ -464,6 +598,7 @@ namespace Barotrauma.Sounds
             while (areStreamsPlaying)
             {
                 areStreamsPlaying = false;
+
                 for (int i = 0; i < playingChannels.Length; i++)
                 {
                     lock (playingChannels[i])
@@ -512,6 +647,7 @@ namespace Barotrauma.Sounds
                     }
                 }
             }
+
             streamingThread?.Join();
             for (int i = loadedSounds.Count - 1; i >= 0; i--)
             {

@@ -409,11 +409,11 @@ namespace Barotrauma.Items.Components
 
         private bool OnProjectileCollision(Fixture target, Vector2 collisionNormal)
         {
-            if (User != null && User.Removed) User = null;
+            if (User != null && User.Removed) { User = null; }
 
-            if (IgnoredBodies.Contains(target.Body)) return false;
+            if (IgnoredBodies.Contains(target.Body)) { return false; }
 
-            if (target.UserData is Item) return false;
+            if (target.UserData is Item) { return false; }
 
             if (target.CollisionCategories == Physics.CollisionCharacter && !(target.Body.UserData is Limb))
             {
@@ -447,10 +447,21 @@ namespace Barotrauma.Items.Components
                 if (attack != null) { attackResult = attack.DoDamage(User, structure, item.WorldPosition, 1.0f); }
             }
 
-            if (character != null) character.LastDamageSource = item;
-            ApplyStatusEffects(ActionType.OnUse, 1.0f, character, target.Body.UserData as Limb, user: user);
-            ApplyStatusEffects(ActionType.OnImpact, 1.0f, character, target.Body.UserData as Limb, user: user);
-            
+            if (character != null) { character.LastDamageSource = item; }
+
+            if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
+            {
+                ApplyStatusEffects(ActionType.OnUse, 1.0f, character, target.Body.UserData as Limb, user: user);
+                ApplyStatusEffects(ActionType.OnImpact, 1.0f, character, target.Body.UserData as Limb, user: user);
+#if SERVER
+                if (GameMain.NetworkMember.IsServer)
+                {
+                    GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse });
+                    GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnImpact });
+                }
+#endif
+            }
+
             item.body.FarseerBody.OnCollision -= OnProjectileCollision;
 
             item.body.CollisionCategories = Physics.CollisionItem;

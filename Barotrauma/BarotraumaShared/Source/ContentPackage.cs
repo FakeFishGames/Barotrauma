@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Xml.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -38,8 +37,7 @@ namespace Barotrauma
         Buffs,
         Tutorials,
         UIStyle,
-        EventManagerSettings,
-        Orders
+        TraitorMissions
     }
 
     public class ContentPackage
@@ -63,8 +61,7 @@ namespace Barotrauma
             ContentType.LevelObjectPrefabs,
             ContentType.RuinConfig,
             ContentType.Outpost,
-            ContentType.Afflictions,
-            ContentType.Orders
+            ContentType.Afflictions
         };
 
         //at least one file of each these types is required in core content packages
@@ -83,13 +80,12 @@ namespace Barotrauma
             ContentType.LevelGenerationParameters,
             ContentType.RandomEvents,
             ContentType.Missions,
+            ContentType.TraitorMissions,
             ContentType.BackgroundCreaturePrefabs,
             ContentType.RuinConfig,
             ContentType.NPCConversations,
             ContentType.Afflictions,
-            ContentType.UIStyle,
-            ContentType.EventManagerSettings,
-            ContentType.Orders
+            ContentType.UIStyle
         };
 
         public static IEnumerable<ContentType> CorePackageRequiredFiles
@@ -102,7 +98,7 @@ namespace Barotrauma
         public string Path
         {
             get;
-            private set;
+            set;
         }
 
         public string SteamWorkshopUrl;
@@ -372,18 +368,12 @@ namespace Barotrauma
             {
                 case ContentType.Character:
                     XDocument doc = XMLExtensions.TryLoadXml(file.Path);
-                    var rootElement = doc.Root;
-                    var element = rootElement.IsOverride() ? rootElement.FirstElement() : rootElement;
-                    var speciesName = element.GetAttributeString("name", "");
-                    var ragdollFolder = RagdollParams.GetFolder(speciesName);
-                    if (Directory.Exists(ragdollFolder))
+                    string speciesName = doc.Root.GetAttributeString("name", "");
+                    //TODO: check non-default paths if defined
+                    filePaths.Add(RagdollParams.GetDefaultFile(speciesName, this));
+                    foreach (AnimationType animationType in Enum.GetValues(typeof(AnimationType)))
                     {
-                        Directory.GetFiles(ragdollFolder, "*.xml").ForEach(f => filePaths.Add(f));
-                    }
-                    var animationFolder = AnimationParams.GetFolder(speciesName);
-                    if (Directory.Exists(animationFolder))
-                    {
-                        Directory.GetFiles(animationFolder, "*.xml").ForEach(f => filePaths.Add(f));
+                        filePaths.Add(AnimationParams.GetDefaultFile(speciesName, animationType, this));
                     }
                     break;
             }
@@ -431,7 +421,7 @@ namespace Barotrauma
             switch (contentFile.Type)
             {
                 case ContentType.Submarine:
-                    return path == "Submarines";
+                    return path == "Submarines" || path == "Mods";
                 default:
                     return path == "Mods";
             }
@@ -455,7 +445,7 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Returns all xml files from all the loaded content packages.
+        /// Returns all xml files.
         /// </summary>
         public static IEnumerable<string> GetAllContentFiles(IEnumerable<ContentPackage> contentPackages)
         {
@@ -472,8 +462,9 @@ namespace Barotrauma
             return Files.Where(f => f.Type == type).Select(f => f.Path);
         }
         
-        public static void LoadAll(string folder)
+        public static void LoadAll()
         {
+            string folder = ContentPackage.Folder;
             if (!Directory.Exists(folder))
             {
                 try
@@ -487,29 +478,23 @@ namespace Barotrauma
                 }
             }
 
-            string[] files = Directory.GetFiles(folder, "*.xml");
-
             List.Clear();
 
+            string[] files = Directory.GetFiles(folder, "*.xml");
             foreach (string filePath in files)
             {
-                ContentPackage package = new ContentPackage(filePath);
-                List.Add(package);                               
+                List.Add(new ContentPackage(filePath));                               
             }
-        }
 
-        public static void SortContentPackages()
-        {
-            List = List
-                .OrderByDescending(p => p.CorePackage)
-                .ThenByDescending(p => GameMain.Config?.SelectedContentPackages.Contains(p))
-                .ThenBy(p => GameMain.Config?.SelectedContentPackages.IndexOf(p))
-                .ToList();
-
-            if (GameMain.Config != null)
+            string[] modDirectories = Directory.GetDirectories("Mods");
+            foreach (string modDirectory in modDirectories)
             {
-                var reportList = List.Where(p => GameMain.Config.SelectedContentPackages.Contains(p));
-                DebugConsole.NewMessage($"Content package load order: { new string(reportList.SelectMany(cp => cp.Name + "  |  ").ToArray()) }");
+                if (System.IO.Path.GetFileName(modDirectory.TrimEnd(System.IO.Path.DirectorySeparatorChar)) == "ExampleMod") { continue; }
+                string modFilePath = System.IO.Path.Combine(modDirectory, Steam.SteamManager.MetadataFileName);
+                if (File.Exists(modFilePath))
+                {
+                    List.Add(new ContentPackage(modFilePath));
+                }
             }
         }
 
@@ -527,13 +512,12 @@ namespace Barotrauma
                 return;
             }
             List.Remove(this);
-            SortContentPackages();
         }
     }
 
     public class ContentFile
     {
-        public readonly string Path;
+        public string Path;
         public ContentType Type;
 
         public Workshop.Item WorkShopItem;

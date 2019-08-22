@@ -281,7 +281,7 @@ namespace Barotrauma.Items.Components
                     Structure attachTarget = Structure.GetAttachTarget(item.WorldPosition);
                     canPlaceNode = attachTarget != null;
 
-                    sub = attachTarget?.Submarine;
+                    sub = sub ?? attachTarget?.Submarine;
                     newNodePos = sub == null ? 
                         item.WorldPosition :
                         item.WorldPosition - sub.Position - sub.HiddenSubPosition;
@@ -332,7 +332,8 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                newNodePos = RoundNode(item.Position, item.CurrentHull) - sub.HiddenSubPosition;
+                newNodePos = RoundNode(item.Position, item.CurrentHull);
+                if (sub != null) { newNodePos -= sub.HiddenSubPosition; }
                 canPlaceNode = true;
             }
 

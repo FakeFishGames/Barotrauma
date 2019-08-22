@@ -294,7 +294,7 @@ namespace Barotrauma
             }
 
             if (container == null) return false;
-            return CharacterHealth.OpenHealthWindow != null || !container.KeepOpenWhenEquipped || (!(owner is Character)) || !owner.HasEquippedItem(container.Item);
+            return owner.SelectedCharacter != null || !container.KeepOpenWhenEquipped || (!(owner is Character)) || !owner.HasEquippedItem(container.Item);
         }
 
         protected virtual bool HideSlot(int i)
@@ -960,7 +960,7 @@ namespace Barotrauma
                     {
                         GUI.DrawRectangle(spriteBatch, new Rectangle(rect.X, rect.Bottom - 8, rect.Width, 8), Color.Black * 0.8f, true);
                         GUI.DrawRectangle(spriteBatch,
-                            new Rectangle(rect.X, rect.Bottom - 8, (int)(rect.Width * item.Condition / item.MaxCondition), 8),
+                            new Rectangle(rect.X, rect.Bottom - 8, (int)(rect.Width * (item.Condition / item.MaxCondition)), 8),
                             Color.Lerp(Color.Red, Color.Green, item.Condition / item.MaxCondition) * 0.8f, true);
                     }
 

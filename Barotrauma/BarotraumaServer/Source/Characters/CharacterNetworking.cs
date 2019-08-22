@@ -382,7 +382,7 @@ namespace Barotrauma
                 tempBuffer.WriteRangedSingle(AnimController.Collider.LinearVelocity.X, -MaxVel, MaxVel, 12);
                 tempBuffer.WriteRangedSingle(AnimController.Collider.LinearVelocity.Y, -MaxVel, MaxVel, 12);
 
-                bool fixedRotation = AnimController.Collider.FarseerBody.FixedRotation;
+                bool fixedRotation = AnimController.Collider.FarseerBody.FixedRotation || !AnimController.Collider.PhysEnabled;
                 tempBuffer.Write(fixedRotation);
                 if (!fixedRotation)
                 {

@@ -104,7 +104,7 @@ namespace Barotrauma
 
             SoundPlayer.OverrideMusicType = "none";
             SoundPlayer.OverrideMusicDuration = null;
-            GameMain.SoundManager.SetCategoryGainMultiplier("waterambience", 0.0f);
+            GameMain.SoundManager.SetCategoryGainMultiplier("waterambience", 0.0f, 0);
 
             GUI.ForceMouseOn(null);
             CalculateSpritesheetPosition();
@@ -201,7 +201,7 @@ namespace Barotrauma
             base.Deselect();
 
             SoundPlayer.OverrideMusicType = null;
-            GameMain.SoundManager.SetCategoryGainMultiplier("waterambience", GameMain.Config.SoundVolume);
+            GameMain.SoundManager.SetCategoryGainMultiplier("waterambience", GameMain.Config.SoundVolume, 0);
 
             GUI.ForceMouseOn(null);
             if (isEndlessRunner)

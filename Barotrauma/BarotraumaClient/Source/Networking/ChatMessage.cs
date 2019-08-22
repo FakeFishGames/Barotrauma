@@ -36,7 +36,11 @@ namespace Barotrauma.Networking
                 }
             }
 
-            if (type == ChatMessageType.Order)
+            if (type == ChatMessageType.ServerMessageBox)
+            {
+                txt = TextManager.GetServerMessage(txt);
+            }
+            else if (type == ChatMessageType.Order)
             {
                 int orderIndex = msg.ReadByte();
                 UInt16 targetCharacterID = msg.ReadUInt16();
@@ -92,6 +96,7 @@ namespace Barotrauma.Networking
                 switch (type)
                 {
                     case ChatMessageType.MessageBox:
+                    case ChatMessageType.ServerMessageBox:
                         //only show the message box if the text differs from the text in the currently visible box
                         if ((GUIMessageBox.VisibleBox as GUIMessageBox)?.Text?.Text != txt)
                         {

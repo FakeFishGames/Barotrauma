@@ -103,6 +103,10 @@ namespace Barotrauma.Networking
         {
             ServerName = incMsg.ReadString();
             ServerMessageText = incMsg.ReadString();
+            MaxPlayers = incMsg.ReadByte();
+            HasPassword = incMsg.ReadBoolean();
+            isPublic = incMsg.ReadBoolean();
+            incMsg.ReadPadBits();
             TickRate = incMsg.ReadRangedInteger(1, 60);
             GameMain.NetworkMember.TickRate = TickRate;
 
@@ -507,7 +511,7 @@ namespace Barotrauma.Networking
             var ragdollButtonBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), TextManager.Get("ServerSettingsAllowRagdollButton"));
             GetPropertyData("AllowRagdollButton").AssignGUIComponent(ragdollButtonBox);
 
-            var traitorRatioBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), TextManager.Get("ServerSettingsUseTraitorRatio"));
+            /*var traitorRatioBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), TextManager.Get("ServerSettingsUseTraitorRatio"));
 
             CreateLabeledSlider(roundsTab, "", out slider, out sliderLabel);
             var traitorRatioSlider = slider;
@@ -552,7 +556,7 @@ namespace Barotrauma.Networking
             GetPropertyData("TraitorRatio").AssignGUIComponent(traitorRatioSlider);
 
             traitorRatioSlider.OnMoved(traitorRatioSlider, traitorRatioSlider.BarScroll);
-            traitorRatioBox.OnSelected(traitorRatioBox);
+            traitorRatioBox.OnSelected(traitorRatioBox);*/
             
             var buttonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.07f), roundsTab.RectTransform), isHorizontal: true)
             {

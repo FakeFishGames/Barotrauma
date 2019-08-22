@@ -20,9 +20,9 @@
     <Optimize>false</Optimize>
     <DebugType>full</DebugType>
     <EnableUnmanagedDebugging>true</EnableUnmanagedDebugging>
-    <OutputPath>bin\Windows\AnyCPU\Debug</OutputPath>
+    <OutputPath>..\..\Windows\</OutputPath>
     <IntermediateOutputPath>obj\Windows\AnyCPU\Debug</IntermediateOutputPath>
-    <DocumentationFile>bin\Windows\AnyCPU\Debug\MonoGame.Framework.xml</DocumentationFile>
+    <DocumentationFile>..\..\Windows\MonoGame.Framework.xml</DocumentationFile>
     <DefineConstants>DEBUG;XNADESIGNPROVIDED;TRACE;WINDOWS;DIRECTX;WINDOWS_MEDIA_SESSION</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>

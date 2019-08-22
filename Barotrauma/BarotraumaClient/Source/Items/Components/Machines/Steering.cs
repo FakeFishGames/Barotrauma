@@ -301,10 +301,9 @@ namespace Barotrauma.Items.Components
             dockingContainer = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.25f), GuiFrame.RectTransform, Anchor.BottomLeft)
             { MinSize = new Point(150, 0) }, style: null);
             var paddedDockingContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), dockingContainer.RectTransform, Anchor.Center), style: null);
-
-            //TODO: add new texts for these ("Dock" & "Undock")
-            dockText = TextManager.Get("captain.dock");
-            undockText = TextManager.Get("captain.undock");
+            
+            dockText = TextManager.Get("label.navterminaldock", fallBackTag: "captain.dock");
+            undockText = TextManager.Get("label.navterminalundock", fallBackTag: "captain.undock");
             dockingButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.5f), paddedDockingContainer.RectTransform, Anchor.Center), dockText, style: "GUIButtonLarge")
             {
                 OnClicked = (btn, userdata) =>

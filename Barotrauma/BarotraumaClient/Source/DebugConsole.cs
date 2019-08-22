@@ -479,10 +479,16 @@ namespace Barotrauma
 
             commands.Add(new Command("clientlist", "", (string[] args) => { }));
             AssignRelayToServer("clientlist", true);
+            commands.Add(new Command("say", "", (string[] args) => { }));
+            AssignRelayToServer("say", true);
+            commands.Add(new Command("msg", "", (string[] args) => { }));
+            AssignRelayToServer("msg", true);
             commands.Add(new Command("setmaxplayers|maxplayers", "", (string[] args) => { }));
             AssignRelayToServer("setmaxplayers", true);
             commands.Add(new Command("setpassword|password", "", (string[] args) => { }));
             AssignRelayToServer("setpassword", true);
+            commands.Add(new Command("traitorlist", "", (string[] args) => { }));
+            AssignRelayToServer("traitorlist", true);
 
             AssignOnExecute("control", (string[] args) =>
             {
@@ -565,6 +571,7 @@ namespace Barotrauma
                         if (args.Length < 3)
                         {
                             ThrowError("Not enough arguments provided! At least three required.");
+                            return;
                         }
                         if (!byte.TryParse(args[0], out byte r))
                         {
@@ -965,6 +972,30 @@ namespace Barotrauma
                     }
                 }
             }, isCheat: false));
+
+            commands.Add(new Command("setentityproperties", "setentityproperties [property name] [value]: Sets the value of some property on all selected items/structures in the sub editor.", (string[] args) =>
+            {
+                if (args.Length != 2 || Screen.Selected != GameMain.SubEditorScreen) { return; }
+                foreach (MapEntity me in MapEntity.SelectedList)
+                {
+                    if (me is ISerializableEntity serializableEntity)
+                    {
+                        if (serializableEntity.SerializableProperties == null)
+                        {
+                            continue;
+                        }
+                        if (!serializableEntity.SerializableProperties.TryGetValue(args[0].ToLowerInvariant(), out SerializableProperty property))
+                        {
+                            NewMessage("Property \"" + args[0] + "\" not found in the entity \"" + me.ToString() + "\".", Color.Orange);
+                            continue;
+                        }
+                        if (!property.TrySetValue(me, args[1]))
+                        {
+                            NewMessage("Failed to set the value of \"" + args[0] + "\" to \"" + args[1] + "\" on the entity \"" + me.ToString() + "\".", Color.Orange);
+                        }
+                    }
+                }
+            }));
 
 #if DEBUG
             commands.Add(new Command("printreceivertransfers", "", (string[] args) =>

@@ -330,6 +330,16 @@ namespace Barotrauma
                     y += 15;
 
                     DrawString(spriteBatch, new Vector2(500, y),
+                        "Current playback amplitude: " + GameMain.SoundManager.PlaybackAmplitude.ToString(), Color.White, Color.Black * 0.5f, 0, SmallFont);
+
+                    y += 15;
+
+                    DrawString(spriteBatch, new Vector2(500, y),
+                        "Compressed dynamic range gain: " + GameMain.SoundManager.CompressionDynamicRangeGain.ToString(), Color.White, Color.Black * 0.5f, 0, SmallFont);
+
+                    y += 15;
+
+                    DrawString(spriteBatch, new Vector2(500, y),
                         "Loaded sounds: " + GameMain.SoundManager.LoadedSoundCount + " (" + GameMain.SoundManager.UniqueLoadedSoundCount + " unique)", Color.White, Color.Black * 0.5f, 0, SmallFont);
                     y += 15;
 
@@ -362,17 +372,20 @@ namespace Barotrauma
                                 soundStr += " (looping)";
                                 clr = Color.Yellow;
                             }
-
                             if (playingSoundChannel.IsStream)
                             {
                                 soundStr += " (streaming)";
                                 clr = Color.Lime;
                             }
-
                             if (!playingSoundChannel.IsPlaying)
                             {
                                 soundStr += " (stopped)";
                                 clr *= 0.5f;
+                            }
+                            else if (playingSoundChannel.Muffled)
+                            {
+                                soundStr += " (muffled)";
+                                clr = Color.Lerp(clr, Color.LightGray, 0.5f);
                             }
                         }
 

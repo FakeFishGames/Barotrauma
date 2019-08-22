@@ -16,6 +16,7 @@ namespace Barotrauma.Networking
         private NetPeerConfiguration netPeerConfiguration;
 
         private ConnectionInitialization initializationStep;
+        private int ownerKey;
         private int passwordSalt;
         private Auth.Ticket steamAuthTicket;
         List<NetIncomingMessage> incomingLidgrenMessages;
@@ -30,9 +31,11 @@ namespace Barotrauma.Networking
             isActive = false;
         }
 
-        public override void Start(object endPoint)
+        public override void Start(object endPoint, int ownerKey)
         {
             if (isActive) { return; }
+
+            this.ownerKey = ownerKey;
 
             netPeerConfiguration = new NetPeerConfiguration("barotrauma");
 
@@ -72,7 +75,7 @@ namespace Barotrauma.Networking
             isActive = true;
         }
 
-        public override void Update()
+        public override void Update(float deltaTime)
         {
             if (!isActive) { return; }
 
@@ -132,7 +135,7 @@ namespace Barotrauma.Networking
             {
                 case NetConnectionStatus.Disconnected:
                     string disconnectMsg = inc.ReadString();
-                    OnDisconnect?.Invoke(disconnectMsg);
+                    Close(disconnectMsg);
                     break;
             }
         }
@@ -151,6 +154,7 @@ namespace Barotrauma.Networking
                     outMsg.Write((byte)PacketHeader.IsConnectionInitializationStep);
                     outMsg.Write((byte)ConnectionInitialization.SteamTicketAndVersion);
                     outMsg.Write(Name);
+                    outMsg.Write(ownerKey);
                     outMsg.Write(SteamManager.GetSteamID());
                     if (steamAuthTicket == null)
                     {
@@ -215,6 +219,7 @@ namespace Barotrauma.Networking
             netClient.Shutdown(msg ?? TextManager.Get("Disconnecting"));
             netClient = null;
             steamAuthTicket?.Cancel(); steamAuthTicket = null;
+            OnDisconnect?.Invoke(msg);
         }
 
         public override void Send(IWriteMessage msg, DeliveryMethod deliveryMethod)

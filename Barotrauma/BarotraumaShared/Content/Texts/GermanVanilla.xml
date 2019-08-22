@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<infotexts language="German" translatedname="Deutsch">
+<infotexts language="German" nowhitespace="false" translatedname="Deutsch">
 
 <!-- Loading Screen -->
 <loading>Wird geladen ...</loading>
@@ -7,7 +7,7 @@
 
 <!-- Loading Screen tips -->
 <loadingscreentip>Du wirst nicht für die Lieferung von Fracht bezahlt, wenn ein Teil der Fracht verloren geht oder während des Transports beschädigt wird.</loadingscreentip>
-<loadingscreentip>Wenn du mehr Strom erzeugst, als die Geräte im U-Boot verbrauchen, kann dies zu Schäden an Verteilerkästen oder Bränden führen.</loadingscreentip>
+<loadingscreentip>Wenn du mehr Strom erzeugst, als die Geräte im U-Boot verbrauchen, kann dies zu Bränden oder Schäden an Verteilerkästen führen.</loadingscreentip>
 <loadingscreentip>Verteilerkästen und andere elektrische Geräte können beschädigt werden, wenn sie zu lange unter Wasser stehen.</loadingscreentip>
 <loadingscreentip>Wenn sich der Kernreaktor des U-Boots überhitzt, kann dies Feuer auslösen. Wenn ein überhitzter Reaktor nicht heruntergefahren wird, führt dies irgendwann zu einer Kernschmelze.</loadingscreentip>
 <loadingscreentip>Die meisten U-Boote sind mit ortsfesten Batterien ausgestattet, welche im Falle eines Reaktorversagens als kurzzeitige Hilfsstromquelle verwendet werden können.</loadingscreentip>
@@ -71,7 +71,7 @@
 <tutorialbutton>Ausbildung</tutorialbutton>
 <newgamebutton>Neues Spiel</newgamebutton>
 <loadgamebutton>Spiel laden</loadgamebutton>
-<joinserverbutton>Server beitreten</joinserverbutton>
+<joinserverbutton>Server-Browser</joinserverbutton>
 <hostserverbutton>Server hosten</hostserverbutton>
 <subeditorbutton>U-Boot-Erstellung</subeditorbutton>
 <charactereditorbutton>Charakter-Erstellung</charactereditorbutton>
@@ -97,7 +97,7 @@
 <maxplayers>Max. Spieler</maxplayers>
 <password>Passwort</password>
 <publicserver>Öffentlicher Server</publicserver>
-<publicservertooltip>Öffentliche Server werden in der Liste der verfügbaren Server auf der Registerkarte Server beitreten angezeigt.</publicservertooltip>
+<publicservertooltip>Öffentliche Server werden in der Liste der verfügbaren Server auf der Registerkarte Server-Browser angezeigt.</publicservertooltip>
 <attemptupnp>UPnP-Portweiterleitung versuchen</attemptupnp>
 <attemptupnptooltip>UPnP kann für die Weiterleitung von Ports auf deinem Router verwendet werden, damit Spieler dem Server beitreten können. UPnP wird jedoch nicht von allen Routern unterstützt, so dass du eventuell manuell Port-Weiterleitungen einrichten musst, wenn Spieler nicht dem Server beitreten können (siehe Readme für Anweisungen).</attemptupnptooltip>
 <startserverbutton>Start</startserverbutton>
@@ -120,7 +120,7 @@
 <modstab>Abonnierte Mods</modstab>
 <downloadbutton>Abonnieren</downloadbutton>
 <subscribedmods>Mods</subscribedmods>
-<nosubscribedmods>Du hast keine Mods für den Steam-Workshop abonniert. Klicke unten auf die Schaltfläche Finde mehr Mods, um loszulegen!</nosubscribedmods>
+<nosubscribedmods>Du hast keine Mods für den Steam-Workshop abonniert. Klicke auf den Tab Beliebte Mods, um loszulegen!</nosubscribedmods>
 <popularmods>Beliebte Mods</popularmods>
 <findmodsbutton>Finde mehr Mods ...</findmodsbutton>
 <workshopitemunsubscribe>Abo beenden</workshopitemunsubscribe>
@@ -162,7 +162,7 @@
 <workshopitemfilenotincluded>Die Datei ist nicht im Ordner mit den Workshop-Objekten vorhanden und wird nicht in das Workshop-Objekt aufgenommen. Dies kann wünschenswert sein, wenn du möchtest, dass die Mod Vanilla-Dateien verwendet, welche die Spieler bereits haben, andernfalls solltest du die Datei in den Ordner mit den Workshop-Objekten kopieren.</workshopitemfilenotincluded>
 <workshopitemfilenotfound>Datei nicht gefunden</workshopitemfilenotfound>
 <workshopitemillegalpath>Workshop-Objekte dürfen nur Dateien im Mod-Ordner ändern oder U-Boot-Dateien zum U-Boot-Ordner hinzufügen. Bitte erstelle dir einen separaten Unterordner für die Dateien.</workshopitemillegalpath>
-<workshopitemrefreshfilelisttooltip>Lade die Konfigurationsdatei des Workshop-Objekts neu (metadata.xml im Ordner des Objekts) und füge alle neuen Dateien darin der Dateiliste hinzu.</workshopitemrefreshfilelisttooltip>
+<workshopitemrefreshfilelisttooltip>Lade die Konfigurationsdatei des Workshop-Objekts neu (filelist.xml im Ordner des Objekts) und füge alle neuen Dateien darin der Dateiliste hinzu.</workshopitemrefreshfilelisttooltip>
 <workshoppublishpleasewait>Bitte warten</workshoppublishpleasewait>
 <workshoppublishinprogress>Veröffentliche [itemname] im Steam-Workshop.</workshoppublishinprogress>
 <workshopitempublished>[itemname] ist jetzt im Steam-Workshop verfügbar!</workshopitempublished>
@@ -222,7 +222,7 @@
 <enablevsynctooltip>Synchronisiert die Bildrate des Spiels mit der Bildrate deines Monitors. Verhindert das Auftauchen von Tearing-Artefakten.</enablevsynctooltip>
 <particlelimit>Partikellimit</particlelimit>
 <loseffect>Sichtlinieneffekt</loseffect>
-<losmodenone>Keiner</losmodenone>
+<losmodenone>k.A.</losmodenone>
 <losmodetransparent>Transparent</losmodetransparent>
 <losmodeopaque>Undurchsichtig</losmodeopaque>
 <lightmapscale>Beleuchtungsauflösung</lightmapscale>
@@ -291,9 +291,9 @@
 <setlegacybindingstooltip>Stelle die Tastenbelegungen ein, die in den alten Vor-Alpha-Versionen von Barotrauma verwendet wurden (E zum Auswählen und Abwählen von Elementen, linke Maustaste zum Verwenden von Objekten in der Hand).</setlegacybindingstooltip>
 
 <!-- Server settings -->
-<serversettingsroundstab>Runden</serversettingsroundstab>
+<serversettingsroundstab>Gameplay</serversettingsroundstab>
 <serversettingsservertab>Server</serversettingsservertab>
-<serversettingsbanlisttab>Bann-Liste</serversettingsbanlisttab>
+<serversettingsbanlisttab>Blacklist</serversettingsbanlisttab>
 <serversettingswhitelisttab>Whitelist</serversettingswhitelisttab>
 <serversettingssubselection>U-Boot-Auswahl</serversettingssubselection>
 <serversettingsmodeselection>Spielmodus-Auswahl</serversettingsmodeselection>
@@ -309,7 +309,7 @@
 <serversettingsmonsterspawns>Monster-Spawns</serversettingsmonsterspawns>
 <serversettingsadditionalcargo>Zusätzliche Fracht</serversettingsadditionalcargo>
 <serversettingsautorestartdelay>Autoneustart-Verzögerung:</serversettingsautorestartdelay>
-<serversettingsstartwhenclientsready>Anfangen, wenn die Spieler bereit sind.</serversettingsstartwhenclientsready>
+<serversettingsstartwhenclientsready>Anfangen, wenn die Spieler bereit sind</serversettingsstartwhenclientsready>
 <serversettingsstartwhenclientsreadyratio>[percentage] % müssen bereit sein</serversettingsstartwhenclientsreadyratio>
 <serversettingsallowspectating>Zuschauen ermöglichen</serversettingsallowspectating>
 <serversettingsallowvotekick>Abstimmungs-Kick erlauben</serversettingsallowvotekick>
@@ -398,7 +398,7 @@
 <error>Fehler</error>
 <warning>Warnung</warning>
 <unknown>Unbekannt</unknown>
-<none>Keiner</none>
+<none>k.A.</none>
 <any>Jede</any>
 <close>Schließen</close>
 <cancel>Abbrechen</cancel>
@@ -488,9 +488,9 @@
 <map>Karte</map>
 <crew>Besatzung</crew>
 <campaignmenucrew>Deine Besatzung</campaignmenucrew>
-<store>Lager</store>
+<store>Depot</store>
 <outpost>Außenposten</outpost>
-<campaignmenuhireable>Anheuerbare Leute</campaignmenuhireable>
+<campaignmenuhireable>Verfügbares Personal</campaignmenuhireable>
 <hirebutton>Anheuern</hirebutton>
 <firebutton>Feuern</firebutton>
 <firewarningheader>Bist du dir sicher?</firewarningheader>
@@ -526,13 +526,13 @@
 <cargospawnnotification>Die gekauften Materialien wurden hierhin geliefert: [roomname]</cargospawnnotification>
 
 <!-- Server list -->
-<joinserver>Server beitreten</joinserver>
-<yourname>Dein Name</yourname>
+<joinserver>Server-Browser</joinserver>
+<yourname>Spielername</yourname>
 <serverip>Server-IP</serverip>
 <serverlistname>Name</serverlistname>
 <serverlistplayers>Spieler</serverlistplayers>
 <serverlistversion>Spielversion</serverlistversion>
-<serverlisthaspassword>Passwortgeschützt</serverlisthaspassword>
+<serverlisthaspassword>Passwort</serverlisthaspassword>
 <serverlistusingwhitelist>Whitelist verwenden</serverlistusingwhitelist>
 <serverlistcontentpackages>Inhaltspakete</serverlistcontentpackages>
 <serverlistsubselection>U-Boot-Auswahl</serverlistsubselection>
@@ -543,7 +543,7 @@
 <serverlistroundstarted>Runde hat angefangen</serverlistroundstarted>
 <serverlistroundnotstarted>Runde hat noch nicht angefangen</serverlistroundnotstarted>
 <serverlistinfo>Info</serverlistinfo>
-<serverlistrefresh>Aktualisieren</serverlistrefresh>
+<serverlistrefresh>Server scannen</serverlistrefresh>
 <serverlistjoin>Beitreten</serverlistjoin>
 <serverlistunknownversion>Kompatibilität konnte nicht bestimmt werden (unbekannte Spielversion)</serverlistunknownversion>
 <serverlistnosteamqueryresponse>Die Kompatibilität mit dem Server konnte nicht ermittelt werden, da er nicht auf Anfragen antwortete. Dies kann passieren, wenn der Server ausgefallen ist oder wenn der Host seinen Abfrageport nicht weitergeleitet hat, aber du kannst trotzdem versuchen, dich mit dem Server zu verbinden.</serverlistnosteamqueryresponse>
@@ -556,10 +556,10 @@
 <serverlistsubscribemissingpackagestooltip>Abonniere die fehlenden Inhaltspakete im Steam-Workshop und öffne das Workshop-Menü, wo du sie herunterladen und aktivieren kannst.</serverlistsubscribemissingpackagestooltip>
 <serverlistsubscribemissingpackagestooltipnosteam>Die fehlenden Inhaltspakete sind im Steam-Workshop verfügbar, aber die Steam-Funktionen sind nicht verfügbar, wenn du Barotrauma nicht auf Steam besitzt.</serverlistsubscribemissingpackagestooltipnosteam>
 <filterservers>Server filtern</filterservers>
-<filterpassword>Kein Passwort erforderlich</filterpassword>
-<filterincompatibleservers>Inkompatible Server verbergen</filterincompatibleservers>
-<filterfullservers>Volle Server verbergen</filterfullservers>
-<filteremptyservers>Leere Server verbergen</filteremptyservers>
+<filterpassword>Kein Passwort</filterpassword>
+<filterincompatibleservers>Inkompatible verbergen</filterincompatibleservers>
+<filterfullservers>Volle verbergen</filterfullservers>
+<filteremptyservers>Leere verbergen</filteremptyservers>
 <nomatchingservers>Keine passenden Server gefunden</nomatchingservers>
 <refreshingserverlist>Aktualisiere Serverliste ...</refreshingserverlist>
 <noservers>Konnte keine Server finden.</noservers>
@@ -714,7 +714,7 @@
 <servermessage.playernotfound>Spieler [player] wurde nicht gefunden!</servermessage.playernotfound>
 
 <!-- Client permissions -->
-<clientpermission.none>Keiner</clientpermission.none>
+<clientpermission.none>k.A.</clientpermission.none>
 <clientpermission.all>Alle</clientpermission.all>
 <clientpermission.endround>Runde beenden</clientpermission.endround>
 <clientpermission.kick>Kicken</clientpermission.kick>
@@ -730,7 +730,7 @@
 <clientpermission.managepermissions>Rechte verwalten</clientpermission.managepermissions>
 
 <!-- Mission types -->
-<missiontype.none>Keiner</missiontype.none>
+<missiontype.none>k.A.</missiontype.none>
 <missiontype.random>Zufällig</missiontype.random>
 <missiontype.salvage>Bergung</missiontype.salvage>
 <missiontype.monster>Monster</missiontype.monster>
@@ -788,13 +788,13 @@
 <missionheader0.killhammerhead>Ziel eliminiert</missionheader0.killhammerhead>
 <missionmessage0.killhammerhead>Der Hammerkopf ist tot. Navigiere das U-Boot aus der Höhle, um die Belohnung zu erhalten.</missionmessage0.killhammerhead>
 <missionname.killcrawlerswarm1>Vernichte einen Schwarm</missionname.killcrawlerswarm1>
-<missiondescription.killcrawlerswarm1>Ein kleiner Schwarm von Kriechern terrorisiert Fahrzeuge, die zwischen [location1] und [location2] verkehren. Eine Belohnung von [reward] Credits wurde denen versprochen, die ihn vernichten.</missiondescription.killcrawlerswarm1>
+<missiondescription.killcrawlerswarm1>Ein kleiner Schwarm von Monstern der Gattung [monster] terrorisiert Fahrzeuge, die zwischen [location1] und [location2] verkehren. Eine Belohnung von [reward] Credits wurde denen versprochen, die ihn vernichten.</missiondescription.killcrawlerswarm1>
 <missionsonarlabel.killcrawlerswarm1>Schwarm</missionsonarlabel.killcrawlerswarm1>
 <missionsuccess.killcrawlerswarm1>Der Schwarm wurde vernichtet.</missionsuccess.killcrawlerswarm1>
 <missionheader0.killcrawlerswarm1>Ziel eliminiert</missionheader0.killcrawlerswarm1>
 <missionmessage0.killcrawlerswarm1>Der Schwarm wurde vernichtet. Navigiere das U-Boot aus der Höhle, um die Belohnung zu erhalten.</missionmessage0.killcrawlerswarm1>
 <missionname.killcrawlerswarm2>Vernichte einen Schwarm</missionname.killcrawlerswarm2>
-<missiondescription.killcrawlerswarm2>Ein großer Schwarm von Kriechern terrorisiert Fahrzeuge, die zwischen [location1] und [location2] verkehren. Eine Belohnung von [reward] Credits wurde denen versprochen, welche ihn vernichten.</missiondescription.killcrawlerswarm2>
+<missiondescription.killcrawlerswarm2>Ein großer Schwarm von Monstern der Gattung [monster] terrorisiert Fahrzeuge, die zwischen [location1] und [location2] verkehren. Eine Belohnung von [reward] Credits wurde denen versprochen, die ihn vernichten.</missiondescription.killcrawlerswarm2>
 <missionsonarlabel.killcrawlerswarm2>Schwarm</missionsonarlabel.killcrawlerswarm2>
 <missionsuccess.killcrawlerswarm2>Der Schwarm wurde vernichtet.</missionsuccess.killcrawlerswarm2>
 <missionheader0.killcrawlerswarm2>Ziel eliminiert</missionheader0.killcrawlerswarm2>
@@ -824,7 +824,7 @@
 <missiondescription.cargovolatilecompoundn>Ein hiesiger Waffenhändler bietet [reward] Credits im Austausch für die Lieferung von zwei Kisten mit Sprengstoff an einen Kunden in [location2] an.</missiondescription.cargovolatilecompoundn>
 <missionsuccess.cargovolatilecompoundn>Der Sprengstoff wurden erfolgreich geliefert.</missionsuccess.cargovolatilecompoundn>
 <missionname.cargochemicals>Chemikalientransport</missionname.cargochemicals>
-<missiondescription.cargochemicals>Forscher von [location1] brauchen jemanden, der für eine Belohnung von [reward] Credits einige gefährliche Chemikalien nach [location2] liefert. </missiondescription.cargochemicals>
+<missiondescription.cargochemicals>Forscher von [location1] brauchen jemanden, der für eine Belohnung von [reward] Credits einige gefährliche Chemikalien nach [location2] liefert.</missiondescription.cargochemicals>
 <missionsuccess.cargochemicals>Die Chemikalien wurden erfolgreich geliefert.</missionsuccess.cargochemicals>
 <missionname.cargohuskeggs>Biologisches Gefahrgut</missionname.cargohuskeggs>
 <missiondescription.cargohuskeggs>Ein paar hiesige Forscher bieten [reward] Credits für die Lieferung eines Behälters mit Eiern von Hüllenparasiten nach [location2] an.</missiondescription.cargohuskeggs>
@@ -863,6 +863,7 @@
 <missiondescription2.pvpmission>Du bist Mitglied einer Gruppe von Abtrünnigen, die sich gegen die Europa-Koalition stellt. Nach Angaben deiner Informanten in [location1] wurde gerade ein Koalitionsschiff auf eine Mission geschickt, um dein Fahrzeug aufzubringen. Eliminiere ihre Besatzung mit allen dafür notwendigen Mitteln.</missiondescription2.pvpmission>
 <missionteam1.pvpmission>Koalition</missionteam1.pvpmission>
 <missionteam2.pvpmission>Abtrünnige</missionteam2.pvpmission>
+<missionsuccess.pvpmission>Das [loser]-Schiff wurde von der [winner]-Crew besiegt!</missionsuccess.pvpmission>
 <missionfailure.pvpmission>Beide Besatzungen wurden getötet.</missionfailure.pvpmission>
 
 <!-- Entity categories -->
@@ -872,7 +873,7 @@
 <mapentitycategory.equipment>Ausrüstung</mapentitycategory.equipment>
 <mapentitycategory.electrical>Elektrik</mapentitycategory.electrical>
 <mapentitycategory.material>Material</mapentitycategory.material>
-<mapentitycategory.misc>Div.</mapentitycategory.misc>
+<mapentitycategory.misc>Diverses</mapentitycategory.misc>
 <mapentitycategory.alien>Außerirdischer</mapentitycategory.alien>
 <mapentitycategory.itemassembly>Objektkonstruktion</mapentitycategory.itemassembly>
 <mapentitycategory.legacy>Legende</mapentitycategory.legacy>
@@ -1193,7 +1194,7 @@
 <entityname.titanite>Titanit</entityname.titanite>
 <entitydescription.titanite>Ein Mineral, das Titan und Eisen enthält.</entitydescription.titanite>
 <entityname.brockite>Brockit</entityname.brockite>
-<entitydescription.brockite>Ein Mineral, das Titan und Phosphor enthält.</entitydescription.brockite>
+<entitydescription.brockite>Ein Mineral, das Thorium und Phosphor enthält.</entitydescription.brockite>
 <entityname.thorianite>Thorianit</entityname.thorianite>
 <entitydescription.thorianite>Ein seltenes Mineral, das Thorium enthält.</entitydescription.thorianite>
 <entityname.amblygonite>Amblygonit</entityname.amblygonite>
@@ -1431,7 +1432,7 @@
 <entityname.nuclearshell>Nukleargranate</entityname.nuclearshell>
 <entitydescription.nuclearshell>Eine Nukleargranate, die mit einer Railgun abgefeuert wird.</entitydescription.nuclearshell>
 <entityname.alienshell>Physicorium-Granate</entityname.alienshell>
-<entitydescription.alienshell>Wird mit einer Gaußkanone abgefeuert.</entitydescription.alienshell>
+<entitydescription.alienshell>Wird mit einer Railgun abgefeuert.</entitydescription.alienshell>
 
 <!-- Alien -->
 <entityname.skyholderartifact>Artefakt des Himmels-Außerirdischen</entityname.skyholderartifact>
@@ -2280,7 +2281,7 @@
 <!-- Room 3 -->
 <engineer.reactor>Reaktor</engineer.reactor>
 <engineer.reactorobjective>Starte den Reaktor</engineer.reactorobjective>
-<engineer.reactortext>Kernreaktoren versorgen U-Boote und Außenposten mit Strom. Sie benötigen Brennstoff, um Hitze zu erzeugen, und ein Besatzungsmitglied, das die Leistung reguliert.\n\nZiehe einen Brennstab auf den Objektslot auf der linken Seite. Wenn du mehrere Brennstäbe verwendest, wird mehr Hitze erzeugt – aber unter normalen Umständen reicht ein Brennstab aus und mehrere Stäbe können zu einer Überhitzung führen.\n\nLege zunächst die Spaltrate so fest, dass die Nadel sich im grünen Bereich befindet. Wiederhole das dann für die Turbinenleistung. Rechts werden die Last und die Leistung angezeigt. Versuche, die Leistung so nah wie möglich an der Last zu halten. Wenn die Leistung niedriger ist, führt das zu Stromausfällen. Ist sie höher, entstehen Überspannungen und Brände.\n\nWenn der Reaktortechniker das Interface lässt, solltest du die automatische Steuerung einschalten. Sie reagiert auf Schwankungen in der Netzlast, ist jedoch deutlich langsamer als ein menschlicher Techniker.</engineer.reactortext>
+<engineer.reactortext>Kernreaktoren versorgen U-Boote und Außenposten mit Strom. Sie benötigen Brennstoff, um Hitze zu erzeugen, und ein Besatzungsmitglied, das die Leistung reguliert.\n\nZiehe einen Brennstab auf den Objektslot auf der linken Seite. Wenn du mehrere Brennstäbe verwendest, wird mehr Hitze erzeugt – aber unter normalen Umständen reicht ein Brennstab aus und mehrere Stäbe können zu einer Überhitzung führen.\n\nLege zunächst die Spaltrate so fest, dass die Nadel sich im grünen Bereich befindet. Wiederhole das dann für die Turbinenleistung. Rechts werden die Last und die Leistung angezeigt. Versuche, die Leistung so nah wie möglich an der Last zu halten. Wenn die Leistung niedriger ist, führt das zu Stromausfällen. Ist sie höher, entstehen Überspannungen und Brände.\n\nWenn der Reaktortechniker das Interface verlässt, solltest du die automatische Steuerung einschalten. Sie reagiert auf Schwankungen in der Netzlast, ist jedoch deutlich langsamer als ein menschlicher Techniker.</engineer.reactortext>
 
 <!-- Room 4 -->
 <engineer.repairjunctionbox>Wartung</engineer.repairjunctionbox>
@@ -2302,7 +2303,7 @@
 
 <!-- Security officer tutorial -->
 <!-- Radio -->
-<officer.radio.wakeup>Ist noch irgendein Sicherheitsoffizier am Leben? DerRumpf hat versagt und wir haben ein paar ungebetene Gäste!</officer.radio.wakeup>
+<officer.radio.wakeup>Ist noch irgendein Sicherheitsoffizier am Leben? Wir haben einen Hüllenbruch und ein paar ungebetene Gäste!</officer.radio.wakeup>
 <officer.radio.equipment>Finde, was du brauchst, um diese Monster auszuschalten.</officer.radio.equipment>
 <officer.radio.crawlerdead>Gut gemacht, aber das war nur ein Babykriecher. Ich sehe da vorne was Größeres, also mach dich auf was gefasst.</officer.radio.crawlerdead>
 <officer.radio.somethingbig>Auf dem Sonar ist etwas Großes zu sehen. Lade die Gaußkanone und versuche, das Ding auszuschalten.</officer.radio.somethingbig>
@@ -2321,7 +2322,7 @@
 <!-- Room 3 -->
 <officer.crawler>Kriecher</officer.crawler>
 <officer.crawlerobjective>Töte den Kriecher</officer.crawlerobjective>
-<officer.crawlertext>Im nächsten Raum befindet sich ein Monster. Ein Kriecher. Schalte ihn mit dem Schockknüppel aus. Der Schockknüppel betäubt Feinde für kurze Zeit. Nutze das zu deinem Vorteil.</officer.crawlertext>
+<officer.crawlertext>Im nächsten Raum befindet sich ein Monster. Ein Kriecher. Schalte ihn mit dem Elektroschlagstock aus. Er betäubt Feinde für kurze Zeit. Nutze das zu deinem Vorteil.</officer.crawlertext>
 
 <!-- Room 4 -->
 <officer.somethingbig>Gaußkanone, Teil 1</officer.somethingbig>
@@ -2421,7 +2422,7 @@
 <resetkarma>Karma zurücksetzen</resetkarma>
 <karmadecreased>Dein Karma hat sich um [karmadecrease] verringert.</karmadecreased>
 <karmaincreased>Dein Karma hat sich um [karmaincrease] erhöht.</karmaincreased>
-<karmabanwarning>Warnung: Du wirst vom Server gebannt, wenn dein Karma unter [banthreshold] fällt.</karmabanwarning>
+<karmabanwarning>WARNUNG: Dein Karma ist gefährlich niedrig. Du wirst vom Server gebannt, wenn dein Karma noch weiter fällt.</karmabanwarning>
 <karmabanned>Du wurdest vom Server gebannt, weil dein Karma unter [banthreshold] gefallen ist.</karmabanned>
 <karmajobdisallowed>Du kannst diese Aufgabe nicht auswählen, weil dein Karma zu niedrig ist ([yourkarma]/[minkarma]).</karmajobdisallowed>
 
@@ -2578,13 +2579,318 @@
 <connection.waterdatain>wasserdaten_ein</connection.waterdatain>
 <connection.oxygendatain>sauerstoffdaten_ein</connection.oxygendatain>
 
-<!-- NEW VALUES -->
-<privacypolicy>Datenschutzerklärung</privacypolicy>
+<!-- *** New additions *** -->
+<itemmsgoxygenrefill>Sauerstoffflasche einsetzen, um sie zu befüllen</itemmsgoxygenrefill>
+<missionfailed>Mission gescheitert</missionfailed>
+<label.highpressurewarning>WARNUNG: Hoher Druck</label.highpressurewarning>
+<label.reactortempwarning>Reaktor-Temp.-Warnung</label.reactortempwarning>
+<addercomponent.timeframe>Zeitrahmen</addercomponent.timeframe>
+<addercomponent.clampmin>Klemme min</addercomponent.clampmin>
+<addercomponent.clampmax>Klemme max</addercomponent.clampmax>
+<equalscomponent.timeframe>Zeitrahmen</equalscomponent.timeframe>
+<equalscomponent.output>Ausgabe</equalscomponent.output>
+<equalscomponent.falseoutput>Falsche Ausgabe</equalscomponent.falseoutput>
+<andcomponent.timeframe>Zeitrahmen</andcomponent.timeframe>
+<andcomponentcomponent.output>Ausgabe</andcomponentcomponent.output>
+<andcomponentcomponent.falseoutput>Falsche Ausgabe</andcomponentcomponent.falseoutput>
+<oscillatorcomponent.timeframe>Zeitrahmen</oscillatorcomponent.timeframe>
+<oscillatorcomponent.outputtype>Ausgabetyp</oscillatorcomponent.outputtype>
+<delaycomponent.delay>Verzögerung</delaycomponent.delay>
+<delaycomponent.resetwhensignalreceived>Bei Empfang eines Signals zurücksetzen</delaycomponent.resetwhensignalreceived>
+<delaycomponent.resetwhendifferentsignalreceived>Bei Empfang eines anderen Signals zurücksetzen</delaycomponent.resetwhendifferentsignalreceived>
+<regexfindcomponent.output>Ausgabe</regexfindcomponent.output>
+<regexfindcomponent.falseoutput>Falsche Ausgabe</regexfindcomponent.falseoutput>
+<regexfindcomponent.expression>Ausdruck</regexfindcomponent.expression>
+<regexfindcomponent.continuousoutput>Dauerhafte Ausgabe</regexfindcomponent.continuousoutput>
+<memorycomponent.value>Wert</memorycomponent.value>
+<motionsensor.output>Ausgabe</motionsensor.output>
+<motionsensor.falseoutput>Falsche Ausgabe</motionsensor.falseoutput>
+<motionsensor.rangex>Spanne X</motionsensor.rangex>
+<motionsensor.rangey>Spanne Y</motionsensor.rangey>
+<signalcheckcomponent.targetsignal>Zielsignal</signalcheckcomponent.targetsignal>
+<signalcheckcomponent.output>Ausgabe</signalcheckcomponent.output>
+<signalcheckcomponent.falseoutput>Falsche Ausgabe</signalcheckcomponent.falseoutput>
+<waterdetector.output>Ausgabe</waterdetector.output>
+<waterdetector.falseoutput>Falsche Ausgabe</waterdetector.falseoutput>
+<wificomponent.channel>Kanal</wificomponent.channel>
+<quickuseaction.holdtounequip>Zum Ablegen halten</quickuseaction.holdtounequip>
+<entityname.incendiumfueltank>Incendium-Tank</entityname.incendiumfueltank>
+<entityname.physicoriumammobox>Physicorium-Munitionskiste</entityname.physicoriumammobox>
+<entityname.physicoriumbolt>Physicorium-Bolzen</entityname.physicoriumbolt>
+<statisticspromptheader>Willst du uns helfen, Barotrauma zu verbessern?</statisticspromptheader>
+<statisticsprompttext>Erlaubst du Barotrauma, Nutzungsstatistiken und Fehlerberichte an die Entwickler zu schicken? Die Daten sind anonym, enthalten keine personenbezogenen Daten und werden nur genutzt, um Fehler zu diagnostizieren und Barotrauma zu verbessern.</statisticsprompttext>
+<centerarealockedheader>Der Weg ins Unbekannte ...</centerarealockedheader>
+<centerarealockedtext>Dieses Gebiet ist in dieser Version von Barotrauma nicht zugänglich. Bitte warte auf zukünftige Updates!</centerarealockedtext>
+<connection.dockingproximitysensor>nähesensor</connection.dockingproximitysensor>
+<connection.signalx>signal_[num]</connection.signalx>
+<connection.set_text>signal_[num]</connection.set_text>
+<connection.stateout>zustand_aus</connection.stateout>
+<connection.turretaimingout>position_aus</connection.turretaimingout>
+<connection.turrettriggerout>auslöser_aus</connection.turrettriggerout>
+<connection.sonardataout>daten_aus</connection.sonardataout>
+<label.outpostinfodisplay1>Willkommen. Sauerstoffwert: Nominal. Stromwert: Nominal. Strahlungswert: Suboptimal. Aktuelle Wetterprognose: Kalt und feucht.</label.outpostinfodisplay1>
+<label.navterminaldock>Andocken</label.navterminaldock>
+<label.navterminaldock>Abdocken</label.navterminaldock>
+<connectionerrornoresponse>Der Server antwortet nicht. Möglicherweise bestehen serverseitige Verbindungsprobleme.</connectionerrornoresponse>
+<dialognorescuetargets>Im Moment ist niemand auf medizinische Hilfe angewiesen!</dialognorescuetargets>
+<dialognorescuetargets>Ich glaube, im Moment benötigt niemand medizinische Hilfe.</dialognorescuetargets>
+<workshoppublisherror.limitexceeded>Veröffentlichung des Workshop-Objekts gescheitert (Limit überschritten). Bitte stelle sicher, dass du die Steam Cloud aktiviert und deine Quote für die Steam Cloud nicht überschritten hast.</workshoppublisherror.limitexceeded>
+<workshoppublisherror.limiteduseraccount>Veröffentlichung des Workshop-Objekts gescheitert. Beschränkte Nutzerkonten dürfen keine Objekte im Steam-Workshop veröffentlichen. Du musst mindestens fünf Dollar im Steam-Store ausgeben, um die Beschränkungen aufzuheben.</workshoppublisherror.limiteduseraccount>
+<workshoppublisherror.banned>Veröffentlichung des Workshop-Objekts gescheitert. Dein Konto ist gesperrt.</workshoppublisherror.banned>
+<workshoppublisherror.insufficientprivilege>Veröffentlichung des Workshop-Objekts gescheitert (Privilegien reichen nicht aus). Das kann aufgrund einer Hub-Sperre, einer Kontosperre oder einer Community-Sperre passieren. Wende dich bitte an den Support von Steam.</workshoppublisherror.insufficientprivilege>
+<workshoppublisherror.serviceunavailable>Veröffentlichung des Workshop-Objekts gescheitert (Dienst nicht verfügbar). Möglicherweise gibt es Probleme mit den Workshop-Servern. Bitte versuche es in einigen Minuten noch einmal.</workshoppublisherror.serviceunavailable>
+<workshopitemupdated>Workshop-Objekt [itemname] erfolgreich aktualisiert.</workshopitemupdated>
+<workshopitemupdatefailed>Aktualisierung des Workshop-Objekts [itemname] fehlgeschlagen. [errormessage]</workshopitemupdatefailed>
+<workshopfilenotfound>Datei [path] nicht gefunden.</workshopfilenotfound>
+<debugconsolehelptext>Debug-Konsole: Zum Öffnen/Schließen F3 drücken. help eintippen, um eine Liste der verfügbaren Befehle zu erhalten.</debugconsolehelptext>
+<voipnodevices>Keine Tonaufnahmegeräte gefunden</voipnodevices>
+<wrongfiletype>Falscher Dateityp!</wrongfiletype>
+<charactereditor.contentpackagenameinuse>Es existiert bereits ein Inhaltspaket mit diesem Namen. Bitte wähle einen anderen Namen oder wähle das bestehende Inhaltspaket aus der Dropdown-Liste, wenn du den Charakter zu diesem Paket hinzufügen willst.</charactereditor.contentpackagenameinuse>
+<servermessage.previousclientname>[client] hat zu einem früheren Zeitpunkt den Namen [previousname] auf dem Server verwendet.</servermessage.previousclientname>
+<serverlistdirectjoin>Direkt beitreten</serverlistdirectjoin>
+<causeofdeath.unknown>Unbekannt</causeofdeath.unknown>
+<self_causeofdeathdescription.unknown>Du bist gestorben.</self_causeofdeathdescription.unknown>
 
-<lightcomponent.lightcolor>Farbe</lightcomponent.lightcolor>
+<!-- Generic strings (new) -->
+<pending>Ausstehend</pending>
+<inprogress>Aktiv</inprogress>
+<complete>Abgeschlossen</complete>
 
-<connection.batterychargestatusout>ladung</connection.batterychargestatusout>
-<connection.batterychargepercentage>ladung_%</connection.batterychargepercentage>
-<connection.batterysetrechargespeed>aufladerate_festlegen</connection.batterysetrechargespeed>
-<connection.batteryrechargespeedout>aufladerate_aus</connection.batteryrechargespeedout>
+<!-- Traitor mission (new) -->
+<traitormissionstartmessage>Du bist der Verräter! Du hast das U-Boot erfolgreich infiltriert. Nun musst du die Pläne in Gang setzen.</traitormissionstartmessage>
+<traitormissionfailuremessage>Deine Mission ist gescheitert. Sie wurde aufgegeben und du bist jetzt Teil der Besatzung. Verhalte dich unauffällig, bist du wieder kontaktiert wirst.</traitormissionfailuremessage>
+<traitormissionsuccessmessage>Du hast die Anstrengungen der Besatzung erfolgreich sabotiert. En Flucht-Shuttle ist unterwegs, um dich abzuholen.</traitormissionsuccessmessage>
+
+<!-- Traitor objectives (new) -->
+<traitorobjectivestartmessage>Du hast ein neues Ziel. Die folgenden Ziele müssen abgeschlossen werden:\n[traitorgoalinfos]</traitorobjectivestartmessage>
+<traitorobjectivestartmessageserver>[traitorname] ist der Verräter und hat die folgenden Ziele:\n[traitorgoalinfos]</traitorobjectivestartmessageserver>
+<traitorobjectiveendmessagesuccess>[traitorname] war ein Verräter und hat die gesetzten Ziele abgeschlossen:\n [traitorgoalinfos]</traitorobjectiveendmessagesuccess>
+<traitorobjectiveendmessagesuccessdead>[traitorname] war ein Verräter und hat die gesetzten Ziele abgeschlossen, ist dabei aber leider gestorben. Ziele:\n[traitorgoalinfos]</traitorobjectiveendmessagesuccessdead>
+<traitorobjectiveendmessagesuccessdetained>[traitorname] war ein Verräter und hat die gesetzten Ziele abgeschlossen, wurde aber in Gewahrsam genommen. Ziele:\n[traitorgoalinfos]</traitorobjectiveendmessagesuccessdetained>
+<traitorobjectiveendmessagefailure>[traitorname] war ein Verräter, hat die gesetzten Ziele aber nicht abgeschlossen:\n[traitorgoalinfos]</traitorobjectiveendmessagefailure>
+<traitorobjectiveendmessagefailuredead>[traitorname] war ein Verräter, ist aber gestorben, ohne die gesetzten Ziele abzuschließen:\n[traitorgoalinfos]</traitorobjectiveendmessagefailuredead>
+<traitorobjectiveendmessagefailuredetained>[traitorname] war ein Verräter, wurde aber in Gewahrsam genommen, ohne die gesetzten Ziele abzuschließen:\n[traitorgoalinfos]</traitorobjectiveendmessagefailuredetained>
+<traitorobjectivegoalinfoformat>- [statustext]\n</traitorobjectivegoalinfoformat>
+
+<!-- Traitor goals (new) -->
+<traitorgoalstatustextformat>[infotext] ([status])</traitorgoalstatustextformat>
+<traitorgoaltimelimitfailure>Du hast dein Ziel nicht rechtzeitig abgeschlossen.</traitorgoaltimelimitfailure>
+<traitorgoalkilltargetinfo>Ermorde [targetname].</traitorgoalkilltargetinfo>
+<traitorgoalkilleveryoneinfo>Töte alle Besatzungsmitglieder.</traitorgoalkilleveryoneinfo>
+<traitorgoalfinditeminfo>Finde folgendes Objekt: [identifier]. Suchgebiet: [targethullname].</traitorgoalfinditeminfo>
+<traitorgoalcausereactormeltdown>Führe eine Kernschmelze des Reaktors herbei.</traitorgoalcausereactormeltdown>
+<traitorgoaldestroyitems>Zerstöre mindestens [percentage] Prozent der Gesamtmenge an Nicht-Inventar-[tag] im U-Boot.</traitorgoaldestroyitems>
+<traitorgoalfloodpercentofsub>Überflute mindestens [percentage] Prozent des U-Boots.</traitorgoalfloodpercentofsub>
+<traitorgoaljamsonarinfo>Verstecke einen Sender, der das aktive Sonar stört, an einem Ort, an dem er [duration] Sekunden lang nicht gefunden wird.</traitorgoaljamsonarinfo>
+<traitorgoaljamsonarinfoalt>Störe das Sonar des U-Boots [duration] Sekunden lang.</traitorgoaljamsonarinfoalt>
+<traitorgoalsabotageinfo>Sabotiere [target], bis sein Zustand unter [threshold] Prozent fällt.</traitorgoalsabotageinfo>
+<traitorgoalpoisoninfo>Injiziere [targetname] [poison].</traitorgoalpoisoninfo>
+<traitorgoaltamperoxygeninfo>Tausche mindestens [percentage] Prozent des Sauerstoffvorrats in der Tauchausrüstung gegen Schweißgas aus.</traitorgoaltamperoxygeninfo>
+<traitorgoaltampercoilguninfo>Lade alle Gaußkanonen-Lader mit Platzpatronen.</traitorgoaltampercoilguninfo>
+<traitorgoaltampercoilguninfomulti>Lade [number] Gaußkanonen-Lader mit Platzpatronen.</traitorgoaltampercoilguninfomulti>
+<traitorgoaltamperrailguninfo>Lade alle Railgun-Autolader mit Platzpatronen.</traitorgoaltamperrailguninfo>
+<traitorgoaltamperrailguninfomulti>Lade [number] Platzpatronen in Railgun-Autolader.</traitorgoaltamperrailguninfomulti>
+
+<!-- Items (new) -->
+<entityname.flamer>Flammenwerfer</entityname.flamer>
+<entitydescription.flamer>Eine Brandwaffe, die einen Strahl aus brennendem Schweißgas ausschießt.</entitydescription.flamer>
+<entityname.smg>Maschinenpistole</entityname.smg>
+<entitydescription.smg>Eine Maschinenpistole vom Kaliber .45.</entitydescription.smg>
+<entityname.smgmagazine>Maschinenpistolenmagazin</entityname.smgmagazine>
+<entitydescription.smgmagazine>Ein Magazin mit 15 Patronen vom Kaliber .45.</entitydescription.smgmagazine>
+<entityname.smground>Maschinenpistolenkugel</entityname.smground>
+<entitydescription.smground>Eine Maschinenpistolenkugel vom Kaliber .45.</entitydescription.smground>
+<entityname.grenadelauncher>Raketenwerfer</entityname.grenadelauncher>
+<entitydescription.grenadelauncher>Ein tragbarer Raketenwerfer für 40-mm-Granaten.</entitydescription.grenadelauncher>
+<entityname.40mmgrenade>40-mm-Granate</entityname.40mmgrenade>
+<entitydescription.40mmgrenade>Munition für einen Raketenwerfer.</entitydescription.40mmgrenade>
+<entityname.40mmstungrenade>40-mm-Betäubungsgranate</entityname.40mmstungrenade>
+<entitydescription.40mmstungrenade>Munition für einen Raketenwerfer. Nicht tödlich.</entitydescription.40mmstungrenade>
+<entityname.shotgun>Polizeischrotflinte</entityname.shotgun>
+<entitydescription.shotgun>Eine Schrotflinte, die von Polizeieinheiten eingesetzt wird.</entitydescription.shotgun>
+<entityname.shotgunshell>Schrotflintenmunition</entityname.shotgunshell>
+<entitydescription.shotgunshell>Munition für eine Schrotflinte. Tödlich.</entitydescription.shotgunshell>
+<entityname.stungun>Elektroschocker</entityname.stungun>
+<entitydescription.stungun>Eine Waffe, die elektrifizierte Pfeile abfeuert.</entitydescription.stungun>
+<entityname.stungundart>Elektropfeil</entityname.stungundart>
+<entitydescription.stungundart>Setzt das Ziel durch einen Stromschlag außer Gefecht. Nicht tödlich.</entitydescription.stungundart>
+<entityname.toyhammer>Spielzeughammer</entityname.toyhammer>
+<entitydescription.toyhammer>Nicht tödlich, aber extrem nervig.</entitydescription.toyhammer>
+<entityname.coilgunammoboxexplosive>Sprengmunitionskiste.</entityname.coilgunammoboxexplosive>
+<entitydescription.coilgunammoboxexplosive>Munition für die Gaußkanone. Explodiert beim Aufprall.</entitydescription.coilgunammoboxexplosive>
+<entityname.coilgunammoboxpiercing>Durchschlagmunitionskiste</entityname.coilgunammoboxpiercing>
+<entitydescription.coilgunammoboxpiercing>Durchschlagsmunition für die Gaußkanone.</entitydescription.coilgunammoboxpiercing>
+<entityname.coilgunboltexplosive>Gauß-Sprengbolzen</entityname.coilgunboltexplosive>
+<entitydescription.coilgunboltexplosive>Munition für die Gaußkanone. Explodiert beim Aufprall.</entitydescription.coilgunboltexplosive>
+<entityname.coilgunboltpiercing>Gauß-Durchschlagsbolzen</entityname.coilgunboltpiercing>
+<entitydescription.coilgunboltpiercing>Durchschlagsmunition für die Gaußkanone.</entitydescription.coilgunboltpiercing>
+<entityname.crawlermask>Kriechermaske</entityname.crawlermask>
+<entitydescription.crawlermask>Schützt die Identität des Trägers. Spaßige Idee für gewisse Partys.</entitydescription.crawlermask>
+<entityname.huskstinger>Hüllenstachel</entityname.huskstinger>
+<entitydescription.huskstinger>Eine improvisierte Stichwaffe.</entitydescription.huskstinger>
+<entityname.shellshield>Molochpanzer-Fragment</entityname.shellshield>
+<entitydescription.shellshield>Ein Splitter eines harten Molochpanzers.</entitydescription.shellshield>
+<entityname.mudraptorshell>Schlammechsenpanzer</entityname.mudraptorshell>
+<entitydescription.mudraptorshell>Der Schutzpanzer einer Schlammechse.</entitydescription.mudraptorshell>
+<entityname.accordion>Akkordeon</entityname.accordion>
+<entitydescription.accordion>Ein altes, selbst gebautes Akkordeon.</entitydescription.accordion>
+<entityname.bongodrums>Bongos</entityname.bongodrums>
+<entitydescription.bongodrums>Ein altes, selbst gebautes Paar Bongotrommeln.</entitydescription.bongodrums>
+<entityname.captainspipe>Kapitänspfeife</entityname.captainspipe>
+<entitydescription.captainspipe>Beruhigt bei stürmischer See die Nerven.</entitydescription.captainspipe>
+
+<workshop.contenttag.eventset>Event-Set</workshop.contenttag.eventset>
+<workshop.contenttag.totalconversion>Umwandlung gesamt</workshop.contenttag.totalconversion>
+<workshop.contenttag.itemassembly>Objektkonstruktion</workshop.contenttag.itemassembly>
+<workshop.contenttag.language>Sprache</workshop.contenttag.language>
+
+<serverplaystyle>Spielstil</serverplaystyle>
+<servertags>Server-Tags</servertags>
+<servermotd>Nachricht des Tages</servermotd>
+<serverbanner>Server-Banner</serverbanner>
+<serverlogo>Server-Logo</serverlogo>
+<servertagline>Motto</servertagline>
+
+
+<!-- *** August additions *** -->
+<!-- Server -->
+<serversettingsgeneraltab>Allgemein</serversettingsgeneraltab>
+<serversettingsantigriefingtab>Anti-Griefing</serversettingsantigriefingtab>
+<serverprocessclosed>Der Serverprozess wurde unerwartet geschlossen. Möglicherweise wurde im Root-Verzeichnis des Spiels ein Absturzbericht (servercrashreport.log) generiert.</serverprocessclosed>
+<serverprocesscrashed>Der Serverprozess ist abgestürzt. Im Root-Verzeichnis des Spiels wurde ein Absturzbericht (servercrashreport.log) generiert.</serverprocesscrashed>
+<disconnectreason.servercrashed>Der Server ist abgestürzt.</disconnectreason.servercrashed>
+
+<!-- Workshop -->
+<workshoperroronenable>Das Workshop-Objekt [itemname] kann nicht aktiviert werden.</workshoperroronenable>
+
+<!-- Audio -->
+<dynamicrangecompression>Dynamikkompression</dynamicrangecompression>
+<dynamicrangecompressiontooltip>Passt die Lautstärke des Spiels automatisch an, um Audioverzerrungen zu verhindern.</dynamicrangecompressiontooltip>
+<voipnodevices>Keine Tonaufnahmegeräte gefunden</voipnodevices>
+
+<!-- Misc -->
+<pumpautocontrol>Automatische Steuerung</pumpautocontrol>
+<viewsteamprofile>Steam-Profil ansehen</viewsteamprofile>
+<deletefileverification>Willst du [filename] löschen?</deletefileverification>
+<connection.activate>aktivieren</connection.activate>
+
+<!-- Submarine labels -->
+<label.betadeck>Beta-Deck</label.betadeck>
+<label.airlock>Luftschleuse</label.airlock>
+<label.dockingport>Andockschleuse</label.dockingport>
+<label.weapons>Waffen</label.weapons>
+<label.cargo>Laderaum</label.cargo>
+<label.crewquarters>Besatzungsquartiere</label.crewquarters>
+<label.electrical1>E-Raum #1</label.electrical1>
+<label.electrical2>E-Raum #2</label.electrical2>
+<label.medical>Krankenstation</label.medical>
+<label.engineering>Technikabteilung</label.engineering>
+<label.ballast>Ballast</label.ballast>
+<label.reactor>Reaktor</label.reactor>
+<label.armory>Waffenkammer</label.armory>
+<label.batteryoutput>Batterieleistung</label.batteryoutput>
+<label.onoff>Ein/Aus</label.onoff>
+<label.bilge>Bilge</label.bilge>
+<label.powermainline>Stromhauptleitung</label.powermainline>
+<label.command>Kommandoraum</label.command>
+<label.engine>Maschinenraum</label.engine>
+
+<!-- Karma system -->
+<karma.kickbanthreshold>Bann-Schwelle</karma.kickbanthreshold>
+<karma.kickbanthresholdtooltip>Die Spieler, deren Karma unter diese Schwelle sinkt, werden automatisch vom Server gebannt.</karma.kickbanthresholdtooltip>
+<karma.karmadecay>Karma-Verbrauchsrate</karma.karmadecay>
+<karma.karmadecaytooltip>Wie sehr das Karma pro Sekunde sinkt, wenn es über der Verbrauchsschwelle liegt.</karma.karmadecaytooltip>
+<karma.karmadecaythreshold>Karma-Verbrauchsschwelle</karma.karmadecaythreshold>
+<karma.karmadecaythresholdtooltip>Karma sinkt schrittweise, wenn es über dieser Schwelle liegt.</karma.karmadecaythresholdtooltip>
+<karma.karmaincrease>Karma-Zuwachsrate</karma.karmaincrease>
+<karma.karmaincreasetooltip>Wie sehr das Karma pro Sekunde steigt, wenn es unter der Zuwachsschwelle liegt.</karma.karmaincreasetooltip>
+<karma.karmaincreasethreshold>Karma-Zuwachsschwelle</karma.karmaincreasethreshold>
+<karma.karmaincreasethresholdtooltip>Karma steigt schrittweise, wenn es unter dieser Schwelle liegt.</karma.karmaincreasethresholdtooltip>
+<karma.structurerepairkarmaincrease>Struktur repariert</karma.structurerepairkarmaincrease>
+<karma.structurerepairkarmaincreasetooltip>Wie sehr das Karma durch die Reparatur von Strukturen steigt (pro Menge an repariertem Schaden, ein Wert von 0,05 bedeutet beispielsweise, dass das Karma um 5 Punkte steigt, wenn man eine Wand von 0 Gesundheit auf 100 Gesundheit repariert).</karma.structurerepairkarmaincreasetooltip>
+<karma.structuredamagekarmadecrease>Struktur beschädigt</karma.structuredamagekarmadecrease>
+<karma.structuredamagekarmadecreasetooltip>Wie sehr das Karma durch das Beschädigen von Strukturen sinkt (pro Menge an verursachtem Schaden, ein Wert von 0,05 bedeutet beispielsweise, dass das Karma um 5 Punkte sinkt, wenn man eine Wand von 100 Gesundheit auf 0 Gesundheit beschädigt).</karma.structuredamagekarmadecreasetooltip>
+<karma.itemrepairkarmaincrease>Gerät repariert</karma.itemrepairkarmaincrease>
+<karma.itemrepairkarmaincreasetooltip>Wie sehr das Karma durch die Reparatur von Geräten sinkt (pro Menge an repariertem Schaden, ein Wert von 0,05 bedeutet beispielsweise, dass das Karma um 5 Punkte steigt, wenn man ein Gerät von 0 Gesundheit auf 100 Gesundheit repariert).</karma.itemrepairkarmaincreasetooltip>
+<karma.damageenemykarmaincrease>Schaden gegen Feind</karma.damageenemykarmaincrease>
+<karma.damageenemykarmaincreasetooltip>Wie sehr das Karma steigt, wenn man Feinden Schaden zufügt (pro Menge an verursachtem Schaden).</karma.damageenemykarmaincreasetooltip>
+<karma.healfriendlykarmaincrease>Verbündete heilen</karma.healfriendlykarmaincrease>
+<karma.healfriendlykarmaincreasetooltip>Wie sehr das Karma steigt, wenn man andere Besatzungsmitglieder heilt (pro Menge an geheiltem Schaden).</karma.healfriendlykarmaincreasetooltip>
+<karma.damagefriendlykarmadecrease>Schaden gegen Verbündeten</karma.damagefriendlykarmadecrease>
+<karma.damagefriendlykarmadecreasetooltip>Wie sehr das Karma sinkt, wenn man anderen Besatzungsmitgliedern Schaden zufügt (pro Menge an verursachtem Schaden).</karma.damagefriendlykarmadecreasetooltip>
+<karma.reactormeltdownkarmadecrease>Reaktorkernschmelze</karma.reactormeltdownkarmadecrease>
+<karma.reactormeltdownkarmadecreasetooltip>Wie sehr das Karma sinkt, wenn der Spieler eine Kernschmelze des Reaktors herbeiführt.</karma.reactormeltdownkarmadecreasetooltip>
+<karma.reactoroverheatkarmadecrease>Reaktorüberhitzung</karma.reactoroverheatkarmadecrease>
+<karma.reactoroverheatkarmadecreasetooltip>Wie sehr das Karma pro Sekunde sinkt, wenn die Reaktortemperatur zu hoch ist, während der Spieler ihn bedient.</karma.reactoroverheatkarmadecreasetooltip>
+<karma.extinguishfirekarmaincrease>Feuer löschen</karma.extinguishfirekarmaincrease>
+<karma.extinguishfirekarmaincreasetooltip>Wie sehr das Karma pro Sekunde steigt, wenn man versucht, Feuer zu löschen.</karma.extinguishfirekarmaincreasetooltip>
+<karma.allowedwiredisconnectionsperminute>Erlaubte Drahttrennungen pro Minute</karma.allowedwiredisconnectionsperminute>
+<karma.allowedwiredisconnectionsperminutetooltip>Wie viele Drähte ein Spieler pro Minute trennen darf, bevor er anfängt, Karma zu verlieren.</karma.allowedwiredisconnectionsperminutetooltip>
+<karma.wiredisconnectionkarmadecrease>Viele Drähte trennen</karma.wiredisconnectionkarmadecrease>
+<karma.wiredisconnectionkarmadecreasetooltip>Wie sehr das Karma sinkt, wenn ein Spieler mehr als die erlaubte Anzahl an Drähten pro Minute trennt.</karma.wiredisconnectionkarmadecreasetooltip>
+<karma.spamfilterkarmadecrease>Auslösen des Spamfilters</karma.spamfilterkarmadecrease>
+<karma.spamfilterkarmadecreasetooltip>Wie sehr das Karma sinkt, wenn ein Spieler den Spamfilter des Textchats auslöst.</karma.spamfilterkarmadecreasetooltip>
+<karma.herpesthreshold>Weltraumherpes-Schwelle</karma.herpesthreshold>
+<karma.herpesthresholdtooltip>Wie tief das Karma sinken muss, damit der Spieler sich mit Weltraumherpes infiziert.</karma.herpesthresholdtooltip>
+<karma.positiveactions>Hilfreiche Aktionen</karma.positiveactions>
+<karma.negativeactions>Schädliche Aktionen</karma.negativeactions>
+<karmapreset.default>Standard</karmapreset.default>
+<karmapreset.strict>Streng</karmapreset.strict>
+<karmapreset.custom>Individuell</karmapreset.custom>
+<karmadecreasedunknownamount>Dein Karma ist gesunken.</karmadecreasedunknownamount>
+<karmaincreasedunknownamount>Dein Karma ist gestiegen.</karmaincreasedunknownamount>
+<afflictionname.spaceherpes>Weltraumherpes</afflictionname.spaceherpes>
+<afflictiondescription.spaceherpes>Das Gesicht des Patienten ist mit ekelhaften Blasen und Pusteln bedeckt.</afflictiondescription.spaceherpes>
+<afflictionname.invertcontrols>Desorientiert</afflictionname.invertcontrols>
+<afflictiondescription.invertcontrols>Die Augen des Patienten huschen nervös hin und her und scheinen Mühe zu haben, die Umgebung wahrzunehmen.</afflictiondescription.invertcontrols>
+
+
+<damagebutton>Schaden</damagebutton>
+<pending>Ausstehend</pending>
+<inprogress>Aktiv</inprogress>
+<complete>Abgeschlossen</complete>
+
+<!-- Traitor goals -->
+<traitorgoalfindcontainerinfo>Finde dein nächstes Ziel: [target]. Suchgebiet: [targethullname].</traitorgoalfindcontainerinfo>
+<traitorgoaldestroyoxygen>Zerstöre mindestens [percentage] Prozent aller Nicht-Inventar-Sauerstoffflaschen im U-Boot.</traitorgoaldestroyoxygen>
+<traitorgoalsabotagedurationinfo>Sabotiere [tag], bis der Zustand mindestens [duration] Sekunden lang unter [threshold] Prozent liegt.</traitorgoalsabotagedurationinfo>
+<traitorgoalescape>Fliehe in das Shuttle in der Nähe.</traitorgoalescape>
+
+<!-- MVP traitor mission text package -->
+<mvptraitormissionstartinfotext>Eine Stimme in deinem Kopf schreit so laut, dass du zusammenzuckst: DER KULT DER HÜLLEN RUFT DICH IN DEN DIENST!</mvptraitormissionstartinfotext>
+<mvptraitorobjectivestartmessage1>In deinem Verstand formt sich langsam ein Gedanke, der zwar völlig trivial ist, trotzdem aber höchst verführerisch:\n[traitorgoalinfos]</mvptraitorobjectivestartmessage1>
+<mvp_goalinfotext_1>Durchsuche die Schränke – unter einer der Ersatzsauerstoffflaschen wartet eine spezielle Nachricht nur für dich.</mvp_goalinfotext_1>
+<mvpobjectivesuccessmessage1>Genau, wie du es irgendwie vorhergesehen hast, klebt an der Unterseite dieser Sauerstoffflasche ein schmutziger Zettel. Er ist mit einem primitiven Gekrakel bedeckt, das du intuitiv als codierte Anweisung erkennst – und verstehst.</mvpobjectivesuccessmessage1>
+<mvptraitorobjectivestartmessage2>Deine erste Aufgabe:\n[traitorgoalinfos]</mvptraitorobjectivestartmessage2>
+<mvpobjectivesuccessmessage2>Du schauderst vor Vergnügen, als du die erste Aufgabe auf dem Papier abschließt. Ein trockenes, wahnsinniges Lachen hallt kurz in deinem Kopf wider und verliert sich dann zu kaum mehr wahrnehmbaren nassen Klicks.</mvpobjectivesuccessmessage2>
+<mvptraitorobjectivestartmessage3>Du liest die nächste codierte Anweisung:\n[traitorgoalinfos]</mvptraitorobjectivestartmessage3>
+<mvpobjectivesuccessmessage3>Damit ist alles getan. Das U-Boot versinkt im Chaos, die Stimme in deinem Kopf verstummt und dein Schicksal ist besiegelt.</mvpobjectivesuccessmessage3>
+
+<!-- flood_1 traitor mission text package -->
+<flood_1_traitormissionstartinfotext>Gelobt sei die Tröte!</flood_1_traitormissionstartinfotext>
+<flood_1_traitorobjectivestartmessage1>Es ist so weit. Genau wie der Mann mit dem seltsam geschminkten Gesicht auf dem Ladedock von Minos Linea dir aufgetragen hat, machst du dich ans Werk:\n[traitorgoalinfos]</flood_1_traitorobjectivestartmessage1>
+<flood_1_goalinfotext_1>Durchsuche die Notfallschränke in allen Bereichen des U-Boots. Ein Agent hat in einem davon einen Knopf versteckt.</flood_1_goalinfotext_1>
+<flood_1_objectivesuccessmessage1>Du steckst den Knopf schnell in deine Tasche und bemühst dich, unauffällig zu wirken. TRÖT!</flood_1_objectivesuccessmessage1>
+<flood_1_traitorobjectivestartmessage2>Jetzt musst du Sprengstoff finden, bevor das jemand anderes tut!\n[traitorgoalinfos]</flood_1_traitorobjectivestartmessage2>
+<flood_1_goalinfotext_2>Hole den Sprengstoff aus der Krankenstation.</flood_1_goalinfotext_2>
+<flood_1_objectivesuccessmessage2>Der Plan läuft bisher reibungslos. Du schnappst dir den Sprengstoff und versuchst, nicht allzu laut zu kichern.</flood_1_objectivesuccessmessage2>
+<flood_1_traitorobjectivestartmessage3>Der geschminkte Mann hat dir gesagt, dass du etwas finden musst, um alles in Gang zu setzen!\n[traitorgoalinfos]</flood_1_traitorobjectivestartmessage3>
+<flood_1_goalinfotext_3>Durchsuche die Stahlschränke des U-Boots und finde den Zünder.</flood_1_goalinfotext_3>
+<flood_1_objectivesuccessmessage3>Der Agent hat ganze Arbeit geleistet! Jetzt hast du alles, was du brauchst, um die Party hier in Gang zu bringen.</flood_1_objectivesuccessmessage3>
+<flood_1_traitorobjectivestartmessage4>Du musst den Zünder an einem guten Punkt an einer Wand anbringen, den Knopf in sicherer Entfernung platzieren, die beiden miteinander verkabeln und dann zünden, um diesen alten Rostkübel zu überfluten!\n[traitorgoalinfos]</flood_1_traitorobjectivestartmessage4>
+<flood_1_objectivesuccessmessage4>TRÖT TRÖT! Jetzt ist mehr als genug Wasser im U-Boot, um seine Mission vorzeitig zu beenden. Wie lange es wohl dauern mag, zum nächsten Außenposten zu schwimmen und dem geschminkten Mann Bericht zu erstatten ...</flood_1_objectivesuccessmessage4>
+
+<!-- flood_2 traitor mission text package -->
+<flood_2_traitormissionstartinfotext>Du blickst dich vorsichtig um. Niemand beobachtet dich. Der perfekte Zeitpunkt, um zur Tat zu schreiten.</flood_2_traitormissionstartinfotext>
+<flood_2_traitorobjectivestartmessage1>Du hast Monate damit zugebracht, das Vertrauen dieser Besatzung zu gewinnen, und nun macht sich das endlich bezahlt:\n[traitorgoalinfos]</flood_2_traitorobjectivestartmessage1>
+<flood_2_goalinfotext_1>Durchsuche die Notfallschränke des U-Boots. In einer der Tauchermasken ist ein kleiner Funkempfänger versteckt. Du brauchst ihn, um deine Ziele zu erreichen.</flood_2_goalinfotext_1>
+<flood_2_objectivesuccessmessage1>Du findest den winzigen Funkempfänger und aktivierst ihn.</flood_2_objectivesuccessmessage1>
+<flood_2_traitorobjectivestartmessage2>Der Empfänger knackt und pfeift und empfängt ein schwaches Signal: Europäischer Widerstand, direkte Maßnahme. Mission freigegeben: Sorge zunächst für eine Ablenkung.\n[traitorgoalinfos]</flood_2_traitorobjectivestartmessage2>
+<flood_2_objectivesuccessmessage2>Gut gemacht. Ohne Sauerstoff werden die Schweine schon bald in Panik geraten.</flood_2_objectivesuccessmessage2>
+<flood_2_traitorobjectivestartmessage3>Jetzt löse eine kleine Überflutung aus und hör, wie die Faschisten quieken:\n[traitorgoalinfos]</flood_2_traitorobjectivestartmessage3>
+<flood_2_objectivesuccessmessage3>Hervorragend! Denk daran, Genosse, es gibt keine schlechte Taktik, nur schlechte Ziele!</flood_2_objectivesuccessmessage3>
+<flood_2_traitorobjectivestartmessage4>Schnell, nutze die Verwirrung aus und schalte die schlimmsten dieser Schweine aus, so lange du kannst!\n[traitorgoalinfos]</flood_2_traitorobjectivestartmessage4>
+<flood_2_objectivesuccessmessage4>Während du ihnen das Leben nimmst, bemerkst du, vielleicht ein wenig verbittert, dass dein Funkempfänger plötzlich verstummt ist. Deine Genossen haben dich der Gnade von Mutter Europa ausgeliefert.</flood_2_objectivesuccessmessage4>
+
+
 </infotexts>

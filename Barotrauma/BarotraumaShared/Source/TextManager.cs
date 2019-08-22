@@ -314,7 +314,80 @@ namespace Barotrauma
             return string.Format(text, args);     
         }
 
+        public static string FormatServerMessage(string textId)
+        {
+            return $"{textId}~";
+        }
+
+        public static string FormatServerMessage(string message, IEnumerable<string> keys, IEnumerable<string> values)
+        {
+            if (!keys.Any())
+            {
+                return FormatServerMessage(message);
+            }
+            var startIndex = message.LastIndexOf('/') + 1;
+            var endIndex = message.IndexOf('~', startIndex);
+            if (endIndex == -1)
+            {
+                endIndex = message.Length - 1;
+            }
+            var textId = message.Substring(startIndex, endIndex - startIndex + 1);
+            var keysWithValues = keys.Zip(values, (key, value) => new { Key = key, Value = value });
+            var prefixEntries = keysWithValues.Select((kv, index) =>
+            {
+                if (kv.Value.IndexOfAny(new char[] { '~', '/' }) != -1)
+                {
+                    var kvStartIndex = kv.Value.LastIndexOf('/') + 1;
+                    return kv.Value.Substring(0, kvStartIndex) + $"[{textId}.{index}]={kv.Value.Substring(kvStartIndex)}";
+                }
+                else
+                {
+                    return null;
+                }
+            }).Where(e => e != null).ToArray();
+            return string.Join("",
+                (prefixEntries.Length > 0 ? string.Join("/", prefixEntries) + "/" : ""),
+                message,
+                string.Join("", keysWithValues.Select((kv, index) => kv.Value.IndexOfAny(new char[] { '~', '/' }) != -1 ? $"~{kv.Key}=[{textId}.{index}]" : $"~{kv.Key}={kv.Value}").ToArray())
+            );
+        }
+
+        static readonly string[] genderPronounVariables = new string[] {
+            "[genderpronoun]",
+            "[genderpronounpossessive]",
+            "[genderpronounreflexive]",
+            "[Genderpronoun]",
+            "[Genderpronounpossessive]",
+            "[Genderpronounreflexive]"
+        };
+
+        static readonly string[] genderPronounMaleValues = new string[] {
+             "PronounMaleLowercase",
+             "PronounPossessiveMaleLowercase",
+             "PronounReflexiveMaleLowercase",
+             "PronounMale",
+             "PronounPossessiveMale",
+             "PronounReflexiveMale"
+        };
+
+        static readonly string[] genderPronounFemaleValues = new string[] {
+             "PronounFemaleLowercase",
+             "PronounPossessiveFemaleLowercase",
+             "PronounReflexiveFemaleLowercase",
+             "PronounMale",
+             "PronounPossessiveFemale",
+             "PronounReflexiveFemale"
+        };
+
+        public static string FormatServerMessageWithGenderPronouns(Gender gender, string message, IEnumerable<string> keys, IEnumerable<string> values)
+        {
+            return FormatServerMessage(message, keys.Concat(genderPronounVariables), values.Concat(gender == Gender.Male ? genderPronounMaleValues : genderPronounFemaleValues));
+        }
+
+        static readonly Regex reReplacedMessage = new Regex(@"^(?<variable>[\[\].A-Za-z0-9_]+?)=(?<message>.*)$", RegexOptions.Compiled);
+
         // Format: ServerMessage.Identifier1/ServerMessage.Indentifier2~[variable1]=value~[variable2]=value
+        // Also: replacement=ServerMessage.Identifier1~[variable1]=value/ServerMessage.Identifier2~[variable2]=replacement
         public static string GetServerMessage(string serverMessage)
         {
             if (!textPacks.ContainsKey(Language))
@@ -328,6 +401,7 @@ namespace Barotrauma
             }
 
             string[] messages = serverMessage.Split('/');
+            var replacedMessages = new Dictionary<string, string>();
 
             bool translationsFound = false;
 
@@ -335,8 +409,17 @@ namespace Barotrauma
             {
                 for (int i = 0; i < messages.Length; i++)
                 {
-                    if (!IsServerMessageWithVariables(messages[i])) // No variables, try to translate
+                    if (messages[i].EndsWith("~", StringComparison.Ordinal))
                     {
+                        messages[i] = messages[i].Substring(0, messages[i].Length - 1);
+                    }
+                    if (!IsServerMessageWithVariables(messages[i]) && !messages[i].Contains('=')) // No variables, try to translate
+                    {
+                        foreach (var replacedMessage in replacedMessages)
+                        {
+                            messages[i] = messages[i].Replace(replacedMessage.Key, replacedMessage.Value);
+                        }
+
                         if (messages[i].Contains(" ")) continue; // Spaces found, do not translate
                         string msg = Get(messages[i], true);
                         if (msg != null) // If a translation was found, otherwise use the original
@@ -347,7 +430,22 @@ namespace Barotrauma
                     }
                     else
                     {
+                        var match = reReplacedMessage.Match(messages[i]);
+                        string messageVariable = null;
+                        if (match.Success)
+                        {
+                            messageVariable = match.Groups["variable"].ToString();
+                            messages[i] = match.Groups["message"].ToString();
+                        }
+
+                        foreach (var replacedMessage in replacedMessages)
+                        {
+                            messages[i] = messages[i].Replace(replacedMessage.Key, replacedMessage.Value);
+                        }
+
+
                         string[] messageWithVariables = messages[i].Split('~');
+
                         string msg = Get(messageWithVariables[0], true);
 
                         if (msg != null) // If a translation was found, otherwise use the original
@@ -355,7 +453,7 @@ namespace Barotrauma
                             messages[i] = msg;
                             translationsFound = true;
                         }
-                        else
+                        else if (messageVariable == null)
                         {
                             continue; // No translation found, probably caused by player input -> skip variable handling
                         }
@@ -366,6 +464,12 @@ namespace Barotrauma
                             string[] variableAndValue = messageWithVariables[j].Split('=');
                             messages[i] = messages[i].Replace(variableAndValue[0], variableAndValue[1]);
                         }
+
+                        if (messageVariable != null)
+                        {
+                            replacedMessages[messageVariable] = messages[i];
+                            messages[i] = null;
+                        }
                     }
                 }
 
@@ -374,7 +478,10 @@ namespace Barotrauma
                     string translatedServerMessage = string.Empty;
                     for (int i = 0; i < messages.Length; i++)
                     {
-                        translatedServerMessage += messages[i];
+                        if (messages[i] != null)
+                        {
+                            translatedServerMessage += messages[i];
+                        }
                     }
                     return translatedServerMessage;
                 }
@@ -494,21 +601,21 @@ namespace Barotrauma
         {
             if (gender == Gender.Male)
             {
-                return text.Replace("[genderpronoun]",     Get("PronounMale").ToLower())
-                    .Replace("[genderpronounpossessive]",  Get("PronounPossessiveMale").ToLower())
-                    .Replace("[genderpronounreflexive]",   Get("PronounReflexiveMale").ToLower())
-                    .Replace("[Genderpronoun]",            Capitalize(Get("PronounMale")))
-                    .Replace("[Genderpronounpossessive]",  Capitalize(Get("PronounPossessiveMale")))
-                    .Replace("[Genderpronounreflexive]",   Capitalize(Get("PronounReflexiveMale")));
+                return text.Replace("[genderpronoun]",     Get("PronounMaleLowercase"))
+                    .Replace("[genderpronounpossessive]",  Get("PronounPossessiveMaleLowercase"))
+                    .Replace("[genderpronounreflexive]",   Get("PronounReflexiveMaleLowercase"))
+                    .Replace("[Genderpronoun]",            Get("PronounMale"))
+                    .Replace("[Genderpronounpossessive]",  Get("PronounPossessiveMale"))
+                    .Replace("[Genderpronounreflexive]",   Get("PronounReflexiveMale"));
             }
             else
             {
-                return text.Replace("[genderpronoun]",     Get("PronounFemale").ToLower())
-                    .Replace("[genderpronounpossessive]",  Get("PronounPossessiveFemale").ToLower())
-                    .Replace("[genderpronounreflexive]",   Get("PronounReflexiveFemale").ToLower())
-                    .Replace("[Genderpronoun]",            Capitalize(Get("PronounFemale")))
-                    .Replace("[Genderpronounpossessive]",  Capitalize(Get("PronounPossessiveFemale")))
-                    .Replace("[Genderpronounreflexive]",   Capitalize(Get("PronounReflexiveFemale")));
+                return text.Replace("[genderpronoun]",     Get("PronounFemaleLowercase"))
+                    .Replace("[genderpronounpossessive]",  Get("PronounPossessiveFemaleLowercase"))
+                    .Replace("[genderpronounreflexive]",   Get("PronounReflexiveFemaleLowerCase"))
+                    .Replace("[Genderpronoun]",            Get("PronounFemale"))
+                    .Replace("[Genderpronounpossessive]",  Get("PronounPossessiveFemale"))
+                    .Replace("[Genderpronounreflexive]",   Get("PronounReflexiveFemale"));
             }
         }
         

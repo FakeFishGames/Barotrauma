@@ -37,7 +37,10 @@ namespace Facepunch.Steamworks
             OnIncomingConnection = null;
             OnConnectionFailed = null;
             OnP2PData = null;
-            ListenChannels.Clear();
+            lock (ListenChannels)
+            {
+                ListenChannels.Clear();
+            }
         }
 
 
@@ -56,11 +59,15 @@ namespace Facepunch.Steamworks
             UpdateTimer.Reset();
             UpdateTimer.Start();
 
-            foreach ( var channel in ListenChannels )
+            lock (ListenChannels)
             {
-                while ( ReadP2PPacket( channel ) )
+                for (int i = 0; i < ListenChannels.Count; i++)
                 {
-                    // Nothing Here.
+                    while (ReadP2PPacket(ListenChannels[i]))
+                    {
+                        //handle listen channel being closed by OnP2PData callback
+                        if (i >= ListenChannels.Count) break;
+                    }
                 }
             }
         }
@@ -72,11 +79,14 @@ namespace Facepunch.Steamworks
         /// </summary>
         public void SetListenChannel( int ChannelId, bool Listen )
         {
-            ListenChannels.RemoveAll( x => x == ChannelId );
-
-            if ( Listen  )
+            lock (ListenChannels)
             {
-                ListenChannels.Add( ChannelId );
+                ListenChannels.RemoveAll(x => x == ChannelId);
+
+                if (Listen)
+                {
+                    ListenChannels.Add(ChannelId);
+                }
             }
         }
 

@@ -39,7 +39,7 @@ namespace Barotrauma.Networking
 
             public float Progress
             {
-                get { return SentOffset / (float)Data.Length; }
+                get { return KnownReceivedOffset / (float)Data.Length; }
             }
 
             public float WaitTimer
@@ -53,18 +53,22 @@ namespace Barotrauma.Networking
                 get { return data; }
             }
 
+            public bool Acknowledged;
+
             public int SentOffset
             {
                 get;
                 set;
             }
 
+            public int KnownReceivedOffset;
+
             public NetworkConnection Connection
             {
                 get { return connection; }
             }
 
-            public int SequenceChannel;
+            public int ID;
 
             public FileTransferOut(NetworkConnection recipient, FileTransferType fileType, string filePath)
             {
@@ -73,6 +77,10 @@ namespace Barotrauma.Networking
                 FileType = fileType;
                 FilePath = filePath;
                 FileName = Path.GetFileName(filePath);
+
+                Acknowledged = false;
+                SentOffset = 0;
+                KnownReceivedOffset = 0;
 
                 Status = FileTransferStatus.NotStarted;
                 
@@ -146,11 +154,11 @@ namespace Barotrauma.Networking
             {
                 transfer = new FileTransferOut(recipient, fileType, filePath)
                 {
-                    SequenceChannel = 1
+                    ID = 1
                 };
-                while (activeTransfers.Any(t => t.Connection == recipient && t.SequenceChannel == transfer.SequenceChannel))
+                while (activeTransfers.Any(t => t.Connection == recipient && t.ID == transfer.ID))
                 {
-                    transfer.SequenceChannel++;
+                    transfer.ID++;
                 }
                 activeTransfers.Add(transfer);
             }
@@ -186,8 +194,6 @@ namespace Barotrauma.Networking
                 transfer.WaitTimer -= deltaTime;
                 if (transfer.WaitTimer > 0.0f) continue;
                 
-                //if (!transfer.Connection.CanSendImmediately(NetDeliveryMethod.ReliableOrdered, transfer.SequenceChannel)) continue;
-
                 transfer.WaitTimer = 0.05f;// transfer.Connection.AverageRoundtripTime;
 
                 // send another part of the file
@@ -198,8 +204,9 @@ namespace Barotrauma.Networking
 
                 try
                 {
-                    //first message; send length, chunk length, file name etc
-                    if (transfer.SentOffset == 0)
+                    //first message; send length, file name etc
+                    //wait for acknowledgement before sending data
+                    if (!transfer.Acknowledged)
                     {
                         message = new WriteOnlyMessage();
                         message.Write((byte)ServerPacketHeader.FILE_TRANSFER);
@@ -209,20 +216,21 @@ namespace Barotrauma.Networking
                         if (transfer.Connection == GameMain.Server.OwnerConnection)
                         {
                             message.Write((byte)FileTransferMessageType.TransferOnSameMachine);
+                            message.Write((byte)transfer.ID);
                             message.Write((byte)transfer.FileType);
                             message.Write(transfer.FilePath);
-                            peer.Send(message, transfer.Connection, DeliveryMethod.ReliableOrdered);
+                            peer.Send(message, transfer.Connection, DeliveryMethod.Unreliable);
                             transfer.Status = FileTransferStatus.Finished;
-                            return;
                         }
                         else
                         {
                             message.Write((byte)FileTransferMessageType.Initiate);
+                            message.Write((byte)transfer.ID);
                             message.Write((byte)transfer.FileType);
-                            message.Write((ushort)chunkLen);
-                            message.Write((ulong)transfer.Data.Length);
+                            //message.Write((ushort)chunkLen);
+                            message.Write(transfer.Data.Length);
                             message.Write(transfer.FileName);
-                            peer.Send(message, transfer.Connection, DeliveryMethod.ReliableOrdered);
+                            peer.Send(message, transfer.Connection, DeliveryMethod.Unreliable);
 
                             transfer.Status = FileTransferStatus.Sending;
 
@@ -231,22 +239,33 @@ namespace Barotrauma.Networking
                                 DebugConsole.Log("Sending file transfer initiation message: ");
                                 DebugConsole.Log("  File: " + transfer.FileName);
                                 DebugConsole.Log("  Size: " + transfer.Data.Length);
-                                DebugConsole.Log("  Sequence channel: " + transfer.SequenceChannel);
+                                DebugConsole.Log("  ID: " + transfer.ID);
                             }
                         }
+                        return;
                     }
 
                     message = new WriteOnlyMessage();
                     message.Write((byte)ServerPacketHeader.FILE_TRANSFER);
                     message.Write((byte)FileTransferMessageType.Data);
 
+                    message.Write((byte)transfer.ID);
+                    message.Write(transfer.SentOffset);
+
                     byte[] sendBytes = new byte[sendByteCount];
                     Array.Copy(transfer.Data, transfer.SentOffset, sendBytes, 0, sendByteCount);
 
+                    message.Write((ushort)sendByteCount);
                     message.Write(sendBytes, 0, sendByteCount);
 
-                    peer.Send(message, transfer.Connection, DeliveryMethod.ReliableOrdered);
                     transfer.SentOffset += sendByteCount;
+                    if (transfer.SentOffset > transfer.KnownReceivedOffset + chunkLen * 5 ||
+                        transfer.SentOffset >= transfer.Data.Length)
+                    {
+                        transfer.SentOffset = transfer.KnownReceivedOffset;
+                    }
+
+                    peer.Send(message, transfer.Connection, DeliveryMethod.Unreliable);
                 }
 
                 catch (Exception e)
@@ -263,11 +282,6 @@ namespace Barotrauma.Networking
                 if (GameSettings.VerboseLogging)
                 {
                     DebugConsole.Log("Sending " + sendByteCount + " bytes of the file " + transfer.FileName + " (" + transfer.SentOffset + "/" + transfer.Data.Length + " sent)");
-                }
-
-                if (remaining - sendByteCount <= 0)
-                {
-                    transfer.Status = FileTransferStatus.Finished;
                 }
             }
         }
@@ -288,11 +302,28 @@ namespace Barotrauma.Networking
 
             if (messageType == (byte)FileTransferMessageType.Cancel)
             {
-                byte sequenceChannel = inc.ReadByte();
-                var matchingTransfer = activeTransfers.Find(t => t.Connection == inc.Sender && t.SequenceChannel == sequenceChannel);
+                byte transferId = inc.ReadByte();
+                var matchingTransfer = activeTransfers.Find(t => t.Connection == inc.Sender && t.ID == transferId);
                 if (matchingTransfer != null) CancelTransfer(matchingTransfer);
 
                 return;
+            }
+            else if (messageType == (byte)FileTransferMessageType.Data)
+            {
+                byte transferId = inc.ReadByte();
+                var matchingTransfer = activeTransfers.Find(t => t.Connection == inc.Sender && t.ID == transferId);
+                if (matchingTransfer != null)
+                {
+                    matchingTransfer.Acknowledged = true;
+                    int offset = inc.ReadInt32();
+                    matchingTransfer.KnownReceivedOffset = offset > matchingTransfer.KnownReceivedOffset ? offset : matchingTransfer.KnownReceivedOffset;
+                    if (matchingTransfer.SentOffset < matchingTransfer.KnownReceivedOffset) { matchingTransfer.SentOffset = matchingTransfer.KnownReceivedOffset; }
+
+                    if (matchingTransfer.KnownReceivedOffset >= matchingTransfer.Data.Length)
+                    {
+                        matchingTransfer.Status = FileTransferStatus.Finished;
+                    }
+                }
             }
 
             byte fileType = inc.ReadByte();

@@ -203,10 +203,6 @@ namespace Barotrauma
                     UserData = Tab.SteamWorkshop,
                     OnClicked = SelectTab
                 };
-
-/*#if OSX && !DEBUG
-                steamWorkshopButton.Text += " (Not yet available on MacOS)";
-#endif*/
             }
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("SubEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
@@ -256,7 +252,7 @@ namespace Barotrauma
                 UserData = Tab.Settings,
                 OnClicked = SelectTab
             };
-            //TODO: translate
+
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), optionList.RectTransform), TextManager.Get("CreditsButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
                 ForceUpperCase = true,
@@ -323,7 +319,7 @@ namespace Barotrauma
                 StartNewGame = StartGame
             };
 
-            var hostServerScale = new Vector2(0.7f, 1.0f);
+            var hostServerScale = new Vector2(0.7f, 0.6f);
             menuTabs[(int)Tab.HostServer] = new GUIFrame(new RectTransform(
                 Vector2.Multiply(relativeSize, hostServerScale), GUI.Canvas, anchor, pivot, minSize.Multiply(hostServerScale), maxSize.Multiply(hostServerScale)) { RelativeOffset = relativeSpacing });
 
@@ -732,13 +728,22 @@ namespace Barotrauma
                     exeName = "DedicatedServer.exe";
                 }
 
-                int ownerKey = Math.Max(CryptoRandom.Instance.Next(), 1);
-
                 string arguments = "-name \"" + name.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"" +
                                    " -public " + isPublicBox.Selected.ToString() +
                                    " -password \"" + passwordBox.Text.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"" +
-                                   " -maxplayers " + maxPlayersBox.Text +
-                                   " -steamid " + Steam.SteamManager.GetSteamID();
+                                   " -maxplayers " + maxPlayersBox.Text;
+
+                int ownerKey = 0;
+
+                if (Steam.SteamManager.GetSteamID()!=0)
+                {
+                    arguments += " -steamid " + Steam.SteamManager.GetSteamID();
+                }
+                else
+                {
+                    ownerKey = Math.Max(CryptoRandom.Instance.Next(), 1);
+                    arguments += " -ownerkey " + ownerKey;
+                }
 
                 string filename = exeName;
 #if LINUX || OSX
@@ -749,13 +754,15 @@ namespace Barotrauma
                     FileName = filename,
                     Arguments = arguments,
 #if !DEBUG
+                    CreateNoWindow = true,
+                    UseShellExecute = false,
                     WindowStyle = ProcessWindowStyle.Hidden
 #endif
                 };
                 GameMain.ServerChildProcess = Process.Start(processInfo);
                 Thread.Sleep(1000); //wait until the server is ready before connecting
 
-                GameMain.Client = new GameClient(name, "127.0.0.1", Steam.SteamManager.GetSteamID(), name, ownerKey, true);
+                GameMain.Client = new GameClient(name, System.Net.IPAddress.Loopback.ToString(), Steam.SteamManager.GetSteamID(), name, ownerKey, true);
             }
             catch (Exception e)
             {
@@ -795,7 +802,10 @@ namespace Barotrauma
 #else
             joinServerButton.Enabled = true;
             hostServerButton.Enabled = true;
-            steamWorkshopButton.Enabled = true;
+            if (Steam.SteamManager.USE_STEAM)
+            {
+                steamWorkshopButton.Enabled = true;
+            }
 #endif
         }
 

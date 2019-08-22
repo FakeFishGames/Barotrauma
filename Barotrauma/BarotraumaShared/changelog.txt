@@ -20,17 +20,14 @@ particle effects and sound cues that make it easier to detect and fix wiring pro
 reactor to catch fire and explode.
 - Option to disable friendly fire altogether.
 
-Expanded traitor mode:
-- More varied objectives: destroy cargo, jam the sonar, sabotage devices, infect crew members, kill a specific
-target, cause a reactor meltdown, flood the sub...
-- The traitors must complete a set of tasks, generally starting with less destructive objectives that 
-give the other players a better chance to detect (and detain/kill) the traitor before they proceed to the
-more lethal ones.
+New items and structures:
+- Additional weapons: stun gun, SMG, shotgun, grenade launcher, flamer, two new types of coilgun ammunition (piercing & explosive).
+- New monster loot: husk stinger, mudraptor shell, crawler mask, moloch shell.
+- Fun stuff: accordion, captain's pipe, toy hammer.
+- Tons of new decorative submarine pieces for the sub editor.
 
-New items:
-- Additional weapons: stun gun, SMG, shotgun, grenade launcher, flamer.
-- New monster loot: husk stinger, mudraptor shell, crawler mask, moloch shell shield.
-- Fun stuff: new musical instruments, captain's pipe, clown hammer.
+New submarine:
+- Berilia, a submarine for 16 players.
 
 Bugfixes:
 - Fixed crashing when selecting doors or gaps in the sub editor.
@@ -39,7 +36,9 @@ Bugfixes:
 ports. Specifically, if a port needed to be docked to from below but was positioned above the center of
 the submarine (or vice versa), the docking interface would not activate on the navigation terminal.
 - Fixed docking port using the wrong submarine's position for joint adjustment, causing errors when 
-docking a submarine with greater mass to one with a smaller mass
+docking a submarine with greater mass to one with a smaller mass.
+- Fixed an issue that caused occasional ID mismatch errors if a client died during a multiplayer
+campaign round and disconnected before the round ended.
 - Fixed item editing panel not appearing in wiring mode when selecting a wire in the sub editor.
 - Fixed ability to throw throwable items while unconscious.
 - Fixed bots not using fire extinguishers client-side in multiplayer.
@@ -88,6 +87,20 @@ preventing the message from being sent if the name wasn't written in lower case.
 - Pass private messages to the client hosting the server when the message is targeted to the server.
 - Private messages appear in the server log.
 - Fixed plasma cutter and welding tool hit particles being offset from the flame.
+- Fixed steel bar and titanium-aluminium alloy deconstructing to 100% condition items even when degraded 
+(which could be used as an exploit to get infinite coilgun rounds).
+- Fixed holdable items staying in the characters hand(s) when swapping them from a hand slot to another 
+limb slot (for example, when moving a flashlight from a hand slot to the head slot).
+- Fixed text wrapping not working properly with words that are longer than a single line.
+- Fixed deconstructor losing some of the material from deconstructed items if the output container couldn't hold all of the new items.
+- Fixed discrepancies in door welding & repairing logic regarding collision.
+- Fixed a crash when retrieving lobby information with an uninitialized IP.
+- Fixed max player count in server list & duplicate lobby entries.
+- Fixed arrow keys not changing caret position when typing.
+- Fixed doors looking repaired as soon as the condition goes above 0%, even though the collisions aren't 
+re-enabled until the door gets above 50%.
+- Fixed water not leaking through broken doors.
+- Fixed inability to throw items through platforms.
 
 Misc additions and changes:
 - Respawn shuttles now spawn inside the level somewhere near the submarine, instead of always spawning
@@ -112,6 +125,8 @@ some device instead of a wire node.
 Prevents console errors about corrupted submarine/save files caused by the partially downloaded files.
 - Increased Humpback's battery capacity.
 - Added widgets for manipulating coilgun/railgun rotation limits in the sub editor.
+- Added a command for setting the value of a property on all selected entities in the sub editor 
+(for example, "setentityproperties scale 2" would set the scale of all selected items/structures to 2).
 - Show ballast tanks and airlocks in a different color on the status monitor to make it easier to 
 distinguish which rooms are actually flooding and which are supposed to have water in them.
 - Option to define multiple inventory variants for a character (e.g. to add variation to monster loot).
@@ -125,6 +140,7 @@ impacts between the feet and the floor).
 - Decreased minimum item scale from 0.1 to 0.01.
 - The amount of materials received from deconstructing fuel rods depends on the condition of the fuel rod.
 - Reactors keep sending the temperature_out signal after a meltdown.
+- Improved file transfer
 
 ---------------------------------------------------------------------------------------------------------
 v0.9.1.0

@@ -95,12 +95,12 @@ namespace Barotrauma.Items.Components
             var sliderArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.3f), rightArea.RectTransform, Anchor.CenterLeft), isHorizontal: true)
             {
                 Stretch = true,
-                RelativeSpacing = 0.05f
+                RelativeSpacing = 0.01f
             };
 
-            var outLabel = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), sliderArea.RectTransform), 
-                TextManager.Get("PumpOut"), textAlignment: Alignment.Center, wrap: true, font: GUI.SmallFont);
-            pumpSpeedSlider = new GUIScrollBar(new RectTransform(new Vector2(0.8f, 1.0f), sliderArea.RectTransform), barSize: 0.25f, style: "GUISlider")
+            var outLabel = new GUITextBlock(new RectTransform(new Vector2(0.25f, 1.0f), sliderArea.RectTransform),
+                TextManager.Get("PumpOut"), textAlignment: Alignment.Center, wrap: false, font: GUI.SmallFont);
+            pumpSpeedSlider = new GUIScrollBar(new RectTransform(new Vector2(0.5f, 1.0f), sliderArea.RectTransform), barSize: 0.25f, style: "GUISlider")
             {
                 Step = 0.05f,
                 OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
@@ -118,9 +118,11 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
             };
-            var inLabel = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), sliderArea.RectTransform), 
-                TextManager.Get("PumpIn"), textAlignment: Alignment.Center, wrap: true, font: GUI.SmallFont);
+            var inLabel = new GUITextBlock(new RectTransform(new Vector2(0.25f, 1.0f), sliderArea.RectTransform), 
+                TextManager.Get("PumpIn"), textAlignment: Alignment.Center, wrap: false, font: GUI.SmallFont);
 
+            rightArea.Recalculate();
+            sliderArea.Recalculate();
             GUITextBlock.AutoScaleAndNormalize(outLabel, inLabel);
         }
 
@@ -129,7 +131,6 @@ namespace Barotrauma.Items.Components
             if (pumpSpeedSlider != null)
             {
                 pumpSpeedSlider.BarScroll = (flowPercentage + 100.0f) / 200.0f;
-
             }
         }
         

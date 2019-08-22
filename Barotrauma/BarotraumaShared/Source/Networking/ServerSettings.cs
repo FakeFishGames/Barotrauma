@@ -508,6 +508,12 @@ namespace Barotrauma.Networking
         public bool HasPassword
         {
             get { return password != null; }
+#if CLIENT
+            set
+            {
+                password = value ? (password ?? new byte[1]) : null;
+            }
+#endif
         }
         
         [Serialize(true, true)]
@@ -562,7 +568,8 @@ namespace Barotrauma.Networking
             get;
             set;
         }
-        
+
+        [Serialize(BotSpawnMode.Normal, true)]
         public BotSpawnMode BotSpawnMode
         {
             get;
@@ -597,6 +604,7 @@ namespace Barotrauma.Networking
         }
 
         private YesNoMaybe traitorsEnabled;
+        [Serialize(YesNoMaybe.No, true)]
         public YesNoMaybe TraitorsEnabled
         {
             get { return traitorsEnabled; }

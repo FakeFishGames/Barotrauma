@@ -270,7 +270,7 @@ namespace Barotrauma.Items.Components
 
                         //calculate how much external power there is in the grid 
                         //(power coming from somewhere else than this reactor, e.g. batteries)
-                        float externalPower = CurrPowerConsumption - pt.CurrPowerConsumption;
+                        float externalPower = Math.Max(CurrPowerConsumption - pt.CurrPowerConsumption, 0);
                         //reduce the external power from the load to prevent overloading the grid
                         load = Math.Max(load, pt.PowerLoad - externalPower);
                     }

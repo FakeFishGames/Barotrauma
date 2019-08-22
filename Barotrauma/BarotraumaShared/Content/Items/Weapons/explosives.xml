@@ -15,9 +15,10 @@
     <Sprite texture="weapons_new.png" depth="0.8" sourcerect="220,380,47,32" origin="0.5,0.5" />
     <Body width="23" height="16" density="20" />
     <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect">
-      <sound file="Content/Items/Weapons/ExplosionMedium1.ogg" type="OnUse" range="10000" selectionmode="All" />
-      <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" type="OnUse" range="10000" />
-      <StatusEffect type="OnUse" target="This" Condition="-100.0">
+      <sound file="Content/Items/Weapons/ExplosionMedium1.ogg" type="OnBroken" range="10000" selectionmode="All" />
+      <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" type="OnBroken" range="10000" />
+      <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true"/>
+      <StatusEffect type="OnBroken" target="This">
         <Explosion range="800.0" structuredamage="150" stun="5" force="20.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5">
           <Affliction identifier="burn" strength="50" />
           <Affliction identifier="internaldamage" strength="25" />
@@ -40,9 +41,10 @@
     <Sprite texture="weapons_new.png" depth="0.8" sourcerect="274,380,48,33" origin="0.5,0.5" />
     <Body width="23" height="16" density="20" />
     <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect">
-      <sound file="Content/Items/Weapons/ExplosionMedium1.ogg" type="OnUse" range="10000" selectionmode="All" />
-      <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" type="OnUse" range="10000" />
-      <StatusEffect type="OnUse" target="This" Condition="-100.0">
+      <sound file="Content/Items/Weapons/ExplosionMedium1.ogg" type="OnBroken" range="10000" selectionmode="All" />
+      <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" type="OnBroken" range="10000" />
+      <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true"/>      
+      <StatusEffect type="OnBroken" target="This">
         <Explosion range="500.0" structuredamage="250" stun="5" force="20.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5">
           <Affliction identifier="burn" strength="150" />
           <Affliction identifier="internaldamage" strength="50" />
@@ -62,10 +64,10 @@
     <Sprite texture="weapons_new.png" depth="0.8" sourcerect="339,378,49,34" origin="0.5,0.5" />
     <Body width="24" height="16" density="20" />
     <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect">
-      <sound file="Content/Items/Weapons/ExplosionMedium2.ogg" type="OnUse" range="10000" selectionmode="All" />
-      <sound file="Content/Items/Weapons/ExplosionDebris2.ogg" type="OnUse" range="10000" />
+      <sound file="Content/Items/Weapons/ExplosionMedium2.ogg" type="OnBroken" range="10000" selectionmode="All" />
+      <sound file="Content/Items/Weapons/ExplosionDebris2.ogg" type="OnBroken" range="10000" />
       <StatusEffect type="OnFire" target="This" Condition="-50.0" />
-      <StatusEffect type="OnUse" target="This" Condition="-100.0" />
+      <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true"/>
       <StatusEffect type="OnBroken" target="This">
         <Explosion range="600.0" structuredamage="150" stun="5" force="20.0" severlimbsprobability="0.6" decal="explosion" decalsize="0.5">
           <Affliction identifier="burn" strength="250" />
@@ -85,13 +87,11 @@
     <Sprite texture="weapons_new.png" depth="0.8" sourcerect="402,377,50,34" origin="0.5,0.5" />
     <Body width="24" height="18" density="20" />
     <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect">
-      <sound file="Content/Items/Weapons/ExplosionMedium3.ogg" type="OnUse" range="10000" selectionmode="All" />
-      <sound file="Content/Items/Weapons/ExplosionDebris3.ogg" type="OnUse" range="10000" />
       <sound file="Content/Items/Weapons/ExplosionMedium3.ogg" type="OnBroken" range="10000" selectionmode="All" />
       <sound file="Content/Items/Weapons/ExplosionDebris3.ogg" type="OnBroken" range="10000" />
       <StatusEffect type="Always" target="This" Condition="-0.35" />
       <StatusEffect type="OnFire" target="This" Condition="-50.0" />
-      <StatusEffect type="OnUse" target="This" Condition="-100" />
+      <StatusEffect type="OnUse" target="This" Condition="-100" disabledeltatime="true"/>
       <StatusEffect type="OnBroken" target="This">
         <Explosion range="600.0" structuredamage="150" stun="5" force="20.0" severlimbsprobability="0.6" decal="explosion" decalsize="0.5">
           <Affliction identifier="burn" strength="250" />
@@ -111,12 +111,10 @@
       <RequiredItem identifier="incendium" />
     </Fabricate>
     <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect">
-      <sound file="Content/Items/Weapons/ExplosionMedium3.ogg" type="OnUse" range="10000" selectionmode="All" />
-      <sound file="Content/Items/Weapons/ExplosionDebris4.ogg" type="OnUse" range="10000" />
       <sound file="Content/Items/Weapons/ExplosionMedium3.ogg" type="OnBroken" range="10000" selectionmode="All" />
       <sound file="Content/Items/Weapons/ExplosionDebris4.ogg" type="OnBroken" range="10000" />
       <StatusEffect type="OnFire" target="This" Condition="-50.0" />
-      <StatusEffect type="OnUse" target="This" Condition="-100" />
+      <StatusEffect type="OnUse" target="This" Condition="-100" disabledeltatime="true"/>
       <StatusEffect type="OnBroken" target="This">
         <Explosion range="500.0" structuredamage="50" stun="5" force="20.0" severlimbsprobability="0.6">
           <Affliction identifier="burn" strength="200" />
@@ -145,7 +143,7 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,175" maxsize="480,210" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver" type="Equipped" />
-      <input name="activate">
+      <input name="activate" displayname="connection.activate">
         <StatusEffect type="OnUse" target="Contained">
           <Use />
         </StatusEffect>

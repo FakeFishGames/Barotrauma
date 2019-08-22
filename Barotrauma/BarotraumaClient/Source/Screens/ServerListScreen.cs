@@ -10,6 +10,7 @@ using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading;
 
 namespace Barotrauma
@@ -45,7 +46,7 @@ namespace Barotrauma
         private readonly GUITickBox filterEmpty;
 
         private string sortedBy;
-
+        
         private readonly GUIButton serverPreviewToggleButton;
 
         //a timer for preventing the client from spamming the refresh button faster than AllowedRefreshInterval
@@ -972,7 +973,7 @@ namespace Barotrauma
 
         public void PingServer(ServerInfo serverInfo, int timeOut)
         {
-            if (serverInfo?.IP == null)
+            if (string.IsNullOrWhiteSpace(serverInfo?.IP))
             {
                 serverInfo.PingChecked = true;
                 serverInfo.Ping = -1;
@@ -980,7 +981,8 @@ namespace Barotrauma
             }
 
             long rtt = -1;
-            IPAddress address = IPAddress.Parse(serverInfo.IP);
+            IPAddress address = null;
+            IPAddress.TryParse(serverInfo.IP, out address);
             if (address != null)
             {
                 //don't attempt to ping if the address is IPv6 and it's not supported

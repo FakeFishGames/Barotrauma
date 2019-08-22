@@ -646,8 +646,8 @@ namespace Barotrauma
 
             SoundPlayer.OverrideMusicType = "none";
             SoundPlayer.OverrideMusicDuration = null;
-            GameMain.SoundManager.SetCategoryGainMultiplier("default", 0.0f);
-            GameMain.SoundManager.SetCategoryGainMultiplier("waterambience", 0.0f);
+            GameMain.SoundManager.SetCategoryGainMultiplier("default", 0.0f, 0);
+            GameMain.SoundManager.SetCategoryGainMultiplier("waterambience", 0.0f, 0);
 
             linkedSubBox.ClearChildren();
             foreach (Submarine sub in Submarine.SavedSubmarines)
@@ -688,8 +688,8 @@ namespace Barotrauma
             if (WiringMode) SetWiringMode(false);
 
             SoundPlayer.OverrideMusicType = null;
-            GameMain.SoundManager.SetCategoryGainMultiplier("default", GameMain.Config.SoundVolume);
-            GameMain.SoundManager.SetCategoryGainMultiplier("waterambience", GameMain.Config.SoundVolume);
+            GameMain.SoundManager.SetCategoryGainMultiplier("default", GameMain.Config.SoundVolume, 0);
+            GameMain.SoundManager.SetCategoryGainMultiplier("waterambience", GameMain.Config.SoundVolume, 0);
 
             if (dummyCharacter != null)
             {
@@ -1000,7 +1000,8 @@ namespace Barotrauma
             submarineDescriptionCharacterCount = new GUITextBlock(new RectTransform(new Vector2(.5f, 1f), descriptionHeaderGroup.RectTransform), string.Empty, textAlignment: Alignment.TopRight);
 
             var descriptionContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.25f), leftColumn.RectTransform));
-            descriptionBox = new GUITextBox(new RectTransform(Vector2.One, descriptionContainer.Content.RectTransform, Anchor.Center), font: GUI.SmallFont, wrap: true);
+            descriptionBox = new GUITextBox(new RectTransform(Vector2.One, descriptionContainer.Content.RectTransform, Anchor.Center), font: GUI.SmallFont, wrap: true, textAlignment: Alignment.TopLeft);
+            descriptionBox.Padding = new Vector4(10 * GUI.Scale);
 
             descriptionBox.OnTextChanged += (textBox, text) =>
             {
@@ -1189,11 +1190,13 @@ namespace Barotrauma
             var contentPackList = new GUIListBox(new RectTransform(new Vector2(0.5f, 1.0f - contentPackagesLabel.RectTransform.RelativeSize.Y),
                 horizontalArea.RectTransform, Anchor.BottomRight));
 
-
             List<string> contentPacks = Submarine.MainSub.RequiredContentPackages.ToList();
             foreach (ContentPackage contentPack in ContentPackage.List)
-            {
-                if (!contentPacks.Contains(contentPack.Name)) contentPacks.Add(contentPack.Name);
+            {                
+                //don't show content packages that only define submarine files
+                //(it doesn't make sense to require another sub to be installed to install this one)
+                if (contentPack.Files.All(cp => cp.Type == ContentType.Submarine)) { continue; }
+                if (!contentPacks.Contains(contentPack.Name)) { contentPacks.Add(contentPack.Name); }
             }
 
             foreach (string contentPackageName in contentPacks)
@@ -2371,11 +2374,7 @@ namespace Barotrauma
                 sub.UpdateTransform();
             }
 
-            spriteBatch.Begin(SpriteSortMode.BackToFront,
-                BlendState.AlphaBlend,
-                null, null, null, null,
-                cam.Transform);
-
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: cam.Transform);
             graphics.Clear(new Color(0.051f, 0.149f, 0.271f, 1.0f));
             if (GameMain.DebugDraw)
             {
@@ -2383,7 +2382,12 @@ namespace Barotrauma
                 GUI.DrawLine(spriteBatch, new Vector2(cam.WorldView.X, -Submarine.MainSub.HiddenSubPosition.Y), new Vector2(cam.WorldView.Right, -Submarine.MainSub.HiddenSubPosition.Y), Color.White * 0.5f, 1.0f, (int)(2.0f / cam.Zoom));
             }
            
-            Submarine.Draw(spriteBatch, true);
+            Submarine.DrawBack(spriteBatch, editing: true);
+
+            spriteBatch.End();
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: cam.Transform);
+
+            Submarine.DrawFront(spriteBatch, editing: true);
 
             if (!CharacterMode && !WiringMode && GUI.MouseOn == null)
             {

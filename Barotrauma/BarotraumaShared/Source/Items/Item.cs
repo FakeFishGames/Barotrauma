@@ -126,6 +126,24 @@ namespace Barotrauma
             }
         }
 
+        public delegate bool InventoryFilter(Inventory inventory);
+        public Inventory FindParentInventory(InventoryFilter filter)
+        {
+            if (parentInventory != null)
+            {
+                if (filter(parentInventory))
+                {
+                    return parentInventory;
+                }
+                var owner = parentInventory.Owner as Item;
+                if (owner != null)
+                {
+                    return owner.FindParentInventory(filter);
+                }
+            }
+            return null;
+        }
+
         private Item container;
         public Item Container
         {
@@ -2120,7 +2138,8 @@ namespace Barotrauma
             if (element.GetAttributeBool("flippedx", false)) item.FlipX(false);
             if (element.GetAttributeBool("flippedy", false)) item.FlipY(false);
 
-            item.condition = element.GetAttributeFloat("condition", item.Prefab.Health);
+            float condition = element.GetAttributeFloat("condition", item.MaxCondition);
+            item.condition = MathHelper.Clamp(condition, 0, item.MaxCondition);
             item.lastSentCondition = item.condition;
 
             item.SetActiveSprite();
@@ -2190,6 +2209,7 @@ namespace Barotrauma
             SerializableProperties = SerializableProperty.DeserializeProperties(this, Prefab.ConfigElement);
             Sprite.ReloadXML();
             SpriteDepth = Sprite.Depth;
+            condition = Prefab.Health;
             components.ForEach(c => c.Reset());
         }
 

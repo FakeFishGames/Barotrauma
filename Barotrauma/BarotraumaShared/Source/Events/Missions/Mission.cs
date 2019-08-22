@@ -32,7 +32,7 @@ namespace Barotrauma
             private set { failureMessage = value; }
         }
 
-        private string description;
+        protected string description;
         public virtual string Description
         {
             get { return description; }
