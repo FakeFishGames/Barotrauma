@@ -531,7 +531,7 @@ namespace Barotrauma
             try
             {
                 File.Delete(Path);
-                GameMain.Config.SelectedContentPackages.Remove(this);
+                GameMain.Config.DeselectContentPackage(this);
                 GameMain.Config.SaveNewPlayerConfig();
             }
             catch (IOException e)

@@ -1464,9 +1464,8 @@ namespace Barotrauma
 
             if (!GameMain.Config.SelectedContentPackages.Contains(contentPackage))
             {
-                GameMain.Config.SelectedContentPackages.Add(contentPackage);
+                GameMain.Config.SelectContentPackage(contentPackage);
                 GameMain.Config.SaveNewPlayerConfig();
-                ContentPackage.SortContentPackages();
             }
 
             // Create the config file
