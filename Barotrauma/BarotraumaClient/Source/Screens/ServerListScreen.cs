@@ -30,7 +30,9 @@ namespace Barotrauma
         private readonly GUITextBox clientNameBox;
         private ServerInfo selectedServer;
 
-        private readonly GUILayoutGroup friendsHolder;
+        private readonly GUILayoutGroup friendsButtonHolder;
+        private readonly GUIListBox friendsListBox;
+
         private class FriendInfo
         {
             public UInt64 SteamID;
@@ -120,7 +122,7 @@ namespace Barotrauma
                 clientNameBox.Text = SteamManager.GetUsername();
             }
 
-            friendsHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), infoHolder.RectTransform)) { RelativeSpacing = 0.01f, IsHorizontal = true };
+            friendsButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), infoHolder.RectTransform)) { RelativeSpacing = 0.01f, IsHorizontal = true };
             friendsList = new List<FriendInfo>();
 
             //-------------------------------------------------------------------------------------
@@ -628,6 +630,16 @@ namespace Barotrauma
         {
             if (SteamManager.IsInitialized)
             {
+                Facepunch.Steamworks.Friends.AvatarSize avatarSize = Facepunch.Steamworks.Friends.AvatarSize.Large;
+                if (friendsButtonHolder.RectTransform.Rect.Height <= 24)
+                {
+                    avatarSize = Facepunch.Steamworks.Friends.AvatarSize.Small;
+                }
+                else if (friendsButtonHolder.RectTransform.Rect.Height <= 48)
+                {
+                    avatarSize = Facepunch.Steamworks.Friends.AvatarSize.Medium;
+                }
+
                 if (friendsListUpdateTime > Timing.TotalTime) { return; }
                 friendsListUpdateTime = Timing.TotalTime + 5.0;
 
@@ -655,9 +667,11 @@ namespace Barotrauma
                             SteamID = friend.Id
                         };
                         friendsList.Insert(0, info);
+                    }
 
-                        //TODO: pick an optimal AvatarSize based on current resolution
-                        var avatarImage = friend.GetAvatar(Facepunch.Steamworks.Friends.AvatarSize.Large);
+                    if (info.Sprite == null)
+                    {
+                        var avatarImage = friend.GetAvatar(avatarSize);
                         if (avatarImage != null)
                         {
                             //TODO: create an avatar atlas?
@@ -700,7 +714,7 @@ namespace Barotrauma
                 Color hoverColor = new Color(40, 255, 80);
                 Color pressColor = new Color(50, 150, 50);
 
-                friendsHolder.ClearChildren();
+                friendsButtonHolder.ClearChildren();
 
                 for (int i=0;i<friendsList.Count;i++)
                 {
@@ -709,15 +723,18 @@ namespace Barotrauma
                     if (friend.InServer)
                     {
                         mainColor = new Color(40, 175, 65);
+                        hoverColor = new Color(40, 255, 80);
+                        pressColor = new Color(50, 150, 50);
                     }
                     else
                     {
                         mainColor = friend.PlayingThisGame ? new Color(70, 125, 90) : new Color(30, 125, 140);
+                        hoverColor = friend.PlayingThisGame ? new Color(100, 200, 100) : new Color(80, 170, 170);
+                        pressColor = friend.PlayingThisGame ? new Color(30, 40, 30) : new Color(25, 37, 75);
                     }
 
-                    var guiButton = new GUIButton(new RectTransform(Vector2.One * 0.9f, friendsHolder.RectTransform, Anchor.BottomRight, Pivot.BottomRight, scaleBasis: ScaleBasis.BothHeight), style: null)
+                    var guiButton = new GUIButton(new RectTransform(Vector2.One * 0.9f, friendsButtonHolder.RectTransform, Anchor.BottomRight, Pivot.BottomRight, scaleBasis: ScaleBasis.BothHeight), style: null)
                     {
-                        Enabled = friend.InServer,
                         Color = mainColor,
                         SelectedColor = mainColor,
                         HoverColor = hoverColor,
