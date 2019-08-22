@@ -3464,6 +3464,7 @@
   <voipattenuationtooltip>Lowers the game's volume when players are speaking.</voipattenuationtooltip>
   <roundsummaryroundhasended>The round has ended.</roundsummaryroundhasended>
   <clientpermission.karmaimmunity>Karma immunity</clientpermission.karmaimmunity>
+  <restartrequiredgeneric>You need to restart the game for the changes to take effect.</restartrequiredgeneric>
 
   <!-- Changed values as of 13th of August -->
 
