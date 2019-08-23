@@ -987,6 +987,7 @@
   <charactereditor.deleteselected>Delete Selected</charactereditor.deleteselected>
   <charactereditor.createjoint>Create Joint</charactereditor.createjoint>
   <charactereditor.createlimb>Create Limb</charactereditor.createlimb>
+  <charactereditor.drawlimbonspritesheet>Draw the limb on the spritesheet</charactereditor.drawlimbonspritesheet>
 
   <!-- Submarine editor -->
   <items>Items</items>

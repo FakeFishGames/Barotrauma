@@ -759,6 +759,11 @@ namespace Barotrauma
                     }
                 }
             }
+            if (isDrawingLimb)
+            {
+                var textPos = new Vector2(GameMain.GraphicsWidth / 2 - 200, GameMain.GraphicsHeight / 4);
+                GUI.DrawString(spriteBatch, textPos, GetCharacterEditorTranslation("DrawLimbOnSpritesheet"), Color.Yellow, font: GUI.LargeFont);
+            }
             if (isEndlessRunner)
             {
                 Structure wall = CurrentWall.walls.FirstOrDefault();
