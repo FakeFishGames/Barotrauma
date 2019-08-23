@@ -7,6 +7,7 @@ using Lidgren.Network;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -182,12 +183,18 @@ namespace Barotrauma
                     var traitor = new Traitor(this, role, candidate.Item2);
                     Traitors.Add(role, traitor);
                 }
-                Update(0.0f, GameMain.Server.EndGame);
+
+                var messages = new Dictionary<Traitor, List<string>>();
                 foreach (var traitor in Traitors.Values)
                 {
+                    messages[traitor] = new List<string>();
                     if (traitor.CurrentObjective == null) { continue; }
-                    traitor.Greet(server, CodeWords, CodeResponse);
+                    traitor.Greet(server, CodeWords, CodeResponse, message => messages[traitor].Add(message));
                 }
+
+                messages.ForEach(traitor => traitor.Value.ForEach(message => traitor.Key.SendChatMessage(message)));
+                Update(0.0f, GameMain.Server.EndGame);
+                messages.ForEach(traitor => traitor.Value.ForEach(message => traitor.Key.SendChatMessageBox(message)));
 #if SERVER
                 foreach (var traitor in Traitors.Values)
                 {
