@@ -66,7 +66,8 @@ namespace Barotrauma {
             public Traitor.Goal Instantiate()
             {
                 Traitor.Goal goal = null;
-                switch (Config.GetAttributeString("type", "").ToLowerInvariant())
+                var goalType = Config.GetAttributeString("type", "");
+                switch (goalType.ToLowerInvariant())
                 {
                     case "killtarget":
                         {
@@ -125,6 +126,9 @@ namespace Barotrauma {
                     case "reachdistancefromsub":
                         goal = new Traitor.GoalReachDistanceFromSub(Config.GetAttributeFloat("distance", 100.0f));
                         break;
+                    default:
+                        GameServer.Log($"Unrecognized goal type \"{goalType}\".", ServerLog.MessageType.Error);
+                        break;
                 }
                 if (goal == null)
                 {
@@ -163,6 +167,9 @@ namespace Barotrauma {
                 {
                     switch (element.Name.ToString().ToLowerInvariant())
                     {
+                        case "modifier":
+                            // loaded above
+                            break;
                         case "infotext":
                             {
                                 var id = element.GetAttributeString("id", null);
@@ -180,6 +187,9 @@ namespace Barotrauma {
                                     goal.CompletedTextId = id;
                                 }
                             }
+                            break;
+                        default:
+                            GameServer.Log($"Unrecognized element \"{element.Name}\" in goal.", ServerLog.MessageType.Error);
                             break;
                     }
                 }
