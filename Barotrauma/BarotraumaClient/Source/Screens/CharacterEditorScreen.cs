@@ -798,7 +798,7 @@ namespace Barotrauma
                     var lastJoint = selectedJoints.LastOrDefault();
                     if (lastJoint != null)
                     {
-                        lastLimb = PlayerInput.KeyDown(Keys.LeftAlt) ? lastJoint.LimbA : lastJoint.LimbB;
+                        lastLimb = PlayerInput.KeyDown(Keys.LeftAlt) ? lastJoint.LimbB : lastJoint.LimbA;
                     }
                 }
                 if (lastLimb != null)
