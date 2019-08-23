@@ -1932,18 +1932,14 @@ namespace Barotrauma
 
         private void CreateButtonsPanel()
         {
-            Vector2 buttonSize = new Vector2(1, 0.06f);
             buttonsPanel = new GUIFrame(new RectTransform(new Vector2(0.6f, 0.1f), leftArea.RectTransform, Anchor.BottomLeft)
             {
+                MinSize = new Point(120, 60),
                 RelativeOffset = new Vector2(0, 0.47f)
             }, style: null, color: panelColor);
-            var layoutGroup = new GUILayoutGroup(new RectTransform(new Point(buttonsPanel.Rect.Width - innerMargin.X, buttonsPanel.Rect.Height - innerMargin.Y),
-                buttonsPanel.RectTransform, Anchor.Center))
-            {
-                AbsoluteSpacing = 2,
-                Stretch = true
-            };
-            var reloadTexturesButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("ReloadTextures"));
+            Vector2 buttonSize = new Vector2(1, 0.45f);
+            var parent = new GUIFrame(new RectTransform(new Vector2(0.85f, 0.70f), buttonsPanel.RectTransform, Anchor.Center), style: null);
+            var reloadTexturesButton = new GUIButton(new RectTransform(buttonSize, parent.RectTransform, Anchor.TopCenter), GetCharacterEditorTranslation("ReloadTextures"));
             reloadTexturesButton.OnClicked += (button, userData) =>
             {
                 foreach (var limb in character.AnimController.Limbs)
@@ -1955,7 +1951,7 @@ namespace Barotrauma
                 CreateTextures();
                 return true;
             };
-            new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("RecreateRagdoll"))
+            new GUIButton(new RectTransform(buttonSize, parent.RectTransform, Anchor.BottomCenter), GetCharacterEditorTranslation("RecreateRagdoll"))
             {
                 ToolTip = GetCharacterEditorTranslation("RecreateRagdollTooltip"),
                 OnClicked = (button, data) =>
