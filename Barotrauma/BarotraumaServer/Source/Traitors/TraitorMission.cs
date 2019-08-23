@@ -15,9 +15,9 @@ namespace Barotrauma
         public class TraitorMission
         {
             private static System.Random random = null;
-            
+
             public static void InitializeRandom() => random = new System.Random((int)DateTime.UtcNow.Ticks);
-            
+
             // All traitor related functionality should use the following interface for generating random values
             public static int Random(int n) => random.Next(n);
 
@@ -85,7 +85,7 @@ namespace Barotrauma
                     {
                         return "";
                     }
-                    
+
                     if (allObjectives.Count > 0)
                     {
                         var isSuccess = completedObjectives.Count >= allObjectives.Count;
@@ -94,7 +94,7 @@ namespace Barotrauma
                         var messageId = isSuccess
                             ? (traitorIsDead ? GlobalEndMessageSuccessDeadTextId : traitorIsDetained ? GlobalEndMessageSuccessDetainedTextId : GlobalEndMessageSuccessTextId)
                             : (traitorIsDead ? GlobalEndMessageFailureDeadTextId : traitorIsDetained ? GlobalEndMessageFailureDetainedTextId : GlobalEndMessageFailureTextId);
-                        return TextManager.FormatServerMessageWithGenderPronouns(traitor.Character?.Info?.Gender ?? Gender.None, messageId, GlobalEndMessageKeys.ToArray(), GlobalEndMessageValues.ToArray()); 
+                        return TextManager.FormatServerMessageWithGenderPronouns(traitor.Character?.Info?.Gender ?? Gender.None, messageId, GlobalEndMessageKeys.ToArray(), GlobalEndMessageValues.ToArray());
                     }
                     return "";
                 }
@@ -105,15 +105,9 @@ namespace Barotrauma
                 return pendingObjectives.Count > 0 ? pendingObjectives[0] : null;
             }
 
-            public virtual bool Start(GameServer server, TraitorManager traitorManager, Character.TeamType team, params string[] traitorRoles)
+            protected List<Tuple<Client, Character>> FindTraitorCandidates(GameServer server, Character.TeamType team, params string[] traitorRoles)
             {
-                List<Character> characters = new List<Character>(); //ANYONE can be a target.
-                List<Tuple<Client, Character>> traitorCandidates = new List<Tuple<Client,Character>>(); //Keep this to not re-pick traitors twice
-
-                foreach (var character in Character.CharacterList)
-                {
-                    characters.Add(character);
-                }
+                var traitorCandidates = new List<Tuple<Client, Character>>();
 #if SERVER_IS_TRAITOR
                 if (server.Character != null)
                 {
@@ -124,6 +118,40 @@ namespace Barotrauma
                 {
                     traitorCandidates.AddRange(server.ConnectedClients.FindAll(c => c.Character != null && !c.Character.IsDead && (team == Character.TeamType.None || c.Character.TeamID == team)).ConvertAll(client => Tuple.Create(client, client.Character)));
                 }
+                return traitorCandidates;
+            }
+
+            protected List<Character> FindCharacters()
+            {
+                List<Character> characters = new List<Character>();
+                foreach (var character in Character.CharacterList)
+                {
+                    characters.Add(character);
+                }
+                return characters;
+            }
+
+            public virtual bool CanBeStarted(GameServer server, TraitorManager traitorManager, Character.TeamType team, params string[] traitorRoles)
+            {
+                var traitorCandidates = FindTraitorCandidates(server, team, traitorRoles);
+                if (traitorCandidates.Count <= 0)
+                {
+                    return false;
+                }
+                var characters = FindCharacters();
+#if !ALLOW_SOLO_TRAITOR
+                if (characters.Count < 2)
+                {
+                    return false;
+                }
+#endif
+                return true;
+            }
+
+            public virtual bool Start(GameServer server, TraitorManager traitorManager, Character.TeamType team, params string[] traitorRoles)
+            {
+                List<Character> characters = FindCharacters();
+                List<Tuple<Client, Character>> traitorCandidates = FindTraitorCandidates(server, team, traitorRoles);
                 if (traitorCandidates.Count <= 0)
                 {
                     return false;
@@ -148,7 +176,7 @@ namespace Barotrauma
                     }, (t, c) =>
                     {
                         traitorManager.SetTraitorCount(Tuple.Create(t.Item1.SteamID, t.Item1.Connection?.EndPointString ?? ""), c);
-                    }, 2, 3);  
+                    }, 2, 3);
                     traitorCandidates.Remove(candidate);
 
                     var traitor = new Traitor(this, role, candidate.Item2);
@@ -250,10 +278,10 @@ namespace Barotrauma
             {
                 if (traitor == null) { return null; }
 
-                List<Character> validCharacters = Character.CharacterList.FindAll(c => 
-                    c.TeamID == traitor.TeamID && 
+                List<Character> validCharacters = Character.CharacterList.FindAll(c =>
+                    c.TeamID == traitor.TeamID &&
                     c != traitor &&
-                    !c.IsDead && 
+                    !c.IsDead &&
                     (filter == null || filter(c)));
 
                 if (validCharacters.Count > 0)
