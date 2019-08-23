@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Xml.Linq;
 using System.Linq;
+using Barotrauma.Extensions;
 using Barotrauma.Networking;
 
 namespace Barotrauma {
@@ -46,6 +47,47 @@ namespace Barotrauma {
             public List<Character> Characters;
         }
 
+        private class AttributeChecker : IDisposable
+        {
+            private readonly XElement element;
+            private readonly HashSet<string> required = new HashSet<string>();
+            private readonly HashSet<string> optional = new HashSet<string>();
+
+            public void Optional(params string[] names)
+            {
+                optional.UnionWith(names);
+            }
+
+            public void Required(params string[] names)
+            {
+                required.UnionWith(names);
+            }
+
+            public void Dispose()
+            {
+                foreach (var requiredName in required)
+                {
+                    if (element.Attributes().All(attribute => attribute.Name != requiredName))
+                    {
+                        GameServer.Log($"Required attribute \"{requiredName}\" is missing in \"{element.Name}\"", ServerLog.MessageType.Error);
+                    }
+                }
+                foreach (var attribute in element.Attributes())
+                {
+                    var attributeName = attribute.Name.ToString();
+                    if (!required.Contains(attributeName) && !optional.Contains(attributeName))
+                    {
+                        GameServer.Log($"Unsupported attribute \"{attributeName}\" in \"{element.Name}\"", ServerLog.MessageType.Error);
+                    }
+                }
+            }
+
+            public AttributeChecker(XElement element)
+            {
+                this.element = element;
+            }
+        }
+
         public class Goal
         {
             public readonly string Type;
@@ -66,11 +108,15 @@ namespace Barotrauma {
             public Traitor.Goal Instantiate()
             {
                 Traitor.Goal goal = null;
-                var goalType = Config.GetAttributeString("type", "");
-                switch (goalType.ToLowerInvariant())
+                using (var checker = new AttributeChecker(Config))
                 {
-                    case "killtarget":
+                    checker.Required("type");
+                    var goalType = Config.GetAttributeString("type", "");
+                    switch (goalType.ToLowerInvariant())
+                    {
+                        case "killtarget":
                         {
+                            checker.Optional(targetFilters.Keys.ToArray());
                             List<Traitor.TraitorMission.CharacterFilter> filters = new List<Traitor.TraitorMission.CharacterFilter>();
                             foreach (var attribute in Config.Attributes())
                             {
@@ -80,10 +126,12 @@ namespace Barotrauma {
                                 }
                             }
                             goal = new Traitor.GoalKillTarget((character) => filters.All(f => f(character)));
+                            break;
                         }
-                        break;
-                    case "destroyitems":
+                        case "destroyitems":
                         {
+                            checker.Required("tag");
+                            checker.Optional("percentage", "matchIdentifier", "matchTag", "matchInventory");
                             var tag = Config.GetAttributeString("tag", null);
                             if (tag != null)
                             {
@@ -94,65 +142,71 @@ namespace Barotrauma {
                                     Config.GetAttributeBool("matchTag", true),
                                     Config.GetAttributeBool("matchInventory", false));
                             }
-                            else
-                            {
-                                GameServer.Log(string.Format("No tag attribute specified for \"destroyitems\" goal."), ServerLog.MessageType.Error);
-                            }
+                            break;
                         }
-                        break;
-                    case "sabotage":
+                        case "sabotage":
                         {
+                            checker.Required("tag");
+                            checker.Optional("threshold");
                             var tag = Config.GetAttributeString("tag", null);
                             if (tag != null)
                             {
                                 goal = new Traitor.GoalSabotageItems(tag, Config.GetAttributeFloat("threshold", 20.0f));
-
                             }
-                            else
-                            {
-                                GameServer.Log(string.Format("No tag attribute specified for \"sabotage\" goal."), ServerLog.MessageType.Error);
-                            }
+                            break;
                         }
-                        break;
-                    case "floodsub":
-                        goal = new Traitor.GoalFloodPercentOfSub(Config.GetAttributeFloat("percentage", 100.0f) / 100.0f);
-                        break;
-                    case "finditem":
-                        goal = new Traitor.GoalFindItem(Config.GetAttributeString("identifier", null), Config.GetAttributeBool("preferNew", true), Config.GetAttributeBool("allowNew", true), Config.GetAttributeBool("allowExisting", true), Config.GetAttributeStringArray("allowedContainers", new string[] { "steelcabinet", "mediumsteelcabinet", "suppliescabinet" }));
-                        break;
-                    case "replaceinventory":
-                        goal = new Traitor.GoalReplaceInventory(Config.GetAttributeStringArray("containers", new string[] { }), Config.GetAttributeStringArray("replacements", new string[] { }), Config.GetAttributeFloat("percentage", 100.0f) / 100.0f);
-                        break;
-                    case "reachdistancefromsub":
-                        goal = new Traitor.GoalReachDistanceFromSub(Config.GetAttributeFloat("distance", 100.0f));
-                        break;
-                    default:
-                        GameServer.Log($"Unrecognized goal type \"{goalType}\".", ServerLog.MessageType.Error);
-                        break;
+                        case "floodsub":
+                            checker.Optional("percentage");
+                            goal = new Traitor.GoalFloodPercentOfSub(Config.GetAttributeFloat("percentage", 100.0f) / 100.0f);
+                            break;
+                        case "finditem":
+                            checker.Required("identifier");
+                            checker.Optional("preferNew", "allowNew", "allowExisting", "allowedContainers");
+                            goal = new Traitor.GoalFindItem(Config.GetAttributeString("identifier", null), Config.GetAttributeBool("preferNew", true), Config.GetAttributeBool("allowNew", true), Config.GetAttributeBool("allowExisting", true), Config.GetAttributeStringArray("allowedContainers", new string[] {"steelcabinet", "mediumsteelcabinet", "suppliescabinet"}));
+                            break;
+                        case "replaceinventory":
+                            checker.Required("containers", "replacements");
+                            checker.Optional("percentage");
+                            goal = new Traitor.GoalReplaceInventory(Config.GetAttributeStringArray("containers", new string[] { }), Config.GetAttributeStringArray("replacements", new string[] { }), Config.GetAttributeFloat("percentage", 100.0f) / 100.0f);
+                            break;
+                        case "reachdistancefromsub":
+                            checker.Optional("distance");
+                            goal = new Traitor.GoalReachDistanceFromSub(Config.GetAttributeFloat("distance", 10000.0f));
+                            break;
+                        default:
+                            GameServer.Log($"Unrecognized goal type \"{goalType}\".", ServerLog.MessageType.Error);
+                            break;
+                    }
                 }
                 if (goal == null)
                 {
-                    return goal;
+                    return null;
                 }
                 foreach (var element in Config.Elements())
                 {
                     switch (element.Name.ToString().ToLowerInvariant())
                     {
                         case "modifier":
+                        {
+                            using (var checker = new AttributeChecker(element))
                             {
+                                checker.Required("type");
                                 var modifierType = element.GetAttributeString("type", "");
                                 switch (modifierType)
                                 {
                                     case "duration":
                                     {
+                                        checker.Optional("cumulative", "duration", "infotext");
                                         var isCumulative = element.GetAttributeBool("cumulative", false);
-                                        goal = new Traitor.GoalHasDuration(goal, element.GetAttributeFloat("duration", 5.0f), isCumulative, isCumulative ? "TraitorGoalWithCumulativeDurationInfoText" : "TraitorGoalWithDurationInfoText");
+                                        goal = new Traitor.GoalHasDuration(goal, element.GetAttributeFloat("duration", 5.0f), isCumulative, element.GetAttributeString("infotext", isCumulative ? "TraitorGoalWithCumulativeDurationInfoText" : "TraitorGoalWithDurationInfoText"));
                                         break;
                                     }
                                     case "timelimit":
+                                        checker.Optional("timelimit", "infotext");
                                         goal = new Traitor.GoalHasTimeLimit(goal, element.GetAttributeFloat("timelimit", 180.0f), element.GetAttributeString("infotext", "TraitorGoalWithTimeLimitInfoText"));
                                         break;
                                     case "optional":
+                                        checker.Optional("infotext");
                                         goal = new Traitor.GoalIsOptional(goal, element.GetAttributeString("infotext", "TraitorGoalIsOptionalInfoText"));
                                         break;
                                     default:
@@ -161,17 +215,22 @@ namespace Barotrauma {
                                 }
                             }
                             break;
+                        }
                     }
                 }
                 foreach (var element in Config.Elements())
                 {
-                    switch (element.Name.ToString().ToLowerInvariant())
+                    var elementName = element.Name.ToString().ToLowerInvariant();
+                    switch (elementName)
                     {
                         case "modifier":
                             // loaded above
                             break;
                         case "infotext":
+                        {
+                            using (var checker = new AttributeChecker(element))
                             {
+                                checker.Required("id");
                                 var id = element.GetAttributeString("id", null);
                                 if (id != null)
                                 {
@@ -179,8 +238,12 @@ namespace Barotrauma {
                                 }
                             }
                             break;
+                        }
                         case "completedtext":
+                        {
+                            using (var checker = new AttributeChecker(element))
                             {
+                                checker.Required("id");
                                 var id = element.GetAttributeString("id", null);
                                 if (id != null)
                                 {
@@ -188,6 +251,7 @@ namespace Barotrauma {
                                 }
                             }
                             break;
+                        }
                         default:
                             GameServer.Log($"Unrecognized element \"{element.Name}\" in goal.", ServerLog.MessageType.Error);
                             break;
@@ -301,47 +365,59 @@ namespace Barotrauma {
             result.ShuffleGoalsCount = objectiveRoot.GetAttributeInt("shuffleGoalsCount", -1);
             foreach (var element in objectiveRoot.Elements())
             {
-                switch(element.Name.ToString().ToLowerInvariant())
+                using (var checker = new AttributeChecker(element))
                 {
-                    case "infotext":
-                        result.InfoText = element.GetAttributeString("id", null);
-                        break;
-                    case "startmessage":
-                        result.StartMessageTextId = element.GetAttributeString("id", null);
-                        break;
-                    case "startmessageserver":
-                        result.StartMessageServerTextId = element.GetAttributeString("id", null);
-                        break;
-                    case "endmessagesuccess":
-                        result.EndMessageSuccessTextId = element.GetAttributeString("id", null);
-                        break;
-                    case "endmessagesuccessdead":
-                        result.EndMessageSuccessDeadTextId = element.GetAttributeString("id", null);
-                        break;
-                    case "endmessagesuccessdetained":
-                        result.EndMessageSuccessDetainedTextId = element.GetAttributeString("id", null);
-                        break;
-                    case "endmessagefailure":
-                        result.EndMessageFailureTextId = element.GetAttributeString("id", null);
-                        break;
-                    case "endmessagefailuredead":
-                        result.EndMessageFailureDeadTextId = element.GetAttributeString("id", null);
-                        break;
-                    case "endmessagefailuredetained":
-                        result.EndMessageFailureDetainedTextId = element.GetAttributeString("id", null);
-                        break;
-                    case "goal":
+                    switch (element.Name.ToString().ToLowerInvariant())
+                    {
+                        case "infotext":
+                            checker.Required("id");
+                            result.InfoText = element.GetAttributeString("id", null);
+                            break;
+                        case "startmessage":
+                            checker.Required("id");
+                            result.StartMessageTextId = element.GetAttributeString("id", null);
+                            break;
+                        case "startmessageserver":
+                            checker.Required("id");
+                            result.StartMessageServerTextId = element.GetAttributeString("id", null);
+                            break;
+                        case "endmessagesuccess":
+                            checker.Required("id");
+                            result.EndMessageSuccessTextId = element.GetAttributeString("id", null);
+                            break;
+                        case "endmessagesuccessdead":
+                            checker.Required("id");
+                            result.EndMessageSuccessDeadTextId = element.GetAttributeString("id", null);
+                            break;
+                        case "endmessagesuccessdetained":
+                            checker.Required("id");
+                            result.EndMessageSuccessDetainedTextId = element.GetAttributeString("id", null);
+                            break;
+                        case "endmessagefailure":
+                            checker.Required("id");
+                            result.EndMessageFailureTextId = element.GetAttributeString("id", null);
+                            break;
+                        case "endmessagefailuredead":
+                            checker.Required("id");
+                            result.EndMessageFailureDeadTextId = element.GetAttributeString("id", null);
+                            break;
+                        case "endmessagefailuredetained":
+                            checker.Required("id");
+                            result.EndMessageFailureDetainedTextId = element.GetAttributeString("id", null);
+                            break;
+                        case "goal":
                         {
                             var goal = LoadGoal(element);
                             if (goal != null)
                             {
                                 result.Goals.Add(goal);
                             }
+                            break;
                         }
-                        break;
-                    default:
-                        GameServer.Log($"Unrecognized element \"{element.Name}\"under Objective.", ServerLog.MessageType.Error);
-                        break;
+                        default:
+                            GameServer.Log($"Unrecognized element \"{element.Name}\"under Objective.", ServerLog.MessageType.Error);
+                            break;
+                    }
                 }
             }
             return result;
@@ -352,30 +428,39 @@ namespace Barotrauma {
             Identifier = missionRoot.GetAttributeString("identifier", null);
             foreach (var element in missionRoot.Elements())
             {
-                switch (element.Name.ToString().ToLowerInvariant())
+                using (var checker = new AttributeChecker(element))
                 {
-                    case "startinfotext":
-                        StartText = element.GetAttributeString("id", null);
-                        break;
-                    case "endmessagesuccess":
-                        EndMessageSuccessText = element.GetAttributeString("id", null);
-                        break;
-                    case "endmessagesuccessdead":
-                        EndMessageSuccessDeadText = element.GetAttributeString("id", null);
-                        break;
-                    case "endmessagesuccessdetained":
-                        EndMessageSuccessDetainedText = element.GetAttributeString("id", null);
-                        break;
-                    case "endmessagefailure":
-                        EndMessageFailureText = element.GetAttributeString("id", null);
-                        break;
-                    case "endmessagefailuredead":
-                        EndMessageFailureDeadText = element.GetAttributeString("id", null);
-                        break;
-                    case "endmessagefailuredetained":
-                        EndMessageFailureDetainedText = element.GetAttributeString("id", null);
-                        break;
-                    case "objective":
+                    switch (element.Name.ToString().ToLowerInvariant())
+                    {
+                        case "startinfotext":
+                            checker.Required("id");
+                            StartText = element.GetAttributeString("id", null);
+                            break;
+                        case "endmessagesuccess":
+                            checker.Required("id");
+                            EndMessageSuccessText = element.GetAttributeString("id", null);
+                            break;
+                        case "endmessagesuccessdead":
+                            checker.Required("id");
+                            EndMessageSuccessDeadText = element.GetAttributeString("id", null);
+                            break;
+                        case "endmessagesuccessdetained":
+                            checker.Required("id");
+                            EndMessageSuccessDetainedText = element.GetAttributeString("id", null);
+                            break;
+                        case "endmessagefailure":
+                            checker.Required("id");
+                            EndMessageFailureText = element.GetAttributeString("id", null);
+                            break;
+                        case "endmessagefailuredead":
+                            checker.Required("id");
+                            EndMessageFailureDeadText = element.GetAttributeString("id", null);
+                            break;
+                        case "endmessagefailuredetained":
+                            checker.Required("id");
+                            EndMessageFailureDetainedText = element.GetAttributeString("id", null);
+                            break;
+                        case "objective":
                         {
                             var objective = LoadObjective(element);
                             if (objective != null)
@@ -383,10 +468,11 @@ namespace Barotrauma {
                                 Objectives.Add(objective);
                             }
                         }
-                        break;
-                    default:
-                        GameServer.Log($"Unrecognized element \"{element.Name}\"under TraitorMission.", ServerLog.MessageType.Error);
-                        break;
+                            break;
+                        default:
+                            GameServer.Log($"Unrecognized element \"{element.Name}\"under TraitorMission.", ServerLog.MessageType.Error);
+                            break;
+                    }
                 }
             }
         }
