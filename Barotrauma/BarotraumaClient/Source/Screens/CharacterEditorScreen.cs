@@ -60,6 +60,7 @@ namespace Barotrauma
         private bool showColliders;
         private bool displayWearables;
         private bool displayBackgroundColor;
+        private bool onlyShowSourceRectForSelectedLimbs;
 
         private enum JointCreationMode
         {
@@ -179,6 +180,7 @@ namespace Barotrauma
             anchor1Pos = null;
             jointStartLimb = null;
             allFiles = null;
+            onlyShowSourceRectForSelectedLimbs = false;
             Wizard.instance?.Reset();
         }
 
@@ -2188,6 +2190,7 @@ namespace Barotrauma
             var layoutGroupLimbControls = new GUILayoutGroup(new RectTransform(Vector2.One, limbControls.RectTransform), childAnchor: Anchor.TopLeft) { CanBeFocused = false };
             lockSpriteOriginToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupLimbControls.RectTransform), GetCharacterEditorTranslation("LockSpriteOrigin"))
             {
+                TextColor = Color.White,
                 Selected = lockSpriteOrigin,
                 OnSelected = (GUITickBox box) =>
                 {
@@ -2195,9 +2198,9 @@ namespace Barotrauma
                     return true;
                 }
             };
-            lockSpriteOriginToggle.TextColor = Color.White;
-            var lockSpritePositionToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupLimbControls.RectTransform), GetCharacterEditorTranslation("LockSpritePosition"))
+            new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupLimbControls.RectTransform), GetCharacterEditorTranslation("LockSpritePosition"))
             {
+                TextColor = Color.White,
                 Selected = lockSpritePosition,
                 OnSelected = (GUITickBox box) =>
                 {
@@ -2205,9 +2208,9 @@ namespace Barotrauma
                     return true;
                 }
             };
-            lockSpritePositionToggle.TextColor = Color.White;
-            var lockSpriteSizeToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupLimbControls.RectTransform), GetCharacterEditorTranslation("LockSpriteSize"))
+            new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupLimbControls.RectTransform), GetCharacterEditorTranslation("LockSpriteSize"))
             {
+                TextColor = Color.White,
                 Selected = lockSpriteSize,
                 OnSelected = (GUITickBox box) =>
                 {
@@ -2215,9 +2218,9 @@ namespace Barotrauma
                     return true;
                 }
             };
-            lockSpriteSizeToggle.TextColor = Color.White;
             recalculateColliderToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupLimbControls.RectTransform), GetCharacterEditorTranslation("AdjustCollider"))
             {
+                TextColor = Color.White,
                 Selected = recalculateCollider,
                 OnSelected = (GUITickBox box) =>
                 {
@@ -2226,7 +2229,17 @@ namespace Barotrauma
                     return true;
                 }
             };
-            recalculateColliderToggle.TextColor = Color.White;
+            new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupLimbControls.RectTransform), GetCharacterEditorTranslation("OnlyShowSelectedLimbs"))
+            {
+                TextColor = Color.White,
+                Selected = onlyShowSourceRectForSelectedLimbs,
+                OnSelected = (GUITickBox box) =>
+                {
+                    onlyShowSourceRectForSelectedLimbs = box.Selected;
+                    return true;
+                }
+            };
+
             // Joint controls
             Point sliderSize = new Point(300, 20);
             jointControls = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.075f), centerArea.RectTransform), style: null) { CanBeFocused = false };
@@ -4414,7 +4427,7 @@ namespace Barotrauma
                 GUI.DrawRectangle(spriteBatch, new Vector2(offsetX, offsetY), texture.Bounds.Size.ToVector2() * spriteSheetZoom, Color.White);
                 foreach (Limb limb in character.AnimController.Limbs)
                 {
-                    if (limb.ActiveSprite == null || limb.ActiveSprite.FilePath != texturePaths[i]) continue;
+                    if (limb.ActiveSprite == null || limb.ActiveSprite.FilePath != texturePaths[i]) { continue; }
                     Rectangle rect = limb.ActiveSprite.SourceRect;
                     rect.Size = rect.MultiplySize(spriteSheetZoom);
                     rect.Location = rect.Location.Multiply(spriteSheetZoom);
@@ -4456,17 +4469,22 @@ namespace Barotrauma
                     }
                     if (editLimbs)
                     {
-                        if (jointStartLimb != limb && jointEndLimb != limb)
-                        {
-                            GUI.DrawRectangle(spriteBatch, rect, selectedLimbs.Contains(limb) ? Color.Yellow : Color.Red);
-                        }
                         int widgetSize = 8;
                         int halfSize = widgetSize / 2;
                         Vector2 stringOffset = new Vector2(5, 14);
                         var topLeft = rect.Location.ToVector2();
                         var topRight = new Vector2(topLeft.X + rect.Width, topLeft.Y);
                         var bottomRight = new Vector2(topRight.X, topRight.Y + rect.Height);
-                        if (selectedLimbs.Contains(limb))
+                        bool isMouseOn = rect.Contains(PlayerInput.MousePosition);
+                        bool isSelected = selectedLimbs.Contains(limb);
+                        if (jointStartLimb != limb && jointEndLimb != limb)
+                        {
+                            if (isSelected || !onlyShowSourceRectForSelectedLimbs)
+                            {
+                                GUI.DrawRectangle(spriteBatch, rect, isSelected ? Color.Yellow : Color.Red);
+                            }
+                        }
+                        if (isSelected)
                         {
                             var sprite = limb.ActiveSprite;
                             Vector2 GetTopLeft() => sprite.SourceRect.Location.ToVector2();
@@ -4650,7 +4668,7 @@ namespace Barotrauma
                                 sizeWidget.Draw(spriteBatch, deltaTime);
                             }
                         }
-                        else if (rect.Contains(PlayerInput.MousePosition) && GUI.MouseOn == null && Widget.selectedWidgets.None())
+                        else if (isMouseOn && GUI.MouseOn == null && Widget.selectedWidgets.None())
                         {
                             // TODO: only one limb name should be displayed (needs to be done in a separate loop)
                             GUI.DrawString(spriteBatch, limbScreenPos + new Vector2(10, -10), limb.Name, Color.White, Color.Black * 0.5f);

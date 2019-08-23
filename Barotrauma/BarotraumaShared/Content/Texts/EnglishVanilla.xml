@@ -988,6 +988,7 @@
   <charactereditor.createjoint>Create Joint</charactereditor.createjoint>
   <charactereditor.createlimb>Create Limb</charactereditor.createlimb>
   <charactereditor.drawlimbonspritesheet>Draw the limb on the spritesheet</charactereditor.drawlimbonspritesheet>
+  <charactereditor.onlyshowselectedlimbs>Show only selected limbs</charactereditor.onlyshowselectedlimbs>
 
   <!-- Submarine editor -->
   <items>Items</items>
