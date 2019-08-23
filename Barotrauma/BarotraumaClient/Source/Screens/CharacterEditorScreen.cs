@@ -753,6 +753,7 @@ namespace Barotrauma
                 {
                     if (jointStartLimb != null)
                     {
+                        // TODO: there's something wrong here
                         var offset = anchor1Pos.HasValue ? Vector2.Transform(ConvertUnits.ToSimUnits(anchor1Pos.Value), Matrix.CreateRotationZ(jointStartLimb.Rotation)) : Vector2.Zero;
                         var startPos = SimToScreen(jointStartLimb.SimPosition + offset);
                         GUI.DrawLine(spriteBatch, startPos, PlayerInput.MousePosition, Color.LightGreen, width: 3);
@@ -1038,6 +1039,9 @@ namespace Barotrauma
                     new XAttribute("texture", RagdollParams.Limbs.First().GetSprite().Texture),
                     new XAttribute("sourcerect", $"{sourceRect.X}, {sourceRect.Y}, {sourceRect.Width}, {sourceRect.Height}")));
             CreateLimb(newLimbElement);
+            SetToggle(paramsToggle, true);
+            lockSpriteOriginToggle.Selected = false;
+            recalculateColliderToggle.Selected = true;
         }
 
         private void CreateLimb(XElement newElement)
@@ -1053,8 +1057,6 @@ namespace Barotrauma
             ClearSelection();
             selectedLimbs.Add(character.AnimController.Limbs.Single(l => l.Params == newLimbParams));
             ResetParamsEditor();
-            lockSpriteOriginToggle.Selected = false;
-            recalculateColliderToggle.Selected = true;
         }
 
         /// <summary>
@@ -3435,6 +3437,7 @@ namespace Barotrauma
             {
                 case JointCreationMode.None:
                     jointCreationMode = JointCreationMode.Select;
+                    SetToggle(spritesheetToggle, true);
                     break;
                 case JointCreationMode.Select:
                 case JointCreationMode.Create:
@@ -3443,7 +3446,14 @@ namespace Barotrauma
             }
         }
 
-        private void ToggleLimbCreationMode() => isDrawingLimb = !isDrawingLimb;
+        private void ToggleLimbCreationMode()
+        {
+            isDrawingLimb = !isDrawingLimb;
+            if (isDrawingLimb)
+            {
+                SetToggle(spritesheetToggle, true);
+            }
+        }
         #endregion
 
         #region Animation Controls
