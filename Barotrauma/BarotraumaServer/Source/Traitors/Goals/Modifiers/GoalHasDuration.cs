@@ -6,27 +6,21 @@ namespace Barotrauma
 {
     partial class Traitor
     {
-        public class GoalHasDuration : Modifier
+        public sealed class GoalHasDuration : Modifier
         {
-            private const string GoalWithDurationInfoTextId = "TraitorGoalWithDurationInfoText";
-            private const string GoalWithCumulativeDurationInfoTextId = "TraitorGoalWithCumulativeDurationInfoText";
-
             private readonly float requiredDuration;
             private readonly bool countTotalDuration;
+            private readonly string durationInfoTextId;
 
             public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[duration]" });
 
             public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { $"{TimeSpan.FromSeconds(requiredDuration):g}" });
 
-            protected internal override string GetInfoText(Traitor traitor, string textId, IEnumerable<string> keys, IEnumerable<string> values) => TextManager.FormatServerMessage(countTotalDuration ? GoalWithCumulativeDurationInfoTextId : GoalWithDurationInfoTextId, new []
+            protected internal override string GetInfoText(Traitor traitor, string textId, IEnumerable<string> keys, IEnumerable<string> values)
             {
-                "[infotext]",
-                "[duration]"
-            }, new []
-            {
-                base.GetInfoText(traitor, textId, keys, values),
-                $"{TimeSpan.FromSeconds(requiredDuration):g}"
-            });
+                var infoText = base.GetInfoText(traitor, textId, keys, values);
+                return !string.IsNullOrEmpty(durationInfoTextId) ? TextManager.FormatServerMessage(durationInfoTextId, new[] { "[infotext]", "[duration]" }, new[] { infoText, $"{TimeSpan.FromSeconds(requiredDuration):g}" }) : infoText;
+            }
 
             private bool isCompleted = false;
             public override bool IsCompleted => isCompleted;
@@ -54,10 +48,11 @@ namespace Barotrauma
                 }
             }
 
-            public GoalHasDuration(Goal goal, float requiredDuration, bool countTotalDuration) : base(goal)
+            public GoalHasDuration(Goal goal, float requiredDuration, bool countTotalDuration, string durationInfoTextId) : base(goal)
             {
                 this.requiredDuration = requiredDuration;
                 this.countTotalDuration = countTotalDuration;
+                this.durationInfoTextId = durationInfoTextId;
             }
         }
     }

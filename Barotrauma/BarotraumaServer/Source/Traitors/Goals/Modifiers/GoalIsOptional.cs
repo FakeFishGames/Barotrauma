@@ -5,9 +5,9 @@ namespace Barotrauma
 {
     partial class Traitor
     {
-        public class GoalIsOptional : Modifier
+        public sealed class GoalIsOptional : Modifier
         {
-            private const string GoalIsOptionalInfoTextId = "TraitorGoalIsOptionalInfoText";
+            private readonly string optionalInfoTextId;
 
             public override string StatusValueTextId => (base.IsStarted && !base.CanBeCompleted) ? "failed" : base.StatusValueTextId;
 
@@ -23,16 +23,15 @@ namespace Barotrauma
             public override bool IsCompleted => base.IsCompleted || (base.IsStarted && !base.CanBeCompleted);
             public override bool CanBeCompleted => true;
 
-            protected internal override string GetInfoText(Traitor traitor, string textId, IEnumerable<string> keys, IEnumerable<string> values) => TextManager.FormatServerMessage(GoalIsOptionalInfoTextId, new[]
+            protected internal override string GetInfoText(Traitor traitor, string textId, IEnumerable<string> keys, IEnumerable<string> values)
             {
-                "[infotext]"
-            }, new[]
-            {
-                base.GetInfoText(traitor, textId, keys, values)
-            });
+                var infoText = base.GetInfoText(traitor, textId, keys, values);
+                return !string.IsNullOrEmpty(optionalInfoTextId) ? TextManager.FormatServerMessage(optionalInfoTextId, new[] { "[infotext]" }, new[] { infoText }) : infoText;
+            }
 
-            public GoalIsOptional(Goal goal) : base(goal)
+            public GoalIsOptional(Goal goal, string optionalInfoTextId) : base(goal)
             {
+                this.optionalInfoTextId = optionalInfoTextId;
             }
         }
     }

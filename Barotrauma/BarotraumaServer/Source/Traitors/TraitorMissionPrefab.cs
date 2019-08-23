@@ -140,13 +140,19 @@ namespace Barotrauma {
                                 switch (modifierType)
                                 {
                                     case "duration":
-                                        goal = new Traitor.GoalHasDuration(goal, element.GetAttributeFloat("duration", 5.0f), element.GetAttributeBool("cumulative", false));
+                                    {
+                                        var isCumulative = element.GetAttributeBool("cumulative", false);
+                                        goal = new Traitor.GoalHasDuration(goal, element.GetAttributeFloat("duration", 5.0f), isCumulative, isCumulative ? "TraitorGoalWithCumulativeDurationInfoText" : "TraitorGoalWithDurationInfoText");
                                         break;
+                                    }
                                     case "timelimit":
-                                        goal = new Traitor.GoalHasTimeLimit(goal, element.GetAttributeFloat("timelimit", 180.0f));
+                                        goal = new Traitor.GoalHasTimeLimit(goal, element.GetAttributeFloat("timelimit", 180.0f), element.GetAttributeString("infotext", "TraitorGoalWithTimeLimitInfoText"));
                                         break;
                                     case "optional":
-                                        goal = new Traitor.GoalIsOptional(goal);
+                                        goal = new Traitor.GoalIsOptional(goal, element.GetAttributeString("infotext", "TraitorGoalIsOptionalInfoText"));
+                                        break;
+                                    default:
+                                        GameServer.Log($"Unrecognized modifier type \"{modifierType}\".", ServerLog.MessageType.Error);
                                         break;
                                 }
                             }
@@ -202,7 +208,7 @@ namespace Barotrauma {
                     var instance = goal.Instantiate();
                     if (instance == null)
                     {
-                        GameServer.Log(string.Format("Failed to instantiate goal \"{0}\".", goal.Type), ServerLog.MessageType.Error);
+                        GameServer.Log($"Failed to instantiate goal \"{goal.Type}\".", ServerLog.MessageType.Error);
                     }
                     return instance;
                 }).FindAll(goal => goal != null).ToArray());
@@ -257,13 +263,13 @@ namespace Barotrauma {
         public readonly string EndMessageFailureText;
         public readonly string EndMessageFailureDeadText;
         public readonly string EndMessageFailureDetainedText;
-        
+
         public readonly List<Objective> Objectives = new List<Objective>();
 
         public Traitor.TraitorMission Instantiate()
         {
             return new Traitor.TraitorMission(
-                StartText ?? "TraitorMissionStartMessage", 
+                StartText ?? "TraitorMissionStartMessage",
                 EndMessageSuccessText ?? "TraitorObjectiveEndMessageSuccess",
                 EndMessageSuccessDeadText ?? "TraitorObjectiveEndMessageSuccessDead",
                 EndMessageSuccessDetainedText ?? "TraitorObjectiveEndMessageSuccessDetained",
@@ -323,6 +329,9 @@ namespace Barotrauma {
                             }
                         }
                         break;
+                    default:
+                        GameServer.Log($"Unrecognized element \"{element.Name}\"under Objective.", ServerLog.MessageType.Error);
+                        break;
                 }
             }
             return result;
@@ -364,6 +373,9 @@ namespace Barotrauma {
                                 Objectives.Add(objective);
                             }
                         }
+                        break;
+                    default:
+                        GameServer.Log($"Unrecognized element \"{element.Name}\"under TraitorMission.", ServerLog.MessageType.Error);
                         break;
                 }
             }

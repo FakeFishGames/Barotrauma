@@ -6,24 +6,19 @@ namespace Barotrauma
 {
     partial class Traitor
     {
-        public class GoalHasTimeLimit : Modifier
+        public sealed class GoalHasTimeLimit : Modifier
         {
-            private const string GoalWithTimeLimitInfoTextId = "TraitorGoalWithTimeLimitInfoText";
-
             private readonly float timeLimit;
+            private readonly string timeLimitInfoTextId;
 
             public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[timelimit]" });
             public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { $"{TimeSpan.FromSeconds(timeLimit):g}" });
 
-            protected internal override string GetInfoText(Traitor traitor, string textId, IEnumerable<string> keys, IEnumerable<string> values) => TextManager.FormatServerMessage(GoalWithTimeLimitInfoTextId, new[]
+            protected internal override string GetInfoText(Traitor traitor, string textId, IEnumerable<string> keys, IEnumerable<string> values)
             {
-                "[infotext]",
-                "[timelimit]"
-            }, new[]
-            {
-                base.GetInfoText(traitor, textId, keys, values),
-                $"{TimeSpan.FromSeconds(timeLimit):g}"
-            });
+                var infoText = base.GetInfoText(traitor, textId, keys, values);
+                return !string.IsNullOrEmpty(timeLimitInfoTextId) ? TextManager.FormatServerMessage(timeLimitInfoTextId, new[] { "[infotext]", "[timelimit]" }, new[] { infoText, $"{TimeSpan.FromSeconds(timeLimit):g}" }) : infoText;
+            }
 
             public override bool CanBeCompleted => base.CanBeCompleted && (!IsStarted || timeRemaining > 0.0f);
 
@@ -45,9 +40,10 @@ namespace Barotrauma
                 return true;
             }
 
-            public GoalHasTimeLimit(Goal goal, float timeLimit) : base(goal)
+            public GoalHasTimeLimit(Goal goal, float timeLimit, string timeLimitInfoTextId) : base(goal)
             {
                 this.timeLimit = timeLimit;
+                this.timeLimitInfoTextId = timeLimitInfoTextId;
             }
         }
     }
