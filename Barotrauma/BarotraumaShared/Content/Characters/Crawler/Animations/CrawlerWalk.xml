@@ -18,6 +18,6 @@
   cyclespeed="2.883953"
   animationtype="Walk"
   foottorque="50"
-  footangles="10: -0.1484762"
+  footangles="10: 0.8620372,15: 0.3794122"
   tailtorque="50"
   tailangle="94.89201" />
