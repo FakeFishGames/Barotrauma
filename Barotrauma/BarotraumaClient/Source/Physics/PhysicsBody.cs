@@ -134,14 +134,17 @@ namespace Barotrauma
                 rot -= MathHelper.PiOver2;
             }
             
-            spriteBatch.Draw(
-                bodyShapeTexture,
-                new Vector2(DrawPosition.X, -DrawPosition.Y),
-                null,
-                color,
-                rot,
-                new Vector2(bodyShapeTexture.Width / 2, bodyShapeTexture.Height / 2),
-                1.0f / bodyShapeTextureScale, SpriteEffects.None, 0.0f);
+            if (bodyShapeTexture != null)
+            {
+                spriteBatch.Draw(
+                    bodyShapeTexture,
+                    new Vector2(DrawPosition.X, -DrawPosition.Y),
+                    null,
+                    color,
+                    rot,
+                    new Vector2(bodyShapeTexture.Width / 2, bodyShapeTexture.Height / 2),
+                    1.0f / bodyShapeTextureScale, SpriteEffects.None, 0.0f);
+            }
         }
 
         public PosInfo ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime, string parentDebugName)
