@@ -376,7 +376,7 @@ namespace Barotrauma
             
             body.Dir = Dir;
 
-            bool hideLimb = wearingItems.Any(w => w != null && w.HideLimb);
+            bool hideLimb = Params.Hide || wearingItems.Any(w => w != null && w.HideLimb);
             body.UpdateDrawPosition();
 
             if (!hideLimb)

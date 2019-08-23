@@ -540,6 +540,9 @@ namespace Barotrauma
             [Serialize(false, true), Editable]
             public bool MirrorHorizontally { get; set; }
 
+            [Serialize(false, true), Editable]
+            public bool Hide { get; set; }
+
             [Serialize(0, true), Editable]
             public int HealthIndex { get; set; }
 
