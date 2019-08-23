@@ -969,16 +969,19 @@ namespace Barotrauma
                 {
                     if (newLimbRect == Rectangle.Empty)
                     {
-                        newLimbRect = new Rectangle((int)PlayerInput.MousePosition.X, (int)PlayerInput.MousePosition.Y, 2, 2);
+                        newLimbRect = new Rectangle((int)PlayerInput.MousePosition.X, (int)PlayerInput.MousePosition.Y, 0, 0);
                     }
                     else
                     {
-                        // TODO: take the offset and zoom into account and clamp the width and height
-                        newLimbRect = new Rectangle(newLimbRect.X, newLimbRect.Y, (int)PlayerInput.MousePosition.X - newLimbRect.X, (int)PlayerInput.MousePosition.Y - newLimbRect.Y);
+                        newLimbRect.Size = new Point((int)PlayerInput.MousePosition.X - newLimbRect.X, (int)PlayerInput.MousePosition.Y - newLimbRect.Y);
                     }
+                    newLimbRect.Size = new Point(Math.Max(newLimbRect.Width, 2), Math.Max(newLimbRect.Height, 2));
                 }
                 if (PlayerInput.LeftButtonClicked())
                 {
+                    // Take the offset and the zoom into account
+                    newLimbRect.Location = new Point(newLimbRect.X - spriteSheetOffsetX, newLimbRect.Y - spriteSheetOffsetY);
+                    newLimbRect = newLimbRect.Divide(spriteSheetZoom);
                     CreateNewLimb(newLimbRect);
                     isDrawingLimb = false;
                     newLimbRect = Rectangle.Empty;
@@ -1012,8 +1015,8 @@ namespace Barotrauma
         {
             var newLimbElement = new XElement("limb",
                 new XAttribute("id", RagdollParams.Limbs.Last().ID + 1),
-                new XAttribute("width", sourceRect.Width),
-                new XAttribute("height", sourceRect.Height),
+                new XAttribute("width", sourceRect.Width * RagdollParams.TextureScale),
+                new XAttribute("height", sourceRect.Height * RagdollParams.TextureScale),
                 new XElement("sprite",
                     new XAttribute("texture", RagdollParams.Limbs.First().GetSprite().Texture),
                     new XAttribute("sourcerect", $"{sourceRect.X}, {sourceRect.Y}, {sourceRect.Width}, {sourceRect.Height}")));
