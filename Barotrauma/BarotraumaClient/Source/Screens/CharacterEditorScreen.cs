@@ -32,7 +32,7 @@ namespace Barotrauma
             }
         }
 
-        private bool ShowExtraRagdollControls => selectedLimbs.Any() && editLimbs || selectedJoints.Any() && editJoints;
+        private bool ShowExtraRagdollControls => editLimbs || editJoints;
 
         private Character character;
         private Vector2 spawnPosition;
@@ -280,11 +280,39 @@ namespace Barotrauma
             }
             if (ShowExtraRagdollControls)
             {
+                createLimbButton.Enabled = editLimbs;
+                duplicateLimbButton.Enabled = selectedLimbs.Any();
+                deleteSelectedButton.Enabled = selectedLimbs.Any() || selectedJoints.Any();
+                createJointButton.Enabled = selectedLimbs.Any() || selectedJoints.Any();
                 extraRagdollControls.AddToGUIUpdateList();
-            }
-            else if (editLimbs)
-            {
-                createLimbButton.AddToGUIUpdateList();
+                if (createLimbButton.Enabled)
+                {
+                    if (isDrawingLimb)
+                    {
+                        createLimbButton.Color = Color.Yellow;
+                        createLimbButton.HoverColor = Color.Yellow;
+                    }
+                    else
+                    {
+                        createLimbButton.Color = Color.White;
+                        createLimbButton.HoverColor = Color.White;
+                    }
+                }
+                if (createJointButton.Enabled)
+                {
+                    switch (jointCreationMode)
+                    {
+                        case JointCreationMode.Select:
+                        case JointCreationMode.Create:
+                            createJointButton.HoverColor = Color.Yellow;
+                            createJointButton.Color = Color.Yellow;
+                            break;
+                        default:
+                            createJointButton.HoverColor = Color.White;
+                            createJointButton.Color = Color.White;
+                            break;
+                    }
+                }
             }
             if (showParamsEditor)
             {
@@ -450,6 +478,7 @@ namespace Barotrauma
                         ResetParamsEditor();
                     }
                     jointCreationMode = JointCreationMode.None;
+                    isDrawingLimb = false;
                 }
                 if (PlayerInput.KeyHit(Keys.Delete))
                 {
@@ -823,22 +852,6 @@ namespace Barotrauma
         #region Ragdoll Manipulation
         private void UpdateJointCreation()
         {
-            switch (jointCreationMode)
-            {
-                case JointCreationMode.None:
-                    createJointButton.HoverColor = Color.White;
-                    createJointButton.Color = Color.White;
-                    break;
-                case JointCreationMode.Select:
-                    createJointButton.HoverColor = Color.Yellow;
-                    createJointButton.Color = Color.Yellow;
-                    break;
-                case JointCreationMode.Create:
-                    createJointButton.HoverColor = Color.LightGreen;
-                    createJointButton.Color = Color.LightGreen;
-                    break;
-            }
-
             if (jointCreationMode == JointCreationMode.None)
             {
                 jointStartLimb = null;
@@ -953,7 +966,6 @@ namespace Barotrauma
 
         private void UpdateLimbCreation()
         {
-            createLimbButton.Color = isDrawingLimb ? Color.LightGreen : Color.White;
             if (!isDrawingLimb)
             {
                 newLimbRect = Rectangle.Empty;
@@ -1681,10 +1693,10 @@ namespace Barotrauma
         private GUITickBox lockSpriteOriginToggle;
 
         private GUIFrame extraRagdollControls;
-        private GUIButton duplicateLimbButton;
-        private GUIButton deleteSelectedButton;
         private GUIButton createJointButton;
         private GUIButton createLimbButton;
+        private GUIButton deleteSelectedButton;
+        private GUIButton duplicateLimbButton;
 
         private ToggleButton modesToggle;
         private ToggleButton minorModesToggle;
@@ -2306,24 +2318,21 @@ namespace Barotrauma
                 return true;
             };
 
-            // Ragdoll manipulation
-            extraRagdollControls = new GUIFrame(new RectTransform(new Point(140, 30), centerArea.RectTransform, Anchor.CenterRight)
+            Point buttonSize = new Point(140, 30);
+            int innerMargin = 5;
+            int outerMargin = 10;
+            extraRagdollControls = new GUIFrame(new RectTransform(new Point(buttonSize.X + outerMargin * 2, buttonSize.Y * 4 + innerMargin * 3 + outerMargin * 2), centerArea.RectTransform, Anchor.BottomRight)
             {
-                AbsoluteOffset = new Point(20, 0)
-            }, style: null)
+                AbsoluteOffset = new Point(30, 0)
+            }, style: null, Color.Black)
             {
                 CanBeFocused = false
             };
-            var extraRagdollLayout = new GUILayoutGroup(new RectTransform(Vector2.One, extraRagdollControls.RectTransform));
-            duplicateLimbButton = new GUIButton(new RectTransform(new Point(140, 30), extraRagdollLayout.RectTransform), GetCharacterEditorTranslation("DuplicateLimb"))
+            var extraRagdollLayout = new GUILayoutGroup(new RectTransform(new Point(extraRagdollControls.Rect.Width - outerMargin * 2, extraRagdollControls.Rect.Height - outerMargin * 2), extraRagdollControls.RectTransform, anchor: Anchor.Center))
             {
-                OnClicked = (button, data) =>
-                {
-                    CopyLimb(selectedLimbs.FirstOrDefault());
-                    return true;
-                }
+                AbsoluteSpacing = innerMargin
             };
-            deleteSelectedButton = new GUIButton(new RectTransform(new Point(140, 30), extraRagdollLayout.RectTransform), GetCharacterEditorTranslation("DeleteSelected"))
+            deleteSelectedButton = new GUIButton(new RectTransform(buttonSize, extraRagdollLayout.RectTransform), GetCharacterEditorTranslation("DeleteSelected"))
             {
                 OnClicked = (button, data) =>
                 {
@@ -2331,7 +2340,15 @@ namespace Barotrauma
                     return true;
                 }
             };
-            createJointButton = new GUIButton(new RectTransform(new Point(140, 30), extraRagdollLayout.RectTransform), GetCharacterEditorTranslation("CreateJoint"))
+            duplicateLimbButton = new GUIButton(new RectTransform(buttonSize, extraRagdollLayout.RectTransform), GetCharacterEditorTranslation("DuplicateLimb"))
+            {
+                OnClicked = (button, data) =>
+                {
+                    CopyLimb(selectedLimbs.FirstOrDefault());
+                    return true;
+                }
+            };
+            createJointButton = new GUIButton(new RectTransform(buttonSize, extraRagdollLayout.RectTransform), GetCharacterEditorTranslation("CreateJoint"))
             {
                 OnClicked = (button, data) =>
                 {
@@ -2339,7 +2356,7 @@ namespace Barotrauma
                     return true;
                 }
             };
-            createLimbButton = new GUIButton(new RectTransform(new Point(140, 30), extraRagdollLayout.RectTransform), GetCharacterEditorTranslation("CreateLimb"))
+            createLimbButton = new GUIButton(new RectTransform(buttonSize, extraRagdollLayout.RectTransform), GetCharacterEditorTranslation("CreateLimb"))
             {
                 OnClicked = (button, data) =>
                 {
