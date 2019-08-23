@@ -534,6 +534,12 @@ namespace Barotrauma
             [Serialize(true, true), Editable]
             public bool Flip { get; set; }
 
+            [Serialize(false, true), Editable(ToolTip = "Currently only works with non-deformable (normal) sprites.")]
+            public bool MirrorVertically { get; set; }
+
+            [Serialize(false, true), Editable]
+            public bool MirrorHorizontally { get; set; }
+
             [Serialize(0, true), Editable]
             public int HealthIndex { get; set; }
 

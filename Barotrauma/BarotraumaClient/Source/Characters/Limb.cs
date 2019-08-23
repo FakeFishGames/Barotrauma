@@ -393,11 +393,11 @@ namespace Barotrauma
                     {
                         DeformSprite.Reset();
                     }
-                    body.Draw(DeformSprite, cam, Vector2.One * Scale * TextureScale, color);
+                    body.Draw(DeformSprite, cam, Vector2.One * Scale * TextureScale, color, Params.MirrorHorizontally);
                 }
                 else
                 {
-                    body.Draw(spriteBatch, activeSprite, color, null, Scale * TextureScale);
+                    body.Draw(spriteBatch, activeSprite, color, null, Scale * TextureScale, Params.MirrorHorizontally, Params.MirrorVertically);
                 }
             }
 
@@ -409,6 +409,14 @@ namespace Barotrauma
             float depthStep = 0.000001f;
             WearableSprite onlyDrawable = wearingItems.Find(w => w.HideOtherWearables);
             SpriteEffects spriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
+            if (Params.MirrorHorizontally)
+            {
+                spriteEffect = spriteEffect == SpriteEffects.None ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+            }
+            if (Params.MirrorVertically)
+            {
+                spriteEffect |= SpriteEffects.FlipVertically;
+            }
             if (onlyDrawable == null)
             {
                 if (HerpesSprite != null)
