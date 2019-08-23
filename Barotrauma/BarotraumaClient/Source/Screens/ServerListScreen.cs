@@ -803,26 +803,34 @@ namespace Barotrauma
             hoverColor = new Color(80, 170, 170);
             pressColor = new Color(25, 37, 75);
 
-            friendsDropdownButton = new GUIButton(new RectTransform(Vector2.One * 0.9f, friendsButtonHolder.RectTransform, Anchor.BottomRight, Pivot.BottomRight, scaleBasis: ScaleBasis.BothHeight), "\u2022 \u2022 \u2022", style: null)
+            if (friendsList.Count > 0)
             {
-                Color = mainColor,
-                SelectedColor = mainColor,
-                HoverColor = hoverColor,
-                OutlineColor = Color.Transparent,
-                PressedColor = pressColor,
-                TextColor = Color.Black,
-                OnClicked = (button, udt) =>
+                friendsDropdownButton = new GUIButton(new RectTransform(Vector2.One * 0.9f, friendsButtonHolder.RectTransform, Anchor.BottomRight, Pivot.BottomRight, scaleBasis: ScaleBasis.BothHeight), "\u2022 \u2022 \u2022", style: null)
                 {
-                    friendsDropdown.RectTransform.NonScaledSize = new Point(friendsButtonHolder.Rect.Height * 7, friendsButtonHolder.Rect.Height * 3);
-                    friendsDropdown.RectTransform.RelativeOffset = Vector2.Zero;
-                    friendsDropdown.RectTransform.AbsoluteOffset = new Point(friendsButtonHolder.Rect.Left, friendsButtonHolder.Rect.Bottom);
-                    friendsDropdown.RectTransform.RecalculateChildren(true);
-                    friendsDropdown.RectTransform.SetPosition(Anchor.TopLeft);
+                    Color = mainColor,
+                    SelectedColor = mainColor,
+                    HoverColor = hoverColor,
+                    OutlineColor = Color.Transparent,
+                    PressedColor = pressColor,
+                    TextColor = Color.Black,
+                    OnClicked = (button, udt) =>
+                    {
+                        friendsDropdown.RectTransform.NonScaledSize = new Point(friendsButtonHolder.Rect.Height * 7, friendsButtonHolder.Rect.Height * 3);
+                        friendsDropdown.RectTransform.RelativeOffset = Vector2.Zero;
+                        friendsDropdown.RectTransform.AbsoluteOffset = new Point(friendsButtonHolder.Rect.Left, friendsButtonHolder.Rect.Bottom);
+                        friendsDropdown.RectTransform.RecalculateChildren(true);
+                        friendsDropdown.RectTransform.SetPosition(Anchor.TopLeft);
 
-                    friendsDropdown.Visible = !friendsDropdown.Visible;
-                    return false;
-                }
-            };
+                        friendsDropdown.Visible = !friendsDropdown.Visible;
+                        return false;
+                    }
+                };
+            }
+            else
+            {
+                friendsDropdownButton = null;
+                friendsDropdown.Visible = false;
+            }
 
             friendsDropdown.RectTransform.NonScaledSize = new Point(friendsButtonHolder.Rect.Height * 7, friendsButtonHolder.Rect.Height * 3);
             friendsDropdown.RectTransform.RelativeOffset = Vector2.Zero;
