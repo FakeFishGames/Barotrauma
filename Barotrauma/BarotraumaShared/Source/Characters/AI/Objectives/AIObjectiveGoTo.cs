@@ -14,7 +14,9 @@ namespace Barotrauma
         private float waitUntilPathUnreachable;
         private bool getDivingGearIfNeeded;
 
-        public Func<bool> customCondition;
+        public Func<bool> requiredCondition;
+        public Func<PathNode, bool> startNodeFilter;
+        public Func<PathNode, bool> endNodeFilter;
 
         public bool followControlledCharacter;
         public bool mimic;
@@ -137,7 +139,12 @@ namespace Barotrauma
                         currTargetSimPos -= diff;
                     }
                 }
-                character.AIController.SteeringManager.SteeringSeek(currTargetSimPos);
+                if (PathSteering != null)
+                {
+                    PathSteering.startNodeFilter = startNodeFilter;
+                    PathSteering.endNodeFilter = endNodeFilter;
+                }
+                SteeringManager.SteeringSeek(currTargetSimPos);
                 if (SteeringManager != PathSteering)
                 {
                     SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: 5, weight: 1, heading: VectorExtensions.Forward(character.AnimController.Collider.Rotation));
@@ -191,7 +198,7 @@ namespace Barotrauma
             }
             else if (closeEnough)
             {
-                if (customCondition == null || customCondition())
+                if (requiredCondition == null || requiredCondition())
                 {
                     if (Target is Item item)
                     {
@@ -218,7 +225,7 @@ namespace Barotrauma
 
         private void CalculateCloseEnough()
         {
-            float interactionDistance = Target is Item i ? i.InteractDistance * 0.9f : 0;
+            float interactionDistance = Target is Item i ? i.InteractDistance + Math.Max(i.Rect.Width, i.Rect.Height) / 2 : 0;
             CloseEnough = Math.Max(interactionDistance, CloseEnough);
         }
 

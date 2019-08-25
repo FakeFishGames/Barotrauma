@@ -22,7 +22,8 @@ namespace Barotrauma
             GameMain.NetworkMember.CreateEntityEvent(Character, new object[] { NetEntityEvent.Type.Status });
         }
 
-        public void Greet(GameServer server, string codeWords, string codeResponse)
+        public delegate void MessageSender(string message);
+        public void Greet(GameServer server, string codeWords, string codeResponse, MessageSender messageSender)
         {
             string greetingMessage = TextManager.FormatServerMessage(Mission.StartText, new string[] {
                 "[codewords]", "[coderesponse]"
@@ -30,8 +31,10 @@ namespace Barotrauma
                 codeWords, codeResponse
             });
 
-            SendChatMessage(greetingMessage);
-            SendChatMessageBox(greetingMessage);
+            messageSender(greetingMessage);
+            // boxSender(greetingMessage);
+            // SendChatMessage(greetingMessage);
+            // SendChatMessageBox(greetingMessage);
 
             Client traitorClient = server.ConnectedClients.Find(c => c.Character == Character);
             Client ownerClient = server.ConnectedClients.Find(c => c.Connection == server.OwnerConnection);

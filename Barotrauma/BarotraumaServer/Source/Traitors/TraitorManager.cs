@@ -17,10 +17,10 @@ namespace Barotrauma
         public string GetCodeResponse(Character.TeamType team) => Missions.TryGetValue(team, out var mission) ? mission.CodeResponse : "";
 
         public IEnumerable<Traitor> Traitors => Missions.Values.SelectMany(mission => mission.Traitors.Values);
-        
+
         private float startCountdown = 0.0f;
         private GameServer server;
-        
+
         private readonly Dictionary<ulong, int> traitorCountsBySteamId = new Dictionary<ulong, int>();
         private readonly Dictionary<string, int> traitorCountsByEndPoint = new Dictionary<string, int>();
 
@@ -61,7 +61,7 @@ namespace Barotrauma
             return;
 #endif
             if (server == null) return;
-            
+
             Traitor.TraitorMission.InitializeRandom();
             this.server = server;
             //TODO: configure countdowns in xml
@@ -124,8 +124,13 @@ namespace Barotrauma
                 startCountdown -= deltaTime;
                 if (startCountdown <= 0.0f)
                 {
-                    var combatMission = GameMain.GameSession.Mission as CombatMission;
-                    if (combatMission != null)
+                    int playerCharactersCount = server.ConnectedClients.Sum(client => client.Character != null && !client.Character.IsDead ? 1 : 0);
+                    if (playerCharactersCount < server.ServerSettings.TraitorsMinPlayerCount)
+                    {
+                        startCountdown = 60.0f;
+                        return;
+                    }
+                    if (GameMain.GameSession.Mission is CombatMission)
                     {
                         var teamIds = new[] { Character.TeamType.Team1, Character.TeamType.Team2 };
                         foreach (var teamId in teamIds)
@@ -136,38 +141,36 @@ namespace Barotrauma
                                 Missions.Add(teamId, mission);
                             }
                         }
-                        var startSuccessCount = 0;
-                        foreach (var mission in Missions)
+                        var canBeStartedCount = Missions.Sum(mission => mission.Value.CanBeStarted(server, this, mission.Key, "traitor") ? 1 : 0);
+                        if (canBeStartedCount >= Missions.Count)
                         {
-                            // TODO: Check if start would succeed first as we dont want to display popups in case one team's mission fails
-                            if (mission.Value.Start(server, this, mission.Key, "traitor"))
+                            var startSuccessCount = Missions.Sum(mission => mission.Value.Start(server, this, mission.Key, "traitor") ? 1 : 0);
+                            if (startSuccessCount >= Missions.Count)
                             {
-                                ++startSuccessCount;
+                                return;
                             }
-                        }
-                        if (startSuccessCount < Missions.Count)
-                        {
-                            Missions.Clear();
-                            startCountdown = 60.0f;
                         }
                     }
                     else
                     {
                         var mission = TraitorMissionPrefab.RandomPrefab()?.Instantiate();
-                        if (mission != null && mission.Start(server, this, Character.TeamType.None, "traitor"))
-                        {
-                            Missions.Add(Character.TeamType.None, mission);
-                        }
-                        else
-                        {
-                            Missions.Clear();
-                            startCountdown = 60.0f;
+                        if (mission != null) {
+                            if (mission.CanBeStarted(server, this, Character.TeamType.None, "traitor"))
+                            {
+                                if (mission.Start(server, this, Character.TeamType.None, "traitor"))
+                                {
+                                    Missions.Add(Character.TeamType.None, mission);
+                                    return;
+                                }
+                            }
                         }
                     }
+                    Missions.Clear();
+                    startCountdown = 60.0f;
                 }
             }
         }
-    
+
         public string GetEndMessage()
         {
 #if DISABLE_MISSIONS
@@ -177,7 +180,7 @@ namespace Barotrauma
 
             return string.Join("\n\n", Missions.Select(mission => mission.Value.GlobalEndMessage));
         }
-        
+
         public static T WeightedRandom<T>(ICollection<T> collection, Func<int, int> random, Func<T, int> readSelectedWeight, Action<T, int> writeSelectedWeight, int entryWeight, int selectionWeight) where T : class
         {
             var count = collection.Count;
@@ -190,7 +193,7 @@ namespace Barotrauma
             var selected = random(totalWeight);
             foreach (var entry in collection)
             {
-                var weight = readSelectedWeight(entry); 
+                var weight = readSelectedWeight(entry);
                 selected -= maxCount;
                 selected += weight;
                 if (selected <= 0)

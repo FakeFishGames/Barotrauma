@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Networking;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.SqlServer.Server;
 
 namespace Barotrauma
 {
@@ -11,19 +12,16 @@ namespace Barotrauma
             public Traitor Traitor { get; private set; }
             public TraitorMission Mission { get; internal set; }
 
-            private string statusTextId = "TraitorGoalStatusTextFormat";
-            public virtual string StatusTextId { get => statusTextId; set { statusTextId = value; } }
+            public virtual string StatusTextId { get; set; } = "TraitorGoalStatusTextFormat";
 
-            private string infoTextId = null;
-            public virtual string InfoTextId { get => infoTextId; set { infoTextId = value; } }
+            public virtual string InfoTextId { get; set; } = null;
 
-            private string completedTextId = null;
-            public virtual string CompletedTextId { get => completedTextId; set { completedTextId = value; } }
+            public virtual string CompletedTextId { get; set; } = null;
 
             public virtual string StatusValueTextId => IsCompleted ? "complete" : "inprogress";
 
-            public virtual IEnumerable<string> StatusTextKeys => new string[] { "[infotext]", "[status]" };
-            public virtual IEnumerable<string> StatusTextValues => new string[] { InfoText, TextManager.FormatServerMessage(StatusValueTextId) };
+            public virtual IEnumerable<string> StatusTextKeys => new [] { "[infotext]", "[status]" };
+            public virtual IEnumerable<string> StatusTextValues => new [] { InfoText, TextManager.FormatServerMessage(StatusValueTextId) };
 
             public virtual IEnumerable<string> InfoTextKeys => new string[] { };
             public virtual IEnumerable<string> InfoTextValues => new string[] { };
@@ -31,9 +29,16 @@ namespace Barotrauma
             public virtual IEnumerable<string> CompletedTextKeys => new string[] { };
             public virtual IEnumerable<string> CompletedTextValues => new string[] { };
 
-            public virtual string StatusText => TextManager.FormatServerMessageWithGenderPronouns(Traitor?.Character?.Info?.Gender ?? Gender.None, StatusTextId, StatusTextKeys, StatusTextValues);
-            public virtual string InfoText => TextManager.FormatServerMessageWithGenderPronouns(Traitor?.Character?.Info?.Gender ?? Gender.None, InfoTextId, InfoTextKeys, InfoTextValues);
-            public virtual string CompletedText => CompletedTextId != null ? TextManager.FormatServerMessageWithGenderPronouns(Traitor?.Character?.Info?.Gender ?? Gender.None, CompletedTextId, CompletedTextKeys, CompletedTextValues) : StatusText;
+            protected virtual string FormatText(Traitor traitor, string textId, IEnumerable<string> keys, IEnumerable<string> values) => TextManager.FormatServerMessageWithGenderPronouns(traitor?.Character?.Info?.Gender ?? Gender.None, textId, keys, values);
+
+            protected internal virtual string GetStatusText(Traitor traitor, string textId, IEnumerable<string> keys, IEnumerable<string> values) => FormatText(traitor, textId, keys, values);
+            protected internal virtual string GetInfoText(Traitor traitor, string textId, IEnumerable<string> keys, IEnumerable<string> values) => FormatText(traitor, textId, keys, values);
+            protected internal virtual string GetCompletedText(Traitor traitor, string textId, IEnumerable<string> keys, IEnumerable<string> values) => FormatText(traitor, textId, keys, values);
+
+            public virtual string StatusText => GetStatusText(Traitor, StatusTextId, StatusTextKeys, StatusTextValues);
+            public virtual string InfoText => GetInfoText(Traitor, InfoTextId, InfoTextKeys, InfoTextValues);
+
+            public virtual string CompletedText => CompletedTextId != null ? GetCompletedText(Traitor, CompletedTextId, CompletedTextKeys, CompletedTextValues) : StatusText;
 
             public abstract bool IsCompleted { get; }
             public virtual bool IsStarted => Traitor != null;

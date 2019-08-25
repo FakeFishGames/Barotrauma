@@ -232,6 +232,8 @@
     <Compile Include="Source\Screens\NetLobbyScreen.cs" />
     <Compile Include="Source\Screens\UnimplementedScreen.cs" />
     <Compile Include="Source\Traitors\Goals\HumanoidGoal.cs" />
+    <Compile Include="Source\Traitors\Goals\Modifiers\GoalIsOptional.cs" />
+    <Compile Include="Source\Traitors\Goals\Modifiers\Modifier.cs" />
     <Compile Include="Source\Utils\MonogameTypes\Color.cs" />
     <Compile Include="Source\Utils\MonogameTypes\Graphics\SpriteEffects.cs" />
     <Compile Include="Source\Utils\MonogameTypes\Input\KeyboardState.cs" />
@@ -248,14 +250,15 @@
     <Compile Include="Source\Traitors\Objective.cs" />
     <Compile Include="Source\Traitors\TraitorMission.cs" />
     <Compile Include="Source\Traitors\Goals\GoalKillTarget.cs" />
-    <Compile Include="Source\Traitors\Goals\Modifiers\GoalWithDuration.cs" />
+    <Compile Include="Source\Traitors\Goals\Modifiers\GoalHasDuration.cs" />
     <Compile Include="Source\Traitors\Goals\GoalSabotageItems.cs" />
     <Compile Include="Source\Traitors\Goals\GoalDestroyItemsWithTag.cs" />
     <Compile Include="Source\Traitors\Goals\GoalFloodPercentOfSub.cs" />
     <Compile Include="Source\Traitors\Goals\GoalFindItem.cs" />
     <Compile Include="Source\Traitors\Goals\GoalReplaceInventory.cs" />
     <Compile Include="Source\Traitors\Traitor.cs" />
-    <Compile Include="Source\Traitors\Goals\Modifiers\GoalWithTimeout.cs" />
+    <Compile Include="Source\Traitors\Goals\Modifiers\GoalHasTimeLimit.cs" />
+    <Compile Include="Source\Traitors\Goals\GoalReachDistanceFromSub.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Libraries\Facepunch.Steamworks\Facepunch.Steamworks.csproj">

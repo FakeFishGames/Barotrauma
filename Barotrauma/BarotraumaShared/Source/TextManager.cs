@@ -69,7 +69,7 @@ namespace Barotrauma
             }
             return language;
         }
-        
+
         public static void LoadTextPacks(IEnumerable<ContentPackage> selectedContentPackages)
         {
             availableLanguages.Clear();
@@ -311,7 +311,7 @@ namespace Barotrauma
                 }
             }
 
-            return string.Format(text, args);     
+            return string.Format(text, args);
         }
 
         public static string FormatServerMessage(string textId)
@@ -321,7 +321,7 @@ namespace Barotrauma
 
         public static string FormatServerMessage(string message, IEnumerable<string> keys, IEnumerable<string> values)
         {
-            if (!keys.Any())
+            if (keys == null || values == null || !keys.Any() || !values.Any())
             {
                 return FormatServerMessage(message);
             }
@@ -534,7 +534,7 @@ namespace Barotrauma
             }
             return string.Join(separator, texts);
         }
-        
+
         public static string EnsureUTF8(string text)
         {
             byte[] bytes = Encoding.Default.GetBytes(text);
@@ -618,7 +618,7 @@ namespace Barotrauma
                     .Replace("[Genderpronounreflexive]",   Get("PronounReflexiveFemale"));
             }
         }
-        
+
         static Regex isCJK = new Regex(
             @"\p{IsHangulJamo}|" +
             @"\p{IsCJKRadicalsSupplement}|" +

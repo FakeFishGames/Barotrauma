@@ -6,7 +6,7 @@ namespace Barotrauma
 {
     partial class Traitor
     {
-        public class GoalKillTarget : Goal
+        public sealed class GoalKillTarget : Goal
         {
             public TraitorMission.CharacterFilter Filter { get; private set; }
             public Character Target { get; private set; }

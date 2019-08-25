@@ -6,7 +6,7 @@ namespace Barotrauma
 {
     partial class Traitor
     {
-        public class GoalFloodPercentOfSub : Goal
+        public sealed class GoalFloodPercentOfSub : Goal
         {
             private readonly float minimumFloodingAmount;
 

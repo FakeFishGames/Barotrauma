@@ -93,12 +93,15 @@ namespace Barotrauma
 
                 var allGoalsCount = allGoals.Count;
                 var indices = allGoals.Select((goal, index) => index).ToArray();
-                for(var i = allGoalsCount; i > 1;)
+                if (shuffleGoalsCount > 0)
                 {
-                    int j = TraitorMission.Random(i--);
-                    var temp = indices[j];
-                    indices[j] = indices[i];
-                    indices[i] = temp;
+                    for (var i = allGoalsCount; i > 1;)
+                    {
+                        int j = TraitorMission.Random(i--);
+                        var temp = indices[j];
+                        indices[j] = indices[i];
+                        indices[i] = temp;
+                    }
                 }
 
                 for (var i = 0; i < allGoalsCount; ++i)
@@ -108,7 +111,7 @@ namespace Barotrauma
                     {
                         activeGoals.Add(goal);
                         pendingGoals.Add(goal);
-                        if (pendingGoals.Count >= shuffleGoalsCount)
+                        if (shuffleGoalsCount > 0 && pendingGoals.Count >= shuffleGoalsCount)
                         {
                             break;
                         }
@@ -141,7 +144,6 @@ namespace Barotrauma
                 {
                     Traitor.SendChatMessageBox(EndMessageText);
                 }
-                // traitor.UpdateCurrentObjective("");
             }
 
             public void EndMessage()
@@ -155,7 +157,6 @@ namespace Barotrauma
                 {
                     return;
                 }
-                int completedCount = completedGoals.Count;
                 for (int i = 0; i < pendingGoals.Count;)
                 {
                     var goal = pendingGoals[i];

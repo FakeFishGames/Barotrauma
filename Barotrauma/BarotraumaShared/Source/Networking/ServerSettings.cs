@@ -319,7 +319,7 @@ namespace Barotrauma.Networking
                 }
             }
         }
-        
+
         public string ServerName;
 
         private string serverMessageText;
@@ -339,7 +339,7 @@ namespace Barotrauma.Networking
         public int QueryPort;
 
         public bool EnableUPnP;
-        
+
         public ServerLog ServerLog;
 
         public Voting Voting;
@@ -347,7 +347,7 @@ namespace Barotrauma.Networking
         public Dictionary<string, bool> MonsterEnabled { get; private set; }
 
         public Dictionary<ItemPrefab, int> ExtraCargo { get; private set; }
-        
+
         private TimeSpan sparseUpdateInterval = new TimeSpan(0, 0, 0, 3);
         private float selectedLevelDifficulty;
         private byte[] password;
@@ -363,7 +363,7 @@ namespace Barotrauma.Networking
         public List<SavedClientPermission> ClientPermissions { get; private set; } = new List<SavedClientPermission>();
 
         public WhiteList Whitelist { get; private set; }
-        
+
         [Serialize(20, true)]
         public int TickRate
         {
@@ -439,7 +439,7 @@ namespace Barotrauma.Networking
                 ServerDetailsChanged = true;
             }
         }
-        
+
         [Serialize(true, true)]
         public bool EndRoundAtLevelEnd
         {
@@ -515,7 +515,7 @@ namespace Barotrauma.Networking
             }
 #endif
         }
-        
+
         [Serialize(true, true)]
         public bool AllowVoteKick
         {
@@ -554,7 +554,7 @@ namespace Barotrauma.Networking
                 ServerDetailsChanged = true;
             }
         }
-        
+
         [Serialize(0, true)]
         public int BotCount
         {
@@ -588,7 +588,7 @@ namespace Barotrauma.Networking
             get;
             set;
         }
-        
+
         [Serialize(true, true)]
         public bool AllowRewiring
         {
@@ -614,6 +614,13 @@ namespace Barotrauma.Networking
                 traitorsEnabled = value;
                 ServerDetailsChanged = true;
             }
+        }
+
+        [Serialize(defaultValue: 1, isSaveable: true)]
+        public int TraitorsMinPlayerCount
+        {
+            get;
+            set;
         }
 
         private SelectionMode subSelectionMode;
@@ -643,7 +650,7 @@ namespace Barotrauma.Networking
         }
 
         public BanList BanList { get; private set; }
-        
+
         [Serialize(0.6f, true)]
         public float EndVoteRequiredRatio
         {
@@ -664,23 +671,9 @@ namespace Barotrauma.Networking
             get;
             private set;
         }
-        
+
         [Serialize(120.0f, true)]
         public float KickAFKTime
-        {
-            get;
-            private set;
-        }
-
-        [Serialize(true, true)]
-        public bool TraitorUseRatio
-        {
-            get;
-            private set;
-        }
-
-        [Serialize(0.2f, true)]
-        public float TraitorRatio
         {
             get;
             private set;
@@ -720,7 +713,7 @@ namespace Barotrauma.Networking
             get;
             set;
         }
-        
+
         public int MaxPlayers
         {
             get { return maxPlayers; }
@@ -746,7 +739,7 @@ namespace Barotrauma.Networking
             get;
             private set;
         }
-        
+
         public void SetPassword(string password)
         {
             if (string.IsNullOrEmpty(password))

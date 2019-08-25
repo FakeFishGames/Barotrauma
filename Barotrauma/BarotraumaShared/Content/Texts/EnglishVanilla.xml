@@ -462,12 +462,12 @@
   <debugconsolehelptext>Debug console—press F3 to open/close; enter help for a list of available commands</debugconsolehelptext>
 
   <!-- Editor -->
-  
+
   <!-- Links -->
   <editordisclaimerwikiurl>https://barotrauma.gamepedia.com/Barotrauma_Wiki</editordisclaimerwikiurl>
   <editordisclaimerdiscordurl>https://discordapp.com/invite/xjeSzWU</editordisclaimerdiscordurl>
   <editordisclaimerforumurl>https://undertowgames.com/forum/viewforum.php?f=17</editordisclaimerforumurl>
-  
+
   <!-- Structure -->
   <entityname.hull>Hull</entityname.hull>
   <entitydescription.hull>Hulls determine which parts are considered to be 'inside the sub'. Generally every room should be enclosed by a hull.</entitydescription.hull>
@@ -1043,7 +1043,7 @@
   <!-- Entity editor -->
   <stringpropertytranslate>This text will be translated to [translation].</stringpropertytranslate>
   <stringpropertycannottranslate>This text will not be translated - text with the tag [tag] not found in the language files.</stringpropertycannottranslate>
-  
+
   <!-- Characters -->
   <MyCharacter>My character</MyCharacter>
   <character.carrier>Carrier</character.carrier>
@@ -3008,7 +3008,7 @@
   <!-- Room 3 -->
   <mechanic.welding>Leaks</mechanic.welding>
   <mechanic.weldingobjective>Repair leak</mechanic.weldingobjective>
-  <mechanic.weldingtext>To repair leaks in hulls, equip the welding tool by double-clicking on it. Some items, like the welding tool, require two free hands to use. Unequip or drop an item by double-clicking it while it is in use.\n\nWhen welding tool is equipped, hold {0} to aim. While aiming, hold {1} to weld.</mechanic.weldingtext>
+  <!--<mechanic.weldingtext>Equip the welding tool and the diving mask you just retrieved from the locker by double-clicking on them. \n\nWith the welding tool you are able to repair leaks in hulls and the diving mask will provide you with a steady supply of oxygen while underwater. Some items, like the welding tool, require two free hands to use. Unequip or drop an item by double-clicking it while it is in use.\n\nWhen welding tool is equipped, hold {0} to aim. While aiming, hold {1} to weld.</mechanic.weldingtext>-->
   <mechanic.drain>Water pumps</mechanic.drain>
   <mechanic.drainobjective>Turn on nearby pump to drain excess water</mechanic.drainobjective>
   <mechanic.draintext>When the sub is flooded, use pumps to drain excess water. Usually pumps receive signals from nearby water detectors or navigation terminals, but some can be operated manually. This pump is programmed to only pump water out. Turn it on by interacting with it ({0}) and flip the switch to the “on” position.</mechanic.draintext>
@@ -3446,6 +3446,12 @@
   <karmakicked>You have been kicked from the server because your Karma decreased below [banthreshold].</karmakicked>
   <karma.kicksbeforeban>Number of kicks before a ban</karma.kicksbeforeban>
   <karma.kicksbeforebantooltip>If the player has been kicked from the server due to low karma this many times, they will be banned if the karma drops below the kick/ban threshold again. A value of 0 means players will always get banned if their karma drops below the threshold.</karma.kicksbeforebantooltip>
+  <traitorgoalreachdistancefromsub>Reach distance of [distance] from the sub.</traitorgoalreachdistancefromsub>
+  <traitorgoalisoptionalinfotext>Optional: [infotext]</traitorgoalisoptionalinfotext>
+  <traitorgoalwithtimelimitinfotext>[infotext] Complete this goal within [timelimit].</traitorgoalwithtimelimitinfotext>
+  <traitorgoalwithdurationinfotext>[infotext] The goal must be completed for [duration].</traitorgoalwithdurationinfotext>
+  <traitorgoalwithcumulativedurationinfotext>[infotext] The goal must be completed for total of [duration].</traitorgoalwithcumulativedurationinfotext>
+  <failed>Failed</failed>
 
   <!-- Changed values as of 13th of August -->
   <traitorgoaldestroyitems>Dispose of at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>
@@ -3453,4 +3459,6 @@
   <karma.kickbanthresholdtooltip>The players whose karma decrease below this threshold get automatically kicked and/or banned from the server (depending on the kick/ban settings below).</karma.kickbanthresholdtooltip>
   <missiondescription.killcrawlerswarm1>A small swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew that can neutralize it.</missiondescription.killcrawlerswarm1>
   <missiondescription.killcrawlerswarm2>A large swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew that can neutralize it.</missiondescription.killcrawlerswarm2>
+  <mechanic.weldingtext>Equip the welding tool and diving mask you just retrieved from the locker by double-clicking on them. \n\nWith the welding tool you are able to repair leaks in hulls, and the diving mask will provide you with a steady supply of oxygen while underwater. \n\nSome items, like the welding tool, require two free hands to use. Unequip or drop an item by double-clicking it while it is in use.\n\nWhen welding tool is equipped, hold {0} to aim. While aiming, hold {1} to weld.</mechanic.weldingtext>
+ 
 </infotexts>

@@ -6,7 +6,7 @@ namespace Barotrauma
 {
     partial class Traitor
     {
-        public class GoalDestroyItemsWithTag : Goal
+        public sealed class GoalDestroyItemsWithTag : Goal
         {
             private readonly string tag;
             private readonly bool matchIdentifier;
@@ -17,16 +17,16 @@ namespace Barotrauma
             public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { string.Format("{0:0}", DestroyPercent * 100.0f), tagPrefabName ?? "" });
 
             private readonly float destroyPercent;
-            protected float DestroyPercent => destroyPercent;
+            private float DestroyPercent => destroyPercent;
 
             private bool isCompleted = false;
             public override bool IsCompleted => isCompleted;
-            
+
             private int totalCount = 0;
             private int targetCount = 0;
             private string tagPrefabName = null;
 
-            protected int CountMatchingItems()
+            private int CountMatchingItems()
             {
                 int result = 0;
                 foreach (var item in Item.ItemList)
