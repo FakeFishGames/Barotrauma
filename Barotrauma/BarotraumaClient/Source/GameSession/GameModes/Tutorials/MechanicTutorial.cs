@@ -445,10 +445,10 @@ namespace Barotrauma.Tutorials
                         {
                             HighlightInventorySlot(mechanic_fabricator.OutputContainer.Inventory, "extinguisher", highlightColor, .5f, .5f, 0f);
 
-                            for (int i = 0; i < mechanic.Inventory.slots.Length; i++)
+                            /*for (int i = 0; i < mechanic.Inventory.slots.Length; i++)
                             {
                                 if (mechanic.Inventory.Items[i] == null) HighlightInventorySlot(mechanic.Inventory, i, highlightColor, .5f, .5f, 0f);
-                            }
+                            }*/
                         }
                         else if (mechanic_fabricator.InputContainer.Inventory.FindItemByIdentifier("aluminium") != null && mechanic_fabricator.InputContainer.Inventory.FindItemByIdentifier("sodium") != null && !mechanic_fabricator.IsActive)
                         {
