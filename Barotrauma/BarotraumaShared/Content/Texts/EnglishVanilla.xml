@@ -938,8 +938,8 @@
   <charactereditor.upperlimit>Upper Limit</charactereditor.upperlimit>
   <charactereditor.lowerlimit>Lower Limit</charactereditor.lowerlimit>
   <charactereditor.defaultname>Character X</charactereditor.defaultname>
-  <charactereditor.ishumanoid>Is a Humanoid?</charactereditor.ishumanoid>
-  <charactereditor.canentersubmarines>Can Enter Submarines (and can walk)?</charactereditor.canentersubmarines>
+  <charactereditor.ishumanoid>Is Humanoid?</charactereditor.ishumanoid>
+  <charactereditor.canentersubmarines>Can Enter Submarines and Walk?</charactereditor.canentersubmarines>
   <charactereditor.configfileoutput>Config File Output</charactereditor.configfileoutput>
   <charactereditor.texturepath>Texture Path</charactereditor.texturepath>
   <charactereditor.contentpackagename>Content Package Name</charactereditor.contentpackagename>
@@ -952,7 +952,8 @@
   <charactereditor.joint>Joint</charactereditor.joint>
   <charactereditor.loadhtml>Load HTML</charactereditor.loadhtml>
   <charactereditor.htmlpath>HTML Path</charactereditor.htmlpath>
-  <charactereditor.multipletorsosdefined>You need to define one and only one limb as Torso!</charactereditor.multipletorsosdefined>
+  <charactereditor.missingtorsoorhead>You need to define at least one limb as "Torso" or "Head"!</charactereditor.missingtorsoorhead>
+  <charactereditor.missinglimbtype>You need to define one and only one limb as "[limbtype]"!</charactereditor.missinglimbtype>
   <charactereditor.charactercreated>Character [name] Created</charactereditor.charactercreated>
   <charactereditor.limbtype>Limb Type</charactereditor.limbtype>
   <charactereditor.sourcerectangle>Source Rectangle</charactereditor.sourcerectangle>

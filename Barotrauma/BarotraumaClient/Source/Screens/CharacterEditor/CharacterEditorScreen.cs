@@ -1515,7 +1515,7 @@ namespace Barotrauma.CharacterEditor
             Cam.Position = character.WorldPosition;
         }
 
-        public bool CreateCharacter(string name, string mainFolder, bool isHumanoid, ContentPackage contentPackage = null, params object[] ragdollConfig)
+        public bool CreateCharacter(string name, string mainFolder, bool isHumanoid, ContentPackage contentPackage, params object[] ragdollConfig)
         {
             var vanilla = GameMain.VanillaContent;
             
@@ -1526,25 +1526,6 @@ namespace Barotrauma.CharacterEditor
 #else
                 contentPackage = GameMain.Config.SelectedContentPackages.LastOrDefault(cp => cp != vanilla);
 #endif
-            }
-            if (contentPackage == null)
-            {
-                string modName = "NewCharacterMod";
-                if (ContentPackage.List.Any(cp => cp.Name == modName))
-                {
-                    string tempName = modName;
-                    for (int i = 0; i < 100; i++)
-                    {
-                        tempName = modName + i.ToString();
-                        if (ContentPackage.List.None(cp => cp.Name == tempName))
-                        {
-                            modName = tempName;
-                            break;
-                        }
-                    }
-                }
-                contentPackage = ContentPackage.CreatePackage(modName, Path.Combine(ContentPackage.Folder, $"{modName}.xml"), false);
-                ContentPackage.List.Add(contentPackage);
             }
             if (contentPackage == null)
             {
@@ -1562,7 +1543,7 @@ namespace Barotrauma.CharacterEditor
             string speciesName = name;
             // Config file
             string configFilePath = Path.Combine(mainFolder, $"{speciesName}.xml").Replace(@"\", @"/");
-            if (Character.ConfigFiles.Any(f => f.Root.GetAttributeString("name", "").Equals(speciesName, StringComparison.OrdinalIgnoreCase)))
+            if (Character.ConfigFiles.Any(f => f.Root.GetAttributeString("speciesname", "").Equals(speciesName, StringComparison.OrdinalIgnoreCase)))
             {
                 GUI.AddMessage(GetCharacterEditorTranslation("ExistingCharacterFound"), Color.Red, font: GUI.LargeFont);
                 // TODO: add a prompt: "Do you want to replace it?" + functionality
@@ -1572,12 +1553,12 @@ namespace Barotrauma.CharacterEditor
             if (!GameMain.Config.SelectedContentPackages.Contains(contentPackage))
             {
                 GameMain.Config.SelectContentPackage(contentPackage);
-                GameMain.Config.SaveNewPlayerConfig();
             }
+            GameMain.Config.SaveNewPlayerConfig();
 
             // Create the config file
             XElement mainElement = new XElement("Character",
-                new XAttribute("name", speciesName),
+                new XAttribute("speciesname", speciesName),
                 new XAttribute("humanoid", isHumanoid),
                 new XElement("ragdolls", new XAttribute("folder", Path.Combine(mainFolder, $"Ragdolls/").Replace(@"\", @"/"))),
                 new XElement("animations", new XAttribute("folder", Path.Combine(mainFolder, $"Animations/").Replace(@"\", @"/"))),
@@ -1626,8 +1607,8 @@ namespace Barotrauma.CharacterEditor
             {
                 AllFiles.Add(configFilePath);
             }
+            limbPairEditing = false;
             SpawnCharacter(configFilePath, ragdollParams);
-
             limbsToggle.Selected = true;
             recalculateColliderToggle.Selected = true;
             lockSpriteOriginToggle.Selected = false;
@@ -1985,7 +1966,7 @@ namespace Barotrauma.CharacterEditor
             var limbPairEditToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("LimbPairEditing"))
             {
                 Selected = limbPairEditing,
-                Enabled = character.IsHumanoid  // TODO: remove when limb pair editing works for non-humanoids
+                Enabled = character.IsHumanoid 
             };
             animTestPoseToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("AnimationTestPose"))
             {
@@ -5148,10 +5129,6 @@ namespace Barotrauma.CharacterEditor
                 return w;
             }
         }
-        #endregion
-
-        #region Character Wizard
-
         #endregion
     }
 }

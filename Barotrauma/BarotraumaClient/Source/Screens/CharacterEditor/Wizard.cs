@@ -209,10 +209,8 @@ namespace Barotrauma.CharacterEditor
                                         new GUIMessageBox("", TextManager.Get("charactereditor.contentpackagenameinuse", fallBackTag: "leveleditorlevelobjnametaken"));
                                         return false;
                                     }
-                                    string fileName = ToolBox.RemoveInvalidFileNameChars(contentPackageNameElement.Text);
-                                    ContentPackage = ContentPackage.CreatePackage(
-                                        contentPackageNameElement.Text,
-                                        Path.Combine(ContentPackage.Folder, $"{fileName}.xml"), false);
+                                    string modName = ToolBox.RemoveInvalidFileNameChars(contentPackageNameElement.Text);
+                                    ContentPackage = ContentPackage.CreatePackage(contentPackageNameElement.Text, Path.Combine("Mods", modName, Steam.SteamManager.MetadataFileName), false);
                                     ContentPackage.List.Add(ContentPackage);
                                     GameMain.Config.SelectContentPackage(ContentPackage);
                                     contentPackageDropDown.AddItem(ContentPackage.Name, ContentPackage, ContentPackage.Path);
@@ -332,7 +330,7 @@ namespace Barotrauma.CharacterEditor
                     }
                 };
 
-                int x = 1, y = 1, w = 100, h = 100;
+                int _x = 1, _y = 1, w = 100, h = 100;
                 int otherElements = limbButtonElement.Rect.Width / 4 + 10 + limbButtonElement.Rect.Height * 2 + 10 + limbButtonElement.RectTransform.AbsoluteOffset.X;
                 var frame = new GUIFrame(new RectTransform(new Point(limbEditLayout.Rect.Width - otherElements, limbButtonElement.Rect.Height), limbEditLayout.RectTransform), color: Color.Transparent);
                 var inputArea = new GUILayoutGroup(new RectTransform(Vector2.One, frame.RectTransform, Anchor.TopRight), isHorizontal: true, childAnchor: Anchor.CenterRight)
@@ -370,10 +368,10 @@ namespace Barotrauma.CharacterEditor
                         switch (comp)
                         {
                             case 0:
-                                x = numInput.IntValue;
+                                _x = numInput.IntValue;
                                 break;
                             case 1:
-                                y = numInput.IntValue;
+                                _y = numInput.IntValue;
                                 break;
                             case 2:
                                 w = numInput.IntValue;
@@ -384,32 +382,88 @@ namespace Barotrauma.CharacterEditor
                         }
                     };
                 }
-
                 new GUIButton(new RectTransform(new Point(limbButtonElement.Rect.Width / 4, limbButtonElement.Rect.Height), limbEditLayout.RectTransform)
                     , GetCharacterEditorTranslation("AddMultipleLimbsButton"))
                 {
                     OnClicked = (b, d) =>
                     {
-                        for (int i = 0; i < x; i++)
-                        {
-                            for (int j = 0; j < y; j++)
-                            {
-                                LimbType limbType = LimbType.None;
-                                switch (LimbGUIElements.Count)
-                                {
-                                    case 0:
-                                        limbType = LimbType.Torso;
-                                        break;
-                                    case 1:
-                                        limbType = LimbType.Head;
-                                        break;
-                                }
-                                CreateLimbGUIElement(limbsList.Content.RectTransform, elementSize, id: LimbGUIElements.Count, limbType: limbType, sourceRect: new Rectangle(i * w, j * h, w, h));
-                            }
-                        }
+                        CreateMultipleLimbs(_x, _y);
                         return true;
                     }
                 };
+                // If no elements are defined, create some as default
+                if (LimbGUIElements.None())
+                {
+                    if (IsHumanoid)
+                    {
+                        CreateMultipleLimbs(2, 6);
+                        // Create the missing waist (13th element)
+                        CreateLimbGUIElement(limbsList.Content.RectTransform, elementSize, id: LimbGUIElements.Count, limbType: LimbType.Waist, sourceRect: new Rectangle(_x, h * LimbGUIElements.Count / 2, w, h));
+                    }
+                    else
+                    {
+                        CreateMultipleLimbs(1, 2);
+                    }
+                }
+                void CreateMultipleLimbs(int x, int y)
+                {
+                    for (int i = 0; i < x; i++)
+                    {
+                        for (int j = 0; j < y; j++)
+                        {
+                            LimbType limbType = LimbType.None;
+                            switch (LimbGUIElements.Count)
+                            {
+                                case 0:
+                                    limbType = LimbType.Torso;
+                                    break;
+                                case 1:
+                                    limbType = LimbType.Head;
+                                    break;
+                            }
+                            if (IsHumanoid)
+                            {
+                                switch (LimbGUIElements.Count)
+                                {
+                                    case 2:
+                                        limbType = LimbType.LeftArm;
+                                        break;
+                                    case 3:
+                                        limbType = LimbType.LeftHand;
+                                        break;
+                                    case 4:
+                                        limbType = LimbType.RightArm;
+                                        break;
+                                    case 5:
+                                        limbType = LimbType.RightHand;
+                                        break;
+                                    case 6:
+                                        limbType = LimbType.LeftThigh;
+                                        break;
+                                    case 7:
+                                        limbType = LimbType.LeftLeg;
+                                        break;
+                                    case 8:
+                                        limbType = LimbType.LeftFoot;
+                                        break;
+                                    case 9:
+                                        limbType = LimbType.RightThigh;
+                                        break;
+                                    case 10:
+                                        limbType = LimbType.RightLeg;
+                                        break;
+                                    case 11:
+                                        limbType = LimbType.RightFoot;
+                                        break;
+                                    case 12:
+                                        limbType = LimbType.Waist;
+                                        break;
+                                }
+                            }
+                            CreateLimbGUIElement(limbsList.Content.RectTransform, elementSize, id: LimbGUIElements.Count, limbType: limbType, sourceRect: new Rectangle(i * w, j * h, w, h));
+                        }
+                    }
+                }
                 // Joints
                 new GUIFrame(new RectTransform(new Vector2(1, 0.05f), bottomGroup.RectTransform), style: null) { CanBeFocused = false };
                 var jointsElement = new GUIFrame(new RectTransform(new Vector2(1, 0.05f), bottomGroup.RectTransform), style: null) { CanBeFocused = false };
@@ -473,7 +527,7 @@ namespace Barotrauma.CharacterEditor
                             });
                             htmlOutput.Text = new XDocument(new XElement("Ragdoll", new object[]
                             {
-                                    new XAttribute("type", Name), LimbXElements.Values, JointXElements
+                                new XAttribute("type", Name), LimbXElements.Values, JointXElements
                             })).ToString();
                             htmlOutput.CalculateHeightFromText();
                             list.UpdateScrollBarSize();
@@ -486,9 +540,6 @@ namespace Barotrauma.CharacterEditor
                     }
                     return true;
                 };
-                //var codeArea = new GUIFrame(new RectTransform(new Vector2(1, 0.5f), listBox.Content.RectTransform), style: null) { CanBeFocused = false };
-                //new GUITextBlock(new RectTransform(new Vector2(1, 0.05f), codeArea.RectTransform), "Custom code:");
-                //new GUITextBox(new RectTransform(new Vector2(1, 1 - 0.05f), codeArea.RectTransform, Anchor.BottomLeft), string.Empty, textAlignment: Alignment.TopLeft);
                 // Previous
                 box.Buttons[0].OnClicked += (b, d) =>
                 {
@@ -500,16 +551,25 @@ namespace Barotrauma.CharacterEditor
                 {
                     ParseLimbsFromGUIElements();
                     ParseJointsFromGUIElements();
-                    var torsoAttributes = LimbXElements.Values.Select(xe => xe.Attribute("type")).Where(a => a.Value.ToLowerInvariant() == "torso");
-                    if (torsoAttributes.Count() != 1)
+                    var main = LimbXElements.Values.Select(xe => xe.Attribute("type")).Where(a => a.Value.ToLowerInvariant() == "torso").FirstOrDefault() ?? 
+                        LimbXElements.Values.Select(xe => xe.Attribute("type")).Where(a => a.Value.ToLowerInvariant() == "head").FirstOrDefault();
+                    if (main == null)
                     {
-                        GUI.AddMessage(GetCharacterEditorTranslation("MultipleTorsosDefined"), Color.Red);
+                        GUI.AddMessage(GetCharacterEditorTranslation("MissingTorsoOrHead"), Color.Red);
                         return false;
                     }
-                    XElement torso = torsoAttributes.Single().Parent;
-                    int radius = torso.GetAttributeInt("radius", -1);
-                    int height = torso.GetAttributeInt("height", -1);
-                    int width = torso.GetAttributeInt("width", -1);
+                    if (IsHumanoid)
+                    {
+                        if (!IsValid(LimbXElements.Values, true, out string missingType))
+                        {
+                            GUI.AddMessage(GetCharacterEditorTranslation("MissingLimbType").Replace("[limbtype]", missingType.FormatCamelCaseWithSpaces()), Color.Red);
+                            return false;
+                        }
+                    }
+                    XElement mainLimb = main.Parent;
+                    int radius = mainLimb.GetAttributeInt("radius", -1);
+                    int height = mainLimb.GetAttributeInt("height", -1);
+                    int width = mainLimb.GetAttributeInt("width", -1);
                     int colliderHeight = -1;
                     if (radius == -1)
                     {
@@ -1094,6 +1154,35 @@ namespace Barotrauma.CharacterEditor
                 }
                 return limbType;
             }
+
+            public static bool IsValid(IEnumerable<XElement> elements, bool isHumanoid, out string missingType)
+            {
+                missingType = "none";
+                if (!HasAtLeastOneLimbOfType(elements, "torso") && !HasAtLeastOneLimbOfType(elements, "head"))
+                {
+                    missingType = "TorsoOrHead";
+                    return false;
+                }
+                if (isHumanoid)
+                {
+                    if (!HasOnlyOneLimbOfType(elements, missingType = "LeftArm")) { return false; }
+                    if (!HasOnlyOneLimbOfType(elements, missingType = "LeftHand")) { return false; }
+                    if (!HasOnlyOneLimbOfType(elements, missingType = "RightArm")) { return false; }
+                    if (!HasOnlyOneLimbOfType(elements, missingType = "RightHand")) { return false; }
+                    if (!HasOnlyOneLimbOfType(elements, missingType = "Waist")) { return false; }
+                    if (!HasOnlyOneLimbOfType(elements, missingType = "LeftThigh")) { return false; }
+                    if (!HasOnlyOneLimbOfType(elements, missingType = "LeftLeg")) { return false; }
+                    if (!HasOnlyOneLimbOfType(elements, missingType = "LeftFoot")) { return false; }
+                    if (!HasOnlyOneLimbOfType(elements, missingType = "RightThigh")) { return false; }
+                    if (!HasOnlyOneLimbOfType(elements, missingType = "RightLeg")) { return false; }
+                    if (!HasOnlyOneLimbOfType(elements, missingType = "RightFoot")) { return false; }
+                }
+                return true;
+            }
+
+            public static bool HasAtLeastOneLimbOfType(IEnumerable<XElement> elements, string type) => elements.Any(e => IsType(e, type));
+            public static bool HasOnlyOneLimbOfType(IEnumerable<XElement> elements, string type) => elements.Count(e => IsType(e, type)) == 1;
+            private static bool IsType(XElement element, string type) => element.GetAttributeString("type", "").Equals(type, StringComparison.OrdinalIgnoreCase);
         }
     }
 }
