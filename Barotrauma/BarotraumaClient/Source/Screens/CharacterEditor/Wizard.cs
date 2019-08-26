@@ -212,8 +212,9 @@ namespace Barotrauma.CharacterEditor
                                 UpdatePaths();
                                 return true;
                             };
+                            contentPackageDropDown.Select(0);
                             var contentPackageNameElement = new GUITextBox(new RectTransform(new Vector2(0.7f, 0.5f), rightContainer.RectTransform, Anchor.BottomLeft),
-                                TextManager.Get("name"))
+                                GetCharacterEditorTranslation("NewContentPackage"))
                             {
                                 CaretColor = Color.White,
                             };
