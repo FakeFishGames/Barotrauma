@@ -332,15 +332,18 @@ namespace Barotrauma.Items.Components
                 float dockingDist = Vector2.Distance(steering.ActiveDockingSource.Item.WorldPosition, steering.DockingTarget.Item.WorldPosition);
                 if (prevDockingDist > steering.DockingAssistThreshold && dockingDist <= steering.DockingAssistThreshold)
                 {
-                    zoom = Math.Max(zoom, MathHelper.Lerp(MinZoom, MaxZoom, 0.25f));
+                    zoomSlider.BarScroll = 0.25f;
+                    zoom = Math.Max(zoom, MathHelper.Lerp(MinZoom, MaxZoom, zoomSlider.BarScroll));
                 }
                 else if (prevDockingDist > steering.DockingAssistThreshold * 0.75f && dockingDist <= steering.DockingAssistThreshold * 0.75f)
                 {
-                    zoom = Math.Max(zoom, MathHelper.Lerp(MinZoom, MaxZoom, 0.5f));
+                    zoomSlider.BarScroll = 0.5f;
+                    zoom = Math.Max(zoom, MathHelper.Lerp(MinZoom, MaxZoom, zoomSlider.BarScroll));
                 }
                 else if (prevDockingDist > steering.DockingAssistThreshold * 0.5f && dockingDist <= steering.DockingAssistThreshold * 0.5f)
                 {
-                    zoom = Math.Max(zoom, MathHelper.Lerp(MinZoom, MaxZoom, 0.25f));
+                    zoomSlider.BarScroll = 0.25f;
+                    zoom = Math.Max(zoom, MathHelper.Lerp(MinZoom, MaxZoom, zoomSlider.BarScroll));
                 }
                 prevDockingDist = Math.Min(dockingDist, prevDockingDist);
             }
