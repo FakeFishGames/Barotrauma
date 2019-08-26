@@ -952,7 +952,8 @@
   <charactereditor.joints>Joints</charactereditor.joints>
   <charactereditor.joint>Joint</charactereditor.joint>
   <charactereditor.loadhtml>Load HTML</charactereditor.loadhtml>
-  <charactereditor.htmlpath>HTML Path</charactereditor.htmlpath>
+  <charactereditor.htmlpath>Path to the HTML file...</charactereditor.htmlpath>
+  <charactereditor.selectfile>Select File</charactereditor.selectfile>
   <charactereditor.missingtorsoorhead>You need to define at least one limb as "Torso" or "Head"!</charactereditor.missingtorsoorhead>
   <charactereditor.missinglimbtype>You need to define one and only one limb as "[limbtype]"!</charactereditor.missinglimbtype>
   <charactereditor.charactercreated>Character [name] Created</charactereditor.charactercreated>
