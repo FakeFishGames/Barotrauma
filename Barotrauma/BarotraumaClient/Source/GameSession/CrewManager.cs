@@ -190,7 +190,8 @@ namespace Barotrauma
                     {
                         if (Character.Controlled == null || Character.Controlled.SpeechImpediment >= 100.0f) { return false; }
                         SetCharacterOrder(null, order, null, Character.Controlled);
-                        foreach (var hull in Character.Controlled.GetVisibleHulls())
+                        var visibleHulls = new List<Hull>(Character.Controlled.GetVisibleHulls());
+                        foreach (var hull in visibleHulls)
                         {
                             HumanAIController.PropagateHullSafety(Character.Controlled, hull);
                             HumanAIController.RefreshTargets(Character.Controlled, order, hull);
