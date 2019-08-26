@@ -82,13 +82,17 @@ namespace Barotrauma.CharacterEditor
 
             protected override GUIMessageBox Create()
             {
-                var box = new GUIMessageBox(GetCharacterEditorTranslation("CreateNewCharacter"), string.Empty, new string[] { TextManager.Get("Cancel"), TextManager.Get("Next") }, new Vector2(0.5f, 1.0f));
+                var box = new GUIMessageBox(GetCharacterEditorTranslation("CreateNewCharacter"), string.Empty, new string[] { TextManager.Get("Cancel"), TextManager.Get("Next") }, new Vector2(0.65f, 1f));
                 box.Header.Font = GUI.LargeFont;
                 box.Content.ChildAnchor = Anchor.TopCenter;
                 box.Content.AbsoluteSpacing = 20;
                 int elementSize = 30;
-                var listBox = new GUIListBox(new RectTransform(new Vector2(1, 0.9f), box.Content.RectTransform));
-                var topGroup = new GUILayoutGroup(new RectTransform(Vector2.One, listBox.Content.RectTransform)) { AbsoluteSpacing = 2 };
+                var frame = new GUIFrame(new RectTransform(new Point(box.Content.Rect.Width - (int)(80 * GUI.xScale), box.Content.Rect.Height - (int)(100 * GUI.yScale)), 
+                    box.Content.RectTransform, Anchor.Center), style: null, color: ParamsEditor.Color)
+                {
+                    CanBeFocused = false
+                };
+                var topGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.99f, 1), frame.RectTransform, Anchor.Center)) { AbsoluteSpacing = 2 };
                 var fields = new List<GUIComponent>();
                 GUITextBox texturePathElement = null;
                 GUITextBox xmlPathElement = null;
@@ -111,8 +115,8 @@ namespace Barotrauma.CharacterEditor
                 {
                     var mainElement = new GUIFrame(new RectTransform(new Point(topGroup.RectTransform.Rect.Width, elementSize), topGroup.RectTransform), style: null, color: Color.Gray * 0.25f);
                     fields.Add(mainElement);
-                    RectTransform leftElement = new RectTransform(new Vector2(0.5f, 1), mainElement.RectTransform, Anchor.TopLeft);
-                    RectTransform rightElement = new RectTransform(new Vector2(0.5f, 1), mainElement.RectTransform, Anchor.TopRight);
+                    RectTransform leftElement = new RectTransform(new Vector2(0.3f, 1), mainElement.RectTransform, Anchor.TopLeft);
+                    RectTransform rightElement = new RectTransform(new Vector2(0.7f, 1), mainElement.RectTransform, Anchor.TopRight);
                     switch (i)
                     {
                         case 0:
@@ -300,16 +304,21 @@ namespace Barotrauma.CharacterEditor
 
             protected override GUIMessageBox Create()
             {
-                var box = new GUIMessageBox(GetCharacterEditorTranslation("DefineRagdoll"), string.Empty, new string[] { TextManager.Get("Previous"), TextManager.Get("Create") }, new Vector2(0.5f, 1.0f));
+                var box = new GUIMessageBox(GetCharacterEditorTranslation("DefineRagdoll"), string.Empty, new string[] { TextManager.Get("Previous"), TextManager.Get("Create") }, new Vector2(0.65f, 1f));
                 box.Header.Font = GUI.LargeFont;
                 box.Content.ChildAnchor = Anchor.TopCenter;
                 box.Content.AbsoluteSpacing = 20;
                 int elementSize = 30;
-                var topGroup = new GUILayoutGroup(new RectTransform(new Vector2(1, 0.05f), box.Content.RectTransform)) { AbsoluteSpacing = 2 };
-                var bottomGroup = new GUILayoutGroup(new RectTransform(new Vector2(1, 0.75f), box.Content.RectTransform)) { AbsoluteSpacing = 10 };
+                var frame = new GUIFrame(new RectTransform(new Point(box.Content.Rect.Width - (int)(80 * GUI.xScale), box.Content.Rect.Height - (int)(200 * GUI.yScale)),
+                    box.Content.RectTransform, Anchor.Center), style: null, color: ParamsEditor.Color)
+                {
+                    CanBeFocused = false
+                };
+                var topGroup = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.05f), frame.RectTransform, Anchor.TopCenter), childAnchor: Anchor.TopCenter) { AbsoluteSpacing = 2 };
+                var bottomGroup = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.9f), frame.RectTransform, Anchor.BottomCenter), childAnchor: Anchor.TopCenter) { AbsoluteSpacing = 10 };
                 // HTML
                 GUIMessageBox htmlBox = null;
-                var loadHtmlButton = new GUIButton(new RectTransform(new Point(topGroup.RectTransform.Rect.Width, elementSize), topGroup.RectTransform), GetCharacterEditorTranslation("LoadFromHTML"));
+                var loadHtmlButton = new GUIButton(new RectTransform(new Point(topGroup.Rect.Width / 3, elementSize), topGroup.RectTransform), GetCharacterEditorTranslation("LoadFromHTML"));
                 // Limbs
                 var limbsElement = new GUIFrame(new RectTransform(new Vector2(1, 0.05f), bottomGroup.RectTransform), style: null) { CanBeFocused = false };
                 new GUITextBlock(new RectTransform(new Vector2(0.2f, 1f), limbsElement.RectTransform), $"{GetCharacterEditorTranslation("Limbs")}: ");
@@ -350,7 +359,7 @@ namespace Barotrauma.CharacterEditor
 
                 int _x = 1, _y = 1, w = 100, h = 100;
                 int otherElements = limbButtonElement.Rect.Width / 4 + 10 + limbButtonElement.Rect.Height * 2 + 10 + limbButtonElement.RectTransform.AbsoluteOffset.X;
-                var frame = new GUIFrame(new RectTransform(new Point(limbEditLayout.Rect.Width - otherElements, limbButtonElement.Rect.Height), limbEditLayout.RectTransform), color: Color.Transparent);
+                frame = new GUIFrame(new RectTransform(new Point(limbEditLayout.Rect.Width - otherElements, limbButtonElement.Rect.Height), limbEditLayout.RectTransform), color: Color.Transparent);
                 var inputArea = new GUILayoutGroup(new RectTransform(Vector2.One, frame.RectTransform, Anchor.TopRight), isHorizontal: true, childAnchor: Anchor.CenterRight)
                 {
                     Stretch = true,
@@ -516,11 +525,12 @@ namespace Barotrauma.CharacterEditor
                 {
                     if (htmlBox == null)
                     {
-                        htmlBox = new GUIMessageBox(GetCharacterEditorTranslation("LoadHTML"), string.Empty, new string[] { TextManager.Get("Close"), TextManager.Get("Load") }, new Vector2(0.5f, 1.0f));
+                        htmlBox = new GUIMessageBox(GetCharacterEditorTranslation("LoadHTML"), string.Empty, new string[] { TextManager.Get("Close"), TextManager.Get("Load") }, new Vector2(0.65f, 1f));
                         htmlBox.Header.Font = GUI.LargeFont;
-                        var element = new GUIFrame(new RectTransform(new Vector2(0.8f, 0.05f), htmlBox.Content.RectTransform), style: null, color: Color.Gray * 0.25f);
-                        new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), element.RectTransform), GetCharacterEditorTranslation("HTMLPath"));
-                        var htmlPathElement = new GUITextBox(new RectTransform(new Vector2(0.5f, 1), element.RectTransform, Anchor.TopRight), XMLPath.Replace(".xml", ".html"));
+                        var element = new GUIFrame(new RectTransform(new Vector2(1f, 0.05f), htmlBox.Content.RectTransform), style: null, color: Color.Gray * 0.25f);
+                        // TODO: allow to select the file
+                        new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform), GetCharacterEditorTranslation("HTMLPath"));
+                        var htmlPathElement = new GUITextBox(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.TopRight), XMLPath.Replace(".xml", ".html"));
                         var list = new GUIListBox(new RectTransform(new Vector2(1, 0.8f), htmlBox.Content.RectTransform));
                         var htmlOutput = new GUITextBlock(new RectTransform(Vector2.One, list.Content.RectTransform), string.Empty) { CanBeFocused = false };
                         htmlBox.Buttons[0].OnClicked += (_b, _d) =>

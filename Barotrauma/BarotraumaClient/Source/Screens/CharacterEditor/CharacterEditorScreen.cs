@@ -3094,7 +3094,7 @@ namespace Barotrauma.CharacterEditor
                                 var attackEditor = attackParams.SerializableEntityEditor;
                                 CreateAddButton(attackEditor, () => attackParams.AddNewAffliction(), GetCharacterEditorTranslation("AddAffliction"));
                                 CreateCloseButton(attackEditor, () => limb.Params.RemoveAttack());
-                                var space = new GUIFrame(new RectTransform(new Point(attackEditor.RectTransform.Rect.Width, 20), attackEditor.RectTransform), style: null, color: new Color(20, 20, 20, 255))
+                                var space = new GUIFrame(new RectTransform(new Point(attackEditor.RectTransform.Rect.Width, 20), attackEditor.RectTransform), style: null, color: ParamsEditor.Color)
                                 {
                                     CanBeFocused = false
                                 };
@@ -3130,7 +3130,7 @@ namespace Barotrauma.CharacterEditor
 
             void CreateAddButtonAtLast(ParamsEditor editor, Action onButtonClicked, string text)
             {
-                var parentFrame = new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 50), editor.EditorBox.Content.RectTransform), style: null, color: new Color(20, 20, 20, 255))
+                var parentFrame = new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 50), editor.EditorBox.Content.RectTransform), style: null, color: ParamsEditor.Color)
                 {
                     CanBeFocused = false
                 };

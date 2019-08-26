@@ -32,7 +32,7 @@ namespace Barotrauma
         {
             rectT = rectT ?? new RectTransform(new Vector2(0.25f, 1f), GUI.Canvas) { MinSize = new Point(340, GameMain.GraphicsHeight) };
             rectT.SetPosition(Anchor.TopRight);
-            Parent = new GUIFrame(rectT, null, new Color(20, 20, 20, 255));
+            Parent = new GUIFrame(rectT, null, Color);
             EditorBox = new GUIListBox(new RectTransform(Vector2.One * 0.98f, rectT, Anchor.Center), color: Color.Black, style: null)
             {
                 Spacing = 10
@@ -49,5 +49,7 @@ namespace Barotrauma
         {
             EditorBox = CreateEditorBox();
         }
+
+        public static Color Color = new Color(20, 20, 20, 255);
     }
 }
