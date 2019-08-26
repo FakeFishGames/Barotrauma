@@ -229,8 +229,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sprite\SpriteSheet.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\StatusEffects\StatusEffect.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\CrossThread.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\LocalizationCSVtoXML.cs">
-    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\LocalizationCSVtoXML.cs"/>
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\MathUtils.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\OpenFileDialog.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\TextureLoader.cs" />
