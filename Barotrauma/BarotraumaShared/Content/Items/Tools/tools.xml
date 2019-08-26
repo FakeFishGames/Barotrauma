@@ -13,7 +13,7 @@
     <!--<Sprite texture="Content/Items/Containers/crates.png" depth="0.54" sourcerect="1,0,68,39"/>-->
     <Body width="45" height="31" density="20" />
     <MeleeWeapon slots="RightHand+LeftHand,Any" controlpose="true" aimpos="45,10" handle1="0,10" handle2="-15,10" holdangle="0" reload="1" range="50" combatpriority="5" msg="ItemMsgPickUpSelect">
-      <Attack structuredamage="10" stun="0.6">
+      <Attack structuredamage="10" stun="0.6" targetimpulse="30">
         <Affliction identifier="internaldamage" strength="2" />
         <Sound file="Content/Items/Weapons/Smack2.ogg" range="800" />
       </Attack>
@@ -241,7 +241,7 @@
     <Sprite texture="tools.png" sourcerect="0,47,32,10" depth="0.55" origin="0.5,0.5" />
     <Body width="30" height="7" density="50" />
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="40,5" handle1="-12,-5" holdangle="60" reload="1.0" range="50" combatpriority="10" msg="ItemMsgPickUpSelect">
-      <Attack structuredamage="2" stun="0.2">
+      <Attack structuredamage="2" stun="0.2" targetimpulse="20">
         <Affliction identifier="internaldamage" strength="4" />
         <Sound file="Content/Items/Weapons/Smack1.ogg" range="800" />
       </Attack>
@@ -264,7 +264,7 @@
     <Sprite texture="tools.png" sourcerect="0,65,65,15" depth="0.55" origin="0.5,0.5" />
     <Body width="60" height="10" density="50" />
     <MeleeWeapon slots="RightHand+LeftHand,Any" controlpose="true" aimpos="45,10" handle1="-20,-7" handle2="-10,0" holdangle="60" reload="1" range="100" combatpriority="30" msg="ItemMsgPickUpSelect">
-      <Attack structuredamage="5" stun="0.6">
+      <Attack structuredamage="5" stun="0.3" targetimpulse="20">
         <Affliction identifier="internaldamage" strength="8" />
         <Sound file="Content/Items/Weapons/Smack2.ogg" range="800" />
       </Attack>

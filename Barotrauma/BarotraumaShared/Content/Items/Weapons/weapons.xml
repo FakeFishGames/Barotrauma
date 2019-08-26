@@ -475,7 +475,7 @@
     <Sprite texture="weapons_new.png" sourcerect="1,407,191,63" depth="0.55" origin="0.5,0.5" />
     <Body width="150" height="30" density="30" />
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="45,10" handle1="-20,-10" holdangle="45" reload="0.75" range="100" combatPriority="50" msg="ItemMsgPickUpSelect">
-      <Attack stun="0.2">
+      <Attack stun="0.2" targetimpulse="20">
         <Sound file="Content/Items/Weapons/Smack1.ogg" range="800" />
         <Affliction identifier="internaldamage" strength="4" />
       </Attack>
@@ -529,7 +529,7 @@
     <Sprite texture="weapons_new.png" sourcerect="296,3,110,28" depth="0.55" origin="0.5,0.5" />
     <Body width="110" height="25" density="50" />
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="50,0" handle1="-5,-5" holdangle="30" reload="0.75" range="50" combatPriority="40" msg="ItemMsgPickUpSelect">
-      <Attack stun="0.2">
+      <Attack stun="0.2" targetimpulse="10">
         <Affliction identifier="internaldamage" strength="10" />
         <Affliction identifier="bleeding" strength="10" />
         <Sound file="Content/Sounds/Damage/LimbSlash1.ogg" range="500" />
@@ -758,7 +758,7 @@
     <Sprite texture="weapons_new.png" sourcerect="242,420,121,55" depth="0.55" origin="0.5,0.5" />
     <Body width="120" height="48" density="50" />
     <MeleeWeapon slots="RightHand+LeftHand,Any" controlpose="true" aimpos="45,10" handle1="-20,-7" handle2="-10,0" holdangle="60" reload="1" range="100" combatpriority="30" msg="ItemMsgPickUpSelect">
-      <Attack stun="0.6">
+      <Attack stun="0.6" targetimpulse="20">
         <Sound file="Content/Items/Weapons/ToyHammerHit1.ogg" range="800" selectionmode="Random"/>
         <Sound file="Content/Items/Weapons/ToyHammerHit2.ogg" range="800" />
         <Sound file="Content/Items/Weapons/ToyHammerHit3.ogg" range="800" />
