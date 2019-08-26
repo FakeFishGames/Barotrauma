@@ -389,12 +389,12 @@ namespace Barotrauma
         public abstract void StoreSnapshot();
         protected void StoreSnapshot<T>() where T : AnimationParams, new()
         {
-            Serialize();
             if (doc == null)
             {
                 DebugConsole.ThrowError("[AnimationParams] The source XML Document is null!");
                 return;
             }
+            Serialize();
             var copy = new T
             {
                 IsLoaded = true,
