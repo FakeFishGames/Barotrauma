@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
+using System.Windows.Forms;
 
 namespace Barotrauma.CharacterEditor
 {
@@ -93,6 +94,7 @@ namespace Barotrauma.CharacterEditor
                 GUITextBox xmlPathElement = null;
                 GUIDropDown contentPackageDropDown = null;
                 bool updateTexturePath = true;
+                bool isTextureSelected = false;
                 void UpdatePaths()
                 {
                     string pathBase = ContentPackage == GameMain.VanillaContent ? $"Content/Characters/{Name}/{Name}"
@@ -154,7 +156,7 @@ namespace Barotrauma.CharacterEditor
                             };
                             break;
                         case 4:
-                            new GUITextBlock(leftElement, GetCharacterEditorTranslation("TexturePath"));
+                            //new GUITextBlock(leftElement, GetCharacterEditorTranslation("TexturePath"));
                             texturePathElement = new GUITextBox(rightElement, string.Empty)
                             {
                                 CaretColor = Color.White,
@@ -164,6 +166,25 @@ namespace Barotrauma.CharacterEditor
                                 updateTexturePath = false;
                                 TexturePath = text;
                                 return true;
+                            };
+                            string title = GetCharacterEditorTranslation("SelectTexture");
+                            new GUIButton(leftElement, title)
+                            {
+                                OnClicked = (button, data) =>
+                                {
+                                    OpenFileDialog ofd = new OpenFileDialog()
+                                    {
+                                        InitialDirectory = Path.GetFullPath("Mods"),
+                                        Filter = "PNG file|*.png",
+                                        Title = title
+                                    };
+                                    if (ofd.ShowDialog() == DialogResult.OK)
+                                    {
+                                        isTextureSelected = true;
+                                        texturePathElement.Text = ToolBox.ConvertAbsoluteToRelativePath(ofd.FileName);
+                                    }
+                                    return true;
+                                }
                             };
                             break;
                         case 5:
@@ -183,7 +204,7 @@ namespace Barotrauma.CharacterEditor
                             contentPackageDropDown.OnSelected = (obj, userdata) =>
                             {
                                 ContentPackage = userdata as ContentPackage;
-                                updateTexturePath = true;
+                                updateTexturePath = !isTextureSelected;
                                 UpdatePaths();
                                 return true;
                             };

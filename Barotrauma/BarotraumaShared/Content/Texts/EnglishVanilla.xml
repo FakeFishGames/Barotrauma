@@ -942,6 +942,7 @@
   <charactereditor.canentersubmarines>Can Enter Submarines and Walk?</charactereditor.canentersubmarines>
   <charactereditor.configfileoutput>Config File Output</charactereditor.configfileoutput>
   <charactereditor.texturepath>Texture Path</charactereditor.texturepath>
+  <charactereditor.selecttexture>Select Texture</charactereditor.selecttexture>
   <charactereditor.contentpackagename>Content Package Name</charactereditor.contentpackagename>
   <charactereditor.texturedoesnotexist>The texture file does not exist!</charactereditor.texturedoesnotexist>
   <charactereditor.defineragdoll>Define Ragdoll</charactereditor.defineragdoll>
