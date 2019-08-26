@@ -1248,7 +1248,8 @@ namespace Barotrauma.Networking
                     {
                         existingClient.SetPermissions(permissions, permittedConsoleCommands);
                         name = tc.Name;
-                        if (GameMain.NetLobbyScreen.CharacterNameBox != null)
+                        if (GameMain.NetLobbyScreen.CharacterNameBox != null &&
+                            !GameMain.NetLobbyScreen.CharacterNameBox.Selected)
                         {
                             GameMain.NetLobbyScreen.CharacterNameBox.Text = name;
                         }
