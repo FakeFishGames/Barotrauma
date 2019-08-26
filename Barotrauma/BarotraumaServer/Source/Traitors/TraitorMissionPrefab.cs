@@ -42,11 +42,6 @@ namespace Barotrauma {
             return TraitorManager.WeightedRandom(List, Traitor.TraitorMission.Random, entry => entry.SelectedWeight, (entry, weight) => entry.SelectedWeight = weight, 2, 3)?.Prefab;
         }
 
-        public class Context
-        {
-            public List<Character> Characters;
-        }
-
         private class AttributeChecker : IDisposable
         {
             private readonly XElement element;
@@ -467,8 +462,8 @@ namespace Barotrauma {
                             {
                                 Objectives.Add(objective);
                             }
-                        }
                             break;
+                        }
                         default:
                             GameServer.Log($"Unrecognized element \"{element.Name}\"under TraitorMission.", ServerLog.MessageType.Error);
                             break;
