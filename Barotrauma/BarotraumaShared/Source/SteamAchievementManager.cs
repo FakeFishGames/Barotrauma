@@ -259,21 +259,20 @@ namespace Barotrauma
 #if SERVER
             if (GameMain.Server?.TraitorManager != null)
             {
-                foreach (Traitor traitor in GameMain.Server.TraitorManager.TraitorList)
+                if (GameMain.Server.TraitorManager.IsTraitor(character))
                 {
-                    if (traitor.TargetCharacter == character)
-                    {
-                        //killed the target as a traitor
-                        UnlockAchievement(traitor.Character, "traitorwin");
-                    }
-                    else if (traitor.Character == character)
-                    {
-                        //someone killed a traitor
-                        UnlockAchievement(causeOfDeath.Killer, "killtraitor");
-                    }
+                    UnlockAchievement(causeOfDeath.Killer, "killtraitor");
                 }
             }
 #endif
+        }
+
+        public static void OnTraitorWin(Character character)
+        {
+#if CLIENT
+            if (GameMain.Client != null || GameMain.GameSession == null) return;
+#endif
+            UnlockAchievement(character, "traitorwin");
         }
 
         public static void OnRoundEnded(GameSession gameSession)
@@ -303,13 +302,11 @@ namespace Barotrauma
                 }
             }
 
-#if CLIENT
-            if (GameMain.Client != null) { return; }
-#endif
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
 
             if (gameSession.Mission != null)
             {
-                if (gameSession.Mission is CombatMission combatMission)
+                if (gameSession.Mission is CombatMission combatMission && GameMain.GameSession.WinningTeam.HasValue)
                 {
                     //all characters that are alive and in the winning team get an achievement
                     UnlockAchievement(gameSession.Mission.Prefab.AchievementIdentifier + (int)GameMain.GameSession.WinningTeam, true, 

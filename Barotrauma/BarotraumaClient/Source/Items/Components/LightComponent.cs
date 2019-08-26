@@ -1,6 +1,5 @@
 ﻿using Barotrauma.Lights;
 using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -36,7 +35,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             IsOn = msg.ReadBoolean();
         }

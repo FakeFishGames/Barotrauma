@@ -157,12 +157,13 @@ namespace Barotrauma
             }
         }
 
-        public SteeringPath FindPath(Vector2 start, Vector2 end, Submarine hostSub = null, string errorMsgStr = null)
+        public SteeringPath FindPath(Vector2 start, Vector2 end, Submarine hostSub = null, string errorMsgStr = null, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null)
         {            
             float closestDist = 0.0f;
             PathNode startNode = null;
             foreach (PathNode node in nodes)
             {
+                if (startNodeFilter != null && !startNodeFilter(node)) { continue; }
                 Vector2 nodePos = node.Position;
                 if (hostSub != null)
                 {
@@ -219,6 +220,7 @@ namespace Barotrauma
             PathNode endNode = null;
             foreach (PathNode node in nodes)
             {
+                if (endNodeFilter != null && !endNodeFilter(node)) { continue; }
                 Vector2 nodePos = node.Position;
                 if (hostSub != null)
                 {

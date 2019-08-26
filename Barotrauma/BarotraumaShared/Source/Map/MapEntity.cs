@@ -339,6 +339,11 @@ namespace Barotrauma
                 hull.Update(deltaTime, cam);
             }
 
+            foreach (Structure structure in Structure.WallList)
+            {
+                structure.Update(deltaTime, cam);
+            }
+
             foreach (Gap gap in Gap.GapList)
             {
                 gap.Update(deltaTime, cam);

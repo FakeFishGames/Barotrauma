@@ -1,5 +1,5 @@
 using Barotrauma.Extensions;
-using Lidgren.Network;
+using Barotrauma.Networking;
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
@@ -53,7 +53,7 @@ namespace Barotrauma
             if (personalityTrait != null && TextManager.Language == "English")
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), headerTextArea.RectTransform),
-                   TextManager.AddPunctuation(':', TextManager.Get("PersonalityTrait"), personalityTrait.Name), font: font);
+                   TextManager.AddPunctuation(':', TextManager.Get("PersonalityTrait"), TextManager.Get("personalitytrait." + personalityTrait.Name.Replace(" ", ""))), font: font);
             }
 
             //spacing
@@ -220,7 +220,7 @@ namespace Barotrauma
         }
 
 
-        public static CharacterInfo ClientRead(string configPath, NetBuffer inc)
+        public static CharacterInfo ClientRead(string configPath, IReadMessage inc)
         {
             ushort infoID = inc.ReadUInt16();
             string newName = inc.ReadString();

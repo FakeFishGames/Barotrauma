@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <contentpackage name="Vanilla 0.9" path="Data/ContentPackages/Vanilla 0.9" corepackage="true" hideinworkshopmenu="true" gameversion="0.9.0.0">
   <Item file="Content/Items/idcard.xml" />
   <Item file="Content/Items/Alien/alienitems.xml" />
@@ -82,6 +82,7 @@
   <Submarine file="Submarines/Humpback.sub" />
   <Submarine file="Submarines/Dugong.sub" />
   <Submarine file="Submarines/Venture.sub" />
+  <Submarine file="Submarines/Berilia.sub" />
   <Submarine file="Submarines/Remora.sub" />
   <Submarine file="Submarines/RemoraDrone.sub" />
   <Text file="Content/Texts/EnglishVanilla.xml" />
@@ -91,6 +92,10 @@
   <Text file="Content/Texts/BrazilianPortugueseVanilla.xml" />
   <Text file="Content/Texts/SimplifiedChineseVanilla.xml" />
   <Text file="Content/Texts/TraditionalChineseVanilla.xml" />
+  <Text file="Content/Texts/CastilianSpanishVanilla.xml" />
+  <Text file="Content/Texts/LatinamericanSpanishVanilla.xml" />
+  <Text file="Content/Texts/PolishVanilla.xml" />
+  <Text file="Content/Texts/TurkishVanilla.xml" />
   <UIStyle file="Content/UI/style.xml"/>  
   <Afflictions file="Content/Afflictions.xml"/>
   <Structure file="Content/Map/StructurePrefabs.xml" />
@@ -104,6 +109,7 @@
   <MapGenerationParameters file="Content/Map/MapGenerationParameters.xml" />
   <LevelGenerationParameters file="Content/Map/LevelGenerationParameters.xml" />  
   <Missions file="Content/Missions.xml" />
+  <TraitorMissions file="Content/TraitorMissions.xml" />
   <NPCConversations file="Content/NPCConversations/NpcConversations_English.xml"/>
   <NPCConversations file="Content/NPCConversations/NpcConversations_German.xml"/>
   <NPCConversations file="Content/NPCConversations/NpcConversations_French.xml"/>

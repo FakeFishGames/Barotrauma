@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -282,7 +281,7 @@ namespace Barotrauma.Items.Components
                     Structure attachTarget = Structure.GetAttachTarget(item.WorldPosition);
                     canPlaceNode = attachTarget != null;
 
-                    sub = attachTarget?.Submarine;
+                    sub = sub ?? attachTarget?.Submarine;
                     newNodePos = sub == null ? 
                         item.WorldPosition :
                         item.WorldPosition - sub.Position - sub.HiddenSubPosition;
@@ -333,7 +332,8 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                newNodePos = RoundNode(item.Position, item.CurrentHull) - sub.HiddenSubPosition;
+                newNodePos = RoundNode(item.Position, item.CurrentHull);
+                if (sub != null) { newNodePos -= sub.HiddenSubPosition; }
                 canPlaceNode = true;
             }
 
@@ -724,7 +724,7 @@ namespace Barotrauma.Items.Components
             base.RemoveComponentSpecific();
         }
 
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             int eventIndex = msg.ReadRangedInteger(0, (int)Math.Ceiling(MaxNodeCount / (float)MaxNodesPerNetworkEvent));
             int nodeCount = msg.ReadRangedInteger(0, MaxNodesPerNetworkEvent);
@@ -738,7 +738,7 @@ namespace Barotrauma.Items.Components
 
             for (int i = 0; i < nodeCount; i++)
             {
-                nodePositions[nodeStartIndex + i] = new Vector2(msg.ReadFloat(), msg.ReadFloat());
+                nodePositions[nodeStartIndex + i] = new Vector2(msg.ReadSingle(), msg.ReadSingle());
             }
 
             if (nodePositions.Any(n => !MathUtils.IsValid(n)))

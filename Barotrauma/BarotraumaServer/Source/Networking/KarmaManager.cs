@@ -66,7 +66,15 @@ namespace Barotrauma
 
             foreach (Client bannedClient in bannedClients)
             {
-                GameMain.Server.BanClient(bannedClient, $"KarmaBanned~[banthreshold]={(int)KickBanThreshold}", duration: TimeSpan.FromSeconds(GameMain.Server.ServerSettings.AutoBanTime));
+                if (bannedClient.KarmaKickCount < KicksBeforeBan)
+                {
+                    GameMain.Server.KickClient(bannedClient, $"KarmaKicked~[banthreshold]={(int)KickBanThreshold}", resetKarma: true);            
+                }
+                else
+                {
+                    GameMain.Server.BanClient(bannedClient, $"KarmaBanned~[banthreshold]={(int)KickBanThreshold}", duration: TimeSpan.FromSeconds(GameMain.Server.ServerSettings.AutoBanTime));
+                }
+                bannedClient.KarmaKickCount++;
             }
         }
 
@@ -79,7 +87,7 @@ namespace Barotrauma
                 if (TestMode)
                 {
                     string msg =
-                        karmaChange < 0 ? $"You karma has decreased to {client.Karma}" : $"You karma has increased to {client.Karma}";
+                        karmaChange < 0 ? $"Your karma has decreased to {client.Karma}" : $"Your karma has increased to {client.Karma}";
                     if (!string.IsNullOrEmpty(debugKarmaChangeReason))
                     {
                         msg += $". Reason: {debugKarmaChangeReason}";
@@ -100,17 +108,17 @@ namespace Barotrauma
 
         private void UpdateClient(Client client, float deltaTime)
         {
-            if (client.Karma > KarmaDecayThreshold)
+            if (client.Character != null && !client.Character.Removed && !client.Character.IsDead)
             {
-                client.Karma -= KarmaDecay * deltaTime;
-            }
-            else if (client.Karma < KarmaIncreaseThreshold)
-            {
-                client.Karma += KarmaIncrease * deltaTime;
-            }
+                if (client.Karma > KarmaDecayThreshold)
+                {
+                    client.Karma -= KarmaDecay * deltaTime;
+                }
+                else if (client.Karma < KarmaIncreaseThreshold)
+                {
+                    client.Karma += KarmaIncrease * deltaTime;
+                }
 
-            if (client.Character != null && !client.Character.Removed)
-            {
                 //increase the strength of the herpes affliction in steps instead of linearly
                 //otherwise clients could determine their exact karma value from the strength
                 float herpesStrength = 0.0f;
@@ -129,6 +137,10 @@ namespace Barotrauma
                 else if (existingAffliction != null)
                 {
                     existingAffliction.Strength = herpesStrength;
+                    if (herpesStrength <= 0.0f)
+                    {
+                        client.Character.CharacterHealth.ReduceAffliction(null, "invertcontrols", 100.0f);
+                    }
                 }
 
                 //check if the client has disconnected an excessive number of wires
@@ -182,18 +194,28 @@ namespace Barotrauma
             if (target.IsDead || target.Removed) { return; }
 
             bool isEnemy = target.AIController is EnemyAIController || target.TeamID != attacker.TeamID;
-            if (GameMain.Server.TraitorManager != null)
+            if (GameMain.Server.TraitorManager?.Traitors != null)
             {
-                if (GameMain.Server.TraitorManager.TraitorList.Any(t => t.Character == target))
+                if (GameMain.Server.TraitorManager.Traitors.Any(t => t.Character == target))
                 {
                     //traitors always count as enemies
                     isEnemy = true;
                 }
-                if (GameMain.Server.TraitorManager.TraitorList.Any(t => t.Character == attacker && t.TargetCharacter == target))
+                if (GameMain.Server.TraitorManager.Traitors.Any(t => 
+                    t.Character == attacker &&
+                    t.CurrentObjective != null &&
+                    t.CurrentObjective.IsEnemy(target)))
                 {
                     //target counts as an enemy to the traitor
                     isEnemy = true;
                 }
+            }
+            
+            //attacking/healing clowns has a smaller effect on karma
+            if (target.HasEquippedItem("clownmask") &&
+                target.HasEquippedItem("clowncostume"))
+            {
+                damage *= 0.5f;
             }
 
             if (appliedAfflictions != null)
@@ -205,7 +227,7 @@ namespace Barotrauma
                 }
             }
 
-            if (target.AIController is EnemyAIController || target.TeamID != attacker.TeamID)
+            if (isEnemy)
             {
                 if (damage > 0)
                 {
@@ -242,6 +264,19 @@ namespace Barotrauma
             if (damageAmount > 0)
             {
                 if (StructureDamageKarmaDecrease <= 0.0f) { return; }
+
+                if (GameMain.Server.TraitorManager?.Traitors != null)
+                {                    
+                    if (GameMain.Server.TraitorManager.Traitors.Any(t => 
+                        t.Character == attacker && 
+                        t.CurrentObjective != null && 
+                        t.CurrentObjective.HasGoalsOfType<Traitor.GoalFloodPercentOfSub>()))
+                    {
+                        //traitor tasked to flood the sub -> damaging structures is ok
+                        return;
+                    }
+                }
+
                 Client client = GameMain.Server.ConnectedClients.Find(c => c.Character == attacker);
                 if (client != null)
                 {
@@ -326,6 +361,13 @@ namespace Barotrauma
 
             Client client = GameMain.Server.ConnectedClients.Find(c => c.Character == target);
             if (client == null) { return; }
+
+            //all penalties/rewards are halved when wearing a clown costume
+            if (target.HasEquippedItem("clownmask") &&
+                target.HasEquippedItem("clowncostume"))
+            {
+                amount *= 0.5f;
+            }
 
             client.Karma += amount;
             if (TestMode)

@@ -134,7 +134,7 @@ namespace Barotrauma.Items.Components
                 if (item.Submarine != null) pos += item.Submarine.DrawPosition;
                 pos.Y = -pos.Y;
 
-                if (brokenSprite == null || item.Health > 0.0f)
+                if (brokenSprite == null || !IsBroken)
                 {
                     spriteBatch.Draw(doorSprite.Texture, pos,
                         new Rectangle((int) (doorSprite.SourceRect.X + doorSprite.size.X * openState),
@@ -160,7 +160,7 @@ namespace Barotrauma.Items.Components
                 if (item.Submarine != null) pos += item.Submarine.DrawPosition;
                 pos.Y = -pos.Y;
 
-                if (brokenSprite == null || item.Health > 0.0f)
+                if (brokenSprite == null || !IsBroken)
                 {
                     spriteBatch.Draw(doorSprite.Texture, pos,
                         new Rectangle(doorSprite.SourceRect.X,
@@ -217,7 +217,7 @@ namespace Barotrauma.Items.Components
             
         }
 
-        public override void ClientRead(ServerNetObject type, Lidgren.Network.NetBuffer msg, float sendingTime)
+        public override void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             base.ClientRead(type, msg, sendingTime);
 

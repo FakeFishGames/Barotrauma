@@ -1,6 +1,5 @@
 ﻿using Barotrauma.Networking;
 using Barotrauma.Sounds;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -188,7 +187,9 @@ namespace Barotrauma.Items.Components
 
             if (loopingSound != null)
             {
-                if (Vector3.DistanceSquared(GameMain.SoundManager.ListenerPosition, new Vector3(position.X, position.Y, 0.0f)) > loopingSound.Range * loopingSound.Range)
+                float targetGain = 0.0f;
+                if (Vector3.DistanceSquared(GameMain.SoundManager.ListenerPosition, new Vector3(position.X, position.Y, 0.0f)) > loopingSound.Range * loopingSound.Range ||
+                    (targetGain = GetSoundVolume(loopingSound)) <= 0.0001f)
                 {
                     if (loopingSoundChannel != null)
                     {
@@ -220,7 +221,6 @@ namespace Barotrauma.Items.Components
                         lastMuffleCheckTime = (float)Timing.TotalTime;
                     }
                     loopingSoundChannel.Muffled = shouldMuffleLooping;
-                    float targetGain = GetSoundVolume(loopingSound);
                     float gainDiff = targetGain - loopingSoundChannel.Gain;
                     loopingSoundChannel.Gain += Math.Abs(gainDiff) < 0.1f ? gainDiff : Math.Sign(gainDiff) * 0.1f;
                     loopingSoundChannel.Position = new Vector3(position.X, position.Y, 0.0f);
@@ -258,7 +258,6 @@ namespace Barotrauma.Items.Components
                 itemSound = matchingSounds[index];
                 PlaySound(matchingSounds[index], position, user);
             }
-
         }
 
 
@@ -278,6 +277,8 @@ namespace Barotrauma.Items.Components
                 }
                 if (loopingSoundChannel == null || !loopingSoundChannel.IsPlaying)
                 {
+                    float volume = GetSoundVolume(itemSound);
+                    if (volume <= 0.0001f) { return; }
                     loopingSoundChannel = loopingSound.RoundSound.Sound.Play(
                         new Vector3(position.X, position.Y, 0.0f), 
                         0.01f,
@@ -291,7 +292,7 @@ namespace Barotrauma.Items.Components
             else
             {
                 float volume = GetSoundVolume(itemSound);
-                if (volume <= 0.0f) { return; }
+                if (volume <= 0.0001f) { return; }
                 SoundPlayer.PlaySound(itemSound.RoundSound.Sound, position, volume, itemSound.Range, item.CurrentHull);
             }
         }
@@ -465,14 +466,14 @@ namespace Barotrauma.Items.Components
         }
 
         //Starts a coroutine that will read the correct state of the component from the NetBuffer when correctionTimer reaches zero.
-        protected void StartDelayedCorrection(ServerNetObject type, NetBuffer buffer, float sendingTime, bool waitForMidRoundSync = false)
+        protected void StartDelayedCorrection(ServerNetObject type, IReadMessage buffer, float sendingTime, bool waitForMidRoundSync = false)
         {
             if (delayedCorrectionCoroutine != null) CoroutineManager.StopCoroutines(delayedCorrectionCoroutine);
 
             delayedCorrectionCoroutine = CoroutineManager.StartCoroutine(DoDelayedCorrection(type, buffer, sendingTime, waitForMidRoundSync));
         }
 
-        private IEnumerable<object> DoDelayedCorrection(ServerNetObject type, NetBuffer buffer, float sendingTime, bool waitForMidRoundSync)
+        private IEnumerable<object> DoDelayedCorrection(ServerNetObject type, IReadMessage buffer, float sendingTime, bool waitForMidRoundSync)
         {
             while (GameMain.Client != null && 
                 (correctionTimer > 0.0f || (waitForMidRoundSync && GameMain.Client.MidRoundSyncing)))

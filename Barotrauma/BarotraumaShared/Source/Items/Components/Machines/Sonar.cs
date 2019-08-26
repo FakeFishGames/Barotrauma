@@ -114,9 +114,9 @@ namespace Barotrauma.Items.Components
                 if (value == Mode.Passive)
                 {
                     currentPingIndex = -1;
-                    if (item.CurrentHull != null)
+                    if (item.AiTarget != null)
                     {
-                        item.CurrentHull.AiTarget.SectorDegrees = 360.0f;
+                        item.AiTarget.SectorDegrees = 360.0f;
                     }
                 }
 #if CLIENT
@@ -168,15 +168,10 @@ namespace Barotrauma.Items.Components
                         var activePing = activePings[currentPingIndex];
                         if (activePing.State > 1.0f)
                         {
-                            if (item.CurrentHull != null)
-                            {
-                                item.CurrentHull.AiTarget.SoundRange = Math.Max(Range * activePing.State / zoom, item.CurrentHull.AiTarget.SoundRange);
-                                item.CurrentHull.AiTarget.SectorDegrees = activePing.IsDirectional ? DirectionalPingSector : 360.0f;
-                                item.CurrentHull.AiTarget.SectorDir = new Vector2(pingDirection.X, -pingDirection.Y);
-                            }
                             if (item.AiTarget != null)
                             {
-                                item.AiTarget.SoundRange = Math.Max(Range * activePing.State / zoom, item.AiTarget.SoundRange);
+                                float range = MathUtils.InverseLerp(item.AiTarget.MinSoundRange, item.AiTarget.MaxSoundRange, Range * activePing.State / zoom);
+                                item.AiTarget.SoundRange = MathHelper.Lerp(item.AiTarget.MinSoundRange, item.AiTarget.MaxSoundRange, range);
                                 item.AiTarget.SectorDegrees = activePing.IsDirectional ? DirectionalPingSector : 360.0f;
                                 item.AiTarget.SectorDir = new Vector2(pingDirection.X, -pingDirection.Y);
                             }
@@ -200,9 +195,9 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    if (item.CurrentHull != null)
+                    if (item.AiTarget != null)
                     {
-                        item.CurrentHull.AiTarget.SectorDegrees = 360.0f;
+                        item.AiTarget.SectorDegrees = 360.0f;
                     }
                     currentPingIndex = -1;
                     aiPingCheckPending = false;
@@ -345,7 +340,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ServerRead(ClientNetObject type, Lidgren.Network.NetBuffer msg, Client c)
+        public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
         {
             bool isActive = msg.ReadBoolean();
             bool directionalPing = useDirectionalPing;
@@ -388,7 +383,7 @@ namespace Barotrauma.Items.Components
 #endif
         }
 
-        public void ServerWrite(Lidgren.Network.NetBuffer msg, Client c, object[] extraData = null)
+        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             msg.Write(currentMode == Mode.Active);
             if (currentMode == Mode.Active)

@@ -82,12 +82,13 @@ namespace Barotrauma.Items.Components
                     }
                 }
 #endif
-                if (AITarget != null) AITarget.Enabled = value;
                 isActive = value;
             }
         }
 
         private bool drawable = true;
+
+        public List<PropertyConditional> IsActiveConditionals;
 
         public bool Drawable
         {
@@ -208,11 +209,6 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        public AITarget AITarget
-        {
-            get;
-            private set;
-        }
 
         /// <summary>
         /// How useful the item is in combat? Used by AI to decide which item it should use as a weapon. For the sake of clarity, use a value between 0 and 100 (not enforced).
@@ -267,6 +263,15 @@ namespace Barotrauma.Items.Components
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
+                    case "activeconditional":
+                    case "isactive":
+                        IsActiveConditionals = IsActiveConditionals ?? new List<PropertyConditional>();
+                        foreach (XAttribute attribute in subElement.Attributes())
+                        {
+                            if (attribute.Name.ToString().ToLowerInvariant() == "targetitemcomponent") { continue; }
+                            IsActiveConditionals.Add(new PropertyConditional(attribute));
+                        }
+                        break;
                     case "requireditem":
                     case "requireditems":
                         RelatedItem ri = RelatedItem.Load(subElement, item.Name);
@@ -308,12 +313,6 @@ namespace Barotrauma.Items.Components
 
                         effectList.Add(statusEffect);
 
-                        break;
-                    case "aitarget":
-                        AITarget = new AITarget(item, subElement)
-                        {
-                            Enabled = isActive
-                        };
                         break;
                     default:
                         if (LoadElemProjSpecific(subElement)) break;
@@ -474,12 +473,6 @@ namespace Barotrauma.Items.Components
                 delayedCorrectionCoroutine = null;
             }
 
-            if (AITarget != null)
-            {
-                AITarget.Remove();
-                AITarget = null;
-            }
-
             RemoveComponentSpecific();
         }
 
@@ -496,11 +489,6 @@ namespace Barotrauma.Items.Components
                 loopingSoundChannel = null;
             }
 #endif
-            if (AITarget != null)
-            {
-                AITarget.Remove();
-                AITarget = null;
-            }
 
             ShallowRemoveComponentSpecific();
         }
@@ -788,6 +776,7 @@ namespace Barotrauma.Items.Components
         public virtual void Reset()
         {
             SerializableProperties = SerializableProperty.DeserializeProperties(this, originalElement);
+            if (this is Pickable) { canBePicked = true; }
             ParseMsg();
             OverrideRequiredItems(originalElement);
         }

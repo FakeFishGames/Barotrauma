@@ -404,7 +404,7 @@ namespace Barotrauma
             }
         }
 
-        public static void CopyFolder(string sourceDirName, string destDirName, bool copySubDirs)
+        public static void CopyFolder(string sourceDirName, string destDirName, bool copySubDirs, bool overwriteExisting = false)
         {
             // Get the subdirectories for the specified directory.
             DirectoryInfo dir = new DirectoryInfo(sourceDirName);
@@ -428,6 +428,10 @@ namespace Barotrauma
             foreach (FileInfo file in files)
             {
                 string temppath = Path.Combine(destDirName, file.Name);
+                if (overwriteExisting && File.Exists(temppath))
+                {
+                    File.Delete(temppath);
+                }
                 file.CopyTo(temppath, false);
             }
 

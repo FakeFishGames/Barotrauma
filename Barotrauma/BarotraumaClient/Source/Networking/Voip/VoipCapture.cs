@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using OpenAL;
 using System;
 using System.Linq;
@@ -97,7 +96,8 @@ namespace Barotrauma.Networking
                         UserData = "capturedevicenotfound"
                     };
                 }
-                GameAnalyticsManager.AddErrorEventOnce("Alc.CaptureDeviceOpen(" + deviceName + ") failed", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,"Error code: "+errorCode);
+                GameAnalyticsManager.AddErrorEventOnce("Alc.CaptureDeviceOpenFailed", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    "Alc.CaptureDeviceOpen(" + deviceName + ") failed. Error code: " + errorCode);
                 GameMain.Config.VoiceSetting = GameSettings.VoiceMode.Disabled;
                 Instance?.Dispose();
                 Instance = null;
@@ -234,7 +234,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public override void Write(NetBuffer msg)
+        public override void Write(IWriteMessage msg)
         {
             lock (buffers)
             {

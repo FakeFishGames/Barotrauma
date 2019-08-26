@@ -2,7 +2,6 @@
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -598,7 +597,7 @@ namespace Barotrauma
             return vel.ClampLength(ConvertUnits.ToDisplayUnits(ForceVelocityLimit)) * currentForceFluctuation;            
         }
 
-        public void ServerWrite(NetBuffer msg, Client c)
+        public void ServerWrite(IWriteMessage msg, Client c)
         {
             if (ForceFluctuationStrength > 0.0f)
             {

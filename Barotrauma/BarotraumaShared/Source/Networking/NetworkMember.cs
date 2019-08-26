@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Items.Components;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -9,9 +8,6 @@ namespace Barotrauma.Networking
 {
     enum ClientPacketHeader
     {
-        REQUEST_AUTH,   //ask the server if a password is needed, if so we'll get nonce for encryption
-        REQUEST_STEAMAUTH, //the same as REQUEST_AUTH, but in addition we want to authenticate the player's Steam ID
-        REQUEST_INIT,   //ask the server to give you initialization
         UPDATE_LOBBY,   //update state in lobby
         UPDATE_INGAME,  //update state ingame
 
@@ -64,7 +60,9 @@ namespace Barotrauma.Networking
 
         QUERY_STARTGAME,    //ask the clients whether they're ready to start
         STARTGAME,          //start a new round
-        ENDGAME
+        ENDGAME,
+
+        TRAITOR_MESSAGE
     }
     enum ServerNetObject
     {
@@ -76,6 +74,14 @@ namespace Barotrauma.Networking
         ENTITY_POSITION,
         ENTITY_EVENT,
         ENTITY_EVENT_INITIAL,
+    }
+
+    enum TraitorMessageType
+    {
+        Server,
+        ServerMessageBox,
+        Objective,
+        Console
     }
 
     enum VoteType
@@ -94,6 +100,7 @@ namespace Barotrauma.Networking
         Banned,
         Kicked,
         ServerShutdown,
+        ServerCrashed,
         ServerFull,
         AuthenticationRequired,
         SteamAuthenticationRequired,
@@ -132,13 +139,7 @@ namespace Barotrauma.Networking
 #if DEBUG
         public Dictionary<string, long> messageCount = new Dictionary<string, long>();
 #endif
-
-        public NetPeer NetPeer
-        {
-            get;
-            protected set;
-        }
-
+        
         protected string name;
 
         protected ServerSettings serverSettings;
@@ -153,12 +154,6 @@ namespace Barotrauma.Networking
         protected RespawnManager respawnManager;
 
         public bool ShowNetStats;
-
-        public int Port
-        {
-            get;
-            set;
-        }
 
         public int TickRate
         {
@@ -205,13 +200,7 @@ namespace Barotrauma.Networking
         {
             get { return serverSettings; }
         }
-        
-        public NetPeerConfiguration NetPeerConfiguration
-        {
-            get;
-            protected set;
-        }
-        
+
         public bool CanUseRadio(Character sender)
         {
             if (sender == null) return false;

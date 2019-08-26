@@ -56,11 +56,9 @@ namespace Barotrauma.Items.Components
         public MeleeWeapon(Item item, XElement element)
             : base(item, element)
         {
-            //throwForce = ToolBox.GetAttributeFloat(element, "throwforce", 1.0f);
-
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLowerInvariant() != "attack") continue;
+                if (subElement.Name.ToString().ToLowerInvariant() != "attack") { continue; }
                 attack = new Attack(subElement, item.Name + ", MeleeWeapon");
             }
             item.IsShootable = true;
@@ -70,23 +68,22 @@ namespace Barotrauma.Items.Components
 
         public override bool Use(float deltaTime, Character character = null)
         {
-            if (character == null || reloadTimer > 0.0f) return false;
-            if (Item.RequireAimToUse && !character.IsKeyDown(InputType.Aim) || hitting) return false;
+            if (character == null || reloadTimer > 0.0f) { return false; }
+            if (Item.RequireAimToUse && !character.IsKeyDown(InputType.Aim) || hitting) { return false; }
 
             //don't allow hitting if the character is already hitting with another weapon
             for (int i = 0; i < 2; i++ )
             {
-                if (character.SelectedItems[i] == null || character.SelectedItems[i] == Item) continue;
+                if (character.SelectedItems[i] == null || character.SelectedItems[i] == Item) { continue; }
 
                 var otherWeapon = character.SelectedItems[i].GetComponent<MeleeWeapon>();
-                if (otherWeapon == null) continue;
-
-                if (otherWeapon.hitting) return false;
+                if (otherWeapon == null) { continue; }
+                if (otherWeapon.hitting) { return false; }
             }
 
             SetUser(character);
 
-            if (hitPos < MathHelper.PiOver4) return false;
+            if (hitPos < MathHelper.PiOver4) { return false; }
 
             reloadTimer = reload;
 
@@ -94,21 +91,20 @@ namespace Barotrauma.Items.Components
             item.body.FarseerBody.CollidesWith = Physics.CollisionCharacter | Physics.CollisionWall;
             item.body.FarseerBody.OnCollision += OnCollision;
 
-            foreach (Limb l in character.AnimController.Limbs)
+            if (!character.AnimController.InWater)
             {
-                //item.body.FarseerBody.IgnoreCollisionWith(l.body.FarseerBody);
-
-                if (character.AnimController.InWater) continue;
-                if (l.type == LimbType.LeftFoot || l.type == LimbType.LeftThigh || l.type == LimbType.LeftLeg) continue;
-
-                if (l.type == LimbType.Head || l.type == LimbType.Torso)
+                foreach (Limb l in character.AnimController.Limbs)
                 {
-                    l.body.ApplyLinearImpulse(new Vector2(character.AnimController.Dir * 7.0f, -4.0f));                   
+                    if (l.type == LimbType.LeftFoot || l.type == LimbType.LeftThigh || l.type == LimbType.LeftLeg) { continue; }
+                    if (l.type == LimbType.Head || l.type == LimbType.Torso)
+                    {
+                        l.body.ApplyLinearImpulse(new Vector2(character.AnimController.Dir * 7.0f, -4.0f));                   
+                    }
+                    else
+                    {
+                        l.body.ApplyLinearImpulse(new Vector2(character.AnimController.Dir * 5.0f, -2.0f));
+                    }                
                 }
-                else
-                {
-                    l.body.ApplyLinearImpulse(new Vector2(character.AnimController.Dir * 5.0f, -2.0f));
-                }                
             }
             
             hitting = true;
@@ -121,7 +117,6 @@ namespace Barotrauma.Items.Components
         public override void Drop(Character dropper)
         {
             base.Drop(dropper);
-
             hitting = false;
             hitPos = 0.0f;
         }
@@ -133,17 +128,17 @@ namespace Barotrauma.Items.Components
         
         public override void Update(float deltaTime, Camera cam)
         {
-            if (!item.body.Enabled) return;
-            if (!picker.HasSelectedItem(item)) IsActive = false;
+            if (!item.body.Enabled) { return; }
+            if (!picker.HasSelectedItem(item)) { IsActive = false; }
 
             reloadTimer -= deltaTime;
             if (reloadTimer < 0) { reloadTimer = 0; }
 
-            if (!picker.IsKeyDown(InputType.Aim) && !hitting) hitPos = 0.0f;
+            if (!picker.IsKeyDown(InputType.Aim) && !hitting) { hitPos = 0.0f; }
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, picker);
 
-            if (item.body.Dir != picker.AnimController.Dir) Flip();
+            if (item.body.Dir != picker.AnimController.Dir) { Flip(); }
 
             AnimController ac = picker.AnimController;
 
@@ -236,16 +231,16 @@ namespace Barotrauma.Items.Components
             if (f2.Body.UserData is Limb)
             {
                 targetLimb = (Limb)f2.Body.UserData;
-                if (targetLimb.IsSevered || targetLimb.character == null) return false;
+                if (targetLimb.IsSevered || targetLimb.character == null) { return false; }
                 targetCharacter = targetLimb.character;
-                if (targetCharacter == picker) return false;
+                if (targetCharacter == picker){ return false; }
                 if (AllowHitMultiple)
                 {
-                    if (hitTargets.Contains(targetCharacter)) return false;
+                    if (hitTargets.Contains(targetCharacter)) { return false; }
                 }
                 else
                 {
-                    if (hitTargets.Any(t => t is Character)) return false;
+                    if (hitTargets.Any(t => t is Character)) { return false; }
                 }
                 hitTargets.Add(targetCharacter);
             }
@@ -256,11 +251,11 @@ namespace Barotrauma.Items.Components
                 targetLimb = targetCharacter.AnimController.GetLimb(LimbType.Torso); //Otherwise armor can be bypassed in strange ways
                 if (AllowHitMultiple)
                 {
-                    if (hitTargets.Contains(targetCharacter)) return false;
+                    if (hitTargets.Contains(targetCharacter)) { return false; }
                 }
                 else
                 {
-                    if (hitTargets.Any(t => t is Character)) return false;
+                    if (hitTargets.Any(t => t is Character)) { return false; }
                 }
                 hitTargets.Add(targetCharacter);
             }
@@ -269,11 +264,11 @@ namespace Barotrauma.Items.Components
                 targetStructure = (Structure)f2.Body.UserData;
                 if (AllowHitMultiple)
                 {
-                    if (hitTargets.Contains(targetStructure)) return true;
+                    if (hitTargets.Contains(targetStructure)) { return true; }
                 }
                 else
                 {
-                    if (hitTargets.Any(t => t is Structure)) return true;
+                    if (hitTargets.Any(t => t is Structure)) { return true; }
                 }
                 hitTargets.Add(targetStructure);
             }
@@ -303,8 +298,8 @@ namespace Barotrauma.Items.Components
                     return false;
                 }
             }
-            
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) return true;
+
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return true; }
 
 #if SERVER
             if (GameMain.Server != null && targetCharacter != null) //TODO: Log structure hits

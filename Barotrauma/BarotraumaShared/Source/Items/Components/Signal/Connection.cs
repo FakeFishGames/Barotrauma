@@ -218,6 +218,16 @@ namespace Barotrauma.Items.Components
 
         public void SetWire(int index, Wire wire)
         {
+            Wire previousWire = wires[index];
+            if (wire != previousWire && previousWire != null)
+            {
+                var otherConnection = previousWire.OtherConnection(this);
+                if (otherConnection != null)
+                {
+                    otherConnection.recipientsDirty = true;
+                }
+            }
+
             wires[index] = wire;
             recipientsDirty = true;
             if (wire != null)

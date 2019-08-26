@@ -76,7 +76,7 @@ namespace Facepunch.Steamworks
 
         }
 
-
+        bool registeredLobbyDataUpdated = false; 
         void OnLobbyList(LobbyMatchList_t callback, bool error)
         {
             if (error) return;
@@ -89,6 +89,9 @@ namespace Facepunch.Steamworks
             {
                 //add the lobby to the list of requests
                 ulong lobby = client.native.matchmaking.GetLobbyByIndex(i);
+
+                if (requests.Contains(lobby)) { continue; }
+                
                 requests.Add(lobby);
 
                 //cast to a LobbyList.Lobby
@@ -103,7 +106,11 @@ namespace Facepunch.Steamworks
                 {
                     //else we need to get the info for the missing lobby
                     client.native.matchmaking.RequestLobbyData(lobby);
-                    client.RegisterCallback<SteamNative.LobbyDataUpdate_t>( OnLobbyDataUpdated );
+                    if (!registeredLobbyDataUpdated)
+                    {
+                        client.RegisterCallback<SteamNative.LobbyDataUpdate_t>(OnLobbyDataUpdated);
+                        registeredLobbyDataUpdated = true;
+                    }
                 }
 
             }
@@ -115,7 +122,7 @@ namespace Facepunch.Steamworks
 
         void checkFinished()
         {
-            if (Lobbies.Count == requests.Count)
+            if (Lobbies.Count >= requests.Count)
             {
                 Finished = true;
                 return;
@@ -128,11 +135,12 @@ namespace Facepunch.Steamworks
             if (callback.Success == 1) //1 if success, 0 if failure
             {
                 //find the lobby that has been updated
-                Lobby lobby = Lobbies.Find(x => x.LobbyID == callback.SteamIDLobby);
+                Lobby lobby = Lobbies.Find(x => x != null && x.LobbyID == callback.SteamIDLobby);
 
                 //if this lobby isn't yet in the list of lobbies, we know that we should add it
                 if (lobby == null)
                 {
+                    lobby = Lobby.FromSteam(client, callback.SteamIDLobby);
                     Lobbies.Add(lobby);
                     checkFinished();
                 }
@@ -140,8 +148,6 @@ namespace Facepunch.Steamworks
                 //otherwise lobby data in general was updated and you should listen to see what changed
                 if (OnLobbiesUpdated != null) { OnLobbiesUpdated(); }
             }
-
-            
         }
 
         public Action OnLobbiesUpdated;

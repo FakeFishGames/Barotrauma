@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -20,7 +19,7 @@ namespace Barotrauma.Networking
             LoadClientPermissions();
         }
 
-        private void WriteNetProperties(NetBuffer outMsg)
+        private void WriteNetProperties(IWriteMessage outMsg)
         {
             outMsg.Write((UInt16)netProperties.Keys.Count);
             foreach (UInt32 key in netProperties.Keys)
@@ -30,7 +29,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void ServerAdminWrite(NetBuffer outMsg, Client c)
+        public void ServerAdminWrite(IWriteMessage outMsg, Client c)
         {
             //outMsg.Write(isPublic);
             //outMsg.Write(EnableUPnP);
@@ -43,11 +42,15 @@ namespace Barotrauma.Networking
             Whitelist.ServerAdminWrite(outMsg, c);
         }
 
-        public void ServerWrite(NetBuffer outMsg,Client c)
+        public void ServerWrite(IWriteMessage outMsg,Client c)
         {
             outMsg.Write(ServerName);
             outMsg.Write(ServerMessageText);
-            outMsg.WriteRangedInteger(1, 60, TickRate);
+            outMsg.Write((byte)MaxPlayers);
+            outMsg.Write(HasPassword);
+            outMsg.Write(isPublic);
+            outMsg.WritePadBits();
+            outMsg.WriteRangedIntegerDeprecated(1, 60, TickRate);
 
             WriteExtraCargo(outMsg);
 
@@ -67,7 +70,7 @@ namespace Barotrauma.Networking
             }
         }
         
-        public void ServerRead(NetIncomingMessage incMsg,Client c)
+        public void ServerRead(IReadMessage incMsg,Client c)
         {
             if (!c.HasPermission(Networking.ClientPermissions.ManageSettings)) return;
 
@@ -112,7 +115,7 @@ namespace Barotrauma.Networking
                     else
                     {
                         UInt32 size = incMsg.ReadVariableUInt32();
-                        incMsg.Position += 8 * size;
+                        incMsg.BitPosition += (int)(8 * size);
                     }
                 }
 
@@ -145,7 +148,7 @@ namespace Barotrauma.Networking
                 if (botSpawnMode > 1) botSpawnMode = 0;
                 BotSpawnMode = (BotSpawnMode)botSpawnMode;
 
-                float levelDifficulty = incMsg.ReadFloat();
+                float levelDifficulty = incMsg.ReadSingle();
                 if (levelDifficulty >= 0.0f) SelectedLevelDifficulty = levelDifficulty;
 
                 UseRespawnShuttle = incMsg.ReadBoolean();
@@ -177,24 +180,16 @@ namespace Barotrauma.Networking
 
             doc.Root.SetAttributeValue("name", ServerName);
             doc.Root.SetAttributeValue("public", isPublic);
-            doc.Root.SetAttributeValue("port", GameMain.Server.NetPeerConfiguration.Port);
+            doc.Root.SetAttributeValue("port", Port);
             if (Steam.SteamManager.USE_STEAM) doc.Root.SetAttributeValue("queryport", QueryPort);
             doc.Root.SetAttributeValue("maxplayers", maxPlayers);
-            doc.Root.SetAttributeValue("enableupnp", GameMain.Server.NetPeerConfiguration.EnableUPnP);
+            doc.Root.SetAttributeValue("enableupnp", EnableUPnP);
 
             doc.Root.SetAttributeValue("autorestart", autoRestart);
-
-            doc.Root.SetAttributeValue("SubSelection", SubSelectionMode.ToString());
-            doc.Root.SetAttributeValue("ModeSelection", ModeSelectionMode.ToString());
+            
             doc.Root.SetAttributeValue("LevelDifficulty", ((int)selectedLevelDifficulty).ToString());
-            doc.Root.SetAttributeValue("TraitorsEnabled", TraitorsEnabled.ToString());
-
-            /*doc.Root.SetAttributeValue("BotCount", BotCount);
-            doc.Root.SetAttributeValue("MaxBotCount", MaxBotCount);*/
-            doc.Root.SetAttributeValue("BotSpawnMode", BotSpawnMode.ToString());
-
+            
             doc.Root.SetAttributeValue("AllowedRandomMissionTypes", string.Join(",", AllowedRandomMissionTypes));
-
             doc.Root.SetAttributeValue("AllowedClientNameChars", string.Join(",", AllowedClientNameChars.Select(c => c.First + "-" + c.Second)));
             
             doc.Root.SetAttributeValue("ServerMessage", ServerMessageText);
@@ -239,18 +234,22 @@ namespace Barotrauma.Networking
 
             selectedLevelDifficulty = doc.Root.GetAttributeFloat("LevelDifficulty", 20.0f);
             GameMain.NetLobbyScreen.SetLevelDifficulty(selectedLevelDifficulty);
-
-            var traitorsEnabled = TraitorsEnabled;
-            Enum.TryParse(doc.Root.GetAttributeString("TraitorsEnabled", "No"), out traitorsEnabled);
-            TraitorsEnabled = traitorsEnabled;
+            
             GameMain.NetLobbyScreen.SetTraitorsEnabled(traitorsEnabled);
-
-            var botSpawnMode = BotSpawnMode.Normal;
-            Enum.TryParse(doc.Root.GetAttributeString("BotSpawnMode", "Normal"), out botSpawnMode);
-            BotSpawnMode = botSpawnMode;
-
-            //"65-90", "97-122", "48-59" = upper and lower case english alphabet and numbers
-            string[] allowedClientNameCharsStr = doc.Root.GetAttributeStringArray("AllowedClientNameChars", new string[] { "65-90", "97-122", "48-59" });
+            
+            string[] allowedClientNameCharsStr = doc.Root.GetAttributeStringArray("AllowedClientNameChars",
+                new string[] {
+                    "32-33",
+                    "38-46",
+                    "48-57",
+                    "65-90",
+                    "91",
+                    "93",
+                    "95-122",
+                    "192-255",
+                    "384-591",
+                    "1024-1279"
+                });
             foreach (string allowedClientNameCharRange in allowedClientNameCharsStr)
             {
                 string[] splitRange = allowedClientNameCharRange.Split('-');
@@ -329,7 +328,7 @@ namespace Barotrauma.Networking
             foreach (XElement clientElement in doc.Root.Elements())
             {
                 string clientName = clientElement.GetAttributeString("name", "");
-                string clientIP = clientElement.GetAttributeString("ip", "");
+                string clientEndPoint = clientElement.GetAttributeString("endpoint", null) ?? clientElement.GetAttributeString("ip", "");
                 string steamIdStr = clientElement.GetAttributeString("steamid", "");
 
                 if (string.IsNullOrWhiteSpace(clientName))
@@ -337,7 +336,7 @@ namespace Barotrauma.Networking
                     DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - all clients must have a name and an IP address.");
                     continue;
                 }
-                if (string.IsNullOrWhiteSpace(clientIP) && string.IsNullOrWhiteSpace(steamIdStr))
+                if (string.IsNullOrWhiteSpace(clientEndPoint) && string.IsNullOrWhiteSpace(steamIdStr))
                 {
                     DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - all clients must have an IP address or a Steam ID.");
                     continue;
@@ -410,7 +409,7 @@ namespace Barotrauma.Networking
                 }
                 else
                 {
-                    ClientPermissions.Add(new SavedClientPermission(clientName, clientIP, permissions, permittedCommands));
+                    ClientPermissions.Add(new SavedClientPermission(clientName, clientEndPoint, permissions, permittedCommands));
                 }
             }
         }
@@ -480,7 +479,7 @@ namespace Barotrauma.Networking
                 }
                 else
                 {
-                    clientElement.Add(new XAttribute("ip", clientPermission.IP));
+                    clientElement.Add(new XAttribute("endpoint", clientPermission.EndPoint));
                 }
 
                 if (matchingPreset == null)

@@ -149,7 +149,14 @@ namespace Barotrauma
                             character?.Speak(TextManager.GetWithVariable("DialogCannotRepair", "[itemname]", Item.Name, true), null, 0.0f, "cannotrepair", 10.0f);
                         }
                     }
-                    repairable.CurrentFixer = abandon && repairable.CurrentFixer == character ? null : character;
+                    if (abandon)
+                    {
+                        repairable.StopRepairing(character);
+                    }
+                    else
+                    {
+                        repairable.StartRepairing(character, Repairable.FixActions.Repair);
+                    }
                     break;
                 }
             }
@@ -161,7 +168,11 @@ namespace Barotrauma
                     constructor: () =>
                     {
                         previousCondition = -1;
-                        var objective = new AIObjectiveGoTo(Item, character, objectiveManager);
+                        var objective = new AIObjectiveGoTo(Item, character, objectiveManager)
+                        {
+                            // Don't stop in ladders, because we can't interact with other items while holding the ladders.
+                            endNodeFilter = node => node.Waypoint.Ladders == null
+                        };
                         if (repairTool != null)
                         {
                             objective.CloseEnough = repairTool.Range * 0.75f;

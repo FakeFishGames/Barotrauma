@@ -73,6 +73,7 @@ namespace Barotrauma.Tutorials
         private Character mechanic;
         private Sprite mechanic_repairIcon;
         private Color mechanic_repairIconColor;
+        private Sprite mechanic_weldIcon;
 
         public MechanicTutorial(XElement element) : base(element)
         {
@@ -97,6 +98,7 @@ namespace Barotrauma.Tutorials
             var repairOrder = Order.PrefabList.Find(order => order.AITag == "repairsystems");
             mechanic_repairIcon = repairOrder.SymbolSprite;
             mechanic_repairIconColor = repairOrder.Color;
+            mechanic_weldIcon = new Sprite("Content/UI/IconAtlas.png", new Rectangle(1, 256, 127, 127), new Vector2(0.5f, 0.5f));
 
             // Other tutorial items
             tutorial_securityFinalDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_securityfinaldoorlight")).GetComponent<LightComponent>();
@@ -309,7 +311,7 @@ namespace Barotrauma.Tutorials
                 yield return null;
             } while (!mechanic.HasEquippedItem("divingmask") || !mechanic.HasEquippedItem("weldingtool")); // Wait until equipped
             SetDoorAccess(mechanic_secondDoor, mechanic_secondDoorLight, true);
-            mechanic.AddActiveObjectiveEntity(mechanic_brokenWall_1, mechanic_repairIcon, mechanic_repairIconColor);
+            mechanic.AddActiveObjectiveEntity(mechanic_brokenWall_1, mechanic_weldIcon, mechanic_repairIconColor);
             do { yield return null; } while (WallHasDamagedSections(mechanic_brokenWall_1)); // Highlight until repaired
             mechanic.RemoveActiveObjectiveEntity(mechanic_brokenWall_1);
             RemoveCompletedObjective(segments[2]);
@@ -443,10 +445,10 @@ namespace Barotrauma.Tutorials
                         {
                             HighlightInventorySlot(mechanic_fabricator.OutputContainer.Inventory, "extinguisher", highlightColor, .5f, .5f, 0f);
 
-                            for (int i = 0; i < mechanic.Inventory.slots.Length; i++)
+                            /*for (int i = 0; i < mechanic.Inventory.slots.Length; i++)
                             {
                                 if (mechanic.Inventory.Items[i] == null) HighlightInventorySlot(mechanic.Inventory, i, highlightColor, .5f, .5f, 0f);
-                            }
+                            }*/
                         }
                         else if (mechanic_fabricator.InputContainer.Inventory.FindItemByIdentifier("aluminium") != null && mechanic_fabricator.InputContainer.Inventory.FindItemByIdentifier("sodium") != null && !mechanic_fabricator.IsActive)
                         {
@@ -521,7 +523,7 @@ namespace Barotrauma.Tutorials
             SetDoorAccess(tutorial_mechanicFinalDoor, tutorial_mechanicFinalDoorLight, true);
 
             // Room 7
-            mechanic.AddActiveObjectiveEntity(mechanic_brokenWall_2, mechanic_repairIcon, mechanic_repairIconColor);
+            mechanic.AddActiveObjectiveEntity(mechanic_brokenWall_2, mechanic_weldIcon, mechanic_repairIconColor);
             do { yield return null; } while (WallHasDamagedSections(mechanic_brokenWall_2));
             mechanic.RemoveActiveObjectiveEntity(mechanic_brokenWall_2);
             TriggerTutorialSegment(9, GameMain.Config.KeyBind(InputType.Use)); // Repairing machinery (pump)

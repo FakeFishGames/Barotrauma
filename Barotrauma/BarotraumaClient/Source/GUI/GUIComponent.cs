@@ -67,6 +67,21 @@ namespace Barotrauma
         }
 
         // TODO: refactor?
+
+        public GUIComponent FindChild(Func<GUIComponent, bool> predicate, bool recursive = false)
+        {
+            var matchingChild = Children.FirstOrDefault(predicate);
+            if (recursive && matchingChild == null)
+            {
+                foreach (GUIComponent child in Children)
+                {
+                    matchingChild = child.FindChild(predicate, recursive);
+                    if (matchingChild != null) return matchingChild;
+                }
+            }
+
+            return matchingChild;
+        }
         public GUIComponent FindChild(object userData, bool recursive = false)
         {
             var matchingChild = Children.FirstOrDefault(c => c.userData == userData);

@@ -3,7 +3,6 @@ using Barotrauma.Networking;
 using Barotrauma.RuinGeneration;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -1143,7 +1142,6 @@ namespace Barotrauma
             savedSubmarines.Add(sub);
         }
 
-
         public static void RefreshSavedSub(string filePath)
         {
             string fullPath = Path.GetFullPath(filePath);
@@ -1154,12 +1152,15 @@ namespace Barotrauma
                     savedSubmarines[i].Dispose();
                 }
             }
-            var sub = new Submarine(filePath);
-            if (!sub.IsFileCorrupted)
+            if (File.Exists(filePath))
             {
-                savedSubmarines.Add(sub);
+                var sub = new Submarine(filePath);
+                if (!sub.IsFileCorrupted)
+                {
+                    savedSubmarines.Add(sub);
+                }
+                savedSubmarines = savedSubmarines.OrderBy(s => s.filePath ?? "").ToList();
             }
-            savedSubmarines = savedSubmarines.OrderBy(s => s.filePath ?? "").ToList();
         }
 
         public static void RefreshSavedSubs()
@@ -1207,6 +1208,15 @@ namespace Barotrauma
                 {
                     DebugConsole.ThrowError("Couldn't open subdirectory \"" + subDirectory + "\"!", e);
                     return;
+                }
+            }
+
+            var contentPackageSubs = ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.Submarine);
+            foreach (string subPath in contentPackageSubs)
+            {
+                if (!filePaths.Any(fp => Path.GetFullPath(fp) == Path.GetFullPath(subPath)))
+                {
+                    filePaths.Add(subPath);
                 }
             }
 

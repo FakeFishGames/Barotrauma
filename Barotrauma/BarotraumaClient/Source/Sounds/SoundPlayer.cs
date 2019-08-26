@@ -393,19 +393,19 @@ namespace Barotrauma
                     if (Math.Abs(diff.X) < FireSoundRange && Math.Abs(diff.Y) < FireSoundRange)
                     {
                         Vector2 diffLeft = (fs.WorldPosition + new Vector2(fs.Size.X, fs.Size.Y / 2)) - listenerPos;
-                        if (diff.X < fs.Size.X / 2.0f) diff.X = 0.0f;
+                        if (Math.Abs(diff.X) < fs.Size.X / 2.0f) { diffLeft.X = 0.0f; }
                         if (diffLeft.X <= 0)
                         {
                             float distFallOffLeft = diffLeft.Length() / FireSoundRange;
                             if (distFallOffLeft < 0.99f)
                             {
-                                fireVolumeLeft[0] += (1.0f - distFallOffLeft) * (fs.Size.X / FireSoundLargeLimit);
+                                fireVolumeLeft[0] += (1.0f - distFallOffLeft);
                                 if (fs.Size.X > FireSoundLargeLimit) fireVolumeLeft[1] += (1.0f - distFallOffLeft) * ((fs.Size.X - FireSoundLargeLimit) / FireSoundLargeLimit);
                             }
                         }
 
                         Vector2 diffRight = (fs.WorldPosition + new Vector2(0.0f, fs.Size.Y / 2)) - listenerPos;
-                        if (diff.X < fs.Size.X / 2.0f) diff.X = 0.0f;
+                        if (Math.Abs(diff.X) < fs.Size.X / 2.0f) { diffRight.X = 0.0f; }
                         if (diffRight.X >= 0)
                         {
                             float distFallOffRight = diffRight.Length() / FireSoundRange;

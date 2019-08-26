@@ -101,6 +101,10 @@ namespace Barotrauma
 
         private GameTime fixedTime;
 
+        public string ConnectName;
+        public string ConnectEndpoint;
+        public UInt64 ConnectLobby;
+
         private static SpriteBatch spriteBatch;
 
         private Viewport defaultViewport;
@@ -174,6 +178,12 @@ namespace Barotrauma
             Config = new GameSettings();
 
             ConsoleArguments = args;
+
+            ConnectName = null;
+            ConnectEndpoint = null;
+            ConnectLobby = 0;
+
+            ToolBox.ParseConnectCommand(ConsoleArguments, out ConnectName, out ConnectEndpoint, out ConnectLobby);
 
             GUI.KeyboardDispatcher = new EventInput.KeyboardDispatcher(Window);
 
@@ -355,13 +365,13 @@ namespace Barotrauma
             }
 
             SoundManager = new Sounds.SoundManager();
-            SoundManager.SetCategoryGainMultiplier("default", Config.SoundVolume);
-            SoundManager.SetCategoryGainMultiplier("ui", Config.SoundVolume);
-            SoundManager.SetCategoryGainMultiplier("waterambience", Config.SoundVolume);
-            SoundManager.SetCategoryGainMultiplier("music", Config.MusicVolume);
-            SoundManager.SetCategoryGainMultiplier("voip", Config.VoiceChatVolume * 20.0f);
+            SoundManager.SetCategoryGainMultiplier("default", Config.SoundVolume, 0);
+            SoundManager.SetCategoryGainMultiplier("ui", Config.SoundVolume, 0);
+            SoundManager.SetCategoryGainMultiplier("waterambience", Config.SoundVolume, 0);
+            SoundManager.SetCategoryGainMultiplier("music", Config.MusicVolume, 0);
+            SoundManager.SetCategoryGainMultiplier("voip", Config.VoiceChatVolume * 20.0f, 0);
 
-            if (ConsoleArguments.Contains("skipintro")) {
+            if (ConsoleArguments.Contains("-skipintro")) {
                 Config.EnableSplashScreen = false;
             }
 
@@ -390,7 +400,7 @@ namespace Barotrauma
             {
                 if (SteamManager.AutoUpdateWorkshopItems())
                 {
-                    ContentPackage.LoadAll(ContentPackage.Folder);
+                    ContentPackage.LoadAll();
                     Config.ReloadContentPackages();
                 }
             }
@@ -494,7 +504,12 @@ namespace Barotrauma
 
             if (SteamManager.USE_STEAM)
             {
-                SteamWorkshopScreen     = new SteamWorkshopScreen();
+                SteamWorkshopScreen = new SteamWorkshopScreen();
+                if (SteamManager.IsInitialized)
+                {
+                    SteamManager.Instance.Friends.OnInvitedToGame += OnInvitedToGame;
+                    SteamManager.Instance.Lobby.OnLobbyJoinRequested += OnLobbyJoinRequested;
+                }
             }
             SubEditorScreen         = new SubEditorScreen();
 
@@ -594,6 +609,18 @@ namespace Barotrauma
             }
         }
 
+        public void OnInvitedToGame(Facepunch.Steamworks.SteamFriend friend, string connectCommand)
+        {
+            ToolBox.ParseConnectCommand(connectCommand.Split(' '), out ConnectName, out ConnectEndpoint, out ConnectLobby);
+
+            DebugConsole.NewMessage(ConnectName+", "+ConnectEndpoint,Color.Yellow);
+        }
+
+        public void OnLobbyJoinRequested(UInt64 lobbyId)
+        {
+            SteamManager.JoinLobby(lobbyId, true);
+        }
+
         /// <summary>
         /// Allows the game to run logic such as updating the world,
         /// checking for collisions, gathering input, and playing audio.
@@ -622,7 +649,7 @@ namespace Barotrauma
             {
                 if (WindowActive || !Config.MuteOnFocusLost)
                 {
-                    SoundManager.ListenerGain = 1.0f;
+                    SoundManager.ListenerGain = SoundManager.CompressionDynamicRangeGain;
                 }
                 else
                 {
@@ -674,6 +701,40 @@ namespace Barotrauma
                 }
                 else if (hasLoaded)
                 {
+                    if (ConnectLobby != 0)
+                    {
+                        if (Client != null)
+                        {
+                            Client.Disconnect();
+                            Client = null;
+
+                            GameMain.MainMenuScreen.Select();
+                        }
+                        Steam.SteamManager.JoinLobby(ConnectLobby, true);
+
+                        ConnectLobby = 0;
+                        ConnectEndpoint = null;
+                        ConnectName = null;
+                    }
+                    else if (!string.IsNullOrWhiteSpace(ConnectEndpoint))
+                    {
+                        if (Client != null)
+                        {
+                            Client.Disconnect();
+                            Client = null;
+
+                            GameMain.MainMenuScreen.Select();
+                        }
+                        UInt64 serverSteamId = SteamManager.SteamIDStringToUInt64(ConnectEndpoint);
+                        Client = new GameClient(SteamManager.GetUsername(),
+                                                serverSteamId != 0 ? null : ConnectEndpoint,
+                                                serverSteamId,
+                                                string.IsNullOrWhiteSpace(ConnectName) ? ConnectEndpoint : ConnectName);
+                        ConnectLobby = 0;
+                        ConnectEndpoint = null;
+                        ConnectName = null;
+                    }
+
                     SoundPlayer.Update((float)Timing.Step);
 
                     if (PlayerInput.KeyHit(Keys.Escape) && WindowActive)
@@ -753,6 +814,8 @@ namespace Barotrauma
                 CoroutineManager.Update((float)Timing.Step, paused ? 0.0f : (float)Timing.Step);
 
                 SteamManager.Update((float)Timing.Step);
+
+                SoundManager?.Update();
 
                 Timing.Accumulator -= Timing.Step;
 

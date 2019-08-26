@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -271,7 +270,7 @@ namespace Barotrauma.Items.Components
 
                         //calculate how much external power there is in the grid 
                         //(power coming from somewhere else than this reactor, e.g. batteries)
-                        float externalPower = CurrPowerConsumption - pt.CurrPowerConsumption;
+                        float externalPower = Math.Max(CurrPowerConsumption - pt.CurrPowerConsumption, 0);
                         //reduce the external power from the load to prevent overloading the grid
                         load = Math.Max(load, pt.PowerLoad - externalPower);
                     }
@@ -288,10 +287,17 @@ namespace Barotrauma.Items.Components
 
                 if (item.CurrentHull != null)
                 {
-                    //the sound can be heard from 20 000 display units away when running at full power
-                    item.CurrentHull.SoundRange = Math.Max(
-                        (-currPowerConsumption / MaxPowerOutput) * 20000.0f, 
-                        item.CurrentHull.AiTarget.SoundRange);
+                    var aiTarget = item.CurrentHull.AiTarget;
+                    float range = Math.Abs(currPowerConsumption) / MaxPowerOutput;
+                    float noise = MathHelper.Lerp(aiTarget.MinSoundRange, aiTarget.MaxSoundRange, range);
+                    aiTarget.SoundRange = Math.Max(aiTarget.SoundRange, noise);
+                }
+
+                if (item.AiTarget != null)
+                {
+                    var aiTarget = item.AiTarget;
+                    float range = Math.Abs(currPowerConsumption) / MaxPowerOutput;
+                    aiTarget.SoundRange = MathHelper.Lerp(aiTarget.MinSoundRange, aiTarget.MaxSoundRange, range);
                 }
             }
 
@@ -438,6 +444,8 @@ namespace Barotrauma.Items.Components
         public override void UpdateBroken(float deltaTime, Camera cam)
         {
             base.UpdateBroken(deltaTime, cam);
+
+            item.SendSignal(0, ((int)(temperature * 100.0f)).ToString(), "temperature_out", null);
 
             currPowerConsumption = 0.0f;
             Temperature -= deltaTime * 1000.0f;

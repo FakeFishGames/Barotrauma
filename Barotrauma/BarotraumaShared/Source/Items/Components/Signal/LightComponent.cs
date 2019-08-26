@@ -2,7 +2,6 @@
 using System;
 using System.Xml.Linq;
 using Barotrauma.Networking;
-using Lidgren.Network;
 #if CLIENT
 using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Lights;
@@ -251,10 +250,6 @@ namespace Barotrauma.Items.Components
                 light.Range = range;
 #endif
             }
-            if (AITarget != null)
-            {
-                UpdateAITarget(AITarget);
-            }
             if (item.AiTarget != null)
             {
                 UpdateAITarget(item.AiTarget);
@@ -267,6 +262,7 @@ namespace Barotrauma.Items.Components
         public override void UpdateBroken(float deltaTime, Camera cam)
         {
             light.Color = Color.Transparent;
+            lightBrightness = 0.0f;
         }
 
         protected override void RemoveComponentSpecific()
@@ -298,7 +294,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             msg.Write(IsOn);
         }

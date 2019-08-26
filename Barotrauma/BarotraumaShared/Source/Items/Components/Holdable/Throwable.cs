@@ -6,12 +6,10 @@ namespace Barotrauma.Items.Components
 {
     class Throwable : Holdable
     {
-        float throwForce;
+        private float throwForce, throwPos;
+        private bool throwing, throwDone;
 
-        float throwPos;
-
-        bool throwing;
-        bool throwDone;
+        private bool midAir;
 
         [Serialize(1.0f, false)]
         public float ThrowForce
@@ -57,7 +55,17 @@ namespace Barotrauma.Items.Components
         
         public override void Update(float deltaTime, Camera cam)
         {
-            if (!item.body.Enabled) return;
+            if (!item.body.Enabled) { return; }
+            if (midAir)
+            {
+                if (item.body.LinearVelocity.LengthSquared() < 0.01f)
+                {
+                    item.body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionPlatform;
+                    midAir = false;
+                }
+                return;
+            }
+
             if (picker == null || picker.Removed || !picker.HasSelectedItem(item))
             {
                 IsActive = false;
@@ -112,6 +120,10 @@ namespace Barotrauma.Items.Components
                     Character thrower = picker;
                     item.Drop(thrower, createNetworkEvent: GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer);
                     item.body.ApplyLinearImpulse(throwVector * throwForce * item.body.Mass * 3.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+
+                    //disable platform collisions until the item comes back to rest again
+                    item.body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
+                    midAir = true;
 
                     ac.GetLimb(LimbType.Head).body.ApplyLinearImpulse(throwVector * 10.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
                     ac.GetLimb(LimbType.Torso).body.ApplyLinearImpulse(throwVector * 10.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);

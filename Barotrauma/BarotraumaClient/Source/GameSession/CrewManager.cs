@@ -1251,6 +1251,7 @@ namespace Barotrauma
                 if (!hoverArea.Contains(PlayerInput.MousePosition) || PlayerInput.RightButtonClicked())
                 {
                     orderTargetFrame = null;
+                    OrderOptionButtons.Clear();
                 }
             }
         }
@@ -1361,7 +1362,9 @@ namespace Barotrauma
             {
                 reportButtonFrame.Visible = true;
 
-                var reportButtonParent = ChatBox ?? GameMain.Client.ChatBox;
+                var reportButtonParent = ChatBox ?? GameMain.Client?.ChatBox;
+                if (reportButtonParent == null) { return; }
+
                 reportButtonFrame.RectTransform.AbsoluteOffset = new Point(
                     Math.Min(reportButtonParent.GUIFrame.Rect.X, reportButtonParent.ToggleButton.Rect.X) - reportButtonFrame.Rect.Width - (int)(10 * GUI.Scale),
                     reportButtonParent.GUIFrame.Rect.Y);

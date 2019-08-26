@@ -9,10 +9,20 @@ namespace Barotrauma.Steam
     {
         public const bool USE_STEAM = true;
 
+        public const int STEAMP2P_OWNER_PORT = 30000;
+
         public const uint AppID = 602960;
-        
+
         private Facepunch.Steamworks.Client client;
-        private Server server;
+        private Facepunch.Steamworks.Server server;
+
+        private static List<string> initializationErrors = new List<string>();
+        public static IEnumerable<string> InitializationErrors
+        {
+            get { return initializationErrors; }
+        }
+
+        public const string MetadataFileName = "filelist.xml";
 
         private Dictionary<string, int> tagCommonness = new Dictionary<string, int>()
         {
@@ -61,6 +71,34 @@ namespace Barotrauma.Steam
         {
             if (!USE_STEAM) return;
             instance = new SteamManager();
+        }
+
+        public static ulong GetSteamID()
+        {
+            if (instance == null || !instance.isInitialized)
+            {
+                return 0;
+            }
+
+            if (instance.client != null)
+            {
+                return instance.client.SteamId;
+            }
+            else if (instance.server != null)
+            {
+                return instance.server.SteamId;
+            }
+
+            return 0;
+        }
+
+        public static string GetUsername()
+        {
+            if (instance == null || !instance.isInitialized || instance.client == null)
+            {
+                return "";
+            }
+            return instance.client.Username;
         }
 
         public static void OverlayCustomURL(string url)
@@ -145,6 +183,34 @@ namespace Barotrauma.Steam
             instance.server?.Dispose();
             instance.server = null;
             instance = null;
+        }
+
+        public static UInt64 SteamIDStringToUInt64(string str)
+        {
+            if (string.IsNullOrWhiteSpace(str)) { return 0; }
+            UInt64 retVal;
+            if (UInt64.TryParse(str, out retVal) && retVal >(1<<52)) { return retVal; }
+            if (str.ToUpper().IndexOf("STEAM_") != 0) { return 0; }
+            string[] split = str.Substring(6).Split(':');
+            if (split.Length != 3) { return 0; }
+
+            UInt64 universe = 0; UInt64 y = 0; UInt64 accountNumber = 0;
+            if (!UInt64.TryParse(split[0], out universe)) { return 0; }
+            if (!UInt64.TryParse(split[1], out y)) { return 0; }
+            if (!UInt64.TryParse(split[2], out accountNumber)) { return 0; }
+
+            UInt64 accountInstance = 1; UInt64 accountType = 1;
+
+            return (universe << 56) | (accountType << 52) | (accountInstance << 32) | (accountNumber << 1) | y;
+        }
+
+        public static string SteamIDUInt64ToString(UInt64 uint64)
+        {
+            UInt64 y = uint64 & 0x1;
+            UInt64 accountNumber = (uint64 >> 1) & 0x7fffffff;
+            UInt64 universe = (uint64 >> 56) & 0xff;
+
+            return "STEAM_" + universe.ToString() + ":" + y.ToString() + ":" + accountNumber.ToString();
         }
     }
 }

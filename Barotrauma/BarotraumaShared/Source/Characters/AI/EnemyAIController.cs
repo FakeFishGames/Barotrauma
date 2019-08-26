@@ -109,9 +109,9 @@ namespace Barotrauma
         private Dictionary<AITarget, AITargetMemory> targetMemories;
 
         //the eyesight of the NPC (0.0 = blind, 1.0 = sees every target within sightRange)
-        private float sight;
+        public float sight;
         //how far the NPC can hear targets from (0.0 = deaf, 1.0 = hears every target within soundRange)
-        private float hearing;
+        public float hearing;
 
         private float colliderSize;
 
@@ -270,11 +270,14 @@ namespace Barotrauma
             return null;
         }
 
-        public override void SelectTarget(AITarget target)
+        public override void SelectTarget(AITarget target) => SelectTarget(target, 100);
+
+        public void SelectTarget(AITarget target, float priority)
         {
             SelectedAiTarget = target;
             selectedTargetMemory = GetTargetMemory(target);
-            targetValue = 100.0f;
+            selectedTargetMemory.Priority = priority;
+            targetValue = priority;
         }
         
         public override void Update(float deltaTime)
@@ -985,7 +988,7 @@ namespace Barotrauma
                 var aiTarget = wallTarget.Structure.AiTarget;
                 if (aiTarget != null && SelectedAiTarget != aiTarget)
                 {
-                    SelectTarget(aiTarget);
+                    SelectTarget(aiTarget, GetTargetMemory(SelectedAiTarget).Priority);
                 }
             }
             if (SelectedAiTarget.Entity is IDamageable damageTarget)

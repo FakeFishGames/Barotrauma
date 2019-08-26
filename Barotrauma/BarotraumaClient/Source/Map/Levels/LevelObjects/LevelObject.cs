@@ -1,12 +1,12 @@
 ﻿using Barotrauma.Lights;
 using Barotrauma.Particles;
 using Barotrauma.Sounds;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 using Barotrauma.SpriteDeformations;
-using Lidgren.Network;
 using System.Linq;
 using FarseerPhysics.Dynamics;
 
@@ -267,7 +267,7 @@ namespace Barotrauma
             }
         }
 
-        public void ClientRead(NetBuffer msg)
+        public void ClientRead(IReadMessage msg)
         {
             for (int i = 0; i < Triggers.Count; i++)
             {

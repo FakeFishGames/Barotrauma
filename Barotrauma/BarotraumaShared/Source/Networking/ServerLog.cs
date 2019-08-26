@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace Barotrauma.Networking
 {
-    partial class ServerLog
+    public partial class ServerLog
     {
         private struct LogMessage
         {

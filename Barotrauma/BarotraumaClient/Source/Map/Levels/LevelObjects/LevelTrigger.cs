@@ -1,10 +1,10 @@
-﻿using Lidgren.Network;
+﻿using Barotrauma.Networking;
 
 namespace Barotrauma
 {
     partial class LevelTrigger
     {
-        public void ClientRead(NetBuffer msg)
+        public void ClientRead(IReadMessage msg)
         {
             if (ForceFluctuationStrength > 0.0f)
             {

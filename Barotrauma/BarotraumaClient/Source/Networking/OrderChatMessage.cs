@@ -5,7 +5,7 @@ namespace Barotrauma.Networking
 {
     partial class OrderChatMessage : ChatMessage
     {
-        public override void ClientWrite(NetOutgoingMessage msg)
+        public override void ClientWrite(IWriteMessage msg)
         {
             msg.Write((byte)ClientNetObject.CHAT_MESSAGE);
             msg.Write(NetStateID);

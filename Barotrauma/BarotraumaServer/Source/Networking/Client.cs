@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -7,8 +6,6 @@ namespace Barotrauma.Networking
 {
     partial class Client : IDisposable
     {
-        public ulong SteamID;
-
         public bool VoiceEnabled = true;
 
         public UInt16 LastRecvClientListUpdate = 0;
@@ -61,9 +58,11 @@ namespace Barotrauma.Networking
         public float DeleteDisconnectedTimer;
 
         public CharacterInfo CharacterInfo;
-        public NetConnection Connection { get; set; }
+        public NetworkConnection Connection { get; set; }
 
         public bool SpectateOnly;
+
+        public int KarmaKickCount;
         
         private float karma = 100.0f;
         public float Karma
@@ -108,28 +107,32 @@ namespace Barotrauma.Networking
             NeedsMidRoundSync = false;
         }
 
-        public static bool IsValidName(string name, GameServer server)
+        public static bool IsValidName(string name, ServerSettings serverSettings)
         {
             char[] disallowedChars = new char[] { ';', ',', '<', '>', '/', '\\', '[', ']', '"', '?' };
             if (name.Any(c => disallowedChars.Contains(c))) return false;
 
             foreach (char character in name)
             {
-                if (!server.ServerSettings.AllowedClientNameChars.Any(charRange => (int)character >= charRange.First && (int)character <= charRange.Second)) return false;
+                if (!serverSettings.AllowedClientNameChars.Any(charRange => (int)character >= charRange.First && (int)character <= charRange.Second)) return false;
             }
 
             return true;
         }
 
-        public bool IPMatches(string ip)
+        public bool EndpointMatches(string endpoint)
         {
-            if (Connection?.RemoteEndPoint == null) { return false; }
-            if (Connection.RemoteEndPoint.Address.IsIPv4MappedToIPv6 && 
-                Connection.RemoteEndPoint.Address.MapToIPv4().ToString() == ip)
+            if (Connection is LidgrenConnection lidgrenConn)
             {
-                return true;
+                if (lidgrenConn.IPEndPoint?.Address == null) { return false; }
+                if ((lidgrenConn.IPEndPoint?.Address.IsIPv4MappedToIPv6 ?? false) &&
+                    lidgrenConn.IPEndPoint?.Address.MapToIPv4().ToString() == endpoint)
+                {
+                    return true;
+                }
             }
-            return Connection.RemoteEndPoint.Address.ToString() == ip;
+            
+            return Connection.EndPointString == endpoint;
         }
 
         public void SetPermissions(ClientPermissions permissions, List<DebugConsole.Command> permittedConsoleCommands)

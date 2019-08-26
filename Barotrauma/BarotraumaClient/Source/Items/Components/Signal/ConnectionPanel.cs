@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -30,7 +29,7 @@ namespace Barotrauma.Items.Components
         
         public override bool ShouldDrawHUD(Character character)
         {
-            return character == Character.Controlled && character == user;
+            return character == Character.Controlled && character == user && character.SelectedConstruction == item;
         }
         
         public override void AddToGUIUpdateList()
@@ -40,7 +39,7 @@ namespace Barotrauma.Items.Components
 
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
-            if (character != Character.Controlled || character != user) return;
+            if (character != Character.Controlled || character != user || character.SelectedConstruction != item) { return; }
             
             if (HighlightedWire != null)
             {
@@ -64,13 +63,13 @@ namespace Barotrauma.Items.Components
         }
 
 
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             if (GameMain.Client.MidRoundSyncing)
             {
                 //delay reading the state until midround syncing is done
                 //because some of the wires connected to the panel may not exist yet
-                long msgStartPos = msg.Position;
+                long msgStartPos = msg.BitPosition;
                 foreach (Connection connection in Connections)
                 {
                     for (int i = 0; i < Connection.MaxLinked; i++)
@@ -83,8 +82,8 @@ namespace Barotrauma.Items.Components
                 {
                     msg.ReadUInt16();
                 }
-                int msgLength = (int)(msg.Position - msgStartPos);
-                msg.Position = msgStartPos;
+                int msgLength = (int)(msg.BitPosition - msgStartPos);
+                msg.BitPosition = (int)msgStartPos;
                 StartDelayedCorrection(type, msg.ExtractBits(msgLength), sendingTime, waitForMidRoundSync: true);
             }
             else
@@ -93,7 +92,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private void ApplyRemoteState(NetBuffer msg)
+        private void ApplyRemoteState(IReadMessage msg)
         {
             List<Wire> prevWires = Connections.SelectMany(c => c.Wires.Where(w => w != null)).ToList();
             List<Wire> newWires = new List<Wire>();

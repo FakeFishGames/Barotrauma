@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using System;
+﻿using System;
 
 namespace Barotrauma.Networking
 {
@@ -15,7 +14,7 @@ namespace Barotrauma.Networking
             serializable = entity;
         }
 
-        public void Write(NetBuffer msg)
+        public void Write(IWriteMessage msg)
         {
             msg.Write(CharacterStateID);
             serializable.ClientWrite(msg, Data);

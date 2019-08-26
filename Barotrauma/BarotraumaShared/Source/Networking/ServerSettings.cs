@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -14,21 +13,21 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Networking
 {
-    enum SelectionMode
+    public enum SelectionMode
     {
         Manual = 0, Random = 1, Vote = 2
     }
 
-    enum YesNoMaybe
+    public enum YesNoMaybe
     {
         No = 0, Maybe = 1, Yes = 2
     }
 
-    enum BotSpawnMode
+    public enum BotSpawnMode
     {
         Normal, Fill
     }
-    
+
     partial class ServerSettings : ISerializableEntity
     {
         public const string SettingsFile = "serversettings.xml";
@@ -57,25 +56,17 @@ namespace Barotrauma.Networking
 
         public class SavedClientPermission
         {
-            public readonly string IP;
+            public readonly string EndPoint;
             public readonly ulong SteamID;
             public readonly string Name;
             public List<DebugConsole.Command> PermittedCommands;
 
             public ClientPermissions Permissions;
 
-            public SavedClientPermission(string name, IPAddress ip, ClientPermissions permissions, List<DebugConsole.Command> permittedCommands)
+            public SavedClientPermission(string name, string endpoint, ClientPermissions permissions, List<DebugConsole.Command> permittedCommands)
             {
                 this.Name = name;
-                this.IP = ip.IsIPv4MappedToIPv6 ? ip.MapToIPv4().ToString() : ip.ToString();
-                this.Permissions = permissions;
-                this.PermittedCommands = permittedCommands;
-            }
-            public SavedClientPermission(string name, string ip, ClientPermissions permissions, List<DebugConsole.Command> permittedCommands)
-            {
-                this.Name = name;
-                this.IP = ip;
-
+                this.EndPoint = endpoint;
                 this.Permissions = permissions;
                 this.PermittedCommands = permittedCommands;
             }
@@ -139,9 +130,9 @@ namespace Barotrauma.Networking
                 }
             }
 
-            public void Read(NetBuffer msg)
+            public void Read(IReadMessage msg)
             {
-                long oldPos = msg.Position;
+                int oldPos = msg.BitPosition;
                 UInt32 size = msg.ReadVariableUInt32();
 
                 float x; float y; float z; float w;
@@ -152,7 +143,7 @@ namespace Barotrauma.Networking
                 {
                     case "float":
                         if (size != 4) break;
-                        property.SetValue(parentObject, msg.ReadFloat());
+                        property.SetValue(parentObject, msg.ReadSingle());
                         return;
                     case "int":
                         if (size != 4) break;
@@ -160,23 +151,23 @@ namespace Barotrauma.Networking
                         return;
                     case "vector2":
                         if (size != 8) break;
-                        x = msg.ReadFloat();
-                        y = msg.ReadFloat();
+                        x = msg.ReadSingle();
+                        y = msg.ReadSingle();
                         property.SetValue(parentObject, new Vector2(x, y));
                         return;
                     case "vector3":
                         if (size != 12) break;
-                        x = msg.ReadFloat();
-                        y = msg.ReadFloat();
-                        z = msg.ReadFloat();
+                        x = msg.ReadSingle();
+                        y = msg.ReadSingle();
+                        z = msg.ReadSingle();
                         property.SetValue(parentObject, new Vector3(x, y, z));
                         return;
                     case "vector4":
                         if (size != 16) break;
-                        x = msg.ReadFloat();
-                        y = msg.ReadFloat();
-                        z = msg.ReadFloat();
-                        w = msg.ReadFloat();
+                        x = msg.ReadSingle();
+                        y = msg.ReadSingle();
+                        z = msg.ReadSingle();
+                        w = msg.ReadSingle();
                         property.SetValue(parentObject, new Vector4(x, y, z, w));
                         return;
                     case "color":
@@ -196,17 +187,17 @@ namespace Barotrauma.Networking
                         property.SetValue(parentObject, new Rectangle(ix, iy, width, height));
                         return;
                     default:
-                        msg.Position = oldPos; //reset position to properly read the string
+                        msg.BitPosition = oldPos; //reset position to properly read the string
                         string incVal = msg.ReadString();
                         property.TrySetValue(parentObject, incVal);
                         return;
                 }
 
                 //size didn't match: skip this
-                msg.Position += 8 * size;
+                msg.BitPosition += (int)(8 * size);
             }
 
-            public void Write(NetBuffer msg, object overrideValue = null)
+            public void Write(IWriteMessage msg, object overrideValue = null)
             {
                 if (overrideValue == null) overrideValue = property.GetValue(parentObject);
                 switch (typeString)
@@ -287,7 +278,7 @@ namespace Barotrauma.Networking
             ServerName = serverName;
             Port = port;
             QueryPort = queryPort;
-            //EnableUPnP = enableUPnP;
+            EnableUPnP = enableUPnP;
             this.maxPlayers = maxPlayers;
             this.isPublic = isPublic;
 
@@ -328,7 +319,7 @@ namespace Barotrauma.Networking
                 }
             }
         }
-        
+
         public string ServerName;
 
         private string serverMessageText;
@@ -346,7 +337,9 @@ namespace Barotrauma.Networking
         public int Port;
 
         public int QueryPort;
-        
+
+        public bool EnableUPnP;
+
         public ServerLog ServerLog;
 
         public Voting Voting;
@@ -354,10 +347,10 @@ namespace Barotrauma.Networking
         public Dictionary<string, bool> MonsterEnabled { get; private set; }
 
         public Dictionary<ItemPrefab, int> ExtraCargo { get; private set; }
-        
+
         private TimeSpan sparseUpdateInterval = new TimeSpan(0, 0, 0, 3);
         private float selectedLevelDifficulty;
-        private string password;
+        private byte[] password;
 
         public float AutoRestartTimer;
 
@@ -370,7 +363,7 @@ namespace Barotrauma.Networking
         public List<SavedClientPermission> ClientPermissions { get; private set; } = new List<SavedClientPermission>();
 
         public WhiteList Whitelist { get; private set; }
-        
+
         [Serialize(20, true)]
         public int TickRate
         {
@@ -446,7 +439,7 @@ namespace Barotrauma.Networking
                 ServerDetailsChanged = true;
             }
         }
-        
+
         [Serialize(true, true)]
         public bool EndRoundAtLevelEnd
         {
@@ -514,9 +507,15 @@ namespace Barotrauma.Networking
 
         public bool HasPassword
         {
-            get { return !string.IsNullOrEmpty(password); }
+            get { return password != null; }
+#if CLIENT
+            set
+            {
+                password = value ? (password ?? new byte[1]) : null;
+            }
+#endif
         }
-        
+
         [Serialize(true, true)]
         public bool AllowVoteKick
         {
@@ -555,7 +554,7 @@ namespace Barotrauma.Networking
                 ServerDetailsChanged = true;
             }
         }
-        
+
         [Serialize(0, true)]
         public int BotCount
         {
@@ -569,7 +568,8 @@ namespace Barotrauma.Networking
             get;
             set;
         }
-        
+
+        [Serialize(BotSpawnMode.Normal, true)]
         public BotSpawnMode BotSpawnMode
         {
             get;
@@ -588,7 +588,7 @@ namespace Barotrauma.Networking
             get;
             set;
         }
-        
+
         [Serialize(true, true)]
         public bool AllowRewiring
         {
@@ -604,6 +604,7 @@ namespace Barotrauma.Networking
         }
 
         private YesNoMaybe traitorsEnabled;
+        [Serialize(YesNoMaybe.No, true)]
         public YesNoMaybe TraitorsEnabled
         {
             get { return traitorsEnabled; }
@@ -613,6 +614,13 @@ namespace Barotrauma.Networking
                 traitorsEnabled = value;
                 ServerDetailsChanged = true;
             }
+        }
+
+        [Serialize(defaultValue: 1, isSaveable: true)]
+        public int TraitorsMinPlayerCount
+        {
+            get;
+            set;
         }
 
         private SelectionMode subSelectionMode;
@@ -642,7 +650,7 @@ namespace Barotrauma.Networking
         }
 
         public BanList BanList { get; private set; }
-        
+
         [Serialize(0.6f, true)]
         public float EndVoteRequiredRatio
         {
@@ -663,23 +671,9 @@ namespace Barotrauma.Networking
             get;
             private set;
         }
-        
+
         [Serialize(120.0f, true)]
         public float KickAFKTime
-        {
-            get;
-            private set;
-        }
-
-        [Serialize(true, true)]
-        public bool TraitorUseRatio
-        {
-            get;
-            private set;
-        }
-
-        [Serialize(0.2f, true)]
-        public float TraitorRatio
         {
             get;
             private set;
@@ -719,7 +713,7 @@ namespace Barotrauma.Networking
             get;
             set;
         }
-        
+
         public int MaxPlayers
         {
             get { return maxPlayers; }
@@ -745,26 +739,42 @@ namespace Barotrauma.Networking
             get;
             private set;
         }
-        
+
         public void SetPassword(string password)
         {
             if (string.IsNullOrEmpty(password))
             {
-                this.password = "";
+                this.password = null;
             }
             else
             {
-                this.password = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password)));
+                this.password = Lidgren.Network.NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password));
             }
         }
 
-        public bool IsPasswordCorrect(string input, int nonce)
+        public static byte[] SaltPassword(byte[] password, int salt)
+        {
+            byte[] saltedPw = new byte[password.Length*2];
+            for (int i = 0; i < password.Length; i++)
+            {
+                saltedPw[(i * 2)] = password[i];
+                saltedPw[(i * 2) + 1] = (byte)((salt >> (8 * (i % 4))) & 0xff);
+            }
+            saltedPw = Lidgren.Network.NetUtility.ComputeSHAHash(saltedPw);
+            return saltedPw;
+        }
+
+        public bool IsPasswordCorrect(byte[] input, int salt)
         {
             if (!HasPassword) return true;
-            string saltedPw = password;
-            saltedPw = saltedPw + Convert.ToString(nonce);
-            saltedPw = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(saltedPw)));
-            return input == saltedPw;
+            byte[] saltedPw = SaltPassword(password, salt);
+            DebugConsole.NewMessage(ToolBox.ByteArrayToString(input)+" "+ToolBox.ByteArrayToString(saltedPw));
+            if (input.Length != saltedPw.Length) return false;
+            for (int i=0;i<input.Length;i++)
+            {
+                if (input[i] != saltedPw[i]) return false;
+            }
+            return true;
         }
 
         /// <summary>
@@ -795,7 +805,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void ReadMonsterEnabled(NetBuffer inc)
+        public void ReadMonsterEnabled(IReadMessage inc)
         {
             InitMonstersEnabled();
             List<string> monsterNames = MonsterEnabled.Keys.ToList();
@@ -806,7 +816,7 @@ namespace Barotrauma.Networking
             inc.ReadPadBits();
         }
 
-        public void WriteMonsterEnabled(NetBuffer msg, Dictionary<string, bool> monsterEnabled = null)
+        public void WriteMonsterEnabled(IWriteMessage msg, Dictionary<string, bool> monsterEnabled = null)
         {
             //monster spawn settings
             if (monsterEnabled == null) monsterEnabled = MonsterEnabled;
@@ -819,7 +829,7 @@ namespace Barotrauma.Networking
             msg.WritePadBits();
         }
 
-        public bool ReadExtraCargo(NetBuffer msg)
+        public bool ReadExtraCargo(IReadMessage msg)
         {
             bool changed = false;
             UInt32 count = msg.ReadUInt32();
@@ -844,7 +854,7 @@ namespace Barotrauma.Networking
             return changed;
         }
 
-        public void WriteExtraCargo(NetBuffer msg)
+        public void WriteExtraCargo(IWriteMessage msg)
         {
             if (ExtraCargo == null)
             {

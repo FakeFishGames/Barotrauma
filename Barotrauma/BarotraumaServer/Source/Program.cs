@@ -24,17 +24,29 @@ namespace Barotrauma
         static void Main(string[] args)
         {
             GameMain game = null;
-            Thread inputThread = null;
 
 #if !DEBUG
             try
             {
 #endif
                 game = new GameMain(args);
-                inputThread = new Thread(new ThreadStart(DebugConsole.UpdateCommandLine));
-                inputThread.Start();
+                DebugConsole.InputThread = null;
+#if !DEBUG
+                if (!args.Contains("-ownerkey") && !args.Contains("-steamid"))
+                {
+#endif
+                    DebugConsole.InputThread = new Thread(new ThreadStart(DebugConsole.UpdateCommandLine));
+                    DebugConsole.InputThread.IsBackground = true;
+                    DebugConsole.InputThread.Start();
+#if !DEBUG
+                }
+                else
+                {
+                    Console.WriteLine("Server launched through client, command line IO disabled");
+                }
+#endif
                 game.Run();
-                inputThread.Abort(); inputThread.Join();
+                DebugConsole.InputThread?.Abort(); DebugConsole.InputThread?.Join();
                 if (GameSettings.SendUserStatistics) GameAnalytics.OnQuit();
                 SteamManager.ShutDown();
 #if !DEBUG
@@ -42,7 +54,8 @@ namespace Barotrauma
             catch (Exception e)
             {
                 CrashDump(game, "servercrashreport.log", e);
-                inputThread.Abort(); inputThread.Join();
+                GameMain.Server?.NotifyCrash();
+                DebugConsole.InputThread?.Abort(); DebugConsole.InputThread?.Join();
             }
 #endif
         }
@@ -115,7 +128,7 @@ namespace Barotrauma
 
             if (GameSettings.SendUserStatistics)
             {
-                GameAnalytics.AddErrorEvent(EGAErrorSeverity.Error, crashReport);
+                GameAnalytics.AddErrorEvent(EGAErrorSeverity.Critical, crashReport);
                 GameAnalytics.OnQuit();
                 Console.Write("A crash report (\"crashreport.log\") was saved in the root folder of the game and sent to the developers.");
             }

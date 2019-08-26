@@ -92,6 +92,7 @@ namespace Barotrauma
         public void Init()
         {
             MissionPrefab.Init();
+            TraitorMissionPrefab.Init();
             MapEntityPrefab.Init();
             MapGenerationParams.Init();
             LevelGenerationParams.LoadPresets();
@@ -169,6 +170,7 @@ namespace Barotrauma
             bool enableUpnp = false;
             int maxPlayers = 10;
             int ownerKey = 0;
+            UInt64 steamId = 0;
 
             XDocument doc = XMLExtensions.TryLoadXml(ServerSettings.SettingsFile);
             if (doc?.Root == null)
@@ -224,6 +226,10 @@ namespace Barotrauma
                         int.TryParse(CommandLineArgs[i + 1], out ownerKey);
                         i++;
                         break;
+                    case "-steamid":
+                        UInt64.TryParse(CommandLineArgs[i + 1], out steamId);
+                        i++;
+                        break;
                 }
             }
 
@@ -235,12 +241,14 @@ namespace Barotrauma
                 password,
                 enableUpnp,
                 maxPlayers,
-                ownerKey);
+                ownerKey,
+                steamId);
         }
 
         public void CloseServer()
         {
-            Server.Disconnect();
+            Server?.Disconnect();
+            ShouldRun = false;
             Server = null;
         }
 
@@ -279,8 +287,9 @@ namespace Barotrauma
                 while (Timing.Accumulator >= Timing.Step)
                 {
                     DebugConsole.Update();
-                    if (Screen.Selected != null) Screen.Selected.Update((float)Timing.Step);
+                    Screen.Selected?.Update((float)Timing.Step);
                     Server.Update((float)Timing.Step);
+                    if (Server == null) { break; }
                     SteamManager.Update((float)Timing.Step);
                     CoroutineManager.Update((float)Timing.Step, (float)Timing.Step);
 

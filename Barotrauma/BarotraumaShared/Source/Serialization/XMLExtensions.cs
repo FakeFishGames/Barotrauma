@@ -289,6 +289,30 @@ namespace Barotrauma
 
             return intValue;
         }
+        public static ushort[] GetAttributeUshortArray(this XElement element, string name, ushort[] defaultValue)
+        {
+            if (element?.Attribute(name) == null) return defaultValue;
+
+            string stringValue = element.Attribute(name).Value;
+            if (string.IsNullOrEmpty(stringValue)) return defaultValue;
+
+            string[] splitValue = stringValue.Split(',');
+            ushort[] ushortValue = new ushort[splitValue.Length];
+            for (int i = 0; i < splitValue.Length; i++)
+            {
+                try
+                {
+                    ushort val = ushort.Parse(splitValue[i]);
+                    ushortValue[i] = val;
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Error in " + element + "! ", e);
+                }
+            }
+
+            return ushortValue;
+        }
 
         public static bool GetAttributeBool(this XElement element, string name, bool defaultValue)
         {

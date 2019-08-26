@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -31,6 +30,10 @@ namespace Barotrauma.Networking
                     else if (GUIComponent is GUIScrollBar scrollBar) return scrollBar.BarScrollValue;
                     else if (GUIComponent is GUIRadioButtonGroup radioButtonGroup) return radioButtonGroup.Selected;
                     else if (GUIComponent is GUIDropDown dropdown) return dropdown.SelectedData;
+                    else if (GUIComponent is GUINumberInput numInput)
+                    {
+                        if (numInput.InputType == GUINumberInput.NumberType.Int) { return numInput.IntValue; } else { return numInput.FloatValue; }
+                    }
                     return null;
                 }
                 set
@@ -38,9 +41,30 @@ namespace Barotrauma.Networking
                     if (GUIComponent == null) return;
                     else if (GUIComponent is GUITickBox tickBox) tickBox.Selected = (bool)value;
                     else if (GUIComponent is GUITextBox textBox) textBox.Text = (string)value;
-                    else if (GUIComponent is GUIScrollBar scrollBar) scrollBar.BarScrollValue = (float)value;
+                    else if (GUIComponent is GUIScrollBar scrollBar)
+                    {
+                        if (value.GetType() == typeof(int))
+                        {
+                            scrollBar.BarScrollValue = (int)value;
+                        }
+                        else
+                        {
+                            scrollBar.BarScrollValue = (float)value;
+                        }
+                    }
                     else if (GUIComponent is GUIRadioButtonGroup radioButtonGroup) radioButtonGroup.Selected = (Enum)value;
                     else if (GUIComponent is GUIDropDown dropdown) dropdown.SelectItem(value);
+                    else if (GUIComponent is GUINumberInput numInput)
+                    {
+                        if (numInput.InputType == GUINumberInput.NumberType.Int)
+                        {
+                            numInput.IntValue = (int)value;
+                        }
+                        else
+                        {
+                            numInput.FloatValue = (float)value;
+                        }
+                    }
                 }
             }
 
@@ -68,7 +92,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void ClientAdminRead(NetBuffer incMsg)
+        public void ClientAdminRead(IReadMessage incMsg)
         {
             int count = incMsg.ReadUInt16();
             for (int i = 0; i < count; i++)
@@ -91,7 +115,7 @@ namespace Barotrauma.Networking
                 else
                 {
                     UInt32 size = incMsg.ReadVariableUInt32();
-                    incMsg.Position += 8 * size;
+                    incMsg.BitPosition += (int)(8 * size);
                 }
             }
 
@@ -100,10 +124,14 @@ namespace Barotrauma.Networking
             Whitelist.ClientAdminRead(incMsg);
         }
 
-        public void ClientRead(NetBuffer incMsg)
+        public void ClientRead(IReadMessage incMsg)
         {
             ServerName = incMsg.ReadString();
             ServerMessageText = incMsg.ReadString();
+            MaxPlayers = incMsg.ReadByte();
+            HasPassword = incMsg.ReadBoolean();
+            isPublic = incMsg.ReadBoolean();
+            incMsg.ReadPadBits();
             TickRate = incMsg.ReadRangedInteger(1, 60);
             GameMain.NetworkMember.TickRate = TickRate;
 
@@ -123,7 +151,7 @@ namespace Barotrauma.Networking
         {
             if (!GameMain.Client.HasPermission(Networking.ClientPermissions.ManageSettings)) return;
 
-            NetOutgoingMessage outMsg = GameMain.NetworkMember.NetPeer.CreateMessage();
+            IWriteMessage outMsg = new WriteOnlyMessage();
 
             outMsg.Write((byte)ClientPacketHeader.SERVER_SETTINGS);
 
@@ -191,7 +219,7 @@ namespace Barotrauma.Networking
                 outMsg.Write(GameMain.NetLobbyScreen.SeedBox.Text);
             }
 
-            (GameMain.NetworkMember.NetPeer as NetClient).SendMessage(outMsg, NetDeliveryMethod.ReliableOrdered);
+            GameMain.Client.ClientPeer.Send(outMsg, DeliveryMethod.Reliable);
         }
 
         //GUI stuff
@@ -508,7 +536,7 @@ namespace Barotrauma.Networking
             var ragdollButtonBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), TextManager.Get("ServerSettingsAllowRagdollButton"));
             GetPropertyData("AllowRagdollButton").AssignGUIComponent(ragdollButtonBox);
 
-            var traitorRatioBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), TextManager.Get("ServerSettingsUseTraitorRatio"));
+            /*var traitorRatioBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), TextManager.Get("ServerSettingsUseTraitorRatio"));
 
             CreateLabeledSlider(roundsTab, "", out slider, out sliderLabel);
             var traitorRatioSlider = slider;
@@ -553,7 +581,7 @@ namespace Barotrauma.Networking
             GetPropertyData("TraitorRatio").AssignGUIComponent(traitorRatioSlider);
 
             traitorRatioSlider.OnMoved(traitorRatioSlider, traitorRatioSlider.BarScroll);
-            traitorRatioBox.OnSelected(traitorRatioBox);
+            traitorRatioBox.OnSelected(traitorRatioBox);*/
             
             var buttonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.07f), roundsTab.RectTransform), isHorizontal: true)
             {

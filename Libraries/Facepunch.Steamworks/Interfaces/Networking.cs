@@ -37,7 +37,10 @@ namespace Facepunch.Steamworks
             OnIncomingConnection = null;
             OnConnectionFailed = null;
             OnP2PData = null;
-            ListenChannels.Clear();
+            lock (ListenChannels)
+            {
+                ListenChannels.Clear();
+            }
         }
 
 
@@ -56,27 +59,34 @@ namespace Facepunch.Steamworks
             UpdateTimer.Reset();
             UpdateTimer.Start();
 
-            foreach ( var channel in ListenChannels )
+            lock (ListenChannels)
             {
-                while ( ReadP2PPacket( channel ) )
+                for (int i = 0; i < ListenChannels.Count; i++)
                 {
-                    // Nothing Here.
+                    while (ReadP2PPacket(ListenChannels[i]))
+                    {
+                        //handle listen channel being closed by OnP2PData callback
+                        if (i >= ListenChannels.Count) break;
+                    }
                 }
             }
         }
 
         /// <summary>
         /// Enable or disable listening on a specific channel.
-        /// If you donp't enable the channel we won't listen to it,
+        /// If you don't enable the channel we won't listen to it,
         /// so you won't be able to receive messages on it.
         /// </summary>
         public void SetListenChannel( int ChannelId, bool Listen )
         {
-            ListenChannels.RemoveAll( x => x == ChannelId );
-
-            if ( Listen  )
+            lock (ListenChannels)
             {
-                ListenChannels.Add( ChannelId );
+                ListenChannels.RemoveAll(x => x == ChannelId);
+
+                if (Listen)
+                {
+                    ListenChannels.Add(ChannelId);
+                }
             }
         }
 

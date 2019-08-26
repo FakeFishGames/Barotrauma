@@ -54,6 +54,9 @@ namespace Barotrauma.Items.Components
         [Serialize(false, false)]
         public bool RepairMultiple { get; set; }
 
+        [Serialize(false, false)]
+        public bool RepairThroughHoles { get; set; }
+
         [Serialize(0.0f, false)]
         public float FireProbability { get; set; }
 
@@ -146,10 +149,24 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            Vector2 targetPosition = item.WorldPosition;
-            targetPosition += new Vector2(
-                (float)Math.Cos(item.body.Rotation),
-                (float)Math.Sin(item.body.Rotation)) * Range * item.body.Dir;
+            Vector2 rayStart;
+            Vector2 sourcePos = character?.AnimController == null ? item.SimPosition : character.AnimController.AimSourceSimPos;
+            Vector2 barrelPos = item.SimPosition + ConvertUnits.ToSimUnits(TransformedBarrelPos);
+            //make sure there's no obstacles between the base of the item (or the shoulder of the character) and the end of the barrel
+            if (Submarine.PickBody(sourcePos, barrelPos, collisionCategory: Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionItemBlocking) == null)
+            {
+                //no obstacles -> we start the raycast at the end of the barrel
+                rayStart = ConvertUnits.ToSimUnits(item.WorldPosition + TransformedBarrelPos);
+            }
+            else
+            {
+                rayStart = ConvertUnits.ToSimUnits(item.WorldPosition);
+            }
+
+            Vector2 rayEnd = rayStart + 
+                ConvertUnits.ToSimUnits(new Vector2(
+                    (float)Math.Cos(item.body.Rotation),
+                    (float)Math.Sin(item.body.Rotation)) * Range * item.body.Dir);
 
             List<Body> ignoredBodies = new List<Body>();
             foreach (Limb limb in character.AnimController.Limbs)
@@ -161,11 +178,8 @@ namespace Barotrauma.Items.Components
 
             IsActive = true;
             activeTimer = 0.1f;
-
-            Vector2 rayStart    = ConvertUnits.ToSimUnits(item.WorldPosition);
-            Vector2 rayEnd      = ConvertUnits.ToSimUnits(targetPosition);
-
-            debugRayStartPos = item.WorldPosition;
+            
+            debugRayStartPos = ConvertUnits.ToDisplayUnits(rayStart);
             debugRayEndPos = ConvertUnits.ToDisplayUnits(rayEnd);
 
             if (character.Submarine == null)
@@ -203,7 +217,7 @@ namespace Barotrauma.Items.Components
             float lastPickedFraction = 0.0f;
             if (RepairMultiple)
             {
-                var bodies = Submarine.PickBodies(rayStart, rayEnd, ignoredBodies, collisionCategories, ignoreSensors: false, allowInsideFixture: true);
+                var bodies = Submarine.PickBodies(rayStart, rayEnd, ignoredBodies, collisionCategories, ignoreSensors: RepairThroughHoles, allowInsideFixture: true);
                 lastPickedFraction = Submarine.LastPickedFraction;
                 Type lastHitType = null;
                 hitCharacters.Clear();
@@ -243,7 +257,7 @@ namespace Barotrauma.Items.Components
             {
                 FixBody(user, deltaTime, degreeOfSuccess, 
                     Submarine.PickBody(rayStart, rayEnd, 
-                    ignoredBodies, collisionCategories, ignoreSensors: false, 
+                    ignoredBodies, collisionCategories, ignoreSensors: RepairThroughHoles, 
                     customPredicate: (Fixture f) => { return f?.Body?.UserData != null; },
                     allowInsideFixture: true));
                 lastPickedFraction = Submarine.LastPickedFraction;
@@ -324,6 +338,7 @@ namespace Barotrauma.Items.Components
             }
             else if (targetBody.UserData is Character targetCharacter)
             {
+                if (targetCharacter.Removed) { return false; }
                 targetCharacter.LastDamageSource = item;
                 ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, new List<ISerializableEntity>() { targetCharacter });
                 FixCharacterProjSpecific(user, deltaTime, targetCharacter);
@@ -331,6 +346,7 @@ namespace Barotrauma.Items.Components
             }
             else if (targetBody.UserData is Limb targetLimb)
             {
+                if (targetLimb.character == null || targetLimb.character.Removed) { return false; }
                 targetLimb.character.LastDamageSource = item;
                 ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, new List<ISerializableEntity>() { targetLimb.character, targetLimb });
                 FixCharacterProjSpecific(user, deltaTime, targetLimb.character);
@@ -506,9 +522,9 @@ namespace Barotrauma.Items.Components
                             if (propertyName != "stuck") { continue; }
                             if (door.SerializableProperties == null || !door.SerializableProperties.TryGetValue(propertyName, out SerializableProperty property)) { continue; }
                             object value = property.GetValue(target);
-                            if (value.GetType() == typeof(float))
+                            if (door.Stuck > 0)
                             {
-                                var progressBar = user.UpdateHUDProgressBar(door, door.Item.WorldPosition, (float)value / 100, Color.DarkGray * 0.5f, Color.White);
+                                var progressBar = user.UpdateHUDProgressBar(door, door.Item.WorldPosition, door.Stuck / 100, Color.DarkGray * 0.5f, Color.White);
                                 if (progressBar != null) { progressBar.Size = new Vector2(60.0f, 20.0f); }
                             }
                         }
