@@ -12,6 +12,7 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -30,6 +31,7 @@ namespace Barotrauma
         private readonly GUITextBox clientNameBox;
         private ServerInfo selectedServer;
 
+        //friends list
         private readonly GUILayoutGroup friendsButtonHolder;
 
         private GUIButton friendsDropdownButton;
@@ -57,6 +59,13 @@ namespace Barotrauma
         private List<FriendInfo> friendsList;
         private GUIFrame friendPopup;
         private double friendsListUpdateTime;
+
+        private Texture2D playStylesTexture;
+        public Sprite[] PlayStyleBanners
+        {
+            get;
+            private set;
+        }
 
         private bool masterServerResponded;
         private IRestResponse masterServerResponse;
@@ -384,6 +393,23 @@ namespace Barotrauma
 
             button.SelectedColor = button.Color;
             refreshDisableTimer = DateTime.Now;
+
+            //playstyle banners
+            //TODO: expose to content package?
+            PlayStyleBanners = new Sprite[Enum.GetValues(typeof(PlayStyle)).Length];
+
+            playStylesTexture = TextureLoader.FromFile("Content/UI/Server/PlayStyleBanners/PlayStyleBanners.png");
+            XDocument playStylesDoc = XMLExtensions.TryLoadXml("Content/UI/Server/PlayStyleBanners/PlayStyleBanners.xml");
+
+            XElement rootElement = playStylesDoc.Root;
+            foreach (var element in rootElement.Elements())
+            {
+                if (Enum.TryParse(element.Name.LocalName, out PlayStyle playStyle))
+                {
+                    Rectangle rectVec = element.GetAttributeRect("sourcerect", Rectangle.Empty);
+                    PlayStyleBanners[(int)playStyle] = new Sprite(playStylesTexture, rectVec, Vector2.Zero);
+                }
+            }
         }
 
         private void OnResolutionChanged()

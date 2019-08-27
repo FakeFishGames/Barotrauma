@@ -33,6 +33,7 @@ namespace Barotrauma.Networking
         public bool? AllowRespawn;
         public YesNoMaybe? TraitorsEnabled;
         public string GameMode;
+        public PlayStyle? PlayStyle;
 
         public bool? RespondedToSteamQuery = null;
 
@@ -89,6 +90,11 @@ namespace Barotrauma.Networking
             {
                 Stretch = true
             };
+
+            Sprite playStyleBannerSprite = GameMain.ServerListScreen.PlayStyleBanners[(int)Networking.PlayStyle.Serious];
+            float playStyleBannerAspectRatio = playStyleBannerSprite.SourceRect.Width / playStyleBannerSprite.SourceRect.Height;
+            var playStyleBanner = new GUIImage(new RectTransform(new Vector2(1.0f, 1.0f / playStyleBannerAspectRatio), previewContainer.RectTransform, scaleBasis: ScaleBasis.BothWidth),
+                                               GameMain.ServerListScreen.PlayStyleBanners[(int)Networking.PlayStyle.Serious], null, true);
 
             var columnContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), previewContainer.RectTransform))
             {

@@ -28,6 +28,15 @@ namespace Barotrauma.Networking
         Normal, Fill
     }
 
+    public enum PlayStyle
+    {
+        Roleplay = 0,
+        Casual = 1,
+        Serious = 2,
+        Rampage = 3,
+        SomethingDifferent = 4
+    }
+
     partial class ServerSettings : ISerializableEntity
     {
         public const string SettingsFile = "serversettings.xml";

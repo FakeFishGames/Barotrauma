@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<PlayStyleBanners>
+    <Roleplay sourcerect="0,0,2048,820" />
+    <Casual sourcerect="0,819,2048,819" /> <!-- ew -->
+    <Serious sourcerect="0,1638‬,2048,819" />
+    <Rampage sourcerect="0,2457,2048,819" />
+    <SomethingDifferent sourcerect="0,3276,2048,820" />
+</PlayStyleBanners>

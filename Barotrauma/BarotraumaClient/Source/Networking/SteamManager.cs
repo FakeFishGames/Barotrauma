@@ -416,6 +416,7 @@ namespace Barotrauma.Steam
 
                 serverInfo.GameStarted = lobby.GetData("gamestarted") == "True";
                 serverInfo.GameMode = lobby.GetData("gamemode");
+                if (Enum.TryParse(lobby.GetData("playstyle"), out PlayStyle playStyle)) serverInfo.PlayStyle = playStyle;
 
                 if (serverInfo.ContentPackageNames.Count != serverInfo.ContentPackageHashes.Count ||
                     serverInfo.ContentPackageHashes.Count != serverInfo.ContentPackageWorkshopUrls.Count)
@@ -510,6 +511,12 @@ namespace Barotrauma.Steam
                     {
                         serverInfo.GameMode = s.Rules["gamemode"];
                     }
+
+                    if (s.Rules.ContainsKey("playstyle"))
+                    {
+                        if (Enum.TryParse(s.Rules["playstyle"], out PlayStyle playStyle)) serverInfo.PlayStyle = playStyle;
+                    }
+
                     if (serverInfo.ContentPackageNames.Count != serverInfo.ContentPackageHashes.Count ||
                         serverInfo.ContentPackageHashes.Count != serverInfo.ContentPackageWorkshopUrls.Count)
                     {
