@@ -20,6 +20,7 @@
     spamfilterkarmadecrease="15"
     herpesthreshold="40"
     kickbanthreshold="1"
+    kicksbeforeban="3"
     karmanotificationinterval="15" />
   <Preset
     name="Strict"
@@ -41,6 +42,7 @@
     spamfilterkarmadecrease="25"
     herpesthreshold="40"
     kickbanthreshold="1"
+    kicksbeforeban="1"
     karmanotificationinterval="15" />
   <Preset
     name="Custom"
@@ -62,5 +64,6 @@
     spamfilterkarmadecrease="15"
     herpesthreshold="40"
     kickbanthreshold="1"
+    kicksbeforeban="3"
     karmanotificationinterval="15" />
 </KarmaManager>
