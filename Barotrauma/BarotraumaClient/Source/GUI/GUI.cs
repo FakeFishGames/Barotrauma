@@ -408,7 +408,7 @@ namespace Barotrauma
 
             if (Character.Controlled?.Inventory != null)
             {
-                if (!Character.Controlled.LockHands && Character.Controlled.Stun >= -0.1f && !Character.Controlled.IsDead)
+                if (!Character.Controlled.LockHands && Character.Controlled.Stun < 0.1f && !Character.Controlled.IsDead)
                 {
                     Inventory.DrawFront(spriteBatch);
                 }
