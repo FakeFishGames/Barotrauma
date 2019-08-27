@@ -260,7 +260,7 @@ namespace Barotrauma
                 {
                     State = AIState.Idle;
                 }
-                else if (Character.Health < FleeHealthThreshold && SwarmBehavior == null)
+                else if (Character.HealthPercentage < FleeHealthThreshold && SwarmBehavior == null)
                 {
                     // Don't flee from damage if in a swarm.
                     State = AIState.Escape;
@@ -889,12 +889,13 @@ namespace Barotrauma
                 if (AIParams.TryGetTarget(tag, out CharacterParams.TargetParams target))
                 {
                     target.State = AIState.Attack;
-                    target.Priority = 100f;
+                    target.Priority = Math.Max(target.Priority, 100f);
                 }
                 else
                 {
                     AIParams.TryAddNewTarget(tag, AIState.Attack, 100f, out _);
                 }
+                // If the target is a human and the human is inside a submarine, also target rooms. (TODO: should we remove this?)
                 if (attacker.Submarine != null && attacker.IsHuman)
                 {
                     if (AIParams.TryGetTarget("room", out CharacterParams.TargetParams room))

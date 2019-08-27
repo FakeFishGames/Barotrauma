@@ -404,6 +404,8 @@ namespace Barotrauma
             get { return CharacterHealth.Vitality; }
         }
 
+        public float HealthPercentage => CharacterHealth.HealthPercentage;
+
         public float MaxVitality
         {
             get { return CharacterHealth.MaxVitality; }

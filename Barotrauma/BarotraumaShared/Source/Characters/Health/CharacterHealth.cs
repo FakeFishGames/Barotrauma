@@ -125,6 +125,8 @@ namespace Barotrauma
 
         public float Vitality { get; private set; }
 
+        public float HealthPercentage => MathUtils.Percentage(Vitality, MaxVitality);
+
         public float MaxVitality
         {
             get
