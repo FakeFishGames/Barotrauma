@@ -310,8 +310,16 @@ namespace Barotrauma
                     return textTag;
                 }
             }
-
-            return string.Format(text, args);     
+            try
+            {
+                return string.Format(text, args);  
+            }   
+            catch (FormatException)
+            {
+                string errorMsg = "Failed to format text \"" + text + "\", args: " + string.Join(", ", args);
+                GameAnalyticsManager.AddErrorEventOnce("TextManager.GetFormatted:FormatException", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                return text;
+            }
         }
 
         public static string FormatServerMessage(string textId)
