@@ -23,6 +23,13 @@ namespace Barotrauma
                 get { return Math.Max(StructureDamageAccumulator, structureDamagePerSecond); }
                 set { structureDamagePerSecond = value; }
             }
+
+            //when did a given character last attack this one
+            public Dictionary<Character, double> LastAttackTime
+            {
+                get;
+                private set;
+            } = new Dictionary<Character, double>();
         }
 
         public bool TestMode = false;
@@ -41,13 +48,19 @@ namespace Barotrauma
             bannedClients.Clear();
             foreach (Client client in clients)
             {
-                var clientMemory = GetClientMemory(client);
                 UpdateClient(client, deltaTime);
 
                 if (perSecondUpdate < DateTime.Now)
                 {
+                    var clientMemory = GetClientMemory(client);
                     clientMemory.StructureDamagePerSecond = clientMemory.StructureDamageAccumulator;
                     clientMemory.StructureDamageAccumulator = 0.0f;
+
+                    var toRemove = clientMemory.LastAttackTime.Where(pair => pair.Value < Timing.TotalTime - AllowedRetaliationTime).Select(pair => pair.Key).ToList();
+                    foreach (var lastAttacker in toRemove)
+                    {
+                        clientMemory.LastAttackTime.Remove(lastAttacker);
+                    }
                 }
             }
             if (perSecondUpdate < DateTime.Now)
@@ -156,7 +169,7 @@ namespace Barotrauma
                         AdjustKarma(client.Character, karmaDecrease, "Disconnected excessive number of wires");
                     }
                 }                
-
+                
                 if (client.Character?.Info?.Job.Prefab.Identifier == "captain" && client.Character.SelectedConstruction != null)
                 {
                     if (client.Character.SelectedConstruction.GetComponent<Steering>() != null)
@@ -210,7 +223,30 @@ namespace Barotrauma
                     isEnemy = true;
                 }
             }
-            
+
+            if (damage > 0)
+            {
+                Client targetClient = GameMain.Server.ConnectedClients.Find(c => c.Character == target);
+                if (targetClient != null)
+                {
+                    var targetMemory = GetClientMemory(targetClient);
+                    targetMemory.LastAttackTime[attacker] = Timing.TotalTime;
+                }
+            }
+
+            Client attackerClient = GameMain.Server.ConnectedClients.Find(c => c.Character == attacker);
+            if (attackerClient != null)
+            {
+                //if the attacker has been attacked by the target within the last x seconds, ignore the damage
+                //(= no karma penalty from retaliating against someone who attacked you)
+                var attackerMemory = GetClientMemory(attackerClient);
+                if (attackerMemory.LastAttackTime.ContainsKey(target) &&
+                    attackerMemory.LastAttackTime[target] > Timing.TotalTime - AllowedRetaliationTime)
+                {
+                    damage = Math.Min(damage, 0);
+                }
+            }
+
             //attacking/healing clowns has a smaller effect on karma
             if (target.HasEquippedItem("clownmask") &&
                 target.HasEquippedItem("clowncostume"))
