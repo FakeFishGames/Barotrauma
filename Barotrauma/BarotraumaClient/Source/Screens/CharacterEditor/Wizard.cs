@@ -685,11 +685,38 @@ namespace Barotrauma.CharacterEditor
                                 LimbXElements.Values,
                                 JointXElements
                     };
-                    if (CharacterEditorScreen.Instance.CreateCharacter(Name, Path.GetDirectoryName(XMLPath), IsHumanoid, ContentPackage, ragdollParams))
+                    if (Character.ConfigFiles.Any(f => f.Root.GetAttributeString("speciesname", "").Equals(Name, StringComparison.OrdinalIgnoreCase)))
                     {
-                        GUI.AddMessage(GetCharacterEditorTranslation("CharacterCreated").Replace("[name]", Name), Color.Green, font: GUI.Font);
+                        var msgBox = new GUIMessageBox("", GetCharacterEditorTranslation("existingcharacterfoundreplaceverification"), new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
+                        {
+                            UserData = "verificationprompt"
+                        };
+                        msgBox.Buttons[0].OnClicked = (yesBtn, userdata) =>
+                        {
+                            msgBox.Close();
+                            if (CharacterEditorScreen.Instance.CreateCharacter(Name, Path.GetDirectoryName(XMLPath), IsHumanoid, ContentPackage, ragdollParams))
+                            {
+                                GUI.AddMessage(GetCharacterEditorTranslation("CharacterCreated").Replace("[name]", Name), Color.Green, font: GUI.Font);
+                            }
+                            Wizard.Instance.SelectTab(Tab.None);
+                            return true;
+                        };
+                        msgBox.Buttons[0].OnClicked += msgBox.Close;
+                        msgBox.Buttons[1].OnClicked = (_, userdata) =>
+                        {
+                            msgBox.Close();
+                            return true;
+                        };
+                        return false;
                     }
-                    Wizard.Instance.SelectTab(Tab.None);
+                    else
+                    {
+                        if (CharacterEditorScreen.Instance.CreateCharacter(Name, Path.GetDirectoryName(XMLPath), IsHumanoid, ContentPackage, ragdollParams))
+                        {
+                            GUI.AddMessage(GetCharacterEditorTranslation("CharacterCreated").Replace("[name]", Name), Color.Green, font: GUI.Font);
+                        }
+                        Wizard.Instance.SelectTab(Tab.None);
+                    }
                     return true;
                 };
                 return box;

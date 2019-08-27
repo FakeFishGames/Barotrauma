@@ -1543,18 +1543,24 @@ namespace Barotrauma.CharacterEditor
             string speciesName = name;
             // Config file
             string configFilePath = Path.Combine(mainFolder, $"{speciesName}.xml").Replace(@"\", @"/");
-            if (Character.ConfigFiles.Any(f => f.Root.GetAttributeString("speciesname", "").Equals(speciesName, StringComparison.OrdinalIgnoreCase)))
-            {
-                GUI.AddMessage(GetCharacterEditorTranslation("ExistingCharacterFound"), Color.Red, font: GUI.LargeFont);
-                // TODO: add a prompt: "Do you want to replace it?" + functionality
-                return false;
-            }
 
             if (!GameMain.Config.SelectedContentPackages.Contains(contentPackage))
             {
                 GameMain.Config.SelectContentPackage(contentPackage);
             }
             GameMain.Config.SaveNewPlayerConfig();
+
+            var duplicate = Character.ConfigFiles.FirstOrDefault(file => file.Root.GetAttributeString("speciesname", string.Empty).Equals(name, StringComparison.OrdinalIgnoreCase));
+            XElement overrideElement = null;
+            if (duplicate != null)
+            {
+                if (!File.Exists(configFilePath))
+                {
+                    // If the file exists, we just want to overwrite it.
+                    // If the file does not exist, it's part of a different content package -> we'll want to override it.
+                    overrideElement = new XElement("override");
+                }
+            }
 
             // Create the config file
             XElement mainElement = new XElement("Character",
@@ -1565,6 +1571,11 @@ namespace Barotrauma.CharacterEditor
                 new XElement("health"),
                 new XElement("ai"));
 
+            if (overrideElement != null)
+            {
+                overrideElement.Add(mainElement);
+                mainElement = overrideElement;
+            }
             XDocument doc = new XDocument(mainElement);
             if (!Directory.Exists(mainFolder))
             {
@@ -1574,18 +1585,19 @@ namespace Barotrauma.CharacterEditor
             // Add to the selected content package
             contentPackage.AddFile(configFilePath, ContentType.Character);
             contentPackage.Save(contentPackage.Path);
-            DebugConsole.NewMessage(GetCharacterEditorTranslation("ContentPackageSaved").Replace("[path]", contentPackage.Path));
-            
-            // TODO: allow overriding if explicitly accepted
-            Character.TryAddConfigFile(configFilePath, allowOverriding: false);
+            DebugConsole.NewMessage(GetCharacterEditorTranslation("ContentPackageSaved").Replace("[path]", contentPackage.Path));         
+            Character.TryAddConfigFile(configFilePath, forceOverride: true);
 
             // Ragdoll
-            string ragdollPath = RagdollParams.GetDefaultFile(speciesName);
+            RagdollParams.ClearCache();
+            string ragdollPath = RagdollParams.GetDefaultFile(speciesName, contentPackage);
             RagdollParams ragdollParams = isHumanoid
                 ? RagdollParams.CreateDefault<HumanRagdollParams>(ragdollPath, speciesName, ragdollConfig)
                 : RagdollParams.CreateDefault<FishRagdollParams>(ragdollPath, speciesName, ragdollConfig) as RagdollParams;
+
             // Animations
-            string animFolder = AnimationParams.GetFolder(speciesName);
+            AnimationParams.ClearCache();
+            string animFolder = AnimationParams.GetFolder(speciesName, contentPackage);
             foreach (AnimationType animType in Enum.GetValues(typeof(AnimationType)))
             {
                 switch (animType)
@@ -1600,7 +1612,7 @@ namespace Barotrauma.CharacterEditor
                     default: continue;
                 }
                 Type type = AnimationParams.GetParamTypeFromAnimType(animType, isHumanoid);
-                string fullPath = AnimationParams.GetDefaultFile(speciesName, animType);
+                string fullPath = AnimationParams.GetDefaultFile(speciesName, animType, contentPackage);
                 AnimationParams.Create(fullPath, speciesName, animType, type);
             }
             if (!AllFiles.Contains(configFilePath))

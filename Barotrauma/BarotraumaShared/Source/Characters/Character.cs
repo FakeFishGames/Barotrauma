@@ -882,16 +882,16 @@ namespace Barotrauma
         public static IEnumerable<string> ConfigFilePaths => configFiles.Keys;
         public static IEnumerable<XDocument> ConfigFiles => configFiles.Values;
 
-        public static bool TryAddConfigFile(string file, bool allowOverriding = false)
+        public static bool TryAddConfigFile(string file, bool forceOverride)
         {
             if (configFilePaths.None() || configFiles.None())
             {
                 LoadAllConfigFiles();
             }
-            return AddConfigFile(file, allowOverriding);
+            return AddConfigFile(file, forceOverride);
         }
 
-        private static bool AddConfigFile(string file, bool allowOverriding)
+        private static bool AddConfigFile(string file, bool forceOverride = false)
         {
             XDocument doc = XMLExtensions.TryLoadXml(file);
             if (doc == null)
@@ -904,16 +904,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError($"Duplicate path: {file}");
                 return false;
             }
-            XElement mainElement;
-            if (allowOverriding && doc.Root.IsOverride())
-            {
-                mainElement = doc.Root.FirstElement();
-            }
-            else
-            {
-                allowOverriding = false;
-                mainElement = doc.Root;
-            }
+            XElement mainElement = doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;
             var name = mainElement.GetAttributeString("name", null);
             if (name != null)
             {
@@ -932,7 +923,7 @@ namespace Barotrauma
             var duplicate = configFiles.FirstOrDefault(kvp => kvp.Value.Root.GetAttributeString("speciesname", string.Empty).Equals(name, StringComparison.OrdinalIgnoreCase));
             if (duplicate.Value != null)
             {
-                if (allowOverriding)
+                if (forceOverride || doc.Root.IsOverride())
                 {
                     DebugConsole.NewMessage($"Overriding the existing character '{name}' defined in '{duplicate.Key}' with '{file}'", Color.Yellow);
                     configFiles.Remove(duplicate.Key);
@@ -965,7 +956,7 @@ namespace Barotrauma
             configFilePaths.Clear();
             foreach (var file in ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.Character))
             {
-                AddConfigFile(file, allowOverriding: true);
+                AddConfigFile(file);
             }
         }
 

@@ -217,6 +217,8 @@ namespace Barotrauma
             return (T)anim;
         }
 
+        public static void ClearCache() => allAnimations.Clear();
+
         public static AnimationParams Create(string fullPath, string speciesName, AnimationType animationType, Type type)
         {
             if (type == typeof(HumanWalkParams))

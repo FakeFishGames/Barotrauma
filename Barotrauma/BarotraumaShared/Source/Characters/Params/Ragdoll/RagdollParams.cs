@@ -207,6 +207,8 @@ namespace Barotrauma
             return instance as T;
         }
 
+        public static void ClearCache() => allRagdolls.Clear();
+
         protected override void UpdatePath(string fullPath)
         {
             if (SpeciesName == null)
