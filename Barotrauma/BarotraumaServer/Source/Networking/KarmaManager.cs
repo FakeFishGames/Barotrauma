@@ -224,15 +224,21 @@ namespace Barotrauma
                 }
             }
 
-            if (damage > 0)
+            if (appliedAfflictions != null)
             {
-                Client targetClient = GameMain.Server.ConnectedClients.Find(c => c.Character == target);
-                if (targetClient != null)
+                foreach (Affliction affliction in appliedAfflictions)
                 {
-                    var targetMemory = GetClientMemory(targetClient);
-                    targetMemory.LastAttackTime[attacker] = Timing.TotalTime;
+                    if (MathUtils.NearlyEqual(affliction.Prefab.KarmaChangeOnApplied, 0.0f)) { continue; }
+                    damage -= affliction.Prefab.KarmaChangeOnApplied * affliction.Strength;
                 }
             }
+
+            Client targetClient = GameMain.Server.ConnectedClients.Find(c => c.Character == target);
+            if (damage > 0 && targetClient != null)
+            {
+                var targetMemory = GetClientMemory(targetClient);
+                targetMemory.LastAttackTime[attacker] = Timing.TotalTime;
+            }            
 
             Client attackerClient = GameMain.Server.ConnectedClients.Find(c => c.Character == attacker);
             if (attackerClient != null)
@@ -254,15 +260,13 @@ namespace Barotrauma
                 damage *= 0.5f;
             }
 
-            if (appliedAfflictions != null)
+            //damage scales according to the karma of the target
+            //(= smaller karma penalty from attacking someone who has a low karma)
+            if (damage > 0 && targetClient != null)
             {
-                foreach (Affliction affliction in appliedAfflictions)
-                {
-                    if (MathUtils.NearlyEqual(affliction.Prefab.KarmaChangeOnApplied, 0.0f)) { continue; }
-                    damage -= affliction.Prefab.KarmaChangeOnApplied * affliction.Strength; 
-                }
+                damage *= MathUtils.InverseLerp(0.0f, 50.0f, targetClient.Karma);
             }
-
+            
             if (isEnemy)
             {
                 if (damage > 0)
