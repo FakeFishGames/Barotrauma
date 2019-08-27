@@ -1357,7 +1357,7 @@ namespace Barotrauma
                                 AfflictionPrefab.InternalDamage.Instantiate((CPRSettings.DamageSkillThreshold - skill) * CPRSettings.DamageSkillMultiplier,
                                 source: character)
                             },
-                            0.0f, true, 0.0f, character);
+                            0.0f, true, 0.0f, attacker: null);
                     }
                     if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient) //Serverside code
                     {
