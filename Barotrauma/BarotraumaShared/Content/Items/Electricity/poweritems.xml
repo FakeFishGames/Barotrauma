@@ -42,7 +42,7 @@
       <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="2" mincondition="0.0" maxcondition="15.0" />
     </Repairable>
   </Item>
-  <Item name="Junction Box" identifier="junctionbox_tutorial" nameidentifier="junctionbox" category="Electrical" description="Junction box with only a single power output." scale="0.75">
+  <Item name="Junction Box" identifier="junctionbox_tutorial" nameidentifier="junctionbox" category="Electrical" description="Junction box with only a single power output." scale="0.75" hideinmenus="true">
     <Sprite texture="FF_junctionbox.png" sourcerect="0,0,73,121" depth="0.8" canflipx="false" origin="0.5,0.5" />
     <BrokenSprite texture="FF_junctionbox.png" sourcerect="73,0,73,123" depth="0.8" maxcondition="40" fadein="true" />
     <BrokenSprite texture="FF_junctionbox.png" sourcerect="146,0,73,123" depth="0.8" maxcondition="0" />
