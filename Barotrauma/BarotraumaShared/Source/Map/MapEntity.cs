@@ -344,7 +344,11 @@ namespace Barotrauma
                 structure.Update(deltaTime, cam);
             }
 
-            foreach (Gap gap in Gap.GapList)
+            //update gaps in random order, because otherwise in rooms with multiple gaps 
+            //the water/air will always tend to flow through the first gap in the list,
+            //which may lead to weird behavior like water draining down only through
+            //one gap in a room even if there are several
+            foreach (Gap gap in Gap.GapList.OrderBy(g => Rand.Int(int.MaxValue)))
             {
                 gap.Update(deltaTime, cam);
             }
