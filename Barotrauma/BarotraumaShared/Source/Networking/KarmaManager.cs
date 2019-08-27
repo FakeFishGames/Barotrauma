@@ -82,6 +82,9 @@ namespace Barotrauma
         [Serialize(10.0f, true)]
         public float KarmaNotificationInterval { get; set; }
 
+        [Serialize(120.0f, true)]
+        public float AllowedRetaliationTime { get; set; }
+
         private readonly AfflictionPrefab herpesAffliction;
 
         public Dictionary<string, XElement> Presets = new Dictionary<string, XElement>();
