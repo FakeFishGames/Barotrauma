@@ -3452,6 +3452,7 @@
   <traitorgoalwithdurationinfotext>[infotext] The goal must be completed for [duration].</traitorgoalwithdurationinfotext>
   <traitorgoalwithcumulativedurationinfotext>[infotext] The goal must be completed for total of [duration].</traitorgoalwithcumulativedurationinfotext>
   <failed>Failed</failed>
+  <pausemenuquitverificationeditor>Are you sure you want to return to the main menu? All your unsaved progress will be lost.</pausemenuquitverificationeditor>
 
   <!-- Changed values as of 13th of August -->
   <traitorgoaldestroyitems>Dispose of at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>
