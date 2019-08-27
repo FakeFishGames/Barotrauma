@@ -561,7 +561,10 @@ namespace Barotrauma.Networking
             }
             catch (Exception e)
             {
-                string errorMsg = "Error while reading a message from server. {" + e + "}\n" + e.StackTrace;
+                string errorMsg = "Error while reading a message from server. {" + e + "}. ";
+                if (GameMain.Client == null) { errorMsg += "Client disposed."; }                
+                errorMsg+= "\n" + e.StackTrace;
+
                 GameAnalyticsManager.AddErrorEventOnce("GameClient.Update:CheckServerMessagesException" + e.TargetSite.ToString(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 DebugConsole.ThrowError("Error while reading a message from server.", e);
                 new GUIMessageBox(TextManager.Get("Error"), TextManager.GetWithVariables("MessageReadError", new string[2] { "[message]", "[targetsite]" }, new string[2] { e.Message, e.TargetSite.ToString() }));
@@ -603,7 +606,7 @@ namespace Barotrauma.Networking
 
             if (IsServerOwner && connected && !connectCancelled)
             {
-                if (GameMain.ServerChildProcess?.HasExited??true)
+                if (GameMain.ServerChildProcess?.HasExited ?? true)
                 {
                     Disconnect();
                     var msgBox = new GUIMessageBox(TextManager.Get("ConnectionLost"), TextManager.Get("ServerProcessClosed"));
@@ -629,6 +632,18 @@ namespace Barotrauma.Networking
                     ReadIngameUpdate(inc);
                     break;
                 case ServerPacketHeader.VOICE:
+                    if (VoipClient == null)
+                    {
+                        string errorMsg = "Failed to read a voice packet from the server (VoipClient == null). ";
+                        if (GameMain.Client == null) { errorMsg += "Client disposed. "; }
+                        errorMsg += "\n" + Environment.StackTrace;
+                        GameAnalyticsManager.AddErrorEventOnce(
+                            "GameClient.ReadDataMessage:VoipClientNull", 
+                            GameMain.Client == null ? GameAnalyticsSDK.Net.EGAErrorSeverity.Error : GameAnalyticsSDK.Net.EGAErrorSeverity.Warning, 
+                            errorMsg);
+                        return;
+                    }
+
                     VoipClient.Read(inc);
                     break;
                 case ServerPacketHeader.QUERY_STARTGAME:
