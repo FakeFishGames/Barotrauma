@@ -38,7 +38,7 @@ namespace Barotrauma.Networking
                 SteamID = null;
                 PasswordSalt = null;
                 UpdateTime = Timing.TotalTime;
-                TimeOut = 20.0;
+                TimeOut = NetworkConnection.TimeoutThreshold;
                 AuthSessionStarted = false;
             }
         }
@@ -319,7 +319,7 @@ namespace Barotrauma.Networking
         {
             if (netServer == null) { return; }
 
-            pendingClient.TimeOut = 20.0;
+            pendingClient.TimeOut = NetworkConnection.TimeoutThreshold;
 
             ConnectionInitialization initializationStep = (ConnectionInitialization)inc.ReadByte();
 

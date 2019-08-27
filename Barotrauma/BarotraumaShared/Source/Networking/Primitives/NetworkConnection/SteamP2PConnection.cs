@@ -23,7 +23,7 @@ namespace Barotrauma.Networking
 
         public void Heartbeat()
         {
-            Timeout = 20.0;
+            Timeout = NetworkConnection.TimeoutThreshold;
         }
     }
 }
