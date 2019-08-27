@@ -202,9 +202,10 @@ namespace Barotrauma
                 T a = new T();
                 if (a.Load(selectedFile, speciesName))
                 {
-                    if (!anims.ContainsKey(a.Name))
+                    fileName = Path.GetFileNameWithoutExtension(selectedFile);
+                    if (!anims.ContainsKey(fileName))
                     {
-                        anims.Add(a.Name, a);
+                        anims.Add(fileName, a);
                     }
                 }
                 else
@@ -280,7 +281,7 @@ namespace Barotrauma
             instance.IsLoaded = instance.Deserialize(animationElement);
             instance.Save();
             instance.Load(fullPath, speciesName);
-            anims.Add(instance.Name, instance);
+            anims.Add(fileName, instance);
             DebugConsole.NewMessage($"[AnimationParams] New animation file of type {animationType} created.", Color.GhostWhite);
             return instance as T;
         }
