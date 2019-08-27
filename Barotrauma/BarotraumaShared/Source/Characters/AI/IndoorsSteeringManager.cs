@@ -312,8 +312,10 @@ namespace Barotrauma
                 Vector2 colliderBottom = character.AnimController.GetColliderBottom();
                 Vector2 colliderSize = collider.GetSize();
                 Vector2 velocity = collider.LinearVelocity;
+                // If the character is smaller than this, it fails to use the waypoint nodes, because they are always too high.
+                float minHeight = 1;
                 // Cannot use the head position, because not all characters have head or it can be below the total height of the character
-                float characterHeight = colliderSize.Y + character.AnimController.ColliderHeightFromFloor;
+                float characterHeight = Math.Max(colliderSize.Y + character.AnimController.ColliderHeightFromFloor, minHeight);
                 float horizontalDistance = Math.Abs(collider.SimPosition.X - currentPath.CurrentNode.SimPosition.X);
                 bool isAboveFeet = currentPath.CurrentNode.SimPosition.Y > colliderBottom.Y;
                 bool isNotTooHigh = currentPath.CurrentNode.SimPosition.Y < colliderBottom.Y + characterHeight;

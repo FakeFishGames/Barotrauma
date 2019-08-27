@@ -146,14 +146,24 @@ namespace Barotrauma.Items.Components
 
             if (item.body == null)
             {
-                transformedItemPos = new Vector2(item.Rect.X, item.Rect.Y);
-                if (item.Submarine != null) transformedItemPos += item.Submarine.DrawPosition;
-                transformedItemPos = transformedItemPos + ItemPos * item.Scale;
+                if (item.FlippedX)
+                {
+                    transformedItemPos.X = -transformedItemPos.X;
+                    transformedItemPos.X += item.Rect.Width;
+                    transformedItemInterval.X = -transformedItemInterval.X;
+                }
+                if (item.FlippedY)
+                {
+                    transformedItemPos.Y = -transformedItemPos.Y;
+                    transformedItemPos.Y -= item.Rect.Height;
+                    transformedItemInterval.Y = -transformedItemInterval.Y;
+                }
+                transformedItemPos += new Vector2(item.Rect.X, item.Rect.Y);
+                if (item.Submarine != null) { transformedItemPos += item.Submarine.DrawPosition; }
             }
             else
             {
                 Matrix transform = Matrix.CreateRotationZ(item.body.Rotation);
-
                 if (item.body.Dir == -1.0f)
                 {
                     transformedItemPos.X = -transformedItemPos.X;
@@ -168,6 +178,10 @@ namespace Barotrauma.Items.Components
             }
 
             Vector2 currentItemPos = transformedItemPos;
+
+            SpriteEffects spriteEffects = SpriteEffects.None;
+            if ((item.body != null && item.body.Dir == -1) || item.FlippedX) { spriteEffects |= SpriteEffects.FlipHorizontally; }
+            if (item.FlippedY) { spriteEffects |= SpriteEffects.FlipVertically; }
 
             int i = 0;
             foreach (Item containedItem in Inventory.Items)
@@ -192,7 +206,7 @@ namespace Barotrauma.Items.Components
                     containedItem.GetSpriteColor(),
                     -currentRotation,
                     containedItem.Scale,
-                    (item.body != null && item.body.Dir == -1) ? SpriteEffects.FlipHorizontally : SpriteEffects.None,
+                    spriteEffects,
                     depth: ContainedSpriteDepth < 0.0f ? containedItem.Sprite.Depth : ContainedSpriteDepth);
 
                 foreach (ItemContainer ic in containedItem.GetComponents<ItemContainer>())

@@ -221,8 +221,8 @@ namespace Barotrauma.Items.Components
 
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
 
-            float successFactor = requiredSkills.Count == 0 ? 1.0f : 0.0f;
-            
+            float successFactor = requiredSkills.Count == 0 ? 1.0f : DegreeOfSuccess(CurrentFixer, requiredSkills);
+
             //item must have been below the repair threshold for the player to get an achievement or XP for repairing it
             if (item.ConditionPercentage < ShowRepairUIThreshold)
             {

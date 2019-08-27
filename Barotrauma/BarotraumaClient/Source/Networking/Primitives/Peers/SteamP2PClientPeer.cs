@@ -66,7 +66,7 @@ namespace Barotrauma.Networking
 
             initializationStep = ConnectionInitialization.SteamTicketAndVersion;
 
-            timeout = 20.0;
+            timeout = NetworkConnection.TimeoutThreshold;
             heartbeatTimer = 1.0;
 
             isActive = true;
@@ -83,7 +83,7 @@ namespace Barotrauma.Networking
             if (!isActive) { return; }
             if (steamId != hostSteamId) { return; }
 
-            timeout = 20.0;
+            timeout = NetworkConnection.TimeoutThreshold;
 
             byte incByte = data[0];
             bool isCompressed = (incByte & (byte)PacketHeader.IsCompressed) != 0;

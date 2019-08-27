@@ -822,7 +822,8 @@
   <CPRButton
     color="230,230,230,255"
     hovercolor="255,255,255,255"
-    selectedcolor="230,230,230,255">
+    selectedcolor="230,230,230,255"
+    pressedcolor="200,200,200,255">
 
     <Sprite texture="Content/UI/Health/cprButton.png" state="None" tile="false" sourcerect ="0, 0, 64, 64"/>
     <Sprite texture="Content/UI/Health/cprButton.png" state="Hover" tile="false" sourcerect ="0, 0, 64, 64"/>
@@ -953,12 +954,13 @@
   <IndicatorButton
     color="255,255,255,255"
     hovercolor="255,255,255,255"
-    selectedcolor="255,255,255,255">
+    selectedcolor="255,255,255,255"    
+    pressedcolor="200,200,200,255">
 
-    <Sprite texture="Content/Items/MachineInterface.png" state="None" sourcerect ="0,92,121,46" slice="18,103,104,129"/>
-    <Sprite texture="Content/Items/MachineInterface.png" state="Hover" sourcerect ="0,92,121,46" slice="18,103,104,129"/>
-    <Sprite texture="Content/Items/MachineInterface.png" state="Selected" sourcerect ="122,92,121,46" slice="139,103,225,129"/>
-    <Sprite texture="Content/Items/MachineInterface.png" state="Pressed" sourcerect ="0,92,121,46" slice="18,103,104,129"/>
+    <Sprite texture="Content/Items/MachineInterface.png" state="None" sourcerect="0,92,121,46" slice="18,103,104,129"/>
+    <Sprite texture="Content/Items/MachineInterface.png" state="Hover" sourcerect="0,92,121,46" slice="18,103,104,129"/>
+    <Sprite texture="Content/Items/MachineInterface.png" state="Selected" sourcerect="122,92,121,46" slice="139,103,225,129"/>
+    <Sprite texture="Content/Items/MachineInterface.png" state="Pressed" sourcerect="0,92,121,46" slice="18,103,104,129"/>
 
     <GUITextBlock
       textcolor="0,0,0,255"

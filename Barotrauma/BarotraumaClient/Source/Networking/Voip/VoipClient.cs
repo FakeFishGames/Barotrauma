@@ -94,7 +94,7 @@ namespace Barotrauma.Networking
                     client.VoipSound = new VoipSound(GameMain.SoundManager, client.VoipQueue);
                 }
 
-                if (client.Character != null && !client.Character.IsDead && client.Character.SpeechImpediment <= 100.0f)
+                if (client.Character != null && !client.Character.IsDead && !client.Character.Removed && client.Character.SpeechImpediment <= 100.0f)
                 {
                     var messageType = ChatMessage.CanUseRadio(client.Character, out WifiComponent radio) ? ChatMessageType.Radio : ChatMessageType.Default;
                     client.Character.ShowSpeechBubble(1.25f, ChatMessage.MessageColor[(int)messageType]);
@@ -119,7 +119,7 @@ namespace Barotrauma.Networking
 
                 if (client.VoipSound.CurrentAmplitude > 0.1f) //TODO: might need to tweak
                 {
-                    if (client.Character != null)
+                    if (client.Character != null && !client.Character.Removed)
                     {
                         Vector3 clientPos = new Vector3(client.Character.WorldPosition.X, client.Character.WorldPosition.Y, 0.0f);
                         Vector3 listenerPos = GameMain.SoundManager.ListenerPosition;

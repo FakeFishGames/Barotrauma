@@ -12,10 +12,7 @@ namespace Barotrauma
     {
         private readonly XElement configElement;
         private readonly string configPath;
-
-        [Serialize(false, false)]
-        public bool HideInMenus { get; set; }
-        
+                
         public List<Pair<MapEntityPrefab, Rectangle>> DisplayEntities
         {
             get;
