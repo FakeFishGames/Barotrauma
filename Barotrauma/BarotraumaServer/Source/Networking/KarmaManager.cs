@@ -260,6 +260,14 @@ namespace Barotrauma
                 damage *= 0.5f;
             }
 
+            //smaller karma penalty for attacking someone who's aiming with a weapon
+            if (damage > 0.0f &&
+                target.IsKeyDown(InputType.Aim) &&
+                target.SelectedItems.Any(it => it != null && (it.GetComponent<MeleeWeapon>() != null || it.GetComponent<RangedWeapon>() != null)))
+            {
+                damage *= 0.5f;
+            }
+
             //damage scales according to the karma of the target
             //(= smaller karma penalty from attacking someone who has a low karma)
             if (damage > 0 && targetClient != null)
