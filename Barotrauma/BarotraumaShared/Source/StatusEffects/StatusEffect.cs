@@ -641,6 +641,7 @@ namespace Barotrauma
 
                     if (target is Character character)
                     {
+                        if (character.Removed) { continue; }
                         character.LastDamageSource = entity;
                         foreach (Limb limb in character.AnimController.Limbs)
                         {
@@ -651,6 +652,7 @@ namespace Barotrauma
                     }
                     else if (target is Limb limb)
                     {
+                        if (limb.character.Removed) { continue; }
                         limb.character.DamageLimb(entity.WorldPosition, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source);
                     }
                 }
@@ -669,7 +671,7 @@ namespace Barotrauma
                         targetLimb = limb;
                         targetCharacter = limb.character;
                     }
-                    if (targetCharacter != null)
+                    if (targetCharacter != null && !targetCharacter.Removed)
                     {
                         float prevVitality = targetCharacter.Vitality;
                         targetCharacter.CharacterHealth.ReduceAffliction(targetLimb, reduceAffliction.First, reduceAmount);
@@ -827,10 +829,12 @@ namespace Barotrauma
 
                         if (target is Character character)
                         {
+                            if (character.Removed) { continue; }
                             character.AddDamage(character.WorldPosition, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false);
                         }
                         else if (target is Limb limb)
                         {
+                            if (limb.character.Removed) { continue; }
                             limb.character.DamageLimb(limb.WorldPosition, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f);
                         }
                     }
@@ -848,7 +852,7 @@ namespace Barotrauma
                             targetLimb = limb;
                             targetCharacter = limb.character;
                         }
-                        if (targetCharacter != null)
+                        if (targetCharacter != null && !targetCharacter.Removed)
                         {
                             float prevVitality = targetCharacter.Vitality;
                             targetCharacter.CharacterHealth.ReduceAffliction(targetLimb, reduceAffliction.First, reduceAffliction.Second * deltaTime);
