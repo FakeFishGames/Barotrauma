@@ -33,7 +33,7 @@ namespace Barotrauma
             }
         }
 
-        public XElement MainElement => doc.Root;
+        public virtual XElement MainElement => doc.Root;
         public XElement OriginalElement { get; protected set; }
 
         protected virtual string GetName() => Path.GetFileNameWithoutExtension(FullPath).FormatCamelCaseWithSpaces();

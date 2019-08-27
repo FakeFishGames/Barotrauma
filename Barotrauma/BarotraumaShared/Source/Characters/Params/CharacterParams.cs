@@ -55,6 +55,8 @@ namespace Barotrauma
 
         protected override string GetName() => "Character Config File";
 
+        public override XElement MainElement => doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;
+
         public bool Load()
         {
             bool success= base.Load(File);
