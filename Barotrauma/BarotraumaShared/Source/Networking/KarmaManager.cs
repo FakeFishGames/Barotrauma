@@ -75,7 +75,7 @@ namespace Barotrauma
 
         [Serialize(1.0f, true)]
         public float KickBanThreshold { get; set; }
-
+        
         [Serialize(0, true)]
         public int KicksBeforeBan { get; set; }
         

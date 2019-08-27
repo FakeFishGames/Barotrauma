@@ -12,8 +12,8 @@ namespace Barotrauma
         {
             public List<Pair<Wire, float>> WireDisconnectTime = new List<Pair<Wire, float>>();
 
-            //the client's karma value when they were last sent a notification about it (e.g. "your karma is very low")
             public float PreviousNotifiedKarma;
+            public float PreviousKarmaNotificationTime;
 
             public float StructureDamageAccumulator;
             
@@ -38,9 +38,7 @@ namespace Barotrauma
         private readonly List<Client> bannedClients = new List<Client>();
 
         private DateTime perSecondUpdate;
-
-        private double KarmaNotificationTime;
-
+        
         public void UpdateClients(IEnumerable<Client> clients, float deltaTime)
         {
             if (!GameMain.Server.GameStarted) { return; }
@@ -65,18 +63,13 @@ namespace Barotrauma
             }
             if (perSecondUpdate < DateTime.Now)
             {
-                perSecondUpdate = DateTime.Now + new TimeSpan(0, 0, 1);
-            }
-
-            if (TestMode || Timing.TotalTime > KarmaNotificationTime)
-            {
                 foreach (Client client in clients)
                 {
                     SendKarmaNotifications(client);
                 }
-                KarmaNotificationTime = Timing.TotalTime + KarmaNotificationInterval;
+                perSecondUpdate = DateTime.Now + new TimeSpan(0, 0, 1);
             }
-
+            
             foreach (Client bannedClient in bannedClients)
             {
                 if (bannedClient.KarmaKickCount < KicksBeforeBan)
@@ -93,9 +86,12 @@ namespace Barotrauma
 
         private void SendKarmaNotifications(Client client, string debugKarmaChangeReason = "")
         {
+            //send a notification about karma changing if the karma has changed by x% within the last second
+
             var clientMemory = GetClientMemory(client);
             float karmaChange = client.Karma - clientMemory.PreviousNotifiedKarma;
-            if (Math.Abs(karmaChange) > KarmaNotificationInterval || (TestMode && Math.Abs(karmaChange) > 2.0f))
+            if (Math.Abs(karmaChange) > 1.0f &&
+                (TestMode || Math.Abs(karmaChange) / clientMemory.PreviousNotifiedKarma > KarmaNotificationInterval / 100.0f))
             {
                 if (TestMode)
                 {
@@ -115,8 +111,8 @@ namespace Barotrauma
                 {
                     GameMain.Server.SendDirectChatMessage(TextManager.Get(karmaChange < 0 ? "KarmaDecreasedUnknownAmount" : "KarmaIncreasedUnknownAmount"), client);
                 }
-                clientMemory.PreviousNotifiedKarma = client.Karma;
             }
+            clientMemory.PreviousNotifiedKarma = client.Karma;
         }
 
         private void UpdateClient(Client client, float deltaTime)
