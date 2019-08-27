@@ -14,13 +14,13 @@
     damageenemykarmaincrease="0.1"
     damagefriendlykarmadecrease="0.2"
     extinguishfirekarmaincrease="1"
-    allowedwiredisconnectionsperminute="3"
+    allowedwiredisconnectionsperminute="5"
     wiredisconnectionkarmadecrease="6.0"
     steersubkarmaincrease="0.15"
     spamfilterkarmadecrease="15"
     herpesthreshold="40"
     kickbanthreshold="1"
-    karmanotificationinterval="10" />
+    karmanotificationinterval="15" />
   <Preset
     name="Strict"
     karmadecay="0.08"
@@ -35,13 +35,13 @@
     damageenemykarmaincrease="0.1"
     damagefriendlykarmadecrease="0.3"
     extinguishfirekarmaincrease="1"
-    allowedwiredisconnectionsperminute="1"
+    allowedwiredisconnectionsperminute="3"
     wiredisconnectionkarmadecrease="10.0"
     steersubkarmaincrease="0.15"
     spamfilterkarmadecrease="25"
     herpesthreshold="40"
     kickbanthreshold="1"
-    karmanotificationinterval="10" />
+    karmanotificationinterval="15" />
   <Preset
     name="Custom"
     karmadecay="0.08"
@@ -56,11 +56,11 @@
     damageenemykarmaincrease="0.1"
     damagefriendlykarmadecrease="0.2"
     extinguishfirekarmaincrease="1"
-    allowedwiredisconnectionsperminute="3"
+    allowedwiredisconnectionsperminute="5"
     wiredisconnectionkarmadecrease="6.0"
     steersubkarmaincrease="0.15"
     spamfilterkarmadecrease="15"
     herpesthreshold="40"
     kickbanthreshold="1"
-    karmanotificationinterval="10" />
+    karmanotificationinterval="15" />
 </KarmaManager>

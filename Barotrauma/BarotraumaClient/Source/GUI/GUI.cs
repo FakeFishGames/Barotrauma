@@ -1563,9 +1563,10 @@ namespace Barotrauma
                 button.OnClicked += (btn, userData) =>
                 {
                     var quitButton = button;
-                    if (GameMain.GameSession != null)
+                    if (GameMain.GameSession != null || (Screen.Selected is CharacterEditorScreen charEditScreen || Screen.Selected is SubEditorScreen subEditScreen))
                     {
-                        var msgBox = new GUIMessageBox("", TextManager.Get("PauseMenuQuitVerification"), new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") })
+                        string text = GameMain.GameSession == null ? "PauseMenuQuitVerificationEditor" : "PauseMenuQuitVerification";
+                        var msgBox = new GUIMessageBox("", TextManager.Get(text), new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") })
                         {
                             UserData = "verificationprompt"
                         };

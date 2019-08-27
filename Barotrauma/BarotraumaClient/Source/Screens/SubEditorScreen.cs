@@ -158,7 +158,26 @@ namespace Barotrauma
 
             var button = new GUIButton(new RectTransform(new Vector2(0.07f, 0.9f), paddedTopPanel.RectTransform, Anchor.CenterLeft), TextManager.Get("Back"))
             {
-                OnClicked = GameMain.MainMenuScreen.ReturnToMainMenu
+                OnClicked = (b, d) =>
+                {
+                    var msgBox = new GUIMessageBox("", TextManager.Get("PauseMenuQuitVerificationEditor"), new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") })
+                    {
+                        UserData = "verificationprompt"
+                    };
+                    msgBox.Buttons[0].OnClicked = (yesBtn, userdata) =>
+                    {
+                        GUIMessageBox.CloseAll();
+                        GameMain.MainMenuScreen.Select();
+                        return true;
+                    };
+                    msgBox.Buttons[0].OnClicked += msgBox.Close;
+                    msgBox.Buttons[1].OnClicked = (_, userdata) =>
+                    {
+                        msgBox.Close();
+                        return true;
+                    };
+                    return true;
+                }
             };
 
             button = new GUIButton(new RectTransform(new Vector2(0.07f, 0.9f), paddedTopPanel.RectTransform, Anchor.CenterLeft) { RelativeOffset = new Vector2(0.07f, 0.0f) }, TextManager.Get("OpenSubButton"))
