@@ -737,7 +737,7 @@ namespace Barotrauma.Networking
 
             string[] splitMsg = disconnectMsg.Split('/');
             DisconnectReason disconnectReason = DisconnectReason.Unknown;
-            if (splitMsg.Length > 0) Enum.TryParse(splitMsg[0], out disconnectReason);
+            if (splitMsg.Length > 0) { Enum.TryParse(splitMsg[0], out disconnectReason); }
 
             if (disconnectMsg == Lidgren.Network.NetConnection.NoResponseMessage)
             {
@@ -745,6 +745,19 @@ namespace Barotrauma.Networking
             }
 
             DebugConsole.NewMessage("Received a disconnect message (" + disconnectMsg + ")");
+
+            if (disconnectReason != DisconnectReason.Banned &&
+                disconnectReason != DisconnectReason.ServerShutdown &&
+                disconnectReason != DisconnectReason.TooManyFailedLogins &&
+                disconnectReason != DisconnectReason.NotOnWhitelist &&
+                disconnectReason != DisconnectReason.MissingContentPackage &&
+                disconnectReason != DisconnectReason.InvalidVersion)
+            {
+                GameAnalyticsManager.AddErrorEventOnce(
+                "GameClient.HandleDisconnectMessage", 
+                GameAnalyticsSDK.Net.EGAErrorSeverity.Debug, 
+                "Client received a disconnect message. Reason: " + disconnectReason.ToString() + ", message: " + disconnectMsg);
+            }
 
             if (disconnectReason == DisconnectReason.ServerFull)
             {
