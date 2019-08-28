@@ -44,6 +44,16 @@ namespace Barotrauma.Items.Components
                 Stretch = true,
                 RelativeSpacing = 0.02f
             };
+            
+            itemList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.5f), paddedFrame.RectTransform))
+            {
+                OnSelected = (GUIComponent component, object userdata) =>
+                {
+                    selectedItem = userdata as FabricationRecipe;
+                    if (selectedItem != null) { SelectItem(Character.Controlled, selectedItem); }
+                    return true;
+                }
+            };
 
             var filterArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.06f), paddedFrame.RectTransform), isHorizontal: true)
             {
@@ -56,16 +66,6 @@ namespace Barotrauma.Items.Components
             var clearButton = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), filterArea.RectTransform), "x")
             {
                 OnClicked = (btn, userdata) => { ClearFilter(); itemFilterBox.Flash(Color.White); return true; }
-            };
-
-            itemList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.5f), paddedFrame.RectTransform))
-            {
-                OnSelected = (GUIComponent component, object userdata) =>
-                {
-                    selectedItem = userdata as FabricationRecipe;
-                    if (selectedItem != null) { SelectItem(Character.Controlled, selectedItem); }
-                    return true;
-                }
             };
 
             inputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(0.7f, 0.15f), paddedFrame.RectTransform), style: null);
