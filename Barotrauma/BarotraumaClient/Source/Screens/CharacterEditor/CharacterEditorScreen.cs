@@ -551,21 +551,21 @@ namespace Barotrauma.CharacterEditor
                 if (isFrozen)
                 {
                     float moveSpeed = (float)deltaTime * 300.0f / Cam.Zoom;
-                    if (PlayerInput.KeyDown(InputType.Left))
-                    {
-                        cameraOffset.X -= moveSpeed;
-                    }
-                    if (PlayerInput.KeyDown(InputType.Right))
-                    {
-                        cameraOffset.X += moveSpeed;
-                    }
-                    if (PlayerInput.KeyDown(InputType.Up))
+                    if (PlayerInput.KeyDown(Keys.W))
                     {
                         cameraOffset.Y += moveSpeed;
                     }
-                    if (PlayerInput.KeyDown(InputType.Down))
+                    if (PlayerInput.KeyDown(Keys.A))
+                    {
+                        cameraOffset.X -= moveSpeed;
+                    }
+                    if (PlayerInput.KeyDown(Keys.S))
                     {
                         cameraOffset.Y -= moveSpeed;
+                    }
+                    if (PlayerInput.KeyDown(Keys.D))
+                    {
+                        cameraOffset.X += moveSpeed;
                     }
                     Vector2 max = new Vector2(GameMain.GraphicsWidth * 0.3f, GameMain.GraphicsHeight * 0.38f) / Cam.Zoom;
                     Vector2 min = -max;
