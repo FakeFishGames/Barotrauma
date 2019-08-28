@@ -86,17 +86,17 @@ namespace Barotrauma.Networking
 
             if (frame == null) return;
 
-            var previewContainer =  new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 1.0f), frame.RectTransform, Anchor.Center))
+            var previewContainer =  new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), frame.RectTransform, Anchor.Center))
             {
                 Stretch = true
             };
 
             Sprite playStyleBannerSprite = GameMain.ServerListScreen.PlayStyleBanners[(int)Networking.PlayStyle.Serious];
-            float playStyleBannerAspectRatio = playStyleBannerSprite.SourceRect.Width / playStyleBannerSprite.SourceRect.Height;
+            float playStyleBannerAspectRatio = playStyleBannerSprite.SourceRect.Width / (playStyleBannerSprite.SourceRect.Height * 0.625f);
             var playStyleBanner = new GUIImage(new RectTransform(new Vector2(1.0f, 1.0f / playStyleBannerAspectRatio), previewContainer.RectTransform, scaleBasis: ScaleBasis.BothWidth),
                                                GameMain.ServerListScreen.PlayStyleBanners[(int)Networking.PlayStyle.Serious], null, true);
 
-            var columnContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), previewContainer.RectTransform))
+            var columnContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.45f), previewContainer.RectTransform) { RelativeOffset = new Vector2(0.027f, 0.0f) })
             {
                 Stretch = true
             };
