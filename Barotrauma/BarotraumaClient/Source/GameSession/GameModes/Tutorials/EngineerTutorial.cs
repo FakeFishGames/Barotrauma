@@ -169,7 +169,9 @@ namespace Barotrauma.Tutorials
             }
 
             engineer_wire_1 = Item.ItemList.Find(i => i.HasTag("engineer_wire_1"));
+            engineer_wire_1.SpriteColor = Color.Transparent;
             engineer_wire_2 = Item.ItemList.Find(i => i.HasTag("engineer_wire_2"));
+            engineer_wire_2.SpriteColor = Color.Transparent;
             engineer_lamp_1 = Item.ItemList.Find(i => i.HasTag("engineer_lamp_1")).GetComponent<Powered>();
             engineer_lamp_2 = Item.ItemList.Find(i => i.HasTag("engineer_lamp_2")).GetComponent<Powered>();
             engineer_fourthDoor = Item.ItemList.Find(i => i.HasTag("engineer_fourthdoor")).GetComponent<Door>();
@@ -472,17 +474,31 @@ namespace Barotrauma.Tutorials
 
         private void CheckGhostWires()
         {
-            if (engineer_wire_1 != null && engineer_lamp_1.Voltage > engineer_lamp_1.MinVoltage)
+            Color wireColor = 
+                Color.OrangeRed *
+                    MathHelper.Lerp(0.5f, 1.0f, (float)(Math.Sin((Timing.TotalTime * 3.0f)) + 1.0f) / 2.0f);
+
+            if (engineer_wire_1 != null)
             {
-                engineer_wire_1.Remove();
-                engineer_wire_1 = null;
+                engineer_wire_1.SpriteColor = wireColor;
+                if (engineer_lamp_1.Voltage > engineer_lamp_1.MinVoltage)
+                {
+                    engineer_wire_1.Remove();
+                    engineer_wire_1 = null;
+                }
             }
 
-            if (engineer_wire_2 != null && engineer_lamp_2.Voltage > engineer_lamp_2.MinVoltage)
+
+            if (engineer_wire_2 != null)
             {
-                engineer_wire_2.Remove();
-                engineer_wire_2 = null;
+                engineer_wire_2.SpriteColor = wireColor;
+                if (engineer_lamp_2.Voltage > engineer_lamp_2.MinVoltage)
+                {
+                    engineer_wire_2.Remove();
+                    engineer_wire_2 = null;
+                }
             }
+
         }
 
         private void HandleJunctionBoxWiringHighlights()
