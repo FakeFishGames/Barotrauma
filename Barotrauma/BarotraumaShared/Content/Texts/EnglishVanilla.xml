@@ -914,6 +914,8 @@
   <charactereditor.recreateragdoll>Recreate Ragdoll</charactereditor.recreateragdoll>
   <charactereditor.recreateragdolltooltip>Many of the parameters requires recreating the ragdoll. If adjusting the parameter doesn't seem to have effect, click this button.</charactereditor.recreateragdolltooltip>
   <charactereditor.createnewcharacter>Create New Character</charactereditor.createnewcharacter>
+  <charactereditor.copycharacter>Copy Character</charactereditor.copycharacter>
+  <charactereditor.copycharactertooltip>Create a copy of the current character</charactereditor.copycharactertooltip>
   <charactereditor.nofieldforparameterfound>No field for [parameter] found!</charactereditor.nofieldforparameterfound>
   <charactereditor.holdleftalttoadjustcyclespeed>Hold "Left Alt" to adjust the cycle speed</charactereditor.holdleftalttoadjustcyclespeed>
   <charactereditor.cyclespeed>Cycle Speed</charactereditor.cyclespeed>

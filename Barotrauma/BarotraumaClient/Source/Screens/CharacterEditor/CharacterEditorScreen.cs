@@ -1555,7 +1555,7 @@ namespace Barotrauma.CharacterEditor
             Cam.Position = character.WorldPosition;
         }
 
-        public bool CreateCharacter(string name, string mainFolder, bool isHumanoid, ContentPackage contentPackage, params object[] ragdollConfig)
+        public bool CreateCharacter(string name, string mainFolder, bool isHumanoid, ContentPackage contentPackage, XElement ragdoll, XElement config = null, IEnumerable<AnimationParams> animations = null)
         {
             var vanilla = GameMain.VanillaContent;
             
@@ -1580,16 +1580,15 @@ namespace Barotrauma.CharacterEditor
                 return false;
             }
 #endif
-            string speciesName = name;
-            // Config file
-            string configFilePath = Path.Combine(mainFolder, $"{speciesName}.xml").Replace(@"\", @"/");
-
+            // Content package
             if (!GameMain.Config.SelectedContentPackages.Contains(contentPackage))
             {
                 GameMain.Config.SelectContentPackage(contentPackage);
             }
             GameMain.Config.SaveNewPlayerConfig();
 
+            // Config file
+            string configFilePath = Path.Combine(mainFolder, $"{name}.xml").Replace(@"\", @"/");
             var duplicate = Character.ConfigFiles.FirstOrDefault(file => file.Root.GetAttributeString("speciesname", string.Empty).Equals(name, StringComparison.OrdinalIgnoreCase));
             XElement overrideElement = null;
             if (duplicate != null)
@@ -1602,21 +1601,23 @@ namespace Barotrauma.CharacterEditor
                 }
             }
 
-            // Create the config file
-            XElement mainElement = new XElement("Character",
-                new XAttribute("speciesname", speciesName),
-                new XAttribute("humanoid", isHumanoid),
-                new XElement("ragdolls", new XAttribute("folder", Path.Combine(mainFolder, $"Ragdolls/").Replace(@"\", @"/"))),
-                new XElement("animations", new XAttribute("folder", Path.Combine(mainFolder, $"Animations/").Replace(@"\", @"/"))),
-                new XElement("health"),
-                new XElement("ai"));
+            if (config == null)
+            {
+                config = new XElement("Character",
+                    new XAttribute("speciesname", name),
+                    new XAttribute("humanoid", isHumanoid),
+                    new XElement("ragdolls", new XAttribute("folder", Path.Combine(mainFolder, $"Ragdolls/").Replace(@"\", @"/"))),
+                    new XElement("animations", new XAttribute("folder", Path.Combine(mainFolder, $"Animations/").Replace(@"\", @"/"))),
+                    new XElement("health"),
+                    new XElement("ai"));
+            }
 
             if (overrideElement != null)
             {
-                overrideElement.Add(mainElement);
-                mainElement = overrideElement;
+                overrideElement.Add(config);
+                config = overrideElement;
             }
-            XDocument doc = new XDocument(mainElement);
+            XDocument doc = new XDocument(config);
             if (!Directory.Exists(mainFolder))
             {
                 Directory.CreateDirectory(mainFolder);
@@ -1630,30 +1631,47 @@ namespace Barotrauma.CharacterEditor
 
             // Ragdoll
             RagdollParams.ClearCache();
-            string ragdollPath = RagdollParams.GetDefaultFile(speciesName, contentPackage);
+            string ragdollPath = RagdollParams.GetDefaultFile(name, contentPackage);
             RagdollParams ragdollParams = isHumanoid
-                ? RagdollParams.CreateDefault<HumanRagdollParams>(ragdollPath, speciesName, ragdollConfig)
-                : RagdollParams.CreateDefault<FishRagdollParams>(ragdollPath, speciesName, ragdollConfig) as RagdollParams;
+                ? RagdollParams.CreateDefault<HumanRagdollParams>(ragdollPath, name, ragdoll)
+                : RagdollParams.CreateDefault<FishRagdollParams>(ragdollPath, name, ragdoll) as RagdollParams;
 
             // Animations
             AnimationParams.ClearCache();
-            string animFolder = AnimationParams.GetFolder(speciesName, contentPackage);
-            foreach (AnimationType animType in Enum.GetValues(typeof(AnimationType)))
+            string animFolder = AnimationParams.GetFolder(name, contentPackage);
+            if (animations != null)
             {
-                switch (animType)
+                if (!Directory.Exists(animFolder))
                 {
-                    case AnimationType.Walk:
-                    case AnimationType.Run:
-                        if (!ragdollParams.CanEnterSubmarine) { continue; }
-                        break;
-                    case AnimationType.SwimSlow:
-                    case AnimationType.SwimFast:
-                        break;
-                    default: continue;
+                    Directory.CreateDirectory(animFolder);
                 }
-                Type type = AnimationParams.GetParamTypeFromAnimType(animType, isHumanoid);
-                string fullPath = AnimationParams.GetDefaultFile(speciesName, animType, contentPackage);
-                AnimationParams.Create(fullPath, speciesName, animType, type);
+                foreach (var animation in animations)
+                {
+                    XElement element = animation.MainElement;
+                    string fullPath = AnimationParams.GetDefaultFile(name, animation.AnimationType, contentPackage);
+                    element.Name = AnimationParams.GetDefaultFileName(name, animation.AnimationType);
+                    element.Save(fullPath);
+                }
+            }
+            else
+            {
+                foreach (AnimationType animType in Enum.GetValues(typeof(AnimationType)))
+                {
+                    switch (animType)
+                    {
+                        case AnimationType.Walk:
+                        case AnimationType.Run:
+                            if (!ragdollParams.CanEnterSubmarine) { continue; }
+                            break;
+                        case AnimationType.SwimSlow:
+                        case AnimationType.SwimFast:
+                            break;
+                        default: continue;
+                    }
+                    Type type = AnimationParams.GetParamTypeFromAnimType(animType, isHumanoid);
+                    string fullPath = AnimationParams.GetDefaultFile(name, animType, contentPackage);
+                    AnimationParams.Create(fullPath, name, animType, type);
+                }
             }
             if (!AllFiles.Contains(configFilePath))
             {
@@ -2962,6 +2980,31 @@ namespace Barotrauma.CharacterEditor
                     skeletonToggle.Selected = false;
                     damageModifiersToggle.Selected = false;
                     Wizard.Instance.SelectTab(Wizard.Tab.Character);
+                    return true;
+                }
+            };
+            new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("CopyCharacter"))
+            {
+                ToolTip = GetCharacterEditorTranslation("CopyCharacterToolTip"),
+                OnClicked = (button, data) =>
+                {
+                    allFiles = null;
+                    // TODO: prompt for the name 
+                    string speciesName = CharacterParams.SpeciesName;
+                    // TODO: allow to select the content package (-> show the wizard?)
+                    var contentPackage = GameMain.Config.SelectedContentPackages.Last();
+                    if (contentPackage.GetFilesOfType(ContentType.Character).Any(c => Path.GetFileNameWithoutExtension(c).Equals(speciesName, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        // Can't create multiple characters with the same name in the same content package.
+                        speciesName += "copy";
+                    }
+                    RagdollParams.Serialize();
+                    XElement ragdoll = RagdollParams.MainElement;
+                    ragdoll.SetAttributeValue("type", speciesName);
+                    string folder = contentPackage == GameMain.VanillaContent ? Path.Combine("Content/Characters", speciesName) : Path.Combine("Mods", contentPackage.Name, "Characters", speciesName);
+                    var config = CharacterParams.MainElement;
+                    config.SetAttributeValue("speciesname", speciesName);
+                    CreateCharacter(speciesName, folder, CharacterParams.Humanoid, contentPackage, ragdoll, config, AnimParams);
                     return true;
                 }
             };

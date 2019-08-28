@@ -677,14 +677,12 @@ namespace Barotrauma.CharacterEditor
                         }
                         colliderElements.Add(secondaryCollider);
                     }
-                    var ragdollParams = new object[]
-                    {
+                    var mainElement = new XElement("Ragdoll",
                             new XAttribute("type", Name),
                             new XAttribute("canentersubmarine", CanEnterSubmarine),
                                 colliderElements,
                                 LimbXElements.Values,
-                                JointXElements
-                    };
+                                JointXElements);
                     if (Character.ConfigFiles.Any(f => f.Root.GetAttributeString("speciesname", "").Equals(Name, StringComparison.OrdinalIgnoreCase)))
                     {
                         var msgBox = new GUIMessageBox("", GetCharacterEditorTranslation("existingcharacterfoundreplaceverification"), new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
@@ -694,7 +692,7 @@ namespace Barotrauma.CharacterEditor
                         msgBox.Buttons[0].OnClicked = (yesBtn, userdata) =>
                         {
                             msgBox.Close();
-                            if (CharacterEditorScreen.Instance.CreateCharacter(Name, Path.GetDirectoryName(XMLPath), IsHumanoid, ContentPackage, ragdollParams))
+                            if (CharacterEditorScreen.Instance.CreateCharacter(Name, Path.GetDirectoryName(XMLPath), IsHumanoid, ContentPackage, mainElement))
                             {
                                 GUI.AddMessage(GetCharacterEditorTranslation("CharacterCreated").Replace("[name]", Name), Color.Green, font: GUI.Font);
                             }
@@ -711,7 +709,7 @@ namespace Barotrauma.CharacterEditor
                     }
                     else
                     {
-                        if (CharacterEditorScreen.Instance.CreateCharacter(Name, Path.GetDirectoryName(XMLPath), IsHumanoid, ContentPackage, ragdollParams))
+                        if (CharacterEditorScreen.Instance.CreateCharacter(Name, Path.GetDirectoryName(XMLPath), IsHumanoid, ContentPackage, mainElement))
                         {
                             GUI.AddMessage(GetCharacterEditorTranslation("CharacterCreated").Replace("[name]", Name), Color.Green, font: GUI.Font);
                         }

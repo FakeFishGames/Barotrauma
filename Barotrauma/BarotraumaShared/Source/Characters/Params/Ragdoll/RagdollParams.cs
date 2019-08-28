@@ -73,8 +73,7 @@ namespace Barotrauma
         public static string GetDefaultFile(string speciesName, ContentPackage contentPackage = null)
             => Path.Combine(GetFolder(speciesName, contentPackage), $"{GetDefaultFileName(speciesName)}.xml");
 
-        private static readonly object[] dummyParams = new object[]
-        {
+        private static readonly XElement dummyRagdoll = new XElement("Ragdoll", 
             new XAttribute("type", "Dummy"),
             new XElement("collider", new XAttribute("radius", 1)),
             new XElement("limb",
@@ -84,7 +83,7 @@ namespace Barotrauma
                 new XAttribute("height", 1),
                 new XElement("sprite",
                     new XAttribute("sourcerect", $"0, 0, 1, 1")))
-        };
+        );
 
         public static string GetFolder(string speciesName, ContentPackage contentPackage = null)
         {
@@ -175,7 +174,7 @@ namespace Barotrauma
                         // Rename the old file so that it's not lost.
                         File.Move(defaultFile, defaultFile + ".invalid");
                     }
-                    return CreateDefault<T>(defaultFile, speciesName, dummyParams);
+                    return CreateDefault<T>(defaultFile, speciesName, dummyRagdoll);
                 }
             }
             return (T)ragdoll;
@@ -185,7 +184,7 @@ namespace Barotrauma
         /// Creates a default ragdoll for the species using a predefined configuration.
         /// Note: Use only to create ragdolls for new characters, because this overrides the old ragdoll!
         /// </summary>
-        public static T CreateDefault<T>(string fullPath, string speciesName, params object[] ragdollConfig) where T : RagdollParams, new()
+        public static T CreateDefault<T>(string fullPath, string speciesName, XElement mainElement) where T : RagdollParams, new()
         {
             // Remove the old ragdolls, if found.
             if (allRagdolls.ContainsKey(speciesName))
@@ -195,11 +194,12 @@ namespace Barotrauma
             }
             var ragdolls = new Dictionary<string, RagdollParams>();
             allRagdolls.Add(speciesName, ragdolls);
-            var instance = new T();
-            XElement ragdollElement = new XElement("Ragdoll", ragdollConfig);
-            instance.doc = new XDocument(ragdollElement);
+            var instance = new T
+            {
+                doc = new XDocument(mainElement)
+            };
             instance.UpdatePath(fullPath);
-            instance.IsLoaded = instance.Deserialize(ragdollElement);
+            instance.IsLoaded = instance.Deserialize(mainElement);
             instance.Save();
             instance.Load(fullPath, speciesName);
             ragdolls.Add(instance.Name, instance);
@@ -312,7 +312,7 @@ namespace Barotrauma
             }
         }
 
-        protected bool Deserialize(XElement element = null, bool alsoChildren = true, bool recursive = true)
+        public bool Deserialize(XElement element = null, bool alsoChildren = true, bool recursive = true)
         {
             if (base.Deserialize(element))
             {
@@ -325,7 +325,7 @@ namespace Barotrauma
             return false;
         }
 
-        protected bool Serialize(XElement element = null, bool alsoChildren = true, bool recursive = true)
+        public bool Serialize(XElement element = null, bool alsoChildren = true, bool recursive = true)
         {
             if (base.Serialize(element))
             {
