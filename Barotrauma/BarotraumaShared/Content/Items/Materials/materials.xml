@@ -216,16 +216,15 @@
     <Sprite texture="CraftingElements1.png" sourcerect="155,13,46,88" depth="0.55" origin="0.5,0.5" />
     <Body width="29" height="58" density="50" />
     <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
-      <StatusEffect type="InWater" target="This" Condition="0.0" setvalue="true">
+      <StatusEffect type="InWater" target="This" Condition="0.0" setvalue="true"/>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
         <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" selectionmode="All" range="5000" />
         <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" selectionmode="All" range="5000" />
         <Explosion range="250.0" structuredamage="10" force="5.0">
           <Affliction identifier="burn" amount="20" />
           <Affliction identifier="stun" amount="3" />
-        </Explosion>
-      </StatusEffect>
-      <!-- Remove the item when fully used -->
-      <StatusEffect type="OnBroken" target="This">
+        </Explosion>        
         <Remove />
       </StatusEffect>
     </Holdable>
@@ -258,16 +257,15 @@
     <Sprite texture="CraftingElements1.png" sourcerect="205,13,47,88" depth="0.55" origin="0.5,0.5" />
     <Body width="29" height="58" density="15" />
     <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
-      <StatusEffect type="InWater" target="This" Condition="0.0" setvalue="true">
+      <StatusEffect type="InWater" target="This" Condition="0.0" setvalue="true"/>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
         <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" selectionmode="All" range="5000" />
         <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" selectionmode="All" range="5000" />
         <Explosion range="250.0" structuredamage="10" force="5.0">
           <Affliction identifier="burn" amount="20" />
           <Affliction identifier="stun" amount="3" />
-        </Explosion>
-      </StatusEffect>
-      <!-- Remove the item when fully used -->
-      <StatusEffect type="OnBroken" target="This">
+        </Explosion>        
         <Remove />
       </StatusEffect>
     </Holdable>
