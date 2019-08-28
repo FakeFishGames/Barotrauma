@@ -398,6 +398,7 @@ namespace Barotrauma
                     }
                     else if (!MathUtils.NearlyEqual(lastSentCondition, condition) && (condition <= 0.0f || condition >= Prefab.Health))
                     {
+                        sendConditionUpdateTimer = 0.0f;
                         conditionUpdatePending = true;
                     }
                 }
@@ -1135,6 +1136,17 @@ namespace Barotrauma
             return CurrentHull.WaterVolume > 0.0f && Position.Y < surfaceY;
         }
 
+        public void SendPendingNetworkUpdates()
+        {
+            if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsServer) { return; }
+            if (conditionUpdatePending)
+            {
+                GameMain.NetworkMember.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
+                lastSentCondition = condition;
+                sendConditionUpdateTimer = NetConfig.ItemConditionUpdateInterval;
+                conditionUpdatePending = false;
+            }
+        }
 
         public override void Update(float deltaTime, Camera cam)
         {
@@ -1150,16 +1162,10 @@ namespace Barotrauma
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
             {
                 sendConditionUpdateTimer -= deltaTime;
-                if (conditionUpdatePending)
+                if (conditionUpdatePending && sendConditionUpdateTimer <= 0.0f)
                 {
-                    if (sendConditionUpdateTimer <= 0.0f)
-                    {
-                        GameMain.NetworkMember.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
-                        lastSentCondition = condition;
-                        sendConditionUpdateTimer = NetConfig.ItemConditionUpdateInterval;
-                        conditionUpdatePending = false;
-                    }
-                }
+                    SendPendingNetworkUpdates();
+                }                
             }
             
             ApplyStatusEffects(ActionType.Always, deltaTime, null);
