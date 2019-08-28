@@ -325,9 +325,10 @@ namespace Barotrauma.CharacterEditor
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
+            if (Wizard.instance != null) { return; }
             spriteSheetRect = CalculateSpritesheetRectangle();
             // Handle shortcut keys
-            if (GUI.KeyboardDispatcher.Subscriber == null && Wizard.instance == null)
+            if (GUI.KeyboardDispatcher.Subscriber == null)
             {
                 if (PlayerInput.KeyHit(Keys.D1))
                 {
@@ -547,8 +548,31 @@ namespace Barotrauma.CharacterEditor
                         UpdateSourceRect(limb, newRect);
                     }
                 }
+                if (isFrozen)
+                {
+                    float moveSpeed = (float)deltaTime * 300.0f / Cam.Zoom;
+                    if (PlayerInput.KeyDown(InputType.Left))
+                    {
+                        cameraOffset.X -= moveSpeed;
+                    }
+                    if (PlayerInput.KeyDown(InputType.Right))
+                    {
+                        cameraOffset.X += moveSpeed;
+                    }
+                    if (PlayerInput.KeyDown(InputType.Up))
+                    {
+                        cameraOffset.Y += moveSpeed;
+                    }
+                    if (PlayerInput.KeyDown(InputType.Down))
+                    {
+                        cameraOffset.Y -= moveSpeed;
+                    }
+                    Vector2 max = new Vector2(GameMain.GraphicsWidth * 0.3f, GameMain.GraphicsHeight * 0.38f) / Cam.Zoom;
+                    Vector2 min = -max;
+                    cameraOffset = Vector2.Clamp(cameraOffset, min, max);
+                }
             }
-            if (!isFrozen && Wizard.instance == null)
+            if (!isFrozen)
             {
                 if (character.AnimController.Invalid)
                 {
