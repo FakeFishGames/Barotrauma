@@ -10,6 +10,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 using Voronoi2;
 
@@ -82,6 +83,7 @@ namespace Barotrauma
         private static float lastPickedFraction;
         private static Vector2 lastPickedNormal;
 
+        private Task hashTask;
         private Md5Hash hash;
         
         private string filePath;
@@ -165,10 +167,12 @@ namespace Barotrauma
         {
             get
             {
-                if (hash != null) return hash;
-
-                XDocument doc = OpenFile(filePath);
-                hash = new Md5Hash(doc);
+                if (hash == null)
+                {
+                    XDocument doc = OpenFile(filePath);
+                    StartHashDocTask(doc);
+                    hashTask.Wait();
+                }
 
                 return hash;
             }
@@ -316,7 +320,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Error loading submarine " + filePath + "!", e);
             }
 
-            if (hash != "")
+            if (!string.IsNullOrWhiteSpace(hash))
             {
                 this.hash = new Md5Hash(hash);
             }
@@ -341,6 +345,11 @@ namespace Barotrauma
 
                 if (doc != null && doc.Root != null)
                 {
+                    if (string.IsNullOrWhiteSpace(hash))
+                    {
+                        StartHashDocTask(doc);
+                    }
+
                     displayName = TextManager.Get("Submarine.Name." + name, true);
                     if (displayName == null || displayName.Length == 0) displayName = name;
 
@@ -395,6 +404,18 @@ namespace Barotrauma
             DockedTo = new List<Submarine>();
 
             FreeID();
+        }
+
+        public void StartHashDocTask(XDocument doc)
+        {
+            if (hash != null) { return; }
+            if (hashTask != null) { return; }
+
+            hashTask = new Task(() =>
+            {
+                hash = new Md5Hash(doc);
+            });
+            hashTask.Start();
         }
 
         public bool HasTag(SubmarineTag tag)
