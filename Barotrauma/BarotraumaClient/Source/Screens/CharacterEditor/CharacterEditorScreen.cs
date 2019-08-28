@@ -408,9 +408,9 @@ namespace Barotrauma.CharacterEditor
                         SetToggle(animTestPoseToggle, !animTestPoseToggle.Selected);
                     }
                 }
-                if (PlayerInput.KeyHit(Keys.G))
+                if (PlayerInput.KeyHit(Keys.H))
                 {
-                    SetToggle(gravitationToggle, !gravitationToggle.Selected);
+                    SetToggle(holdPositionToggle, !holdPositionToggle.Selected);
                 }
                 if (PlayerInput.KeyHit(InputType.Run))
                 {
@@ -807,9 +807,9 @@ namespace Barotrauma.CharacterEditor
             {
                 GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 40, 200), GetCharacterEditorTranslation("Frozen"), Color.Blue, Color.White * 0.5f, 10, GUI.LargeFont);
             }
-            if (!gravitationToggle.Selected)
+            if (holdPositionToggle.Selected)
             {
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 135, 250), GetCharacterEditorTranslation("GravitationDisabled"), Color.White, Color.Red * 0.5f, 10, GUI.LargeFont);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 100, 250), GetCharacterEditorTranslation("HoldingPosition"), Color.White, Color.Red * 0.5f, 10, GUI.LargeFont);
             }
             if (animTestPoseToggle.Selected)
             {
@@ -1705,7 +1705,7 @@ namespace Barotrauma.CharacterEditor
 
         private GUIDropDown animSelection;
         private GUITickBox freezeToggle;
-        private GUITickBox gravitationToggle;
+        private GUITickBox holdPositionToggle;
         private GUITickBox animTestPoseToggle;
         private GUITickBox showCollidersToggle;
         private GUIScrollBar jointScaleBar;
@@ -2025,12 +2025,12 @@ namespace Barotrauma.CharacterEditor
                     return true;
                 }
             };
-            gravitationToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("EnableGravitation"))
+            holdPositionToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("HoldPosition"))
             {
-                Selected = character.AnimController.Collider.PhysEnabled,
+                Selected = !character.AnimController.Collider.PhysEnabled,
                 OnSelected = box =>
                 {
-                    character.AnimController.Collider.PhysEnabled = box.Selected;
+                    character.AnimController.Collider.PhysEnabled = !box.Selected;
                     return true;
                 }
             };
@@ -2964,7 +2964,6 @@ namespace Barotrauma.CharacterEditor
         #endregion
 
         #region ToggleButtons 
-
         private enum Direction
         {
             Left,

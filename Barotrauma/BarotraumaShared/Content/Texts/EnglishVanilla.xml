@@ -883,8 +883,8 @@
   <charactereditor.editiktargets>IK Targets</charactereditor.editiktargets>
   <charactereditor.freeze>Freeze [F]</charactereditor.freeze>
   <charactereditor.autofreeze>Auto Freeze</charactereditor.autofreeze>
-  <charactereditor.enablegravitation>Gravitation [G]</charactereditor.enablegravitation>
-  <charactereditor.gravitationdisabled>Gravitation Disabled</charactereditor.gravitationdisabled>
+  <charactereditor.holdposition>Hold Position [H]</charactereditor.holdposition>
+  <charactereditor.holdingposition>Holding Position</charactereditor.holdingposition>
   <charactereditor.limbpairediting>Limb Pair Editing</charactereditor.limbpairediting>
   <charactereditor.animationtestpose>Animation Test Pose [X]</charactereditor.animationtestpose>
   <charactereditor.animationtestposeenabled>Animation Test Pose Enabled</charactereditor.animationtestposeenabled>
