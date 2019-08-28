@@ -2954,8 +2954,6 @@ namespace Barotrauma.CharacterEditor
                     paramsToggle.Selected = false;
                     skeletonToggle.Selected = false;
                     damageModifiersToggle.Selected = false;
-                    recalculateColliderToggle.Selected = true;
-                    lockSpriteOriginToggle.Selected = false;
                     Wizard.Instance.SelectTab(Wizard.Tab.Character);
                     return true;
                 }
