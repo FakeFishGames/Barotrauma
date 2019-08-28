@@ -211,7 +211,7 @@ namespace Barotrauma.Steam
             instance.client.Lobby.CurrentLobbyData.SetData("allowrespawn", serverSettings.AllowRespawn.ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("traitors", serverSettings.TraitorsEnabled.ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("gamestarted", GameMain.Client.GameStarted.ToString());
-            instance.client.Lobby.CurrentLobbyData.SetData("gamemode", serverSettings.GameModeIdentifier);
+            instance.client.Lobby.CurrentLobbyData.SetData("gamemode", GameMain.NetLobbyScreen?.SelectedMode?.Identifier??"");
 
             DebugConsole.Log("Lobby updated!");
         }
