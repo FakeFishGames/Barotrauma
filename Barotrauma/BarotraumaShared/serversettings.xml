@@ -48,5 +48,5 @@
   autorestart="false"
   LevelDifficulty="20"
   AllowedRandomMissionTypes="Random,Salvage,Monster,Cargo,Combat"
-  AllowedClientNameChars="32-33,38-46,48-57,65-90,91-91,93-93,95-122,192-255,384-591,1024-1279"
+  AllowedClientNameChars="32-33,38-46,48-57,65-90,91-91,93-93,95-122,192-255,384-591,1024-1279,19968-40959,13312-19903,131072-173791,173824-178207,178208-183983,63744-64255,194560-195103"
   ServerMessage="" />

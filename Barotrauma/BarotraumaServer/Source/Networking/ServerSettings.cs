@@ -248,7 +248,8 @@ namespace Barotrauma.Networking
                     "95-122",
                     "192-255",
                     "384-591",
-                    "1024-1279"
+                    "1024-1279",
+                    "19968-40959","13312-19903","131072-173791","173824-178207","178208-183983","63744-64255","194560-195103" //CJK
                 });
             foreach (string allowedClientNameCharRange in allowedClientNameCharsStr)
             {
