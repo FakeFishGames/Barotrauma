@@ -432,7 +432,6 @@ namespace Barotrauma
                 case PropertyConditional.Comparison.Or:
                     foreach (ISerializableEntity target in targets)
                     {
-                        if (target == null || target.SerializableProperties == null) { continue; }
                         foreach (PropertyConditional pc in propertyConditionals)
                         {
                             if (!string.IsNullOrEmpty(pc.TargetItemComponentName))
@@ -449,7 +448,6 @@ namespace Barotrauma
                 case PropertyConditional.Comparison.And:
                     foreach (ISerializableEntity target in targets)
                     {
-                        if (target == null || target.SerializableProperties == null) { continue; }
                         foreach (PropertyConditional pc in propertyConditionals)
                         {
                             if (!string.IsNullOrEmpty(pc.TargetItemComponentName))

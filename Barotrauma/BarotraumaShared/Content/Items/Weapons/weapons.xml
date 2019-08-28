@@ -145,8 +145,9 @@
         <Affliction identifier="gunshotwound" strength="40" />
         <Affliction identifier="internaldamage" strength="30" />
       </Attack>
-      <StatusEffect type="OnImpact">
-        <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-5" anglemax="5" particleamount="5" velocitymin="-10" velocitymax="-100" scalemin="0.5" scalemax="1" />
+      <StatusEffect type="OnImpact" target="Character">
+        <Conditional entitytype="!eq Character"/>
+        <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-10" anglemax="10" particleamount="5" velocitymin="-10" velocitymax="-200" scalemin="0.5" scalemax="1" />
       </StatusEffect>
     </Projectile>
   </Item>
@@ -187,8 +188,9 @@
         <Affliction identifier="gunshotwound" strength="15" />
         <Affliction identifier="internaldamage" strength="10" />
       </Attack>
-      <StatusEffect type="OnImpact">
-        <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-5" anglemax="5" particleamount="5" velocitymin="-10" velocitymax="-100" scalemin="0.5" scalemax="1" />
+      <StatusEffect type="OnImpact" target="Character">
+        <Conditional entitytype="!eq Character"/>
+        <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-10" anglemax="10" particleamount="5" velocitymin="-10" velocitymax="-200" scalemin="0.5" scalemax="1" />
       </StatusEffect>
     </Projectile>
   </Item>
@@ -694,8 +696,9 @@
         <Affliction identifier="gunshotwound" strength="6" />
         <Affliction identifier="internaldamage" strength="5" />
       </Attack>
-      <StatusEffect type="OnImpact">
-        <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-5" anglemax="5" particleamount="5" velocitymin="-10" velocitymax="-100" scalemin="0.5" scalemax="1" />
+      <StatusEffect type="OnImpact" target="Character">
+        <Conditional entitytype="!eq Character"/>
+        <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-10" anglemax="10" particleamount="5" velocitymin="-10" velocitymax="-200" scalemin="0.5" scalemax="1" />
       </StatusEffect>
     </Projectile>
   </Item>
@@ -752,10 +755,13 @@
         <Affliction identifier="stun" strength="10" />
       </Attack>
       <StatusEffect type="OnImpact" target="This">
-        <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-5" anglemax="5" particleamount="5" velocitymin="-10" velocitymax="-100" scalemin="0.5" scalemax="1" />
         <Sound file="Content/Items/Weapons/TaserHit1.ogg" type="OnUse" range="3000" selectionmode="Random" />
         <Sound file="Content/Items/Weapons/TaserHit2.ogg" type="OnUse" range="3000" />
         <Remove />
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="Character">
+        <Conditional entitytype="!eq Character"/>
+        <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-10" anglemax="10" particleamount="5" velocitymin="-10" velocitymax="-200" scalemin="0.5" scalemax="1" />
       </StatusEffect>
     </Projectile>
   </Item>

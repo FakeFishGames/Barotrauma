@@ -176,9 +176,7 @@ namespace Barotrauma
                 var spawnedEntity = entitySpawnInfo.Spawn();
                 if (spawnedEntity != null)
                 {
-#if SERVER
-                    CreateNetworkEvent(spawnedEntity, false);
-#endif
+                    CreateNetworkEventProjSpecific(spawnedEntity, false);
                     if (spawnedEntity is Item)
                     {
                         ((Item)spawnedEntity).Condition = ((ItemSpawnInfo)entitySpawnInfo).Condition;
@@ -189,17 +187,16 @@ namespace Barotrauma
             while (removeQueue.Count > 0)
             {
                 var removedEntity = removeQueue.Dequeue();
-
-#if SERVER
-                if (GameMain.Server != null)
+                if (removedEntity is Item item)
                 {
-                    CreateNetworkEvent(removedEntity, true);
+                    item.SendPendingNetworkUpdates();
                 }
-#endif
-
+                CreateNetworkEventProjSpecific(removedEntity, true);
                 removedEntity.Remove();
             }
         }
+
+        partial void CreateNetworkEventProjSpecific(Entity entity, bool remove);
 
         public void Reset()
         {

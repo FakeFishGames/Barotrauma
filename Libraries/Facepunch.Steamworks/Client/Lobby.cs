@@ -448,9 +448,16 @@ namespace Facepunch.Steamworks
         /// <returns>Array of member SteamIDs</returns>
         public ulong[] GetMemberIDs()
         {
-            ulong[] memIDs = new ulong[NumMembers];
-            for ( int i = 0; i < NumMembers; i++ )
+            int numMembers = NumMembers;
+            ulong[] memIDs = new ulong[numMembers];
+            for ( int i = 0; i < numMembers; i++ )
             {
+                int currNumMembers = NumMembers;
+                if (i >= currNumMembers)
+                {
+                    Array.Resize<ulong>(ref memIDs, currNumMembers);
+                    break;
+                }
                 memIDs[i] = client.native.matchmaking.GetLobbyMemberByIndex( CurrentLobby, i );
             }
             return memIDs;
