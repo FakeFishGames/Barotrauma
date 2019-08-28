@@ -129,8 +129,15 @@ namespace Barotrauma.CharacterEditor
             Submarine.MainSub.GodMode = true;
             if (Character.Controlled == null)
             {
-                SpawnCharacter(Character.HumanConfigFile);
-                //SpawnCharacter(AllFiles.First());
+                var humanConfig = Character.HumanConfigFile;
+                if (string.IsNullOrEmpty(humanConfig))
+                {
+                    SpawnCharacter(AllFiles.First());
+                }
+                else
+                {
+                    SpawnCharacter(humanConfig);
+                }
             }
             else
             {
