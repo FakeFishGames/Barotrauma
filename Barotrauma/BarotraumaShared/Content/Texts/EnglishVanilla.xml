@@ -876,13 +876,13 @@
   <charactereditor.drawskeleton>Skeleton</charactereditor.drawskeleton>
   <charactereditor.enablelights>Lights</charactereditor.enablelights>
   <charactereditor.drawdamagemodifiers>Damage Modifiers</charactereditor.drawdamagemodifiers>
-  <charactereditor.editcharacter>CHARACTER</charactereditor.editcharacter>
-  <charactereditor.editanimations>ANIMATIONS</charactereditor.editanimations>
-  <charactereditor.editlimbs>LIMBS</charactereditor.editlimbs>
-  <charactereditor.editjoints>JOINTS</charactereditor.editjoints>
-  <charactereditor.editragdoll>RAGDOLL</charactereditor.editragdoll>
+  <charactereditor.editcharacter>CHARACTER [1]</charactereditor.editcharacter>
+  <charactereditor.editragdoll>RAGDOLL [2]</charactereditor.editragdoll>
+  <charactereditor.editlimbs>LIMBS [3]</charactereditor.editlimbs>
+  <charactereditor.editjoints>JOINTS [4]</charactereditor.editjoints>
+  <charactereditor.editanimations>ANIMATIONS [5]</charactereditor.editanimations>
   <charactereditor.editiktargets>IK Targets</charactereditor.editiktargets>
-  <charactereditor.freeze>Freeze</charactereditor.freeze>
+  <charactereditor.freeze>Freeze [F]</charactereditor.freeze>
   <charactereditor.autofreeze>Auto Freeze</charactereditor.autofreeze>
   <charactereditor.limbpairediting>Limb Pair Editing</charactereditor.limbpairediting>
   <charactereditor.animationtestpose>Animation Test Pose</charactereditor.animationtestpose>

@@ -331,23 +331,23 @@ namespace Barotrauma.CharacterEditor
             {
                 if (PlayerInput.KeyHit(Keys.D1))
                 {
-                    SetToggle(characterInfoToggle, true);
+                    SetToggle(characterInfoToggle, !characterInfoToggle.Selected);
                 }
                 else if (PlayerInput.KeyHit(Keys.D2))
                 {
-                    SetToggle(ragdollToggle, true);
+                    SetToggle(ragdollToggle, !ragdollToggle.Selected);
                 }
                 else if (PlayerInput.KeyHit(Keys.D3))
                 {
-                    SetToggle(limbsToggle, true);
+                    SetToggle(limbsToggle, !limbsToggle.Selected);
                 }
                 else if (PlayerInput.KeyHit(Keys.D4))
                 {
-                    SetToggle(jointsToggle, true);
+                    SetToggle(jointsToggle, !jointsToggle.Selected);
                 }
                 else if (PlayerInput.KeyHit(Keys.D5))
                 {
-                    SetToggle(animsToggle, true);
+                    SetToggle(animsToggle, !animsToggle.Selected);
                 }
                 if (PlayerInput.KeyDown(Keys.LeftControl))
                 {
