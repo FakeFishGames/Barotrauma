@@ -445,7 +445,7 @@ namespace Facepunch.Steamworks
                 int currNumMembers = NumMembers;
                 if (i >= currNumMembers)
                 {
-                    Array.Resize(ref numMembers, currNumMembers);
+                    Array.Resize<ulong>(ref memIDs, currNumMembers);
                     break;
                 }
                 memIDs[i] = client.native.matchmaking.GetLobbyMemberByIndex( CurrentLobby, i );
