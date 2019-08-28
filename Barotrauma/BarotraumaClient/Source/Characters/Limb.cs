@@ -218,12 +218,33 @@ namespace Barotrauma
             }
         }
 
-        public void RecreateSprite()
+        public void RecreateSprites()
         {
-            if (Sprite == null) { return; }
-            Sprite.Remove();
-            var source = Sprite.SourceElement;
-            Sprite = new Sprite(source, file: GetSpritePath(source));
+            if (Sprite != null)
+            {
+                Sprite.Remove();
+                var source = Sprite.SourceElement;
+                Sprite = new Sprite(source, file: GetSpritePath(source));
+            }
+            if (DeformSprite != null)
+            {
+                DeformSprite.Remove();
+                var source = DeformSprite.Sprite.SourceElement;
+                DeformSprite = new DeformableSprite(source, filePath: GetSpritePath(source));
+            }
+            if (DamagedSprite != null)
+            {
+                DamagedSprite.Remove();
+                var source = DamagedSprite.SourceElement;
+                DamagedSprite = new Sprite(source, file: GetSpritePath(source));
+            }
+            for (int i = 0; i < ConditionalSprites.Count; i++)
+            {
+                var conditionalSprite = ConditionalSprites[i];
+                conditionalSprite.Remove();
+                var source = conditionalSprite.SourceElement;
+                ConditionalSprites[i] = new ConditionalSprite(source, character, file: GetSpritePath(source));
+            }
         }
 
         /// <summary>

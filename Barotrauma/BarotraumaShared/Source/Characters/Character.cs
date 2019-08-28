@@ -812,7 +812,7 @@ namespace Barotrauma
             if (head == null) { return; }
             Info.RecreateHead(headId ?? Info.HeadSpriteId, Info.Race, Info.Gender, hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
 #if CLIENT
-            head.RecreateSprite();
+            head.RecreateSprites();
 #endif
             LoadHeadAttachments();
         }

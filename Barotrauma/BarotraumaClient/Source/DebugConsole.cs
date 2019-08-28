@@ -1763,7 +1763,7 @@ namespace Barotrauma
                     {
                         if (limb.type != LimbType.Head)
                         {
-                            limb.RecreateSprite();
+                            limb.RecreateSprites();
                         }
                         foreach (var wearable in limb.WearingItems)
                         {
