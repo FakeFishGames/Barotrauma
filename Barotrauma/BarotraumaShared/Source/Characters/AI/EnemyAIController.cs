@@ -387,14 +387,17 @@ namespace Barotrauma
 
         private void UpdateIdle(float deltaTime)
         {
-            if (Character.Submarine == null && SimPosition.Y < ConvertUnits.ToSimUnits(Character.CharacterHealth.CrushDepth * 0.75f))
+            if (Character.Submarine == null && 
+                SimPosition.Y < ConvertUnits.ToSimUnits(Character.CharacterHealth.CrushDepth * 0.75f))
             {
                 //steer straight up if very deep
                 steeringManager.SteeringManual(deltaTime, Vector2.UnitY);
                 return;
             }
 
-            if (wallTarget != null) return;
+            SteerInsideLevel(deltaTime);
+
+            if (wallTarget != null) { return; }
             
             if (SelectedAiTarget != null)
             {
@@ -450,6 +453,10 @@ namespace Barotrauma
                         }
                     }
                 }
+            }
+            else
+            {
+                SteerInsideLevel(deltaTime);
             }
             if (escapePoint != Vector2.Zero && Vector2.DistanceSquared(Character.SimPosition, escapePoint) > 1)
             {
@@ -1394,6 +1401,30 @@ namespace Barotrauma
             escapePoint = Vector2.Zero;
             wallTarget = null;
             AttackingLimb = null;
+        }
+
+        private void SteerInsideLevel(float deltaTime)
+        {
+            if (Level.Loaded == null) { return; } 
+            
+            Vector2 levelSimSize = new Vector2(
+                ConvertUnits.ToSimUnits(Level.Loaded.Size.X),
+                ConvertUnits.ToSimUnits(Level.Loaded.Size.Y));
+
+            float margin = 10.0f;
+
+            if (SimPosition.Y < 0.0f)
+            {
+                steeringManager.SteeringManual(deltaTime, Vector2.UnitY * MathUtils.InverseLerp(0.0f, -margin, SimPosition.Y));
+            }
+            if (SimPosition.X < 0.0f)
+            {
+                steeringManager.SteeringManual(deltaTime, Vector2.UnitX * MathUtils.InverseLerp(0.0f, -margin, SimPosition.X));
+            }
+            if (SimPosition.X > levelSimSize.X)
+            {
+                steeringManager.SteeringManual(deltaTime, Vector2.UnitX * MathUtils.InverseLerp(levelSimSize.X, levelSimSize.X + margin, SimPosition.X));
+            }            
         }
 
         private int GetMinimumPassableHoleCount()
