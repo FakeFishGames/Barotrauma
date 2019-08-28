@@ -846,7 +846,6 @@
   <charactereditor.selectanchor1pos>Select the anchor position for the joint</charactereditor.selectanchor1pos>
   <charactereditor.selectlimbtoconnect>Select another limb to connect it with the joint</charactereditor.selectlimbtoconnect>
   <charactereditor.frozen>Frozen</charactereditor.frozen>
-  <charactereditor.animationtestpose>Animation Test Pose</charactereditor.animationtestpose>
   <charactereditor.spriteorientation>Sprite Orientation</charactereditor.spriteorientation>
   <charactereditor.spritesheetorientation>Spritesheet Orientation</charactereditor.spritesheetorientation>
   <charactereditor.cantaddjointsnolimbelements>Cannot add joints, because no limb elements were found!</charactereditor.cantaddjointsnolimbelements>
@@ -884,8 +883,11 @@
   <charactereditor.editiktargets>IK Targets</charactereditor.editiktargets>
   <charactereditor.freeze>Freeze [F]</charactereditor.freeze>
   <charactereditor.autofreeze>Auto Freeze</charactereditor.autofreeze>
+  <charactereditor.enablegravitation>Gravitation [G]</charactereditor.enablegravitation>
+  <charactereditor.gravitationdisabled>Gravitation Disabled</charactereditor.gravitationdisabled>
   <charactereditor.limbpairediting>Limb Pair Editing</charactereditor.limbpairediting>
-  <charactereditor.animationtestpose>Animation Test Pose</charactereditor.animationtestpose>
+  <charactereditor.animationtestpose>Animation Test Pose [X]</charactereditor.animationtestpose>
+  <charactereditor.animationtestposeenabled>Animation Test Pose Enabled</charactereditor.animationtestposeenabled>
   <charactereditor.automove>Auto Move</charactereditor.automove>
   <charactereditor.followcursor>Follow Cursor</charactereditor.followcursor>
   <charactereditor.showcolliders>Colliders</charactereditor.showcolliders>

@@ -48,7 +48,7 @@ namespace Barotrauma.CharacterEditor
         private bool drawDamageModifiers;
         private bool showParamsEditor;
         private bool showSpritesheet;
-        private bool isFreezed;
+        private bool isFrozen;
         private bool autoFreeze;
         private bool limbPairEditing;
         private bool uniformScaling;
@@ -160,7 +160,7 @@ namespace Barotrauma.CharacterEditor
             drawDamageModifiers = false;
             showParamsEditor = false;
             showSpritesheet = false;
-            isFreezed = false;
+            isFrozen = false;
             autoFreeze = true;
             limbPairEditing = true;
             uniformScaling = true;
@@ -397,14 +397,19 @@ namespace Barotrauma.CharacterEditor
                 }
                 if (PlayerInput.KeyHit(Keys.C) && !PlayerInput.KeyDown(Keys.LeftControl))
                 {
-                    copyJointsToggle.Selected = !copyJointsToggle.Selected;
+                    SetToggle(copyJointsToggle, !copyJointsToggle.Selected);
                 }
                 if (character.IsHumanoid)
                 {
-                    if (PlayerInput.KeyHit(Keys.T) || PlayerInput.KeyHit(Keys.X))
+                    animTestPoseToggle.Enabled = CurrentAnimation.IsGroundedAnimation;
+                    if (animTestPoseToggle.Enabled && PlayerInput.KeyHit(Keys.X))
                     {
-                        animTestPoseToggle.Selected = !animTestPoseToggle.Selected;
+                        SetToggle(animTestPoseToggle, !animTestPoseToggle.Selected);
                     }
+                }
+                if (PlayerInput.KeyHit(Keys.G))
+                {
+                    SetToggle(gravitationToggle, !gravitationToggle.Selected);
                 }
                 if (PlayerInput.KeyHit(InputType.Run))
                 {
@@ -543,7 +548,7 @@ namespace Barotrauma.CharacterEditor
                     }
                 }
             }
-            if (!isFreezed && Wizard.instance == null)
+            if (!isFrozen && Wizard.instance == null)
             {
                 if (character.AnimController.Invalid)
                 {
@@ -637,7 +642,7 @@ namespace Barotrauma.CharacterEditor
         private Vector2 scaledMouseSpeed;
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
-            if (isFreezed)
+            if (isFrozen)
             {
                 Timing.Alpha = 0.0f;
             }
@@ -774,13 +779,17 @@ namespace Barotrauma.CharacterEditor
                 GUI.DrawIndicator(spriteBatch, indicatorPos, Cam, 700, GUI.SubmarineIcon, Color.White);
             }
             GUI.Draw(Cam, spriteBatch);
-            if (isFreezed)
+            if (isFrozen)
             {
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 35, 200), GetCharacterEditorTranslation("Frozen"), Color.Blue, Color.White * 0.5f, 10, GUI.LargeFont);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 40, 200), GetCharacterEditorTranslation("Frozen"), Color.Blue, Color.White * 0.5f, 10, GUI.LargeFont);
+            }
+            if (!gravitationToggle.Selected)
+            {
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 135, 250), GetCharacterEditorTranslation("GravitationDisabled"), Color.White, Color.Red * 0.5f, 10, GUI.LargeFont);
             }
             if (animTestPoseToggle.Selected)
             {
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 130, 300), GetCharacterEditorTranslation("AnimationTestPose"), Color.Blue, Color.White * 0.5f, 10, GUI.LargeFont);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 170, 300), GetCharacterEditorTranslation("AnimationTestPoseEnabled"), Color.White, Color.Black * 0.5f, 10, GUI.LargeFont);
             }
             if (selectedJoints.Count == 1)
             {
@@ -1672,6 +1681,7 @@ namespace Barotrauma.CharacterEditor
 
         private GUIDropDown animSelection;
         private GUITickBox freezeToggle;
+        private GUITickBox gravitationToggle;
         private GUITickBox animTestPoseToggle;
         private GUITickBox showCollidersToggle;
         private GUIScrollBar jointScaleBar;
@@ -1973,17 +1983,52 @@ namespace Barotrauma.CharacterEditor
                 Stretch = true
             };
             new GUITextBlock(new RectTransform(new Vector2(0.03f, 0.06f), layoutGroup.RectTransform), GetCharacterEditorTranslation("OptionsPanel"), font: GUI.LargeFont);
-            freezeToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("Freeze")) { Selected = isFreezed };
-            var autoFreezeToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("AutoFreeze")) { Selected = autoFreeze };
-            var limbPairEditToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("LimbPairEditing"))
+            freezeToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("Freeze"))
+            {
+                Selected = isFrozen,
+                OnSelected = box =>
+                {
+                    isFrozen = box.Selected;
+                    return true;
+                }
+            };
+            new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("AutoFreeze"))
+            {
+                Selected = autoFreeze,
+                OnSelected = box =>
+                {
+                    autoFreeze = box.Selected;
+                    return true;
+                }
+            };
+            gravitationToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("EnableGravitation"))
+            {
+                Selected = character.AnimController.Collider.PhysEnabled,
+                OnSelected = box =>
+                {
+                    character.AnimController.Collider.PhysEnabled = box.Selected;
+                    return true;
+                }
+            };
+            new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("LimbPairEditing"))
             {
                 Selected = limbPairEditing,
-                Enabled = character.IsHumanoid 
+                Enabled = character.IsHumanoid,
+                OnSelected = box =>
+                {
+                    limbPairEditing = box.Selected;
+                    return true;
+                }
             };
             animTestPoseToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("AnimationTestPose"))
             {
                 Selected = character.AnimController.AnimationTestPose,
-                Enabled = character.IsHumanoid
+                Enabled = character.IsHumanoid,
+                OnSelected = box =>
+                {
+                    character.AnimController.AnimationTestPose = box.Selected;
+                    return true;
+                }
             };
             new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("AutoMove"))
             {
@@ -2011,26 +2056,6 @@ namespace Barotrauma.CharacterEditor
                     displayBackgroundColor = box.Selected;
                     return true;
                 }
-            };
-            freezeToggle.OnSelected = box =>
-            {
-                isFreezed = box.Selected;
-                return true;
-            };
-            autoFreezeToggle.OnSelected = box =>
-            {
-                autoFreeze = box.Selected;
-                return true;
-            };
-            limbPairEditToggle.OnSelected = box =>
-            {
-                limbPairEditing = box.Selected;
-                return true;
-            };
-            animTestPoseToggle.OnSelected = box =>
-            {
-                character.AnimController.AnimationTestPose = box.Selected;
-                return true;
             };
             optionsToggle = new ToggleButton(new RectTransform(new Vector2(0.1f, 1), optionsPanel.RectTransform, Anchor.CenterLeft, Pivot.CenterRight), Direction.Right);
         }
@@ -4221,7 +4246,7 @@ namespace Barotrauma.CharacterEditor
                                 if (jointCreationMode != JointCreationMode.None) { continue; }
                                 if (autoFreeze)
                                 {
-                                    isFreezed = true;
+                                    isFrozen = true;
                                 }
                                 Vector2 input = ConvertUnits.ToSimUnits(scaledMouseSpeed) / Cam.Zoom;
                                 input.Y = -input.Y;
@@ -4276,7 +4301,7 @@ namespace Barotrauma.CharacterEditor
                             }
                             else
                             {
-                                isFreezed = freezeToggle.Selected;
+                                isFrozen = freezeToggle.Selected;
                             }
                         }
                     }
@@ -4971,13 +4996,13 @@ namespace Barotrauma.CharacterEditor
                 {
                     if (autoFreeze ?? this.autoFreeze)
                     {
-                        isFreezed = true;
+                        isFrozen = true;
                     }
                     onPressed();
                 }
                 else
                 {
-                    isFreezed = freezeToggle.Selected;
+                    isFrozen = freezeToggle.Selected;
                 }
                 // Might not be entirely reliable, since the method is used inside the draw loop.
                 if (PlayerInput.LeftButtonClicked())
