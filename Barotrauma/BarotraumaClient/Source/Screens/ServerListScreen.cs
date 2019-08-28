@@ -792,7 +792,7 @@ namespace Barotrauma
                         pressColor = friend.PlayingThisGame ? new Color(30, 40, 30) : new Color(25, 37, 75);
                     }
 
-                    var guiButton = new GUIButton(new RectTransform(Vector2.One * 0.9f, friendsButtonHolder.RectTransform, Anchor.BottomRight, Pivot.BottomRight, scaleBasis: ScaleBasis.BothHeight), style: null)
+                    var guiButton = new GUIButton(new RectTransform(Vector2.One * 0.6f, friendsButtonHolder.RectTransform, Anchor.BottomRight, Pivot.BottomRight, scaleBasis: ScaleBasis.BothHeight), style: null)
                     {
                         Color = mainColor,
                         SelectedColor = mainColor,
@@ -805,7 +805,7 @@ namespace Barotrauma
 
                     if (friend.Sprite != null)
                     {
-                        var guiImage = new GUIImage(new RectTransform(Vector2.One * 0.9f, guiButton.RectTransform, Anchor.Center), friend.Sprite, null, true);
+                        var guiImage = new GUIImage(new RectTransform(Vector2.One * 0.925f, guiButton.RectTransform, Anchor.Center), friend.Sprite, null, true);
                         guiImage.ToolTip = friend.Name + "\n" + friend.Status;
                     }
                 }
@@ -831,7 +831,7 @@ namespace Barotrauma
 
             if (friendsList.Count > 0)
             {
-                friendsDropdownButton = new GUIButton(new RectTransform(Vector2.One * 0.9f, friendsButtonHolder.RectTransform, Anchor.BottomRight, Pivot.BottomRight, scaleBasis: ScaleBasis.BothHeight), "\u2022 \u2022 \u2022", style: null)
+                friendsDropdownButton = new GUIButton(new RectTransform(Vector2.One * 0.6f, friendsButtonHolder.RectTransform, Anchor.BottomRight, Pivot.BottomRight, scaleBasis: ScaleBasis.BothHeight), "\u2022 \u2022 \u2022", style: null)
                 {
                     Color = mainColor,
                     SelectedColor = mainColor,
