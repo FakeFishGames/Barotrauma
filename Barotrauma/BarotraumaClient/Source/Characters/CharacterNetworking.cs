@@ -337,7 +337,7 @@ namespace Barotrauma
 
         public static Character ReadSpawnData(IReadMessage inc, bool spawn = true)
         {
-            DebugConsole.NewMessage("READING CHARACTER SPAWN DATA", Color.Cyan);
+            DebugConsole.Log("Reading character spawn data");
 
             if (GameMain.Client == null) return null;
 

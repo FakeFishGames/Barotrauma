@@ -213,7 +213,7 @@ namespace Barotrauma.Steam
             instance.client.Lobby.CurrentLobbyData.SetData("gamestarted", GameMain.Client.GameStarted.ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("gamemode", serverSettings.GameModeIdentifier);
 
-            DebugConsole.NewMessage("Lobby updated!", Microsoft.Xna.Framework.Color.Lime);
+            DebugConsole.Log("Lobby updated!");
         }
 
         public static void LeaveLobby()

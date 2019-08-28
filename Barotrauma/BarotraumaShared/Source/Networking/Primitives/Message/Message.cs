@@ -547,7 +547,7 @@ namespace Barotrauma.Networking
                         if (compressedBuf.Length > outBuf.Length) { Array.Resize(ref outBuf, compressedBuf.Length); }
                         Array.Copy(compressedBuf, outBuf, compressedBuf.Length);
                         length = compressedBuf.Length;
-                        DebugConsole.NewMessage("Compressed message: " + LengthBytes + " to " + length);
+                        DebugConsole.Log("Compressed message: " + LengthBytes + " to " + length);
                     }
                 }
             }
@@ -632,7 +632,7 @@ namespace Barotrauma.Networking
                 buf = new byte[decompressedData.Length];
                 Array.Copy(decompressedData, 0, buf, 0, decompressedData.Length);
                 lengthBits = decompressedData.Length * 8;
-                DebugConsole.NewMessage("Decompressing message: " + inLength + " to " + LengthBytes);
+                DebugConsole.Log("Decompressing message: " + inLength + " to " + LengthBytes);
             }
             else
             {

@@ -588,7 +588,7 @@ namespace Barotrauma.Networking
             if (netServer == null) { return; }
 
             PendingClient pendingClient = pendingClients.Find(c => c.SteamID == steamID);
-            DebugConsole.NewMessage(steamID + " validation: " + status+", "+(pendingClient!=null));
+            DebugConsole.Log(steamID + " validation: " + status+", "+(pendingClient!=null));
             
             if (pendingClient == null)
             {

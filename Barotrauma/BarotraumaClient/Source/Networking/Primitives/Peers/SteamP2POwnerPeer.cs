@@ -87,7 +87,7 @@ namespace Barotrauma.Networking
         private void OnAuthChange(ulong steamID, ulong ownerID, ClientAuthStatus status)
         {
             RemotePeer remotePeer = remotePeers.Find(p => p.SteamID == steamID);
-            DebugConsole.NewMessage(steamID + " validation: " + status + ", " + (remotePeer != null));
+            DebugConsole.Log(steamID + " validation: " + status + ", " + (remotePeer != null));
 
             if (remotePeer == null) { return; }
 
