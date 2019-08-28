@@ -224,6 +224,11 @@ namespace Barotrauma
                 }
             }
 
+            bool targetIsHusk = target.CharacterHealth?.GetAffliction<AfflictionHusk>("huskinfection")?.State == AfflictionHusk.InfectionState.Active;
+            bool attackerIsHusk = attacker.CharacterHealth?.GetAffliction<AfflictionHusk>("huskinfection")?.State == AfflictionHusk.InfectionState.Active;
+            //huskified characters count as enemies to healthy characters and vice versa
+            if (targetIsHusk != attackerIsHusk) { isEnemy = true; }
+
             if (appliedAfflictions != null)
             {
                 foreach (Affliction affliction in appliedAfflictions)
