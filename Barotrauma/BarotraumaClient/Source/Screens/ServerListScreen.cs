@@ -346,11 +346,11 @@ namespace Barotrauma
 				OnClicked = (btn, userdata) => { RefreshServers(); return true; }
 			};
 
-            /*var directJoinButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.9f), buttonContainer.RectTransform),
+            var directJoinButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.9f), buttonContainer.RectTransform),
                 TextManager.Get("serverlistdirectjoin"), style: "GUIButtonLarge")
             {
                 OnClicked = (btn, userdata) => { ShowDirectJoinPrompt(); return true; }
-            };*/
+            };
 
             joinButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.9f), buttonContainer.RectTransform),
                 TextManager.Get("ServerListJoin"), style: "GUIButtonLarge")
@@ -587,7 +587,7 @@ namespace Barotrauma
             serverList.UpdateScrollBarSize();
         }
 
-        /*private void ShowDirectJoinPrompt()
+        private void ShowDirectJoinPrompt()
         {
             var msgBox = new GUIMessageBox(TextManager.Get("ServerListDirectJoin"), "", new string[] { TextManager.Get("OK"), TextManager.Get("Cancel") },
                 relativeSize: new Vector2(0.25f, 0.2f), minSize: new Point(400, 150));
@@ -619,7 +619,7 @@ namespace Barotrauma
                 okButton.Enabled = !string.IsNullOrEmpty(text);
                 return true;
             };
-        }*/
+        }
 
         private bool JoinFriend(GUIButton button, object userdata)
         {
