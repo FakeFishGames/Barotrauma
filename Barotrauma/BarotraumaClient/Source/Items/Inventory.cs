@@ -741,14 +741,34 @@ namespace Barotrauma
                 {
                     Inventory selectedInventory = selectedSlot.ParentInventory;
                     int slotIndex = selectedSlot.SlotIndex;
-                    if (selectedInventory.TryPutItem(draggingItem, slotIndex, true, true, Character.Controlled))
+
+                    //if attempting to drop into an invalid slot in the same inventory, try to move to the correct slot
+                    if (selectedInventory.Items[slotIndex] == null &&
+                        selectedInventory == Character.Controlled.Inventory &&
+                        !draggingItem.AllowedSlots.Any(a => a.HasFlag(Character.Controlled.Inventory.SlotTypes[slotIndex])) &&
+                        selectedInventory.TryPutItem(draggingItem, Character.Controlled, draggingItem.AllowedSlots))
                     {
-                        if (selectedInventory.slots != null) selectedInventory.slots[slotIndex].ShowBorderHighlight(Color.White, 0.1f, 0.4f);
+                        if (selectedInventory.slots != null)
+                        {
+                            for (int i = 0; i < selectedInventory.slots.Length; i++)
+                            {
+                                if (selectedInventory.Items[i] == draggingItem)
+                                {
+                                    selectedInventory.slots[slotIndex].ShowBorderHighlight(Color.White, 0.1f, 0.4f);
+                                }
+                            }
+                            selectedInventory.slots[slotIndex].ShowBorderHighlight(Color.Red, 0.1f, 0.9f);
+                        }
+                        GUI.PlayUISound(GUISoundType.PickItem);
+                    }
+                    else if (selectedInventory.TryPutItem(draggingItem, slotIndex, true, true, Character.Controlled))
+                    {
+                        if (selectedInventory.slots != null) { selectedInventory.slots[slotIndex].ShowBorderHighlight(Color.White, 0.1f, 0.4f); }
                         GUI.PlayUISound(GUISoundType.PickItem);
                     }
                     else
                     {
-                        if (selectedInventory.slots != null) selectedInventory.slots[slotIndex].ShowBorderHighlight(Color.Red, 0.1f, 0.9f);
+                        if (selectedInventory.slots != null){ selectedInventory.slots[slotIndex].ShowBorderHighlight(Color.Red, 0.1f, 0.9f); }
                         GUI.PlayUISound(GUISoundType.PickItemFail);
                     }
                     selectedInventory.HideTimer = 1.0f;
