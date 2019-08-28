@@ -167,7 +167,7 @@
     <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0" msg="ItemMsgPickUpSelect">      
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
       <StatusEffect type="OnUse" target="Character" delay="10" duration="10">
-        <Affliction identifier="drunk" amount="0.5" />
+        <Affliction identifier="drunk" amount="2.0" />
         <Affliction identifier="psychosisresistance" amount="10" />
       </StatusEffect>
       <!-- Remove the item when fully used -->
