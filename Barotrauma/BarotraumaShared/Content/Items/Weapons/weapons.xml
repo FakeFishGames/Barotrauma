@@ -607,8 +607,8 @@
 
   <Item name="40mm Stun Grenade" identifier="40mmstungrenade" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem" Scale="0.35" impactsoundtag="impact_metal_light">
     <!--TODO: adjust prices-->
-    <Price locationtype="Military" buyprice="60" />
-    <Price locationtype="City" buyprice="100" />
+    <Price locationtype="Military" buyprice="100" />
+    <Price locationtype="City" buyprice="120" />
     <Deconstruct time="5">
       <Item identifier="iron" />
       <Item identifier="phosphorus" />
@@ -707,6 +707,11 @@
       <Item identifier="steel" />
       <Item identifier="plastic" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="20">
+      <RequiredSkill identifier="medical" level="40"/>
+      <RequiredItem identifier="steel"/>
+      <RequiredItem identifier="plastic"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,830,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="0,293,130,76" depth="0.55" origin="0.5,0.5" />
     <Body width="130" height="70" density="50" />
@@ -727,6 +732,16 @@
   </Item>
   
   <Item name="Stun Gun Dart" identifier="stungundart" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem" impactsoundtag="impact_metal_light">
+    <Price locationtype="Military" buyprice="20" />
+    <Price locationtype="City" buyprice="30" />
+    <Deconstruct time="10">
+      <Item identifier="steel" />
+    </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="20">
+      <RequiredSkill identifier="weapons" level="30" />
+      <Item identifier="steel" />
+      <Item identifier="chloralhydrate" mincondition="0.1" usecondition="true" />
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="766,576,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="127,49,36,9" depth="0.55" origin="0.5,0.5" />
     <Body width="35" height="8" density="40" />
