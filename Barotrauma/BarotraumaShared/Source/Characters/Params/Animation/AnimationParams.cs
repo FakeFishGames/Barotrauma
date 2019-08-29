@@ -288,6 +288,9 @@ namespace Barotrauma
             return instance as T;
         }
 
+        public bool Serialize() => base.Serialize();
+        public bool Deserialize() => base.Deserialize();
+
         protected bool Load(string file, string speciesName)
         {
             if (Load(file))

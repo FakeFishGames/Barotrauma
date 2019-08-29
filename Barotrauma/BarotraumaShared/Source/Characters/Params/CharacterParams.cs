@@ -128,7 +128,7 @@ namespace Barotrauma
             }
         }
 
-        protected bool Deserialize(XElement element = null, bool alsoChildren = true, bool recursive = true)
+        public bool Deserialize(XElement element = null, bool alsoChildren = true, bool recursive = true)
         {
             if (base.Deserialize(element))
             {
@@ -141,7 +141,7 @@ namespace Barotrauma
             return false;
         }
 
-        protected bool Serialize(XElement element = null, bool alsoChildren = true, bool recursive = true)
+        public bool Serialize(XElement element = null, bool alsoChildren = true, bool recursive = true)
         {
             if (base.Serialize(element))
             {

@@ -12,8 +12,8 @@ namespace Barotrauma.CharacterEditor
     class Wizard
     {
         // Ragdoll data
-        private string name = string.Empty;
-        private bool isHumanoid = false;
+        private string name;
+        private bool isHumanoid;
         private bool canEnterSubmarine = true;
         private string texturePath;
         private string xmlPath;
@@ -22,6 +22,23 @@ namespace Barotrauma.CharacterEditor
         private List<GUIComponent> limbGUIElements = new List<GUIComponent>();
         private List<XElement> jointXElements = new List<XElement>();
         private List<GUIComponent> jointGUIElements = new List<GUIComponent>();
+
+        public bool IsCopy { get; private set; }
+        public CharacterParams SourceCharacter { get; private set; }
+        public RagdollParams SourceRagdoll { get; private set; }
+        public IEnumerable<AnimationParams> SourceAnimations { get; private set; }
+
+        public void CopyExisting(CharacterParams character, RagdollParams ragdoll, IEnumerable<AnimationParams> animations)
+        {
+            IsCopy = true;
+            SourceCharacter = character;
+            SourceRagdoll = ragdoll;
+            SourceAnimations = animations;
+            name = character.SpeciesName;
+            isHumanoid = character.Humanoid;
+            canEnterSubmarine = ragdoll.CanEnterSubmarine;
+            texturePath = ragdoll.Limbs.First().GetSprite().Texture;
+        }
 
         public static Wizard instance;
         public static Wizard Instance
@@ -73,6 +90,43 @@ namespace Barotrauma.CharacterEditor
             activeView?.Box.AddToGUIUpdateList();
         }
 
+        public void CreateCharacter(XElement ragdollElement, XElement characterElement = null, IEnumerable<AnimationParams> animations = null)
+        {
+            if (Character.ConfigFiles.Any(f => (f.Root.IsOverride() ? f.Root.FirstElement() : f.Root).GetAttributeString("speciesname", "").Equals(name, StringComparison.OrdinalIgnoreCase)))
+            {
+                bool isSamePackage = contentPackage.GetFilesOfType(ContentType.Character).Any(c => Path.GetFileNameWithoutExtension(c).Equals(name, StringComparison.OrdinalIgnoreCase));
+                string verificationText = isSamePackage ? GetCharacterEditorTranslation("existingcharacterfoundreplaceverification") : GetCharacterEditorTranslation("existingcharacterfoundoverrideverification");
+                var msgBox = new GUIMessageBox("", verificationText, new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
+                {
+                    UserData = "verificationprompt"
+                };
+                msgBox.Buttons[0].OnClicked = (_, userdata) =>
+                {
+                    msgBox.Close();
+                    if (CharacterEditorScreen.Instance.CreateCharacter(name, Path.GetDirectoryName(xmlPath), isHumanoid, contentPackage, ragdollElement, characterElement, animations))
+                    {
+                        GUI.AddMessage(GetCharacterEditorTranslation("CharacterCreated").Replace("[name]", name), Color.Green, font: GUI.Font);
+                    }
+                    Wizard.Instance.SelectTab(Tab.None);
+                    return true;
+                };
+                //msgBox.Buttons[0].OnClicked += msgBox.Close;
+                msgBox.Buttons[1].OnClicked = (_, userdata) =>
+                {
+                    msgBox.Close();
+                    return true;
+                };
+            }
+            else
+            {
+                if (CharacterEditorScreen.Instance.CreateCharacter(name, Path.GetDirectoryName(xmlPath), isHumanoid, contentPackage, ragdollElement, characterElement, animations))
+                {
+                    GUI.AddMessage(GetCharacterEditorTranslation("CharacterCreated").Replace("[name]", name), Color.Green, font: GUI.Font);
+                }
+                Wizard.Instance.SelectTab(Tab.None);
+            }
+        }
+
         private class CharacterView : View
         {
             private static CharacterView instance;
@@ -82,7 +136,7 @@ namespace Barotrauma.CharacterEditor
 
             protected override GUIMessageBox Create()
             {
-                var box = new GUIMessageBox(GetCharacterEditorTranslation("CreateNewCharacter"), string.Empty, new string[] { TextManager.Get("Cancel"), TextManager.Get("Next") }, new Vector2(0.65f, 1f));
+                var box = new GUIMessageBox(GetCharacterEditorTranslation("CreateNewCharacter"), string.Empty, new string[] { TextManager.Get("Cancel"), IsCopy ? TextManager.Get("Create") : TextManager.Get("Next") }, new Vector2(0.65f, 1f));
                 box.Header.Font = GUI.LargeFont;
                 box.Content.ChildAnchor = Anchor.TopCenter;
                 box.Content.AbsoluteSpacing = 20;
@@ -121,7 +175,7 @@ namespace Barotrauma.CharacterEditor
                     {
                         case 0:
                             new GUITextBlock(leftElement, TextManager.Get("Name"));
-                            var nameField = new GUITextBox(rightElement, GetCharacterEditorTranslation("DefaultName")) { CaretColor = Color.White };
+                            var nameField = new GUITextBox(rightElement, Name ?? GetCharacterEditorTranslation("DefaultName")) { CaretColor = Color.White };
                             string ProcessText(string text) => text.RemoveWhitespace().CapitaliseFirstInvariant();
                             Name = ProcessText(nameField.Text);
                             nameField.OnTextChanged += (tb, text) =>
@@ -151,6 +205,7 @@ namespace Barotrauma.CharacterEditor
                             new GUITextBlock(leftElement, GetCharacterEditorTranslation("ConfigFileOutput"));
                             xmlPathElement = new GUITextBox(rightElement, string.Empty)
                             {
+                                Text = XMLPath,
                                 CaretColor = Color.White
                             };
                             xmlPathElement.OnTextChanged += (tb, text) =>
@@ -163,6 +218,7 @@ namespace Barotrauma.CharacterEditor
                             //new GUITextBlock(leftElement, GetCharacterEditorTranslation("TexturePath"));
                             texturePathElement = new GUITextBox(rightElement, string.Empty)
                             {
+                                Text = TexturePath,
                                 CaretColor = Color.White,
                             };
                             texturePathElement.OnTextChanged += (tb, text) =>
@@ -259,9 +315,6 @@ namespace Barotrauma.CharacterEditor
                     }
                 }
                 UpdatePaths();
-                //var codeArea = new GUIFrame(new RectTransform(new Vector2(1, 0.5f), listBox.Content.RectTransform), style: null) { CanBeFocused = false };
-                //new GUITextBlock(new RectTransform(new Vector2(1, 0.05f), codeArea.RectTransform), "Custom code:");
-                //var inputBox = new GUITextBox(new RectTransform(new Vector2(1, 1 - 0.05f), codeArea.RectTransform, Anchor.BottomLeft), string.Empty, textAlignment: Alignment.TopLeft);
                 // Cancel
                 box.Buttons[0].OnClicked += (b, d) =>
                 {
@@ -289,7 +342,16 @@ namespace Barotrauma.CharacterEditor
                         texturePathElement.Flash(Color.Red);
                         return false;
                     }
-                    Wizard.Instance.SelectTab(Tab.Ragdoll);
+                    if (IsCopy)
+                    {
+                        SourceRagdoll.Limbs.ForEach(l => l.GetSprite().Texture = TexturePath);
+                        SourceRagdoll.Serialize();
+                        Wizard.Instance.CreateCharacter(SourceRagdoll.MainElement, SourceCharacter.MainElement, SourceAnimations);
+                    }
+                    else
+                    {
+                        Wizard.Instance.SelectTab(Tab.Ragdoll);
+                    }
                     return true;
                 };
                 return box;
@@ -683,38 +745,7 @@ namespace Barotrauma.CharacterEditor
                                 colliderElements,
                                 LimbXElements.Values,
                                 JointXElements);
-                    if (Character.ConfigFiles.Any(f => f.Root.GetAttributeString("speciesname", "").Equals(Name, StringComparison.OrdinalIgnoreCase)))
-                    {
-                        var msgBox = new GUIMessageBox("", GetCharacterEditorTranslation("existingcharacterfoundreplaceverification"), new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
-                        {
-                            UserData = "verificationprompt"
-                        };
-                        msgBox.Buttons[0].OnClicked = (yesBtn, userdata) =>
-                        {
-                            msgBox.Close();
-                            if (CharacterEditorScreen.Instance.CreateCharacter(Name, Path.GetDirectoryName(XMLPath), IsHumanoid, ContentPackage, mainElement))
-                            {
-                                GUI.AddMessage(GetCharacterEditorTranslation("CharacterCreated").Replace("[name]", Name), Color.Green, font: GUI.Font);
-                            }
-                            Wizard.Instance.SelectTab(Tab.None);
-                            return true;
-                        };
-                        msgBox.Buttons[0].OnClicked += msgBox.Close;
-                        msgBox.Buttons[1].OnClicked = (_, userdata) =>
-                        {
-                            msgBox.Close();
-                            return true;
-                        };
-                        return false;
-                    }
-                    else
-                    {
-                        if (CharacterEditorScreen.Instance.CreateCharacter(Name, Path.GetDirectoryName(XMLPath), IsHumanoid, ContentPackage, mainElement))
-                        {
-                            GUI.AddMessage(GetCharacterEditorTranslation("CharacterCreated").Replace("[name]", Name), Color.Green, font: GUI.Font);
-                        }
-                        Wizard.Instance.SelectTab(Tab.None);
-                    }
+                    Wizard.Instance.CreateCharacter(mainElement);
                     return true;
                 };
                 return box;
@@ -809,6 +840,12 @@ namespace Barotrauma.CharacterEditor
         private abstract class View
         {
             // Easy accessors to the common data.
+
+            public bool IsCopy => Instance.IsCopy;
+            public IEnumerable<AnimationParams> SourceAnimations => Instance.SourceAnimations;
+            public CharacterParams SourceCharacter => Instance.SourceCharacter;
+            public RagdollParams SourceRagdoll => Instance.SourceRagdoll;
+
             public string Name
             {
                 get => Instance.name;
@@ -962,7 +999,7 @@ namespace Barotrauma.CharacterEditor
             Dictionary<int, string> idToCodeName = new Dictionary<int, string>();
             protected void ParseRagdollFromHTML(string path, Action<int, string, LimbType, Rectangle> limbCallback = null, Action<int, int, Vector2, Vector2, string> jointCallback = null)
             {
-                // TODO: parse as xml?
+                // TODO: parse as xml files -> allows to load ragdolls onto the wizard.
                 //XDocument doc = XMLExtensions.TryLoadXml(path);
                 //var xElements = doc.Elements().ToArray();
                 string html = string.Empty;

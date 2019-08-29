@@ -1589,10 +1589,11 @@ namespace Barotrauma.CharacterEditor
 
             // Config file
             string configFilePath = Path.Combine(mainFolder, $"{name}.xml").Replace(@"\", @"/");
-            var duplicate = Character.ConfigFiles.FirstOrDefault(file => file.Root.GetAttributeString("speciesname", string.Empty).Equals(name, StringComparison.OrdinalIgnoreCase));
+            var duplicate = Character.ConfigFiles.FirstOrDefault(f => (f.Root.IsOverride() ? f.Root.FirstElement() : f.Root).GetAttributeString("speciesname", string.Empty).Equals(name, StringComparison.OrdinalIgnoreCase));
             XElement overrideElement = null;
             if (duplicate != null)
             {
+                allFiles = null;
                 if (!File.Exists(configFilePath))
                 {
                     // If the file exists, we just want to overwrite it.
@@ -2970,15 +2971,7 @@ namespace Barotrauma.CharacterEditor
             {
                 OnClicked = (button, data) =>
                 {
-                    characterInfoToggle.Selected = false;
-                    ragdollToggle.Selected = false;
-                    limbsToggle.Selected = false;
-                    animsToggle.Selected = false;
-                    spritesheetToggle.Selected = false;
-                    jointsToggle.Selected = false;
-                    paramsToggle.Selected = false;
-                    skeletonToggle.Selected = false;
-                    damageModifiersToggle.Selected = false;
+                    ResetView();
                     Wizard.Instance.SelectTab(Wizard.Tab.Character);
                     return true;
                 }
@@ -2988,28 +2981,30 @@ namespace Barotrauma.CharacterEditor
                 ToolTip = GetCharacterEditorTranslation("CopyCharacterToolTip"),
                 OnClicked = (button, data) =>
                 {
-                    allFiles = null;
-                    // TODO: prompt for the name 
-                    string speciesName = CharacterParams.SpeciesName;
-                    // TODO: allow to select the content package (-> show the wizard?)
-                    var contentPackage = GameMain.Config.SelectedContentPackages.Last();
-                    if (contentPackage.GetFilesOfType(ContentType.Character).Any(c => Path.GetFileNameWithoutExtension(c).Equals(speciesName, StringComparison.OrdinalIgnoreCase)))
-                    {
-                        // Can't create multiple characters with the same name in the same content package.
-                        speciesName += "copy";
-                    }
+                    ResetView();
+                    CharacterParams.Serialize();
                     RagdollParams.Serialize();
-                    XElement ragdoll = RagdollParams.MainElement;
-                    ragdoll.SetAttributeValue("type", speciesName);
-                    string folder = contentPackage == GameMain.VanillaContent ? Path.Combine("Content/Characters", speciesName) : Path.Combine("Mods", contentPackage.Name, "Characters", speciesName);
-                    var config = CharacterParams.MainElement;
-                    config.SetAttributeValue("speciesname", speciesName);
-                    CreateCharacter(speciesName, folder, CharacterParams.Humanoid, contentPackage, ragdoll, config, AnimParams);
+                    AnimParams.ForEach(a => a.Serialize());
+                    Wizard.Instance.CopyExisting(CharacterParams, RagdollParams, AnimParams);
+                    Wizard.Instance.SelectTab(Wizard.Tab.Character);
                     return true;
                 }
             };
 
             fileEditToggle = new ToggleButton(new RectTransform(new Vector2(0.1f, 1), fileEditPanel.RectTransform, Anchor.CenterLeft, Pivot.CenterRight), Direction.Right);
+
+            void ResetView()
+            {
+                characterInfoToggle.Selected = false;
+                ragdollToggle.Selected = false;
+                limbsToggle.Selected = false;
+                animsToggle.Selected = false;
+                spritesheetToggle.Selected = false;
+                jointsToggle.Selected = false;
+                paramsToggle.Selected = false;
+                skeletonToggle.Selected = false;
+                damageModifiersToggle.Selected = false;
+            }
         }
         #endregion
 

@@ -922,7 +922,8 @@ namespace Barotrauma
                 return false;
             }
             name = name.ToLowerInvariant();
-            var duplicate = configFiles.FirstOrDefault(kvp => kvp.Value.Root.GetAttributeString("speciesname", string.Empty).Equals(name, StringComparison.OrdinalIgnoreCase));
+            var duplicate = configFiles.FirstOrDefault(kvp => (kvp.Value.Root.IsOverride() ? kvp.Value.Root.FirstElement() : kvp.Value.Root)
+                .GetAttributeString("speciesname", string.Empty).Equals(name, StringComparison.OrdinalIgnoreCase));
             if (duplicate.Value != null)
             {
                 if (forceOverride || doc.Root.IsOverride())

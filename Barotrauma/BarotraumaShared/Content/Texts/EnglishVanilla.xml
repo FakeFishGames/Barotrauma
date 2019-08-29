@@ -968,8 +968,9 @@
   <charactereditor.limbwithindexanchor>Limb [index] Anchor</charactereditor.limbwithindexanchor>
   <charactereditor.failedtoreadhtml>Character Editor Screen: Failed to read HTML at [path]</charactereditor.failedtoreadhtml>
   <charactereditor.multipleitemswithsamehierarchy>Multiple items with the same hierarchy [hierarchy] found ([name]). Cannot continue.</charactereditor.multipleitemswithsamehierarchy>
-  <charactereditor.cannoteditvanillacharacters>Cannot edit the characters defined in the 'Vanilla' content package!</charactereditor.cannoteditvanillacharacters>
-  <charactereditor.existingcharacterfoundreplaceverification>An existing character with the same name was found. Do you want to replace it?</charactereditor.existingcharacterfoundreplaceverification>
+  <charactereditor.cannoteditvanillacharacters>Cannot edit the characters defined in the 'Vanilla' content package! You can create a copy of the character (in another content package) should you want to edit it.</charactereditor.cannoteditvanillacharacters>
+  <charactereditor.existingcharacterfoundreplaceverification>An existing character with the same name was found in the same content package. Do you want to replace it (the original files will be lost)?</charactereditor.existingcharacterfoundreplaceverification>
+  <charactereditor.existingcharacterfoundoverrideverification>An existing character with the same name was found in another content package. Do you want to create an override of it (the original files will stay intact)?</charactereditor.existingcharacterfoundoverrideverification>
   <charactereditor.existingcharacterfound>An existing character with the same name was found.</charactereditor.existingcharacterfound>
   <charactereditor.modespanel>Edit</charactereditor.modespanel>
   <charactereditor.fileeditpanel>Files</charactereditor.fileeditpanel>
