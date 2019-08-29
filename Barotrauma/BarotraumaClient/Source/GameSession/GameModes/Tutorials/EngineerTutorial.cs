@@ -418,6 +418,8 @@ namespace Barotrauma.Tutorials
             do { CheckJunctionBoxHighlights(); yield return null; } while (!engineer_submarineJunctionBox_1.IsFullCondition || !engineer_submarineJunctionBox_2.IsFullCondition || !engineer_submarineJunctionBox_3.IsFullCondition);
             CheckJunctionBoxHighlights();
             RemoveCompletedObjective(segments[4]);
+            yield return new WaitForSeconds(2f, false);
+
             TriggerTutorialSegment(5); // Powerup reactor
             SetHighlight(engineer_submarineReactor.Item, true);
             engineer.AddActiveObjectiveEntity(engineer_submarineReactor.Item, engineer_reactorIcon, engineer_reactorIconColor);
@@ -426,6 +428,8 @@ namespace Barotrauma.Tutorials
             SetHighlight(engineer_submarineReactor.Item, false);
             RemoveCompletedObjective(segments[5]);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.Complete"), ChatMessageType.Radio, null);
+
+            yield return new WaitForSeconds(4f, false);
 
             CoroutineManager.StartCoroutine(TutorialCompleted());
         }
@@ -475,8 +479,8 @@ namespace Barotrauma.Tutorials
         private void CheckGhostWires()
         {
             Color wireColor = 
-                Color.OrangeRed *
-                    MathHelper.Lerp(0.5f, 1.0f, (float)(Math.Sin((Timing.TotalTime * 3.0f)) + 1.0f) / 2.0f);
+                Color.Orange *
+                    MathHelper.Lerp(0.25f, 0.75f, (float)(Math.Sin((Timing.TotalTime * 4.0f)) + 1.0f) / 2.0f);
 
             if (engineer_wire_1 != null)
             {
