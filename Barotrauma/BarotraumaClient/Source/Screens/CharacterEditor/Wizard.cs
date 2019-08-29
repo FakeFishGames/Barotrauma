@@ -151,7 +151,7 @@ namespace Barotrauma.CharacterEditor
                 GUITextBox texturePathElement = null;
                 GUITextBox xmlPathElement = null;
                 GUIDropDown contentPackageDropDown = null;
-                bool updateTexturePath = true;
+                bool updateTexturePath = !IsCopy;
                 bool isTextureSelected = false;
                 void UpdatePaths()
                 {
@@ -264,7 +264,7 @@ namespace Barotrauma.CharacterEditor
                             contentPackageDropDown.OnSelected = (obj, userdata) =>
                             {
                                 ContentPackage = userdata as ContentPackage;
-                                updateTexturePath = !isTextureSelected;
+                                updateTexturePath = !isTextureSelected && !IsCopy;
                                 UpdatePaths();
                                 return true;
                             };
