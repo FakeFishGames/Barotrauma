@@ -23,7 +23,7 @@ namespace Barotrauma
             "CrewExperienceHigh"
         };
 
-        private readonly Point defaultPreviewImageSize = new Point(512, 368);
+        private readonly Point defaultPreviewImageSize = new Point(640, 368);
 
         private Camera cam;
 
@@ -2466,7 +2466,7 @@ namespace Barotrauma
                 Matrix.CreateScale(new Vector3(scale, scale, 1)) *
                 viewMatrix;
 
-            Sprite backgroundSprite = LevelGenerationParams.LevelParams.Find(l => l.BackgroundTopSprite != null).BackgroundTopSprite;
+            /*Sprite backgroundSprite = LevelGenerationParams.LevelParams.Find(l => l.BackgroundTopSprite != null).BackgroundTopSprite;*/
 
             using (RenderTarget2D rt = new RenderTarget2D(
                  GameMain.Instance.GraphicsDevice,
@@ -2475,14 +2475,14 @@ namespace Barotrauma
             {
                 GameMain.Instance.GraphicsDevice.SetRenderTarget(rt);
 
-                GameMain.Instance.GraphicsDevice.Clear(Color.Black);
+                GameMain.Instance.GraphicsDevice.Clear(new Color(8, 13, 19));
 
-                if (backgroundSprite != null)
+                /*if (backgroundSprite != null)
                 {
                     spriteBatch.Begin();
                     backgroundSprite.DrawTiled(spriteBatch, Vector2.Zero, new Vector2(width, height), color: new Color(0.025f, 0.075f, 0.131f, 1.0f));
                     spriteBatch.End();
-                }
+                }*/
 
                 spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, null, null, null, null, transform);
                 Submarine.Draw(spriteBatch, false);
