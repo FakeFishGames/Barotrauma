@@ -256,6 +256,7 @@ namespace Barotrauma.Tutorials
             GameMain.GameSession.CrewManager.AddCharacter(doctor);
             GameMain.GameSession.CrewManager.AddCharacter(patient1);
             GameMain.GameSession.CrewManager.ToggleCrewAreaOpen = true;
+            patient1.CharacterHealth.UseHealthWindow = false;
 
             yield return new WaitForSeconds(3.0f, false);
             patient1.AIController.Enabled = true;
@@ -277,6 +278,7 @@ namespace Barotrauma.Tutorials
             RemoveCompletedObjective(segments[3]);
             SetHighlight(doctor_medBayCabinet.Item, true);
             SetDoorAccess(doctor_thirdDoor, doctor_thirdDoorLight, true);
+            patient1.CharacterHealth.UseHealthWindow = true;
 
             yield return new WaitForSeconds(2.0f, false);
 
