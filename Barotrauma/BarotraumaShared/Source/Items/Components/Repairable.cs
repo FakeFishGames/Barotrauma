@@ -147,6 +147,10 @@ namespace Barotrauma.Items.Components
 #if SERVER
                 item.CreateServerEvent(this);
 #endif
+#if CLIENT
+                repairSoundChannel?.FadeOutAndDispose();
+                repairSoundChannel = null;                
+#endif
                 return true;
             }
             else

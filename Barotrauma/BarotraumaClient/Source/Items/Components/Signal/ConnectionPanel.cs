@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using Barotrauma.Sounds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -12,6 +13,8 @@ namespace Barotrauma.Items.Components
     {
         public static Wire HighlightedWire;
 
+        private SoundChannel rewireSoundChannel;
+
         partial void InitProjSpecific(XElement element)
         {
             if (GuiFrame == null) return;
@@ -20,7 +23,38 @@ namespace Barotrauma.Items.Components
                 UserData = this
             };
         }
-        
+
+        partial void UpdateProjSpecific(float deltaTime)
+        {
+            foreach (Wire wire in DisconnectedWires)
+            {
+                if (Rand.Range(0.0f, 500.0f) < 1.0f)
+                {
+                    SoundPlayer.PlaySound("zap", item.WorldPosition, hullGuess: item.CurrentHull);
+                    Vector2 baseVel = new Vector2(0.0f, -100.0f);
+                    for (int i = 0; i < 5; i++)
+                    {
+                        var particle = GameMain.ParticleManager.CreateParticle("spark", item.WorldPosition,
+                            baseVel + Rand.Vector(100.0f), 0.0f, item.CurrentHull);
+                        if (particle != null) { particle.Size *= Rand.Range(0.5f, 1.0f); }
+                    }
+                }
+            }
+
+            if (user != null && user.SelectedConstruction == item)
+            {
+                if (rewireSoundChannel == null || !rewireSoundChannel.IsPlaying)
+                {
+                    rewireSoundChannel = SoundPlayer.PlaySound("rewire", item.WorldPosition, hullGuess: item.CurrentHull);
+                }
+            }
+            else
+            {
+                rewireSoundChannel?.FadeOutAndDispose();
+                rewireSoundChannel = null;
+            }
+        }
+
         public override void Move(Vector2 amount)
         {
             if (item.Submarine == null || item.Submarine.Loading || Screen.Selected != GameMain.SubEditorScreen) return;

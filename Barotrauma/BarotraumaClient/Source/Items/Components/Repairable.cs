@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Networking;
 using Barotrauma.Particles;
+using Barotrauma.Sounds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
@@ -24,6 +25,8 @@ namespace Barotrauma.Items.Components
         private List<ParticleEmitter> particleEmitters = new List<ParticleEmitter>();
         //the corresponding particle emitter is active when the condition is within this range
         private List<Vector2> particleEmitterConditionRanges = new List<Vector2>();
+
+        private SoundChannel repairSoundChannel;
 
         private string repairButtonText, repairingText;
         private string sabotageButtonText, sabotagingText;
@@ -140,6 +143,19 @@ namespace Barotrauma.Items.Components
                     particleEmitters[i].Emit(deltaTime, item.WorldPosition, item.CurrentHull);
                 }
             }
+
+            if (CurrentFixer != null && CurrentFixer.SelectedConstruction == item)
+            {
+                if (repairSoundChannel == null || !repairSoundChannel.IsPlaying)
+                {
+                repairSoundChannel = SoundPlayer.PlaySound("repair", item.WorldPosition, hullGuess: item.CurrentHull);
+                }
+            }
+            else
+            {
+                repairSoundChannel?.FadeOutAndDispose();
+                repairSoundChannel = null;
+            }
         }
         
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
@@ -177,20 +193,6 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
-        {
-            deteriorationTimer = msg.ReadSingle();
-            deteriorateAlwaysResetTimer = msg.ReadSingle();
-            DeteriorateAlways = msg.ReadBoolean();
-            CurrentFixer = msg.ReadBoolean() ? Character.Controlled : null;
-            currentFixerAction = (FixActions)msg.ReadRangedInteger(0, 2);
-        }
-
-        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
-        {
-            msg.WriteRangedInteger((int)requestStartFixAction, 0, 2);
-        }
-
         public void Draw(SpriteBatch spriteBatch, bool editing)
         {
             if (GameMain.DebugDraw && Character.Controlled?.FocusedItem == item)
@@ -212,6 +214,26 @@ namespace Barotrauma.Items.Components
                     new Vector2(item.WorldPosition.X, -item.WorldPosition.Y + 20), "Condition: " + (int)item.Condition + "/" + (int)item.MaxCondition,
                     Color.Orange);
             }
+        }
+
+        protected override void RemoveComponentSpecific()
+        {
+            repairSoundChannel?.FadeOutAndDispose();
+            repairSoundChannel = null;
+        }
+
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        {
+            deteriorationTimer = msg.ReadSingle();
+            deteriorateAlwaysResetTimer = msg.ReadSingle();
+            DeteriorateAlways = msg.ReadBoolean();
+            CurrentFixer = msg.ReadBoolean() ? Character.Controlled : null;
+            currentFixerAction = (FixActions)msg.ReadRangedInteger(0, 2);
+        }
+
+        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
+        {
+            msg.WriteRangedInteger((int)requestStartFixAction, 0, 2);
         }
     }
 }
