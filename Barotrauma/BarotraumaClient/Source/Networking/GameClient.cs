@@ -396,15 +396,13 @@ namespace Barotrauma.Networking
         private bool connectCancelled;
         private void CancelConnect()
         {
-            if (!(GameMain.ServerChildProcess?.HasExited??true))
+            if (!(GameMain.ServerChildProcess?.HasExited ?? true))
             {
                 GameMain.ServerChildProcess.Kill();
                 GameMain.ServerChildProcess = null;
             }
-
             connectCancelled = true;
-            clientPeer?.Close();
-            clientPeer = null;
+            Disconnect();
         }
 
         // Before main looping starts, we loop here and wait for approval message
