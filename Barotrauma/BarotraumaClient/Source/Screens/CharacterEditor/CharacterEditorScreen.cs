@@ -562,6 +562,10 @@ namespace Barotrauma.CharacterEditor
                 if (isFrozen)
                 {
                     float moveSpeed = (float)deltaTime * 300.0f / Cam.Zoom;
+                    if (PlayerInput.KeyDown(Keys.LeftShift))
+                    {
+                        moveSpeed *= 4;
+                    }
                     if (PlayerInput.KeyDown(Keys.W))
                     {
                         cameraOffset.Y += moveSpeed;
