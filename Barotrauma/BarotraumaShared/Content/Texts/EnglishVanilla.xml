@@ -886,8 +886,8 @@
   <charactereditor.holdposition>Hold Position [H]</charactereditor.holdposition>
   <charactereditor.holdingposition>Holding Position</charactereditor.holdingposition>
   <charactereditor.limbpairediting>Limb Pair Editing</charactereditor.limbpairediting>
-  <charactereditor.animationtestpose>Animation Test Pose [X]</charactereditor.animationtestpose>
-  <charactereditor.animationtestposeenabled>Animation Test Pose Enabled</charactereditor.animationtestposeenabled>
+  <charactereditor.animationtestpose>Test Pose [X]</charactereditor.animationtestpose>
+  <charactereditor.animationtestposeenabled>Test Pose Enabled</charactereditor.animationtestposeenabled>
   <charactereditor.automove>Auto Move</charactereditor.automove>
   <charactereditor.followcursor>Follow Cursor</charactereditor.followcursor>
   <charactereditor.showcolliders>Colliders</charactereditor.showcolliders>
