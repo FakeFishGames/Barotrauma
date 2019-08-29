@@ -32,6 +32,12 @@ namespace Barotrauma
             private set;
         }
 
+        public bool IsCJK
+        {
+            get;
+            private set;
+        }
+
         public uint Size
         {
             get
@@ -58,11 +64,16 @@ namespace Barotrauma
         }
 
         public ScalableFont(XElement element, GraphicsDevice gd = null)
-            : this (element.GetAttributeString("file", ""), (uint)element.GetAttributeInt("size", 14), gd, element.GetAttributeBool("dynamicloading", false))
-        {            
+            : this(
+                element.GetAttributeString("file", ""),
+                (uint)element.GetAttributeInt("size", 14),
+                gd,
+                element.GetAttributeBool("dynamicloading", false),
+                element.GetAttributeBool("iscjk", false))
+        {
         }
 
-        public ScalableFont(string filename, uint size, GraphicsDevice gd = null, bool dynamicLoading = false)
+        public ScalableFont(string filename, uint size, GraphicsDevice gd = null, bool dynamicLoading = false, bool isCJK = false)
         {
             lock (mutex)
             {
@@ -85,6 +96,7 @@ namespace Barotrauma
                 this.textures = new List<Texture2D>();
                 this.texCoords = new Dictionary<uint, GlyphData>();
                 this.DynamicLoading = dynamicLoading;
+                this.IsCJK = isCJK;
                 this.graphicsDevice = gd;
 
                 if (gd != null && !dynamicLoading)

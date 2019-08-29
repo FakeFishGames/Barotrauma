@@ -643,6 +643,7 @@ namespace Barotrauma
         /// </summary>
         public static bool IsCJK(string text)
         {
+            if (string.IsNullOrEmpty(text)) { return false; }
             return isCJK.IsMatch(text);
         }
 

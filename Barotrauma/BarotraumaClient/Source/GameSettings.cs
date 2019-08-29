@@ -153,11 +153,6 @@ namespace Barotrauma
                 UnsavedSettings = true;
 
                 var msgBox = new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("RestartRequiredLanguage"));
-                //change fonts to the default font of the new language to make sure
-                //they can be displayed when for example changing from English to Chinese
-                var defaultFont = GUI.Style.LoadCurrentDefaultFont();
-                msgBox.Header.Font = defaultFont;
-                msgBox.Text.Font = defaultFont;
 
                 return true;
             };
