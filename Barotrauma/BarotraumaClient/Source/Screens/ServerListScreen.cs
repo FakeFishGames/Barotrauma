@@ -116,9 +116,9 @@ namespace Barotrauma
                 AutoScale = true
             };
 
-            var infoHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.33f), topRow.RectTransform), isHorizontal: true) { RelativeSpacing = 0.05f, Stretch = true };
+            var infoHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.33f), topRow.RectTransform), isHorizontal: true) { RelativeSpacing = 0.05f,  Stretch = true };
 
-            var clientNameHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), infoHolder.RectTransform)) { RelativeSpacing = 0.05f };
+            var clientNameHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.2f, 1.0f), infoHolder.RectTransform)) { RelativeSpacing = 0.05f };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), clientNameHolder.RectTransform), TextManager.Get("YourName"));
             clientNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.5f), clientNameHolder.RectTransform), "")
@@ -133,7 +133,7 @@ namespace Barotrauma
                 clientNameBox.Text = SteamManager.GetUsername();
             }
 
-            friendsButtonHolder = new GUILayoutGroup(new RectTransform(Vector2.One, infoHolder.RectTransform)) { RelativeSpacing = 0.01f, IsHorizontal = true };
+            friendsButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 1.0f), infoHolder.RectTransform, Anchor.BottomRight), childAnchor: Anchor.BottomRight) { RelativeSpacing = 0.005f, IsHorizontal = true };
             friendsList = new List<FriendInfo>();
 
             //-------------------------------------------------------------------------------------
@@ -764,9 +764,9 @@ namespace Barotrauma
                 return 0;
             });
 
-            Color mainColor = new Color(40, 175, 65);
-            Color hoverColor = new Color(40, 255, 80);
-            Color pressColor = new Color(50, 150, 50);
+            Color mainColor = new Color(132, 170, 56);
+            Color hoverColor = new Color(53, 72, 76);
+            Color pressColor = new Color(255, 255, 255);
 
             friendsButtonHolder.ClearChildren();
 
@@ -781,31 +781,29 @@ namespace Barotrauma
                 {
                     if (friend.InServer)
                     {
-                        mainColor = new Color(40, 175, 65);
-                        hoverColor = new Color(40, 255, 80);
-                        pressColor = new Color(50, 150, 50);
+                        mainColor = new Color(132, 170, 56);
                     }
                     else
                     {
-                        mainColor = friend.PlayingThisGame ? new Color(70, 125, 90) : new Color(30, 125, 140);
-                        hoverColor = friend.PlayingThisGame ? new Color(100, 200, 100) : new Color(80, 170, 170);
-                        pressColor = friend.PlayingThisGame ? new Color(30, 40, 30) : new Color(25, 37, 75);
+                        mainColor = friend.PlayingThisGame ? new Color(132, 170, 56) : new Color(83, 164, 196);
                     }
 
-                    var guiButton = new GUIButton(new RectTransform(Vector2.One * 0.6f, friendsButtonHolder.RectTransform, Anchor.BottomRight, Pivot.BottomRight, scaleBasis: ScaleBasis.BothHeight), style: null)
+                    var guiButton = new GUIButton(new RectTransform(Vector2.One * 0.6f, friendsButtonHolder.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: null)
                     {
                         Color = mainColor,
-                        SelectedColor = mainColor,
                         HoverColor = hoverColor,
-                        OutlineColor = Color.Transparent,
+                        SelectedColor = hoverColor,
                         PressedColor = pressColor,
+                        OutlineColor = Color.Transparent,
                         UserData = friend,
                         OnClicked = OpenFriendPopup
                     };
 
                     if (friend.Sprite != null)
                     {
-                        var guiImage = new GUIImage(new RectTransform(Vector2.One * 0.925f, guiButton.RectTransform, Anchor.Center), friend.Sprite, null, true);
+                        var avatarHolder = new GUILayoutGroup(new RectTransform(Vector2.One * 0.925f, guiButton.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.025f, 0.025f) });
+
+                        var guiImage = new GUIImage(new RectTransform(Vector2.One, avatarHolder.RectTransform), friend.Sprite, null, true);
                         guiImage.ToolTip = friend.Name + "\n" + friend.Status;
                     }
                 }
@@ -825,27 +823,27 @@ namespace Barotrauma
                 }
             }
 
-            mainColor = new Color(30, 125, 140);
-            hoverColor = new Color(80, 170, 170);
-            pressColor = new Color(25, 37, 75);
+            mainColor = new Color(73, 98, 103);
+            hoverColor = new Color(53, 72, 76);
+            pressColor = new Color(255, 255, 255);
 
             if (friendsList.Count > 0)
             {
                 friendsDropdownButton = new GUIButton(new RectTransform(Vector2.One * 0.6f, friendsButtonHolder.RectTransform, Anchor.BottomRight, Pivot.BottomRight, scaleBasis: ScaleBasis.BothHeight), "\u2022 \u2022 \u2022", style: null)
                 {
                     Color = mainColor,
-                    SelectedColor = mainColor,
+                    SelectedColor = hoverColor,
                     HoverColor = hoverColor,
-                    OutlineColor = Color.Transparent,
-                    PressedColor = pressColor,
-                    TextColor = Color.Black,
+                    OutlineColor = new Color(27, 36, 38),
+                    PressedColor = hoverColor,
+                    TextColor = Color.White,
+                    Font = GUI.ObjectiveNameFont,
                     OnClicked = (button, udt) =>
                     {
-                        friendsDropdown.RectTransform.NonScaledSize = new Point(friendsButtonHolder.Rect.Height * 7, friendsButtonHolder.Rect.Height * 3);
-                        friendsDropdown.RectTransform.RelativeOffset = Vector2.Zero;
-                        friendsDropdown.RectTransform.AbsoluteOffset = new Point(friendsButtonHolder.Rect.Left, friendsButtonHolder.Rect.Bottom);
+                        friendsDropdown.RectTransform.NonScaledSize = new Point(friendsButtonHolder.Rect.Height * 5, friendsButtonHolder.Rect.Height * 2);
+                        friendsDropdown.RectTransform.RelativeOffset = new Vector2(0.155f, 0.215f);
                         friendsDropdown.RectTransform.RecalculateChildren(true);
-                        friendsDropdown.RectTransform.SetPosition(Anchor.TopLeft);
+                        friendsDropdown.RectTransform.SetPosition(Anchor.TopRight);
 
                         friendsDropdown.Visible = !friendsDropdown.Visible;
                         return false;
@@ -858,11 +856,10 @@ namespace Barotrauma
                 friendsDropdown.Visible = false;
             }
 
-            friendsDropdown.RectTransform.NonScaledSize = new Point(friendsButtonHolder.Rect.Height * 7, friendsButtonHolder.Rect.Height * 3);
-            friendsDropdown.RectTransform.RelativeOffset = Vector2.Zero;
-            friendsDropdown.RectTransform.AbsoluteOffset = new Point(friendsButtonHolder.Rect.Left, friendsButtonHolder.Rect.Bottom);
+            friendsDropdown.RectTransform.NonScaledSize = new Point(friendsButtonHolder.Rect.Height * 5, friendsButtonHolder.Rect.Height * 2);
+            friendsDropdown.RectTransform.RelativeOffset = new Vector2(0.155f, 0.215f);
             friendsDropdown.RectTransform.RecalculateChildren(true);
-            friendsDropdown.RectTransform.SetPosition(Anchor.TopLeft);
+            friendsDropdown.RectTransform.SetPosition(Anchor.TopRight);
 
             friendsDropdown.ScrollBar.BarScrollValue = prevDropdownScroll;
         }
