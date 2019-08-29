@@ -1611,11 +1611,45 @@ namespace Barotrauma.CharacterEditor
                 config = new XElement("Character",
                     new XAttribute("speciesname", name),
                     new XAttribute("humanoid", isHumanoid),
-                    new XElement("ragdolls", new XAttribute("folder", Path.Combine(mainFolder, $"Ragdolls/").Replace(@"\", @"/"))),
-                    new XElement("animations", new XAttribute("folder", Path.Combine(mainFolder, $"Animations/").Replace(@"\", @"/"))),
+                    new XElement("ragdolls", CreateRagdollPath()),
+                    new XElement("animations", CreateAnimationPath()),
                     new XElement("health"),
                     new XElement("ai"));
             }
+            else
+            {
+                config.SetAttributeValue("speciesname", name);
+                config.SetAttributeValue("humanoid", isHumanoid);
+                var ragdollElement = config.Element("ragdolls");
+                if (ragdollElement == null)
+                {
+                    config.Add(new XElement("ragdolls", CreateRagdollPath()));
+                }
+                else
+                {
+                    var path = ragdollElement.GetAttributeString("folder", "");
+                    if (!string.IsNullOrEmpty(path) && !path.Equals("default", StringComparison.OrdinalIgnoreCase))
+                    {
+                        ragdollElement.ReplaceWith(new XElement("ragdolls", CreateRagdollPath()));
+                    }
+                }
+                var animationElement = config.Element("animations");
+                if (animationElement == null)
+                {
+                    config.Add(new XElement("animations", CreateAnimationPath()));
+                }
+                else
+                {
+                    var path = animationElement.GetAttributeString("folder", "");
+                    if (!string.IsNullOrEmpty(path) && !path.Equals("default", StringComparison.OrdinalIgnoreCase))
+                    {
+                        animationElement.ReplaceWith(new XElement("animations", CreateAnimationPath()));
+                    }
+                }
+            }
+
+            XAttribute CreateRagdollPath() => new XAttribute("folder", Path.Combine(mainFolder, $"Ragdolls/").Replace(@"\", @"/"));
+            XAttribute CreateAnimationPath() => new XAttribute("folder", Path.Combine(mainFolder, $"Animations/").Replace(@"\", @"/"));
 
             if (overrideElement != null)
             {
@@ -1653,6 +1687,7 @@ namespace Barotrauma.CharacterEditor
                 foreach (var animation in animations)
                 {
                     XElement element = animation.MainElement;
+                    element.SetAttributeValue("type", name);
                     string fullPath = AnimationParams.GetDefaultFile(name, animation.AnimationType, contentPackage);
                     element.Name = AnimationParams.GetDefaultFileName(name, animation.AnimationType);
                     element.Save(fullPath);

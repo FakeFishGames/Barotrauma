@@ -186,20 +186,30 @@ namespace Barotrauma.CharacterEditor
                             };
                             break;
                         case 1:
-                            new GUITextBlock(leftElement, GetCharacterEditorTranslation("IsHumanoid"));
-                            new GUITickBox(rightElement, string.Empty)
+                            var label = new GUITextBlock(leftElement, GetCharacterEditorTranslation("IsHumanoid"));
+                            var tickBox = new GUITickBox(rightElement, string.Empty)
                             {
                                 Selected = IsHumanoid,
+                                Enabled = !IsCopy,
                                 OnSelected = (tB) => IsHumanoid = tB.Selected
                             };
+                            if (!tickBox.Enabled)
+                            {
+                                label.TextColor *= 0.6f;
+                            }
                             break;
                         case 2:
-                            new GUITextBlock(leftElement, GetCharacterEditorTranslation("CanEnterSubmarines"));
-                            new GUITickBox(rightElement, string.Empty)
+                            var l = new GUITextBlock(leftElement, GetCharacterEditorTranslation("CanEnterSubmarines"));
+                            var t = new GUITickBox(rightElement, string.Empty)
                             {
                                 Selected = CanEnterSubmarine,
+                                Enabled = !IsCopy,
                                 OnSelected = (tB) => CanEnterSubmarine = tB.Selected
                             };
+                            if (!t.Enabled)
+                            {
+                                l.TextColor *= 0.6f;
+                            }
                             break;
                         case 3:
                             new GUITextBlock(leftElement, GetCharacterEditorTranslation("ConfigFileOutput"));
@@ -345,6 +355,7 @@ namespace Barotrauma.CharacterEditor
                     if (IsCopy)
                     {
                         SourceRagdoll.Limbs.ForEach(l => l.GetSprite().Texture = TexturePath);
+                        SourceRagdoll.CanEnterSubmarine = CanEnterSubmarine;
                         SourceRagdoll.Serialize();
                         Wizard.Instance.CreateCharacter(SourceRagdoll.MainElement, SourceCharacter.MainElement, SourceAnimations);
                     }
