@@ -1182,7 +1182,22 @@ namespace Barotrauma.Steam
                 return false;                
             }
 
-            string metaDataPath = Path.Combine(item.Directory.FullName, MetadataFileName);
+            string metaDataPath = "";
+            try
+            {
+                metaDataPath = Path.Combine(item.Directory.FullName, MetadataFileName);
+            }
+            catch (ArgumentException e)
+            {
+                string errorMessage = "Metadata file for the Workshop item \"" + item.Title +
+                    "\" not found. Could not combine path (" + (item.Directory.FullName ?? "directory name empty") + ").";
+                DebugConsole.ThrowError(errorMessage);
+                GameAnalyticsManager.AddErrorEventOnce("SteamManager.CheckWorkshopItemEnabled:PathCombineException" + item.Title,
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    errorMessage);
+                return false;
+            }
+
             if (!File.Exists(metaDataPath))
             {
                 DebugConsole.ThrowError("Metadata file for the Workshop item \"" + item.Title + "\" not found. The file may be corrupted.");
