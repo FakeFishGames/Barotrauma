@@ -578,11 +578,13 @@ namespace Barotrauma
 
         public void LoadHeadSprite()
         {
+            // TODO: use ragdollparams instead?
             foreach (XElement limbElement in Ragdoll.MainElement.Elements())
             {
-                if (limbElement.GetAttributeString("type", "").ToLowerInvariant() != "head") continue;
+                if (limbElement.GetAttributeString("type", "").ToLowerInvariant() != "head") { continue; }
 
                 XElement spriteElement = limbElement.Element("sprite");
+                if (spriteElement == null) { continue; }
 
                 string spritePath = spriteElement.Attribute("texture").Value;
 
@@ -601,7 +603,7 @@ namespace Barotrauma
                     }
                     string fileWithoutTags = Path.GetFileNameWithoutExtension(file);
                     fileWithoutTags = fileWithoutTags.Split('[', ']').First();
-                    if (fileWithoutTags != fileName) continue;
+                    if (fileWithoutTags != fileName) { continue; }
 
                     HeadSprite = new Sprite(spriteElement, "", file);
                     Portrait = new Sprite(spriteElement, "", file) { RelativeOrigin = Vector2.Zero };
