@@ -1,7 +1,4 @@
 using Barotrauma.Networking;
-using Lidgren.Network;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Barotrauma
 {
@@ -32,9 +29,6 @@ namespace Barotrauma
             });
 
             messageSender(greetingMessage);
-            // boxSender(greetingMessage);
-            // SendChatMessage(greetingMessage);
-            // SendChatMessageBox(greetingMessage);
 
             Client traitorClient = server.ConnectedClients.Find(c => c.Character == Character);
             Client ownerClient = server.ConnectedClients.Find(c => c.Connection == server.OwnerConnection);

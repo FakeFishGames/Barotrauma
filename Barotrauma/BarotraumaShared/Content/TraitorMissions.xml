@@ -161,7 +161,7 @@
         </Goal>
       </Objective>
     </TraitorMission> -->
-  
+<!--
   <TraitorMission identifier="SabotageReactor_Assassinate">
 
     <StartInfoText id="MVPtraitormissionStartInfoText" />
@@ -239,12 +239,15 @@
 
   </TraitorMission>
 
-
+-->
   <TraitorMission identifier="flood2">
 
+    <Role id="t1" />
+    <Role id="t2" />
+    
     <StartInfoText id="flood_2_traitormissionStartInfoText"/>
 
-    <Objective>
+    <Objective roles="t1,t2">
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="flood_2_objectiveSuccessMessage1"/>
       <StartMessage id="flood_2_traitorobjectivestartmessage1"/>
@@ -253,7 +256,7 @@
       </Goal>
     </Objective>
 
-    <Objective>
+    <Objective roles="t1">
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="flood_2_objectiveSuccessMessage2"/>
       <StartMessage id="flood_2_traitorobjectivestartmessage2"/>
@@ -262,7 +265,7 @@
       </Goal>
     </Objective>
 
-    <Objective>
+    <Objective roles="t2">
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="flood_2_objectiveSuccessMessage3"/>
       <StartMessage id="flood_2_traitorobjectivestartmessage3"/>

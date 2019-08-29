@@ -35,28 +35,11 @@ namespace Barotrauma
 
             public readonly Dictionary<string, Traitor> Traitors = new Dictionary<string, Traitor>();
 
+            public readonly List<string> Roles = new List<string>();
+
             public string StartText { get; private set; }
             public string CodeWords { get; private set; }
             public string CodeResponse { get; private set; }
-            public string EndMessage {
-                get
-                {
-                    if (!Traitors.TryGetValue("traitor", out Traitor traitor))
-                    {
-                        return "";
-                    }
-
-                    if (pendingObjectives.Count <= 0)
-                    {
-                        if (completedObjectives.Count <= 0) return "";
-                        return completedObjectives[completedObjectives.Count - 1].EndMessageText;
-                    }
-                    else
-                    {
-                        return pendingObjectives[0].EndMessageText;
-                    }
-                }
-            }
 
             public string GlobalEndMessageSuccessTextId { get; private set; }
             public string GlobalEndMessageSuccessDeadTextId { get; private set; }
@@ -65,14 +48,13 @@ namespace Barotrauma
             public string GlobalEndMessageFailureDeadTextId { get; private set; }
             public string GlobalEndMessageFailureDetainedTextId { get; private set; }
 
-            private readonly string objectiveGoalInfoFormat = "[index]. [goalinfos]\n";
-
             public virtual IEnumerable<string> GlobalEndMessageKeys => new string[] { "[traitorname]", "[traitorgoalinfos]" };
             public virtual IEnumerable<string> GlobalEndMessageValues {
                 get {
                     var isSuccess = completedObjectives.Count >= allObjectives.Count;
                     return new string[] {
-                        (Traitors.TryGetValue("traitor", out var traitor) ? traitor.Character?.Name : null) ?? "(unknown)",
+                        string.Join(", ", Traitors.Values.Select(traitor => traitor.Character?.Name ?? "(unknown)")),
+                        // (Traitors.TryGetValue("traitor", out var traitor) ? traitor.Character?.Name : null) ?? "(unknown)",
                         (isSuccess ? completedObjectives.LastOrDefault() : pendingObjectives.FirstOrDefault())?.GoalInfos ?? ""
                     };
                 }
@@ -82,32 +64,53 @@ namespace Barotrauma
             {
                 get
                 {
-                    if (!Traitors.TryGetValue("traitor", out Traitor traitor))
+                    if (Traitors.Any() && allObjectives.Count > 0)
                     {
-                        return "";
-                    }
 
-                    if (allObjectives.Count > 0)
-                    {
-                        var isSuccess = completedObjectives.Count >= allObjectives.Count;
-                        var traitorIsDead = traitor.Character.IsDead;
-                        var traitorIsDetained = traitor.Character.LockHands;
-                        var messageId = isSuccess
-                            ? (traitorIsDead ? GlobalEndMessageSuccessDeadTextId : traitorIsDetained ? GlobalEndMessageSuccessDetainedTextId : GlobalEndMessageSuccessTextId)
-                            : (traitorIsDead ? GlobalEndMessageFailureDeadTextId : traitorIsDetained ? GlobalEndMessageFailureDetainedTextId : GlobalEndMessageFailureTextId);
-                        return TextManager.FormatServerMessageWithGenderPronouns(traitor.Character?.Info?.Gender ?? Gender.None, messageId, GlobalEndMessageKeys.ToArray(), GlobalEndMessageValues.ToArray());
+                        TextManager.JoinServerMessages("\n",
+                            Traitors.Values.Select(traitor =>
+                            {
+                                var isSuccess = completedObjectives.Count >= allObjectives.Count;
+                                var traitorIsDead = traitor.Character.IsDead;
+                                var traitorIsDetained = traitor.Character.LockHands;
+                                var messageId = isSuccess
+                                    ? (traitorIsDead ? GlobalEndMessageSuccessDeadTextId : traitorIsDetained ? GlobalEndMessageSuccessDetainedTextId : GlobalEndMessageSuccessTextId)
+                                    : (traitorIsDead ? GlobalEndMessageFailureDeadTextId : traitorIsDetained ? GlobalEndMessageFailureDetainedTextId : GlobalEndMessageFailureTextId);
+                                return TextManager.FormatServerMessageWithGenderPronouns(traitor.Character?.Info?.Gender ?? Gender.None, messageId, GlobalEndMessageKeys.ToArray(), GlobalEndMessageValues.ToArray());
+                            }).ToArray());
                     }
                     return "";
                 }
             }
 
-            public Objective GetCurrentObjective(Traitor traitor)
+            protected Objective GetLastCompletedObjective(Traitor traitor)
             {
-                return pendingObjectives.Count > 0 ? pendingObjectives[0] : null;
+                if (!Traitors.ContainsValue(traitor))
+                {
+                    return null;
+                }
+                var traitorRole = Traitors.First(entry => entry.Value == traitor).Key;
+                return completedObjectives.LastOrDefault(objective => objective.Roles.Contains(traitorRole));
             }
 
-            protected List<Tuple<Client, Character>> FindTraitorCandidates(GameServer server, Character.TeamType team, params string[] traitorRoles)
+            public Objective GetCurrentObjective(Traitor traitor)
             {
+                if (pendingObjectives.Count <= 0)
+                {
+                    return null;
+                }
+                int traitorNextIndex = pendingObjectives.FindIndex(objective => objective.Roles.Contains(traitor.Role));
+                int globalNextIndex = Traitors.Values.Max(t => pendingObjectives.FindIndex(objective => objective.Roles.Contains(t.Role)));
+                if (traitorNextIndex < 0 || traitorNextIndex < globalNextIndex)
+                {
+                    return null; /* no objective, waiting for other traitors */
+                }
+                return pendingObjectives[traitorNextIndex];
+            }
+
+            protected List<Tuple<Client, Character>> FindTraitorCandidates(GameServer server, Character.TeamType team, ICollection<string> traitorRoles)
+            {
+                // TODO(xxx): Traitor role specific conditions should be taken into account here.
                 var traitorCandidates = new List<Tuple<Client, Character>>();
 #if SERVER_IS_TRAITOR
                 if (server.Character != null)
@@ -132,9 +135,9 @@ namespace Barotrauma
                 return characters;
             }
 
-            public virtual bool CanBeStarted(GameServer server, TraitorManager traitorManager, Character.TeamType team, params string[] traitorRoles)
+            public virtual bool CanBeStarted(GameServer server, TraitorManager traitorManager, Character.TeamType team)
             {
-                var traitorCandidates = FindTraitorCandidates(server, team, traitorRoles);
+                var traitorCandidates = FindTraitorCandidates(server, team, Roles);
                 if (traitorCandidates.Count <= 0)
                 {
                     return false;
@@ -149,26 +152,57 @@ namespace Barotrauma
                 return true;
             }
 
-            public virtual bool Start(GameServer server, TraitorManager traitorManager, Character.TeamType team, params string[] traitorRoles)
+            public virtual bool Start(GameServer server, TraitorManager traitorManager, Character.TeamType team)
             {
                 List<Character> characters = FindCharacters();
-                List<Tuple<Client, Character>> traitorCandidates = FindTraitorCandidates(server, team, traitorRoles);
-                if (traitorCandidates.Count <= 0)
-                {
-                    return false;
-                }
 #if !ALLOW_SOLO_TRAITOR
                 if (characters.Count < 2)
                 {
                     return false;
                 }
 #endif
-                CodeWords = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
-                CodeResponse = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
-                Traitors.Clear();
-                foreach (var role in traitorRoles)
+
+                var roleCandidates = new Dictionary<string, HashSet<Tuple<Client, Character>>>();
+                foreach (var role in Roles)
                 {
-                    var candidate = TraitorManager.WeightedRandom(traitorCandidates, Random, t =>
+                    roleCandidates.Add(role, new HashSet<Tuple<Client, Character>>(FindTraitorCandidates(server, team, new[] { role })));
+                    if (roleCandidates[role].Count <= 0)
+                    {
+                        return false;
+                    }
+                }
+
+                var candidateRoleCounts = new Dictionary<Tuple<Client, Character>, int>();
+                foreach (var candidateEntry in roleCandidates)
+                {
+                    foreach (var candidate in candidateEntry.Value)
+                    {
+                        candidateRoleCounts[candidate] = candidateRoleCounts.TryGetValue(candidate, out var count) ? count + 1 : 1;
+                    }
+                }
+
+                var unassignedRoles = new List<string>(roleCandidates.Keys);
+                unassignedRoles.Sort((a, b) => roleCandidates[a].Count - roleCandidates[b].Count);
+
+                var assignedCandidates = new List<Tuple<string, Tuple<Client, Character>>>();
+                while (unassignedRoles.Count > 0)
+                {
+                    var currentRole = unassignedRoles[0];
+                    var availableCandidates = roleCandidates[currentRole].ToList();
+                    if (availableCandidates.Count <= 0)
+                    {
+                        break;
+                    }
+                    unassignedRoles.RemoveAt(0);
+                    availableCandidates.Sort((a,b) => candidateRoleCounts[b] - candidateRoleCounts[a]);
+                    unassignedRoles.Sort((a, b) => roleCandidates[a].Count - roleCandidates[b].Count);
+
+                    int numCandidates = 1;
+                    for (int i = 1; i < availableCandidates.Count && candidateRoleCounts[availableCandidates[i]] == candidateRoleCounts[availableCandidates[0]]; ++i)
+                    {
+                        ++numCandidates;
+                    }
+                    var selected = TraitorManager.WeightedRandom(availableCandidates, 0, numCandidates, Random, t =>
                     {
                         var previousClient = server.FindPreviousClientData(t.Item1);
                         return Math.Max(
@@ -178,10 +212,24 @@ namespace Barotrauma
                     {
                         traitorManager.SetTraitorCount(Tuple.Create(t.Item1.SteamID, t.Item1.Connection?.EndPointString ?? ""), c);
                     }, 2, 3);
-                    traitorCandidates.Remove(candidate);
 
-                    var traitor = new Traitor(this, role, candidate.Item2);
-                    Traitors.Add(role, traitor);
+                    assignedCandidates.Add(Tuple.Create(currentRole, selected));
+                    foreach (var candidate in roleCandidates.Values)
+                    {
+                        candidate.Remove(selected);
+                    }
+                }
+                if (unassignedRoles.Count > 0)
+                {
+                    return false;
+                }
+                CodeWords = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
+                CodeResponse = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
+                Traitors.Clear();
+                foreach(var candidate in assignedCandidates)
+                {
+                    var traitor = new Traitor(this, candidate.Item1, candidate.Item2.Item1.Character);
+                    Traitors.Add(candidate.Item1, traitor);
                 }
 
                 var messages = new Dictionary<Traitor, List<string>>();
@@ -198,7 +246,7 @@ namespace Barotrauma
 #if SERVER
                 foreach (var traitor in Traitors.Values)
                 {
-                    GameServer.Log(string.Format("{0} is the traitor and the current goals are:\n{1}", traitor.Character.Name, traitor.CurrentObjective?.GoalInfos != null ? TextManager.GetServerMessage(traitor.CurrentObjective?.GoalInfos) : "(empty)"), ServerLog.MessageType.ServerMessage);
+                    GameServer.Log(string.Format("{0} is a traitor and the current goals are:\n{1}", traitor.Character.Name, traitor.CurrentObjective?.GoalInfos != null ? TextManager.GetServerMessage(traitor.CurrentObjective?.GoalInfos) : "(empty)"), ServerLog.MessageType.ServerMessage);
                 }
 #endif
                 return true;
@@ -217,16 +265,35 @@ namespace Barotrauma
                     if (traitor.Character.IsDead)
                     {
                         traitor.UpdateCurrentObjective("");
+                        continue;
                     }
-                }
-                int previousCompletedCount = completedObjectives.Count;
-                int startedCount = 0;
-                while (pendingObjectives.Count > 0)
-                {
-                    var objective = pendingObjectives[0];
-                    if (!objective.IsStarted)
+
+                    int previousCompletedCount = completedObjectives.Count;
+                    int startedCount = 0;
+                    while (pendingObjectives.Count > 0)
                     {
-                        if (!objective.Start(Traitors["traitor"]))
+                        var objective = GetCurrentObjective(traitor);
+                          // pendingObjectives[0];
+                        /*if (!objective.Roles.Contains(traitor.Role))
+                        {
+                            break;
+                        }*/
+                        if (!objective.IsStarted)
+                        {
+                            if (!objective.Start(traitor))
+                            {
+                                pendingObjectives.RemoveAt(0);
+                                completedObjectives.Add(objective);
+                                if (pendingObjectives.Count > 0)
+                                {
+                                    objective.EndMessage();
+                                }
+                                continue;
+                            }
+                            ++startedCount;
+                        }
+                        objective.Update(deltaTime);
+                        if (objective.IsCompleted)
                         {
                             pendingObjectives.RemoveAt(0);
                             completedObjectives.Add(objective);
@@ -236,41 +303,29 @@ namespace Barotrauma
                             }
                             continue;
                         }
-                        ++startedCount;
-                    }
-                    objective.Update(deltaTime);
-                    if (objective.IsCompleted)
-                    {
-                        pendingObjectives.RemoveAt(0);
-                        completedObjectives.Add(objective);
-                        if (pendingObjectives.Count > 0)
+                        if (!objective.CanBeCompleted)
                         {
                             objective.EndMessage();
+                            objective.End(true);
+                            pendingObjectives.Clear();
                         }
-                        continue;
+                        break;
                     }
-                    if (!objective.CanBeCompleted)
+                    int completedMax = completedObjectives.Count - 1;
+                    for (int i = previousCompletedCount; i <= completedMax; ++i)
                     {
-                        objective.EndMessage();
-                        objective.End(true);
-                        pendingObjectives.Clear();
+                        var objective = completedObjectives[i];
+                        objective.End(i < completedMax || pendingObjectives.Count > 0);
                     }
-                    break;
-                }
-                int completedMax = completedObjectives.Count - 1;
-                for (int i = previousCompletedCount; i <= completedMax; ++i)
-                {
-                    var objective = completedObjectives[i];
-                    objective.End(i < completedMax || pendingObjectives.Count > 0);
-                }
-                if (pendingObjectives.Count > 0)
-                {
-                    if (startedCount > 0)
+                    if (pendingObjectives.Count > 0)
                     {
-                        pendingObjectives[0].StartMessage();
+                        if (startedCount > 0)
+                        {
+                            pendingObjectives[0].StartMessage();
+                        }
                     }
                 }
-                else if (completedObjectives.Count >= allObjectives.Count)
+                if (completedObjectives.Count >= allObjectives.Count)
                 {
                     foreach (var traitor in Traitors)
                     {
@@ -303,7 +358,7 @@ namespace Barotrauma
 #endif
             }
 
-            public TraitorMission(string startText, string globalEndMessageSuccessTextId, string globalEndMessageSuccessDeadTextId, string globalEndMessageSuccessDetainedTextId, string globalEndMessageFailureTextId, string globalEndMessageFailureDeadTextId, string globalEndMessageFailureDetainedTextId, params Objective[] objectives)
+            public TraitorMission(string startText, string globalEndMessageSuccessTextId, string globalEndMessageSuccessDeadTextId, string globalEndMessageSuccessDetainedTextId, string globalEndMessageFailureTextId, string globalEndMessageFailureDeadTextId, string globalEndMessageFailureDetainedTextId, ICollection<string> roles, ICollection<Objective> objectives)
             {
                 StartText = startText;
                 GlobalEndMessageSuccessTextId = globalEndMessageSuccessTextId;
@@ -312,6 +367,7 @@ namespace Barotrauma
                 GlobalEndMessageFailureTextId = globalEndMessageFailureTextId;
                 GlobalEndMessageFailureDeadTextId = globalEndMessageFailureDeadTextId;
                 GlobalEndMessageFailureDetainedTextId = globalEndMessageFailureDetainedTextId;
+                Roles.AddRange(roles);
                 allObjectives.AddRange(objectives);
                 pendingObjectives.AddRange(objectives);
             }
