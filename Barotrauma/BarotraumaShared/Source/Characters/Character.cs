@@ -1595,7 +1595,7 @@ namespace Barotrauma
 #if CLIENT
             if (Screen.Selected == GameMain.SubEditorScreen) { hidden = false; }
 #endif  
-            if (!CanInteract || hidden) return false;
+            if (!CanInteract || hidden || item.NonInteractable) return false;
 
             if (item.ParentInventory != null)
             {

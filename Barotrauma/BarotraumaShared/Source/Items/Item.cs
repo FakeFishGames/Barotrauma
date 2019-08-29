@@ -177,6 +177,13 @@ namespace Barotrauma
             set;
         }
 
+        [Editable, Serialize(false, true)]
+        public bool NonInteractable
+        {
+            get;
+            set;
+        }
+
         public float ImpactTolerance
         {
             get { return Prefab.ImpactTolerance; }
