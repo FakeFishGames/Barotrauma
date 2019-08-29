@@ -739,7 +739,7 @@ namespace Barotrauma
             [Serialize(0f, true), Editable(minValue: 0, maxValue: 1, DecimalCount = 3, ToolTip = "The Z-depth of the limb relative to other limbs of the same character. 1 is front, 0 is behind.")]
             public float Depth { get; set; }
 
-            [Serialize("", true)]
+            [Serialize("", true), Editable()]
             public string Texture { get; set; }
 
             public DeformationParams Deformation { get; set; }
