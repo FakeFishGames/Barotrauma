@@ -1484,6 +1484,9 @@ namespace Barotrauma
             return (wall == null || !wall.CastShadow) && (door == null || door.IsOpen);
         }
 
+        public bool HasItem(Item item, bool requireEquipped = false) => 
+            requireEquipped ? HasEquippedItem(item) : item.FindParentInventory(i => i.Owner == this) != null;
+
         public bool HasEquippedItem(Item item)
         {
             for (int i = 0; i < Inventory.Capacity; i++)

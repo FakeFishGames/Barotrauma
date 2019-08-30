@@ -126,24 +126,6 @@ namespace Barotrauma
             }
         }
 
-        public delegate bool InventoryFilter(Inventory inventory);
-        public Inventory FindParentInventory(InventoryFilter filter)
-        {
-            if (parentInventory != null)
-            {
-                if (filter(parentInventory))
-                {
-                    return parentInventory;
-                }
-                var owner = parentInventory.Owner as Item;
-                if (owner != null)
-                {
-                    return owner.FindParentInventory(filter);
-                }
-            }
-            return null;
-        }
-
         private Item container;
         public Item Container
         {
@@ -963,7 +945,6 @@ namespace Barotrauma
                 return CurrentHull;
             }
 
-
             CurrentHull = Hull.FindHull(WorldPosition, CurrentHull);
             if (body != null && body.Enabled)
             {
@@ -986,7 +967,23 @@ namespace Barotrauma
 
             return rootContainer;
         }
-                
+
+        public Inventory FindParentInventory(Func<Inventory, bool> predicate)
+        {
+            if (parentInventory != null)
+            {
+                if (predicate(parentInventory))
+                {
+                    return parentInventory;
+                }
+                if (parentInventory.Owner is Item owner)
+                {
+                    return owner.FindParentInventory(predicate);
+                }
+            }
+            return null;
+        }
+
         public void SetContainedItemPositions()
         {
             foreach (ItemComponent component in components)
