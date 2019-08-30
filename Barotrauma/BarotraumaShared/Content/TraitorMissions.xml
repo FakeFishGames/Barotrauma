@@ -247,7 +247,7 @@
     
     <StartInfoText id="flood_2_traitormissionStartInfoText"/>
 
-    <Objective roles="t1,t2">
+    <Objective roles="t1,t2,borken">
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="flood_2_objectiveSuccessMessage1"/>
       <StartMessage id="flood_2_traitorobjectivestartmessage1"/>

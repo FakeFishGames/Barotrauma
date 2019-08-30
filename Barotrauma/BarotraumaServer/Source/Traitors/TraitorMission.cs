@@ -54,7 +54,6 @@ namespace Barotrauma
                     var isSuccess = completedObjectives.Count >= allObjectives.Count;
                     return new string[] {
                         string.Join(", ", Traitors.Values.Select(traitor => traitor.Character?.Name ?? "(unknown)")),
-                        // (Traitors.TryGetValue("traitor", out var traitor) ? traitor.Character?.Name : null) ?? "(unknown)",
                         (isSuccess ? completedObjectives.LastOrDefault() : pendingObjectives.FirstOrDefault())?.GoalInfos ?? ""
                     };
                 }
@@ -83,29 +82,13 @@ namespace Barotrauma
                 }
             }
 
-            protected Objective GetLastCompletedObjective(Traitor traitor)
-            {
-                if (!Traitors.ContainsValue(traitor))
-                {
-                    return null;
-                }
-                var traitorRole = Traitors.First(entry => entry.Value == traitor).Key;
-                return completedObjectives.LastOrDefault(objective => objective.Roles.Contains(traitorRole));
-            }
-
             public Objective GetCurrentObjective(Traitor traitor)
             {
-                if (pendingObjectives.Count <= 0)
+                if (!Traitors.ContainsValue(traitor) || pendingObjectives.Count <= 0)
                 {
                     return null;
                 }
-                int traitorNextIndex = pendingObjectives.FindIndex(objective => objective.Roles.Contains(traitor.Role));
-                int globalNextIndex = Traitors.Values.Max(t => pendingObjectives.FindIndex(objective => objective.Roles.Contains(t.Role)));
-                if (traitorNextIndex < 0 || traitorNextIndex < globalNextIndex)
-                {
-                    return null; /* no objective, waiting for other traitors */
-                }
-                return pendingObjectives[traitorNextIndex];
+                return pendingObjectives.Find(objective => objective.Roles.Contains(traitor.Role));
             }
 
             protected List<Tuple<Client, Character>> FindTraitorCandidates(GameServer server, Character.TeamType team, ICollection<string> traitorRoles)
@@ -138,7 +121,7 @@ namespace Barotrauma
             public virtual bool CanBeStarted(GameServer server, TraitorManager traitorManager, Character.TeamType team)
             {
                 var traitorCandidates = FindTraitorCandidates(server, team, Roles);
-                if (traitorCandidates.Count <= 0)
+                if (traitorCandidates.Count < Roles.Count)
                 {
                     return false;
                 }
@@ -161,7 +144,6 @@ namespace Barotrauma
                     return false;
                 }
 #endif
-
                 var roleCandidates = new Dictionary<string, HashSet<Tuple<Client, Character>>>();
                 foreach (var role in Roles)
                 {
@@ -171,7 +153,6 @@ namespace Barotrauma
                         return false;
                     }
                 }
-
                 var candidateRoleCounts = new Dictionary<Tuple<Client, Character>, int>();
                 foreach (var candidateEntry in roleCandidates)
                 {
@@ -180,10 +161,8 @@ namespace Barotrauma
                         candidateRoleCounts[candidate] = candidateRoleCounts.TryGetValue(candidate, out var count) ? count + 1 : 1;
                     }
                 }
-
                 var unassignedRoles = new List<string>(roleCandidates.Keys);
                 unassignedRoles.Sort((a, b) => roleCandidates[a].Count - roleCandidates[b].Count);
-
                 var assignedCandidates = new List<Tuple<string, Tuple<Client, Character>>>();
                 while (unassignedRoles.Count > 0)
                 {
@@ -194,7 +173,7 @@ namespace Barotrauma
                         break;
                     }
                     unassignedRoles.RemoveAt(0);
-                    availableCandidates.Sort((a,b) => candidateRoleCounts[b] - candidateRoleCounts[a]);
+                    availableCandidates.Sort((a, b) => candidateRoleCounts[b] - candidateRoleCounts[a]);
                     unassignedRoles.Sort((a, b) => roleCandidates[a].Count - roleCandidates[b].Count);
 
                     int numCandidates = 1;
@@ -208,10 +187,7 @@ namespace Barotrauma
                         return Math.Max(
                             previousClient != null ? traitorManager.GetTraitorCount(previousClient) : 0,
                             traitorManager.GetTraitorCount(Tuple.Create(t.Item1.SteamID, t.Item1.Connection?.EndPointString ?? "")));
-                    }, (t, c) =>
-                    {
-                        traitorManager.SetTraitorCount(Tuple.Create(t.Item1.SteamID, t.Item1.Connection?.EndPointString ?? ""), c);
-                    }, 2, 3);
+                    }, (t, c) => { traitorManager.SetTraitorCount(Tuple.Create(t.Item1.SteamID, t.Item1.Connection?.EndPointString ?? ""), c); }, 2, 3);
 
                     assignedCandidates.Add(Tuple.Create(currentRole, selected));
                     foreach (var candidate in roleCandidates.Values)
@@ -226,7 +202,7 @@ namespace Barotrauma
                 CodeWords = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
                 CodeResponse = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
                 Traitors.Clear();
-                foreach(var candidate in assignedCandidates)
+                foreach (var candidate in assignedCandidates)
                 {
                     var traitor = new Traitor(this, candidate.Item1, candidate.Item2.Item1.Character);
                     Traitors.Add(candidate.Item1, traitor);
@@ -235,8 +211,10 @@ namespace Barotrauma
                 var messages = new Dictionary<Traitor, List<string>>();
                 foreach (var traitor in Traitors.Values)
                 {
-                    messages[traitor] = new List<string>();
-                    if (traitor.CurrentObjective == null) { continue; }
+                    messages.Add(traitor, new List<string>());
+                }
+                foreach (var traitor in Traitors.Values)
+                {
                     traitor.Greet(server, CodeWords, CodeResponse, message => messages[traitor].Add(message));
                 }
 
@@ -246,7 +224,7 @@ namespace Barotrauma
 #if SERVER
                 foreach (var traitor in Traitors.Values)
                 {
-                    GameServer.Log(string.Format("{0} is a traitor and the current goals are:\n{1}", traitor.Character.Name, traitor.CurrentObjective?.GoalInfos != null ? TextManager.GetServerMessage(traitor.CurrentObjective?.GoalInfos) : "(empty)"), ServerLog.MessageType.ServerMessage);
+                    GameServer.Log($"{traitor.Character.Name} is a traitor and the current goals are:\n{(traitor.CurrentObjective?.GoalInfos != null ? TextManager.GetServerMessage(traitor.CurrentObjective?.GoalInfos) : "(empty)")}", ServerLog.MessageType.ServerMessage);
                 }
 #endif
                 return true;
@@ -260,29 +238,29 @@ namespace Barotrauma
                 {
                     return;
                 }
+                if (Traitors.Values.Any(traitor => traitor.Character?.IsDead ?? true))
+                {
+                    Traitors.Values.ForEach(traitor => traitor.UpdateCurrentObjective(""));
+                    return;
+                }
+                var startedObjectives = new List<Objective>();
                 foreach (var traitor in Traitors.Values)
                 {
-                    if (traitor.Character.IsDead)
-                    {
-                        traitor.UpdateCurrentObjective("");
-                        continue;
-                    }
-
-                    int previousCompletedCount = completedObjectives.Count;
-                    int startedCount = 0;
+                    var previousCompletedCount = completedObjectives.Count;
+                    startedObjectives.Clear();
                     while (pendingObjectives.Count > 0)
                     {
                         var objective = GetCurrentObjective(traitor);
-                          // pendingObjectives[0];
-                        /*if (!objective.Roles.Contains(traitor.Role))
+                        if (objective == null)
                         {
+                            // No more objectives left for traitor or waiting for another traitor's objective.
                             break;
-                        }*/
+                        }
                         if (!objective.IsStarted)
                         {
                             if (!objective.Start(traitor))
                             {
-                                pendingObjectives.RemoveAt(0);
+                                pendingObjectives.Remove(objective);
                                 completedObjectives.Add(objective);
                                 if (pendingObjectives.Count > 0)
                                 {
@@ -290,12 +268,12 @@ namespace Barotrauma
                                 }
                                 continue;
                             }
-                            ++startedCount;
+                            startedObjectives.Add(objective);
                         }
                         objective.Update(deltaTime);
                         if (objective.IsCompleted)
                         {
-                            pendingObjectives.RemoveAt(0);
+                            pendingObjectives.Remove(objective);
                             completedObjectives.Add(objective);
                             if (pendingObjectives.Count > 0)
                             {
@@ -311,18 +289,15 @@ namespace Barotrauma
                         }
                         break;
                     }
-                    int completedMax = completedObjectives.Count - 1;
-                    for (int i = previousCompletedCount; i <= completedMax; ++i)
+                    var completedMax = completedObjectives.Count - 1;
+                    for (var i = previousCompletedCount; i <= completedMax; ++i)
                     {
                         var objective = completedObjectives[i];
                         objective.End(i < completedMax || pendingObjectives.Count > 0);
                     }
                     if (pendingObjectives.Count > 0)
                     {
-                        if (startedCount > 0)
-                        {
-                            pendingObjectives[0].StartMessage();
-                        }
+                        startedObjectives.ForEach(objective => objective.StartMessage());
                     }
                 }
                 if (completedObjectives.Count >= allObjectives.Count)

@@ -232,6 +232,7 @@
     <Compile Include="Source\Program.cs" />
     <Compile Include="Source\Screens\NetLobbyScreen.cs" />
     <Compile Include="Source\Screens\UnimplementedScreen.cs" />
+    <Compile Include="Source\Traitors\Goals\GoalWaitForTraitors.cs" />
     <Compile Include="Source\Traitors\Goals\HumanoidGoal.cs" />
     <Compile Include="Source\Traitors\Goals\Modifiers\GoalIsOptional.cs" />
     <Compile Include="Source\Traitors\Goals\Modifiers\Modifier.cs" />

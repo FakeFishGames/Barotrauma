@@ -256,10 +256,16 @@ namespace Barotrauma {
             }
         }
 
-         public class Objective
+
+        public abstract class ObjectiveBase
         {
             public HashSet<string> Roles { get; } = new HashSet<string>();
 
+            public abstract Traitor.Objective Instantiate(string role);
+        }
+
+        protected class Objective : ObjectiveBase
+        {
             public string InfoText { get; internal set; }
             public string StartMessageTextId { get; internal set; }
             public string StartMessageServerTextId { get; internal set; }
@@ -273,9 +279,9 @@ namespace Barotrauma {
 
             public readonly List<Goal> Goals = new List<Goal>();
 
-            public Traitor.Objective Instantiate()
+            public override Traitor.Objective Instantiate(string role)
             {
-                var result = new Traitor.Objective(InfoText, ShuffleGoalsCount, Roles, Goals.ConvertAll(goal => {
+                var result = new Traitor.Objective(InfoText, ShuffleGoalsCount, new [] { role }, Goals.ConvertAll(goal => {
                     var instance = goal.Instantiate();
                     if (instance == null)
                     {
@@ -319,6 +325,22 @@ namespace Barotrauma {
             }
         }
 
+        protected class WaitObjective : ObjectiveBase
+        {
+            private readonly Traitor.GoalWaitForTraitors sharedGoal;
+
+            public override Traitor.Objective Instantiate(string role)
+            {
+                return new Traitor.Objective("TraitorObjectiveInfoTextWaitForOtherTraitors", -1, new [] { role }, new[] { sharedGoal });
+            }
+
+            public WaitObjective(ICollection<string> roles)
+            {
+                Roles.UnionWith(roles);
+                sharedGoal = new Traitor.GoalWaitForTraitors(Roles.Count);
+            }
+        }
+
         public class Role
         {
             // public string Job;
@@ -334,10 +356,34 @@ namespace Barotrauma {
         public readonly string EndMessageFailureDeadText;
         public readonly string EndMessageFailureDetainedText;
 
-        public readonly List<Objective> Objectives = new List<Objective>();
+        public readonly List<ObjectiveBase> Objectives = new List<ObjectiveBase>();
 
         public Traitor.TraitorMission Instantiate()
         {
+            var objectivesWithSync = new List<ObjectiveBase>();
+            var objectivesCount = Objectives.Count;
+            if (objectivesCount > 0)
+            {
+                var pendingRoles = new HashSet<string>();
+                objectivesWithSync.Add(Objectives[0]);
+                pendingRoles.UnionWith(Objectives[0].Roles);
+                for (var i = 1; i < objectivesCount; ++i)
+                {
+                    var objective = Objectives[i];
+                    if (pendingRoles.IsSupersetOf(objective.Roles))
+                    {
+                        objectivesWithSync.Add(new WaitObjective(objective.Roles));
+                        pendingRoles.Clear();
+                    }
+                    objectivesWithSync.Add(objective);
+                    pendingRoles.UnionWith(objective.Roles);
+                }
+                if (pendingRoles.IsSubsetOf(Roles.Keys))
+                {
+                    // TODO(xxx): Correct end message for WaitObjective
+                    objectivesWithSync.Add(new WaitObjective(Roles.Keys));
+                }
+            }
             return new Traitor.TraitorMission(
                 StartText ?? "TraitorMissionStartMessage",
                 EndMessageSuccessText ?? "TraitorObjectiveEndMessageSuccess",
@@ -347,7 +393,7 @@ namespace Barotrauma {
                 EndMessageFailureDeadText ?? "TraitorObjectiveEndMessageFailureDead",
                 EndMessageFailureDetainedText ?? "TraitorObjectiveEndMessageFailureDetained",
                 Roles.Keys, // TODO(xxx): Full role data to mission
-                Objectives.ConvertAll(objective => objective.Instantiate()));
+                objectivesWithSync.SelectMany(objective => objective.Roles.Select(objective.Instantiate)).ToArray());
         }
 
         protected Goal LoadGoal(XElement goalRoot)
@@ -357,12 +403,20 @@ namespace Barotrauma {
         }
 
          protected Objective LoadObjective(XElement objectiveRoot, string[] allRoles)
-        {
+         {
+            var allRolesSet = new HashSet<string>(allRoles);
             var result = new Objective
             {
                 ShuffleGoalsCount = objectiveRoot.GetAttributeInt("shuffleGoalsCount", -1)
             };
-            result.Roles.UnionWith(objectiveRoot.GetAttributeStringArray("roles", allRoles));
+            var objectiveRoles = objectiveRoot.GetAttributeStringArray("roles", allRoles);
+            if (!allRolesSet.IsSupersetOf(objectiveRoles))
+            {
+                var unrecognized = new HashSet<string>(objectiveRoles);
+                unrecognized.ExceptWith(allRoles);
+                GameServer.Log($"Undefined role(s) \"{string.Join(", ", unrecognized)}\" set for Objective.", ServerLog.MessageType.Error);
+            }
+            result.Roles.UnionWith(allRolesSet.Intersect(objectiveRoles));
 
             foreach (var element in objectiveRoot.Elements())
             {
@@ -416,7 +470,7 @@ namespace Barotrauma {
                             break;
                         }
                         default:
-                            GameServer.Log($"Unrecognized element \"{element.Name}\"under Objective.", ServerLog.MessageType.Error);
+                            GameServer.Log($"Unrecognized element \"{element.Name}\" under Objective.", ServerLog.MessageType.Error);
                             break;
                     }
                 }
