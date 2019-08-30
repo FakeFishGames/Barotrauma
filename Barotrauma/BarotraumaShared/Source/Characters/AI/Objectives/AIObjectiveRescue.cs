@@ -147,7 +147,7 @@ namespace Barotrauma
                 {
                     if (treatmentSuitability.Value > 0.0f)
                     {
-                        Item matchingItem = character.Inventory.FindItemByIdentifier(treatmentSuitability.Key);
+                        Item matchingItem = character.Inventory.FindItemByIdentifier(treatmentSuitability.Key, true);
                         if (matchingItem == null) { continue; }
                         ApplyTreatment(affliction, matchingItem);
                         return;
