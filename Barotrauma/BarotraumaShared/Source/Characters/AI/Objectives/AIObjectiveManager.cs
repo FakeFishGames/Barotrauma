@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
@@ -102,7 +103,7 @@ namespace Barotrauma
             if (objective == null)
             {
 #if DEBUG
-                DebugConsole.ThrowError("Attempted to add a null objective to AIObjectiveManager\n" + Environment.StackTrace);
+                DebugConsole.ThrowError($"{character.Name}: Attempted to add a null objective to AIObjectiveManager\n" + Environment.StackTrace);
 #endif
                 return;
             }
@@ -168,14 +169,14 @@ namespace Barotrauma
                 if (objective.IsCompleted())
                 {
 #if DEBUG
-                    DebugConsole.NewMessage($"Removing objective {objective.DebugTag}, because it is completed.");
+                    DebugConsole.NewMessage($"{character.Name}: Removing objective {objective.DebugTag}, because it is completed.", Color.LightGreen);
 #endif
                     Objectives.Remove(objective);
                 }
                 else if (!objective.CanBeCompleted)
                 {
 #if DEBUG
-                    DebugConsole.NewMessage($"Removing objective {objective.DebugTag}, because it cannot be completed.");
+                    DebugConsole.NewMessage($"{character.Name}: Removing objective {objective.DebugTag}, because it cannot be completed.", Color.Red);
 #endif
                     Objectives.Remove(objective);
                 }

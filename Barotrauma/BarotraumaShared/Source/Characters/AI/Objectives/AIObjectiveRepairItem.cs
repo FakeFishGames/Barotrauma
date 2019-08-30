@@ -90,7 +90,7 @@ namespace Barotrauma
                 if (containedItems == null)
                 {
 #if DEBUG
-                    DebugConsole.ThrowError("AIObjectiveRepairItem failed - the item \"" + repairTool + "\" has no proper inventory");
+                    DebugConsole.ThrowError($"{character.Name}: AIObjectiveRepairItem failed - the item \"" + repairTool + "\" has no proper inventory");
 #endif
                     abandon = true;
                     return;

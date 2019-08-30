@@ -69,7 +69,7 @@ namespace Barotrauma
                 if (subObjective.IsCompleted())
                 {
 #if DEBUG
-                    DebugConsole.NewMessage($"Removing subobjective {subObjective.DebugTag} of {DebugTag}, because it is completed.");
+                    DebugConsole.NewMessage($"{character.Name}: Removing SUBobjective {subObjective.DebugTag} of {DebugTag}, because it is completed.", Color.LightGreen);
 #endif
                     subObjective.OnCompleted();
                     subObjectives.Remove(subObjective);
@@ -77,7 +77,7 @@ namespace Barotrauma
                 else if (!subObjective.CanBeCompleted)
                 {
 #if DEBUG
-                    DebugConsole.NewMessage($"Removing subobjective {subObjective.DebugTag} of {DebugTag}, because it cannot be completed.");
+                    DebugConsole.NewMessage($"{character.Name}: Removing SUBobjective {subObjective.DebugTag} of {DebugTag}, because it cannot be completed.", Color.Red);
 #endif
                     subObjectives.Remove(subObjective);
                 }
