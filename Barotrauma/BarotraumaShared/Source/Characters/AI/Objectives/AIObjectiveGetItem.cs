@@ -252,34 +252,19 @@ namespace Barotrauma
         {
             if (targetItem != null)
             {
-                return HasItem(targetItem);
+                return character.HasItem(targetItem, equip);
             }
             else if (itemIdentifiers != null)
             {
                 foreach (string itemName in itemIdentifiers)
                 {
-                    var matchingItem = character.Inventory.FindItemByTag(itemName) ?? character.Inventory.FindItemByIdentifier(itemName);
-                    if (matchingItem != null && (!equip || character.HasEquippedItem(matchingItem)))
+                    var matchingItem = character.Inventory.FindItemByTag(itemName, true) ?? character.Inventory.FindItemByIdentifier(itemName, true);
+                    if (matchingItem != null)
                     {
-                        return true;
+                        return !equip || character.HasEquippedItem(matchingItem);
                     }
                 }
                 return false;
-            }
-            return false;
-        }
-
-        private bool HasItem(Item item)
-        {
-            bool isEquipped = !equip || character.HasEquippedItem(item);
-            if (character.Inventory.Items.Contains(item) && isEquipped) { return true; }
-            if (!equip)
-            {
-                Item rootContainer = item.GetRootContainer();
-                if (rootContainer != null && rootContainer.ParentInventory is CharacterInventory)
-                {
-                    return rootContainer.ParentInventory.Owner == character;
-                }
             }
             return false;
         }
