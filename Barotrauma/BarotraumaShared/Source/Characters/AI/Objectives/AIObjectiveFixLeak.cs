@@ -58,7 +58,7 @@ namespace Barotrauma
                     return;
                 }
             }
-            var weldingTool = character.Inventory.FindItemByTag("weldingtool");
+            var weldingTool = character.Inventory.FindItemByTag("weldingtool", true);
             if (weldingTool == null)
             {
                 TryAddSubObjective(ref getWeldingTool, () => new AIObjectiveGetItem(character, "weldingtool", objectiveManager, true));

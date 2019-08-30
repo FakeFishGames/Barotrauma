@@ -62,7 +62,7 @@ namespace Barotrauma
                 {
                     foreach (string identifier in itemIdentifiers)
                     {
-                        itemToDecontain = container.Inventory.FindItemByIdentifier(identifier) ?? container.Inventory.FindItemByTag(identifier);
+                        itemToDecontain = container.Inventory.FindItemByIdentifier(identifier, true) ?? container.Inventory.FindItemByTag(identifier, true);
                         if (itemToDecontain != null) { break; }
                     }
                 }
