@@ -682,6 +682,7 @@ namespace Barotrauma
             if (friendsDropdown == null) {
                 friendsDropdown = new GUIListBox(new RectTransform(Vector2.One, GUI.Canvas))
                 {
+                    OutlineColor = Color.Black,
                     Visible = false
                 };
             }
@@ -764,7 +765,7 @@ namespace Barotrauma
                 return 0;
             });
 
-            Color mainColor = new Color(132, 170, 56);
+            Color mainColor = new Color(58, 93, 43);
             Color hoverColor = new Color(53, 72, 76);
             Color pressColor = new Color(255, 255, 255);
 
@@ -772,20 +773,20 @@ namespace Barotrauma
 
             int buttonCount = 0;
 
-            for (int i=0;i<friendsList.Count;i++)
+            for (int i = 0; i < friendsList.Count; i++)
             {
                 var friend = friendsList[i];
                 buttonCount++;
 
-                if (buttonCount<=5)
+                if (buttonCount <= 5)
                 {
                     if (friend.InServer)
                     {
-                        mainColor = new Color(132, 170, 56);
+                        mainColor = new Color(58, 93, 43);
                     }
                     else
                     {
-                        mainColor = friend.PlayingThisGame ? new Color(132, 170, 56) : new Color(83, 164, 196);
+                        mainColor = friend.PlayingThisGame ? new Color(58, 93, 43) : new Color(83, 164, 196);
                     }
 
                     var guiButton = new GUIButton(new RectTransform(Vector2.One * 0.6f, friendsButtonHolder.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: null)
@@ -808,15 +809,31 @@ namespace Barotrauma
                     }
                 }
 
-                var friendFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.33f), friendsDropdown.Content.RectTransform));
-                var guiImage2TheSequel = new GUIImage(new RectTransform(Vector2.One * 0.8f, friendFrame.RectTransform, Anchor.CenterLeft, scaleBasis: ScaleBasis.BothHeight), friend.Sprite, null, true);
+                var friendFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.167f), friendsDropdown.Content.RectTransform), style: null)
+                {
+                    Color = new Color(27, 36, 38),
+                    HoverColor = new Color(44, 59, 62),
+                    SelectedColor = new Color(27, 36, 38),
+                    PressedColor = pressColor,
+                    OutlineColor = Color.Black
+                };
+                var guiImage2TheSequel = new GUIImage(new RectTransform(Vector2.One * 0.9f, friendFrame.RectTransform, Anchor.CenterLeft, scaleBasis: ScaleBasis.BothHeight) { RelativeOffset = new Vector2(0.02f, 0.02f) } , friend.Sprite, null, true);
 
-                var textBlock = new GUITextBlock(new RectTransform(Vector2.One * 0.8f, friendFrame.RectTransform, Anchor.CenterLeft, scaleBasis: ScaleBasis.BothHeight) { RelativeOffset = new Vector2(1.0f / 7.0f, 0.0f) }, friend.Name + "\n" + friend.Status);
+                var textBlock = new GUITextBlock(new RectTransform(Vector2.One * 0.8f, friendFrame.RectTransform, Anchor.CenterLeft, scaleBasis: ScaleBasis.BothHeight) { RelativeOffset = new Vector2(1.0f / 7.7f, 0.0f) }, friend.Name + "\n" + friend.Status)
+                {
+                    TextColor = mainColor,
+                    Font = GUI.SmallFont
+                };
 
                 if (friend.InServer)
                 {
-                    var joinButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.6f), friendFrame.RectTransform, Anchor.CenterRight), "Join")
+                    var joinButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.6f), friendFrame.RectTransform, Anchor.CenterRight) { RelativeOffset = new Vector2(0.05f, 0.0f) }, "Join", style: null)
                     {
+                        Color = new Color(43, 71, 93),
+                        TextColor = new Color(90, 190, 249),
+                        HoverColor = new Color(53, 88, 115),
+                        SelectedColor = new Color(53, 88, 115),
+                        PressedColor = pressColor,
                         UserData = friend
                     };
                     joinButton.OnClicked = JoinFriend;
@@ -824,8 +841,6 @@ namespace Barotrauma
             }
 
             mainColor = new Color(73, 98, 103);
-            hoverColor = new Color(53, 72, 76);
-            pressColor = new Color(255, 255, 255);
 
             if (friendsList.Count > 0)
             {
@@ -840,7 +855,7 @@ namespace Barotrauma
                     Font = GUI.ObjectiveNameFont,
                     OnClicked = (button, udt) =>
                     {
-                        friendsDropdown.RectTransform.NonScaledSize = new Point(friendsButtonHolder.Rect.Height * 5, friendsButtonHolder.Rect.Height * 2);
+                        friendsDropdown.RectTransform.NonScaledSize = new Point(friendsButtonHolder.Rect.Height * 5, friendsButtonHolder.Rect.Height * 4);
                         friendsDropdown.RectTransform.RelativeOffset = new Vector2(0.155f, 0.215f);
                         friendsDropdown.RectTransform.RecalculateChildren(true);
                         friendsDropdown.RectTransform.SetPosition(Anchor.TopRight);
@@ -856,7 +871,7 @@ namespace Barotrauma
                 friendsDropdown.Visible = false;
             }
 
-            friendsDropdown.RectTransform.NonScaledSize = new Point(friendsButtonHolder.Rect.Height * 5, friendsButtonHolder.Rect.Height * 2);
+            friendsDropdown.RectTransform.NonScaledSize = new Point(friendsButtonHolder.Rect.Height * 5, friendsButtonHolder.Rect.Height * 4);
             friendsDropdown.RectTransform.RelativeOffset = new Vector2(0.155f, 0.215f);
             friendsDropdown.RectTransform.RecalculateChildren(true);
             friendsDropdown.RectTransform.SetPosition(Anchor.TopRight);
