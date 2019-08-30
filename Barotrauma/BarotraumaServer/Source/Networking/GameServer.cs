@@ -263,17 +263,15 @@ namespace Barotrauma.Networking
             {
                 newClient.GivePermission(ClientPermissions.All);
                 newClient.PermittedConsoleCommands.AddRange(DebugConsole.Commands);
-
-                GameMain.Server.UpdateClientPermissions(newClient);
-                GameMain.Server.SendConsoleMessage("Granted all permissions to " + newClient.Name + ".", newClient);
+                SendConsoleMessage("Granted all permissions to " + newClient.Name + ".", newClient);
             }
 
-            GameMain.Server.SendChatMessage($"ServerMessage.JoinedServer~[client]={clName}", ChatMessageType.Server, null);
+            SendChatMessage($"ServerMessage.JoinedServer~[client]={clName}", ChatMessageType.Server, null);
             serverSettings.ServerDetailsChanged = true;
 
             if (previousPlayer != null && previousPlayer.Name != newClient.Name)
             {
-                GameMain.Server.SendChatMessage($"ServerMessage.PreviousClientName~[client]={clName}~[previousname]={previousPlayer.Name}", ChatMessageType.Server, null);
+                SendChatMessage($"ServerMessage.PreviousClientName~[client]={clName}~[previousname]={previousPlayer.Name}", ChatMessageType.Server, null);
                 previousPlayer.Name = newClient.Name;
             }
 
@@ -298,6 +296,8 @@ namespace Barotrauma.Networking
                     newClient.SetPermissions(ClientPermissions.None, new List<DebugConsole.Command>());
                 }
             }
+
+            UpdateClientPermissions(newClient);
         }
 
         private void OnClientDisconnect(NetworkConnection connection, string disconnectMsg)
@@ -1474,7 +1474,7 @@ namespace Barotrauma.Networking
         private void WriteClientList(Client c, IWriteMessage outmsg)
         {
             bool hasChanged = NetIdUtils.IdMoreRecent(LastClientListUpdateID, c.LastRecvClientListUpdate);
-            if (!hasChanged) return;
+            if (!hasChanged) { return; }
             
             outmsg.Write((byte)ServerNetObject.CLIENT_LIST);
             outmsg.Write(LastClientListUpdateID);
@@ -2634,25 +2634,48 @@ namespace Barotrauma.Networking
                 }
             }
 
+            //send the message to the client whose permissions are being modified and the clients who are allowed to modify permissions
+            List<Client> recipients = new List<Client>() { client };
+            foreach (Client otherClient in connectedClients)
+            {
+                if (otherClient.HasPermission(ClientPermissions.ManagePermissions) && !recipients.Contains(otherClient))
+                {
+                    recipients.Add(otherClient);
+                }
+            }
+            foreach (Client recipient in recipients)
+            {
+                CoroutineManager.StartCoroutine(SendClientPermissionsAfterClientListSynced(recipient, client));
+            }
+            serverSettings.SaveClientPermissions();
+        }
+
+
+        private IEnumerable<object> SendClientPermissionsAfterClientListSynced(Client recipient, Client client)
+        {
+            DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, 10);
+            while (recipient.LastRecvClientListUpdate < LastClientListUpdateID)
+            {
+                if (DateTime.Now > timeOut || GameMain.Server == null || !connectedClients.Contains(recipient))
+                {
+                    yield return CoroutineStatus.Success;
+                }
+                yield return null;
+            }            
+
+            SendClientPermissions(recipient, client);
+            yield return CoroutineStatus.Success;
+        }
+
+
+        private void SendClientPermissions(Client recipient, Client client)
+        {
+            if (recipient?.Connection == null) { return; }
+
             IWriteMessage msg = new WriteOnlyMessage();
             msg.Write((byte)ServerPacketHeader.PERMISSIONS);
             client.WritePermissions(msg);
-
-            //send the message to the client whose permissions are being modified and the clients who are allowed to modify permissions
-            List<NetworkConnection> recipients = new List<NetworkConnection>() { client.Connection };
-            foreach (Client otherClient in connectedClients)
-            {
-                if (otherClient.HasPermission(ClientPermissions.ManagePermissions) && !recipients.Contains(otherClient.Connection))
-                {
-                    recipients.Add(otherClient.Connection);
-                }
-            }
-            foreach (NetworkConnection c in recipients)
-            {
-                serverPeer.Send(msg, c, DeliveryMethod.Reliable); 
-            }           
-
-            serverSettings.SaveClientPermissions();
+            serverPeer.Send(msg, recipient.Connection, DeliveryMethod.Reliable);
         }
         
         public void GiveAchievement(Character character, string achievementIdentifier)
