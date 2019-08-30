@@ -58,7 +58,7 @@ namespace Barotrauma
                 if (extinguisher == null)
                 {
 #if DEBUG
-                    DebugConsole.ThrowError("AIObjectiveExtinguishFire failed - the item \"" + extinguisherItem + "\" has no RepairTool component but is tagged as an extinguisher");
+                    DebugConsole.ThrowError($"{character.Name}: AIObjectiveExtinguishFire failed - the item \"" + extinguisherItem + "\" has no RepairTool component but is tagged as an extinguisher");
 #endif
                     abandon = true;
                     return;

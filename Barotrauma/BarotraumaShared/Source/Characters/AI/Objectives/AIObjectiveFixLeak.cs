@@ -70,7 +70,7 @@ namespace Barotrauma
                 if (containedItems == null)
                 {
 #if DEBUG
-                    DebugConsole.ThrowError("AIObjectiveFixLeak failed - the item \"" + weldingTool + "\" has no proper inventory");
+                    DebugConsole.ThrowError($"{character.Name}: AIObjectiveFixLeak failed - the item \"" + weldingTool + "\" has no proper inventory");
 #endif
                     abandon = true;
                     return;
@@ -95,7 +95,7 @@ namespace Barotrauma
             if (repairTool == null)
             {
 #if DEBUG
-                DebugConsole.ThrowError("AIObjectiveFixLeak failed - the item \"" + weldingTool + "\" has no RepairTool component but is tagged as a welding tool");
+                DebugConsole.ThrowError($"{character.Name}: AIObjectiveFixLeak failed - the item \"" + weldingTool + "\" has no RepairTool component but is tagged as a welding tool");
 #endif
                 abandon = true;
                 return;

@@ -109,7 +109,7 @@ namespace Barotrauma
                         if (holdable == null)
                         {
 #if DEBUG
-                            DebugConsole.ThrowError("AIObjectiveOperateItem failed - equipping item " + component.Item + " is required but the item has no Holdable component");
+                            DebugConsole.ThrowError($"{character.Name}: AIObjectiveOperateItem failed - equipping item " + component.Item + " is required but the item has no Holdable component");
 #endif
                             return;
                         }

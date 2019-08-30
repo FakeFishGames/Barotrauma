@@ -55,7 +55,7 @@ namespace Barotrauma
                 if (containedItems == null)
                 {
 #if DEBUG
-                    DebugConsole.ThrowError("AIObjectiveFindDivingGear failed - the item \"" + item + "\" has no proper inventory");
+                    DebugConsole.ThrowError($"{character.Name}: AIObjectiveFindDivingGear failed - the item \"" + item + "\" has no proper inventory");
 #endif
                     abandon = true;
                     return;

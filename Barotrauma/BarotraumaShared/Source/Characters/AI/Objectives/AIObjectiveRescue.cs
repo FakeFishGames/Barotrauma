@@ -24,7 +24,7 @@ namespace Barotrauma
         {
             if (targetCharacter == null)
             {
-                string errorMsg = "Attempted to create a Rescue objective with no target!\n" + Environment.StackTrace;
+                string errorMsg = $"{character.Name}: Attempted to create a Rescue objective with no target!\n" + Environment.StackTrace;
                 DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce("AIObjectiveRescue:ctor:targetnull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 abandon = true;
