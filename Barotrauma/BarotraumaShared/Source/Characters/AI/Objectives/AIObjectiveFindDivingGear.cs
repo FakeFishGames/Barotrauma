@@ -56,13 +56,30 @@ namespace Barotrauma
                         containedItem.Drop(character);
                     }
                 }
-                if (containedItems.None(it => (it.Prefab.Identifier == "oxygentank" || it.HasTag("oxygensource")) && it.Condition > 0.0f))
+                if (containedItems.None(it => it.HasTag("oxygensource") && it.Condition > 0.0f))
                 {
-                    TryAddSubObjective(ref getOxygen, () =>
+                    var oxygenTank = character.Inventory.FindItemByTag("oxygensource", true);
+                    if (oxygenTank != null)
                     {
-                        character.Speak(TextManager.Get("DialogGetOxygenTank"), null, 0, "getoxygentank", 30.0f);
-                        return new AIObjectiveContainItem(character, new string[] { "oxygentank", "oxygensource" }, item.GetComponent<ItemContainer>(), objectiveManager);
-                    });
+                        var container = item.GetComponent<ItemContainer>();
+                        if (container.Item.ParentInventory == character.Inventory)
+                        {
+                            character.Inventory.RemoveItem(oxygenTank);
+                            container.Inventory.TryPutItem(oxygenTank, null);
+                        }
+                        else
+                        {
+                            container.Combine(oxygenTank);
+                        }
+                    }
+                    else
+                    {
+                        TryAddSubObjective(ref getOxygen, () =>
+                        {
+                            character.Speak(TextManager.Get("DialogGetOxygenTank"), null, 0, "getoxygentank", 30.0f);
+                            return new AIObjectiveContainItem(character, new string[] { "oxygentank", "oxygensource" }, item.GetComponent<ItemContainer>(), objectiveManager);
+                        });
+                    }
                 }
             }
         }
