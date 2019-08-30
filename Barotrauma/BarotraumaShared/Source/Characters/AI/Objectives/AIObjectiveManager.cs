@@ -38,6 +38,8 @@ namespace Barotrauma
 
         public bool IsCurrentObjective<T>() where T : AIObjective => CurrentObjective is T;
 
+        public AIObjective GetActiveObjective() => CurrentObjective?.GetActiveObjective();
+
         public AIObjectiveManager(Character character)
         {
             this.character = character;

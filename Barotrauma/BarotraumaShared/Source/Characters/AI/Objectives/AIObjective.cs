@@ -44,7 +44,13 @@ namespace Barotrauma
         protected HumanAIController HumanAIController => character.AIController as HumanAIController;
         protected IndoorsSteeringManager PathSteering => HumanAIController.PathSteering;
         protected SteeringManager SteeringManager => HumanAIController.SteeringManager;
-        
+
+        public AIObjective GetActiveObjective()
+        {
+            var subObjective = SubObjectives.FirstOrDefault();
+            return subObjective == null ? this : subObjective.GetActiveObjective();
+        }
+
         public AIObjective(Character character, AIObjectiveManager objectiveManager, float priorityModifier, string option = null)
         {
             this.objectiveManager = objectiveManager;

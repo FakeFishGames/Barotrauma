@@ -47,11 +47,16 @@ namespace Barotrauma
                 var currentObjective = ObjectiveManager.CurrentObjective;
                 if (currentObjective != null)
                 {
-                    GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 20), $"OBJECTIVE: {currentObjective.DebugTag} ({currentObjective.GetPriority().FormatZeroDecimal()})", Color.White, Color.Black);
+                    GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 0), $"MAIN OBJECTIVE: {currentObjective.DebugTag} ({currentObjective.GetPriority().FormatZeroDecimal()})", Color.White, Color.Black);
                     var subObjective = currentObjective.SubObjectives.FirstOrDefault();
                     if (subObjective != null)
                     {
-                        GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 40), $"SUBOBJECTIVE: {subObjective.DebugTag} ({subObjective.GetPriority().FormatZeroDecimal()})", Color.White, Color.Black);
+                        GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 20), $"SUBOBJECTIVE: {subObjective.DebugTag} ({subObjective.GetPriority().FormatZeroDecimal()})", Color.White, Color.Black);
+                    }
+                    var activeObjective = ObjectiveManager.GetActiveObjective();
+                    if (activeObjective != null)
+                    {
+                        GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 40), $"ACTIVE OBJECTIVE: {activeObjective.DebugTag} ({activeObjective.GetPriority().FormatZeroDecimal()})", Color.White, Color.Black);
                     }
                 }
             }
