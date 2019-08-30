@@ -398,7 +398,7 @@ namespace Barotrauma
             //TODO: expose to content package?
             PlayStyleBanners = new Sprite[Enum.GetValues(typeof(PlayStyle)).Length];
 
-            playStylesTexture = TextureLoader.FromFile("Content/UI/Server/PlayStyleBanners/PlayStyleBanners.png");
+            playStylesTexture = TextureLoader.FromFile("Content/UI/Server/PlayStyleBanners/PlayStyleBanners.png", mipmap: true);
             XDocument playStylesDoc = XMLExtensions.TryLoadXml("Content/UI/Server/PlayStyleBanners/PlayStyleBanners.xml");
 
             XElement rootElement = playStylesDoc.Root;
@@ -1349,7 +1349,7 @@ namespace Barotrauma
             GameMain.TitleScreen.DrawLoadingText = false;
             GameMain.MainMenuScreen.DrawBackground(graphics, spriteBatch);
 
-            spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, GameMain.ScissorTestEnable);
+            spriteBatch.Begin(SpriteSortMode.Deferred, null, GUI.SamplerState, null, GameMain.ScissorTestEnable);
             
             GUI.Draw(Cam, spriteBatch);
 

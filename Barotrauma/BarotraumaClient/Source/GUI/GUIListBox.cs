@@ -586,7 +586,7 @@ namespace Barotrauma
             {                    
                 spriteBatch.End();
                 spriteBatch.GraphicsDevice.ScissorRectangle = Rectangle.Intersect(prevScissorRect, Content.Rect);
-                spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
+                spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
             }
 
             var children = Content.Children;
@@ -610,7 +610,7 @@ namespace Barotrauma
             {
                 spriteBatch.End();
                 spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
-                spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: prevRasterizerState);
+                spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: prevRasterizerState);
             }
 
             if (ScrollBar.Visible) ScrollBar.DrawManually(spriteBatch, alsoChildren: true, recursive: true);

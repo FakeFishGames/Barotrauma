@@ -27,6 +27,20 @@ namespace Barotrauma
     {
         public static GUICanvas Canvas => GUICanvas.Instance;
 
+        public static readonly SamplerState SamplerState = new SamplerState()
+        {
+            Filter = TextureFilter.Linear,
+            AddressU = TextureAddressMode.Wrap,
+            AddressV = TextureAddressMode.Wrap,
+            AddressW = TextureAddressMode.Wrap,
+            BorderColor = Color.White,
+            MaxAnisotropy = 4,
+            MaxMipLevel = 0,
+            MipMapLevelOfDetailBias = -0.8f,
+            ComparisonFunction = CompareFunction.Never,
+            FilterMode = TextureFilterMode.Default,
+        };
+
         public static readonly string[] vectorComponentLabels = { "X", "Y", "Z", "W" };
         public static readonly string[] rectComponentLabels = { "X", "Y", "W", "H" };
         public static readonly string[] colorComponentLabels = { "R", "G", "B", "A" };

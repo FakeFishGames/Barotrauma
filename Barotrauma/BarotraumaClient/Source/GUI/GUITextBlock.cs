@@ -347,7 +347,7 @@ namespace Barotrauma
                 spriteBatch.End();
                 Rectangle scissorRect = new Rectangle(rect.X + (int)padding.X, rect.Y, rect.Width - (int)padding.X - (int)padding.Z, rect.Height);
                 spriteBatch.GraphicsDevice.ScissorRectangle = scissorRect;
-                spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
+                spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
             }
 
             if (!string.IsNullOrEmpty(text))
@@ -371,7 +371,7 @@ namespace Barotrauma
             {
                 spriteBatch.End();
                 spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
-                spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
+                spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
             }
 
             if (OutlineColor.A * currColor.A > 0.0f) GUI.DrawRectangle(spriteBatch, rect, OutlineColor * (currColor.A / 255.0f), false);

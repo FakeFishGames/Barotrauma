@@ -1689,7 +1689,7 @@ namespace Barotrauma
 
             GUI.DrawBackgroundSprite(spriteBatch, backgroundSprite);
 
-            spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
+            spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
             if (campaignUI != null)
             {
                 campaignUI.MapContainer.DrawAuto(spriteBatch);

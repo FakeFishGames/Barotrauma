@@ -72,7 +72,10 @@ namespace Microsoft.Xna.Framework.Graphics
                 var subresourceIndex = CalculateSubresourceIndex(0, level);
                 var d3dContext = GraphicsDevice._d3dContext;
                 lock (d3dContext)
+                {
                     d3dContext.UpdateSubresource(GetTexture(), subresourceIndex, region, dataPtr, GetPitch(w), 0);
+                    d3dContext.GenerateMips(GetShaderResourceView());
+                }
             }
             finally
             {
@@ -390,6 +393,12 @@ namespace Microsoft.Xna.Framework.Graphics
             if (_shared)
                 desc.OptionFlags |= ResourceOptionFlags.Shared;
 
+            if (_mipmap)
+            {
+                desc.OptionFlags |= ResourceOptionFlags.GenerateMipMaps;
+                desc.BindFlags |= BindFlags.RenderTarget;
+            }
+
             return desc;
         }
         internal override Resource CreateTexture()
@@ -401,6 +410,30 @@ namespace Microsoft.Xna.Framework.Graphics
             _sampleDescription = desc.SampleDescription;
 
             return new SharpDX.Direct3D11.Texture2D(GraphicsDevice._d3dDevice, desc);
+        }
+
+        protected override ShaderResourceView CreateShaderResourceView()
+        {
+            var texDesc = GetTexture2DDescription();
+            if (_mipmap)
+            {
+                ShaderResourceViewDescription resViewDesc = new ShaderResourceViewDescription()
+                {
+                    Format = texDesc.Format,
+                    Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.Texture2D,
+                    Texture2D = new ShaderResourceViewDescription.Texture2DResource()
+                    {
+                        MostDetailedMip = 0,
+                        MipLevels = texDesc.MipLevels
+                    }
+                };
+
+                return new SharpDX.Direct3D11.ShaderResourceView(GraphicsDevice._d3dDevice, GetTexture(), resViewDesc);
+            }
+            else
+            {
+                return base.CreateShaderResourceView();
+            }
         }
 
         protected internal virtual SampleDescription CreateSampleDescription()

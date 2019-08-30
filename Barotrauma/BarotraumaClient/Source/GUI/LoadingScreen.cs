@@ -149,7 +149,7 @@ namespace Barotrauma
                 TitlePosition = new Vector2(GameMain.GraphicsWidth * 0.5f, GameMain.GraphicsHeight * 0.45f);
             }
 
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, samplerState: GUI.SamplerState);
             graphics.Clear(Color.Black);
 
             spriteBatch.Draw(backgroundTexture, BackgroundPosition, null, Color.White * Math.Min(state / 5.0f, 1.0f), 0.0f,
@@ -168,7 +168,7 @@ namespace Barotrauma
                 WaterRenderer.Instance.RenderWater(spriteBatch, renderTarget, null);
             }
 
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, samplerState: GUI.SamplerState);
 
             titleSprite?.Draw(spriteBatch, TitlePosition, Color.White * Math.Min((state - 1.0f) / 5.0f, 1.0f), scale: titleScale);
 

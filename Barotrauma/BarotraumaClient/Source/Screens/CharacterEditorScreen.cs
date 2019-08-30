@@ -646,7 +646,7 @@ namespace Barotrauma
             }
 
             // GUI
-            spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
+            spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
             if (editAnimations)
             {
                 DrawAnimationControls(spriteBatch, (float)deltaTime);

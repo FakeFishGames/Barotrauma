@@ -471,7 +471,7 @@ namespace Barotrauma
                 GameMain.SpriteEditorScreen.Draw(deltaTime, graphics, spriteBatch);
             }
 
-            spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
+            spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
             GUI.Draw(Cam, spriteBatch);
             spriteBatch.End();
         }
