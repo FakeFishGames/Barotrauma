@@ -15,20 +15,7 @@ namespace Barotrauma
         private AIObjectiveGetItem getDivingGear;
         private AIObjectiveContainItem getOxygen;
 
-        public override bool IsCompleted()
-        {
-            for (int i = 0; i < character.Inventory.Items.Length; i++)
-            {
-                if (character.Inventory.SlotTypes[i] == InvSlotType.Any || character.Inventory.Items[i] == null) { continue; }
-                if (character.Inventory.Items[i].HasTag(gearTag))
-                {
-                    var containedItems = character.Inventory.Items[i].ContainedItems;
-                    if (containedItems == null) { continue; }
-                    return containedItems.Any(it => (it.Prefab.Identifier == "oxygentank" || it.HasTag("oxygensource")) && it.Condition > 0.0f);
-                }
-            }
-            return false;
-        }
+        public override bool IsCompleted() => HumanAIController.HasItem(character, gearTag, "oxygensource");
 
         public override float GetPriority() => MathHelper.Clamp(100 - character.OxygenAvailable, 0, 100);
         public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveFindDivingGear;
