@@ -106,7 +106,11 @@ namespace Barotrauma.Networking
                 remotePeer.Authenticating = false;
                 foreach (var msg in remotePeer.UnauthedMessages)
                 {
-                    netClient.SendMessage(msg.Second, msg.First);
+                    NetSendResult result = netClient.SendMessage(msg.Second, msg.First);
+                    if (result != NetSendResult.Queued && result != NetSendResult.Sent)
+                    {
+                        DebugConsole.NewMessage("Failed to send unauthed message to host: " + result);
+                    }
                 }
                 remotePeer.UnauthedMessages.Clear();
             }
@@ -200,7 +204,11 @@ namespace Barotrauma.Networking
             }
             else
             {
-                netClient.SendMessage(outMsg, lidgrenDeliveryMethod);
+                NetSendResult result = netClient.SendMessage(outMsg, lidgrenDeliveryMethod);
+                if (result != NetSendResult.Queued && result != NetSendResult.Sent)
+                {
+                    DebugConsole.NewMessage("Failed to send message from "+SteamManager.SteamIDUInt64ToString(remotePeer.SteamID)+" to host: " + result);
+                }
             }
         }
 
@@ -332,7 +340,11 @@ namespace Barotrauma.Networking
                     outMsg.Write(selfSteamID);
                     outMsg.Write((byte)(PacketHeader.IsConnectionInitializationStep));
                     outMsg.Write(Name);
-                    netClient.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
+                    NetSendResult result = netClient.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
+                    if (result != NetSendResult.Queued && result != NetSendResult.Sent)
+                    {
+                        DebugConsole.NewMessage("Failed to send initialization message to host: " + result);
+                    }
 
                     return;
                 }
@@ -454,7 +466,11 @@ namespace Barotrauma.Networking
             lidgrenMsg.Write((UInt16)length);
             lidgrenMsg.Write(msgData, 0, length);
 
-            netClient.SendMessage(lidgrenMsg, lidgrenDeliveryMethod);
+            NetSendResult result = netClient.SendMessage(lidgrenMsg, lidgrenDeliveryMethod);
+            if (result != NetSendResult.Queued && result != NetSendResult.Sent)
+            {
+                DebugConsole.NewMessage("Failed to send own message to host: " + result);
+            }
         }
     }
 }

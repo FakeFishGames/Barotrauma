@@ -37,7 +37,7 @@ namespace Barotrauma.Networking
                 Retries = 0;
                 SteamID = null;
                 PasswordSalt = null;
-                UpdateTime = Timing.TotalTime;
+                UpdateTime = Timing.TotalTime+Timing.Step*3.0;
                 TimeOut = NetworkConnection.TimeoutThreshold;
                 AuthSessionStarted = false;
             }
@@ -327,6 +327,8 @@ namespace Barotrauma.Networking
 
             if (pendingClient.InitializationStep != initializationStep) return;
 
+            pendingClient.UpdateTime = Timing.TotalTime + Timing.Step;
+
             switch (initializationStep)
             {
                 case ConnectionInitialization.SteamTicketAndVersion:
@@ -522,6 +524,7 @@ namespace Barotrauma.Networking
                 }
 
                 OnInitializationComplete?.Invoke(newConnection);
+                return;
             }
 
 
@@ -556,7 +559,7 @@ namespace Barotrauma.Networking
             NetSendResult result = netServer.SendMessage(outMsg, pendingClient.Connection, NetDeliveryMethod.ReliableUnordered);
             if (result != NetSendResult.Sent && result != NetSendResult.Queued)
             {
-                DebugConsole.ThrowError("Failed to send initialization step " + pendingClient.InitializationStep.ToString() + " to pending client: " + result.ToString());
+                DebugConsole.NewMessage("Failed to send initialization step " + pendingClient.InitializationStep.ToString() + " to pending client: " + result.ToString(), Microsoft.Xna.Framework.Color.Yellow);
             }
             //DebugConsole.NewMessage("sent update to pending client: "+result);
         }
@@ -660,7 +663,7 @@ namespace Barotrauma.Networking
             NetSendResult result = netServer.SendMessage(lidgrenMsg, lidgrenConn.NetConnection, lidgrenDeliveryMethod);
             if (result != NetSendResult.Sent && result != NetSendResult.Queued)
             {
-                DebugConsole.ThrowError("Failed to send message to "+conn.Name+": " + result.ToString());
+                DebugConsole.NewMessage("Failed to send message to "+conn.Name+": " + result.ToString(), Microsoft.Xna.Framework.Color.Yellow);
             }
         }
         
