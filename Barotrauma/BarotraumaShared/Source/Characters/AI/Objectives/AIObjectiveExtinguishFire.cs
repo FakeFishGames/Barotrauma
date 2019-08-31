@@ -37,7 +37,6 @@ namespace Barotrauma
             return MathHelper.Lerp(0, 100, MathHelper.Clamp(devotion + severityFactor * distanceFactor, 0, 1));
         }
 
-        public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveExtinguishFire otherExtinguishFire && otherExtinguishFire.targetHull == targetHull;
         protected override bool Check() => targetHull.FireSources.None();
 
         protected override void Act(float deltaTime)

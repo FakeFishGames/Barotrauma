@@ -91,12 +91,6 @@ namespace Barotrauma
 
         public override float GetPriority() => (Enemy != null && (Enemy.Removed || Enemy.IsDead)) ? 0 : Math.Min(100 * PriorityModifier, 100);
 
-        public override bool IsDuplicate(AIObjective otherObjective)
-        {
-            if (!(otherObjective is AIObjectiveCombat objective)) return false;
-            return objective.Enemy == Enemy;
-        }
-
         public override void OnSelected() => Weapon = null;
 
         protected override bool Check()

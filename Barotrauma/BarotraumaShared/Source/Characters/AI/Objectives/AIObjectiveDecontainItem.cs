@@ -86,24 +86,5 @@ namespace Barotrauma
             itemToDecontain.Drop(character);
             isCompleted = true;
         }
-
-        public override bool IsDuplicate(AIObjective otherObjective)
-        {
-            if (!(otherObjective is AIObjectiveDecontainItem decontainItem)) { return false; }
-            if (decontainItem.itemIdentifiers != null && itemIdentifiers != null)
-            {
-                if (decontainItem.itemIdentifiers.Length != itemIdentifiers.Length) { return false; }
-                for (int i = 0; i < decontainItem.itemIdentifiers.Length; i++)
-                {
-                    if (decontainItem.itemIdentifiers[i] != itemIdentifiers[i]) { return false; }
-                }
-                return true;
-            }
-            else if (decontainItem.itemIdentifiers == null && itemIdentifiers == null)
-            {
-                return decontainItem.targetItem == targetItem;
-            }
-            return false;
-        }
     }
 }

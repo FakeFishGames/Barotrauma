@@ -30,8 +30,6 @@ namespace Barotrauma
         protected override bool Check() => false;
         public override bool CanBeCompleted => true;
 
-        public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveFindSafety;
-
         public override void Update(float deltaTime)
         {
             if (unreachableClearTimer > 0)

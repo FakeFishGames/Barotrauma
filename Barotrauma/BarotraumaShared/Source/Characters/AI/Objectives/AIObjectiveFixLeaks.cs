@@ -32,7 +32,6 @@ namespace Barotrauma
             }
         }
 
-        public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveFixLeaks;
         protected override float TargetEvaluation() => Targets.Max(t => GetLeakSeverity(t));
         protected override IEnumerable<Gap> GetList() => Gap.GapList;
         protected override AIObjective ObjectiveConstructor(Gap gap) 

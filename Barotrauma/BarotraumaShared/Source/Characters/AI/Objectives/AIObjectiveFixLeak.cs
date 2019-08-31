@@ -39,12 +39,6 @@ namespace Barotrauma
             return MathHelper.Lerp(0, max, MathHelper.Clamp(devotion + severity * distanceFactor * PriorityModifier, 0, 1));
         }
 
-        public override bool IsDuplicate(AIObjective otherObjective)
-        {
-            if (!(otherObjective is AIObjectiveFixLeak fixLeak)) { return false; }
-            return fixLeak.Leak == Leak;
-        }
-
         protected override void Act(float deltaTime)
         {
             if (!Leak.IsRoomToRoom)

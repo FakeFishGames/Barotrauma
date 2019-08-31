@@ -144,12 +144,6 @@ namespace Barotrauma
             }
         }
 
-
-        public override bool IsDuplicate(AIObjective otherObjective)
-        {
-            if (!(otherObjective is AIObjectiveOperateItem operateItem)) { return false; }
-            return (operateItem.component == component || otherObjective.Option == Option);
-        }
         protected override bool Check() => isCompleted && !IsLoop;
     }
 }

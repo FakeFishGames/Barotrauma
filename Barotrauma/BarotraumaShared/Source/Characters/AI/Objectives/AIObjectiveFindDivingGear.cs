@@ -19,7 +19,6 @@ namespace Barotrauma
         protected override bool Check() => HumanAIController.HasItem(character, gearTag, "oxygensource");
 
         public override float GetPriority() => MathHelper.Clamp(100 - character.OxygenAvailable, 0, 100);
-        public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveFindDivingGear;
 
         public AIObjectiveFindDivingGear(Character character, bool needDivingSuit, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier)
         {

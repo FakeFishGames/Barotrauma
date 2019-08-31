@@ -15,11 +15,6 @@ namespace Barotrauma
         public AIObjectiveChargeBatteries(Character character, AIObjectiveManager objectiveManager, string option, float priorityModifier) 
             : base(character, objectiveManager, priorityModifier, option) { }
 
-        public override bool IsDuplicate(AIObjective otherObjective)
-        {
-            return otherObjective is AIObjectiveChargeBatteries other && other.Option == Option;
-        }
-
         protected override bool Filter(PowerContainer battery)
         {
             if (battery == null) { return false; }

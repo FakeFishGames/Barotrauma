@@ -18,7 +18,6 @@ namespace Barotrauma
 
         public static float GetFireSeverity(Hull hull) => hull.FireSources.Sum(fs => fs.Size.X);
 
-        public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveExtinguishFires;
         protected override IEnumerable<Hull> GetList() => Hull.hullList;
 
         protected override AIObjective ObjectiveConstructor(Hull target) 
