@@ -346,7 +346,11 @@ namespace Barotrauma.Networking
                     NetOutgoingMessage outMsg = netServer.CreateMessage();
                     outMsg.Write(OwnerSteamID);
                     outMsg.Write((byte)(PacketHeader.IsConnectionInitializationStep | PacketHeader.IsServerMessage));
-                    netServer.SendMessage(outMsg, netConnection, NetDeliveryMethod.ReliableUnordered);
+                    NetSendResult result = netServer.SendMessage(outMsg, netConnection, NetDeliveryMethod.ReliableUnordered);
+                    if (result != NetSendResult.Sent && result != NetSendResult.Queued)
+                    {
+                        DebugConsole.ThrowError("Failed to send connection confirmation message to owner: " + result.ToString());
+                    }
                     break;
                 case NetConnectionStatus.Disconnected:
                     DebugConsole.NewMessage("Owner disconnected: closing the server...");
@@ -549,6 +553,10 @@ namespace Barotrauma.Networking
             if (netConnection != null)
             {
                 NetSendResult result = netServer.SendMessage(outMsg, netConnection, NetDeliveryMethod.ReliableUnordered);
+                if (result != NetSendResult.Sent && result != NetSendResult.Queued)
+                {
+                    DebugConsole.ThrowError("Failed to send initialization step " + pendingClient.InitializationStep.ToString() + " to pending client: " + result.ToString());
+                }
             }
         }
 
@@ -609,7 +617,11 @@ namespace Barotrauma.Networking
             lidgrenMsg.Write((UInt16)length);
             lidgrenMsg.Write(msgData, 0, length);
 
-            netServer.SendMessage(lidgrenMsg, netConnection, lidgrenDeliveryMethod);
+            NetSendResult result = netServer.SendMessage(lidgrenMsg, netConnection, lidgrenDeliveryMethod);
+            if (result != NetSendResult.Sent && result != NetSendResult.Queued)
+            {
+                DebugConsole.ThrowError("Failed to send message to " + conn.Name + ": " + result.ToString());
+            }
         }
 
         private void SendDisconnectMessage(UInt64 steamId, string msg)
@@ -622,7 +634,11 @@ namespace Barotrauma.Networking
             lidgrenMsg.Write((byte)(PacketHeader.IsDisconnectMessage | PacketHeader.IsServerMessage));
             lidgrenMsg.Write(msg);
 
-            netServer.SendMessage(lidgrenMsg, netConnection, NetDeliveryMethod.ReliableUnordered);
+            NetSendResult result = netServer.SendMessage(lidgrenMsg, netConnection, NetDeliveryMethod.ReliableUnordered);
+            if (result != NetSendResult.Sent && result != NetSendResult.Queued)
+            {
+                DebugConsole.ThrowError("Failed to send disconnect message to " + Steam.SteamManager.SteamIDUInt64ToString(steamId) + ": " + result.ToString());
+            }
         }
 
         private void Disconnect(NetworkConnection conn, string msg, bool sendDisconnectMessage)

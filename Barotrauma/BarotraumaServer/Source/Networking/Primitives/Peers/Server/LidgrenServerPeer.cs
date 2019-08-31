@@ -554,6 +554,10 @@ namespace Barotrauma.Networking
             }
 
             NetSendResult result = netServer.SendMessage(outMsg, pendingClient.Connection, NetDeliveryMethod.ReliableUnordered);
+            if (result != NetSendResult.Sent && result != NetSendResult.Queued)
+            {
+                DebugConsole.ThrowError("Failed to send initialization step " + pendingClient.InitializationStep.ToString() + " to pending client: " + result.ToString());
+            }
             //DebugConsole.NewMessage("sent update to pending client: "+result);
         }
 
@@ -653,7 +657,11 @@ namespace Barotrauma.Networking
             lidgrenMsg.Write((UInt16)length);
             lidgrenMsg.Write(msgData, 0, length);
 
-            netServer.SendMessage(lidgrenMsg, lidgrenConn.NetConnection, lidgrenDeliveryMethod);
+            NetSendResult result = netServer.SendMessage(lidgrenMsg, lidgrenConn.NetConnection, lidgrenDeliveryMethod);
+            if (result != NetSendResult.Sent && result != NetSendResult.Queued)
+            {
+                DebugConsole.ThrowError("Failed to send message to "+conn.Name+": " + result.ToString());
+            }
         }
         
         public override void Disconnect(NetworkConnection conn,string msg=null)
