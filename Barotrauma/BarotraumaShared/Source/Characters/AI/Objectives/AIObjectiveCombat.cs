@@ -99,7 +99,7 @@ namespace Barotrauma
 
         public override void OnSelected() => Weapon = null;
 
-        public override bool IsCompleted()
+        protected override bool Check()
         {
             bool completed = (Enemy != null && (Enemy.Removed || Enemy.IsDead)) || (initialMode != CombatMode.Offensive && coolDownTimer <= 0);
             if (completed)

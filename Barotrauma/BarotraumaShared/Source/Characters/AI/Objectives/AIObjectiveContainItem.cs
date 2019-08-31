@@ -40,7 +40,7 @@ namespace Barotrauma
             this.container = container;
         }
 
-        public override bool IsCompleted()
+        protected override bool Check()
         {
             int containedItemCount = 0;
             foreach (Item item in container.Inventory.Items)
@@ -75,7 +75,7 @@ namespace Barotrauma
             {
                 if (getItemObjective != null)
                 {
-                    if (getItemObjective.IsCompleted())
+                    if (getItemObjective.IsCompleted)
                     {
                         if (getItemObjective.TargetItem != null)
                         {
@@ -95,7 +95,7 @@ namespace Barotrauma
                     }
                 }
                 TryAddSubObjective(ref getItemObjective, () =>
-                    new AIObjectiveGetItem(character, itemIdentifiers, objectiveManager, checkInventory: checkInventory)
+                    new AIObjectiveGetItem(character, itemIdentifiers, objectiveManager, equip: false, checkInventory: checkInventory)
                     {
                         GetItemPriority = GetItemPriority,
                         ignoredContainerIdentifiers = ignoredContainerIdentifiers,

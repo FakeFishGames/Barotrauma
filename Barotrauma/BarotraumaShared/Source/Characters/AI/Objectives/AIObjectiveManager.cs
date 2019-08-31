@@ -168,7 +168,7 @@ namespace Barotrauma
             for (int i = 0; i < Objectives.Count; i++)
             {
                 var objective = Objectives[i];
-                if (objective.IsCompleted())
+                if (objective.IsCompleted)
                 {
 #if DEBUG
                     DebugConsole.NewMessage($"{character.Name}: Removing objective {objective.DebugTag}, because it is completed.", Color.LightGreen);

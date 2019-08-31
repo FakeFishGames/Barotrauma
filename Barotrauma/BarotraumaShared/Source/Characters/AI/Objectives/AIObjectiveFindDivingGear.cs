@@ -11,28 +11,33 @@ namespace Barotrauma
         public override bool ForceRun => true;
 
         private readonly string gearTag;
+        private const string fallbackTag = "diving";
 
         private AIObjectiveGetItem getDivingGear;
         private AIObjectiveContainItem getOxygen;
 
-        public override bool IsCompleted() => HumanAIController.HasItem(character, gearTag, "oxygensource");
+        protected override bool Check() => HumanAIController.HasItem(character, gearTag, "oxygensource");
 
         public override float GetPriority() => MathHelper.Clamp(100 - character.OxygenAvailable, 0, 100);
         public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveFindDivingGear;
 
         public AIObjectiveFindDivingGear(Character character, bool needDivingSuit, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier)
         {
-            gearTag = needDivingSuit ? "divingsuit" : "diving";
+            gearTag = needDivingSuit ? "divingsuit" : "divingmask";
         }
 
         protected override void Act(float deltaTime)
         {
-            var item = character.Inventory.FindItemByTag(gearTag);
+            // TODO: if can't find any items, try the fallback tag and if even then cannot find anything, just abort
+            var item = character.Inventory.FindItemByIdentifier(gearTag, true) ?? character.Inventory.FindItemByTag(gearTag, true);
             if (item == null || !character.HasEquippedItem(item))
             {
                 TryAddSubObjective(ref getDivingGear, () =>
                 {
-                    character.Speak(TextManager.Get("DialogGetDivingGear"), null, 0.0f, "getdivinggear", 30.0f);
+                    if (item == null)
+                    {
+                        character.Speak(TextManager.Get("DialogGetDivingGear"), null, 0.0f, "getdivinggear", 30.0f);
+                    }
                     return new AIObjectiveGetItem(character, gearTag, objectiveManager, equip: true);
                 });
             }

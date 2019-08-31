@@ -196,6 +196,7 @@ namespace Barotrauma
                         null, 2.0f, "listrequiredtreatments" + targetCharacter.Name, 60.0f);
                 }
                 character.DeselectCharacter();
+                // TODO: use TryAdd?
                 AddSubObjective(new AIObjectiveGetItem(character, suitableItemIdentifiers.ToArray(), objectiveManager, equip: true));
             }
             character.AnimController.Anim = AnimController.Animation.CPR;
@@ -224,14 +225,12 @@ namespace Barotrauma
             }
         }
 
-        public override bool IsCompleted()
+        protected override bool Check()
         {
             if (targetCharacter == null || targetCharacter.Removed)
             {
-                abandon = true;
                 return true;
             }
-
             bool isCompleted = targetCharacter.Bleeding <= 0 && targetCharacter.Vitality / targetCharacter.MaxVitality > AIObjectiveRescueAll.GetVitalityThreshold(objectiveManager);
             if (isCompleted)
             {                

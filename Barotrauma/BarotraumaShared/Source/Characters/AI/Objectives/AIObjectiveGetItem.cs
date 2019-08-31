@@ -35,7 +35,7 @@ namespace Barotrauma
             return 1.0f;
         }
 
-        public AIObjectiveGetItem(Character character, Item targetItem, AIObjectiveManager objectiveManager, bool equip = false, float priorityModifier = 1) 
+        public AIObjectiveGetItem(Character character, Item targetItem, AIObjectiveManager objectiveManager, bool equip = true, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier)
         {
             currSearchIndex = -1;
@@ -43,10 +43,10 @@ namespace Barotrauma
             this.targetItem = targetItem;
         }
 
-        public AIObjectiveGetItem(Character character, string itemIdentifier, AIObjectiveManager objectiveManager, bool equip = false, bool checkInventory = true, float priorityModifier = 1) 
+        public AIObjectiveGetItem(Character character, string itemIdentifier, AIObjectiveManager objectiveManager, bool equip = true, bool checkInventory = true, float priorityModifier = 1) 
             : this(character, new string[] { itemIdentifier }, objectiveManager, equip, checkInventory, priorityModifier) { }
 
-        public AIObjectiveGetItem(Character character, string[] itemIdentifiers, AIObjectiveManager objectiveManager, bool equip = false, bool checkInventory = true, float priorityModifier = 1) 
+        public AIObjectiveGetItem(Character character, string[] itemIdentifiers, AIObjectiveManager objectiveManager, bool equip = true, bool checkInventory = true, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier)
         {
             currSearchIndex = -1;
@@ -119,15 +119,19 @@ namespace Barotrauma
                 }
                 else
                 {
-                    int targetSlot = -1;
+                    targetItem.TryInteract(character, forceSelectKey: true);
                     if (equip)
                     {
                         var pickable = targetItem.GetComponent<Pickable>();
                         if (pickable == null)
                         {
+#if DEBUG
+                            DebugConsole.NewMessage($"{character.Name}: Target not pickable. Aborting.", Color.Yellow);
+#endif
                             abandon = true;
                             return;
                         }
+                        int targetSlot = -1;
                         //check if all the slots required by the item are free
                         foreach (InvSlotType slots in pickable.AllowedSlots)
                         {
@@ -138,19 +142,27 @@ namespace Barotrauma
                                 if (!slots.HasFlag(character.Inventory.SlotTypes[i])) { continue; }
                                 targetSlot = i;
                                 //slot free, continue
-                                if (character.Inventory.Items[i] == null) { continue; }
+                                var otherItem = character.Inventory.Items[i];
+                                if (otherItem == null) { continue; }
                                 //try to move the existing item to LimbSlot.Any and continue if successful
-                                if (character.Inventory.TryPutItem(character.Inventory.Items[i], character, new List<InvSlotType>() { InvSlotType.Any })) { continue; }
+                                if (character.Inventory.TryPutItem(otherItem, character, new List<InvSlotType>() { InvSlotType.Any })) { continue; }
                                 //if everything else fails, simply drop the existing item
-                                character.Inventory.Items[i].Drop(character);
+                                otherItem.Drop(character);
                             }
                         }
-                    }
-                    targetItem.TryInteract(character, false, true);
-                    if (targetSlot > -1 && !character.HasEquippedItem(targetItem))
-                    {
                         character.Inventory.TryPutItem(targetItem, targetSlot, false, false, character);
                     }
+                    isCompleted = true;
+#if DEBUG
+                    if (!character.HasItem(targetItem))
+                    {
+                        DebugConsole.NewMessage($"{character.Name}: Failed to move the item into the character inventory. Aborting.", Color.Red);
+                    }
+                    if (equip && !character.HasEquippedItem(targetItem))
+                    {
+                        DebugConsole.NewMessage($"{character.Name}: Failed to equip the item. Aborting.", Color.Red);
+                    }
+#endif
                 }
             }
             else
@@ -248,8 +260,9 @@ namespace Barotrauma
             return false;
         }
 
-        public override bool IsCompleted()
+        protected override bool Check()
         {
+            if (isCompleted) { return true; }
             if (targetItem != null)
             {
                 return character.HasItem(targetItem, equip);

@@ -38,7 +38,7 @@ namespace Barotrauma
             : base(character, objectiveManager, priorityModifier, option) { }
 
         protected override void Act(float deltaTime) { }
-        public override bool IsCompleted() => false;
+        protected override bool Check() => false;
         public override bool CanBeCompleted => true;
 
         public override bool IsLoop { get => true; set => throw new System.Exception("Trying to set the value for IsLoop from: " + System.Environment.StackTrace); }
@@ -91,6 +91,7 @@ namespace Barotrauma
 
         public override void Reset()
         {
+            base.Reset();
             ignoreList.Clear();
             ignoreListTimer = 0;
             UpdateTargets();

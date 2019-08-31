@@ -16,7 +16,6 @@ namespace Barotrauma
         private readonly Item targetItem;
 
         private AIObjectiveGoTo goToObjective;
-        private bool isCompleted;
 
         public AIObjectiveDecontainItem(Character character, Item targetItem, ItemContainer container, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier)
@@ -40,7 +39,7 @@ namespace Barotrauma
             this.container = container;
         }
 
-        public override bool IsCompleted() => isCompleted;
+        protected override bool Check() => isCompleted;
 
         public override float GetPriority()
         {

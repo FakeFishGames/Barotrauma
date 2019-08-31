@@ -12,7 +12,6 @@ namespace Barotrauma
 
         private ItemComponent component, controller;
         private Entity operateTarget;
-        private bool isCompleted;
         private bool requireEquip;
         private bool useController;
         private AIObjectiveGoTo goToObjective;
@@ -85,7 +84,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(target.Item, character, objectiveManager));
+                    TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(target.Item, character, objectiveManager, closeEnough: 50));
                 }
             }
             else
@@ -145,12 +144,12 @@ namespace Barotrauma
             }
         }
 
-        public override bool IsCompleted() => isCompleted && !IsLoop;
 
         public override bool IsDuplicate(AIObjective otherObjective)
         {
             if (!(otherObjective is AIObjectiveOperateItem operateItem)) { return false; }
             return (operateItem.component == component || otherObjective.Option == Option);
         }
+        protected override bool Check() => isCompleted && !IsLoop;
     }
 }

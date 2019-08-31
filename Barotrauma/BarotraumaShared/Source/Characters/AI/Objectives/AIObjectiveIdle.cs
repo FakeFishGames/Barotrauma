@@ -36,7 +36,7 @@ namespace Barotrauma
             walkDuration = Rand.Range(0.0f, 10.0f);
         }
 
-        public override bool IsCompleted() => false;
+        protected override bool Check() => false;
         public override bool CanBeCompleted => true;
 
         public override bool IsLoop { get => true; set => throw new System.Exception("Trying to set the value for IsLoop from: " + System.Environment.StackTrace); }

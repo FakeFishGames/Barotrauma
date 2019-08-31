@@ -64,31 +64,11 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// makes the character act according to the objective, or according to any subobjectives that
-        /// need to be completed before this one
+        /// Makes the character act according to the objective, or according to any subobjectives that need to be completed before this one
         /// </summary>
         public void TryComplete(float deltaTime)
         {
-            for (int i = 0; i < subObjectives.Count; i++)
-            {
-                var subObjective = subObjectives[i];
-                if (subObjective.IsCompleted())
-                {
-#if DEBUG
-                    DebugConsole.NewMessage($"{character.Name}: Removing SUBobjective {subObjective.DebugTag} of {DebugTag}, because it is completed.", Color.LightGreen);
-#endif
-                    subObjective.OnCompleted();
-                    subObjectives.Remove(subObjective);
-                }
-                else if (!subObjective.CanBeCompleted)
-                {
-#if DEBUG
-                    DebugConsole.NewMessage($"{character.Name}: Removing SUBobjective {subObjective.DebugTag} of {DebugTag}, because it cannot be completed.", Color.Red);
-#endif
-                    subObjectives.Remove(subObjective);
-                }
-            }
-
+            if (isCompleted) { return; }
             foreach (AIObjective objective in subObjectives)
             {
                 objective.TryComplete(deltaTime);
@@ -97,12 +77,7 @@ namespace Barotrauma
                     return;
                 }
             }
-
             Act(deltaTime);
-            if (IsCompleted())
-            {
-                OnCompleted();
-            }
         }
 
         // TODO: go through AIOperate methods where subobjectives are added and ensure that they add the subobjectives correctly -> use TryAddSubObjective method instead?
@@ -156,8 +131,10 @@ namespace Barotrauma
                     }
                 }
                 Priority = MathHelper.Clamp(Priority, 0, 100);
-                subObjectives.ForEach(so => so.Update(deltaTime));
             }
+            subObjectives.ForEach(so => so.Update(deltaTime));
+            CheckState();
+            CheckSubObjectives();
         }
 
         /// <summary>
@@ -222,19 +199,72 @@ namespace Barotrauma
         protected virtual void OnCompleted()
         {
             Completed?.Invoke();
-            //if (Completed != null)
-            //{
-            //    Completed();
-            //    Completed = null;
-            //}
         }
 
-        public virtual void Reset() { }
+        public virtual void Reset()
+        {
+            isCompleted = false;
+            hasBeenChecked = false;
+        }
 
         protected abstract void Act(float deltaTime);
 
-        public abstract bool IsCompleted();
+        protected bool isCompleted;
+        private bool hasBeenChecked;
 
-        public abstract bool IsDuplicate(AIObjective otherObjective);
+        public bool IsCompleted
+        {
+            get
+            {
+                if (!hasBeenChecked)
+                {
+                    CheckState();
+                }
+                return isCompleted;
+            }
+            protected set
+            {
+                isCompleted = true;
+            }
+        }
+
+        protected abstract bool Check();
+
+        private bool CheckState()
+        {
+            hasBeenChecked = true;
+            if (Check())
+            {
+                if (!isCompleted)
+                {
+                    OnCompleted();
+                }
+                isCompleted = true;
+            }
+            subObjectives.ForEach(so => so.CheckState());
+            return isCompleted;
+        }
+
+        private void CheckSubObjectives()
+        {
+            for (int i = 0; i < subObjectives.Count; i++)
+            {
+                var subObjective = subObjectives[i];
+                if (subObjective.IsCompleted)
+                {
+#if DEBUG
+                    DebugConsole.NewMessage($"{character.Name}: Removing SUBobjective {subObjective.DebugTag} of {DebugTag}, because it is completed.", Color.LightGreen);
+#endif
+                    subObjectives.Remove(subObjective);
+                }
+                else if (!subObjective.CanBeCompleted)
+                {
+#if DEBUG
+                    DebugConsole.NewMessage($"{character.Name}: Removing SUBobjective {subObjective.DebugTag} of {DebugTag}, because it cannot be completed.", Color.Red);
+#endif
+                    subObjectives.Remove(subObjective);
+                }
+            }
+        }
     }
 }
