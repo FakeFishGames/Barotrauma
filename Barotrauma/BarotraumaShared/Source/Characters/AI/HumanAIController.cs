@@ -225,7 +225,7 @@ namespace Barotrauma
 
             if (!Character.LockHands)
             {
-                DropUnnecessaryItems();
+                UnequipUnnecessaryItems();
             }
 
             if (Character.IsKeyDown(InputType.Aim))
@@ -249,19 +249,56 @@ namespace Barotrauma
             }
         }
 
-        private void DropUnnecessaryItems()
+        private void UnequipUnnecessaryItems()
         {
             if (!NeedsDivingGear(Character.CurrentHull))
             {
                 bool oxygenLow = Character.OxygenAvailable < CharacterHealth.LowOxygenThreshold;
                 bool highPressure = Character.CurrentHull == null || Character.CurrentHull.LethalPressure > 0 && Character.PressureProtection <= 0;
-                bool shouldKeepTheGearOn = !ObjectiveManager.IsCurrentObjective<AIObjectiveIdle>();
-                bool removeDivingSuit = oxygenLow && !highPressure;
+                bool shouldKeepTheGearOn = Character.AnimController.HeadInWater || ObjectiveManager.HasActiveObjective<AIObjectiveFindDivingGear>();
+                bool removeDivingSuit = !Character.AnimController.HeadInWater && oxygenLow && !highPressure;
+                AIObjectiveGoTo gotoObjective = ObjectiveManager.CurrentOrder as AIObjectiveGoTo;
                 if (!removeDivingSuit)
                 {
-                    bool targetHasNoSuit = objectiveManager.CurrentOrder is AIObjectiveGoTo gtObj && gtObj.mimic && !HasDivingSuit(gtObj.Target as Character);
+                    bool targetHasNoSuit = gotoObjective != null && gotoObjective.mimic && !HasDivingSuit(gotoObjective.Target as Character);
                     bool canDropTheSuit = Character.CurrentHull.WaterPercentage < 1 && !Character.IsClimbing && steeringManager == insideSteering && !PathSteering.InStairs;
-                    removeDivingSuit = (!shouldKeepTheGearOn || targetHasNoSuit) && canDropTheSuit;
+                    if (canDropTheSuit)
+                    {
+                        removeDivingSuit = !shouldKeepTheGearOn && (gotoObjective == null || targetHasNoSuit);
+                    }
+                }
+                bool takeMaskOff = !Character.AnimController.HeadInWater && oxygenLow;
+                if (!takeMaskOff && Character.CurrentHull.WaterPercentage < 30)
+                {
+                    bool targetHasNoMask = gotoObjective != null && gotoObjective.mimic && !HasDivingMask(gotoObjective.Target as Character);
+                    takeMaskOff = !shouldKeepTheGearOn && (gotoObjective == null || targetHasNoMask);
+                }
+                if (gotoObjective != null)
+                {
+                    if (gotoObjective.Target is Hull h)
+                    {
+                        if (NeedsDivingGear(h))
+                        {
+                            removeDivingSuit = false;
+                            takeMaskOff = false;
+                        }
+                    }
+                    else if (gotoObjective.Target is Character c)
+                    {
+                        if (NeedsDivingGear(c.CurrentHull))
+                        {
+                            removeDivingSuit = false;
+                            takeMaskOff = false;
+                        }
+                    }
+                    else if (gotoObjective.Target is Item i)
+                    {
+                        if (NeedsDivingGear(i.CurrentHull))
+                        {
+                            removeDivingSuit = false;
+                            takeMaskOff = false;
+                        }
+                    }
                 }
                 if (removeDivingSuit)
                 {
@@ -272,8 +309,6 @@ namespace Barotrauma
                         divingSuit.Drop(Character);
                     }
                 }
-                bool targetHasNoMask = objectiveManager.CurrentOrder is AIObjectiveGoTo gotoObjective && gotoObjective.mimic && !HasDivingMask(gotoObjective.Target as Character);
-                bool takeMaskOff = oxygenLow || (!shouldKeepTheGearOn && Character.CurrentHull.WaterPercentage < 20) || targetHasNoMask;
                 if (takeMaskOff)
                 {
                     var mask = Character.Inventory.FindItemByIdentifier("divingmask");
@@ -563,7 +598,7 @@ namespace Barotrauma
             shouldCrouch = Submarine.PickBody(startPos, startPos + Vector2.UnitY * minCeilingDist, null, Physics.CollisionWall) != null;
         }
 
-        public static bool NeedsDivingGear(Hull hull) => hull == null || hull.OxygenPercentage < 50 || hull.WaterPercentage > 50;
+        public static bool NeedsDivingGear(Hull hull) => hull == null || hull.OxygenPercentage < CharacterHealth.LowOxygenThreshold || hull.WaterPercentage > 60;
 
         /// <summary>
         /// Check whether the character has a diving suit in usable condition plus some oxygen.
@@ -573,13 +608,13 @@ namespace Barotrauma
         /// <summary>
         /// Check whether the character has a diving mask in usable condition plus some oxygen.
         /// </summary>
-        public static bool HasDivingMask(Character character) => HasItem(character, "diving", "oxygensource");
+        public static bool HasDivingMask(Character character) => HasItem(character, "divingmask", "oxygensource");
 
-        public static bool HasItem(Character character, string tag, string containedTag, float conditionPercentage = 0)
+        public static bool HasItem(Character character, string identifier, string containedTag, float conditionPercentage = 0)
         {
             if (character == null) { return false; }
             if (character.Inventory == null) { return false; }
-            var item = character.Inventory.FindItemByTag(tag);
+            var item = character.Inventory.FindItemByIdentifier(identifier) ?? character.Inventory.FindItemByTag(identifier);
             return item != null &&
                 item.ConditionPercentage > conditionPercentage &&
                 character.HasEquippedItem(item) &&
