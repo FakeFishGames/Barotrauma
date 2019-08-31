@@ -64,6 +64,11 @@ namespace Barotrauma
 
         public void CreateAutonomousObjectives()
         {
+            foreach (var delayedObjective in DelayedObjectives)
+            {
+                CoroutineManager.StopCoroutines(delayedObjective.Value);
+            }
+            DelayedObjectives.Clear();
             Objectives.Clear();
             AddObjective(new AIObjectiveFindSafety(character, this), delay: Rand.Value() / 2);
             AddObjective(new AIObjectiveIdle(character, this), delay: Rand.Value() / 2);
