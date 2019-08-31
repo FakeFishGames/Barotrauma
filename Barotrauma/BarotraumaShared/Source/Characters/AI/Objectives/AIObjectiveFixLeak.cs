@@ -25,10 +25,7 @@ namespace Barotrauma
             Leak = leak;
         }
 
-        public override bool IsCompleted()
-        {
-            return Leak.Open <= 0.0f || Leak.Removed;
-        }
+        protected override bool Check() => Leak.Open <= 0.0f || Leak.Removed;
 
         public override float GetPriority()
         {

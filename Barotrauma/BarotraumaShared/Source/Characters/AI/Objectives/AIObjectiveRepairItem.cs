@@ -46,7 +46,7 @@ namespace Barotrauma
             return MathHelper.Lerp(0, max, MathHelper.Clamp(devotion + damagePriority * distanceFactor * successFactor * PriorityModifier, 0, 1));
         }
 
-        public override bool IsCompleted()
+        protected override bool Check()
         {
             bool isCompleted = Item.IsFullCondition;
             if (isCompleted && character.SelectedConstruction == Item)

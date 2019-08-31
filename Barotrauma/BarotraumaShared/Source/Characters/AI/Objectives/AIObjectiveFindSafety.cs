@@ -27,7 +27,7 @@ namespace Barotrauma
 
         public AIObjectiveFindSafety(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier) {  }
 
-        public override bool IsCompleted() => false;
+        protected override bool Check() => false;
         public override bool CanBeCompleted => true;
 
         public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveFindSafety;
@@ -61,7 +61,7 @@ namespace Barotrauma
                 Priority += dangerFactor * priorityIncrease * deltaTime;
             }
             Priority = MathHelper.Clamp(Priority, 0, 100);
-            if (divingGearObjective != null && !divingGearObjective.IsCompleted() && divingGearObjective.CanBeCompleted)
+            if (divingGearObjective != null && !divingGearObjective.IsCompleted && divingGearObjective.CanBeCompleted)
             {
                 // Boost the priority while seeking the diving gear
                 Priority = Math.Max(Priority, Math.Min(AIObjectiveManager.OrderPriority + 20, 100));
@@ -92,7 +92,7 @@ namespace Barotrauma
             }
             else
             {
-                if (divingGearObjective != null && divingGearObjective.IsCompleted())
+                if (divingGearObjective != null && divingGearObjective.IsCompleted)
                 {
                     // Reset the devotion.
                     Priority = 0;
@@ -135,7 +135,7 @@ namespace Barotrauma
                 }
                 if (goToObjective != null)
                 {
-                    if (goToObjective.IsCompleted())
+                    if (goToObjective.IsCompleted)
                     {
                         objectiveManager.GetObjective<AIObjectiveIdle>()?.Wander(deltaTime);
                     }
