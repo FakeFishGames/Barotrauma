@@ -31,7 +31,7 @@ namespace Barotrauma
         /// <summary>
         /// Can the objective be completed. That is, does the objective have failing subobjectives or other conditions that prevent it from completing.
         /// </summary>
-        public virtual bool CanBeCompleted => !abandon && subObjectives.All(so => so.CanBeCompleted);
+        public virtual bool CanBeCompleted => !abandon && subObjectives.None(so => !so.CanBeCompleted);
 
         /// <summary>
         /// When true, the objective is never completed, unless CanBeCompleted returns false.
