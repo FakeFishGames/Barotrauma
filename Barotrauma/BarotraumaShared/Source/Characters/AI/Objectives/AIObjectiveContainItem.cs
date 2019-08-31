@@ -117,21 +117,6 @@ namespace Barotrauma
                 }
                 container.Combine(itemToContain);
             }
-        }
-
-        public override bool IsDuplicate(AIObjective otherObjective)
-        {
-            if (!(otherObjective is AIObjectiveContainItem objective)) { return false; }
-            if (objective.container != container) { return false; }
-            if (objective.itemIdentifiers.Length != itemIdentifiers.Length) { return false; }
-            for (int i = 0; i < itemIdentifiers.Length; i++)
-            {
-                if (objective.itemIdentifiers[i] != itemIdentifiers[i])
-                {
-                    return false;
-                }
-            }
-            return true;
-        }    
+        }  
     }
 }

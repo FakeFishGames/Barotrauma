@@ -39,12 +39,6 @@ namespace Barotrauma
             }
             this.targetCharacter = targetCharacter;
         }
-
-        public override bool IsDuplicate(AIObjective otherObjective)
-        {
-            AIObjectiveRescue rescueObjective = otherObjective as AIObjectiveRescue;
-            return rescueObjective != null && rescueObjective.targetCharacter == targetCharacter;
-        }
         
         protected override void Act(float deltaTime)
         {

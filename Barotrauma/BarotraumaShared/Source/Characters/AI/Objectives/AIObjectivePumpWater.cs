@@ -15,8 +15,6 @@ namespace Barotrauma
         public AIObjectivePumpWater(Character character, AIObjectiveManager objectiveManager, string option, float priorityModifier = 1)
             : base(character, objectiveManager, priorityModifier, option) { }
 
-        public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectivePumpWater && otherObjective.Option == Option;
-
         protected override void FindTargets()
         {
             if (Option == null) { return; }

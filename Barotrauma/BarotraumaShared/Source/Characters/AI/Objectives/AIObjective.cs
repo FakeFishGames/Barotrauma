@@ -58,9 +58,6 @@ namespace Barotrauma
             Option = option ?? string.Empty;
 
             PriorityModifier = priorityModifier;
-#if DEBUG
-            IsDuplicate(null);
-#endif
         }
 
         /// <summary>
@@ -83,7 +80,8 @@ namespace Barotrauma
         // TODO: go through AIOperate methods where subobjectives are added and ensure that they add the subobjectives correctly -> use TryAddSubObjective method instead?
         public void AddSubObjective(AIObjective objective)
         {
-            if (subObjectives.Any(o => o.IsDuplicate(objective))) { return; }
+            var type = objective.GetType();
+            subObjectives.RemoveAll(o => o.GetType() == type);
             subObjectives.Add(objective);
         }
 

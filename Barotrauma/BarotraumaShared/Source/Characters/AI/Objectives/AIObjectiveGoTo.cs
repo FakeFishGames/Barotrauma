@@ -232,12 +232,6 @@ namespace Barotrauma
             return isCompleted;
         }
 
-        public override bool IsDuplicate(AIObjective otherObjective)
-        {
-            if (!(otherObjective is AIObjectiveGoTo objective)) { return false; }
-            return objective.Target == Target;
-        }
-
         private void CalculateCloseEnough()
         {
             CloseEnough = Target is Item i ? i.InteractDistance + Math.Max(i.Rect.Width, i.Rect.Height) / 2 : 50;

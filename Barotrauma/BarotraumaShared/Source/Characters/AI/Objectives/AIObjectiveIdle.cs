@@ -295,10 +295,5 @@ namespace Barotrauma
             if (hullName == null) { return false; }
             return hullName.Contains("ballast") || hullName.Contains("airlock");
         }
-
-        public override bool IsDuplicate(AIObjective otherObjective)
-        {
-            return (otherObjective is AIObjectiveIdle);
-        }
     }
 }

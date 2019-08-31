@@ -56,11 +56,6 @@ namespace Barotrauma
             return isCompleted;
         }
 
-        public override bool IsDuplicate(AIObjective otherObjective)
-        {
-            return otherObjective is AIObjectiveRepairItem repairObjective && repairObjective.Item == Item;
-        }
-
         protected override void Act(float deltaTime)
         {
             foreach (Repairable repairable in Item.Repairables)

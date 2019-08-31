@@ -25,8 +25,6 @@ namespace Barotrauma
         public AIObjectiveRescueAll(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier) { }
 
-        public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveRescueAll;
-
         protected override bool Filter(Character target) => IsValidTarget(target, character);
 
         protected override IEnumerable<Character> GetList() => Character.CharacterList;

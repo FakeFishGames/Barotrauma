@@ -240,26 +240,6 @@ namespace Barotrauma
             }
         }
 
-        public override bool IsDuplicate(AIObjective otherObjective)
-        {
-            if (!(otherObjective is AIObjectiveGetItem getItem)) { return false; }
-            if (getItem.equip != equip) { return false; }
-            if (getItem.itemIdentifiers != null && itemIdentifiers != null)
-            {
-                if (getItem.itemIdentifiers.Length != itemIdentifiers.Length) { return false; }
-                for (int i = 0; i < getItem.itemIdentifiers.Length; i++)
-                {
-                    if (getItem.itemIdentifiers[i] != itemIdentifiers[i]) { return false; }
-                }
-                return true;
-            }
-            else if (getItem.itemIdentifiers == null && itemIdentifiers == null)
-            {
-                return getItem.targetItem == targetItem;
-            }
-            return false;
-        }
-
         protected override bool Check()
         {
             if (isCompleted) { return true; }
