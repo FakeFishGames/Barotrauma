@@ -283,14 +283,14 @@ namespace Barotrauma
                 Mode = CombatMode.Retreat;
                 return false;
             }
-            //if (!character.SelectedItems.Contains(Weapon))
             if (!character.HasEquippedItem(Weapon))
             {
                 Weapon.TryInteract(character, forceSelectKey: true);
                 var slots = Weapon.AllowedSlots.FindAll(s => s == InvSlotType.LeftHand || s == InvSlotType.RightHand || s == (InvSlotType.LeftHand | InvSlotType.RightHand));
                 if (character.Inventory.TryPutItem(Weapon, character, slots))
                 {
-                    Weapon.Equip(character);
+                    // equipping is already done here?
+                    //Weapon.Equip(character);
                     aimTimer = Rand.Range(0.5f, 1f);
                 }
                 else
