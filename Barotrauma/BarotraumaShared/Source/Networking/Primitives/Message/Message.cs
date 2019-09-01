@@ -493,11 +493,6 @@ namespace Barotrauma.Networking
             MsgWriter.Write(ref buf, ref seekPos, val);
         }
 
-        public void WriteRangedIntegerDeprecated(int min, int max, int val)
-        {
-            MsgWriter.WriteRangedInteger(ref buf, ref seekPos, val, min, max);
-        }
-
         public void WriteRangedInteger(int val, int min, int max)
         {
             MsgWriter.WriteRangedInteger(ref buf, ref seekPos, val, min, max);
@@ -847,10 +842,6 @@ namespace Barotrauma.Networking
             MsgWriter.Write(ref buf, ref seekPos, val);
         }
 
-        public void WriteRangedIntegerDeprecated(int min, int max, int val)
-        {
-            MsgWriter.WriteRangedInteger(ref buf, ref seekPos, val, min, max);
-        }
 
         public void WriteRangedInteger(int val, int min, int max)
         {

@@ -1543,9 +1543,9 @@ namespace Barotrauma.Networking
 
                 outmsg.Write(serverSettings.AllowSpectating);
 
-                outmsg.WriteRangedIntegerDeprecated(0, 2, (int)serverSettings.TraitorsEnabled);
+                outmsg.WriteRangedInteger((int)serverSettings.TraitorsEnabled, 0, 2);
 
-                outmsg.WriteRangedIntegerDeprecated(0, Enum.GetValues(typeof(MissionType)).Length - 1, (GameMain.NetLobbyScreen.MissionTypeIndex));
+                outmsg.WriteRangedInteger((GameMain.NetLobbyScreen.MissionTypeIndex), 0, Enum.GetValues(typeof(MissionType)).Length - 1);
 
                 outmsg.Write((byte)GameMain.NetLobbyScreen.SelectedModeIndex);
                 outmsg.Write(GameMain.NetLobbyScreen.LevelSeed);

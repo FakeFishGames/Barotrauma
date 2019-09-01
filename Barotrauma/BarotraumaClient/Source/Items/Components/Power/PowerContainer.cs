@@ -129,7 +129,7 @@ namespace Barotrauma.Items.Components
         
         public void ClientWrite(IWriteMessage msg, object[] extraData)
         {
-            msg.WriteRangedIntegerDeprecated(0, 10, (int)(rechargeSpeed / MaxRechargeSpeed * 10));
+            msg.WriteRangedInteger((int)(rechargeSpeed / MaxRechargeSpeed * 10), 0, 10);
         }
 
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
