@@ -35,7 +35,8 @@ namespace Barotrauma
 
             public readonly Dictionary<string, Traitor> Traitors = new Dictionary<string, Traitor>();
 
-            public readonly List<string> Roles = new List<string>();
+            public delegate bool RoleFilter(Character character);
+            public readonly Dictionary<string, RoleFilter> Roles = new Dictionary<string, RoleFilter>();
 
             public string StartText { get; private set; }
             public string CodeWords { get; private set; }
@@ -91,9 +92,8 @@ namespace Barotrauma
                 return pendingObjectives.Find(objective => objective.Roles.Contains(traitor.Role));
             }
 
-            protected List<Tuple<Client, Character>> FindTraitorCandidates(GameServer server, Character.TeamType team, ICollection<string> traitorRoles)
+            protected List<Tuple<Client, Character>> FindTraitorCandidates(GameServer server, Character.TeamType team, RoleFilter traitorRoleFilter)
             {
-                // TODO(xxx): Traitor role specific conditions should be taken into account here.
                 var traitorCandidates = new List<Tuple<Client, Character>>();
 #if SERVER_IS_TRAITOR
                 if (server.Character != null)
@@ -103,7 +103,7 @@ namespace Barotrauma
                 else
 #endif
                 {
-                    traitorCandidates.AddRange(server.ConnectedClients.FindAll(c => c.Character != null && !c.Character.IsDead && (team == Character.TeamType.None || c.Character.TeamID == team)).ConvertAll(client => Tuple.Create(client, client.Character)));
+                    traitorCandidates.AddRange(server.ConnectedClients.FindAll(c => c.Character != null && !c.Character.IsDead && (team == Character.TeamType.None || c.Character.TeamID == team) && traitorRoleFilter(c.Character)).ConvertAll(client => Tuple.Create(client, client.Character)));
                 }
                 return traitorCandidates;
             }
@@ -120,10 +120,13 @@ namespace Barotrauma
 
             public virtual bool CanBeStarted(GameServer server, TraitorManager traitorManager, Character.TeamType team)
             {
-                var traitorCandidates = FindTraitorCandidates(server, team, Roles);
-                if (traitorCandidates.Count < Roles.Count)
+                foreach (var role in Roles)
                 {
-                    return false;
+                    var candidates = FindTraitorCandidates(server, team, role.Value);
+                    if (candidates.Count <= 0)
+                    {
+                        return false;
+                    }
                 }
                 var characters = FindCharacters();
 #if !ALLOW_SOLO_TRAITOR
@@ -147,8 +150,8 @@ namespace Barotrauma
                 var roleCandidates = new Dictionary<string, HashSet<Tuple<Client, Character>>>();
                 foreach (var role in Roles)
                 {
-                    roleCandidates.Add(role, new HashSet<Tuple<Client, Character>>(FindTraitorCandidates(server, team, new[] { role })));
-                    if (roleCandidates[role].Count <= 0)
+                    roleCandidates.Add(role.Key, new HashSet<Tuple<Client, Character>>(FindTraitorCandidates(server, team, role.Value)));
+                    if (roleCandidates[role.Key].Count <= 0)
                     {
                         return false;
                     }
@@ -333,7 +336,7 @@ namespace Barotrauma
 #endif
             }
 
-            public TraitorMission(string startText, string globalEndMessageSuccessTextId, string globalEndMessageSuccessDeadTextId, string globalEndMessageSuccessDetainedTextId, string globalEndMessageFailureTextId, string globalEndMessageFailureDeadTextId, string globalEndMessageFailureDetainedTextId, ICollection<string> roles, ICollection<Objective> objectives)
+            public TraitorMission(string startText, string globalEndMessageSuccessTextId, string globalEndMessageSuccessDeadTextId, string globalEndMessageSuccessDetainedTextId, string globalEndMessageFailureTextId, string globalEndMessageFailureDeadTextId, string globalEndMessageFailureDetainedTextId, IEnumerable<KeyValuePair<string, RoleFilter>> roles, ICollection<Objective> objectives)
             {
                 StartText = startText;
                 GlobalEndMessageSuccessTextId = globalEndMessageSuccessTextId;
@@ -342,7 +345,10 @@ namespace Barotrauma
                 GlobalEndMessageFailureTextId = globalEndMessageFailureTextId;
                 GlobalEndMessageFailureDeadTextId = globalEndMessageFailureDeadTextId;
                 GlobalEndMessageFailureDetainedTextId = globalEndMessageFailureDetainedTextId;
-                Roles.AddRange(roles);
+                foreach (var role in roles)
+                {
+                    Roles.Add(role.Key, role.Value);
+                }
                 allObjectives.AddRange(objectives);
                 pendingObjectives.AddRange(objectives);
             }

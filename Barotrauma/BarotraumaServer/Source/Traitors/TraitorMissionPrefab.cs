@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Xml.Linq;
 using System.Linq;
 using Barotrauma.Networking;
@@ -261,7 +262,7 @@ namespace Barotrauma {
         {
             public HashSet<string> Roles { get; } = new HashSet<string>();
 
-            public abstract Traitor.Objective Instantiate(string role);
+            public abstract Traitor.Objective Instantiate(IEnumerable<string> roles);
         }
 
         protected class Objective : ObjectiveBase
@@ -279,9 +280,9 @@ namespace Barotrauma {
 
             public readonly List<Goal> Goals = new List<Goal>();
 
-            public override Traitor.Objective Instantiate(string role)
+            public override Traitor.Objective Instantiate(IEnumerable<string> roles)
             {
-                var result = new Traitor.Objective(InfoText, ShuffleGoalsCount, new [] { role }, Goals.ConvertAll(goal => {
+                var result = new Traitor.Objective(InfoText, ShuffleGoalsCount, roles.ToArray(), Goals.ConvertAll(goal => {
                     var instance = goal.Instantiate();
                     if (instance == null)
                     {
@@ -329,9 +330,9 @@ namespace Barotrauma {
         {
             private readonly Traitor.GoalWaitForTraitors sharedGoal;
 
-            public override Traitor.Objective Instantiate(string role)
+            public override Traitor.Objective Instantiate(IEnumerable<string> roles)
             {
-                return new Traitor.Objective("TraitorObjectiveInfoTextWaitForOtherTraitors", -1, new [] { role }, new[] { sharedGoal });
+                return new Traitor.Objective("TraitorObjectiveInfoTextWaitForOtherTraitors", -1, roles.ToArray(), new[] { sharedGoal });
             }
 
             public WaitObjective(ICollection<string> roles)
@@ -343,7 +344,17 @@ namespace Barotrauma {
 
         public class Role
         {
-            // public string Job;
+            public readonly Traitor.TraitorMission.RoleFilter Filter;
+
+            public Role(IEnumerable<Traitor.TraitorMission.RoleFilter> filters)
+            {
+                Filter = character => filters.All(filter => filter(character));
+            }
+
+            public Role()
+            {
+                Filter = character => true;
+            }
         }
         public readonly Dictionary<string, Role> Roles = new Dictionary<string, Role>();
 
@@ -384,6 +395,7 @@ namespace Barotrauma {
                     objectivesWithSync.Add(new WaitObjective(Roles.Keys));
                 }
             }
+
             return new Traitor.TraitorMission(
                 StartText ?? "TraitorMissionStartMessage",
                 EndMessageSuccessText ?? "TraitorObjectiveEndMessageSuccess",
@@ -392,8 +404,8 @@ namespace Barotrauma {
                 EndMessageFailureText ?? "TraitorObjectiveEndMessageFailure",
                 EndMessageFailureDeadText ?? "TraitorObjectiveEndMessageFailureDead",
                 EndMessageFailureDetainedText ?? "TraitorObjectiveEndMessageFailureDetained",
-                Roles.Keys, // TODO(xxx): Full role data to mission
-                objectivesWithSync.SelectMany(objective => objective.Roles.Select(objective.Instantiate)).ToArray());
+                Roles.ToDictionary(kv => kv.Key, kv => kv.Value.Filter),
+                objectivesWithSync.SelectMany(objective => objective.Roles.Select(role => objective.Instantiate(new[] { role }))).ToArray());
         }
 
         protected Goal LoadGoal(XElement goalRoot)
@@ -478,6 +490,18 @@ namespace Barotrauma {
             return result;
         }
 
+        protected Role LoadRole(XElement roleRoot)
+        {
+            var filters = new List<Traitor.TraitorMission.RoleFilter>();
+            var jobs = roleRoot.GetAttributeStringArray("jobs", null);
+            if (jobs != null)
+            {
+                var jobsSet = new HashSet<string>(jobs.Select(job => job.ToLower(CultureInfo.InvariantCulture)));
+                filters.Add(character => jobsSet.Contains(character.Info.Job.Name.ToLower(CultureInfo.InvariantCulture)));
+            }
+            return new Role(filters);
+        }
+
         public TraitorMissionPrefab(XElement missionRoot)
         {
             Identifier = missionRoot.GetAttributeString("identifier", null);
@@ -489,14 +513,15 @@ namespace Barotrauma {
                     {
                         case "role":
                             checker.Required("id");
-                            Roles.Add(element.GetAttributeString("id", null), new Role { });
+                            checker.Optional("jobs");
+                            Roles.Add(element.GetAttributeString("id", null), LoadRole(element));
                             break;
                     }
                 }
             }
             if (!Roles.Any())
             {
-                Roles.Add("traitor", new Role { });
+                Roles.Add("traitor", new Role());
             }
             foreach (var element in missionRoot.Elements())
             {
