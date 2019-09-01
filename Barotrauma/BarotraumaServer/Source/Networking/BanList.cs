@@ -280,6 +280,9 @@ namespace Barotrauma.Networking
         {
             try
             {
+                if (outMsg == null) { throw new ArgumentException("OutMsg was null"); }
+                if (GameMain.Server == null) { throw new Exception("GameMain.Server was null"); }
+
                 if (!c.HasPermission(ClientPermissions.Ban))
                 {
                     outMsg.Write(false); outMsg.WritePadBits();
