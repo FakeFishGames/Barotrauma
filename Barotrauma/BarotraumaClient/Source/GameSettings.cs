@@ -626,18 +626,21 @@ namespace Barotrauma
             var dbMeter = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.25f), voiceActivityGroup.RectTransform), 0.0f, Color.Lime);
             dbMeter.ProgressGetter = () =>
             {
-                if (VoipCapture.Instance == null) return 0.0f;
+                if (VoipCapture.Instance == null) { return 0.0f; }
                 dbMeter.Color = VoipCapture.Instance.LastdB > NoiseGateThreshold ? Color.Lime : Color.Orange; //TODO: i'm a filthy hack
-                return ((float)VoipCapture.Instance.LastdB + 100.0f) / 100.0f;
+
+                float scrollVal = double.IsNegativeInfinity(VoipCapture.Instance.LastdB) ? 0.0f : ((float)VoipCapture.Instance.LastdB + 100.0f) / 100.0f;
+                return scrollVal * scrollVal;
             };
             var noiseGateSlider = new GUIScrollBar(new RectTransform(Vector2.One, dbMeter.RectTransform, Anchor.Center), color: Color.White, barSize: 0.03f);
             noiseGateSlider.Frame.Visible = false;
             noiseGateSlider.Step = 0.01f;
             noiseGateSlider.Range = new Vector2(-100.0f, 0.0f);
-            noiseGateSlider.BarScrollValue = NoiseGateThreshold;
+            noiseGateSlider.BarScroll = MathUtils.InverseLerp(-1.0f, 0.0f, NoiseGateThreshold);
+            noiseGateSlider.BarScroll *= noiseGateSlider.BarScroll;
             noiseGateSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
-                NoiseGateThreshold = scrollBar.BarScrollValue;
+                NoiseGateThreshold = MathHelper.Lerp(-100.0f, 0.0f, (float)Math.Sqrt(scrollBar.BarScroll));
                 UnsavedSettings = true;
                 return true;
             };
