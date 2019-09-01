@@ -1297,13 +1297,13 @@ namespace Barotrauma
 
                 string modFolder = Path.GetDirectoryName(itemContentPackage.Path);                
                 string filePathRelativeToModFolder = UpdaterUtil.GetRelativePath(file, Path.Combine(Environment.CurrentDirectory, modFolder));
-                string destinationPath = Path.Combine(modFolder, Path.GetFileName(file));
+                string destinationPath;
 
                 //file is not inside the mod folder, we need to move it
                 if (filePathRelativeToModFolder.StartsWith("..") || 
                     Path.GetPathRoot(Environment.CurrentDirectory) != Path.GetPathRoot(file))
                 {
-                    string tryPath = destinationPath;
+                    destinationPath = Path.Combine(modFolder, Path.GetFileName(file));
                     //add a number to the filename if a file with the same name already exists
                     i = 2;
                     while (File.Exists(destinationPath))
@@ -1317,9 +1317,13 @@ namespace Barotrauma
                     }
                     catch (Exception e)
                     {
-                        DebugConsole.ThrowError("Copying the file \""+file+"\" to the mod folder failed.", e);
+                        DebugConsole.ThrowError("Copying the file \"" + file + "\" to the mod folder failed.", e);
                         return;
                     }
+                }
+                else
+                {
+                    destinationPath = Path.Combine(modFolder, filePathRelativeToModFolder);
                 }
                 itemContentPackage.AddFile(destinationPath, ContentType.None);
             }
