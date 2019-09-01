@@ -21,6 +21,9 @@ namespace Barotrauma
             // All traitor related functionality should use the following interface for generating random values
             public static int Random(int n) => random.Next(n);
 
+            // All traitor related functionality should use the following interface for generating random values
+            public static double RandomDouble() => random.NextDouble();
+
             private static string wordsTxt = Path.Combine("Content", "CodeWords.txt");
 
             private readonly List<Objective> allObjectives = new List<Objective>();
@@ -64,10 +67,15 @@ namespace Barotrauma
             private readonly string objectiveGoalInfoFormat = "[index]. [goalinfos]\n";
 
             public virtual IEnumerable<string> GlobalEndMessageKeys => new string[] { "[traitorname]", "[traitorgoalinfos]" };
-            public virtual IEnumerable<string> GlobalEndMessageValues => new string[] {
-                (Traitors.TryGetValue("traitor", out var traitor) ? traitor.Character?.Name : null) ?? "(unknown)",
-                (pendingObjectives.Count > 0 ? pendingObjectives[0] : completedObjectives.Count > 0 ? completedObjectives[0] : allObjectives.Count > 0 ? allObjectives[0] : null)?.GoalInfos ?? ""
-            };
+            public virtual IEnumerable<string> GlobalEndMessageValues {
+                get {
+                    var isSuccess = completedObjectives.Count >= allObjectives.Count;
+                    return new string[] {
+                        (Traitors.TryGetValue("traitor", out var traitor) ? traitor.Character?.Name : null) ?? "(unknown)",
+                        (isSuccess ? completedObjectives.LastOrDefault() : pendingObjectives.FirstOrDefault())?.GoalInfos ?? ""
+                    };
+                }
+            }
 
             public string GlobalEndMessage
             {
@@ -86,7 +94,7 @@ namespace Barotrauma
                         var messageId = isSuccess
                             ? (traitorIsDead ? GlobalEndMessageSuccessDeadTextId : traitorIsDetained ? GlobalEndMessageSuccessDetainedTextId : GlobalEndMessageSuccessTextId)
                             : (traitorIsDead ? GlobalEndMessageFailureDeadTextId : traitorIsDetained ? GlobalEndMessageFailureDetainedTextId : GlobalEndMessageFailureTextId);
-                        return TextManager.FormatServerMessageWithGenderPronouns(traitor.Character.Info.Gender, messageId, GlobalEndMessageKeys.ToArray(), GlobalEndMessageValues.ToArray()); 
+                        return TextManager.FormatServerMessageWithGenderPronouns(traitor.Character?.Info?.Gender ?? Gender.None, messageId, GlobalEndMessageKeys.ToArray(), GlobalEndMessageValues.ToArray()); 
                     }
                     return "";
                 }
@@ -97,7 +105,7 @@ namespace Barotrauma
                 return pendingObjectives.Count > 0 ? pendingObjectives[0] : null;
             }
 
-            public virtual void Start(GameServer server, params string[] traitorRoles)
+            public virtual bool Start(GameServer server, params string[] traitorRoles)
             {
                 List<Character> characters = new List<Character>(); //ANYONE can be a target.
                 List<Character> traitorCandidates = new List<Character>(); //Keep this to not re-pick traitors twice
@@ -114,12 +122,16 @@ namespace Barotrauma
                 else
 #endif
                 {
-                    traitorCandidates.AddRange(server.ConnectedClients.FindAll(c => c.Character != null).ConvertAll(client => client.Character));
+                    traitorCandidates.AddRange(server.ConnectedClients.FindAll(c => c.Character != null && !c.Character.IsDead).ConvertAll(client => client.Character));
+                }
+                if (traitorCandidates.Count <= 0)
+                {
+                    return false;
                 }
 #if !ALLOW_SOLO_TRAITOR
                 if (characters.Count < 2)
                 {
-                    return;
+                    return false;
                 }
 #endif
                 CodeWords = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
@@ -146,6 +158,7 @@ namespace Barotrauma
                     GameServer.Log(string.Format("{0} is the traitor and the current goals are:\n{1}", traitor.Character.Name, traitor.CurrentObjective?.GoalInfos != null ? TextManager.GetServerMessage(traitor.CurrentObjective?.GoalInfos) : "(empty)"), ServerLog.MessageType.ServerMessage);
                 }
 #endif
+                return true;
             }
 
             public virtual void Update(float deltaTime)
@@ -153,6 +166,13 @@ namespace Barotrauma
                 if (pendingObjectives.Count <= 0 || Traitors.Count <= 0)
                 {
                     return;
+                }
+                foreach (var traitor in Traitors.Values)
+                {
+                    if (traitor.Character.IsDead)
+                    {
+                        traitor.UpdateCurrentObjective("");
+                    }
                 }
                 int previousCompletedCount = completedObjectives.Count;
                 int startedCount = 0;

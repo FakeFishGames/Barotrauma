@@ -1,10 +1,74 @@
 ---------------------------------------------------------------------------------------------------------
+v0.9.2.2
+---------------------------------------------------------------------------------------------------------
+
+Karma improvements:
+- Attacking someone who has just recently attacked you doesn't reduce karma.
+- The karma penalty from attacking someone scales according to their karma (i.e. smaller penalty for 
+attacking a griefer whose karma is low).
+- Damaging characters by performing CPR doesn't decrease karma.
+- Fixed karma decreasing when moving a wire from a connection to another.
+- Reviving characters with CPR increases karma.
+- Made the default karma settings a little less strict.
+- Fixed clients always getting kicked (never banned) if the "kicks before ban" karma setting is set above 0.
+- Players aren't notified about their karma decreasing when it decreases "naturally" towards the neutral
+value of 50.
+
+Bugfixes:
+- Fixed mechanic tutorial crashing after the welding task when playing in Russian.
+- Less restrictive client name symbol constraints. Fixes clients failing to join servers if their name 
+contains Chinese symbols for example.
+- Fixed inability to enable/update content packages created for a version prior to 0.9.2.0 (ones that have 
+the content package in the Data/ContentPackages folder instead of in the mod folder).
+
+---------------------------------------------------------------------------------------------------------
+v0.9.2.1
+---------------------------------------------------------------------------------------------------------
+
+- Fixed crashing if a traitor client switches to a non-human creature and their original character dies.
+- Traitors don't lose karma by damaging structures if their goal is to flood the sub.
+- Traitors cannot be assigned to kill themselves.
+- Fixed round summary and traitorlist command displaying incorrect traitor mission info.
+- Fixed inability to end the round if there's an active traitor mission but no traitors assigned.
+- Disabled traitors in campaign mode.
+- Fixed server crashing when attempting to greet a traitor with no objective.
+- Fixed dead characters being occasionally selected as traitors.
+- Fixed info menu still displaying the old traitor objective after a traitor dies and respawns.
+- Allow traitors to re-use the sabotage button when someone starts to repair the device without having 
+to re-open the interface.
+- Fixed grenades exploding multiple times when triggered using a detonator.
+- Scaled down alien materials (oxygenite, sulphurite, fulgurium, etc) and fixed their collider sizes.
+- Karma doesn't spontaneously decay/increase when dead.
+- Increased karma penalties for poisoning someone.
+- Option to kick clients with low karma from the server and ban them if they get kicked more than x times.
+- Space herpes randomly toggles inverted controls on/off to make it more difficult to bypass the effect 
+by modifying keybinds.
+- Fixed workshop item preview image not being refreshed in the publish tab when adding a preview image 
+to an item that doesn't have one.
+- Fixed "error loading submarine" console error when creating a copy of a submarine, deleting the original 
+sub and then saving the copy.
+- Fixed server logging an "attempted to send a chat message to a null client" error when a client tries 
+to send a private message to a non-existent client.
+- Enable dynamic range compression and VOIP attenuation by default.
+- Fixed inability to extinguish fires through holes in walls.
+- Fixed some texts not fitting on the submarine's wall labels in Spanish and Polish.
+- Fixed "Broken English" character trait not being translated.
+- Fixed missing "undock" text in the navigation terminal interface.
+- Fixed some of the items in Berilia and Bunyip being impossible to pick up.
+- Fixed crashing when less than 3 arguments are passed to the "color" console command.
+- Fixed crashing when attempting to rewire two linked devices at the same time.
+
+---------------------------------------------------------------------------------------------------------
 v0.9.2.0
 ---------------------------------------------------------------------------------------------------------
 
 Easier server hosting:
 - Switched to Steam's networking API, which allows clients to connect to servers without the need for the
 host to forward their ports.
+
+Expanded traitor feature:
+- Multi-step traitor missions that not only make things more interesting to the traitors themselves but 
+also to give the rest of the crew a fighting chance of detecting the traitor.
 
 Anti-griefing:
 - Karma: a system that detects malicious actions and automatically creates a more challenging experience 

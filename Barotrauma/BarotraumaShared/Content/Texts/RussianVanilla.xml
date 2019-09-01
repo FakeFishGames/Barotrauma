@@ -116,7 +116,7 @@
 
 <!-- Steam Workshop menu -->
 <browsetab>Популярные моды</browsetab>
-<publishtab>Опубликовать</publishtab>
+<publishtab>Публикация</publishtab>
 <modstab>Подписки на моды</modstab>
 <downloadbutton>Подписаться</downloadbutton>
 <subscribedmods>Моды</subscribedmods>
@@ -400,7 +400,7 @@
 <unknown>Неизвестно</unknown>
 <none>Нет</none>
 <any>Любой</any>
-<close>Ближайший</close>
+<close>Закрыть</close>
 <cancel>Отмена</cancel>
 <done>Готово</done>
 <delete>Удалить</delete>
@@ -469,8 +469,8 @@
 <selectedsub>Выбранная подлодка</selectedsub>
 <savenameinuseheader>Название сохранения уже используется</savenameinuseheader>
 <savenameinusetext>Пожалуйста, выберите другое название для файла сохранения</savenameinusetext>
-<savename>Сохранить игру</savename>
-<savefile.defaultname>Сохранить</savefile.defaultname>
+<savename>Название сохранения</savename>
+<savefile.defaultname>Сохранение</savefile.defaultname>
 <lastsaved>Последнее сохранение</lastsaved>
 <mapseed>Шифр карты</mapseed>
 <startcampaignbutton>Начать</startcampaignbutton>
@@ -538,7 +538,7 @@
 <serverlistsubselection>Выбор подлодки</serverlistsubselection>
 <serverlistmodeselection>Выбор режима игры</serverlistmodeselection>
 <serverlistallowspectating>Разрешить наблюдение</serverlistallowspectating>
-<serverlistcompatible>Совместимо</serverlistcompatible>
+<serverlistcompatible>Совмест.</serverlistcompatible>
 <serverlistping>Пинг</serverlistping>
 <serverlistroundstarted>Раунд начался</serverlistroundstarted>
 <serverlistroundnotstarted>Раунд не начался</serverlistroundnotstarted>
@@ -560,7 +560,7 @@
 <filterincompatibleservers>Скрыть несовместимые</filterincompatibleservers>
 <filterfullservers>Скрыть заполненные</filterfullservers>
 <filteremptyservers>Скрыть пустые</filteremptyservers>
-<nomatchingservers>Подходящие сервера не найдены.</nomatchingservers>
+<nomatchingservers>Подходящие серверы не найдены.</nomatchingservers>
 <refreshingserverlist>Обновление списка серверов...</refreshingserverlist>
 <noservers>Не удалось найти ни одного сервера.</noservers>
 <serverlistnosteamconnection>Не удалось найти ни одного сервера (нет подключения к Steam).</serverlistnosteamconnection>
@@ -1503,7 +1503,7 @@
 <roomname.subbottomleft>Нижняя задняя часть</roomname.subbottomleft>
 <roomname.subbottomcenter>Нижняя средняя часть</roomname.subbottomcenter>
 <roomname.subbottomright>Нижняя передняя часть</roomname.subbottomright>
-<roomname.subdiroclock>[dir] час.</roomname.subdiroclock>
+<roomname.subdiroclock>[dir] ч.</roomname.subdiroclock>
 <roomname.ballasttank1>Камера балласта A</roomname.ballasttank1>
 <roomname.ballasttank2>Камера балласта B</roomname.ballasttank2>
 <roomname.ballasttank3>Камера балласта C</roomname.ballasttank3>
@@ -1673,9 +1673,9 @@
 <reactorwarningoverheating>Перегрев</reactorwarningoverheating>
 <reactorwarninglowoutput>Низкая выработка</reactorwarninglowoutput>
 <reactorwarninghighoutput>Высокая выработка</reactorwarninghighoutput>
-<reactorwarninglowfuel>Недостаточно топлива</reactorwarninglowfuel>
+<reactorwarninglowfuel>Нехватка топлива</reactorwarninglowfuel>
 <reactorwarningfuelout>Топливо закончилось</reactorwarningfuelout>
-<reactorwarningmeltdown>Расплавление</reactorwarningmeltdown>
+<reactorwarningmeltdown>Плавление</reactorwarningmeltdown>
 <reactorwarningscram>Аварийная остановка</reactorwarningscram>
 <reactortipfissionrate>Когда вы увеличиваете скорость расщепления, реактор начинает потреблять больше топлива и производить больше тепла. Тепловая энергия вращает турбину, которая вырабатывает электричество.</reactortipfissionrate>
 <reactortipturbineoutput>Чем выше выработка турбины, тем больше электричества пытается произвести реактор. Если по отношению к скорости расщепления выработка окажется слишком велика, реактор начнет остывать, если слишком мала - перегреваться.</reactortipturbineoutput>
@@ -2628,8 +2628,8 @@
 <connection.turrettriggerout>вызвать_выкл</connection.turrettriggerout>
 <connection.sonardataout>данные_выкл</connection.sonardataout>
 <label.outpostinfodisplay1>Добро пожаловать. Уровни кислорода: номинальные. Уровни энергии: номинальные. Уровни радиации: субоптимальные. Прогноз погоды на сегодня: холодно и мокро.</label.outpostinfodisplay1>
-<label.navterminaldock>Пристыковаться</label.navterminaldock>
-<label.navterminaldock>Отстыковаться</label.navterminaldock>
+<label.navterminaldock>Стыковка</label.navterminaldock>
+<label.navterminalundock>Отплытие</label.navterminalundock>
 <connectionerrornoresponse>Нет ответа от сервера. Возможно, это проблема соединения со стороны сервера.</connectionerrornoresponse>
 <dialognorescuetargets>Сейчас никому не требуется медицинская помощь!</dialognorescuetargets>
 <dialognorescuetargets>Не думаю, что сейчас кому-то требуется медпомощь.</dialognorescuetargets>
@@ -2774,16 +2774,16 @@
 <connection.activate>активировать</connection.activate>
 
 <!-- Submarine labels -->
-<label.betadeck>Палуба Бета</label.betadeck>
+<label.betadeck>Палуба «Бета»</label.betadeck>
 <label.airlock>Шлюз</label.airlock>
-<label.dockingport>Стыковочный порт</label.dockingport>
+<label.dockingport>Стык. порт</label.dockingport>
 <label.weapons>Оружие</label.weapons>
-<label.cargo>Грузовой отсек</label.cargo>
+<label.cargo>Груз. отсек</label.cargo>
 <label.crewquarters>Жилой отсек</label.crewquarters>
-<label.electrical1>Электрощитовая №1</label.electrical1>
-<label.electrical2>Электрощитовая №2</label.electrical2>
-<label.medical>Медицинский отсек</label.medical>
-<label.engineering>Инженерный отсек</label.engineering>
+<label.electrical1>Щитовая №1</label.electrical1>
+<label.electrical2>Щитовая №2</label.electrical2>
+<label.medical>Медотсек</label.medical>
+<label.engineering>Инженерная</label.engineering>
 <label.ballast>Балласт</label.ballast>
 <label.reactor>Реактор</label.reactor>
 <label.armory>Арсенал</label.armory>
@@ -2791,8 +2791,8 @@
 <label.onoff>Вкл./Откл.</label.onoff>
 <label.bilge>Днище</label.bilge>
 <label.powermainline>Силовая магистраль</label.powermainline>
-<label.command>Командный отсек</label.command>
-<label.engine>Моторный отсек</label.engine>
+<label.command>Мостик</label.command>
+<label.engine>Двигатель</label.engine>
 
 <!-- Karma system -->
 <karma.kickbanthreshold>Порог блокировки</karma.kickbanthreshold>
@@ -2876,7 +2876,7 @@
 <flood_1_traitorobjectivestartmessage3>И, наконец, человек с раскрашенным лицом сказал вам найти то, что поможет активировать бомбу!\n[traitorgoalinfos]</flood_1_traitorobjectivestartmessage3>
 <flood_1_goalinfotext_3>Обыщите стальные шкафчики на подлодке и найдите детонатор.</flood_1_goalinfotext_3>
 <flood_1_objectivesuccessmessage3>Агент постарался на славу! Теперь у вас есть все, чтобы начать вечеринку.</flood_1_objectivesuccessmessage3>
-<flood_1_traitorobjectivestartmessage4>Разместите детонатор на стене в подходящем месте, затем установите на безопасном расстоянии кнопку и соедините их проводом — и пускай оно все рванет и затопит это ржавое корыто![traitorgoalinfos]</flood_1_traitorobjectivestartmessage4>
+<flood_1_traitorobjectivestartmessage4>Разместите детонатор на стене в подходящем месте, затем установите на безопасном расстоянии кнопку и соедините их проводом — и пускай оно все рванет и затопит это ржавое корыто!\n[traitorgoalinfos]</flood_1_traitorobjectivestartmessage4>
 <flood_1_objectivesuccessmessage4>ХИ-ХИ! ХИ-ХИ! Внутри подлодки уже достаточно воды, ваше задание выполнено. Осталось только добраться вплавь до ближайшего аванпоста и доложить об успехе человеку с раскрашенным лицом...</flood_1_objectivesuccessmessage4>
 
 <!-- flood_2 traitor mission text package -->

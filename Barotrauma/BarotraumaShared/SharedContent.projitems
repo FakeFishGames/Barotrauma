@@ -710,6 +710,33 @@
     <Content Include="$(MSBuildThisFileDirectory)Data\karmasettings.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Mods\ExampleMod\filelist.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Mods\ExampleMod\PreviewImage.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Mods\ExampleMod\Redcrawler\Animations\RedcrawlerRun.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Mods\ExampleMod\Redcrawler\Animations\RedcrawlerSwimFast.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Mods\ExampleMod\Redcrawler\Animations\RedcrawlerSwimSlow.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Mods\ExampleMod\Redcrawler\Animations\RedcrawlerWalk.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Mods\ExampleMod\Redcrawler\crawler.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Mods\ExampleMod\Redcrawler\Ragdolls\RedcrawlerDefaultRagdoll.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Mods\ExampleMod\Redcrawler\Redcrawler.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="$(MSBuildThisFileDirectory)Concentus_LICENSE">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -2378,6 +2405,9 @@
     <None Include="$(MSBuildThisFileDirectory)Content\Tutorials\TutorialOutpost.sub">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="$(MSBuildThisFileDirectory)Mods\ExampleMod\Humpback2.sub">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="$(MSBuildThisFileDirectory)MonoKickstart_LICENSE">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -2387,10 +2417,6 @@
     <None Include="$(MSBuildThisFileDirectory)Submarines\Berilia.sub">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Submarines\Berilia_Gtest_Tower.sub" />
-    <None Include="$(MSBuildThisFileDirectory)Submarines\Dugong_Tutorial.sub">
-    </None>
-    <None Include="$(MSBuildThisFileDirectory)Submarines\TutorialOutpost.sub" />
     <None Include="$(MSBuildThisFileDirectory)Content\TraitorMissions.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

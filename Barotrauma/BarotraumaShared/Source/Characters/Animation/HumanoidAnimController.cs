@@ -1298,7 +1298,8 @@ namespace Barotrauma
 
             Vector2 colliderPos = GetColliderBottom();
 
-            bool wasCritical = target.Vitality < 0.0f;
+            float prevVitality = target.Vitality;
+            bool wasCritical = prevVitality < 0.0f;
             
             if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient) //Serverside code
             {
@@ -1389,9 +1390,12 @@ namespace Barotrauma
                     character.Info.IncreaseSkillLevel("medical", 0.5f, character.WorldPosition + Vector2.UnitY * 150.0f);
                     SteamAchievementManager.OnCharacterRevived(target, character);
                     lastReviveTime = (float)Timing.TotalTime;
+#if SERVER
+                    GameMain.Server?.KarmaManager?.OnCharacterHealthChanged(target, character, damage: Math.Min(prevVitality - target.Vitality, 0.0f));
+#endif
                     //reset attacker, we don't want the character to start attacking us
                     //because we caused a bit of damage to them during CPR
-                    if (target.LastAttacker == character) target.LastAttacker = null;
+                    if (target.LastAttacker == character) { target.LastAttacker = null; }
                 }
             }
         }

@@ -170,7 +170,7 @@
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="MVPobjectiveSuccessMessage1" />
       <StartMessage id="MVPtraitorobjectivestartmessage1"/>
-      <Goal type="finditem" identifier="oxygentank">
+      <Goal type="finditem" identifier="oxygentank" allowedContainers="mediumsteelcabinet, mediumwindowedsteelcabinet, steelcabinet">
         <InfoText id="MVP_GoalInfoText_1" />    
       </Goal>
     </Objective>

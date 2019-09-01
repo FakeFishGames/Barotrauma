@@ -1,6 +1,7 @@
 ﻿// #define DISABLE_MISSIONS
 using Barotrauma.Networking;
 using Lidgren.Network;
+using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -44,7 +45,8 @@ namespace Barotrauma
             
             Traitor.TraitorMission.InitializeRandom();
             this.server = server;
-            startCountdown = 90.0f;
+            //TODO: configure countdowns in xml
+            startCountdown = MathHelper.Lerp(90.0f, 180.0f, (float)Traitor.TraitorMission.RandomDouble());
         }
 
         public void Update(float deltaTime)
@@ -57,8 +59,13 @@ namespace Barotrauma
                 Mission.Update(deltaTime);
                 if (Mission.IsCompleted)
                 {
+                    foreach (var traitor in Mission.Traitors.Values)
+                    {
+                        traitor.UpdateCurrentObjective("");
+                    }
                     Mission = null;
-                    startCountdown = 60.0f;
+                    //TODO: configure countdowns in xml
+                    startCountdown = MathHelper.Lerp(90.0f, 180.0f, (float)Traitor.TraitorMission.RandomDouble());
                 }
             }
             else if (startCountdown > 0.0f && server.GameStarted)
@@ -67,9 +74,10 @@ namespace Barotrauma
                 if (startCountdown <= 0.0f)
                 {
                     Mission = TraitorMissionPrefab.RandomPrefab()?.Instantiate();
-                    if (Mission != null)
+                    if (Mission == null || !Mission.Start(server, "traitor"))
                     {
-                        Mission.Start(server, "traitor");
+                        Mission = null;
+                        startCountdown = 60.0f;
                     }
                 }
             }

@@ -53,12 +53,12 @@ namespace Barotrauma
         public float ExtinguishFireKarmaIncrease { get; set; }
 
 
-        private float allowedWireDisconnectionsPerMinute;
-        [Serialize(5.0f, true)]
-        public float AllowedWireDisconnectionsPerMinute
+        private int allowedWireDisconnectionsPerMinute;
+        [Serialize(5, true)]
+        public int AllowedWireDisconnectionsPerMinute
         {
             get { return allowedWireDisconnectionsPerMinute; }
-            set { allowedWireDisconnectionsPerMinute = Math.Max(0.0f, value); }
+            set { allowedWireDisconnectionsPerMinute = Math.Max(0, value); }
         }
 
         [Serialize(6.0f, true)]
@@ -75,9 +75,15 @@ namespace Barotrauma
 
         [Serialize(1.0f, true)]
         public float KickBanThreshold { get; set; }
-
+        
+        [Serialize(0, true)]
+        public int KicksBeforeBan { get; set; }
+        
         [Serialize(10.0f, true)]
         public float KarmaNotificationInterval { get; set; }
+
+        [Serialize(120.0f, true)]
+        public float AllowedRetaliationTime { get; set; }
 
         private readonly AfflictionPrefab herpesAffliction;
 

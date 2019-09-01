@@ -372,7 +372,14 @@ namespace Barotrauma
             // Only add ai targets automatically to submarine/outpost walls 
             if (aiTarget == null && HasBody && Tags.Contains("wall") && submarine != null && !Prefab.NoAITarget)
             {
-                aiTarget = new AITarget(this);
+                aiTarget = new AITarget(this)
+                {
+                    MinSightRange = 1000,
+                    MaxSightRange = 4000,
+                    MaxSoundRange = 0,
+                    SoundRange = 0,
+                    SightRange = 1000
+                };
             }
 
             InsertToList();
@@ -1287,6 +1294,15 @@ namespace Barotrauma
         public virtual void Reset()
         {
             SerializableProperties = SerializableProperty.DeserializeProperties(this, Prefab.ConfigElement);
+        }
+
+        public override void Update(float deltaTime, Camera cam)
+        {
+            base.Update(deltaTime, cam);
+            if (aiTarget != null)
+            {
+                aiTarget.SightRange = Submarine == null ? aiTarget.MinSightRange : Submarine.Velocity.Length() / 2 * aiTarget.MaxSightRange;
+            }
         }
     }
 }

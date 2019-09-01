@@ -1252,6 +1252,7 @@ namespace Barotrauma
                 if (!hoverArea.Contains(PlayerInput.MousePosition) || PlayerInput.RightButtonClicked())
                 {
                     orderTargetFrame = null;
+                    OrderOptionButtons.Clear();
                 }
             }
         }

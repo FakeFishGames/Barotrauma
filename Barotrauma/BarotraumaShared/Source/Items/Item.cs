@@ -622,6 +622,8 @@ namespace Barotrauma
                         break;
                     case "aitarget":
                         aiTarget = new AITarget(this, subElement);
+                        aiTarget.SoundRange = aiTarget.MinSoundRange;
+                        aiTarget.SightRange = aiTarget.MinSightRange;
                         break;
                     default:
                         ItemComponent ic = ItemComponent.Load(subElement, this, itemPrefab.ConfigFile);
@@ -1150,6 +1152,7 @@ namespace Barotrauma
 
         public override void Update(float deltaTime, Camera cam)
         {
+            base.Update(deltaTime, cam);
             //aitarget goes silent/invisible if the components don't keep it active
             if (aiTarget != null)
             {

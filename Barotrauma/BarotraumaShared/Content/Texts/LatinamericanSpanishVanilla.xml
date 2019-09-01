@@ -21,7 +21,7 @@
 <loadingscreentip>El escaneo del sonar en el terminal de navegación podría volverse inexacto si se daña el terminal. ¡Asegúrate de que tus ingenieros mantienen el terminal en buen estado!</loadingscreentip>
 <loadingscreentip>Cuando despliegues un señuelo, recuerda desactivar tu sonar activo para obtener mejores resultados.</loadingscreentip>
 <loadingscreentip>Si intentas recablear dispositivos eléctricos sin la formación adecuada en ingeniería eléctrica, podrías terminar electrocutado.</loadingscreentip>
-<loadingscreentip>Las herramientas de soldar son tan sencillas que cualquier submarinista puede usarlas, pero por lo general los mecánicos cualificados soldarán más rápido y tienen un menor riesgo de lesionarse con la herramienta.</loadingscreentip>
+<loadingscreentip>Las herramientas de soldar son tan sencillas que cualquier submarinista puede usarlas, pero por lo general los mecánicos calificados soldarán más rápido y tienen un menor riesgo de lesionarse con la herramienta.</loadingscreentip>
 <loadingscreentip>Todos los submarinistas cuentan con la formación necesaria para realizar reparaciones básicas de dispositivos eléctricos, pero los ingenieros eléctricos lo harán mucho más rápido.</loadingscreentip>
 <loadingscreentip>Todos los submarinistas cuentan con la formación necesaria para realizar reparaciones básicas de dispositivos mecánicos, pero los mecánicos lo harán mucho más rápido.</loadingscreentip>
 <loadingscreentip>Por lo general, los capitanes son mucho más competentes a la hora de maniobrar con el submarino que el tripulante medio.</loadingscreentip>
@@ -41,7 +41,7 @@
 <loadingscreentip>Los dispositivos ruidosos y los pulsos de sonido del sonar pueden alertar a las criaturas cercanas.</loadingscreentip>
 <loadingscreentip>Realizar maniobras de RCP sin la formación médica adecuada puede causar daños internos al paciente.</loadingscreentip>
 <loadingscreentip>Los opiáceos como la morfina y el fentanilo son una manera eficaz de tratar lesiones en una emergencia, pero el uso habitual puede causar adicción y provocar peligrosos síntomas de abstinencia.</loadingscreentip>
-<loadingscreentip>La morbusina es una neurotoxina con la potencia suficiente como para derribar incluso a algunos de los depredadores europanos más grandes. Un médico cualificado puede crearla con relativa facilidad mediante un fabricador médico.</loadingscreentip>
+<loadingscreentip>La morbusina es una neurotoxina con la potencia suficiente como para derribar incluso a algunos de los depredadores europanos más grandes. Un médico calificado puede crearla con relativa facilidad mediante un fabricador médico.</loadingscreentip>
 <loadingscreentip>Las heridas sangrantes se pueden tratar con vendas y agentes hemostáticos. El paciente podría necesitar también bolsas de suero o de sangre para reponer la sangre perdida.</loadingscreentip>
 <loadingscreentip>Por desgracia, los trastornos mentales como la psicosis son frecuentes entre la tripulación de los submarinos, sobre todo tras las expediciones a ruinas. Si tus compañeros de tripulación empiezan a ver u oír cosas que otros no ven ni oyen, informa al médico de inmediato.</loadingscreentip>
 <loadingscreentip>La principal labor de los médicos es mantener la salud de la tripulación en buen estado, pero un médico con una pistola de jeringas y algo de pericia con los venenos también puede resultar muy útil para mantener a los intrusos a raya.</loadingscreentip>
@@ -115,14 +115,14 @@
 <gamemode.multiplayercampaign>Campaña</gamemode.multiplayercampaign>
 
 <!-- Steam Workshop menu -->
-<browsetab>Mods populares</browsetab>
+<browsetab>Modificaciones populares</browsetab>
 <publishtab>Publicar</publishtab>
-<modstab>Mods suscritos</modstab>
+<modstab>Modificaciones suscritas</modstab>
 <downloadbutton>Suscribirse</downloadbutton>
-<subscribedmods>Mods</subscribedmods>
-<nosubscribedmods>No te has suscrito a ningún mod en Steam Workshop. ¡Selecciona la pestaña Mods populares para encontrar algunos!</nosubscribedmods>
-<popularmods>Mods populares</popularmods>
-<findmodsbutton>Buscar más mods...</findmodsbutton>
+<subscribedmods>Modificaciones</subscribedmods>
+<nosubscribedmods>No te has suscrito a ninguna modificación en el taller de Steam. ¡Selecciona la pestaña Modificaciones populares para encontrar algunas!</nosubscribedmods>
+<popularmods>Modificaciones populares</popularmods>
+<findmodsbutton>Buscar más modificaciones...</findmodsbutton>
 <workshopitemunsubscribe>Cancelar suscripción</workshopitemunsubscribe>
 <publishedworkshopitems>Artículos publicados</publishedworkshopitems>
 <yourworkshopitems>Tus artículos</yourworkshopitems>
@@ -141,7 +141,7 @@
 <workshopitemtitle>Título</workshopitemtitle>
 <workshopitemdescription>Descripción</workshopitemdescription>
 <workshopitemtags>Etiquetas</workshopitemtags>
-<workshopitemcreatehelptext>Puedes usar esta pestaña para publicar nuevos artículos en Steam Workshop. Puedes seleccionar un submarino existente o un paquete de contenido en el menú Tus artículos de la izquierda, o bien crear un artículo totalmente nuevo haciendo clic en el botón Crear un artículo nuevo.</workshopitemcreatehelptext>
+<workshopitemcreatehelptext>Puedes usar esta pestaña para publicar nuevos artículos en el Taller de Steam. Puedes seleccionar un submarino existente o un paquete de contenido en el menú Tus artículos de la izquierda, o bien crear un artículo totalmente nuevo haciendo clic en el botón Crear un artículo nuevo.</workshopitemcreatehelptext>
 <workshopitempreviewimage>Imagen de vista previa</workshopitempreviewimage>
 <workshopitembrowse>Explorar...</workshopitembrowse>
 <workshopitemcorepackage>Paquete esencial</workshopitemcorepackage>
@@ -149,20 +149,20 @@
 <workshopitemfiles>Archivos incluidos en el artículo</workshopitemfiles>
 <workshopitemshowfolder>Mostrar carpeta</workshopitemshowfolder>
 <workshopitemchangenote>Nota de cambios</workshopitemchangenote>
-<workshopitemchangenotetooltip>Estás publicando una actualización para un artículo de Workshop existente. Puedes usar la nota de cambios para explicar las novedades que trae la actualización.</workshopitemchangenotetooltip>
+<workshopitemchangenotetooltip>Estás publicando una actualización para un artículo existente del Taller. Puedes usar la nota de cambios para explicar las novedades que trae la actualización.</workshopitemchangenotetooltip>
 <workshopitemrefreshfilelist>Actualizar</workshopitemrefreshfilelist>
 <workshopitemaddfiles>Añadir archivos...</workshopitemaddfiles>
 <workshopitempublish>Publicar artículo</workshopitempublish>
 <workshopitemupdate>Actualizar artículo</workshopitemupdate>
 <workshopitemdelete>Borrar artículo</workshopitemdelete>
-<workshopitemdeletetooltip>Borra el artículo de Steam Workshop.</workshopitemdeletetooltip>
-<workshopitemdeleteverification>¿Seguro que quieres borrar el artículo [itemname] de Steam Workshop?</workshopitemdeleteverification>
-<workshopitempublishtooltip>Envía los archivos a Steam Workshop.</workshopitempublishtooltip>
-<workshopitemfileincluded>El archivo se incluirá en el artículo de Workshop.</workshopitemfileincluded>
-<workshopitemfilenotincluded>El archivo no se encuentra en la carpeta del artículo de Workshop y no se incluirá en él. Esto puede ser conveniente si quieres que el mod use los archivos básicos que ya tienen los jugadores; de lo contrario, deberías copiar el archivo a la carpeta del artículo de Workshop.</workshopitemfilenotincluded>
+<workshopitemdeletetooltip>Borra el artículo del Taller de Steam.</workshopitemdeletetooltip>
+<workshopitemdeleteverification>¿Seguro que quieres borrar el artículo [itemname] del Taller de Steam?</workshopitemdeleteverification>
+<workshopitempublishtooltip>Envía los archivos al Taller de Steam.</workshopitempublishtooltip>
+<workshopitemfileincluded>El archivo se incluirá en el artículo del Taller.</workshopitemfileincluded>
+<workshopitemfilenotincluded>El archivo no se encuentra en la carpeta del artículo del Taller y no se incluirá en él. Esto puede ser conveniente si quieres que el mod use los archivos básicos que ya tienen los jugadores; de lo contrario, deberías copiar el archivo a la carpeta del artículo del Taller.</workshopitemfilenotincluded>
 <workshopitemfilenotfound>No se encuentra el archivo.</workshopitemfilenotfound>
 <workshopitemillegalpath>Los artículos de Workshop solo tienen permitido modificar archivos de la carpeta Mods o añadir archivos de submarinos a la carpeta Submarines. Crea una subcarpeta aparte para los archivos.</workshopitemillegalpath>
-<workshopitemrefreshfilelisttooltip>Vuelve a cargar el archivo de configuración del artículo de Workshop (filelist.xml dentro de la carpeta del artículo) y añade a la lista de archivos todos los archivos nuevos que contenga.</workshopitemrefreshfilelisttooltip>
+<workshopitemrefreshfilelisttooltip>Vuelve a cargar el archivo de configuración del artículo del Taller (filelist.xml dentro de la carpeta del artículo) y añade a la lista de archivos todos los archivos nuevos que contenga.</workshopitemrefreshfilelisttooltip>
 <workshoppublishpleasewait>Espera</workshoppublishpleasewait>
 <workshoppublishinprogress>Publicando [itemname] en Steam Workshop.</workshoppublishinprogress>
 <workshopitempublished>¡[itemname] ya está disponible en Steam Workshop!</workshopitempublished>
@@ -1434,7 +1434,7 @@
 <entityname.alienshell>Cartucho de fisicorio</entityname.alienshell>
 <entitydescription.alienshell>Para disparar con un cañón de riel.</entitydescription.alienshell>
 
-<Alien>|workshop.contenttag.eventset</Alien>
+<Alien></Alien>
 <entityname.skyholderartifact>Artefacto alienígena del cielo</entityname.skyholderartifact>
 <entitydescription.skyholderartifact>Artefacto hallado en ruinas alienígenas.</entitydescription.skyholderartifact>
 <entityname.thermalartifact>Artefacto alienígena termal</entityname.thermalartifact>
@@ -1659,7 +1659,7 @@
 <minimapairqualityunavailable>Datos de la calidad del aire no disponibles</minimapairqualityunavailable>
 <pumppowered>Alimentado</pumppowered>
 <pumpin>ADENTRO</pumpin>
-<pumpout>AFUERA</pumpout>
+<pumpout>r</pumpout>
 <pumpspeed>Velocidad de bombeo</pumpspeed>
 <reactorautotemp>Control automático</reactorautotemp>
 <reactoroutput>Rendimiento: [kw] kW</reactoroutput>
@@ -1670,7 +1670,7 @@
 <reactorwarningcriticallowtemp>Temperatura\ncríticamente baja</reactorwarningcriticallowtemp>
 <reactorwarningcriticaloutput>Rendimiento\ncrítico</reactorwarningcriticaloutput>
 <reactorwarninglowtemp>Temperatura baja</reactorwarninglowtemp>
-<reactorwarningoverheating>Sobrecalentamiento</reactorwarningoverheating>
+<reactorwarningoverheating>Demasiada\ntemperatura</reactorwarningoverheating>
 <reactorwarninglowoutput>Rendimiento bajo</reactorwarninglowoutput>
 <reactorwarninghighoutput>Rendimiento alto</reactorwarninghighoutput>
 <reactorwarninglowfuel>Combustible bajo</reactorwarninglowfuel>
@@ -1851,15 +1851,15 @@
 <dialogsteeringtaken>¡Eh, estoy al timón!</dialogsteeringtaken>
 <dialogsteeringtaken>¡Apártate! ¡Estoy maniobrando!</dialogsteeringtaken>
 <dialogsteeringtaken>¡Oye, no hacen falta dos personas al timón!</dialogsteeringtaken>
-<dialogsonartarget>¡Objetivo en el sonar al [direction]!</dialogsonartarget>
-<dialogsonartarget>¡Señal en el sonar al [direction]!</dialogsonartarget>
-<dialogsonartarget>¡Hay algo en el sonar al [direction]!</dialogsonartarget>
-<dialogsonartarget>¡Tengo un objetivo al [direction]!</dialogsonartarget>
-<dialogsonartargetlarge>¡Objetivo grande en el sonar al [direction]!</dialogsonartargetlarge>
-<dialogsonartargetlarge>¡Hay un objeto grande al [direction]!</dialogsonartargetlarge>
-<dialogsonartargetlarge>¡Hay algo grande en el sonar al [direction]!</dialogsonartargetlarge>
-<dialogsonartargetmultiple>¡[count] objetivos en el sonar al [direction]!</dialogsonartargetmultiple>
-<dialogsonartargetmultiple>¡Tenemos [count] objetivos al [direction]!</dialogsonartargetmultiple>
+<dialogsonartarget>¡Objetivo en el sonar a las [direction]!</dialogsonartarget>
+<dialogsonartarget>¡Señal en el sonar a las [direction]!</dialogsonartarget>
+<dialogsonartarget>¡Hay algo en el sonar a las [direction]!</dialogsonartarget>
+<dialogsonartarget>¡Tengo un objetivo a las [direction]!</dialogsonartarget>
+<dialogsonartargetlarge>¡Objetivo grande en el sonar a las [direction]!</dialogsonartargetlarge>
+<dialogsonartargetlarge>¡Hay un objeto grande a las [direction]!</dialogsonartargetlarge>
+<dialogsonartargetlarge>¡Hay algo grande en el sonar a las [direction]!</dialogsonartargetlarge>
+<dialogsonartargetmultiple>¡[count] objetivos en el sonar a las [direction]!</dialogsonartargetmultiple>
+<dialogsonartargetmultiple>¡Tenemos [count] objetivos a las [direction]!</dialogsonartargetmultiple>
 <dialogfoundunconscioustarget>¡Encontré a [targetname] inconsciente en: [roomname]!</dialogfoundunconscioustarget>
 <dialogfoundunconscioustarget>¡Le estoy dando primeros auxilios a [targetname] en: [roomname]!</dialogfoundunconscioustarget>
 <dialoglistrequiredtreatments>¡Tengo que encontrar [treatmentlist]!</dialoglistrequiredtreatments>
@@ -2630,7 +2630,7 @@
 <connection.sonardataout>datos_sal</connection.sonardataout>
 <label.outpostinfodisplay1>Te damos la bienvenida. Niveles de oxígeno: nominales. Niveles de energía: nominales. Niveles de radiación: subóptimos. Pronóstico del tiempo para hoy: frío y húmedo.</label.outpostinfodisplay1>
 <label.navterminaldock>Atracar</label.navterminaldock>
-<label.navterminaldock>Desatracar</label.navterminaldock>
+  <label.navterminalundock>Desatracar</label.navterminalundock>
 <connectionerrornoresponse>No hay respuesta del servidor. Podría ser un problema de conexión por parte del servidor.</connectionerrornoresponse>
 <dialognorescuetargets>¡Nadie parece necesitar asistencia médica en este momento!</dialognorescuetargets>
 <dialognorescuetargets>No creo que nadie necesite asistencia médica por el momento.</dialognorescuetargets>

@@ -21,7 +21,7 @@ namespace Barotrauma
 
             private bool isCompleted = false;
             public override bool IsCompleted => isCompleted;
-
+            
             private int totalCount = 0;
             private int targetCount = 0;
             private string tagPrefabName = null;

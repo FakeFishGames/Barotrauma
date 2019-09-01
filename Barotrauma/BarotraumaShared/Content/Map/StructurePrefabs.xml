@@ -578,7 +578,7 @@
   <fin name="Fin A Wing Part 48" identifier="finawingpart48" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="176,1728,81,192" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="Fin A Wing Part 49" identifier="finawingpart49" description="Fin construction piece" body="true">
+  <fin name="Fin A Wing Part 49" identifier="finawingpart49" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="288,1728,512,192" depth="0.985" origin="0.5,0.5" />
   </fin>
   <fin name="Fin A Wing Part 50" identifier="finawingpart50" description="Fin construction piece" body="false">

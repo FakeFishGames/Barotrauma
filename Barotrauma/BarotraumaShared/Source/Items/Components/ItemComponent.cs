@@ -82,7 +82,6 @@ namespace Barotrauma.Items.Components
                     }
                 }
 #endif
-                if (AITarget != null) AITarget.Enabled = value;
                 isActive = value;
             }
         }
@@ -210,11 +209,6 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        public AITarget AITarget
-        {
-            get;
-            private set;
-        }
 
         /// <summary>
         /// How useful the item is in combat? Used by AI to decide which item it should use as a weapon. For the sake of clarity, use a value between 0 and 100 (not enforced).
@@ -319,12 +313,6 @@ namespace Barotrauma.Items.Components
 
                         effectList.Add(statusEffect);
 
-                        break;
-                    case "aitarget":
-                        AITarget = new AITarget(item, subElement)
-                        {
-                            Enabled = isActive
-                        };
                         break;
                     default:
                         if (LoadElemProjSpecific(subElement)) break;
@@ -485,12 +473,6 @@ namespace Barotrauma.Items.Components
                 delayedCorrectionCoroutine = null;
             }
 
-            if (AITarget != null)
-            {
-                AITarget.Remove();
-                AITarget = null;
-            }
-
             RemoveComponentSpecific();
         }
 
@@ -507,11 +489,6 @@ namespace Barotrauma.Items.Components
                 loopingSoundChannel = null;
             }
 #endif
-            if (AITarget != null)
-            {
-                AITarget.Remove();
-                AITarget = null;
-            }
 
             ShallowRemoveComponentSpecific();
         }

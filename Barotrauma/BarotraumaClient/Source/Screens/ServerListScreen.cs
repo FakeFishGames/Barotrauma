@@ -333,13 +333,13 @@ namespace Barotrauma
                 {
                     if (ipBox.UserData is ServerInfo selectedServer)
                     {
-                        if (selectedServer.SteamID == 0)
+                        if (selectedServer.LobbyID == 0)
                         {
                             JoinServer(selectedServer.IP + ":" + selectedServer.Port, selectedServer.ServerName);
                         }
                         else
                         {
-                            JoinServer(selectedServer.SteamID.ToString(), selectedServer.ServerName);
+                            Steam.SteamManager.JoinLobby(selectedServer.LobbyID, true);
                         }
                     }
                     else if (!string.IsNullOrEmpty(ipBox.Text))
@@ -480,6 +480,15 @@ namespace Barotrauma
         {
             base.Select();
             RefreshServers();
+        }
+
+        public override void Deselect()
+        {
+            base.Deselect();
+            if (SteamManager.IsInitialized && SteamManager.Instance.LobbyList != null)
+            {
+                SteamManager.Instance.LobbyList.OnLobbiesUpdated = null;
+            }
         }
 
         private void FilterServers()
@@ -679,16 +688,24 @@ namespace Barotrauma
 
         private void AddToServerList(ServerInfo serverInfo)
         {
-            var serverFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.06f), serverList.Content.RectTransform) { MinSize = new Point(0, 35) },
+            var serverFrame = serverList.Content.FindChild(d => (d.UserData is ServerInfo info) &&
+                                                                (info.LobbyID==serverInfo.LobbyID && info.IP==serverInfo.IP && info.Port==serverInfo.Port));
+
+            if (serverFrame == null)
+            {
+                serverFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.06f), serverList.Content.RectTransform) { MinSize = new Point(0, 35) },
                 style: "InnerFrame", color: Color.White * 0.5f)
-            {
-                UserData = serverInfo
-            };
-            new GUILayoutGroup(new RectTransform(new Vector2(0.98f, 1.0f), serverFrame.RectTransform, Anchor.Center), isHorizontal: true, childAnchor: Anchor.CenterLeft)
-            {
-                Stretch = true,
-                //RelativeSpacing = 0.02f
-            };
+                {
+                    UserData = serverInfo
+                };
+                new GUILayoutGroup(new RectTransform(new Vector2(0.98f, 1.0f), serverFrame.RectTransform, Anchor.Center), isHorizontal: true, childAnchor: Anchor.CenterLeft)
+                {
+                    Stretch = true,
+                    //RelativeSpacing = 0.02f
+                };
+            }
+            serverFrame.UserData = serverInfo;
+            
             UpdateServerInfo(serverInfo);
 
             SortList(sortedBy, toggle: false);

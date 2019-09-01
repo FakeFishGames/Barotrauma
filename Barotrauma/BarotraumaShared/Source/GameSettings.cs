@@ -1120,6 +1120,8 @@ namespace Barotrauma
             ChatOpen = true;
             soundVolume = 0.5f;
             musicVolume = 0.3f;
+            DynamicRangeCompressionEnabled = true;
+            VoipAttenuationEnabled = true;
             voiceChatVolume = 0.5f;
             microphoneVolume = 1.0f;
             AutoCheckUpdates = true;

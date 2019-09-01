@@ -627,7 +627,16 @@ namespace Barotrauma.Networking
                     ReadLobbyUpdate(inc);
                     break;
                 case ServerPacketHeader.UPDATE_INGAME:
-                    ReadIngameUpdate(inc);
+                    try
+                    {
+                        ReadIngameUpdate(inc);
+                    }
+                    catch (Exception e)
+                    {
+                        string errorMsg = "Error while reading an ingame update message from server. {" + e + "}\n" + e.StackTrace;
+                        GameAnalyticsManager.AddErrorEventOnce("GameClient.ReadDataMessage:ReadIngameUpdate", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                        throw;
+                    }
                     break;
                 case ServerPacketHeader.VOICE:
                     if (VoipClient == null)
@@ -880,31 +889,35 @@ namespace Barotrauma.Networking
 
         private void ReadTraitorMessage(IReadMessage inc)
         {
-            bool isObjective = inc.ReadBoolean();
-            bool createMessageBox = inc.ReadBoolean();
+            TraitorMessageType messageType = (TraitorMessageType)inc.ReadByte();
             string message = inc.ReadString();
             message = TextManager.GetServerMessage(message);
 
-            if (isObjective)
-            {
-                if (Character != null)
-                {
-                    Character.IsTraitor = true;
-                    Character.TraitorCurrentObjective = message;
-                }
-                else
-                {
-                    SpawnAsTraitor = true;
-                    TraitorFirstObjective = message;
-                }
-            }
-            else if (createMessageBox)
-            {
-                new GUIMessageBox("", message);
-            }
-            else
-            {
-                GameMain.Client.AddChatMessage(message, ChatMessageType.Server);
+            switch(messageType) {
+                case TraitorMessageType.Objective:
+                    var isTraitor = !string.IsNullOrEmpty(message); 
+                    if (Character != null)
+                    {
+                        Character.IsTraitor = isTraitor;
+                        Character.TraitorCurrentObjective = message;
+                    }
+                    else
+                    {
+                        SpawnAsTraitor = isTraitor;
+                        TraitorFirstObjective = message;
+                    }
+                    break;
+                case TraitorMessageType.Console:
+                    GameMain.Client.AddChatMessage(ChatMessage.Create("", message, ChatMessageType.Console, null));
+                    DebugConsole.NewMessage(message);
+                    break;
+                case TraitorMessageType.ServerMessageBox:
+                    new GUIMessageBox("", message);
+                    break;
+                case TraitorMessageType.Server:
+                default:
+                    GameMain.Client.AddChatMessage(message, ChatMessageType.Server);
+                    break;
             }
         }
 

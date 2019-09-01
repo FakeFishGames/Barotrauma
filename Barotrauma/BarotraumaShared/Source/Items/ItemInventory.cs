@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 
 namespace Barotrauma
@@ -92,10 +93,10 @@ namespace Barotrauma
         {
             if (!Item.ItemList.Contains(container.Item))
             {
-                string errorMsg = "Attempted to create a network event for an item (" + container.Item.Name + ") that hasn't been fully initialized yet.";
+                string errorMsg = "Attempted to create a network event for an item (" + container.Item.Name + ") that hasn't been fully initialized yet.\n" + Environment.StackTrace;
                 DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce(
-                    "ItemInventory.CreateServerEvent:EventForUninitializedItem" + container.Item.Name + container.Item.ID, 
+                    "ItemInventory.CreateServerEvent:EventForUninitializedItem" + container.Item.Name + container.Item.ID,
                     GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return;
             }

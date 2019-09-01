@@ -1251,6 +1251,8 @@ namespace Barotrauma
             {
                 GameMain.Config.MusicVolume = 0.5f;
                 GameMain.Config.SoundVolume = 0.5f;
+                GameMain.Config.DynamicRangeCompressionEnabled = true;
+                GameMain.Config.VoipAttenuationEnabled = true;
                 NewMessage("Music and sound volume set to 0.5", Color.Green);
 
                 GameMain.Config.GraphicsWidth = 0;

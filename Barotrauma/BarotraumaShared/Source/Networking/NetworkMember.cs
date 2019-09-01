@@ -76,6 +76,14 @@ namespace Barotrauma.Networking
         ENTITY_EVENT_INITIAL,
     }
 
+    enum TraitorMessageType
+    {
+        Server,
+        ServerMessageBox,
+        Objective,
+        Console
+    }
+
     enum VoteType
     {
         Unknown,

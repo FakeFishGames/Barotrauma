@@ -257,10 +257,6 @@ namespace Barotrauma.Items.Components
                 light.Range = range;
 #endif
             }
-            if (AITarget != null)
-            {
-                UpdateAITarget(AITarget);
-            }
             if (item.AiTarget != null)
             {
                 UpdateAITarget(item.AiTarget);

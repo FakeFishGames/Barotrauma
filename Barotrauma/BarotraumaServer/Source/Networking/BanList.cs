@@ -278,28 +278,39 @@ namespace Barotrauma.Networking
 
         public void ServerAdminWrite(IWriteMessage outMsg, Client c)
         {
-            if (!c.HasPermission(ClientPermissions.Ban))
+            try
             {
-                outMsg.Write(false); outMsg.WritePadBits();
-                return;
-            }
-            outMsg.Write(true);
-            outMsg.Write(c.Connection == GameMain.Server.OwnerConnection);
-
-            outMsg.WritePadBits();
-            outMsg.WriteVariableUInt32((UInt32)bannedPlayers.Count);
-            for (int i = 0; i < bannedPlayers.Count; i++)
-            {
-                BannedPlayer bannedPlayer = bannedPlayers[i];
-
-                outMsg.Write(bannedPlayer.Name);
-                outMsg.Write(bannedPlayer.UniqueIdentifier);
-                outMsg.Write(bannedPlayer.IsRangeBan); outMsg.WritePadBits();
-                if (c.Connection == GameMain.Server.OwnerConnection)
+                if (!c.HasPermission(ClientPermissions.Ban))
                 {
-                    outMsg.Write(bannedPlayer.IP);
-                    outMsg.Write(bannedPlayer.SteamID);
+                    outMsg.Write(false); outMsg.WritePadBits();
+                    return;
                 }
+
+                outMsg.Write(true);
+                outMsg.Write(c.Connection == GameMain.Server.OwnerConnection);
+
+                outMsg.WritePadBits();
+                outMsg.WriteVariableUInt32((UInt32)bannedPlayers.Count);
+                for (int i = 0; i < bannedPlayers.Count; i++)
+                {
+                    BannedPlayer bannedPlayer = bannedPlayers[i];
+
+                    outMsg.Write(bannedPlayer.Name);
+                    outMsg.Write(bannedPlayer.UniqueIdentifier);
+                    outMsg.Write(bannedPlayer.IsRangeBan); outMsg.WritePadBits();
+                    if (c.Connection == GameMain.Server.OwnerConnection)
+                    {
+                        outMsg.Write(bannedPlayer.IP);
+                        outMsg.Write(bannedPlayer.SteamID);
+                    }
+                }
+            }
+
+            catch (Exception e)
+            {
+                string errorMsg = "Error while writing banlist. {" + e + "}\n" + e.StackTrace;
+                GameAnalyticsManager.AddErrorEventOnce("Banlist.ServerAdminWrite", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                throw;
             }
         }
 

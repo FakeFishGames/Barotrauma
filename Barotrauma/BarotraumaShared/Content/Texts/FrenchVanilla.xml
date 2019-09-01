@@ -2630,7 +2630,7 @@
 <connection.sonardataout>données_sortie</connection.sonardataout>
 <label.outpostinfodisplay1>Bienvenue. Niveaux d'oxygène : nominaux. Niveaux énergétiques : nominaux. Niveaux de radiation : sous-optimaux. Prévisions météorologiques du jour : froid et humidité.</label.outpostinfodisplay1>
 <label.navterminaldock>Amarrer</label.navterminaldock>
-<label.navterminaldock>Détacher</label.navterminaldock>
+<label.navterminalundock>Détacher</label.navterminalundock>
 <connectionerrornoresponse>Pas de réponse du serveur. Il y a peut-être un problème de connexion venant du serveur.</connectionerrornoresponse>
 <dialognorescuetargets>Personne ne semble avoir besoin d'assistance médicale pour le moment !</dialognorescuetargets>
 <dialognorescuetargets>Je ne crois pas que quiconque ait besoin d'assistance médicale pour le moment.</dialognorescuetargets>

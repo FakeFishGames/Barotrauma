@@ -13,16 +13,24 @@ namespace Barotrauma.Items.Components
         public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
         {
             if (c.Character == null) return;
-            var fixAction = (FixActions)msg.ReadRangedInteger(0, 2);
-            if (!c.Character.IsTraitor && fixAction == FixActions.Sabotage)
+            var requestedFixAction = (FixActions)msg.ReadRangedInteger(0, 2);
+            if (requestedFixAction != FixActions.None)
             {
-                if (GameSettings.VerboseLogging)
+                if (!c.Character.IsTraitor && requestedFixAction == FixActions.Sabotage)
                 {
-                    DebugConsole.Log($"Non traitor \"{c.Character.Name}\" attempted to sabotage item.");
+                    if (GameSettings.VerboseLogging)
+                    {
+                        DebugConsole.Log($"Non traitor \"{c.Character.Name}\" attempted to sabotage item.");
+                    }
+                    requestedFixAction = FixActions.Repair;
                 }
-                fixAction = FixActions.Repair;
+
+                if (CurrentFixer == null || CurrentFixer == c.Character && requestedFixAction != currentFixerAction)
+                {
+                    StartRepairing(c.Character, requestedFixAction);
+                    item.CreateServerEvent(this);
+                }
             }
-            StartRepairing(c.Character, fixAction);
         }
 
         public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
@@ -30,6 +38,8 @@ namespace Barotrauma.Items.Components
             msg.Write(deteriorationTimer);
             msg.Write(deteriorateAlwaysResetTimer);
             msg.Write(DeteriorateAlways);
+            msg.Write(CurrentFixer == c.Character);
+            msg.WriteRangedInteger((int)currentFixerAction, 0, 2);
         }
     }
 }

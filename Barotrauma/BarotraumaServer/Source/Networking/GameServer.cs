@@ -250,6 +250,7 @@ namespace Barotrauma.Networking
             if (previousPlayer != null)
             {
                 newClient.Karma = previousPlayer.Karma;
+                newClient.KarmaKickCount = previousPlayer.KarmaKickCount;
                 foreach (Client c in previousPlayer.KickVoters)
                 {
                     if (!connectedClients.Contains(c)) { continue; }
@@ -1888,18 +1889,20 @@ namespace Barotrauma.Networking
             if (serverSettings.TraitorsEnabled == YesNoMaybe.Yes ||
                 (serverSettings.TraitorsEnabled == YesNoMaybe.Maybe && Rand.Range(0.0f, 1.0f) < 0.5f))
             {
-                List<Character> characters = new List<Character>();
-                foreach (Client client in ConnectedClients)
+                if (!(GameMain.GameSession?.GameMode is CampaignMode))
                 {
-                    if (client.Character != null) characters.Add(client.Character);
-                }
+                    List<Character> characters = new List<Character>();
+                    foreach (Client client in ConnectedClients)
+                    {
+                        if (client.Character != null) characters.Add(client.Character);
+                    }
                 
-                int max = Math.Max(serverSettings.TraitorUseRatio ? (int)Math.Round(characters.Count * serverSettings.TraitorRatio, 1) : 1, 1);
-                int traitorCount = Rand.Range(1, max + 1);
+                    int max = Math.Max(serverSettings.TraitorUseRatio ? (int)Math.Round(characters.Count * serverSettings.TraitorRatio, 1) : 1, 1);
+                    int traitorCount = Rand.Range(1, max + 1);
                               
-                TraitorManager = new TraitorManager();
-
-                TraitorManager.Start(this, traitorCount);
+                    TraitorManager = new TraitorManager();
+                    TraitorManager.Start(this, traitorCount);
+                }
             }
 
             GameAnalyticsManager.AddDesignEvent("Traitors:" + (TraitorManager == null ? "Disabled" : "Enabled"));
@@ -2125,9 +2128,19 @@ namespace Barotrauma.Networking
             KickClient(client, reason);
         }
 
-        public void KickClient(Client client, string reason)
+        public void KickClient(Client client, string reason, bool resetKarma = false)
         {
             if (client == null || client.Connection == OwnerConnection) return;
+
+            if (resetKarma)
+            {
+                var previousPlayer = previousPlayers.Find(p => p.MatchesClient(client));
+                if (previousPlayer != null)
+                {
+                    previousPlayer.Karma = Math.Max(previousPlayer.Karma, 50.0f);
+                }
+                client.Karma = Math.Max(client.Karma, 50.0f);
+            }
 
             string msg = DisconnectReason.Kicked.ToString();
             string logMsg = $"ServerMessage.KickedFromServer~[client]={client.Name}";
@@ -2243,6 +2256,7 @@ namespace Barotrauma.Networking
             }
             previousPlayer.Name = client.Name;
             previousPlayer.Karma = client.Karma;
+            previousPlayer.KarmaKickCount = client.KarmaKickCount;
             previousPlayer.KickVoters.Clear();
             foreach (Client c in connectedClients)
             {
@@ -2712,7 +2726,7 @@ namespace Barotrauma.Networking
             serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
         }
 
-        public void SendTraitorMessage(Client client, string message, bool isObjective, bool createMessageBox)
+        public void SendTraitorMessage(Client client, string message, TraitorMessageType messageType)
         {
             if (client == null) { return; }
             if (!TraitorManager.IsTraitor(client.Character) && client.Connection != OwnerConnection)
@@ -2721,8 +2735,7 @@ namespace Barotrauma.Networking
             }
             var msg = new WriteOnlyMessage(); 
             msg.Write((byte)ServerPacketHeader.TRAITOR_MESSAGE);
-            msg.Write(isObjective);
-            msg.Write(createMessageBox);
+            msg.Write((byte)messageType);
             msg.Write(message);
 
             serverPeer.Send(msg, client.Connection, DeliveryMethod.ReliableOrdered);
@@ -3087,6 +3100,7 @@ namespace Barotrauma.Networking
         public string EndPoint;
         public UInt64 SteamID;
         public float Karma;
+        public int KarmaKickCount;
         public readonly List<Client> KickVoters = new List<Client>();
 
         public PreviousPlayer(Client c)

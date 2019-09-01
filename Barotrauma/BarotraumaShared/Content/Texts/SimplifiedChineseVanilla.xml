@@ -381,12 +381,12 @@
 <waist>腰</waist>
 
 <!-- Misc -->
-<yes>赞同</yes>
-<yestoall>全部赞同</yestoall>
+<yes>同意</yes>
+<yestoall>全部同意</yestoall>
 <no>反对</no>
 <notoall>全部反对</notoall>
 <maybe>也许</maybe>
-<ok>可以</ok>
+<ok>了解</ok>
 <skills>技能</skills>
 <personalitytrait>特性</personalitytrait>
 <male>男性</male>
@@ -2427,7 +2427,7 @@
 <karmajobdisallowed>你无法选择该工作，你的道德值太低了 ([yourkarma]/[minkarma])。</karmajobdisallowed>
 
 <!-- Disclaimers -->
-<campaigndisclaimertitle>欢迎游玩《潜渊证》！</campaigndisclaimertitle>
+<campaigndisclaimertitle>欢迎游玩《潜渊症》！</campaigndisclaimertitle>
 <campaigndisclaimertext>请注意游戏尚处于EA阶段，游戏仍存在很多不完善之处，我们仍在不断改进中。\n\n战役模式目前缺少很多玩法模块，可能没有多人游戏那样有趣。当前版本中，单人游戏对新玩家可能略有困难——尽管AI们能帮助你完成一些任务，但他们仍比不上真人玩家。如果您对游戏的未来更新感兴趣，可以点击下面的“更新路线图”。\n\n不过，我们建议您在开始多人游戏之前，先完成单人教学关卡。祝你好运，航海家！</campaigndisclaimertext>
 <campaignroadmaptitle>更新路线图</campaignroadmaptitle>
 <campaignroadmaptext>-探索地点:当前战役地图上的地点只能购买补给、雇佣船员,但在EA期间,它们将成为可以实际探索的场景。\n\n-扩展故事:通过与NPC互动,探索前哨站与非人造建筑,在此过程中,你能对这个冰洋中的世界产生更深的理解…\n\n-新的任务类型：我们正尝试设计一些新的任务类型，比如说人员运输与沉船打捞。\n\n-游戏平衡：目前游戏内的经济系统并不是非常平衡，我们将在内容更加丰富后考虑改进它。\n\n-最终目标：虽然完成战役模式有些不现实，但在未来的版本中，地图中心的神秘位置将变得触手可及...</campaignroadmaptext>
@@ -2630,7 +2630,7 @@
 <connection.sonardataout>data_out</connection.sonardataout>
 <label.outpostinfodisplay1>欢迎。氧气水平：正常。能量水平：正常。辐射水平：超量。本日天气预报：阴冷潮湿。</label.outpostinfodisplay1>
 <label.navterminaldock>停靠</label.navterminaldock>
-<label.navterminaldock>离港</label.navterminaldock>
+  <label.navterminalundock>离港</label.navterminalundock>
 <connectionerrornoresponse>服务器无响应。可能是与服务器的连接出现了问题。</connectionerrornoresponse>
 <dialognorescuetargets>目前似乎没有人需要医疗！</dialognorescuetargets>
 <dialognorescuetargets>我想现在好像没有人需要医疗！</dialognorescuetargets>

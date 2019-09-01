@@ -12,8 +12,8 @@ namespace Barotrauma
         {
             public List<Pair<Wire, float>> WireDisconnectTime = new List<Pair<Wire, float>>();
 
-            //the client's karma value when they were last sent a notification about it (e.g. "your karma is very low")
             public float PreviousNotifiedKarma;
+            public float PreviousKarmaNotificationTime;
 
             public float StructureDamageAccumulator;
             
@@ -23,6 +23,13 @@ namespace Barotrauma
                 get { return Math.Max(StructureDamageAccumulator, structureDamagePerSecond); }
                 set { structureDamagePerSecond = value; }
             }
+
+            //when did a given character last attack this one
+            public Dictionary<Character, double> LastAttackTime
+            {
+                get;
+                private set;
+            } = new Dictionary<Character, double>();
         }
 
         public bool TestMode = false;
@@ -31,9 +38,7 @@ namespace Barotrauma
         private readonly List<Client> bannedClients = new List<Client>();
 
         private DateTime perSecondUpdate;
-
-        private double KarmaNotificationTime;
-
+        
         public void UpdateClients(IEnumerable<Client> clients, float deltaTime)
         {
             if (!GameMain.Server.GameStarted) { return; }
@@ -41,40 +46,52 @@ namespace Barotrauma
             bannedClients.Clear();
             foreach (Client client in clients)
             {
-                var clientMemory = GetClientMemory(client);
                 UpdateClient(client, deltaTime);
 
                 if (perSecondUpdate < DateTime.Now)
                 {
+                    var clientMemory = GetClientMemory(client);
                     clientMemory.StructureDamagePerSecond = clientMemory.StructureDamageAccumulator;
                     clientMemory.StructureDamageAccumulator = 0.0f;
+
+                    var toRemove = clientMemory.LastAttackTime.Where(pair => pair.Value < Timing.TotalTime - AllowedRetaliationTime).Select(pair => pair.Key).ToList();
+                    foreach (var lastAttacker in toRemove)
+                    {
+                        clientMemory.LastAttackTime.Remove(lastAttacker);
+                    }
                 }
             }
             if (perSecondUpdate < DateTime.Now)
-            {
-                perSecondUpdate = DateTime.Now + new TimeSpan(0, 0, 1);
-            }
-
-            if (TestMode || Timing.TotalTime > KarmaNotificationTime)
             {
                 foreach (Client client in clients)
                 {
                     SendKarmaNotifications(client);
                 }
-                KarmaNotificationTime = Timing.TotalTime + KarmaNotificationInterval;
+                perSecondUpdate = DateTime.Now + new TimeSpan(0, 0, 1);
             }
-
+            
             foreach (Client bannedClient in bannedClients)
             {
-                GameMain.Server.BanClient(bannedClient, $"KarmaBanned~[banthreshold]={(int)KickBanThreshold}", duration: TimeSpan.FromSeconds(GameMain.Server.ServerSettings.AutoBanTime));
+                bannedClient.KarmaKickCount++;
+                if (bannedClient.KarmaKickCount <= KicksBeforeBan)
+                {
+                    GameMain.Server.KickClient(bannedClient, $"KarmaKicked~[banthreshold]={(int)KickBanThreshold}", resetKarma: true);            
+                }
+                else
+                {
+                    GameMain.Server.BanClient(bannedClient, $"KarmaBanned~[banthreshold]={(int)KickBanThreshold}", duration: TimeSpan.FromSeconds(GameMain.Server.ServerSettings.AutoBanTime));
+                }
             }
         }
 
         private void SendKarmaNotifications(Client client, string debugKarmaChangeReason = "")
         {
+            //send a notification about karma changing if the karma has changed by x% within the last second
+
             var clientMemory = GetClientMemory(client);
             float karmaChange = client.Karma - clientMemory.PreviousNotifiedKarma;
-            if (Math.Abs(karmaChange) > KarmaNotificationInterval || (TestMode && Math.Abs(karmaChange) > 2.0f))
+            if (Math.Abs(karmaChange) > 1.0f &&
+                (TestMode || Math.Abs(karmaChange) / clientMemory.PreviousNotifiedKarma > KarmaNotificationInterval / 100.0f))
             {
                 if (TestMode)
                 {
@@ -94,8 +111,8 @@ namespace Barotrauma
                 {
                     GameMain.Server.SendDirectChatMessage(TextManager.Get(karmaChange < 0 ? "KarmaDecreasedUnknownAmount" : "KarmaIncreasedUnknownAmount"), client);
                 }
-                clientMemory.PreviousNotifiedKarma = client.Karma;
             }
+            clientMemory.PreviousNotifiedKarma = client.Karma;
         }
 
         private void UpdateClient(Client client, float deltaTime)
@@ -148,7 +165,7 @@ namespace Barotrauma
                         AdjustKarma(client.Character, karmaDecrease, "Disconnected excessive number of wires");
                     }
                 }                
-
+                
                 if (client.Character?.Info?.Job.Prefab.Identifier == "captain" && client.Character.SelectedConstruction != null)
                 {
                     if (client.Character.SelectedConstruction.GetComponent<Steering>() != null)
@@ -202,7 +219,41 @@ namespace Barotrauma
                     isEnemy = true;
                 }
             }
-            
+
+            bool targetIsHusk = target.CharacterHealth?.GetAffliction<AfflictionHusk>("huskinfection")?.State == AfflictionHusk.InfectionState.Active;
+            bool attackerIsHusk = attacker.CharacterHealth?.GetAffliction<AfflictionHusk>("huskinfection")?.State == AfflictionHusk.InfectionState.Active;
+            //huskified characters count as enemies to healthy characters and vice versa
+            if (targetIsHusk != attackerIsHusk) { isEnemy = true; }
+
+            if (appliedAfflictions != null)
+            {
+                foreach (Affliction affliction in appliedAfflictions)
+                {
+                    if (MathUtils.NearlyEqual(affliction.Prefab.KarmaChangeOnApplied, 0.0f)) { continue; }
+                    damage -= affliction.Prefab.KarmaChangeOnApplied * affliction.Strength;
+                }
+            }
+
+            Client targetClient = GameMain.Server.ConnectedClients.Find(c => c.Character == target);
+            if (damage > 0 && targetClient != null)
+            {
+                var targetMemory = GetClientMemory(targetClient);
+                targetMemory.LastAttackTime[attacker] = Timing.TotalTime;
+            }            
+
+            Client attackerClient = GameMain.Server.ConnectedClients.Find(c => c.Character == attacker);
+            if (attackerClient != null)
+            {
+                //if the attacker has been attacked by the target within the last x seconds, ignore the damage
+                //(= no karma penalty from retaliating against someone who attacked you)
+                var attackerMemory = GetClientMemory(attackerClient);
+                if (attackerMemory.LastAttackTime.ContainsKey(target) &&
+                    attackerMemory.LastAttackTime[target] > Timing.TotalTime - AllowedRetaliationTime)
+                {
+                    damage = Math.Min(damage, 0);
+                }
+            }
+
             //attacking/healing clowns has a smaller effect on karma
             if (target.HasEquippedItem("clownmask") &&
                 target.HasEquippedItem("clowncostume"))
@@ -210,15 +261,21 @@ namespace Barotrauma
                 damage *= 0.5f;
             }
 
-            if (appliedAfflictions != null)
+            //smaller karma penalty for attacking someone who's aiming with a weapon
+            if (damage > 0.0f &&
+                target.IsKeyDown(InputType.Aim) &&
+                target.SelectedItems.Any(it => it != null && (it.GetComponent<MeleeWeapon>() != null || it.GetComponent<RangedWeapon>() != null)))
             {
-                foreach (Affliction affliction in appliedAfflictions)
-                {
-                    if (MathUtils.NearlyEqual(affliction.Prefab.KarmaChangeOnApplied, 0.0f)) { continue; }
-                    damage -= affliction.Prefab.KarmaChangeOnApplied * affliction.Strength; 
-                }
+                damage *= 0.5f;
             }
 
+            //damage scales according to the karma of the target
+            //(= smaller karma penalty from attacking someone who has a low karma)
+            if (damage > 0 && targetClient != null)
+            {
+                damage *= MathUtils.InverseLerp(0.0f, 50.0f, targetClient.Karma);
+            }
+            
             if (isEnemy)
             {
                 if (damage > 0)

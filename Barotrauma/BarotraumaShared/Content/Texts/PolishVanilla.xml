@@ -22,7 +22,7 @@
 <loadingscreentip>Aby osiągnąć najlepsze rezultaty przy rozmieszczaniu wabika, upewnij się, że sonar aktywny jest wyłączony.</loadingscreentip>
 <loadingscreentip>Próba zmiany okablowania w podłączonych urządzeniach bez odpowiednich umiejętności elektrotechnicznych może skutkować porażeniem prądem.</loadingscreentip>
 <loadingscreentip>Narzędzia spawalnicze są dość proste, by każdy członek załogi mógł z nich korzystać, ale wyszkoleni mechanicy spawają szybciej i mają niższe ryzyko urazów przy pracy.</loadingscreentip>
-<loadingscreentip>Wszyscy członkowie załogi przeszli podstawowe szkolenie z napraw urządzeń elektrycznych, ale elektrycy wykonują je znacznie szybciej.</loadingscreentip>
+<loadingscreentip>Wszyscy członkowie załogi przeszli podstawowe szkolenie z napraw urządzeń elektrycznych, ale inżynierowie wykonują je znacznie szybciej.</loadingscreentip>
 <loadingscreentip>Wszyscy członkowie załogi przeszli podstawowe szkolenie z napraw urządzeń mechanicznych, ale mechanicy wykonują je znacznie szybciej.</loadingscreentip>
 <loadingscreentip>Kapitan na ogół znacznie lepiej steruje okrętem podwodnym niż przeciętny marynarz.</loadingscreentip>
 <loadingscreentip>Jeśli reaktor nie może wytworzyć dość energii dla wszystkich systemów pokładowych, zmniejsz współczynnik ładowania baterii pokładowych i superkondensatorów lub wyreguluj, kiedy okręt ma pracować z pełną mocą.</loadingscreentip>
@@ -499,7 +499,7 @@
 <hireunavailable>Brak ludzi do zatrudnienia.</hireunavailable>
 <mission>Misja</mission>
 <nomission>Brak misji</nomission>
-<reward>Nagroda: [reward] kred.</reward>
+<reward>Nagroda: [reward] kredytów</reward>
 
 <!-- In-game menus -->
 <credit>Kredyt</credit>
@@ -1301,7 +1301,7 @@
 <entitydescription.nitroglycerin>Wysoce niestabilny płyn, który może wybuchnąć w wyniku bodźców cieplnych lub fizycznych.</entitydescription.nitroglycerin>
 <entityname.calcium>Wapń</entityname.calcium>
 <entitydescription.calcium>Pierwiastek do wykorzystania w wytwórstwie.</entitydescription.calcium>
-<entityname.aluminium>Glin</entityname.aluminium>
+<entityname.aluminium>Aluminium</entityname.aluminium>
 <entitydescription.aluminium>Pierwiastek do wykorzystania w wytwórstwie.</entitydescription.aluminium>
 <entityname.titanium>Tytan</entityname.titanium>
 <entitydescription.titanium>Pierwiastek do wykorzystania w wytwórstwie.</entitydescription.titanium>
@@ -1434,7 +1434,7 @@
 <entityname.alienshell>Pocisk z fizykorium</entityname.alienshell>
 <entitydescription.alienshell>Amunicja do działa elektromagnetycznego.</entitydescription.alienshell>
 
-<Alien>|workshop.contenttag.eventset</Alien>
+<Alien></Alien>
 <entityname.skyholderartifact>Artefakt atmosferyczny</entityname.skyholderartifact>
 <entitydescription.skyholderartifact>Artefakt znaleziony w ruinach obcych.</entitydescription.skyholderartifact>
 <entityname.thermalartifact>Artefakt cieplny</entityname.thermalartifact>
@@ -1540,8 +1540,8 @@
 <label.frontrailguncontrol>Ster przedniego działa EM</label.frontrailguncontrol>
 <label.toggledocking>Cumowanie</label.toggledocking>
 <label.reactorshutdown>Wyłączenie reaktora</label.reactorshutdown>
-<label.engine1>Silnik #1</label.engine1>
-<label.engine2>Silnik #2</label.engine2>
+<label.engine1>Silnik nr 1</label.engine1>
+<label.engine2>Silnik nr 2</label.engine2>
 <label.auxiliaryengine>Dodatk. silnik</label.auxiliaryengine>
 <label.launchdecoy>Wystrzel wabik</label.launchdecoy>
 <label.launchdepthcharge>Wystrzel bombę głębinową</label.launchdepthcharge>
@@ -1591,9 +1591,9 @@
 
 <!-- Submarine names & descriptions -->
 <submarine.name.humpback>Humpback</submarine.name.humpback>
-<submarine.description.humpback>Niegdysiejszy okręt wojskowy WH4-L3 „Humpback” jest wyposażony, aby stawić czoła większości niebezpieczeństw czyhających na Europie. Jego względnie duża szybkość jest równoważona niewielką zwrotnością. Z powodu reaktora starego typu wymaga dodatkowego zasilania bateriami, gdyż inaczej może się okazać, że nie można uruchomić nowego wyposażenia.</submarine.description.humpback>
+<submarine.description.humpback>Niegdysiejszy okręt wojskowy WH4-L3 „Humpback” jest wyposażony, aby stawić czoła większości niebezpieczeństw czyhających na Europie. Jego względnie duża szybkość jest równoważona niewielką zwrotnością. Z powodu reaktora starego typu wymaga dodatkowego zasilania bateriami, gdyż inaczej może się okazać, że uruchomienie nowego wyposażenia nie jest możliwe.</submarine.description.humpback>
 <submarine.name.bunyip>Bunyip</submarine.name.bunyip>
-<submarine.description.bunyip>Bunyip, najnowszy model transportowców, może przewozić załogę między okrętami a instalacjami. Jego zasięg pływania jest znacząco mniejszy niż u jego bardziej zaawansowanych kuzynów, a brak uzbrojenia sprawia, że jest podatny na ataki.</submarine.description.bunyip>
+<submarine.description.bunyip>Bunyip, najnowszy model transportowca, może przewozić załogę między okrętami a instalacjami. Jego zasięg pływania jest znacząco mniejszy niż u jego bardziej zaawansowanych kuzynów, a brak uzbrojenia sprawia, że jest podatny na ataki.</submarine.description.bunyip>
 <submarine.name.muikku>Muikku</submarine.name.muikku>
 <submarine.description.muikku>Wół roboczy kolonii. Te małe łodzie są szybkie i dobrze nurkują, ale są delikatne, a mało wydajne baterie nieco ograniczają ich zasięg.</submarine.description.muikku>
 <submarine.name.orca>Orca</submarine.name.orca>
@@ -1601,13 +1601,13 @@
 <submarine.name.remora>Remora</submarine.name.remora>
 <submarine.description.remora>Okręt klasy „Remora” ma szeroki wybór modyfikacji. W tym modelu część powierzchni głównego kadłuba można zastąpić odłączanym balastem i zdalnie sterowanym dronem. Do obsługi tego okrętu potrzebna jest duża załoga.</submarine.description.remora>
 <submarine.name.typhon>Typhon</submarine.name.typhon>
-<submarine.description.typhon>Okręty klasy „Typhon” są znane z ordynarnego wyglądu, sensownego oświetlenia, znacznej siły ognia i ogólnej niezawodności. Kapitanowie powinni mieć świadomość, że okręty te schodzą powoli i nie są szybkie.</submarine.description.typhon>
+<submarine.description.typhon>Okręty klasy „Typhon” są znane z ordynarnego wyglądu, sensownego poziomu oświetlenia, znacznej siły ognia i ogólnej niezawodności. Kapitanowie powinni mieć świadomość, że okręty te schodzą powoli i nie osiągają znacznej szybkości.</submarine.description.typhon>
 <submarine.name.dugong>Dugong</submarine.name.dugong>
 <submarine.description.dugong>W porównaniu z większymi okrętami klasa „Dugong” wypada gorzej we wszystkim prócz jednego: ich niezawodność w stosunku do ceny jest na światowym poziomie. Brakuje im siły ognia i prędkości, więc kluczowe jest dobre manewrowanie.</submarine.description.dugong>
 <submarine.name.selkie>Selkie</submarine.name.selkie>
-<submarine.description.selkie>Wół roboczy kolonii. Te małe łodzie są szybkie i dobrze nurkują, ale są delikatne, a ich mało wydajne baterie nieco ograniczają ich zasięg.</submarine.description.selkie>
+<submarine.description.selkie>Wół roboczy kolonii. Te małe łodzie są szybkie i dobrze nurkują, ale są delikatne, a mało wydajne baterie nieco ograniczają ich zasięg.</submarine.description.selkie>
 <submarine.name.venture>Venture</submarine.name.venture>
-<submarine.description.venture>Klasa „Venture”, początkowo zaprojektowana jako łódź badawcza, została zaadaptowana jako solidniejsza alternatywa do podróży między placówkami i okrętami.</submarine.description.venture>
+<submarine.description.venture>Klasa okrętów „Venture”, początkowo zaprojektowana jako łódź badawcza, została zaadaptowana jako solidniejsza alternatywa do podróży między placówkami i okrętami.</submarine.description.venture>
 <submarine.name.berilia>Berilia</submarine.name.berilia>
 <submarine.description.berilia>„Berilia” nie ma sobie równych w kwestii masy i siły ognia. Dwa silniki i trzy balasty wymagają solidnej dawki mocy, a utrzymanie maszynerii w dobrej kondycji jest kłopotliwe nawet dla średniej wielkości załogi.</submarine.description.berilia>
 <!-- Waypoints -->
@@ -2166,7 +2166,7 @@
 
 <!-- Job descriptions -->
 <tutorial.mechanictitle>Mechanik – jedynie klej, taśma i twoja zimna krew utrzymują załogę przy życiu.</tutorial.mechanictitle>
-<tutorial.mechanicdescription>To, że wszystko pójdzie zgodnie z planem, a sprzęt nie nawali, jest równie prawdopodobne, co opuszczenie tego zadupia przez ludzkość. Nie dla ciebie przerwy czy odpoczynek, bo jeżeli coś może się zepsuć, to z pewnością się zepsuje. A jeśli się nie zepsuje, to czeka cię serwisowanie, a także serwisowanie oraz serwisowanie. Liczy się tylko dotarcie do kolejnego celu i zależy to od ciebie. Od „towarzyszy niedoli” nie usłyszysz ani podziękowań, ani uszanowanka, tylko pogardliwe parsknięcia i sarkanie – ale nie o to chodzi. To TWOJA łódź ratunkowa, a jeśli ktoś jeszcze przeżyje, to cóż… hip, hip, hurra.</tutorial.mechanicdescription>
+<tutorial.mechanicdescription>To, że wszystko pójdzie zgodnie z planem, a sprzęt nie nawali, jest równie prawdopodobne, co opuszczenie tego zadupia przez ludzkość. Nie dla ciebie przerwy czy odpoczynek, bo jeżeli coś może się zepsuć, to z pewnością się zepsuje. A jeśli się nie zepsuje, to czeka cię serwisowanie, a także serwisowanie oraz serwisowanie. Liczy się tylko dotarcie do kolejnego celu i zależy to od ciebie. Od „towarzyszy niedoli” nie uświadczysz ani podziękowań, ani szacunku, tylko pogardliwe parsknięcia i sarkanie – ale nie o to chodzi. To TWOJA łódź ratunkowa, a jeśli ktoś jeszcze przeżyje, to cóż… hip, hip, hurra.</tutorial.mechanicdescription>
 <tutorial.mechanicresponsibilities>Obowiązki\n– Dbanie o maszynerię\n– Naprawianie przecieków</tutorial.mechanicresponsibilities>
 <tutorial.engineertitle>Inżynier – ujarzmia siły natury.</tutorial.engineertitle>
 <tutorial.engineerdescription>Prąd i tlen, i tyle. Bez nich okręt nie popłynie, a płuca nie będą oddychać. Gadka szmatka, ale to ty tak naprawdę rządzisz na statku, łapiesz? Zaufaj prawom fizyki i myśl logicznie. Aha, i nie spuszczaj z oczu tego cholernego, pożal się Boże mechanika, który tylko by grzebał w swoich zabawkach. Nie wdawaj się też w psychobełkotliwe dysputy lekarza. Jest zupełnie oderwany od rzeczywistości. Kapitan i szef ochrony są nieszkodliwi i nie dorównują ci inteligencją. Bez dwóch zdań.</tutorial.engineerdescription>
@@ -2217,12 +2217,12 @@
 <!-- Room 1 -->
 <mechanic.opendoor>Drzwi</mechanic.opendoor>
 <mechanic.opendoorobjective>Otwórz drzwi, naciskając przylegający przycisk</mechanic.opendoorobjective>
-<mechanic.opendoortext>Poruszaj się, używając przycisków {0}, {1}, {2}, {3}. Używaj przedmiotów i urządzeń przyciskiem {4}.\n\nOtwórz drzwi, naciskając {5}, kiedy kursor znajdzie się nad nimi.</mechanic.opendoortext>
+<mechanic.opendoortext>Poruszaj się, używając przycisków {0}, {1}, {2}, {3}. Używaj przedmiotów i urządzeń {4}.\n\nOtwórz drzwi, naciskając {5}, kiedy kursor znajdzie się nad nimi.</mechanic.opendoortext>
 
 <!-- Room 2 -->
 <mechanic.equipment>Pojemniki</mechanic.equipment>
 <mechanic.equipmentobjective>Weź swój sprzęt z szafki</mechanic.equipmentobjective>
-<mechanic.equipmenttext>Przedmioty są przechowywane w różnej wielkości pojemnikach. Możesz zobaczyć, co w nich jest, dzięki interakcji z nimi ({0}). Przenoś przedmioty między postacią a schowkiem pojemnika, przeciągając przedmiot lub klikając go dwukrotnie.\n\nW przedmioty w ekwipunku można się wyposażyć, klikając je dwukrotnie lub naciskając odpowiedni skrót.\n\nAby zamknąć interfejs, naciśnij {1}.</mechanic.equipmenttext>
+<mechanic.equipmenttext>Przedmioty są przechowywane w różnej wielkości pojemnikach. Możesz zobaczyć, co w nich jest, dzięki interakcji z nimi ({0}). Przenoś przedmioty między postacią a schowkiem pojemnika, przeciągając przedmiot lub klikając go dwukrotnie.\n\nW przedmioty będące w ekwipunku można się wyposażyć, klikając je dwukrotnie lub naciskając odpowiedni skrót.\n\nAby zamknąć interfejs, naciśnij {1}.</mechanic.equipmenttext>
 
 <!-- Room 3 -->
 <mechanic.welding>Przecieki</mechanic.welding>
@@ -2514,7 +2514,7 @@
 <entityname.equalscomponent>Element równości sygnałów</entityname.equalscomponent>
 <entitydescription.equalscomponent>Wysyła sygnał, jeżeli oba wejścia otrzymają ten sam sygnał.</entitydescription.equalscomponent>
 <entityname.greatercomponent>Element „większy od”</entityname.greatercomponent>
-<entitydescription.greatercomponent>Wysyła sygnał, jeżeli wejście signal_in1 jest większe niż wejście signal_in2.</entitydescription.greatercomponent>
+<entitydescription.greatercomponent>Wysyła sygnał, jeżeli wejście sygnał_wejść_1 jest większe niż wejście sygnał_wejść_2.</entitydescription.greatercomponent>
 <entityname.colorcomponent>Element koloru</entityname.colorcomponent>
 <entitydescription.colorcomponent>Wysyła zsumowany sygnał koloru dla sterowania światłem.</entitydescription.colorcomponent>
 <entityname.subtractcomponent>Element odejmujący</entityname.subtractcomponent>
@@ -2526,7 +2526,7 @@
 <entityname.xorcomponent>Element XOR</entityname.xorcomponent>
 <entitydescription.xorcomponent>Wysyła sygnał, jeżeli tylko jedno z wejść otrzyma sygnał.</entitydescription.xorcomponent>
 <entityname.memorycomponent>Element pamięci</entityname.memorycomponent>
-<entitydescription.memorycomponent>Wysyła przechowywaną wartość, którą można uaktualnić przez inne źródła. Użyj połączenia signal_in do ustawienia przechowywanej wartości i wejścia signal_store, aby ustalić, czy otrzymywany sygnał powinien być przechowywany.</entitydescription.memorycomponent>
+<entitydescription.memorycomponent>Wysyła przechowywaną wartość, którą można uaktualnić przez inne źródła. Użyj połączenia sygnał_wejść do ustawienia przechowywanej wartości i wejścia przechowaj_sygnał, aby ustalić, czy otrzymywany sygnał powinien być przechowywany.</entitydescription.memorycomponent>
 <entityname.oxygentank>Butla z tlenem</entityname.oxygentank>
 <entitydescription.oxygentank>Przenośny zbiornik tlenu.</entitydescription.oxygentank>
 <entityname.cyanideantidote>Antidotum na cyjanek</entityname.cyanideantidote>
@@ -2630,7 +2630,7 @@
 <connection.sonardataout>data_out</connection.sonardataout>
 <label.outpostinfodisplay1>Witaj. Poziom tlenu: w normie. Energia: w normie. Promieniowanie: poniżej optymalnego poziomu. Prognoza na dziś: zimno i mokro.</label.outpostinfodisplay1>
 <label.navterminaldock>Cumuj</label.navterminaldock>
-<label.navterminaldock>Odcumuj</label.navterminaldock>
+<label.navterminalundock>Odcumuj</label.navterminalundock>
 <connectionerrornoresponse>Serwer nie odpowiada. Być może problem z połączeniem leży po stronie serwera.</connectionerrornoresponse>
 <dialognorescuetargets>W tej chwili nikt nie potrzebuje pomocy medycznej!</dialognorescuetargets>
 <dialognorescuetargets>Nie wydaje mi się, żeby ktokolwiek potrzebował teraz pomocy medycznej.</dialognorescuetargets>

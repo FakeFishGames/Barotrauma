@@ -2205,16 +2205,15 @@ namespace Barotrauma
         private void UpdateSightRange()
         {
             if (aiTarget == null) { return; }
-            // TODO: the formula might need some tweaking
-            float range = (float)Math.Sqrt(Mass) * 1000.0f + AnimController.Collider.LinearVelocity.Length() * 500.0f;
-            aiTarget.SightRange = MathHelper.Clamp(range, 0, 15000.0f);
+            float range = (float)Math.Sqrt(Mass) * 250 + AnimController.Collider.LinearVelocity.Length() * 500;
+            aiTarget.SightRange = MathHelper.Clamp(range, 0, 10000);
         }
 
         private void UpdateSoundRange()
         {
             if (aiTarget == null) { return; }
-            float range = Mass / 5 * AnimController.TargetMovement.Length() * Noise;
-            aiTarget.SoundRange = MathHelper.Clamp(range, 0f, 5000f);
+            float range = ((float)Math.Sqrt(Mass) / 3) * (AnimController.TargetMovement.Length() * 2) * Noise;
+            aiTarget.SoundRange = MathHelper.Clamp(range, 0, 10000);
         }
 
         public void SetOrder(Order order, string orderOption, Character orderGiver, bool speak = true)
@@ -2605,6 +2604,7 @@ namespace Barotrauma
             {
                 if (selectedItems[i] != null) selectedItems[i].Drop(this);            
             }
+            SelectedConstruction = null;
             
             AnimController.ResetPullJoints();
 
