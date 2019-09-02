@@ -108,62 +108,59 @@ namespace Barotrauma
                 objectiveManager.GetObjective<AIObjectiveIdle>()?.Wander(deltaTime);
                 return;
             }
+            if (IsTakenBySomeone(targetItem))
+            {
+#if DEBUG
+                DebugConsole.NewMessage($"{character.Name}: Found an item, but it's already equipped by someone else. Aborting.", Color.Yellow);
+#endif
+                abandon = true;
+            }
             if (character.CanInteractWith(targetItem, out _, checkLinked: false))
             {
-                if (IsTakenBySomeone(targetItem))
+                targetItem.TryInteract(character, forceSelectKey: true);
+                if (equip)
                 {
+                    var pickable = targetItem.GetComponent<Pickable>();
+                    if (pickable == null)
+                    {
 #if DEBUG
-                    DebugConsole.NewMessage($"{character.Name}: Found an item, but it's equipped by someone else. Aborting.", Color.Yellow);
+                        DebugConsole.NewMessage($"{character.Name}: Target not pickable. Aborting.", Color.Yellow);
 #endif
-                    abandon = true;
+                        abandon = true;
+                        return;
+                    }
+                    int targetSlot = -1;
+                    //check if all the slots required by the item are free
+                    foreach (InvSlotType slots in pickable.AllowedSlots)
+                    {
+                        if (slots.HasFlag(InvSlotType.Any)) { continue; }
+                        for (int i = 0; i < character.Inventory.Items.Length; i++)
+                        {
+                            //slot not needed by the item, continue
+                            if (!slots.HasFlag(character.Inventory.SlotTypes[i])) { continue; }
+                            targetSlot = i;
+                            //slot free, continue
+                            var otherItem = character.Inventory.Items[i];
+                            if (otherItem == null) { continue; }
+                            //try to move the existing item to LimbSlot.Any and continue if successful
+                            if (character.Inventory.TryPutItem(otherItem, character, new List<InvSlotType>() { InvSlotType.Any })) { continue; }
+                            //if everything else fails, simply drop the existing item
+                            otherItem.Drop(character);
+                        }
+                    }
+                    character.Inventory.TryPutItem(targetItem, targetSlot, false, false, character);
                 }
-                else
+                isCompleted = true;
+#if DEBUG
+                if (!character.HasItem(targetItem))
                 {
-                    targetItem.TryInteract(character, forceSelectKey: true);
-                    if (equip)
-                    {
-                        var pickable = targetItem.GetComponent<Pickable>();
-                        if (pickable == null)
-                        {
-#if DEBUG
-                            DebugConsole.NewMessage($"{character.Name}: Target not pickable. Aborting.", Color.Yellow);
-#endif
-                            abandon = true;
-                            return;
-                        }
-                        int targetSlot = -1;
-                        //check if all the slots required by the item are free
-                        foreach (InvSlotType slots in pickable.AllowedSlots)
-                        {
-                            if (slots.HasFlag(InvSlotType.Any)) { continue; }
-                            for (int i = 0; i < character.Inventory.Items.Length; i++)
-                            {
-                                //slot not needed by the item, continue
-                                if (!slots.HasFlag(character.Inventory.SlotTypes[i])) { continue; }
-                                targetSlot = i;
-                                //slot free, continue
-                                var otherItem = character.Inventory.Items[i];
-                                if (otherItem == null) { continue; }
-                                //try to move the existing item to LimbSlot.Any and continue if successful
-                                if (character.Inventory.TryPutItem(otherItem, character, new List<InvSlotType>() { InvSlotType.Any })) { continue; }
-                                //if everything else fails, simply drop the existing item
-                                otherItem.Drop(character);
-                            }
-                        }
-                        character.Inventory.TryPutItem(targetItem, targetSlot, false, false, character);
-                    }
-                    isCompleted = true;
-#if DEBUG
-                    if (!character.HasItem(targetItem))
-                    {
-                        DebugConsole.NewMessage($"{character.Name}: Failed to move the item into the character inventory. Aborting.", Color.Red);
-                    }
-                    if (equip && !character.HasEquippedItem(targetItem))
-                    {
-                        DebugConsole.NewMessage($"{character.Name}: Failed to equip the item. Aborting.", Color.Red);
-                    }
-#endif
+                    DebugConsole.NewMessage($"{character.Name}: Failed to move the item into the character inventory. Aborting.", Color.Red);
                 }
+                if (equip && !character.HasEquippedItem(targetItem))
+                {
+                    DebugConsole.NewMessage($"{character.Name}: Failed to equip the item. Aborting.", Color.Red);
+                }
+#endif
             }
             else
             {
