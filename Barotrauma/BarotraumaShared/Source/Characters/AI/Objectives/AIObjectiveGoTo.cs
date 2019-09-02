@@ -135,8 +135,19 @@ namespace Barotrauma
                 if (getDivingGearIfNeeded)
                 {
                     Character followTarget = Target as Character;
-                    bool needsDivingGear = HumanAIController.NeedsDivingGear(targetHull) || mimic && HumanAIController.HasDivingMask(followTarget);
-                    bool needsDivingSuit = needsDivingGear && (targetHull == null || targetIsOutside || targetHull.WaterPercentage > 80) || mimic && HumanAIController.HasDivingSuit(followTarget);
+                    bool needsDivingGear = HumanAIController.NeedsDivingGear(character, targetHull, out bool needsDivingSuit);
+                    if (!needsDivingGear && mimic)
+                    {
+                        if (HumanAIController.HasDivingSuit(followTarget))
+                        {
+                            needsDivingGear = true;
+                            needsDivingSuit = true;
+                        }
+                        else if (HumanAIController.HasDivingMask(followTarget))
+                        {
+                            needsDivingGear = true;
+                        }
+                    }
                     bool needsEquipment = false;
                     if (needsDivingSuit)
                     {
@@ -144,7 +155,7 @@ namespace Barotrauma
                     }
                     else if (needsDivingGear)
                     {
-                        needsEquipment = !HumanAIController.HasDivingMask(character);
+                        needsEquipment = !HumanAIController.HasDivingMask(character) && !HumanAIController.HasDivingSuit(character);
                     }
                     if (needsEquipment)
                     {

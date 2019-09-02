@@ -247,12 +247,11 @@ namespace Barotrauma
 
         private void UnequipUnnecessaryItems()
         {
-            if (!NeedsDivingGear(Character.CurrentHull))
+            if (!NeedsDivingGear(Character, Character.CurrentHull, out _))
             {
                 bool oxygenLow = Character.OxygenAvailable < CharacterHealth.LowOxygenThreshold;
-                bool highPressure = Character.CurrentHull == null || Character.CurrentHull.LethalPressure > 0 && Character.PressureProtection <= 0;
                 bool shouldKeepTheGearOn = Character.AnimController.HeadInWater || ObjectiveManager.CurrentObjective.GetSubObjectivesRecursive(true).Any(o => o.KeepDivingGearOn);
-                bool removeDivingSuit = !Character.AnimController.HeadInWater && oxygenLow && !highPressure;
+                bool removeDivingSuit = !Character.AnimController.HeadInWater && oxygenLow;
                 AIObjectiveGoTo gotoObjective = ObjectiveManager.CurrentOrder as AIObjectiveGoTo;
                 if (!removeDivingSuit)
                 {
@@ -273,7 +272,7 @@ namespace Barotrauma
                 {
                     if (gotoObjective.Target is Hull h)
                     {
-                        if (NeedsDivingGear(h))
+                        if (NeedsDivingGear(Character, h, out _))
                         {
                             removeDivingSuit = false;
                             takeMaskOff = false;
@@ -281,7 +280,7 @@ namespace Barotrauma
                     }
                     else if (gotoObjective.Target is Character c)
                     {
-                        if (NeedsDivingGear(c.CurrentHull))
+                        if (NeedsDivingGear(Character, c.CurrentHull, out _))
                         {
                             removeDivingSuit = false;
                             takeMaskOff = false;
@@ -289,7 +288,7 @@ namespace Barotrauma
                     }
                     else if (gotoObjective.Target is Item i)
                     {
-                        if (NeedsDivingGear(i.CurrentHull))
+                        if (NeedsDivingGear(Character, i.CurrentHull, out _))
                         {
                             removeDivingSuit = false;
                             takeMaskOff = false;
@@ -594,7 +593,24 @@ namespace Barotrauma
             shouldCrouch = Submarine.PickBody(startPos, startPos + Vector2.UnitY * minCeilingDist, null, Physics.CollisionWall) != null;
         }
 
-        public static bool NeedsDivingGear(Hull hull) => hull == null || hull.OxygenPercentage < CharacterHealth.LowOxygenThreshold || hull.WaterPercentage > 60;
+        public static bool NeedsDivingGear(Character character, Hull hull, out bool needsSuit)
+        {
+            needsSuit = false;
+            if (hull == null || 
+                hull.WaterPercentage > 80 || 
+                (hull.LethalPressure > 0 && character.PressureProtection <= 0) || 
+                hull.ConnectedGaps.Max(g => AIObjectiveFixLeaks.GetLeakSeverity(g)) > 60)
+            {
+                needsSuit = true;
+                return true;
+            }
+            if (hull.WaterPercentage > 60 || hull.OxygenPercentage < CharacterHealth.LowOxygenThreshold)
+            {
+                return true;
+            }
+            return false;
+        }
+
 
         /// <summary>
         /// Check whether the character has a diving suit in usable condition plus some oxygen.
