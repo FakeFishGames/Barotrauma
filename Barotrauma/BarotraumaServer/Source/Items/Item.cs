@@ -345,7 +345,7 @@ namespace Barotrauma
 
             if (!ItemList.Contains(this))
             {
-                string errorMsg = "Attempted to create a network event for an item (" + Name + ") that hasn't been fully initialized yet.";
+                string errorMsg = "Attempted to create a network event for an item (" + Name + ") that hasn't been fully initialized yet.\n" + Environment.StackTrace;
                 DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce("Item.CreateServerEvent:EventForUninitializedItem" + Name + ID, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return;

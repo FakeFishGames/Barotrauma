@@ -777,6 +777,14 @@ namespace Barotrauma.Steam
             ContentPackage tempContentPackage = new ContentPackage(Path.Combine(existingItem.Directory.FullName, MetadataFileName));
             string installedContentPackagePath = Path.GetFullPath(GetWorkshopItemContentPackagePath(tempContentPackage));
             contentPackage = ContentPackage.List.Find(cp => Path.GetFullPath(cp.Path) == installedContentPackagePath);
+
+            if (contentPackage == null && tempContentPackage.GameVersion <= new Version(0, 9, 1, 0))
+            {
+                //try finding the content package in the lega
+                installedContentPackagePath = Path.GetFullPath(GetWorkshopItemContentPackagePath(tempContentPackage, legacy: false));
+                contentPackage = ContentPackage.List.Find(cp => Path.GetFullPath(cp.Path) == installedContentPackagePath);
+            }
+
             if (tempContentPackage.GameVersion > new Version(0, 9, 1, 0))
             {
                 itemEditor.Folder = Path.GetDirectoryName(installedContentPackagePath);
@@ -1317,11 +1325,17 @@ namespace Barotrauma.Steam
 
         public static string GetWorkshopItemContentPackagePath(ContentPackage contentPackage)
         {
+            return GetWorkshopItemContentPackagePath(contentPackage, legacy: contentPackage.GameVersion <= new Version(0, 9, 1, 0));
+        }
+
+        private static string GetWorkshopItemContentPackagePath(ContentPackage contentPackage, bool legacy)
+        {
             string fileName = contentPackage.Name;
-            string invalidChars = ToolBox.RemoveInvalidFileNameChars(fileName);
-            return contentPackage.GameVersion > new Version(0, 9, 1, 0) ?
-                Path.Combine("Mods", fileName, MetadataFileName) :
-                Path.Combine("Data", "ContentPackages", fileName + ".xml"); //legacy support
+            fileName = ToolBox.RemoveInvalidFileNameChars(fileName);
+
+            return legacy ?
+                Path.Combine("Data", "ContentPackages", fileName + ".xml") :
+                Path.Combine("Mods", fileName, MetadataFileName);
         }
 
         #endregion

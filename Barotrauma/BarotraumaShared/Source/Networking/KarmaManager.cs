@@ -75,12 +75,15 @@ namespace Barotrauma
 
         [Serialize(1.0f, true)]
         public float KickBanThreshold { get; set; }
-
+        
         [Serialize(0, true)]
         public int KicksBeforeBan { get; set; }
         
         [Serialize(10.0f, true)]
         public float KarmaNotificationInterval { get; set; }
+
+        [Serialize(120.0f, true)]
+        public float AllowedRetaliationTime { get; set; }
 
         private readonly AfflictionPrefab herpesAffliction;
 

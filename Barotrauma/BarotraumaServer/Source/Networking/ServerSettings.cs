@@ -236,8 +236,8 @@ namespace Barotrauma.Networking
             GameMain.NetLobbyScreen.SetLevelDifficulty(selectedLevelDifficulty);
             
             GameMain.NetLobbyScreen.SetTraitorsEnabled(traitorsEnabled);
-            
-            string[] allowedClientNameCharsStr = doc.Root.GetAttributeStringArray("AllowedClientNameChars",
+
+            string[] defaultAllowedClientNameChars = 
                 new string[] {
                     "32-33",
                     "38-46",
@@ -248,8 +248,16 @@ namespace Barotrauma.Networking
                     "95-122",
                     "192-255",
                     "384-591",
-                    "1024-1279"
-                });
+                    "1024-1279",
+                    "19968-40959","13312-19903","131072-173791","173824-178207","178208-183983","63744-64255","194560-195103" //CJK
+                };
+
+            string[] allowedClientNameCharsStr = doc.Root.GetAttributeStringArray("AllowedClientNameChars", defaultAllowedClientNameChars);
+            if (doc.Root.GetAttributeString("AllowedClientNameChars", "") == "65-90,97-122,48-59")
+            {
+                allowedClientNameCharsStr = defaultAllowedClientNameChars;
+            }
+
             foreach (string allowedClientNameCharRange in allowedClientNameCharsStr)
             {
                 string[] splitRange = allowedClientNameCharRange.Split('-');
@@ -275,7 +283,7 @@ namespace Barotrauma.Networking
                     }
                 }
 
-                if (min > -1 && max > -1) AllowedClientNameChars.Add(new Pair<int, int>(min, max));
+                if (min > -1 && max > -1) { AllowedClientNameChars.Add(new Pair<int, int>(min, max)); }
             }
 
             AllowedRandomMissionTypes = new List<MissionType>();

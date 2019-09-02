@@ -626,7 +626,16 @@ namespace Barotrauma.Networking
                     ReadLobbyUpdate(inc);
                     break;
                 case ServerPacketHeader.UPDATE_INGAME:
-                    ReadIngameUpdate(inc);
+                    try
+                    {
+                        ReadIngameUpdate(inc);
+                    }
+                    catch (Exception e)
+                    {
+                        string errorMsg = "Error while reading an ingame update message from server. {" + e + "}\n" + e.StackTrace;
+                        GameAnalyticsManager.AddErrorEventOnce("GameClient.ReadDataMessage:ReadIngameUpdate", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                        throw;
+                    }
                     break;
                 case ServerPacketHeader.VOICE:
                     VoipClient.Read(inc);
