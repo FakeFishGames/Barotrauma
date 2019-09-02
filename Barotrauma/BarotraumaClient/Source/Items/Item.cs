@@ -1114,7 +1114,8 @@ namespace Barotrauma
                 MapEntityPrefab.Find(itemName, itemIdentifier, showErrorMessages: false) as ItemPrefab;
             if (itemPrefab == null)
             {
-                string errorMsg = "Failed to spawn item (name: " + (itemName ?? "null") + ", identifier: " + (itemIdentifier ?? "null");
+                string errorMsg = "Failed to spawn item (name: " + (itemName ?? "null") + ", identifier: " + (itemIdentifier ?? "null") + ")";
+                errorMsg += "\n" + string.Join(", ", GameMain.Config.SelectedContentPackages.Select(cp => cp.Name));
                 GameAnalyticsManager.AddErrorEventOnce("Item.ReadSpawnData:PrefabNotFound" + (itemName ?? "null") + (itemIdentifier ?? "null"),
                     GameAnalyticsSDK.Net.EGAErrorSeverity.Critical,
                     errorMsg);
