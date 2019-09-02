@@ -10,6 +10,7 @@ namespace Barotrauma
     class AIObjectiveRepairItem : AIObjective
     {
         public override string DebugTag => "repair item";
+        public override bool KeepDivingGearOn => true;
 
         public Item Item { get; private set; }
 

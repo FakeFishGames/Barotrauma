@@ -10,6 +10,7 @@ namespace Barotrauma
     {
         public override string DebugTag => "rescue";
         public override bool ForceRun => true;
+        public override bool KeepDivingGearOn => true;
 
         const float TreatmentDelay = 0.5f;
 
