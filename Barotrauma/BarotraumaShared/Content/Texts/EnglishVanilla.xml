@@ -3456,6 +3456,7 @@
   <mapentitycategory.decorative>Decorative</mapentitycategory.decorative>
   <mapentitycategory.wall>Wall</mapentitycategory.wall>
   <karma.resetkarmabetweenrounds>Reset karma between rounds</karma.resetkarmabetweenrounds>
+  <enablesplashscreen>Enable splash screen</enablesplashscreen>
   
   <servertag.casual>Casual</servertag.casual>
   <servertagdescription.casual>Having fun is more important than completing the objective. A good choice for new players.</servertagdescription.casual>
