@@ -126,6 +126,7 @@ namespace Barotrauma
 
         public override void RemoveItem(Item item)
         {
+            if (!Items.Contains(item)) { return; }
             base.RemoveItem(item);
             CreateSlots();
         }
@@ -175,7 +176,12 @@ namespace Barotrauma
 
             AssignQuickUseNumKeys();
 
-            highlightedSubInventorySlots.Clear();
+            highlightedSubInventorySlots.RemoveWhere(s => s.Inventory.OpenState <= 0.0f);
+            foreach (var subSlot in highlightedSubInventorySlots)
+            {
+                subSlot.Slot = slots[subSlot.SlotIndex];
+            }
+            //highlightedSubInventorySlots.Clear();
 
             screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
             CalculateBackgroundFrame();
@@ -469,6 +475,7 @@ namespace Barotrauma
             }
             
             List<SlotReference> hideSubInventories = new List<SlotReference>();
+            highlightedSubInventorySlots.RemoveWhere(s => Items[s.SlotIndex] == null);
             foreach (var highlightedSubInventorySlot in highlightedSubInventorySlots)
             {
                 if (highlightedSubInventorySlot.ParentInventory == this)
@@ -646,7 +653,10 @@ namespace Barotrauma
                 }
             }
 
-            slotRef.Inventory.OpenState = isEquippedSubInventory ? 1f : 0f; // Reset animation when initially equipped
+            if (isEquippedSubInventory)
+            {
+                slotRef.Inventory.OpenState = 1.0f; // Reset animation when initially equipped
+            }
 
             highlightedSubInventorySlots.Add(slotRef);
             slotRef.Inventory.HideTimer = 1f;

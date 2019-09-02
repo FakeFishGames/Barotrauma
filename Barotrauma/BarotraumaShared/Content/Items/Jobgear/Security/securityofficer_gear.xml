@@ -25,7 +25,7 @@
     </Wearable>
   </Item>
   <Item name="Body Armor" identifier="bodyarmor" category="Equipment" tags="smallitem" scale="0.35" cargocontaineridentifier="metalcrate" description="While the body armor won't offer adequate protection against most of the inhabitants of the subsurface ocean, it can be extremely useful if there are traitors on board." impactsoundtag="impact_soft">
-    <Upgrade gameversion="0.9.2.0" scale="0.35"/>
+    <Upgrade gameversion="0.9.3.0" scale="0.35"/>
     <Price locationtype="Military" buyprice="225" />
     <Price locationtype="City" buyprice="300" />
     <Price locationtype="Outpost" buyprice="500" />

@@ -264,17 +264,15 @@ namespace Barotrauma.Networking
             {
                 newClient.GivePermission(ClientPermissions.All);
                 newClient.PermittedConsoleCommands.AddRange(DebugConsole.Commands);
-
-                GameMain.Server.UpdateClientPermissions(newClient);
-                GameMain.Server.SendConsoleMessage("Granted all permissions to " + newClient.Name + ".", newClient);
+                SendConsoleMessage("Granted all permissions to " + newClient.Name + ".", newClient);
             }
 
-            GameMain.Server.SendChatMessage($"ServerMessage.JoinedServer~[client]={clName}", ChatMessageType.Server, null);
+            SendChatMessage($"ServerMessage.JoinedServer~[client]={clName}", ChatMessageType.Server, null);
             serverSettings.ServerDetailsChanged = true;
 
             if (previousPlayer != null && previousPlayer.Name != newClient.Name)
             {
-                GameMain.Server.SendChatMessage($"ServerMessage.PreviousClientName~[client]={clName}~[previousname]={previousPlayer.Name}", ChatMessageType.Server, null);
+                SendChatMessage($"ServerMessage.PreviousClientName~[client]={clName}~[previousname]={previousPlayer.Name}", ChatMessageType.Server, null);
                 previousPlayer.Name = newClient.Name;
             }
 
@@ -299,6 +297,8 @@ namespace Barotrauma.Networking
                     newClient.SetPermissions(ClientPermissions.None, new List<DebugConsole.Command>());
                 }
             }
+
+            UpdateClientPermissions(newClient);
         }
 
         private void OnClientDisconnect(NetworkConnection connection, string disconnectMsg)
@@ -653,9 +653,18 @@ namespace Barotrauma.Networking
                         catch (Exception e)
                         {
                             DebugConsole.ThrowError("Failed to write a network message for the client \"" + c.Name + "\"!", e);
-                            GameAnalyticsManager.AddErrorEventOnce("GameServer.Update:ClientWriteFailed" + e.StackTrace, GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                                "Failed to write a network message for the client \"" + c.Name + "\"! (MidRoundSyncing: " + c.NeedsMidRoundSync + ")\n"
-                                + e.Message + "\n" + e.StackTrace);
+
+                            string errorMsg = "Failed to write a network message for the client \"" + c.Name + "\"! (MidRoundSyncing: " + c.NeedsMidRoundSync + ")\n"
+                                + e.Message + "\n" + e.StackTrace;
+                            if (e.InnerException != null)
+                            {
+                                errorMsg += "\nInner exception: " + e.InnerException.Message + "\n" + e.InnerException.StackTrace;
+                            }
+
+                            GameAnalyticsManager.AddErrorEventOnce(
+                                "GameServer.Update:ClientWriteFailed" + e.StackTrace, 
+                                GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                                errorMsg);
                         }
                     }
 
@@ -1475,7 +1484,7 @@ namespace Barotrauma.Networking
         private void WriteClientList(Client c, IWriteMessage outmsg)
         {
             bool hasChanged = NetIdUtils.IdMoreRecent(LastClientListUpdateID, c.LastRecvClientListUpdate);
-            if (!hasChanged) return;
+            if (!hasChanged) { return; }
             
             outmsg.Write((byte)ServerNetObject.CLIENT_LIST);
             outmsg.Write(LastClientListUpdateID);
@@ -1501,6 +1510,8 @@ namespace Barotrauma.Networking
             outmsg.Write((byte)ServerPacketHeader.UPDATE_LOBBY);
 
             outmsg.Write((byte)ServerNetObject.SYNC_IDS);
+
+            int settingsBytes = outmsg.LengthBytes;
 
             if (NetIdUtils.IdMoreRecent(GameMain.NetLobbyScreen.LastUpdateID, c.LastRecvLobbyUpdate))
             {
@@ -1534,9 +1545,9 @@ namespace Barotrauma.Networking
 
                 outmsg.Write(serverSettings.AllowSpectating);
 
-                outmsg.WriteRangedIntegerDeprecated(0, 2, (int)serverSettings.TraitorsEnabled);
+                outmsg.WriteRangedInteger((int)serverSettings.TraitorsEnabled, 0, 2);
 
-                outmsg.WriteRangedIntegerDeprecated(0, Enum.GetValues(typeof(MissionType)).Length - 1, (GameMain.NetLobbyScreen.MissionTypeIndex));
+                outmsg.WriteRangedInteger((GameMain.NetLobbyScreen.MissionTypeIndex), 0, Enum.GetValues(typeof(MissionType)).Length - 1);
 
                 outmsg.Write((byte)GameMain.NetLobbyScreen.SelectedModeIndex);
                 outmsg.Write(GameMain.NetLobbyScreen.LevelSeed);
@@ -1556,9 +1567,12 @@ namespace Barotrauma.Networking
                 outmsg.Write(false);
                 outmsg.WritePadBits();
             }
+            settingsBytes = outmsg.LengthBytes - settingsBytes;
 
+            int campaignBytes = outmsg.LengthBytes;
             var campaign = GameMain.GameSession?.GameMode as MultiPlayerCampaign;
-            if (campaign != null && campaign.Preset == GameMain.NetLobbyScreen.SelectedMode && 
+            if (outmsg.LengthBytes < MsgConstants.MTU - 500 &&
+                campaign != null && campaign.Preset == GameMain.NetLobbyScreen.SelectedMode && 
                 NetIdUtils.IdMoreRecent(campaign.LastUpdateID, c.LastRecvCampaignUpdate))
             {
                 outmsg.Write(true);
@@ -1570,12 +1584,20 @@ namespace Barotrauma.Networking
                 outmsg.Write(false);
                 outmsg.WritePadBits();
             }
+            campaignBytes = outmsg.LengthBytes - campaignBytes;
 
             outmsg.Write(c.LastSentChatMsgID); //send this to client so they know which chat messages weren't received by the server
 
-            WriteClientList(c, outmsg);
+            int clientListBytes = outmsg.LengthBytes;
+            if (outmsg.LengthBytes < MsgConstants.MTU - 500)
+            {
+                WriteClientList(c, outmsg);
+            }
+            clientListBytes = outmsg.LengthBytes - clientListBytes;
 
+            int chatMessageBytes = outmsg.LengthBytes;
             WriteChatMessages(outmsg, c);
+            chatMessageBytes = outmsg.LengthBytes - outmsg.LengthBytes;
 
             outmsg.Write((byte)ServerNetObject.END_OF_MESSAGE);
             
@@ -1597,7 +1619,14 @@ namespace Barotrauma.Networking
             {
                 if (outmsg.LengthBytes > MsgConstants.MTU)
                 {
-                    DebugConsole.ThrowError("Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + MsgConstants.MTU + ")");
+                    string errorMsg = "Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + MsgConstants.MTU + ")";
+                    errorMsg +=
+                        "  Client list size: " + clientListBytes + " bytes\n" +
+                        "  Chat message size: " + chatMessageBytes + " bytes\n" +
+                        "  Campaign size: " + campaignBytes + " bytes\n" +
+                        "  Settings size: " + settingsBytes + " bytes\n\n";
+                        DebugConsole.ThrowError(errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("GameServer.ClientWriteIngame1:ClientWriteLobby" + outmsg.LengthBytes, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 }
 
                 serverPeer.Send(outmsg, c.Connection, DeliveryMethod.Unreliable);
@@ -2646,25 +2675,48 @@ namespace Barotrauma.Networking
                 }
             }
 
+            //send the message to the client whose permissions are being modified and the clients who are allowed to modify permissions
+            List<Client> recipients = new List<Client>() { client };
+            foreach (Client otherClient in connectedClients)
+            {
+                if (otherClient.HasPermission(ClientPermissions.ManagePermissions) && !recipients.Contains(otherClient))
+                {
+                    recipients.Add(otherClient);
+                }
+            }
+            foreach (Client recipient in recipients)
+            {
+                CoroutineManager.StartCoroutine(SendClientPermissionsAfterClientListSynced(recipient, client));
+            }
+            serverSettings.SaveClientPermissions();
+        }
+
+
+        private IEnumerable<object> SendClientPermissionsAfterClientListSynced(Client recipient, Client client)
+        {
+            DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, 10);
+            while (recipient.LastRecvClientListUpdate < LastClientListUpdateID)
+            {
+                if (DateTime.Now > timeOut || GameMain.Server == null || !connectedClients.Contains(recipient))
+                {
+                    yield return CoroutineStatus.Success;
+                }
+                yield return null;
+            }            
+
+            SendClientPermissions(recipient, client);
+            yield return CoroutineStatus.Success;
+        }
+
+
+        private void SendClientPermissions(Client recipient, Client client)
+        {
+            if (recipient?.Connection == null) { return; }
+
             IWriteMessage msg = new WriteOnlyMessage();
             msg.Write((byte)ServerPacketHeader.PERMISSIONS);
             client.WritePermissions(msg);
-
-            //send the message to the client whose permissions are being modified and the clients who are allowed to modify permissions
-            List<NetworkConnection> recipients = new List<NetworkConnection>() { client.Connection };
-            foreach (Client otherClient in connectedClients)
-            {
-                if (otherClient.HasPermission(ClientPermissions.ManagePermissions) && !recipients.Contains(otherClient.Connection))
-                {
-                    recipients.Add(otherClient.Connection);
-                }
-            }
-            foreach (NetworkConnection c in recipients)
-            {
-                serverPeer.Send(msg, c, DeliveryMethod.Reliable); 
-            }           
-
-            serverSettings.SaveClientPermissions();
+            serverPeer.Send(msg, recipient.Connection, DeliveryMethod.Reliable);
         }
         
         public void GiveAchievement(Character character, string achievementIdentifier)

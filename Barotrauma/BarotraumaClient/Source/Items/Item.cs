@@ -930,17 +930,17 @@ namespace Barotrauma
             }
 
             NetEntityEvent.Type eventType = (NetEntityEvent.Type)extraData[0];
-            msg.WriteRangedIntegerDeprecated(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1, (int)eventType);
+            msg.WriteRangedInteger((int)eventType, 0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1);
             switch (eventType)
             {
                 case NetEntityEvent.Type.ComponentState:
                     int componentIndex = (int)extraData[1];
-                    msg.WriteRangedIntegerDeprecated(0, components.Count - 1, componentIndex);
+                    msg.WriteRangedInteger(componentIndex, 0, components.Count - 1);
                     (components[componentIndex] as IClientSerializable).ClientWrite(msg, extraData);
                     break;
                 case NetEntityEvent.Type.InventoryState:
                     int containerIndex = (int)extraData[1];
-                    msg.WriteRangedIntegerDeprecated(0, components.Count - 1, containerIndex);
+                    msg.WriteRangedInteger(containerIndex, 0, components.Count - 1);
                     (components[containerIndex] as ItemContainer).Inventory.ClientWrite(msg, extraData);
                     break;
                 case NetEntityEvent.Type.Treatment:
@@ -1115,6 +1115,7 @@ namespace Barotrauma
             if (itemPrefab == null)
             {
                 string errorMsg = "Failed to spawn item, prefab not found (name: " + (itemName ?? "null") + ", identifier: " + (itemIdentifier ?? "null") + ")";
+                errorMsg += "\n" + string.Join(", ", GameMain.Config.SelectedContentPackages.Select(cp => cp.Name));
                 GameAnalyticsManager.AddErrorEventOnce("Item.ReadSpawnData:PrefabNotFound" + (itemName ?? "null") + (itemIdentifier ?? "null"),
                     GameAnalyticsSDK.Net.EGAErrorSeverity.Critical,
                     errorMsg);

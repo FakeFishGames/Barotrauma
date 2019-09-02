@@ -427,12 +427,8 @@ namespace Barotrauma
             FileInfo[] files = dir.GetFiles();
             foreach (FileInfo file in files)
             {
-                string temppath = Path.Combine(destDirName, file.Name);
-                if (overwriteExisting && File.Exists(temppath))
-                {
-                    File.Delete(temppath);
-                }
-                file.CopyTo(temppath, false);
+                string tempPath = Path.Combine(destDirName, file.Name);
+                file.CopyTo(tempPath, overwriteExisting);
             }
 
             // If copying subdirectories, copy them and their contents to new location.
@@ -440,8 +436,8 @@ namespace Barotrauma
             {
                 foreach (DirectoryInfo subdir in dirs)
                 {
-                    string temppath = Path.Combine(destDirName, subdir.Name);
-                    CopyFolder(subdir.FullName, temppath, copySubDirs);
+                    string tempPath = Path.Combine(destDirName, subdir.Name);
+                    CopyFolder(subdir.FullName, tempPath, copySubDirs, overwriteExisting);
                 }
             }
         }

@@ -105,15 +105,15 @@ namespace Barotrauma
                 switch ((NetEntityEvent.Type)extraData[0])
                 {
                     case NetEntityEvent.Type.InventoryState:
-                        msg.WriteRangedIntegerDeprecated(0, 3, 0);
+                        msg.WriteRangedInteger(0, 0, 3);
                         Inventory.ClientWrite(msg, extraData);
                         break;
                     case NetEntityEvent.Type.Treatment:
-                        msg.WriteRangedIntegerDeprecated(0, 3, 1);
+                        msg.WriteRangedInteger(1, 0, 3);
                         msg.Write(AnimController.Anim == AnimController.Animation.CPR);
                         break;
                     case NetEntityEvent.Type.Status:
-                        msg.WriteRangedIntegerDeprecated(0, 3, 2);
+                        msg.WriteRangedInteger(2, 0, 3);
                         break;
                 }
             }
@@ -131,7 +131,7 @@ namespace Barotrauma
                 msg.Write(inputCount);
                 for (int i = 0; i < inputCount; i++)
                 {
-                    msg.WriteRangedIntegerDeprecated(0, (int)InputNetFlags.MaxVal, (int)memInput[i].states);
+                    msg.WriteRangedInteger((int)memInput[i].states, 0, (int)InputNetFlags.MaxVal);
                     msg.Write(memInput[i].intAim);
                     if (memInput[i].states.HasFlag(InputNetFlags.Select) || 
                         memInput[i].states.HasFlag(InputNetFlags.Deselect) ||
@@ -337,7 +337,7 @@ namespace Barotrauma
 
         public static Character ReadSpawnData(IReadMessage inc, bool spawn = true)
         {
-            DebugConsole.NewMessage("READING CHARACTER SPAWN DATA", Color.Cyan);
+            DebugConsole.Log("Reading character spawn data");
 
             if (GameMain.Client == null) return null;
 
@@ -433,7 +433,16 @@ namespace Barotrauma
                 if (causeOfDeathType == CauseOfDeathType.Affliction)
                 {
                     int afflictionIndex = msg.ReadRangedInteger(0, AfflictionPrefab.List.Count - 1);
-                    causeOfDeathAffliction = AfflictionPrefab.List[afflictionIndex];
+                    if (afflictionIndex < 0 || afflictionIndex >= AfflictionPrefab.List.Count)
+                    {
+                        string errorMsg = $"Error in CharacterNetworking.ReadStatus: affliction index out of bounds (index: {afflictionIndex}, affliction count: {AfflictionPrefab.List.Count})";
+                        causeOfDeathType = CauseOfDeathType.Unknown;
+                        GameAnalyticsManager.AddErrorEventOnce("CharacterNetworking.ReadStatus:AfflictionIndexOutOfBounts", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    }
+                    else
+                    {
+                        causeOfDeathAffliction = AfflictionPrefab.List[afflictionIndex];
+                    }
                 }
 
                 byte severedLimbCount = msg.ReadByte();
@@ -452,13 +461,20 @@ namespace Barotrauma
                 for (int i = 0; i < severedLimbCount; i++)
                 {
                     int severedJointIndex = msg.ReadByte();
-                    AnimController.SeverLimbJoint(AnimController.LimbJoints[severedJointIndex]);
+                    if (severedJointIndex < 0 || severedJointIndex >= AnimController.LimbJoints.Length)
+                    {
+                        string errorMsg = $"Error in CharacterNetworking.ReadStatus: severed joint index out of bounds (index: {severedJointIndex}, joint count: {AnimController.LimbJoints.Length})";
+                        GameAnalyticsManager.AddErrorEventOnce("CharacterNetworking.ReadStatus:JointIndexOutOfBounts", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    }
+                    else
+                    {
+                        AnimController.SeverLimbJoint(AnimController.LimbJoints[severedJointIndex]);
+                    }
                 }
             }
             else
             {
-                if (IsDead) Revive();
-
+                if (IsDead) { Revive(); }
                 CharacterHealth.ClientRead(msg);
             }
         }

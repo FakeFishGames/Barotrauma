@@ -764,13 +764,13 @@ namespace Barotrauma
 
         public void SetSkillLevel(string skillIdentifier, float level, Vector2 worldPos)
         {
-            if (Job == null) return;
+            if (Job == null) { return; }
 
             var skill = Job.Skills.Find(s => s.Identifier == skillIdentifier);
             if (skill == null)
             {
                 Job.Skills.Add(new Skill(skillIdentifier, level));
-                OnSkillChanged(skillIdentifier, 0.0f, skill.Level, worldPos);
+                OnSkillChanged(skillIdentifier, 0.0f, level, worldPos);
             }
             else
             {
