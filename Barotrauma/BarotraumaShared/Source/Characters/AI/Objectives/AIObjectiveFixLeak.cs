@@ -15,7 +15,6 @@ namespace Barotrauma
 
         public Gap Leak { get; private set; }
 
-        private AIObjectiveFindDivingGear findDivingGear;
         private AIObjectiveGetItem getWeldingTool;
         private AIObjectiveContainItem refuelObjective;
         private AIObjectiveGoTo gotoObjective;
@@ -42,14 +41,6 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            if (!Leak.IsRoomToRoom)
-            {
-                if (!HumanAIController.HasDivingSuit(character))
-                {
-                    TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, true, objectiveManager));
-                    return;
-                }
-            }
             var weldingTool = character.Inventory.FindItemByTag("weldingtool", true);
             if (weldingTool == null)
             {

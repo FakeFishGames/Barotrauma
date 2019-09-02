@@ -71,9 +71,8 @@ namespace Barotrauma
         private Hull previousSafeHull;
         protected override void Act(float deltaTime)
         {
-            var currentHull = character.AnimController.CurrentHull;
-            bool needsDivingGear = HumanAIController.NeedsDivingGear(currentHull);
-            bool needsDivingSuit = needsDivingGear && (currentHull == null || currentHull.WaterPercentage > 80);
+            var currentHull = character.CurrentHull;
+            bool needsDivingGear = HumanAIController.NeedsDivingGear(character, currentHull, out bool needsDivingSuit);
             bool needsEquipment = false;
             if (needsDivingSuit)
             {
@@ -81,7 +80,7 @@ namespace Barotrauma
             }
             else if (needsDivingGear)
             {
-                needsEquipment = !HumanAIController.HasDivingMask(character);
+                needsEquipment = !HumanAIController.HasDivingMask(character) && !HumanAIController.HasDivingSuit(character);
             }
             if (needsEquipment)
             {
