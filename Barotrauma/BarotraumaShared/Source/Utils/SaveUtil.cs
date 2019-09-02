@@ -437,7 +437,7 @@ namespace Barotrauma
                 foreach (DirectoryInfo subdir in dirs)
                 {
                     string tempPath = Path.Combine(destDirName, subdir.Name);
-                    CopyFolder(subdir.FullName, tempPath, copySubDirs);
+                    CopyFolder(subdir.FullName, tempPath, copySubDirs, overwriteExisting);
                 }
             }
         }
