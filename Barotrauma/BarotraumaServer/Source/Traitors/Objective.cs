@@ -36,7 +36,7 @@ namespace Barotrauma
                 string.Join("/",
                     string.Join("/", activeGoals.Select((goal, index) =>
                     {
-                        var statusText = goal.StatusText;
+                        var statusText = goal.StatusText(Traitor);
                         var startIndex = statusText.LastIndexOf('/') + 1;
                         return $"{statusText.Substring(0, startIndex)}[{index}.st]={statusText.Substring(startIndex)}/[{index}.sl]={TextManager.FormatServerMessage(GoalInfoFormatId, new string[] { "[statustext]" }, new string[] { $"[{index}.st]" })}";
                     }).ToArray()),
@@ -46,7 +46,7 @@ namespace Barotrauma
                 string.Join("/",
                     string.Join("/", allGoals.Select((goal, index) =>
                     {
-                        var statusText = goal.StatusText;
+                        var statusText = goal.StatusText(Traitor);
                         var startIndex = statusText.LastIndexOf('/') + 1;
                         return $"{statusText.Substring(0, startIndex)}[{index}.st]={statusText.Substring(startIndex)}/[{index}.sl]={TextManager.FormatServerMessage(GoalInfoFormatId, new string[] { "[statustext]" }, new string[] { $"[{index}.st]" })}";
                     }).ToArray()),
@@ -174,10 +174,10 @@ namespace Barotrauma
                         pendingGoals.RemoveAt(i);
                         if (GameMain.Server != null)
                         {
-                            Traitor.SendChatMessage(goal.CompletedText);
+                            Traitor.SendChatMessage(goal.CompletedText(Traitor));
                             if (pendingGoals.Count > 0)
                             {
-                                Traitor.SendChatMessageBox(goal.CompletedText);
+                                Traitor.SendChatMessageBox(goal.CompletedText(Traitor));
                             }
                             Traitor.UpdateCurrentObjective(GoalInfos);
                         }

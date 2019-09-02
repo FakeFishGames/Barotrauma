@@ -262,6 +262,7 @@ namespace Barotrauma {
         {
             public HashSet<string> Roles { get; } = new HashSet<string>();
 
+            public abstract void InstantiateGoals();
             public abstract Traitor.Objective Instantiate(IEnumerable<string> roles);
         }
 
@@ -280,16 +281,24 @@ namespace Barotrauma {
 
             public readonly List<Goal> Goals = new List<Goal>();
 
-            public override Traitor.Objective Instantiate(IEnumerable<string> roles)
+            private List<Traitor.Goal> goalInstances = null;
+
+            public override void InstantiateGoals()
             {
-                var result = new Traitor.Objective(InfoText, ShuffleGoalsCount, roles.ToArray(), Goals.ConvertAll(goal => {
+                goalInstances = Goals.ConvertAll(goal =>
+                {
                     var instance = goal.Instantiate();
                     if (instance == null)
                     {
                         GameServer.Log($"Failed to instantiate goal \"{goal.Type}\".", ServerLog.MessageType.Error);
                     }
                     return instance;
-                }).FindAll(goal => goal != null));
+                }).FindAll(goal => goal != null);
+            }
+
+            public override Traitor.Objective Instantiate(IEnumerable<string> roles)
+            {
+                var result = new Traitor.Objective(InfoText, ShuffleGoalsCount, roles.ToArray(), goalInstances);
                 if (StartMessageTextId != null)
                 {
                     result.StartMessageTextId = StartMessageTextId;
@@ -328,7 +337,12 @@ namespace Barotrauma {
 
         protected class WaitObjective : ObjectiveBase
         {
-            private readonly Traitor.GoalWaitForTraitors sharedGoal;
+            private Traitor.GoalWaitForTraitors sharedGoal;
+
+            public override void InstantiateGoals()
+            {
+                sharedGoal = new Traitor.GoalWaitForTraitors(Roles.Count);
+            }
 
             public override Traitor.Objective Instantiate(IEnumerable<string> roles)
             {
@@ -338,7 +352,6 @@ namespace Barotrauma {
             public WaitObjective(ICollection<string> roles)
             {
                 Roles.UnionWith(roles);
-                sharedGoal = new Traitor.GoalWaitForTraitors(Roles.Count);
             }
         }
 
@@ -376,6 +389,7 @@ namespace Barotrauma {
             if (objectivesCount > 0)
             {
                 var pendingRoles = new HashSet<string>();
+                var pendingCount = 1;
                 objectivesWithSync.Add(Objectives[0]);
                 pendingRoles.UnionWith(Objectives[0].Roles);
                 for (var i = 1; i < objectivesCount; ++i)
@@ -383,13 +397,18 @@ namespace Barotrauma {
                     var objective = Objectives[i];
                     if (pendingRoles.IsSupersetOf(objective.Roles))
                     {
-                        objectivesWithSync.Add(new WaitObjective(objective.Roles));
+                        if (pendingCount > 1)
+                        {
+                            objectivesWithSync.Add(new WaitObjective(objective.Roles));
+                        }
                         pendingRoles.Clear();
+                        pendingCount = 0;
                     }
                     objectivesWithSync.Add(objective);
                     pendingRoles.UnionWith(objective.Roles);
+                    ++pendingCount;
                 }
-                if (pendingRoles.IsSubsetOf(Roles.Keys))
+                if (pendingCount > 1 && pendingRoles.IsSubsetOf(Roles.Keys))
                 {
                     // TODO(xxx): Correct end message for WaitObjective
                     objectivesWithSync.Add(new WaitObjective(Roles.Keys));
@@ -405,7 +424,11 @@ namespace Barotrauma {
                 EndMessageFailureDeadText ?? "TraitorObjectiveEndMessageFailureDead",
                 EndMessageFailureDetainedText ?? "TraitorObjectiveEndMessageFailureDetained",
                 Roles.ToDictionary(kv => kv.Key, kv => kv.Value.Filter),
-                objectivesWithSync.SelectMany(objective => objective.Roles.Select(role => objective.Instantiate(new[] { role }))).ToArray());
+                objectivesWithSync.SelectMany(objective =>
+                {
+                    objective.InstantiateGoals();
+                    return objective.Roles.Select(role => objective.Instantiate(new[] { role }));
+                }).ToArray());
         }
 
         protected Goal LoadGoal(XElement goalRoot)

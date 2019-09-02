@@ -17,7 +17,7 @@ namespace Barotrauma
             public override bool IsCompleted => isCompleted;
 
             public override IEnumerable<string> StatusTextKeys => base.StatusTextKeys.Concat(new string[] { "[percentage]" });
-            public override IEnumerable<string> StatusTextValues => base.StatusTextValues.Concat(new string[] { string.Format("{0:0}", replaceAmount * 100.0f) });
+            public override IEnumerable<string> StatusTextValues(Traitor traitor) => base.StatusTextValues(traitor).Concat(new string[] { string.Format("{0:0}", replaceAmount * 100.0f) });
 
             public override void Update(float deltaTime)
             {
@@ -25,7 +25,7 @@ namespace Barotrauma
                 int totalAmount = 0, replacedAmount = 0;
                 foreach (var item in Item.ItemList)
                 {
-                    if (item.Submarine == null || item.Submarine.TeamID != Traitor.Character.TeamID)
+                    if (item.Submarine == null || Traitors.All(traitor => item.Submarine.TeamID != traitor.Character.TeamID))
                     {
                         continue;
                     }

@@ -13,7 +13,7 @@ namespace Barotrauma
             public override bool IsCompleted => count >= requiredCount;
 
             public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[remaining]", "[count]" });
-            public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { $"{requiredCount - count}", $"{requiredCount}" });
+            public override IEnumerable<string> InfoTextValues(Traitor traitor) => base.InfoTextValues(traitor).Concat(new string[] { $"{requiredCount - count}", $"{requiredCount}" });
 
             public override bool Start(Traitor traitor)
             {

@@ -14,7 +14,7 @@ namespace Barotrauma
 
             public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[duration]" });
 
-            public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { $"duration({requiredDuration})" });
+            public override IEnumerable<string> InfoTextValues(Traitor traitor) => base.InfoTextValues(traitor).Concat(new string[] { $"duration({requiredDuration})" });
 
             protected internal override string GetInfoText(Traitor traitor, string textId, IEnumerable<string> keys, IEnumerable<string> values)
             {
