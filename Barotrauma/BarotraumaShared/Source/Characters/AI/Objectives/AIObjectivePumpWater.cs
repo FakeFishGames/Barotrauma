@@ -33,15 +33,7 @@ namespace Barotrauma
             if (pump.Item.CurrentHull.FireSources.Count > 0) { return false; }
             if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(pump.Item, true)) { return false; }
             if (Character.CharacterList.Any(c => c.CurrentHull == pump.Item.CurrentHull && !HumanAIController.IsFriendly(c))) { return false; }
-            if (Option == "stoppumping")
-            {
-                if (!pump.IsActive || MathUtils.NearlyEqual(pump.FlowPercentage, 0)) { return false; }
-            }
-            else
-            {
-                if (!pump.Item.InWater) { return false; }
-                if (pump.IsActive && pump.FlowPercentage <= -99.9f) { return false; }
-            }
+            if (IsReady(pump)) { return false; }
             return true;
         }
         protected override IEnumerable<Pump> GetList()
@@ -66,8 +58,24 @@ namespace Barotrauma
             }
         }
 
+        private bool IsReady(Pump pump)
+        {
+            if (Option == "stoppumping")
+            {
+                return !pump.IsActive || MathUtils.NearlyEqual(pump.FlowPercentage, 0);
+            }
+            else
+            {
+                return !pump.Item.InWater || pump.IsActive && pump.FlowPercentage <= -99.9f;
+            }
+        }
+
         protected override AIObjective ObjectiveConstructor(Pump pump)
-            => new AIObjectiveOperateItem(pump, character, objectiveManager, Option, false) { IsLoop = false };
+            => new AIObjectiveOperateItem(pump, character, objectiveManager, Option, false)
+            {
+                IsLoop = false,
+                completionCondition = () => IsReady(pump)
+            };
 
         protected override void OnObjectiveCompleted(AIObjective objective, Pump target)
             => HumanAIController.RemoveTargets<AIObjectivePumpWater, Pump>(character, target);

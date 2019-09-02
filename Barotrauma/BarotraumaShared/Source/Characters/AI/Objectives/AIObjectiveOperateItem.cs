@@ -22,6 +22,8 @@ namespace Barotrauma
         public Entity OperateTarget => operateTarget;
         public ItemComponent Component => component;
 
+        public Func<bool> completionCondition;
+
         public override float GetPriority()
         {
             if (component.Item.ConditionPercentage <= 0) { return 0; }
@@ -79,7 +81,7 @@ namespace Barotrauma
                     }
                     if (component.AIOperate(deltaTime, character, this))
                     {
-                        isCompleted = true;
+                        isCompleted = completionCondition == null || completionCondition();
                     }
                 }
                 else
@@ -138,7 +140,7 @@ namespace Barotrauma
                     }
                     if (component.AIOperate(deltaTime, character, this))
                     {
-                        isCompleted = true;
+                        isCompleted = completionCondition == null || completionCondition();
                     }
                 }
             }
