@@ -13,7 +13,6 @@ namespace Barotrauma
             public List<Pair<Wire, float>> WireDisconnectTime = new List<Pair<Wire, float>>();
 
             public float PreviousNotifiedKarma;
-            public float PreviousKarmaNotificationTime;
 
             public float StructureDamageAccumulator;
             
