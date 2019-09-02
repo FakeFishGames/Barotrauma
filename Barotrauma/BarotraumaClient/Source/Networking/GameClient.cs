@@ -552,7 +552,7 @@ namespace Barotrauma.Networking
             UpdateHUD(deltaTime);
 
             base.Update(deltaTime);
-            
+
             try
             {
                 clientPeer?.Update(deltaTime);
@@ -560,9 +560,12 @@ namespace Barotrauma.Networking
             catch (Exception e)
             {
                 string errorMsg = "Error while reading a message from server. {" + e + "}. ";
-                if (GameMain.Client == null) { errorMsg += "Client disposed."; }                
-                errorMsg+= "\n" + e.StackTrace;
-
+                if (GameMain.Client == null) { errorMsg += "Client disposed."; }
+                errorMsg += "\n" + e.StackTrace;
+                if (e.InnerException != null)
+                {
+                    errorMsg += "\nInner exception: " + e.InnerException.Message + "\n" + e.InnerException.StackTrace;
+                }
                 GameAnalyticsManager.AddErrorEventOnce("GameClient.Update:CheckServerMessagesException" + e.TargetSite.ToString(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 DebugConsole.ThrowError("Error while reading a message from server.", e);
                 new GUIMessageBox(TextManager.Get("Error"), TextManager.GetWithVariables("MessageReadError", new string[2] { "[message]", "[targetsite]" }, new string[2] { e.Message, e.TargetSite.ToString() }));
@@ -634,6 +637,10 @@ namespace Barotrauma.Networking
                     catch (Exception e)
                     {
                         string errorMsg = "Error while reading an ingame update message from server. {" + e + "}\n" + e.StackTrace;
+                        if (e.InnerException != null)
+                        {
+                            errorMsg += "\nInner exception: " + e.InnerException.Message + "\n" + e.InnerException.StackTrace;
+                        }
                         GameAnalyticsManager.AddErrorEventOnce("GameClient.ReadDataMessage:ReadIngameUpdate", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                         throw;
                     }

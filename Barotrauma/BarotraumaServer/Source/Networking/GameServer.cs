@@ -658,7 +658,7 @@ namespace Barotrauma.Networking
                                 + e.Message + "\n" + e.StackTrace;
                             if (e.InnerException != null)
                             {
-                                errorMsg += "\n" + e.InnerException.Message + "\n" + e.InnerException.StackTrace;
+                                errorMsg += "\nInner exception: " + e.InnerException.Message + "\n" + e.InnerException.StackTrace;
                             }
 
                             GameAnalyticsManager.AddErrorEventOnce(
