@@ -205,7 +205,7 @@
     <Body width="50" height="65" density="50" />
     <ItemContainer hideitems="true" capacity="1" drawinventory="false" canbeselected="false" ShowConditionInContainedStateIndicator="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
-      <Containable identifiers="none" />
+      <Containable identifiers="smground" />
       <!--Spawn an SMG round on use. Condition -6.7 -> 15 shots per magazine.-->
       <StatusEffect type="OnUse" target="This" condition="-6.7" disabledeltatime="true">
         <SpawnItem identifiers="smground" spawnposition="ThisInventory" />
