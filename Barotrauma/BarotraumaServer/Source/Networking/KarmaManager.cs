@@ -189,6 +189,18 @@ namespace Barotrauma
             }
         }
 
+        public void OnRoundEnded()
+        {
+            if (ResetKarmaBetweenRounds)
+            {
+                clientMemories.Clear();
+                foreach (Client client in GameMain.Server.ConnectedClients)
+                {
+                    client.Karma = Math.Max(50.0f, client.Karma);
+                }
+            }
+        }
+
         public void OnClientDisconnected(Client client)
         {
             clientMemories.Remove(client);

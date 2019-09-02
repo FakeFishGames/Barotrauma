@@ -15,6 +15,9 @@ namespace Barotrauma
 
         public Dictionary<string, SerializableProperty> SerializableProperties { get; private set; }
 
+        [Serialize(true, true)]
+        public bool ResetKarmaBetweenRounds { get; set; }
+
         [Serialize(0.1f, true)]
         public float KarmaDecay { get; set; }
 

@@ -3455,6 +3455,8 @@
   <pausemenuquitverificationeditor>Are you sure you want to return to the main menu? All your unsaved progress will be lost.</pausemenuquitverificationeditor>
   <mapentitycategory.decorative>Decorative</mapentitycategory.decorative>
   <mapentitycategory.wall>Wall</mapentitycategory.wall>
+  <karma.resetkarmabetweenrounds>Reset karma between rounds</karma.resetkarmabetweenrounds>
+  
   
   <!-- Changed values as of 13th of August -->
   <traitorgoaldestroyitems>Dispose of at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>

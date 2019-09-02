@@ -2018,6 +2018,8 @@ namespace Barotrauma.Networking
                 c.PositionUpdateLastSent.Clear();
             }
 
+            KarmaManager.OnRoundEnded();
+
 #if DEBUG
             messageCount.Clear();
 #endif

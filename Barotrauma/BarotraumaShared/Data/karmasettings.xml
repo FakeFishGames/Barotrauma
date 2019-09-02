@@ -21,7 +21,8 @@
     herpesthreshold="40"
     kickbanthreshold="1"
     kicksbeforeban="3"
-    karmanotificationinterval="15" />
+    karmanotificationinterval="15" 
+    resetkarmabetweenrounds="true" />
   <Preset
     name="Strict"
     karmadecay="0.08"
@@ -43,7 +44,8 @@
     herpesthreshold="40"
     kickbanthreshold="1"
     kicksbeforeban="1"
-    karmanotificationinterval="15" />
+    karmanotificationinterval="15"
+    resetkarmabetweenrounds="true" />
   <Preset
     name="Custom"
     karmadecay="0.08"
@@ -65,5 +67,6 @@
     herpesthreshold="40"
     kickbanthreshold="1"
     kicksbeforeban="3"
-    karmanotificationinterval="15" />
+    karmanotificationinterval="15"
+    resetkarmabetweenrounds="true" />
 </KarmaManager>
