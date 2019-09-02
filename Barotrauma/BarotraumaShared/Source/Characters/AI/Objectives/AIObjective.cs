@@ -68,15 +68,12 @@ namespace Barotrauma
         public void TryComplete(float deltaTime)
         {
             if (isCompleted) { return; }
-            CheckState();
-            CheckSubObjectives();
+            if (CheckState()) { return; }
+            // Not ready -> act
             foreach (AIObjective objective in subObjectives)
             {
                 objective.TryComplete(deltaTime);
-                if (!ConcurrentObjectives)
-                {
-                    return;
-                }
+                if (!ConcurrentObjectives) { return; }
             }
             Act(deltaTime);
         }
@@ -233,15 +230,15 @@ namespace Barotrauma
         private bool CheckState()
         {
             hasBeenChecked = true;
-            if (Check())
+            CheckSubObjectives();
+            if (subObjectives.None())
             {
-                if (!isCompleted)
+                if (Check())
                 {
+                    isCompleted = true;
                     OnCompleted();
                 }
-                isCompleted = true;
             }
-            subObjectives.ForEach(so => so.CheckState());
             return isCompleted;
         }
 
@@ -250,6 +247,7 @@ namespace Barotrauma
             for (int i = 0; i < subObjectives.Count; i++)
             {
                 var subObjective = subObjectives[i];
+                subObjective.CheckState();
                 if (subObjective.IsCompleted)
                 {
 #if DEBUG
