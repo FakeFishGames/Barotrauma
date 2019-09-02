@@ -12,6 +12,8 @@ namespace Barotrauma
     {
         public override string DebugTag => "combat";
 
+        public override bool KeepDivingGearOn => true;
+
         private readonly CombatMode initialMode;
 
         const float coolDown = 10.0f;

@@ -10,6 +10,7 @@ namespace Barotrauma
     class AIObjectivePumpWater : AIObjectiveLoop<Pump>
     {
         public override string DebugTag => "pump water";
+        public override bool KeepDivingGearOn => true;
         private IEnumerable<Pump> pumpList;
 
         public AIObjectivePumpWater(Character character, AIObjectiveManager objectiveManager, string option, float priorityModifier = 1)

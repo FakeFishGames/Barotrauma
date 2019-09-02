@@ -1,34 +1,38 @@
 ﻿using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
-using System.Linq;
 using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
     class AIObjectiveFindDivingGear : AIObjective
     {
-        public override string DebugTag => "find diving gear";
+        public override string DebugTag => $"find diving gear ({gearTag})";
         public override bool ForceRun => true;
+        public override bool KeepDivingGearOn => true;
 
         private readonly string gearTag;
-        private const string fallbackTag = "diving";
+        private readonly string fallbackTag;
 
         private AIObjectiveGetItem getDivingGear;
         private AIObjectiveContainItem getOxygen;
 
-        protected override bool Check() => HumanAIController.HasItem(character, gearTag, "oxygensource");
+        protected override bool Check() => HumanAIController.HasItem(character, gearTag, "oxygensource") || HumanAIController.HasItem(character, fallbackTag, "oxygensource");
 
-        public override float GetPriority() => MathHelper.Clamp(100 - character.OxygenAvailable, 0, 100);
+        public override float GetPriority() => MathHelper.Clamp(100 - character.OxygenAvailable - 10, 0, 100);
 
         public AIObjectiveFindDivingGear(Character character, bool needDivingSuit, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier)
         {
             gearTag = needDivingSuit ? "divingsuit" : "divingmask";
+            fallbackTag = needDivingSuit ? "divingsuit" : "diving";
         }
 
         protected override void Act(float deltaTime)
         {
-            // TODO: if can't find any items, try the fallback tag and if even then cannot find anything, just abort
             var item = character.Inventory.FindItemByIdentifier(gearTag, true) ?? character.Inventory.FindItemByTag(gearTag, true);
+            if (item == null && fallbackTag != gearTag)
+            {
+                item = character.Inventory.FindItemByTag(fallbackTag, true);
+            }
             if (item == null || !character.HasEquippedItem(item))
             {
                 TryAddSubObjective(ref getDivingGear, () =>
