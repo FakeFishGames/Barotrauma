@@ -60,6 +60,11 @@ namespace Barotrauma
         private GUIFrame friendPopup;
         private double friendsListUpdateTime;
 
+        //favorite servers/history
+        private List<ServerInfo> favoriteServers;
+        private List<ServerInfo> recentServers;
+
+        //server playstyle and tags
         private Texture2D playStylesTexture;
         public Sprite[] PlayStyleBanners
         {

@@ -394,7 +394,8 @@ namespace Barotrauma.Steam
                     MaxPlayers = maxPlayers,
                     HasPassword = hasPassword,
                     RespondedToSteamQuery = true,
-                    LobbyID = lobby.LobbyID
+                    LobbyID = lobby.LobbyID,
+                    OwnerID = lobby.Owner
                 };
                 serverInfo.PingChecked = false;
                 serverInfo.ServerMessage = lobby.GetData("message");

@@ -265,6 +265,42 @@ namespace Barotrauma
             return val;
         }
 
+        public static UInt64 GetAttributeUInt64(this XElement element, string name, UInt64 defaultValue)
+        {
+            if (element?.Attribute(name) == null) return defaultValue;
+
+            UInt64 val = defaultValue;
+
+            try
+            {
+                val = UInt64.Parse(element.Attribute(name).Value);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Error in " + element + "! ", e);
+            }
+
+            return val;
+        }
+
+        public static UInt64 GetAttributeSteamID(this XElement element, string name, UInt64 defaultValue)
+        {
+            if (element?.Attribute(name) == null) return defaultValue;
+
+            UInt64 val = defaultValue;
+
+            try
+            {
+                val = Steam.SteamManager.SteamIDStringToUInt64(element.Attribute(name).Value);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Error in " + element + "! ", e);
+            }
+
+            return val;
+        }
+
         public static int[] GetAttributeIntArray(this XElement element, string name, int[] defaultValue)
         {
             if (element?.Attribute(name) == null) return defaultValue;

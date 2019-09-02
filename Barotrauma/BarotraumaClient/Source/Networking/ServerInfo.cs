@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma.Networking
 {
@@ -12,6 +13,7 @@ namespace Barotrauma.Networking
         public string Port;
 
         public UInt64 LobbyID;
+        public UInt64 OwnerID;
 
         public string ServerName;
         public string ServerMessage;
@@ -258,6 +260,42 @@ namespace Barotrauma.Networking
             {
                 if (c is GUITextBlock textBlock) textBlock.Padding = Vector4.Zero;
             }
+        }
+
+        public static ServerInfo FromXElement(XElement element)
+        {
+            return new ServerInfo()
+            {
+                ServerName = element.GetAttributeString("ServerName", ""),
+                ServerMessage = element.GetAttributeString("ServerMessage", ""),
+                IP = element.GetAttributeString("IP", ""),
+                Port = element.GetAttributeString("Port", ""),
+                OwnerID = element.GetAttributeSteamID("OwnerID",0)
+            };
+        }
+
+        public XElement ToXElement()
+        {
+            if (OwnerID == 0 && string.IsNullOrEmpty(Port))
+            {
+                return null; //can't save this one since it's not set up correctly
+            }
+
+            XElement element = new XElement("ServerInfo");
+
+            element.SetAttributeValue("ServerName", ServerName);
+            element.SetAttributeValue("ServerMessage", ServerMessage);
+            element.SetAttributeValue("IP", IP);
+            if (LobbyID == 0 || OwnerID == 0)
+            {
+                element.SetAttributeValue("Port", Port);
+            }
+            else
+            {
+                element.SetAttributeValue("OwnerID", SteamManager.SteamIDUInt64ToString(OwnerID));
+            }
+
+            return element;
         }
     }
 }
