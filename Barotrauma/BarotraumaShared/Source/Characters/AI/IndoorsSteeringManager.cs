@@ -445,6 +445,9 @@ namespace Barotrauma
                     }
                     else if (shouldBeOpen)
                     {
+#if DEBUG
+                        DebugConsole.NewMessage("Pathfinding error: Cannot access the door", Color.Yellow);
+#endif
                         currentPath.Unreachable = true;
                         return;
                     }
