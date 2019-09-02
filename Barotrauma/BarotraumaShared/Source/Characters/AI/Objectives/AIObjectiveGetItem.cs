@@ -65,32 +65,11 @@ namespace Barotrauma
         private void CheckInventory()
         {
             if (itemIdentifiers == null) { return; }
-            for (int i = 0; i < character.Inventory.Items.Length; i++)
+            var item = character.Inventory.FindItem(i => i != null && itemIdentifiers.Any(id => i.Prefab.Identifier == id || i.HasTag(id)) && i.Condition > 0, recursive: true);
+            if (item != null)
             {
-                if (character.Inventory.Items[i] == null || character.Inventory.Items[i].Condition <= 0.0f) { continue; }
-                if (itemIdentifiers.Any(id => character.Inventory.Items[i].Prefab.Identifier == id || character.Inventory.Items[i].HasTag(id)))
-                {
-                    targetItem = character.Inventory.Items[i];
-                    moveToTarget = targetItem;
-                    currItemPriority = 100.0f;
-                    break;
-                }
-                //check items inside items (tool inside a toolbox etc)
-                var containedItems = character.Inventory.Items[i].ContainedItems;
-                if (containedItems != null)
-                {
-                    foreach (Item containedItem in containedItems)
-                    {
-                        if (containedItem == null || containedItem.Condition <= 0.0f) { continue; }
-                        if (itemIdentifiers.Any(id => containedItem.Prefab.Identifier == id || containedItem.HasTag(id)))
-                        {
-                            targetItem = containedItem;
-                            moveToTarget = character.Inventory.Items[i];
-                            currItemPriority = 100.0f;
-                            break;
-                        }
-                    }
-                }
+                targetItem = item;
+                moveToTarget = item.GetRootContainer() ?? item;
             }
         }
 
@@ -101,10 +80,16 @@ namespace Barotrauma
                 abandon = true;
                 return;
             }
-
             FindTargetItem();
             if (targetItem == null || moveToTarget == null)
             {
+                if (targetItem != null && moveToTarget == null)
+                {
+#if DEBUG
+                    DebugConsole.ThrowError($"{character.Name}: Move to target is null!");
+#endif
+                    abandon = true;
+                }
                 objectiveManager.GetObjective<AIObjectiveIdle>()?.Wander(deltaTime);
                 return;
             }
@@ -191,7 +176,7 @@ namespace Barotrauma
                 if (targetItem == null)
                 {
 #if DEBUG
-                    DebugConsole.NewMessage($"{character.Name}: Cannot find the item, because neither identifiers nor item is was defined.", Color.Red);
+                    DebugConsole.NewMessage($"{character.Name}: Cannot find the item, because neither identifiers nor item was defined.", Color.Red);
 #endif
                     abandon = true;
                 }
@@ -212,17 +197,19 @@ namespace Barotrauma
                     if (ignoredContainerIdentifiers.Contains(item.ContainerIdentifier)) { continue; }
                 }
                 if (IsTakenBySomeone(item)) { continue; }
-                float itemPriority = 0.0f;
+                float itemPriority = 1;
                 if (GetItemPriority != null)
                 {
-                    //ignore if the item has zero priority
                     itemPriority = GetItemPriority(item);
-                    if (itemPriority <= 0.0f) { continue; }
                 }
                 Item rootContainer = item.GetRootContainer();
-                itemPriority -= Vector2.Distance((rootContainer ?? item).Position, character.Position) * 0.01f;
+                Vector2 itemPos = (rootContainer ?? item).WorldPosition;
+                // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
+                float dist = Math.Abs(character.WorldPosition.X - itemPos.X) + Math.Abs(character.WorldPosition.Y - itemPos.Y) * 2.0f;
+                float distanceFactor = MathHelper.Lerp(1, 0, MathUtils.InverseLerp(0, 10000, dist));
+                itemPriority *= distanceFactor;
                 //ignore if the item has a lower priority than the currently selected one
-                if (moveToTarget != null && itemPriority < currItemPriority) { continue; }
+                if (itemPriority < currItemPriority) { continue; }
                 currItemPriority = itemPriority;
                 targetItem = item;
                 moveToTarget = rootContainer ?? item;
@@ -259,22 +246,6 @@ namespace Barotrauma
             return false;
         }
 
-        private bool IsTakenBySomeone(Item item)
-        {
-            return item.FindParentInventory(i => i.Owner != character && i.Owner is Character owner && !owner.IsDead) != null;
-
-            ////if the item is inside a character's inventory, don't steal it unless the character is dead
-            //if (item.ParentInventory is CharacterInventory)
-            //{
-            //    if (item.ParentInventory.Owner is Character owner && owner != character && !owner.IsDead) { return true; }
-            //}
-            ////if the item is inside an item, which is inside a character's inventory, don't steal it unless the character is dead
-            //Item rootContainer = item.GetRootContainer();
-            //if (rootContainer != null && rootContainer.ParentInventory is CharacterInventory)
-            //{
-            //    if (rootContainer.ParentInventory.Owner is Character owner && owner != character && !owner.IsDead) { return true; }
-            //}
-            //return false;
-        }
+        private bool IsTakenBySomeone(Item item) => item.FindParentInventory(i => i.Owner != character && i.Owner is Character owner && !owner.IsDead) != null;
     }
 }
