@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
   <Item name="UEX" identifier="uex" category="Equipment" description="A simple explosive compound made of sodium and phosphorus." Scale="0.5" Tags="smallitem,explosive" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_soft">
+    <Upgrade gameversion="0.9.3.0" scale="0.5"/>
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Outpost" buyprice="125" />
@@ -13,7 +14,7 @@
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="897,896,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" depth="0.8" sourcerect="220,380,47,32" origin="0.5,0.5" />
-    <Body width="23" height="16" density="20" />
+    <Body width="45" height="30" density="20" />
     <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect">
       <sound file="Content/Items/Weapons/ExplosionMedium1.ogg" type="OnBroken" range="10000" selectionmode="All" />
       <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" type="OnBroken" range="10000" />
@@ -28,6 +29,7 @@
     </Throwable>
   </Item>
   <Item name="C-4 Block" identifier="c4block" category="Equipment" Tags="smallitem,explosive" Scale="0.5" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_soft">
+    <Upgrade gameversion="0.9.3.0" scale="0.5"/>
     <Price locationtype="Military" buyprice="100" />
     <Price locationtype="City" buyprice="125" />
     <Price locationtype="Outpost" buyprice="200" />
@@ -39,7 +41,7 @@
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,64,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" depth="0.8" sourcerect="274,380,48,33" origin="0.5,0.5" />
-    <Body width="23" height="16" density="20" />
+    <Body width="45" height="30" density="20" />
     <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect">
       <sound file="Content/Items/Weapons/ExplosionMedium1.ogg" type="OnBroken" range="10000" selectionmode="All" />
       <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" type="OnBroken" range="10000" />
@@ -54,6 +56,7 @@
     </Throwable>
   </Item>
   <Item name="Compound N" identifier="compoundn" category="Equipment" Tags="smallitem,explosive" Scale="0.5" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_soft">
+    <Upgrade gameversion="0.9.3.0" scale="0.5"/>
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="20">
       <RequiredSkill identifier="medical" level="60" />
       <RequiredItem identifier="aluminium" />
@@ -62,7 +65,7 @@
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,64,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" depth="0.8" sourcerect="339,378,49,34" origin="0.5,0.5" />
-    <Body width="24" height="16" density="20" />
+    <Body width="45" height="30" density="20" />
     <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect">
       <sound file="Content/Items/Weapons/ExplosionMedium2.ogg" type="OnBroken" range="10000" selectionmode="All" />
       <sound file="Content/Items/Weapons/ExplosionDebris2.ogg" type="OnBroken" range="10000" />
@@ -78,6 +81,7 @@
     </Throwable>
   </Item>
   <Item name="Volatile Compound N" identifier="volatilecompoundn" category="Equipment" Tags="smallitem,explosive" Scale="0.5" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_soft">
+    <Upgrade gameversion="0.9.3.0" scale="0.5"/>
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="20">
       <RequiredSkill identifier="medical" level="40" />
       <RequiredItem identifier="compoundn" />
@@ -85,7 +89,7 @@
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,64,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" depth="0.8" sourcerect="402,377,50,34" origin="0.5,0.5" />
-    <Body width="24" height="18" density="20" />
+    <Body width="45" height="30" density="20" />
     <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect">
       <sound file="Content/Items/Weapons/ExplosionMedium3.ogg" type="OnBroken" range="10000" selectionmode="All" />
       <sound file="Content/Items/Weapons/ExplosionDebris3.ogg" type="OnBroken" range="10000" />
@@ -102,9 +106,10 @@
     </Throwable>
   </Item>
   <Item name="IC-4 Block" identifier="ic4block" description="A compound made of C-4 and incendium." category="Equipment" Tags="smallitem,explosive" Scale="0.5" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_soft">
+    <Upgrade gameversion="0.9.3.0" scale="0.5"/>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,64,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" depth="0.8" sourcerect="462,378,50,34" origin="0.5,0.5" />
-    <Body width="24" height="16" density="20" />
+    <Body width="50" height="30" density="20" />
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
       <RequiredSkill identifier="weapons" level="50" />
       <RequiredItem identifier="c4block" />
@@ -125,13 +130,14 @@
     </Throwable>
   </Item>
   <Item name="Detonator" identifier="detonator" description="A device that detonates any contained explosive when receiving a signal." category="Equipment" Tags="smallitem" Scale="0.5" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_metal_light" isshootable="true">
+    <Upgrade gameversion="0.9.3.0" scale="0.5"/>
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Outpost" buyprice="100" />
     <Price locationtype="Research" buyprice="100" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,64,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" depth="0.8" sourcerect="-1,385,41,21" origin="0.5,0.5" />
-    <Body width="24" height="22" density="20" />
+    <Body width="40" height="22" density="20" />
     <Holdable selectkey="Action" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
       <RequiredItem identifier="wrench" type="Equipped" />
     </Holdable>

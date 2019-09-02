@@ -351,6 +351,7 @@
     </Throwable>
   </Item>
   <Item name="EMP Grenade" identifier="empgrenade" category="Equipment" cargocontaineridentifier="explosivecrate" tags="smallitem,weapon,explosive" scale="0.5" impactsoundtag="impact_metal_light">
+    <Upgrade gameversion="0.9.3.0" scale="0.5"/>
     <Deconstruct time="10">
       <Item identifier="iron" />
       <Item identifier="copper" mincondition="0.9" />
@@ -386,6 +387,7 @@
     </Throwable>
   </Item>
   <Item name="Frag Grenade" identifier="fraggrenade" category="Equipment" cargocontaineridentifier="explosivecrate" tags="smallitem,weapon,explosive" scale="0.5" impactsoundtag="impact_metal_heavy">
+    <Upgrade gameversion="0.9.3.0" scale="0.5"/>
     <Price locationtype="Military" buyprice="250" />
     <Deconstruct time="10">
       <Item identifier="iron" />
@@ -424,6 +426,7 @@
     </Throwable>
   </Item>
   <Item name="Incendium Grenade" identifier="incendiumgrenade" category="Equipment" cargocontaineridentifier="explosivecrate" tags="smallitem,weapon,explosive" Scale="0.5" impactsoundtag="impact_metal_heavy">
+    <Upgrade gameversion="0.9.3.0" scale="0.5"/>
     <Price locationtype="Military" buyprice="300" />
     <Deconstruct time="10">
       <Item identifier="iron" />
