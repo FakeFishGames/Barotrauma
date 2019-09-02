@@ -252,20 +252,19 @@ namespace Barotrauma
                 bool oxygenLow = Character.OxygenAvailable < CharacterHealth.LowOxygenThreshold;
                 bool highPressure = Character.CurrentHull == null || Character.CurrentHull.LethalPressure > 0 && Character.PressureProtection <= 0;
                 bool shouldKeepTheGearOn = Character.AnimController.HeadInWater || ObjectiveManager.CurrentObjective.GetSubObjectivesRecursive(true).Any(o => o.KeepDivingGearOn);
-
                 bool removeDivingSuit = !Character.AnimController.HeadInWater && oxygenLow && !highPressure;
                 AIObjectiveGoTo gotoObjective = ObjectiveManager.CurrentOrder as AIObjectiveGoTo;
                 if (!removeDivingSuit)
                 {
                     bool targetHasNoSuit = gotoObjective != null && gotoObjective.mimic && !HasDivingSuit(gotoObjective.Target as Character);
-                    bool canDropTheSuit = Character.CurrentHull.WaterPercentage < 1 && !Character.IsClimbing && steeringManager == insideSteering && !PathSteering.InStairs;
+                    bool canDropTheSuit = Character.CurrentHull.WaterPercentage < 5 && !Character.IsClimbing && steeringManager == insideSteering && !PathSteering.InStairs;
                     if (canDropTheSuit)
                     {
                         removeDivingSuit = !shouldKeepTheGearOn && (gotoObjective == null || targetHasNoSuit);
                     }
                 }
                 bool takeMaskOff = !Character.AnimController.HeadInWater && oxygenLow;
-                if (!takeMaskOff && Character.CurrentHull.WaterPercentage < 30)
+                if (!takeMaskOff && Character.CurrentHull.WaterPercentage < 40)
                 {
                     bool targetHasNoMask = gotoObjective != null && gotoObjective.mimic && !HasDivingMask(gotoObjective.Target as Character);
                     takeMaskOff = !shouldKeepTheGearOn && (gotoObjective == null || targetHasNoMask);
