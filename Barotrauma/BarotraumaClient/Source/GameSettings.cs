@@ -1016,6 +1016,7 @@ namespace Barotrauma
                     SelectedContentPackages.Remove(contentPackage);
                 }
             }
+            if (contentPackage.GetFilesOfType(ContentType.Submarine).Any()) { Submarine.RefreshSavedSubs(); }
             UnsavedSettings = true;
             return true;
         }
