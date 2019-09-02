@@ -792,6 +792,7 @@ namespace Barotrauma.Steam
                     contentPackage.Path = newPath;
                     itemEditor.Folder = newDir;
                     if (!Directory.Exists(newDir)) { Directory.CreateDirectory(newDir); }
+                    if (File.Exists(newPath)) { File.Delete(newPath); }
                     File.Move(installedContentPackagePath, newPath);
                     //move all files inside the Mods folder
                     foreach (ContentFile cf in contentPackage.Files)
@@ -801,10 +802,12 @@ namespace Barotrauma.Steam
                         {
                             string destinationPath = Path.Combine(newDir, cf.Path);
                             if (!Directory.Exists(Path.GetDirectoryName(destinationPath))) { Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)); }
+                            if (File.Exists(destinationPath)) { File.Delete(destinationPath); }
                             File.Move(cf.Path, destinationPath);
                             cf.Path = destinationPath;
                         }
                     }
+                    contentPackage.GameVersion = GameMain.Version;
                     contentPackage.Save(contentPackage.Path);
                 }
                 catch (Exception e)
