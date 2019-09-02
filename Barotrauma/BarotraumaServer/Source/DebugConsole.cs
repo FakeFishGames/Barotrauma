@@ -205,10 +205,10 @@ namespace Barotrauma
                                 ResetAutoComplete();
                                 break;
                         }
-                        
+
                         RewriteInputToCommandLine(input);
                     }
-                    
+
                     //TODO: be more clever about it
                     Thread.Sleep(10); //sleep for 10ms to not pin the CPU super hard
                 }
@@ -249,7 +249,7 @@ namespace Barotrauma
             try
             {
                 Console.WriteLine(""); Console.CursorTop -= inputLines;
-                       
+
                 string ln = input.Length > 0 ? AutoComplete(input, 0) : "";
                 ln += new string(' ', consoleWidth - (ln.Length % consoleWidth));
                 Console.ForegroundColor = ConsoleColor.DarkGray;
@@ -829,13 +829,13 @@ namespace Barotrauma
             AssignOnExecute("setclientcharacter", (string[] args) =>
             {
                 if (GameMain.Server == null) return;
-                
+
                 if (args.Length < 2)
                 {
                     ThrowError("Invalid parameters. The command should be formatted as \"setclientcharacter [client] [character]\". If the names consist of multiple words, you should surround them with quotation marks.");
                     return;
                 }
-                
+
                 var client = GameMain.Server.ConnectedClients.Find(c => c.Name == args[0]);
                 if (client == null)
                 {
@@ -1204,7 +1204,7 @@ namespace Barotrauma
                 if (Screen.Selected == GameMain.NetLobbyScreen) return;
                 GameMain.Server.EndGame();
             }));
-            
+
             commands.Add(new Command("entitydata", "", (string[] args) =>
             {
                 if (args.Length == 0) return;
@@ -1528,7 +1528,7 @@ namespace Barotrauma
                 (Client client, Vector2 cursorWorldPos, string[] args) =>
                 {
                     Character killedCharacter = (args.Length == 0) ? client.Character : FindMatchingCharacter(args);
-                    killedCharacter?.SetAllDamage(200.0f, 0.0f, 0.0f);          
+                    killedCharacter?.SetAllDamage(200.0f, 0.0f, 0.0f);
                 }
             );
 
@@ -1791,7 +1791,7 @@ namespace Barotrauma
                         ThrowError("Invalid parameters. The command should be formatted as \"setclientcharacter [client] [character]\". If the names consist of multiple words, you should surround them with quotation marks.");
                         return;
                     }
-                    
+
                     var client = GameMain.Server.ConnectedClients.Find(c => c.Name == args[0]);
                     if (client == null)
                     {
@@ -1867,7 +1867,7 @@ namespace Barotrauma
                 foreach (Structure wall in Structure.WallList)
                 {
                     GameMain.Server.CreateEntityEvent(wall);
-                }                
+                }
             }));
 #endif
         }

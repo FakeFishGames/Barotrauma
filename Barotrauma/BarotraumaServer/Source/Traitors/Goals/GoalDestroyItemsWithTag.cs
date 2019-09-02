@@ -14,7 +14,7 @@ namespace Barotrauma
             private readonly bool matchInventory;
 
             public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[percentage]", "[tag]" });
-            public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { string.Format("{0:0}", DestroyPercent * 100.0f), tagPrefabName ?? "" });
+            public override IEnumerable<string> InfoTextValues(Traitor traitor) => base.InfoTextValues(traitor).Concat(new string[] { string.Format("{0:0}", DestroyPercent * 100.0f), tagPrefabName ?? "" });
 
             private readonly float destroyPercent;
             private float DestroyPercent => destroyPercent;
@@ -31,7 +31,7 @@ namespace Barotrauma
                 int result = 0;
                 foreach (var item in Item.ItemList)
                 {
-                    if (!matchInventory && item.FindParentInventory(inventory => inventory.Owner is Character && inventory.Owner != Traitor.Character) != null)
+                    if (!matchInventory && Traitors.All(traitor => item.FindParentInventory(inventory => inventory.Owner is Character && inventory.Owner != traitor.Character) != null))
                     {
                         continue;
                     }
@@ -42,7 +42,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        if (item.Submarine.TeamID != Traitor.Character.TeamID) { continue; }
+                        if (Traitors.All(traitor => item.Submarine.TeamID != traitor.Character.TeamID)) { continue; }
                     }
 
                     if (item.Condition <= 0.0f)

@@ -623,6 +623,34 @@ namespace Barotrauma.Networking
             set;
         }
 
+        [Serialize(defaultValue: 90.0f, isSaveable: true)]
+        public float TraitorsMinStartDelay
+        {
+            get;
+            set;
+        }
+
+        [Serialize(defaultValue: 180.0f, isSaveable: true)]
+        public float TraitorsMaxStartDelay
+        {
+            get;
+            set;
+        }
+
+        [Serialize(defaultValue: 30.0f, isSaveable: true)]
+        public float TraitorsMinRestartDelay
+        {
+            get;
+            set;
+        }
+
+        [Serialize(defaultValue: 90.0f, isSaveable: true)]
+        public float TraitorsMaxRestartDelay
+        {
+            get;
+            set;
+        }
+
         private SelectionMode subSelectionMode;
         [Serialize(SelectionMode.Manual, true)]
         public SelectionMode SubSelectionMode

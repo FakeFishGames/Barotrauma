@@ -30,24 +30,24 @@ namespace Barotrauma
             }
 
             public override IEnumerable<string> StatusTextKeys => Goal.StatusTextKeys;
-            public override IEnumerable<string> StatusTextValues => new [] { InfoText, TextManager.FormatServerMessage(StatusValueTextId) };
+            public override IEnumerable<string> StatusTextValues(Traitor traitor) => new [] { InfoText(traitor), TextManager.FormatServerMessage(StatusValueTextId) };
 
             public override IEnumerable<string> InfoTextKeys => Goal.InfoTextKeys;
-            public override IEnumerable<string> InfoTextValues => Goal.InfoTextValues;
+            public override IEnumerable<string> InfoTextValues(Traitor traitor) => Goal.InfoTextValues(traitor);
 
             public override IEnumerable<string> CompletedTextKeys => Goal.CompletedTextKeys;
-            public override IEnumerable<string> CompletedTextValues => Goal.CompletedTextValues;
+            public override IEnumerable<string> CompletedTextValues(Traitor traitor) => Goal.CompletedTextValues(traitor);
 
             protected internal override string GetStatusText(Traitor traitor, string textId, IEnumerable<string> keys, IEnumerable<string> values) => Goal.GetStatusText(traitor, textId, keys, values);
             protected internal override string GetInfoText(Traitor traitor, string textId, IEnumerable<string> keys, IEnumerable<string> values) => Goal.GetInfoText(traitor, textId, keys, values);
             protected internal override string GetCompletedText(Traitor traitor, string textId, IEnumerable<string> keys, IEnumerable<string> values) => Goal.GetCompletedText(traitor, textId, keys, values);
 
-            public override string StatusText => GetStatusText(Traitor, StatusTextId, StatusTextKeys, StatusTextValues);
-            public override string InfoText => GetInfoText(Traitor, InfoTextId, InfoTextKeys, InfoTextValues);
-            public override string CompletedText => CompletedTextId != null ? GetCompletedText(Traitor, CompletedTextId, CompletedTextKeys, CompletedTextValues) : StatusText;
+            public override string StatusText(Traitor traitor) => GetStatusText(traitor, StatusTextId, StatusTextKeys, StatusTextValues(traitor));
+            public override string InfoText(Traitor traitor) => GetInfoText(traitor, InfoTextId, InfoTextKeys, InfoTextValues(traitor));
+            public override string CompletedText(Traitor traitor) => CompletedTextId != null ? GetCompletedText(traitor, CompletedTextId, CompletedTextKeys, CompletedTextValues(traitor)) : StatusText(traitor);
 
             public override bool IsCompleted => Goal.IsCompleted;
-            public override bool IsStarted => base.IsStarted && Goal.IsStarted;
+            public override bool IsStarted(Traitor traitor) => base.IsStarted(traitor) && Goal.IsStarted(traitor);
             public override bool CanBeCompleted => base.CanBeCompleted && Goal.CanBeCompleted;
 
             public override bool IsEnemy(Character character) => base.IsEnemy(character) || Goal.IsEnemy(character);

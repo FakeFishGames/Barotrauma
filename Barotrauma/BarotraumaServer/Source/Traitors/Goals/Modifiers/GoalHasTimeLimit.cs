@@ -12,7 +12,7 @@ namespace Barotrauma
             private readonly string timeLimitInfoTextId;
 
             public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[timelimit]" });
-            public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { $"{TimeSpan.FromSeconds(timeLimit):g}" });
+            public override IEnumerable<string> InfoTextValues(Traitor traitor) => base.InfoTextValues(traitor).Concat(new string[] { $"{TimeSpan.FromSeconds(timeLimit):g}" });
 
             protected internal override string GetInfoText(Traitor traitor, string textId, IEnumerable<string> keys, IEnumerable<string> values)
             {
@@ -20,7 +20,7 @@ namespace Barotrauma
                 return !string.IsNullOrEmpty(timeLimitInfoTextId) ? TextManager.FormatServerMessage(timeLimitInfoTextId, new[] { "[infotext]", "[timelimit]" }, new[] { infoText, $"{TimeSpan.FromSeconds(timeLimit):g}" }) : infoText;
             }
 
-            public override bool CanBeCompleted => base.CanBeCompleted && (!IsStarted || timeRemaining > 0.0f);
+            public override bool CanBeCompleted => base.CanBeCompleted && (!Traitors.Any(IsStarted) || timeRemaining > 0.0f);
 
             private float timeRemaining;
 

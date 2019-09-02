@@ -12,7 +12,7 @@ namespace Barotrauma
             public Character Target { get; private set; }
 
             public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[targetname]" });
-            public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { Target?.Name ?? "(unknown)" });
+            public override IEnumerable<string> InfoTextValues(Traitor traitor) => base.InfoTextValues(traitor).Concat(new string[] { Target?.Name ?? "(unknown)" });
 
             private bool isCompleted = false;
             public override bool IsCompleted => isCompleted;

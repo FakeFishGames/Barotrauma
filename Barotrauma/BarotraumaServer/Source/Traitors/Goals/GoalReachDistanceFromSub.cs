@@ -14,20 +14,23 @@ namespace Barotrauma
             private readonly float requiredDistanceSqr;
 
             public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[distance]" });
-            public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { $"{requiredDistance:0.00}" });
+            public override IEnumerable<string> InfoTextValues(Traitor traitor) => base.InfoTextValues(traitor).Concat(new string[] { $"{requiredDistance:0.00}" });
 
             public override bool IsCompleted
             {
                 get
                 {
-                    if (Traitor == null || Traitor.Character == null || Traitor.Character.Submarine == null)
+                    return Traitors.Any(traitor =>
                     {
-                        return false;
-                    }
-                    var characterPosition = Traitor.Character.WorldPosition;
-                    var submarinePosition = Traitor.Character.Submarine.WorldPosition;
-                    var distance = Vector2.DistanceSquared(characterPosition, submarinePosition);
-                    return distance >= requiredDistanceSqr;
+                        if (traitor.Character?.Submarine == null)
+                        {
+                            return false;
+                        }
+                        var characterPosition = traitor.Character.WorldPosition;
+                        var submarinePosition = traitor.Character.Submarine.WorldPosition;
+                        var distance = Vector2.DistanceSquared(characterPosition, submarinePosition);
+                        return distance >= requiredDistanceSqr;
+                    });
                 }
             }
 

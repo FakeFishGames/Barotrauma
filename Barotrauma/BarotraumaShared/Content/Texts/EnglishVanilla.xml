@@ -3451,6 +3451,7 @@
   <traitorgoalwithtimelimitinfotext>[infotext] Complete this goal within [timelimit].</traitorgoalwithtimelimitinfotext>
   <traitorgoalwithdurationinfotext>[infotext] The goal must be completed for [duration].</traitorgoalwithdurationinfotext>
   <traitorgoalwithcumulativedurationinfotext>[infotext] The goal must be completed for total of [duration].</traitorgoalwithcumulativedurationinfotext>
+  <traitorgoalwaitfortraitorsinfotext>Wait for [remaining] of [count] traitors to complete their tasks.</traitorgoalwaitfortraitorsinfotext>
   <failed>Failed</failed>
   <pausemenuquitverificationeditor>Are you sure you want to return to the main menu? All your unsaved progress will be lost.</pausemenuquitverificationeditor>
   <mapentitycategory.decorative>Decorative</mapentitycategory.decorative>
