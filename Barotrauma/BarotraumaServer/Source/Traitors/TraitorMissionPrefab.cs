@@ -410,7 +410,7 @@ namespace Barotrauma {
                 }
                 if (pendingCount > 1 && pendingRoles.IsSubsetOf(Roles.Keys))
                 {
-                    // TODO(xxx): Correct end message for WaitObjective
+                    // TODO: If last objective includes only one traitor, other traitors will get the wrong end message.
                     objectivesWithSync.Add(new WaitObjective(Roles.Keys));
                 }
             }
