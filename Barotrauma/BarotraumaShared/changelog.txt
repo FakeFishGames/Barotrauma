@@ -29,7 +29,8 @@ prompt is active and then enters something in the console.
 - Added a tickbox for selecting/deselecting all permissions to the client management panel.
 - Fixed clients with campaign management permissions not seeing the permissions of newly joined clients.
 - Fixed statuseffects with a duration not having an effect on karma.
-- Causing an "oxygen low" affliction decreases karma.
+- Causing an "oxygen low" affliction decreases karma (for example when injecting large amounts of fentanyl).
+- Fixed scroll values resetting in the multiplayer campaign store menu when purchasing/selling items.
 
 Miscellaneous improvements:
 - Attempting to drop an item to an empty inventory slot that's not of the right type (e.g. trying to put 
@@ -80,6 +81,8 @@ for the character class.
 - Fixed "Add File" dialog of the Workshop publish screen always using the mod's root folder as the file 
 path even if the file is in a subfolder.
 - Fixed contentpackage version number not being updated when updating an older workshop item.
+- Fixed subinventories closing when items are dropped into or removed from them, which made reloading 
+weapons or putting several items into a container cumbersome.
 
 ---------------------------------------------------------------------------------------------------------
 v0.9.2.2
