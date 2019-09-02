@@ -68,6 +68,8 @@ namespace Barotrauma
         public void TryComplete(float deltaTime)
         {
             if (isCompleted) { return; }
+            CheckState();
+            CheckSubObjectives();
             foreach (AIObjective objective in subObjectives)
             {
                 objective.TryComplete(deltaTime);
@@ -133,8 +135,6 @@ namespace Barotrauma
                 Priority = MathHelper.Clamp(Priority, 0, 100);
             }
             subObjectives.ForEach(so => so.Update(deltaTime));
-            CheckState();
-            CheckSubObjectives();
         }
 
         /// <summary>
