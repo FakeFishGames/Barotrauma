@@ -155,8 +155,8 @@ namespace Barotrauma
         public class SlotReference
         {
             public readonly Inventory ParentInventory;
-            public readonly InventorySlot Slot;
             public readonly int SlotIndex;
+            public InventorySlot Slot;
 
             public Inventory Inventory;
 
@@ -751,7 +751,7 @@ namespace Barotrauma
                         if (selectedInventory.slots != null) selectedInventory.slots[slotIndex].ShowBorderHighlight(Color.Red, 0.1f, 0.9f);
                         GUI.PlayUISound(GUISoundType.PickItemFail);
                     }
-                    selectedInventory.HideTimer = 1.0f;
+                    selectedInventory.HideTimer = 2.0f;
                     if (selectedSlot.ParentInventory?.Owner is Item parentItem && parentItem.ParentInventory != null)
                     {
                         for (int i = 0; i < parentItem.ParentInventory.capacity; i++)
