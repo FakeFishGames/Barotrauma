@@ -98,7 +98,7 @@
       <RequiredItems identifiers="spear,alienspear,explosivespear" type="Contained" msg="ItemMsgSpearRequired" />
       <RequiredSkill identifier="weapons" level="30" />
     </RangedWeapon>
-    <ItemContainer itempos="27,10" iteminterval="0,-4" hideitems="false">
+    <ItemContainer itempos="27,10" iteminterval="0,-4" hideitems="false" capacity="6">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="0,0,121,30" />
       <Containable identifiers="spear,alienspear,explosivespear" />
     </ItemContainer>
