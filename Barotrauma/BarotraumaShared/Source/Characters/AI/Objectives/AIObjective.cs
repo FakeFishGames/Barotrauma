@@ -39,7 +39,20 @@ namespace Barotrauma
         public virtual bool IsLoop { get; set; }
         public IEnumerable<AIObjective> SubObjectives => subObjectives;
 
-        public IEnumerable<AIObjective> GetSubObjectivesRecursive() => SubObjectives.SelectManyRecursive(so => so.SubObjectives);
+        private readonly List<AIObjective> all = new List<AIObjective>();
+        public IEnumerable<AIObjective> GetSubObjectivesRecursive(bool includingSelf = false)
+        {
+            all.Clear();
+            if (includingSelf)
+            {
+                all.Add(this);
+            }
+            foreach (var subObjective in subObjectives)
+            {
+                all.AddRange(subObjective.GetSubObjectivesRecursive(true));
+            }
+            return all;
+        }
 
         public event Action Completed;
 
