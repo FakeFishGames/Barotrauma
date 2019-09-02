@@ -388,7 +388,9 @@ namespace Barotrauma
 
             if (end.state == 0 || end.Parent == null)
             {
-                //DebugConsole.NewMessage("Pathfinding error: path not found", Color.DarkRed);
+#if DEBUG
+                DebugConsole.NewMessage("Pathfinding error: path not found", Color.Red);
+#endif
                 return new SteeringPath(true);
             }
 
