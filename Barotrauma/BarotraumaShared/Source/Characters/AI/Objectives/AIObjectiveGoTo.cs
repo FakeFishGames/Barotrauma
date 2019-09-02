@@ -21,10 +21,18 @@ namespace Barotrauma
         public bool followControlledCharacter;
         public bool mimic;
 
+        private float _closeEnough = 50;
         /// <summary>
         /// Display units
         /// </summary>
-        public float CloseEnough { get; set; }
+        public float CloseEnough
+        {
+            get { return _closeEnough; }
+            set
+            {
+                _closeEnough = Math.Max(_closeEnough, value);
+            }
+        }
         public bool IgnoreIfTargetDead { get; set; }
         public bool AllowGoingOutside { get; set; }
 
@@ -49,9 +57,10 @@ namespace Barotrauma
             this.repeat = repeat;
             waitUntilPathUnreachable = 3.0f;
             this.getDivingGearIfNeeded = getDivingGearIfNeeded;
-            if (closeEnough == 0)
+            CloseEnough = closeEnough;
+            if (Target is Item i)
             {
-                CalculateCloseEnough();
+                CloseEnough = Math.Max(CloseEnough, i.InteractDistance + Math.Max(i.Rect.Width, i.Rect.Height) / 2);
             }
         }
 
@@ -230,11 +239,6 @@ namespace Barotrauma
                 }
             }
             return isCompleted;
-        }
-
-        private void CalculateCloseEnough()
-        {
-            CloseEnough = Target is Item i ? i.InteractDistance + Math.Max(i.Rect.Width, i.Rect.Height) / 2 : 50;
         }
 
         private void StopMovement()
