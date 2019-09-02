@@ -243,7 +243,7 @@
    
     <StartInfoText id="flood_2_traitormissionStartInfoText"/>
 
-    <Objective roles="t1,t2">
+    <Objective>
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="flood_2_objectiveSuccessMessage1"/>
       <StartMessage id="flood_2_traitorobjectivestartmessage1"/>
@@ -252,7 +252,7 @@
       </Goal>
     </Objective>
 
-    <Objective roles="t1">
+    <Objective>
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="flood_2_objectiveSuccessMessage2"/>
       <StartMessage id="flood_2_traitorobjectivestartmessage2"/>
@@ -261,7 +261,7 @@
       </Goal>
     </Objective>
 
-    <Objective roles="t2">
+    <Objective>
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="flood_2_objectiveSuccessMessage3"/>
       <StartMessage id="flood_2_traitorobjectivestartmessage3"/>
