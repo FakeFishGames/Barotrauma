@@ -1511,6 +1511,8 @@ namespace Barotrauma.Networking
 
             outmsg.Write((byte)ServerNetObject.SYNC_IDS);
 
+            int settingsBytes = outmsg.LengthBytes;
+
             if (NetIdUtils.IdMoreRecent(GameMain.NetLobbyScreen.LastUpdateID, c.LastRecvLobbyUpdate))
             {
                 outmsg.Write(true);
@@ -1565,9 +1567,12 @@ namespace Barotrauma.Networking
                 outmsg.Write(false);
                 outmsg.WritePadBits();
             }
+            settingsBytes = outmsg.LengthBytes - settingsBytes;
 
+            int campaignBytes = outmsg.LengthBytes;
             var campaign = GameMain.GameSession?.GameMode as MultiPlayerCampaign;
-            if (campaign != null && campaign.Preset == GameMain.NetLobbyScreen.SelectedMode && 
+            if (outmsg.LengthBytes < MsgConstants.MTU - 500 &&
+                campaign != null && campaign.Preset == GameMain.NetLobbyScreen.SelectedMode && 
                 NetIdUtils.IdMoreRecent(campaign.LastUpdateID, c.LastRecvCampaignUpdate))
             {
                 outmsg.Write(true);
@@ -1579,12 +1584,20 @@ namespace Barotrauma.Networking
                 outmsg.Write(false);
                 outmsg.WritePadBits();
             }
+            campaignBytes = outmsg.LengthBytes - campaignBytes;
 
             outmsg.Write(c.LastSentChatMsgID); //send this to client so they know which chat messages weren't received by the server
 
-            WriteClientList(c, outmsg);
+            int clientListBytes = outmsg.LengthBytes;
+            if (outmsg.LengthBytes < MsgConstants.MTU - 500)
+            {
+                WriteClientList(c, outmsg);
+            }
+            clientListBytes = outmsg.LengthBytes - clientListBytes;
 
+            int chatMessageBytes = outmsg.LengthBytes;
             WriteChatMessages(outmsg, c);
+            chatMessageBytes = outmsg.LengthBytes - outmsg.LengthBytes;
 
             outmsg.Write((byte)ServerNetObject.END_OF_MESSAGE);
             
@@ -1606,7 +1619,14 @@ namespace Barotrauma.Networking
             {
                 if (outmsg.LengthBytes > MsgConstants.MTU)
                 {
-                    DebugConsole.ThrowError("Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + MsgConstants.MTU + ")");
+                    string errorMsg = "Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + MsgConstants.MTU + ")";
+                    errorMsg +=
+                        "  Client list size: " + clientListBytes + " bytes\n" +
+                        "  Chat message size: " + chatMessageBytes + " bytes\n" +
+                        "  Campaign size: " + campaignBytes + " bytes\n" +
+                        "  Settings size: " + settingsBytes + " bytes\n\n";
+                        DebugConsole.ThrowError(errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("GameServer.ClientWriteIngame1:ClientWriteLobby" + outmsg.LengthBytes, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 }
 
                 serverPeer.Send(outmsg, c.Connection, DeliveryMethod.Unreliable);
