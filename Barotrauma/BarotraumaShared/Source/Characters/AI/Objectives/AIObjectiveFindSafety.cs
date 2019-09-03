@@ -15,12 +15,9 @@ namespace Barotrauma
         const float priorityIncrease = 100;
         const float priorityDecrease = 10;
         const float SearchHullInterval = 3.0f;
-        const float clearUnreachableInterval = 30;
-
-        public readonly HashSet<Hull> unreachable = new HashSet<Hull>();
 
         private float currenthullSafety;
-        private float unreachableClearTimer;
+
         private float searchHullTimer;
 
         private AIObjectiveGoTo goToObjective;
@@ -33,15 +30,6 @@ namespace Barotrauma
 
         public override void Update(float deltaTime)
         {
-            if (unreachableClearTimer > 0)
-            {
-                unreachableClearTimer -= deltaTime;
-            }
-            else
-            {
-                unreachableClearTimer = clearUnreachableInterval;
-                unreachable.Clear();
-            }
             if (character.CurrentHull == null)
             {
                 currenthullSafety = 0;
@@ -124,7 +112,7 @@ namespace Barotrauma
                             {
                                 AllowGoingOutside = HumanAIController.HasDivingSuit(character)
                             }, 
-                            onAbandon: () => unreachable.Add(goToObjective.Target as Hull));
+                            onAbandon: () => HumanAIController.UnreachableHulls.Add(goToObjective.Target as Hull));
                     }
                     else
                     {
@@ -197,7 +185,7 @@ namespace Barotrauma
                 if (hull.Submarine == null) { continue; }
                 if (!allowChangingTheSubmarine && hull.Submarine != character.Submarine) { continue; }
                 if (ignoredHulls != null && ignoredHulls.Contains(hull)) { continue; }
-                if (unreachable.Contains(hull)) { continue; }
+                if (HumanAIController.UnreachableHulls.Contains(hull)) { continue; }
                 float hullSafety = 0;
                 if (character.CurrentHull != null && character.Submarine != null)
                 {
@@ -214,7 +202,7 @@ namespace Barotrauma
                     var path = PathSteering.PathFinder.FindPath(character.SimPosition, hull.SimPosition);
                     if (path.Unreachable)
                     {
-                        unreachable.Add(hull);
+                        HumanAIController.UnreachableHulls.Add(hull);
                         continue;
                     }
                     // Each unsafe node reduces the hull safety value.
