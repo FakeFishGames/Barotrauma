@@ -24,9 +24,9 @@ namespace Barotrauma
             private string targetHullNameText;
 
             public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[identifier]", "[target]", "[targethullname]" });
-            public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { targetNameText ?? "", targetContainerNameText ?? "", targetHullNameText ?? "" });
+            public override IEnumerable<string> InfoTextValues(Traitor traitor) => base.InfoTextValues(traitor).Concat(new string[] { targetNameText ?? "", targetContainerNameText ?? "", targetHullNameText ?? "" });
 
-            public override bool IsCompleted => target != null && target.ParentInventory == Traitor.Character.Inventory;
+            public override bool IsCompleted => target != null && Traitors.Any(traitor => target.ParentInventory == traitor.Character.Inventory);
             public override bool CanBeCompleted {
                 get
                 {
@@ -51,7 +51,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        if (target.Submarine.TeamID != Traitor.Character.TeamID)
+                        if (Traitors.All(traitor => target.Submarine.TeamID != traitor.Character.TeamID))
                         {
                             return false;
                         }
@@ -75,7 +75,7 @@ namespace Barotrauma
                 for (int i = 0; i < itemsCount; ++i)
                 {
                     var item = Item.ItemList[(i + startIndex) % itemsCount];
-                    if (item.Submarine == null || item.Submarine.TeamID != Traitor.Character.TeamID)
+                    if (item.Submarine == null || Traitors.All(traitor => item.Submarine.TeamID != traitor.Character.TeamID))
                     {
                         continue;
                     }
@@ -96,6 +96,10 @@ namespace Barotrauma
                 if (!base.Start(traitor))
                 {
                     return false;
+                }
+                if (targetPrefab != null)
+                {
+                    return true;
                 }
                 targetPrefab = FindItemPrefab(identifier);
                 if (targetPrefab == null)
