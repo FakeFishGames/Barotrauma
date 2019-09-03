@@ -143,7 +143,10 @@ namespace Barotrauma.Items.Components
             float rechargeRate = msg.ReadRangedInteger(0, 10) / 10.0f;
             RechargeSpeed = rechargeRate * MaxRechargeSpeed;
 #if CLIENT
-            rechargeSpeedSlider.BarScroll = rechargeRate;
+            if (rechargeSpeedSlider != null)
+            {
+                rechargeSpeedSlider.BarScroll = rechargeRate;
+            }
 #endif
             Charge = msg.ReadRangedSingle(0.0f, 1.0f, 8) * capacity;
         }
