@@ -338,7 +338,7 @@ namespace Barotrauma
 
         public Item FindItem(Func<Item, bool> predicate, bool recursive)
         {
-            Item match = Items.FirstOrDefault(predicate);
+            Item match = Items.FirstOrDefault(i => i != null && predicate(i));
             if (match == null && recursive)
             {
                 foreach (var item in Items)
@@ -360,13 +360,13 @@ namespace Barotrauma
         public Item FindItemByTag(string tag, bool recursive = false)
         {
             if (tag == null) { return null; }
-            return FindItem(i => i != null && i.HasTag(tag), recursive);
+            return FindItem(i => i.HasTag(tag), recursive);
         }
 
         public Item FindItemByIdentifier(string identifier, bool recursive = false)
         {
             if (identifier == null) return null;
-            return FindItem(i => i != null && i.Prefab.Identifier == identifier, recursive);
+            return FindItem(i => i.Prefab.Identifier == identifier, recursive);
         }
 
         public virtual void RemoveItem(Item item)

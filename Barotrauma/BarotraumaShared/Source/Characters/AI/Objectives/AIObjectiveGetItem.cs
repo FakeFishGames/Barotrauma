@@ -65,7 +65,7 @@ namespace Barotrauma
         private void CheckInventory()
         {
             if (itemIdentifiers == null) { return; }
-            var item = character.Inventory.FindItem(i => i != null && itemIdentifiers.Any(id => i.Prefab.Identifier == id || i.HasTag(id)) && i.Condition > 0, recursive: true);
+            var item = character.Inventory.FindItem(i => itemIdentifiers.Any(id => i.Prefab.Identifier == id || i.HasTag(id)) && i.Condition > 0, recursive: true);
             if (item != null)
             {
                 targetItem = item;
