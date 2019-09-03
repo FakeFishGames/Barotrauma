@@ -197,7 +197,8 @@ namespace Barotrauma
             {
                 Objectives.Sort((x, y) => y.GetPriority().CompareTo(x.GetPriority()));
             }
-            CurrentObjective?.SortSubObjectives();
+            // Not sure if we should mess with the subobjective order at all.
+            //CurrentObjective?.SortSubObjectives();
         }
         
         public void DoCurrentObjective(float deltaTime)
