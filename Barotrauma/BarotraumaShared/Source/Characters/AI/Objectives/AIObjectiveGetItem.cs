@@ -80,18 +80,21 @@ namespace Barotrauma
                 abandon = true;
                 return;
             }
-            FindTargetItem();
-            if (targetItem == null || moveToTarget == null)
+            if (targetItem == null)
             {
-                if (targetItem != null && moveToTarget == null)
+                FindTargetItem();
+                if (targetItem == null || moveToTarget == null)
                 {
+                    if (targetItem != null && moveToTarget == null)
+                    {
 #if DEBUG
-                    DebugConsole.ThrowError($"{character.Name}: Move to target is null!");
+                        DebugConsole.ThrowError($"{character.Name}: Move to target is null!");
 #endif
-                    abandon = true;
+                        abandon = true;
+                    }
+                    objectiveManager.GetObjective<AIObjectiveIdle>()?.Wander(deltaTime);
+                    return;
                 }
-                objectiveManager.GetObjective<AIObjectiveIdle>()?.Wander(deltaTime);
-                return;
             }
             if (IsTakenBySomeone(targetItem))
             {
