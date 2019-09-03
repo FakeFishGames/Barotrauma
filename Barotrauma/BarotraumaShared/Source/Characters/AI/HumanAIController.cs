@@ -755,30 +755,27 @@ namespace Barotrauma
 
         public float GetHullSafety(Hull hull, Character character, IEnumerable<Hull> visibleHulls = null)
         {
-            bool updateCurrentHullSafety = character == Character && character.CurrentHull == hull;
+            bool isCurrentHull = character == Character && character.CurrentHull == hull;
             if (hull == null)
             {
-                if (updateCurrentHullSafety)
+                if (isCurrentHull)
                 {
                     CurrentHullSafety = 0;
                 }
                 return CurrentHullSafety;
             }
-            if (character == Character)
+            if (isCurrentHull && visibleHulls == null)
             {
-                // If the character is this character, we can use the cached hulls.
-                // If no visible hulls are provided, the calculations don't take visible/adjacent hulls into account.
-                if (visibleHulls == null)
-                {
-                    visibleHulls = VisibleHulls;
-                }
+                // Use the cached visible hulls
+                visibleHulls = VisibleHulls;
             }
+            // TODO: should we calculate the visible hulls for each hull? -> could be a bit heavy.
             bool ignoreFire = ObjectiveManager.IsCurrentObjective<AIObjectiveExtinguishFires>() || ObjectiveManager.IsCurrentObjective<AIObjectiveExtinguishFire>();
             bool ignoreWater = HasDivingSuit(character);
             bool ignoreOxygen = ignoreWater || HasDivingMask(character);
             bool ignoreEnemies = ObjectiveManager.IsCurrentObjective<AIObjectiveFightIntruders>();
             float safety = GetHullSafety(hull, visibleHulls, character, ignoreWater, ignoreOxygen, ignoreFire, ignoreEnemies);
-            if (updateCurrentHullSafety)
+            if (isCurrentHull)
             {
                 CurrentHullSafety = safety;
             }
