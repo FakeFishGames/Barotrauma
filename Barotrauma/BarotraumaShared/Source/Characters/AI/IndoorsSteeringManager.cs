@@ -270,8 +270,9 @@ namespace Barotrauma
                     {
                         diff.Y = Math.Max(diff.Y, 1.0f);
                     }
-
-                    bool aboveFloor = heightFromFloor > 0 && heightFromFloor < collider.height * 1.5f;
+                    // We need some margin, because if a hatch has closed, it's possible that the height from floor is slightly negative.
+                    float margin = 0.1f;
+                    bool aboveFloor = heightFromFloor > margin && heightFromFloor < collider.height * 1.5f;
                     if (aboveFloor || IsNextNodeLadder)
                     {
                         if (!nextLadderSameAsCurrent)
