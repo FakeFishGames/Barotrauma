@@ -128,16 +128,20 @@ namespace Barotrauma
                     }
                     else
                     {
-                        goToObjective = null;
+                        RemoveSubObjective(ref goToObjective);
                     }
                 }
                 if (goToObjective != null)
                 {
                     if (goToObjective.IsCompleted)
                     {
+                        RemoveSubObjective(ref goToObjective);
                         objectiveManager.GetObjective<AIObjectiveIdle>()?.Wander(deltaTime);
                     }
-                    Priority = 0;
+                    if (currenthullSafety > HumanAIController.HULL_SAFETY_THRESHOLD)
+                    {
+                        Priority = 0;
+                    }
                     return;
                 }
                 if (currentHull == null) { return; }
