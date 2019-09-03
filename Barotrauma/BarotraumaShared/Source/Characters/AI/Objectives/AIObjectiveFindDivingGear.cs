@@ -9,6 +9,7 @@ namespace Barotrauma
         public override string DebugTag => $"find diving gear ({gearTag})";
         public override bool ForceRun => true;
         public override bool KeepDivingGearOn => true;
+        public override bool IgnoreUnsafeHulls => true;
 
         private readonly string gearTag;
         private readonly string fallbackTag;

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
+using System.Linq;
 using Barotrauma.Extensions;
 
 namespace Barotrauma
@@ -97,9 +98,19 @@ namespace Barotrauma
                     character.AIController.SelectTarget(e.AiTarget);
                 }
             }
-            bool isInside = character.CurrentHull != null;
-            bool insideSteering = SteeringManager == PathSteering && PathSteering.CurrentPath != null && !PathSteering.IsPathDirty;
             var targetHull = Target is Hull h ? h : Target is Item i ? i.CurrentHull : Target is Character c ? c.CurrentHull : character.CurrentHull;
+            // Abandon if going through unsafe paths. Note ignores unsafe nodes when following an order or when the objective is set to ignore unsafe hulls.
+            bool containsUnsafeNodes = HumanAIController.CurrentOrder == null && !HumanAIController.ObjectiveManager.CurrentObjective.IgnoreUnsafeHulls
+                && PathSteering != null && PathSteering.CurrentPath != null
+                && PathSteering.CurrentPath.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull));
+            if (containsUnsafeNodes || HumanAIController.UnreachableHulls.Contains(targetHull))
+            {
+                abandon = true;
+                SteeringManager.Reset();
+                return;
+            }
+            bool insideSteering = SteeringManager == PathSteering && PathSteering.CurrentPath != null && !PathSteering.IsPathDirty;
+            bool isInside = character.CurrentHull != null;
             bool targetIsOutside = (Target != null && targetHull == null) || (insideSteering && PathSteering.CurrentPath.HasOutdoorsNodes);
             if (isInside && targetIsOutside && !AllowGoingOutside)
             {
@@ -116,6 +127,10 @@ namespace Barotrauma
                     else
                     {
                         abandon = true;
+                        if (targetHull != null)
+                        {
+                            HumanAIController.UnreachableHulls.Add(targetHull);
+                        }
                     }
                 }
             }
