@@ -291,8 +291,6 @@ namespace Barotrauma
                 var slots = Weapon.AllowedSlots.FindAll(s => s == InvSlotType.LeftHand || s == InvSlotType.RightHand || s == (InvSlotType.LeftHand | InvSlotType.RightHand));
                 if (character.Inventory.TryPutItem(Weapon, character, slots))
                 {
-                    // equipping is already done here?
-                    //Weapon.Equip(character);
                     aimTimer = Rand.Range(0.5f, 1f);
                 }
                 else
@@ -508,7 +506,7 @@ namespace Barotrauma
                         {
                             character.SetInput(InputType.Shoot, false, true);
                             Weapon.Use(deltaTime, character);
-                            aimTimer = Rand.Range(0.25f, 0.5f);
+                            aimTimer = WeaponComponent is RangedWeapon rangedWeapon && !rangedWeapon.RapidFire ? Rand.Range(0.25f, 0.5f) : 0;
                         }
                     }
                 }

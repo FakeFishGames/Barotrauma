@@ -226,7 +226,7 @@
     <Sprite texture="weapons_new.png" sourcerect="288,94,224,124" depth="0.55" origin="0.5,0.5" />
     <Body width="220" height="120" density="50" />
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true" holdpos="35,-10" aimpos="35,-10" handle1="-15,-6" handle2="26,7" holdangle="-40" msg="ItemMsgPickUpSelect"/>
-    <RangedWeapon reload="0.125" barrelpos="14,6" spread="3" unskilledspread="8" combatPriority="100">
+    <RangedWeapon reload="0.125" barrelpos="14,6" spread="3" unskilledspread="8" combatPriority="100" rapidfire="true">
       <Sound file="Content/Items/Weapons/SMGsingleShot1.ogg" type="OnUse" range="3000" selectionmode="Random" />
       <Sound file="Content/Items/Weapons/SMGsingleShot2.ogg" type="OnUse" range="3000" />
       <Sound file="Content/Items/Weapons/SMGsingleShot3.ogg" type="OnUse" range="3000" />
