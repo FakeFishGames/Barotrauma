@@ -126,7 +126,6 @@
     linkable="true"
     allowedlinks="oxygenerator"
     scale="0.8">
-
     <Sprite texture="oxygengenerator.png" depth="0.91" sourcerect="277,200,64,64"/>
     <DecorativeSprite texture="oxygengenerator.png" depth="0.92" sourcerect="345,204,56,56" rotationspeed="360" >
       <AnimationConditional OxygenFlow="gt 10" targetitemcomponent="Vent"/>
@@ -135,33 +134,27 @@
     <Vent>
       <sound file="Content/Items/OxygenGenerator/Ventilation.ogg" type="OnActive" range="400.0" volumeproperty="OxygenFlow" volume="0.0005f" loop="true"/>
     </Vent>
-
   </Item>
 
   <Item
-  name="Loose Vent"
-  identifier="loosevent"
-  category="Machine"
-  linkable="true"
-  allowedlinks="oxygenerator"
-  pickdistance="150"
-  scale="0.8"
-  interactdistance="10">
-
-
+    name="Loose Vent"
+    identifier="loosevent"
+    category="Machine"
+    linkable="true"
+    allowedlinks="oxygenerator"
+    pickdistance="150"
+    scale="0.8"
+    interactdistance="10">
     <Sprite texture="oxygengenerator.png" depth="0.91" sourcerect="277,200,64,64"/>
     <DecorativeSprite texture="oxygengenerator.png" depth="0.92" sourcerect="345,204,56,56" rotationspeed="360" >
       <AnimationConditional OxygenFlow="gt 10" targetitemcomponent="Vent"/>
     </DecorativeSprite>
-
     <Vent>
       <sound file="Content/Items/OxygenGenerator/Ventilation.ogg" type="OnActive" range="400.0" volumeproperty="OxygenFlow" volume="0.0005f" loop="true"/>
-    </Vent>
-    
+    </Vent>    
     <ItemContainer capacity="1" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.25,0.3" anchor="Center" style="ItemUI" />
       <Containable identifiers="smallitem,mediumitem" />
     </ItemContainer>
-
   </Item>
 </Items>

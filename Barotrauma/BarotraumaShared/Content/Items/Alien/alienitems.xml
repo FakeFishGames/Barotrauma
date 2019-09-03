@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
   <Item name="Alien Artifact" identifier="skyholderartifact" category="Alien" Tags="alien" sonarsize="30" scale="0.5" impactsoundtag="impact_metal_heavy">
+    <Upgrade gameversion="0.9.3.1" scale="0.5"/>
     <Sprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.6" sourcerect="0,0,68,69" origin="0.5,0.5" />
     <!-- central piece -->
     <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="0,0,68,69" origin="0.5,0.5" randomgroupid="1" />
@@ -30,12 +31,13 @@
       <Item identifier="oxygeniteshard" />
       <Item identifier="oxygeniteshard" />
     </Deconstruct>
-    <Body width="200" height="200" density="50" friction="0.95" />
+    <Body radius="45" density="50" friction="0.95" />
     <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10" msg="ItemMsgPickUpSelect">
       <StatusEffect type="Always" target="Hull" oxygen="-50000.0" />
     </Holdable>
   </Item>
   <Item name="Alien Artifact" identifier="thermalartifact" category="Alien" Tags="alien" sonarsize="30" scale="0.5" impactsoundtag="impact_metal_heavy">
+    <Upgrade gameversion="0.9.3.1" scale="0.5"/>
     <Sprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.6" sourcerect="0,0,68,69" origin="0.5,0.5" />
     <!-- central piece -->
     <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="0,0,68,69" origin="0.5,0.5" randomgroupid="1" />
@@ -65,7 +67,7 @@
       <Item identifier="incendium" />
       <Item identifier="incendium" />
     </Deconstruct>
-    <Body radius="28" density="50" friction="0.95" />
+    <Body radius="45" density="50" friction="0.95" />
     <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10" msg="ItemMsgPickUpSelect">
       <StatusEffect type="Always">
         <Fire />
@@ -73,6 +75,7 @@
     </Holdable>
   </Item>
   <Item name="Alien Artifact" identifier="faradayartifact" category="Alien" Tags="alien" sonarsize="30" scale="0.5" impactsoundtag="impact_metal_heavy">
+    <Upgrade gameversion="0.9.3.1" scale="0.5"/>
     <Sprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.6" sourcerect="0,0,68,69" origin="0.5,0.5" />
     <!-- central piece -->
     <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="0,0,68,69" origin="0.5,0.5" randomgroupid="1" />
@@ -102,7 +105,7 @@
       <Item identifier="fulgurium" />
       <Item identifier="fulgurium" />
     </Deconstruct>
-    <Body radius="25" density="50" friction="0.95" />
+    <Body radius="45" density="50" friction="0.95" />
     <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10" msg="ItemMsgPickUpSelect">
       <!-- EMP explosion every 10 seconds -->
       <StatusEffect type="Always" target="This" Condition="0" delay="10" stackable="false" setvalue="true" />
@@ -113,6 +116,7 @@
     </Holdable>
   </Item>
   <Item name="Alien Artifact" identifier="nasonovartifact" category="Alien" Tags="alien,nasonov" pickdistance="150" indestructible="true" sonarsize="30" scale="0.5" impactsoundtag="impact_metal_heavy">
+    <Upgrade gameversion="0.9.3.1" scale="0.5"/>
     <Sprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.6" sourcerect="0,0,68,69" origin="0.5,0.5" />
     <!-- central piece -->
     <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="0,0,68,69" origin="0.5,0.5" randomgroupid="1" />
@@ -143,10 +147,11 @@
       <Item identifier="physicorium" />
     </Deconstruct>
     <AiTarget sightrange="10000.0" soundrange="10000" />
-    <Body width="55" height="55" density="50" friction="0.95" />
+    <Body radius="45" density="50" friction="0.95" />
     <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10" msg="ItemMsgPickUpSelect" />
   </Item>
   <Item name="Alien Artifact" identifier="psychosisartifact" category="Alien" Tags="alien" sonarsize="30" spritecolor="200,200,200,255" scale="0.5" impactsoundtag="impact_metal_heavy">
+    <Upgrade gameversion="0.9.3.1" scale="0.5"/>
     <Sprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.6" sourcerect="0,0,68,69" origin="0.5,0.5" />
     <!-- central piece -->
     <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="0,0,68,69" origin="0.5,0.5" randomgroupid="1" />
@@ -176,7 +181,7 @@
       <Item identifier="dementonite" />
       <Item identifier="dementonite" />
     </Deconstruct>
-    <Body radius="25" density="50" friction="0.95" />
+    <Body radius="45" density="50" friction="0.95" />
     <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10" msg="ItemMsgPickUpSelect">
       <StatusEffect type="OnContained" target="Character">
         <Affliction identifier="psychosis" strength="0.5" />
@@ -184,27 +189,30 @@
     </Holdable>
   </Item>
   <Item name="Alien Trinket" identifier="alientrinket1" category="Alien" Tags="alien, smallitem" scale="0.5" impactsoundtag="impact_metal_heavy">
+    <Upgrade gameversion="0.9.3.1" scale="0.5"/>
     <Sprite texture="AlienArtifact1.png" depth="0.7" sourcerect="172,203,73,76" origin="0.5,0.5" />
     <Deconstruct time="30">
       <Item identifier="oxygeniteshard" />
     </Deconstruct>
-    <Body width="48" height="48" density="20" />
+    <Body width="70" height="70" density="20" />
     <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5" msg="ItemMsgPickUpSelect"></Holdable>
   </Item>
   <Item name="Alien Curio" identifier="alientrinket2" category="Alien" Tags="alien, smallitem" scale="0.5" impactsoundtag="impact_metal_heavy">
+    <Upgrade gameversion="0.9.3.1" scale="0.5"/>
     <Sprite texture="AlienArtifact1.png" depth="0.7" sourcerect="86,203,82,74" origin="0.5,0.5" />
     <Deconstruct time="30">
       <Item identifier="sulphuriteshard" />
     </Deconstruct>
-    <Body width="48" height="48" density="20" />
+    <Body width="80" height="72" density="20" />
     <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5" msg="ItemMsgPickUpSelect"></Holdable>
   </Item>
   <Item name="Alien Ornament" identifier="alientrinket3" category="Alien" Tags="alien, smallitem" scale="0.5" impactsoundtag="impact_metal_heavy">
+    <Upgrade gameversion="0.9.3.1" scale="0.5"/>
     <Sprite texture="AlienArtifact1.png" depth="0.7" sourcerect="0,203,82,79" origin="0.5,0.5" />
     <Deconstruct time="30">
       <Item identifier="physicorium" />
     </Deconstruct>
-    <Body width="48" height="48" density="20" />
+    <Body width="80" height="75" density="20" />
     <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5" msg="ItemMsgPickUpSelect"></Holdable>
   </Item>
   <Item name="Oxygenite Shard" identifier="oxygeniteshard" category="Alien" scale="0.5" tags="alien,smallitem,oxygensource" impacttolerance="8" impactsoundtag="impact_metal_light">
@@ -547,7 +555,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Alien Vent" identifier="alienvent" category="Alien" interactdistance="0" linkable="true">
-    <Sprite texture="Content/Items/OxygenGenerator/vent.png" depth="0.91" sourcerect="0,0,64,64" />
+    <Sprite texture="Content/Items/OxygenGenerator/oxygengenerator.png" depth="0.91" sourcerect="277,200,64,64"/>
     <Vent>
       <sound file="Content/Items/OxygenGenerator/Ventilation.ogg" type="OnActive" range="400.0" loop="true" />
       <StatusEffect type="NotInWater" target="NearbyCharacters" range="300">

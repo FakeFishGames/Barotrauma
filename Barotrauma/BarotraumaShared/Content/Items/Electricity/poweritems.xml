@@ -109,6 +109,7 @@
     </Repairable>
   </Item>
   <Item name="ShuttleBattery" identifier="shuttlebattery" tags="battery" category="Electrical" Scale="0.5" description="Generally used for storing backup power in case of a reactor failure.">
+    <Upgrade gameversion="0.9.3.1" scale="0.5" indicatorposition="21,12" indicatorsize="54,35"/>
     <Sprite texture="battery.png" sourcerect="0,207,120,125" depth="0.8" />
     <BrokenSprite texture="battery.png" sourcerect="120,207,120,125" depth="0.8" maxcondition="40" fadein="true" />
     <BrokenSprite texture="battery.png" sourcerect="240,207,120,125" depth="0.8" maxcondition="0" />

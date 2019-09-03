@@ -684,18 +684,26 @@ namespace Barotrauma
             {
                 if (subElement.Name.ToString().ToLowerInvariant() != "upgrade") { continue; }
                 var upgradeVersion = new Version(subElement.GetAttributeString("gameversion", "0.0.0.0"));
-                if (savedVersion < upgradeVersion)
+                if (savedVersion >= upgradeVersion) { continue; }                
+                foreach (XAttribute attribute in subElement.Attributes())
                 {
-                    foreach (XAttribute attribute in subElement.Attributes())
+                    string attributeName = attribute.Name.ToString().ToLowerInvariant();
+                    if (attributeName == "gameversion") { continue; }
+                    if (entity.SerializableProperties.TryGetValue(attributeName, out SerializableProperty property))
                     {
-                        string attributeName = attribute.Name.ToString().ToLowerInvariant();
-                        if (attributeName == "gameversion") { continue; }
-                        if (entity.SerializableProperties.TryGetValue(attributeName, out SerializableProperty property))
+                        property.TrySetValue(entity, attribute.Value);
+                    }
+                    else if (entity is Item item)
+                    {
+                        foreach (ISerializableEntity component in item.AllPropertyObjects)
                         {
-                            property.TrySetValue(entity, attribute.Value);
+                            if (component.SerializableProperties.TryGetValue(attributeName, out SerializableProperty componentProperty))
+                            {
+                                componentProperty.TrySetValue(component, attribute.Value);
+                            }
                         }
                     }
-                }
+                }                
             }
         }
     }
