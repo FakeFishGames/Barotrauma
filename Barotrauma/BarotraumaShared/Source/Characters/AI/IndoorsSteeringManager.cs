@@ -168,7 +168,7 @@ namespace Barotrauma
                 }
 
                 var newPath = pathFinder.FindPath(pos, target, character.Submarine, "(Character: " + character.Name + ")", startNodeFilter, endNodeFilter);
-                bool useNewPath = currentPath == null || needsNewPath;
+                bool useNewPath = currentPath == null || needsNewPath || currentPath.Finished;
                 if (!useNewPath && currentPath != null && currentPath.CurrentNode != null && newPath.Nodes.Any() && !newPath.Unreachable)
                 {
                     // It's possible that the current path was calculated from a start point that is no longer valid.
