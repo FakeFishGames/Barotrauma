@@ -475,7 +475,7 @@ namespace Barotrauma
             }
             
             List<SlotReference> hideSubInventories = new List<SlotReference>();
-            highlightedSubInventorySlots.RemoveWhere(s => Items[s.SlotIndex] == null);
+            highlightedSubInventorySlots.RemoveWhere(s => s.SlotIndex < 0 || s.SlotIndex >= Items.Length || Items[s.SlotIndex] == null);
             foreach (var highlightedSubInventorySlot in highlightedSubInventorySlots)
             {
                 if (highlightedSubInventorySlot.ParentInventory == this)
