@@ -171,7 +171,6 @@ namespace Barotrauma
                 }
                 else
                 {
-                    Priority = 0;
                     objectiveManager.GetObjective<AIObjectiveIdle>()?.Wander(deltaTime);
                 }
             }
