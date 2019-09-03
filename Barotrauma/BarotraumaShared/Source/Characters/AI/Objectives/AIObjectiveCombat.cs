@@ -12,6 +12,7 @@ namespace Barotrauma
         public override string DebugTag => "combat";
 
         public override bool KeepDivingGearOn => true;
+        public override bool IgnoreUnsafeHulls => true;
 
         private readonly CombatMode initialMode;
 

@@ -127,24 +127,20 @@ namespace Barotrauma
                 else if (targetHulls.Count > 0)
                 {
                     //choose a random available hull
-                    var randomHull = ToolBox.SelectWeightedRandom(targetHulls, hullWeights, Rand.RandSync.Unsynced);
-                    bool isCurrentHullOK = !HumanAIController.UnsafeHulls.Contains(character.CurrentHull) && !IsForbidden(character.CurrentHull);
-                    if (isCurrentHullOK)
+                    currentTarget = ToolBox.SelectWeightedRandom(targetHulls, hullWeights, Rand.RandSync.Unsynced);
+                    bool isCurrentHullAllowed = !IsForbidden(character.CurrentHull);
+                    // Check that there is no unsafe or forbidden hulls on the way to the target
+                    var path = PathSteering.PathFinder.FindPath(character.SimPosition, currentTarget.SimPosition);
+                    if (path.Unreachable || path.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull) || isCurrentHullAllowed && IsForbidden(n.CurrentHull)))
                     {
-                        // Check that there is no unsafe or forbidden hulls on the way to the target
-                        // Only do this when the current hull is ok, because otherwise would block all paths from the current hull to the target hull.
-                        var path = PathSteering.PathFinder.FindPath(character.SimPosition, randomHull.SimPosition);
-                        if (path.Unreachable || path.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull) || IsForbidden(n.CurrentHull)))
-                        {
-                            //can't go to this room, remove it from the list and try another room next frame
-                            int index = targetHulls.IndexOf(randomHull);
-                            targetHulls.RemoveAt(index);
-                            hullWeights.RemoveAt(index);
-                            PathSteering.Reset();
-                            return;
-                        }
+                        //can't go to this room, remove it from the list and try another room next frame
+                        int index = targetHulls.IndexOf(currentTarget);
+                        targetHulls.RemoveAt(index);
+                        hullWeights.RemoveAt(index);
+                        PathSteering.Reset();
+                        currentTarget = null;
+                        return;
                     }
-                    currentTarget = randomHull;
                     searchingNewHull = false;
                 }
 

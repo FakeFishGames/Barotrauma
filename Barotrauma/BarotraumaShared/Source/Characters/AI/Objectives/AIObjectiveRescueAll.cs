@@ -7,6 +7,7 @@ namespace Barotrauma
     {
         public override string DebugTag => "rescue all";
         public override bool ForceRun => true;
+        public override bool IgnoreUnsafeHulls => true;
 
         private const float vitalityThreshold = 0.8f;
         private const float vitalityThresholdForOrders = 0.95f;
