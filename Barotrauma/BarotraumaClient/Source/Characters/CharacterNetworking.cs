@@ -283,9 +283,16 @@ namespace Barotrauma
                         case 0:
                             if (Inventory == null)
                             {
-                                string errorMsg = "Received an inventory update message for an entity with no inventory (" + Name + ")";
+                                string errorMsg = "Received an inventory update message for an entity with no inventory (" + Name + ", removed: " + Removed + ")";
                                 DebugConsole.ThrowError(errorMsg);
                                 GameAnalyticsManager.AddErrorEventOnce("CharacterNetworking.ClientRead:NoInventory" + ID, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+
+                                //read anyway to prevent messing up reading the rest of the message
+                                byte itemCount = msg.ReadByte();
+                                for (int i = 0; i < itemCount; i++)
+                                {
+                                    msg.ReadUInt16();
+                                }
                             }
                             else
                             {

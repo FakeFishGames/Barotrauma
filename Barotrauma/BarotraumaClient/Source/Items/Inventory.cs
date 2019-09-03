@@ -1100,9 +1100,9 @@ namespace Barotrauma
 
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
-            receivedItemIDs = new ushort[capacity];
-
-            for (int i = 0; i < capacity; i++)
+            byte itemCount = msg.ReadByte();
+            receivedItemIDs = new ushort[itemCount];
+            for (int i = 0; i < itemCount; i++)
             {
                 receivedItemIDs[i] = msg.ReadUInt16();
             }

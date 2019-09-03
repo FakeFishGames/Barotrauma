@@ -385,6 +385,7 @@ namespace Barotrauma
 
         public void SharedWrite(IWriteMessage msg, object[] extraData = null)
         {
+            msg.Write((byte)capacity);
             for (int i = 0; i < capacity; i++)
             {
                 msg.Write((ushort)(Items[i] == null ? 0 : Items[i].ID));
