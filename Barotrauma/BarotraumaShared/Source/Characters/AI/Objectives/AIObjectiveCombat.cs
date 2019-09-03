@@ -161,8 +161,7 @@ namespace Barotrauma
                 }
                 else if (!WeaponComponent.HasRequiredContainedItems(character, addMessage: false))
                 {
-                    // Seek ammunition only if cannot find a new weapon
-                    if (!Reload(!HoldPosition, () => GetWeapon(out _) == null))
+                    if (!Reload(!HoldPosition))
                     {
                         if (seekAmmunition != null && subObjectives.Contains(seekAmmunition))
                         {
@@ -174,10 +173,6 @@ namespace Barotrauma
                         }
                     }
                 }
-            }
-            if (Weapon == null)
-            {
-                Weapon = GetWeapon(out _weaponComponent);
             }
             if (Weapon == null)
             {
@@ -351,9 +346,9 @@ namespace Barotrauma
             if (followTargetObjective != null && subObjectives.Contains(followTargetObjective))
             {
                 followTargetObjective.CloseEnough =
-                    WeaponComponent is RangedWeapon ? 300 :
+                    WeaponComponent is RangedWeapon ? 1000 :
                     WeaponComponent is MeleeWeapon mw ? mw.Range :
-                    WeaponComponent is RepairTool rt ? rt.Range : 50;
+                    WeaponComponent is RepairTool rt ? rt.Range : 200;
             }
         }
 
@@ -373,17 +368,20 @@ namespace Barotrauma
                 },
                 onAbandon: () =>
                 {
-                    Weapon = null;
-                    Mode = CombatMode.Retreat;
                     SteeringManager.Reset();
+                    Weapon = GetWeapon(out _, ignoreRequiredItems: false);
+                    if (Weapon == null)
+                    {
+                        Mode = CombatMode.Retreat;
+                    }
                 });
         }
         
         /// <summary>
         /// Reloads the ammunition found in the inventory.
-        /// If seekAmmo is true and the condition is met or not provided, tries to get find the ammo elsewhere.
+        /// If seekAmmo is true, tries to get find the ammo elsewhere.
         /// </summary>
-        private bool Reload(bool seekAmmo, Func<bool> condition = null)
+        private bool Reload(bool seekAmmo)
         {
             if (WeaponComponent == null) { return false; }
             if (!WeaponComponent.requiredItems.ContainsKey(RelatedItem.RelationType.Contained)) { return false; }
@@ -437,12 +435,9 @@ namespace Barotrauma
             {
                 return true;
             }
-            else if (ammunition == null)
+            else if (ammunition == null && Mode == CombatMode.Offensive && seekAmmo && ammunitionIdentifiers != null)
             {
-                if (seekAmmo && ammunitionIdentifiers != null && (condition == null || condition()))
-                {
-                    SeekAmmunition(ammunitionIdentifiers);
-                }
+                SeekAmmunition(ammunitionIdentifiers);
             }
             return false;
         }
