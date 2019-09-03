@@ -3480,8 +3480,10 @@
   <servertagdescription.voipdisabled>Voice chat is disabled.</servertagdescription.voipdisabled>
   <servertag.karmadisabled>Karma disabled</servertag.karmadisabled>
   <servertagdescription.karmadisabled>Karma system is disabled.</servertagdescription.karmadisabled>
-  
-  
+
+  <invalidcontentpackage>Content package '[packagename]' cannot be loaded.</invalidcontentpackage>
+  <xmlfileinvalid>File '[filepath]' is not a valid XML file.</xmlfileinvalid>
+
   <!-- Changed values as of 13th of August -->
   <traitorgoaldestroyitems>Dispose of at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>
   <karma.kickbanthreshold>Kick/Ban threshold</karma.kickbanthreshold>

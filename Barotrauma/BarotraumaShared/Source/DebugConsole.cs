@@ -1604,7 +1604,7 @@ namespace Barotrauma
 #if CLIENT
             if (createMessageBox)
             {
-                new GUIMessageBox(TextManager.Get("Error"), error);
+                CoroutineManager.StartCoroutine(CreateMessageBox(error));
             }
             else
             {
@@ -1612,7 +1612,20 @@ namespace Barotrauma
             }
 #endif
         }
-        
+
+#if CLIENT
+        private static IEnumerable<object> CreateMessageBox(string errorMsg)
+        {
+            while (GUI.Style == null)
+            {
+                yield return null;
+            }
+
+            new GUIMessageBox(TextManager.Get("Error"), errorMsg);
+            yield return CoroutineStatus.Success;
+        }
+#endif
+
         public static void SaveLogs()
         {
             if (unsavedMessages.Count == 0) return;
