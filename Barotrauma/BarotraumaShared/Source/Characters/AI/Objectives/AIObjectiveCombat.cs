@@ -388,12 +388,21 @@ namespace Barotrauma
             if (WeaponComponent == null) { return false; }
             if (!WeaponComponent.requiredItems.ContainsKey(RelatedItem.RelationType.Contained)) { return false; }
             var containedItems = Weapon.ContainedItems;
+            // Drop empty ammo
+            foreach (Item containedItem in containedItems)
+            {
+                if (containedItem == null) { continue; }
+                if (containedItem.Condition <= 0)
+                {
+                    containedItem.Drop(character);
+                }
+            }
             RelatedItem item = null;
             Item ammunition = null;
             string[] ammunitionIdentifiers = null;
             foreach (RelatedItem requiredItem in WeaponComponent.requiredItems[RelatedItem.RelationType.Contained])
             {
-                ammunition = containedItems.FirstOrDefault(it => it.Condition > 0.0f && requiredItem.MatchesItem(it));
+                ammunition = containedItems.FirstOrDefault(it => it.Condition > 0 && requiredItem.MatchesItem(it));
                 if (ammunition != null)
                 {
                     // Ammunition still remaining
@@ -405,19 +414,21 @@ namespace Barotrauma
             // No ammo
             if (ammunition == null)
             {
-                var container = Weapon.GetComponent<ItemContainer>();
-                // Try reload ammunition in inventory
-                foreach (string identifier in ammunitionIdentifiers)
+                if (ammunitionIdentifiers != null)
                 {
-                    foreach (var i in character.Inventory.Items)
+                    // Try reload ammunition from inventory
+                    ammunition = character.Inventory.FindItem(i => ammunitionIdentifiers.Any(id => id == i.Prefab.Identifier || i.HasTag(id)) && i.Condition > 0, true);
+                    if (ammunition != null)
                     {
-                        if (i == null) { continue; }
-                        if (i.Prefab.Identifier == identifier || i.HasTag(identifier))
+                        var container = Weapon.GetComponent<ItemContainer>();
+                        if (container.Item.ParentInventory == character.Inventory)
                         {
-                            if (i.Condition > 0)
-                            {
-                                container.Inventory.TryPutItem(ammunition, null);
-                            }
+                            character.Inventory.RemoveItem(ammunition);
+                            container.Inventory.TryPutItem(ammunition, null);
+                        }
+                        else
+                        {
+                            container.Combine(ammunition);
                         }
                     }
                 }
