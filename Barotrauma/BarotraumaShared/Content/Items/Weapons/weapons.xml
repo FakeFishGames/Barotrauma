@@ -88,7 +88,7 @@
     <Sprite texture="weapons_new.png" sourcerect="0,64,282,60" depth="0.55" origin="0.5,0.5" />
     <Body width="90" height="30" density="50" />
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true" holdpos="35,-10" aimpos="35,-10" handle1="-15,-6" handle2="26,7" holdangle="-40" msg="ItemMsgPickUpSelect" />
-    <RangedWeapon barrelpos="49,10" spread="1" unskilledspread="10" combatPriority="50">
+    <RangedWeapon barrelpos="49,10" spread="1" unskilledspread="10" combatPriority="70">
       <Sound file="Content/Items/Weapons/HarpoonGun1.ogg" type="OnUse" />
       <Sound file="Content/Items/Weapons/HarpoonGun2.ogg" type="OnUse" />
       <Sound file="Content/Items/Weapons/HarpoonGun3.ogg" type="OnUse" />
@@ -162,7 +162,7 @@
     <Sprite texture="weapons_new.png" sourcerect="0,1,117,64" depth="0.55" origin="0.5,0.5" />
     <Body width="110" height="60" density="50" />
     <Holdable slots="Any,RightHand,LeftHand" controlpose="true" aimpos="90,10" handle1="-11,-7" msg="ItemMsgPickUpSelect" />
-    <RangedWeapon barrelpos="14,6" spread="0" unskilledspread="2" combatPriority="60">
+    <RangedWeapon barrelpos="14,6" spread="0" unskilledspread="2" combatPriority="80">
       <Sound file="Content/Items/Weapons/Revolver1.ogg" type="OnUse" range="3000" selectionmode="Random" />
       <Sound file="Content/Items/Weapons/Revolver2.ogg" type="OnUse" range="3000" />
       <Sound file="Content/Items/Weapons/Revolver3.ogg" type="OnUse" range="3000" />
@@ -226,7 +226,7 @@
     <Sprite texture="weapons_new.png" sourcerect="288,94,224,124" depth="0.55" origin="0.5,0.5" />
     <Body width="220" height="120" density="50" />
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true" holdpos="35,-10" aimpos="35,-10" handle1="-15,-6" handle2="26,7" holdangle="-40" msg="ItemMsgPickUpSelect"/>
-    <RangedWeapon reload="0.125" barrelpos="14,6" spread="3" unskilledspread="8" combatPriority="90">
+    <RangedWeapon reload="0.125" barrelpos="14,6" spread="3" unskilledspread="8" combatPriority="100">
       <Sound file="Content/Items/Weapons/SMGsingleShot1.ogg" type="OnUse" range="3000" selectionmode="Random" />
       <Sound file="Content/Items/Weapons/SMGsingleShot2.ogg" type="OnUse" range="3000" />
       <Sound file="Content/Items/Weapons/SMGsingleShot3.ogg" type="OnUse" range="3000" />
@@ -267,7 +267,7 @@
     <Body width="215" height="119" density="40" />
     <!-- the character will hold the item 50 pixels in front of him, with his hands at the handle1 and handle2 positions -->
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true" aimpos="50,0" handle1="-85,-35" handle2="0,-27" msg="ItemMsgPickUpSelect" />
-    <RepairTool structurefixamount="0.0" usablein="Air" range="500" barrelpos="35,10" fireprobability="0.2" repairmultiple="true" repairthroughwalls="false"  repairthroughholes="true" combatpriority="20">
+    <RepairTool structurefixamount="0.0" usablein="Air" range="500" barrelpos="35,10" fireprobability="0.2" repairmultiple="true" repairthroughwalls="false"  repairthroughholes="true" combatpriority="65">
       <!-- the item must contain a welding fuel tank for it to work -->
       <RequiredItems identifier="weldingfueltank,incendiumfueltank" type="Contained" msg="ItemMsgWeldingFuelRequired" />
       <ParticleEmitterHitCharacter particle="fleshsmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100" />
@@ -550,7 +550,7 @@
     <Sprite texture="weapons_new.png" sourcerect="219,274,290,102" depth="0.55" origin="0.5,0.5" />
     <Body width="280" height="60" density="50" />
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true" holdpos="35,-10" aimpos="35,-10" handle1="-15,-6" handle2="26,7" holdangle="-40" msg="ItemMsgPickUpSelect"/>
-    <RangedWeapon barrelpos="49,10" spread="1" unskilledspread="10" combatPriority="50">
+    <RangedWeapon barrelpos="49,10" spread="1" unskilledspread="10" combatPriority="80">
       <Sound file="Content/Items/Weapons/GrenadeLauncherShot1.ogg" type="OnUse" selectionmode="Random"/>
       <Sound file="Content/Items/Weapons/GrenadeLauncherShot2.ogg" type="OnUse" />
       <Sound file="Content/Items/Weapons/GrenadeLauncherShot3.ogg" type="OnUse" />
@@ -661,7 +661,7 @@
     <Sprite texture="weapons_new.png" sourcerect="0,191,289,84" depth="0.55" origin="0.5,0.5" />
     <Body width="280" height="50" density="50" />
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true" holdpos="35,-10" aimpos="35,-10" handle1="-15,-6" handle2="26,7" holdangle="-40" msg="ItemMsgPickUpSelect"/>
-    <RangedWeapon barrelpos="49,10" spread="1" unskilledspread="10" combatPriority="50" reload="1.5">
+    <RangedWeapon barrelpos="49,10" spread="1" unskilledspread="10" combatPriority="90" reload="1.5">
       <Sound file="Content/Items/Weapons/ShotgunShot1.ogg" type="OnUse" range="3000" selectionmode="Random" />
       <Sound file="Content/Items/Weapons/ShotgunShot2.ogg" type="OnUse" range="3000" />
       <Sound file="Content/Items/Weapons/ShotgunShot3.ogg" type="OnUse" range="3000" />
@@ -778,7 +778,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="641,960,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="242,420,121,55" depth="0.55" origin="0.5,0.5" />
     <Body width="120" height="48" density="50" />
-    <MeleeWeapon slots="RightHand+LeftHand,Any" controlpose="true" aimpos="45,10" handle1="-20,-7" handle2="-10,0" holdangle="60" reload="1" range="100" combatpriority="30" msg="ItemMsgPickUpSelect">
+    <MeleeWeapon slots="RightHand+LeftHand,Any" controlpose="true" aimpos="45,10" handle1="-20,-7" handle2="-10,0" holdangle="60" reload="1" range="100" combatpriority="10" msg="ItemMsgPickUpSelect">
       <Attack stun="0.6" targetimpulse="20">
         <Sound file="Content/Items/Weapons/ToyHammerHit1.ogg" range="800" selectionmode="Random"/>
         <Sound file="Content/Items/Weapons/ToyHammerHit2.ogg" range="800" />
