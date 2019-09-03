@@ -1598,6 +1598,10 @@ namespace Barotrauma
             if (e != null)
             {
                 error += " {" + e.Message + "}\n" + e.StackTrace;
+                if (e.InnerException != null)
+                {
+                    error += "\n\nInner exception: " + e.InnerException.Message + "\n" + e.InnerException.StackTrace;
+                }
             }
             System.Diagnostics.Debug.WriteLine(error);
             NewMessage(error, Color.Red);
