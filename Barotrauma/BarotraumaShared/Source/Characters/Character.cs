@@ -2809,7 +2809,7 @@ namespace Barotrauma
                         }
                     }
                 }
-                visibleHulls.AddRange(CurrentHull.GetLinkedEntities<Hull>(tempList, filter: h =>
+                visibleHulls.AddRange(CurrentHull.GetLinkedEntities(tempList, filter: h =>
                 {
                     // Ignore adjacent hulls because they were already handled above
                     if (adjacentHulls.Contains(h))

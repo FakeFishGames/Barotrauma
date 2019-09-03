@@ -17,15 +17,18 @@ namespace Barotrauma
         private float crouchRaycastTimer;
         private float reactTimer;
         private float hullVisibilityTimer;
+        private float unreachableClearTimer;
         private bool shouldCrouch;
 
         const float reactionTime = 0.5f;
         const float hullVisibilityInterval = 0.5f;
         const float crouchRaycastInterval = 1;
         const float sortObjectiveInterval = 1;
+        const float clearUnreachableInterval = 30;
 
         public static float HULL_SAFETY_THRESHOLD = 50;
 
+        public HashSet<Hull> UnreachableHulls { get; private set; } = new HashSet<Hull>();
         public HashSet<Hull> UnsafeHulls { get; private set; } = new HashSet<Hull>();
 
         private SteeringManager outsideSteering, insideSteering;
@@ -86,6 +89,16 @@ namespace Barotrauma
         public override void Update(float deltaTime)
         {
             if (DisableCrewAI || Character.IsUnconscious || Character.Removed) { return; }
+
+            if (unreachableClearTimer > 0)
+            {
+                unreachableClearTimer -= deltaTime;
+            }
+            else
+            {
+                unreachableClearTimer = clearUnreachableInterval;
+                UnreachableHulls.Clear();
+            }
 
             float maxDistanceToSub = 3000;
             if (Character.Submarine != null || SelectedAiTarget?.Entity?.Submarine != null && 

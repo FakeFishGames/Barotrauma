@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Extensions;
-using FarseerPhysics;
 
 namespace Barotrauma
 {
@@ -81,7 +80,7 @@ namespace Barotrauma
             if (findSafety != null)
             {
                 findSafety.Priority = 0;
-                findSafety.unreachable.Clear();
+                HumanAIController.UnreachableHulls.Clear();
             }
             Mode = mode;
             initialMode = Mode;
