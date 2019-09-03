@@ -272,7 +272,7 @@ namespace Barotrauma
                     }
                     // We need some margin, because if a hatch has closed, it's possible that the height from floor is slightly negative.
                     float margin = 0.1f;
-                    bool aboveFloor = heightFromFloor > margin && heightFromFloor < collider.height * 1.5f;
+                    bool aboveFloor = heightFromFloor > -margin && heightFromFloor < collider.height * 1.5f;
                     if (aboveFloor || IsNextNodeLadder)
                     {
                         if (!nextLadderSameAsCurrent)
