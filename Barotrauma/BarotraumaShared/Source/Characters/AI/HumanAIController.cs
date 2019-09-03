@@ -132,8 +132,6 @@ namespace Barotrauma
                 hullVisibilityTimer = hullVisibilityInterval;
                 VisibleHulls = Character.GetVisibleHulls();
             }
-
-            objectiveManager.UpdateObjectives(deltaTime);
             if (sortTimer > 0.0f)
             {
                 sortTimer -= deltaTime;
@@ -143,6 +141,8 @@ namespace Barotrauma
                 objectiveManager.SortObjectives();
                 sortTimer = sortObjectiveInterval;
             }
+            objectiveManager.UpdateObjectives(deltaTime);
+
             if (reactTimer > 0.0f)
             {
                 reactTimer -= deltaTime;
