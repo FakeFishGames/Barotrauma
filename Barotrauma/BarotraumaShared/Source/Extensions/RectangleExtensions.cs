@@ -4,6 +4,18 @@ namespace Barotrauma.Extensions
 {
     public static class RectangleExtensions
     {
+        public static Rectangle Multiply(this Rectangle rect, float f)
+        {
+            Vector2 location = new Vector2(rect.X, rect.Y) * f;
+            return new Rectangle(new Point((int)location.X, (int)location.Y), rect.MultiplySize(f));
+        }
+
+        public static Rectangle Divide(this Rectangle rect, float f)
+        {
+            Vector2 location = new Vector2(rect.X, rect.Y) / f;
+            return new Rectangle(new Point((int)location.X, (int)location.Y), rect.DivideSize(f));
+        }
+
         public static Point DivideSize(this Rectangle rect, float f)
         {
             return new Point((int)(rect.Width / f), (int)(rect.Height / f));

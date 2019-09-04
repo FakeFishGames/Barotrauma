@@ -22,6 +22,8 @@ namespace Barotrauma
 
         private readonly Point MinSupportedResolution = new Point(1024, 540);
 
+        private bool contentPackageSelectionDirty;
+
         private GUIFrame settingsFrame;
         private GUIButton applyButton;
 
@@ -982,14 +984,15 @@ namespace Barotrauma
 
         private bool SelectContentPackage(GUITickBox tickBox)
         {
+            contentPackageSelectionDirty = true;
             var contentPackage = tickBox.UserData as ContentPackage;
             if (contentPackage.CorePackage)
             {
                 if (tickBox.Selected)
                 {
                     //make sure no other core packages are selected
-                    SelectedContentPackages.RemoveWhere(cp => cp.CorePackage && cp != contentPackage);
-                    SelectedContentPackages.Add(contentPackage);
+                    SelectedContentPackages.RemoveAll(cp => cp.CorePackage && cp != contentPackage);
+                    SelectContentPackage(contentPackage);
                     foreach (GUITickBox otherTickBox in tickBox.Parent.Children)
                     {
                         ContentPackage otherContentPackage = otherTickBox.UserData as ContentPackage;
@@ -1009,11 +1012,11 @@ namespace Barotrauma
             {
                 if (tickBox.Selected)
                 {
-                    SelectedContentPackages.Add(contentPackage);
+                    SelectContentPackage(contentPackage);
                 }
                 else
                 {
-                    SelectedContentPackages.Remove(contentPackage);
+                    DeselectContentPackage(contentPackage);
                 }
             }
             if (contentPackage.GetFilesOfType(ContentType.Submarine).Any()) { Submarine.RefreshSavedSubs(); }
@@ -1134,7 +1137,10 @@ namespace Barotrauma
         {
             ApplySettings();
             if (Screen.Selected != GameMain.MainMenuScreen) GUI.SettingsMenuOpen = false;
-
+            if (contentPackageSelectionDirty)
+            {
+                new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("RestartRequiredGeneric"));
+            }
             return true;
         }
     }

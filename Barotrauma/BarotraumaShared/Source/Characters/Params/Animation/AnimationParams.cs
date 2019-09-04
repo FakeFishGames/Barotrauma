@@ -43,7 +43,7 @@ namespace Barotrauma
         public float SteerTorque { get; set; }
     }
 
-    abstract class AnimationParams : EditableParams
+    abstract class AnimationParams : EditableParams, IMemorizable<AnimationParams>
     {
         public string SpeciesName { get; private set; }
         public bool IsGroundedAnimation => AnimationType == AnimationType.Walk || AnimationType == AnimationType.Run;
@@ -102,7 +102,12 @@ namespace Barotrauma
         public static string GetFolder(string speciesName, ContentPackage contentPackage = null)
         {
             string configFilePath = Character.GetConfigFile(speciesName, contentPackage);
-            var folder = XMLExtensions.TryLoadXml(configFilePath)?.Root?.Element("animations")?.GetAttributeString("folder", string.Empty);
+            if (!Character.TryGetConfigFile(configFilePath, out XDocument configFile))
+            {
+                DebugConsole.ThrowError($"Failed to load config file: {configFilePath} for '{speciesName}'");
+                return string.Empty;
+            }
+            var folder = configFile.Root?.Element("animations")?.GetAttributeString("folder", string.Empty);
             if (string.IsNullOrEmpty(folder) || folder.ToLowerInvariant() == "default")
             {
                 folder = Path.Combine(Path.GetDirectoryName(configFilePath), "Animations");
@@ -197,9 +202,10 @@ namespace Barotrauma
                 T a = new T();
                 if (a.Load(selectedFile, speciesName))
                 {
-                    if (!anims.ContainsKey(a.Name))
+                    fileName = Path.GetFileNameWithoutExtension(selectedFile);
+                    if (!anims.ContainsKey(fileName))
                     {
-                        anims.Add(a.Name, a);
+                        anims.Add(fileName, a);
                     }
                 }
                 else
@@ -210,6 +216,8 @@ namespace Barotrauma
             }
             return (T)anim;
         }
+
+        public static void ClearCache() => allAnimations.Clear();
 
         public static AnimationParams Create(string fullPath, string speciesName, AnimationType animationType, Type type)
         {
@@ -275,10 +283,13 @@ namespace Barotrauma
             instance.IsLoaded = instance.Deserialize(animationElement);
             instance.Save();
             instance.Load(fullPath, speciesName);
-            anims.Add(instance.Name, instance);
+            anims.Add(fileName, instance);
             DebugConsole.NewMessage($"[AnimationParams] New animation file of type {animationType} created.", Color.GhostWhite);
             return instance as T;
         }
+
+        public bool Serialize() => base.Serialize();
+        public bool Deserialize() => base.Deserialize();
 
         protected bool Load(string file, string speciesName)
         {
@@ -380,14 +391,16 @@ namespace Barotrauma
         }
 
         #region Memento
-        protected void CreateSnapshot<T>() where T : AnimationParams, new()
+        public Memento<AnimationParams> Memento { get; protected set; } = new Memento<AnimationParams>();
+        public abstract void StoreSnapshot();
+        protected void StoreSnapshot<T>() where T : AnimationParams, new()
         {
-            Serialize();
             if (doc == null)
             {
                 DebugConsole.ThrowError("[AnimationParams] The source XML Document is null!");
                 return;
             }
+            Serialize();
             var copy = new T
             {
                 IsLoaded = true,
@@ -395,10 +408,11 @@ namespace Barotrauma
             };
             copy.Deserialize();
             copy.Serialize();
-            memento.Store(copy);
+            Memento.Store(copy);
         }
-        public override void Undo() => Deserialize(memento.Undo().MainElement);
-        public override void Redo() => Deserialize(memento.Redo().MainElement);
+        public void Undo() => Deserialize(Memento.Undo().MainElement);
+        public void Redo() => Deserialize(Memento.Redo().MainElement);
+        public void ClearHistory() => Memento.Clear();
         #endregion
     }
 }

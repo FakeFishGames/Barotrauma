@@ -400,9 +400,6 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Door\door2.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Electricity\FF_junctionboxAdditive.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Electricity\Lamps.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -1181,28 +1178,13 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Tools\tools_new.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Weapons\coilgunbarrel.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Weapons\coilgunbase.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Weapons\coilgunloader.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Weapons\coilgunrail.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Weapons\dischargecoil.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Weapons\GrenadesExplosiveKnife.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Weapons\Loaders.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Weapons\railgunrail.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Weapons\TurretsAndDepthCharges.png">
@@ -1415,9 +1397,6 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Map\AlienWallSet1.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Map\AlienWallSet2.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Map\bWall_Airlock_A1.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -1431,9 +1410,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Map\LargeInsideWalls.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Map\LargeInsideWallsBack.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Map\LocationPortraits\AlienRuins.png">
@@ -1598,7 +1574,7 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Containers\Lockers.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Electricity\FF_junctionbox.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Electricity\JunctionBox.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Legacy\legacycommand.xml">
@@ -1635,9 +1611,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Reactor\Sector.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\SearchLight\SearchLight.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Legacy\SearchLight_legacy.png">
@@ -1890,9 +1863,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Weapons\railgun.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Weapons\railgunbarrel.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Weapons\railgunbase.png">

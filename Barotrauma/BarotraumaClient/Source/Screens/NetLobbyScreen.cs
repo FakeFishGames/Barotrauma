@@ -1011,7 +1011,7 @@ namespace Barotrauma
                 int i = 1;
                 foreach (string jobIdentifier in GameMain.Config.JobPreferences)
                 {
-                    JobPrefab job = JobPrefab.List.Find(j => j.Identifier == jobIdentifier);
+                    if (!JobPrefab.List.TryGetValue(jobIdentifier, out JobPrefab job)) { continue; }
                     if (job == null || job.MaxNumber <= 0) continue;
 
                     var jobFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), jobList.Content.RectTransform) { MinSize = new Point(0, 20) }, style: "ListBoxElement")

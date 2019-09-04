@@ -287,9 +287,19 @@ namespace Barotrauma
             try
             {
                 XDocument doc = XMLExtensions.TryLoadXml(configPath);
-                if (doc == null || doc.Root == null) return;
-
-                foreach (XElement element in doc.Root.Elements())
+                if (doc == null) { return; }
+                var mainElement = doc.Root;
+                if (doc.Root.IsOverride())
+                {
+                    mainElement = doc.Root.FirstElement();
+                    DebugConsole.NewMessage($"Overriding all level object prefabs with '{configPath}'", Color.Yellow);
+                    list.Clear();
+                }
+                else if (list.Any())
+                {
+                    DebugConsole.NewMessage($"Loading additional level object prefabs from file '{configPath}'");
+                }
+                foreach (XElement element in mainElement.Elements())
                 {
                     list.Add(new LevelObjectPrefab(element));
                 }

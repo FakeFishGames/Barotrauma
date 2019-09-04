@@ -93,10 +93,8 @@ namespace Barotrauma
             sourceRect = new Rectangle(0, 0, texture.Width, texture.Height);
         }
 
-
         public static Texture2D LoadTexture(string file, bool preMultiplyAlpha = true)
         {
-
             if (string.IsNullOrWhiteSpace(file))
             {
                 Texture2D t = null;
@@ -109,7 +107,7 @@ namespace Barotrauma
             file = Path.GetFullPath(file);
             foreach (Sprite s in list)
             {
-                if (s.FullPath == file && s.texture != null) { return s.texture; }
+                if (s.FullPath == file && s.texture != null && !s.texture.IsDisposed) { return s.texture; }
             }
 
             if (File.Exists(file))

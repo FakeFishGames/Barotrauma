@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name="Carrier" humanoid="false">
+<Character speciesname="Carrier" humanoid="false">
   
   <ragdolls folder="default"/>
   <animations folder="default"/>
@@ -14,8 +14,8 @@
   <sound file="Content/Characters/Carrier/CARRIER_attack2.ogg" state="Attack" range="3000"/>
   <sound file="Content/Characters/Carrier/CARRIER_attack3.ogg" state="Attack" range="3000"/>
 
-  <sound file="Content/Characters/Carrier/CARRIER_idle1.ogg" state="None" range="3000"/>
-  <sound file="Content/Characters/Carrier/CARRIER_idle2.ogg" state="None" range="3000"/>
+  <sound file="Content/Characters/Carrier/CARRIER_idle1.ogg" state="Idle" range="3000"/>
+  <sound file="Content/Characters/Carrier/CARRIER_idle2.ogg" state="Idle" range="3000"/>
 
   <sound file="Content/Characters/Carrier/CARRIER_damage1.ogg" state="Damage" range="3000"/>
   <sound file="Content/Characters/Carrier/CARRIER_damage2.ogg" state="Damage" range="3000"/>

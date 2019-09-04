@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name="Humanhusk" humanoid="true" needsair="false" genders="true" canspeak="false">
+<Character speciesname="Humanhusk" husk="true" humanoid="true" needsair="false" genders="true" canspeak="false">
 
   <ragdolls folder="default"/>
   <animations folder="default"/>
-  <huskappendage path="Content/Characters/Humanhusk/Huskappendage.xml"/>
+  <huskappendage affliction="huskinfection" path="Content/Characters/Humanhusk/Huskappendage.xml"/>
 
   <bloodemitter particle="blackblood" particleamount="5"/>
   <bloodemitter particle="blackwaterblood" particleamount="1"/>

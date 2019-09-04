@@ -324,7 +324,7 @@ namespace Barotrauma
                             AddTargets<AIObjectiveFightIntruders, Character>(Character, c);
                             if (newOrder == null)
                             {
-                                var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportintruders");
+                                var orderPrefab = Order.GetPrefab("reportintruders");
                                 newOrder = new Order(orderPrefab, c.CurrentHull, null, orderGiver: Character);
                             }
                         }
@@ -334,7 +334,7 @@ namespace Barotrauma
                         AddTargets<AIObjectiveExtinguishFires, Hull>(Character, hull);
                         if (newOrder == null)
                         {
-                            var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportfire");
+                            var orderPrefab = Order.GetPrefab("reportfire");
                             newOrder = new Order(orderPrefab, hull, null, orderGiver: Character);
                         }
                     }
@@ -347,7 +347,7 @@ namespace Barotrauma
                             {
                                 if (newOrder == null)
                                 {
-                                    var orderPrefab = Order.PrefabList.Find(o => o.AITag == "requestfirstaid");
+                                    var orderPrefab = Order.GetPrefab("requestfirstaid");
                                     newOrder = new Order(orderPrefab, c.CurrentHull, null, orderGiver: Character);
                                 }
                             }
@@ -360,7 +360,7 @@ namespace Barotrauma
                             AddTargets<AIObjectiveFixLeaks, Gap>(Character, gap);
                             if (newOrder == null && !gap.IsRoomToRoom)
                             {
-                                var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportbreach");
+                                var orderPrefab = Order.GetPrefab("reportbreach");
                                 newOrder = new Order(orderPrefab, hull, null, orderGiver: Character);
                             }
                         }
@@ -374,7 +374,7 @@ namespace Barotrauma
                             AddTargets<AIObjectiveRepairItems, Item>(Character, item);
                             if (newOrder == null)
                             {
-                                var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportbrokendevices");
+                                var orderPrefab = Order.GetPrefab("reportbrokendevices");
                                 newOrder = new Order(orderPrefab, item.CurrentHull, item.Repairables?.FirstOrDefault(), orderGiver: Character);
                             }
                         }
@@ -620,7 +620,7 @@ namespace Barotrauma
 
         public static void RefreshTargets(Character character, Order order, Hull hull)
         {
-            switch (order.AITag)
+            switch (order.Identifier)
             {
                 case "reportfire":
                     AddTargets<AIObjectiveExtinguishFires, Hull>(character, hull);
@@ -667,7 +667,7 @@ namespace Barotrauma
                     break;
                 default:
 #if DEBUG
-                    DebugConsole.ThrowError(order.AITag + " not implemented!");
+                    DebugConsole.ThrowError(order.Identifier + " not implemented!");
 #endif
                     break;
             }

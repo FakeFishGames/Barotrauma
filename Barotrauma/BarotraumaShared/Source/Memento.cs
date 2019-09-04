@@ -3,6 +3,15 @@ using System.Linq;
 
 namespace Barotrauma
 {
+    interface IMemorizable<T>
+    {
+        Memento<T> Memento { get; }
+        void StoreSnapshot();
+        void Undo();
+        void Redo();
+        void ClearHistory();
+    }
+
     public class Memento<T>
     {
         public T Current { get; private set; }

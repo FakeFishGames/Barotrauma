@@ -186,7 +186,7 @@ namespace Barotrauma
             foreach (string configFile in GameMain.Instance.GetFilesOfType(ContentType.Particles))
             {
                 XDocument doc = XMLExtensions.TryLoadXml(configFile);
-                if (doc == null || doc.Root == null) continue;
+                if (doc == null) { continue; }
 
                 var prefabList = GameMain.ParticleManager.GetPrefabList();
                 foreach (ParticlePrefab prefab in prefabList)

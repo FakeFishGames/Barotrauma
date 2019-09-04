@@ -5,6 +5,7 @@ using System.Xml.Linq;
 using System.Linq;
 using Barotrauma.Extensions;
 using System.IO;
+using SpriteParams = Barotrauma.RagdollParams.SpriteParams;
 
 namespace Barotrauma
 {
@@ -229,7 +230,7 @@ namespace Barotrauma
                 return;
             }
             var doc = XMLExtensions.TryLoadXml(path);
-            if (doc == null || doc.Root == null) { return; }
+            if (doc == null) { return; }
             if (string.IsNullOrWhiteSpace(Name) && string.IsNullOrWhiteSpace(EntityID)) { return; }
             var spriteElements = doc.Descendants("sprite").Concat(doc.Descendants("Sprite"));
             var sourceElements = spriteElements.Where(e => e.GetAttributeString("name", null) == Name);

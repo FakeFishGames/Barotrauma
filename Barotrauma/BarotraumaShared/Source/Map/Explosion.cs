@@ -209,7 +209,7 @@ namespace Barotrauma
                     distFactors.Add(limb, distFactor);
                     
                     List<Affliction> modifiedAfflictions = new List<Affliction>();
-                    foreach (Affliction affliction in attack.Afflictions)
+                    foreach (Affliction affliction in attack.Afflictions.Keys)
                     {
                         modifiedAfflictions.Add(affliction.CreateMultiplied(distFactor / c.AnimController.Limbs.Length));
                     }

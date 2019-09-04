@@ -826,7 +826,7 @@ namespace Barotrauma
             itemContentPackage.Name = sub.Name;
             itemContentPackage.Save(itemContentPackage.Path);
             ContentPackage.List.Add(itemContentPackage);
-            GameMain.Config.SelectedContentPackages.Add(itemContentPackage);
+            GameMain.Config.SelectContentPackage(itemContentPackage);
 
             itemEditor.Title = sub.Name;
             itemEditor.Tags.Add("Submarine");

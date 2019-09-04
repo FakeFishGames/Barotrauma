@@ -489,9 +489,9 @@ namespace Barotrauma
                 {
                     case LimbType.LeftFoot:
                     case LimbType.RightFoot:
-                        if (CurrentSwimParams.FootAnglesInRadians.ContainsKey(limb.limbParams.ID))
+                        if (CurrentSwimParams.FootAnglesInRadians.ContainsKey(limb.Params.ID))
                         {
-                            SmoothRotateWithoutWrapping(limb, movementAngle + CurrentSwimParams.FootAnglesInRadians[limb.limbParams.ID] * Dir, MainLimb, FootTorque);
+                            SmoothRotateWithoutWrapping(limb, movementAngle + CurrentSwimParams.FootAnglesInRadians[limb.Params.ID] * Dir, MainLimb, FootTorque);
                         }
                         break;
                     case LimbType.Tail:
@@ -673,10 +673,10 @@ namespace Barotrauma
 #if CLIENT
                         if (playFootstepSound) { PlayImpactSound(limb); }
 #endif
-                        if (CurrentGroundedParams.FootAnglesInRadians.ContainsKey(limb.limbParams.ID))
+                        if (CurrentGroundedParams.FootAnglesInRadians.ContainsKey(limb.Params.ID))
                         {
                             SmoothRotateWithoutWrapping(limb,
-                                movementAngle + CurrentGroundedParams.FootAnglesInRadians[limb.limbParams.ID] * Dir,
+                                movementAngle + CurrentGroundedParams.FootAnglesInRadians[limb.Params.ID] * Dir,
                                 MainLimb, FootTorque);
                         }
                         break;

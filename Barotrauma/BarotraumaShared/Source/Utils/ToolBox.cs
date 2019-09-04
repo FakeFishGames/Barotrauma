@@ -418,5 +418,14 @@ namespace Barotrauma
                 hex.AppendFormat("{0:x2}", b);
             return hex.ToString();
         }
+
+        public static string ConvertAbsoluteToRelativePath(string path)
+        {
+            string[] splitted = path.Split(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
+            string currentFolder = Environment.CurrentDirectory.Split(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }).Last();
+            // Filter out the current folder -> result is "Content/blaahblaah" or "Mods/blaahblaah" etc.
+            IEnumerable<string> filtered = splitted.SkipWhile(part => part != currentFolder).Skip(1);
+            return string.Join("/", filtered);
+        }
     }
 }

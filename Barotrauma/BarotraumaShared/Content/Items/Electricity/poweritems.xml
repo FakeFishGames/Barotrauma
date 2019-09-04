@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
   <Item name="Junction Box" identifier="junctionbox" category="Electrical" description="Serves as a hub for power distribution and relaying signals between devices." scale="0.75">
-    <Sprite texture="FF_junctionbox.png" sourcerect="0,0,73,121" depth="0.8" canflipx="false" origin="0.5,0.5" />
-    <BrokenSprite texture="FF_junctionbox.png" sourcerect="73,0,73,123" depth="0.8" maxcondition="40" fadein="true" />
-    <BrokenSprite texture="FF_junctionbox.png" sourcerect="146,0,73,123" depth="0.8" maxcondition="0" />
+    <Sprite texture="JunctionBox.png" sourcerect="0,0,73,121" depth="0.8" canflipx="false" origin="0.5,0.5" />
+    <BrokenSprite texture="JunctionBox.png" sourcerect="73,0,73,123" depth="0.8" maxcondition="40" fadein="true" />
+    <BrokenSprite texture="JunctionBox.png" sourcerect="146,0,73,123" depth="0.8" maxcondition="0" />
     <PowerTransfer canbeselected="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.2,0.15" minsize="350,160" maxsize="420,190" anchor="Center" style="ItemUI" />
       <StatusEffect type="InWater" target="This" condition="-0.25">
@@ -11,11 +11,11 @@
       </StatusEffect>
     </PowerTransfer>
     <LightComponent range="10.0" lightcolor="255,255,255,5" powerconsumption="1" IsOn="true" castshadows="false" allowingameediting="false">
-      <sprite texture="Content/Items/Electricity/FF_junctionbox.png" sourcerect="0,121,73,121" depth="0.1" origin="0.5,0.5" alpha="1.0" />
+      <sprite texture="Content/Items/Electricity/JunctionBox.png" sourcerect="0,121,73,121" depth="0.1" origin="0.5,0.5" alpha="1.0" />
       <IsActive targetitemcomponent="PowerTransfer" overload="eq False" />
     </LightComponent>
     <LightComponent range="10.0" lightcolor="255,255,255,5" powerconsumption="1" IsOn="false" castshadows="false" allowingameediting="false" blinkfrequency="1.5">
-      <sprite texture="Content/Items/Electricity/FF_junctionbox.png" sourcerect="73,121,73,123" depth="0.1" origin="0.5,0.5" alpha="1.0" />
+      <sprite texture="Content/Items/Electricity/JunctionBox.png" sourcerect="73,121,73,123" depth="0.1" origin="0.5,0.5" alpha="1.0" />
       <IsActive targetitemcomponent="PowerTransfer" overload="eq True" />
     </LightComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
@@ -43,9 +43,9 @@
     </Repairable>
   </Item>
   <Item name="Junction Box" identifier="junctionbox_tutorial" nameidentifier="junctionbox" category="Electrical" description="Junction box with only a single power output." scale="0.75" hideinmenus="true">
-    <Sprite texture="FF_junctionbox.png" sourcerect="0,0,73,121" depth="0.8" canflipx="false" origin="0.5,0.5" />
-    <BrokenSprite texture="FF_junctionbox.png" sourcerect="73,0,73,123" depth="0.8" maxcondition="40" fadein="true" />
-    <BrokenSprite texture="FF_junctionbox.png" sourcerect="146,0,73,123" depth="0.8" maxcondition="0" />
+    <Sprite texture="JunctionBox.png" sourcerect="0,0,73,121" depth="0.8" canflipx="false" origin="0.5,0.5" />
+    <BrokenSprite texture="JunctionBox.png" sourcerect="73,0,73,123" depth="0.8" maxcondition="40" fadein="true" />
+    <BrokenSprite texture="JunctionBox.png" sourcerect="146,0,73,123" depth="0.8" maxcondition="0" />
     <PowerTransfer canbeselected="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.2,0.15" minsize="350,160" maxsize="420,190" anchor="Center" style="ItemUI" />
       <StatusEffect type="InWater" target="This" condition="-0.25">

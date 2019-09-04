@@ -1,86 +1,120 @@
 ﻿using Microsoft.Xna.Framework;
+using System;
 using System.Xml.Linq;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
-    partial class DamageModifier
+    partial class DamageModifier : ISerializableEntity
     {
-        [Serialize(1.0f, false)]
+        public string Name => "Damage Modifier";
+
+        public Dictionary<string, SerializableProperty> SerializableProperties { get; private set; }
+
+        [Serialize(1.0f, false), Editable]
         public float DamageMultiplier
         {
             get;
             private set;
         }
 
-        [Serialize("0.0,360", false)]
+        [Serialize("0.0,360", false), Editable]
         public Vector2 ArmorSector
         {
             get;
             private set;
         }
 
-        [Serialize(true, false)]
-        public bool IsArmor
-        {
-            get;
-            private set;
-        }
+        public Vector2 ArmorSectorInRadians => new Vector2(MathHelper.ToRadians(ArmorSector.X), MathHelper.ToRadians(ArmorSector.Y));
 
-        [Serialize(false, false)]
+        [Serialize(false, false), Editable]
         public bool DeflectProjectiles
         {
             get;
             private set;
         }
 
-        public string[] AfflictionIdentifiers
+        [Serialize("", true), Editable]
+        public string AfflictionIdentifiers
         {
-            get;
-            private set;
+            get
+            {
+                return rawAfflictionIdentifierString;
+            }
+            private set
+            {
+                rawAfflictionIdentifierString = value;
+                ParseAfflictionIdentifiers();
+            }
         }
 
-        public string[] AfflictionTypes
+        [Serialize("", true), Editable]
+        public string AfflictionTypes
         {
-            get;
-            private set;
+            get
+            {
+                return rawAfflictionTypeString;
+            }
+            private set
+            {
+                rawAfflictionTypeString = value;
+                ParseAfflictionTypes();
+            }
         }
+
+        private string rawAfflictionIdentifierString;
+        private string rawAfflictionTypeString;
+        private string[] parsedAfflictionIdentifiers;
+        private string[] parsedAfflictionTypes;
 
         public DamageModifier(XElement element, string parentDebugName)
         {
-            SerializableProperty.DeserializeProperties(this, element);
-            ArmorSector = new Vector2(MathHelper.ToRadians(ArmorSector.X), MathHelper.ToRadians(ArmorSector.Y));
-
+            Deserialize(element);
             if (element.Attribute("afflictionnames") != null)
             {
                 DebugConsole.ThrowError("Error in DamageModifier config (" + parentDebugName + ") - define afflictions using identifiers or types instead of names.");
             }
+        }
 
-            AfflictionIdentifiers = element.GetAttributeStringArray("afflictionidentifiers", new string[0]);
-            for (int i = 0; i < AfflictionIdentifiers.Length; i++)
+        private void ParseAfflictionTypes()
+        {
+            string[] splitValue = rawAfflictionTypeString.Split(',', '，');
+            for (int i = 0; i < splitValue.Length; i++)
             {
-                AfflictionIdentifiers[i] = AfflictionIdentifiers[i].ToLowerInvariant();
+                splitValue[i] = splitValue[i].ToLowerInvariant().Trim();
             }
-            AfflictionTypes = element.GetAttributeStringArray("afflictiontypes", new string[0]);
-            for (int i = 0; i < AfflictionTypes.Length; i++)
+            parsedAfflictionTypes = splitValue;
+        }
+
+        private void ParseAfflictionIdentifiers()
+        {
+            string[] splitValue = rawAfflictionIdentifierString.Split(',', '，');
+            for (int i = 0; i < splitValue.Length; i++)
             {
-                AfflictionTypes[i] = AfflictionTypes[i].ToLowerInvariant();
+                splitValue[i] = splitValue[i].ToLowerInvariant().Trim();
             }
+            parsedAfflictionIdentifiers = splitValue;
         }
 
         public bool MatchesAffliction(Affliction affliction)
         {
             //if no identifiers or types have been defined, the damage modifier affects all afflictions
             if (AfflictionIdentifiers.Length == 0 && AfflictionTypes.Length == 0) { return true; }
+            return parsedAfflictionIdentifiers.Any(id => id.Equals(affliction.Identifier, StringComparison.OrdinalIgnoreCase)) 
+                || parsedAfflictionTypes.Any(t => t.Equals(affliction.Prefab.AfflictionType, StringComparison.OrdinalIgnoreCase));
+        }
 
-            foreach (string afflictionName in AfflictionIdentifiers)
-            {
-                if (affliction.Prefab.Identifier.ToLowerInvariant() == afflictionName) return true;
-            }
-            foreach (string afflictionType in AfflictionTypes)
-            {
-                if (affliction.Prefab.AfflictionType.ToLowerInvariant() == afflictionType) return true;
-            }
-            return false;
+        public void Serialize(XElement element)
+        {
+            if (element == null) { return; }
+            SerializableProperty.SerializeProperties(this, element);
+        }
+
+        public void Deserialize(XElement element)
+        {
+            if (element == null) { return; }
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
         }
     }
 }
