@@ -157,12 +157,28 @@ namespace Barotrauma
             languageDD.OnSelected = (guiComponent, obj) =>
             {
                 string newLanguage = obj as string;
-                if (newLanguage == Language) return true;
-                
+                if (newLanguage == Language) { return true; }
+
+                string prevLanguage = Language;
                 Language = newLanguage;
                 UnsavedSettings = true;
 
-                var msgBox = new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("RestartRequiredLanguage"));
+                var msgBox = new GUIMessageBox(
+                    TextManager.Get("RestartRequiredLabel"), 
+                    TextManager.Get("RestartRequiredLanguage"), 
+                    buttons: new string[] { TextManager.Get("Cancel"), TextManager.Get("OK") });
+                msgBox.Buttons[0].OnClicked += (btn, userdata) =>
+                {
+                    Language = prevLanguage;
+                    languageDD.SelectItem(Language);
+                    msgBox.Close();
+                    return true;
+                }; msgBox.Buttons[1].OnClicked += (btn, userdata) =>
+                {
+                    ApplySettings();
+                    GameMain.Instance.Exit();
+                    return true;
+                };
 
                 return true;
             };
