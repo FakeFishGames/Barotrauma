@@ -20,7 +20,7 @@
       springstiffnesslowskill="25" springstiffnesshighskill="25"
       springdampinglowskill="5" springdampinghighskill="5"
       rotationspeedlowskill="0.5" rotationspeedhighskill="0.5">
-      <BarrelSprite texture="Content/Items/SearchLight/SearchLight.png" origin="0.5, 0.75" />
+      <BarrelSprite texture="Content/Items/SearchLight/SearchLightBase.png" sourcerect="308,0,204,257" origin="0.5, 0.75" />
       <LightComponent LightColor="1.0,1.0,1.0,1.0" Flicker="0.0" range="2500" IsOn="true" powerconsumption="50" drawbehindsubs="true">
         <LightTexture texture="Content/Lights/lightcone.png" origin="0.0, 0.5" size="1.0,1.0"/>
       </LightComponent>

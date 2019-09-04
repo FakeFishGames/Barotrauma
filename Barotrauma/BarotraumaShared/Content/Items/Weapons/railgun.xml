@@ -10,8 +10,8 @@
         <sound file="Content/Items/Weapons/Railgun3.ogg" range="10000" type="OnUse" />
         <Explosion range="1000.0" structuredamage="0" force="0.01" camerashake="10.0" flames="false" smoke="false" sparks="false" underwaterbubble="false" />
       </StatusEffect>
-      <RailSprite texture="Content/Items/Weapons/railgunrail.png" origin="0.52, 0.59" depth="0.011" />
-      <BarrelSprite texture="Content/Items/Weapons/railgunbarrel.png" origin="0.5, 0.85" depth="0.012" />
+      <RailSprite texture="Content/Items/Weapons/railgunbase.png" origin="0.52, 0.59" sourcerect="0,256,164,256" depth="0.011" />
+      <BarrelSprite texture="Content/Items/Weapons/railgunbase.png" origin="0.5, 0.85" sourcerect="256,0,125,336" depth="0.012" />
       <Crosshair texture="Content/Items/Weapons/crosshair.png" />
       <CrosshairPointer texture="Content/Items/Weapons/crosshairPointer.png" />
       <MoveSound file="Content/Items/Weapons/RailgunLoop.ogg" />

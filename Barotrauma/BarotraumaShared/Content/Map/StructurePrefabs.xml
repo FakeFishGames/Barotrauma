@@ -5,7 +5,7 @@
     <sprite texture="Content/Map/OpbgShop.png" sourcerect="0,0,2007,608" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Opbg>
   <Opbg name="Outpost Social Center A1" identifier="opbgsocialcentera1" description="Outpost Social Center back wall" allowattachitems="true" width="16" height="304" resizehorizontal="true" texturescale="0.5,0.5">
-    <sprite texture="Content/Map/OpbgSocialCenter.png" sourcerect="0,0,2048,608" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
+    <sprite texture="Content/Map/OpbgSocialCenter.png" sourcerect="0,0,2036,608" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Opbg>
   <Opbg name="Outpost Maintenace Bay A1" identifier="opbgmaintenancebaya1" description="Outpost Maintenance Bay wall" allowattachitems="true" width="16" height="304" resizehorizontal="true" texturescale="0.5,0.5">
     <sprite texture="Content/Map/OpbgMaintenanceBay.png" sourcerect="0,0,2048,608" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
@@ -938,19 +938,19 @@
   <!-- INTERIOR WALLS FF -->
   <structure name="InWall L 0" identifier="ff_x_wall" description="A large horizontal wall with collision detection" width="512" height="48" resizehorizontal="true" body="true" castshadow="true" health="75">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="0,0,512,48" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/LargeInsideWallsBack.png" sourcerect="0,0,512,48" depth="0.85" />
+    <backgroundsprite texture="Content/Map/LargeInsideWalls.png" sourcerect="512,0,512,48" depth="0.85" />
   </structure>
   <structure name="InWall L 0 Cables" identifier="ff_x_wall_cables" description="A large vertical wall with collision detection" width="512" height="73" resizehorizontal="true" body="true" bodyheight="52" bodyoffset="0,12" castshadow="true" health="75">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="0,55,512,74" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/LargeInsideWallsBack.png" sourcerect="0,55,512,74" depth="0.85" />
+    <backgroundsprite texture="Content/Map/LargeInsideWalls.png" sourcerect="512,55,512,74" depth="0.85" />
   </structure>
   <structure name="InWall L 90" identifier="ff_y_wall" description="A large vertical wall with collision detection" width="48" height="512" resizevertical="true" body="true" castshadow="true" health="75">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="464,135,48,512" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/LargeInsideWallsBack.png" sourcerect="464,135,48,512" depth="0.85" />
+    <backgroundsprite texture="Content/Map/LargeInsideWalls.png" sourcerect="976,135,48,512" depth="0.85" />
   </structure>
   <structure name="InWall L 90 cables" identifier="inwalll90cables" description="A large vertical wall with collision detection" resizevertical="true" body="true" bodywidth="52" bodyoffset="12,0" castshadow="true" health="75">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="383,135,73,512" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/LargeInsideWallsBack.png" sourcerect="383,135,73,512" depth="0.85" />
+    <backgroundsprite texture="Content/Map/LargeInsideWalls.png" sourcerect="895,135,73,512" depth="0.85" />
   </structure>
   <structure name="InWall L Cap H1" identifier="inwalllcaph1" description="A large wall cap" body="false" castshadow="false" noaitarget="true">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.03" sourcerect="0,177,27,50" origin="0.5,0.5" />
@@ -1038,7 +1038,7 @@
     <sprite texture="Content/Map/OutpostWall_A.png" sourcerect="0,0,512,256" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Wall_I1>
   <Wall_I2 name="BackWall Outpost B" identifier="FF_Wall_I2" description="Outpost back wall 2" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/OutpostWall_B.png" sourcerect="0,0,512,256" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
+    <sprite texture="Content/Map/OutpostWall_A.png" sourcerect="0,256,512,256" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Wall_I2>
   <Wall_I3 name="BackWall Outpost C" identifier="FF_Wall_I3" description="Outpost back wall 3" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/OutpostWall_C.png" sourcerect="0,0,256,256" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />

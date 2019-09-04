@@ -10,8 +10,8 @@
       <sound file="Content/Items/Weapons/Coilgun1.ogg" range="10000" type="OnUse" />
       <sound file="Content/Items/Weapons/Coilgun2.ogg" range="10000" type="OnUse" />
       <sound file="Content/Items/Weapons/Coilgun3.ogg" range="10000" type="OnUse" />
-      <RailSprite texture="Content/Items/Weapons/coilgunrail.png" depth="0.011" origin="0.64, 0.7" />
-      <BarrelSprite texture="Content/Items/Weapons/coilgunbarrel.png" depth="0.012" origin="0.6, 0.8" />
+      <RailSprite texture="Content/Items/Weapons/coilgunbase.png" depth="0.011" sourcerect="381,0,120,287" origin="0.64, 0.7" />
+      <BarrelSprite texture="Content/Items/Weapons/coilgunbase.png" depth="0.012" sourcerect="256,0,125,333" origin="0.6, 0.8" />
       <Crosshair texture="Content/Items/Weapons/crosshair.png" />
       <CrosshairPointer texture="Content/Items/Weapons/crosshairPointer.png" />
       <MoveSound file="Content/Items/Weapons/RailgunLoop.ogg" />
