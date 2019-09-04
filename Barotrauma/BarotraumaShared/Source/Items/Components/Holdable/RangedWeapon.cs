@@ -43,13 +43,6 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Serialize(false, false)]
-        public bool RapidFire
-        {
-            get;
-            set;
-        }
-
         public Vector2 TransformedBarrelPos
         {
             get

@@ -71,7 +71,7 @@ namespace Barotrauma
             {
                 if (Character.Controlled == null)
                 {
-                    abandon = true;
+                    Abandon = true;
                     return;
                 }
                 Target = Character.Controlled;
@@ -91,7 +91,7 @@ namespace Barotrauma
             {
                 if (e.Removed)
                 {
-                    abandon = true;
+                    Abandon = true;
                 }
                 else
                 {
@@ -105,7 +105,7 @@ namespace Barotrauma
                 && PathSteering.CurrentPath.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull));
             if (containsUnsafeNodes || HumanAIController.UnreachableHulls.Contains(targetHull))
             {
-                abandon = true;
+                Abandon = true;
                 SteeringManager.Reset();
                 return;
             }
@@ -114,7 +114,7 @@ namespace Barotrauma
             bool targetIsOutside = (Target != null && targetHull == null) || (insideSteering && PathSteering.CurrentPath.HasOutdoorsNodes);
             if (isInside && targetIsOutside && !AllowGoingOutside)
             {
-                abandon = true;
+                Abandon = true;
             }
             else if (waitUntilPathUnreachable < 0)
             {
@@ -126,7 +126,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        abandon = true;
+                        Abandon = true;
                         if (targetHull != null)
                         {
                             HumanAIController.UnreachableHulls.Add(targetHull);
@@ -134,7 +134,7 @@ namespace Barotrauma
                     }
                 }
             }
-            if (abandon)
+            if (Abandon)
             {
 #if DEBUG
                 DebugConsole.NewMessage($"{character.Name}: Cannot reach the target: {Target.ToString()}", Color.Yellow);
@@ -174,7 +174,7 @@ namespace Barotrauma
                     }
                     if (needsEquipment)
                     {
-                        TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit, objectiveManager));
+                        TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit, objectiveManager), onAbandon: () => RemoveSubObjective(ref findDivingGear));
                         return;
                     }
                 }
@@ -236,7 +236,7 @@ namespace Barotrauma
             // And finally check if can interact (heaviest)
             if (Target == null)
             {
-                abandon = true;
+                Abandon = true;
                 return false;
             }
             if (repeat)

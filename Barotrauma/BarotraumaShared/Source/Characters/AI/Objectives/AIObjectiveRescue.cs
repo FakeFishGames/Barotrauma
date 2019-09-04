@@ -28,14 +28,14 @@ namespace Barotrauma
                 string errorMsg = $"{character.Name}: Attempted to create a Rescue objective with no target!\n" + Environment.StackTrace;
                 DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce("AIObjectiveRescue:ctor:targetnull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
-                abandon = true;
+                Abandon = true;
                 return;
             }
 
             if (targetCharacter == character)
             {
                 // TODO: enable healing self too
-                abandon = true;
+                Abandon = true;
                 return;
             }
             this.targetCharacter = targetCharacter;
@@ -240,13 +240,13 @@ namespace Barotrauma
             if (targetCharacter == null) { return 0; }
             if (targetCharacter.CurrentHull == null || targetCharacter.Removed || targetCharacter.IsDead)
             {
-                abandon = true;
+                Abandon = true;
                 return 0;
             }
             // Don't go into rooms that have enemies
             if (Character.CharacterList.Any(c => c.CurrentHull == targetCharacter.CurrentHull && !HumanAIController.IsFriendly(c)))
             {
-                abandon = true;
+                Abandon = true;
                 return 0;
             }
             // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)

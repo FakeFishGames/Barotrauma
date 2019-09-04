@@ -44,7 +44,7 @@ namespace Barotrauma
             var weldingTool = character.Inventory.FindItemByTag("weldingtool", true);
             if (weldingTool == null)
             {
-                TryAddSubObjective(ref getWeldingTool, () => new AIObjectiveGetItem(character, "weldingtool", objectiveManager, true));
+                TryAddSubObjective(ref getWeldingTool, () => new AIObjectiveGetItem(character, "weldingtool", objectiveManager, true), onAbandon: () => RemoveSubObjective(ref getWeldingTool));
                 return;
             }
             else
@@ -55,7 +55,7 @@ namespace Barotrauma
 #if DEBUG
                     DebugConsole.ThrowError($"{character.Name}: AIObjectiveFixLeak failed - the item \"" + weldingTool + "\" has no proper inventory");
 #endif
-                    abandon = true;
+                    Abandon = true;
                     return;
                 }
                 // Drop empty tanks
@@ -69,7 +69,7 @@ namespace Barotrauma
                 }
                 if (containedItems.None(i => i.HasTag("weldingfueltank") && i.Condition > 0.0f))
                 {
-                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, "weldingfueltank", weldingTool.GetComponent<ItemContainer>(), objectiveManager));
+                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, "weldingfueltank", weldingTool.GetComponent<ItemContainer>(), objectiveManager), onAbandon: () => RemoveSubObjective(ref refuelObjective));
                     return;
                 }
             }
@@ -80,7 +80,7 @@ namespace Barotrauma
 #if DEBUG
                 DebugConsole.ThrowError($"{character.Name}: AIObjectiveFixLeak failed - the item \"" + weldingTool + "\" has no RepairTool component but is tagged as a welding tool");
 #endif
-                abandon = true;
+                Abandon = true;
                 return;
             }
             Vector2 gapDiff = Leak.WorldPosition - character.WorldPosition;
@@ -94,14 +94,14 @@ namespace Barotrauma
             bool canOperate = gapDiff.LengthSquared() < reach * reach;
             if (canOperate)
             {
-                TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: "", requireEquip: true, operateTarget: Leak));
+                TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: "", requireEquip: true, operateTarget: Leak), onAbandon: () => RemoveSubObjective(ref operateObjective));
             }
             else
             {
                 TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(Leak, character, objectiveManager)
                 {
                     CloseEnough = reach
-                });
+                }, onAbandon: () => RemoveSubObjective(ref gotoObjective));
             }
         }
     }

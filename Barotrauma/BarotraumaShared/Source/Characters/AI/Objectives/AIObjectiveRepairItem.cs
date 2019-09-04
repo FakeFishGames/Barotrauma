@@ -88,7 +88,7 @@ namespace Barotrauma
 #if DEBUG
                     DebugConsole.ThrowError($"{character.Name}: AIObjectiveRepairItem failed - the item \"" + repairTool + "\" has no proper inventory");
 #endif
-                    abandon = true;
+                    Abandon = true;
                     return;
                 }
                 // Drop empty tanks
@@ -126,9 +126,9 @@ namespace Barotrauma
                     if (repairable.CurrentFixer != null && repairable.CurrentFixer != character)
                     {
                         // Someone else is repairing the target. Abandon the objective if the other is better at this then us.
-                        abandon = repairable.DegreeOfSuccess(character) < repairable.DegreeOfSuccess(repairable.CurrentFixer);
+                        Abandon = repairable.DegreeOfSuccess(character) < repairable.DegreeOfSuccess(repairable.CurrentFixer);
                     }
-                    if (!abandon)
+                    if (!Abandon)
                     {
                         if (character.SelectedConstruction != Item)
                         {
@@ -141,11 +141,11 @@ namespace Barotrauma
                         else if (Item.Condition < previousCondition)
                         {
                             // If the current condition is less than the previous condition, we can't complete the task, so let's abandon it. The item is probably deteriorating at a greater speed than we can repair it.
-                            abandon = true;
+                            Abandon = true;
                             character?.Speak(TextManager.GetWithVariable("DialogCannotRepair", "[itemname]", Item.Name, true), null, 0.0f, "cannotrepair", 10.0f);
                         }
                     }
-                    if (abandon)
+                    if (Abandon)
                     {
                         repairable.StopRepairing(character);
                     }

@@ -75,16 +75,16 @@ namespace Barotrauma
             {
                 TryAddSubObjective(ref divingGearObjective,
                     () => new AIObjectiveFindDivingGear(character, needsDivingSuit, objectiveManager),
-                    onAbandon: () => searchHullTimer = Math.Min(1, searchHullTimer));
+                    onAbandon: () =>
+                    {
+                        // Reset the devotion.
+                        Priority = 0;
+                        searchHullTimer = Math.Min(1, searchHullTimer);
+                        RemoveSubObjective(ref divingGearObjective);
+                    });
             }
             else
             {
-                if (divingGearObjective != null && divingGearObjective.IsCompleted)
-                {
-                    // Reset the devotion.
-                    Priority = 0;
-                    divingGearObjective = null;
-                }
                 if (currenthullSafety < HumanAIController.HULL_SAFETY_THRESHOLD)
                 {
                     searchHullTimer = Math.Min(1, searchHullTimer);
@@ -106,32 +106,30 @@ namespace Barotrauma
                     {
                         if (goToObjective?.Target != currentSafeHull)
                         {
-                            goToObjective = null;
+                            RemoveSubObjective(ref goToObjective);
                         }
                         TryAddSubObjective(ref goToObjective, 
                             constructor: () => new AIObjectiveGoTo(currentSafeHull, character, objectiveManager, getDivingGearIfNeeded: true)
                             {
                                 AllowGoingOutside = HumanAIController.HasDivingSuit(character)
-                            }, 
-                            onAbandon: () => HumanAIController.UnreachableHulls.Add(goToObjective.Target as Hull));
+                            },
+                            onCompleted: () =>
+                            {
+                                if (currenthullSafety > HumanAIController.HULL_SAFETY_THRESHOLD)
+                                {
+                                    Priority = 0;
+                                }
+                            },
+                            onAbandon: () =>
+                            {
+                                HumanAIController.UnreachableHulls.Add(goToObjective.Target as Hull);
+                                RemoveSubObjective(ref goToObjective);
+                            });
                     }
                     else
                     {
                         RemoveSubObjective(ref goToObjective);
                     }
-                }
-                if (goToObjective != null)
-                {
-                    if (goToObjective.IsCompleted)
-                    {
-                        RemoveSubObjective(ref goToObjective);
-                        objectiveManager.GetObjective<AIObjectiveIdle>()?.Wander(deltaTime);
-                    }
-                    if (currenthullSafety > HumanAIController.HULL_SAFETY_THRESHOLD)
-                    {
-                        Priority = 0;
-                    }
-                    return;
                 }
                 if (currentHull == null) { return; }
                 //goto objective doesn't exist (a safe hull not found, or a path to a safe hull not found)
