@@ -43,7 +43,7 @@ namespace Barotrauma
                         character.Speak(TextManager.Get("DialogGetDivingGear"), null, 0.0f, "getdivinggear", 30.0f);
                     }
                     return new AIObjectiveGetItem(character, gearTag, objectiveManager, equip: true);
-                });
+                }, onAbandon: () => RemoveSubObjective(ref getDivingGear));
             }
             else
             {
@@ -53,7 +53,7 @@ namespace Barotrauma
 #if DEBUG
                     DebugConsole.ThrowError($"{character.Name}: AIObjectiveFindDivingGear failed - the item \"" + item + "\" has no proper inventory");
 #endif
-                    abandon = true;
+                    Abandon = true;
                     return;
                 }
                 // Drop empty tanks
@@ -87,7 +87,7 @@ namespace Barotrauma
                         {
                             character.Speak(TextManager.Get("DialogGetOxygenTank"), null, 0, "getoxygentank", 30.0f);
                             return new AIObjectiveContainItem(character, new string[] { "oxygentank", "oxygensource" }, item.GetComponent<ItemContainer>(), objectiveManager);
-                        });
+                        }, onAbandon: () => RemoveSubObjective(ref getOxygen));
                     }
                 }
             }

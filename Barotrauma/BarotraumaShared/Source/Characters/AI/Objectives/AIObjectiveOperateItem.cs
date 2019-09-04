@@ -62,7 +62,7 @@ namespace Barotrauma
             if (useController && controller == null)
             {
                 character.Speak(TextManager.GetWithVariable("DialogCantFindController", "[item]", component.Item.Name, true), null, 2.0f, "cantfindcontroller", 30.0f);
-                abandon = true;
+                Abandon = true;
                 return;
             }
             if (target.CanBeSelected)
@@ -72,7 +72,7 @@ namespace Barotrauma
                     // Don't allow to operate an item that someone already operates, unless this objective is an order
                     if (objectiveManager.CurrentOrder != this && Character.CharacterList.Any(c => c.SelectedConstruction == target.Item && c != character && HumanAIController.IsFriendly(c)))
                     {
-                        abandon = true;
+                        Abandon = true;
                         return;
                     }
                     if (character.SelectedConstruction != target.Item)
@@ -86,7 +86,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(target.Item, character, objectiveManager, closeEnough: 50));
+                    TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(target.Item, character, objectiveManager, closeEnough: 50), onAbandon: () => RemoveSubObjective(ref goToObjective));
                 }
             }
             else
@@ -94,12 +94,12 @@ namespace Barotrauma
                 if (component.Item.GetComponent<Pickable>() == null)
                 {
                     //controller/target can't be selected and the item cannot be picked -> objective can't be completed
-                    abandon = true;
+                    Abandon = true;
                     return;
                 }
                 else if (!character.Inventory.Items.Contains(component.Item))
                 {
-                    TryAddSubObjective(ref getItemObjective, () => new AIObjectiveGetItem(character, component.Item, objectiveManager, equip: true));
+                    TryAddSubObjective(ref getItemObjective, () => new AIObjectiveGetItem(character, component.Item, objectiveManager, equip: true), onAbandon: () => RemoveSubObjective(ref getItemObjective));
                 }
                 else
                 {

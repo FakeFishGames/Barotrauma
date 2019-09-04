@@ -59,7 +59,7 @@ namespace Barotrauma
 #if DEBUG
                     DebugConsole.ThrowError($"{character.Name}: AIObjectiveExtinguishFire failed - the item \"" + extinguisherItem + "\" has no RepairTool component but is tagged as an extinguisher");
 #endif
-                    abandon = true;
+                    Abandon = true;
                     return;
                 }
                 foreach (FireSource fs in targetHull.FireSources)

@@ -40,6 +40,7 @@ namespace Barotrauma
         protected override void Act(float deltaTime) { }
         protected override bool Check() => false;
         public override bool CanBeCompleted => true;
+        public override bool AbandonWhenCannotCompleteSubjectives => false;
 
         public override bool IsLoop { get => true; set => throw new System.Exception("Trying to set the value for IsLoop from: " + System.Environment.StackTrace); }
 

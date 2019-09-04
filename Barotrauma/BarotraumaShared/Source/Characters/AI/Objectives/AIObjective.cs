@@ -13,6 +13,7 @@ namespace Barotrauma
         public abstract string DebugTag { get; }
         public virtual bool ForceRun => false;
         public virtual bool IgnoreUnsafeHulls => false;
+        public virtual bool AbandonWhenCannotCompleteSubjectives => true;
 
         /// <summary>
         /// Run the main objective with all subobjectives concurrently?
@@ -29,12 +30,21 @@ namespace Barotrauma
         public readonly AIObjectiveManager objectiveManager;
         public string Option { get; protected set; }
 
-        protected bool abandon;
+        private bool _abandon;
+        protected bool Abandon
+        {
+            get { return _abandon; }
+            set
+            {
+                _abandon = value;
+                if (_abandon)
+                {
+                    OnAbandon();
+                }
+            }
+        }
 
-        /// <summary>
-        /// Can the objective be completed. That is, does the objective have failing subobjectives or other conditions that prevent it from completing.
-        /// </summary>
-        public virtual bool CanBeCompleted => !abandon && subObjectives.None(so => !so.CanBeCompleted);
+        public virtual bool CanBeCompleted => !Abandon;
 
         /// <summary>
         /// When true, the objective is never completed, unless CanBeCompleted returns false.
@@ -58,6 +68,7 @@ namespace Barotrauma
         }
 
         public event Action Completed;
+        public event Action Abandoned;
 
         protected HumanAIController HumanAIController => character.AIController as HumanAIController;
         protected IndoorsSteeringManager PathSteering => HumanAIController.PathSteering;
@@ -74,7 +85,6 @@ namespace Barotrauma
             this.objectiveManager = objectiveManager;
             this.character = character;
             Option = option ?? string.Empty;
-
             PriorityModifier = priorityModifier;
         }
 
@@ -170,9 +180,9 @@ namespace Barotrauma
         /// <summary>
         /// Checks if the objective already is created and added in subobjectives. If not, creates it.
         /// Handles objectives that cannot be completed. If the objective has been removed form the subobjectives, a null value is assigned to the reference.
-        /// Returns true if the objective was created.
+        /// Returns true if the objective was created and successfully added.
         /// </summary>
-        protected bool TryAddSubObjective<T>(ref T objective, Func<T> constructor, Action onAbandon = null) where T : AIObjective
+        protected bool TryAddSubObjective<T>(ref T objective, Func<T> constructor, Action onCompleted = null, Action onAbandon = null) where T : AIObjective
         {
             if (objective != null)
             {
@@ -180,11 +190,6 @@ namespace Barotrauma
                 // If the sub objective is removed -> it's either completed or impossible to complete.
                 if (!subObjectives.Contains(objective))
                 {
-                    if (!objective.CanBeCompleted)
-                    {
-                        abandon = true;
-                        onAbandon?.Invoke();
-                    }
                     objective = null;
                 }
                 return false;
@@ -195,8 +200,20 @@ namespace Barotrauma
                 if (!subObjectives.Contains(objective))
                 {
                     AddSubObjective(objective);
+                    if (onCompleted != null)
+                    {
+                        objective.Completed += onCompleted;
+                    }
+                    if (onAbandon != null)
+                    {
+                        objective.Abandoned += onAbandon;
+                    }
+                    return true;
                 }
-                return true;
+#if DEBUG
+                DebugConsole.ThrowError("Attempted to add a duplicate subobjective!\n" + Environment.StackTrace);
+#endif
+                return false;
             }
         }
 
@@ -212,6 +229,11 @@ namespace Barotrauma
         protected virtual void OnCompleted()
         {
             Completed?.Invoke();
+        }
+
+        protected virtual void OnAbandon()
+        {
+            Abandoned?.Invoke();
         }
 
         public virtual void Reset()
@@ -277,6 +299,10 @@ namespace Barotrauma
                     DebugConsole.NewMessage($"{character.Name}: Removing SUBobjective {subObjective.DebugTag} of {DebugTag}, because it cannot be completed.", Color.Red);
 #endif
                     subObjectives.Remove(subObjective);
+                    if (AbandonWhenCannotCompleteSubjectives)
+                    {
+                        Abandon = true;
+                    }
                 }
             }
         }

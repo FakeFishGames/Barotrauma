@@ -77,7 +77,7 @@ namespace Barotrauma
         {
             if (character.LockHands)
             {
-                abandon = true;
+                Abandon = true;
                 return;
             }
             if (targetItem == null)
@@ -90,7 +90,7 @@ namespace Barotrauma
 #if DEBUG
                         DebugConsole.ThrowError($"{character.Name}: Move to target is null!");
 #endif
-                        abandon = true;
+                        Abandon = true;
                     }
                     objectiveManager.GetObjective<AIObjectiveIdle>()?.Wander(deltaTime);
                     return;
@@ -101,7 +101,7 @@ namespace Barotrauma
 #if DEBUG
                 DebugConsole.NewMessage($"{character.Name}: Found an item, but it's already equipped by someone else. Aborting.", Color.Yellow);
 #endif
-                abandon = true;
+                Abandon = true;
             }
             if (character.CanInteractWith(targetItem, out _, checkLinked: false))
             {
@@ -114,7 +114,7 @@ namespace Barotrauma
 #if DEBUG
                         DebugConsole.NewMessage($"{character.Name}: Target not pickable. Aborting.", Color.Yellow);
 #endif
-                        abandon = true;
+                        Abandon = true;
                         return;
                     }
                     int targetSlot = -1;
@@ -165,6 +165,7 @@ namespace Barotrauma
                         targetItem = null;
                         moveToTarget = null;
                         ignoredItems.Add(targetItem);
+                        RemoveSubObjective(ref goToObjective);
                     });
             }
         }
@@ -181,7 +182,7 @@ namespace Barotrauma
 #if DEBUG
                     DebugConsole.NewMessage($"{character.Name}: Cannot find the item, because neither identifiers nor item was defined.", Color.Red);
 #endif
-                    abandon = true;
+                    Abandon = true;
                 }
                 return;
             }
@@ -223,7 +224,7 @@ namespace Barotrauma
 #if DEBUG
                 DebugConsole.NewMessage($"{character.Name}: Cannot find the item with the following identifier(s): {string.Join(", ", itemIdentifiers)}", Color.Red);
 #endif
-                abandon = true;
+                Abandon = true;
             }
         }
 

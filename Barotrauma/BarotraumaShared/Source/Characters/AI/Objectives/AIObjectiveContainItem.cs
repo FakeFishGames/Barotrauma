@@ -64,58 +64,52 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            //get the item that should be contained
-            Item itemToContain = null;
-            foreach (string identifier in itemIdentifiers)
+            Item itemToContain = character.Inventory.FindItem(i => itemIdentifiers.Any(id => id == i.Prefab.Identifier || i.HasTag(id)) && i.Condition > 0 && i.Container != container.Item, true);
+            if (itemToContain != null)
             {
-                itemToContain = character.Inventory.FindItemByIdentifier(identifier, true) ?? character.Inventory.FindItemByTag(identifier, true);
-                if (itemToContain != null && itemToContain.Condition > 0.0f) { break; }
-            }            
-            if (itemToContain == null)
-            {
-                if (getItemObjective != null)
+                // Contain the item
+                if (container.Item.ParentInventory == character.Inventory)
                 {
-                    if (getItemObjective.IsCompleted)
-                    {
-                        if (getItemObjective.TargetItem != null)
-                        {
-                            containedItems.Add(getItemObjective.TargetItem);
-                        }
-                        else
-                        {
-                            // Reduce the target item count to prevent getting stuck here, if the target item for some reason is null, which shouldn't happen.
-                            targetItemCount--;
-                        }
-                        getItemObjective = null;
-                    }
-                    else if (!getItemObjective.CanBeCompleted)
-                    {
-                        getItemObjective = null;
-                        targetItemCount--;
-                    }
+                    character.Inventory.RemoveItem(itemToContain);
+                    container.Inventory.TryPutItem(itemToContain, null);
                 }
+                else
+                {
+                    if (!character.CanInteractWith(container.Item, out _, checkLinked: false))
+                    {
+                        TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(container.Item, character, objectiveManager), onAbandon: () => RemoveSubObjective(ref goToObjective));
+                        return;
+                    }
+                    container.Combine(itemToContain);
+                }
+            }
+            else
+            {
+                // Not in the inventory, try to get the item
                 TryAddSubObjective(ref getItemObjective, () =>
                     new AIObjectiveGetItem(character, itemIdentifiers, objectiveManager, equip: false, checkInventory: checkInventory)
                     {
                         GetItemPriority = GetItemPriority,
                         ignoredContainerIdentifiers = ignoredContainerIdentifiers,
                         ignoredItems = containedItems
+                    }, onAbandon: () =>
+                    {
+                        targetItemCount--;
+                        RemoveSubObjective(ref getItemObjective);
+                    }, onCompleted: () =>
+                    {
+                        if (getItemObjective.TargetItem != null)
+                        {
+                            containedItems.Add(getItemObjective.TargetItem);
+                            RemoveSubObjective(ref getItemObjective);
+                        }
+                        else
+                        {
+                            // Reduce the target item count to prevent getting stuck here, if the target item for some reason is null, which shouldn't happen.
+                            targetItemCount--;
+                            RemoveSubObjective(ref getItemObjective);
+                        }
                     });
-                return;
-            }
-            if (container.Item.ParentInventory == character.Inventory)
-            {           
-                character.Inventory.RemoveItem(itemToContain);
-                container.Inventory.TryPutItem(itemToContain, null);
-            }
-            else
-            {
-                if (!character.CanInteractWith(container.Item, out _, checkLinked: false))
-                {
-                    TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(container.Item, character, objectiveManager));
-                    return;
-                }
-                container.Combine(itemToContain);
             }
         }  
     }
