@@ -429,7 +429,7 @@ namespace Barotrauma.Networking
 
             isActive = false;
 
-            for (int i=remotePeers.Count-1;i>=0;i--)
+            for (int i = remotePeers.Count - 1; i >= 0; i--)
             {
                 DisconnectPeer(remotePeers[i], msg ?? DisconnectReason.ServerShutdown.ToString());
             }
@@ -478,6 +478,12 @@ namespace Barotrauma.Networking
             lidgrenMsg.Write((UInt16)length);
             lidgrenMsg.Write(msgData, 0, length);
 
+#if DEBUG
+            netPeerConfiguration.SimulatedDuplicatesChance = GameMain.Client.SimulatedDuplicatesChance;
+            netPeerConfiguration.SimulatedMinimumLatency = GameMain.Client.SimulatedMinimumLatency;
+            netPeerConfiguration.SimulatedRandomLatency = GameMain.Client.SimulatedRandomLatency;
+            netPeerConfiguration.SimulatedLoss = GameMain.Client.SimulatedLoss;
+#endif
             NetSendResult result = netClient.SendMessage(lidgrenMsg, lidgrenDeliveryMethod);
             if (result != NetSendResult.Queued && result != NetSendResult.Sent)
             {
