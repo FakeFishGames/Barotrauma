@@ -59,7 +59,7 @@ namespace Barotrauma
 
         public bool Load()
         {
-            bool success= base.Load(File);
+            bool success = base.Load(File);
             CreateSubParams();
             return success;
         }
@@ -132,6 +132,11 @@ namespace Barotrauma
         {
             if (base.Deserialize(element))
             {
+                //backwards compatibility
+                if (string.IsNullOrEmpty(SpeciesName))
+                {
+                    SpeciesName = element.GetAttributeString("name", "[NAME NOT GIVEN]");
+                }
                 if (alsoChildren)
                 {
                     SubParams.ForEach(p => p.Deserialize(recursive));

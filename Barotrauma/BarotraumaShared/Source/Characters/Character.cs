@@ -872,7 +872,7 @@ namespace Barotrauma
             {
                 if (!configFilePaths.TryGetValue(speciesName.ToLowerInvariant(), out configFile))
                 {
-                    DebugConsole.ThrowError($"Couldn't find a config file for {speciesName} from the selected content packages!");
+                    DebugConsole.ThrowError($"Couldn't find a config file for species \"{speciesName}\" from the selected content packages!");
                 }
             }
             return configFile;
