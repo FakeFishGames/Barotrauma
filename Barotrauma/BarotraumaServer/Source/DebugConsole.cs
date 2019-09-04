@@ -738,9 +738,21 @@ namespace Barotrauma
             });
             AssignOnExecute("togglekarmatestmode|karmatestmode", (string[] args) =>
             {
-                if (GameMain.Server?.KarmaManager == null) return;
+                if (GameMain.Server?.KarmaManager == null) { return; }
                 GameMain.Server.KarmaManager.TestMode = !GameMain.Server.KarmaManager.TestMode;
                 NewMessage(GameMain.Server.KarmaManager.TestMode ? "Karma test mode enabled." : "Karma test mode disabled.", Color.LightGreen);
+            });
+            AssignOnClientRequestExecute("togglekarmatestmode|karmatestmode", (Client client, Vector2 cursorWorldPos, string[] args) =>
+            {
+                if (GameMain.Server?.KarmaManager == null) { return; }
+                GameMain.Server.KarmaManager.TestMode = !GameMain.Server.KarmaManager.TestMode;
+                NewMessage(GameMain.Server.KarmaManager.TestMode ? 
+                    $"Karma test mode enabled by {client.Name}." :
+                    $"Karma test mode disabled by {client.Name}.", 
+                    Color.LightGreen);
+                GameMain.Server.SendDirectChatMessage(
+                    GameMain.Server.KarmaManager.TestMode ? "Karma test mode enabled." : "Karma test mode disabled.",
+                    client);
             });
 
             AssignOnExecute("banendpoint", (string[] args) =>
