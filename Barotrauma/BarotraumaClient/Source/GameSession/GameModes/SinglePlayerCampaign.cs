@@ -295,7 +295,7 @@ namespace Barotrauma
                         {
                             GameMain.GameSession.LoadPrevious();
                             GameMain.LobbyScreen.Select();
-                            GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox);
+                            (GUIMessageBox.VisibleBox as GUIMessageBox)?.Close();
                             return true;
                         }
                     };
@@ -303,7 +303,11 @@ namespace Barotrauma
                     var quitButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonArea.RectTransform),
                         TextManager.Get("QuitButton"));
                     quitButton.OnClicked += GameMain.LobbyScreen.QuitToMainMenu;
-                    quitButton.OnClicked += (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox); return true; };
+                    quitButton.OnClicked += (GUIButton button, object obj) =>
+                    {
+                        (GUIMessageBox.VisibleBox as GUIMessageBox)?.Close();
+                        return true;
+                    };
                 }
             }
 

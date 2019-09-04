@@ -773,9 +773,15 @@ namespace Barotrauma
                 }
             }, isCheat: true));
 
-            commands.Add(new Command("messagebox", "", (string[] args) =>
+            commands.Add(new Command("messagebox|guimessagebox", "messagebox [header] [msg] [default/ingame]: Creates a message box.", (string[] args) =>
             {
-                new GUIMessageBox("", string.Join(" ", args));
+                var msgBox = new GUIMessageBox(
+                    args.Length > 0 ? args[0] : "",
+                    args.Length > 1 ? args[1] : "",
+                    buttons: new string[] { "OK" },
+                    type: args.Length < 3 || args[2] == "default" ? GUIMessageBox.Type.Default : GUIMessageBox.Type.InGame);
+
+                msgBox.Buttons[0].OnClicked = msgBox.Close;
             }));
 
             AssignOnExecute("debugdraw", (string[] args) =>
@@ -1241,12 +1247,6 @@ namespace Barotrauma
             {
                 if (args.Length == 0) return;
                 LocalizationCSVtoXML.Convert(args[0]);
-            }));
-
-            commands.Add(new Command("guimessagebox", "guimessagebox [msg] -> Creates a message box with the parameter as a message.", (string[] args) =>
-            {
-                if (args.Length == 0) return;
-                var dialog = new GUIMessageBox("Message box", args[0]);
             }));
 #endif
 

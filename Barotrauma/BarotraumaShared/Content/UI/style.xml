@@ -692,7 +692,7 @@
       padding="0.0, 0.0, 0.0, 0.0"/>
   </GUIBugButton>
   
-  <GUIMessageBox    
+  <GUIMessageBox.Default
     color="0,0,0,204"
     hovercolor="0,0,0,204"
     selectedcolor="0,0,0,204"
@@ -707,10 +707,27 @@
       hovercolor="255,255,255,255"
       selectedcolor="255,255,255,255"  
       textcolor="0,0,0,255">
-
       <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="32, 541, 420, 220" slice="87,576,430,687"/>
     </GUIFrame>
-  </GUIMessageBox>
+  </GUIMessageBox.Default>
+  
+  <GUIMessageBox.InGame
+    color="0,0,0,0"
+    hovercolor="0,0,0,0"
+    selectedcolor="0,0,0,0"
+    pressedcolor="0,0,0,0"
+    textcolor="0,0,0,0">
+
+    <GUIFrame
+      padding="40.0, 20.0, 40.0, 20.0"
+      color="200,200,200,220"
+      hovercolor="200,200,200,220"
+      selectedcolor="200,200,200,220"
+      outlinecolor="200,200,200,220"
+      textcolor="127,140,153,255">
+      <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect ="746, 704, 120, 120" slice="754, 711, 865, 816"/>
+    </GUIFrame>
+  </GUIMessageBox.InGame>
 
   <GUIProgressBar
     padding="0.0, 0.0, 0.0, 0.0"

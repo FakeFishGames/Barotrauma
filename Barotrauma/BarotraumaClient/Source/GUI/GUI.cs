@@ -626,9 +626,19 @@ namespace Barotrauma
 
         private static void HandlePersistingElements(float deltaTime)
         {
-            if (GUIMessageBox.VisibleBox != null && GUIMessageBox.VisibleBox.UserData as string != "verificationprompt" && GUIMessageBox.VisibleBox.UserData as string != "bugreporter")
+            if (GUIMessageBox.VisibleBox != null &&
+                GUIMessageBox.VisibleBox.UserData as string != "verificationprompt" &&
+                GUIMessageBox.VisibleBox.UserData as string != "bugreporter")
             {
                 GUIMessageBox.VisibleBox.AddToGUIUpdateList();
+                for (int i = GUIMessageBox.MessageBoxes.Count - 1; i >= 0; i--)
+                {
+                    if (i == GUIMessageBox.MessageBoxes.Count - 1 ||
+                        (GUIMessageBox.MessageBoxes[i] as GUIMessageBox).AlwaysVisible)
+                    {
+                        GUIMessageBox.MessageBoxes[i].AddToGUIUpdateList();
+                    }
+                }
             }
 
             if (pauseMenuOpen)
