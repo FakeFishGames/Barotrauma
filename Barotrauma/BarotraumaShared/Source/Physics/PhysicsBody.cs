@@ -6,6 +6,8 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using LimbParams = Barotrauma.RagdollParams.LimbParams;
+using ColliderParams = Barotrauma.RagdollParams.ColliderParams;
 
 namespace Barotrauma
 {

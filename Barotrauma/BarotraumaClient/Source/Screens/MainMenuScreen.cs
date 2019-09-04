@@ -575,7 +575,7 @@ namespace Barotrauma
             //(gamesession.GameMode as SinglePlayerCampaign).GenerateMap(ToolBox.RandomSeed(8));
             gamesession.StartRound(ToolBox.RandomSeed(8));
             GameMain.GameScreen.Select();
-
+            // TODO: modding support
             string[] jobIdentifiers = new string[] { "captain", "engineer", "mechanic" };
             for (int i = 0; i < 3; i++)
             {
@@ -588,7 +588,7 @@ namespace Barotrauma
                 }
                 var characterInfo = new CharacterInfo(
                     Character.HumanConfigFile,
-                    jobPrefab: JobPrefab.List.Find(j => j.Identifier == jobIdentifiers[i]));
+                    jobPrefab: JobPrefab.Get(jobIdentifiers[i]));
                 if (characterInfo.Job == null)
                 {
                     DebugConsole.ThrowError("Failed to find the job \"" + jobIdentifiers[i] + "\"!");
@@ -955,7 +955,7 @@ namespace Barotrauma
             if (File.Exists(ServerSettings.SettingsFile))
             {
                 XDocument settingsDoc = XMLExtensions.TryLoadXml(ServerSettings.SettingsFile);
-                if (settingsDoc?.Root != null)
+                if (settingsDoc != null)
                 {
                     port = settingsDoc.Root.GetAttributeInt("port", port);
                     queryPort = settingsDoc.Root.GetAttributeInt("queryport", queryPort);

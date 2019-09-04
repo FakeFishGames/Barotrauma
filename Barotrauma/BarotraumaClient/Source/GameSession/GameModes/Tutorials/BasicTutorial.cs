@@ -663,7 +663,7 @@ namespace Barotrauma.Tutorials
                 //TODO: reimplement
                 //enemy.Health = 50.0f;
 
-                enemy.AIController.State = AIController.AIState.Idle;
+                enemy.AIController.State = AIState.Idle;
 
                 Vector2 targetPos = Character.Controlled.WorldPosition + new Vector2(0.0f, 3000.0f);
 

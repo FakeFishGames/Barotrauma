@@ -30,27 +30,12 @@ namespace Barotrauma
 
         public SpriteSheet FocusIndicator { get; private set; }
             
-        public GUIStyle(string file, GraphicsDevice graphicsDevice)
+        public GUIStyle(XElement element, GraphicsDevice graphicsDevice)
         {
             this.graphicsDevice = graphicsDevice;
             componentStyles = new Dictionary<string, GUIComponentStyle>();
-
-            XDocument doc;
-            try
-            {
-                ToolBox.IsProperFilenameCase(file);
-                doc = XDocument.Load(file, LoadOptions.SetBaseUri);
-                if (doc == null) { throw new Exception("doc is null"); }
-                if (doc.Root == null) { throw new Exception("doc.Root is null"); }
-                if (doc.Root.Elements() == null) { throw new Exception("doc.Root.Elements() is null"); }
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Loading style \"" + file + "\" failed", e);
-                return;
-            }
-            configElement = doc.Root;
-            foreach (XElement subElement in doc.Root.Elements())
+            configElement = element;
+            foreach (XElement subElement in configElement.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {

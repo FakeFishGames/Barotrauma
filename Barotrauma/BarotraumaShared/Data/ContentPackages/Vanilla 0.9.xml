@@ -105,6 +105,7 @@
   <Particles file="Content/Particles/ParticlePrefabs.xml"/>
   <Decals file="Content/Particles/DecalPrefabs.xml"/>
   <RandomEvents file="Content/randomevents.xml" />
+  <EventManagerSettings file="Content/EventManagerSettings.xml" />
   <LocationTypes file="Content/Map/locationTypes.xml" />
   <MapGenerationParameters file="Content/Map/MapGenerationParameters.xml" />
   <LevelGenerationParameters file="Content/Map/LevelGenerationParameters.xml" />  
@@ -118,6 +119,7 @@
   <NPCConversations file="Content/NPCConversations/NpcConversations_SimplifiedChinese.xml"/>
   <NPCConversations file="Content/NPCConversations/NpcConversations_TraditionalChinese.xml"/>
   <Jobs file="Content/Jobs.xml" />
+  <Orders file="Content/Orders.xml" />
   <Sounds file="Content/Sounds/sounds.xml" />
   <Tutorials file="Content/Tutorials/Tutorials.xml" />
   <Executable file="Barotrauma.exe" />
