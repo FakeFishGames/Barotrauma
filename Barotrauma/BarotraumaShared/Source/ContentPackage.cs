@@ -376,7 +376,7 @@ namespace Barotrauma
                     XDocument doc = XMLExtensions.TryLoadXml(file.Path);
                     var rootElement = doc.Root;
                     var element = rootElement.IsOverride() ? rootElement.FirstElement() : rootElement;
-                    var speciesName = element.GetAttributeString("name", "");
+                    var speciesName = element.GetAttributeString("speciesname", element.GetAttributeString("name", ""));
                     var ragdollFolder = RagdollParams.GetFolder(speciesName);
                     if (Directory.Exists(ragdollFolder))
                     {
