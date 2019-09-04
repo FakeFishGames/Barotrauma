@@ -96,7 +96,7 @@ namespace Barotrauma.Networking
                 //find the first event that hasn't been sent in roundtriptime or at all
                 eventLastSent.TryGetValue(events[i].ID, out float lastSent);
 
-                if (lastSent > Lidgren.Network.NetTime.Now - 50) //TODO: reimplement serverConnection.AverageRoundtripTime
+                if (lastSent > Lidgren.Network.NetTime.Now - 0.2) //TODO: reimplement serverConnection.AverageRoundtripTime
                 {
                     continue;
                 }
