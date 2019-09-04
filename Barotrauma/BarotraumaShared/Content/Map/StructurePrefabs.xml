@@ -1594,19 +1594,19 @@
     <sprite texture="Content/Map/AlienBackground1.png" sourcerect="0,0,512,512" depth="0.98" premultiplyalpha="false" />
   </RuinBack1>
   <RuinBack2 name="Ruin BackWall 2" identifier="RuinBack2" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/AlienBackground2.png" sourcerect="0,0,512,512" depth="0.981" premultiplyalpha="false" />
+    <sprite texture="Content/Map/AlienBackground1.png" sourcerect="512,0,512,512" depth="0.981" premultiplyalpha="false" />
   </RuinBack2>
   <RuinBack3 name="Ruin BackWall 3" identifier="RuinBack3" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/AlienBackground3.png" sourcerect="0,0,512,512" depth="0.98" premultiplyalpha="false" />
+    <sprite texture="Content/Map/AlienBackground1.png" sourcerect="0,512,512,512" depth="0.98" premultiplyalpha="false" />
   </RuinBack3>
   <RuinBack4 name="Ruin BackWall 4" identifier="RuinBack4" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/AlienBackground4.png" sourcerect="0,0,512,512" depth="0.98" premultiplyalpha="false" />
+    <sprite texture="Content/Map/AlienBackground1.png" sourcerect="512,512,512,512" depth="0.98" premultiplyalpha="false" />
   </RuinBack4>
   <RuinBack5 name="Ruin BackWall 5" identifier="RuinBack5" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/AlienBackground5.png" sourcerect="0,0,512,512" depth="0.98" premultiplyalpha="false" />
+    <sprite texture="Content/Map/AlienBackground2.png" sourcerect="0,0,512,512" depth="0.98" premultiplyalpha="false" />
   </RuinBack5>
   <RuinBack6 name="Ruin BackWall 6" identifier="RuinBack6" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/AlienBackground6.png" sourcerect="0,0,512,512" depth="0.98" premultiplyalpha="false" />
+    <sprite texture="Content/Map/AlienBackground2.png" sourcerect="512,0,512,512" depth="0.98" premultiplyalpha="false" />
   </RuinBack6>
   <RuinBlock name="Ruin Prop Block" identifier="RuinBlock" category="Alien" allowattachitems="true" width="514" height="296">
     <sprite texture="Content/Map/ruins.png" sourcerect="0,513,514,296" depth="0.98" />

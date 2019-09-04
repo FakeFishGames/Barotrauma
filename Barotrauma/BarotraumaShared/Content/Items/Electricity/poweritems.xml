@@ -139,9 +139,9 @@
     </ItemContainer>
   </Item>
   <Item name="Supercapacitor" identifier="supercapacitor" category="Electrical" Scale="0.5" description="Can deliver charge much faster than batteries.">
-    <Sprite texture="supercapacitor.png" depth="0.8" sourcerect="0,16,154,160" />
-    <BrokenSprite texture="supercapacitor.png" sourcerect="154,16,154,160" depth="0.8" maxcondition="40" fadein="true" />
-    <BrokenSprite texture="supercapacitor.png" sourcerect="308,16,154,160" depth="0.8" maxcondition="0" />
+    <Sprite texture="battery.png" depth="0.8" sourcerect="0,334,154,160" />
+    <BrokenSprite texture="battery.png" sourcerect="154,334,155,161" depth="0.8" maxcondition="40" fadein="true" />
+    <BrokenSprite texture="battery.png" sourcerect="309,334,155,161" depth="0.8" maxcondition="0" />
     <PowerContainer capacity="20.0" maxrechargespeed="20.0" maxoutput="2000000.0" canbeselected="true" indicatorposition="51,16" indicatorsize="47,12" ishorizontal="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.18,0.23" minsize="350,250" maxsize="420,300" anchor="Center" relativeoffset="0,-0.1" style="ItemUI" />
     </PowerContainer>
@@ -183,7 +183,7 @@
       <RequiredItem identifier="lithium" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,0,64,64" origin="0.5,0.5" />
-    <Sprite texture="battery.png" sourcerect="3,336,57,40" depth="0.8" />
+    <Sprite texture="battery.png" sourcerect="357,0,57,38" depth="0.8" />
     <Body width="55" height="38" density="30" />
     <Pickable slots="Any,RightHand,LeftHand" msg="ItemMsgPickUpSelect" />
   </Item>
@@ -198,7 +198,7 @@
       <RequiredItem identifier="zinc" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="514,832,62,64" origin="0.5,0.5" />
-    <Sprite texture="battery.png" sourcerect="64,336,62,41" depth="0.8" />
+    <Sprite texture="battery.png" sourcerect="417,0,61,38" depth="0.8" />
     <Body width="55" height="38" density="30" />
     <Pickable slots="Any,RightHand,LeftHand" msg="ItemMsgPickUpSelect" />
   </Item>
