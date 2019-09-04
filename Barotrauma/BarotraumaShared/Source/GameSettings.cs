@@ -205,7 +205,7 @@ namespace Barotrauma
             {
                 voiceChatVolume = MathHelper.Clamp(value, 0.0f, 1.0f);
 #if CLIENT
-                GameMain.SoundManager?.SetCategoryGainMultiplier("voip", voiceChatVolume * 20.0f, 0);
+                GameMain.SoundManager?.SetCategoryGainMultiplier("voip", voiceChatVolume * 30.0f, 0);
 #endif
             }
         }
@@ -215,7 +215,7 @@ namespace Barotrauma
             get { return microphoneVolume; }
             set
             {
-                microphoneVolume = MathHelper.Clamp(value, 0.1f, 5.0f);
+                microphoneVolume = MathHelper.Clamp(value, 0.2f, 10.0f);
             }
         }
         public string Language
@@ -1127,7 +1127,7 @@ namespace Barotrauma
             DynamicRangeCompressionEnabled = true;
             VoipAttenuationEnabled = true;
             voiceChatVolume = 0.5f;
-            microphoneVolume = 1.0f;
+            microphoneVolume = 5.0f;
             AutoCheckUpdates = true;
             defaultPlayerName = string.Empty;
             HUDScale = 1;
