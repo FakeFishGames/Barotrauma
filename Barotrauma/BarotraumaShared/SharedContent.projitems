@@ -394,9 +394,6 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Command\NavUI.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Containers\DivingSuitLocker2.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Door\door2.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -1133,9 +1130,6 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Electricity\ShuttleBattery.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Electricity\supercapacitor.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\headgears.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -1374,18 +1368,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Map\AlienBackground2.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Map\AlienBackground3.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Map\AlienBackground4.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Map\AlienBackground5.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Map\AlienBackground6.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Map\AlienDecals1.png">
