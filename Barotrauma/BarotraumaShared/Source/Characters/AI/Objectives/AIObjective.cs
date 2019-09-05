@@ -94,11 +94,12 @@ namespace Barotrauma
         public void TryComplete(float deltaTime)
         {
             if (isCompleted) { return; }
+            if (Abandon) { return; }
             if (CheckState()) { return; }
-            // Not ready -> act
-            foreach (AIObjective objective in subObjectives)
+            // Not ready -> act (can't do foreach because it's possible that the collection is modified in event callbacks.
+            for (int i = 0; i < subObjectives.Count; i++)
             {
-                objective.TryComplete(deltaTime);
+                subObjectives[i].TryComplete(deltaTime);
                 if (!ConcurrentObjectives) { return; }
             }
             Act(deltaTime);
@@ -240,6 +241,7 @@ namespace Barotrauma
         {
             isCompleted = false;
             hasBeenChecked = false;
+            _abandon = false;
         }
 
         protected abstract void Act(float deltaTime);

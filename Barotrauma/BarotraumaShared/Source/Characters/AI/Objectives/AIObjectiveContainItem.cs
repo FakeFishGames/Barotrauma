@@ -94,8 +94,7 @@ namespace Barotrauma
                         ignoredItems = containedItems
                     }, onAbandon: () =>
                     {
-                        targetItemCount--;
-                        RemoveSubObjective(ref getItemObjective);
+                        Abandon = true;
                     }, onCompleted: () =>
                     {
                         if (getItemObjective.TargetItem != null)
@@ -105,9 +104,14 @@ namespace Barotrauma
                         }
                         else
                         {
-                            // Reduce the target item count to prevent getting stuck here, if the target item for some reason is null, which shouldn't happen.
-                            targetItemCount--;
-                            RemoveSubObjective(ref getItemObjective);
+                            if (container.Inventory.FindItem(i => itemIdentifiers.Any(id => i.Prefab.Identifier == id || i.HasTag(id)), false) != null)
+                            {
+                                IsCompleted = true;
+                            }
+                            else
+                            {
+                                Abandon = true;
+                            }
                         }
                     });
             }
