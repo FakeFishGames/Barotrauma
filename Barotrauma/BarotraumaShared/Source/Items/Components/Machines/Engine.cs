@@ -148,6 +148,16 @@ namespace Barotrauma.Items.Components
             force = MathHelper.Lerp(force, 0.0f, 0.1f);
         }
 
+        public override void FlipX(bool relativeToSub)
+        {
+            PropellerPos = new Vector2(-PropellerPos.X, PropellerPos.Y);
+        }
+
+        public override void FlipY(bool relativeToSub)
+        {
+            PropellerPos = new Vector2(PropellerPos.X, -PropellerPos.Y);
+        }
+
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
             base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power, signalStrength);
