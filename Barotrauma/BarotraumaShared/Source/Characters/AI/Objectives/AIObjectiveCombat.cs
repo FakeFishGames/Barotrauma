@@ -16,7 +16,16 @@ namespace Barotrauma
 
         private readonly CombatMode initialMode;
 
+        private float seekWeaponsTimer;
+        const float seekWeaponsInterval = 1;
+        private float ignoreWeaponTimer;
+        const float ignoredWeaponsClearTime = 10;
+
         const float coolDown = 10.0f;
+        // Won't take the offensive or defensive with weapons that have lower priority than this -> retreat only
+        const float poorWeaponPriority = 10;
+        // Won't take the offensive with weapons that have lower priority than this
+        const float goodWeaponPriority = 30;
 
         public Character Enemy { get; private set; }
         public bool HoldPosition { get; set; }
@@ -97,6 +106,18 @@ namespace Barotrauma
 
         public override void OnSelected() => Weapon = null;
 
+        public override void Update(float deltaTime)
+        {
+            base.Update(deltaTime);
+            ignoreWeaponTimer -= deltaTime;
+            seekWeaponsTimer -= deltaTime;
+            if (ignoreWeaponTimer < 0)
+            {
+                ignoredWeapons.Clear();
+                ignoreWeaponTimer = ignoredWeaponsClearTime;
+            }
+        }
+
         protected override bool Check()
         {
             bool completed = (Enemy != null && (Enemy.Removed || Enemy.IsDead)) || (initialMode != CombatMode.Offensive && coolDownTimer <= 0);
@@ -159,8 +180,9 @@ namespace Barotrauma
                 Weapon = null;
                 return false;
             }
-            if (Weapon == null)
+            if (seekWeaponsTimer < 0)
             {
+                seekWeaponsTimer = seekWeaponsInterval;
                 // First go through all weapons and try to reload without seeking ammunition
                 var allWeapons = GetAllWeapons().ToList();
                 while (allWeapons.Any())
@@ -177,6 +199,16 @@ namespace Barotrauma
                         allWeapons.Remove(WeaponComponent);
                         Weapon = null;
                         continue;
+                    }
+                    if (initialMode == CombatMode.Offensive)
+                    {
+                        // In the offensive mode, let's ignore weapons that cannot be used in the offensive mode
+                        if (WeaponComponent.CombatPriority < goodWeaponPriority)
+                        {
+                            allWeapons.Remove(WeaponComponent);
+                            Weapon = null;
+                            continue;
+                        }
                     }
                     if (IsLoaded(WeaponComponent))
                     {
@@ -195,15 +227,20 @@ namespace Barotrauma
                         Weapon = null;
                     }
                 }
-                // No loaded weapon found. Try again, now let's try to seek ammunition too
                 if (Weapon == null)
                 {
+                    // No weapon found with the conditions above. Try again, now let's try to seek ammunition too
                     Weapon = GetWeapon(out _weaponComponent);
                     if (Weapon != null)
                     {
-                        if (!CheckWeapon(seekAmmo: !HoldPosition))
+                        if (!CheckWeapon(seekAmmo: true))
                         {
-                            if (seekAmmunition == null)
+                            if (seekAmmunition != null)
+                            {
+                                // No loaded weapon, but we are trying to seek ammunition.
+                                return false;
+                            }
+                            else
                             {
                                 Weapon = null;
                             }
@@ -218,7 +255,14 @@ namespace Barotrauma
                     Weapon = null;
                 }
             }
-            Mode = Weapon == null ? CombatMode.Retreat : initialMode;
+            if (Weapon == null || WeaponComponent.CombatPriority < poorWeaponPriority)
+            {
+                Mode = CombatMode.Retreat;
+            }
+            else
+            {
+                Mode = WeaponComponent.CombatPriority >= goodWeaponPriority ? initialMode : CombatMode.Defensive;
+            }
             return Weapon != null;
 
             bool CheckWeapon(bool seekAmmo)
@@ -507,7 +551,7 @@ namespace Barotrauma
             {
                 return true;
             }
-            else if (ammunition == null && Mode == CombatMode.Offensive && seekAmmo && ammunitionIdentifiers != null)
+            else if (ammunition == null && !HoldPosition && initialMode == CombatMode.Offensive && seekAmmo && ammunitionIdentifiers != null)
             {
                 SeekAmmunition(ammunitionIdentifiers);
             }
