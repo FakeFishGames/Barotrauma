@@ -1224,6 +1224,75 @@ namespace Barotrauma
                 }
                 File.WriteAllLines(filePath, lines);
             }));
+
+
+            commands.Add(new Command("itemcomponentdocumentation", "", (string[] args) =>
+            {
+                Dictionary<string, string> typeNames = new Dictionary<string, string>
+                {
+                    { "Single", "float"},
+                    { "Int32", "integer"},
+                    { "Boolean", "true/false"},
+                    { "String", "text"},
+                };
+
+                var itemComponentTypes = typeof(ItemComponent).Assembly.GetTypes().Where(type => type.IsSubclassOf(typeof(ItemComponent)));
+                string filePath = args.Length > 0 ? args[0] : "ItemComponentDocumentation.txt";
+                List<string> lines = new List<string>();
+                foreach (Type t in itemComponentTypes)
+                {
+                    lines.Add($"[n]{t.Name}[/b]");
+                    lines.Add("");
+
+                    var properties = t.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.DeclaredOnly);//.Cast<System.ComponentModel.PropertyDescriptor>();
+                    Dictionary<string, SerializableProperty> dictionary = new Dictionary<string, SerializableProperty>();
+                    foreach (var property in properties)
+                    {
+                        object[] attributes = property.GetCustomAttributes(true);
+                        Serialize serialize = attributes.FirstOrDefault(a => a is Serialize) as Serialize;
+                        if (serialize == null) { continue; }
+
+                        string propertyTypeName = property.PropertyType.Name;
+                        if (typeNames.ContainsKey(propertyTypeName))
+                        {
+                            propertyTypeName = typeNames[propertyTypeName];
+                        }
+                        else if (property.PropertyType.IsEnum)
+                        {
+                            List<string> valueNames = new List<string>();
+                            foreach (object enumValue in Enum.GetValues(property.PropertyType))
+                            {
+                                valueNames.Add(enumValue.ToString());
+                            }
+                            propertyTypeName = string.Join("/", valueNames);
+                        }
+
+                        lines.Add($"{property.Name} ({propertyTypeName})");
+                        Editable editable = attributes.FirstOrDefault(a => a is Editable) as Editable;
+                        if (editable != null)
+                        {
+                            if (!string.IsNullOrEmpty(editable.ToolTip))
+                            {
+                                lines.Add(editable.ToolTip);
+                            }
+                            if (editable.MinValueFloat > float.MinValue || editable.MaxValueFloat < float.MaxValue)
+                            {
+                                lines.Add("Range: " + editable.MinValueFloat+"-"+editable.MaxValueFloat);
+                            }
+                            else if (editable.MinValueInt > int.MinValue || editable.MaxValueInt < int.MaxValue)
+                            {
+                                lines.Add("Range: " + editable.MinValueInt + "-" + editable.MaxValueInt);
+                            }
+                        }
+
+                        lines.Add("Default value: " + serialize.defaultValue);
+                        lines.Add("");
+                    }
+                    lines.Add("");
+                }
+                File.WriteAllLines(filePath, lines);
+                System.Diagnostics.Process.Start(Path.GetFullPath(filePath));
+            }));
 #if DEBUG
             commands.Add(new Command("checkduplicates", "Checks the given language for duplicate translation keys and writes to file.", (string[] args) =>
             {
