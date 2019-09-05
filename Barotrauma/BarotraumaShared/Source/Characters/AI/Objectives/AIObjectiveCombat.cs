@@ -382,7 +382,9 @@ namespace Barotrauma
             }
             if (character.CurrentHull != retreatTarget)
             {
-                TryAddSubObjective(ref retreatObjective, () => new AIObjectiveGoTo(retreatTarget, character, objectiveManager, false, true), onAbandon: () => RemoveSubObjective(ref retreatObjective));
+                TryAddSubObjective(ref retreatObjective, () => new AIObjectiveGoTo(retreatTarget, character, objectiveManager, false, true), 
+                    onAbandon: () => RemoveSubObjective(ref retreatObjective), 
+                    onCompleted: () => RemoveSubObjective(ref retreatObjective));
             }
         }
 
@@ -437,6 +439,7 @@ namespace Barotrauma
                     targetItemCount = Weapon.GetComponent<ItemContainer>().Capacity,
                     checkInventory = false
                 },
+                onCompleted: () => RemoveSubObjective(ref seekAmmunition),
                 onAbandon: () =>
                 {
                     SteeringManager.Reset();

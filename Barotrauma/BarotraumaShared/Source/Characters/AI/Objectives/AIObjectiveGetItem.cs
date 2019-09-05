@@ -166,7 +166,8 @@ namespace Barotrauma
                         moveToTarget = null;
                         ignoredItems.Add(targetItem);
                         RemoveSubObjective(ref goToObjective);
-                    });
+                    },
+                    onCompleted: () => RemoveSubObjective(ref goToObjective));
             }
         }
 
@@ -222,7 +223,7 @@ namespace Barotrauma
             if (currSearchIndex >= Item.ItemList.Count - 1 && targetItem == null)
             {
 #if DEBUG
-                DebugConsole.NewMessage($"{character.Name}: Cannot find the item with the following identifier(s): {string.Join(", ", itemIdentifiers)}", Color.Red);
+                DebugConsole.NewMessage($"{character.Name}: Cannot find the item with the following identifier(s): {string.Join(", ", itemIdentifiers)}", Color.Yellow);
 #endif
                 Abandon = true;
             }
