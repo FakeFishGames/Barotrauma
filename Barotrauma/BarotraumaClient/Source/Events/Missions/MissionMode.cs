@@ -9,7 +9,7 @@ namespace Barotrauma
         {
             if (mission == null) return;
 
-            new GUIMessageBox(mission.Name, mission.Description, new Vector2(0.25f, 0.0f), new Point(400, 200))
+            new GUIMessageBox(mission.Name, mission.Description, new string[0], type: GUIMessageBox.Type.InGame)
             {
                 UserData = "missionstartmessage"
             };
