@@ -53,7 +53,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize("0,0", true), Editable(ToolTip = "The position to detect the movement at relative to the item. For example, 0,100 would detect movement 100 units above the item.")]
+        [Editable, Serialize("0,0", true, description: "The position to detect the movement at relative to the item. For example, 0,100 would detect movement 100 units above the item.")]
         public Vector2 DetectOffset
         {
             get { return detectOffset; }
@@ -79,7 +79,7 @@ namespace Barotrauma.Items.Components
             set { falseOutput = value; }
         }
 
-        [Editable(ToolTip = "How fast the objects within the detector's range have to be moving (in m/s).", DecimalCount = 3), Serialize(0.01f, true)]
+        [Editable(DecimalCount = 3), Serialize(0.01f, true, description: "How fast the objects within the detector's range have to be moving (in m/s).")]
         public float MinimumVelocity
         {
             get;
@@ -88,7 +88,7 @@ namespace Barotrauma.Items.Components
 
 
         public MotionSensor(Item item, XElement element)
-            : base (item, element)
+            : base(item, element)
         {
             IsActive = true;
 

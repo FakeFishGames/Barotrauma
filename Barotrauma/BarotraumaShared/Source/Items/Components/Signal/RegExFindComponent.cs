@@ -19,10 +19,10 @@ namespace Barotrauma.Items.Components
         [InGameEditable, Serialize("1", true)]
         public string Output { get; set; }
 
-        [InGameEditable, Serialize("0", true)]
+        [Serialize("0", true)]
         public string FalseOutput { get; set; }
 
-        [Serialize(true, true), InGameEditable(ToolTip = "Should the component keep sending the output even after it stops receiving a signal, or only send an output when it receives a signal.")]
+        [InGameEditable, Serialize(true, true, description: "Should the component keep sending the output even after it stops receiving a signal, or only send an output when it receives a signal.")]
         public bool ContinuousOutput { get; set; }
 
         [InGameEditable, Serialize("", true)]

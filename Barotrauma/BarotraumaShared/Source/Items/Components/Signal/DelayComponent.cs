@@ -30,14 +30,14 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [InGameEditable(ToolTip = "Should the component discard previously received signals when a new one is received."), Serialize(false, true)]
+        [InGameEditable, Serialize(false, true, description: "Should the component discard previously received signals when a new one is received.")]
         public bool ResetWhenSignalReceived
         {
             get;
             set;
         }
 
-        [InGameEditable(ToolTip = "Should the component discard previously received signals when the incoming signal changes."), Serialize(false, true)]
+        [InGameEditable, Serialize(false, true, description: "Should the component discard previously received signals when the incoming signal changes.")]
         public bool ResetWhenDifferentSignalReceived
         {
             get;

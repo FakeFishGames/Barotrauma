@@ -65,40 +65,40 @@ namespace Barotrauma
             AppliedDamageModifiers = appliedDamageModifiers;
         }
     }
-    
+
     partial class Attack : ISerializableEntity
     {
-        [Serialize(AttackContext.NotDefined, true), Editable(ToolTip = "Is the attack used only in a specific condition?")]
+        [Serialize(AttackContext.NotDefined, true, description: "Is the attack used only in a specific condition?"), Editable]
         public AttackContext Context { get; private set; }
 
-        [Serialize(AttackTarget.Any, true), Editable(ToolTip = "Does the attack target only specific targets?")]
+        [Serialize(AttackTarget.Any, true, description: "Does the attack target only specific targets?"), Editable]
         public AttackTarget TargetType { get; private set; }
 
-        [Serialize(HitDetection.Distance, true), Editable(ToolTip = "Collision detection is more accurate, but it only affects targets that are in contact with the limb.")]
+        [Serialize(HitDetection.Distance, true, description: "Collision detection is more accurate, but it only affects targets that are in contact with the limb."), Editable]
         public HitDetection HitDetectionType { get; private set; }
 
-        [Serialize(AIBehaviorAfterAttack.FallBack, true), Editable(ToolTip = "The preferred AI behavior after the attack.")]
+        [Serialize(AIBehaviorAfterAttack.FallBack, true, description: "The preferred AI behavior after the attack."), Editable]
         public AIBehaviorAfterAttack AfterAttack { get; set; }
 
-        [Serialize(false, true), Editable(ToolTip = "Should the AI try to reverse when aiming with this attack?")]
+        [Serialize(false, true, description: "Should the AI try to reverse when aiming with this attack?"), Editable]
         public bool Reverse { get; private set; }
 
-        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2000.0f, ToolTip = "The min distance from the attack limb to the target before the AI tries to attack.")]
+        [Serialize(0.0f, true, description: "The min distance from the attack limb to the target before the AI tries to attack."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2000.0f)]
         public float Range { get; set; }
 
-        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2000.0f, ToolTip = "The min distance from the attack limb to the target to do damage. In distance-based hit detection, the hit will be registered as soon as the target is within the damage range, unless the attack duration has expired.")]
+        [Serialize(0.0f, true, description: "The min distance from the attack limb to the target to do damage. In distance-based hit detection, the hit will be registered as soon as the target is within the damage range, unless the attack duration has expired."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2000.0f)]
         public float DamageRange { get; set; }
 
-        [Serialize(0.25f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, DecimalCount = 2, ToolTip = "An approximation of the attack duration. Effectively defines the time window in which the hit can be registered. If set to too low value, it's possible that the attack won't hit the target in time.")]
+        [Serialize(0.25f, true, description: "An approximation of the attack duration. Effectively defines the time window in which the hit can be registered. If set to too low value, it's possible that the attack won't hit the target in time."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, DecimalCount = 2)]
         public float Duration { get; private set; }
 
-        [Serialize(5f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, DecimalCount = 2, ToolTip = "How long the AI waits between the attacks.")]
+        [Serialize(5f, true, description: "How long the AI waits between the attacks."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, DecimalCount = 2)]
         public float CoolDown { get; set; } = 5;
 
-        [Serialize(0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, DecimalCount = 2, ToolTip = "Used as the attack cooldown between different kind of attacks. Does not have effect, if set to 0.")]
+        [Serialize(0f, true, description: "Used as the attack cooldown between different kind of attacks. Does not have effect, if set to 0."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, DecimalCount = 2)]
         public float SecondaryCoolDown { get; set; } = 0;
 
-        [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1, DecimalCount = 2, ToolTip = "A random factor applied to all cooldowns. Example: 0.1 -> adds a random value between -10% and 10% of the cooldown. Min 0 (default), Max 1 (could disable or double the cooldown in extreme cases).")]
+        [Serialize(0f, true, description: "A random factor applied to all cooldowns. Example: 0.1 -> adds a random value between -10% and 10% of the cooldown. Min 0 (default), Max 1 (could disable or double the cooldown in extreme cases)."), Editable(MinValueFloat = 0, MaxValueFloat = 1, DecimalCount = 2)]
         public float CoolDownRandomFactor { get; private set; } = 0;
 
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10000.0f)]
@@ -137,28 +137,28 @@ namespace Barotrauma
             }
         }
 
-        [Serialize(0.0f, true), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f, ToolTip = "Applied to the attacking limb (or limbs defined using ApplyForceOnLimbs). The direction of the force is towards the target that's being attacked.")]
+        [Serialize(0.0f, true, description: "Applied to the attacking limb (or limbs defined using ApplyForceOnLimbs). The direction of the force is towards the target that's being attacked."), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
         public float Force { get; private set; }
 
-        [Serialize(0.0f, true), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f, ToolTip = "Applied to the attacking limb.")]
+        [Serialize(0.0f, true, description: "Applied to the attacking limb."), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
         public float Torque { get; private set; }
 
         [Serialize(false, true), Editable]
         public bool ApplyForcesOnlyOnce { get; private set; }
 
-        [Serialize(0.0f, true), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f, ToolTip = "Applied to the target the attack hits. The direction of the impulse is from this limb towards the target (use negative values to pull the target closer).")]
+        [Serialize(0.0f, true, description: "Applied to the target the attack hits. The direction of the impulse is from this limb towards the target (use negative values to pull the target closer)."), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
         public float TargetImpulse { get; private set; }
 
-        [Serialize("0.0, 0.0", true), Editable(ToolTip = "Applied to the target, in world space coordinates(i.e. 0, -1 pushes the target downwards).")]
+        [Serialize("0.0, 0.0", true, description: "Applied to the target, in world space coordinates(i.e. 0, -1 pushes the target downwards)."), Editable]
         public Vector2 TargetImpulseWorld { get; private set; }
 
-        [Serialize(0.0f, true), Editable(-1000.0f, 1000.0f, ToolTip = "Applied to the target the attack hits. The direction of the force is from this limb towards the target (use negative values to pull the target closer).")]
+        [Serialize(0.0f, true, description: "Applied to the target the attack hits. The direction of the force is from this limb towards the target (use negative values to pull the target closer)."), Editable(-1000.0f, 1000.0f)]
         public float TargetForce { get; private set; }
 
-        [Serialize("0.0, 0.0", true), Editable(ToolTip = "Applied to the target, in world space coordinates(i.e. 0, -1 pushes the target downwards).")]
+        [Serialize("0.0, 0.0", true, description: "Applied to the target, in world space coordinates(i.e. 0, -1 pushes the target downwards)."), Editable]
         public Vector2 TargetForceWorld { get; private set; }
 
-        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f, ToolTip = "How likely the attack causes target limbs to be severed when the target is dead.")]
+        [Serialize(0.0f, true, description: "How likely the attack causes target limbs to be severed when the target is dead."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
         public float SeverLimbsProbability { get; set; }
 
         // TODO: disabled because not synced
@@ -166,9 +166,9 @@ namespace Barotrauma
         //public float StickChance { get; set; }
         public float StickChance => 0f;
 
-        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f, ToolTip = "")]
+        [Serialize(0.0f, true, description: ""), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
         public float Priority { get; private set; }
-             
+
         public IEnumerable<StatusEffect> StatusEffects
         {
             get { return statusEffects; }

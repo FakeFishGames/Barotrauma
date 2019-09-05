@@ -1268,13 +1268,14 @@ namespace Barotrauma
                         }
 
                         lines.Add($"{property.Name} ({propertyTypeName})");
+
+                        if (!string.IsNullOrEmpty(serialize.Description))
+                        {
+                            lines.Add(serialize.Description);
+                        }
                         Editable editable = attributes.FirstOrDefault(a => a is Editable) as Editable;
                         if (editable != null)
                         {
-                            if (!string.IsNullOrEmpty(editable.ToolTip))
-                            {
-                                lines.Add(editable.ToolTip);
-                            }
                             if (editable.MinValueFloat > float.MinValue || editable.MaxValueFloat < float.MaxValue)
                             {
                                 lines.Add("Range: " + editable.MinValueFloat+"-"+editable.MaxValueFloat);

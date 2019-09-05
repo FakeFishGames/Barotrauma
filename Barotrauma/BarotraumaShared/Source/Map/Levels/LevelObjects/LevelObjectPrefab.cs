@@ -78,7 +78,7 @@ namespace Barotrauma
         /// <summary>
         /// Which sides of a wall the object can appear on.
         /// </summary>
-        [Serialize((Alignment.Top | Alignment.Bottom | Alignment.Left | Alignment.Right), true), Editable(ToolTip = "Which sides of a wall the object can spawn on.")]
+        [Serialize((Alignment.Top | Alignment.Bottom | Alignment.Left | Alignment.Right), true, description: "Which sides of a wall the object can spawn on."), Editable]
         public Alignment Alignment
         {
             get;
@@ -117,15 +117,15 @@ namespace Barotrauma
             private set;
         }
 
-        [Serialize("0.0,1.0", true), Editable()]
+        [Serialize("0.0,1.0", true), Editable]
         public Vector2 DepthRange
         {
             get;
             private set;
         }
 
-        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, 
-            ToolTip = "The tendency for the prefab to form clusters. Used as an exponent for perlin noise values that are used to determine the probability for an object to spawn at a specific position.")]
+        [Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f),
+        Serialize(0.0f, true, description: "The tendency for the prefab to form clusters. Used as an exponent for perlin noise values that are used to determine the probability for an object to spawn at a specific position.")]
         /// <summary>
         /// The tendency for the prefab to form clusters. Used as an exponent for perlin noise values 
         /// that are used to determine the probability for an object to spawn at a specific position.
@@ -136,8 +136,8 @@ namespace Barotrauma
             private set;
         }
 
-        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f,
-            ToolTip = "A value between 0-1 that determines the z-coordinate to sample perlin noise from when determining the probability " +
+        [Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f),
+            Serialize(0.0f, true, description: "A value between 0-1 that determines the z-coordinate to sample perlin noise from when determining the probability " +
             " for an object to spawn at a specific position. Using the same (or close) value for different objects means the objects tend " +
             "to form clusters in the same areas.")]
         /// <summary>
@@ -152,15 +152,14 @@ namespace Barotrauma
             private set;
         }
 
-        [Serialize(false, true), Editable(ToolTip = "Should the object be rotated to align it with the wall surface it spawns on.")]
+        [Editable, Serialize(false, true, description: "Should the object be rotated to align it with the wall surface it spawns on.")]
         public bool AlignWithSurface
         {
             get;
             private set;
         }
 
-        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f, 
-            ToolTip = "Minimum length of a graph edge the object can spawn on.")]
+        [Serialize(0.0f, true, description: "Minimum length of a graph edge the object can spawn on."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
         /// <summary>
         /// Minimum length of a graph edge the object can spawn on.
         /// </summary>
@@ -171,7 +170,7 @@ namespace Barotrauma
         }
 
         private Vector2 randomRotation;
-        [Serialize("0.0,0.0", true), Editable(ToolTip = "How much the rotation of the object can vary (min and max values in degrees).")]
+        [Editable, Serialize("0.0,0.0", true, description: "How much the rotation of the object can vary (min and max values in degrees).")]
         public Vector2 RandomRotation
         {
             get { return new Vector2(MathHelper.ToDegrees(randomRotation.X), MathHelper.ToDegrees(randomRotation.Y)); }
@@ -184,7 +183,7 @@ namespace Barotrauma
         public Vector2 RandomRotationRad => randomRotation;
 
         private float swingAmount;
-        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 360.0f, ToolTip = "How much the object swings (in degrees).")]
+        [Serialize(0.0f, true, description: "How much the object swings (in degrees)."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 360.0f)]
         public float SwingAmount
         {
             get { return MathHelper.ToDegrees(swingAmount); }
@@ -196,30 +195,30 @@ namespace Barotrauma
 
         public float SwingAmountRad => swingAmount;
 
-        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, ToolTip = "How fast the object swings.")]
+        [Serialize(0.0f, true, description: "How fast the object swings."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f)]
         public float SwingFrequency
         {
             get;
             private set;
         }
 
-        [Serialize("0.0,0.0", true), Editable(ToolTip = "How much the scale of the object oscillates on each axis. A value of 0.5,0.5 would make the object's scale oscillate from 100% to 150%.")]
+        [Editable, Serialize("0.0,0.0", true, description: "How much the scale of the object oscillates on each axis. A value of 0.5,0.5 would make the object's scale oscillate from 100% to 150%.")]
         public Vector2 ScaleOscillation
         {
             get;
             private set;
         }
 
-        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, ToolTip = "How fast the object's scale oscillates.")]
+        [Serialize(0.0f, true, description: "How fast the object's scale oscillates."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f)]
         public float ScaleOscillationFrequency
         {
             get;
             private set;
         }
 
-        [Serialize(1.0f, true), Editable(ToolTip = "How likely it is for the object to spawn in a level. "+
-            "This is relative to the commonness of the other objects - for example, having an object with "+
-            "a commonness of 1 and another with a commonness of 10 would mean the latter appears in levels 10 times as frequently as the former. "+
+        [Editable, Serialize(1.0f, true, description: "How likely it is for the object to spawn in a level. " +
+            "This is relative to the commonness of the other objects - for example, having an object with " +
+            "a commonness of 1 and another with a commonness of 10 would mean the latter appears in levels 10 times as frequently as the former. " +
             "The commonness value can be overridden on specific level types.")]
         public float Commonness
         {
@@ -227,7 +226,7 @@ namespace Barotrauma
             private set;
         }
 
-        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, ToolTip = "How much the object disrupts submarine's sonar.")]
+        [Serialize(0.0f, true, description: "How much the object disrupts submarine's sonar."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f)]
         public float SonarDisruption
         {
             get;

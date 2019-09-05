@@ -40,8 +40,8 @@ namespace Barotrauma.Items.Components
 
         public float Rotation;
 
-        [Editable(ToolTip = "Should structures cast shadows when light from this light source hits them. "+
-            "Disabling shadows increases the performance of the game, and is recommended for lights with a short range."), Serialize(true, true)]
+        [Editable, Serialize(true, true, description: "Should structures cast shadows when light from this light source hits them. " +
+            "Disabling shadows increases the performance of the game, and is recommended for lights with a short range.")]
         public bool CastShadows
         {
             get { return castShadows; }
@@ -54,8 +54,8 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable(ToolTip = "Lights drawn behind submarines don't cast any shadows and are much faster to draw than shadow-casting lights. "+
-            "It's recommended to enable this on decorative lights outside the submarine's hull."), Serialize(false, true)]
+        [Editable, Serialize(false, true, description: "Lights drawn behind submarines don't cast any shadows and are much faster to draw than shadow-casting lights. " +
+            "It's recommended to enable this on decorative lights outside the submarine's hull.")]
         public bool DrawBehindSubs
         {
             get { return drawBehindSubs; }

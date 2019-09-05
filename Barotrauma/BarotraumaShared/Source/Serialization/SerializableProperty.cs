@@ -21,8 +21,6 @@ namespace Barotrauma
         public float MinValueFloat = float.MinValue, MaxValueFloat = float.MaxValue;
         public float ValueStep;
 
-        public string ToolTip;
-
         public string DisplayName;
 
         public Editable(int maxLength = 20)
@@ -57,6 +55,8 @@ namespace Barotrauma
         public bool isSaveable;
         public string translationTextTag;
 
+        public string Description;
+
         /// <summary>
         /// Makes the property serializable to/from XML
         /// </summary>
@@ -64,11 +64,12 @@ namespace Barotrauma
         /// <param name="isSaveable">Is the value saved to XML when serializing.</param>
         /// <param name="translationTextTag">If set to anything else than null, SerializableEntityEditors will show what the text gets translated to or warn if the text is not found in the language files.
         /// Setting the value to a non-empty string will let the user select the text from one whose tag starts with the given string (e.g. RoomName. would show all texts with a RoomName.* tag)</param>
-        public Serialize(object defaultValue, bool isSaveable, string translationTextTag = null)
+        public Serialize(object defaultValue, bool isSaveable, string description = "", string translationTextTag = null)
         {
             this.defaultValue = defaultValue;
             this.isSaveable = isSaveable;
             this.translationTextTag = translationTextTag;
+            this.Description = description;
         }
     }
 

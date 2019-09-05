@@ -22,8 +22,8 @@ namespace Barotrauma.Items.Components
 
         private float prevVoltage;
         
-        [Editable(0.0f, 10000000.0f, ToolTip = "The amount of force exerted on the submarine when the engine is operating at full power."), 
-        Serialize(2000.0f, true)]
+        [Editable(0.0f, 10000000.0f), 
+        Serialize(2000.0f, true, description: "The amount of force exerted on the submarine when the engine is operating at full power.")]
         public float MaxForce
         {
             get { return maxForce; }

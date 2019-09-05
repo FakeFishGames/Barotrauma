@@ -22,8 +22,8 @@ namespace Barotrauma.Items.Components
         //the maximum amount of power the item can draw from connected items
         protected float powerConsumption;
 
-        [Serialize(0.5f, true), Editable(ToolTip = "The minimum voltage required for the device to function. "+
-            "The voltage is calculated as power / powerconsumption, meaning that a device "+
+        [Editable, Serialize(0.5f, true, description: "The minimum voltage required for the device to function. " +
+            "The voltage is calculated as power / powerconsumption, meaning that a device " +
             "with a power consumption of 1000 kW would need at least 500 kW of power to work if the minimum voltage is set to 0.5.")]
         public float MinVoltage
         {
@@ -31,7 +31,7 @@ namespace Barotrauma.Items.Components
             set { minVoltage = value; }
         }
 
-        [Editable(ToolTip = "How much power the device draws (or attempts to draw) from the electrical grid."), Serialize(0.0f, true)]
+        [Editable, Serialize(0.0f, true, description: "How much power the device draws (or attempts to draw) from the electrical grid.")]
         public float PowerConsumption
         {
             get { return powerConsumption; }
@@ -66,7 +66,7 @@ namespace Barotrauma.Items.Components
             set { voltage = Math.Max(0.0f, value); }
         }
 
-        [Editable(ToolTip = "Can the item be damaged by electomagnetic pulses."), Serialize(true, true)]
+        [Editable, Serialize(true, true, description: "Can the item be damaged by electomagnetic pulses.")]
         public bool VulnerableToEMP
         {
             get;

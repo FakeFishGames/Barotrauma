@@ -13,7 +13,7 @@ namespace Barotrauma
         public readonly string Description;
 
         public readonly List<int> AllowedZones = new List<int>();
-        
+
         public Biome(string name, string description)
         {
             Name = name;
@@ -55,7 +55,7 @@ namespace Barotrauma
             get;
             private set;
         }
-        
+
         private int minWidth, maxWidth, height;
 
         private Point voronoiSiteInterval;
@@ -86,7 +86,7 @@ namespace Barotrauma
         private float cellIrregularity;
 
         private int mountainCountMin, mountainCountMax;
-        
+
         private int mountainHeightMin, mountainHeightMax;
 
         private int ruinCount;
@@ -134,8 +134,8 @@ namespace Barotrauma
             get;
             set;
         }
-        
-        [Serialize(1000, true), Editable(MinValueInt = 0, MaxValueInt = 100000, ToolTip = "The total number of level objects (vegetation, vents, etc) in the level.")]
+
+        [Serialize(1000, true, description: "The total number of level objects (vegetation, vents, etc) in the level."), Editable(MinValueInt = 0, MaxValueInt = 100000)]
         public int LevelObjectAmount
         {
             get;
@@ -162,9 +162,8 @@ namespace Barotrauma
             get { return height; }
             set { height = Math.Max(value, 2000); }
         }
-        
-        [Serialize("3000, 3000", true), Editable(
-            ToolTip = "How far from each other voronoi sites are placed. " +
+
+        [Editable, Serialize("3000, 3000", true, description: "How far from each other voronoi sites are placed. " +
             "Sites determine shape of the voronoi graph which the level walls are generated from. " +
             "(Decreasing this value causes the number of sites, and the complexity of the level, to increase exponentially - be careful when adjusting)")]
         public Point VoronoiSiteInterval
@@ -177,7 +176,7 @@ namespace Barotrauma
             }
         }
 
-        [Serialize("700,700", true), Editable(ToolTip = "How much random variation to apply to the positions of the voronoi sites on each axis. "+
+        [Editable, Serialize("700,700", true, description: "How much random variation to apply to the positions of the voronoi sites on each axis. " +
             "Small values produce roughly rectangular level walls. The larger the values are, the less uniform the shapes get.")]
         public Point VoronoiSiteVariance
         {
@@ -189,8 +188,8 @@ namespace Barotrauma
                     MathHelper.Clamp(value.Y, 0, voronoiSiteInterval.Y));
             }
         }
-        
-        [Serialize(1000, true), Editable(MinValueInt = 100, MaxValueInt = 10000, ToolTip = "The edges of the individual wall cells are subdivided into edges of this size. "
+
+        [Editable(MinValueInt = 100, MaxValueInt = 10000), Serialize(1000, true, description: "The edges of the individual wall cells are subdivided into edges of this size. "
             + "Can be used in conjunction with the rounding values to make the cells rounder. Smaller values will make the cells look smoother, " +
             "but make the level more performance-intensive as the number of polygons used in rendering and physics calculations increases.")]
         public int CellSubdivisionLength
@@ -203,8 +202,8 @@ namespace Barotrauma
         }
 
 
-        [Serialize(0.5f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f, ToolTip = "How much the individual wall cells are rounded. "
-            +"Note that the final shape of the cells is also affected by the CellSubdivisionLength parameter.")]
+        [Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f), Serialize(0.5f, true, description: "How much the individual wall cells are rounded. "
+            + "Note that the final shape of the cells is also affected by the CellSubdivisionLength parameter.")]
         public float CellRoundingAmount
         {
             get { return cellRoundingAmount; }
@@ -214,7 +213,7 @@ namespace Barotrauma
             }
         }
 
-        [Serialize(0.1f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f, ToolTip = "How much random variance is applied to the edges of the cells. "
+        [Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f), Serialize(0.1f, true, description: "How much random variance is applied to the edges of the cells. "
             + "Note that the final shape of the cells is also affected by the CellSubdivisionLength parameter.")]
         public float CellIrregularity
         {
@@ -226,7 +225,7 @@ namespace Barotrauma
         }
 
 
-        [Serialize("5000, 10000", true), Editable(ToolTip = "The distance between the nodes that are used to generate the main path through the level (min, max). Larger values produce a straighter path.")]
+        [Editable, Serialize("5000, 10000", true, description: "The distance between the nodes that are used to generate the main path through the level (min, max). Larger values produce a straighter path.")]
         public Point MainPathNodeIntervalRange
         {
             get { return mainPathNodeIntervalRange; }
@@ -237,14 +236,14 @@ namespace Barotrauma
             }
         }
 
-        [Serialize(5, true), Editable(ToolTip = "The number of small tunnels placed along the main path.")]
+        [Editable, Serialize(5, true, description: "The number of small tunnels placed along the main path.")]
         public int SmallTunnelCount
         {
             get { return smallTunnelCount; }
             set { smallTunnelCount = MathHelper.Clamp(value, 0, 100); }
         }
-        
-        [Serialize("5000, 10000", true), Editable(ToolTip = "The minimum and maximum length of small tunnels placed along the main path.")]
+
+        [Editable, Serialize("5000, 10000", true, description: "The minimum and maximum length of small tunnels placed along the main path.")]
         public Point SmallTunnelLengthRange
         {
             get { return smallTunnelLengthRange; }
@@ -269,21 +268,21 @@ namespace Barotrauma
             set;
         }
 
-        [Serialize(300000, true), Editable(MinValueFloat = Level.MaxEntityDepth, MaxValueFloat = 0.0f, ToolTip = "How far below the level the sea floor is placed.")]
+        [Serialize(300000, true, description: "How far below the level the sea floor is placed."), Editable(MinValueFloat = Level.MaxEntityDepth, MaxValueFloat = 0.0f)]
         public int SeaFloorDepth
         {
             get { return seaFloorBaseDepth; }
             set { seaFloorBaseDepth = MathHelper.Clamp(value, Level.MaxEntityDepth, 0); }
         }
 
-        [Serialize(1000, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100000.0f, ToolTip = "Variance of the depth of the sea floor. Smaller values produce a smoother sea floor.")]
+        [Serialize(1000, true, description: "Variance of the depth of the sea floor. Smaller values produce a smoother sea floor."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100000.0f)]
         public int SeaFloorVariance
         {
             get { return seaFloorVariance; }
             set { seaFloorVariance = value; }
         }
 
-        [Serialize(0, true), Editable(MinValueInt = 0, MaxValueInt = 20, ToolTip = "The minimum number of mountains on the sea floor.")]
+        [Serialize(0, true, description: "The minimum number of mountains on the sea floor."), Editable(MinValueInt = 0, MaxValueInt = 20)]
         public int MountainCountMin
         {
             get { return mountainCountMin; }
@@ -293,7 +292,7 @@ namespace Barotrauma
             }
         }
 
-        [Serialize(0, true), Editable(MinValueInt = 0, MaxValueInt = 20, ToolTip = "The maximum number of mountains on the sea floor.")]
+        [Serialize(0, true, description: "The maximum number of mountains on the sea floor."), Editable(MinValueInt = 0, MaxValueInt = 20)]
         public int MountainCountMax
         {
             get { return mountainCountMax; }
@@ -302,8 +301,8 @@ namespace Barotrauma
                 mountainCountMax = Math.Max(value, 0);
             }
         }
-        
-        [Serialize(1000, true), Editable(MinValueInt = 0, MaxValueInt = 1000000, ToolTip = "The minimum height of the mountains on the sea floor.")]
+
+        [Serialize(1000, true, description: "The minimum height of the mountains on the sea floor."), Editable(MinValueInt = 0, MaxValueInt = 1000000)]
         public int MountainHeightMin
         {
             get { return mountainHeightMin; }
@@ -312,8 +311,8 @@ namespace Barotrauma
                 mountainHeightMin = Math.Max(value, 0);
             }
         }
-        
-        [Serialize(5000, true), Editable(MinValueInt = 0, MaxValueInt = 1000000, ToolTip = "The maximum height of the mountains on the sea floor.")]
+
+        [Serialize(5000, true, description: "The maximum height of the mountains on the sea floor."), Editable(MinValueInt = 0, MaxValueInt = 1000000)]
         public int MountainHeightMax
         {
             get { return mountainHeightMax; }
@@ -323,21 +322,21 @@ namespace Barotrauma
             }
         }
 
-        [Serialize(1, true), Editable(MinValueInt = 0, MaxValueInt = 50, ToolTip = "The number of alien ruins in the level.")]
+        [Serialize(1, true, description: "The number of alien ruins in the level."), Editable(MinValueInt = 0, MaxValueInt = 50)]
         public int RuinCount
         {
             get { return ruinCount; }
             set { ruinCount = MathHelper.Clamp(value, 0, 10); }
         }
 
-        [Serialize(0.4f, true), Editable(ToolTip = "The probability for wall cells to be removed from the bottom of the map. A value of 0 will produce a completely enclosed tunnel and 1 will make the entire bottom of the level completely open.")]
+        [Serialize(0.4f, true, description: "The probability for wall cells to be removed from the bottom of the map. A value of 0 will produce a completely enclosed tunnel and 1 will make the entire bottom of the level completely open."), Editable()]
         public float BottomHoleProbability
         {
             get { return bottomHoleProbability; }
             set { bottomHoleProbability = MathHelper.Clamp(value, 0.0f, 1.0f); }
         }
 
-        [Serialize(1.0f, true), Editable(ToolTip = "Scale of the water particle texture.")]
+        [Serialize(1.0f, true, description: "Scale of the water particle texture."), Editable]
         public float WaterParticleScale
         {
             get { return waterParticleScale; }
@@ -351,7 +350,7 @@ namespace Barotrauma
         public Sprite WallEdgeSprite { get; private set; }
         public Sprite WallEdgeSpriteSpecular { get; private set; }
         public Sprite WaterParticles { get; private set; }
-        
+
         public static List<Biome> GetBiomes()
         {
             return biomes;
@@ -386,7 +385,7 @@ namespace Barotrauma
         {
             Name = element == null ? "default" : element.Name.ToString();
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
-                        
+
             string biomeStr = element.GetAttributeString("biomes", "");
             if (string.IsNullOrWhiteSpace(biomeStr))
             {
@@ -450,7 +449,7 @@ namespace Barotrauma
             {
                 files = new List<string>() { "Content/Map/LevelGenerationParameters.xml" };
             }
-            
+
             List<XElement> biomeElements = new List<XElement>();
             List<XElement> levelParamElements = new List<XElement>();
 

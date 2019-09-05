@@ -302,7 +302,7 @@ namespace Barotrauma
             {
                 displayName = property.Name.FormatCamelCaseWithSpaces();
             }
-            string toolTip = property.GetAttribute<Editable>().ToolTip;
+            string toolTip = property.GetAttribute<Serialize>().Description;
             GUIComponent propertyField = null;
             if (value is bool)
             {

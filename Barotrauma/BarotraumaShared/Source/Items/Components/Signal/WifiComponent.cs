@@ -39,25 +39,24 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable(ToolTip = 
-            "If enabled, any signals received from another chat-linked wifi component are displayed "+
-            "as chat messages in the chatbox of the player holding the item."), Serialize(false, false)]
+        [Editable, Serialize(false, false, description: "If enabled, any signals received from another chat-linked wifi component are displayed " +
+            "as chat messages in the chatbox of the player holding the item.")]
         public bool LinkToChat
         {
             get;
             set;
         }
 
-        [Editable(ToolTip = "How many seconds have to pass between signals for a message to be displayed in the chatbox. "+
-            "Setting this to a very low value is not recommended, because it may cause an excessive amount of chat messages to be created "+
-            "if there are chat-linked wifi components that transmit a continuous signal."), Serialize(1.0f, true)]
+        [Editable, Serialize(1.0f, true, description: "How many seconds have to pass between signals for a message to be displayed in the chatbox. " +
+            "Setting this to a very low value is not recommended, because it may cause an excessive amount of chat messages to be created " +
+            "if there are chat-linked wifi components that transmit a continuous signal.")]
         public float MinChatMessageInterval
         {
             get;
             set;
         }
 
-        [Editable(ToolTip = "If set to true, the component will only create chat messages when the received signal changes."), Serialize(false, true)]
+        [Editable, Serialize(false, true, description: "If set to true, the component will only create chat messages when the received signal changes.")]
         public bool DiscardDuplicateChatMessages
         {
             get;

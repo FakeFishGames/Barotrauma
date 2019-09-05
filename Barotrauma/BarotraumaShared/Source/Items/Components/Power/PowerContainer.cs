@@ -59,11 +59,10 @@ namespace Barotrauma.Items.Components
             set { isHorizontal = value; }
         }
 
-        [Editable(ToolTip = "Maximum output of the device when fully charged (kW)."), Serialize(10.0f, true)]
+        [Editable, Serialize(10.0f, true, description: "Maximum output of the device when fully charged (kW).")]
         public float MaxOutPut { set; get; }
 
-        [Serialize(10.0f, true), Editable(ToolTip = "The maximum capacity of the device (kW * min). "+
-            "For example, a value of 1000 means the device can output 100 kilowatts of power for 10 minutes, or 1000 kilowatts for 1 minute.")]
+        [Editable, Serialize(10.0f, true, description: "The maximum capacity of the device (kW * min). For example, a value of 1000 means the device can output 100 kilowatts of power for 10 minutes, or 1000 kilowatts for 1 minute.")]
         public float Capacity
         {
             get { return capacity; }
@@ -92,8 +91,7 @@ namespace Barotrauma.Items.Components
 
         public float ChargePercentage => MathUtils.Percentage(Charge, Capacity);
         
-        [Serialize(10.0f, true), Editable(ToolTip = "How fast the device can be recharged. "+
-            "For example, a recharge speed of 100 kW and a capacity of 1000 kW*min would mean it takes 10 minutes to fully charge the device.")]
+        [Editable, Serialize(10.0f, true, description: "How fast the device can be recharged. For example, a recharge speed of 100 kW and a capacity of 1000 kW*min would mean it takes 10 minutes to fully charge the device.")]
         public float MaxRechargeSpeed
         {
             get { return maxRechargeSpeed; }

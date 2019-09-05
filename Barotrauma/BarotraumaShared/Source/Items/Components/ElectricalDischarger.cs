@@ -55,7 +55,7 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Serialize(10.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f, ToolTip = "How much further can the discharge be carried when moving across walls.")]
+        [Serialize(10.0f, true, description: "How much further can the discharge be carried when moving across walls."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
         public float RangeMultiplierInWalls
         {
             get;

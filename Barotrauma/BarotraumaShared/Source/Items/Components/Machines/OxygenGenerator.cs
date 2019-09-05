@@ -22,7 +22,7 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
-        [Editable(ToolTip = "How much oxygen the machine generates when operating at full power."), Serialize(400.0f, true)]
+        [Editable, Serialize(400.0f, true, description: "How much oxygen the machine generates when operating at full power.")]
         public float GeneratedAmount
         {
             get { return generatedAmount; }

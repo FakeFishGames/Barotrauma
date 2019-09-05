@@ -36,16 +36,16 @@ namespace Barotrauma
         public readonly bool ShowOverlay = true;
 #endif
 
-        [Serialize(6, true)]        
+        [Serialize(6, true)]
         public int DifficultyZones { get; set; } //Number of difficulty zones
-        
+
         [Serialize(2000, true)]
         public int Size { get; set; }
 
-        [Serialize(20.0f, true), Editable(0.0f, 5000.0f, ToolTip = "Connections with a length smaller or equal to this generate the smallest possible levels (using the MinWidth parameter in the level generation paramaters).")]
+        [Serialize(20.0f, true, description: "Connections with a length smaller or equal to this generate the smallest possible levels (using the MinWidth parameter in the level generation paramaters)."), Editable(0.0f, 5000.0f)]
         public float SmallLevelConnectionLength { get; set; }
 
-        [Serialize(200.0f, true), Editable(0.0f, 5000.0f, ToolTip = "Connections with a length larger or equal to this generate the largest possible levels (using the MaxWidth parameter in the level generation paramaters).")]
+        [Serialize(200.0f, true, description: "Connections with a length larger or equal to this generate the largest possible levels (using the MaxWidth parameter in the level generation paramaters)."), Editable(0.0f, 5000.0f)]
         public float LargeLevelConnectionLength { get; set; }
 
         [Serialize(1024, true)]
@@ -65,77 +65,71 @@ namespace Barotrauma
         [Serialize("280,80", true), Editable]
         public Vector2 TileSpriteSpacing { get; set; }
 
-        [Serialize(1.0f, true), Editable(0.0f, 1.0f, ToolTip = "How dark the center of the map is (1.0f = black).")]
-        public float CenterDarkenStrength { get; set; } 
+        [Serialize(1.0f, true, description: "How dark the center of the map is (1.0f = black)."), Editable(0.0f, 1.0f)]
+        public float CenterDarkenStrength { get; set; }
 
-        [Serialize(0.9f, true), Editable(0.0f, 1.0f, ToolTip = "How close to the center the darkening starts (0.8f = 20% from the edge).")]
+        [Serialize(0.9f, true, description: "How close to the center the darkening starts (0.8f = 20% from the edge)."), Editable(0.0f, 1.0f)]
         public float CenterDarkenRadius { get; set; }
 
-        [Serialize(5, true), Editable(0, 1000,
-            ToolTip = "The edge of the dark center area is wave-shaped, and the frequency is determined by this value." +
-            " I.e. how many points does the star-shaped dark area in the center have.")]
+        [Serialize(5, true, description: "The edge of the dark center area is wave-shaped, and the frequency is determined by this value." +
+            " I.e. how many points does the star-shaped dark area in the center have."), Editable(0, 1000)]
         public int CenterDarkenWaveFrequency { get; set; }
 
-        [Serialize(15.0f, true), Editable(0, 1000.0f,
-            ToolTip = "How heavily the noise map affects the phase of the edge wave (higher value = more irregular shape).")]
+        [Serialize(15.0f, true, description: "How heavily the noise map affects the phase of the edge wave (higher value = more irregular shape)."), Editable(0, 1000.0f)]
         public float CenterDarkenWavePhaseNoise { get; set; }
 
-        [Serialize(0.8f, true), Editable(0.0f, 1.0f, ToolTip = "How dark the edges of the map are (1.0f = black).")]
+        [Serialize(0.8f, true, description: "How dark the edges of the map are (1.0f = black)."), Editable(0.0f, 1.0f)]
         public float EdgeDarkenStrength { get; set; }
 
-        [Serialize(0.9f, true), Editable(0.0f, 1.0f, ToolTip = "How far from the center the darkening starts (0.95f = 5% from the edge).")]
+        [Serialize(0.9f, true, description: "How far from the center the darkening starts (0.95f = 5% from the edge)."), Editable(0.0f, 1.0f)]
         public float EdgeDarkenRadius { get; set; }
-        
-        [Serialize(0.9f, true), Editable(0.0f, 1.0f, ToolTip = "How far from the center locations can be placed.")]
+
+        [Serialize(0.9f, true, description: "How far from the center locations can be placed."), Editable(0.0f, 1.0f)]
         public float LocationRadius { get; set; }
-        
-        [Serialize(20.0f, true), Editable(1.0f, 100.0f, 
-            ToolTip = "How far from each other voronoi sites are placed. "+
-            "Sites determine shape of the voronoi graph. Locations are placed at the vertices of the voronoi cells. "+
-            "(Decreasing this value causes the number of sites, and the complexity of the map, to increase exponentially - be careful when adjusting)") ]
+
+        [Serialize(20.0f, true, description: "How far from each other voronoi sites are placed. " +
+            "Sites determine shape of the voronoi graph. Locations are placed at the vertices of the voronoi cells. " +
+            "(Decreasing this value causes the number of sites, and the complexity of the map, to increase exponentially - be careful when adjusting)"), Editable(1.0f, 100.0f)]
         public float VoronoiSiteInterval { get; set; }
-        
-        [Serialize(0.3f, true), Editable(0.01f, 1.0f, 
-            ToolTip = "How likely it is for a site to be placed at a given spot (e.g. 20% probability for a site to be placed every 5 units of the map). "+
-            "Multiplied with the noise value in the spot, meaning that sites are less likely to appear in dark spots.")]
+
+        [Serialize(0.3f, true, description: "How likely it is for a site to be placed at a given spot (e.g. 20% probability for a site to be placed every 5 units of the map). " +
+            "Multiplied with the noise value in the spot, meaning that sites are less likely to appear in dark spots."), Editable(0.01f, 1.0f)]
         public float VoronoiSitePlacementProbability { get; set; }
-        
-        [Serialize(0.1f, true), Editable(0.01f, 1.0f,
-            ToolTip = "Probability * noise ^ 2 must be higher than this for a site to be placed. "+
-            "= How bright the noise map must be at a given spot for a location to be placed there")]
+
+        [Serialize(0.1f, true, description: "Probability * noise ^ 2 must be higher than this for a site to be placed. " +
+            "= How bright the noise map must be at a given spot for a location to be placed there"), Editable(0.01f, 1.0f)]
         public float VoronoiSitePlacementMinVal { get; set; }
 
-        [Serialize(10.0f, true), Editable(0.0f, 500.0f, ToolTip = "Connections smaller than this are removed.")]
+        [Serialize(10.0f, true, description: "Connections smaller than this are removed."), Editable(0.0f, 500.0f)]
         public float MinConnectionDistance { get; set; }
-        
-        [Serialize(5.0f, true), Editable(0.0f, 100.0f, ToolTip = "Locations that are closer than this to another location are removed.")]
+
+        [Serialize(5.0f, true, description: "Locations that are closer than this to another location are removed."), Editable(0.0f, 100.0f)]
         public float MinLocationDistance { get; set; }
 
-        [Serialize(0.2f, true), Editable(0.0f, 10.0f, 
-            ToolTip = "Affects how many iterations are done when generating the jagged shape of the connections (iterations = Sqrt(connectionLength * multiplier)).")]
+        [Serialize(0.2f, true, description: "Affects how many iterations are done when generating the jagged shape of the connections (iterations = Sqrt(connectionLength * multiplier))."), Editable(0.0f, 10.0f)]
         public float ConnectionIterationMultiplier { get; set; }
-        
-        [Serialize(0.5f, true), Editable(0.0f, 10.0f, ToolTip = "How large the \"bends\" in the connections are (displacement = connectionLength * multiplier).")]
+
+        [Serialize(0.5f, true, description: "How large the \"bends\" in the connections are (displacement = connectionLength * multiplier)."), Editable(0.0f, 10.0f)]
         public float ConnectionDisplacementMultiplier { get; set; }
-        
-        [Serialize(0.1f, true), Editable(0.0f, 10.0f, ToolTip = "ConnectionIterationMultiplier for the UI indicator lines between locations.")]
+
+        [Serialize(0.1f, true, description: "ConnectionIterationMultiplier for the UI indicator lines between locations."), Editable(0.0f, 10.0f)]
         public float ConnectionIndicatorIterationMultiplier { get; set; }
-        
-        [Serialize(0.1f, true), Editable(0.0f, 10.0f, ToolTip = "ConnectionDisplacementMultiplier for the UI indicator lines between locations.")]
+
+        [Serialize(0.1f, true, description: "ConnectionDisplacementMultiplier for the UI indicator lines between locations."), Editable(0.0f, 10.0f)]
         public float ConnectionIndicatorDisplacementMultiplier { get; set; }
 
         public Sprite ConnectionSprite { get; private set; }
 
 #if CLIENT
-        
-        [Serialize(15.0f, true), Editable(1.0f, 1000.0f, ToolTip = "Size of the location icons in pixels when at 100% zoom.")]
+
+        [Serialize(15.0f, true, description: "Size of the location icons in pixels when at 100% zoom."), Editable(1.0f, 1000.0f)]
         public float LocationIconSize { get; set; }
 
-        [Serialize("150,150,150,255", true), Editable(ToolTip = "The color used to display the low-difficulty connections on the map.")]
+        [Serialize("150,150,150,255", true, description: "The color used to display the low-difficulty connections on the map."), Editable()]
         public Color LowDifficultyColor { get; set; }
-        [Serialize("210,143,83,255", true), Editable(ToolTip = "The color used to display the medium-difficulty connections on the map.")]
+        [Serialize("210,143,83,255", true, description: "The color used to display the medium-difficulty connections on the map."), Editable()]
         public Color MediumDifficultyColor { get; set; }
-        [Serialize("216,154,138", true), Editable(ToolTip = "The color used to display the high-difficulty connections on the map.")]
+        [Serialize("216,154,138", true, description: "The color used to display the high-difficulty connections on the map."), Editable()]
         public Color HighDifficultyColor { get; set; }
 
         public SpriteSheet DecorativeMapSprite { get; private set; }

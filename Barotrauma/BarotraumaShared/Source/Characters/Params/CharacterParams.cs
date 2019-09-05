@@ -31,7 +31,7 @@ namespace Barotrauma
         [Serialize(false, true), Editable]
         public bool CanSpeak { get; set; }
 
-        [Serialize(100f, true), Editable(minValue: 0f, maxValue: 1000f, ToolTip = "How much noise the character makes when moving?")]
+        [Serialize(100f, true, description: "How much noise the character makes when moving?"), Editable(minValue: 0f, maxValue: 1000f)]
         public float Noise { get; set; }
 
         [Serialize("", true), Editable]
@@ -246,7 +246,7 @@ namespace Barotrauma
             [Serialize(1.0f, true), Editable(minValue: 0f, maxValue: 2.0f)]
             public float Volume { get; private set; }
 
-            [Serialize(Gender.None, true), Editable(ToolTip = "Is the sound gender specific?")]
+            [Serialize(Gender.None, true, description: "Is the sound gender specific?"), Editable()]
             public Gender Gender { get; private set; }
 
             public SoundParams(XElement element, CharacterParams character) : base(element, character) { }
@@ -310,7 +310,7 @@ namespace Barotrauma
         {
             public override string Name => "Health";
 
-            [Serialize(100f, true), Editable(minValue: 1, maxValue: 10000f, ToolTip = "How much (max) health does the character have?")]
+            [Serialize(100f, true, description: "How much (max) health does the character have?"), Editable(minValue: 1, maxValue: 10000f)]
             public float Vitality { get; set; }
 
             [Serialize(true, true), Editable]
@@ -334,7 +334,7 @@ namespace Barotrauma
             {
                 public override string Name => "Item";
 
-                [Serialize("", true), Editable(ToolTip = "Item identifier.")]
+                [Serialize("", true, description: "Item identifier."), Editable()]
                 public string Identifier { get; private set; }
 
                 public InventoryItem(XElement element, CharacterParams character) : base(element, character) { }
@@ -342,13 +342,13 @@ namespace Barotrauma
 
             public override string Name => "Inventory";
 
-            [Serialize("Any, Any", true), Editable(ToolTip = "Which slots the inventory holds? Accepted types: None, Any, RightHand, LeftHand, Head, InnerClothes, OuterClothes, Headset, and Card.")]
+            [Serialize("Any, Any", true, description: "Which slots the inventory holds? Accepted types: None, Any, RightHand, LeftHand, Head, InnerClothes, OuterClothes, Headset, and Card."), Editable()]
             public string Slots { get; private set; }
 
             [Serialize(false, true), Editable]
             public bool AccessibleWhenAlive { get; private set; }
 
-            [Serialize(1.0f, true), Editable(minValue: 0f, maxValue: 1.0f, ToolTip = "What are the odds that this inventory is spawned on the character?")]
+            [Serialize(1.0f, true, description: "What are the odds that this inventory is spawned on the character?"), Editable(minValue: 0f, maxValue: 1.0f)]
             public float Commonness { get; private set; }
 
             public List<InventoryItem> Items { get; private set; } = new List<InventoryItem>();
@@ -380,28 +380,28 @@ namespace Barotrauma
         {
             public override string Name => "AI";
 
-            [Serialize(1.0f, true), Editable(ToolTip = "How strong other characters think this character is? Only affects AI.")]
+            [Serialize(1.0f, true, description: "How strong other characters think this character is? Only affects AI."), Editable()]
             public float CombatStrength { get; private set; }
 
-            [Serialize(1.0f, true), Editable(minValue: 0f, maxValue: 2f, ToolTip = "Affects how far the character can see the targets. Used as a multiplier.")]
+            [Serialize(1.0f, true, description: "Affects how far the character can see the targets. Used as a multiplier."), Editable(minValue: 0f, maxValue: 2f)]
             public float Sight { get; private set; }
 
-            [Serialize(1.0f, true), Editable(minValue: 0f, maxValue: 2f, ToolTip = "Affects how far the character can hear the targets. Used as a multiplier.")]
+            [Serialize(1.0f, true, description: "Affects how far the character can hear the targets. Used as a multiplier."), Editable(minValue: 0f, maxValue: 2f)]
             public float Hearing { get; private set; }
 
-            [Serialize(100f, true), Editable(minValue: -1000f, maxValue: 1000f, ToolTip = "How much the target priority increase when the character takes damage? Additive.")]
+            [Serialize(100f, true, description: "How much the target priority increase when the character takes damage? Additive."), Editable(minValue: -1000f, maxValue: 1000f)]
             public float AggressionHurt { get; private set; }
 
-            [Serialize(10f, true), Editable(minValue: 0f, maxValue: 1000f, ToolTip = "How much the target priority increase when the character takes damage? Additive.")]
+            [Serialize(10f, true, description: "How much the target priority increase when the character takes damage? Additive."), Editable(minValue: 0f, maxValue: 1000f)]
             public float AggressionGreed { get; private set; }
 
-            [Serialize(0f, true), Editable(minValue: 0f, maxValue: 100f, ToolTip = "If the health drops below this threshold, the character flees. In percentages.")]
+            [Serialize(0f, true, description: "If the health drops below this threshold, the character flees. In percentages."), Editable(minValue: 0f, maxValue: 100f)]
             public float FleeHealthThreshold { get; private set; }
 
-            [Serialize(false, true), Editable(ToolTip = "Does the character attack ONLY when provoked?")]
+            [Serialize(false, true, description: "Does the character attack ONLY when provoked?"), Editable()]
             public bool AttackOnlyWhenProvoked { get; private set; }
 
-            [Serialize(false, true), Editable(ToolTip = "Does the character try to break inside the sub?")]
+            [Serialize(false, true, description: "Does the character try to break inside the sub?"), Editable()]
             public bool AggressiveBoarding { get; private set; }
 
             // TODO: latchonto, swarming
@@ -477,13 +477,13 @@ namespace Barotrauma
         {
             public override string Name => "Target";
 
-            [Serialize("", true), Editable(ToolTip = "Can be an item tag, species name or something else. Examples: decoy, provocative, light, dead, human, crawler, wall, nasonov, sonar, door, stronger, weaker, light, human, room...")]
+            [Serialize("", true, description: "Can be an item tag, species name or something else. Examples: decoy, provocative, light, dead, human, crawler, wall, nasonov, sonar, door, stronger, weaker, light, human, room..."), Editable()]
             public string Tag { get; private set; }
 
             [Serialize(AIState.Idle, true), Editable]
             public AIState State { get; set; }
 
-            [Serialize(0f, true), Editable(minValue: 0f, maxValue: 1000f, ToolTip = "What base priority is given to the target?")]
+            [Serialize(0f, true, description: "What base priority is given to the target?"), Editable(minValue: 0f, maxValue: 1000f)]
             public float Priority { get; set; }
 
             public TargetParams(XElement element, CharacterParams character) : base(element, character) { }

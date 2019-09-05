@@ -20,20 +20,20 @@ namespace Barotrauma
 
     abstract class GroundedMovementParams : AnimationParams
     {
-        [Serialize("1.0, 1.0", true), Editable(DecimalCount = 2, ToolTip = "How big steps the character takes.")]
+        [Serialize("1.0, 1.0", true, description: "How big steps the character takes."), Editable(DecimalCount = 2)]
         public Vector2 StepSize
         {
             get;
             set;
         }
 
-        [Serialize(0f, true), Editable(DecimalCount = 2, ToolTip = "How high above the ground the character's head is positioned.")]
+        [Serialize(0f, true, description: "How high above the ground the character's head is positioned."), Editable(DecimalCount = 2)]
         public float HeadPosition { get; set; }
 
-        [Serialize(0f, true), Editable(DecimalCount = 2, ToolTip = "How high above the ground the character's torso is positioned.")]
+        [Serialize(0f, true, description: "How high above the ground the character's torso is positioned."), Editable(DecimalCount = 2)]
         public float TorsoPosition { get; set; }
 
-        [Serialize(0.75f, true), Editable(MinValueFloat = 0.1f, MaxValueFloat = 0.99f, DecimalCount = 2, ToolTip = "The character's movement speed is multiplied with this value when moving backwards.")]
+        [Serialize(0.75f, true, description: "The character's movement speed is multiplied with this value when moving backwards."), Editable(MinValueFloat = 0.1f, MaxValueFloat = 0.99f, DecimalCount = 2)]
         public float BackwardsMovementMultiplier { get; set; }
     }
 
@@ -54,8 +54,8 @@ namespace Barotrauma
         [Serialize(1.0f, true), Editable(DecimalCount = 2)]
         public float MovementSpeed { get; set; }
 
-        [Serialize(1.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2, 
-            ToolTip = "The speed of the \"animation cycle\", i.e. how fast the character takes steps or moves the tail/legs/arms (the outcome depends what the clip is about)")]
+        [Serialize(1.0f, true, description: "The speed of the \"animation cycle\", i.e. how fast the character takes steps or moves the tail/legs/arms (the outcome depends what the clip is about)"),
+            Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2)]
         public float CycleSpeed { get; set; }
 
         /// <summary>

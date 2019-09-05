@@ -31,7 +31,7 @@ namespace Barotrauma
 
         public string SpeciesName { get; private set; }
 
-        [Serialize(0f, true), Editable(-360, 360, ToolTip = "The orientation of the sprites as drawn on the sprite sheet. Can be overridden by setting a value for Limb's 'Sprite Orientation'. Used mainly for animations and widgets.")]
+        [Serialize(0f, true, description: "The orientation of the sprites as drawn on the sprite sheet. Can be overridden by setting a value for Limb's 'Sprite Orientation'. Used mainly for animations and widgets."), Editable(-360, 360)]
         public float SpritesheetOrientation { get; set; }
 
         private float limbScale;
@@ -46,16 +46,16 @@ namespace Barotrauma
         [Serialize(1f, false)]
         public float TextureScale { get; set; }
 
-        [Serialize(45f, true), Editable(0f, 1000f, ToolTip = "How high from the ground the main collider levitates when the character is standing? Doesn't affect swimming.")]
+        [Serialize(45f, true, description: "How high from the ground the main collider levitates when the character is standing? Doesn't affect swimming."), Editable(0f, 1000f)]
         public float ColliderHeightFromFloor { get; set; }
 
-        [Serialize(50f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1000, ToolTip = "How much impact is required before the character takes impact damage?")]
+        [Serialize(50f, true, description: "How much impact is required before the character takes impact damage?"), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
         public float ImpactTolerance { get; set; }
 
-        [Serialize(true, true), Editable(ToolTip = "Can the creature enter submarine and walk when there is no water? Creatures that cannot enter submarines, always collide with it, even when there is a gap.")]
+        [Serialize(true, true, description: "Can the creature enter submarine and walk when there is no water? Creatures that cannot enter submarines, always collide with it, even when there is a gap."), Editable()]
         public bool CanEnterSubmarine { get; set; }
 
-        [Serialize(true, true), Editable(ToolTip = "Can the character be dragged around by other creatures?")]
+        [Serialize(true, true, description: "Can the character be dragged around by other creatures?"), Editable()]
         public bool Draggable { get; set; }
 
         private static Dictionary<string, Dictionary<string, RagdollParams>> allRagdolls = new Dictionary<string, Dictionary<string, RagdollParams>>();
@@ -453,13 +453,13 @@ namespace Barotrauma
             /// <summary>
             /// Should be converted to sim units.
             /// </summary>
-            [Serialize("1.0, 1.0", true), Editable(ToolTip = "Local position of the joint in the Limb1.")]
+            [Serialize("1.0, 1.0", true, description: "Local position of the joint in the Limb1."), Editable()]
             public Vector2 Limb1Anchor { get; set; }
 
             /// <summary>
             /// Should be converted to sim units.
             /// </summary>
-            [Serialize("1.0, 1.0", true), Editable(ToolTip = "Local position of the join in the Limb2.")]
+            [Serialize("1.0, 1.0", true, description: "Local position of the join in the Limb2."), Editable()]
             public Vector2 Limb2Anchor { get; set; }
 
             [Serialize(true, true), Editable]
@@ -522,57 +522,57 @@ namespace Barotrauma
             /// <summary>
             /// Note that editing this in-game doesn't currently have any effect (unless the ragdoll is recreated). It should be visible, but readonly in the editor.
             /// </summary>
-            [Serialize(-1, true), Editable(ToolTip = "Should be read-only. Don't touch!")]
+            [Serialize(-1, true, description: "Should be read-only. Don't touch!"), Editable()]
             public int ID { get; set; }
 
-            [Serialize(LimbType.None, true), Editable(ToolTip = "The limb type affects many things, like the animations. Torso or Head are considered as the main limbs. Every character should have at least one Torso or Head.")]
+            [Serialize(LimbType.None, true, description: "The limb type affects many things, like the animations. Torso or Head are considered as the main limbs. Every character should have at least one Torso or Head."), Editable()]
             public LimbType Type { get; set; }
 
-            [Serialize(float.NaN, true), Editable(-360, 360, ToolTip = "The orientation of the sprite as drawn on the sprite sheet. Overrides the value defined in the Ragdoll settings. Used mainly for animations and widgets.")]
+            [Serialize(float.NaN, true, description: "The orientation of the sprite as drawn on the sprite sheet. Overrides the value defined in the Ragdoll settings. Used mainly for animations and widgets."), Editable(-360, 360)]
             public float SpriteOrientation { get; set; }
 
             public float GetSpriteOrientation() => MathHelper.ToRadians(float.IsNaN(SpriteOrientation) ? Ragdoll.SpritesheetOrientation : SpriteOrientation);
 
-            [Serialize(true, true), Editable(ToolTip = "Does the limb flip when the character flips?")]
+            [Serialize(true, true, description: "Does the limb flip when the character flips?"), Editable()]
             public bool Flip { get; set; }
 
-            [Serialize(false, true), Editable(ToolTip = "Currently only works with non-deformable (normal) sprites.")]
+            [Serialize(false, true, description: "Currently only works with non-deformable (normal) sprites."), Editable()]
             public bool MirrorVertically { get; set; }
 
             [Serialize(false, true), Editable]
             public bool MirrorHorizontally { get; set; }
 
-            [Serialize(false, true), Editable(ToolTip = "Disable drawing for this limb.")]
+            [Serialize(false, true, description: "Disable drawing for this limb."), Editable()]
             public bool Hide { get; set; }
 
-            [Serialize(0f, true), Editable(ToolTip = "Higher values make AI characters prefer attacking this limb.")]
+            [Serialize(0f, true, description: "Higher values make AI characters prefer attacking this limb."), Editable()]
             public float AttackPriority { get; set; }
 
             [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 500)]
             public float SteerForce { get; set; }
 
-            [Serialize("0, 0", true), Editable(ToolTip = "Only applicable if this limb is a foot. Determines the \"neutral position\" of the foot relative to a joint determined by the \"RefJoint\" parameter. For example, a value of {-100, 0} would mean that the foot is positioned on the floor, 100 units behind the reference joint.")]
+            [Serialize("0, 0", true, description: "Only applicable if this limb is a foot. Determines the \"neutral position\" of the foot relative to a joint determined by the \"RefJoint\" parameter. For example, a value of {-100, 0} would mean that the foot is positioned on the floor, 100 units behind the reference joint."), Editable()]
             public Vector2 StepOffset { get; set; }
 
-            [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1000, ToolTip = "Radius of the collider.")]
+            [Serialize(0f, true, description: "Radius of the collider."), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
             public float Radius { get; set; }
 
-            [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1000, ToolTip = "Height of the collider.")]
+            [Serialize(0f, true, description: "Height of the collider."), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
             public float Height { get; set; }
 
-            [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1000, ToolTip = "Width of the collider.")]
+            [Serialize(0f, true, description: "Width of the collider."), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
             public float Width { get; set; }
 
-            [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 10000, ToolTip = "How heavy the limb is? If 0, the mass is automatically calculated based on the sprite dimensions.")]
+            [Serialize(0f, true, description: "How heavy the limb is? If 0, the mass is automatically calculated based on the sprite dimensions."), Editable(MinValueFloat = 0, MaxValueFloat = 10000)]
             public float Mass { get; set; }
 
             [Serialize(10f, true), Editable(MinValueFloat = 0, MaxValueFloat = 100)]
             public float Density { get; set; }
 
-            [Serialize("0, 0", true), Editable(ToolTip = "The position which is used to lead the IK chain to the IK goal. Only applicable if the limb is hand or foot.")]
+            [Serialize("0, 0", true, description: "The position which is used to lead the IK chain to the IK goal. Only applicable if the limb is hand or foot."), Editable()]
             public Vector2 PullPos { get; set; }
 
-            [Serialize(-1, true), Editable(ToolTip = "The id of the refecence joint. Determines which joint is used as the \"neutral x-position\" for the foot movement. For example in the case of a humanoid-shaped characters this would usually be the waist. The position can be offset using the StepOffset parameter. Only applicable if this limb is a foot.")]
+            [Serialize(-1, true, description: "The id of the refecence joint. Determines which joint is used as the \"neutral x-position\" for the foot movement. For example in the case of a humanoid-shaped characters this would usually be the waist. The position can be offset using the StepOffset parameter. Only applicable if this limb is a foot."), Editable()]
             public int RefJoint { get; set; }
 
             [Serialize(false, true), Editable]
@@ -733,10 +733,10 @@ namespace Barotrauma
             [Serialize("0, 0, 0, 0", true), Editable]
             public Rectangle SourceRect { get; set; }
 
-            [Serialize("0.5, 0.5", true), Editable(DecimalCount = 2, ToolTip = "The origin of the sprite relative to the collider.")]
+            [Serialize("0.5, 0.5", true, description: "The origin of the sprite relative to the collider."), Editable(DecimalCount = 2)]
             public Vector2 Origin { get; set; }
 
-            [Serialize(0f, true), Editable(minValue: 0, maxValue: 1, DecimalCount = 3, ToolTip = "The Z-depth of the limb relative to other limbs of the same character. 1 is front, 0 is behind.")]
+            [Serialize(0f, true, description: "The Z-depth of the limb relative to other limbs of the same character. 1 is front, 0 is behind."), Editable(minValue: 0, maxValue: 1, DecimalCount = 3)]
             public float Depth { get; set; }
 
             [Serialize("", true), Editable()]

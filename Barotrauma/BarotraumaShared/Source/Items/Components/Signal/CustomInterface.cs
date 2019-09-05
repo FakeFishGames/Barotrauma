@@ -12,7 +12,7 @@ namespace Barotrauma.Items.Components
             public bool ContinuousSignal;
             public bool State;
             public string Connection;
-            [Serialize("", false, translationTextTag = "Label.")]
+            [Serialize("", false, translationTextTag: "Label.")]
             public string Label { get; set; }
             [Serialize("1", false)]
             public string Signal { get; set; }

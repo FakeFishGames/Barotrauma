@@ -160,7 +160,7 @@ namespace Barotrauma.Items.Components
         }
 
         //Remove item if combination results in 0 condition
-        [Serialize(true, false), Editable(ToolTip = "Can the properties of the component be edited in-game (only applicable if the component has in-game editable properties).")]
+        [Serialize(true, false, description: "Can the properties of the component be edited in-game (only applicable if the component has in-game editable properties)."), Editable()]
         public bool AllowInGameEditing
         {
             get;

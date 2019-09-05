@@ -85,7 +85,7 @@ namespace Barotrauma.Items.Components
             set { attachedByDefault = value; }
         }
 
-        [Serialize("0.0,0.0", false),Editable]
+        [Serialize("0.0,0.0", false), Editable]
         public Vector2 HoldPos
         {
             get { return ConvertUnits.ToDisplayUnits(holdPos); }

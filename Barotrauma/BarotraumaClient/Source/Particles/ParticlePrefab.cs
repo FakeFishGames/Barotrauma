@@ -17,12 +17,12 @@ namespace Barotrauma.Particles
             private set;
         }
                 
-        [Editable(0.0f, float.MaxValue, ToolTip = "How many seconds the particle remains alive."), Serialize(5.0f, false)]
+        [Editable(0.0f, float.MaxValue), Serialize(5.0f, false, description: "How many seconds the particle remains alive.")]
         public float LifeTime { get; private set; }
 
-        [Editable(ToolTip = "How long it takes for the particle to appear after spawning it."), Serialize(0.0f, false)]
+        [Editable, Serialize(0.0f, false, description: "How long it takes for the particle to appear after spawning it.")]
         public float StartDelayMin { get; private set; }
-        [Editable(ToolTip = "How long it takes for the particle to appear after spawning it."), Serialize(0.0f, false)]
+        [Editable, Serialize(0.0f, false, description: "How long it takes for the particle to appear after spawning it.")]
         public float StartDelayMax { get; private set; }
         //movement -----------------------------------------
 
@@ -57,7 +57,7 @@ namespace Barotrauma.Particles
         private float startRotationMin;
         public float StartRotationMinRad { get; private set; }
 
-        [Editable(ToolTip = "The minimum initial rotation of the particle (in degrees)."), Serialize(0.0f, false)]
+        [Editable, Serialize(0.0f, false, description: "The minimum initial rotation of the particle (in degrees).")]
         public float StartRotationMin
         {
             get { return startRotationMin; }
@@ -71,7 +71,7 @@ namespace Barotrauma.Particles
         private float startRotationMax;
         public float StartRotationMaxRad { get; private set; }
 
-        [Editable(ToolTip = "The maximum initial rotation of the particle (in degrees)."), Serialize(0.0f, false)]
+        [Editable, Serialize(0.0f, false, description: "The maximum initial rotation of the particle (in degrees).")]
         public float StartRotationMax
         {
             get { return startRotationMax; }
@@ -82,19 +82,19 @@ namespace Barotrauma.Particles
             }
         }
 
-        [Editable(ToolTip = "Should the particle face the direction it's moving towards."), Serialize(false, false)]
+        [Editable, Serialize(false, false, description: "Should the particle face the direction it's moving towards.")]
         public bool RotateToDirection { get; private set; }
 
-        [Editable(ToolTip = "Drag applied to the particle when it's moving through air."), Serialize(0.0f, false)]
+        [Editable, Serialize(0.0f, false, description: "Drag applied to the particle when it's moving through air.")]
         public float Drag { get; private set; }
 
-        [Editable(ToolTip = "Drag applied to the particle when it's moving through water."), Serialize(0.0f, false)]
+        [Editable, Serialize(0.0f, false, description: "Drag applied to the particle when it's moving through water.")]
         public float WaterDrag { get; private set; }
 
         private Vector2 velocityChange;
         public Vector2 VelocityChangeDisplay { get; private set; }
 
-        [Editable(ToolTip = "How much the velocity of the particle changes per second."), Serialize("0.0,0.0", false)]
+        [Editable, Serialize("0.0,0.0", false, description: "How much the velocity of the particle changes per second.")]
         public Vector2 VelocityChange
         {
             get { return velocityChange; }
@@ -108,7 +108,7 @@ namespace Barotrauma.Particles
         private Vector2 velocityChangeWater;
         public Vector2 VelocityChangeWaterDisplay { get; private set; }
 
-        [Editable(ToolTip = "How much the velocity of the particle changes per second when in water."), Serialize("0.0,0.0", false)]
+        [Editable, Serialize("0.0,0.0", false, description: "How much the velocity of the particle changes per second when in water.")]
         public Vector2 VelocityChangeWater
         {
             get { return velocityChangeWater; }
@@ -119,62 +119,62 @@ namespace Barotrauma.Particles
             }
         }
 
-        [Editable(0.0f, 10000.0f, ToolTip = "Drag applied to the particle when it's moving through water."), Serialize(0.0f, false)]
+        [Editable(0.0f, 10000.0f), Serialize(0.0f, false, description: "Drag applied to the particle when it's moving through water.")]
         public float CollisionRadius { get; private set; }
 
-        [Editable(ToolTip = "Does the particle collide with the walls of the submarine and the level."), Serialize(false, false)]
+        [Editable, Serialize(false, false, description: "Does the particle collide with the walls of the submarine and the level.")]
         public bool UseCollision { get; private set; }
 
-        [Editable(ToolTip = "Does the particle disappear when it collides with something."), Serialize(false, false)]
+        [Editable, Serialize(false, false, description: "Does the particle disappear when it collides with something.")]
         public bool DeleteOnCollision { get; private set; }
 
-        [Editable(0.0f, 1.0f, ToolTip = "The friction coefficient of the particle, i.e. how much it slows down when it's sliding against a surface."), Serialize(0.5f, false)]
+        [Editable(0.0f, 1.0f), Serialize(0.5f, false, description: "The friction coefficient of the particle, i.e. how much it slows down when it's sliding against a surface.")]
         public float Friction { get; private set; }
 
-        [Editable(0.0f, 1.0f, ToolTip = "How much of the particle's velocity is conserved when it collides with something, i.e. the \"bounciness\" of the particle. (1.0 = the particle stops completely).")]
-        [Serialize(0.5f, false)]
+        [Editable(0.0f, 1.0f)]
+        [Serialize(0.5f, false, description: "How much of the particle's velocity is conserved when it collides with something, i.e. the \"bounciness\" of the particle. (1.0 = the particle stops completely).")]
         public float Restitution { get; private set; }
 
         //size -----------------------------------------
 
-        [Editable(ToolTip = "The minimum initial size of the particle."), Serialize("1.0,1.0", false)]
+        [Editable, Serialize("1.0,1.0", false, description: "The minimum initial size of the particle.")]
         public Vector2 StartSizeMin { get; private set; }
 
-        [Editable(ToolTip = "The maximum initial size of the particle."), Serialize("1.0,1.0", false)]
+        [Editable, Serialize("1.0,1.0", false, description: "The maximum initial size of the particle.")]
         public Vector2 StartSizeMax { get; private set; }
 
-        [Editable(ToolTip = "How much the size of the particle changes per second. The rate of growth for each particle is randomize between SizeChangeMin and SizeChangeMax.")]
-        [Serialize("0.0,0.0", false)]
+        [Editable]
+        [Serialize("0.0,0.0", false, description: "How much the size of the particle changes per second. The rate of growth for each particle is randomize between SizeChangeMin and SizeChangeMax.")]
         public Vector2 SizeChangeMin { get; private set; }
 
-        [Editable(ToolTip = "How much the size of the particle changes per second. The rate of growth for each particle is randomize between SizeChangeMin and SizeChangeMax.")]
-        [Serialize("0.0,0.0", false)]
+        [Editable]
+        [Serialize("0.0,0.0", false, description: "How much the size of the particle changes per second. The rate of growth for each particle is randomize between SizeChangeMin and SizeChangeMax.")]
         public Vector2 SizeChangeMax { get; private set; }
 
-        [Editable(ToolTip = "How many seconds it takes for the particle to grow to it's initial size.")]
-        [Serialize(0.0f, false)]
+        [Editable]
+        [Serialize(0.0f, false, description: "How many seconds it takes for the particle to grow to it's initial size.")]
         public float GrowTime { get; private set; }
 
         //rendering -----------------------------------------
 
-        [Editable(ToolTip = "The initial color of the particle."), Serialize("1.0,1.0,1.0,1.0", false)]
+        [Editable, Serialize("1.0,1.0,1.0,1.0", false, description: "The initial color of the particle.")]
         public Color StartColor { get; private set; }
 
-        [Editable(ToolTip = "The color of the particle at the end of its lifetime."), Serialize("1.0,1.0,1.0,1.0", false)]
+        [Editable, Serialize("1.0,1.0,1.0,1.0", false, description: "The color of the particle at the end of its lifetime.")]
         public Color EndColor { get; private set; }
         
-        [Editable(ToolTip = "Should the particle be rendered in air, water or both."), Serialize(DrawTargetType.Air, false)]
+        [Editable, Serialize(DrawTargetType.Air, false, description: "Should the particle be rendered in air, water or both.")]
         public DrawTargetType DrawTarget { get; private set; }
 
-        [Editable(ToolTip = "The type of blending to use when rendering the particle."), Serialize(ParticleBlendState.AlphaBlend, false)]
+        [Editable, Serialize(ParticleBlendState.AlphaBlend, false, description: "The type of blending to use when rendering the particle.")]
         public ParticleBlendState BlendState { get; private set; }
         
         //animation -----------------------------------------
 
-        [Editable(0.0f, float.MaxValue, ToolTip = "The duration of the particle's animation cycle (if it's animated)."), Serialize(1.0f, false)]
+        [Editable(0.0f, float.MaxValue), Serialize(1.0f, false, description: "The duration of the particle's animation cycle (if it's animated).")]
         public float AnimDuration { get; private set; }
 
-        [Editable(ToolTip = "Should the sprite animation be looped, or stay at the last frame when the animation finishes."), Serialize(true, false)]
+        [Editable, Serialize(true, false, description: "Should the sprite animation be looped, or stay at the last frame when the animation finishes.")]
         public bool LoopAnim { get; private set; }
 
         //----------------------------------------------------

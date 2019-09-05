@@ -93,7 +93,7 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Serialize(false, false), Editable(ToolTip = "Does the sonar have to be connected to external transducers to work.")]
+        [Editable, Serialize(false, false, description: "Does the sonar have to be connected to external transducers to work.")]
         public bool UseTransducers
         {
             get;

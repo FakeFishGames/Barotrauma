@@ -51,7 +51,7 @@ namespace Barotrauma.Items.Components
             get { return user; }
         }
 
-        [Serialize(false, false), Editable(ToolTip = "When enabled, the item will continuously send out a 0/1 signal and interacting with it will flip the signal (making the item behave like a switch). When disabled, the item will simply send out 1 when interacted with.")]
+        [Editable, Serialize(false, false, description: "When enabled, the item will continuously send out a 0/1 signal and interacting with it will flip the signal (making the item behave like a switch). When disabled, the item will simply send out 1 when interacted with.")]
         public bool IsToggle
         {
             get;

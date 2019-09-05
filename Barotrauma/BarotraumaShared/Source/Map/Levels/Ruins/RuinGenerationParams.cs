@@ -35,61 +35,61 @@ namespace Barotrauma.RuinGeneration
                 
         public string Name => "RuinGenerationParams";
         
-        [Serialize("5000,5000", false), Editable()]
+        [Serialize("5000,5000", false), Editable]
         public Point SizeMin
         {
             get;
             set;
         }
-        [Serialize("8000,8000", false), Editable()]
+        [Serialize("8000,8000", false), Editable]
         public Point SizeMax
         {
             get;
             set;
         }
 
-        [Serialize(3, false), Editable(MinValueInt = 1, MaxValueInt = 10, ToolTip = "The ruin generation algorithm \"splits\" the ruin area into two, splits these areas again, repeats this for some number of times and creates a room at each of the final split areas. This is value determines the minimum number of times the split is done.")]
+        [Serialize(3, false, description: "The ruin generation algorithm \"splits\" the ruin area into two, splits these areas again, repeats this for some number of times and creates a room at each of the final split areas. This is value determines the minimum number of times the split is done."), Editable(MinValueInt = 1, MaxValueInt = 10)]
         public int RoomDivisionIterationsMin
         {
             get;
             set;
         }
 
-        [Serialize(4, false), Editable(MinValueInt = 1, MaxValueInt = 10, ToolTip = "The ruin generation algorithm \"splits\" the ruin area into two, splits these areas again, repeats this for some number of times and creates a room at each of the final split areas. This is value determines the maximum number of times the split is done.")]
+        [Serialize(4, false, description: "The ruin generation algorithm \"splits\" the ruin area into two, splits these areas again, repeats this for some number of times and creates a room at each of the final split areas. This is value determines the maximum number of times the split is done."), Editable(MinValueInt = 1, MaxValueInt = 10)]
         public int RoomDivisionIterationsMax
         {
             get;
             set;
         }
 
-        [Serialize(0.5f, false), Editable(MinValueFloat = 0.1f, MaxValueFloat = 0.9f, ToolTip = "The probability for the split algorithm to split the area vertically. High values tend to create tall, vertical rooms, and low values wide, horizontal rooms.")]
+        [Serialize(0.5f, false, description: "The probability for the split algorithm to split the area vertically. High values tend to create tall, vertical rooms, and low values wide, horizontal rooms."), Editable(MinValueFloat = 0.1f, MaxValueFloat = 0.9f)]
         public float VerticalSplitProbability
         {
             get;
             set;
         }
 
-        [Serialize(400, false), Editable(ToolTip = "The splitting algorithm attempts to keep the dimensions the split areas larger than this. For example, if the width of the split areas would be smaller than this after a vertical split, the algorithm will do a horizontal split.")]
+        [Serialize(400, false, description: "The splitting algorithm attempts to keep the dimensions the split areas larger than this. For example, if the width of the split areas would be smaller than this after a vertical split, the algorithm will do a horizontal split."), Editable]
         public int MinSplitWidth
         {
             get;
             set;
         }
 
-        [Serialize("0.5,0.9", false), Editable(ToolTip = "The minimum and maximum width of a room relative to the areas created by the split algorithm.")]
+        [Serialize("0.5,0.9", false, description: "The minimum and maximum width of a room relative to the areas created by the split algorithm."), Editable]
         public Vector2 RoomWidthRange
         {
             get;
             set;
         }
-        [Serialize("0.5,0.9", false), Editable(ToolTip = "The minimum and maximum height of a room relative to the areas created by the split algorithm.")]
+        [Serialize("0.5,0.9", false, description: "The minimum and maximum height of a room relative to the areas created by the split algorithm."), Editable]
         public Vector2 RoomHeightRange
         {
             get;
             set;
         }
 
-        [Serialize("200,256", false), Editable(ToolTip = "The minimum and maximum width of the corridors between rooms.")]
+        [Serialize("200,256", false, description: "The minimum and maximum width of the corridors between rooms."), Editable]
         public Point CorridorWidthRange
         {
             get;
@@ -213,34 +213,34 @@ namespace Barotrauma.RuinGeneration
             private set;
         } = new Dictionary<string, SerializableProperty>();
         
-        [Serialize(RoomPlacement.Any, false), Editable()]
+        [Serialize(RoomPlacement.Any, false), Editable]
         public RoomPlacement Placement
         {
             get;
             set;
         }
 
-        [Serialize(0, false), Editable()]
+        [Serialize(0, false), Editable]
         public int PlacementOffset
         {
             get;
             set;
         }
 
-        [Serialize(false, false), Editable()]
+        [Serialize(false, false), Editable]
         public bool IsCorridor
         {
             get;
             set;
         }
         
-        [Serialize(1.0f, false), Editable()]
+        [Serialize(1.0f, false), Editable]
         public float MinWaterAmount
         {
             get;
             set;
         }
-        [Serialize(1.0f, false), Editable()]
+        [Serialize(1.0f, false), Editable]
         public float MaxWaterAmount
         {
             get;
@@ -391,11 +391,11 @@ namespace Barotrauma.RuinGeneration
         [Serialize(Alignment.Bottom, false), Editable]
         public Alignment Alignment { get; private set; }
 
-        [Serialize("0,0", false), Editable(ToolTip = "Minimum offset from the anchor position, relative to the size of the room."+
-            " For example, a value of { -0.5,0 } with a Bottom alignment would mean the entity can be placed anywhere between the bottom-left corner of the room and bottom-center.")]
+        [Serialize("0,0", false, description: "Minimum offset from the anchor position, relative to the size of the room." +
+            " For example, a value of { -0.5,0 } with a Bottom alignment would mean the entity can be placed anywhere between the bottom-left corner of the room and bottom-center."), Editable]
         public Vector2 MinOffset { get; private set; }
-        [Serialize("0,0", false), Editable(ToolTip = "Maximum offset from the anchor position, relative to the size of the room." +
-            " For example, a value of { 0.5,0 } with a Bottom alignment would mean the entity can be placed anywhere between the bottom-right corner of the room and bottom-center.")]
+        [Serialize("0,0", false, description: "Maximum offset from the anchor position, relative to the size of the room." +
+            " For example, a value of { 0.5,0 } with a Bottom alignment would mean the entity can be placed anywhere between the bottom-right corner of the room and bottom-center."), Editable]
         public Vector2 MaxOffset { get; private set; }
 
         [Serialize(RuinEntityType.Prop, false), Editable]
