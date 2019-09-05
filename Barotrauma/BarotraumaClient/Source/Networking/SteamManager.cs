@@ -75,7 +75,8 @@ namespace Barotrauma.Steam
             Joining,
             Joined
         }
-        private static UInt64 lobbyID = 0;
+
+        public static UInt64 LobbyID { get; private set; } = 0;
         private static LobbyState lobbyState = LobbyState.NotConnected;
         private static string lobbyIP = "";
         private static Thread lobbyIPRetrievalThread;
@@ -167,7 +168,7 @@ namespace Barotrauma.Steam
                 lobbyIPRetrievalThread.Start();
                 
                 lobbyState = LobbyState.Owner;
-                lobbyID = instance.client.Lobby.CurrentLobby;
+                LobbyID = instance.client.Lobby.CurrentLobby;
                 UpdateLobby(serverSettings);
             };
             if (lobbyState != LobbyState.NotConnected) { return; }
@@ -231,7 +232,7 @@ namespace Barotrauma.Steam
                 lobbyIPRetrievalThread = null;
 
                 instance.client.Lobby.Leave();
-                lobbyID = 0;
+                LobbyID = 0;
                 lobbyIP = "";
                 lobbyState = LobbyState.NotConnected;
 
@@ -241,7 +242,7 @@ namespace Barotrauma.Steam
         public static void JoinLobby(UInt64 id, bool joinServer)
         {
             if (instance.client.Lobby.CurrentLobby == id) { return; }
-            if (lobbyID == id) { return; }
+            if (LobbyID == id) { return; }
             instance.client.Lobby.OnLobbyJoined = (success) =>
             {
                 try
@@ -252,7 +253,7 @@ namespace Barotrauma.Steam
                         return;
                     }
                     lobbyState = LobbyState.Joined;
-                    lobbyID = instance.client.Lobby.CurrentLobby;
+                    LobbyID = instance.client.Lobby.CurrentLobby;
                     if (joinServer)
                     {
                         GameMain.Instance.ConnectLobby = 0;
@@ -266,7 +267,7 @@ namespace Barotrauma.Steam
                 }
             };
             lobbyState = LobbyState.Joining;
-            lobbyID = id;
+            LobbyID = id;
             instance.client.Lobby.Join(id);
         }
 

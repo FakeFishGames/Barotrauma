@@ -98,6 +98,8 @@ namespace Barotrauma
 
         public ServerListScreen()
         {
+            recentServers = new List<ServerInfo>();
+
             GameMain.Instance.OnResolutionChanged += OnResolutionChanged;
 
             menu = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.85f), GUI.Canvas, Anchor.Center) { MinSize = new Point(GameMain.GraphicsHeight, 0) });
@@ -415,6 +417,55 @@ namespace Barotrauma
                     PlayStyleBanners[(int)playStyle] = new Sprite(playStylesTexture, rectVec, Vector2.Zero);
                 }
             }
+        }
+
+        public void AddToRecentServers(object endpoint, ServerSettings serverSettings)
+        {
+            UInt64 steamId = 0;
+            string ip = ""; string port = "";
+            if (endpoint is UInt64 id) { steamId = id; }
+            else if (endpoint is string strEndpoint)
+            {
+                string[] address = strEndpoint.Split(':');
+                if (address.Length == 1)
+                {
+                    ip = strEndpoint;
+                    port = NetConfig.DefaultPort.ToString();
+                }
+                else
+                {
+                    ip = string.Join(":", address.Take(address.Length - 1));
+                    port = address[address.Length - 1];
+                }
+            }
+            
+
+            ServerInfo info = recentServers.Find(s => s.IP == ip && s.Port == port && s.OwnerID == steamId);
+            if (info == null)
+            {
+                info = new ServerInfo();
+                recentServers.Add(info);
+            }
+
+            info.ServerName = serverSettings.Name;
+            info.ServerMessage = serverSettings.ServerMessageText;
+            info.OwnerID = steamId;
+            info.LobbyID = SteamManager.LobbyID;
+            info.IP = ip;
+            info.Port = port;
+            info.GameMode = GameMain.NetLobbyScreen.SelectedMode.Identifier;
+            info.GameStarted = Screen.Selected != GameMain.NetLobbyScreen;
+            info.GameVersion = GameMain.Version.ToString();
+            info.MaxPlayers = serverSettings.MaxPlayers;
+            info.PlayStyle = PlayStyle.SomethingDifferent;
+            info.RespondedToSteamQuery = true;
+            info.UsingWhiteList = serverSettings.Whitelist.Enabled;
+            info.TraitorsEnabled = serverSettings.TraitorsEnabled;
+            info.SubSelectionMode = serverSettings.SubSelectionMode;
+            info.VoipEnabled = serverSettings.VoiceChatEnabled;
+            info.PlayerCount = GameMain.Client.ConnectedClients.Count;
+            info.PingChecked = false;
+            info.HasPassword = serverSettings.HasPassword;
         }
 
         private void OnResolutionChanged()

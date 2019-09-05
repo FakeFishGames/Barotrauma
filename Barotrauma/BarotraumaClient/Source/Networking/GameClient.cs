@@ -1349,6 +1349,7 @@ namespace Barotrauma.Networking
                                 ReadWriteMessage settingsBuf = new ReadWriteMessage();
                                 settingsBuf.Write(settingsData, 0, settingsLen); settingsBuf.BitPosition = 0;
                                 serverSettings.ClientRead(settingsBuf);
+                                GameMain.ServerListScreen.AddToRecentServers(serverEndpoint, serverSettings);
 
                                 GameMain.NetLobbyScreen.LastUpdateID = updateID;
 
