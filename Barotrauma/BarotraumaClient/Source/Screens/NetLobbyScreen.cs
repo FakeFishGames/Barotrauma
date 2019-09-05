@@ -909,7 +909,7 @@ namespace Barotrauma
         {
             if (characterInfo == null)
             {
-                characterInfo = new CharacterInfo(Character.HumanConfigFile, GameMain.NetworkMember.Name, null);
+                characterInfo = new CharacterInfo(Character.HumanSpeciesName, GameMain.NetworkMember.Name, null);
                 characterInfo.RecreateHead(
                     GameMain.Config.CharacterHeadIndex,
                     GameMain.Config.CharacterRace,

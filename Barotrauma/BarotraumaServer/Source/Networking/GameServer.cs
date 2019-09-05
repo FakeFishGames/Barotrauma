@@ -1843,7 +1843,7 @@ namespace Barotrauma.Networking
 
                     if (client.CharacterInfo == null)
                     {
-                        client.CharacterInfo = new CharacterInfo(Character.HumanConfigFile, client.Name);
+                        client.CharacterInfo = new CharacterInfo(Character.HumanSpeciesName, client.Name);
                     }
                     characterInfos.Add(client.CharacterInfo);
                     if (client.CharacterInfo.Job == null || client.CharacterInfo.Job.Prefab != client.AssignedJob)
@@ -1856,7 +1856,7 @@ namespace Barotrauma.Networking
                 int botsToSpawn = serverSettings.BotSpawnMode == BotSpawnMode.Fill ? serverSettings.BotCount - characterInfos.Count : serverSettings.BotCount;
                 for (int i = 0; i < botsToSpawn; i++)
                 {
-                    var botInfo = new CharacterInfo(Character.HumanConfigFile);
+                    var botInfo = new CharacterInfo(Character.HumanSpeciesName);
                     characterInfos.Add(botInfo);
                     bots.Add(botInfo);
                 }
@@ -2849,7 +2849,7 @@ namespace Barotrauma.Networking
                 }
             }
 
-            sender.CharacterInfo = new CharacterInfo(Character.HumanConfigFile, sender.Name);
+            sender.CharacterInfo = new CharacterInfo(Character.HumanSpeciesName, sender.Name);
             sender.CharacterInfo.RecreateHead(headSpriteId, race, gender, hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
 
             //if the client didn't provide job preferences, we'll use the preferences that are randomly assigned in the Client constructor

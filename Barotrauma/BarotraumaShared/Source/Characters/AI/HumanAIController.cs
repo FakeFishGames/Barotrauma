@@ -69,6 +69,10 @@ namespace Barotrauma
 
         public HumanAIController(Character c) : base(c)
         {
+            if (!c.IsHuman)
+            {
+                throw new System.Exception($"Tried to create a human ai controller for a non-human: {c.SpeciesName}!");
+            }
             insideSteering = new IndoorsSteeringManager(this, true, false);
             outsideSteering = new SteeringManager(this);
             objectiveManager = new AIObjectiveManager(c);

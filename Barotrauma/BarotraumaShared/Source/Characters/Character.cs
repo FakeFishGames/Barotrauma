@@ -128,7 +128,7 @@ namespace Barotrauma
 
         public bool IsTraitor;
         public string TraitorCurrentObjective = "";
-        public bool IsHuman => SpeciesName == "human";
+        public bool IsHuman => SpeciesName.Equals(Character.HumanSpeciesName, StringComparison.OrdinalIgnoreCase);
 
         private float attackCoolDown;
 
@@ -226,11 +226,7 @@ namespace Barotrauma
             }
         }
 
-        public string ConfigPath
-        {
-            get;
-            private set;
-        }
+        public string ConfigPath => Params.File;
 
         public float Mass
         {
@@ -610,13 +606,13 @@ namespace Barotrauma
         /// <param name="ragdoll">Ragdoll configuration file. If null, will select the default.</param>
         public static Character Create(CharacterInfo characterInfo, Vector2 position, string seed, bool isRemotePlayer = false, bool hasAi = true, RagdollParams ragdoll = null)
         {
-            return Create(characterInfo.File, position, seed, characterInfo, isRemotePlayer, hasAi, true, ragdoll);
+            return Create(characterInfo.SpeciesName, position, seed, characterInfo, isRemotePlayer, hasAi, true, ragdoll);
         }
 
         /// <summary>
         /// Create a new character
         /// </summary>
-        /// <param name="file">The path to the character's config file.</param>
+        /// <param name="speciesName">Name of the species (or the path to the config file)</param>
         /// <param name="position">Position in display units.</param>
         /// <param name="seed">RNG seed to use if the character config has randomizable parameters.</param>
         /// <param name="characterInfo">The name, gender, etc of the character. Only used for humans, and if the parameter is not given, a random CharacterInfo is generated.</param>
@@ -624,59 +620,30 @@ namespace Barotrauma
         /// <param name="hasAi">Is the character controlled by AI.</param>
         /// <param name="createNetworkEvent">Should clients receive a network event about the creation of this character?</param>
         /// <param name="ragdoll">Ragdoll configuration file. If null, will select the default.</param>
-        public static Character Create(string file, Vector2 position, string seed, CharacterInfo characterInfo = null, bool isRemotePlayer = false, bool hasAi = true, bool createNetworkEvent = true, RagdollParams ragdoll = null)
+        public static Character Create(string speciesName, Vector2 position, string seed, CharacterInfo characterInfo = null, bool isRemotePlayer = false, bool hasAi = true, bool createNetworkEvent = true, RagdollParams ragdoll = null)
         {
-#if LINUX
-            if (!System.IO.File.Exists(file))
+            if (speciesName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
             {
-                //if the file was not found, attempt to convert the name of the folder to upper case
-                var splitPath = file.Split('/');
-                if (splitPath.Length > 2)
-                {
-                    splitPath[splitPath.Length - 2] =
-                        splitPath[splitPath.Length - 2].First().ToString().ToUpper() + splitPath[splitPath.Length - 2].Substring(1);
-
-                    file = string.Join("/", splitPath);
-                }
-
-                if (!System.IO.File.Exists(file))
-                {
-                    DebugConsole.ThrowError("Spawning a character failed - file \"" + file + "\" not found!");
-                    return null;
-                }
+                speciesName = Path.GetFileNameWithoutExtension(speciesName).ToLowerInvariant();
             }
-#else
-            if (!System.IO.File.Exists(file))
-            {
-                DebugConsole.ThrowError("Spawning a character failed - file \"" + file + "\" not found!");
-                return null;
-            }
-#endif
             Character newCharacter = null;
-            if (file != HumanConfigFile)
+            if (!speciesName.Equals(Character.HumanSpeciesName, StringComparison.OrdinalIgnoreCase))
             {
-                var aiCharacter = new AICharacter(file, position, seed, characterInfo, isRemotePlayer, ragdoll);
-                var ai = new EnemyAIController(aiCharacter, file, seed);
+                var aiCharacter = new AICharacter(speciesName, position, seed, characterInfo, isRemotePlayer, ragdoll);
+                var ai = new EnemyAIController(aiCharacter, seed);
                 aiCharacter.SetAI(ai);
-
-                //aiCharacter.minVitality = 0.0f;
-
                 newCharacter = aiCharacter;
             }
             else if (hasAi)
             {
-                var aiCharacter = new AICharacter(file, position, seed, characterInfo, isRemotePlayer, ragdoll);
+                var aiCharacter = new AICharacter(speciesName, position, seed, characterInfo, isRemotePlayer, ragdoll);
                 var ai = new HumanAIController(aiCharacter);
                 aiCharacter.SetAI(ai);
-
-                //aiCharacter.minVitality = -100.0f;
-
                 newCharacter = aiCharacter;
             }
             else
             {
-                newCharacter = new Character(file, position, seed, characterInfo, isRemotePlayer, ragdoll);
-                //newCharacter.minVitality = -100.0f;
+                newCharacter = new Character(speciesName, position, seed, characterInfo, isRemotePlayer, ragdoll);
             }
 
 #if SERVER
@@ -688,10 +655,14 @@ namespace Barotrauma
             return newCharacter;
         }
 
-        protected Character(string file, Vector2 position, string seed, CharacterInfo characterInfo = null, bool isRemotePlayer = false, RagdollParams ragdollParams = null)
+        protected Character(string speciesName, Vector2 position, string seed, CharacterInfo characterInfo = null, bool isRemotePlayer = false, RagdollParams ragdollParams = null)
             : base(null)
         {
-            ConfigPath = file;
+            string path = Character.GetConfigFilePath(speciesName);
+            if (!Character.TryGetConfigFile(path, out XDocument doc))
+            {
+                throw new System.Exception($"Failed to load the config file for {speciesName} from {path}!");
+            }
             this.seed = seed;
             MTRandom random = new MTRandom(ToolBox.StringToInt(seed));
 
@@ -705,14 +676,14 @@ namespace Barotrauma
             lowPassMultiplier = 1.0f;
 
             Properties = SerializableProperty.GetProperties(this);
-            Params = new CharacterParams(file);
+            Params = new CharacterParams(path);
 
             Info = characterInfo;
-            if (file == HumanConfigFile || file.ToLowerInvariant().Contains("human"))
+            if (speciesName.Equals(Character.HumanSpeciesName, StringComparison.OrdinalIgnoreCase))
             {
                 if (characterInfo == null)
                 {
-                    Info = new CharacterInfo(HumanConfigFile);
+                    Info = new CharacterInfo(Character.HumanSpeciesName);
                 }
             }
 
@@ -722,16 +693,10 @@ namespace Barotrauma
                 keys[i] = new Key((InputType)i);
             }
 
-            if (!TryGetConfigFile(file, out XDocument doc))
-            {
-                DebugConsole.ThrowError($"Failed to load config file: {file}");
-                return;
-            }
-
             var rootElement = doc.Root;
             var mainElement = rootElement.IsOverride() ? rootElement.FirstElement() : rootElement;
             InitProjSpecific(mainElement);
-            displayName = TextManager.Get($"Character.{Path.GetFileName(Path.GetDirectoryName(file))}", true);
+            displayName = TextManager.Get($"Character.{speciesName}", true);
 
             List<XElement> inventoryElements = new List<XElement>();
             List<float> inventoryCommonness = new List<float>();
@@ -843,13 +808,14 @@ namespace Barotrauma
 #endif
         }
 
-        public static string HumanConfigFile => GetConfigFile("human");
+        public static string HumanSpeciesName = "human";
+        public static string HumanConfigFile => GetConfigFilePath(HumanSpeciesName);
 
         /// <summary>
         /// Searches for a character config file from all currently selected content packages, 
         /// or from a specific package if the contentPackage parameter is given.
         /// </summary>
-        public static string GetConfigFile(string speciesName, ContentPackage contentPackage = null)
+        public static string GetConfigFilePath(string speciesName, ContentPackage contentPackage = null)
         {
             if (configFilePaths.None() || configFiles.None())
             {
@@ -942,6 +908,16 @@ namespace Barotrauma
             configFiles.Add(file, doc);
             configFilePaths.Add(name, file);
             return true;
+        }
+
+        public static XDocument GetConfigFile(string speciesName)
+        {
+            string file = GetConfigFilePath(speciesName);
+            if (!TryGetConfigFile(file, out XDocument doc))
+            {
+                DebugConsole.ThrowError($"Failed to load the config file for {speciesName} from {file}!");
+            }
+            return doc;
         }
 
         public static bool TryGetConfigFile(string file, out XDocument doc)

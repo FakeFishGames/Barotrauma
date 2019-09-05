@@ -87,7 +87,7 @@ namespace Barotrauma
 
         public static string GetFolder(string speciesName, ContentPackage contentPackage = null)
         {
-            string configFilePath = Character.GetConfigFile(speciesName, contentPackage);
+            string configFilePath = Character.GetConfigFilePath(speciesName, contentPackage);
             if (!Character.TryGetConfigFile(configFilePath, out XDocument configFile))
             {
                 DebugConsole.ThrowError($"Failed to load config file: {configFilePath} for '{speciesName}'");

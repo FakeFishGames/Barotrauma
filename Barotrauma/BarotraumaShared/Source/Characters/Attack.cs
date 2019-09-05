@@ -357,7 +357,10 @@ namespace Barotrauma
             Character targetCharacter = target as Character;
             if (OnlyHumans)
             {
-                if (targetCharacter != null && targetCharacter.ConfigPath != Character.HumanConfigFile) return new AttackResult();
+                if (targetCharacter != null && !targetCharacter.IsHuman)
+                {
+                    return new AttackResult();
+                }
             }
 
             SetUser(attacker);
@@ -414,7 +417,10 @@ namespace Barotrauma
 
             if (OnlyHumans)
             {
-                if (targetLimb.character != null && targetLimb.character.ConfigPath != Character.HumanConfigFile) return new AttackResult();
+                if (targetLimb.character != null && !targetLimb.character.IsHuman)
+                {
+                    return new AttackResult();
+                }
             }
 
             SetUser(attacker);

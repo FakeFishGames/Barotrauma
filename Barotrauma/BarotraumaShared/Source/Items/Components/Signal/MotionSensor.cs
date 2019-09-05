@@ -126,7 +126,7 @@ namespace Barotrauma.Items.Components
 
             foreach (Character c in Character.CharacterList)
             {
-                if (OnlyHumans && c.ConfigPath != Character.HumanConfigFile) { continue; }
+                if (OnlyHumans && !c.IsHuman) { continue; }
 
                 //do a rough check based on the position of the character's collider first
                 //before the more accurate limb-based check

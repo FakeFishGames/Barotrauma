@@ -206,7 +206,7 @@ namespace Barotrauma
 
             Vitality    = maxVitality;
 
-            minVitality = (character.ConfigPath == Character.HumanConfigFile) ? -100.0f : 0.0f;
+            minVitality = character.IsHuman ? -100.0f : 0.0f;
 
             limbHealths.Clear();
             foreach (XElement subElement in element.Elements())
@@ -556,7 +556,7 @@ namespace Barotrauma
             if (!DoesBleed && newAffliction is AfflictionBleeding) return;
             if (!Character.NeedsAir && newAffliction.Prefab == AfflictionPrefab.OxygenLow) return;
             // Currently only human can get the husk infection. TODO: change this
-            if (newAffliction.Prefab == AfflictionPrefab.Husk && Character.SpeciesName.ToLowerInvariant() != "human") { return; }
+            if (newAffliction.Prefab == AfflictionPrefab.Husk && !Character.IsHuman) { return; }
             foreach (Affliction affliction in afflictions)
             {
                 if (newAffliction.Prefab == affliction.Prefab)

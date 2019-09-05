@@ -1339,7 +1339,7 @@ namespace Barotrauma
 
             string characterLowerCase = args[0].ToLowerInvariant();
             JobPrefab.List.TryGetValue(characterLowerCase, out JobPrefab job);
-            bool human = job != null || characterLowerCase == "human";
+            bool human = job != null || characterLowerCase == Character.HumanSpeciesName;
 
             if (args.Length > 1)
             {
@@ -1389,7 +1389,7 @@ namespace Barotrauma
 
             if (human)
             {
-                CharacterInfo characterInfo = new CharacterInfo(Character.HumanConfigFile, jobPrefab: job);
+                CharacterInfo characterInfo = new CharacterInfo(Character.HumanSpeciesName, jobPrefab: job);
                 spawnedCharacter = Character.Create(characterInfo, spawnPosition, ToolBox.RandomSeed(8));
                 if (job != null)
                 {

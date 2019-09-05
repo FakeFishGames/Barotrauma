@@ -93,7 +93,7 @@ namespace Barotrauma
         {
             get
             {
-                var targetingPriority = GetTargetingPriority("human");
+                var targetingPriority = GetTargetingPriority(Character.HumanSpeciesName);
                 return targetingPriority != null && targetingPriority.State == AIState.Attack && targetingPriority.Priority > 0.0f;
             }
         }
@@ -127,12 +127,16 @@ namespace Barotrauma
 
         public bool Reverse { get; private set; }
 
-        public EnemyAIController(Character c, string file, string seed) : base(c)
+        public EnemyAIController(Character c, string seed) : base(c)
         {
+            if (c.IsHuman)
+            {
+                throw new System.Exception($"Tried to create an enemy ai controller for human!");
+            }
+            string file = Character.GetConfigFilePath(c.SpeciesName);
             if (!Character.TryGetConfigFile(file, out XDocument doc))
             {
-                DebugConsole.ThrowError("Failed to find a character config file at: " + file);
-                return;
+                throw new System.Exception($"Failed to load the config file for {c.SpeciesName} from {file}!");
             }
             var mainElement = doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;
             targetMemories = new Dictionary<AITarget, AITargetMemory>();
@@ -142,7 +146,7 @@ namespace Barotrauma
             List<float> aiCommonness = new List<float>();
             foreach (XElement element in mainElement.Elements())
             {
-                if (element.Name.ToString().ToLowerInvariant() != "ai") continue;                
+                if (!element.Name.ToString().Equals("ai", StringComparison.OrdinalIgnoreCase)) { continue; }                
                 aiElements.Add(element);
                 aiCommonness.Add(element.GetAttributeFloat("commonness", 1.0f));                
             }

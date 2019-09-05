@@ -1394,7 +1394,7 @@ namespace Barotrauma.CharacterEditor
 
         private void GetCurrentCharacterIndex()
         {
-            characterIndex = AllFiles.IndexOf(Character.GetConfigFile(character.SpeciesName));
+            characterIndex = AllFiles.IndexOf(Character.GetConfigFilePath(character.SpeciesName));
         }
 
         private void IncreaseIndex()

@@ -220,7 +220,7 @@ namespace Barotrauma
         }
 
 
-        public static CharacterInfo ClientRead(string configPath, IReadMessage inc)
+        public static CharacterInfo ClientRead(string speciesName, IReadMessage inc)
         {
             ushort infoID = inc.ReadUInt16();
             string newName = inc.ReadString();
@@ -249,7 +249,7 @@ namespace Barotrauma
             }
 
             // TODO: animations
-            CharacterInfo ch = new CharacterInfo(configPath, newName, jobPrefab, ragdollFile)
+            CharacterInfo ch = new CharacterInfo(speciesName, newName, jobPrefab, ragdollFile)
             {
                 ID = infoID,
             };

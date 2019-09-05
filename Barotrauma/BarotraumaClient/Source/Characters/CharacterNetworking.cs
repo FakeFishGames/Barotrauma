@@ -359,18 +359,12 @@ namespace Barotrauma
 
             DebugConsole.Log("Received spawn data for " + speciesName);
 
-            string configPath = GetConfigFile(speciesName);
-            if (string.IsNullOrEmpty(configPath))
-            {
-                throw new Exception("Error in character spawn data - could not find a config file for the character \"" + configPath + "\"!");
-            }
-
             Character character = null;
             if (noInfo)
             {
                 if (!spawn) return null;
 
-                character = Create(configPath, position, seed, null, true);
+                character = Create(speciesName, position, seed, null, true);
                 character.ID = id;
             }
             else
@@ -383,19 +377,13 @@ namespace Barotrauma
 
                 if (!spawn) return null;
 
-                string infoConfigPath = GetConfigFile(infoSpeciesName);
-                if (string.IsNullOrEmpty(infoConfigPath))
-                {
-                    throw new Exception("Error in character spawn data - could not find a config file for the character info \"" + configPath + "\"!");
-                }
+                CharacterInfo info = CharacterInfo.ClientRead(infoSpeciesName, inc);
 
-                CharacterInfo info = CharacterInfo.ClientRead(infoConfigPath, inc);
-
-                character = Create(configPath, position, seed, info, GameMain.Client.ID != ownerId, hasAi);
+                character = Create(infoSpeciesName, position, seed, info, GameMain.Client.ID != ownerId, hasAi);
                 character.ID = id;
                 character.TeamID = (TeamType)teamID;
 
-                if (configPath == HumanConfigFile && character.TeamID != TeamType.FriendlyNPC)
+                if (character.IsHuman && character.TeamID != TeamType.FriendlyNPC)
                 {
                     CharacterInfo duplicateCharacterInfo = GameMain.GameSession.CrewManager.GetCharacterInfos().FirstOrDefault(c => c.ID == info.ID);
                     GameMain.GameSession.CrewManager.RemoveCharacterInfo(duplicateCharacterInfo);

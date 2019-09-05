@@ -126,14 +126,24 @@ namespace Barotrauma
             }
         }
 
-        public string SpeciesName => CharacterConfigElement.GetAttributeString("speciesname", string.Empty).ToLowerInvariant();
+        private string _speciesName;
+        public string SpeciesName
+        {
+            get
+            {
+                if (_speciesName == null)
+                {
+                    _speciesName = CharacterConfigElement.GetAttributeString("speciesname", string.Empty).ToLowerInvariant();
+                }
+                return _speciesName;
+            }
+            set { _speciesName = value; }
+        }
 
         /// <summary>
         /// Note: Can be null.
         /// </summary>
         public Character Character;
-
-        public readonly string File;
         
         public Job Job;
         
@@ -327,7 +337,7 @@ namespace Barotrauma
                 if (ragdoll == null)
                 {
                     string speciesName = SpeciesName;
-                    bool isHumanoid = CharacterConfigElement.GetAttributeBool("humanoid", speciesName == "human");
+                    bool isHumanoid = CharacterConfigElement.GetAttributeBool("humanoid", speciesName.Equals(Character.HumanSpeciesName, StringComparison.OrdinalIgnoreCase));
                     ragdoll = isHumanoid 
                         ? HumanRagdollParams.GetRagdollParams(speciesName, ragdollFileName)
                         : RagdollParams.GetRagdollParams<FishRagdollParams>(speciesName, ragdollFileName) as RagdollParams;
@@ -340,17 +350,18 @@ namespace Barotrauma
         public bool IsAttachmentsLoaded => HairIndex > -1 && BeardIndex > -1 && MoustacheIndex > -1 && FaceAttachmentIndex > -1;
 
         // Used for creating the data
-        public CharacterInfo(string file, string name = "", JobPrefab jobPrefab = null, string ragdollFileName = null)
+        public CharacterInfo(string speciesName, string name = "", JobPrefab jobPrefab = null, string ragdollFileName = null)
         {
+            if (speciesName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
+            {
+                speciesName = Path.GetFileNameWithoutExtension(speciesName).ToLowerInvariant();
+            }
             ID = idCounter;
             idCounter++;
-            File = file;
+            _speciesName = speciesName;
             SpriteTags = new List<string>();
-            if (!Character.TryGetConfigFile(File, out XDocument doc))
-            {
-                DebugConsole.ThrowError($"Failed to load the character config file from '{File}'");
-                return;
-            }
+            XDocument doc = Character.GetConfigFile(_speciesName);
+            if (doc == null) { return; }
             CharacterConfigElement = doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;
             head = new HeadInfo();
             HasGenders = CharacterConfigElement.GetAttributeBool("genders", false);
@@ -406,12 +417,19 @@ namespace Barotrauma
             Salary = infoElement.GetAttributeInt("salary", 1000);
             Enum.TryParse(infoElement.GetAttributeString("race", "White"), true, out Race race);
             Enum.TryParse(infoElement.GetAttributeString("gender", "None"), true, out Gender gender);
-            File = Character.GetConfigFile(Name);
-            if (!Character.TryGetConfigFile(File, out XDocument doc))
+            _speciesName = infoElement.GetAttributeString("speciesname", null);
+            XDocument doc = null;
+            if (_speciesName != null)
             {
-                DebugConsole.ThrowError("Cannot find character config file " + File);
-                return;
+                doc = Character.GetConfigFile(_speciesName);
             }
+            else
+            {
+                // Backwards support (human only)
+                string file = infoElement.GetAttributeString("file", "");
+                doc = XMLExtensions.TryLoadXml(file);
+            }
+            if (doc == null) { return; }
             CharacterConfigElement = doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;
             HasGenders = CharacterConfigElement.GetAttributeBool("genders", false);
             if (HasGenders && gender == Gender.None)
@@ -786,7 +804,7 @@ namespace Barotrauma
 
             charElement.Add(
                 new XAttribute("name", Name),
-                new XAttribute("file", File),
+                new XAttribute("speciesname", SpeciesName),
                 new XAttribute("gender", Head.gender == Gender.Male ? "male" : "female"),
                 new XAttribute("race", Head.race.ToString()),
                 new XAttribute("salary", Salary),

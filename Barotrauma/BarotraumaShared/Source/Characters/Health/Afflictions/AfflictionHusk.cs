@@ -111,11 +111,7 @@ namespace Barotrauma
 
         private void DeactivateHusk(Character character)
         {
-            if (Character.TryGetConfigFile(character.ConfigPath, out XDocument configDoc))
-            {
-                var mainElement = configDoc.Root.IsOverride() ? configDoc.Root.FirstElement() : configDoc.Root;
-                character.NeedsAir = mainElement.GetAttributeBool("needsair", false);
-            }
+            character.NeedsAir = character.Params.MainElement.GetAttributeBool("needsair", false);
             if (huskAppendage != null)
             {
                 huskAppendage.ForEach(l => character.AnimController.RemoveLimb(l));
@@ -153,7 +149,7 @@ namespace Barotrauma
             character.Enabled = false;
             Entity.Spawner.AddToRemoveQueue(character);
 
-            string configFile = Character.GetConfigFile(GetHuskedSpeciesName(character, Prefab as AfflictionPrefabHusk));
+            string configFile = Character.GetConfigFilePath(GetHuskedSpeciesName(character, Prefab as AfflictionPrefabHusk));
 
             if (string.IsNullOrEmpty(configFile))
             {
@@ -206,7 +202,7 @@ namespace Barotrauma
                 return appendage;
             }
             string huskedSpeciesName = GetHuskedSpeciesName(character, matchingAffliction);
-            string filePath = Character.GetConfigFile(huskedSpeciesName);
+            string filePath = Character.GetConfigFilePath(huskedSpeciesName);
             if (!Character.TryGetConfigFile(filePath, out XDocument huskDoc))
             {
                 DebugConsole.ThrowError($"Error in '{filePath}': Failed to load the config file for the husk infected species with the species name '{huskedSpeciesName}'!");
