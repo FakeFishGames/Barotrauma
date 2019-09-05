@@ -1,4 +1,13 @@
 ---------------------------------------------------------------------------------------------------------
+v0.9.3.1
+---------------------------------------------------------------------------------------------------------
+
+- Fixed clients waiting an excessive amount of time before resending network messages the server has not
+acknowledged receiving. Caused clients to occasionally enter a state where they can't interact with devices
+or pick up items.
+- Fixed fonts getting messed up when playing in Simplified Chinese.
+
+---------------------------------------------------------------------------------------------------------
 v0.9.3.0
 ---------------------------------------------------------------------------------------------------------
 
