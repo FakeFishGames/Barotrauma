@@ -121,16 +121,15 @@ namespace Barotrauma
                 coolDownTimer -= deltaTime;
             }
             if (Abandon) { return; }
-            TryArm();
-            if (seekAmmunition == null || !subObjectives.Contains(seekAmmunition))
+            if (seekAmmunition == null)
             {
-                if (!HoldPosition)
-                {
-                    Move();
-                }
-                if (WeaponComponent != null)
+                if (TryArm())
                 {
                     OperateWeapon(deltaTime);
+                }
+                if (!HoldPosition && seekAmmunition == null)
+                {
+                    Move();
                 }
             }
         }
@@ -155,69 +154,90 @@ namespace Barotrauma
 
         private bool TryArm()
         {
-            if (character.LockHands) { return false; }
+            if (character.LockHands)
+            {
+                Weapon = null;
+                return false;
+            }
             if (Weapon == null)
             {
-                Weapon = GetWeapon(out _weaponComponent, ignoreRequiredItems: true);
-            }
-            if (Weapon != null)
-            {
-                if (!character.Inventory.Items.Contains(Weapon) || WeaponComponent == null)
+                // First go through all weapons and try to reload without seeking ammunition
+                var allWeapons = GetAllWeapons().ToList();
+                while (allWeapons.Any())
                 {
-                    // Not in the inventory anymore or cannot find the weapon component.
-                    Weapon = null;
-                }
-                else if (!IsLoaded(WeaponComponent))
-                {
-                    // Try reloading // TOOD: don't seek ammo here
-                    if (!Reload(!HoldPosition))
+                    Weapon = GetWeapon(allWeapons, out _weaponComponent);
+                    if (Weapon == null)
                     {
-                        if (seekAmmunition != null && subObjectives.Contains(seekAmmunition))
-                        {
-                            return false;
-                        }
-                        else
-                        {
-                            Weapon = null;
-                        }
+                        // No weapons
+                        break;
+                    }
+                    if (!character.Inventory.Items.Contains(Weapon) || WeaponComponent == null)
+                    {
+                        // Not in the inventory anymore or cannot find the weapon component
+                        allWeapons.Remove(WeaponComponent);
+                        Weapon = null;
+                        continue;
+                    }
+                    if (IsLoaded(WeaponComponent))
+                    {
+                        // All good, the weapon is loaded
+                        break;
+                    }
+                    if (Reload(seekAmmo: false))
+                    {
+                        // All good, reloading successful
+                        break;
+                    }
+                    else
+                    {
+                        // No ammo.
+                        allWeapons.Remove(WeaponComponent);
+                        Weapon = null;
                     }
                 }
+                // No loaded weapon found. Try again, now let's try to seek ammunition too
                 if (Weapon == null)
                 {
-                    // If cannot find ammunition for the first weapon, go through other weapons and try to reload without seeking ammunition.
-                    var allWeapons = GetAllWeapons(ignoreRequiredItems: true).ToList();
-                    while (allWeapons.Any())
+                    Weapon = GetWeapon(out _weaponComponent);
+                    if (Weapon != null)
                     {
-                        Weapon = GetWeapon(allWeapons, out _weaponComponent);
-                        if (Weapon == null)
+                        if (!CheckWeapon(seekAmmo: !HoldPosition))
                         {
-                            break;
-                        }
-                        if (IsLoaded(WeaponComponent))
-                        {
-                            // All good, is loaded
-                            break;
-                        }
-                        else
-                        {
-                            if (Reload(false))
+                            if (seekAmmunition == null)
                             {
-                                // All good, reloading successful
-                                break;
-                            }
-                            else
-                            {
-                                // No ammo.
-                                allWeapons.Remove(WeaponComponent);
                                 Weapon = null;
                             }
                         }
                     }
                 }
-                // TODO: If no weapon can be used, try to find ammunition
+            }
+            else
+            {
+                if (!CheckWeapon(seekAmmo: false))
+                {
+                    Weapon = null;
+                }
             }
             Mode = Weapon == null ? CombatMode.Retreat : initialMode;
             return Weapon != null;
+
+            bool CheckWeapon(bool seekAmmo)
+            {
+                if (!character.Inventory.Items.Contains(Weapon) || WeaponComponent == null)
+                {
+                    // Not in the inventory anymore or cannot find the weapon component
+                    return false;
+                }
+                if (!IsLoaded(WeaponComponent))
+                {
+                    // Try reloading (and seek ammo)
+                    if (!Reload(seekAmmo))
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            };
         }
 
         private void OperateWeapon(float deltaTime)
@@ -238,9 +258,9 @@ namespace Barotrauma
             }
         }
 
-        private Item GetWeapon(out ItemComponent weaponComponent, bool ignoreRequiredItems = false)
+        private Item GetWeapon(out ItemComponent weaponComponent)
         {
-            GetAllWeapons(ignoreRequiredItems);
+            GetAllWeapons();
             return GetWeapon(weapons, out weaponComponent);
         }
 
@@ -263,40 +283,34 @@ namespace Barotrauma
             return priority;
         }
 
-        private HashSet<ItemComponent> GetAllWeapons(bool ignoreRequiredItems)
+        private HashSet<ItemComponent> GetAllWeapons()
         {
             weapons.Clear();
             foreach (var item in character.Inventory.Items)
             {
                 if (item == null) { continue; }
                 if (ignoredWeapons.Contains(item)) { continue; }
-                SeekWeapons(item, weapons, ignoreRequiredItems);
+                SeekWeapons(item, weapons);
                 if (item.OwnInventory != null)
                 {
-                    item.OwnInventory.Items.ForEach(i => SeekWeapons(i, weapons, ignoreRequiredItems));
+                    item.OwnInventory.Items.ForEach(i => SeekWeapons(i, weapons));
                 }
             }
             return weapons;
         }
 
-        private void SeekWeapons(Item item, ICollection<ItemComponent> weaponList, bool ignoreRequiredItems)
+        private void SeekWeapons(Item item, ICollection<ItemComponent> weaponList)
         {
             if (item == null) { return; }
             foreach (var component in item.Components)
             {
                 if (component is RangedWeapon rw)
                 {
-                    if (ignoreRequiredItems || rw.HasRequiredContainedItems(character, addMessage: false))
-                    {
-                        weaponList.Add(rw);
-                    }
+                    weaponList.Add(rw);
                 }
                 else if (component is MeleeWeapon mw)
                 {
-                    if (ignoreRequiredItems || mw.HasRequiredContainedItems(character, addMessage: false))
-                    {
-                        weaponList.Add(mw);
-                    }
+                    weaponList.Add(mw);
                 }
                 else
                 {
@@ -309,10 +323,7 @@ namespace Barotrauma
                             {
                                 if (statusEffect.Afflictions.Any())
                                 {
-                                    if (ignoreRequiredItems || component.HasRequiredContainedItems(character, addMessage: false))
-                                    {
-                                        weaponList.Add(component);
-                                    }
+                                    weaponList.Add(component);
                                 }
                             }
                         }
@@ -403,7 +414,7 @@ namespace Barotrauma
                     SteeringManager.Reset();
                     RemoveSubObjective(ref followTargetObjective);
                 });
-            if (followTargetObjective != null && subObjectives.Contains(followTargetObjective))
+            if (followTargetObjective != null)
             {
                 followTargetObjective.CloseEnough =
                     WeaponComponent is RangedWeapon ? 1000 :
