@@ -14,12 +14,12 @@ namespace Barotrauma
 
             public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[duration]" });
 
-            public override IEnumerable<string> InfoTextValues(Traitor traitor) => base.InfoTextValues(traitor).Concat(new string[] { $"duration({requiredDuration})" });
+            public override IEnumerable<string> InfoTextValues(Traitor traitor) => base.InfoTextValues(traitor).Concat(new string[] { requiredDuration.ToString() });
 
             protected internal override string GetInfoText(Traitor traitor, string textId, IEnumerable<string> keys, IEnumerable<string> values)
             {
                 var infoText = base.GetInfoText(traitor, textId, keys, values);
-                return !string.IsNullOrEmpty(durationInfoTextId) ? TextManager.FormatServerMessage(durationInfoTextId, new[] { "[infotext]", "[duration]" }, new[] { infoText, $"{TimeSpan.FromSeconds(requiredDuration):g}" }) : infoText;
+                return !string.IsNullOrEmpty(durationInfoTextId) ? TextManager.FormatServerMessage(durationInfoTextId, new[] { "[infotext]", "[duration]" }, new[] { infoText, requiredDuration.ToString() }) : infoText;
             }
 
             private bool isCompleted = false;
