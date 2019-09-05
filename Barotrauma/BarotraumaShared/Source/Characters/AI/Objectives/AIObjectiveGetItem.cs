@@ -237,13 +237,10 @@ namespace Barotrauma
             }
             else if (itemIdentifiers != null)
             {
-                foreach (string itemName in itemIdentifiers)
+                var matchingItem = character.Inventory.FindItem(i => !ignoredItems.Contains(i) && itemIdentifiers.Any(id => id == i.Prefab.Identifier || i.HasTag(id)), recursive: true);
+                if (matchingItem != null)
                 {
-                    var matchingItem = character.Inventory.FindItemByTag(itemName, true) ?? character.Inventory.FindItemByIdentifier(itemName, true);
-                    if (matchingItem != null)
-                    {
-                        return !equip || character.HasEquippedItem(matchingItem);
-                    }
+                    return !equip || character.HasEquippedItem(matchingItem);
                 }
                 return false;
             }

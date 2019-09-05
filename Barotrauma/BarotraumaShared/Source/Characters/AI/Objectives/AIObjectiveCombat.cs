@@ -54,6 +54,7 @@ namespace Barotrauma
 
         private readonly AIObjectiveFindSafety findSafety;
         private readonly HashSet<ItemComponent> weapons = new HashSet<ItemComponent>();
+        private readonly HashSet<Item> ignoredWeapons = new HashSet<Item>();
 
         private AIObjectiveContainItem seekAmmunition;
         private AIObjectiveGoTo retreatObjective;
@@ -168,7 +169,7 @@ namespace Barotrauma
                 }
                 else if (!IsLoaded(WeaponComponent))
                 {
-                    // Allow to seek ammunition for the first weapon.
+                    // Try reloading // TOOD: don't seek ammo here
                     if (!Reload(!HoldPosition))
                     {
                         if (seekAmmunition != null && subObjectives.Contains(seekAmmunition))
@@ -213,6 +214,7 @@ namespace Barotrauma
                         }
                     }
                 }
+                // TODO: If no weapon can be used, try to find ammunition
             }
             Mode = Weapon == null ? CombatMode.Retreat : initialMode;
             return Weapon != null;
@@ -267,6 +269,7 @@ namespace Barotrauma
             foreach (var item in character.Inventory.Items)
             {
                 if (item == null) { continue; }
+                if (ignoredWeapons.Contains(item)) { continue; }
                 SeekWeapons(item, weapons, ignoreRequiredItems);
                 if (item.OwnInventory != null)
                 {
@@ -427,6 +430,8 @@ namespace Barotrauma
                 {
                     SteeringManager.Reset();
                     RemoveSubObjective(ref seekAmmunition);
+                    ignoredWeapons.Add(Weapon);
+                    Weapon = null;
                 });
         }
         
