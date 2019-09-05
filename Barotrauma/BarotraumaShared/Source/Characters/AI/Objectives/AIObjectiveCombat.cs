@@ -22,8 +22,6 @@ namespace Barotrauma
         const float ignoredWeaponsClearTime = 10;
 
         const float coolDown = 10.0f;
-        // Won't take the offensive or defensive with weapons that have lower priority than this -> retreat only
-        const float poorWeaponPriority = 10;
         // Won't take the offensive with weapons that have lower priority than this
         const float goodWeaponPriority = 30;
 
@@ -255,7 +253,7 @@ namespace Barotrauma
                     Weapon = null;
                 }
             }
-            if (Weapon == null || WeaponComponent.CombatPriority < poorWeaponPriority)
+            if (Weapon == null)
             {
                 Mode = CombatMode.Retreat;
             }
@@ -456,7 +454,7 @@ namespace Barotrauma
                 },
                 onAbandon: () =>
                 {
-                    Mode = CombatMode.Retreat;
+                    Mode = CombatMode.Defensive;
                     SteeringManager.Reset();
                     RemoveSubObjective(ref followTargetObjective);
                 });
