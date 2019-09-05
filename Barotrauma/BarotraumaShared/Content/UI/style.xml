@@ -445,10 +445,10 @@
     selectedcolor="204,204,204,204"
     pressedcolor="150,150,150,255">
 
-    <Sprite texture="Content/UI/inventoryAtlas.png" state="None" tile="false" sourcerect="471,947,24,69"/>
-    <Sprite texture="Content/UI/inventoryAtlas.png" state="Hover" tile="false" sourcerect="471,947,24,69"/>
-    <Sprite texture="Content/UI/inventoryAtlas.png" state="Selected" tile="false" sourcerect="471,947,24,69"/>
-    <Sprite texture="Content/UI/inventoryAtlas.png" state="Pressed" tile="false" sourcerect="471,947,24,69"/>
+    <Sprite texture="Content/UI/UI_Atlas2.png" state="None" tile="false" sourcerect="235,9,62,174"/>
+    <Sprite texture="Content/UI/UI_Atlas2.png" state="Hover" tile="false" sourcerect="235,9,62,174"/>
+    <Sprite texture="Content/UI/UI_Atlas2.png" state="Selected" tile="false" sourcerect="235,9,62,174"/>
+    <Sprite texture="Content/UI/UI_Atlas2.png" state="Pressed" tile="false" sourcerect="235,9,62,174"/>
 
     <GUITextBlock
       textcolor="153,166,179,255"
@@ -461,15 +461,47 @@
     selectedcolor="204,204,204,204"
     pressedcolor="150,150,150,255">
 
-    <Sprite texture="Content/UI/inventoryAtlas.png" state="None" tile="false" sourcerect="584,972,69,24"/>
-    <Sprite texture="Content/UI/inventoryAtlas.png" state="Hover" tile="false" sourcerect="584,972,69,24"/>
-    <Sprite texture="Content/UI/inventoryAtlas.png" state="Selected" tile="false" sourcerect="584,972,69,24"/>
-    <Sprite texture="Content/UI/inventoryAtlas.png" state="Pressed" tile="false" sourcerect="584,972,69,24"/>
+    <Sprite texture="Content/UI/UI_Atlas2.png" state="None" tile="false" sourcerect="308,1,174,63"/>
+    <Sprite texture="Content/UI/UI_Atlas2.png" state="Hover" tile="false" sourcerect="308,1,174,63"/>
+    <Sprite texture="Content/UI/UI_Atlas2.png" state="Selected" tile="false" sourcerect="308,1,174,63"/>
+    <Sprite texture="Content/UI/UI_Atlas2.png" state="Pressed" tile="false" sourcerect="308,1,174,63"/>
 
     <GUITextBlock
       textcolor="153,166,179,255"
       padding="0.0, 0.0, 0.0, 0.0"/>
   </GUIButtonVerticalArrow>
+
+  <GUIButtonSolidHorizontalArrow
+    color="204,204,204,204"
+    hovercolor="255,255,255,255"
+    selectedcolor="204,204,204,204"
+    pressedcolor="150,150,150,255">
+
+    <Sprite texture="Content/UI/UI_Atlas2.png" state="None" tile="false" sourcerect="308,66,68,131"/>
+    <Sprite texture="Content/UI/UI_Atlas2.png" state="Hover" tile="false" sourcerect="308,66,68,131"/>
+    <Sprite texture="Content/UI/UI_Atlas2.png" state="Selected" tile="false" sourcerect="308,66,68,131"/>
+    <Sprite texture="Content/UI/UI_Atlas2.png" state="Pressed" tile="false" sourcerect="308,66,68,131"/>
+
+    <GUITextBlock
+      textcolor="153,166,179,255"
+      padding="0.0, 0.0, 0.0, 0.0"/>
+  </GUIButtonSolidHorizontalArrow>
+
+  <GUIButtonSolidVerticalArrow
+    color="204,204,204,204"
+    hovercolor="255,255,255,255"
+    selectedcolor="204,204,204,204"
+    pressedcolor="150,150,150,255">
+
+    <Sprite texture="Content/UI/UI_Atlas2.png" state="None" tile="false" sourcerect="486,1,131,69"/>
+    <Sprite texture="Content/UI/UI_Atlas2.png" state="Hover" tile="false" sourcerect="486,1,131,69"/>
+    <Sprite texture="Content/UI/UI_Atlas2.png" state="Selected" tile="false" sourcerect="486,1,131,69"/>
+    <Sprite texture="Content/UI/UI_Atlas2.png" state="Pressed" tile="false" sourcerect="486,1,131,69"/>
+
+    <GUITextBlock
+      textcolor="153,166,179,255"
+      padding="0.0, 0.0, 0.0, 0.0"/>
+  </GUIButtonSolidVerticalArrow>
   
   <GUITextBlock
     textcolor="127,140,153,255"
@@ -720,10 +752,10 @@
 
     <GUIFrame
       padding="40.0, 20.0, 40.0, 20.0"
-      color="200,200,200,220"
-      hovercolor="200,200,200,220"
-      selectedcolor="200,200,200,220"
-      outlinecolor="200,200,200,220"
+      color="200,200,200,255"
+      hovercolor="200,200,200,255"
+      selectedcolor="200,200,200,255"
+      outlinecolor="200,200,200,255"
       textcolor="127,140,153,255">
       <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect ="746, 704, 120, 120" slice="754, 711, 865, 816"/>
     </GUIFrame>
