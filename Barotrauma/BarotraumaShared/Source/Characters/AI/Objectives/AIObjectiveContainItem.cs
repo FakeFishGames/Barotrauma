@@ -77,7 +77,9 @@ namespace Barotrauma
                 {
                     if (!character.CanInteractWith(container.Item, out _, checkLinked: false))
                     {
-                        TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(container.Item, character, objectiveManager), onAbandon: () => RemoveSubObjective(ref goToObjective));
+                        TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(container.Item, character, objectiveManager), 
+                            onAbandon: () => RemoveSubObjective(ref goToObjective),
+                            onCompleted: () => RemoveSubObjective(ref goToObjective));
                         return;
                     }
                     container.Combine(itemToContain);
@@ -100,7 +102,6 @@ namespace Barotrauma
                         if (getItemObjective.TargetItem != null)
                         {
                             containedItems.Add(getItemObjective.TargetItem);
-                            RemoveSubObjective(ref getItemObjective);
                         }
                         else
                         {
@@ -113,6 +114,7 @@ namespace Barotrauma
                                 Abandon = true;
                             }
                         }
+                        RemoveSubObjective(ref getItemObjective);
                     });
             }
         }  

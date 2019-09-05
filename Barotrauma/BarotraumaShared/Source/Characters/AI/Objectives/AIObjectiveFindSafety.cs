@@ -81,7 +81,8 @@ namespace Barotrauma
                         Priority = 0;
                         searchHullTimer = Math.Min(1, searchHullTimer);
                         RemoveSubObjective(ref divingGearObjective);
-                    });
+                    },
+                    onCompleted: () => RemoveSubObjective(ref divingGearObjective));
             }
             else
             {
@@ -115,6 +116,7 @@ namespace Barotrauma
                             },
                             onCompleted: () =>
                             {
+                                RemoveSubObjective(ref goToObjective);
                                 if (currenthullSafety > HumanAIController.HULL_SAFETY_THRESHOLD)
                                 {
                                     Priority = 0;

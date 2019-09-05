@@ -86,7 +86,9 @@ namespace Barotrauma
                 }
                 else
                 {
-                    TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(target.Item, character, objectiveManager, closeEnough: 50), onAbandon: () => RemoveSubObjective(ref goToObjective));
+                    TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(target.Item, character, objectiveManager, closeEnough: 50), 
+                        onAbandon: () => RemoveSubObjective(ref goToObjective),
+                        onCompleted: () => RemoveSubObjective(ref goToObjective));
                 }
             }
             else
@@ -99,7 +101,9 @@ namespace Barotrauma
                 }
                 else if (!character.Inventory.Items.Contains(component.Item))
                 {
-                    TryAddSubObjective(ref getItemObjective, () => new AIObjectiveGetItem(character, component.Item, objectiveManager, equip: true), onAbandon: () => RemoveSubObjective(ref getItemObjective));
+                    TryAddSubObjective(ref getItemObjective, () => new AIObjectiveGetItem(character, component.Item, objectiveManager, equip: true), 
+                        onAbandon: () => RemoveSubObjective(ref getItemObjective),
+                        onCompleted: () => RemoveSubObjective(ref getItemObjective));
                 }
                 else
                 {

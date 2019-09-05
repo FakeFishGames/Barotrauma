@@ -44,7 +44,9 @@ namespace Barotrauma
             var weldingTool = character.Inventory.FindItemByTag("weldingtool", true);
             if (weldingTool == null)
             {
-                TryAddSubObjective(ref getWeldingTool, () => new AIObjectiveGetItem(character, "weldingtool", objectiveManager, true), onAbandon: () => RemoveSubObjective(ref getWeldingTool));
+                TryAddSubObjective(ref getWeldingTool, () => new AIObjectiveGetItem(character, "weldingtool", objectiveManager, true), 
+                    onAbandon: () => RemoveSubObjective(ref getWeldingTool),
+                    onCompleted: () => RemoveSubObjective(ref getWeldingTool));
                 return;
             }
             else
@@ -69,7 +71,9 @@ namespace Barotrauma
                 }
                 if (containedItems.None(i => i.HasTag("weldingfueltank") && i.Condition > 0.0f))
                 {
-                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, "weldingfueltank", weldingTool.GetComponent<ItemContainer>(), objectiveManager), onAbandon: () => RemoveSubObjective(ref refuelObjective));
+                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, "weldingfueltank", weldingTool.GetComponent<ItemContainer>(), objectiveManager), 
+                        onAbandon: () => RemoveSubObjective(ref refuelObjective),
+                        onCompleted: () => RemoveSubObjective(ref refuelObjective));
                     return;
                 }
             }
@@ -94,14 +98,18 @@ namespace Barotrauma
             bool canOperate = gapDiff.LengthSquared() < reach * reach;
             if (canOperate)
             {
-                TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: "", requireEquip: true, operateTarget: Leak), onAbandon: () => RemoveSubObjective(ref operateObjective));
+                TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: "", requireEquip: true, operateTarget: Leak), 
+                    onAbandon: () => RemoveSubObjective(ref operateObjective),
+                    onCompleted: () => RemoveSubObjective(ref operateObjective));
             }
             else
             {
                 TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(Leak, character, objectiveManager)
                 {
                     CloseEnough = reach
-                }, onAbandon: () => RemoveSubObjective(ref gotoObjective));
+                }, 
+                onAbandon: () => RemoveSubObjective(ref gotoObjective),
+                onCompleted: () => RemoveSubObjective(ref gotoObjective));
             }
         }
     }
