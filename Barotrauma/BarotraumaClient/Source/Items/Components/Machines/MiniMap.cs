@@ -79,6 +79,11 @@ namespace Barotrauma.Items.Components
             displayedSubs.AddRange(item.Submarine.DockedTo);
         }
 
+        public override void FlipX(bool relativeToSub)
+        {
+            CreateHUD();
+        }
+
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
             //recreate HUD if the subs we should display have changed

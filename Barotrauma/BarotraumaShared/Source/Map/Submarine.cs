@@ -931,7 +931,7 @@ namespace Barotrauma
             parents.Add(this);
 
             flippedX = !flippedX;
-
+            
             Item.UpdateHulls();
 
             List<Item> bodyItems = Item.ItemList.FindAll(it => it.Submarine == this && it.body != null);
@@ -974,6 +974,8 @@ namespace Barotrauma
                 entityGrid = null;
             }
             entityGrid = Hull.GenerateEntityGrid(this);
+
+            SubBody.FlipX();
 
             foreach (MapEntity mapEntity in subEntities)
             {
