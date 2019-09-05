@@ -220,10 +220,9 @@ namespace Barotrauma
                 {
                     traitor.Greet(server, CodeWords, CodeResponse, message => messages[traitor].Add(message));
                 }
-
                 messages.ForEach(traitor => traitor.Value.ForEach(message => traitor.Key.SendChatMessage(message)));
-                Update(0.0f, GameMain.Server.EndGame);
                 messages.ForEach(traitor => traitor.Value.ForEach(message => traitor.Key.SendChatMessageBox(message)));
+                Update(0.0f, GameMain.Server.EndGame);
 #if SERVER
                 foreach (var traitor in Traitors.Values)
                 {
@@ -287,16 +286,9 @@ namespace Barotrauma
                         if (!objective.CanBeCompleted)
                         {
                             objective.EndMessage();
-                            objective.End(true);
                             pendingObjectives.Clear();
                         }
                         break;
-                    }
-                    var completedMax = completedObjectives.Count - 1;
-                    for (var i = previousCompletedCount; i <= completedMax; ++i)
-                    {
-                        var objective = completedObjectives[i];
-                        objective.End(i < completedMax || pendingObjectives.Count > 0);
                     }
                     if (pendingObjectives.Count > 0)
                     {

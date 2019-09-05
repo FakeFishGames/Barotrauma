@@ -140,17 +140,10 @@ namespace Barotrauma
             {
                 Traitor.SendChatMessage(StartMessageText);
             }
-
-            public void End(bool displayMessage)
-            {
-                if (displayMessage)
-                {
-                    Traitor.SendChatMessageBox(EndMessageText);
-                }
-            }
-
+            
             public void EndMessage()
             {
+                Traitor.SendChatMessageBox(EndMessageText);
                 Traitor.SendChatMessage(EndMessageText);
             }
 

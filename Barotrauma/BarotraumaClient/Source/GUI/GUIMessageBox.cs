@@ -180,6 +180,7 @@ namespace Barotrauma
                     if (VisibleBox is GUIMessageBox msgBox && msgBox.alwaysVisible)
                     {
                         MessageBoxes[i].AddToGUIUpdateList();
+                        break;
                     }
                 }
             }
@@ -193,7 +194,7 @@ namespace Barotrauma
                 Vector2 defaultPos = new Vector2(0.0f, HUDLayoutSettings.InventoryAreaLower.Y - InnerFrame.Rect.Height - 20 * GUI.Scale);
                 Vector2 endPos = new Vector2(GameMain.GraphicsWidth, defaultPos.Y);
 
-                for (int i = MessageBoxes.IndexOf(this); i >= 0; i--)
+                /*for (int i = MessageBoxes.IndexOf(this); i >= 0; i--)
                 {
                     if (MessageBoxes[i] is GUIMessageBox otherMsgBox && otherMsgBox != this && otherMsgBox.type == type && !otherMsgBox.closing)
                     {
@@ -201,7 +202,7 @@ namespace Barotrauma
                             Math.Max(otherMsgBox.InnerFrame.RectTransform.AbsoluteOffset.X + 10 * GUI.Scale, defaultPos.X),
                             Math.Max(otherMsgBox.InnerFrame.RectTransform.AbsoluteOffset.Y + 10 * GUI.Scale, defaultPos.Y));
                     }
-                }
+                }*/
 
                 if (!closing)
                 {

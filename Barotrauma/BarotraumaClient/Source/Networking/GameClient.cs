@@ -932,7 +932,7 @@ namespace Barotrauma.Networking
                     DebugConsole.NewMessage(message);
                     break;
                 case TraitorMessageType.ServerMessageBox:
-                    new GUIMessageBox("", message);
+                    new GUIMessageBox("", message, new string[0], type: GUIMessageBox.Type.InGame);
                     break;
                 case TraitorMessageType.Server:
                 default:
