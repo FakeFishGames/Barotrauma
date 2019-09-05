@@ -4,14 +4,14 @@
   <Item name="Coilgun" 
         description="A rapid-firing turret that propels metal bolts using electromagnets. Generally not very effective against large or heavily armored targets, but ideal for taking down smaller enemies."
         identifier="coilgun" Tags="turret" category="Machine" interactthroughwalls="true" Scale="0.5" interactdistance="10" spritecolor="1.0,1.0,1.0,1.0" focusonselected="true" offsetonselected="700" linkable="true" allowedlinks="coilgunequipment">
-    <Sprite texture="coilgunbase.png" depth="0.01" sourcerect="0,0,256,256" canflipy="false" />
+    <Sprite texture="Turrets.png" depth="0.01" sourcerect="0,0,256,256" canflipy="false" />
     <StaticBody width="80" radius="80" />
     <Turret canbeselected="false" characterusable="false" linkable="true" barrelpos="128,88" rotationlimits="180,360" powerconsumption="1000.0" showchargeindicator="true" showprojectileindicator="true" recoildistance="50" reload="0.25" springstiffnesslowskill="2" springstiffnesshighskill="50" springdampinglowskill="0.5" springdampinghighskill="10" rotationspeedlowskill="1" rotationspeedhighskill="8">
       <sound file="Content/Items/Weapons/Coilgun1.ogg" range="10000" type="OnUse" />
       <sound file="Content/Items/Weapons/Coilgun2.ogg" range="10000" type="OnUse" />
       <sound file="Content/Items/Weapons/Coilgun3.ogg" range="10000" type="OnUse" />
-      <RailSprite texture="Content/Items/Weapons/coilgunbase.png" depth="0.011" sourcerect="381,0,120,287" origin="0.64, 0.7" />
-      <BarrelSprite texture="Content/Items/Weapons/coilgunbase.png" depth="0.012" sourcerect="256,0,125,333" origin="0.6, 0.8" />
+      <RailSprite texture="Content/Items/Weapons/Turrets.png" depth="0.011" sourcerect="381,0,120,287" origin="0.64, 0.7" />
+      <BarrelSprite texture="Content/Items/Weapons/Turrets.png" depth="0.012" sourcerect="256,0,125,333" origin="0.6, 0.8" />
       <Crosshair texture="Content/Items/Weapons/crosshair.png" />
       <CrosshairPointer texture="Content/Items/Weapons/crosshairPointer.png" />
       <MoveSound file="Content/Items/Weapons/RailgunLoop.ogg" />
