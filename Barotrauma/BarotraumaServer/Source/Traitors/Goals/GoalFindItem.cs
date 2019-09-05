@@ -69,26 +69,24 @@ namespace Barotrauma
 
             protected Item FindRandomContainer(bool includeNew, bool includeExisting)
             {
-                int itemsCount = Item.ItemList.Count;
-                int startIndex = TraitorMission.Random(itemsCount);
-                Item fallback = null;
-                for (int i = 0; i < itemsCount; ++i)
+                List<Item> suitableItems = new List<Item>();
+                foreach (Item item in Item.ItemList)
                 {
-                    var item = Item.ItemList[(i + startIndex) % itemsCount];
                     if (item.Submarine == null || Traitors.All(traitor => item.Submarine.TeamID != traitor.Character.TeamID))
                     {
                         continue;
                     }
-
                     if (item.GetComponent<ItemContainer>() != null && allowedContainerIdentifiers.Contains(item.prefab.Identifier))
                     {
                         if ((includeNew && !item.OwnInventory.IsFull()) || (includeExisting && item.OwnInventory.FindItemByIdentifier(targetPrefab.Identifier) != null))
                         {
-                            return item;
+                            suitableItems.Add(item);
                         }
                     }
                 }
-                return null;
+
+                if (suitableItems.Count == 0) { return null; }
+                return suitableItems[TraitorMission.Random(suitableItems.Count)];
             }
 
             public override bool Start(Traitor traitor)
