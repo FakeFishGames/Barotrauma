@@ -96,7 +96,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    searchHullTimer = SearchHullInterval;
+                    searchHullTimer = SearchHullInterval * Rand.Range(0.9f, 1.1f);
                     previousSafeHull = currentSafeHull;
                     currentSafeHull = FindBestHull();
                     if (currentSafeHull == null)
