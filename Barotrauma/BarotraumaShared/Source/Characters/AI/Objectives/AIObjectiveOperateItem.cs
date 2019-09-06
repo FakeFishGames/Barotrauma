@@ -83,7 +83,7 @@ namespace Barotrauma
                     }
                     if (component.AIOperate(deltaTime, character, this))
                     {
-                        isCompleted = completionCondition == null || completionCondition();
+                        IsCompleted = completionCondition == null || completionCondition();
                     }
                 }
                 else
@@ -146,12 +146,12 @@ namespace Barotrauma
                     }
                     if (component.AIOperate(deltaTime, character, this))
                     {
-                        isCompleted = completionCondition == null || completionCondition();
+                        IsCompleted = completionCondition == null || completionCondition();
                     }
                 }
             }
         }
 
-        protected override bool Check() => isCompleted && !IsLoop;
+        protected override bool Check() => IsCompleted && !IsLoop;
     }
 }
