@@ -1172,7 +1172,7 @@ namespace Barotrauma
             {
                 return new string[][]
                 {
-                    Submarine.Loaded.Select(s => s.Name).ToArray()
+                    Submarine.SavedSubmarines.Select(s => s.Name).ToArray()
                 };
             }));
 
@@ -1191,7 +1191,7 @@ namespace Barotrauma
             {
                 return new string[][]
                 {
-                    Submarine.Loaded.Select(s => s.Name).ToArray()
+                    Submarine.SavedSubmarines.Select(s => s.Name).ToArray()
                 };
             }));
 
