@@ -111,7 +111,7 @@ namespace Barotrauma
                         missionCompleted = true;
                         foreach (var traitor in mission.Value.Traitors.Values)
                         {
-                            traitor.UpdateCurrentObjective("");
+                            traitor.UpdateCurrentObjective("", mission.Value.Identifier);
                         }
                     }
                 }

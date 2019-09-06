@@ -2744,12 +2744,13 @@ namespace Barotrauma.Networking
             serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
         }
 
-        public void SendTraitorMessage(Client client, string message, TraitorMessageType messageType)
+        public void SendTraitorMessage(Client client, string message, string missionIdentifier, TraitorMessageType messageType)
         {
             if (client == null) { return; }
             var msg = new WriteOnlyMessage();
             msg.Write((byte)ServerPacketHeader.TRAITOR_MESSAGE);
             msg.Write((byte)messageType);
+            msg.Write(missionIdentifier ?? "");
             msg.Write(message);
             serverPeer.Send(msg, client.Connection, DeliveryMethod.ReliableOrdered);
         }
