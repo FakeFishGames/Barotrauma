@@ -124,14 +124,7 @@ namespace Barotrauma
             DelayedObjectives.Add(objective, coroutine);
         }
 
-        public T GetObjective<T>() where T : AIObjective
-        {
-            foreach (AIObjective objective in Objectives)
-            {
-                if (objective is T) return (T)objective;
-            }
-            return null;
-        }
+        public T GetObjective<T>() where T : AIObjective => Objectives.FirstOrDefault(o => o is T) as T;
 
         private AIObjective GetCurrentObjective()
         {
