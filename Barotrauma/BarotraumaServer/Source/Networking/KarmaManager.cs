@@ -110,8 +110,18 @@ namespace Barotrauma
                 {
                     GameMain.Server.SendDirectChatMessage(TextManager.Get(karmaChange < 0 ? "KarmaDecreasedUnknownAmount" : "KarmaIncreasedUnknownAmount"), client);
                 }
+                if (TestMode)
+                {
+                    clientMemory.PreviousNotifiedKarma = client.Karma;
+                }
             }
-            clientMemory.PreviousNotifiedKarma = client.Karma;
+
+            //when not in test mode, reset karma after each check
+            //(so we only send notifications if the karma changes significantly as a result of some action, not when it has changed over time)
+            if (!TestMode)
+            {
+                clientMemory.PreviousNotifiedKarma = client.Karma;
+            }
         }
 
         private void UpdateClient(Client client, float deltaTime)

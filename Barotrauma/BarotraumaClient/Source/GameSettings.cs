@@ -115,8 +115,8 @@ namespace Barotrauma
                 var tickBox = new GUITickBox(new RectTransform(tickBoxScale, contentPackageList.Content.RectTransform, scaleBasis: ScaleBasis.BothHeight), contentPackage.Name)
                 {
                     UserData = contentPackage,
-                    OnSelected = SelectContentPackage,
-                    Selected = SelectedContentPackages.Contains(contentPackage)
+                    Selected = SelectedContentPackages.Contains(contentPackage),
+                    OnSelected = SelectContentPackage
                 };
                 if (contentPackage.CorePackage)
                 {
@@ -124,17 +124,27 @@ namespace Barotrauma
                 }
                 if (!contentPackage.IsCompatible())
                 {
-                    tickBox.TextColor = Color.Red;
                     tickBox.Enabled = false;
-                    tickBox.ToolTip = TextManager.GetWithVariables(contentPackage.GameVersion <= new Version(0, 0, 0, 0) ? "IncompatibleContentPackageUnknownVersion" : "IncompatibleContentPackage",
+                    tickBox.TextColor = Color.Red * 0.6f;
+                    tickBox.ToolTip = tickBox.TextBlock.ToolTip =
+                        TextManager.GetWithVariables(contentPackage.GameVersion <= new Version(0, 0, 0, 0) ? "IncompatibleContentPackageUnknownVersion" : "IncompatibleContentPackage",
                         new string[3] { "[packagename]", "[packageversion]", "[gameversion]" }, new string[3] { contentPackage.Name, contentPackage.GameVersion.ToString(), GameMain.Version.ToString() });
                 }
                 else if (contentPackage.CorePackage && !contentPackage.ContainsRequiredCorePackageFiles(out List<ContentType> missingContentTypes))
                 {
-                    tickBox.TextColor = Color.Red;
                     tickBox.Enabled = false;
-                    tickBox.ToolTip = TextManager.GetWithVariables("ContentPackageMissingCoreFiles", new string[2] { "[packagename]", "[missingfiletypes]" },
+                    tickBox.TextColor = Color.Red * 0.6f;
+                    tickBox.ToolTip = tickBox.TextBlock.ToolTip =
+                        TextManager.GetWithVariables("ContentPackageMissingCoreFiles", new string[2] { "[packagename]", "[missingfiletypes]" },
                         new string[2] { contentPackage.Name, string.Join(", ", missingContentTypes) }, new bool[2] { false, true });
+                }
+                else if (contentPackage.Invalid)
+                {
+                    tickBox.Enabled = false;
+                    tickBox.TextColor = Color.Red * 0.6f;
+                    tickBox.ToolTip = tickBox.TextBlock.ToolTip =
+                        TextManager.GetWithVariable("InvalidContentPackage", "[packagename]", contentPackage.Name) +
+                        "\n" + string.Join("\n", contentPackage.ErrorMessages);
                 }
             }
 
@@ -149,12 +159,28 @@ namespace Barotrauma
             languageDD.OnSelected = (guiComponent, obj) =>
             {
                 string newLanguage = obj as string;
-                if (newLanguage == Language) return true;
-                
+                if (newLanguage == Language) { return true; }
+
+                string prevLanguage = Language;
                 Language = newLanguage;
                 UnsavedSettings = true;
 
-                var msgBox = new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("RestartRequiredLanguage"));
+                var msgBox = new GUIMessageBox(
+                    TextManager.Get("RestartRequiredLabel"), 
+                    TextManager.Get("RestartRequiredLanguage"), 
+                    buttons: new string[] { TextManager.Get("Cancel"), TextManager.Get("OK") });
+                msgBox.Buttons[0].OnClicked += (btn, userdata) =>
+                {
+                    Language = prevLanguage;
+                    languageDD.SelectItem(Language);
+                    msgBox.Close();
+                    return true;
+                }; msgBox.Buttons[1].OnClicked += (btn, userdata) =>
+                {
+                    ApplySettings();
+                    GameMain.Instance.Exit();
+                    return true;
+                };
 
                 return true;
             };
@@ -594,7 +620,7 @@ namespace Barotrauma
                 BarScroll = (float)Math.Sqrt(MathUtils.InverseLerp(0.2f, 5.0f, MicrophoneVolume)),
                 OnMoved = (scrollBar, scroll) =>
                 {
-                    MicrophoneVolume = MathHelper.Lerp(0.2f, 5.0f, scroll * scroll);
+                    MicrophoneVolume = MathHelper.Lerp(0.2f, 10.0f, scroll * scroll);
                     MicrophoneVolume = (float)Math.Round(MicrophoneVolume, 1);
                     ChangeSliderText(scrollBar, MicrophoneVolume);
                     scrollBar.Step = 0.05f;

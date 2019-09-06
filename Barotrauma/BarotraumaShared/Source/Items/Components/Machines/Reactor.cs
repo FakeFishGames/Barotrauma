@@ -51,6 +51,8 @@ namespace Barotrauma.Items.Components
         const float AIUpdateInterval = 0.2f;
         private float aiUpdateTimer;
 
+        private Character lastAIUser;
+
         private Character lastUser;
         private Character LastUser
         {
@@ -192,6 +194,18 @@ namespace Barotrauma.Items.Components
                 }
             }
 #endif
+
+            //if an AI character was using the item on the previous frame but not anymore, turn autotemp on
+            // (= bots turn autotemp back on when leaving the reactor)
+            if (lastAIUser != null)
+            {
+                if (lastAIUser.SelectedConstruction != item && lastAIUser.CanInteractWith(item))
+                {
+                    AutoTemp = true;
+                    unsentChanges = true;
+                    lastAIUser = null;
+                }
+            }
 
             prevAvailableFuel = AvailableFuel;
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
@@ -562,7 +576,7 @@ namespace Barotrauma.Items.Components
                 character.Speak(TextManager.Get("DialogReactorTaken"), null, 0.0f, "reactortaken", 10.0f);
             }
 
-            LastUser = character;
+            LastUser = lastAIUser = character;
             
             switch (objective.Option.ToLowerInvariant())
             {

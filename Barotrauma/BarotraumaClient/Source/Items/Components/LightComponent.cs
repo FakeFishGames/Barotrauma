@@ -28,7 +28,7 @@ namespace Barotrauma.Items.Components
 
         public override void FlipX(bool relativeToSub)
         {
-            if (light?.LightSprite != null)
+            if (light?.LightSprite != null && item.Prefab.CanSpriteFlipX)
             {
                 light.LightSpriteEffect = light.LightSpriteEffect == SpriteEffects.None ?
                     SpriteEffects.FlipHorizontally : SpriteEffects.None;                

@@ -1598,13 +1598,17 @@ namespace Barotrauma
             if (e != null)
             {
                 error += " {" + e.Message + "}\n" + e.StackTrace;
+                if (e.InnerException != null)
+                {
+                    error += "\n\nInner exception: " + e.InnerException.Message + "\n" + e.InnerException.StackTrace;
+                }
             }
             System.Diagnostics.Debug.WriteLine(error);
             NewMessage(error, Color.Red);
 #if CLIENT
             if (createMessageBox)
             {
-                new GUIMessageBox(TextManager.Get("Error"), error);
+                CoroutineManager.StartCoroutine(CreateMessageBox(error));
             }
             else
             {
@@ -1612,7 +1616,20 @@ namespace Barotrauma
             }
 #endif
         }
-        
+
+#if CLIENT
+        private static IEnumerable<object> CreateMessageBox(string errorMsg)
+        {
+            while (GUI.Style == null)
+            {
+                yield return null;
+            }
+
+            new GUIMessageBox(TextManager.Get("Error"), errorMsg);
+            yield return CoroutineStatus.Success;
+        }
+#endif
+
         public static void SaveLogs()
         {
             if (unsavedMessages.Count == 0) return;

@@ -1256,6 +1256,14 @@ namespace Barotrauma
                         createItemFileList.Flash(Color.Red);
                     }
 
+                    if (!itemContentPackage.CheckValidity(out List<string> errorMessages))
+                    {
+                        new GUIMessageBox(
+                            TextManager.GetWithVariable("workshopitempublishfailed", "[itemname]", itemEditor.Title),
+                            string.Join("\n", errorMessages));
+                        return false;
+                    }
+
                     PublishWorkshopItem();
                     return true;
                 }

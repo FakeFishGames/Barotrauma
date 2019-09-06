@@ -206,7 +206,7 @@ namespace Barotrauma
             {
                 voiceChatVolume = MathHelper.Clamp(value, 0.0f, 1.0f);
 #if CLIENT
-                GameMain.SoundManager?.SetCategoryGainMultiplier("voip", voiceChatVolume * 20.0f, 0);
+                GameMain.SoundManager?.SetCategoryGainMultiplier("voip", voiceChatVolume * 30.0f, 0);
 #endif
             }
         }
@@ -216,7 +216,7 @@ namespace Barotrauma
             get { return microphoneVolume; }
             set
             {
-                microphoneVolume = MathHelper.Clamp(value, 0.1f, 5.0f);
+                microphoneVolume = MathHelper.Clamp(value, 0.2f, 10.0f);
             }
         }
         public string Language
@@ -672,6 +672,7 @@ namespace Barotrauma
         {
             var missingPackagePaths = new List<string>();
             var incompatiblePackages = new List<ContentPackage>();
+            var invalidPackages = new List<ContentPackage>();
             SelectedContentPackages.Clear();
             foreach (string path in contentPackagePaths)
             {
@@ -685,6 +686,10 @@ namespace Barotrauma
                 {
                     incompatiblePackages.Add(matchingContentPackage);
                 }
+                else if (!matchingContentPackage.CheckValidity(out List<string> errorMessages))
+                {
+                    invalidPackages.Add(matchingContentPackage);
+                }
                 else
                 {
                     SelectedContentPackages.Add(matchingContentPackage);
@@ -696,12 +701,6 @@ namespace Barotrauma
 
             foreach (ContentPackage contentPackage in SelectedContentPackages)
             {
-                bool packageOk = contentPackage.VerifyFiles(out List<string> errorMessages);
-                if (!packageOk)
-                {
-                    DebugConsole.ThrowError("Error in content package \"" + contentPackage.Name + "\":\n" + string.Join("\n", errorMessages));
-                    continue;
-                }
                 foreach (ContentFile file in contentPackage.Files)
                 {
                     ToolBox.IsProperFilenameCase(file.Path);
@@ -711,7 +710,7 @@ namespace Barotrauma
             EnsureCoreContentPackageSelected();
 
             //save to get rid of the invalid selected packages in the config file
-            if (missingPackagePaths.Count > 0 || incompatiblePackages.Count > 0) { SaveNewPlayerConfig(); }
+            if (missingPackagePaths.Count > 0 || incompatiblePackages.Count > 0 || invalidPackages.Count > 0) { SaveNewPlayerConfig(); }
 
             //display error messages after all content packages have been loaded
             //to make sure the package that contains text files has been loaded before we attempt to use TextManager
@@ -719,10 +718,15 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError(TextManager.GetWithVariable("ContentPackageNotFound", "[packagepath]", missingPackagePath));
             }
+            foreach (ContentPackage invalidPackage in invalidPackages)
+            {
+                DebugConsole.ThrowError(TextManager.GetWithVariable("InvalidContentPackage", "[packagename]", invalidPackage.Name), createMessageBox: true);
+            }
             foreach (ContentPackage incompatiblePackage in incompatiblePackages)
             {
                 DebugConsole.ThrowError(TextManager.GetWithVariables(incompatiblePackage.GameVersion <= new Version(0, 0, 0, 0) ? "IncompatibleContentPackageUnknownVersion" : "IncompatibleContentPackage",
-                    new string[3] { "[packagename]", "[packageversion]", "[gameversion]" }, new string[3] { incompatiblePackage.Name, incompatiblePackage.GameVersion.ToString(), GameMain.Version.ToString() }));
+                    new string[3] { "[packagename]", "[packageversion]", "[gameversion]" }, new string[3] { incompatiblePackage.Name, incompatiblePackage.GameVersion.ToString(), GameMain.Version.ToString() }),
+                    createMessageBox: true);
             }
         }
 
@@ -1143,7 +1147,7 @@ namespace Barotrauma
             DynamicRangeCompressionEnabled = true;
             VoipAttenuationEnabled = true;
             voiceChatVolume = 0.5f;
-            microphoneVolume = 1.0f;
+            microphoneVolume = 5.0f;
             AutoCheckUpdates = true;
             defaultPlayerName = string.Empty;
             HUDScale = 1;

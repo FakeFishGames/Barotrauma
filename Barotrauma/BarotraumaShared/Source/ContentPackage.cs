@@ -180,7 +180,7 @@ namespace Barotrauma
                 if (!Enum.TryParse(subElement.Name.ToString(), true, out ContentType type))
                 {
                     errorMsgs.Add("Error in content package \"" + Name + "\" - \"" + subElement.Name.ToString() + "\" is not a valid content type.");
-                    type = ContentType.None;                    
+                    type = ContentType.None;
                 }
                 Files.Add(new ContentFile(subElement.GetAttributeString("file", ""), type));
             }
@@ -193,6 +193,29 @@ namespace Barotrauma
                 {
                     DebugConsole.ThrowError(errorMsg);
                 }
+            }
+        }
+
+        private bool? invalid;
+        public bool Invalid
+        {
+            get
+            {
+                if (!invalid.HasValue)
+                {
+                    invalid = !CheckValidity(out _);
+                }
+                return invalid.Value;
+            }
+        }
+
+        private List<string> errorMessages;
+        public IEnumerable<string> ErrorMessages
+        {
+            get
+            {
+                if (errorMessages == null) { CheckValidity(out _); }
+                return errorMessages;
             }
         }
 
@@ -238,6 +261,46 @@ namespace Barotrauma
             return missingContentTypes.Count == 0;
         }
 
+        public bool CheckValidity(out List<string> errorMessages)
+        {
+            this.errorMessages = errorMessages = new List<string>();
+            foreach (ContentFile file in Files)
+            {
+                switch (file.Type)
+                {
+                    case ContentType.Executable:
+                    case ContentType.ServerExecutable:
+                    case ContentType.None:
+                    case ContentType.Outpost:
+                    case ContentType.Submarine:
+                        break;
+                    default:
+                        try
+                        {
+                            XDocument.Load(file.Path);
+                        }
+                        catch
+                        {
+                            errorMessages.Add(TextManager.GetWithVariable("xmlfileinvalid", "[filepath]", file.Path));
+                        }
+                        break;
+                }
+            }
+
+            if (CorePackage && !ContainsRequiredCorePackageFiles(out List<ContentType> missingContentTypes))
+            {
+                errorMessages.Add(TextManager.GetWithVariables("ContentPackageCantMakeCorePackage", 
+                    new string[2] { "[packagename]", "[missingfiletypes]" },
+                    new string[2] { Name, string.Join(", ", missingContentTypes) }, 
+                    new bool[2] { false, true }));
+            }
+            VerifyFiles(out List<string> missingFileMessages);
+
+            errorMessages.AddRange(missingFileMessages);
+            invalid = errorMessages.Count > 0;
+            return !invalid.Value;
+        }
+
         /// <summary>
         /// Make sure all the files defined in the content package are present
         /// </summary>
@@ -251,7 +314,6 @@ namespace Barotrauma
                 //dedicated server doesn't care if the client executable is present or not
                 if (file.Type == ContentType.Executable) { continue; }
 #endif
-
                 if (!File.Exists(file.Path))
                 {
                     errorMessages.Add("File \"" + file.Path + "\" not found.");

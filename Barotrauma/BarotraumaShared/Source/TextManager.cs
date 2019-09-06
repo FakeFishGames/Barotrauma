@@ -210,7 +210,7 @@ namespace Barotrauma
                 }
             }
 
-            if (formatCapitals != null && !GameMain.Config.Language.Contains("Chinese"))
+            if (formatCapitals != null && (GameMain.Config == null || !GameMain.Config.Language.Contains("Chinese")))
             {
                 for (int i = 0; i < variableTags.Length; i++)
                 {

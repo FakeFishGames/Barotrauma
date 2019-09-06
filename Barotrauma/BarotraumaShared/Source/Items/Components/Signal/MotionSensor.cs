@@ -146,5 +146,14 @@ namespace Barotrauma.Items.Components
                 }
             }
         }
+
+        public override void FlipX(bool relativeToSub)
+        {
+            detectOffset.X = -detectOffset.X;
+        }
+        public override void FlipY(bool relativeToSub)
+        {
+            detectOffset.Y = -detectOffset.Y;
+        }
     }
 }

@@ -1767,8 +1767,16 @@ namespace Barotrauma.Networking
                 GameMain.GameSession = new GameSession(selectedSub, "", selectedMode, (MissionType)GameMain.NetLobbyScreen.MissionTypeIndex);
             }
 
+            List<Client> playingClients = new List<Client>(connectedClients);
+            if (serverSettings.AllowSpectating)
+            {
+                playingClients.RemoveAll(c => c.SpectateOnly);
+            }
+            //always allow the server owner to spectate even if it's disallowed in server settings
+            playingClients.RemoveAll(c => c.Connection == OwnerConnection && c.SpectateOnly);
+
             if (GameMain.GameSession.GameMode.Mission != null &&
-                GameMain.GameSession.GameMode.Mission.AssignTeamIDs(connectedClients))
+                GameMain.GameSession.GameMode.Mission.AssignTeamIDs(playingClients))
             {
                 teamCount = 2;
             }
@@ -1817,14 +1825,8 @@ namespace Barotrauma.Networking
 
                 //find the clients in this team
                 List<Client> teamClients = teamCount == 1 ?
-                    new List<Client>(connectedClients) :
-                    connectedClients.FindAll(c => c.TeamID == teamID);
-                if (serverSettings.AllowSpectating)
-                {
-                    teamClients.RemoveAll(c => c.SpectateOnly);
-                }
-                //always allow the server owner to spectate even if it's disallowed in server settings
-                teamClients.RemoveAll(c => c.Connection == OwnerConnection && c.SpectateOnly);
+                    new List<Client>(connectedClients) : 
+                    playingClients.FindAll(c => c.TeamID == teamID);
 
                 if (!teamClients.Any() && n > 0) { continue; }
 

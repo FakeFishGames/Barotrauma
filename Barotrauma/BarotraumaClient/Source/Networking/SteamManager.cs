@@ -1291,8 +1291,9 @@ namespace Barotrauma.Steam
                 itemsUpdated = false;
                 foreach (var item in q.Items)
                 {
-                    if (item.Installed && CheckWorkshopItemEnabled(item) && !CheckWorkshopItemUpToDate(item))
+                    try
                     {
+                        if (!item.Installed || !CheckWorkshopItemEnabled(item) || CheckWorkshopItemUpToDate(item)) { continue; }
                         if (!UpdateWorkshopItem(item, out string errorMsg))
                         {
                             DebugConsole.ThrowError(errorMsg);
@@ -1305,6 +1306,16 @@ namespace Barotrauma.Steam
                             new GUIMessageBox("", TextManager.GetWithVariable("WorkshopItemUpdated", "[itemname]", item.Title));
                             itemsUpdated = true;
                         }
+                    }
+                    catch (Exception e)
+                    {
+                        new GUIMessageBox(
+                            TextManager.Get("Error"),
+                            TextManager.GetWithVariables("WorkshopItemUpdateFailed", new string[2] { "[itemname]", "[errormessage]" }, new string[2] { item.Title, e.Message + ", " + e.TargetSite }));
+                        GameAnalyticsManager.AddErrorEventOnce(
+                            "SteamManager.AutoUpdateWorkshopItems:" + e.Message,
+                            GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                            "Failed to autoupdate workshop item \"" + item.Title + "\". " + e.Message + "\n" + e.StackTrace);
                     }
                 }
             };

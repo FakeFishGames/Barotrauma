@@ -239,7 +239,10 @@ namespace Barotrauma.Items.Components
 #endif
                     RechargeSpeed = maxRechargeSpeed * aiRechargeTargetRatio;
 #if CLIENT
-                    rechargeSpeedSlider.BarScroll = RechargeSpeed / Math.Max(maxRechargeSpeed, 1.0f);
+                    if (rechargeSpeedSlider != null)
+                    {
+                        rechargeSpeedSlider.BarScroll = RechargeSpeed / Math.Max(maxRechargeSpeed, 1.0f);
+                    }
 #endif
                     
                     character.Speak(TextManager.GetWithVariables("DialogChargeBatteries", new string[2] { "[itemname]", "[rate]" }, 
@@ -256,7 +259,10 @@ namespace Barotrauma.Items.Components
 #endif
                     RechargeSpeed = 0.0f;
 #if CLIENT
-                    rechargeSpeedSlider.BarScroll = RechargeSpeed / Math.Max(maxRechargeSpeed, 1.0f);
+                    if (rechargeSpeedSlider != null)
+                    {
+                        rechargeSpeedSlider.BarScroll = RechargeSpeed / Math.Max(maxRechargeSpeed, 1.0f);
+                    }
 #endif
                     character.Speak(TextManager.GetWithVariables("DialogStopChargingBatteries", new string[2] { "[itemname]", "[rate]" },
                         new string[2] { item.Name, ((int)(rechargeSpeed / maxRechargeSpeed * 100.0f)).ToString() },
@@ -278,7 +284,10 @@ namespace Barotrauma.Items.Components
                     float rechargeRate = MathHelper.Clamp(tempSpeed / 100.0f, 0.0f, 1.0f);
                     RechargeSpeed = rechargeRate * MaxRechargeSpeed;
 #if CLIENT
-                    rechargeSpeedSlider.BarScroll = rechargeRate;
+                    if (rechargeSpeedSlider != null)
+                    {
+                        rechargeSpeedSlider.BarScroll = rechargeRate;
+                    }
 #endif
                 }
             }

@@ -1216,7 +1216,7 @@ namespace Barotrauma
                 CanBeFocused = false
             };
 
-            var matchingSub = Submarine.SavedSubmarines.FirstOrDefault(s => s.Name == sub.Name && s.MD5Hash.Hash == sub.MD5Hash.Hash);
+            var matchingSub = Submarine.SavedSubmarines.FirstOrDefault(s => s.Name == sub.Name && s.MD5Hash?.Hash == sub.MD5Hash?.Hash);
             if (matchingSub == null) matchingSub = Submarine.SavedSubmarines.FirstOrDefault(s => s.Name == sub.Name);
 
             if (matchingSub == null)
@@ -1224,7 +1224,7 @@ namespace Barotrauma
                 subTextBlock.TextColor = new Color(subTextBlock.TextColor, 0.5f);
                 frame.ToolTip = TextManager.Get("SubNotFound");
             }
-            else if (matchingSub.MD5Hash.Hash != sub.MD5Hash.Hash)
+            else if (matchingSub?.MD5Hash == null || matchingSub.MD5Hash?.Hash != sub.MD5Hash?.Hash)
             {
                 subTextBlock.TextColor = new Color(subTextBlock.TextColor, 0.5f);
                 frame.ToolTip = TextManager.Get("SubDoesntMatch");
@@ -2044,24 +2044,34 @@ namespace Barotrauma
 
         public bool TrySelectSub(string subName, string md5Hash, GUIListBox subList)
         {
-            if (GameMain.Client == null) return false;
+            if (GameMain.Client == null) { return false; }
 
             //already downloading the selected sub file
             if (GameMain.Client.FileReceiver.ActiveTransfers.Any(t => t.FileName == subName + ".sub"))
             {
                 return false;
             }
+            
+            Submarine sub = subList.Content.Children
+                .FirstOrDefault(c => c.UserData is Submarine s && s.Name == subName && s.MD5Hash?.Hash == md5Hash)?
+                .UserData as Submarine;
 
-            Submarine sub = Submarine.SavedSubmarines.FirstOrDefault(m => m.Name == subName && m.MD5Hash.Hash == md5Hash);
-            if (sub == null) sub = Submarine.SavedSubmarines.FirstOrDefault(m => m.Name == subName);
-
-            var matchingListSub = subList.Content.GetChildByUserData(sub);
-            if (sub != null && subList.SelectedData as Submarine == sub)
+            //matching sub found and already selected, all good
+            if (sub != null && subList.SelectedData is Submarine selectedSub && selectedSub.MD5Hash?.Hash == md5Hash)
             {
                 return true;
             }
 
-            if (matchingListSub != null)
+            //sub not found, see if we have a sub with the same name
+            if (sub == null)
+            {
+                sub = subList.Content.Children
+                    .FirstOrDefault(c => c.UserData is Submarine s && s.Name == subName)?
+                    .UserData as Submarine;
+            }
+
+            //found a sub that at least has the same name, select it
+            if (sub != null)
             {
                 if (subList.Parent is GUIDropDown subDropDown)
                 {
@@ -2070,7 +2080,7 @@ namespace Barotrauma
                 else
                 {
                     subList.OnSelected -= VotableClicked;
-                    subList.Select(subList.Content.GetChildIndex(matchingListSub), true);
+                    subList.Select(sub, force: true);
                     subList.OnSelected += VotableClicked;
                 }
 
@@ -2078,58 +2088,62 @@ namespace Barotrauma
                     FailedSelectedSub = null;
                 else
                     FailedSelectedShuttle = null;
+                
+                //hashes match, all good
+                if (sub.MD5Hash?.Hash == md5Hash)
+                {
+                    return true;
+                }
+            }
+            
+            //-------------------------------------------------------------------------------------
+            //if we get to this point, a matching sub was not found or it has an incorrect MD5 hash
+            
+            if (subList == SubList)
+                FailedSelectedSub = new Pair<string, string>(subName, md5Hash);
+            else
+                FailedSelectedShuttle = new Pair<string, string>(subName, md5Hash);
+
+            string errorMsg = "";
+            if (sub == null)
+            {
+                errorMsg = TextManager.GetWithVariable("SubNotFoundError", "[subname]", subName) + " ";
+            }
+            else if (sub.MD5Hash?.Hash == null)
+            {
+                errorMsg = TextManager.GetWithVariable("SubLoadError", "[subname]", subName) + " ";
+                subList.Content.GetChildByUserData(sub).GetChild<GUITextBox>().TextColor = Color.Red;
+            }
+            else
+            {
+                errorMsg = TextManager.GetWithVariables("SubDoesntMatchError", new string[3] { "[subname]" , "[myhash]", "[serverhash]" }, 
+                    new string[3] { sub.Name, sub.MD5Hash.ShortHash, Md5Hash.GetShortHash(md5Hash) }) + " ";
             }
 
-            if (sub == null || sub.MD5Hash.Hash != md5Hash)
+            errorMsg += TextManager.Get("DownloadSubQuestion");
+
+            //already showing a message about the same sub
+            if (GUIMessageBox.MessageBoxes.Any(mb => mb.UserData as string == "request" + subName))
             {
-                if (subList == SubList)
-                    FailedSelectedSub = new Pair<string, string>(subName, md5Hash);
-                else
-                    FailedSelectedShuttle = new Pair<string, string>(subName, md5Hash);
-
-                string errorMsg = "";
-                if (sub == null)
-                {
-                    errorMsg = TextManager.GetWithVariable("SubNotFoundError", "[subname]", subName) + " ";
-                }
-                else if (sub.MD5Hash.Hash == null)
-                {
-                    errorMsg = TextManager.GetWithVariable("SubLoadError", "[subname]", subName) + " ";
-                    if (matchingListSub != null) matchingListSub.GetChild<GUITextBox>().TextColor = Color.Red;
-                }
-                else
-                {
-                    errorMsg = TextManager.GetWithVariables("SubDoesntMatchError", new string[3] { "[subname]" , "[myhash]", "[serverhash]" }, 
-                        new string[3] { sub.Name, sub.MD5Hash.ShortHash, Md5Hash.GetShortHash(md5Hash) }) + " ";
-                }
-
-                errorMsg += TextManager.Get("DownloadSubQuestion");
-
-                //already showing a message about the same sub
-                if (GUIMessageBox.MessageBoxes.Any(mb => mb.UserData as string == "request" + subName))
-                {
-                    return false;
-                }
-
-                var requestFileBox = new GUIMessageBox(TextManager.Get("DownloadSubLabel"), errorMsg, 
-                    new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
-                {
-                    UserData = "request" + subName
-                };
-                requestFileBox.Buttons[0].UserData = new string[] { subName, md5Hash };
-                requestFileBox.Buttons[0].OnClicked += requestFileBox.Close;
-                requestFileBox.Buttons[0].OnClicked += (GUIButton button, object userdata) =>
-                {
-                    string[] fileInfo = (string[])userdata;
-                    GameMain.Client?.RequestFile(FileTransferType.Submarine, fileInfo[0], fileInfo[1]);
-                    return true;
-                };
-                requestFileBox.Buttons[1].OnClicked += requestFileBox.Close;
-
                 return false;
             }
 
-            return true;
+            var requestFileBox = new GUIMessageBox(TextManager.Get("DownloadSubLabel"), errorMsg, 
+                new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
+            {
+                UserData = "request" + subName
+            };
+            requestFileBox.Buttons[0].UserData = new string[] { subName, md5Hash };
+            requestFileBox.Buttons[0].OnClicked += requestFileBox.Close;
+            requestFileBox.Buttons[0].OnClicked += (GUIButton button, object userdata) =>
+            {
+                string[] fileInfo = (string[])userdata;
+                GameMain.Client?.RequestFile(FileTransferType.Submarine, fileInfo[0], fileInfo[1]);
+                return true;
+            };
+            requestFileBox.Buttons[1].OnClicked += requestFileBox.Close;
+
+            return false;            
         }
 
     }
