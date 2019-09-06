@@ -92,7 +92,7 @@ namespace Barotrauma
 #endif
                         Abandon = true;
                     }
-                    objectiveManager.GetObjective<AIObjectiveIdle>()?.Wander(deltaTime);
+                    objectiveManager.GetObjective<AIObjectiveIdle>().Wander(deltaTime);
                     return;
                 }
             }
