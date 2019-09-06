@@ -17,6 +17,8 @@ namespace Barotrauma
         private AIObjectiveGoTo goToObjective;
         private AIObjectiveGetItem getItemObjective;
 
+        public bool Override { get; set; } = true;
+
         public override bool CanBeCompleted => base.CanBeCompleted && (!useController || controller != null);
 
         public Entity OperateTarget => operateTarget;
