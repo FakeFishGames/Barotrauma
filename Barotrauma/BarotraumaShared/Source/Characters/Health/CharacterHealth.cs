@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Networking;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -555,8 +556,14 @@ namespace Barotrauma
         {
             if (!DoesBleed && newAffliction is AfflictionBleeding) return;
             if (!Character.NeedsAir && newAffliction.Prefab == AfflictionPrefab.OxygenLow) return;
-            // Currently only human can get the husk infection. TODO: change this
-            if (newAffliction.Prefab == AfflictionPrefab.Husk && !Character.IsHuman) { return; }
+            if (newAffliction.Prefab.AfflictionType == "huskinfection")
+            {
+                var huskPrefab = newAffliction.Prefab as AfflictionPrefabHusk;
+                if (huskPrefab.TargetSpecies.None(s => s.Equals(Character.SpeciesName, StringComparison.OrdinalIgnoreCase)))
+                {
+                    return;
+                }
+            }
             foreach (Affliction affliction in afflictions)
             {
                 if (newAffliction.Prefab == affliction.Prefab)

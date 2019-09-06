@@ -149,7 +149,8 @@ namespace Barotrauma
             character.Enabled = false;
             Entity.Spawner.AddToRemoveQueue(character);
 
-            string configFile = Character.GetConfigFilePath(GetHuskedSpeciesName(character, Prefab as AfflictionPrefabHusk));
+            string speciesName = GetHuskedSpeciesName(character.SpeciesName, Prefab as AfflictionPrefabHusk);
+            string configFile = Character.GetConfigFilePath(speciesName);
 
             if (string.IsNullOrEmpty(configFile))
             {
@@ -157,7 +158,7 @@ namespace Barotrauma
                 yield return CoroutineStatus.Success;
             }
 
-            var husk = Character.Create(configFile, character.WorldPosition, character.Info.Name, character.Info, isRemotePlayer: false, hasAi: true);
+            var husk = Character.Create(configFile, character.WorldPosition, character.Info.Name, character.Info, isRemotePlayer: false, hasAi: true, ragdoll: character.AnimController.RagdollParams);
 
             foreach (Limb limb in husk.AnimController.Limbs)
             {
@@ -201,7 +202,8 @@ namespace Barotrauma
                 DebugConsole.ThrowError($"Could not find an affliction of type 'huskinfection' that matches the affliction '{afflictionIdentifier}'!");
                 return appendage;
             }
-            string huskedSpeciesName = GetHuskedSpeciesName(character, matchingAffliction);
+            string nonhuskedSpeciesName = GetNonHuskedSpeciesName(character.SpeciesName, matchingAffliction);
+            string huskedSpeciesName = GetHuskedSpeciesName(nonhuskedSpeciesName, matchingAffliction);
             string filePath = Character.GetConfigFilePath(huskedSpeciesName);
             if (!Character.TryGetConfigFile(filePath, out XDocument huskDoc))
             {
@@ -239,7 +241,7 @@ namespace Barotrauma
                     Limb attachLimb = null;
                     if (matchingAffliction.AttachLimbId > -1)
                     {
-                        attachLimb = ragdoll.Limbs[matchingAffliction.AttachLimbId];
+                        attachLimb = ragdoll.Limbs.FirstOrDefault(l => l.Params.ID == matchingAffliction.AttachLimbId);
                     }
                     else if (matchingAffliction.AttachLimbName != null)
                     {
@@ -252,7 +254,7 @@ namespace Barotrauma
                     if (attachLimb == null)
                     {
                         DebugConsole.Log("Attachment limb not defined in the affliction prefab or no matching limb could be found. Using the appendage definition as it is.");
-                        attachLimb = ragdoll.Limbs[jointParams.Limb1];
+                        attachLimb = ragdoll.Limbs.FirstOrDefault(l => l.Params.ID == jointParams.Limb1);
                     }
                     if (attachLimb != null)
                     {
@@ -279,18 +281,15 @@ namespace Barotrauma
             return appendage;
         }
 
-        private static string GetHuskedSpeciesName(Character character, AfflictionPrefabHusk prefab)
+        public static string GetHuskedSpeciesName(string speciesName, AfflictionPrefabHusk prefab)
         {
-            string huskedSpeciesName = prefab.HuskedSpeciesName;
-            if (huskedSpeciesName == null)
-            {
-                huskedSpeciesName = character.SpeciesName.ToLowerInvariant();
-                if (!huskedSpeciesName.Contains("husk"))
-                {
-                    huskedSpeciesName += "husk";
-                }
-            }
-            return huskedSpeciesName;
+            return prefab.HuskedSpeciesName.Replace(AfflictionPrefabHusk.Tag, speciesName);
+        }
+
+        public static string GetNonHuskedSpeciesName(string huskedSpeciesName, AfflictionPrefabHusk prefab)
+        {
+            string nonTag = prefab.HuskedSpeciesName.Remove(AfflictionPrefabHusk.Tag);
+            return huskedSpeciesName.Remove(nonTag);
         }
     }
 }

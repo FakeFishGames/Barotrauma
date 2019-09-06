@@ -42,6 +42,15 @@ namespace Barotrauma
         public AfflictionPrefabHusk(XElement element, Type type = null) : base(element, type)
         {
             HuskedSpeciesName = element.GetAttributeString("huskedspeciesname", null);
+            if (HuskedSpeciesName == null)
+            {
+                DebugConsole.ThrowError($"No 'huskedspeciesname' defined for the husk affliction ({Identifier}) in {element.ToString()}");
+            }
+            TargetSpecies = element.GetAttributeStringArray("targets", new string[0] { }, trim: true, convertToLowerInvariant: true);
+            if (TargetSpecies.Length == 0)
+            {
+                DebugConsole.ThrowError($"No 'targets' defined for the husk affliction ({Identifier}) in {element.ToString()}");
+            }
             var attachElement = element.GetChildElement("attachlimb");
             if (attachElement != null)
             {
@@ -62,7 +71,10 @@ namespace Barotrauma
         public readonly int AttachLimbId;
         public readonly string AttachLimbName;
         public readonly LimbType AttachLimbType;
+
         public readonly string HuskedSpeciesName;
+        public readonly string[] TargetSpecies;
+        public const string Tag = "[speciesname]";
     }
 
     class AfflictionPrefab
@@ -157,7 +169,6 @@ namespace Barotrauma
         public static AfflictionPrefab Bloodloss;
         public static AfflictionPrefab Pressure;
         public static AfflictionPrefab Stun;
-        public static AfflictionPrefabHusk Husk;
 
         public static List<AfflictionPrefab> List = new List<AfflictionPrefab>();
 
@@ -313,9 +324,6 @@ namespace Barotrauma
                         case "stun":
                             Stun = prefab;
                             break;
-                        case "huskinfection":
-                            Husk = prefab as AfflictionPrefabHusk;
-                            break;
                     }
                     List.Add(prefab);
                 }
@@ -328,7 +336,6 @@ namespace Barotrauma
             if (Bloodloss == null) DebugConsole.ThrowError("Affliction \"Bloodloss\" not defined in the affliction prefabs.");
             if (Pressure == null) DebugConsole.ThrowError("Affliction \"Pressure\" not defined in the affliction prefabs.");
             if (Stun == null) DebugConsole.ThrowError("Affliction \"Stun\" not defined in the affliction prefabs.");
-            if (Husk == null) DebugConsole.ThrowError("Affliction \"Husk\" not defined in the affliction prefabs.");
         }
 
         public AfflictionPrefab(XElement element, Type type = null)

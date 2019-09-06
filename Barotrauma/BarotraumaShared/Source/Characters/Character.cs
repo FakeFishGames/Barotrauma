@@ -128,7 +128,7 @@ namespace Barotrauma
 
         public bool IsTraitor;
         public string TraitorCurrentObjective = "";
-        public bool IsHuman => SpeciesName.Equals(Character.HumanSpeciesName, StringComparison.OrdinalIgnoreCase);
+        public bool IsHuman => SpeciesName.Equals(HumanSpeciesName, StringComparison.OrdinalIgnoreCase);
 
         private float attackCoolDown;
 
@@ -421,27 +421,6 @@ namespace Barotrauma
         {
             get { return CharacterHealth.GetAfflictionStrength("bleeding", true); }
         }
-        
-        public float HuskInfectionState
-        {
-            get
-            {
-                var huskAffliction = CharacterHealth.GetAffliction("huskinfection", false) as AfflictionHusk;
-                return huskAffliction == null ? 0.0f : huskAffliction.Strength;
-            }
-            set
-            {
-                var huskAffliction = CharacterHealth.GetAffliction("huskinfection", false) as AfflictionHusk;
-                if (huskAffliction == null)
-                {
-                    CharacterHealth.ApplyAffliction(null, AfflictionPrefab.Husk.Instantiate(value));
-                }
-                else
-                {
-                    huskAffliction.Strength = value;
-                }
-            }
-        }
 
         private bool speechImpedimentSet;
 
@@ -627,7 +606,7 @@ namespace Barotrauma
                 speciesName = Path.GetFileNameWithoutExtension(speciesName).ToLowerInvariant();
             }
             Character newCharacter = null;
-            if (!speciesName.Equals(Character.HumanSpeciesName, StringComparison.OrdinalIgnoreCase))
+            if (!speciesName.Equals(HumanSpeciesName, StringComparison.OrdinalIgnoreCase))
             {
                 var aiCharacter = new AICharacter(speciesName, position, seed, characterInfo, isRemotePlayer, ragdoll);
                 var ai = new EnemyAIController(aiCharacter, seed);
@@ -658,10 +637,10 @@ namespace Barotrauma
         protected Character(string speciesName, Vector2 position, string seed, CharacterInfo characterInfo = null, bool isRemotePlayer = false, RagdollParams ragdollParams = null)
             : base(null)
         {
-            string path = Character.GetConfigFilePath(speciesName);
-            if (!Character.TryGetConfigFile(path, out XDocument doc))
+            string path = GetConfigFilePath(speciesName);
+            if (!TryGetConfigFile(path, out XDocument doc))
             {
-                throw new System.Exception($"Failed to load the config file for {speciesName} from {path}!");
+                throw new Exception($"Failed to load the config file for {speciesName} from {path}!");
             }
             this.seed = seed;
             MTRandom random = new MTRandom(ToolBox.StringToInt(seed));
@@ -679,11 +658,11 @@ namespace Barotrauma
             Params = new CharacterParams(path);
 
             Info = characterInfo;
-            if (speciesName.Equals(Character.HumanSpeciesName, StringComparison.OrdinalIgnoreCase))
+            if (speciesName.Equals(HumanSpeciesName, StringComparison.OrdinalIgnoreCase))
             {
                 if (characterInfo == null)
                 {
-                    Info = new CharacterInfo(Character.HumanSpeciesName);
+                    Info = new CharacterInfo(HumanSpeciesName);
                 }
             }
 
@@ -737,6 +716,26 @@ namespace Barotrauma
                     this);
             }
 
+            if (Params.Husk)
+            {
+                // Get the non husked name and find the ragdoll with it
+                var matchingAffliction = AfflictionPrefab.List
+                    .Where(p => p.AfflictionType == "huskinfection")
+                    .Select(p => p as AfflictionPrefabHusk)
+                    .FirstOrDefault(p => p.TargetSpecies.Contains(AfflictionHusk.GetNonHuskedSpeciesName(speciesName, p)));
+                if (matchingAffliction == null)
+                {
+                    DebugConsole.ThrowError("Cannot find a husk infection that matches this species! Please add the speciesnames as 'targets' in the husk affliction prefab definition!");
+                    return;
+                }
+                string nonHuskedSpeciesName = AfflictionHusk.GetNonHuskedSpeciesName(speciesName, matchingAffliction);
+                ragdollParams = IsHumanoid ? RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(nonHuskedSpeciesName) : RagdollParams.GetDefaultRagdollParams<FishRagdollParams>(nonHuskedSpeciesName) as RagdollParams;
+                if (info == null)
+                {
+                    info = new CharacterInfo(nonHuskedSpeciesName, ragdollParams.FileName);
+                }
+            }
+
             if (IsHumanoid)
             {
                 AnimController = new HumanoidAnimController(this, seed, ragdollParams as HumanRagdollParams);
@@ -763,7 +762,7 @@ namespace Barotrauma
             //  - if an AICharacter, the server enables it when close enough to any of the players
             Enabled = GameMain.NetworkMember == null;
 
-            if (Info != null)
+            if (info != null)
             {
                 LoadHeadAttachments();
             }

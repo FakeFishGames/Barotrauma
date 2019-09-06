@@ -166,15 +166,8 @@ namespace Barotrauma
                 }
                 else
                 {
-                    DebugConsole.ThrowError($"[RagdollParams] Failed to load ragdoll {r} at {selectedFile} for the character {speciesName}. Creating a dummy file.");
-                    var defaultFile = GetDefaultFile(speciesName);
-                    if (File.Exists(defaultFile))
-                    {
-                        DebugConsole.ThrowError($"[RagdollParams] Renaming the invalid file as {selectedFile}.invalid");
-                        // Rename the old file so that it's not lost.
-                        File.Move(defaultFile, defaultFile + ".invalid");
-                    }
-                    return CreateDefault<T>(defaultFile, speciesName, dummyRagdoll);
+                   // Failing to create a ragdoll causes so many issues that cannot be handled. Dummy ragdoll just seems to make things harded to debug. It's better to fail early.
+                   throw new Exception($"[RagdollParams] Failed to load ragdoll {r.Name} from {selectedFile} for the character {speciesName}.");
                 }
             }
             return (T)ragdoll;
