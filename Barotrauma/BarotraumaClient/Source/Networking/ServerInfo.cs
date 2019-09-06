@@ -264,7 +264,7 @@ namespace Barotrauma.Networking
 
         public static ServerInfo FromXElement(XElement element)
         {
-            return new ServerInfo()
+            ServerInfo info = new ServerInfo()
             {
                 ServerName = element.GetAttributeString("ServerName", ""),
                 ServerMessage = element.GetAttributeString("ServerMessage", ""),
@@ -272,6 +272,38 @@ namespace Barotrauma.Networking
                 Port = element.GetAttributeString("Port", ""),
                 OwnerID = element.GetAttributeSteamID("OwnerID",0)
             };
+
+            info.GameMode = element.GetAttributeString("GameMode", "");
+            info.GameVersion = element.GetAttributeString("GameVersion", "");
+            info.MaxPlayers = element.GetAttributeInt("MaxPlayers", 0);
+
+            string playStyleStr = element.GetAttributeString("PlayStyle", "");
+            PlayStyle playStyleTemp;
+            if (Enum.TryParse(playStyleStr, out playStyleTemp)) { info.PlayStyle = playStyleTemp; }
+
+            string whitelistStr = element.GetAttributeString("UsingWhiteList", "");
+            bool whitelistTemp;
+            if (bool.TryParse(whitelistStr, out whitelistTemp)) { info.UsingWhiteList = whitelistTemp; }
+
+            string traitorsStr = element.GetAttributeString("TraitorsEnabled", "");
+            YesNoMaybe traitorsTemp;
+            if (Enum.TryParse(traitorsStr, out traitorsTemp)) { info.TraitorsEnabled = traitorsTemp; }
+
+            string subSelectionStr = element.GetAttributeString("SubSelectionMode", "");
+            SelectionMode subSelectionTemp;
+            if (Enum.TryParse(subSelectionStr, out subSelectionTemp)) { info.SubSelectionMode = subSelectionTemp; }
+
+            string modeSelectionStr = element.GetAttributeString("ModeSelectionMode", "");
+            SelectionMode modeSelectionTemp;
+            if (Enum.TryParse(modeSelectionStr, out modeSelectionTemp)) { info.ModeSelectionMode = subSelectionTemp; }
+
+            string voipStr = element.GetAttributeString("VoipEnabled", "");
+            bool voipTemp;
+            if (bool.TryParse(voipStr, out voipTemp)) { info.VoipEnabled = voipTemp; }
+
+            info.HasPassword = element.GetAttributeBool("HasPassword", false);
+
+            return info;
         }
 
         public XElement ToXElement()
@@ -285,15 +317,26 @@ namespace Barotrauma.Networking
 
             element.SetAttributeValue("ServerName", ServerName);
             element.SetAttributeValue("ServerMessage", ServerMessage);
-            element.SetAttributeValue("IP", IP);
             if (LobbyID == 0 || OwnerID == 0)
             {
+                element.SetAttributeValue("IP", IP);
                 element.SetAttributeValue("Port", Port);
             }
             else
             {
                 element.SetAttributeValue("OwnerID", SteamManager.SteamIDUInt64ToString(OwnerID));
             }
+
+            element.SetAttributeValue("GameMode", GameMode ?? "");
+            element.SetAttributeValue("GameVersion", GameVersion ?? "");
+            element.SetAttributeValue("MaxPlayers", MaxPlayers);
+            if (PlayStyle.HasValue) { element.SetAttributeValue("PlayStyle", PlayStyle.Value.ToString()); }
+            if (UsingWhiteList.HasValue) { element.SetAttributeValue("UsingWhiteList", UsingWhiteList.Value.ToString()); }
+            if (TraitorsEnabled.HasValue) { element.SetAttributeValue("TraitorsEnabled", TraitorsEnabled.Value.ToString()); }
+            if (SubSelectionMode.HasValue) { element.SetAttributeValue("SubSelectionMode", SubSelectionMode.Value.ToString()); }
+            if (ModeSelectionMode.HasValue) { element.SetAttributeValue("ModeSelectionMode", ModeSelectionMode.Value.ToString()); }
+            if (VoipEnabled.HasValue) { element.SetAttributeValue("VoipEnabled", VoipEnabled.Value.ToString()); }
+            element.SetAttributeValue("HasPassword", HasPassword.ToString());
 
             return element;
         }

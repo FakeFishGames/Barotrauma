@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 using RestSharp;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -61,6 +62,8 @@ namespace Barotrauma
         private double friendsListUpdateTime;
 
         //favorite servers/history
+        private const string recentServersFile = "Data/recentservers.xml";
+        private const string favoriteServersFile = "Data/favoriteservers.xml";
         private List<ServerInfo> favoriteServers;
         private List<ServerInfo> recentServers;
 
@@ -98,7 +101,7 @@ namespace Barotrauma
 
         public ServerListScreen()
         {
-            recentServers = new List<ServerInfo>();
+            ReadServerMemFromFile(recentServersFile, ref recentServers);
 
             GameMain.Instance.OnResolutionChanged += OnResolutionChanged;
 
@@ -419,6 +422,38 @@ namespace Barotrauma
             }
         }
 
+        private void ReadServerMemFromFile(string file, ref List<ServerInfo> servers)
+        {
+            if (servers == null) { servers = new List<ServerInfo>(); }
+
+            if (!File.Exists(file)) { return; }
+
+            XDocument doc = XMLExtensions.TryLoadXml(file);
+            if (doc == null) { return; }
+
+            foreach (XElement element in doc.Root.Elements())
+            {
+                if (element.Name != "ServerInfo") { continue; }
+                servers.Add(ServerInfo.FromXElement(element));
+            }
+        }
+
+        private void WriteServerMemToFile(string file, List<ServerInfo> servers)
+        {
+            if (servers == null) { return; }
+
+            XDocument doc = new XDocument();
+            XElement rootElement = new XElement("servers");
+            doc.Add(rootElement);
+
+            foreach (ServerInfo info in servers)
+            {
+                rootElement.Add(info.ToXElement());
+            }
+
+            doc.Save(file);
+        }
+
         public void AddToRecentServers(object endpoint, ServerSettings serverSettings)
         {
             UInt64 steamId = 0;
@@ -447,13 +482,13 @@ namespace Barotrauma
                 recentServers.Add(info);
             }
 
-            info.ServerName = serverSettings.Name;
+            info.ServerName = serverSettings.ServerName;
             info.ServerMessage = serverSettings.ServerMessageText;
             info.OwnerID = steamId;
             info.LobbyID = SteamManager.LobbyID;
             info.IP = ip;
             info.Port = port;
-            info.GameMode = GameMain.NetLobbyScreen.SelectedMode.Identifier;
+            info.GameMode = GameMain.NetLobbyScreen.SelectedMode?.Identifier ?? "";
             info.GameStarted = Screen.Selected != GameMain.NetLobbyScreen;
             info.GameVersion = GameMain.Version.ToString();
             info.MaxPlayers = serverSettings.MaxPlayers;
@@ -462,10 +497,13 @@ namespace Barotrauma
             info.UsingWhiteList = serverSettings.Whitelist.Enabled;
             info.TraitorsEnabled = serverSettings.TraitorsEnabled;
             info.SubSelectionMode = serverSettings.SubSelectionMode;
+            info.ModeSelectionMode = serverSettings.ModeSelectionMode;
             info.VoipEnabled = serverSettings.VoiceChatEnabled;
             info.PlayerCount = GameMain.Client.ConnectedClients.Count;
             info.PingChecked = false;
             info.HasPassword = serverSettings.HasPassword;
+
+            WriteServerMemToFile(recentServersFile, recentServers);
         }
 
         private void OnResolutionChanged()
