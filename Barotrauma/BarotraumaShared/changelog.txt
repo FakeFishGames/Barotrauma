@@ -8,21 +8,35 @@ be done by surrounding the element with "<override></override>" (for example, an
 config element you want to replace a vanilla Item/Character with). The overrides work based on identifiers;
 for instance, if you configure an item with the identifier "wrench" and surround it with the override
 tags, it will replace the vanilla wrench.
+- Content package load order: the game will first load the core package, then other content in the order
+ of selection (proper ui still pending). The load order is saved in the config_player.xml.
 - Made AI orders and event manager settings moddable.
+- The engine and reactor sound ranges can now be modified in the item XML.
+- The husk affliction can now be modified and applied on any character.
+- Support for multiple simultaneous husk afflictions based on the same system.
+- Support for multiple husk appendages. Made the attachment limb configurable in the affliction definition.
 - Additional content package validity checks during startup: make sure all XML files in the package can 
 be loaded, and disable the package if they can't. Fixes tons of console errors on startup when a mod with 
 invalid XML files is enabled.
 - Don't allow publishing workshop items that contain invalid XML files.
 - Don't allow selecting invalid content packages in the settings menu.
-- The engine and reactor sound ranges can be modified in the item XML.
 
 Character editor improvements:
 - Improved layout, hotkeys, general UI/UX improvements.
-- Support for editing light sources attached to limbs.
-- Support for editing inventories.
-- Support for editing character sounds.
-- Support for editing character particles (blood/gib emitters).
-- Option to enable lights in the editor.
+- Support for editing the character configuration files including health, ai, inventory, sounds, particles etc.
+- Support for limb sounds.
+- Support for light sources attached to limbs.
+- Support for adding and removing attacks.
+- Support for afflictions in attacks.
+- Support for damage modifiers in limbs.
+- New functionality: creating limbs (without having to operate on duplicates).
+- Support for creating humanoids.
+- Allow to create new characters based on an existing character (copy character).
+- Added a limb specific "sprite orientation" that overrides the universal "spritesheet orientation".
+- Option for mirroring limb sprites.
+- Option for hiding the limb sprite (invisible limbs).
+- Multiple minor additions and changes, like an option to enable lights or to display the damage modifiers
+drawn on the character.
 
 Misc improvements:
 - Increased default VOIP and microphone volume and the maximum values.
