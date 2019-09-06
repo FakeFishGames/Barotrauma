@@ -39,7 +39,7 @@ namespace Barotrauma
             this.container = container;
         }
 
-        protected override bool Check() => isCompleted;
+        protected override bool Check() => IsCompleted;
 
         public override float GetPriority()
         {
@@ -52,7 +52,7 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            if (isCompleted) { return; }
+            if (IsCompleted) { return; }
             Item itemToDecontain = null;
             //get the item that should be de-contained
             if (targetItem == null)
@@ -72,7 +72,7 @@ namespace Barotrauma
             }
             if (itemToDecontain == null || itemToDecontain.Container != container.Item) // Item not found or already de-contained, consider complete
             {
-                isCompleted = true;
+                IsCompleted = true;
                 return;
             }
             if (itemToDecontain.OwnInventory != character.Inventory && itemToDecontain.ParentInventory != character.Inventory)
@@ -84,7 +84,7 @@ namespace Barotrauma
                 }
             }
             itemToDecontain.Drop(character);
-            isCompleted = true;
+            IsCompleted = true;
         }
     }
 }

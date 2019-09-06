@@ -232,7 +232,7 @@ namespace Barotrauma
 
         protected override bool Check()
         {
-            if (isCompleted) { return true; }
+            if (IsCompleted) { return true; }
             // First check the distance
             // Then the custom condition
             // And finally check if can interact (heaviest)
@@ -253,20 +253,20 @@ namespace Barotrauma
                     {
                         if (Target is Item item)
                         {
-                            if (character.CanInteractWith(item, out _, checkLinked: false)) { isCompleted = true; }
+                            if (character.CanInteractWith(item, out _, checkLinked: false)) { IsCompleted = true; }
                         }
                         else if (Target is Character targetCharacter)
                         {
-                            if (character.CanInteractWith(targetCharacter, CloseEnough)) { isCompleted = true; }
+                            if (character.CanInteractWith(targetCharacter, CloseEnough)) { IsCompleted = true; }
                         }
                         else
                         {
-                            isCompleted = true;
+                            IsCompleted = true;
                         }
                     }
                 }
             }
-            return isCompleted;
+            return IsCompleted;
         }
 
         private void StopMovement()

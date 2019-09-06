@@ -246,7 +246,7 @@ namespace Barotrauma
 
         protected abstract void Act(float deltaTime);
 
-        protected bool isCompleted;
+        private bool isCompleted;
         private bool hasBeenChecked;
 
         public bool IsCompleted
@@ -261,7 +261,7 @@ namespace Barotrauma
             }
             protected set
             {
-                isCompleted = true;
+                isCompleted = value;
             }
         }
 

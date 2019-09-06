@@ -138,7 +138,7 @@ namespace Barotrauma
                     }
                     character.Inventory.TryPutItem(targetItem, targetSlot, false, false, character);
                 }
-                isCompleted = true;
+                IsCompleted = true;
 #if DEBUG
                 if (!character.HasItem(targetItem))
                 {
@@ -231,7 +231,7 @@ namespace Barotrauma
 
         protected override bool Check()
         {
-            if (isCompleted) { return true; }
+            if (IsCompleted) { return true; }
             if (targetItem != null)
             {
                 return character.HasItem(targetItem, equip);
