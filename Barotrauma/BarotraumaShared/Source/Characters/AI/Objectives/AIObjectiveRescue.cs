@@ -64,7 +64,9 @@ namespace Barotrauma
                         {
                             goToObjective = null;
                         }
-                        TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(targetCharacter, character, objectiveManager));
+                        TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(targetCharacter, character, objectiveManager),
+                            onCompleted: () => RemoveSubObjective(ref goToObjective),
+                            onAbandon: () => RemoveSubObjective(ref goToObjective));
                     }
                     else
                     {
@@ -80,18 +82,13 @@ namespace Barotrauma
                     }
                     if (safeHull == null)
                     {
-                        var findSafety = objectiveManager.GetObjective<AIObjectiveFindSafety>();
-                        if (findSafety == null)
-                        {
-                            // Ensure that we have the find safety objective (should always be the case)
-                            findSafety = new AIObjectiveFindSafety(character, objectiveManager);
-                            objectiveManager.AddObjective(findSafety);
-                        }
-                        safeHull = findSafety.FindBestHull(HumanAIController.VisibleHulls);
+                        safeHull = objectiveManager.GetObjective<AIObjectiveFindSafety>().FindBestHull(HumanAIController.VisibleHulls);
                     }
                     if (character.CurrentHull != safeHull)
                     {
-                        TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(safeHull, character, objectiveManager));
+                        TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(safeHull, character, objectiveManager), 
+                            onCompleted: () => RemoveSubObjective(ref goToObjective),
+                            onAbandon: () => RemoveSubObjective(ref goToObjective));
                     }
                 }
             }
@@ -101,7 +98,9 @@ namespace Barotrauma
             if (!character.CanInteractWith(targetCharacter))
             {
                 // Go to the target and select it
-                TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(targetCharacter, character, objectiveManager));
+                TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(targetCharacter, character, objectiveManager),
+                    onCompleted: () => RemoveSubObjective(ref goToObjective),
+                    onAbandon: () => RemoveSubObjective(ref goToObjective));
             }
             else
             {

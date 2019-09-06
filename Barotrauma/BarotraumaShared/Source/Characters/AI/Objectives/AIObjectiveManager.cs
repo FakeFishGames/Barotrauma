@@ -72,8 +72,8 @@ namespace Barotrauma
             }
             DelayedObjectives.Clear();
             Objectives.Clear();
-            AddObjective(new AIObjectiveFindSafety(character, this), delay: Rand.Value() / 2);
-            AddObjective(new AIObjectiveIdle(character, this), delay: Rand.Value() / 2);
+            AddObjective(new AIObjectiveFindSafety(character, this));
+            AddObjective(new AIObjectiveIdle(character, this));
             int objectiveCount = Objectives.Count;
             foreach (var automaticOrder in character.Info.Job.Prefab.AutomaticOrders)
             {
@@ -141,7 +141,7 @@ namespace Barotrauma
             if (previousObjective != CurrentObjective)
             {
                 CurrentObjective?.OnSelected();
-                GetObjective<AIObjectiveIdle>()?.SetRandom();
+                GetObjective<AIObjectiveIdle>().SetRandom();
             }
             return CurrentObjective;
         }
