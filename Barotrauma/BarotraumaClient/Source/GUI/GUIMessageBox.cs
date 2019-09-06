@@ -28,6 +28,22 @@ namespace Barotrauma
         public GUITextBlock Text { get; private set; }
         public string Tag { get; private set; }
 
+        public GUIImage Icon
+        {
+            get;
+            private set;
+        }
+
+        public Color IconColor
+        {
+            get { return Icon == null ? Color.White : Icon.Color; }
+            set
+            {
+                if (Icon == null) { return; }
+                Icon.Color = value;
+            }
+        }
+
         private bool alwaysVisible;
 
         private float openState;
@@ -43,7 +59,7 @@ namespace Barotrauma
             this.Buttons[0].OnClicked = Close;
         }
 
-        public GUIMessageBox(string headerText, string text, string[] buttons, Vector2? relativeSize = null, Point? minSize = null, Alignment textAlignment = Alignment.TopLeft, Type type = Type.Default, string tag = "")
+        public GUIMessageBox(string headerText, string text, string[] buttons, Vector2? relativeSize = null, Point? minSize = null, Alignment textAlignment = Alignment.TopLeft, Type type = Type.Default, string tag = "", Sprite icon = null)
             : base(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: "GUIMessageBox." + type)
         {
             int width = (int)(DefaultWidth * (type == Type.Default ? 1.0f : 1.5f)), height = 0;
@@ -127,7 +143,12 @@ namespace Barotrauma
                     Stretch = true,
                     RelativeSpacing = 0.02f
                 };
-                Content = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 1.0f), horizontalLayoutGroup.RectTransform)) { AbsoluteSpacing = 5 };
+                if (icon != null)
+                {
+                    Icon = new GUIImage(new RectTransform(new Vector2(0.2f, 1.0f), horizontalLayoutGroup.RectTransform), icon, scaleToFit: true);
+                }
+
+                Content = new GUILayoutGroup(new RectTransform(new Vector2(icon != null ? 0.6f : 0.8f, 1.0f), horizontalLayoutGroup.RectTransform)) { AbsoluteSpacing = 5 };
 
                 var buttonContainer = new GUIFrame(new RectTransform(new Vector2(0.2f, 1.0f), horizontalLayoutGroup.RectTransform), style: null);
                 Buttons = new List<GUIButton>(1)
@@ -138,6 +159,7 @@ namespace Barotrauma
                     }
                 };
 
+
                 Header = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), headerText, wrap: true);
                 GUI.Style.Apply(Header, "", this);
                 Header.RectTransform.MinSize = new Point(0, Header.Rect.Height);
@@ -146,9 +168,10 @@ namespace Barotrauma
                 {
                     Text = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), text, textAlignment: textAlignment, wrap: true);
                     GUI.Style.Apply(Text, "", this);
+                    /*Content.Recalculate();
                     Text.RectTransform.NonScaledSize = Text.RectTransform.MinSize = Text.RectTransform.MaxSize =
                         new Point(Text.Rect.Width, Text.Rect.Height);
-                    Text.RectTransform.IsFixedSize = true;
+                    Text.RectTransform.IsFixedSize = true;*/
                 }
 
                 if (height == 0)
@@ -170,18 +193,25 @@ namespace Barotrauma
 
         public static void AddActiveToGUIUpdateList()
         {
-            if (VisibleBox != null &&
-                VisibleBox.UserData as string != "verificationprompt" &&
-                VisibleBox.UserData as string != "bugreporter")
+            for (int i = 0; i < MessageBoxes.Count; i++)
             {
-                VisibleBox.AddToGUIUpdateList();
-                for (int i = MessageBoxes.Count - 2; i >= 0; i--)
+                if (MessageBoxes[i] is GUIMessageBox alwaysVisibleMsgBox && alwaysVisibleMsgBox.alwaysVisible)
                 {
-                    if (VisibleBox is GUIMessageBox msgBox && msgBox.alwaysVisible)
-                    {
-                        MessageBoxes[i].AddToGUIUpdateList();
-                        break;
-                    }
+                    alwaysVisibleMsgBox.AddToGUIUpdateList();
+                    break;
+                }
+            }
+            for (int i = MessageBoxes.Count - 1; i >= 0; i--)
+            {
+                if (MessageBoxes[i].UserData as string == "verificationprompt" ||
+                    MessageBoxes[i].UserData as string == "bugreporter")
+                {
+                    continue;
+                }
+                if (!(MessageBoxes[i] is GUIMessageBox msgBox) || !msgBox.alwaysVisible)
+                {
+                    MessageBoxes[i].AddToGUIUpdateList();
+                    break;
                 }
             }
         }
