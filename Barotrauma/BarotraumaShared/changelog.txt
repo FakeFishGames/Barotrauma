@@ -1,4 +1,62 @@
 ---------------------------------------------------------------------------------------------------------
+v0.9.300.0 (test build)
+---------------------------------------------------------------------------------------------------------
+
+Modding improvements:
+- Mods can override specific content without having to create a completely new content package. This can
+be done by surrounding the element with "<override></override>" (for example, an Item or a Character
+config element you want to replace a vanilla Item/Character with). The overrides work based on identifiers;
+for instance, if you configure an item with the identifier "wrench" and surround it with the override
+tags, it will replace the vanilla wrench.
+- Made AI orders and event manager settings moddable.
+- Additional content package validity checks during startup: make sure all XML files in the package can 
+be loaded, and disable the package if they can't. Fixes tons of console errors on startup when a mod with 
+invalid XML files is enabled.
+- Don't allow publishing workshop items that contain invalid XML files.
+- Don't allow selecting invalid content packages in the settings menu.
+- The engine and reactor sound ranges can be modified in the item XML.
+
+Character editor improvements:
+- Improved layout, hotkeys, general UI/UX improvements.
+- Support for editing light sources attached to limbs.
+- Support for editing inventories.
+- Support for editing character sounds.
+- Support for editing character particles (blood/gib emitters).
+- Option to enable lights in the editor.
+
+Misc improvements:
+- Increased default VOIP and microphone volume and the maximum values.
+- Force a restart when switching the language.
+
+Bugfixes:
+- Fixed clients failing to select the submarine selected by the server if the settings menu is opened
+while in the server lobby. Caused the clients to start the round with an incorrect submarine, which lead to 
+tons of ID mismatch errors that usually caused the client to get disconnected as soon as a round starts.
+- Fixed crashing when the recharge speed of a PowerContainer with no interface (e.g. Alien Generator) is 
+adjusted by a signal or a bot.
+- Fixed an occasional crash when a bot starts retreating away from an enemy immediately after spawning.
+- Fixed traitor missions almost always placing the mission-related items inside the same containers.
+- Fixed traitor goal durations being displayed as "duration(xx) seconds" instead of "xx seconds".
+- Fixed rewiring sound playing whenever a remote player is using a rewireable device.
+- Fixed subinventories not opening when grabbing another character with no items in the corresponding slot.
+- Fixed light sprites being mirrored when the item is mirrored, even if the mirroring the item's sprite 
+had been disabled (e.g. junction boxes).
+- Fixed motion sensor detection area not being flipped when the item is mirrored.
+- Fixed status monitor not mirroring rooms on the display in mirrored subs.
+- Fixed engine propeller position not being flipped when the item is mirrored.
+- Fixed diving suits being displayed in an incorrect position when the locker has been flipped on either axis.
+- AI characters turn autotemp back on when leaving the reactor.
+- Fixed item sprites becoming unmirrored when a damaged sprite is fading in.
+- Fixed damaged item sprites that are set to fade in according to the damage always being drawn at full opacity.
+- Fixed spectators being distributed into teams in combat missions, potentially leading to imbalanced crew sizes.
+- Notify the client using the "togglekarmatestmode" command about the test mode being enabled/disabled.
+- Send karma change notifications when karma has changed by 1 unit or more when test mode is enabled, not 
+just when an action causes an immediate change of 1 unit or more.
+- Fixed adjacent sprites bleeding into the platform and topwindow sprites.
+- Fixed autocompleting submarine/shuttle names when using the submarine/shuttle console commands.
+- Fixed some items (like sonar beacon) attracting monsters even when they're powered off.
+
+---------------------------------------------------------------------------------------------------------
 v0.9.3.0
 ---------------------------------------------------------------------------------------------------------
 
