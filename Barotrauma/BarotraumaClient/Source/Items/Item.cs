@@ -128,11 +128,13 @@ namespace Barotrauma
                 }
             }
 
-            foreach (BrokenItemSprite brokenSprite in Prefab.BrokenSprites)
+            for (int i = 0; i < Prefab.BrokenSprites.Count;i++)
             {
-                if (condition <= brokenSprite.MaxCondition)
+                float minCondition = i > 0 ? Prefab.BrokenSprites[i - i].MaxCondition : 0.0f;
+                if (condition <= minCondition ||
+                    condition <= Prefab.BrokenSprites[i].MaxCondition && !Prefab.BrokenSprites[i].FadeIn)
                 {
-                    activeSprite = brokenSprite.Sprite;
+                    activeSprite = Prefab.BrokenSprites[i].Sprite;
                     break;
                 }
             }
@@ -216,7 +218,7 @@ namespace Barotrauma
                 SpriteEffects oldEffects = activeSprite.effects;
                 activeSprite.effects ^= SpriteEffects;
                 SpriteEffects oldBrokenSpriteEffects = SpriteEffects.None;
-                if (fadeInBrokenSprite != null)
+                if (fadeInBrokenSprite != null && fadeInBrokenSprite.Sprite != activeSprite)
                 {
                     oldBrokenSpriteEffects = fadeInBrokenSprite.Sprite.effects;
                     fadeInBrokenSprite.Sprite.effects ^= SpriteEffects;
@@ -304,9 +306,9 @@ namespace Barotrauma
                 }
 
                 activeSprite.effects = oldEffects;
-                if (fadeInBrokenSprite != null)
+                if (fadeInBrokenSprite != null && fadeInBrokenSprite.Sprite != activeSprite)
                 {
-                    fadeInBrokenSprite.Sprite.effects = oldEffects;
+                    fadeInBrokenSprite.Sprite.effects = oldBrokenSpriteEffects;
                 }
             }
 

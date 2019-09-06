@@ -7,7 +7,7 @@
     allowedlinks="vent">
     
     <Sprite texture="oxygengenerator.png" depth="0.8" sourcerect="0,0,214,192"/>
-    <BrokenSprite texture="oxygengenerator.png" sourcerect="214,0,214,192" depth="0.8" maxcondition="40" fadein="true" />
+    <BrokenSprite texture="oxygengenerator.png" sourcerect="214,0,214,192" depth="0.8" maxcondition="80" fadein="true" />
     <BrokenSprite texture="oxygengenerator.png" sourcerect="428,0,214,192" depth="0.8" maxcondition="0" />
     <DecorativeSprite texture="oxygengenerator.png" sourcerect="0,199,214,31" depth="0.85" origin="0.5,3.5"
                       offset="0,7" offsetanim="Sine" offsetanimspeed="0.5">
