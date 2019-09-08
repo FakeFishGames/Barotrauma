@@ -3512,7 +3512,7 @@
   <servertagdescription.karmadisabled>Karma system is disabled.</servertagdescription.karmadisabled>
   <restartrequiredgeneric>You need to restart the game for the changes to take effect.</restartrequiredgeneric>
   <invalidcontentpackage>Content package '[packagename]' cannot be loaded.</invalidcontentpackage>
-  <xmlfileinvalid>File '[filepath]' is not a valid XML file.</xmlfileinvalid>
+  <xmlfileinvalid>File '[filepath]' is not a valid XML file ([errormessage]).</xmlfileinvalid>
 
   <!-- Changed values as of 13th of August -->
   <traitorgoaldestroyitems>Dispose of at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>

@@ -279,9 +279,11 @@ namespace Barotrauma
                         {
                             XDocument.Load(file.Path);
                         }
-                        catch
+                        catch (Exception e)
                         {
-                            errorMessages.Add(TextManager.GetWithVariable("xmlfileinvalid", "[filepath]", file.Path));
+                            errorMessages.Add(TextManager.GetWithVariables("xmlfileinvalid", 
+                                new string[] { "[filepath]", "[errormessage]" },
+                                new string[] { file.Path, e.Message }));
                         }
                         break;
                 }
