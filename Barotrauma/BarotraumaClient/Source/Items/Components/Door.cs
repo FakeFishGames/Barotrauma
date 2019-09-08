@@ -115,7 +115,7 @@ namespace Barotrauma.Items.Components
             if (stuck > 0.0f && weldedSprite != null)
             {
                 Vector2 weldSpritePos = new Vector2(item.Rect.Center.X, item.Rect.Y - item.Rect.Height / 2.0f);
-                if (item.Submarine != null) weldSpritePos += item.Submarine.Position;
+                if (item.Submarine != null) weldSpritePos += item.Submarine.DrawPosition;
                 weldSpritePos.Y = -weldSpritePos.Y;
 
                 weldedSprite.Draw(spriteBatch,
