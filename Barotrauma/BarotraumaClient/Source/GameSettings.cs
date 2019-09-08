@@ -113,8 +113,8 @@ namespace Barotrauma
                 var tickBox = new GUITickBox(new RectTransform(tickBoxScale, contentPackageList.Content.RectTransform, scaleBasis: ScaleBasis.BothHeight), contentPackage.Name)
                 {
                     UserData = contentPackage,
-                    OnSelected = SelectContentPackage,
-                    Selected = SelectedContentPackages.Contains(contentPackage)
+                    Selected = SelectedContentPackages.Contains(contentPackage),
+                    OnSelected = SelectContentPackage
                 };
                 if (contentPackage.CorePackage)
                 {
