@@ -25,7 +25,7 @@ namespace Barotrauma
             get { return capacity; }
         }
 
-        public Inventory(Entity owner, int capacity, Vector2? centerPos = null, int slotsPerRow = 5)
+        public Inventory(Entity owner, int capacity, int slotsPerRow = 5)
         {
             this.capacity = capacity;
 
