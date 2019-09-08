@@ -49,7 +49,7 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Serialize(0f, true)]
+        [Serialize(0f, true, description: "How low a traitor must get the item's condition for it to start breaking down.")]
         public float MinSabotageCondition
         {
             get;
@@ -77,8 +77,7 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        //if enabled, the deterioration timer will always run regardless if the item is being used or not
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "If set to true, the deterioration timer will always run regardless if the item is being used or not.")]
         public bool DeteriorateAlways
         {
             get;

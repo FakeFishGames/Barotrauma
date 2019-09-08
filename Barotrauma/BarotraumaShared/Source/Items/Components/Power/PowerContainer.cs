@@ -14,7 +14,7 @@ namespace Barotrauma.Items.Components
 
         private float charge;
 
-        private float rechargeVoltage, outputVoltage;
+        private float rechargeVoltage;
 
         //how fast the battery can be recharged
         private float maxRechargeSpeed;
@@ -38,21 +38,21 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
-        [Serialize("0,0", true)]
+        [Serialize("0,0", true, description: "The position of the progress bar indicating the charge of the item. In pixels as an offset from the upper left corner of the sprite.")]
         public Vector2 IndicatorPosition
         {
             get { return indicatorPosition; }
             set { indicatorPosition = value; }
         }
 
-        [Serialize("0,0", true)]
+        [Serialize("0,0", true, description: "The size of the progress bar indicating the charge of the item (in pixels).")]
         public Vector2 IndicatorSize
         {
             get { return indicatorSize; }
             set { indicatorSize = value; }
         }
 
-        [Serialize(false, true)]
+        [Serialize(false, true, description: "Should the progress bar indicating the charge of the item fill up horizontally or vertically.")]
         public bool IsHorizontal
         {
             get { return isHorizontal; }
@@ -69,7 +69,7 @@ namespace Barotrauma.Items.Components
             set { capacity = Math.Max(value, 1.0f); }
         }
 
-        [Editable, Serialize(0.0f, true)]
+        [Editable, Serialize(0.0f, true, description: "The current charge of the device.")]
         public float Charge
         {
             get { return charge; }
@@ -98,7 +98,7 @@ namespace Barotrauma.Items.Components
             set { maxRechargeSpeed = Math.Max(value, 1.0f); }
         }
 
-        [Serialize(10.0f, true), Editable]
+        [Editable, Serialize(10.0f, true, description: "The current recharge speed of the device.")]
         public float RechargeSpeed
         {
             get { return rechargeSpeed; }
@@ -221,7 +221,6 @@ namespace Barotrauma.Items.Components
             }
 
             rechargeVoltage = 0.0f;
-            outputVoltage = 0.0f;
         }
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
@@ -296,10 +295,6 @@ namespace Barotrauma.Items.Components
             if (connection.Name == "power_in")
             {
                 rechargeVoltage = Math.Min(power, 1.0f);
-            }
-            else
-            {
-                outputVoltage = power;
             }
         }
     }

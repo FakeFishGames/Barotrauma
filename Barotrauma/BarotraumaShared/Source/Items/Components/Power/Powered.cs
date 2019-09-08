@@ -31,14 +31,14 @@ namespace Barotrauma.Items.Components
             set { minVoltage = value; }
         }
 
-        [Editable, Serialize(0.0f, true, description: "How much power the device draws (or attempts to draw) from the electrical grid.")]
+        [Editable, Serialize(0.0f, true, description: "How much power the device draws (or attempts to draw) from the electrical grid when active.")]
         public float PowerConsumption
         {
             get { return powerConsumption; }
             set { powerConsumption = value; }
         }
         
-        [Serialize(false, true)]
+        [Serialize(false, true, description: "Is the device currently active. Inactive devices don't consume power.")]
         public override bool IsActive
         {
             get { return base.IsActive; }
@@ -52,14 +52,14 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(0.0f, true)]
+        [Serialize(0.0f, true, description: "The current power consumption of the device. Intended to be used by StatusEffect conditionals (setting the value from XML is not recommended).")]
         public float CurrPowerConsumption
         {
             get {return currPowerConsumption; }
             set { currPowerConsumption = value; }
         }
 
-        [Serialize(0.0f, true)]
+        [Serialize(0.0f, true, description: "The current voltage of the item (calculated as power consumption / available power). Intended to be used by StatusEffect conditionals (setting the value from XML is not recommended).")]
         public float Voltage
         {
             get { return voltage; }

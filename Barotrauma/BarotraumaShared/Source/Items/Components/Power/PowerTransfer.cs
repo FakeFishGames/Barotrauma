@@ -64,7 +64,7 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Is the item currently overloaded. Intended to be used by StatusEffect conditionals (setting the value from XML is not recommended).")]
         public bool Overload
         {
             get;

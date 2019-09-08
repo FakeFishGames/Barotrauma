@@ -33,7 +33,9 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize("0.0,0.0", true)]
+        [Editable, Serialize("0.0,0.0", true, 
+            description: "The position of the propeller as an offset from the item's center (in pixels)."+
+            " Determines where the particles spawn and the position that causes characters to take damage from the engine if the PropellerDamage is defined.")]
         public Vector2 PropellerPos
         {
             get;

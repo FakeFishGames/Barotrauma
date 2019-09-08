@@ -25,7 +25,8 @@ namespace Barotrauma.Items.Components
 
         public PhysicsBody ParentBody;
 
-        [Editable(MinValueFloat = 0.0f, MaxValueFloat = 2048.0f), Serialize(100.0f, true)]
+        [Serialize(100.0f, true, description: "The range of the emitted light. Higher values are more performance-intensive."), 
+            Editable(MinValueFloat = 0.0f, MaxValueFloat = 2048.0f)]
         public float Range
         {
             get { return range; }
@@ -68,7 +69,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize(false, true)]
+        [Editable, Serialize(false, true, description: "Is the light currently on.")]
         public bool IsOn
         {
             get { return IsActive; }
@@ -83,7 +84,7 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false, description: "How heavily the light flickers. 0 = no flickering, 1 = the light will alternate between completely dark and full brightness.")]
         public float Flicker
         {
             get { return flicker; }
@@ -93,7 +94,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize(0.0f, true)]
+        [Editable, Serialize(0.0f, true, description: "How rapidly the light blinks on and off (in Hz). 0 = no blinking.")]
         public float BlinkFrequency
         {
             get { return blinkFrequency; }
@@ -103,7 +104,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [InGameEditable, Serialize("1.0,1.0,1.0,1.0", true)]
+        [InGameEditable, Serialize("255,255,255,255", true, description: "The color of the emitted light (R,G,B,A).")]
         public Color LightColor
         {
             get { return lightColor; }

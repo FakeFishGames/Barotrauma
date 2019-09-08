@@ -23,7 +23,7 @@ namespace Barotrauma.Items.Components
 
         private Queue<DelayedSignal> signalQueue;
         
-        [InGameEditable(MinValueFloat = 0.0f, MaxValueFloat = 60.0f, DecimalCount = 2), Serialize(1.0f, true)]
+        [InGameEditable(MinValueFloat = 0.0f, MaxValueFloat = 60.0f, DecimalCount = 2), Serialize(1.0f, true, description: "How long the item delays the signals (in seconds).")]
         public float Delay
         {
             get;

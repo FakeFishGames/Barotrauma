@@ -13,7 +13,7 @@ namespace Barotrauma.Items.Components
         //the output is sent if both inputs have received a signal within the timeframe
         protected float timeFrame;
         
-        [InGameEditable(DecimalCount = 2), Serialize(0.0f, true)]
+        [InGameEditable(DecimalCount = 2), Serialize(0.0f, true, description: "The item sends the output if both inputs have received a non-zero signal within the timeframe. If set to 0, the inputs must receive a signal at the same time.")]
         public float TimeFrame
         {
             get { return timeFrame; }
@@ -23,14 +23,14 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [InGameEditable, Serialize("1", true)]
+        [InGameEditable, Serialize("1", true, description: "The signal sent when both inputs have received a non-zero signal.")]
         public string Output
         {
             get { return output; }
             set { output = value; }
         }
 
-        [InGameEditable, Serialize("", true)]
+        [InGameEditable, Serialize("", true, description: "The signal sent when both inputs have not received a non-zero signal (if empty, no signal is sent).")]
         public string FalseOutput
         {
             get { return falseOutput; }

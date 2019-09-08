@@ -20,14 +20,17 @@ namespace Barotrauma.Items.Components
 
         private float phase;
 
-        [InGameEditable, Serialize(WaveType.Pulse, true)]
+        [InGameEditable, Serialize(WaveType.Pulse, true, description: "What kind of a signal the item outputs." +
+            " Pulse: periodically sends out a signal of 1." +
+            " Sine: sends out a sine wave oscillating between -1 and 1." +
+            " Square: sends out a signal that alternates between 0 and 1.")]
         public WaveType OutputType
         {
             get;
             set;
         }
 
-        [InGameEditable(DecimalCount = 2), Serialize(1.0f, true)]
+        [InGameEditable(DecimalCount = 2), Serialize(1.0f, true, description: "How fast the signal oscillates, or how fast the pulses are sent (in Hz).")]
         public float Frequency
         {
             get { return frequency; }

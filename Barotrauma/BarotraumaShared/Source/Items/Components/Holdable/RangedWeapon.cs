@@ -15,28 +15,28 @@ namespace Barotrauma.Items.Components
 
         private Vector2 barrelPos;
 
-        [Serialize("0.0,0.0", false)]
+        [Serialize("0.0,0.0", false, description: "The position of the barrel as an offset from the item's center (in pixels). Determines where the projectiles spawn.")]
         public string BarrelPos
         {
             get { return XMLExtensions.Vector2ToString(ConvertUnits.ToDisplayUnits(barrelPos)); }
             set { barrelPos = ConvertUnits.ToSimUnits(XMLExtensions.ParseVector2(value)); }
         }
 
-        [Serialize(1.0f, false)]
+        [Serialize(1.0f, false, description: "How long the user has to wait before they can fire the weapon again (in seconds).")]
         public float Reload
         {
             get { return reload; }
             set { reload = Math.Max(value, 0.0f); }
         }
 
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false, description: "Random spread applied to the firing angle of the projectiles when used by a character with sufficient skills to use the weapon (in degrees).")]
         public float Spread
         {
             get;
             set;
         }
 
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false, description: "Random spread applied to the firing angle of the projectiles when used by a character with insufficient skills to use the weapon (in degrees).")]
         public float UnskilledSpread
         {
             get;

@@ -42,17 +42,17 @@ namespace Barotrauma.Items.Components
 
         public int DockingDir { get; private set; }
 
-        [Serialize("32.0,32.0", false)]
+        [Serialize("32.0,32.0", false, description: "How close the docking port has to be to another port to dock.")]
         public Vector2 DistanceTolerance { get; set; }
 
-        [Serialize(32.0f, false)]
+        [Serialize(32.0f, false, description: "How close together the docking ports are forced when docked.")]
         public float DockedDistance
         {
             get;
             set;
         }
 
-        [Serialize(true, false)]
+        [Serialize(true, false, description: "Is the port horizontal.")]
         public bool IsHorizontal
         {
             get;

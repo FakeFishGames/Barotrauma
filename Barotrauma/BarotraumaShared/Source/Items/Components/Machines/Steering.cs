@@ -87,7 +87,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(1000.0f, true)]
+        [Serialize(1000.0f, true, description: "How close the docking port has to be to another docking port for the docking mode to become active.")]
         public float DockingAssistThreshold
         {
             get;

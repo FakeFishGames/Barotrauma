@@ -11,25 +11,29 @@ namespace Barotrauma.Items.Components
         protected float[] timeSinceReceived;
 
         protected float[] receivedSignal;
-        
+
         //the output is sent if both inputs have received a signal within the timeframe
         protected float timeFrame;
 
-        [InGameEditable(MinValueFloat = -999999.0f, MaxValueFloat = 999999.0f), Serialize(999999.0f, true)]
+        [Serialize(999999.0f, true, description: "The output of the item is restricted below this value."),
+            InGameEditable(MinValueFloat = -999999.0f, MaxValueFloat = 999999.0f)]
         public float ClampMax
         {
             get;
             set;
         }
 
-        [InGameEditable(MinValueFloat = -999999.0f, MaxValueFloat = 999999.0f), Serialize(-999999.0f, true)]
+        [Serialize(-999999.0f, true, description: "The output of the item is restricted above this value."),
+            InGameEditable(MinValueFloat = -999999.0f, MaxValueFloat = 999999.0f)]
         public float ClampMin
         {
             get;
             set;
         }
 
-        [InGameEditable(DecimalCount = 2), Serialize(0.0f, true)]
+        [InGameEditable(DecimalCount = 2),
+            Serialize(0.0f, true, description: "The item must have received signals to both inputs within this timeframe to output the sum of the signals." +
+            " If set to 0, the inputs must be received at the same time.")]
         public float TimeFrame
         {
             get { return timeFrame; }

@@ -48,7 +48,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(100.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 5000.0f)]
+        [Serialize(100.0f, true, description: "How far the discharge can travel from the item."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 5000.0f)]
         public float Range
         {
             get;
@@ -62,14 +62,14 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Serialize(0.25f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
+        [Serialize(0.25f, true, description: "The duration of an individual discharge (in seconds)."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
         public float Duration
         {
             get;
             set;
         }
 
-        [Serialize(false, true), Editable()]
+        [Serialize(false, true, "If set to true, the discharge cannot travel inside the submarine nor shock anyone inside."), Editable]
         public bool OutdoorsOnly
         {
             get;

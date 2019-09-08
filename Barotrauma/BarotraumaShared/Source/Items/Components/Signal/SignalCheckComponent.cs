@@ -4,29 +4,13 @@ namespace Barotrauma.Items.Components
 {
     class SignalCheckComponent : ItemComponent
     {
-        private string output, falseOutput;
+        [InGameEditable, Serialize("1", true, description: "The signal this item outputs when the received signal matches the target signal.")]
+        public string Output { get; set; }
+        [InGameEditable, Serialize("0", true, description: "The signal this item outputs when the received signal does not match the target signal.")]
+        public string FalseOutput { get; set; }
 
-        private string targetSignal;
-
-        [InGameEditable, Serialize("1", true)]
-        public string Output
-        {
-            get { return output; }
-            set { output = value; }
-        }
-        [InGameEditable, Serialize("0", true)]
-        public string FalseOutput
-        {
-            get { return falseOutput; }
-            set { falseOutput = value; }
-        }
-
-        [InGameEditable, Serialize("", true)]
-        public string TargetSignal
-        {
-            get { return targetSignal; }
-            set { targetSignal = value; }
-        }
+        [InGameEditable, Serialize("", true, description: "The value to compare the received signals against.")]
+        public string TargetSignal { get; set; }
 
         public SignalCheckComponent(Item item, XElement element)
             : base(item, element)
@@ -38,17 +22,17 @@ namespace Barotrauma.Items.Components
             switch (connection.Name)
             {
                 case "signal_in":
-                    string signalOut = (signal == targetSignal) ? output : falseOutput;
+                    string signalOut = (signal == TargetSignal) ? Output : FalseOutput;
 
                     if (string.IsNullOrWhiteSpace(signalOut)) return;
                     item.SendSignal(stepsTaken, signalOut, "signal_out", sender, signalStrength);
 
                     break;
                 case "set_output":
-                    output = signal;
+                    Output = signal;
                     break;
                 case "set_targetsignal":
-                    targetSignal = signal;
+                    TargetSignal = signal;
                     break;
             }
         }
