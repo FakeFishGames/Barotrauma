@@ -209,7 +209,14 @@ namespace Barotrauma
 
         public static SlotReference SelectedSlot
         {
-            get { return selectedSlot; }
+            get
+            {
+                if (selectedSlot?.Inventory?.Owner == null || selectedSlot.Inventory.Owner.Removed)
+                {
+                    return null;
+                }
+                return selectedSlot;
+            }
         }
 
         public virtual void CreateSlots()
