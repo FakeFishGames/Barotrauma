@@ -211,7 +211,7 @@ namespace Barotrauma
         {
             get
             {
-                if (selectedSlot?.Inventory?.Owner == null || selectedSlot.Inventory.Owner.Removed)
+                if (selectedSlot?.ParentInventory?.Owner == null || selectedSlot.ParentInventory.Owner.Removed)
                 {
                     return null;
                 }
