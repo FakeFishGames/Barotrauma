@@ -109,30 +109,21 @@ namespace Barotrauma.Items.Components
             {
                 foreach (Item item in containedItems)
                 {
-                    projectile = item.GetComponent<Projectile>();
-                    if (projectile != null) break;
-                }
-                //projectile not found, see if one of the contained items contains projectiles
-                if (projectile == null)
-                {
-                    foreach (Item item in containedItems)
+                    var containedSubItems = item.ContainedItems;
+                    if (containedSubItems == null) { continue; }
+                    foreach (Item subItem in containedSubItems)
                     {
-                        var containedSubItems = item.ContainedItems;
-                        if (containedSubItems == null) { continue; }
-                        foreach (Item subItem in containedSubItems)
+                        projectile = subItem.GetComponent<Projectile>();
+                        //apply OnUse statuseffects to the container in case it has to react to it somehow
+                        //(play a sound, spawn more projectiles, reduce condition...)
+                        if (subItem.Condition > 0.0f)
                         {
-                            projectile = subItem.GetComponent<Projectile>();
-                            //apply OnUse statuseffects to the container in case it has to react to it somehow
-                            //(play a sound, spawn more projectiles, reduce condition...)
-                            if (subItem.Condition > 0.0f)
-                            {
-                                subItem.GetComponent<ItemContainer>()?.Item.ApplyStatusEffects(ActionType.OnUse, deltaTime);
-                            }
-                            if (projectile != null) break;
+                            subItem.GetComponent<ItemContainer>()?.Item.ApplyStatusEffects(ActionType.OnUse, deltaTime);
                         }
+                        if (projectile != null) break;
                     }
                 }
-            }
+            }            
             
             if (projectile == null) return true;
             
