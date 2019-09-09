@@ -499,17 +499,6 @@ namespace Barotrauma.CharacterEditor
                 {
                     DeleteSelected();
                 }
-                if (editLimbs && PlayerInput.KeyDown(Keys.LeftControl))
-                {
-                    var selectedLimb = selectedLimbs.FirstOrDefault();
-                    if (selectedLimb != null)
-                    {
-                        if (PlayerInput.KeyHit(Keys.C))
-                        {
-                            CopyLimb(selectedLimb);
-                        }
-                    }
-                }
                 if (ShowExtraRagdollControls && PlayerInput.KeyDown(Keys.LeftControl))
                 {
                     if (PlayerInput.KeyHit(Keys.E))
