@@ -1130,9 +1130,8 @@ namespace Barotrauma.CharacterEditor
             TeleportTo(spawnPosition);
             ClearWidgets();
             ClearSelection();
+            SetToggle(jointsToggle, true);
             selectedJoints.Add(character.AnimController.LimbJoints.Single(j => j.Params == newJointParams));
-            jointsToggle.Selected = true;
-            ResetParamsEditor();
         }
 
         /// <summary>
