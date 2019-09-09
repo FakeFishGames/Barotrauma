@@ -49,6 +49,8 @@ namespace Barotrauma
             public string GlobalEndMessageFailureDeadTextId { get; private set; }
             public string GlobalEndMessageFailureDetainedTextId { get; private set; }
 
+            public readonly string Identifier;
+
             public virtual IEnumerable<string> GlobalEndMessageKeys => new string[] { "[traitorname]", "[traitorgoalinfos]" };
             public virtual IEnumerable<string> GlobalEndMessageValues {
                 get {
@@ -220,10 +222,9 @@ namespace Barotrauma
                 {
                     traitor.Greet(server, CodeWords, CodeResponse, message => messages[traitor].Add(message));
                 }
-
-                messages.ForEach(traitor => traitor.Value.ForEach(message => traitor.Key.SendChatMessage(message)));
+                messages.ForEach(traitor => traitor.Value.ForEach(message => traitor.Key.SendChatMessage(message, Identifier)));
+                messages.ForEach(traitor => traitor.Value.ForEach(message => traitor.Key.SendChatMessageBox(message, Identifier)));
                 Update(0.0f, GameMain.Server.EndGame);
-                messages.ForEach(traitor => traitor.Value.ForEach(message => traitor.Key.SendChatMessageBox(message)));
 #if SERVER
                 foreach (var traitor in Traitors.Values)
                 {
@@ -243,7 +244,7 @@ namespace Barotrauma
                 }
                 if (Traitors.Values.Any(traitor => traitor.Character?.IsDead ?? true))
                 {
-                    Traitors.Values.ForEach(traitor => traitor.UpdateCurrentObjective(""));
+                    Traitors.Values.ForEach(traitor => traitor.UpdateCurrentObjective("", Identifier));
                     return;
                 }
                 var startedObjectives = new List<Objective>();
@@ -287,16 +288,9 @@ namespace Barotrauma
                         if (!objective.CanBeCompleted)
                         {
                             objective.EndMessage();
-                            objective.End(true);
                             pendingObjectives.Clear();
                         }
                         break;
-                    }
-                    var completedMax = completedObjectives.Count - 1;
-                    for (var i = previousCompletedCount; i <= completedMax; ++i)
-                    {
-                        var objective = completedObjectives[i];
-                        objective.End(i < completedMax || pendingObjectives.Count > 0);
                     }
                     if (pendingObjectives.Count > 0)
                     {
@@ -335,9 +329,10 @@ namespace Barotrauma
                 return null;
 #endif
             }
-
-            public TraitorMission(string startText, string globalEndMessageSuccessTextId, string globalEndMessageSuccessDeadTextId, string globalEndMessageSuccessDetainedTextId, string globalEndMessageFailureTextId, string globalEndMessageFailureDeadTextId, string globalEndMessageFailureDetainedTextId, IEnumerable<KeyValuePair<string, RoleFilter>> roles, ICollection<Objective> objectives)
+            
+            public TraitorMission(string identifier, string startText, string globalEndMessageSuccessTextId, string globalEndMessageSuccessDeadTextId, string globalEndMessageSuccessDetainedTextId, string globalEndMessageFailureTextId, string globalEndMessageFailureDeadTextId, string globalEndMessageFailureDetainedTextId, IEnumerable<KeyValuePair<string, RoleFilter>> roles, ICollection<Objective> objectives)
             {
+                Identifier = identifier;
                 StartText = startText;
                 GlobalEndMessageSuccessTextId = globalEndMessageSuccessTextId;
                 GlobalEndMessageSuccessDeadTextId = globalEndMessageSuccessDeadTextId;

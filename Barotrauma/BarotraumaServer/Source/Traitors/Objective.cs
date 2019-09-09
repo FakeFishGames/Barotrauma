@@ -130,28 +130,21 @@ namespace Barotrauma
                 }
                 IsStarted = true;
 
-                traitor.SendChatMessageBox(StartMessageText);
-                traitor.UpdateCurrentObjective(GoalInfos);
+                traitor.SendChatMessageBox(StartMessageText, traitor.Mission?.Identifier);
+                traitor.UpdateCurrentObjective(GoalInfos, traitor.Mission?.Identifier);
 
                 return true;
             }
 
             public void StartMessage()
             {
-                Traitor.SendChatMessage(StartMessageText);
+                Traitor.SendChatMessage(StartMessageText, Traitor.Mission?.Identifier);
             }
-
-            public void End(bool displayMessage)
-            {
-                if (displayMessage)
-                {
-                    Traitor.SendChatMessageBox(EndMessageText);
-                }
-            }
-
+            
             public void EndMessage()
             {
-                Traitor.SendChatMessage(EndMessageText);
+                Traitor.SendChatMessageBox(EndMessageText, Traitor.Mission?.Identifier);
+                Traitor.SendChatMessage(EndMessageText, Traitor.Mission?.Identifier);
             }
 
             public void Update(float deltaTime)
@@ -174,12 +167,12 @@ namespace Barotrauma
                         pendingGoals.RemoveAt(i);
                         if (GameMain.Server != null)
                         {
-                            Traitor.SendChatMessage(goal.CompletedText(Traitor));
+                            Traitor.SendChatMessage(goal.CompletedText(Traitor), Traitor.Mission?.Identifier);
                             if (pendingGoals.Count > 0)
                             {
-                                Traitor.SendChatMessageBox(goal.CompletedText(Traitor));
+                                Traitor.SendChatMessageBox(goal.CompletedText(Traitor), Traitor.Mission?.Identifier);
                             }
-                            Traitor.UpdateCurrentObjective(GoalInfos);
+                            Traitor.UpdateCurrentObjective(GoalInfos, Traitor.Mission?.Identifier);
                         }
                     }
                 }

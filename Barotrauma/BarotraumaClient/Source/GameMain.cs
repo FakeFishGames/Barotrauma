@@ -455,6 +455,7 @@ namespace Barotrauma
 
             Character.LoadAllConfigFiles();
             MissionPrefab.Init();
+            TraitorMissionPrefab.Init();
             MapEntityPrefab.Init();
             Tutorials.Tutorial.Init();
             MapGenerationParams.Init();
