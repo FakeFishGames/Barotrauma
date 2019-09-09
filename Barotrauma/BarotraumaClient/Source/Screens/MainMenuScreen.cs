@@ -1017,8 +1017,12 @@ namespace Barotrauma
                 }
             };
 
-            playstyleDescription = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), parent.RectTransform), 
-                "playstyle description goes here", style: "GUIToolTip", wrap: true);
+            playstyleDescription = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), playstyleBanner.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0.0f, 0.1f) },
+                "playstyle description goes here", style: null, wrap: true)
+            {
+                Color = Color.Black * 0.8f,
+                TextColor = Color.White
+            };
 
             //other settings -----------------------------------------------------
 
