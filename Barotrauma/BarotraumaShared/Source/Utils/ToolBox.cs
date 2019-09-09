@@ -145,7 +145,7 @@ namespace Barotrauma
 
         public static string RemoveBBCodeTags(string str)
         {
-            if (string.IsNullOrEmpty(str)) { return str };
+            if (string.IsNullOrEmpty(str)) { return str; }
             return removeBBCodeRegex.Replace(str, "");
         }
 
