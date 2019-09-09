@@ -274,7 +274,16 @@ namespace Barotrauma.CharacterEditor
             if (showSpritesheet)
             {
                 spriteSheetControls.AddToGUIUpdateList();
-                if (selectedLimbs.Any())
+                Limb lastLimb = selectedLimbs.LastOrDefault();
+                if (lastLimb == null)
+                {
+                    var lastJoint = selectedJoints.LastOrDefault();
+                    if (lastJoint != null)
+                    {
+                        lastLimb = PlayerInput.KeyDown(Keys.LeftAlt) ? lastJoint.LimbB : lastJoint.LimbA;
+                    }
+                }
+                if (lastLimb != null)
                 {
                     resetSpriteOrientationButtonParent.AddToGUIUpdateList();
                 }
