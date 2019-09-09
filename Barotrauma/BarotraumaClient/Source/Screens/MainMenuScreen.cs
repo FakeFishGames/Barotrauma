@@ -981,7 +981,7 @@ namespace Barotrauma
 
             //play style -----------------------------------------------------
 
-            var playstyleContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.98f, 0.5f), parent.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
+            var playstyleContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), parent.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
             {
                 Stretch = true,
                 Color = Color.Black
