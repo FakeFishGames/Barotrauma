@@ -3498,7 +3498,7 @@
   <servertag.somethingdifferent>Something different</servertag.somethingdifferent>
   <servertagdescription.somethingdifferent>Gameplay differs significantly from the usual Barotrauma gameplay. Modded servers, very unconventional subs, battle royale rounds, shuttle racing, deathrun maps... Anything goes!</servertagdescription.somethingdifferent>
   <servertag.rampage>Rampage</servertag.rampage>
-  <servertagdescription.rampage>Get ready to fight for your life! A server heavily geared towards combat. This can mean player-versus-player combat, PvE or both — see the server description should include a guideline as to what kind of violence is allowed on the server.</servertagdescription.rampage>
+  <servertagdescription.rampage>Get ready to fight for your life! A server heavily geared towards combat. This can mean player-versus-player combat, PvE or both — the server description should include a guideline as to what kind of violence is allowed on the server.</servertagdescription.rampage>
 
   <servertag.modded.true>Modded</servertag.modded.true>
   <servertagdescription.modded.true>One or more mods enabled. Installing mods from the Workshop may be required to join the server.</servertagdescription.modded.true>
