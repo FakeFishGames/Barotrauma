@@ -175,7 +175,8 @@ namespace Barotrauma
 
             var filters = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f), serverListHolder.RectTransform, Anchor.Center), style: null)
             {
-                Color = new Color(12, 14, 15, 255) * 0.5f
+                Color = new Color(12, 14, 15, 255) * 0.5f,
+                OutlineColor = Color.Black
             };
             var filterToggle = new GUIButton(new RectTransform(new Vector2(0.02f, 1.0f), serverListHolder.RectTransform, Anchor.CenterRight) { MinSize = new Point(20, 0) }, style: "UIToggleButton")
             {
@@ -339,6 +340,7 @@ namespace Barotrauma
             serverPreview = new GUIFrame(new RectTransform(new Vector2(0.3f, 1.0f), serverListHolder.RectTransform, Anchor.Center), style: null)
             {
                 Color = new Color(12, 14, 15, 255) * 0.5f,
+                OutlineColor = Color.Black,
                 IgnoreLayoutGroups = true,
                 Visible = false
             };

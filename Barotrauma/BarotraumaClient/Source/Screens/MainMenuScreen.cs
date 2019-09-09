@@ -1017,8 +1017,18 @@ namespace Barotrauma
                 }
             };
 
-            playstyleDescription = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), parent.RectTransform), 
-                "playstyle description goes here", style: "GUIToolTip", wrap: true);
+            string longestPlayStyleStr = "";
+            foreach (PlayStyle playStyle in Enum.GetValues(typeof(PlayStyle)))
+            {
+                string playStyleStr = TextManager.Get("servertagdescription." + playStyle);
+                if (playStyleStr.Length > longestPlayStyleStr.Length) { longestPlayStyleStr = playStyleStr; }
+            }
+
+            playstyleDescription = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), parent.RectTransform),
+                longestPlayStyleStr, style: "GUIToolTip", wrap: true);
+            playstyleDescription.Padding = Vector4.One * 10.0f * GUI.Scale;
+            playstyleDescription.CalculateHeightFromText(padding: (int)(15 * GUI.Scale));
+            playstyleDescription.RectTransform.MinSize = new Point(0, playstyleDescription.Rect.Height);
 
             //other settings -----------------------------------------------------
 
@@ -1108,9 +1118,6 @@ namespace Barotrauma
             nameText.RectTransform.NonScaledSize = (nameText.Font.MeasureString(nameText.Text) + new Vector2(25, 10) * GUI.Scale).ToPoint();
 
             playstyleDescription.Text = TextManager.Get("servertagdescription." + playStyle);
-            playstyleDescription.Padding = Vector4.One * 10.0f;
-            playstyleDescription.CalculateHeightFromText(padding: (int)(15 * GUI.Scale));
-            (playstyleDescription.Parent as GUILayoutGroup)?.Recalculate();
         }
 #endregion
 
