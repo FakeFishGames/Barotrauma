@@ -2564,6 +2564,7 @@ namespace Barotrauma.CharacterEditor
                     default:
                         throw new NotImplementedException();
                 }
+                ResetParamsEditor();
                 return true;
             };
         }
@@ -3176,7 +3177,7 @@ namespace Barotrauma.CharacterEditor
             }
             else if (editAnimations)
             {
-                AnimParams.ForEach(p => p.AddToEditor(ParamsEditor.Instance, space: 10));
+                character.AnimController.CurrentAnimationParams?.AddToEditor(ParamsEditor.Instance, space: 10);
             }
             else
             {
@@ -3622,7 +3623,7 @@ namespace Barotrauma.CharacterEditor
             bool ShowCycleWidget() => PlayerInput.KeyDown(Keys.LeftAlt) && (CurrentAnimation is IHumanAnimation || CurrentAnimation is GroundedMovementParams);
             if (!PlayerInput.KeyDown(Keys.LeftAlt) && (animParams is IHumanAnimation || animParams is GroundedMovementParams))
             {
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 120, 100), GetCharacterEditorTranslation("HoldLeftAltToAdjustCycleSpeed"), Color.White, Color.Black * 0.5f, 10, GUI.Font);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 120, 150), GetCharacterEditorTranslation("HoldLeftAltToAdjustCycleSpeed"), Color.White, Color.Black * 0.5f, 10, GUI.Font);
             }
             // Widgets for all anims -->
             Vector2 referencePoint = SimToScreen(head != null ? head.SimPosition: collider.SimPosition);
