@@ -726,7 +726,7 @@ namespace Barotrauma
             [Serialize("0.5, 0.5", true, description: "The origin of the sprite relative to the collider."), Editable(DecimalCount = 2)]
             public Vector2 Origin { get; set; }
 
-            [Serialize(0f, true, description: "The Z-depth of the limb relative to other limbs of the same character. 1 is front, 0 is behind."), Editable(minValue: 0, maxValue: 1, DecimalCount = 3)]
+            [Serialize(0f, true, description: "The Z-depth of the limb relative to other limbs of the same character. 1 is front, 0 is behind."), Editable(MinValueFloat = 0, MaxValueFloat = 1, DecimalCount = 3)]
             public float Depth { get; set; }
 
             [Serialize("", true), Editable()]
