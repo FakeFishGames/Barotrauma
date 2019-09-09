@@ -1097,6 +1097,11 @@ namespace Barotrauma.CharacterEditor
         /// </summary>
         private void CreateJoint(int fromLimb, int toLimb, Vector2? anchor1 = null, Vector2? anchor2 = null)
         {
+            if (RagdollParams.Joints.Any(j => j.Limb1 == fromLimb && j.Limb2 == toLimb))
+            {
+                DebugConsole.ThrowError(GetCharacterEditorTranslation("ExistingJointFound").Replace("[limbid1]", fromLimb.ToString()).Replace("[limbid2]", toLimb.ToString()));
+                return;
+            }
             //RagdollParams.StoreState();
             Vector2 a1 = anchor1 ?? Vector2.Zero;
             Vector2 a2 = anchor2 ?? Vector2.Zero;

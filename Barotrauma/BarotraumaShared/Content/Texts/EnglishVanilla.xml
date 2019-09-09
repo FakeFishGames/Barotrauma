@@ -998,6 +998,7 @@
   <charactereditor.drawlimbonspritesheet>Draw the limb on the spritesheet</charactereditor.drawlimbonspritesheet>
   <charactereditor.onlyshowselectedlimbs>Show Only Selected Limbs</charactereditor.onlyshowselectedlimbs>
   <charactereditor.newcontentpackage>New Content Package</charactereditor.newcontentpackage>
+  <charactereditor.existingjointfound>A joint between limb [limbid1] and [limbid2] already found!</charactereditor.existingjointfound>
 
   <!-- Submarine editor -->
   <items>Items</items>
