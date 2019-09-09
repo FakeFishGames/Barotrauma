@@ -3493,12 +3493,12 @@
   <servertagdescription.casual>Having fun is more important than completing the objective. A good choice for new players.</servertagdescription.casual>
   <servertag.serious>Serious</servertag.serious>
   <servertagdescription.serious>The crew should focus on working together efficiently and completing their objective. No unnecessary messing around.</servertagdescription.serious>
-  <servertag.roleplaying>Roleplaying</servertag.roleplaying>
-  <servertagdescription.roleplaying>The crew should aim to act like a real submarine crew. Chain of command is important, as is taking care of your responsibilities and following orders. Speaking out-of-character should be avoided when a round is running.</servertagdescription.roleplaying>
-  <servertag.somethingelse>Something else</servertag.somethingelse>
-  <servertagdescription.somethingelse>Gameplay differs significantly from the usual Barotrauma gameplay. Modded servers, very unconventional subs, battle royale rounds, shuttle racing, deathrun maps... Anything goes!</servertagdescription.somethingelse>
+  <servertag.roleplay>Roleplay</servertag.roleplay>
+  <servertagdescription.roleplay>The crew should aim to act like a real submarine crew. Chain of command is important, as is taking care of your responsibilities and following orders. Speaking out-of-character should be avoided when a round is running.</servertagdescription.roleplay>
+  <servertag.somethingdifferent>Something different</servertag.somethingdifferent>
+  <servertagdescription.somethingdifferent>Gameplay differs significantly from the usual Barotrauma gameplay. Modded servers, very unconventional subs, battle royale rounds, shuttle racing, deathrun maps... Anything goes!</servertagdescription.somethingdifferent>
   <servertag.rampage>Rampage</servertag.rampage>
-  <servertagdescription.rampage>Get ready to fight for your life! A server heavily geared towards combat. This can mean player-versus-player combat, PvE or both — see the server description before you start wrenching your crewmates' faces.</servertagdescription.rampage>
+  <servertagdescription.rampage>Get ready to fight for your life! A server heavily geared towards combat. This can mean player-versus-player combat, PvE or both — see the server description should include a guideline as to what kind of violence is allowed on the server.</servertagdescription.rampage>
 
   <servertag.modded>Modded</servertag.modded>
   <servertagdescription.modded>One or more mods enabled. Installing mods from the Workshop may be required to join the server.</servertagdescription.modded>

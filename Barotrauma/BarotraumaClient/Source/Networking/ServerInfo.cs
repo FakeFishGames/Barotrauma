@@ -88,17 +88,26 @@ namespace Barotrauma.Networking
 
             if (frame == null) return;
 
-            var previewContainer =  new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), frame.RectTransform, Anchor.Center))
+            var previewContainer =  new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 1.0f), frame.RectTransform, Anchor.Center))
             {
                 Stretch = true
             };
 
-            Sprite playStyleBannerSprite = GameMain.ServerListScreen.PlayStyleBanners[(int)(PlayStyle.HasValue ? PlayStyle.Value : Networking.PlayStyle.Serious)];
+            PlayStyle playStyle = PlayStyle.HasValue ? PlayStyle.Value : Networking.PlayStyle.Serious;
+
+            Sprite playStyleBannerSprite = GameMain.ServerListScreen.PlayStyleBanners[(int)playStyle];
             float playStyleBannerAspectRatio = playStyleBannerSprite.SourceRect.Width / (playStyleBannerSprite.SourceRect.Height * 0.625f);
-            var playStyleBanner = new GUIImage(new RectTransform(new Vector2(1.0f, 1.0f / playStyleBannerAspectRatio), previewContainer.RectTransform, scaleBasis: ScaleBasis.BothWidth),
+            var playStyleBanner = new GUIImage(new RectTransform(new Vector2(1.0f, 1.0f / playStyleBannerAspectRatio), previewContainer.RectTransform, Anchor.TopCenter, scaleBasis: ScaleBasis.BothWidth),
                                                playStyleBannerSprite, null, true);
 
-            var columnContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.45f), previewContainer.RectTransform) { RelativeOffset = new Vector2(0.027f, 0.0f) })
+            var playStyleName = new GUITextBlock(new RectTransform(new Vector2(0.15f, 0.0f), playStyleBanner.RectTransform) { RelativeOffset = new Vector2(0.01f, 0.06f) },
+                TextManager.AddPunctuation(':', TextManager.Get("serverplaystyle"), TextManager.Get("servertag."+ playStyle)), textColor: Color.White, 
+                font: GUI.SmallFont, textAlignment: Alignment.Center, 
+                color: GameMain.ServerListScreen.PlayStyleColors[(int)playStyle], style: "GUISlopedHeader");
+            playStyleName.RectTransform.NonScaledSize = (playStyleName.Font.MeasureString(playStyleName.Text) + new Vector2(20, 5) * GUI.Scale).ToPoint();
+            playStyleName.RectTransform.IsFixedSize = true;
+
+            var columnContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.45f), previewContainer.RectTransform))
             {
                 Stretch = true
             };

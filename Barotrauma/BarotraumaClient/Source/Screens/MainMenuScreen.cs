@@ -29,6 +29,7 @@ namespace Barotrauma
         private readonly GameMain game;
 
         private GUIImage playstyleBanner;
+        private GUITextBlock playstyleDescription;
 
         private Tab selectedTab;
 
@@ -978,14 +979,16 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("HostServerButton"), textAlignment: Alignment.Center, font: GUI.LargeFont) { ForceUpperCase = true };
 
-            new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("ServerPlayStyle"));
-            var playStyleContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.98f, 0.4f), parent.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
+            //play style -----------------------------------------------------
+
+            var playstyleContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.98f, 0.5f), parent.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
             {
                 Stretch = true,
+                Color = Color.Black
                 //RelativeSpacing = 0.02f
             };
-
-            new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), playStyleContainer.RectTransform), style: "UIToggleButton")
+            
+            new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), playstyleContainer.RectTransform), style: "UIToggleButton")
             {
                 OnClicked = (btn, userdata) =>
                 {
@@ -996,14 +999,14 @@ namespace Barotrauma
                 }
             }.Children.ForEach(c => c.SpriteEffects = SpriteEffects.FlipHorizontally);
 
-            playstyleBanner = new GUIImage(new RectTransform(new Vector2(0.8f, 1.0f), playStyleContainer.RectTransform), style: null, scaleToFit: true)
+            playstyleBanner = new GUIImage(new RectTransform(new Vector2(0.8f, 1.0f), playstyleContainer.RectTransform), style: null, scaleToFit: true)
             {
                 UserData = PlayStyle.Serious
             };
-            /*new GUITextBlock(new RectTransform(new Vector2(0.15f, 0.05f), playstyleBanner.RectTransform) { RelativeOffset = new Vector2(0.01f, 0.02f) },
-                ) ;*/
+            new GUITextBlock(new RectTransform(new Vector2(0.15f, 0.05f), playstyleBanner.RectTransform) { RelativeOffset = new Vector2(0.01f, 0.06f) },
+                "playstyle name goes here", font: GUI.SmallFont, textAlignment: Alignment.Center, textColor: Color.White, style: "GUISlopedHeader");
 
-            new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), playStyleContainer.RectTransform), style: "UIToggleButton")
+            new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), playstyleContainer.RectTransform), style: "UIToggleButton")
             {
                 OnClicked = (btn, userdata) =>
                 {
@@ -1013,6 +1016,11 @@ namespace Barotrauma
                     return true;
                 }
             };
+
+            playstyleDescription = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), parent.RectTransform), 
+                "playstyle description goes here", style: "GUIToolTip", wrap: true);
+
+            //other settings -----------------------------------------------------
 
             var label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("ServerName"), textAlignment: textAlignment);
             serverNameBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment)
@@ -1093,6 +1101,16 @@ namespace Barotrauma
         {
             playstyleBanner.Sprite = GameMain.ServerListScreen.PlayStyleBanners[(int)playStyle];
             playstyleBanner.UserData = playStyle;
+
+            var nameText = playstyleBanner.GetChild<GUITextBlock>();
+            nameText.Text = TextManager.AddPunctuation(':', TextManager.Get("serverplaystyle"), TextManager.Get("servertag." + playStyle));
+            nameText.Color = GameMain.ServerListScreen.PlayStyleColors[(int)playStyle];
+            nameText.RectTransform.NonScaledSize = (nameText.Font.MeasureString(nameText.Text) + new Vector2(25, 10) * GUI.Scale).ToPoint();
+
+            playstyleDescription.Text = TextManager.Get("servertagdescription." + playStyle);
+            playstyleDescription.Padding = Vector4.One * 10.0f;
+            playstyleDescription.CalculateHeightFromText(padding: (int)(15 * GUI.Scale));
+            (playstyleDescription.Parent as GUILayoutGroup)?.Recalculate();
         }
 #endregion
 

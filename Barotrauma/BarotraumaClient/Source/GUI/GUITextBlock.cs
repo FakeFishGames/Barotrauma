@@ -227,10 +227,10 @@ namespace Barotrauma
             Censor = false;
         }
 
-        public void CalculateHeightFromText()
+        public void CalculateHeightFromText(int padding = 0)
         {
             if (wrappedText == null) { return; }
-            RectTransform.Resize(new Point(RectTransform.Rect.Width, (int)Font.MeasureString(wrappedText).Y));
+            RectTransform.Resize(new Point(RectTransform.Rect.Width, (int)Font.MeasureString(wrappedText).Y + padding));
         }
         
         public override void ApplyStyle(GUIComponentStyle style)

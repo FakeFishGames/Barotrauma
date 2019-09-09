@@ -70,8 +70,11 @@ namespace Barotrauma
         //server playstyle and tags
         public Sprite[] PlayStyleBanners
         {
-            get;
-            private set;
+            get; private set;
+        }
+        public Color[] PlayStyleColors
+        {
+            get; private set;
         }
 
         private bool masterServerResponded;
@@ -155,15 +158,15 @@ namespace Barotrauma
 
             var serverListHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), bottomRow.RectTransform), isHorizontal: true)
             {
-                Stretch = true
+                Stretch = true,
+                OutlineColor = Color.Black
             };
 
             // filters -------------------------------------------
 
             var filters = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f), serverListHolder.RectTransform, Anchor.Center), style: null)
             {
-                Color = new Color(12, 14, 15, 255) * 0.5f,
-                OutlineColor = Color.Black
+                Color = new Color(12, 14, 15, 255) * 0.5f
             };
             var filterToggle = new GUIButton(new RectTransform(new Vector2(0.02f, 1.0f), serverListHolder.RectTransform, Anchor.CenterRight) { MinSize = new Point(20, 0) }, style: "UIToggleButton")
             {
@@ -327,7 +330,6 @@ namespace Barotrauma
             serverPreview = new GUIFrame(new RectTransform(new Vector2(0.3f, 1.0f), serverListHolder.RectTransform, Anchor.Center), style: null)
             {
                 Color = new Color(12, 14, 15, 255) * 0.5f,
-                OutlineColor = Color.Black,
                 IgnoreLayoutGroups = true,
                 Visible = false
             };
@@ -402,8 +404,8 @@ namespace Barotrauma
             refreshDisableTimer = DateTime.Now;
 
             //playstyle banners
-            //TODO: expose to content package?
             PlayStyleBanners = new Sprite[Enum.GetValues(typeof(PlayStyle)).Length];
+            PlayStyleColors = new Color[Enum.GetValues(typeof(PlayStyle)).Length];
 
             XDocument playStylesDoc = XMLExtensions.TryLoadXml("Content/UI/Server/PlayStyleBanners/PlayStyleBanners.xml");
 
@@ -413,6 +415,7 @@ namespace Barotrauma
                 if (Enum.TryParse(element.Name.LocalName, out PlayStyle playStyle))
                 {
                     PlayStyleBanners[(int)playStyle] = new Sprite(element, lazyLoad: true);
+                    PlayStyleColors[(int)playStyle] = element.GetAttributeColor("color", Color.White);
                 }
             }
 
