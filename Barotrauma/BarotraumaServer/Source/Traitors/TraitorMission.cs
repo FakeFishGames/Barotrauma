@@ -66,8 +66,7 @@ namespace Barotrauma
                 {
                     if (Traitors.Any() && allObjectives.Count > 0)
                     {
-
-                        TextManager.JoinServerMessages("\n",
+                        return TextManager.JoinServerMessages("\n",
                             Traitors.Values.Select(traitor =>
                             {
                                 var isSuccess = completedObjectives.Count >= allObjectives.Count;

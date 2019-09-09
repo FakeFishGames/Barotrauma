@@ -392,10 +392,12 @@ namespace Barotrauma
         {
             return FormatServerMessage(message, keys.Concat(genderPronounVariables), values.Concat(gender == Gender.Male ? genderPronounMaleValues : genderPronounFemaleValues));
         }
-
+        
         public static string JoinServerMessages(string separator, string[] parts, string namePrefix = "part.")
         {
-            return string.Join("/", parts.Select((part, index) => $"[{namePrefix}{index}]={part}"), string.Join(separator, parts.Select((part,index) => $"[{namePrefix}{index}]")));
+            return string.Join("/",
+                string.Join("/", parts.Select((part, index) => $"[{namePrefix}{index}]={part}")), 
+                string.Join(separator, parts.Select((part, index) => $"[{namePrefix}{index}]")));
         }
 
         static readonly Regex reFormattedMessage = new Regex(@"^(?<variable>[\[\].a-z0-9_]+?)=(?<formatter>[a-z0-9_]+?)\((?<value>.+?)\)", RegexOptions.Compiled|RegexOptions.IgnoreCase);
