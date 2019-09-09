@@ -512,10 +512,7 @@ namespace Barotrauma
 
             public SpriteParams GetSprite() => deformSpriteParams ?? normalSpriteParams;
 
-            /// <summary>
-            /// Note that editing this in-game doesn't currently have any effect (unless the ragdoll is recreated). It should be visible, but readonly in the editor.
-            /// </summary>
-            [Serialize(-1, true, description: "Should be read-only. Don't touch!"), Editable()]
+            [Serialize(-1, true), Editable(ReadOnly = true)]
             public int ID { get; set; }
 
             [Serialize(LimbType.None, true, description: "The limb type affects many things, like the animations. Torso or Head are considered as the main limbs. Every character should have at least one Torso or Head."), Editable()]
