@@ -1368,7 +1368,7 @@ namespace Barotrauma.CharacterEditor
             {
                 if (allFiles == null)
                 {
-                    allFiles = Character.ConfigFilePaths.ToList();
+                    allFiles = Character.ConfigFilePaths.OrderBy(p => p).ToList();
                     allFiles.ForEach(f => DebugConsole.NewMessage(f, Color.White));
                 }
                 return allFiles;
