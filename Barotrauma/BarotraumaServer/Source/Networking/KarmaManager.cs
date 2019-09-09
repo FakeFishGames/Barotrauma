@@ -13,7 +13,6 @@ namespace Barotrauma
             public List<Pair<Wire, float>> WireDisconnectTime = new List<Pair<Wire, float>>();
 
             public float PreviousNotifiedKarma;
-            public float PreviousKarmaNotificationTime;
 
             public float StructureDamageAccumulator;
             
@@ -111,8 +110,18 @@ namespace Barotrauma
                 {
                     GameMain.Server.SendDirectChatMessage(TextManager.Get(karmaChange < 0 ? "KarmaDecreasedUnknownAmount" : "KarmaIncreasedUnknownAmount"), client);
                 }
+                if (TestMode)
+                {
+                    clientMemory.PreviousNotifiedKarma = client.Karma;
+                }
             }
-            clientMemory.PreviousNotifiedKarma = client.Karma;
+
+            //when not in test mode, reset karma after each check
+            //(so we only send notifications if the karma changes significantly as a result of some action, not when it has changed over time)
+            if (!TestMode)
+            {
+                clientMemory.PreviousNotifiedKarma = client.Karma;
+            }
         }
 
         private void UpdateClient(Client client, float deltaTime)
@@ -185,6 +194,18 @@ namespace Barotrauma
                 else
                 {
                     bannedClients.Add(client);
+                }
+            }
+        }
+
+        public void OnRoundEnded()
+        {
+            if (ResetKarmaBetweenRounds)
+            {
+                clientMemories.Clear();
+                foreach (Client client in GameMain.Server.ConnectedClients)
+                {
+                    client.Karma = Math.Max(50.0f, client.Karma);
                 }
             }
         }
@@ -313,13 +334,12 @@ namespace Barotrauma
             if (damageAmount > 0)
             {
                 if (StructureDamageKarmaDecrease <= 0.0f) { return; }
-
-                if (GameMain.Server.TraitorManager?.Traitors != null)
-                {                    
-                    if (GameMain.Server.TraitorManager.Traitors.Any(t => 
-                        t.Character == attacker && 
-                        t.CurrentObjective != null && 
-                        t.CurrentObjective.HasGoalsOfType<Traitor.GoalFloodPercentOfSub>()))
+                 if (GameMain.Server.TraitorManager?.Traitors != null)
+                {
+                    if (GameMain.Server.TraitorManager.Traitors.Any(t =>
+                        t.Character == attacker &&
+                        t.CurrentObjective != null &&
+                        t.CurrentObjective.IsAllowedToDamage(structure)))
                     {
                         //traitor tasked to flood the sub -> damaging structures is ok
                         return;

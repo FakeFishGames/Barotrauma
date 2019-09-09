@@ -69,7 +69,7 @@ namespace Barotrauma
             }
             return language;
         }
-        
+
         public static void LoadTextPacks(IEnumerable<ContentPackage> selectedContentPackages)
         {
             availableLanguages.Clear();
@@ -210,7 +210,7 @@ namespace Barotrauma
                 }
             }
 
-            if (formatCapitals != null && !GameMain.Config.Language.Contains("Chinese"))
+            if (formatCapitals != null && (GameMain.Config == null || !GameMain.Config.Language.Contains("Chinese")))
             {
                 for (int i = 0; i < variableTags.Length; i++)
                 {
@@ -310,6 +310,7 @@ namespace Barotrauma
                     return textTag;
                 }
             }
+
             try
             {
                 return string.Format(text, args);  
@@ -329,7 +330,7 @@ namespace Barotrauma
 
         public static string FormatServerMessage(string message, IEnumerable<string> keys, IEnumerable<string> values)
         {
-            if (!keys.Any())
+            if (keys == null || values == null || !keys.Any() || !values.Any())
             {
                 return FormatServerMessage(message);
             }
@@ -360,7 +361,7 @@ namespace Barotrauma
             );
         }
 
-        static readonly string[] genderPronounVariables = new string[] {
+        static readonly string[] genderPronounVariables = {
             "[genderpronoun]",
             "[genderpronounpossessive]",
             "[genderpronounreflexive]",
@@ -369,7 +370,7 @@ namespace Barotrauma
             "[Genderpronounreflexive]"
         };
 
-        static readonly string[] genderPronounMaleValues = new string[] {
+        static readonly string[] genderPronounMaleValues = {
              "PronounMaleLowercase",
              "PronounPossessiveMaleLowercase",
              "PronounReflexiveMaleLowercase",
@@ -378,7 +379,7 @@ namespace Barotrauma
              "PronounReflexiveMale"
         };
 
-        static readonly string[] genderPronounFemaleValues = new string[] {
+        static readonly string[] genderPronounFemaleValues = {
              "PronounFemaleLowercase",
              "PronounPossessiveFemaleLowercase",
              "PronounReflexiveFemaleLowercase",
@@ -392,10 +393,21 @@ namespace Barotrauma
             return FormatServerMessage(message, keys.Concat(genderPronounVariables), values.Concat(gender == Gender.Male ? genderPronounMaleValues : genderPronounFemaleValues));
         }
 
-        static readonly Regex reReplacedMessage = new Regex(@"^(?<variable>[\[\].A-Za-z0-9_]+?)=(?<message>.*)$", RegexOptions.Compiled);
+        public static string JoinServerMessages(string separator, string[] parts, string namePrefix = "part.")
+        {
+            return string.Join("/", parts.Select((part, index) => $"[{namePrefix}{index}]={part}"), string.Join(separator, parts.Select((part,index) => $"[{namePrefix}{index}]")));
+        }
+
+        static readonly Regex reFormattedMessage = new Regex(@"^(?<variable>[\[\].a-z0-9_]+?)=(?<formatter>[a-z0-9_]+?)\((?<value>.+?)\)", RegexOptions.Compiled|RegexOptions.IgnoreCase);
+        static readonly Regex reReplacedMessage = new Regex(@"^(?<variable>[\[\].a-z0-9_]+?)=(?<message>.*)$", RegexOptions.Compiled|RegexOptions.IgnoreCase);
+        static readonly Dictionary<string, Func<string, string>> messageFormatters = new Dictionary<string, Func<string, string>>
+        {
+            { "duration", secondsValue => double.TryParse(secondsValue, out var seconds) ? $"{TimeSpan.FromSeconds(seconds):g}" : null }
+        };
 
         // Format: ServerMessage.Identifier1/ServerMessage.Indentifier2~[variable1]=value~[variable2]=value
         // Also: replacement=ServerMessage.Identifier1~[variable1]=value/ServerMessage.Identifier2~[variable2]=replacement
+        // And: replacement=formatter(value)
         public static string GetServerMessage(string serverMessage)
         {
             if (!textPacks.ContainsKey(Language))
@@ -438,12 +450,29 @@ namespace Barotrauma
                     }
                     else
                     {
-                        var match = reReplacedMessage.Match(messages[i]);
                         string messageVariable = null;
-                        if (match.Success)
+                        var matchFormatted = reFormattedMessage.Match(messages[i]);
+                        if (matchFormatted.Success)
                         {
-                            messageVariable = match.Groups["variable"].ToString();
-                            messages[i] = match.Groups["message"].ToString();
+                            var formatter = matchFormatted.Groups["formatter"].ToString();
+                            if (messageFormatters.TryGetValue(formatter, out var formatterFn))
+                            {
+                                var formattedValue = formatterFn(matchFormatted.Groups["value"].ToString());
+                                if (formattedValue != null)
+                                {
+                                    messageVariable = matchFormatted.Groups["variable"].ToString();
+                                    messages[i] = formattedValue;
+                                }
+                            }
+                        }
+                        if (messageVariable == null)
+                        {
+                            var matchReplaced = reReplacedMessage.Match(messages[i]);
+                            if (matchReplaced.Success)
+                            {
+                                messageVariable = matchReplaced.Groups["variable"].ToString();
+                                messages[i] = matchReplaced.Groups["message"].ToString();
+                            }
                         }
 
                         foreach (var replacedMessage in replacedMessages)
@@ -542,7 +571,7 @@ namespace Barotrauma
             }
             return string.Join(separator, texts);
         }
-        
+
         public static string EnsureUTF8(string text)
         {
             byte[] bytes = Encoding.Default.GetBytes(text);
@@ -626,7 +655,7 @@ namespace Barotrauma
                     .Replace("[Genderpronounreflexive]",   Get("PronounReflexiveFemale"));
             }
         }
-        
+
         static Regex isCJK = new Regex(
             @"\p{IsHangulJamo}|" +
             @"\p{IsCJKRadicalsSupplement}|" +
@@ -643,6 +672,7 @@ namespace Barotrauma
         /// </summary>
         public static bool IsCJK(string text)
         {
+            if (string.IsNullOrEmpty(text)) { return false; }
             return isCJK.IsMatch(text);
         }
 

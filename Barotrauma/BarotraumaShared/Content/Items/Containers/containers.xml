@@ -66,7 +66,7 @@
     </ItemContainer>
   </Item>
   <Item name="Diving Suit Locker" identifier="divingsuitlocker" pickdistance="50" tags="divingsuitcontainerwindow" scale="0.5">
-    <Sprite texture="DivingSuitLocker2.png" depth="0.84" sourcerect="128,0,99,254" origin="0.5,0.5" />
+    <Sprite texture="Lockers.png" depth="0.84" sourcerect="128,686,99,254" origin="0.5,0.5" />
     <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="0,0" iteminterval="0,0" canbeselected="true" autointeractwithcontained="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.2,0.3" anchor="Center" style="ItemUI" />
       <Containable identifiers="divingsuit" />
@@ -95,7 +95,7 @@
     </ItemContainer>
   </Item>
   <Item name="Oxygen Tank Shelf" identifier="oxygentankshelf2" nameidentifier="oxygentankshelf" pickdistance="50" scale="0.5">
-    <Sprite name="Diving Suit Locker Small" texture="Content/Items/Containers/DivingSuitLocker2.png" sourcerect="0,255,99,83" depth="0.84" origin="0.5,0.5" />
+    <Sprite name="Diving Suit Locker Small" texture="Content/Items/Containers/Lockers.png" sourcerect="0,941,99,83" depth="0.84" origin="0.5,0.5" />
     <ItemContainer hideitems="false" drawinventory="true" capacity="3" slotsperrow="3" itempos="27,-42" iteminterval="22.5,0" itemrotation="0" canbeselected="true" containedspritedepth="0.83" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.2,0.3" anchor="Center" style="ItemUI" />
       <Containable identifiers="oxygentank,weldingfueltank,oxygenitetank,incendiumfueltank" />
@@ -164,11 +164,28 @@
     </ItemContainer>
   </Item>
   <Item name="Weapon Holder" identifier="weaponholder" scale="0.5">
-    <Sprite texture="containers.png" depth="0.85" sourcerect="109,271,88,88" canflipx="false" origin="0.5,0.5" />
+    <Sprite texture="containers.png" depth="0.85" sourcerect="109,271,88,88" canflipx="false" origin="0.5,0.5"/>
     <DecorativeSprite texture="containers.png" depth="0.5" sourcerect="109,188,124,33" canflipx="false" origin="0.5,0.5" />
     <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="46,-47" iteminterval="0,0" itemrotation="90" canbeselected="true" autointeractwithcontained="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
       <Containable identifiers="weapon" />
     </ItemContainer>
   </Item>
+  
+  <Item name="Loose Panel" identifier="loosepanel" scale="0.65" interactdistance="10">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="961,33,128,127" depth="0.885" origin="0.5339039,0.4379086" canflipx="false"/>
+    <ItemContainer capacity="1" slotsperrow="1" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
+      <Containable identifiers="smallitem,mediumitem" />
+    </ItemContainer>
+  </Item>
+
+  <Item name="Loose Panel" identifier="loosepanel2" scale="0.74" interactdistance="10">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="1228,908,76,74" depth="0.885" origin="0.5,0.5" canflipx="false"/>
+    <ItemContainer capacity="1" slotsperrow="1" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
+      <Containable identifiers="smallitem,mediumitem" />
+    </ItemContainer>
+  </Item>
+  
 </Items>

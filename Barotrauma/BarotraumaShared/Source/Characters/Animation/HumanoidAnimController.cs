@@ -809,10 +809,11 @@ namespace Barotrauma
                     //get the elbow to a neutral rotation
                     if (Math.Abs(hand.body.AngularVelocity) < 10.0f)
                     {
-                        LimbJoint elbow =
-                        GetJointBetweenLimbs(armType, hand.type) ??
-                        GetJointBetweenLimbs(armType, foreArmType);
-                        hand.body.ApplyTorque(MathHelper.Clamp(-elbow.JointAngle, -MathHelper.PiOver2, MathHelper.PiOver2) * hand.Mass * 10.0f);
+                        LimbJoint elbow = GetJointBetweenLimbs(armType, hand.type) ?? GetJointBetweenLimbs(armType, foreArmType);
+                        if (elbow != null)
+                        {
+                            hand.body.ApplyTorque(MathHelper.Clamp(-elbow.JointAngle, -MathHelper.PiOver2, MathHelper.PiOver2) * hand.Mass * 10.0f);
+                        }
                     }
                 }
             }
@@ -1848,7 +1849,11 @@ namespace Barotrauma
             }
             var torso = GetLimb(LimbType.Torso);
             var waist = GetJointBetweenLimbs(LimbType.Waist, upperLeg.type);
-            Vector2 waistPos = waist.LimbA == upperLeg ? waist.WorldAnchorA : waist.WorldAnchorB;
+            Vector2 waistPos = Vector2.Zero;
+            if (waist != null)
+            {
+                waistPos = waist.LimbA == upperLeg ? waist.WorldAnchorA : waist.WorldAnchorB;
+            }
 
             //distance from waist joint to the target position
             float c = Vector2.Distance(pos, waistPos);

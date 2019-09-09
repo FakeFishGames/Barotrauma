@@ -86,7 +86,7 @@
     <Sprite texture="Content/Items/Jobgear/AlienGear.png" sourcerect="9,318,172,47" depth="0.55" origin="0.44,0.6" />
     <Body radius="15" width="100" density="50" />
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="30,5" handle1="-20,0" holdangle="65" reload="1.0" range="50" combatpriority="10" msg="ItemMsgPickUpSelect">
-      <Attack structuredamage="5" stun="0.2">
+      <Attack structuredamage="5" stun="0.2" targetimpulse="15">
         <Affliction identifier="internaldamage" strength="5" />
         <Affliction identifier="bleeding" strength="10" />
         <Sound file="Content/Items/Weapons/Smack1.ogg" range="800" />

@@ -71,7 +71,7 @@ namespace Barotrauma.Items.Components
             get { return connections; }
         }
 
-        [Serialize(5000.0f, false)]
+        [Serialize(5000.0f, false, description: "The maximum distance the wire can extend (in pixels).")]
         public float MaxLength
         {
             get;

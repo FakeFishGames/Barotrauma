@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Character name="Hammerhead" humanoid="false">
+<Character speciesname="Hammerhead" humanoid="false">
   <ragdolls />
   <animations />
 
@@ -12,9 +12,9 @@
     vitality="250"
     doesbleed="true"/>
 
-  <sound file="Content/Characters/Hammerhead/HAMMERHEAD_idle1.ogg" state="None" range="5000" />
-  <sound file="Content/Characters/Hammerhead/HAMMERHEAD_idle2.ogg" state="None" range="6000" />
-  <sound file="Content/Characters/Hammerhead/HAMMERHEAD_idle3.ogg" state="None" range="6000" />
+  <sound file="Content/Characters/Hammerhead/HAMMERHEAD_idle1.ogg" state="Idle" range="5000" />
+  <sound file="Content/Characters/Hammerhead/HAMMERHEAD_idle2.ogg" state="Idle" range="6000" />
+  <sound file="Content/Characters/Hammerhead/HAMMERHEAD_idle3.ogg" state="Idle" range="6000" />
 
   <sound file="Content/Characters/Hammerhead/HAMMERHEAD_attack1.ogg" state="Attack" range="4000" />
   <sound file="Content/Characters/Hammerhead/HAMMERHEAD_attack2.ogg" state="Attack" range="5000" />

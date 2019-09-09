@@ -462,12 +462,12 @@
   <debugconsolehelptext>Debug console—press F3 to open/close; enter help for a list of available commands</debugconsolehelptext>
 
   <!-- Editor -->
-  
+
   <!-- Links -->
   <editordisclaimerwikiurl>https://barotrauma.gamepedia.com/Barotrauma_Wiki</editordisclaimerwikiurl>
   <editordisclaimerdiscordurl>https://discordapp.com/invite/xjeSzWU</editordisclaimerdiscordurl>
   <editordisclaimerforumurl>https://undertowgames.com/forum/viewforum.php?f=17</editordisclaimerforumurl>
-  
+
   <!-- Structure -->
   <entityname.hull>Hull</entityname.hull>
   <entitydescription.hull>Hulls determine which parts are considered to be 'inside the sub'. Generally every room should be enclosed by a hull.</entitydescription.hull>
@@ -842,13 +842,14 @@
   <leveleditorlevelobjtexturenotfound>Could not find the selected texture file.</leveleditorlevelobjtexturenotfound>
 
   <!-- Character editor -->
-  <charactereditor.contentpackagenameinuse>A content package with the same name already exists. Please choose another name or select the existing content package from the dropdown if you want to add the character to it.</charactereditor.contentpackagenameinuse>
   <charactereditor.creatingnewjoint>Creating a new joint</charactereditor.creatingnewjoint>
+  <charactereditor.selectanchor1pos>Select the anchor position for the joint</charactereditor.selectanchor1pos>
+  <charactereditor.selectlimbtoconnect>Select another limb to connect it with the joint</charactereditor.selectlimbtoconnect>
   <charactereditor.frozen>Frozen</charactereditor.frozen>
-  <charactereditor.animationtestposeenabled>Animation Test Pose Enabled</charactereditor.animationtestposeenabled>
+  <charactereditor.spriteorientation>Sprite Orientation</charactereditor.spriteorientation>
   <charactereditor.spritesheetorientation>Spritesheet Orientation</charactereditor.spritesheetorientation>
   <charactereditor.cantaddjointsnolimbelements>Cannot add joints, because no limb elements were found!</charactereditor.cantaddjointsnolimbelements>
-  <charactereditor.humanoidlimbdeletiondisabled>Deleting limbs from a humanoid is currently disabled due to crashing</charactereditor.humanoidlimbdeletiondisabled>
+  <charactereditor.humanoidlimbdeletiondisabled>Deleting limbs from a humanoid is currently disabled to prevent crashing</charactereditor.humanoidlimbdeletiondisabled>
   <charactereditor.tryingtospawncharacter>Trying to spawn [config]</charactereditor.tryingtospawncharacter>
   <charactereditor.nocontentpackageselected>No content package selected!</charactereditor.nocontentpackageselected>
   <charactereditor.contentpackagesaved>Content package saved at: [path]</charactereditor.contentpackagesaved>
@@ -871,28 +872,31 @@
   <charactereditor.nextcharacter>Next</charactereditor.nextcharacter>
   <charactereditor.showparameters>Parameters</charactereditor.showparameters>
   <charactereditor.showspritesheet>Spritesheet</charactereditor.showspritesheet>
-  <charactereditor.showragdoll>Ragdoll</charactereditor.showragdoll>
-  <charactereditor.editanimations>ANIMATIONS</charactereditor.editanimations>
-  <charactereditor.editlimbs>LIMBS</charactereditor.editlimbs>
-  <charactereditor.editjoints>JOINTS</charactereditor.editjoints>
+  <charactereditor.drawskeleton>Skeleton</charactereditor.drawskeleton>
+  <charactereditor.enablelights>Lights</charactereditor.enablelights>
+  <charactereditor.drawdamagemodifiers>Damage Modifiers</charactereditor.drawdamagemodifiers>
+  <charactereditor.editcharacter>CHARACTER [1]</charactereditor.editcharacter>
+  <charactereditor.editragdoll>RAGDOLL [2]</charactereditor.editragdoll>
+  <charactereditor.editlimbs>LIMBS [3]</charactereditor.editlimbs>
+  <charactereditor.editjoints>JOINTS [4]</charactereditor.editjoints>
+  <charactereditor.editanimations>ANIMATIONS [5]</charactereditor.editanimations>
   <charactereditor.editiktargets>IK Targets</charactereditor.editiktargets>
-  <charactereditor.freeze>Freeze</charactereditor.freeze>
+  <charactereditor.freeze>Freeze [F]</charactereditor.freeze>
   <charactereditor.autofreeze>Auto Freeze</charactereditor.autofreeze>
+  <charactereditor.holdposition>Hold Position [H]</charactereditor.holdposition>
+  <charactereditor.holdingposition>Holding Position</charactereditor.holdingposition>
   <charactereditor.limbpairediting>Limb Pair Editing</charactereditor.limbpairediting>
-  <charactereditor.animationtestpose>Animation Test Pose</charactereditor.animationtestpose>
+  <charactereditor.animationtestpose>Test Pose [X]</charactereditor.animationtestpose>
+  <charactereditor.animationtestposeenabled>Test Pose Enabled</charactereditor.animationtestposeenabled>
   <charactereditor.automove>Auto Move</charactereditor.automove>
   <charactereditor.followcursor>Follow Cursor</charactereditor.followcursor>
   <charactereditor.showcolliders>Colliders</charactereditor.showcolliders>
   <charactereditor.editbackgroundcolor>Edit Background Color</charactereditor.editbackgroundcolor>
-  <charactereditor.quicksaveanimations>Quick Save Animations</charactereditor.quicksaveanimations>
-  <charactereditor.canteditvanillacontent>Can't edit Vanilla content!</charactereditor.canteditvanillacontent>
+  <charactereditor.savebutton>Save All</charactereditor.savebutton>
   <charactereditor.allanimationssaved>All animations saved</charactereditor.allanimationssaved>
-  <charactereditor.quicksaveragdoll>Quick Save Ragdoll</charactereditor.quicksaveragdoll>
   <charactereditor.ragdollsavedto>Ragdoll saved to [path]</charactereditor.ragdollsavedto>
-  <charactereditor.resetanimations>Reset Animations</charactereditor.resetanimations>
-  <charactereditor.allanimationsreset>All animations reset</charactereditor.allanimationsreset>
-  <charactereditor.resetragdoll>Reset Ragdoll</charactereditor.resetragdoll>
-  <charactereditor.ragdollreset>Ragdoll reset</charactereditor.ragdollreset>
+  <charactereditor.charactersavedto>Character config file saved to [path]</charactereditor.charactersavedto>
+  <charactereditor.resetbutton>Reset</charactereditor.resetbutton>
   <charactereditor.saveragdoll>Save Ragdoll</charactereditor.saveragdoll>
   <charactereditor.providefilename>Please provide a name for the file</charactereditor.providefilename>
   <charactereditor.loadragdoll>Load Ragdoll</charactereditor.loadragdoll>
@@ -908,11 +912,12 @@
   <charactereditor.animationoftypeloaded>Animation of type [type] loaded from [file]</charactereditor.animationoftypeloaded>
   <charactereditor.reloadtextures>Reload Textures</charactereditor.reloadtextures>
   <charactereditor.recreateragdoll>Recreate Ragdoll</charactereditor.recreateragdoll>
-  <charactereditor.recreateragdolltooltip>Many of the parameters requires recreation of the ragdoll. If adjusting the parameter doesn't seem to have effect, click this button.</charactereditor.recreateragdolltooltip>
+  <charactereditor.recreateragdolltooltip>Many of the parameters requires recreating the ragdoll. If adjusting the parameter doesn't seem to have effect, click this button.</charactereditor.recreateragdolltooltip>
   <charactereditor.createnewcharacter>Create New Character</charactereditor.createnewcharacter>
+  <charactereditor.copycharacter>Copy Character</charactereditor.copycharacter>
+  <charactereditor.copycharactertooltip>Create a copy of the current character</charactereditor.copycharactertooltip>
   <charactereditor.nofieldforparameterfound>No field for [parameter] found!</charactereditor.nofieldforparameterfound>
-  <charactereditor.selecttargetlimbforjointend>Left click to select the target limb for the other end of the joint.</charactereditor.selecttargetlimbforjointend>
-  <charactereditor.holdleftalttoadjustcyclespeed>Hold Left Alt to adjust cycle speed</charactereditor.holdleftalttoadjustcyclespeed>
+  <charactereditor.holdleftalttoadjustcyclespeed>Hold "Left Alt" to adjust the cycle speed</charactereditor.holdleftalttoadjustcyclespeed>
   <charactereditor.cyclespeed>Cycle Speed</charactereditor.cyclespeed>
   <charactereditor.movementspeed>Movement Speed</charactereditor.movementspeed>
   <charactereditor.headangle>Head Angle</charactereditor.headangle>
@@ -930,17 +935,18 @@
   <charactereditor.legmovementspeed>Leg Movement Speed</charactereditor.legmovementspeed>
   <charactereditor.legmovementamount>Leg Movement Amount</charactereditor.legmovementamount>
   <charactereditor.handmovementamount>Hand Movement Amount</charactereditor.handmovementamount>
-  <charactereditor.holdleftalttomanipulatejoint>Hold Left Alt to manipulate the other end of the joint</charactereditor.holdleftalttomanipulatejoint>
+  <charactereditor.holdleftalttomanipulatejoint>Hold "Left Alt" to manipulate the other end of the joint</charactereditor.holdleftalttomanipulatejoint>
   <charactereditor.origin>Origin</charactereditor.origin>
   <charactereditor.position>Position: [coordinates]</charactereditor.position>
   <charactereditor.size>Size</charactereditor.size>
   <charactereditor.upperlimit>Upper Limit</charactereditor.upperlimit>
   <charactereditor.lowerlimit>Lower Limit</charactereditor.lowerlimit>
   <charactereditor.defaultname>Character X</charactereditor.defaultname>
-  <charactereditor.ishumanoid>Is a Humanoid?</charactereditor.ishumanoid>
-  <charactereditor.canentersubmarines>Can Enter Submarines (and can walk)?</charactereditor.canentersubmarines>
+  <charactereditor.ishumanoid>Is Humanoid?</charactereditor.ishumanoid>
+  <charactereditor.canentersubmarines>Can Enter Submarines and Walk?</charactereditor.canentersubmarines>
   <charactereditor.configfileoutput>Config File Output</charactereditor.configfileoutput>
   <charactereditor.texturepath>Texture Path</charactereditor.texturepath>
+  <charactereditor.selecttexture>Select Texture</charactereditor.selecttexture>
   <charactereditor.contentpackagename>Content Package Name</charactereditor.contentpackagename>
   <charactereditor.texturedoesnotexist>The texture file does not exist!</charactereditor.texturedoesnotexist>
   <charactereditor.defineragdoll>Define Ragdoll</charactereditor.defineragdoll>
@@ -950,8 +956,10 @@
   <charactereditor.joints>Joints</charactereditor.joints>
   <charactereditor.joint>Joint</charactereditor.joint>
   <charactereditor.loadhtml>Load HTML</charactereditor.loadhtml>
-  <charactereditor.htmlpath>HTML Path</charactereditor.htmlpath>
-  <charactereditor.multipletorsosdefined>You need to define one and only one limb as Torso!</charactereditor.multipletorsosdefined>
+  <charactereditor.htmlpath>Path to the HTML file...</charactereditor.htmlpath>
+  <charactereditor.selectfile>Select File</charactereditor.selectfile>
+  <charactereditor.missingtorsoorhead>You need to define at least one limb as "Torso" or "Head"!</charactereditor.missingtorsoorhead>
+  <charactereditor.missinglimbtype>You need to define one and only one limb as "[limbtype]"!</charactereditor.missinglimbtype>
   <charactereditor.charactercreated>Character [name] Created</charactereditor.charactercreated>
   <charactereditor.limbtype>Limb Type</charactereditor.limbtype>
   <charactereditor.sourcerectangle>Source Rectangle</charactereditor.sourcerectangle>
@@ -960,15 +968,36 @@
   <charactereditor.limbwithindexanchor>Limb [index] Anchor</charactereditor.limbwithindexanchor>
   <charactereditor.failedtoreadhtml>Character Editor Screen: Failed to read HTML at [path]</charactereditor.failedtoreadhtml>
   <charactereditor.multipleitemswithsamehierarchy>Multiple items with the same hierarchy [hierarchy] found ([name]). Cannot continue.</charactereditor.multipleitemswithsamehierarchy>
-  <charactereditor.cannoteditvanillacharacters>Cannot edit the characters defined in the Vanilla content package!</charactereditor.cannoteditvanillacharacters>
-  <charactereditor.existingcharacterfoundreplaceverification>An existing character with the same name was found. Do you want to replace it?</charactereditor.existingcharacterfoundreplaceverification>
+  <charactereditor.cannoteditvanillacharacters>Cannot edit the characters defined in the 'Vanilla' content package! You can create a copy of the character (in another content package) should you want to edit it.</charactereditor.cannoteditvanillacharacters>
+  <charactereditor.existingcharacterfoundreplaceverification>An existing character with the same name was found in the same content package. Do you want to replace it (the original files will be lost)?</charactereditor.existingcharacterfoundreplaceverification>
+  <charactereditor.existingcharacterfoundoverrideverification>An existing character with the same name was found in another content package. Do you want to create an override of it (the original files will stay intact)?</charactereditor.existingcharacterfoundoverrideverification>
   <charactereditor.existingcharacterfound>An existing character with the same name was found.</charactereditor.existingcharacterfound>
-  <charactereditor.modespanel>Modes</charactereditor.modespanel>
+  <charactereditor.modespanel>Edit</charactereditor.modespanel>
   <charactereditor.fileeditpanel>Files</charactereditor.fileeditpanel>
   <charactereditor.optionspanel>Options</charactereditor.optionspanel>
   <charactereditor.characterpanel>Character</charactereditor.characterpanel>
   <charactereditor.toolspanel>Tools</charactereditor.toolspanel>
+  <charactereditor.minormodestitle>Show</charactereditor.minormodestitle>
   <charactereditor.addmultiplelimbsbutton>Add Multiple</charactereditor.addmultiplelimbsbutton>
+  <charactereditor.contentpackagenameinuse>A content package with the same name already exists. Please choose another name or select the existing content package from the dropdown if you want to add the character to it.</charactereditor.contentpackagenameinuse>
+  <charactereditor.addaitarget>Add Target</charactereditor.addaitarget>
+  <charactereditor.addbloodemitter>Add Blood Emitter</charactereditor.addbloodemitter>
+  <charactereditor.addgibemitter>Add Gib Emitter</charactereditor.addgibemitter>
+  <charactereditor.addsound>Add Sound</charactereditor.addsound>
+  <charactereditor.addlightsource>Add Light</charactereditor.addlightsource>
+  <charactereditor.addattack>Add Attack</charactereditor.addattack>
+  <charactereditor.addaffliction>Add Affliction</charactereditor.addaffliction>
+  <charactereditor.adddamagemodifier>Add Damage Modifier</charactereditor.adddamagemodifier>
+  <charactereditor.addinventory>Add Inventory</charactereditor.addinventory>
+  <charactereditor.addinventoryitem>Add Inventory Item</charactereditor.addinventoryitem>
+  <charactereditor.selected>Selected</charactereditor.selected>
+  <charactereditor.duplicatelimb>Duplicate Limb</charactereditor.duplicatelimb>
+  <charactereditor.deleteselected>Delete Selected</charactereditor.deleteselected>
+  <charactereditor.createjoint>Create Joint</charactereditor.createjoint>
+  <charactereditor.createlimb>Create Limb</charactereditor.createlimb>
+  <charactereditor.drawlimbonspritesheet>Draw the limb on the spritesheet</charactereditor.drawlimbonspritesheet>
+  <charactereditor.onlyshowselectedlimbs>Show Only Selected Limbs</charactereditor.onlyshowselectedlimbs>
+  <charactereditor.newcontentpackage>New Content Package</charactereditor.newcontentpackage>
 
   <!-- Submarine editor -->
   <items>Items</items>
@@ -1043,7 +1072,7 @@
   <!-- Entity editor -->
   <stringpropertytranslate>This text will be translated to [translation].</stringpropertytranslate>
   <stringpropertycannottranslate>This text will not be translated - text with the tag [tag] not found in the language files.</stringpropertycannottranslate>
-  
+
   <!-- Characters -->
   <MyCharacter>My character</MyCharacter>
   <character.carrier>Carrier</character.carrier>
@@ -3008,7 +3037,7 @@
   <!-- Room 3 -->
   <mechanic.welding>Leaks</mechanic.welding>
   <mechanic.weldingobjective>Repair leak</mechanic.weldingobjective>
-  <mechanic.weldingtext>To repair leaks in hulls, equip the welding tool by double-clicking on it. Some items, like the welding tool, require two free hands to use. Unequip or drop an item by double-clicking it while it is in use.\n\nWhen welding tool is equipped, hold {0} to aim. While aiming, hold {1} to weld.</mechanic.weldingtext>
+  <!--<mechanic.weldingtext>Equip the welding tool and the diving mask you just retrieved from the locker by double-clicking on them. \n\nWith the welding tool you are able to repair leaks in hulls and the diving mask will provide you with a steady supply of oxygen while underwater. Some items, like the welding tool, require two free hands to use. Unequip or drop an item by double-clicking it while it is in use.\n\nWhen welding tool is equipped, hold {0} to aim. While aiming, hold {1} to weld.</mechanic.weldingtext>-->
   <mechanic.drain>Water pumps</mechanic.drain>
   <mechanic.drainobjective>Turn on nearby pump to drain excess water</mechanic.drainobjective>
   <mechanic.draintext>When the sub is flooded, use pumps to drain excess water. Usually pumps receive signals from nearby water detectors or navigation terminals, but some can be operated manually. This pump is programmed to only pump water out. Turn it on by interacting with it ({0}) and flip the switch to the “on” position.</mechanic.draintext>
@@ -3019,7 +3048,7 @@
   <mechanic.deconstructtext>The fabricator is a device that can take different kinds of materials and turn them into useful items. If you don't have enough materials for fabrication, you can break down items in the deconstructor. Just drag the item into one of the top slots and press the “Deconstruct” button.\n\nIn this case, fabricating a fire extinguisher requires aluminum and sodium. Sodium is readily available, but aluminum must be deconstructed from oxygen tanks.</mechanic.deconstructtext>
   <mechanic.fabricate>Crafting, part 2</mechanic.fabricate>
   <mechanic.fabricateobjective>Fabricate a fire extinguisher</mechanic.fabricateobjective>
-  <mechanic.fabricatetext>Now that we have all of the required materials, we can fabricate a fire extinguisher. Find it in the list, load the fabricator with materials and press the button to start fabricating.\n\nWhen done, the fabricated item can be found in the fabricator’s output slot.</mechanic.fabricatetext>
+  <!--<mechanic.fabricatetext>Now that we have all of the required materials, we can fabricate a fire extinguisher. Find it in the list, load the fabricator with materials and press the button to start fabricating.\n\nWhen done, the fabricated item can be found in the fabricator’s output slot. As the fire extinguisher is an item that requires both hands, equip it by double-clicking on the item.</mechanic.fabricatetext>-->
 
   <!-- Room 5 -->
   <mechanic.extinguisher>Fires</mechanic.extinguisher>
@@ -3443,9 +3472,47 @@
   <voipattenuationtooltip>Lowers the game's volume when players are speaking.</voipattenuationtooltip>
   <roundsummaryroundhasended>The round has ended.</roundsummaryroundhasended>
   <clientpermission.karmaimmunity>Karma immunity</clientpermission.karmaimmunity>
+
   <karmakicked>You have been kicked from the server because your Karma decreased below [banthreshold].</karmakicked>
   <karma.kicksbeforeban>Number of kicks before a ban</karma.kicksbeforeban>
   <karma.kicksbeforebantooltip>If the player has been kicked from the server due to low karma this many times, they will be banned if the karma drops below the kick/ban threshold again. A value of 0 means players will always get banned if their karma drops below the threshold.</karma.kicksbeforebantooltip>
+  <traitorgoalreachdistancefromsub>Reach distance of [distance] from the sub.</traitorgoalreachdistancefromsub>
+  <traitorgoalisoptionalinfotext>Optional: [infotext]</traitorgoalisoptionalinfotext>
+  <traitorgoalwithtimelimitinfotext>[infotext] Complete this goal within [timelimit].</traitorgoalwithtimelimitinfotext>
+  <traitorgoalwithdurationinfotext>[infotext] The goal must be completed for [duration] seconds.</traitorgoalwithdurationinfotext>
+  <traitorgoalwithcumulativedurationinfotext>[infotext] The goal must be completed for a total of [duration] seconds.</traitorgoalwithcumulativedurationinfotext>
+  <traitorgoalwaitfortraitorsinfotext>Wait for [remaining] of [count] traitors to complete their tasks.</traitorgoalwaitfortraitorsinfotext>
+  <failed>Failed</failed>
+  <pausemenuquitverificationeditor>Are you sure you want to return to the main menu? All your unsaved progress will be lost.</pausemenuquitverificationeditor>
+  <mapentitycategory.decorative>Decorative</mapentitycategory.decorative>
+  <mapentitycategory.wall>Wall</mapentitycategory.wall>
+  <karma.resetkarmabetweenrounds>Reset karma between rounds</karma.resetkarmabetweenrounds>
+  <enablesplashscreen>Enable splash screen</enablesplashscreen>
+  
+  <servertag.casual>Casual</servertag.casual>
+  <servertagdescription.casual>Having fun is more important than completing the objective. A good choice for new players.</servertagdescription.casual>
+  <servertag.serious>Serious</servertag.serious>
+  <servertagdescription.serious>The crew should focus on working together efficiently and completing their objective. No unnecessary messing around.</servertagdescription.serious>
+  <servertag.roleplaying>Roleplaying</servertag.roleplaying>
+  <servertagdescription.roleplaying>The crew should aim to act like a real submarine crew. Chain of command is important, as is taking care of your responsibilities and following orders. Speaking out-of-character should be avoided when a round is running.</servertagdescription.roleplaying>
+  <servertag.somethingelse>Something else</servertag.somethingelse>
+  <servertagdescription.somethingelse>Gameplay differs significantly from the usual Barotrauma gameplay. Modded servers, very unconventional subs, battle royale rounds, shuttle racing, deathrun maps... Anything goes!</servertagdescription.somethingelse>
+  <servertag.rampage>Rampage</servertag.rampage>
+  <servertagdescription.rampage>Get ready to fight for your life! A server heavily geared towards combat. This can mean player-versus-player combat, PvE or both — see the server description before you start wrenching your crewmates' faces.</servertagdescription.rampage>
+
+  <servertag.modded>Modded</servertag.modded>
+  <servertagdescription.modded>One or more mods enabled. Installing mods from the Workshop may be required to join the server.</servertagdescription.modded>
+  <servertag.247>24/7</servertag.247>
+  <servertagdescription.247>Runs around the clock.</servertagdescription.247>
+  <servertag.nofriendlyfire>Friendly fire off</servertag.nofriendlyfire>
+  <servertagdescription.nofriendlyfire>Causing damage to your crew mates is disabled.</servertagdescription.nofriendlyfire>
+  <servertag.voipdisabled>Voice chat disabled</servertag.voipdisabled>
+  <servertagdescription.voipdisabled>Voice chat is disabled.</servertagdescription.voipdisabled>
+  <servertag.karmadisabled>Karma disabled</servertag.karmadisabled>
+  <servertagdescription.karmadisabled>Karma system is disabled.</servertagdescription.karmadisabled>
+  <restartrequiredgeneric>You need to restart the game for the changes to take effect.</restartrequiredgeneric>
+  <invalidcontentpackage>Content package '[packagename]' cannot be loaded.</invalidcontentpackage>
+  <xmlfileinvalid>File '[filepath]' is not a valid XML file ([errormessage]).</xmlfileinvalid>
 
   <!-- Changed values as of 13th of August -->
   <traitorgoaldestroyitems>Dispose of at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>
@@ -3453,4 +3520,6 @@
   <karma.kickbanthresholdtooltip>The players whose karma decrease below this threshold get automatically kicked and/or banned from the server (depending on the kick/ban settings below).</karma.kickbanthresholdtooltip>
   <missiondescription.killcrawlerswarm1>A small swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew that can neutralize it.</missiondescription.killcrawlerswarm1>
   <missiondescription.killcrawlerswarm2>A large swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew that can neutralize it.</missiondescription.killcrawlerswarm2>
+  <mechanic.weldingtext>Equip the welding tool and diving mask you just retrieved from the locker by double-clicking on them. \n\nWith the welding tool you are able to repair leaks in hulls, and the diving mask will provide you with a steady supply of oxygen while underwater. \n\nSome items, like the welding tool, require two free hands to use. Unequip or drop an item by double-clicking it while it is in use.\n\nWhen welding tool is equipped, hold {0} to aim. While aiming, hold {1} to weld.</mechanic.weldingtext>
+  <mechanic.fabricatetext>Now that we have all of the required materials, we can fabricate a fire extinguisher. Find it in the list, load the fabricator with materials and press the button to start fabricating.\n\nWhen done, the fabricated item can be found in the fabricator’s output slot. As the fire extinguisher is an item that requires the use of both hands, equip the item by double-clicking on it.</mechanic.fabricatetext>
 </infotexts>

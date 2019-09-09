@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Xml.Linq;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
@@ -61,10 +62,34 @@ namespace Barotrauma
             foreach (string file in files)
             {
                 XDocument doc = XMLExtensions.TryLoadXml(file);
-                if (doc?.Root == null) continue;
-
-                foreach (XElement element in doc.Root.Elements())
+                if (doc == null) { continue; }
+                bool allowOverride = false;
+                var mainElement = doc.Root;
+                if (mainElement.IsOverride())
                 {
+                    allowOverride = true;
+                    mainElement = mainElement.FirstElement();
+                }
+
+                foreach (XElement sourceElement in mainElement.Elements())
+                {
+                    var element = sourceElement.IsOverride() ? sourceElement.FirstElement() : sourceElement;
+                    var identifier = element.GetAttributeString("identifier", string.Empty);
+                    var duplicate = List.Find(m => m.Identifier == identifier);
+                    if (duplicate != null)
+                    {
+                        if (allowOverride || sourceElement.IsOverride())
+                        {
+                            DebugConsole.NewMessage($"Overriding a mission with the identifier '{identifier}' using the file '{file}'", Color.Yellow);
+                            List.Remove(duplicate);
+                        }
+                        else
+                        {
+                            DebugConsole.ThrowError($"Duplicate mission found with the identifier '{identifier}' in file '{file}'! Add <override></override> tags as the parent of the mission definition to allow overriding.");
+                            // TODO: Don't allow adding duplicates when the issue with multiple missions is solved.
+                            //continue;
+                        }
+                    }
                     List.Add(new MissionPrefab(element));
                 }
             }

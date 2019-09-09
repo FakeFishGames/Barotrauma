@@ -23,21 +23,21 @@ namespace Barotrauma.Items.Components
 
         private Queue<DelayedSignal> signalQueue;
         
-        [InGameEditable(MinValueFloat = 0.0f, MaxValueFloat = 60.0f, DecimalCount = 2), Serialize(1.0f, true)]
+        [InGameEditable(MinValueFloat = 0.0f, MaxValueFloat = 60.0f, DecimalCount = 2), Serialize(1.0f, true, description: "How long the item delays the signals (in seconds).")]
         public float Delay
         {
             get;
             set;
         }
 
-        [InGameEditable(ToolTip = "Should the component discard previously received signals when a new one is received."), Serialize(false, true)]
+        [InGameEditable, Serialize(false, true, description: "Should the component discard previously received signals when a new one is received.")]
         public bool ResetWhenSignalReceived
         {
             get;
             set;
         }
 
-        [InGameEditable(ToolTip = "Should the component discard previously received signals when the incoming signal changes."), Serialize(false, true)]
+        [InGameEditable, Serialize(false, true, description: "Should the component discard previously received signals when the incoming signal changes.")]
         public bool ResetWhenDifferentSignalReceived
         {
             get;

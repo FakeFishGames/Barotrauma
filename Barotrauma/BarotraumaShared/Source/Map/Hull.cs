@@ -230,10 +230,10 @@ namespace Barotrauma
 
             aiTarget = new AITarget(this)
             {
-                SoundRange = 0,
-                MinSightRange = 1000,
-                MaxSightRange = 3000,
-                MaxSoundRange = 5000
+                MinSightRange = 2000,
+                MaxSightRange = 5000,
+                MaxSoundRange = 5000,
+                SoundRange = 0
             };
 
             hullList.Add(this);
@@ -423,6 +423,7 @@ namespace Barotrauma
 
         public override void Update(float deltaTime, Camera cam)
         {
+            base.Update(deltaTime, cam);
             UpdateProjSpecific(deltaTime, cam);
 
             Oxygen -= OxygenDeteriorationSpeed * deltaTime;

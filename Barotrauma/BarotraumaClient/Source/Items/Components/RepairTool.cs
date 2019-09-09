@@ -65,13 +65,13 @@ namespace Barotrauma.Items.Components
         }
 
 
-        partial void UseProjSpecific(float deltaTime)
+        partial void UseProjSpecific(float deltaTime, Vector2 raystart)
         {
             if (ParticleEmitter != null)
             {
                 float particleAngle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
                 ParticleEmitter.Emit(
-                    deltaTime, item.WorldPosition + TransformedBarrelPos,
+                    deltaTime, ConvertUnits.ToDisplayUnits(raystart),
                     item.CurrentHull, particleAngle, ParticleEmitter.Prefab.CopyEntityAngle ? -particleAngle : 0);
             }
         }

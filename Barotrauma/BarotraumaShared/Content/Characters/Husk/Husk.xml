@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name="Husk" humanoid="true" needsair="false" blooddecal="blackblood">
+<Character speciesname="Husk" humanoid="true" needsair="false" blooddecal="blackblood">
 
   <ragdolls folder="default"/>
   <animations folder="default"/>

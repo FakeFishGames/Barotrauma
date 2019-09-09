@@ -66,7 +66,7 @@ namespace Barotrauma.Networking
 
             initializationStep = ConnectionInitialization.SteamTicketAndVersion;
 
-            timeout = 20.0;
+            timeout = NetworkConnection.TimeoutThreshold;
             heartbeatTimer = 1.0;
 
             isActive = true;
@@ -83,7 +83,7 @@ namespace Barotrauma.Networking
             if (!isActive) { return; }
             if (steamId != hostSteamId) { return; }
 
-            timeout = 20.0;
+            timeout = NetworkConnection.TimeoutThreshold;
 
             byte incByte = data[0];
             bool isCompressed = (incByte & (byte)PacketHeader.IsCompressed) != 0;
@@ -270,8 +270,27 @@ namespace Barotrauma.Networking
             }
 
             heartbeatTimer = 5.0;
-            bool successSend = SteamManager.Instance.Networking.SendP2PPacket(hostSteamId, buf, length + 4, sendType);
 
+#if DEBUG
+            CoroutineManager.InvokeAfter(() =>
+            {
+                if (Rand.Range(0.0f, 1.0f) < GameMain.Client.SimulatedLoss && sendType != Facepunch.Steamworks.Networking.SendType.Reliable) { return; }
+                int count = Rand.Range(0.0f, 1.0f) < GameMain.Client.SimulatedDuplicatesChance ? 2 : 1;
+                for (int i = 0; i < count; i++)
+                {
+                    Send(buf, length + 4, sendType);
+                }
+            },
+            GameMain.Client.SimulatedMinimumLatency + Rand.Range(0.0f, GameMain.Client.SimulatedRandomLatency));
+
+#else
+            Send(buf, length + 4, sendType);
+#endif
+        }
+
+        private void Send(byte[] buf, int length, Facepunch.Steamworks.Networking.SendType sendType)
+        {
+            bool successSend = SteamManager.Instance.Networking.SendP2PPacket(hostSteamId, buf, length + 4, sendType);
             if (!successSend)
             {
                 if (sendType != Facepunch.Steamworks.Networking.SendType.Reliable)

@@ -122,7 +122,7 @@
     -->
     <Sprite name="Diving Suit Item" texture="Content/Items/Containers/DivingSuitLocker.png" sourcerect="331,196,126,112" depth="0.55" origin="0.5,0.5" />
     <ContainedSprite name="Diving Suit In Vertical Locker" allowedcontainertags="divingsuitcontainervertical" texture="Content/Items/Containers/DivingSuitLocker.png" sourcerect="330,0,71,195" depth="0.55" origin="0.5,0.5" />
-    <ContainedSprite name="Diving Suit Behind Window" allowedcontainertags="divingsuitcontainerwindow" texture="Content/Items/Containers/DivingSuitLocker2.png" sourcerect="0,0,99,254" depth="0.55" origin="0.0,0.0" />
+    <ContainedSprite name="Diving Suit Behind Window" allowedcontainertags="divingsuitcontainerwindow" texture="Content/Items/Containers/Lockers.png" sourcerect="0,686,99,254" depth="0.55" origin="0.0,0.0" />
     <ContainedSprite name="Diving Suit In Horizontal Locker" allowedcontainertags="divingsuitcontainerhorizontal" texture="Content/Items/Containers/DivingSuitLocker.png" sourcerect="236,340,228,66" depth="0.55" origin="0.6,0.5" />
     <Body radius="45" width="34" density="15" />
     <Wearable slots="OuterClothes" msg="ItemMsgEquipSelect">

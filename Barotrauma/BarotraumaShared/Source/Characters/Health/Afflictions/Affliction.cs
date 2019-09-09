@@ -2,14 +2,26 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class Affliction
+    class Affliction : ISerializableEntity
     {
         public readonly AfflictionPrefab Prefab;
-        
-        public float Strength;
+
+        public string Name => ToString();
+
+        public Dictionary<string, SerializableProperty> SerializableProperties { get; set; }
+
+        [Serialize(0f, true), Editable]
+        public float Strength { get; set; }
+
+        [Serialize("", true), Editable]
+        public string Identifier { get; private set; }
+
+        [Serialize(1.0f, true, description: "The probability for the affliction to be applied."), Editable(minValue: 0f, maxValue: 1f)]
+        public float Probability { get; private set; }
 
         public float DamagePerSecond;
         public float DamagePerSecondTimer;
@@ -17,11 +29,6 @@ namespace Barotrauma
 
         public float StrengthDiminishMultiplier = 1.0f;
         public Affliction MultiplierSource;
-
-        /// <summary>
-        /// Probability for the affliction to be applied. Used by attacks.
-        /// </summary>
-        public float ApplyProbability = 1.0f;
 
         /// <summary>
         /// Which character gave this affliction
@@ -32,6 +39,17 @@ namespace Barotrauma
         {
             Prefab = prefab;
             Strength = strength;
+            Identifier = prefab?.Identifier;
+        }
+
+        public void Serialize(XElement element)
+        {
+            SerializableProperty.SerializeProperties(this, element);
+        }
+
+        public void Deserialize(XElement element)
+        {
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
         }
 
         public Affliction CreateMultiplied(float multiplier)
@@ -39,10 +57,7 @@ namespace Barotrauma
             return Prefab.Instantiate(Strength * multiplier, Source);
         }
 
-        public override string ToString()
-        {
-            return "Affliction (" + Prefab.Name + ")";
-        }
+        public override string ToString() => Prefab == null ? "Affliction (Invalid)" : $"Affliction ({Prefab.Name})";
 
         public float GetVitalityDecrease(CharacterHealth characterHealth)
         {

@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Networking;
 using Barotrauma.Particles;
+using Barotrauma.Sounds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
@@ -9,28 +10,24 @@ namespace Barotrauma.Items.Components
 {
     partial class Repairable : ItemComponent, IDrawableComponent
     {
-        public GUIButton RepairButton
-        {
-            get { return repairButton; }
-        }
-        private GUIButton repairButton;
-        public GUIButton SabotageButton
-        {
-            get { return sabotageButton; }
-        }
-        private GUIButton sabotageButton;
+        public GUIButton RepairButton { get; private set; }
+
+        public GUIButton SabotageButton { get; private set; }
+
         private GUIProgressBar progressBar;
 
         private List<ParticleEmitter> particleEmitters = new List<ParticleEmitter>();
         //the corresponding particle emitter is active when the condition is within this range
         private List<Vector2> particleEmitterConditionRanges = new List<Vector2>();
 
+        private SoundChannel repairSoundChannel;
+
         private string repairButtonText, repairingText;
         private string sabotageButtonText, sabotagingText;
 
         private FixActions requestStartFixAction;
 
-        [Serialize("", false)]
+        [Serialize("", false, description: "An optional description of the needed repairs displayed in the repair interface.")]
         public string Description
         {
             get;
@@ -80,7 +77,7 @@ namespace Barotrauma.Items.Components
 
             repairButtonText = TextManager.Get("RepairButton");
             repairingText = TextManager.Get("Repairing");
-            repairButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.15f), paddedFrame.RectTransform, Anchor.TopCenter), repairButtonText)
+            RepairButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.15f), paddedFrame.RectTransform, Anchor.TopCenter), repairButtonText)
             {
                 OnClicked = (btn, obj) =>
                 {
@@ -91,7 +88,7 @@ namespace Barotrauma.Items.Components
             };
             sabotageButtonText = TextManager.Get("SabotageButton");
             sabotagingText = TextManager.Get("Sabotaging");
-            sabotageButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.15f), paddedFrame.RectTransform, Anchor.BottomCenter), sabotageButtonText)
+            SabotageButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.15f), paddedFrame.RectTransform, Anchor.BottomCenter), sabotageButtonText)
             {
                 OnClicked = (btn, obj) =>
                 {
@@ -140,6 +137,19 @@ namespace Barotrauma.Items.Components
                     particleEmitters[i].Emit(deltaTime, item.WorldPosition, item.CurrentHull);
                 }
             }
+
+            if (CurrentFixer != null && CurrentFixer.SelectedConstruction == item)
+            {
+                if (repairSoundChannel == null || !repairSoundChannel.IsPlaying)
+                {
+                repairSoundChannel = SoundPlayer.PlaySound("repair", item.WorldPosition, hullGuess: item.CurrentHull);
+                }
+            }
+            else
+            {
+                repairSoundChannel?.FadeOutAndDispose();
+                repairSoundChannel = null;
+            }
         }
         
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
@@ -149,14 +159,14 @@ namespace Barotrauma.Items.Components
             progressBar.BarSize = item.Condition / item.MaxCondition;
             progressBar.Color = ToolBox.GradientLerp(progressBar.BarSize, Color.Red, Color.Orange, Color.Green);
 
-            repairButton.Enabled = (currentFixerAction == FixActions.None || (CurrentFixer == character && currentFixerAction != FixActions.Repair)) && item.ConditionPercentage <= ShowRepairUIThreshold;
-            repairButton.Text = (currentFixerAction == FixActions.None || CurrentFixer != character || currentFixerAction != FixActions.Repair) ? 
+            RepairButton.Enabled = (currentFixerAction == FixActions.None || (CurrentFixer == character && currentFixerAction != FixActions.Repair)) && item.ConditionPercentage <= ShowRepairUIThreshold;
+            RepairButton.Text = (currentFixerAction == FixActions.None || CurrentFixer != character || currentFixerAction != FixActions.Repair) ? 
                 repairButtonText : 
                 repairingText + new string('.', ((int)(Timing.TotalTime * 2.0f) % 3) + 1);
 
-            sabotageButton.Visible = character.IsTraitor;
-            sabotageButton.Enabled = (currentFixerAction == FixActions.None || (CurrentFixer == character && currentFixerAction != FixActions.Sabotage)) && character.IsTraitor && item.ConditionPercentage > MinSabotageCondition;
-            sabotageButton.Text = (currentFixerAction == FixActions.None || CurrentFixer != character || currentFixerAction != FixActions.Sabotage || !character.IsTraitor) ?
+            SabotageButton.Visible = character.IsTraitor;
+            SabotageButton.Enabled = (currentFixerAction == FixActions.None || (CurrentFixer == character && currentFixerAction != FixActions.Sabotage)) && character.IsTraitor && item.ConditionPercentage > MinSabotageCondition;
+            SabotageButton.Text = (currentFixerAction == FixActions.None || CurrentFixer != character || currentFixerAction != FixActions.Sabotage || !character.IsTraitor) ?
                 sabotageButtonText :
                 sabotagingText + new string('.', ((int)(Timing.TotalTime * 2.0f) % 3) + 1);
 
@@ -175,20 +185,6 @@ namespace Barotrauma.Items.Components
                     textBlock.TextColor = Color.White;
                 }
             }
-        }
-
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
-        {
-            deteriorationTimer = msg.ReadSingle();
-            deteriorateAlwaysResetTimer = msg.ReadSingle();
-            DeteriorateAlways = msg.ReadBoolean();
-            CurrentFixer = msg.ReadBoolean() ? Character.Controlled : null;
-            currentFixerAction = (FixActions)msg.ReadRangedInteger(0, 2);
-        }
-
-        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
-        {
-            msg.WriteRangedInteger((int)requestStartFixAction, 0, 2);
         }
 
         public void Draw(SpriteBatch spriteBatch, bool editing)
@@ -212,6 +208,26 @@ namespace Barotrauma.Items.Components
                     new Vector2(item.WorldPosition.X, -item.WorldPosition.Y + 20), "Condition: " + (int)item.Condition + "/" + (int)item.MaxCondition,
                     Color.Orange);
             }
+        }
+
+        protected override void RemoveComponentSpecific()
+        {
+            repairSoundChannel?.FadeOutAndDispose();
+            repairSoundChannel = null;
+        }
+
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        {
+            deteriorationTimer = msg.ReadSingle();
+            deteriorateAlwaysResetTimer = msg.ReadSingle();
+            DeteriorateAlways = msg.ReadBoolean();
+            CurrentFixer = msg.ReadBoolean() ? Character.Controlled : null;
+            currentFixerAction = (FixActions)msg.ReadRangedInteger(0, 2);
+        }
+
+        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
+        {
+            msg.WriteRangedInteger((int)requestStartFixAction, 0, 2);
         }
     }
 }

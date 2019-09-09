@@ -142,6 +142,9 @@ namespace Barotrauma
             IsPathDirty = false;
         }
 
+        public Func<PathNode, bool> startNodeFilter;
+        public Func<PathNode, bool> endNodeFilter;
+
         protected override Vector2 DoSteeringSeek(Vector2 target, float weight)
         {
             bool needsNewPath = currentPath != null && currentPath.Unreachable || Vector2.DistanceSquared(target, currentTarget) > 1;
@@ -164,7 +167,7 @@ namespace Barotrauma
                     }
                 }
 
-                var newPath = pathFinder.FindPath(pos, target, character.Submarine, "(Character: " + character.Name + ")");
+                var newPath = pathFinder.FindPath(pos, target, character.Submarine, "(Character: " + character.Name + ")", startNodeFilter, endNodeFilter);
                 bool useNewPath = currentPath == null || needsNewPath;
                 if (!useNewPath && currentPath != null && currentPath.CurrentNode != null && newPath.Nodes.Any() && !newPath.Unreachable)
                 {
@@ -309,8 +312,10 @@ namespace Barotrauma
                 Vector2 colliderBottom = character.AnimController.GetColliderBottom();
                 Vector2 colliderSize = collider.GetSize();
                 Vector2 velocity = collider.LinearVelocity;
+                // If the character is smaller than this, it fails to use the waypoint nodes, because they are always too high.
+                float minHeight = 1;
                 // Cannot use the head position, because not all characters have head or it can be below the total height of the character
-                float characterHeight = colliderSize.Y + character.AnimController.ColliderHeightFromFloor;
+                float characterHeight = Math.Max(colliderSize.Y + character.AnimController.ColliderHeightFromFloor, minHeight);
                 float horizontalDistance = Math.Abs(collider.SimPosition.X - currentPath.CurrentNode.SimPosition.X);
                 bool isAboveFeet = currentPath.CurrentNode.SimPosition.Y > colliderBottom.Y;
                 bool isNotTooHigh = currentPath.CurrentNode.SimPosition.Y < colliderBottom.Y + characterHeight;

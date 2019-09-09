@@ -204,8 +204,13 @@ namespace Barotrauma
             if (textColor.HasValue)
             {
                 this.textColor = textColor.Value;
-            }
-            this.Font = font ?? GUI.Font;
+            }            
+
+            //if the text is in chinese/korean/japanese and we're not using a CJK-compatible font,
+            //use the default CJK font as a fallback
+            var selectedFont = font ?? GUI.Font;
+            if (TextManager.IsCJK(text) && !selectedFont.IsCJK) { selectedFont = GUI.CJKFont; }
+            this.Font = selectedFont;
             this.textAlignment = textAlignment;
             this.Wrap = wrap;
             this.Text = text ?? "";

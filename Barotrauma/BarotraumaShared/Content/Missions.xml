@@ -101,7 +101,7 @@
     <message header="Artifact collected" text="The artifact is now on board. Navigate the submarine out of the cavern to claim the reward."/>
   </SalvageMission>
 
-  <!-- TODO: salvagenasonovartifactruins with proper messages (not cavern) & translations -->
+  <!-- TODO: salvagenasonovartifactruins with proper messages (not cavern) & translations
   <SalvageMission
     name="Salvaging an artifact"
     identifier="salvagenasonovartifactcave"
@@ -133,7 +133,7 @@
     <LocationType from="Research" to="Lair"/>
     
     <message header="Artifact collected" text="The artifact is now on board. Navigate the submarine out of the cavern to claim the reward."/>
-  </SalvageMission>
+  </SalvageMission> -->
 
   <SalvageMission
     name="Salvaging an artifact"

@@ -10,15 +10,11 @@ namespace Barotrauma.Lights
 {
     class LightSourceParams : ISerializableEntity
     {
-        public string Name => "LightSource";
+        public string Name => "Light Source";
 
         public bool Persistent;
 
-        public Dictionary<string, SerializableProperty> SerializableProperties
-        {
-            get;
-            private set;
-        } = new Dictionary<string, SerializableProperty>();
+        public Dictionary<string, SerializableProperty> SerializableProperties { get; private set; } = new Dictionary<string, SerializableProperty>();
 
         [Serialize("1.0,1.0,1.0,1.0", true), Editable]
         public Color Color
@@ -28,6 +24,7 @@ namespace Barotrauma.Lights
         }
 
         private float range;
+
         [Serialize(100.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2048.0f)]
         public float Range
         {
@@ -64,7 +61,7 @@ namespace Barotrauma.Lights
 
         public LightSourceParams(XElement element)
         {
-            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+            Deserialize(element);
             
             foreach (XElement subElement in element.Elements())
             {
@@ -102,6 +99,17 @@ namespace Barotrauma.Lights
             SerializableProperties = SerializableProperty.DeserializeProperties(this);
             Range = range;
             Color = color;
+        }
+
+        public bool Deserialize(XElement element)
+        {
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+            return SerializableProperties != null;
+        }
+
+        public void Serialize(XElement element)
+        {
+            SerializableProperty.SerializeProperties(this, element, true);
         }
     }
 

@@ -98,7 +98,7 @@
       <RequiredItems identifiers="spear,alienspear,explosivespear" type="Contained" msg="ItemMsgSpearRequired" />
       <RequiredSkill identifier="weapons" level="30" />
     </RangedWeapon>
-    <ItemContainer itempos="27,10" iteminterval="0,-4" hideitems="false">
+    <ItemContainer itempos="27,10" iteminterval="0,-4" hideitems="false" capacity="6">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="0,0,121,30" />
       <Containable identifiers="spear,alienspear,explosivespear" />
     </ItemContainer>
@@ -145,8 +145,9 @@
         <Affliction identifier="gunshotwound" strength="40" />
         <Affliction identifier="internaldamage" strength="30" />
       </Attack>
-      <StatusEffect type="OnImpact">
-        <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-5" anglemax="5" particleamount="5" velocitymin="-10" velocitymax="-100" scalemin="0.5" scalemax="1" />
+      <StatusEffect type="OnImpact" target="Character">
+        <Conditional entitytype="!eq Character"/>
+        <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-10" anglemax="10" particleamount="5" velocitymin="-10" velocitymax="-200" scalemin="0.5" scalemax="1" />
       </StatusEffect>
     </Projectile>
   </Item>
@@ -177,7 +178,7 @@
     </ItemContainer>
   </Item>  
   
-  <Item name="SMG Round" identifier="smground" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem" impactsoundtag="impact_metal_light" scale="0.2">
+  <Item name="SMG Round" identifier="smground" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem" impactsoundtag="impact_metal_light" hideinmenus="true" scale="0.2">
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,960,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="128,3,40,14" depth="0.55" origin="0.5,0.5" />
     <Body width="40" height="14" density="40" />
@@ -187,8 +188,9 @@
         <Affliction identifier="gunshotwound" strength="15" />
         <Affliction identifier="internaldamage" strength="10" />
       </Attack>
-      <StatusEffect type="OnImpact">
-        <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-5" anglemax="5" particleamount="5" velocitymin="-10" velocitymax="-100" scalemin="0.5" scalemax="1" />
+      <StatusEffect type="OnImpact" target="Character">
+        <Conditional entitytype="!eq Character"/>
+        <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-10" anglemax="10" particleamount="5" velocitymin="-10" velocitymax="-200" scalemin="0.5" scalemax="1" />
       </StatusEffect>
     </Projectile>
   </Item>
@@ -349,6 +351,7 @@
     </Throwable>
   </Item>
   <Item name="EMP Grenade" identifier="empgrenade" category="Equipment" cargocontaineridentifier="explosivecrate" tags="smallitem,weapon,explosive" scale="0.5" impactsoundtag="impact_metal_light">
+    <Upgrade gameversion="0.9.3.0" scale="0.5"/>
     <Deconstruct time="10">
       <Item identifier="iron" />
       <Item identifier="copper" mincondition="0.9" />
@@ -384,6 +387,7 @@
     </Throwable>
   </Item>
   <Item name="Frag Grenade" identifier="fraggrenade" category="Equipment" cargocontaineridentifier="explosivecrate" tags="smallitem,weapon,explosive" scale="0.5" impactsoundtag="impact_metal_heavy">
+    <Upgrade gameversion="0.9.3.0" scale="0.5"/>
     <Price locationtype="Military" buyprice="250" />
     <Deconstruct time="10">
       <Item identifier="iron" />
@@ -422,6 +426,7 @@
     </Throwable>
   </Item>
   <Item name="Incendium Grenade" identifier="incendiumgrenade" category="Equipment" cargocontaineridentifier="explosivecrate" tags="smallitem,weapon,explosive" Scale="0.5" impactsoundtag="impact_metal_heavy">
+    <Upgrade gameversion="0.9.3.0" scale="0.5"/>
     <Price locationtype="Military" buyprice="300" />
     <Deconstruct time="10">
       <Item identifier="iron" />
@@ -475,7 +480,7 @@
     <Sprite texture="weapons_new.png" sourcerect="1,407,191,63" depth="0.55" origin="0.5,0.5" />
     <Body width="150" height="30" density="30" />
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="45,10" handle1="-20,-10" holdangle="45" reload="0.75" range="100" combatPriority="50" msg="ItemMsgPickUpSelect">
-      <Attack stun="0.2">
+      <Attack stun="0.2" targetimpulse="20">
         <Sound file="Content/Items/Weapons/Smack1.ogg" range="800" />
         <Affliction identifier="internaldamage" strength="4" />
       </Attack>
@@ -529,7 +534,7 @@
     <Sprite texture="weapons_new.png" sourcerect="296,3,110,28" depth="0.55" origin="0.5,0.5" />
     <Body width="110" height="25" density="50" />
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="50,0" handle1="-5,-5" holdangle="30" reload="0.75" range="50" combatPriority="40" msg="ItemMsgPickUpSelect">
-      <Attack stun="0.2">
+      <Attack stun="0.2" targetimpulse="10">
         <Affliction identifier="internaldamage" strength="10" />
         <Affliction identifier="bleeding" strength="10" />
         <Sound file="Content/Sounds/Damage/LimbSlash1.ogg" range="500" />
@@ -607,8 +612,8 @@
 
   <Item name="40mm Stun Grenade" identifier="40mmstungrenade" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem" Scale="0.35" impactsoundtag="impact_metal_light">
     <!--TODO: adjust prices-->
-    <Price locationtype="Military" buyprice="60" />
-    <Price locationtype="City" buyprice="100" />
+    <Price locationtype="Military" buyprice="100" />
+    <Price locationtype="City" buyprice="120" />
     <Deconstruct time="5">
       <Item identifier="iron" />
       <Item identifier="phosphorus" />
@@ -694,8 +699,9 @@
         <Affliction identifier="gunshotwound" strength="6" />
         <Affliction identifier="internaldamage" strength="5" />
       </Attack>
-      <StatusEffect type="OnImpact">
-        <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-5" anglemax="5" particleamount="5" velocitymin="-10" velocitymax="-100" scalemin="0.5" scalemax="1" />
+      <StatusEffect type="OnImpact" target="Character">
+        <Conditional entitytype="!eq Character"/>
+        <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-10" anglemax="10" particleamount="5" velocitymin="-10" velocitymax="-200" scalemin="0.5" scalemax="1" />
       </StatusEffect>
     </Projectile>
   </Item>
@@ -707,6 +713,11 @@
       <Item identifier="steel" />
       <Item identifier="plastic" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="20">
+      <RequiredSkill identifier="medical" level="40"/>
+      <RequiredItem identifier="steel"/>
+      <RequiredItem identifier="plastic"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,830,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="0,293,130,76" depth="0.55" origin="0.5,0.5" />
     <Body width="130" height="70" density="50" />
@@ -727,6 +738,16 @@
   </Item>
   
   <Item name="Stun Gun Dart" identifier="stungundart" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem" impactsoundtag="impact_metal_light">
+    <Price locationtype="Military" buyprice="20" />
+    <Price locationtype="City" buyprice="30" />
+    <Deconstruct time="10">
+      <Item identifier="steel" />
+    </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="20">
+      <RequiredSkill identifier="weapons" level="30" />
+      <Item identifier="steel" />
+      <Item identifier="chloralhydrate" mincondition="0.1" usecondition="true" />
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="766,576,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="127,49,36,9" depth="0.55" origin="0.5,0.5" />
     <Body width="35" height="8" density="40" />
@@ -737,10 +758,13 @@
         <Affliction identifier="stun" strength="10" />
       </Attack>
       <StatusEffect type="OnImpact" target="This">
-        <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-5" anglemax="5" particleamount="5" velocitymin="-10" velocitymax="-100" scalemin="0.5" scalemax="1" />
         <Sound file="Content/Items/Weapons/TaserHit1.ogg" type="OnUse" range="3000" selectionmode="Random" />
         <Sound file="Content/Items/Weapons/TaserHit2.ogg" type="OnUse" range="3000" />
         <Remove />
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="Character">
+        <Conditional entitytype="!eq Character"/>
+        <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-10" anglemax="10" particleamount="5" velocitymin="-10" velocitymax="-200" scalemin="0.5" scalemax="1" />
       </StatusEffect>
     </Projectile>
   </Item>
@@ -758,7 +782,7 @@
     <Sprite texture="weapons_new.png" sourcerect="242,420,121,55" depth="0.55" origin="0.5,0.5" />
     <Body width="120" height="48" density="50" />
     <MeleeWeapon slots="RightHand+LeftHand,Any" controlpose="true" aimpos="45,10" handle1="-20,-7" handle2="-10,0" holdangle="60" reload="1" range="100" combatpriority="30" msg="ItemMsgPickUpSelect">
-      <Attack stun="0.6">
+      <Attack stun="0.6" targetimpulse="20">
         <Sound file="Content/Items/Weapons/ToyHammerHit1.ogg" range="800" selectionmode="Random"/>
         <Sound file="Content/Items/Weapons/ToyHammerHit2.ogg" range="800" />
         <Sound file="Content/Items/Weapons/ToyHammerHit3.ogg" range="800" />

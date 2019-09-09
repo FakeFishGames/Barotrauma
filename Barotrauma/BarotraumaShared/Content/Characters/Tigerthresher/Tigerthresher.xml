@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name="Tigerthresher" humanoid="false">
+<Character speciesname="Tigerthresher" humanoid="false">
 
   <ragdolls folder="default"/>
   <animations folder="default"/>
@@ -14,8 +14,8 @@
     doesbleed="true"/>
 
   <sound file="Content/Characters/Tigerthresher/thresherattack1.ogg" state="Attack" />
-  <sound file="Content/Characters/Tigerthresher/thresheridle1.ogg" state="None" />
-  <sound file="Content/Characters/Tigerthresher/thresheridle2.ogg" state="None" />
+  <sound file="Content/Characters/Tigerthresher/thresheridle1.ogg" state="Idle" />
+  <sound file="Content/Characters/Tigerthresher/thresheridle2.ogg" state="Idle" />
 
   <ai
     combatstrength="400"

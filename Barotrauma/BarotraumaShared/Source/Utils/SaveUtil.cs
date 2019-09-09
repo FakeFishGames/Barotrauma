@@ -119,6 +119,7 @@ namespace Barotrauma
             DecompressToDirectory(filePath, TempPath, null);
 
             XDocument doc = XMLExtensions.TryLoadXml(Path.Combine(TempPath, "gamesession.xml"));
+            if (doc == null) { return; }
 
             string subPath = Path.Combine(TempPath, doc.Root.GetAttributeString("submarine", "")) + ".sub";
             Submarine selectedSub = new Submarine(subPath, "");
@@ -130,6 +131,7 @@ namespace Barotrauma
             DebugConsole.Log("Loading save file for an existing game session (" + filePath + ")");
             DecompressToDirectory(filePath, TempPath, null);
             XDocument doc = XMLExtensions.TryLoadXml(Path.Combine(TempPath, "gamesession.xml"));
+            if (doc == null) { return; }
             gameSession.Load(doc.Root);
         }
 
@@ -427,12 +429,8 @@ namespace Barotrauma
             FileInfo[] files = dir.GetFiles();
             foreach (FileInfo file in files)
             {
-                string temppath = Path.Combine(destDirName, file.Name);
-                if (overwriteExisting && File.Exists(temppath))
-                {
-                    File.Delete(temppath);
-                }
-                file.CopyTo(temppath, false);
+                string tempPath = Path.Combine(destDirName, file.Name);
+                file.CopyTo(tempPath, overwriteExisting);
             }
 
             // If copying subdirectories, copy them and their contents to new location.
@@ -440,8 +438,8 @@ namespace Barotrauma
             {
                 foreach (DirectoryInfo subdir in dirs)
                 {
-                    string temppath = Path.Combine(destDirName, subdir.Name);
-                    CopyFolder(subdir.FullName, temppath, copySubDirs);
+                    string tempPath = Path.Combine(destDirName, subdir.Name);
+                    CopyFolder(subdir.FullName, tempPath, copySubDirs, overwriteExisting);
                 }
             }
         }

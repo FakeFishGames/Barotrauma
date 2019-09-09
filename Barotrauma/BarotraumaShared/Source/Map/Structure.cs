@@ -151,7 +151,7 @@ namespace Barotrauma
             private set;
         }
 
-        [Serialize("0,0", true), Editable(ToolTip = "The position of the drop shadow relative to the structure. If set to zero, the shadow is positioned automatically so that it points towards the sub's center of mass.")]
+        [Editable, Serialize("0,0", true, description: "The position of the drop shadow relative to the structure. If set to zero, the shadow is positioned automatically so that it points towards the sub's center of mass.")]
         public Vector2 DropShadowOffset
         {
             get;
@@ -236,6 +236,29 @@ namespace Barotrauma
                         sec.rect = secRect;
                     }
                 }          
+            }
+        }
+        
+        //for upgrading the dimensions of a structure from xml
+        [Serialize(0, false)]
+        public int RectWidth
+        {
+            get { return rect.Width; }
+            set
+            {
+                if (value <= 0) { return; }
+                Rect = new Rectangle(rect.X, rect.Y, value, rect.Height);
+            }
+        }
+        //for upgrading the dimensions of a structure from xml
+        [Serialize(0, false)]
+        public int RectHeight
+        {
+            get { return rect.Height; }
+            set
+            {
+                if (value <= 0) { return; }
+                Rect = new Rectangle(rect.X, rect.Y, rect.Width, value);
             }
         }
 
@@ -374,11 +397,9 @@ namespace Barotrauma
             {
                 aiTarget = new AITarget(this)
                 {
-                    MinSightRange = 1000,
-                    MaxSightRange = 4000,
-                    MaxSoundRange = 0,
-                    SoundRange = 0,
-                    SightRange = 1000
+                    MinSightRange = 2000,
+                    MaxSightRange = 5000,
+                    MaxSoundRange = 0
                 };
             }
 
@@ -1193,6 +1214,11 @@ namespace Barotrauma
 
             SerializableProperty.DeserializeProperties(s, element);
 
+            if (submarine?.GameVersion != null)
+            {
+                SerializableProperty.UpgradeGameVersion(s, s.Prefab.ConfigElement, submarine.GameVersion);
+            }
+
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString())
@@ -1298,7 +1324,6 @@ namespace Barotrauma
 
         public override void Update(float deltaTime, Camera cam)
         {
-            base.Update(deltaTime, cam);
             if (aiTarget != null)
             {
                 aiTarget.SightRange = Submarine == null ? aiTarget.MinSightRange : Submarine.Velocity.Length() / 2 * aiTarget.MaxSightRange;

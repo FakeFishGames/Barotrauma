@@ -45,7 +45,9 @@ namespace Barotrauma
 
             if (string.IsNullOrEmpty(filename))
             {
-                DebugConsole.ThrowError("Error when loading round sound (" + element + ") - file path not set");
+                string errorMsg = "Error when loading round sound (" + element + ") - file path not set";
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Submarine.LoadRoundSound:FilePathEmpty" + element.ToString(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg + "\n" + Environment.StackTrace);
                 return null;
             }
 
@@ -69,7 +71,9 @@ namespace Barotrauma
                 }
                 catch (FileNotFoundException e)
                 {
-                    DebugConsole.ThrowError("Failed to load sound file \"" + filename + "\".", e);
+                    string errorMsg = "Failed to load sound file \"" + filename + "\".";
+                    DebugConsole.ThrowError(errorMsg, e);
+                    GameAnalyticsManager.AddErrorEventOnce("Submarine.LoadRoundSound:FileNotFound" + filename, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg + "\n" + Environment.StackTrace);
                     return null;
                 }
             }

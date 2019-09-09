@@ -173,7 +173,7 @@ namespace Barotrauma.Steam
             };
             if (lobbyState != LobbyState.NotConnected) { return; }
             lobbyState = LobbyState.Creating;
-            instance.client.Lobby.Create(serverSettings.isPublic ? Lobby.Type.Public : Lobby.Type.FriendsOnly, serverSettings.MaxPlayers);
+            instance.client.Lobby.Create(serverSettings.isPublic ? Lobby.Type.Public : Lobby.Type.FriendsOnly, serverSettings.MaxPlayers+10);
             instance.client.Lobby.Joinable = true;
         }
         
@@ -193,13 +193,13 @@ namespace Barotrauma.Steam
             {
                 return;
             }
-            
+
             var contentPackages = GameMain.Config.SelectedContentPackages.Where(cp => cp.HasMultiplayerIncompatibleContent);
-            
+
             instance.client.Lobby.Name = serverSettings.ServerName;
             instance.client.Lobby.Owner = GetSteamID();
-            instance.client.Lobby.MaxMembers = serverSettings.MaxPlayers;
-            instance.client.Lobby.CurrentLobbyData.SetData("playercount", (GameMain.Client?.ConnectedClients?.Count??0).ToString());
+            instance.client.Lobby.MaxMembers = serverSettings.MaxPlayers + 10;
+            instance.client.Lobby.CurrentLobbyData.SetData("playercount", (GameMain.Client?.ConnectedClients?.Count ?? 0).ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("maxplayernum", serverSettings.MaxPlayers.ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("hostipaddress", lobbyIP);
             instance.client.Lobby.CurrentLobbyData.SetData("haspassword", serverSettings.HasPassword.ToString());
@@ -219,9 +219,9 @@ namespace Barotrauma.Steam
             instance.client.Lobby.CurrentLobbyData.SetData("traitors", serverSettings.TraitorsEnabled.ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("gamestarted", GameMain.Client.GameStarted.ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("playstyle", serverSettings.PlayStyle.ToString());
-            instance.client.Lobby.CurrentLobbyData.SetData("gamemode", serverSettings.GameModeIdentifier);
+            instance.client.Lobby.CurrentLobbyData.SetData("gamemode", GameMain.NetLobbyScreen?.SelectedMode?.Identifier ?? "");
 
-            DebugConsole.NewMessage("Lobby updated!", Microsoft.Xna.Framework.Color.Lime);
+            DebugConsole.Log("Lobby updated!");
         }
 
         public static void LeaveLobby()
@@ -801,6 +801,7 @@ namespace Barotrauma.Steam
                     contentPackage.Path = newPath;
                     itemEditor.Folder = newDir;
                     if (!Directory.Exists(newDir)) { Directory.CreateDirectory(newDir); }
+                    if (File.Exists(newPath)) { File.Delete(newPath); }
                     File.Move(installedContentPackagePath, newPath);
                     //move all files inside the Mods folder
                     foreach (ContentFile cf in contentPackage.Files)
@@ -810,10 +811,12 @@ namespace Barotrauma.Steam
                         {
                             string destinationPath = Path.Combine(newDir, cf.Path);
                             if (!Directory.Exists(Path.GetDirectoryName(destinationPath))) { Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)); }
+                            if (File.Exists(destinationPath)) { File.Delete(destinationPath); }
                             File.Move(cf.Path, destinationPath);
                             cf.Path = destinationPath;
                         }
                     }
+                    contentPackage.GameVersion = GameMain.Version;
                     contentPackage.Save(contentPackage.Path);
                 }
                 catch (Exception e)
@@ -968,9 +971,9 @@ namespace Barotrauma.Steam
             if (newPackage.CorePackage)
             {
                 //if enabling a core package, disable all other core packages
-                GameMain.Config.SelectedContentPackages.RemoveWhere(cp => cp.CorePackage);
+                GameMain.Config.SelectedContentPackages.RemoveAll(cp => cp.CorePackage);
             }
-            GameMain.Config.SelectedContentPackages.Add(newPackage);
+            GameMain.Config.SelectContentPackage(newPackage);
             GameMain.Config.SaveNewPlayerConfig();
 
             if (newPackage.Files.Any(f => f.Type == ContentType.Submarine))
@@ -1172,7 +1175,8 @@ namespace Barotrauma.Steam
                 }
 
                 ContentPackage.List.RemoveAll(cp => System.IO.Path.GetFullPath(cp.Path) == System.IO.Path.GetFullPath(installedContentPackagePath));
-                GameMain.Config.SelectedContentPackages.RemoveWhere(cp => !ContentPackage.List.Contains(cp));
+                GameMain.Config.SelectedContentPackages.RemoveAll(cp => !ContentPackage.List.Contains(cp));
+                ContentPackage.SortContentPackages();
                 GameMain.Config.SaveNewPlayerConfig();
             }
             catch (Exception e)
@@ -1219,7 +1223,22 @@ namespace Barotrauma.Steam
                 return false;                
             }
 
-            string metaDataPath = Path.Combine(item.Directory.FullName, MetadataFileName);
+            string metaDataPath = "";
+            try
+            {
+                metaDataPath = Path.Combine(item.Directory.FullName, MetadataFileName);
+            }
+            catch (ArgumentException e)
+            {
+                string errorMessage = "Metadata file for the Workshop item \"" + item.Title +
+                    "\" not found. Could not combine path (" + (item.Directory.FullName ?? "directory name empty") + ").";
+                DebugConsole.ThrowError(errorMessage);
+                GameAnalyticsManager.AddErrorEventOnce("SteamManager.CheckWorkshopItemEnabled:PathCombineException" + item.Title,
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    errorMessage);
+                return false;
+            }
+
             if (!File.Exists(metaDataPath))
             {
                 DebugConsole.ThrowError("Metadata file for the Workshop item \"" + item.Title + "\" not found. The file may be corrupted.");
@@ -1281,8 +1300,9 @@ namespace Barotrauma.Steam
                 itemsUpdated = false;
                 foreach (var item in q.Items)
                 {
-                    if (item.Installed && CheckWorkshopItemEnabled(item) && !CheckWorkshopItemUpToDate(item))
+                    try
                     {
+                        if (!item.Installed || !CheckWorkshopItemEnabled(item) || CheckWorkshopItemUpToDate(item)) { continue; }
                         if (!UpdateWorkshopItem(item, out string errorMsg))
                         {
                             DebugConsole.ThrowError(errorMsg);
@@ -1295,6 +1315,16 @@ namespace Barotrauma.Steam
                             new GUIMessageBox("", TextManager.GetWithVariable("WorkshopItemUpdated", "[itemname]", item.Title));
                             itemsUpdated = true;
                         }
+                    }
+                    catch (Exception e)
+                    {
+                        new GUIMessageBox(
+                            TextManager.Get("Error"),
+                            TextManager.GetWithVariables("WorkshopItemUpdateFailed", new string[2] { "[itemname]", "[errormessage]" }, new string[2] { item.Title, e.Message + ", " + e.TargetSite }));
+                        GameAnalyticsManager.AddErrorEventOnce(
+                            "SteamManager.AutoUpdateWorkshopItems:" + e.Message,
+                            GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                            "Failed to autoupdate workshop item \"" + item.Title + "\". " + e.Message + "\n" + e.StackTrace);
                     }
                 }
             };

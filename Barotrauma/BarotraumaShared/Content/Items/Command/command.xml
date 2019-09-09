@@ -2,7 +2,7 @@
 <Items>
   <Item name="Navigation Terminal" identifier="navterminal" tags="command" linkable="true" allowedlinks="statusmonitor" category="Machine">
     <Sprite texture="Content/Items/Command/CommandDevices.png" depth="0.8" sourcerect="0,0,188,194" origin="0.5,0.5" />
-    <BrokenSprite texture="Content/Items/Command/CommandDevices.png" sourcerect="188,0,188,194" depth="0.8" maxcondition="40" fadein="true" origin="0.5,0.5" />
+    <BrokenSprite texture="Content/Items/Command/CommandDevices.png" sourcerect="188,0,188,194" depth="0.8" maxcondition="80" fadein="true" origin="0.5,0.5" />
     <BrokenSprite texture="Content/Items/Command/CommandDevices.png" sourcerect="376,0,188,194" depth="0.8" maxcondition="0" origin="0.5,0.5" />
     <Steering minvoltage="0.5" canbeselected="true" powerconsumption="10" linkuitocomponent="Sonar" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.5,0.6" anchor="CenterLeft" style="OuterGlow" color="0,0,0,0.8" absoluteoffset="30,0" />
@@ -12,10 +12,10 @@
       <MaintainPosOriginIndicator texture="Content/Items/Command/NavUI.png" sourcerect="0,0,50,54" />
       <SteeringIndicator texture="Content/Items/Command/NavUI.png" sourcerect="0,135,362,16" origin="0,0.5"/>
       <LightComponent range="10.0" lightcolor="1.0,1.0,1.0,0.2" powerconsumption="5" IsOn="true" castshadows="false" allowingameediting="false">
-        <sprite texture="Content/Items/Command/navigatorLights.png" depth="0.025" origin="0.5,0.5" alpha="1.0" />
+        <sprite texture="Content/Items/Command/navigatorLights.png" depth="0.025" origin="0.367,0.38" alpha="1.0" />
       </LightComponent>
       <LightComponent range="10.0" lightcolor="1.0,1.0,1.0,0.5" powerconsumption="5" IsOn="true" castshadows="false" blinkfrequency="1" allowingameediting="false">
-        <sprite texture="Content/Items/Command/navigatorLightsBlinking.png" depth="0.025" origin="0.5,0.5" alpha="1.0" />
+        <sprite texture="Content/Items/Command/navigatorLightsBlinking.png" depth="0.025" origin="0.367,0.38" alpha="1.0" />
       </LightComponent>
     </Steering>
     <aitarget sightrange="500" soundrange="10000"/>
@@ -63,7 +63,7 @@
   </Item>
   <Item name="Shuttle Navigation Terminal" identifier="shuttlenavterminal" tags="command" linkable="true" allowedlinks="statusmonitor" category="Machine" scale="0.5">
     <Sprite texture="Content/Items/Command/CommandDevices.png" depth="0.8" sourcerect="2,196,284,237" origin="0.5,0.5" />
-    <BrokenSprite texture="Content/Items/Command/CommandDevices.png" sourcerect="285,196,284,237" depth="0.8" maxcondition="40" fadein="true" origin="0.5,0.5" />
+    <BrokenSprite texture="Content/Items/Command/CommandDevices.png" sourcerect="285,196,284,237" depth="0.8" maxcondition="80" fadein="true" origin="0.5,0.5" />
     <BrokenSprite texture="Content/Items/Command/CommandDevices.png" sourcerect="572,196,284,237" depth="0.8" maxcondition="0" origin="0.5,0.5" />
     <Steering minvoltage="0.5" canbeselected="true" powerconsumption="10" linkuitocomponent="Sonar" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.5,0.6" anchor="CenterLeft" style="OuterGlow" color="0,0,0,0.8" absoluteoffset="30,0" />
@@ -112,7 +112,7 @@
   </Item>
   <Item name="Sonar Monitor" identifier="sonarmonitor" tags="command" linkable="true" allowedlinks="statusmonitor" category="Machine">
     <Sprite texture="Content/Items/Command/CommandDevices.png" depth="0.8" sourcerect="0,1,188,194" origin="0.5,0.5" />
-    <BrokenSprite texture="Content/Items/Command/CommandDevices.png" sourcerect="188,1,188,194" depth="0.8" maxcondition="40" fadein="true" origin="0.5,0.5" />
+    <BrokenSprite texture="Content/Items/Command/CommandDevices.png" sourcerect="188,1,188,194" depth="0.8" maxcondition="80" fadein="true" origin="0.5,0.5" />
     <BrokenSprite texture="Content/Items/Command/CommandDevices.png" sourcerect="376,1,188,194" depth="0.8" maxcondition="0" origin="0.5,0.5" />
     <aitarget sightrange="500" soundrange="10000"/>
     <Sonar canbeselected="true" powerconsumption="100" displaybordersize="-0.1" msg="ItemMsgInteractSelect">
@@ -139,7 +139,7 @@
   </Item>
   <Item name="Status Monitor" identifier="statusmonitor" tags="command" aliases="MiniMap" category="Machine" linkable="true" allowedlinks="navterminal">
     <Sprite texture="Content/Items/Command/CommandDevices.png" sourcerect="588,1,113,192" depth="0.8" origin="0.5,0.5" />
-    <BrokenSprite texture="Content/Items/Command/CommandDevices.png" sourcerect="701,1,113,192" depth="0.8" maxcondition="40" fadein="true" origin="0.5,0.5" />
+    <BrokenSprite texture="Content/Items/Command/CommandDevices.png" sourcerect="701,1,113,192" depth="0.8" maxcondition="80" fadein="true" origin="0.5,0.5" />
     <BrokenSprite texture="Content/Items/Command/CommandDevices.png" sourcerect="812,1,113,192" depth="0.8" maxcondition="0" origin="0.5,0.5" />
     <MiniMap MinVoltage="0.5" PowerConsumption="100" canbeselected="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.5,0.5" anchor="CenterRight" style="ItemUI" />

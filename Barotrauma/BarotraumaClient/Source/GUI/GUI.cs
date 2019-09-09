@@ -1,3 +1,4 @@
+using Barotrauma.CharacterEditor;
 using Barotrauma.Extensions;
 using Barotrauma.Sounds;
 using Barotrauma.Tutorials;
@@ -8,6 +9,7 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -97,6 +99,7 @@ namespace Barotrauma
         public static ScalableFont VideoTitleFont => Style?.VideoTitleFont;
         public static ScalableFont ObjectiveTitleFont => Style?.ObjectiveTitleFont;
         public static ScalableFont ObjectiveNameFont => Style?.ObjectiveNameFont;
+        public static ScalableFont CJKFont { get; private set; }
 
         public static UISprite UIGlow => Style.UIGlow;
 
@@ -167,18 +170,43 @@ namespace Barotrauma
         public static void Init(GameWindow window, IEnumerable<ContentPackage> selectedContentPackages, GraphicsDevice graphicsDevice)
         {
             GUI.graphicsDevice = graphicsDevice;
-            var uiStyles = ContentPackage.GetFilesOfType(selectedContentPackages, ContentType.UIStyle).ToList();
-            if (uiStyles.Count == 0)
+
+            var files = ContentPackage.GetFilesOfType(selectedContentPackages, ContentType.UIStyle);
+            XElement selectedStyle = null;
+            foreach (var file in files)
+            {
+                XDocument doc = XMLExtensions.TryLoadXml(file);
+                if (doc == null) { continue; }
+                var mainElement = doc.Root;
+                if (doc.Root.IsOverride())
+                {
+                    mainElement = doc.Root.FirstElement();
+                    if (selectedStyle != null)
+                    {
+                        DebugConsole.NewMessage($"Overriding the ui styles with '{file}'", Color.Yellow);
+                    }
+                }
+                else if (selectedStyle != null)
+                {
+                    DebugConsole.ThrowError("Another ui style already loaded! Use <override></override> tags to override it.");
+                    break;
+                }
+                selectedStyle = mainElement;
+            }
+            if (selectedStyle == null)
             {
                 DebugConsole.ThrowError("No UI styles defined in the selected content package!");
-                return;
             }
-            else if (uiStyles.Count > 1)
+            else
             {
-                DebugConsole.ThrowError("Multiple UI styles defined in the selected content package! Selecting the first one.");
+                Style = new GUIStyle(selectedStyle, graphicsDevice);
             }
 
-            Style = new GUIStyle(uiStyles[0], graphicsDevice);
+            if (CJKFont == null)
+            {
+                CJKFont = new ScalableFont("Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf",
+                    Font.Size, graphicsDevice, dynamicLoading: true, isCJK: true);
+            }
         }
 
         public static void LoadContent(bool loadSounds = true)
@@ -414,6 +442,10 @@ namespace Barotrauma
                 {
                     debugDrawEvents = !debugDrawEvents;
                 }
+                if (MouseOn != null)
+                {
+                    DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 500, 20), $"Selected UI Element: {MouseOn.GetType().ToString()}", Color.LightGreen, Color.Black * 0.5f, 0, SmallFont);
+                }
             }
 
             if (HUDLayoutSettings.DebugDraw) HUDLayoutSettings.Draw(spriteBatch);
@@ -422,7 +454,7 @@ namespace Barotrauma
 
             if (Character.Controlled?.Inventory != null)
             {
-                if (!Character.Controlled.LockHands && Character.Controlled.Stun >= -0.1f && !Character.Controlled.IsDead)
+                if (!Character.Controlled.LockHands && Character.Controlled.Stun < 0.1f && !Character.Controlled.IsDead)
                 {
                     Inventory.DrawFront(spriteBatch);
                 }
@@ -608,10 +640,7 @@ namespace Barotrauma
 
         private static void HandlePersistingElements(float deltaTime)
         {
-            if (GUIMessageBox.VisibleBox != null && GUIMessageBox.VisibleBox.UserData as string != "verificationprompt" && GUIMessageBox.VisibleBox.UserData as string != "bugreporter")
-            {
-                GUIMessageBox.VisibleBox.AddToGUIUpdateList();
-            }
+            GUIMessageBox.AddActiveToGUIUpdateList();
 
             if (pauseMenuOpen)
             {
@@ -1577,9 +1606,10 @@ namespace Barotrauma
                 button.OnClicked += (btn, userData) =>
                 {
                     var quitButton = button;
-                    if (GameMain.GameSession != null)
+                    if (GameMain.GameSession != null || (Screen.Selected is CharacterEditorScreen || Screen.Selected is SubEditorScreen))
                     {
-                        var msgBox = new GUIMessageBox("", TextManager.Get("PauseMenuQuitVerification"), new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") })
+                        string text = GameMain.GameSession == null ? "PauseMenuQuitVerificationEditor" : "PauseMenuQuitVerification";
+                        var msgBox = new GUIMessageBox("", TextManager.Get(text), new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") })
                         {
                             UserData = "verificationprompt"
                         };

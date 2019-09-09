@@ -161,16 +161,18 @@
         </Goal>
       </Objective>
     </TraitorMission> -->
-  
+
   <TraitorMission identifier="SabotageReactor_Assassinate">
 
+    <Icon texture="Content/UI/MissionIcons.png" sourcerect="512,0,256,256" color="200,0,0,255"/>
+    
     <StartInfoText id="MVPtraitormissionStartInfoText" />
     
     <Objective>
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="MVPobjectiveSuccessMessage1" />
       <StartMessage id="MVPtraitorobjectivestartmessage1"/>
-      <Goal type="finditem" identifier="oxygentank" allowedContainers="mediumsteelcabinet, mediumwindowedsteelcabinet, steelcabinet">
+      <Goal type="finditem" identifier="oxygentank" preferNew="false" allowNew="true" allowExisting="true" allowedContainers="mediumsteelcabinet, mediumwindowedsteelcabinet, steelcabinet">
         <InfoText id="MVP_GoalInfoText_1" />    
       </Goal>
     </Objective>
@@ -199,6 +201,8 @@
 
   <TraitorMission identifier="flood_1">
 
+    <Icon texture="Content/UI/MissionIcons.png" sourcerect="256,0,256,256" color="255,127,39,255"/>
+    
     <StartInfoText id="flood_1_traitormissionStartInfoText"/>
 
     <Objective>
@@ -223,7 +227,7 @@
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="flood_1_objectiveSuccessMessage3"/>
       <StartMessage id="flood_1_traitorobjectivestartmessage3"/>
-      <Goal type="finditem" identifier="detonator" allowedContainers="mediumsteelcabinet, mediumwindowedsteelcabinet, steelcabinet">
+      <Goal type="finditem" identifier="detonator" preferNew="false" allowNew="true" allowExisting="true" allowedContainers="mediumsteelcabinet, mediumwindowedsteelcabinet, steelcabinet">
         <InfoText id="flood_1_GoalInfoText_3"/>
       </Goal>
     </Objective>
@@ -239,16 +243,17 @@
 
   </TraitorMission>
 
-
   <TraitorMission identifier="flood2">
 
+    <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+    
     <StartInfoText id="flood_2_traitormissionStartInfoText"/>
 
     <Objective>
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="flood_2_objectiveSuccessMessage1"/>
       <StartMessage id="flood_2_traitorobjectivestartmessage1"/>
-      <Goal type="finditem" identifier="divingmask" allowedContainers="suppliescabinet">
+      <Goal type="finditem" identifier="divingmask" preferNew="false" allowNew="true" allowExisting="true" allowedContainers="suppliescabinet">
         <InfoText id="flood_2_GoalInfoText_1"/>
       </Goal>
     </Objective>
@@ -282,6 +287,51 @@
 
   </TraitorMission>
 
+  <TraitorMission identifier="flood2">
 
+    <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+    
+    <Role id="t1" jobs="captain, engineer" />
+    <Role id="t2" />
+    
+    <StartInfoText id="flood_2_traitormissionStartInfoText"/>
 
+    <Objective roles="t1,t2">
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="flood_2_objectiveSuccessMessage1"/>
+      <StartMessage id="flood_2_traitorobjectivestartmessage1"/>
+      <Goal type="finditem" identifier="divingmask" preferNew="false" allowNew="true" allowExisting="true" allowedContainers="suppliescabinet">
+        <InfoText id="flood_2_GoalInfoText_1"/>
+      </Goal>
+    </Objective>
+
+    <Objective roles="t1">
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="flood_2_objectiveSuccessMessage2"/>
+      <StartMessage id="flood_2_traitorobjectivestartmessage2"/>
+      <Goal type="destroyitems" tag="oxygentank" percentage="50">
+        <InfoText id="traitorgoaldestroyitems" />
+      </Goal>
+    </Objective>
+
+    <Objective roles="t2">
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="flood_2_objectiveSuccessMessage3"/>
+      <StartMessage id="flood_2_traitorobjectivestartmessage3"/>
+      <Goal type="floodsub" percentage="25">
+        <InfoText id="traitorgoalfloodpercentofsub"/>
+      </Goal>
+    </Objective>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="flood_2_objectiveSuccessMessage4" />
+      <StartMessage id="flood_2_traitorobjectivestartmessage4"/>
+      <Goal type="killtarget">
+        <InfoText id="traitorgoalkilltargetinfo" />
+      </Goal>
+    </Objective>
+
+  </TraitorMission>
+  
 </TraitorMissions>

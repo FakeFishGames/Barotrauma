@@ -272,7 +272,7 @@ namespace Barotrauma
                         attack.Afflictions.Clear();
                         foreach (Affliction affliction in multipliedAfflictions)
                         {
-                            attack.Afflictions.Add(affliction);
+                            attack.Afflictions.Add(affliction, null);
                         }
                         attacks.Add(attack);
                         break;
@@ -313,7 +313,7 @@ namespace Barotrauma
             if (entity is Character character)
             {
                 if (character.CurrentHull != null) return false;
-                if (character.ConfigPath == Character.HumanConfigFile)
+                if (character.IsHuman)
                 {
                     if (!triggeredBy.HasFlag(TriggererType.Human)) return false;
                 }

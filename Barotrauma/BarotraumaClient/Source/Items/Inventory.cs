@@ -155,8 +155,8 @@ namespace Barotrauma
         public class SlotReference
         {
             public readonly Inventory ParentInventory;
-            public readonly InventorySlot Slot;
             public readonly int SlotIndex;
+            public InventorySlot Slot;
 
             public Inventory Inventory;
 
@@ -741,17 +741,37 @@ namespace Barotrauma
                 {
                     Inventory selectedInventory = selectedSlot.ParentInventory;
                     int slotIndex = selectedSlot.SlotIndex;
-                    if (selectedInventory.TryPutItem(draggingItem, slotIndex, true, true, Character.Controlled))
+
+                    //if attempting to drop into an invalid slot in the same inventory, try to move to the correct slot
+                    if (selectedInventory.Items[slotIndex] == null &&
+                        selectedInventory == Character.Controlled.Inventory &&
+                        !draggingItem.AllowedSlots.Any(a => a.HasFlag(Character.Controlled.Inventory.SlotTypes[slotIndex])) &&
+                        selectedInventory.TryPutItem(draggingItem, Character.Controlled, draggingItem.AllowedSlots))
                     {
-                        if (selectedInventory.slots != null) selectedInventory.slots[slotIndex].ShowBorderHighlight(Color.White, 0.1f, 0.4f);
+                        if (selectedInventory.slots != null)
+                        {
+                            for (int i = 0; i < selectedInventory.slots.Length; i++)
+                            {
+                                if (selectedInventory.Items[i] == draggingItem)
+                                {
+                                    selectedInventory.slots[slotIndex].ShowBorderHighlight(Color.White, 0.1f, 0.4f);
+                                }
+                            }
+                            selectedInventory.slots[slotIndex].ShowBorderHighlight(Color.Red, 0.1f, 0.9f);
+                        }
+                        GUI.PlayUISound(GUISoundType.PickItem);
+                    }
+                    else if (selectedInventory.TryPutItem(draggingItem, slotIndex, true, true, Character.Controlled))
+                    {
+                        if (selectedInventory.slots != null) { selectedInventory.slots[slotIndex].ShowBorderHighlight(Color.White, 0.1f, 0.4f); }
                         GUI.PlayUISound(GUISoundType.PickItem);
                     }
                     else
                     {
-                        if (selectedInventory.slots != null) selectedInventory.slots[slotIndex].ShowBorderHighlight(Color.Red, 0.1f, 0.9f);
+                        if (selectedInventory.slots != null){ selectedInventory.slots[slotIndex].ShowBorderHighlight(Color.Red, 0.1f, 0.9f); }
                         GUI.PlayUISound(GUISoundType.PickItemFail);
                     }
-                    selectedInventory.HideTimer = 1.0f;
+                    selectedInventory.HideTimer = 2.0f;
                     if (selectedSlot.ParentInventory?.Owner is Item parentItem && parentItem.ParentInventory != null)
                     {
                         for (int i = 0; i < parentItem.ParentInventory.capacity; i++)
@@ -960,7 +980,7 @@ namespace Barotrauma
                     {
                         GUI.DrawRectangle(spriteBatch, new Rectangle(rect.X, rect.Bottom - 8, rect.Width, 8), Color.Black * 0.8f, true);
                         GUI.DrawRectangle(spriteBatch,
-                            new Rectangle(rect.X, rect.Bottom - 8, (int)(rect.Width * item.Condition / item.MaxCondition), 8),
+                            new Rectangle(rect.X, rect.Bottom - 8, (int)(rect.Width * (item.Condition / item.MaxCondition)), 8),
                             Color.Lerp(Color.Red, Color.Green, item.Condition / item.MaxCondition) * 0.8f, true);
                     }
 
@@ -1080,9 +1100,9 @@ namespace Barotrauma
 
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
-            receivedItemIDs = new ushort[capacity];
-
-            for (int i = 0; i < capacity; i++)
+            byte itemCount = msg.ReadByte();
+            receivedItemIDs = new ushort[itemCount];
+            for (int i = 0; i < itemCount; i++)
             {
                 receivedItemIDs[i] = msg.ReadUInt16();
             }

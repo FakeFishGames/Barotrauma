@@ -14,7 +14,7 @@ namespace Barotrauma.Items.Components
 
         private float charge;
 
-        private float rechargeVoltage, outputVoltage;
+        private float rechargeVoltage;
 
         //how fast the battery can be recharged
         private float maxRechargeSpeed;
@@ -38,39 +38,38 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
-        [Serialize("0,0", true)]
+        [Serialize("0,0", true, description: "The position of the progress bar indicating the charge of the item. In pixels as an offset from the upper left corner of the sprite.")]
         public Vector2 IndicatorPosition
         {
             get { return indicatorPosition; }
             set { indicatorPosition = value; }
         }
 
-        [Serialize("0,0", true)]
+        [Serialize("0,0", true, description: "The size of the progress bar indicating the charge of the item (in pixels).")]
         public Vector2 IndicatorSize
         {
             get { return indicatorSize; }
             set { indicatorSize = value; }
         }
 
-        [Serialize(false, true)]
+        [Serialize(false, true, description: "Should the progress bar indicating the charge of the item fill up horizontally or vertically.")]
         public bool IsHorizontal
         {
             get { return isHorizontal; }
             set { isHorizontal = value; }
         }
 
-        [Editable(ToolTip = "Maximum output of the device when fully charged (kW)."), Serialize(10.0f, true)]
+        [Editable, Serialize(10.0f, true, description: "Maximum output of the device when fully charged (kW).")]
         public float MaxOutPut { set; get; }
 
-        [Serialize(10.0f, true), Editable(ToolTip = "The maximum capacity of the device (kW * min). "+
-            "For example, a value of 1000 means the device can output 100 kilowatts of power for 10 minutes, or 1000 kilowatts for 1 minute.")]
+        [Editable, Serialize(10.0f, true, description: "The maximum capacity of the device (kW * min). For example, a value of 1000 means the device can output 100 kilowatts of power for 10 minutes, or 1000 kilowatts for 1 minute.")]
         public float Capacity
         {
             get { return capacity; }
             set { capacity = Math.Max(value, 1.0f); }
         }
 
-        [Editable, Serialize(0.0f, true)]
+        [Editable, Serialize(0.0f, true, description: "The current charge of the device.")]
         public float Charge
         {
             get { return charge; }
@@ -92,15 +91,14 @@ namespace Barotrauma.Items.Components
 
         public float ChargePercentage => MathUtils.Percentage(Charge, Capacity);
         
-        [Serialize(10.0f, true), Editable(ToolTip = "How fast the device can be recharged. "+
-            "For example, a recharge speed of 100 kW and a capacity of 1000 kW*min would mean it takes 10 minutes to fully charge the device.")]
+        [Editable, Serialize(10.0f, true, description: "How fast the device can be recharged. For example, a recharge speed of 100 kW and a capacity of 1000 kW*min would mean it takes 10 minutes to fully charge the device.")]
         public float MaxRechargeSpeed
         {
             get { return maxRechargeSpeed; }
             set { maxRechargeSpeed = Math.Max(value, 1.0f); }
         }
 
-        [Serialize(10.0f, true), Editable]
+        [Editable, Serialize(10.0f, true, description: "The current recharge speed of the device.")]
         public float RechargeSpeed
         {
             get { return rechargeSpeed; }
@@ -223,7 +221,6 @@ namespace Barotrauma.Items.Components
             }
 
             rechargeVoltage = 0.0f;
-            outputVoltage = 0.0f;
         }
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
@@ -241,7 +238,10 @@ namespace Barotrauma.Items.Components
 #endif
                     RechargeSpeed = maxRechargeSpeed * aiRechargeTargetRatio;
 #if CLIENT
-                    rechargeSpeedSlider.BarScroll = RechargeSpeed / Math.Max(maxRechargeSpeed, 1.0f);
+                    if (rechargeSpeedSlider != null)
+                    {
+                        rechargeSpeedSlider.BarScroll = RechargeSpeed / Math.Max(maxRechargeSpeed, 1.0f);
+                    }
 #endif
                     
                     character.Speak(TextManager.GetWithVariables("DialogChargeBatteries", new string[2] { "[itemname]", "[rate]" }, 
@@ -258,7 +258,10 @@ namespace Barotrauma.Items.Components
 #endif
                     RechargeSpeed = 0.0f;
 #if CLIENT
-                    rechargeSpeedSlider.BarScroll = RechargeSpeed / Math.Max(maxRechargeSpeed, 1.0f);
+                    if (rechargeSpeedSlider != null)
+                    {
+                        rechargeSpeedSlider.BarScroll = RechargeSpeed / Math.Max(maxRechargeSpeed, 1.0f);
+                    }
 #endif
                     character.Speak(TextManager.GetWithVariables("DialogStopChargingBatteries", new string[2] { "[itemname]", "[rate]" },
                         new string[2] { item.Name, ((int)(rechargeSpeed / maxRechargeSpeed * 100.0f)).ToString() },
@@ -273,22 +276,25 @@ namespace Barotrauma.Items.Components
         {
             if (connection.Name == "set_rate")
             {
-                float tempSpeed;
-                if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out tempSpeed))
+                if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempSpeed))
                 {
-                    if (!MathUtils.IsValid(tempSpeed)) return;
-                    RechargeSpeed = MathHelper.Clamp(tempSpeed / 100.0f, 0.0f, 1.0f) * MaxRechargeSpeed;
+                    if (!MathUtils.IsValid(tempSpeed)) { return; }
+
+                    float rechargeRate = MathHelper.Clamp(tempSpeed / 100.0f, 0.0f, 1.0f);
+                    RechargeSpeed = rechargeRate * MaxRechargeSpeed;
+#if CLIENT
+                    if (rechargeSpeedSlider != null)
+                    {
+                        rechargeSpeedSlider.BarScroll = rechargeRate;
+                    }
+#endif
                 }
             }
-            if (!connection.IsPower) return;
+            if (!connection.IsPower) { return; }
 
             if (connection.Name == "power_in")
             {
                 rechargeVoltage = Math.Min(power, 1.0f);
-            }
-            else
-            {
-                outputVoltage = power;
             }
         }
     }

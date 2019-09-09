@@ -123,7 +123,9 @@ namespace Facepunch.Steamworks
             void ResultCallback( SteamNative.SteamUGCQueryCompleted_t data, bool bFailed )
             {
                 if ( bFailed )
-                    throw new System.Exception( "bFailed!" );
+                {
+                    throw new System.Exception("Steam UGC Query failed: "+data.Result.ToString());
+                }
 
                 var gotFiles = 0;
                 for ( int i = 0; i < data.NumResultsReturned; i++ )

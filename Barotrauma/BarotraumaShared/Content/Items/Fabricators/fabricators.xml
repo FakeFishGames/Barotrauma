@@ -10,7 +10,7 @@
     scale="0.5">
 
     <Sprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" sourcerect="0,513,285,391" depth="0.8"/>
-    <BrokenSprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" sourcerect="286,513,285,391" depth="0.8" maxcondition="40" fadein="true" />
+    <BrokenSprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" sourcerect="286,513,285,391" depth="0.8" maxcondition="80" fadein="true" />
     <BrokenSprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" sourcerect="572,513,285,391" depth="0.8" maxcondition="0" />
 
     <Fabricator canbeselected="true" powerconsumption="500.0" msg="ItemMsgInteractSelect">
@@ -47,7 +47,7 @@
     description="A machine that can be used to manufacture various medicines.">
 
     <Sprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" depth="0.8" sourcerect="0,0,140,168"/>
-    <BrokenSprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" sourcerect="140,0,140,168" depth="0.8" maxcondition="40" fadein="true" />
+    <BrokenSprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" sourcerect="140,0,140,168" depth="0.8" maxcondition="80" fadein="true" />
     <BrokenSprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" sourcerect="280,0,140,168" depth="0.8" maxcondition="0" />
 
     <Fabricator canbeselected = "true" powerconsumption="100.0" msg="ItemMsgInteractSelect">
@@ -85,7 +85,7 @@
     scale="0.5">
 
     <Sprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" depth="0.8" sourcerect="0,171,243,335"/>
-    <BrokenSprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" sourcerect="243,171,243,335" depth="0.8" maxcondition="40" fadein="true" />
+    <BrokenSprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" sourcerect="243,171,243,335" depth="0.8" maxcondition="80" fadein="true" />
     <BrokenSprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" sourcerect="486,171,243,335" depth="0.8" maxcondition="0" />
 
     <Deconstructor canbeselected = "true" powerconsumption="500.0" msg="ItemMsgInteractSelect">

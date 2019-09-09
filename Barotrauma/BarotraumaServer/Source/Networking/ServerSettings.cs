@@ -50,7 +50,7 @@ namespace Barotrauma.Networking
             outMsg.Write(HasPassword);
             outMsg.Write(isPublic);
             outMsg.WritePadBits();
-            outMsg.WriteRangedIntegerDeprecated(1, 60, TickRate);
+            outMsg.WriteRangedInteger(TickRate, 1, 60);
 
             WriteExtraCargo(outMsg);
 
@@ -220,7 +220,7 @@ namespace Barotrauma.Networking
                 doc = XMLExtensions.TryLoadXml(SettingsFile);
             }
 
-            if (doc == null || doc.Root == null)
+            if (doc == null)
             {
                 doc = new XDocument(new XElement("serversettings"));
             }
@@ -333,6 +333,7 @@ namespace Barotrauma.Networking
             }
 
             XDocument doc = XMLExtensions.TryLoadXml(ClientPermissionsFile);
+            if (doc == null) { return; }
             foreach (XElement clientElement in doc.Root.Elements())
             {
                 string clientName = clientElement.GetAttributeString("name", "");

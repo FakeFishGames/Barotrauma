@@ -25,39 +25,39 @@ namespace Barotrauma.Items.Components
 
         private Vector2 debugRayStartPos, debugRayEndPos;
 
-        [Serialize("Both", false)]
+        [Serialize("Both", false, description: "Can the item be used in air, water or both.")]
         public UseEnvironment UsableIn
         {
             get; set;
         }
 
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false, description: "The distance at which the item can repair targets.")]
         public float Range { get; set; }
 
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false, description: "How many units of damage the item removes from structures per second.")]
         public float StructureFixAmount
         {
             get; set;
         }
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false, description: "How much the item decreases the size of fires per second.")]
         public float ExtinguishAmount
         {
             get; set;
         }
 
-        [Serialize("0.0,0.0", false)]
+        [Serialize("0.0,0.0", false, description: "The position of the barrel as an offset from the item's center (in pixels).")]
         public Vector2 BarrelPos { get; set; }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Can the item repair things through walls.")]
         public bool RepairThroughWalls { get; set; }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Can the item repair multiple things at once, or will it only affect the first thing the ray from the barrel hits.")]
         public bool RepairMultiple { get; set; }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Can the item repair things through holes in walls.")]
         public bool RepairThroughHoles { get; set; }
 
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false, description: "The probability of starting a fire somewhere along the ray fired from the barrel (for example, 0.1 = 10% chance to start a fire during a second of use).")]
         public float FireProbability { get; set; }
 
         public Vector2 TransformedBarrelPos
@@ -132,7 +132,7 @@ namespace Barotrauma.Items.Components
                 return false;
             }
 
-            if (character.AnimController.InWater)
+            if (item.InWater)
             {
                 if (UsableIn == UseEnvironment.Air)
                 {
@@ -160,7 +160,8 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                rayStart = ConvertUnits.ToSimUnits(item.WorldPosition);
+                rayStart = Submarine.LastPickedPosition + Submarine.LastPickedNormal * 0.1f;
+                if (item.Submarine != null) { rayStart += item.Submarine.SimPosition; }
             }
 
             Vector2 rayEnd = rayStart + 
@@ -201,12 +202,12 @@ namespace Barotrauma.Items.Components
                 Repair(rayStart - character.Submarine.SimPosition, rayEnd - character.Submarine.SimPosition, deltaTime, character, degreeOfSuccess, ignoredBodies);
             }
             
-            UseProjSpecific(deltaTime);
+            UseProjSpecific(deltaTime, rayStart);
 
             return true;
         }
 
-        partial void UseProjSpecific(float deltaTime);
+        partial void UseProjSpecific(float deltaTime, Vector2 raystart);
 
         private readonly HashSet<Character> hitCharacters = new HashSet<Character>();
         private readonly List<FireSource> fireSourcesInRange = new List<FireSource>();

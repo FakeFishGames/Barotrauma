@@ -310,7 +310,7 @@ namespace Barotrauma
                 CreateMyItemFrame(contentPackage, myItemList);
             }
         }
-        
+
         private void OnItemsReceived(IList<Facepunch.Steamworks.Workshop.Item> itemDetails, GUIListBox listBox)
         {
             listBox.ClearChildren();
@@ -525,6 +525,9 @@ namespace Barotrauma
                     OnClicked = DownloadItem
                 };
             }
+
+            innerFrame.Recalculate();
+            listBox.RecalculateChildren();
         }
 
         private void RemoveItemFromLists(ulong itemID)
@@ -724,23 +727,30 @@ namespace Barotrauma
                 }
             };
 
-            var headerArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), content.RectTransform)) { Color = Color.Black };
+            var centerArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), content.RectTransform), isHorizontal: true)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.01f,
+                Color = Color.Black * 0.9f
+            };
             
             if (itemPreviewSprites.ContainsKey(item.PreviewImageUrl))
             {
-                new GUIImage(new RectTransform(Vector2.One, headerArea.RectTransform), itemPreviewSprites[item.PreviewImageUrl], scaleToFit: true);
+                new GUIImage(new RectTransform(new Vector2(0.5f, 1.0f), centerArea.RectTransform), itemPreviewSprites[item.PreviewImageUrl], scaleToFit: true);
             }
             else
             {
-                new GUIImage(new RectTransform(Vector2.One, headerArea.RectTransform), SteamManager.Instance.DefaultPreviewImage, scaleToFit: true);
+                new GUIImage(new RectTransform(new Vector2(0.5f, 0.0f), centerArea.RectTransform), SteamManager.Instance.DefaultPreviewImage, scaleToFit: true);
             }
             
-            var descriptionContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.2f), content.RectTransform)) { ScrollBarVisible = true };
+            var descriptionContainer = new GUIListBox(new RectTransform(new Vector2(0.5f, 1.0f), centerArea.RectTransform)) { ScrollBarVisible = true };
 
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), descriptionContainer.Content.RectTransform) { MinSize = new Point(0, 5) }, style: null);
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), descriptionContainer.Content.RectTransform), TextManager.EnsureUTF8(item.Description), wrap: true)
+            string description = TextManager.EnsureUTF8(item.Description);
+            description = ToolBox.RemoveBBCodeTags(description);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), descriptionContainer.Content.RectTransform), description, wrap: true)
             {
                 CanBeFocused = false
             };
@@ -799,12 +809,24 @@ namespace Barotrauma
 
             var modificationDate = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemModificationDate"));
             new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), modificationDate.RectTransform, Anchor.CenterRight), item.Modified.ToString("dd.MM.yyyy"), textAlignment: Alignment.TopRight);
-        }
 
-        /*private void CreateWorkshopItem()
-        {
-            SteamManager.CreateWorkshopItemStaging("ModName", out itemEditor, out itemContentPackage);
-        }*/
+            if (item.Subscribed)
+            {
+                var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), content.RectTransform) { MinSize = new Point(0, 25) }, isHorizontal: true);
+                new GUIButton(new RectTransform(new Vector2(0.5f, 0.95f), buttonContainer.RectTransform), TextManager.Get("WorkshopItemUnsubscribe"))
+                {
+                    UserData = item,
+                    OnClicked = (btn, userdata) =>
+                    {
+                        item.UnSubscribe();
+                        subscribedItemList.RemoveChild(subscribedItemList.Content.GetChildByUserData(item));
+                        itemPreviewFrame.ClearChildren();
+                        return true;
+                    }
+                };
+            }
+        }
+        
         private void CreateWorkshopItem(Submarine sub)
         {
             string destinationFolder = Path.Combine("Mods", sub.Name);
@@ -826,7 +848,7 @@ namespace Barotrauma
             itemContentPackage.Name = sub.Name;
             itemContentPackage.Save(itemContentPackage.Path);
             ContentPackage.List.Add(itemContentPackage);
-            GameMain.Config.SelectedContentPackages.Add(itemContentPackage);
+            GameMain.Config.SelectContentPackage(itemContentPackage);
 
             itemEditor.Title = sub.Name;
             itemEditor.Tags.Add("Submarine");
@@ -1256,6 +1278,14 @@ namespace Barotrauma
                         createItemFileList.Flash(Color.Red);
                     }
 
+                    if (!itemContentPackage.CheckValidity(out List<string> errorMessages))
+                    {
+                        new GUIMessageBox(
+                            TextManager.GetWithVariable("workshopitempublishfailed", "[itemname]", itemEditor.Title),
+                            string.Join("\n", errorMessages));
+                        return false;
+                    }
+
                     PublishWorkshopItem();
                     return true;
                 }
@@ -1297,13 +1327,13 @@ namespace Barotrauma
 
                 string modFolder = Path.GetDirectoryName(itemContentPackage.Path);                
                 string filePathRelativeToModFolder = UpdaterUtil.GetRelativePath(file, Path.Combine(Environment.CurrentDirectory, modFolder));
-                string destinationPath = Path.Combine(modFolder, Path.GetFileName(file));
+                string destinationPath;
 
                 //file is not inside the mod folder, we need to move it
                 if (filePathRelativeToModFolder.StartsWith("..") || 
                     Path.GetPathRoot(Environment.CurrentDirectory) != Path.GetPathRoot(file))
                 {
-                    string tryPath = destinationPath;
+                    destinationPath = Path.Combine(modFolder, Path.GetFileName(file));
                     //add a number to the filename if a file with the same name already exists
                     i = 2;
                     while (File.Exists(destinationPath))
@@ -1317,9 +1347,13 @@ namespace Barotrauma
                     }
                     catch (Exception e)
                     {
-                        DebugConsole.ThrowError("Copying the file \""+file+"\" to the mod folder failed.", e);
+                        DebugConsole.ThrowError("Copying the file \"" + file + "\" to the mod folder failed.", e);
                         return;
                     }
+                }
+                else
+                {
+                    destinationPath = Path.Combine(modFolder, filePathRelativeToModFolder);
                 }
                 itemContentPackage.AddFile(destinationPath, ContentType.None);
             }

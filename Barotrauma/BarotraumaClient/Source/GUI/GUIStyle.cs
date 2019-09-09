@@ -30,27 +30,12 @@ namespace Barotrauma
 
         public SpriteSheet FocusIndicator { get; private set; }
             
-        public GUIStyle(string file, GraphicsDevice graphicsDevice)
+        public GUIStyle(XElement element, GraphicsDevice graphicsDevice)
         {
             this.graphicsDevice = graphicsDevice;
             componentStyles = new Dictionary<string, GUIComponentStyle>();
-
-            XDocument doc;
-            try
-            {
-                ToolBox.IsProperFilenameCase(file);
-                doc = XDocument.Load(file, LoadOptions.SetBaseUri);
-                if (doc == null) { throw new Exception("doc is null"); }
-                if (doc.Root == null) { throw new Exception("doc.Root is null"); }
-                if (doc.Root.Elements() == null) { throw new Exception("doc.Root.Elements() is null"); }
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Loading style \"" + file + "\" failed", e);
-                return;
-            }
-            configElement = doc.Root;
-            foreach (XElement subElement in doc.Root.Elements())
+            configElement = element;
+            foreach (XElement subElement in configElement.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -155,7 +140,8 @@ namespace Barotrauma
             string file         = GetFontFilePath(element);
             uint size           = GetFontSize(element);
             bool dynamicLoading = GetFontDynamicLoading(element);
-            return new ScalableFont(file, size, graphicsDevice, dynamicLoading);
+            bool isCJK          = GetIsCJK(element);
+            return new ScalableFont(file, size, graphicsDevice, dynamicLoading, isCJK);
         }
 
         private uint GetFontSize(XElement element)
@@ -198,6 +184,20 @@ namespace Barotrauma
                 }
             }
             return element.GetAttributeBool("dynamicloading", false);
+        }
+
+        private bool GetIsCJK(XElement element)
+        {
+            foreach (XElement subElement in element.Elements())
+            {
+                if (subElement.Name.ToString().ToLowerInvariant() != "override") { continue; }
+                string language = subElement.GetAttributeString("language", "").ToLowerInvariant();
+                if (GameMain.Config.Language.ToLowerInvariant() == language)
+                {
+                    return subElement.GetAttributeBool("iscjk", false);
+                }
+            }
+            return element.GetAttributeBool("iscjk", false);
         }
 
         public GUIComponentStyle GetComponentStyle(string name)

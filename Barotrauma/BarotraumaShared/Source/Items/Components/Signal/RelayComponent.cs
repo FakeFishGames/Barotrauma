@@ -22,7 +22,7 @@ namespace Barotrauma.Items.Components
             { "signal_in5", "signal_out5" }
         };
 
-        [Editable, Serialize(1000.0f, true)]
+        [Editable, Serialize(1000.0f, true, description: "The maximum amount of power that can pass through the item.")]
         public float MaxPower
         {
             get { return maxPower; }
@@ -32,7 +32,7 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        [Editable, Serialize(false, true)]
+        [Editable, Serialize(false, true, description: "Can the relay currently pass power and signals through it.")]
         public bool IsOn
         {
             get

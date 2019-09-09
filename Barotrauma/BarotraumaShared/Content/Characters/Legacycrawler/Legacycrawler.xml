@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<Character name="Legacycrawler" humanoid="false" blooddecal="blood">
+<Character speciesname="Legacycrawler" humanoid="false" blooddecal="blood">
   
   <ragdolls folder="default"/>
   <animations folder="default"/>
@@ -16,8 +16,8 @@
   <sound file="Content/Characters/Legacycrawler/attack1.ogg" state="Attack" range="500"/>
   <sound file="Content/Characters/Legacycrawler/attack2.ogg" state="Attack" range="500"/>
 
-  <sound file="Content/Characters/Legacycrawler/idle1.ogg" state="None" range="500"/>
-  <sound file="Content/Characters/Legacycrawler/idle2.ogg" state="None" range="500"/>
+  <sound file="Content/Characters/Legacycrawler/idle1.ogg" state="Idle" range="500"/>
+  <sound file="Content/Characters/Legacycrawler/idle2.ogg" state="Idle" range="500"/>
 
   <Inventory slots="Any, Any" accessiblewhenalive="false">
     <Item identifier="swimbladder"/>

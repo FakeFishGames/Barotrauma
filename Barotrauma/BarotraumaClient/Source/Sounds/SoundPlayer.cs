@@ -116,10 +116,15 @@ namespace Barotrauma
             foreach (string soundFile in soundFiles)
             {
                 XDocument doc = XMLExtensions.TryLoadXml(soundFile);
-                if (doc != null && doc.Root != null)
+                if (doc == null) { continue; }
+                var mainElement = doc.Root;
+                if (doc.Root.IsOverride())
                 {
-                    soundElements.AddRange(doc.Root.Elements());
+                    mainElement = doc.Root.FirstElement();
+                    DebugConsole.NewMessage($"Overriding all sounds with {soundFile}", Color.Yellow);
+                    soundElements.Clear();
                 }
+                soundElements.AddRange(mainElement.Elements());
             }
             
             SoundCount = 1 + soundElements.Count();
@@ -484,12 +489,19 @@ namespace Barotrauma
         public static SoundChannel PlaySound(string soundTag, Vector2 position, float? volume = null, float? range = null, Hull hullGuess = null)
         {
             var sound = GetSound(soundTag);
-            if (sound == null) return null;
+            if (sound == null) { return null; }
             return PlaySound(sound, position, volume ?? sound.BaseGain, range ?? sound.BaseFar, hullGuess);
         }
 
         public static SoundChannel PlaySound(Sound sound, Vector2 position, float? volume = null, float? range = null, Hull hullGuess = null)
         {
+            if (sound == null)
+            {
+                string errorMsg = "Error in SoundPlayer.PlaySound (sound was null)\n" + Environment.StackTrace;
+                GameAnalyticsManager.AddErrorEventOnce("SoundPlayer.PlaySound:SoundNull" + Environment.StackTrace, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                return null;
+            }
+
             float far = range ?? sound.BaseFar;
 
             if (Vector2.DistanceSquared(new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y), position) > far * far) return null;

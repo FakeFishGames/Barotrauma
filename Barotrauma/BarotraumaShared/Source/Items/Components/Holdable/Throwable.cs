@@ -11,7 +11,7 @@ namespace Barotrauma.Items.Components
 
         private bool midAir;
 
-        [Serialize(1.0f, false)]
+        [Serialize(1.0f, false, description: "The impulse applied to the physics body of the item when thrown. Higher values make the item be thrown faster.")]
         public float ThrowForce
         {
             get { return throwForce; }

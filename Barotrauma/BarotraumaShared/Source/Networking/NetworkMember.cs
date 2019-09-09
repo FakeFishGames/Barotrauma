@@ -155,6 +155,12 @@ namespace Barotrauma.Networking
 
         public bool ShowNetStats;
 
+#if DEBUG
+        public float SimulatedRandomLatency, SimulatedMinimumLatency;
+        public float SimulatedLoss;
+        public float SimulatedDuplicatesChance;
+#endif
+
         public int TickRate
         {
             get { return serverSettings.TickRate; }

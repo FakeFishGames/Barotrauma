@@ -130,7 +130,7 @@ namespace Barotrauma
 
             switch (enemyAI.State)
             {
-                case AIController.AIState.Idle:
+                case AIState.Idle:
                     if (attachToWalls && character.Submarine == null && Level.Loaded != null)
                     {
                         raycastTimer -= deltaTime;
@@ -187,7 +187,7 @@ namespace Barotrauma
                         }
                     }
                     break;
-                case AIController.AIState.Attack:
+                case AIState.Attack:
                     if (enemyAI.AttackingLimb != null)
                     {
                         if (attachToSub && !enemyAI.IsSteeringThroughGap && wallAttachPos != Vector2.Zero && attachTargetBody != null)

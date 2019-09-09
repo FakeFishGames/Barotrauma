@@ -10,7 +10,7 @@ namespace Barotrauma
                 {
                     return false;
                 }
-                return Traitor?.Character?.IsHumanoid ?? false;
+                return traitor?.Character?.IsHumanoid ?? false;
             }
         }
     }

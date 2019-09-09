@@ -4,27 +4,17 @@ namespace Barotrauma.Items.Components
 {
     class WaterDetector : ItemComponent
     {
-        private string output, falseOutput;
-
         //how often the detector can switch from state to another
         const float StateSwitchInterval = 1.0f;
 
         private bool isInWater;
         private float stateSwitchDelay;
 
-        [InGameEditable, Serialize("1", true)]
-        public string Output
-        {
-            get { return output; }
-            set { output = value; }
-        }
+        [InGameEditable, Serialize("1", true, description: "The signal the item sends out when it's underwater.")]
+        public string Output { get; set; }
 
-        [InGameEditable, Serialize("0", true)]
-        public string FalseOutput
-        {
-            get { return falseOutput; }
-            set { falseOutput = value; }
-        }
+        [InGameEditable, Serialize("0", true, description: "The signal the item sends out when it's not underwater.")]
+        public string FalseOutput { get; set; }
 
         public WaterDetector(Item item, XElement element)
             : base(item, element)
@@ -64,7 +54,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            string signalOut = isInWater ? output : falseOutput;
+            string signalOut = isInWater ? Output : FalseOutput;
             if (!string.IsNullOrEmpty(signalOut))
             {
                 item.SendSignal(0, signalOut, "signal_out", null);

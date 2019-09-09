@@ -21,64 +21,63 @@ namespace Barotrauma.Items.Components
 
         public float LastActiveTime;
 
-        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, DecimalCount = 2, ToolTip = "How fast the condition of the item deteriorates per second.")]
+        [Serialize(0.0f, true, description: "How fast the condition of the item deteriorates per second."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, DecimalCount = 2)]
         public float DeteriorationSpeed
         {
             get;
             set;
         }
 
-        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f, DecimalCount = 2, ToolTip = "Minimum initial delay before the item starts to deteriorate.")]
+        [Serialize(0.0f, true, description: "Minimum initial delay before the item starts to deteriorate."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f, DecimalCount = 2)]
         public float MinDeteriorationDelay
         {
             get;
             set;
         }
 
-        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f, DecimalCount = 2, ToolTip = "Maximum initial delay before the item starts to deteriorate.")]
+        [Serialize(0.0f, true, description: "Maximum initial delay before the item starts to deteriorate."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f, DecimalCount = 2)]
         public float MaxDeteriorationDelay
         {
             get;
             set;
         }
 
-        [Serialize(50.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, ToolTip = "The item won't deteriorate spontaneously if the condition is below this value. For example, if set to 10, the condition will spontaneously drop to 10 and then stop dropping (unless the item is damaged further by external factors). Percentages of max condition.")]
+        [Serialize(50.0f, true, description: "The item won't deteriorate spontaneously if the condition is below this value. For example, if set to 10, the condition will spontaneously drop to 10 and then stop dropping (unless the item is damaged further by external factors). Percentages of max condition."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f)]
         public float MinDeteriorationCondition
         {
             get;
             set;
         }
 
-        [Serialize(0f, true)]
+        [Serialize(0f, true, description: "How low a traitor must get the item's condition for it to start breaking down.")]
         public float MinSabotageCondition
         {
             get;
             set;
         }
 
-        [Serialize(80.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, ToolTip = "The condition of the item has to be below this before the repair UI becomes usable. Percentages of max condition.")]
+        [Serialize(80.0f, true, description: "The condition of the item has to be below this before the repair UI becomes usable. Percentages of max condition."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f)]
         public float ShowRepairUIThreshold
         {
             get;
             set;
         }
 
-        [Serialize(100.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, ToolTip = "The amount of time it takes to fix the item with insufficient skill levels.")]
+        [Serialize(100.0f, true, description: "The amount of time it takes to fix the item with insufficient skill levels."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f)]
         public float FixDurationLowSkill
         {
             get;
             set;
         }
 
-        [Serialize(10.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, ToolTip = "The amount of time it takes to fix the item with sufficient skill levels.")]
+        [Serialize(10.0f, true, description: "The amount of time it takes to fix the item with sufficient skill levels."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f)]
         public float FixDurationHighSkill
         {
             get;
             set;
         }
 
-        //if enabled, the deterioration timer will always run regardless if the item is being used or not
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "If set to true, the deterioration timer will always run regardless if the item is being used or not.")]
         public bool DeteriorateAlways
         {
             get;
@@ -146,6 +145,10 @@ namespace Barotrauma.Items.Components
                 currentFixerAction = FixActions.None;
 #if SERVER
                 item.CreateServerEvent(this);
+#endif
+#if CLIENT
+                repairSoundChannel?.FadeOutAndDispose();
+                repairSoundChannel = null;                
 #endif
                 return true;
             }
@@ -221,8 +224,8 @@ namespace Barotrauma.Items.Components
 
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
 
-            float successFactor = requiredSkills.Count == 0 ? 1.0f : 0.0f;
-            
+            float successFactor = requiredSkills.Count == 0 ? 1.0f : DegreeOfSuccess(CurrentFixer, requiredSkills);
+
             //item must have been below the repair threshold for the player to get an achievement or XP for repairing it
             if (item.ConditionPercentage < ShowRepairUIThreshold)
             {

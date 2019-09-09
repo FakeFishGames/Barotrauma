@@ -114,6 +114,7 @@
     limbspecific="false"
     indicatorlimb="Torso"
     activationthreshold="1"
+    karmachangeonapplied="-0.2"
     maxstrength="200">
     <Effect minstrength="50" maxstrength="200" multiplybymaxvitality="true"
       minvitalitydecrease="0"
@@ -179,6 +180,8 @@
     identifier="huskinfection"
     description="Something dark and unpleasant moves in the mouth. They are rendered completely mute, save for occasional clicking sounds apparently emanating from deep within the throat."
     type="huskinfection"
+    targets="human"
+    huskedspeciesname="[speciesname]husk"
     causeofdeathdescription="Taken over by a husk parasite"
     selfcauseofdeathdescription="You have been taken over by the husk parasite."
     limbspecific="false"
@@ -383,7 +386,7 @@
     maxstrength="100">
     <!-- No effects except slight distortion at this level -->
     <Effect minstrength="0" maxstrength="50"
-      strengthchange="-1"
+      strengthchange="-0.5"
       minchromaticaberration="0.0"
       maxchromaticaberration="1.0">
     </Effect>
@@ -394,7 +397,7 @@
       maxvitalitydecrease="200"
       minscreendistort="0.0"
       maxscreendistort="3.0"
-      strengthchange="-1"
+      strengthchange="-0.5"
       minchromaticaberration="0.0"
       maxchromaticaberration="10.0"
       minradialdistort="0.0"

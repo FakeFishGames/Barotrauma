@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name="Human" humanoid="true" needsair="true" genders="true" canspeak="true" blooddecal="blood">
+<Character speciesname="Human" humanoid="true" needsair="true" genders="true" canspeak="true" blooddecal="blood">
 
   <name firstname="Content/Characters/Human/firstnames_[GENDER].txt" lastname="Content/Characters/Human/lastnames.txt" />
   <portraitbackground>

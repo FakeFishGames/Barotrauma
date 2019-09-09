@@ -193,7 +193,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Screens\BlurEffect.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Screens\CampaignSetupUI.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Screens\CampaignUI.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Screens\CharacterEditorScreen.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Screens\CharacterEditor\CharacterEditorScreen.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Screens\CharacterEditor\Wizard.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Screens\CreditsPlayer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Screens\GameScreen.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Screens\LevelEditorScreen.cs" />
@@ -227,9 +228,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sprite\Sprite.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sprite\SpriteSheet.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\StatusEffects\StatusEffect.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Traitors\TraitorMissionPrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\CrossThread.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\LocalizationCSVtoXML.cs">
-    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\LocalizationCSVtoXML.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\MathUtils.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\OpenFileDialog.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\TextureLoader.cs" />

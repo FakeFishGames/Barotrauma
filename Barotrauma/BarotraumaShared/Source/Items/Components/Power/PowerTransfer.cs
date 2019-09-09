@@ -41,30 +41,30 @@ namespace Barotrauma.Items.Components
             get { return powerLoad; }
         }
 
-        [Serialize(true, true), Editable(ToolTip = "Can the item be damaged if too much power is supplied to the power grid.")]
+        [Editable, Serialize(true, true, description: "Can the item be damaged if too much power is supplied to the power grid.")]
         public bool CanBeOverloaded
         {
             get;
             set;
         }
 
-        [Serialize(2.0f, true), Editable(MinValueFloat = 1.0f, ToolTip = 
+        [Editable(MinValueFloat = 1.0f), Serialize(2.0f, true, description:
             "How much power has to be supplied to the grid relative to the load before item starts taking damage. "
-            +"E.g. a value of 2 means that the grid has to be receiving twice as much power as the devices in the grid are consuming.")]
+            + "E.g. a value of 2 means that the grid has to be receiving twice as much power as the devices in the grid are consuming.")]
         public float OverloadVoltage
         {
             get;
             set;
         }
 
-        [Serialize(0.15f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f, ToolTip = "The probability for a fire to start when the item breaks.")]
+        [Serialize(0.15f, true, description: "The probability for a fire to start when the item breaks."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
         public float FireProbability
         {
             get;
             set;
         }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Is the item currently overloaded. Intended to be used by StatusEffect conditionals (setting the value from XML is not recommended).")]
         public bool Overload
         {
             get;

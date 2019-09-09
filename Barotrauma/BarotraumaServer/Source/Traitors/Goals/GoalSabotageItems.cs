@@ -6,13 +6,13 @@ namespace Barotrauma
 {
     partial class Traitor
     {
-        public class GoalSabotageItems : HumanoidGoal
+        public sealed class GoalSabotageItems : HumanoidGoal
         {
             private readonly string tag;
             private readonly float conditionThreshold;
 
             public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[tag]", "[target]", "[threshold]" });
-            public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { tag ?? "", targetItemPrefabName ?? "", string.Format("{0:0}", conditionThreshold) });
+            public override IEnumerable<string> InfoTextValues(Traitor traitor) => base.InfoTextValues(traitor).Concat(new string[] { tag ?? "", targetItemPrefabName ?? "", string.Format("{0:0}", conditionThreshold) });
 
             private bool isCompleted = false;
             public override bool IsCompleted => isCompleted;
@@ -28,7 +28,7 @@ namespace Barotrauma
                 }
                 foreach (var item in Item.ItemList)
                 {
-                    if (item.Submarine == null || item.Submarine.TeamID != Traitor.Character.TeamID)
+                    if (item.Submarine == null || Traitors.All(t => item.Submarine.TeamID != t.Character.TeamID))
                     {
                         continue;
                     }

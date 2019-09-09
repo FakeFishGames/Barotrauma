@@ -10,27 +10,22 @@ namespace Barotrauma.Items.Components
 {
     class Propulsion : ItemComponent
     {
-        enum UsableIn
+        public enum UseEnvironment
         {
             Air, Water, Both
         };
 
-        private float force;
-
         private float useState;
-        
-        private UsableIn usableIn;
 
-        [Serialize(0.0f, false), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
-        public float Force
-        {
-            get { return force; }
-            set { force = value; }
-        }
+        [Serialize(UseEnvironment.Both, false, description: "Can the item be used in air, underwater or both.")]
+        public UseEnvironment UsableIn { get; set; }
+
+        [Serialize(0.0f, false, description: "The force to apply to the user's body."), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
+        public float Force { get; set; }
 
 #if CLIENT
         private string particles;
-        [Serialize("", false)]
+        [Serialize("", false, description: "The name of the particle prefab the item emits when used.")]
         public string Particles
         {
             get { return particles; }
@@ -41,19 +36,6 @@ namespace Barotrauma.Items.Components
         public Propulsion(Item item, XElement element)
             : base(item,element)
         {
-            switch (element.GetAttributeString("usablein", "both").ToLowerInvariant())
-            {
-                case "air":
-                    usableIn = UsableIn.Air;
-                    break;
-                case "water":
-                    usableIn = UsableIn.Water;
-                    break;
-                case "both":
-                default:
-                    usableIn = UsableIn.Both;
-                    break;
-            }
             ResetSoundRange();
         }
         
@@ -67,18 +49,18 @@ namespace Barotrauma.Items.Components
 
             if (character.AnimController.InWater)
             {
-                if (usableIn == UsableIn.Air) return true;
+                if (UsableIn == UseEnvironment.Air) return true;
             }
             else
             {
-                if (usableIn == UsableIn.Water) return true;
+                if (UsableIn == UseEnvironment.Water) return true;
             }
 
             Vector2 dir = Vector2.Normalize(character.CursorPosition - character.Position);
             //move upwards if the cursor is at the position of the character
             if (!MathUtils.IsValid(dir)) dir = Vector2.UnitY;
 
-            Vector2 propulsion = dir * force;
+            Vector2 propulsion = dir * Force;
 
             if (character.AnimController.InWater) character.AnimController.TargetMovement = dir;
 

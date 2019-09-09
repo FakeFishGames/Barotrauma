@@ -58,7 +58,7 @@ namespace Barotrauma
 
             if (ProgressGetter != null)
             {
-                float newSize = ProgressGetter();
+                float newSize = MathHelper.Clamp(ProgressGetter(), 0.0f, 1.0f);
                 if (!MathUtils.IsValid(newSize))
                 {
                     GameAnalyticsManager.AddErrorEventOnce(
