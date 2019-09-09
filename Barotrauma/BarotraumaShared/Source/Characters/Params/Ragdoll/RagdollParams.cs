@@ -73,18 +73,6 @@ namespace Barotrauma
         public static string GetDefaultFile(string speciesName, ContentPackage contentPackage = null)
             => Path.Combine(GetFolder(speciesName, contentPackage), $"{GetDefaultFileName(speciesName)}.xml");
 
-        private static readonly XElement dummyRagdoll = new XElement("Ragdoll", 
-            new XAttribute("type", "Dummy"),
-            new XElement("collider", new XAttribute("radius", 1)),
-            new XElement("limb",
-                new XAttribute("id", 0),
-                new XAttribute("type", LimbType.Head.ToString()),
-                new XAttribute("width", 1),
-                new XAttribute("height", 1),
-                new XElement("sprite",
-                    new XAttribute("sourcerect", $"0, 0, 1, 1")))
-        );
-
         public static string GetFolder(string speciesName, ContentPackage contentPackage = null)
         {
             string configFilePath = Character.GetConfigFilePath(speciesName, contentPackage);
