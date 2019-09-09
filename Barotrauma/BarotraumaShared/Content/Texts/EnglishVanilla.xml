@@ -3500,16 +3500,31 @@
   <servertag.rampage>Rampage</servertag.rampage>
   <servertagdescription.rampage>Get ready to fight for your life! A server heavily geared towards combat. This can mean player-versus-player combat, PvE or both — see the server description should include a guideline as to what kind of violence is allowed on the server.</servertagdescription.rampage>
 
-  <servertag.modded>Modded</servertag.modded>
-  <servertagdescription.modded>One or more mods enabled. Installing mods from the Workshop may be required to join the server.</servertagdescription.modded>
-  <servertag.247>24/7</servertag.247>
-  <servertagdescription.247>Runs around the clock.</servertagdescription.247>
-  <servertag.nofriendlyfire>Friendly fire off</servertag.nofriendlyfire>
-  <servertagdescription.nofriendlyfire>Causing damage to your crew mates is disabled.</servertagdescription.nofriendlyfire>
-  <servertag.voipdisabled>Voice chat disabled</servertag.voipdisabled>
-  <servertagdescription.voipdisabled>Voice chat is disabled.</servertagdescription.voipdisabled>
-  <servertag.karmadisabled>Karma disabled</servertag.karmadisabled>
-  <servertagdescription.karmadisabled>Karma system is disabled.</servertagdescription.karmadisabled>
+  <servertag.modded.true>Modded</servertag.modded.true>
+  <servertagdescription.modded.true>One or more mods enabled. Installing mods from the Workshop may be required to join the server.</servertagdescription.modded.true>
+  <servertag.modded.false>Vanilla</servertag.modded.false>
+  <servertagdescription.modded.false>The server is not using any mods.</servertagdescription.modded.false>
+  <servertag.247.true>24/7</servertag.247.true>
+  <servertagdescription.247.true>Runs around the clock.</servertagdescription.247.true>
+  <servertag.247.false>Occasionally up</servertag.247.false>
+  <servertagdescription.247.false>The server is not run 24/7.</servertagdescription.247.false>
+  <servertag.friendlyfire.true>Friendly fire on</servertag.friendlyfire.true>
+  <servertagdescription.friendlyfire.true>Causing damage to your crew mates is enabled.</servertagdescription.friendlyfire.true>
+  <servertag.friendlyfire.false>Friendly fire off</servertag.friendlyfire.false>
+  <servertagdescription.friendlyfire.false>Causing damage to your crew mates is disabled.</servertagdescription.friendlyfire.false>
+  <servertag.voip.true>Voice chat enabled</servertag.voip.true>
+  <servertagdescription.voip.true>Voice chat is enabled.</servertagdescription.voip.true>
+  <servertag.voip.false>Voice chat disabled</servertag.voip.false>
+  <servertagdescription.voip.false>Voice chat is disabled.</servertagdescription.voip.false>
+  <servertag.karma.true>Karma disabled</servertag.karma.true>
+  <servertagdescription.karma.true>Karma system is disabled.</servertagdescription.karma.true>
+  <servertag.karma.false>Karma disabled</servertag.karma.false>
+  <servertagdescription.karma.false>Karma system is disabled.</servertagdescription.karma.false>
+  <servertag.traitors.true>Traitors enabled</servertag.traitors.true>
+  <servertagdescription.traitors.true>Traitors are enabled on the server.</servertagdescription.traitors.true>
+  <servertag.traitor.false>Traitors disabled</servertag.traitor.false>
+  <servertagdescription.traitors.false>Traitors are disabled on the server.</servertagdescription.traitors.false>
+  
   <restartrequiredgeneric>You need to restart the game for the changes to take effect.</restartrequiredgeneric>
   <invalidcontentpackage>Content package '[packagename]' cannot be loaded.</invalidcontentpackage>
   <xmlfileinvalid>File '[filepath]' is not a valid XML file ([errormessage]).</xmlfileinvalid>
@@ -3526,4 +3541,6 @@
   <missiondescription.killcrawlerswarm2>A large swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew that can neutralize it.</missiondescription.killcrawlerswarm2>
   <mechanic.weldingtext>Equip the welding tool and diving mask you just retrieved from the locker by double-clicking on them. \n\nWith the welding tool you are able to repair leaks in hulls, and the diving mask will provide you with a steady supply of oxygen while underwater. \n\nSome items, like the welding tool, require two free hands to use. Unequip or drop an item by double-clicking it while it is in use.\n\nWhen welding tool is equipped, hold {0} to aim. While aiming, hold {1} to weld.</mechanic.weldingtext>
   <mechanic.fabricatetext>Now that we have all of the required materials, we can fabricate a fire extinguisher. Find it in the list, load the fabricator with materials and press the button to start fabricating.\n\nWhen done, the fabricated item can be found in the fabricator’s output slot. As the fire extinguisher is an item that requires the use of both hands, equip the item by double-clicking on it.</mechanic.fabricatetext>
+
+
 </infotexts>

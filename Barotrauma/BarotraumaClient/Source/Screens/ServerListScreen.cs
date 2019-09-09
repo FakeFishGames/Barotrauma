@@ -77,6 +77,15 @@ namespace Barotrauma
             get; private set;
         }
 
+        public Dictionary<string, Sprite> PlayStyleIcons
+        {
+            get; private set;
+        }
+        public Dictionary<string, Color> PlayStyleIconColors
+        {
+            get; private set;
+        }
+
         private bool masterServerResponded;
         private IRestResponse masterServerResponse;
         
@@ -406,16 +415,29 @@ namespace Barotrauma
             //playstyle banners
             PlayStyleBanners = new Sprite[Enum.GetValues(typeof(PlayStyle)).Length];
             PlayStyleColors = new Color[Enum.GetValues(typeof(PlayStyle)).Length];
+            PlayStyleIcons = new Dictionary<string, Sprite>();
+            PlayStyleIconColors = new Dictionary<string, Color>();
 
-            XDocument playStylesDoc = XMLExtensions.TryLoadXml("Content/UI/Server/PlayStyleBanners/PlayStyleBanners.xml");
+            XDocument playStylesDoc = XMLExtensions.TryLoadXml("Content/UI/Server/PlayStyles.xml");
 
             XElement rootElement = playStylesDoc.Root;
             foreach (var element in rootElement.Elements())
             {
-                if (Enum.TryParse(element.Name.LocalName, out PlayStyle playStyle))
+                switch (element.Name.ToString().ToLowerInvariant())
                 {
-                    PlayStyleBanners[(int)playStyle] = new Sprite(element, lazyLoad: true);
-                    PlayStyleColors[(int)playStyle] = element.GetAttributeColor("color", Color.White);
+                    case "playstylebanner":
+                        if (Enum.TryParse(element.GetAttributeString("identifier", ""), out PlayStyle playStyle))
+                        {
+                            PlayStyleBanners[(int)playStyle] = new Sprite(element, lazyLoad: true);
+                            PlayStyleColors[(int)playStyle] = element.GetAttributeColor("color", Color.White);
+                        }
+                        break;
+                    case "playstyleicon":
+                        string identifier = element.GetAttributeString("identifier", "");
+                        if (string.IsNullOrEmpty(identifier)) { continue; }
+                        PlayStyleIcons[identifier] = new Sprite(element, lazyLoad: true);
+                        PlayStyleIconColors[identifier] = element.GetAttributeColor("color", Color.White);
+                        break;
                 }
             }
 
@@ -500,6 +522,8 @@ namespace Barotrauma
             info.SubSelectionMode = serverSettings.SubSelectionMode;
             info.ModeSelectionMode = serverSettings.ModeSelectionMode;
             info.VoipEnabled = serverSettings.VoiceChatEnabled;
+            info.FriendlyFireEnabled = serverSettings.AllowFriendlyFire;
+            info.KarmaEnabled = serverSettings.KarmaEnabled;
             info.PlayerCount = GameMain.Client.ConnectedClients.Count;
             info.PingChecked = false;
             info.HasPassword = serverSettings.HasPassword;

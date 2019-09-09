@@ -32,6 +32,8 @@ namespace Barotrauma.Networking
         public SelectionMode? SubSelectionMode;
         public bool? AllowSpectating;
         public bool? VoipEnabled;
+        public bool? KarmaEnabled;
+        public bool? FriendlyFireEnabled;
         public bool? AllowRespawn;
         public YesNoMaybe? TraitorsEnabled;
         public string GameMode;
@@ -107,54 +109,43 @@ namespace Barotrauma.Networking
             playStyleName.RectTransform.NonScaledSize = (playStyleName.Font.MeasureString(playStyleName.Text) + new Vector2(20, 5) * GUI.Scale).ToPoint();
             playStyleName.RectTransform.IsFixedSize = true;
 
-            var columnContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.45f), previewContainer.RectTransform))
+            var columnContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.45f), previewContainer.RectTransform), isHorizontal: true)
             {
                 Stretch = true
             };
 
-            float elementHeight = 0.075f;
-
-            var title = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), columnContainer.RectTransform), ServerName, font: GUI.LargeFont);
-            title.Text = ToolBox.LimitString(title.Text, title.Font, title.Rect.Width);
-
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), columnContainer.RectTransform),
-                TextManager.AddPunctuation(':', TextManager.Get("ServerListVersion"), string.IsNullOrEmpty(GameVersion) ? TextManager.Get("Unknown") : GameVersion));
-
             // left column -----------------------------------------------------------------------------
 
-            //new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnLeft.RectTransform), IP + ":" + Port);
-
-            var serverMsg = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.5f), columnContainer.RectTransform)) { ScrollBarVisible = true };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), serverMsg.Content.RectTransform), ServerMessage, wrap: true) { CanBeFocused = false };
-
-            // right column -----------------------------------------------------------------------------
-
-            /*var playerCount = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnRight.RectTransform), TextManager.Get("ServerListPlayers"));
-            new GUITextBlock(new RectTransform(Vector2.One, playerCount.RectTransform), PlayerCount + "/" + MaxPlayers, textAlignment: Alignment.Right);
-
-
-            new GUITickBox(new RectTransform(new Vector2(1, elementHeight), columnRight.RectTransform), "Round running")
+            var leftColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 1.0f), columnContainer.RectTransform))
             {
-                Selected = GameStarted,
-                CanBeFocused = false
-            };*/
+                Stretch = true
+            };
+            float elementHeight = 0.075f;
 
-            var gameMode = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnContainer.RectTransform), TextManager.Get("GameMode"));
+            var title = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), leftColumn.RectTransform), ServerName, font: GUI.LargeFont);
+            title.Text = ToolBox.LimitString(title.Text, title.Font, title.Rect.Width);
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), leftColumn.RectTransform),
+                TextManager.AddPunctuation(':', TextManager.Get("ServerListVersion"), string.IsNullOrEmpty(GameVersion) ? TextManager.Get("Unknown") : GameVersion));
+
+            var serverMsg = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.5f), leftColumn.RectTransform)) { ScrollBarVisible = true };
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), serverMsg.Content.RectTransform), ServerMessage, font: GUI.SmallFont, wrap: true) { CanBeFocused = false };
+
+            var gameMode = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), leftColumn.RectTransform), TextManager.Get("GameMode"));
             new GUITextBlock(new RectTransform(Vector2.One, gameMode.RectTransform),
                 TextManager.Get(string.IsNullOrEmpty(GameMode) ? "Unknown" : "GameMode." + GameMode, returnNull: true) ?? GameMode,
                 textAlignment: Alignment.Right);
 
-            var traitors = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnContainer.RectTransform), TextManager.Get("Traitors"));
+            /*var traitors = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), leftColumn.RectTransform), TextManager.Get("Traitors"));
+            new GUITextBlock(new RectTransform(Vector2.One, traitors.RectTransform), TextManager.Get(!TraitorsEnabled.HasValue ? "Unknown" : TraitorsEnabled.Value.ToString()), textAlignment: Alignment.Right);*/
 
-            new GUITextBlock(new RectTransform(Vector2.One, traitors.RectTransform), TextManager.Get(!TraitorsEnabled.HasValue ? "Unknown" : TraitorsEnabled.Value.ToString()), textAlignment: Alignment.Right);
-
-            var subSelection = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnContainer.RectTransform), TextManager.Get("ServerListSubSelection"));
+            var subSelection = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), leftColumn.RectTransform), TextManager.Get("ServerListSubSelection"));
             new GUITextBlock(new RectTransform(Vector2.One, subSelection.RectTransform), TextManager.Get(!SubSelectionMode.HasValue ? "Unknown" : SubSelectionMode.Value.ToString()), textAlignment: Alignment.Right);
 
-            var modeSelection = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnContainer.RectTransform), TextManager.Get("ServerListModeSelection"));
+            var modeSelection = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), leftColumn.RectTransform), TextManager.Get("ServerListModeSelection"));
             new GUITextBlock(new RectTransform(Vector2.One, modeSelection.RectTransform), TextManager.Get(!ModeSelectionMode.HasValue ? "Unknown" : ModeSelectionMode.Value.ToString()), textAlignment: Alignment.Right);
 
-            var allowSpectating = new GUITickBox(new RectTransform(new Vector2(1, elementHeight), columnContainer.RectTransform), TextManager.Get("ServerListAllowSpectating"))
+            var allowSpectating = new GUITickBox(new RectTransform(new Vector2(1, elementHeight), leftColumn.RectTransform), TextManager.Get("ServerListAllowSpectating"))
             {
                 CanBeFocused = false
             };
@@ -163,7 +154,7 @@ namespace Barotrauma.Networking
             else
                 allowSpectating.Selected = AllowSpectating.Value;
 
-            var allowRespawn = new GUITickBox(new RectTransform(new Vector2(1, elementHeight), columnContainer.RectTransform), TextManager.Get("ServerSettingsAllowRespawning"))
+            var allowRespawn = new GUITickBox(new RectTransform(new Vector2(1, elementHeight), leftColumn.RectTransform), TextManager.Get("ServerSettingsAllowRespawning"))
             {
                 CanBeFocused = false
             };
@@ -172,16 +163,16 @@ namespace Barotrauma.Networking
             else
                 allowRespawn.Selected = AllowRespawn.Value;
 
-            var voipEnabledTickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), columnContainer.RectTransform), TextManager.Get("serversettingsvoicechatenabled"))
+            /*var voipEnabledTickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), leftColumn.RectTransform), TextManager.Get("serversettingsvoicechatenabled"))
             {
                 CanBeFocused = false
             };
             if (!VoipEnabled.HasValue)
                 new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.8f), voipEnabledTickBox.Box.RectTransform, Anchor.Center), "?", textAlignment: Alignment.Center);
             else
-                voipEnabledTickBox.Selected = VoipEnabled.Value;
+                voipEnabledTickBox.Selected = VoipEnabled.Value;*/
 
-            var usingWhiteList = new GUITickBox(new RectTransform(new Vector2(1, elementHeight), columnContainer.RectTransform), TextManager.Get("ServerListUsingWhitelist"))
+            var usingWhiteList = new GUITickBox(new RectTransform(new Vector2(1, elementHeight), leftColumn.RectTransform), TextManager.Get("ServerListUsingWhitelist"))
             {
                 CanBeFocused = false
             };
@@ -191,15 +182,15 @@ namespace Barotrauma.Networking
                 usingWhiteList.Selected = UsingWhiteList.Value;
 
 
-            columnContainer.RectTransform.SizeChanged += () =>
+            leftColumn.RectTransform.SizeChanged += () =>
             {
-                GUITextBlock.AutoScaleAndNormalize(allowSpectating.TextBlock, allowRespawn.TextBlock, voipEnabledTickBox.TextBlock, usingWhiteList.TextBlock);
+                GUITextBlock.AutoScaleAndNormalize(allowSpectating.TextBlock, allowRespawn.TextBlock, usingWhiteList.TextBlock);
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), columnContainer.RectTransform),
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), leftColumn.RectTransform),
                 TextManager.Get("ServerListContentPackages"));
 
-            var contentPackageList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.3f), columnContainer.RectTransform)) { ScrollBarVisible = true };
+            var contentPackageList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.3f), leftColumn.RectTransform)) { ScrollBarVisible = true };
             if (ContentPackageNames.Count == 0)
             {
                 new GUITextBlock(new RectTransform(Vector2.One, contentPackageList.Content.RectTransform), TextManager.Get("Unknown"), textAlignment: Alignment.Center)
@@ -248,7 +239,7 @@ namespace Barotrauma.Networking
                 }
                 if (availableWorkshopUrls.Count > 0)
                 {
-                    var workshopBtn = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), columnContainer.RectTransform), TextManager.Get("ServerListSubscribeMissingPackages"))
+                    var workshopBtn = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), leftColumn.RectTransform), TextManager.Get("ServerListSubscribeMissingPackages"))
                     {
                         ToolTip = TextManager.Get(SteamManager.IsInitialized ? "ServerListSubscribeMissingPackagesTooltip" : "ServerListSubscribeMissingPackagesTooltipNoSteam"),
                         Enabled = SteamManager.IsInitialized,
@@ -262,13 +253,68 @@ namespace Barotrauma.Networking
                     workshopBtn.TextBlock.AutoScale = true;
                 }
             }
+            // right column -----------------------------------------------------------------------------
+
+            var rightColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.2f, 1.0f), columnContainer.RectTransform));
+
+            var playStyleTags = GetPlayStyleTags();
+            foreach (string tag in playStyleTags)
+            {
+                if (!GameMain.ServerListScreen.PlayStyleIcons.ContainsKey(tag)) { continue; }
+
+                new GUIImage(new RectTransform(Vector2.One, rightColumn.RectTransform, scaleBasis: ScaleBasis.BothWidth),
+                    GameMain.ServerListScreen.PlayStyleIcons[tag], scaleToFit: true)
+                {
+                    ToolTip = TextManager.Get("servertagdescription." + tag),
+                    Color = GameMain.ServerListScreen.PlayStyleIconColors[tag]
+                };
+            }
+
+            /*var playerCount = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnRight.RectTransform), TextManager.Get("ServerListPlayers"));
+            new GUITextBlock(new RectTransform(Vector2.One, playerCount.RectTransform), PlayerCount + "/" + MaxPlayers, textAlignment: Alignment.Right);
+
+
+            new GUITickBox(new RectTransform(new Vector2(1, elementHeight), columnRight.RectTransform), "Round running")
+            {
+                Selected = GameStarted,
+                CanBeFocused = false
+            };*/
+
 
             // -----------------------------------------------------------------------------
 
-            foreach (GUIComponent c in columnContainer.Children)
+            foreach (GUIComponent c in leftColumn.Children)
             {
                 if (c is GUITextBlock textBlock) textBlock.Padding = Vector4.Zero;
             }
+        }
+
+        public IEnumerable<string> GetPlayStyleTags()
+        {
+            List<string> tags = new List<string>();
+            if (KarmaEnabled.HasValue)
+            {
+                tags.Add(KarmaEnabled.Value ? "karma.true" : "karma.false");
+            }
+            if (TraitorsEnabled.HasValue)
+            {
+                tags.Add(TraitorsEnabled.Value == YesNoMaybe.Maybe ? 
+                    "traitors.maybe" :
+                    (TraitorsEnabled.Value == YesNoMaybe.Yes ? "traitors.true" : "traitors.false"));
+            }
+            if (VoipEnabled.HasValue)
+            {
+                tags.Add(VoipEnabled.Value ? "voip.true" : "voip.false");
+            }
+            if (FriendlyFireEnabled.HasValue)
+            {
+                tags.Add(FriendlyFireEnabled.Value ? "friendlyfire.true" : "friendlyfire.false");
+            }
+            if (ContentPackageNames.Count > 0)
+            {
+                tags.Add(ContentPackageNames.Count > 1 || ContentPackageNames[0] != GameMain.VanillaContent?.Name ? "modded.true" : "modded.false");
+            }
+            return tags;
         }
 
         public static ServerInfo FromXElement(XElement element)
@@ -286,29 +332,14 @@ namespace Barotrauma.Networking
             info.GameVersion = element.GetAttributeString("GameVersion", "");
             info.MaxPlayers = element.GetAttributeInt("MaxPlayers", 0);
 
-            string playStyleStr = element.GetAttributeString("PlayStyle", "");
-            PlayStyle playStyleTemp;
-            if (Enum.TryParse(playStyleStr, out playStyleTemp)) { info.PlayStyle = playStyleTemp; }
-
-            string whitelistStr = element.GetAttributeString("UsingWhiteList", "");
-            bool whitelistTemp;
-            if (bool.TryParse(whitelistStr, out whitelistTemp)) { info.UsingWhiteList = whitelistTemp; }
-
-            string traitorsStr = element.GetAttributeString("TraitorsEnabled", "");
-            YesNoMaybe traitorsTemp;
-            if (Enum.TryParse(traitorsStr, out traitorsTemp)) { info.TraitorsEnabled = traitorsTemp; }
-
-            string subSelectionStr = element.GetAttributeString("SubSelectionMode", "");
-            SelectionMode subSelectionTemp;
-            if (Enum.TryParse(subSelectionStr, out subSelectionTemp)) { info.SubSelectionMode = subSelectionTemp; }
-
-            string modeSelectionStr = element.GetAttributeString("ModeSelectionMode", "");
-            SelectionMode modeSelectionTemp;
-            if (Enum.TryParse(modeSelectionStr, out modeSelectionTemp)) { info.ModeSelectionMode = subSelectionTemp; }
-
-            string voipStr = element.GetAttributeString("VoipEnabled", "");
-            bool voipTemp;
-            if (bool.TryParse(voipStr, out voipTemp)) { info.VoipEnabled = voipTemp; }
+            if (Enum.TryParse(element.GetAttributeString("PlayStyle", ""), out PlayStyle playStyleTemp)) { info.PlayStyle = playStyleTemp; }
+            if (bool.TryParse(element.GetAttributeString("UsingWhiteList", ""), out bool whitelistTemp)) { info.UsingWhiteList = whitelistTemp; }
+            if (Enum.TryParse(element.GetAttributeString("TraitorsEnabled", ""), out YesNoMaybe traitorsTemp)) { info.TraitorsEnabled = traitorsTemp; }
+            if (Enum.TryParse(element.GetAttributeString("SubSelectionMode", ""), out SelectionMode subSelectionTemp)) { info.SubSelectionMode = subSelectionTemp; }
+            if (Enum.TryParse(element.GetAttributeString("ModeSelectionMode", ""), out SelectionMode modeSelectionTemp)) { info.ModeSelectionMode = subSelectionTemp; }
+            if (bool.TryParse(element.GetAttributeString("VoipEnabled", ""), out bool voipTemp)) { info.VoipEnabled = voipTemp; }
+            if (bool.TryParse(element.GetAttributeString("KarmaEnabled", ""), out bool karmaTemp)) { info.KarmaEnabled = karmaTemp; }
+            if (bool.TryParse(element.GetAttributeString("FriendlyFireEnabled", ""), out bool friendlyFireTemp)) { info.FriendlyFireEnabled = friendlyFireTemp; }
 
             info.HasPassword = element.GetAttributeBool("HasPassword", false);
 
@@ -345,6 +376,8 @@ namespace Barotrauma.Networking
             if (SubSelectionMode.HasValue) { element.SetAttributeValue("SubSelectionMode", SubSelectionMode.Value.ToString()); }
             if (ModeSelectionMode.HasValue) { element.SetAttributeValue("ModeSelectionMode", ModeSelectionMode.Value.ToString()); }
             if (VoipEnabled.HasValue) { element.SetAttributeValue("VoipEnabled", VoipEnabled.Value.ToString()); }
+            if (KarmaEnabled.HasValue) { element.SetAttributeValue("KarmaEnabled", KarmaEnabled.Value.ToString()); }
+            if (FriendlyFireEnabled.HasValue) { element.SetAttributeValue("FriendlyFireEnabled", FriendlyFireEnabled.Value.ToString()); }
             element.SetAttributeValue("HasPassword", HasPassword.ToString());
 
             return element;

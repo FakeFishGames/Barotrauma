@@ -698,7 +698,7 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\UI\Server\PlayStyleBanners\PlayStyleBanners.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\UI\Server\PlayStyleBanners\PlayStyleBanners.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\UI\Server\PlayStyles.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\UI\Server\ServerPlayStyleIcons.png">

@@ -216,6 +216,8 @@ namespace Barotrauma.Steam
             instance.client.Lobby.CurrentLobbyData.SetData("voicechatenabled", serverSettings.VoiceChatEnabled.ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("allowspectating", serverSettings.AllowSpectating.ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("allowrespawn", serverSettings.AllowRespawn.ToString());
+            instance.client.Lobby.CurrentLobbyData.SetData("karmaenabled", serverSettings.KarmaEnabled.ToString());
+            instance.client.Lobby.CurrentLobbyData.SetData("friendlyfireenabled", serverSettings.AllowFriendlyFire.ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("traitors", serverSettings.TraitorsEnabled.ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("gamestarted", GameMain.Client.GameStarted.ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("playstyle", serverSettings.PlayStyle.ToString());
@@ -407,15 +409,17 @@ namespace Barotrauma.Steam
                 serverInfo.ContentPackageHashes.AddRange(lobby.GetData("contentpackagehash").Split(','));
                 serverInfo.ContentPackageWorkshopUrls.AddRange(lobby.GetData("contentpackageurl").Split(','));
 
-                serverInfo.UsingWhiteList = lobby.GetData("usingwhitelist") == "True";
+                serverInfo.UsingWhiteList = getLobbyBool("usingwhitelist");
                 SelectionMode selectionMode;
-                if (Enum.TryParse(lobby.GetData("modeselectionmode"), out selectionMode)) serverInfo.ModeSelectionMode = selectionMode;
-                if (Enum.TryParse(lobby.GetData("subselectionmode"), out selectionMode)) serverInfo.SubSelectionMode = selectionMode;
+                if (Enum.TryParse(lobby.GetData("modeselectionmode"), out selectionMode)) { serverInfo.ModeSelectionMode = selectionMode; }
+                if (Enum.TryParse(lobby.GetData("subselectionmode"), out selectionMode)) { serverInfo.SubSelectionMode = selectionMode; }
 
-                serverInfo.AllowSpectating = lobby.GetData("allowspectating") == "True";
-                serverInfo.AllowRespawn = lobby.GetData("allowrespawn") == "True";
-                serverInfo.VoipEnabled = lobby.GetData("voicechatenabled") == "True";
-                if (Enum.TryParse(lobby.GetData("traitors"), out YesNoMaybe traitorsEnabled)) serverInfo.TraitorsEnabled = traitorsEnabled;
+                serverInfo.AllowSpectating = getLobbyBool("allowspectating");
+                serverInfo.AllowRespawn = getLobbyBool("allowrespawn");
+                serverInfo.VoipEnabled = getLobbyBool("voicechatenabled");
+                serverInfo.KarmaEnabled = getLobbyBool("karmaenabled");
+                serverInfo.FriendlyFireEnabled = getLobbyBool("friendlyfireenabled");
+                if (Enum.TryParse(lobby.GetData("traitors"), out YesNoMaybe traitorsEnabled)) { serverInfo.TraitorsEnabled = traitorsEnabled; }
 
                 serverInfo.GameStarted = lobby.GetData("gamestarted") == "True";
                 serverInfo.GameMode = lobby.GetData("gamemode");
@@ -427,6 +431,13 @@ namespace Barotrauma.Steam
                     //invalid contentpackage info
                     serverInfo.ContentPackageNames.Clear();
                     serverInfo.ContentPackageHashes.Clear();
+                }
+
+                bool? getLobbyBool(string key)
+                {
+                    string data = lobby.GetData(key);
+                    if (string.IsNullOrEmpty(data)) { return null; }
+                    return data == "True" || data == "true";
                 }
 
                 onServerFound(serverInfo);
@@ -503,6 +514,8 @@ namespace Barotrauma.Steam
                     if (s.Rules.ContainsKey("allowspectating")) serverInfo.AllowSpectating = s.Rules["allowspectating"] == "True";
                     if (s.Rules.ContainsKey("allowrespawn")) serverInfo.AllowRespawn = s.Rules["allowrespawn"] == "True";
                     if (s.Rules.ContainsKey("voicechatenabled")) serverInfo.VoipEnabled = s.Rules["voicechatenabled"] == "True";
+                    if (s.Rules.ContainsKey("karmaenabled")) serverInfo.KarmaEnabled = s.Rules["karmaenabled"] == "True";
+                    if (s.Rules.ContainsKey("friendlyfireenabled")) serverInfo.FriendlyFireEnabled = s.Rules["friendlyfireenabled"] == "True";
                     if (s.Rules.ContainsKey("traitors"))
                     {
                         if (Enum.TryParse(s.Rules["traitors"], out YesNoMaybe traitorsEnabled)) serverInfo.TraitorsEnabled = traitorsEnabled;
