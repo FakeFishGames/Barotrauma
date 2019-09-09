@@ -3514,6 +3514,10 @@
   <invalidcontentpackage>Content package '[packagename]' cannot be loaded.</invalidcontentpackage>
   <xmlfileinvalid>File '[filepath]' is not a valid XML file ([errormessage]).</xmlfileinvalid>
 
+  <friendplayingbarotrauma>Playing Barotrauma</friendplayingbarotrauma>
+  <friendplayinganothergame>Playing another game</friendplayinganothergame>
+  <friendnotplaying>Not playing</friendnotplaying>
+
   <!-- Changed values as of 13th of August -->
   <traitorgoaldestroyitems>Dispose of at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>
   <karma.kickbanthreshold>Kick/Ban threshold</karma.kickbanthreshold>

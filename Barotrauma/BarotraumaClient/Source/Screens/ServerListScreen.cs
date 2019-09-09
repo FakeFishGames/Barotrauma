@@ -795,7 +795,7 @@ namespace Barotrauma
 
             SteamManager.Instance.Friends.Refresh();
 
-            for (int i=friendsList.Count-1;i>=0;i--)
+            for (int i = friendsList.Count - 1; i >= 0; i--)
             {
                 var friend = friendsList[i];
                 if (!SteamManager.Instance.Friends.AllFriends.Any(g => g.Id == friend.SteamID && g.IsOnline))
@@ -849,7 +849,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    info.Status = friend.IsPlaying ? "Playing other game" : "Not playing";
+                    info.Status = TextManager.Get(friend.IsPlaying ? "FriendPlayingAnotherGame" : "FriendNotPlaying");
                 }
             }
 
