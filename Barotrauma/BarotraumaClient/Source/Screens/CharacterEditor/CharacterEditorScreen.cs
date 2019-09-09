@@ -419,10 +419,6 @@ namespace Barotrauma.CharacterEditor
                         SetToggle(animTestPoseToggle, !animTestPoseToggle.Selected);
                     }
                 }
-                //if (PlayerInput.KeyHit(Keys.H))
-                //{
-                //    SetToggle(holdPositionToggle, !holdPositionToggle.Selected);
-                //}
                 if (PlayerInput.KeyHit(InputType.Run))
                 {
                     // TODO: refactor this horrible hacky index manipulation mess
@@ -822,10 +818,6 @@ namespace Barotrauma.CharacterEditor
             {
                 GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 40, 200), GetCharacterEditorTranslation("Frozen"), Color.Blue, Color.White * 0.5f, 10, GUI.LargeFont);
             }
-            //if (holdPositionToggle.Selected)
-            //{
-            //    GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 100, 250), GetCharacterEditorTranslation("HoldingPosition"), Color.White, Color.Red * 0.5f, 10, GUI.LargeFont);
-            //}
             if (animTestPoseToggle.Selected)
             {
                 GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 100, 300), GetCharacterEditorTranslation("AnimationTestPoseEnabled"), Color.White, Color.Black * 0.5f, 10, GUI.LargeFont);
@@ -1774,7 +1766,6 @@ namespace Barotrauma.CharacterEditor
 
         private GUIDropDown animSelection;
         private GUITickBox freezeToggle;
-        //private GUITickBox holdPositionToggle;
         private GUITickBox animTestPoseToggle;
         private GUITickBox showCollidersToggle;
         private GUIScrollBar jointScaleBar;
@@ -2094,15 +2085,6 @@ namespace Barotrauma.CharacterEditor
                     return true;
                 }
             };
-            //holdPositionToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("HoldPosition"))
-            //{
-            //    Selected = !character.AnimController.Collider.PhysEnabled,
-            //    OnSelected = box =>
-            //    {
-            //        character.AnimController.Collider.PhysEnabled = !box.Selected;
-            //        return true;
-            //    }
-            //};
             new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("LimbPairEditing"))
             {
                 Selected = limbPairEditing,
