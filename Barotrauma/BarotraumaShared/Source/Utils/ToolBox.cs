@@ -140,6 +140,15 @@ namespace Barotrauma
             return fileName;
         }
 
+        private static System.Text.RegularExpressions.Regex removeBBCodeRegex = 
+            new System.Text.RegularExpressions.Regex(@"\[\/?(?:b|i|u|url|quote|code|img|color|size)*?.*?\]");
+
+        public static string RemoveBBCodeTags(string str)
+        {
+            if (string.IsNullOrEmpty(str)) { return str };
+            return removeBBCodeRegex.Replace(str, "");
+        }
+
         public static string LimitString(string str, int maxCharacters)
         {
             if (str == null || maxCharacters < 0) return null;
