@@ -494,7 +494,7 @@ namespace Barotrauma.Networking
         public PlayStyle PlayStyle
         {
             get;
-            private set;
+            set;
         }
 
         [Serialize(800, true)]
