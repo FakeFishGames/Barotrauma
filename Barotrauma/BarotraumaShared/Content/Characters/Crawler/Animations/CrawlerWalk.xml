@@ -20,4 +20,8 @@
   foottorque="50"
   footangles="10: 0.8620372,15: 0.3794122"
   tailtorque="50"
-  tailangle="94.89201" />
+  tailangle="94.89201"
+  stepliftheadmultiplier="1"
+  stepliftamount="5.299997"
+  stepliftoffset="-0.8"
+  stepliftfrequency="1" />
