@@ -406,10 +406,38 @@ namespace Barotrauma.CharacterEditor
                 else
                 {
                     Widget.EnableMultiSelect = false;
-                }
-                if (PlayerInput.KeyHit(Keys.C) && !PlayerInput.KeyDown(Keys.LeftControl))
-                {
-                    SetToggle(copyJointsToggle, !copyJointsToggle.Selected);
+                    if (PlayerInput.KeyHit(Keys.C))
+                    {
+                        SetToggle(showCollidersToggle, !showCollidersToggle.Selected);
+                    }
+                    if (PlayerInput.KeyHit(Keys.Tab))
+                    {
+                        SetToggle(paramsToggle, !paramsToggle.Selected);
+                    }
+                    if (PlayerInput.KeyHit(Keys.L))
+                    {
+                        SetToggle(lightsToggle, !lightsToggle.Selected);
+                    }
+                    if (PlayerInput.KeyHit(Keys.M))
+                    {
+                        SetToggle(damageModifiersToggle, !damageModifiersToggle.Selected);
+                    }
+                    if (PlayerInput.KeyHit(Keys.N))
+                    {
+                        SetToggle(skeletonToggle, !skeletonToggle.Selected);
+                    }
+                    if (PlayerInput.KeyHit(Keys.T))
+                    {
+                        SetToggle(spritesheetToggle, !spritesheetToggle.Selected);
+                    }
+                    if (PlayerInput.KeyHit(Keys.I))
+                    {
+                        SetToggle(ikToggle, !ikToggle.Selected);
+                    }
+                    if (PlayerInput.KeyHit(Keys.F5))
+                    {
+                        RecreateRagdoll();
+                    }
                 }
                 if (character.IsHumanoid)
                 {
