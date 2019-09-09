@@ -437,6 +437,8 @@ namespace Barotrauma
 
             if (canMove)
             {
+                subInventory.HideTimer = 1.0f;
+                subInventory.OpenState = 1.0f;
                 if (subInventory.movableFrameRect.Contains(PlayerInput.MousePosition) && PlayerInput.RightButtonClicked())
                 {
                     container.Inventory.savedPosition = container.Inventory.originalPos;
