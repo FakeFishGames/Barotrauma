@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <PlayStyleBanners>
-  <Roleplay texture="Content/UI/Server/PlayStyleBanners/PlayStyleBanners.png" sourcerect="0,0,2048,820" />
-  <Casual texture="Content/UI/Server/PlayStyleBanners/PlayStyleBanners.png" sourcerect="0,819,2048,819" /> <!-- ew -->
-  <Serious texture="Content/UI/Server/PlayStyleBanners/PlayStyleBanners.png" sourcerect="0,1638‬,2048,819" />
-  <Rampage texture="Content/UI/Server/PlayStyleBanners/PlayStyleBanners.png" sourcerect="0,2457,2048,819" />
-  <SomethingDifferent texture="Content/UI/Server/PlayStyleBanners/PlayStyleBanners.png" sourcerect="0,3276,2048,820" />
+  <Roleplay texture="Content/UI/Server/PlayStyleBanners/PlayStyleBanners.png" sourcerect="0,0,1024,410" />
+  <Casual texture="Content/UI/Server/PlayStyleBanners/PlayStyleBanners.png" sourcerect="0,410,1024,409" /> <!-- ew -->
+  <Serious texture="Content/UI/Server/PlayStyleBanners/PlayStyleBanners.png" sourcerect="0,820,1024,409" />
+  <Rampage texture="Content/UI/Server/PlayStyleBanners/PlayStyleBanners.png" sourcerect="0,1229,1024,409" />
+  <SomethingDifferent texture="Content/UI/Server/PlayStyleBanners/PlayStyleBanners.png" sourcerect="0,1639,1024,409" />
 </PlayStyleBanners>
