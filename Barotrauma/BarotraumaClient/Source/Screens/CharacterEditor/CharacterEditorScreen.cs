@@ -908,9 +908,11 @@ namespace Barotrauma.CharacterEditor
                             jointEndLimb = GetClosestLimbOnSpritesheet(PlayerInput.MousePosition, l => l != null && l != jointStartLimb && l.ActiveSprite != null);
                             if (jointEndLimb != null && PlayerInput.LeftButtonClicked())
                             {
+                                Vector2 anchor1 = anchor1Pos.HasValue ? anchor1Pos.Value / spriteSheetZoom : Vector2.Zero;
+                                anchor1.X = -anchor1.X;
                                 Vector2 anchor2 = (GetLimbSpritesheetRect(jointEndLimb).Center.ToVector2() - PlayerInput.MousePosition) / spriteSheetZoom;
                                 anchor2.X = -anchor2.X;
-                                ExtrudeJoint(selectedJoint, jointEndLimb.Params.ID, anchor1Pos, anchor2);
+                                CreateJoint(jointStartLimb.Params.ID, jointEndLimb.Params.ID, anchor1, anchor2);
                                 jointCreationMode = JointCreationMode.None;
                             }
                         }
@@ -920,7 +922,7 @@ namespace Barotrauma.CharacterEditor
                             if (jointEndLimb != null && PlayerInput.LeftButtonClicked())
                             {
                                 Vector2 anchor2 = ConvertUnits.ToDisplayUnits(jointEndLimb.body.FarseerBody.GetLocalPoint(ScreenToSim(PlayerInput.MousePosition)));
-                                ExtrudeJoint(selectedJoint, jointEndLimb.Params.ID, anchor1Pos, anchor2);
+                                CreateJoint(jointStartLimb.Params.ID, jointEndLimb.Params.ID, anchor1Pos, anchor2);
                                 jointCreationMode = JointCreationMode.None;
                             }
                         }
@@ -1088,15 +1090,6 @@ namespace Barotrauma.CharacterEditor
             ClearSelection();
             selectedLimbs.Add(character.AnimController.Limbs.Single(l => l.Params == newLimbParams));
             ResetParamsEditor();
-        }
-
-        /// <summary>
-        /// Creates a new joint between the last limb of the given joint and the target limb.
-        /// </summary>
-        private void ExtrudeJoint(LimbJoint joint, int targetLimb, Vector2? anchor1 = null, Vector2? anchor2 = null)
-        {
-            if (joint == null) { return; }
-            CreateJoint(joint.Params.Limb2, targetLimb, anchor1, anchor2);
         }
 
         /// <summary>
