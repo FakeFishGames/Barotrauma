@@ -20,6 +20,7 @@ namespace Barotrauma.Steam
         public Facepunch.Steamworks.Auth Auth => client?.Auth;
         public Facepunch.Steamworks.Lobby Lobby => client?.Lobby;
         public Facepunch.Steamworks.LobbyList LobbyList => client?.LobbyList;
+        public Facepunch.Steamworks.ServerList ServerList => client?.ServerList;
 
         private SteamManager()
         {
@@ -317,9 +318,11 @@ namespace Barotrauma.Steam
             query.OnUpdate = () => { UpdateServerQuery(query, onServerFound, onServerRulesReceived, includeUnresponsive: true); };
             query.OnFinished = onFinished;
 
+#if !DEBUG
             var localQuery = instance.client.ServerList.Local(filter);
             localQuery.OnUpdate = () => { UpdateServerQuery(localQuery, onServerFound, onServerRulesReceived, includeUnresponsive: true); };
             localQuery.OnFinished = onFinished;
+#endif
 
             instance.client.LobbyList.OnLobbiesUpdated = () => { UpdateLobbyQuery(onServerFound, onServerRulesReceived, onFinished); };
             instance.client.LobbyList.Refresh();
@@ -393,6 +396,7 @@ namespace Barotrauma.Steam
                 {
                     ServerName = lobby.Name,
                     Port = "",
+                    QueryPort = "",
                     IP = ip,
                     PlayerCount = currPlayers,
                     MaxPlayers = maxPlayers,
@@ -473,6 +477,7 @@ namespace Barotrauma.Steam
                 {
                     ServerName = s.Name,
                     Port = s.ConnectionPort.ToString(),
+                    QueryPort = s.QueryPort.ToString(),
                     IP = s.Address.ToString(),
                     PlayerCount = s.Players,
                     MaxPlayers = s.MaxPlayers,

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Runtime.InteropServices;
 using System.Text;
 using SteamNative;
@@ -35,6 +36,125 @@ namespace Facepunch.Steamworks
     THE SOFTWARE.
         
     **/
+    public class ISteamMatchmakingRulesResponse
+    {
+        // Got data on a rule on the server -- you'll get one of these per rule defined on
+        // the server you are querying
+        public delegate void RulesResponded(string pchRule, string pchValue);
+
+        // The server failed to respond to the request for rule details
+        public delegate void RulesFailedToRespond();
+
+        // The server has finished responding to the rule details request 
+        // (ie, you won't get anymore RulesResponded callbacks)
+        public delegate void RulesRefreshComplete();
+
+        private VTable m_VTable;
+        private IntPtr m_pVTable;
+        private GCHandle m_pGCHandle;
+        private RulesResponded m_RulesResponded;
+        private RulesFailedToRespond m_RulesFailedToRespond;
+        private RulesRefreshComplete m_RulesRefreshComplete;
+
+        public ISteamMatchmakingRulesResponse(RulesResponded onRulesResponded, RulesFailedToRespond onRulesFailedToRespond, RulesRefreshComplete onRulesRefreshComplete)
+        {
+            if (onRulesResponded == null || onRulesFailedToRespond == null || onRulesRefreshComplete == null)
+            {
+                throw new ArgumentNullException();
+            }
+            m_RulesResponded = onRulesResponded;
+            m_RulesFailedToRespond = onRulesFailedToRespond;
+            m_RulesRefreshComplete = onRulesRefreshComplete;
+
+            m_VTable = new VTable()
+            {
+                m_VTRulesResponded = InternalOnRulesResponded,
+                m_VTRulesFailedToRespond = InternalOnRulesFailedToRespond,
+                m_VTRulesRefreshComplete = InternalOnRulesRefreshComplete
+            };
+            m_pVTable = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(VTable)));
+            Marshal.StructureToPtr(m_VTable, m_pVTable, false);
+
+            m_pGCHandle = GCHandle.Alloc(m_pVTable, GCHandleType.Pinned);
+        }
+
+        ~ISteamMatchmakingRulesResponse()
+        {
+            if (m_pVTable != IntPtr.Zero)
+            {
+                Marshal.FreeHGlobal(m_pVTable);
+            }
+
+            if (m_pGCHandle.IsAllocated)
+            {
+                m_pGCHandle.Free();
+            }
+        }
+
+        [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
+        public delegate void InternalRulesResponded(IntPtr thisptr, IntPtr pchRule, IntPtr pchValue);
+        [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
+        public delegate void InternalRulesFailedToRespond(IntPtr thisptr);
+        [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
+        public delegate void InternalRulesRefreshComplete(IntPtr thisptr);
+        private void InternalOnRulesResponded(IntPtr thisptr, IntPtr pchRule, IntPtr pchValue)
+        {
+            List<byte> bytes = new List<byte>();
+            IntPtr seekPointer = pchRule;
+            byte b = Marshal.ReadByte(seekPointer);
+            while (b != 0)
+            {
+                bytes.Add(b);
+                seekPointer = (IntPtr)(seekPointer.ToInt64() + sizeof(byte));
+                b = Marshal.ReadByte(seekPointer);
+            }
+
+            string pchRuleDecoded = Encoding.UTF8.GetString(bytes.ToArray());
+
+            bytes.Clear();
+            seekPointer = pchValue;
+            b = Marshal.ReadByte(seekPointer);
+            while (b != 0)
+            {
+                bytes.Add(b);
+                seekPointer = (IntPtr)(seekPointer.ToInt64() + sizeof(byte));
+                b = Marshal.ReadByte(seekPointer);
+            }
+
+            string pchValueDecoded = Encoding.UTF8.GetString(bytes.ToArray());
+
+            m_RulesResponded(pchRuleDecoded, pchValueDecoded);
+        }
+        private void InternalOnRulesFailedToRespond(IntPtr thisptr)
+        {
+            m_RulesFailedToRespond();
+        }
+        private void InternalOnRulesRefreshComplete(IntPtr thisptr)
+        {
+            m_RulesRefreshComplete();
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private class VTable
+        {
+            [NonSerialized]
+            [MarshalAs(UnmanagedType.FunctionPtr)]
+            public InternalRulesResponded m_VTRulesResponded;
+
+            [NonSerialized]
+            [MarshalAs(UnmanagedType.FunctionPtr)]
+            public InternalRulesFailedToRespond m_VTRulesFailedToRespond;
+
+            [NonSerialized]
+            [MarshalAs(UnmanagedType.FunctionPtr)]
+            public InternalRulesRefreshComplete m_VTRulesRefreshComplete;
+        }
+
+        public static explicit operator System.IntPtr(ISteamMatchmakingRulesResponse that)
+        {
+            return that.m_pGCHandle.AddrOfPinnedObject();
+        }
+    };
 
     public class ISteamMatchmakingPlayersResponse
     {
@@ -261,7 +381,10 @@ namespace Facepunch.Steamworks
             public string value;
         }
 
-
+        public int RequestSpecificServer(ISteamMatchmakingRulesResponse response, IPAddress ip, int port)
+        {
+            return client.native.servers.ServerRules(ip.IpToInt32(), (ushort)port, (IntPtr)response).Value;
+        }
 
         public Request Internet( Filter filter = null )
         {

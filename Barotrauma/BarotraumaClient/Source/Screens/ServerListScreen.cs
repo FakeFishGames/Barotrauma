@@ -1048,11 +1048,11 @@ namespace Barotrauma
 
             refreshDisableTimer = DateTime.Now + AllowedRefreshInterval;
 
-            //TODO: remove, recent servers list needs some processing first
             foreach (ServerInfo info in recentServers)
             {
-                DebugConsole.NewMessage(info.ServerName + " " + info.ServerMessage);
+                DebugConsole.NewMessage(info.ServerName + " " + info.ServerMessage + " " + info.QueryPort);
                 AddToServerList(info);
+                info.QueryLiveInfo();
             }
 
             yield return CoroutineStatus.Success;

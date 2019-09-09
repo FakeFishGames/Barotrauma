@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Xml.Linq;
 
 namespace Barotrauma.Networking
@@ -11,6 +12,7 @@ namespace Barotrauma.Networking
     {
         public string IP;
         public string Port;
+        public string QueryPort;
 
         public UInt64 LobbyID;
         public UInt64 OwnerID;
@@ -40,6 +42,10 @@ namespace Barotrauma.Networking
         public PlayStyle? PlayStyle;
 
         public bool? RespondedToSteamQuery = null;
+
+        public Facepunch.Steamworks.SteamFriend SteamFriend;
+        public Facepunch.Steamworks.ISteamMatchmakingRulesResponse MatchmakingRulesResponse;
+        public int? ServerQuery;
 
         public string GameVersion;
         public List<string> ContentPackageNames
@@ -325,8 +331,11 @@ namespace Barotrauma.Networking
                 ServerMessage = element.GetAttributeString("ServerMessage", ""),
                 IP = element.GetAttributeString("IP", ""),
                 Port = element.GetAttributeString("Port", ""),
+                QueryPort = element.GetAttributeString("QueryPort", ""),
                 OwnerID = element.GetAttributeSteamID("OwnerID",0)
             };
+
+            info.RespondedToSteamQuery = null;
 
             info.GameMode = element.GetAttributeString("GameMode", "");
             info.GameVersion = element.GetAttributeString("GameVersion", "");
@@ -346,6 +355,28 @@ namespace Barotrauma.Networking
             return info;
         }
 
+        public void QueryLiveInfo()
+        {
+            if (int.TryParse(QueryPort, out _))
+            {
+                MatchmakingRulesResponse = new Facepunch.Steamworks.ISteamMatchmakingRulesResponse(
+                    (string pchRule, string pchValue) =>
+                    {
+                        DebugConsole.NewMessage(pchRule + " " + pchValue);
+                    },
+                    () =>
+                    {
+
+                    },
+                    () =>
+                    {
+
+                    });
+                ServerQuery = SteamManager.Instance.ServerList.RequestSpecificServer(MatchmakingRulesResponse, IPAddress.Parse(IP), int.Parse(QueryPort));
+                DebugConsole.NewMessage(ServerQuery.ToString());
+            }
+        }
+
         public XElement ToXElement()
         {
             if (OwnerID == 0 && string.IsNullOrEmpty(Port))
@@ -361,6 +392,7 @@ namespace Barotrauma.Networking
             {
                 element.SetAttributeValue("IP", IP);
                 element.SetAttributeValue("Port", Port);
+                element.SetAttributeValue("QueryPort", QueryPort);
             }
             else
             {
