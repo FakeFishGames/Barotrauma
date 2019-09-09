@@ -36,10 +36,13 @@ namespace Facepunch.Steamworks
         internal Client client;
         private byte[] buffer = new byte[1024 * 128];
 
+        public Action<ulong> OnRichPresenceUpdateCallback;
+
         internal Friends( Client c )
         {
             client = c;
 
+            client.RegisterCallback<FriendRichPresenceUpdate_t>(OnRichPresenceUpdate);
             client.RegisterCallback<AvatarImageLoaded_t>( OnAvatarImageLoaded );
             client.RegisterCallback<PersonaStateChange_t>( OnPersonaStateChange );
             client.RegisterCallback<GameRichPresenceJoinRequested_t>( OnGameJoinRequested );
@@ -390,6 +393,11 @@ namespace Facepunch.Steamworks
         private void OnAvatarImageLoaded( AvatarImageLoaded_t data )
         {
             LoadAvatarForSteamId( data.SteamID );
+        }
+
+        private void OnRichPresenceUpdate( FriendRichPresenceUpdate_t data )
+        {
+            OnRichPresenceUpdateCallback?.Invoke(data.SteamIDFriend);
         }
 
     }

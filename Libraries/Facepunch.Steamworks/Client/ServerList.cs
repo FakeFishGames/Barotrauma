@@ -7,6 +7,143 @@ using SteamNative;
 
 namespace Facepunch.Steamworks
 {
+    //ISteamMatchmakingPlayersResponse taken from:
+    //  https://github.com/rlabrecque/Steamworks.NET/blob/master/Plugins/Steamworks.NET/ISteamMatchmakingResponses.cs
+
+    /**
+         
+    The MIT License (MIT)
+
+    Copyright (c) 2013-2019 Riley Labrecque
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in
+    all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+    THE SOFTWARE.
+        
+    **/
+
+    public class ISteamMatchmakingPlayersResponse
+    {
+        // Got data on a new player on the server -- you'll get this callback once per player
+        // on the server which you have requested player data on.
+        public delegate void AddPlayerToList(string pchName, int nScore, float flTimePlayed);
+
+        // The server failed to respond to the request for player details
+        public delegate void PlayersFailedToRespond();
+
+        // The server has finished responding to the player details request 
+        // (ie, you won't get anymore AddPlayerToList callbacks)
+        public delegate void PlayersRefreshComplete();
+
+        private VTable m_VTable;
+        private IntPtr m_pVTable;
+        private GCHandle m_pGCHandle;
+        private AddPlayerToList m_AddPlayerToList;
+        private PlayersFailedToRespond m_PlayersFailedToRespond;
+        private PlayersRefreshComplete m_PlayersRefreshComplete;
+
+        public ISteamMatchmakingPlayersResponse(AddPlayerToList onAddPlayerToList, PlayersFailedToRespond onPlayersFailedToRespond, PlayersRefreshComplete onPlayersRefreshComplete)
+        {
+            if (onAddPlayerToList == null || onPlayersFailedToRespond == null || onPlayersRefreshComplete == null)
+            {
+                throw new ArgumentNullException();
+            }
+            m_AddPlayerToList = onAddPlayerToList;
+            m_PlayersFailedToRespond = onPlayersFailedToRespond;
+            m_PlayersRefreshComplete = onPlayersRefreshComplete;
+
+            m_VTable = new VTable()
+            {
+                m_VTAddPlayerToList = InternalOnAddPlayerToList,
+                m_VTPlayersFailedToRespond = InternalOnPlayersFailedToRespond,
+                m_VTPlayersRefreshComplete = InternalOnPlayersRefreshComplete
+            };
+            m_pVTable = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(VTable)));
+            Marshal.StructureToPtr(m_VTable, m_pVTable, false);
+
+            m_pGCHandle = GCHandle.Alloc(m_pVTable, GCHandleType.Pinned);
+        }
+
+        ~ISteamMatchmakingPlayersResponse()
+        {
+            if (m_pVTable != IntPtr.Zero)
+            {
+                Marshal.FreeHGlobal(m_pVTable);
+            }
+
+            if (m_pGCHandle.IsAllocated)
+            {
+                m_pGCHandle.Free();
+            }
+        }
+
+        [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
+        public delegate void InternalAddPlayerToList(IntPtr thisptr, IntPtr pchName, int nScore, float flTimePlayed);
+        [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
+        public delegate void InternalPlayersFailedToRespond(IntPtr thisptr);
+        [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
+        public delegate void InternalPlayersRefreshComplete(IntPtr thisptr);
+        private void InternalOnAddPlayerToList(IntPtr thisptr, IntPtr pchName, int nScore, float flTimePlayed)
+        {
+            List<byte> bytes = new List<byte>();
+            IntPtr seekPointer = pchName;
+            byte b = Marshal.ReadByte(seekPointer);
+            while (b != 0)
+            {
+                bytes.Add(b);
+                seekPointer = (IntPtr)(seekPointer.ToInt64() + sizeof(byte));
+                b = Marshal.ReadByte(seekPointer);
+            }
+
+            string pchNameDecoded = Encoding.UTF8.GetString(bytes.ToArray());
+
+            m_AddPlayerToList(pchNameDecoded, nScore, flTimePlayed);
+        }
+        private void InternalOnPlayersFailedToRespond(IntPtr thisptr)
+        {
+            m_PlayersFailedToRespond();
+        }
+        private void InternalOnPlayersRefreshComplete(IntPtr thisptr)
+        {
+            m_PlayersRefreshComplete();
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private class VTable
+        {
+            [NonSerialized]
+            [MarshalAs(UnmanagedType.FunctionPtr)]
+            public InternalAddPlayerToList m_VTAddPlayerToList;
+
+            [NonSerialized]
+            [MarshalAs(UnmanagedType.FunctionPtr)]
+            public InternalPlayersFailedToRespond m_VTPlayersFailedToRespond;
+
+            [NonSerialized]
+            [MarshalAs(UnmanagedType.FunctionPtr)]
+            public InternalPlayersRefreshComplete m_VTPlayersRefreshComplete;
+        }
+
+        public static explicit operator System.IntPtr(ISteamMatchmakingPlayersResponse that)
+        {
+            return that.m_pGCHandle.AddrOfPinnedObject();
+        }
+    };
+
     public partial class ServerList : IDisposable
     {
         internal Client client;

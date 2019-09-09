@@ -101,8 +101,6 @@ namespace Barotrauma
 
         public ServerListScreen()
         {
-            ReadServerMemFromFile(recentServersFile, ref recentServers);
-
             GameMain.Instance.OnResolutionChanged += OnResolutionChanged;
 
             menu = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.85f), GUI.Canvas, Anchor.Center) { MinSize = new Point(GameMain.GraphicsHeight, 0) });
@@ -420,6 +418,9 @@ namespace Barotrauma
                     PlayStyleBanners[(int)playStyle] = new Sprite(playStylesTexture, rectVec, Vector2.Zero);
                 }
             }
+
+            //recent and favorite servers
+            ReadServerMemFromFile(recentServersFile, ref recentServers);
         }
 
         private void ReadServerMemFromFile(string file, ref List<ServerInfo> servers)
@@ -990,7 +991,7 @@ namespace Barotrauma
             {
                 CanBeFocused = false
             };
-            
+
             CoroutineManager.StartCoroutine(WaitForRefresh());
         }
 
@@ -1022,6 +1023,13 @@ namespace Barotrauma
             }
 
             refreshDisableTimer = DateTime.Now + AllowedRefreshInterval;
+
+            //TODO: remove, recent servers list needs some processing first
+            foreach (ServerInfo info in recentServers)
+            {
+                DebugConsole.NewMessage(info.ServerName + " " + info.ServerMessage);
+                AddToServerList(info);
+            }
 
             yield return CoroutineStatus.Success;
         }
