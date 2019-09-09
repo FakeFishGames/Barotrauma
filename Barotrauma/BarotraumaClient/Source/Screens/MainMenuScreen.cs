@@ -981,7 +981,7 @@ namespace Barotrauma
 
             //play style -----------------------------------------------------
 
-            var playstyleContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.98f, 0.5f), parent.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
+            var playstyleContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), parent.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
             {
                 Stretch = true,
                 Color = Color.Black
@@ -1024,8 +1024,12 @@ namespace Barotrauma
                 if (playStyleStr.Length > longestPlayStyleStr.Length) { longestPlayStyleStr = playStyleStr; }
             }
 
-            playstyleDescription = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), parent.RectTransform),
-                longestPlayStyleStr, style: "GUIToolTip", wrap: true);
+            playstyleDescription = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), playstyleBanner.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0.0f, 0.1f) },
+                "playstyle description goes here", style: null, wrap: true)
+            {
+                Color = Color.Black * 0.8f,
+                TextColor = Color.White
+            };
             playstyleDescription.Padding = Vector4.One * 10.0f * GUI.Scale;
             playstyleDescription.CalculateHeightFromText(padding: (int)(15 * GUI.Scale));
             playstyleDescription.RectTransform.MinSize = new Point(0, playstyleDescription.Rect.Height);
