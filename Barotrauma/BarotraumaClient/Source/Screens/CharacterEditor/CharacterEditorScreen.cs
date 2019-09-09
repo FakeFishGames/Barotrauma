@@ -439,6 +439,12 @@ namespace Barotrauma.CharacterEditor
                         RecreateRagdoll();
                     }
                 }
+                if (PlayerInput.KeyDown(InputType.Left) || PlayerInput.KeyDown(InputType.Right) || PlayerInput.KeyDown(InputType.Up) || PlayerInput.KeyDown(InputType.Down))
+                {
+                    // Enable the main collider physics when the user is trying to move the character.
+                    // It's possible that the physics are disabled, because the angle widgets handle input logic in the draw method (which they shouldn't)
+                    character.AnimController.Collider.PhysEnabled = true;
+                }
                 if (character.IsHumanoid)
                 {
                     animTestPoseToggle.Enabled = CurrentAnimation.IsGroundedAnimation;
