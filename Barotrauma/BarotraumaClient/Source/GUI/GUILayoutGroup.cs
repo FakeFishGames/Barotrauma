@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using System;
 using System.Linq;
 
 namespace Barotrauma
@@ -83,17 +84,25 @@ namespace Barotrauma
             float stretchFactor = 1.0f;
             if (stretch && RectTransform.Children.Count() > 0)
             {
+                float minSize = RectTransform.Children
+                    .Where(c => !c.GUIComponent.IgnoreLayoutGroups)
+                    .Sum(c => isHorizontal ? c.MinSize.X : c.MinSize.Y);
+
                 float totalSize = RectTransform.Children
                     .Where(c => !c.GUIComponent.IgnoreLayoutGroups)
                     .Sum(c => isHorizontal ? 
                         MathHelper.Clamp(c.Rect.Width, c.MinSize.X, c.MaxSize.X) :
                         MathHelper.Clamp(c.Rect.Height, c.MinSize.Y, c.MaxSize.Y));
 
+                float thisSize = (isHorizontal ? Rect.Width : Rect.Height);
+
                 totalSize += 
                     (RectTransform.Children.Count() - 1) * 
-                    (absoluteSpacing + relativeSpacing * (isHorizontal ? Rect.Width : Rect.Height));
+                    (absoluteSpacing + relativeSpacing * thisSize);
 
-                stretchFactor = totalSize <= 0.0f ? 1.0f : (isHorizontal ? Rect.Width: Rect.Height) / totalSize;
+                stretchFactor = totalSize <= 0.0f || minSize >= thisSize ? 
+                    1.0f : 
+                    (thisSize - minSize) / (totalSize - minSize);
             }
 
             int absPos = 0;
@@ -106,7 +115,7 @@ namespace Barotrauma
                 {
                     child.RelativeOffset = new Vector2(relPos, child.RelativeOffset.Y);
                     child.AbsoluteOffset = new Point(absPos, child.AbsoluteOffset.Y);
-                    absPos += (int)((child.Rect.Width + absoluteSpacing) * stretchFactor);
+                    absPos += (int)Math.Max((child.Rect.Width + absoluteSpacing) * stretchFactor, child.MinSize.X);
                     if (stretch)
                     {
                         child.RelativeSize = new Vector2(child.RelativeSize.X * stretchFactor, child.RelativeSize.Y);
@@ -116,7 +125,7 @@ namespace Barotrauma
                 {
                     child.RelativeOffset = new Vector2(child.RelativeOffset.X, relPos);
                     child.AbsoluteOffset = new Point(child.AbsoluteOffset.X, absPos);
-                    absPos += (int)((child.Rect.Height + absoluteSpacing) * stretchFactor);
+                    absPos += (int)Math.Max((child.Rect.Height + absoluteSpacing) * stretchFactor, child.MinSize.Y);
                     if (stretch)
                     {
                         child.RelativeSize = new Vector2(child.RelativeSize.X, child.RelativeSize.Y * stretchFactor);
