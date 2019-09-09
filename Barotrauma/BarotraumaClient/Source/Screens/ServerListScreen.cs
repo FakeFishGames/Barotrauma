@@ -68,7 +68,6 @@ namespace Barotrauma
         private List<ServerInfo> recentServers;
 
         //server playstyle and tags
-        private Texture2D playStylesTexture;
         public Sprite[] PlayStyleBanners
         {
             get;
@@ -406,7 +405,6 @@ namespace Barotrauma
             //TODO: expose to content package?
             PlayStyleBanners = new Sprite[Enum.GetValues(typeof(PlayStyle)).Length];
 
-            playStylesTexture = TextureLoader.FromFile("Content/UI/Server/PlayStyleBanners/PlayStyleBanners.png", mipmap: true);
             XDocument playStylesDoc = XMLExtensions.TryLoadXml("Content/UI/Server/PlayStyleBanners/PlayStyleBanners.xml");
 
             XElement rootElement = playStylesDoc.Root;
@@ -414,8 +412,7 @@ namespace Barotrauma
             {
                 if (Enum.TryParse(element.Name.LocalName, out PlayStyle playStyle))
                 {
-                    Rectangle rectVec = element.GetAttributeRect("sourcerect", Rectangle.Empty);
-                    PlayStyleBanners[(int)playStyle] = new Sprite(playStylesTexture, rectVec, Vector2.Zero);
+                    PlayStyleBanners[(int)playStyle] = new Sprite(element, lazyLoad: true);
                 }
             }
 

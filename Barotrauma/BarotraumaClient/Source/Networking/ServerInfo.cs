@@ -93,10 +93,10 @@ namespace Barotrauma.Networking
                 Stretch = true
             };
 
-            Sprite playStyleBannerSprite = GameMain.ServerListScreen.PlayStyleBanners[(int)Networking.PlayStyle.Serious];
+            Sprite playStyleBannerSprite = GameMain.ServerListScreen.PlayStyleBanners[(int)(PlayStyle.HasValue ? PlayStyle.Value : Networking.PlayStyle.Serious)];
             float playStyleBannerAspectRatio = playStyleBannerSprite.SourceRect.Width / (playStyleBannerSprite.SourceRect.Height * 0.625f);
             var playStyleBanner = new GUIImage(new RectTransform(new Vector2(1.0f, 1.0f / playStyleBannerAspectRatio), previewContainer.RectTransform, scaleBasis: ScaleBasis.BothWidth),
-                                               GameMain.ServerListScreen.PlayStyleBanners[(int)Networking.PlayStyle.Serious], null, true);
+                                               playStyleBannerSprite, null, true);
 
             var columnContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.45f), previewContainer.RectTransform) { RelativeOffset = new Vector2(0.027f, 0.0f) })
             {

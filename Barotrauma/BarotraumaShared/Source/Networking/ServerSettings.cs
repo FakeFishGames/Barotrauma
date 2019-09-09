@@ -490,6 +490,13 @@ namespace Barotrauma.Networking
             }
         }
 
+        [Serialize(PlayStyle.Serious, true)]
+        public PlayStyle PlayStyle
+        {
+            get;
+            private set;
+        }
+
         [Serialize(800, true)]
         private int LinesPerLogFile
         {

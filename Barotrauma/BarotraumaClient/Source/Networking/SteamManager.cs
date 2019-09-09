@@ -197,7 +197,7 @@ namespace Barotrauma.Steam
             var contentPackages = GameMain.Config.SelectedContentPackages.Where(cp => cp.HasMultiplayerIncompatibleContent);
             
             instance.client.Lobby.Name = serverSettings.ServerName;
-            instance.client.Lobby.Owner = Steam.SteamManager.GetSteamID();
+            instance.client.Lobby.Owner = GetSteamID();
             instance.client.Lobby.MaxMembers = serverSettings.MaxPlayers;
             instance.client.Lobby.CurrentLobbyData.SetData("playercount", (GameMain.Client?.ConnectedClients?.Count??0).ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("maxplayernum", serverSettings.MaxPlayers.ToString());
@@ -218,6 +218,7 @@ namespace Barotrauma.Steam
             instance.client.Lobby.CurrentLobbyData.SetData("allowrespawn", serverSettings.AllowRespawn.ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("traitors", serverSettings.TraitorsEnabled.ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("gamestarted", GameMain.Client.GameStarted.ToString());
+            instance.client.Lobby.CurrentLobbyData.SetData("playstyle", serverSettings.PlayStyle.ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("gamemode", serverSettings.GameModeIdentifier);
 
             DebugConsole.NewMessage("Lobby updated!", Microsoft.Xna.Framework.Color.Lime);
