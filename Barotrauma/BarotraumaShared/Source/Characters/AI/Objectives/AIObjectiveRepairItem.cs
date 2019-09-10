@@ -19,6 +19,8 @@ namespace Barotrauma
         private float previousCondition = -1;
         private RepairTool repairTool;
 
+        private bool IsRepairing => character.SelectedConstruction == Item && Item.GetComponent<Repairable>()?.CurrentFixer == character;
+
         public AIObjectiveRepairItem(Character character, Item item, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier)
         {
             Item = item;
@@ -34,31 +36,26 @@ namespace Barotrauma
             float distanceFactor = MathHelper.Lerp(1, 0.5f, MathUtils.InverseLerp(0, 10000, dist));
             float damagePriority = MathHelper.Lerp(1, 0, Item.Condition / Item.MaxCondition);
             float successFactor = MathHelper.Lerp(0, 1, Item.Repairables.Average(r => r.DegreeOfSuccess(character)));
-            float isSelected = character.SelectedConstruction == Item ? 50 : 0;
+            float isSelected = IsRepairing ? 50 : 0;
             float devotion = (Math.Min(Priority, 10) + isSelected) / 100;
             float max = MathHelper.Min(AIObjectiveManager.OrderPriority - 1, 90);
-
-            bool isCompleted = Item.IsFullCondition;
-            if (isCompleted && character.SelectedConstruction == Item)
-            {
-                character?.Speak(TextManager.GetWithVariable("DialogItemRepaired", "[itemname]", Item.Name, true), null, 0.0f, "itemrepaired", 10.0f);
-            }
-
             return MathHelper.Lerp(0, max, MathHelper.Clamp(devotion + damagePriority * distanceFactor * successFactor * PriorityModifier, 0, 1));
         }
 
         protected override bool Check()
         {
-            bool isCompleted = Item.IsFullCondition;
-            if (isCompleted && character.SelectedConstruction == Item)
+            IsCompleted = Item.IsFullCondition;
+            if (IsCompleted && IsRepairing)
             {
                 character?.Speak(TextManager.GetWithVariable("DialogItemRepaired", "[itemname]", Item.Name, true), null, 0.0f, "itemrepaired", 10.0f);
             }
-            return isCompleted;
+            return IsCompleted;
         }
 
         protected override void Act(float deltaTime)
         {
+            // Only continue when the get item sub objectives have been completed.
+            if (subObjectives.Any()) { return; }
             foreach (Repairable repairable in Item.Repairables)
             {
                 if (!repairable.HasRequiredItems(character, false))
@@ -68,14 +65,12 @@ namespace Barotrauma
                     {
                         foreach (RelatedItem requiredItem in kvp.Value)
                         {
-                            AddSubObjective(new AIObjectiveGetItem(character, requiredItem.Identifiers, objectiveManager, true));
+                            subObjectives.Add(new AIObjectiveGetItem(character, requiredItem.Identifiers, objectiveManager, true));
                         }
                     }
                     return;
                 }
             }
-            // Only continue when the get item sub objectives have been completed.
-            if (subObjectives.Any()) { return; }
             if (repairTool == null)
             {
                 FindRepairTool();
