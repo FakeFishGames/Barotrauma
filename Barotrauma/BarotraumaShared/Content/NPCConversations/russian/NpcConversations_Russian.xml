@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Conversations identifier="vanillaconversations" Language="Russian" nowhitespace="False">
+<Conversations identifier="vanillaconversations" Language="Russian">
 
 <!-- Personality traits -->
 <PersonalityTrait name="Professional" alloweddialogtags="professional,none" commonness="1" />
@@ -12,7 +12,7 @@
 <PersonalityTrait name="Crazy" alloweddialogtags="crazy,none" commonness="1" />
 
 <!-- Generic conversation -->
-<Conversation line="Ну что, ребята, прокатимся!" speaker="0" flags="Initial" allowedjobs="captain">
+<Conversation line="Ну, что ребята, прокатимся!" speaker="0" flags="Initial" allowedjobs="captain">
 	<Conversation line="" speaker="0"/>
 	<Conversation line="Так точно." speaker="1">
 		<Conversation line="Слушаюсь!" speaker="2"/>
@@ -207,8 +207,8 @@
 <Conversation line="Ты не задумываешься о том, что же произошло с теми, кто построил эти руины?" speaker="0" maxintensity="0.2">
 	<Conversation line="Бесконечные своды, скрытые в безграничной тьме ночного кошмара. Неисчислимые и ушедшие, быр, быр, быр!" speaker="0" flags="Psychosis"/>
 	<Conversation line="Я думаю, все об этом задумываются." speaker="1"/>
-	<Conversation line="Пускай лучше этим занимаются исследователи." speaker="1">
-		<Conversation line="У меня тут и так забот хватает." speaker="1"/>
+	<Conversation line="Но пускай лучше этим занимаются исследователи." speaker="1">
+		<Conversation line="А у меня тут и так забот хватает." speaker="1"/>
 	</Conversation>
 	<Conversation line="Лишь бездна знает." speaker="1" speakertags="crazy"/>
 	<Conversation line="Я об этом думаю, но по мне так, правды нихто не знаит." speaker="2" speakertags="brokenenglish"/>
@@ -247,10 +247,10 @@
 </Conversation>
 
 <Conversation line="Мне на днях в руки попала старая памятка для моряков." speaker="0" maxintensity="0.2">
-	<Conversation line="И из-за этой странной древней терминологии я многих вещей там вообще не понимаю." speaker="0">
+	<Conversation line="И я из-за этой странной древней терминологии многих вещей там, вообще, не пойму." speaker="0">
 		<Conversation line="Вот, например, что такое астролябия?" speaker="0">
 			<Conversation line="Представления не имею." speaker="1"/>
-			<Conversation line="Это слово явно как-то связано со звездами." speaker="1"/>
+			<Conversation line="Но явно это как-то связано со звездами." speaker="1"/>
 		</Conversation>
 	</Conversation>
 </Conversation>
@@ -611,7 +611,7 @@
 
 <!-- Outpost Watchmen -->
 <Conversation line="Привет, моряки!" speaker="0" flags="EnterEndOutpost" allowedjobs="watchman">
-	<Conversation line="Строительство аванпоста еще не завершено, загляните через несколько месяцев!" speaker="0">
+	<Conversation line="Строительство аванпоста еще не завершено, заглядывайте через несколько месяцев!" speaker="0">
 		<Conversation line="Хотя я могу показать вам каталог припасов, которые можно у нас купить. А еще у нас есть люди, которые ищут работу." speaker="0">
 			<Conversation line="Как будете готовы, я могу дать вам пару советов по навигации в этом районе." speaker="0"/>
 		</Conversation>
@@ -619,7 +619,7 @@
 </Conversation>
 
 <Conversation line="Всегда приятно видеть знакомое лицо! У нас тут гости нечасто бывают." speaker="0" flags="EnterEndOutpost" allowedjobs="watchman">
-	<Conversation line="Строительство аванпоста еще не завершено, загляните через несколько месяцев!" speaker="0">
+	<Conversation line="Строительство аванпоста еще не завершено, заглядывайте через несколько месяцев!" speaker="0">
 		<Conversation line="Но если вам нужны припасы или работники, дайте знать." speaker="0">
 			<Conversation line="А как будете готовы, я могу дать вам пару советов по навигации в этом районе." speaker="0"/>
 		</Conversation>
