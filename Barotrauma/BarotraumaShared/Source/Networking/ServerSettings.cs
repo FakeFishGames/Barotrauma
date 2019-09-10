@@ -490,11 +490,16 @@ namespace Barotrauma.Networking
             }
         }
 
+        private PlayStyle playstyleSelection;
         [Serialize(PlayStyle.Serious, true)]
         public PlayStyle PlayStyle
         {
-            get;
-            set;
+            get { return playstyleSelection; }
+            set 
+            {
+                playstyleSelection = value;
+                ServerDetailsChanged = true;
+            }
         }
 
         [Serialize(800, true)]

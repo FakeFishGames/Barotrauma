@@ -331,9 +331,26 @@ namespace Barotrauma.Networking
             };
 
             //***********************************************
-            
+
+            // Play Style Selection
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsPlayStyle"));
+            var selectionFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.3f), serverTab.RectTransform))
+            {
+                Stretch = true,
+                RelativeSpacing = 0.05f
+            };
+
+            GUIRadioButtonGroup selectionPlayStyle = new GUIRadioButtonGroup();
+            for (int i = 0; i < 5; i++)
+            {
+                var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.15f, 1.0f), selectionFrame.RectTransform), TextManager.Get("servertag." + ((PlayStyle)i).ToString()), font: GUI.SmallFont);
+                selectionPlayStyle.AddRadioButton((PlayStyle)i, selectionTick);
+            }
+            GetPropertyData("PlayStyle").AssignGUIComponent(selectionPlayStyle);
+
+            // Sub Selection
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsSubSelection"));
-            var selectionFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), isHorizontal: true)
+            selectionFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), isHorizontal: true)
             {
                 Stretch = true,
                 RelativeSpacing = 0.05f
@@ -348,6 +365,7 @@ namespace Barotrauma.Networking
             DebugConsole.NewMessage(SubSelectionMode.ToString(), Color.White);
             GetPropertyData("SubSelectionMode").AssignGUIComponent(selectionMode);
 
+            // Mode Selection
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsModeSelection"));
             selectionFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), isHorizontal: true)
             {
@@ -715,6 +733,18 @@ namespace Barotrauma.Networking
                 Stretch = true,
                 RelativeSpacing = 0.02f
             };
+
+            var allowFriendlyFire = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), antigriefingTab.RectTransform),
+                TextManager.Get("ServerSettingsAllowFriendlyFire"));
+            GetPropertyData("AllowFriendlyFire").AssignGUIComponent(allowFriendlyFire);
+
+            var allowRewiring = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), antigriefingTab.RectTransform),
+                TextManager.Get("ServerSettingsAllowRewiring"));
+            GetPropertyData("AllowRewiring").AssignGUIComponent(allowRewiring);
+
+            var allowDisguises = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), antigriefingTab.RectTransform),
+                TextManager.Get("ServerSettingsAllowDisguises"));
+            GetPropertyData("AllowDisguises").AssignGUIComponent(allowDisguises);
 
             var voteKickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), antigriefingTab.RectTransform), TextManager.Get("ServerSettingsAllowVoteKick"));
             GetPropertyData("AllowVoteKick").AssignGUIComponent(voteKickBox);

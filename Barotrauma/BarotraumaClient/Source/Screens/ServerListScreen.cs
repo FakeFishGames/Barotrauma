@@ -886,7 +886,7 @@ namespace Barotrauma
                 return 0;
             });
 
-            Color mainColor = new Color(58, 93, 43);
+            Color mainColor = new Color(96, 196, 83);
             Color hoverColor = new Color(53, 72, 76);
             Color pressColor = new Color(255, 255, 255);
 
@@ -903,11 +903,11 @@ namespace Barotrauma
                 {
                     if (friend.InServer)
                     {
-                        mainColor = new Color(58, 93, 43);
+                        mainColor = new Color(96, 196, 83);
                     }
                     else
                     {
-                        mainColor = friend.PlayingThisGame ? new Color(58, 93, 43) : new Color(83, 164, 196);
+                        mainColor = friend.PlayingThisGame ? new Color(96, 196, 83) : new Color(83, 164, 196);
                     }
 
                     var guiButton = new GUIButton(new RectTransform(Vector2.One * 0.6f, friendsButtonHolder.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: null)
