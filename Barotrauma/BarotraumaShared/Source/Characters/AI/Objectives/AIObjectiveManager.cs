@@ -272,7 +272,6 @@ namespace Barotrauma
                 case "repairsystems":
                     newObjective = new AIObjectiveRepairItems(character, this, priorityModifier)
                     {
-                        Option = option,
                         RequireAdequateSkills = option == "jobspecific"
                     };
                     break;
