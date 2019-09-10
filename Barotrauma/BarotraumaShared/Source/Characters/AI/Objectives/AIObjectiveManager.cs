@@ -48,7 +48,7 @@ namespace Barotrauma
             CreateAutonomousObjectives();
         }
 
-        public void AddObjective(AIObjective objective)
+        public void AddObjective<T>(T objective) where T : AIObjective
         {
             if (objective == null)
             {
@@ -57,8 +57,20 @@ namespace Barotrauma
 #endif
                 return;
             }
+            // Can't use the generic type, because it's possible that the user of this method uses the base type AIObjective.
+            // We need to get the highest type.
             var type = objective.GetType();
-            Objectives.RemoveAll(o => o.GetType() == type);
+            if (objective.AllowMultipleInstances)
+            {
+                if (Objectives.FirstOrDefault(o => o.GetType() == type) is T existingObjective && existingObjective.IsDuplicate(objective))
+                {
+                    Objectives.Remove(existingObjective);
+                }
+            }
+            else
+            {
+                Objectives.RemoveAll(o => o.GetType() == type);
+            }
             Objectives.Add(objective);
         }
 
@@ -86,8 +98,8 @@ namespace Barotrauma
                 matchingItems.RemoveAll(it => it.Submarine != character.Submarine);
                 var item = matchingItems.GetRandom();
                 var order = new Order(
-                    orderPrefab, 
-                    item ?? character.CurrentHull as Entity, 
+                    orderPrefab,
+                    item ?? character.CurrentHull as Entity,
                     item?.Components.FirstOrDefault(ic => ic.GetType() == orderPrefab.ItemComponentType),
                     orderGiver: character);
                 if (order == null) { continue; }
@@ -101,7 +113,7 @@ namespace Barotrauma
             WaitTimer = Math.Max(WaitTimer, Rand.Range(0.5f, 1f) * objectiveCount);
         }
 
-        public void AddObjective(AIObjective objective, float delay, Action callback = null)
+        public void AddObjective<T>(T objective, float delay, Action callback = null) where T : AIObjective
         {
             if (objective == null)
             {
@@ -258,7 +270,11 @@ namespace Barotrauma
                     newObjective = new AIObjectiveRescueAll(character, this, priorityModifier);
                     break;
                 case "repairsystems":
-                    newObjective = new AIObjectiveRepairItems(character, this, priorityModifier) { RequireAdequateSkills = option == "jobspecific" };
+                    newObjective = new AIObjectiveRepairItems(character, this, priorityModifier)
+                    {
+                        Option = option,
+                        RequireAdequateSkills = option == "jobspecific"
+                    };
                     break;
                 case "pumpwater":
                     newObjective = new AIObjectivePumpWater(character, this, option, priorityModifier: priorityModifier);
