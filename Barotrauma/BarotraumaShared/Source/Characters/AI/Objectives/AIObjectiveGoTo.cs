@@ -175,7 +175,7 @@ namespace Barotrauma
                     if (needsEquipment)
                     {
                         TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit, objectiveManager), 
-                            onAbandon: () => RemoveSubObjective(ref findDivingGear),
+                            onAbandon: () => Abandon = true,
                             onCompleted: () => RemoveSubObjective(ref findDivingGear));
                         return;
                     }

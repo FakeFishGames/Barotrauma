@@ -89,7 +89,7 @@ namespace Barotrauma
                 else
                 {
                     TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(target.Item, character, objectiveManager, closeEnough: 50), 
-                        onAbandon: () => RemoveSubObjective(ref goToObjective),
+                        onAbandon: () => Abandon = true,
                         onCompleted: () => RemoveSubObjective(ref goToObjective));
                 }
             }
@@ -104,7 +104,7 @@ namespace Barotrauma
                 else if (!character.Inventory.Items.Contains(component.Item))
                 {
                     TryAddSubObjective(ref getItemObjective, () => new AIObjectiveGetItem(character, component.Item, objectiveManager, equip: true), 
-                        onAbandon: () => RemoveSubObjective(ref getItemObjective),
+                        onAbandon: () => Abandon = true,
                         onCompleted: () => RemoveSubObjective(ref getItemObjective));
                 }
                 else
