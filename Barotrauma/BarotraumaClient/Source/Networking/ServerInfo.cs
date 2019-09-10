@@ -122,12 +122,12 @@ namespace Barotrauma.Networking
 
             // left column -----------------------------------------------------------------------------
 
-            var leftColumnHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 1.0f), columnContainer.RectTransform), childAnchor: Anchor.CenterRight)
+            var leftColumnHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 1.0f), columnContainer.RectTransform), childAnchor: Anchor.Center)
             {
                 Stretch = true
             };
 
-            var leftColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.975f, 1.0f), leftColumnHolder.RectTransform))
+            var leftColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 1.0f), leftColumnHolder.RectTransform))
             {
                 Stretch = true
             };
@@ -267,7 +267,12 @@ namespace Barotrauma.Networking
             }
             // right column -----------------------------------------------------------------------------
 
-            var rightColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.2f, 1.0f), columnContainer.RectTransform));
+            var rightColumnBackground = new GUIFrame(new RectTransform(new Vector2(0.2f, 1.0f), columnContainer.RectTransform), style: null)
+            {
+                Color = Color.Black * 0.25f
+            };
+
+            var rightColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 1.0f), rightColumnBackground.RectTransform, Anchor.Center));
 
             var playStyleTags = GetPlayStyleTags();
             foreach (string tag in playStyleTags)
