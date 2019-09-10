@@ -21,6 +21,7 @@ namespace Barotrauma.Steam
         public Facepunch.Steamworks.Lobby Lobby => client?.Lobby;
         public Facepunch.Steamworks.LobbyList LobbyList => client?.LobbyList;
         public Facepunch.Steamworks.ServerList ServerList => client?.ServerList;
+        public Facepunch.Steamworks.Client Client => client;
 
         private SteamManager()
         {
@@ -491,66 +492,70 @@ namespace Barotrauma.Steam
                 {
                     s.FetchRules();
                 }
-                s.OnReceivedRules += (bool rulesReceived) =>
-                {
-                    if (!rulesReceived || s.Rules == null) { return; }
-                    
-                    if (s.Rules.ContainsKey("message")) serverInfo.ServerMessage = s.Rules["message"];
-                    if (s.Rules.ContainsKey("version")) serverInfo.GameVersion = s.Rules["version"];
-
-                    if (s.Rules.ContainsKey("playercount"))
-                    {
-                       if (int.TryParse(s.Rules["playercount"], out int playerCount)) serverInfo.PlayerCount = playerCount;
-                    }
-
-                    if (s.Rules.ContainsKey("contentpackage")) serverInfo.ContentPackageNames.AddRange(s.Rules["contentpackage"].Split(','));
-                    if (s.Rules.ContainsKey("contentpackagehash")) serverInfo.ContentPackageHashes.AddRange(s.Rules["contentpackagehash"].Split(','));
-                    if (s.Rules.ContainsKey("contentpackageurl")) serverInfo.ContentPackageWorkshopUrls.AddRange(s.Rules["contentpackageurl"].Split(','));
-
-                    if (s.Rules.ContainsKey("usingwhitelist")) serverInfo.UsingWhiteList = s.Rules["usingwhitelist"] == "True";
-                    if (s.Rules.ContainsKey("modeselectionmode"))
-                    {
-                        if (Enum.TryParse(s.Rules["modeselectionmode"], out SelectionMode selectionMode)) serverInfo.ModeSelectionMode = selectionMode;
-                    }
-                    if (s.Rules.ContainsKey("subselectionmode"))
-                    {
-                        if (Enum.TryParse(s.Rules["subselectionmode"], out SelectionMode selectionMode)) serverInfo.SubSelectionMode = selectionMode;
-                    }
-                    if (s.Rules.ContainsKey("allowspectating")) serverInfo.AllowSpectating = s.Rules["allowspectating"] == "True";
-                    if (s.Rules.ContainsKey("allowrespawn")) serverInfo.AllowRespawn = s.Rules["allowrespawn"] == "True";
-                    if (s.Rules.ContainsKey("voicechatenabled")) serverInfo.VoipEnabled = s.Rules["voicechatenabled"] == "True";
-                    if (s.Rules.ContainsKey("karmaenabled")) serverInfo.KarmaEnabled = s.Rules["karmaenabled"] == "True";
-                    if (s.Rules.ContainsKey("friendlyfireenabled")) serverInfo.FriendlyFireEnabled = s.Rules["friendlyfireenabled"] == "True";
-                    if (s.Rules.ContainsKey("traitors"))
-                    {
-                        if (Enum.TryParse(s.Rules["traitors"], out YesNoMaybe traitorsEnabled)) serverInfo.TraitorsEnabled = traitorsEnabled;
-                    }
-
-                    if (s.Rules.ContainsKey("gamestarted")) serverInfo.GameStarted = s.Rules["gamestarted"] == "True";
-
-                    if (s.Rules.ContainsKey("gamemode"))
-                    {
-                        serverInfo.GameMode = s.Rules["gamemode"];
-                    }
-
-                    if (s.Rules.ContainsKey("playstyle"))
-                    {
-                        if (Enum.TryParse(s.Rules["playstyle"], out PlayStyle playStyle)) serverInfo.PlayStyle = playStyle;
-                    }
-
-                    if (serverInfo.ContentPackageNames.Count != serverInfo.ContentPackageHashes.Count ||
-                        serverInfo.ContentPackageHashes.Count != serverInfo.ContentPackageWorkshopUrls.Count)
-                    {
-                        //invalid contentpackage info
-                        serverInfo.ContentPackageNames.Clear();
-                        serverInfo.ContentPackageHashes.Clear();
-                    }
-                    onServerRulesReceived(serverInfo);
-                };
+                s.OnReceivedRules += (bool received) => { OnReceivedRules(s, serverInfo, received); onServerRulesReceived(serverInfo); };
 
                 onServerFound(serverInfo);
             }
             query.Responded.Clear();
+        }
+
+        public static void OnReceivedRules(ServerList.Server s, ServerInfo serverInfo, bool rulesReceived)
+        {
+            if (!rulesReceived || s.Rules == null) { return; }
+                    
+            if (s.Rules.ContainsKey("message")) serverInfo.ServerMessage = s.Rules["message"];
+            if (s.Rules.ContainsKey("version")) serverInfo.GameVersion = s.Rules["version"];
+
+            if (s.Rules.ContainsKey("playercount"))
+            {
+                if (int.TryParse(s.Rules["playercount"], out int playerCount)) serverInfo.PlayerCount = playerCount;
+            }
+
+            serverInfo.ContentPackageNames.Clear();
+            serverInfo.ContentPackageHashes.Clear();
+            serverInfo.ContentPackageWorkshopUrls.Clear();
+            if (s.Rules.ContainsKey("contentpackage")) serverInfo.ContentPackageNames.AddRange(s.Rules["contentpackage"].Split(','));
+            if (s.Rules.ContainsKey("contentpackagehash")) serverInfo.ContentPackageHashes.AddRange(s.Rules["contentpackagehash"].Split(','));
+            if (s.Rules.ContainsKey("contentpackageurl")) serverInfo.ContentPackageWorkshopUrls.AddRange(s.Rules["contentpackageurl"].Split(','));
+
+            if (s.Rules.ContainsKey("usingwhitelist")) serverInfo.UsingWhiteList = s.Rules["usingwhitelist"] == "True";
+            if (s.Rules.ContainsKey("modeselectionmode"))
+            {
+                if (Enum.TryParse(s.Rules["modeselectionmode"], out SelectionMode selectionMode)) serverInfo.ModeSelectionMode = selectionMode;
+            }
+            if (s.Rules.ContainsKey("subselectionmode"))
+            {
+                if (Enum.TryParse(s.Rules["subselectionmode"], out SelectionMode selectionMode)) serverInfo.SubSelectionMode = selectionMode;
+            }
+            if (s.Rules.ContainsKey("allowspectating")) serverInfo.AllowSpectating = s.Rules["allowspectating"] == "True";
+            if (s.Rules.ContainsKey("allowrespawn")) serverInfo.AllowRespawn = s.Rules["allowrespawn"] == "True";
+            if (s.Rules.ContainsKey("voicechatenabled")) serverInfo.VoipEnabled = s.Rules["voicechatenabled"] == "True";
+            if (s.Rules.ContainsKey("karmaenabled")) serverInfo.KarmaEnabled = s.Rules["karmaenabled"] == "True";
+            if (s.Rules.ContainsKey("friendlyfireenabled")) serverInfo.FriendlyFireEnabled = s.Rules["friendlyfireenabled"] == "True";
+            if (s.Rules.ContainsKey("traitors"))
+            {
+                if (Enum.TryParse(s.Rules["traitors"], out YesNoMaybe traitorsEnabled)) serverInfo.TraitorsEnabled = traitorsEnabled;
+            }
+
+            if (s.Rules.ContainsKey("gamestarted")) serverInfo.GameStarted = s.Rules["gamestarted"] == "True";
+
+            if (s.Rules.ContainsKey("gamemode"))
+            {
+                serverInfo.GameMode = s.Rules["gamemode"];
+            }
+
+            if (s.Rules.ContainsKey("playstyle"))
+            {
+                if (Enum.TryParse(s.Rules["playstyle"], out PlayStyle playStyle)) serverInfo.PlayStyle = playStyle;
+            }
+
+            if (serverInfo.ContentPackageNames.Count != serverInfo.ContentPackageHashes.Count ||
+                serverInfo.ContentPackageHashes.Count != serverInfo.ContentPackageWorkshopUrls.Count)
+            {
+                //invalid contentpackage info
+                serverInfo.ContentPackageNames.Clear();
+                serverInfo.ContentPackageHashes.Clear();
+            }
         }
 
         private static bool ValidateServerInfo(ServerList.Server server)

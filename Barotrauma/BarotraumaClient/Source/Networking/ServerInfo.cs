@@ -44,8 +44,8 @@ namespace Barotrauma.Networking
         public bool? RespondedToSteamQuery = null;
 
         public Facepunch.Steamworks.SteamFriend SteamFriend;
-        public Facepunch.Steamworks.ISteamMatchmakingRulesResponse MatchmakingRulesResponse;
-        public int? ServerQuery;
+        public Facepunch.Steamworks.ISteamMatchmakingPingResponse MatchmakingPingResponse;
+        public int? PingHQuery;
 
         public string GameVersion;
         public List<string> ContentPackageNames
@@ -361,25 +361,37 @@ namespace Barotrauma.Networking
             return info;
         }
 
-        public void QueryLiveInfo()
+        public void QueryLiveInfo(Action<Networking.ServerInfo> onServerRulesReceived)
         {
             if (int.TryParse(QueryPort, out _))
             {
-                MatchmakingRulesResponse = new Facepunch.Steamworks.ISteamMatchmakingRulesResponse(
-                    (string pchRule, string pchValue) =>
+                if (PingHQuery != null)
+                {
+                    SteamManager.Instance.ServerList.CancelHQuery(PingHQuery.Value);
+                    PingHQuery = null;
+                }
+
+                MatchmakingPingResponse = new Facepunch.Steamworks.ISteamMatchmakingPingResponse(
+                    SteamManager.Instance.Client,
+                    (server) =>
                     {
-                        DebugConsole.NewMessage(pchRule + " " + pchValue);
+                        ServerName = server.Name;
+                        RespondedToSteamQuery = true;
+                        PlayerCount = server.Players;
+                        MaxPlayers = server.MaxPlayers;
+                        HasPassword = server.Passworded;
+                        PingChecked = true;
+                        Ping = server.Ping;
+                        LobbyID = 0;
+                        server.FetchRules();
+                        server.OnReceivedRules += (bool received) => { SteamManager.OnReceivedRules(server, this, received); onServerRulesReceived?.Invoke(this); };
                     },
                     () =>
                     {
-
-                    },
-                    () =>
-                    {
-
+                        RespondedToSteamQuery = false;
                     });
-                ServerQuery = SteamManager.Instance.ServerList.RequestSpecificServer(MatchmakingRulesResponse, IPAddress.Parse(IP), int.Parse(QueryPort));
-                DebugConsole.NewMessage(ServerQuery.ToString());
+
+                PingHQuery = SteamManager.Instance.ServerList.HQueryPing(MatchmakingPingResponse, IPAddress.Parse(IP), int.Parse(QueryPort));
             }
         }
 

@@ -8,7 +8,7 @@ using SteamNative;
 
 namespace Facepunch.Steamworks
 {
-    //ISteamMatchmakingPlayersResponse taken from:
+    //ISteamMatchmakingRulesResponse & ISteamMatchmakingPlayersResponse taken from:
     //  https://github.com/rlabrecque/Steamworks.NET/blob/master/Plugins/Steamworks.NET/ISteamMatchmakingResponses.cs
 
     /**
@@ -36,6 +36,86 @@ namespace Facepunch.Steamworks
     THE SOFTWARE.
         
     **/
+    public class ISteamMatchmakingPingResponse
+    {
+        // Server has responded successfully and has updated data
+        public delegate void ServerResponded(ServerList.Server server);
+
+        // Server failed to respond to the ping request
+        public delegate void ServerFailedToRespond();
+
+        private VTable m_VTable;
+        private IntPtr m_pVTable;
+        private GCHandle m_pGCHandle;
+        private ServerResponded m_ServerResponded;
+        private ServerFailedToRespond m_ServerFailedToRespond;
+        private Client client;
+
+        public ISteamMatchmakingPingResponse(Client c, ServerResponded onServerResponded, ServerFailedToRespond onServerFailedToRespond)
+        {
+            if (onServerResponded == null || onServerFailedToRespond == null)
+            {
+                throw new ArgumentNullException();
+            }
+            client = c;
+            m_ServerResponded = onServerResponded;
+            m_ServerFailedToRespond = onServerFailedToRespond;
+
+            m_VTable = new VTable()
+            {
+                m_VTServerResponded = InternalOnServerResponded,
+                m_VTServerFailedToRespond = InternalOnServerFailedToRespond,
+            };
+            m_pVTable = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(VTable)));
+            Marshal.StructureToPtr(m_VTable, m_pVTable, false);
+
+            m_pGCHandle = GCHandle.Alloc(m_pVTable, GCHandleType.Pinned);
+        }
+
+        ~ISteamMatchmakingPingResponse()
+        {
+            if (m_pVTable != IntPtr.Zero)
+            {
+                Marshal.FreeHGlobal(m_pVTable);
+            }
+
+            if (m_pGCHandle.IsAllocated)
+            {
+                m_pGCHandle.Free();
+            }
+        }
+
+        [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
+        private delegate void InternalServerResponded(IntPtr thisptr, gameserveritem_t server);
+        [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
+        private delegate void InternalServerFailedToRespond(IntPtr thisptr);
+        private void InternalOnServerResponded(IntPtr thisptr, gameserveritem_t serverItem)
+        {
+            m_ServerResponded(ServerList.Server.FromSteam(client, serverItem));
+        }
+        private void InternalOnServerFailedToRespond(IntPtr thisptr)
+        {
+            m_ServerFailedToRespond();
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private class VTable
+        {
+            [NonSerialized]
+            [MarshalAs(UnmanagedType.FunctionPtr)]
+            public InternalServerResponded m_VTServerResponded;
+
+            [NonSerialized]
+            [MarshalAs(UnmanagedType.FunctionPtr)]
+            public InternalServerFailedToRespond m_VTServerFailedToRespond;
+        }
+
+        public static explicit operator System.IntPtr(ISteamMatchmakingPingResponse that)
+        {
+            return that.m_pGCHandle.AddrOfPinnedObject();
+        }
+    };
+
     public class ISteamMatchmakingRulesResponse
     {
         // Got data on a rule on the server -- you'll get one of these per rule defined on
@@ -381,9 +461,19 @@ namespace Facepunch.Steamworks
             public string value;
         }
 
-        public int RequestSpecificServer(ISteamMatchmakingRulesResponse response, IPAddress ip, int port)
+        public void CancelHQuery(int query)
         {
-            return client.native.servers.ServerRules(ip.IpToInt32(), (ushort)port, (IntPtr)response).Value;
+            client.native.servers.CancelServerQuery((HServerQuery)query);
+        }
+
+        public int HQueryPing(ISteamMatchmakingPingResponse response, IPAddress ip, int port)
+        {
+            return client.native.servers.PingServer(ip.IpToInt32(), (ushort)port, (IntPtr)response).Value;
+        }
+
+        public int HQueryServerRules(ISteamMatchmakingRulesResponse response, IPAddress ip, int queryPort)
+        {
+            return client.native.servers.ServerRules(ip.IpToInt32(), (ushort)queryPort, (IntPtr)response).Value;
         }
 
         public Request Internet( Filter filter = null )

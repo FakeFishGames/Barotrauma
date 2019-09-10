@@ -1054,7 +1054,7 @@ namespace Barotrauma
             {
                 DebugConsole.NewMessage(info.ServerName + " " + info.ServerMessage + " " + info.QueryPort);
                 AddToServerList(info);
-                info.QueryLiveInfo();
+                info.QueryLiveInfo(UpdateServerInfo);
             }
 
             yield return CoroutineStatus.Success;
