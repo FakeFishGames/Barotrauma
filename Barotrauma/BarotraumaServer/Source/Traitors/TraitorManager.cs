@@ -20,9 +20,15 @@ namespace Barotrauma
 
         private float startCountdown = 0.0f;
         private GameServer server;
-
+        
         private readonly Dictionary<ulong, int> traitorCountsBySteamId = new Dictionary<ulong, int>();
         private readonly Dictionary<string, int> traitorCountsByEndPoint = new Dictionary<string, int>();
+
+        public bool ShouldEndRound
+        {
+            get;
+            set;
+        }
 
         public int GetTraitorCount(Tuple<ulong, string> steamIdAndEndPoint)
         {
@@ -70,7 +76,9 @@ namespace Barotrauma
 #if DISABLE_MISSIONS
             return;
 #endif
-            if (server == null) return;
+            if (server == null) { return; }
+
+            ShouldEndRound = false;
 
             Traitor.TraitorMission.InitializeRandom();
             this.server = server;
@@ -81,6 +89,8 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
+            if (ShouldEndRound) { return; }
+
 #if DISABLE_MISSIONS
             return;
 #endif
@@ -118,7 +128,7 @@ namespace Barotrauma
                 if (gameShouldEnd)
                 {
                     GameMain.GameSession.WinningTeam = winningTeam;
-                    GameMain.Server.EndGame();
+                    ShouldEndRound = true;
                     return;
                 }
                 if (missionCompleted)

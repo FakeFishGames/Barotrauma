@@ -221,7 +221,7 @@ namespace Barotrauma
                 }
 
                 messages.ForEach(traitor => traitor.Value.ForEach(message => traitor.Key.SendChatMessage(message)));
-                Update(0.0f, GameMain.Server.EndGame);
+                Update(0.0f, () => { GameMain.Server.TraitorManager.ShouldEndRound = true; });
                 messages.ForEach(traitor => traitor.Value.ForEach(message => traitor.Key.SendChatMessageBox(message)));
 #if SERVER
                 foreach (var traitor in Traitors.Values)
