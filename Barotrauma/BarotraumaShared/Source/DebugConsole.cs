@@ -968,7 +968,7 @@ namespace Barotrauma
                 var commands = new List<KeyValuePair<string, string[]>>()
                 {
                     new KeyValuePair<string, string[]>("debugdraw", new string[]{ "true" }),
-                    new KeyValuePair<string, string[]>("los", new string[]{ "true" }),
+                    new KeyValuePair<string, string[]>("los", new string[]{ "false" }),
                     new KeyValuePair<string, string[]>("lights", new string[]{ "false" }),
                     new KeyValuePair<string, string[]>("freecam", new string[0]),
                 };
