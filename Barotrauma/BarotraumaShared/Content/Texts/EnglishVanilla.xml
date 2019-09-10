@@ -870,27 +870,25 @@
   <charactereditor.selectedanimation>Selected Animation</charactereditor.selectedanimation>
   <charactereditor.previouscharacter>Previous</charactereditor.previouscharacter>
   <charactereditor.nextcharacter>Next</charactereditor.nextcharacter>
-  <charactereditor.showparameters>Parameters</charactereditor.showparameters>
-  <charactereditor.showspritesheet>Spritesheet</charactereditor.showspritesheet>
-  <charactereditor.drawskeleton>Skeleton</charactereditor.drawskeleton>
-  <charactereditor.enablelights>Lights</charactereditor.enablelights>
-  <charactereditor.drawdamagemodifiers>Damage Modifiers</charactereditor.drawdamagemodifiers>
+  <charactereditor.showparameters>Parameters [TAB]</charactereditor.showparameters>
+  <charactereditor.showspritesheet>Spritesheet [T]</charactereditor.showspritesheet>
+  <charactereditor.drawskeleton>Skeleton [N]</charactereditor.drawskeleton>
+  <charactereditor.enablelights>Lights [L]</charactereditor.enablelights>
+  <charactereditor.drawdamagemodifiers>Damage Modifiers [M]</charactereditor.drawdamagemodifiers>
   <charactereditor.editcharacter>CHARACTER [1]</charactereditor.editcharacter>
   <charactereditor.editragdoll>RAGDOLL [2]</charactereditor.editragdoll>
   <charactereditor.editlimbs>LIMBS [3]</charactereditor.editlimbs>
   <charactereditor.editjoints>JOINTS [4]</charactereditor.editjoints>
   <charactereditor.editanimations>ANIMATIONS [5]</charactereditor.editanimations>
-  <charactereditor.editiktargets>IK Targets</charactereditor.editiktargets>
+  <charactereditor.editiktargets>IK Targets [I]</charactereditor.editiktargets>
   <charactereditor.freeze>Freeze [F]</charactereditor.freeze>
   <charactereditor.autofreeze>Auto Freeze</charactereditor.autofreeze>
-  <charactereditor.holdposition>Hold Position [H]</charactereditor.holdposition>
-  <charactereditor.holdingposition>Holding Position</charactereditor.holdingposition>
   <charactereditor.limbpairediting>Limb Pair Editing</charactereditor.limbpairediting>
   <charactereditor.animationtestpose>Test Pose [X]</charactereditor.animationtestpose>
   <charactereditor.animationtestposeenabled>Test Pose Enabled</charactereditor.animationtestposeenabled>
   <charactereditor.automove>Auto Move</charactereditor.automove>
   <charactereditor.followcursor>Follow Cursor</charactereditor.followcursor>
-  <charactereditor.showcolliders>Colliders</charactereditor.showcolliders>
+  <charactereditor.showcolliders>Colliders [C]</charactereditor.showcolliders>
   <charactereditor.editbackgroundcolor>Edit Background Color</charactereditor.editbackgroundcolor>
   <charactereditor.savebutton>Save All</charactereditor.savebutton>
   <charactereditor.allanimationssaved>All animations saved</charactereditor.allanimationssaved>
@@ -911,7 +909,7 @@
   <charactereditor.animationtypenotimplemented>Animation type [type] not implemented!</charactereditor.animationtypenotimplemented>
   <charactereditor.animationoftypeloaded>Animation of type [type] loaded from [file]</charactereditor.animationoftypeloaded>
   <charactereditor.reloadtextures>Reload Textures</charactereditor.reloadtextures>
-  <charactereditor.recreateragdoll>Recreate Ragdoll</charactereditor.recreateragdoll>
+  <charactereditor.recreateragdoll>Recreate Ragdoll [F5]</charactereditor.recreateragdoll>
   <charactereditor.recreateragdolltooltip>Many of the parameters requires recreating the ragdoll. If adjusting the parameter doesn't seem to have effect, click this button.</charactereditor.recreateragdolltooltip>
   <charactereditor.createnewcharacter>Create New Character</charactereditor.createnewcharacter>
   <charactereditor.copycharacter>Copy Character</charactereditor.copycharacter>
@@ -998,6 +996,7 @@
   <charactereditor.drawlimbonspritesheet>Draw the limb on the spritesheet</charactereditor.drawlimbonspritesheet>
   <charactereditor.onlyshowselectedlimbs>Show Only Selected Limbs</charactereditor.onlyshowselectedlimbs>
   <charactereditor.newcontentpackage>New Content Package</charactereditor.newcontentpackage>
+  <charactereditor.existingjointfound>A joint between limb [limbid1] and [limbid2] already found!</charactereditor.existingjointfound>
 
   <!-- Submarine editor -->
   <items>Items</items>

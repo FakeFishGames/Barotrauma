@@ -8,7 +8,6 @@ using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
 
-
 namespace Barotrauma
 {
     [AttributeUsage(AttributeTargets.Property)]
@@ -22,6 +21,11 @@ namespace Barotrauma
         public float ValueStep;
 
         public string DisplayName;
+
+        /// <summary>
+        /// Currently implemented only for int fields. TODO: implement the remaining types (SerializableEntityEditor)
+        /// </summary>
+        public bool ReadOnly;
 
         public Editable(int maxLength = 20)
         {

@@ -274,7 +274,16 @@ namespace Barotrauma.CharacterEditor
             if (showSpritesheet)
             {
                 spriteSheetControls.AddToGUIUpdateList();
-                if (selectedLimbs.Any())
+                Limb lastLimb = selectedLimbs.LastOrDefault();
+                if (lastLimb == null)
+                {
+                    var lastJoint = selectedJoints.LastOrDefault();
+                    if (lastJoint != null)
+                    {
+                        lastLimb = PlayerInput.KeyDown(Keys.LeftAlt) ? lastJoint.LimbB : lastJoint.LimbA;
+                    }
+                }
+                if (lastLimb != null)
                 {
                     resetSpriteOrientationButtonParent.AddToGUIUpdateList();
                 }
@@ -406,10 +415,44 @@ namespace Barotrauma.CharacterEditor
                 else
                 {
                     Widget.EnableMultiSelect = false;
+                    if (PlayerInput.KeyHit(Keys.C))
+                    {
+                        SetToggle(showCollidersToggle, !showCollidersToggle.Selected);
+                    }
+                    if (PlayerInput.KeyHit(Keys.Tab))
+                    {
+                        SetToggle(paramsToggle, !paramsToggle.Selected);
+                    }
+                    if (PlayerInput.KeyHit(Keys.L))
+                    {
+                        SetToggle(lightsToggle, !lightsToggle.Selected);
+                    }
+                    if (PlayerInput.KeyHit(Keys.M))
+                    {
+                        SetToggle(damageModifiersToggle, !damageModifiersToggle.Selected);
+                    }
+                    if (PlayerInput.KeyHit(Keys.N))
+                    {
+                        SetToggle(skeletonToggle, !skeletonToggle.Selected);
+                    }
+                    if (PlayerInput.KeyHit(Keys.T))
+                    {
+                        SetToggle(spritesheetToggle, !spritesheetToggle.Selected);
+                    }
+                    if (PlayerInput.KeyHit(Keys.I))
+                    {
+                        SetToggle(ikToggle, !ikToggle.Selected);
+                    }
+                    if (PlayerInput.KeyHit(Keys.F5))
+                    {
+                        RecreateRagdoll();
+                    }
                 }
-                if (PlayerInput.KeyHit(Keys.C) && !PlayerInput.KeyDown(Keys.LeftControl))
+                if (PlayerInput.KeyDown(InputType.Left) || PlayerInput.KeyDown(InputType.Right) || PlayerInput.KeyDown(InputType.Up) || PlayerInput.KeyDown(InputType.Down))
                 {
-                    SetToggle(copyJointsToggle, !copyJointsToggle.Selected);
+                    // Enable the main collider physics when the user is trying to move the character.
+                    // It's possible that the physics are disabled, because the angle widgets handle input logic in the draw method (which they shouldn't)
+                    character.AnimController.Collider.PhysEnabled = true;
                 }
                 if (character.IsHumanoid)
                 {
@@ -498,17 +541,6 @@ namespace Barotrauma.CharacterEditor
                 if (PlayerInput.KeyHit(Keys.Delete))
                 {
                     DeleteSelected();
-                }
-                if (editLimbs && PlayerInput.KeyDown(Keys.LeftControl))
-                {
-                    var selectedLimb = selectedLimbs.FirstOrDefault();
-                    if (selectedLimb != null)
-                    {
-                        if (PlayerInput.KeyHit(Keys.C))
-                        {
-                            CopyLimb(selectedLimb);
-                        }
-                    }
                 }
                 if (ShowExtraRagdollControls && PlayerInput.KeyDown(Keys.LeftControl))
                 {
@@ -919,9 +951,11 @@ namespace Barotrauma.CharacterEditor
                             jointEndLimb = GetClosestLimbOnSpritesheet(PlayerInput.MousePosition, l => l != null && l != jointStartLimb && l.ActiveSprite != null);
                             if (jointEndLimb != null && PlayerInput.LeftButtonClicked())
                             {
+                                Vector2 anchor1 = anchor1Pos.HasValue ? anchor1Pos.Value / spriteSheetZoom : Vector2.Zero;
+                                anchor1.X = -anchor1.X;
                                 Vector2 anchor2 = (GetLimbSpritesheetRect(jointEndLimb).Center.ToVector2() - PlayerInput.MousePosition) / spriteSheetZoom;
                                 anchor2.X = -anchor2.X;
-                                ExtrudeJoint(selectedJoint, jointEndLimb.Params.ID, anchor1Pos, anchor2);
+                                CreateJoint(jointStartLimb.Params.ID, jointEndLimb.Params.ID, anchor1, anchor2);
                                 jointCreationMode = JointCreationMode.None;
                             }
                         }
@@ -931,7 +965,7 @@ namespace Barotrauma.CharacterEditor
                             if (jointEndLimb != null && PlayerInput.LeftButtonClicked())
                             {
                                 Vector2 anchor2 = ConvertUnits.ToDisplayUnits(jointEndLimb.body.FarseerBody.GetLocalPoint(ScreenToSim(PlayerInput.MousePosition)));
-                                ExtrudeJoint(selectedJoint, jointEndLimb.Params.ID, anchor1Pos, anchor2);
+                                CreateJoint(jointStartLimb.Params.ID, jointEndLimb.Params.ID, anchor1Pos, anchor2);
                                 jointCreationMode = JointCreationMode.None;
                             }
                         }
@@ -1102,19 +1136,15 @@ namespace Barotrauma.CharacterEditor
         }
 
         /// <summary>
-        /// Creates a new joint between the last limb of the given joint and the target limb.
-        /// </summary>
-        private void ExtrudeJoint(LimbJoint joint, int targetLimb, Vector2? anchor1 = null, Vector2? anchor2 = null)
-        {
-            if (joint == null) { return; }
-            CreateJoint(joint.Params.Limb2, targetLimb, anchor1, anchor2);
-        }
-
-        /// <summary>
         /// Creates a new joint using the limb IDs.
         /// </summary>
         private void CreateJoint(int fromLimb, int toLimb, Vector2? anchor1 = null, Vector2? anchor2 = null)
         {
+            if (RagdollParams.Joints.Any(j => j.Limb1 == fromLimb && j.Limb2 == toLimb))
+            {
+                DebugConsole.ThrowError(GetCharacterEditorTranslation("ExistingJointFound").Replace("[limbid1]", fromLimb.ToString()).Replace("[limbid2]", toLimb.ToString()));
+                return;
+            }
             //RagdollParams.StoreState();
             Vector2 a1 = anchor1 ?? Vector2.Zero;
             Vector2 a2 = anchor2 ?? Vector2.Zero;
@@ -1143,9 +1173,8 @@ namespace Barotrauma.CharacterEditor
             TeleportTo(spawnPosition);
             ClearWidgets();
             ClearSelection();
+            SetToggle(jointsToggle, true);
             selectedJoints.Add(character.AnimController.LimbJoints.Single(j => j.Params == newJointParams));
-            jointsToggle.Selected = true;
-            ResetParamsEditor();
         }
 
         /// <summary>
@@ -1348,7 +1377,7 @@ namespace Barotrauma.CharacterEditor
             {
                 if (allFiles == null)
                 {
-                    allFiles = Character.ConfigFilePaths.ToList();
+                    allFiles = Character.ConfigFilePaths.OrderBy(p => p).ToList();
                     allFiles.ForEach(f => DebugConsole.NewMessage(f, Color.White));
                 }
                 return allFiles;
@@ -2544,6 +2573,7 @@ namespace Barotrauma.CharacterEditor
                     default:
                         throw new NotImplementedException();
                 }
+                ResetParamsEditor();
                 return true;
             };
         }
@@ -3156,7 +3186,7 @@ namespace Barotrauma.CharacterEditor
             }
             else if (editAnimations)
             {
-                AnimParams.ForEach(p => p.AddToEditor(ParamsEditor.Instance, space: 10));
+                character.AnimController.CurrentAnimationParams?.AddToEditor(ParamsEditor.Instance, space: 10);
             }
             else
             {
@@ -3602,7 +3632,7 @@ namespace Barotrauma.CharacterEditor
             bool ShowCycleWidget() => PlayerInput.KeyDown(Keys.LeftAlt) && (CurrentAnimation is IHumanAnimation || CurrentAnimation is GroundedMovementParams);
             if (!PlayerInput.KeyDown(Keys.LeftAlt) && (animParams is IHumanAnimation || animParams is GroundedMovementParams))
             {
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 120, 100), GetCharacterEditorTranslation("HoldLeftAltToAdjustCycleSpeed"), Color.White, Color.Black * 0.5f, 10, GUI.Font);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 120, 150), GetCharacterEditorTranslation("HoldLeftAltToAdjustCycleSpeed"), Color.White, Color.Black * 0.5f, 10, GUI.Font);
             }
             // Widgets for all anims -->
             Vector2 referencePoint = SimToScreen(head != null ? head.SimPosition: collider.SimPosition);

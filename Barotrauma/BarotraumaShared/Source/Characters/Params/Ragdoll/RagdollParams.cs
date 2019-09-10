@@ -73,18 +73,6 @@ namespace Barotrauma
         public static string GetDefaultFile(string speciesName, ContentPackage contentPackage = null)
             => Path.Combine(GetFolder(speciesName, contentPackage), $"{GetDefaultFileName(speciesName)}.xml");
 
-        private static readonly XElement dummyRagdoll = new XElement("Ragdoll", 
-            new XAttribute("type", "Dummy"),
-            new XElement("collider", new XAttribute("radius", 1)),
-            new XElement("limb",
-                new XAttribute("id", 0),
-                new XAttribute("type", LimbType.Head.ToString()),
-                new XAttribute("width", 1),
-                new XAttribute("height", 1),
-                new XElement("sprite",
-                    new XAttribute("sourcerect", $"0, 0, 1, 1")))
-        );
-
         public static string GetFolder(string speciesName, ContentPackage contentPackage = null)
         {
             string configFilePath = Character.GetConfigFilePath(speciesName, contentPackage);
@@ -512,10 +500,7 @@ namespace Barotrauma
 
             public SpriteParams GetSprite() => deformSpriteParams ?? normalSpriteParams;
 
-            /// <summary>
-            /// Note that editing this in-game doesn't currently have any effect (unless the ragdoll is recreated). It should be visible, but readonly in the editor.
-            /// </summary>
-            [Serialize(-1, true, description: "Should be read-only. Don't touch!"), Editable()]
+            [Serialize(-1, true), Editable(ReadOnly = true)]
             public int ID { get; set; }
 
             [Serialize(LimbType.None, true, description: "The limb type affects many things, like the animations. Torso or Head are considered as the main limbs. Every character should have at least one Torso or Head."), Editable()]
@@ -729,7 +714,7 @@ namespace Barotrauma
             [Serialize("0.5, 0.5", true, description: "The origin of the sprite relative to the collider."), Editable(DecimalCount = 2)]
             public Vector2 Origin { get; set; }
 
-            [Serialize(0f, true, description: "The Z-depth of the limb relative to other limbs of the same character. 1 is front, 0 is behind."), Editable(minValue: 0, maxValue: 1, DecimalCount = 3)]
+            [Serialize(0f, true, description: "The Z-depth of the limb relative to other limbs of the same character. 1 is front, 0 is behind."), Editable(MinValueFloat = 0, MaxValueFloat = 1, DecimalCount = 3)]
             public float Depth { get; set; }
 
             [Serialize("", true), Editable()]

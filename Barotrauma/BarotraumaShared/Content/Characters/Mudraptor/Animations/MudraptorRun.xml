@@ -19,4 +19,8 @@
   headangle="0.2125145"
   torsoangle="-10.36164"
   tailtorque="5"
-  tailangle="173.3972" />
+  tailangle="173.3972"
+  stepliftheadmultiplier="1"
+  stepliftamount="6.599996"
+  stepliftoffset="1"
+  stepliftfrequency="2" />
