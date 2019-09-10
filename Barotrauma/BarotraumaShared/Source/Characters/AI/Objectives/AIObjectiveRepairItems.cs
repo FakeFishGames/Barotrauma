@@ -30,7 +30,11 @@ namespace Barotrauma
                     {
                         objective = ObjectiveConstructor(item);
                         Objectives.Add(item, objective);
-                        AddSubObjective(objective);
+                        if (!subObjectives.Contains(objective))
+                        {
+                            subObjectives.Add(objective);
+                        }
+                        objective.Completed += () => OnObjectiveCompleted(objective, item);
                     }
                     break;
                 }

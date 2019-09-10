@@ -14,9 +14,10 @@ namespace Barotrauma
         public virtual bool ForceRun => false;
         public virtual bool IgnoreUnsafeHulls => false;
         public virtual bool AbandonWhenCannotCompleteSubjectives => true;
+        public virtual bool AllowSubObjectiveSorting => false;
 
         /// <summary>
-        /// Can there be multiple objective instaces of the same type? Currently multiple instances are not allowed for subobjectives.
+        /// Can there be multiple objective instaces of the same type? Currently multiple instances allowed only for main objectives and the subobjectives of objetive loops.
         /// In theory, there could be multiple subobjectives of same type for concurrent objectives, but that would make things more complex -> potential issues
         /// </summary>
         public virtual bool AllowMultipleInstances => false;
@@ -133,6 +134,7 @@ namespace Barotrauma
 
         public void SortSubObjectives()
         {
+            if (!AllowSubObjectiveSorting) { return; }
             if (subObjectives.None()) { return; }
             subObjectives.Sort((x, y) => y.GetPriority().CompareTo(x.GetPriority()));
             if (ConcurrentObjectives)
@@ -208,7 +210,14 @@ namespace Barotrauma
                 objective = constructor();
                 if (!subObjectives.Contains(objective))
                 {
-                    AddSubObjective(objective);
+                    if (objective.AllowMultipleInstances)
+                    {
+                        subObjectives.Add(objective);
+                    }
+                    else
+                    {
+                        AddSubObjective(objective);
+                    }
                     if (onCompleted != null)
                     {
                         objective.Completed += onCompleted;
