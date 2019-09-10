@@ -96,7 +96,7 @@ namespace Barotrauma
                 var traitorCandidates = new List<Tuple<Client, Character>>();
                 foreach (Client c in server.ConnectedClients)
                 {
-                    if (c.Character == null || c.Character.IsDead || c.Character.Removed || 
+                    if (c.Character == null || c.Character.IsDead || c.Character.Removed || !traitorRoleFilter(c.Character) ||
                         (team != Character.TeamType.None && c.Character.TeamID != team))
                     {
                         continue;
