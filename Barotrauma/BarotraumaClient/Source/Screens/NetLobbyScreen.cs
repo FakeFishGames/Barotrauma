@@ -35,6 +35,7 @@ namespace Barotrauma
         private GUITextBlock botSpawnModeText;
 
         private GUITickBox[] missionTypeTickBoxes;
+        private GUITextBlock missionTypeLabel;
         private GUIListBox missionTypeList;
 
         private GUIListBox jobList;
@@ -485,12 +486,19 @@ namespace Barotrauma
             }
 
             //mission type ------------------------------------------------------------------
-
-            var missionTypeLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), midInfoColumn.RectTransform), TextManager.Get("MissionType"));
+            missionTypeLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), midInfoColumn.RectTransform), TextManager.Get("MissionType"));
 
             missionTypeList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.15f), midInfoColumn.RectTransform))
             {
-                OnSelected = (component, obj) => { return false; }
+                OnSelected = (component, obj) =>
+                {
+                    int ind = (int)obj;
+
+                    if (GUI.MouseOn == missionTypeTickBoxes[ind]) { return false; }
+                    missionTypeTickBoxes[ind].Selected = !missionTypeTickBoxes[ind].Selected;
+
+                    return false;
+                }
             };
 
             missionTypeTickBoxes = new GUITickBox[Enum.GetValues(typeof(MissionType)).Length - 2];
@@ -498,8 +506,11 @@ namespace Barotrauma
             foreach (MissionType missionType in Enum.GetValues(typeof(MissionType)))
             {
                 if (missionType == MissionType.None || missionType == MissionType.All) { continue; }
-                
-                GUIFrame frame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.25f), missionTypeList.Content.RectTransform), style: "ListBoxElement");
+
+                GUIFrame frame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.25f), missionTypeList.Content.RectTransform), style: "ListBoxElement")
+                {
+                    UserData = index,
+                };
 
                 missionTypeTickBoxes[index] = new GUITickBox(new RectTransform(Vector2.One, frame.RectTransform),
                     TextManager.Get("MissionType." + missionType.ToString()))
@@ -1908,8 +1919,8 @@ namespace Barotrauma
             }
             
             if (modeList.SelectedIndex != modeIndex) { modeList.Select(modeIndex, true); }
-            
-            missionTypeList.Visible = SelectedMode != null && SelectedMode.Identifier == "mission";
+
+            missionTypeLabel.Visible = missionTypeList.Visible = SelectedMode != null && SelectedMode.Identifier == "mission";
         }
 
         private bool SelectMode(GUIComponent component, object obj)
@@ -1918,8 +1929,8 @@ namespace Barotrauma
             
             GameModePreset modePreset = obj as GameModePreset;
             if (modePreset == null) return false;
-            
-            missionTypeList.Visible = modePreset.Identifier == "mission";
+
+            missionTypeLabel.Visible = missionTypeList.Visible = modePreset.Identifier == "mission";
             if (modePreset.Identifier == "multiplayercampaign")
             {
                 //campaign selected and the campaign view has not been set up yet
