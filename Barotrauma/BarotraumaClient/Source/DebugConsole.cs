@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 using System.Globalization;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -508,14 +509,22 @@ namespace Barotrauma
 
             AssignOnExecute("los", (string[] args) =>
              {
-                 GameMain.LightManager.LosEnabled = !GameMain.LightManager.LosEnabled;
+                 if (args.None() || !bool.TryParse(args[0], out bool state))
+                 {
+                     state = !GameMain.LightManager.LosEnabled;
+                 }
+                 GameMain.LightManager.LosEnabled = state;
                  NewMessage("Line of sight effect " + (GameMain.LightManager.LosEnabled ? "enabled" : "disabled"), Color.White);
              });
             AssignRelayToServer("los", false);
 
             AssignOnExecute("lighting|lights", (string[] args) =>
             {
-                GameMain.LightManager.LightingEnabled = !GameMain.LightManager.LightingEnabled;
+                if (args.None() || !bool.TryParse(args[0], out bool state))
+                {
+                    state = !GameMain.LightManager.LightingEnabled;
+                }
+                GameMain.LightManager.LightingEnabled = state;
                 NewMessage("Lighting " + (GameMain.LightManager.LightingEnabled ? "enabled" : "disabled"), Color.White);
             });
             AssignRelayToServer("lighting|lights", false);
@@ -780,7 +789,11 @@ namespace Barotrauma
 
             AssignOnExecute("debugdraw", (string[] args) =>
             {
-                GameMain.DebugDraw = !GameMain.DebugDraw;
+                if (args.None() || !bool.TryParse(args[0], out bool state))
+                {
+                    state = !GameMain.DebugDraw;
+                }
+                GameMain.DebugDraw = state;
                 NewMessage("Debug draw mode " + (GameMain.DebugDraw ? "enabled" : "disabled"), Color.White);
             });
             AssignRelayToServer("debugdraw", false);
