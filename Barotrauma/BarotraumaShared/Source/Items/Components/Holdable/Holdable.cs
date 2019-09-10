@@ -237,23 +237,28 @@ namespace Barotrauma.Items.Components
             if (item.body != null)
             {
                 item.body.ResetDynamics();
-                Limb heldHand;
-                Limb arm;
+                Limb heldHand, arm;
+                Vector2 diff = Vector2.Zero;
                 if (picker.Inventory.IsInLimbSlot(item, InvSlotType.LeftHand))
                 {
                     heldHand = picker.AnimController.GetLimb(LimbType.LeftHand);
                     arm = picker.AnimController.GetLimb(LimbType.LeftArm);
+
                 }
                 else
                 {
                     heldHand = picker.AnimController.GetLimb(LimbType.RightHand);
                     arm = picker.AnimController.GetLimb(LimbType.RightArm);
                 }
-
-                float xDif = (heldHand.SimPosition.X - arm.SimPosition.X) / 2f;
-                float yDif = (heldHand.SimPosition.Y - arm.SimPosition.Y) / 2.5f;
+                if (heldHand != null && arm != null)
+                {
+                    diff = new Vector2(
+                        (heldHand.SimPosition.X - arm.SimPosition.X) / 2f,
+                        (heldHand.SimPosition.Y - arm.SimPosition.Y) / 2.5f);
+                }
+                
                 //hand simPosition is actually in the wrist so need to move the item out from it slightly
-                item.SetTransform(heldHand.SimPosition + new Vector2(xDif, yDif), 0.0f);
+                item.SetTransform(heldHand.SimPosition + diff, 0.0f);
             }
 
             picker.DeselectItem(item);
