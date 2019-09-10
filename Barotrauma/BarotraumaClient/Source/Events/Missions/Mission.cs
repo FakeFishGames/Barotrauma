@@ -1,6 +1,4 @@
-﻿using Barotrauma.Networking;
-
-namespace Barotrauma
+﻿namespace Barotrauma
 {
     partial class Mission
     {
@@ -11,7 +9,10 @@ namespace Barotrauma
             string header = index < Headers.Count ? Headers[index] : "";
             string message = index < Messages.Count ? Messages[index] : "";
 
-            new GUIMessageBox(header, message, buttons: new string[0], type: GUIMessageBox.Type.InGame);
+            new GUIMessageBox(header, message, buttons: new string[0], type: GUIMessageBox.Type.InGame, icon: Prefab.Icon)
+            {
+                IconColor = Prefab.IconColor
+            };
         }
     }
 }
