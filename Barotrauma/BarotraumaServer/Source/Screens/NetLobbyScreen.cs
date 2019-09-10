@@ -82,6 +82,10 @@ namespace Barotrauma
             {
                 lastUpdateID++;
                 missionType = value;
+                if (GameMain.NetworkMember?.ServerSettings != null)
+                {
+                    GameMain.NetworkMember.ServerSettings.MissionType = missionType.ToString();
+                }
             }
         }
 
@@ -90,8 +94,8 @@ namespace Barotrauma
             get { return missionType.ToString(); }
             set
             {
-                Enum.TryParse(value, out missionType);
-                lastUpdateID++;
+                Enum.TryParse(value, out MissionType type);
+                MissionType = type;
             }
         }
 

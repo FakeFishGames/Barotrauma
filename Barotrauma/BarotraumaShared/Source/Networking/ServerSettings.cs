@@ -756,7 +756,7 @@ namespace Barotrauma.Networking
             set;
         }
 
-        [Serialize("Random", true)]
+        [Serialize("All", true)]
         public string MissionType
         {
             get;

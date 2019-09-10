@@ -301,6 +301,9 @@ namespace Barotrauma.Networking
             ServerMessageText = doc.Root.GetAttributeString("ServerMessage", "");
             
             GameMain.NetLobbyScreen.SelectedModeIdentifier = GameModeIdentifier;
+            //handle Random as the mission type, which is no longer a valid setting
+            //MissionType.All offers equivalent functionality
+            if (MissionType == "Random") { MissionType = "All"; }
             GameMain.NetLobbyScreen.MissionTypeName = MissionType;
 
             GameMain.NetLobbyScreen.SetBotSpawnMode(BotSpawnMode);
