@@ -94,11 +94,11 @@ namespace Barotrauma
             else
             {
                 List<Vector2> convexHull = GenerateConvexHull();
-                HullVertices = convexHull;
                 for (int i = 0; i < convexHull.Count; i++)
                 {
                     convexHull[i] = ConvertUnits.ToSimUnits(convexHull[i]);
                 }
+                HullVertices = convexHull;
 
                 Vector2 minExtents = Vector2.Zero, maxExtents = Vector2.Zero;
 
@@ -216,7 +216,6 @@ namespace Barotrauma
 
             Body = new PhysicsBody(farseerBody);
         }
-
 
         private List<Vector2> GenerateConvexHull()
         {
@@ -403,6 +402,16 @@ namespace Barotrauma
             }
 
             depthDamageTimer = 10.0f;
+        }
+
+        public void FlipX()
+        {
+            List<Vector2> convexHull = GenerateConvexHull();
+            for (int i = 0; i < convexHull.Count; i++)
+            {
+                convexHull[i] = ConvertUnits.ToSimUnits(convexHull[i]);
+            }
+            HullVertices = convexHull;
         }
 
         public bool OnCollision(Fixture f1, Fixture f2, Contact contact)

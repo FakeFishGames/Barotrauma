@@ -132,7 +132,7 @@ namespace Barotrauma.Items.Components
                 return false;
             }
 
-            if (character.AnimController.InWater)
+            if (item.InWater)
             {
                 if (UsableIn == UseEnvironment.Air)
                 {
@@ -160,7 +160,8 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                rayStart = ConvertUnits.ToSimUnits(item.WorldPosition);
+                rayStart = Submarine.LastPickedPosition + Submarine.LastPickedNormal * 0.1f;
+                if (item.Submarine != null) { rayStart += item.Submarine.SimPosition; }
             }
 
             Vector2 rayEnd = rayStart + 
@@ -201,12 +202,12 @@ namespace Barotrauma.Items.Components
                 Repair(rayStart - character.Submarine.SimPosition, rayEnd - character.Submarine.SimPosition, deltaTime, character, degreeOfSuccess, ignoredBodies);
             }
             
-            UseProjSpecific(deltaTime);
+            UseProjSpecific(deltaTime, rayStart);
 
             return true;
         }
 
-        partial void UseProjSpecific(float deltaTime);
+        partial void UseProjSpecific(float deltaTime, Vector2 raystart);
 
         private readonly HashSet<Character> hitCharacters = new HashSet<Character>();
         private readonly List<FireSource> fireSourcesInRange = new List<FireSource>();

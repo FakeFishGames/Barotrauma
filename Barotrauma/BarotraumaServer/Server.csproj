@@ -191,6 +191,7 @@
     <Compile Include="Source\Items\Components\Door.cs" />
     <Compile Include="Source\Items\Components\ItemComponent.cs" />
     <Compile Include="Source\Items\Components\ItemLabel.cs" />
+    <Compile Include="Source\Items\Components\Machines\Controller.cs" />
     <Compile Include="Source\Items\Components\Machines\Deconstructor.cs" />
     <Compile Include="Source\Items\Components\Machines\Engine.cs" />
     <Compile Include="Source\Items\Components\Machines\Fabricator.cs" />
@@ -231,6 +232,7 @@
     <Compile Include="Source\Program.cs" />
     <Compile Include="Source\Screens\NetLobbyScreen.cs" />
     <Compile Include="Source\Screens\UnimplementedScreen.cs" />
+    <Compile Include="Source\Traitors\Goals\GoalWaitForTraitors.cs" />
     <Compile Include="Source\Traitors\Goals\HumanoidGoal.cs" />
     <Compile Include="Source\Traitors\Goals\Modifiers\GoalIsOptional.cs" />
     <Compile Include="Source\Traitors\Goals\Modifiers\Modifier.cs" />

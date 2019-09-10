@@ -2,7 +2,7 @@
 <Items>
   <Item name="Junction Box" identifier="junctionbox" category="Electrical" description="Serves as a hub for power distribution and relaying signals between devices." scale="0.75">
     <Sprite texture="FF_junctionbox.png" sourcerect="0,0,73,121" depth="0.8" canflipx="false" origin="0.5,0.5" />
-    <BrokenSprite texture="FF_junctionbox.png" sourcerect="73,0,73,123" depth="0.8" maxcondition="40" fadein="true" />
+    <BrokenSprite texture="FF_junctionbox.png" sourcerect="73,0,73,123" depth="0.8" maxcondition="80" fadein="true" />
     <BrokenSprite texture="FF_junctionbox.png" sourcerect="146,0,73,123" depth="0.8" maxcondition="0" />
     <PowerTransfer canbeselected="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.2,0.15" minsize="350,160" maxsize="420,190" anchor="Center" style="ItemUI" />
@@ -44,7 +44,7 @@
   </Item>
   <Item name="Junction Box" identifier="junctionbox_tutorial" nameidentifier="junctionbox" category="Electrical" description="Junction box with only a single power output." scale="0.75" hideinmenus="true">
     <Sprite texture="FF_junctionbox.png" sourcerect="0,0,73,121" depth="0.8" canflipx="false" origin="0.5,0.5" />
-    <BrokenSprite texture="FF_junctionbox.png" sourcerect="73,0,73,123" depth="0.8" maxcondition="40" fadein="true" />
+    <BrokenSprite texture="FF_junctionbox.png" sourcerect="73,0,73,123" depth="0.8" maxcondition="80" fadein="true" />
     <BrokenSprite texture="FF_junctionbox.png" sourcerect="146,0,73,123" depth="0.8" maxcondition="0" />
     <PowerTransfer canbeselected="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.2,0.15" minsize="350,160" maxsize="420,190" anchor="Center" style="ItemUI" />
@@ -74,7 +74,7 @@
   </Item>
   <Item name="Battery" identifier="battery" tags="battery" category="Electrical" Scale="0.5" description="Generally used for storing backup power in case of a reactor failure.">
     <Sprite texture="battery.png" sourcerect="0,0,118,159" depth="0.8" />
-    <BrokenSprite texture="battery.png" sourcerect="118,0,118,159" depth="0.8" maxcondition="40" fadein="true" />
+    <BrokenSprite texture="battery.png" sourcerect="118,0,118,159" depth="0.8" maxcondition="80" fadein="true" />
     <BrokenSprite texture="battery.png" sourcerect="236,0,118,159" depth="0.8" maxcondition="0" />
     <PowerContainer capacity="2000.0" maxrechargespeed="500.0" maxoutput="1000.0" canbeselected="true" indicatorposition="65,33" indicatorsize="34,46" ishorizontal="false" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.18,0.23" minsize="350,250" maxsize="420,300" anchor="Center" relativeoffset="0,-0.1" style="ItemUI" />
@@ -110,7 +110,7 @@
   </Item>
   <Item name="ShuttleBattery" identifier="shuttlebattery" tags="battery" category="Electrical" Scale="0.2" description="Generally used for storing backup power in case of a reactor failure.">
     <Sprite texture="ShuttleBattery.png" sourcerect="0,0,299,307" depth="0.8" />
-    <BrokenSprite texture="ShuttleBattery.png" sourcerect="299,0,299,307" depth="0.8" maxcondition="40" fadein="true" />
+    <BrokenSprite texture="ShuttleBattery.png" sourcerect="299,0,299,307" depth="0.8" maxcondition="80" fadein="true" />
     <BrokenSprite texture="ShuttleBattery.png" sourcerect="598,0,299,307" depth="0.8" maxcondition="0" />
     <PowerContainer capacity="2000.0" maxrechargespeed="500.0" maxoutput="1000.0" canbeselected="true" indicatorposition="59,30" indicatorsize="132,83" ishorizontal="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.18,0.23" minsize="350,250" maxsize="420,300" anchor="Center" relativeoffset="0,-0.1" style="ItemUI" />
@@ -139,7 +139,7 @@
   </Item>
   <Item name="Supercapacitor" identifier="supercapacitor" category="Electrical" Scale="0.5" description="Can deliver charge much faster than batteries.">
     <Sprite texture="supercapacitor.png" depth="0.8" sourcerect="0,16,154,160" />
-    <BrokenSprite texture="supercapacitor.png" sourcerect="154,16,154,160" depth="0.8" maxcondition="40" fadein="true" />
+    <BrokenSprite texture="supercapacitor.png" sourcerect="154,16,154,160" depth="0.8" maxcondition="80" fadein="true" />
     <BrokenSprite texture="supercapacitor.png" sourcerect="308,16,154,160" depth="0.8" maxcondition="0" />
     <PowerContainer capacity="20.0" maxrechargespeed="20.0" maxoutput="2000000.0" canbeselected="true" indicatorposition="51,16" indicatorsize="47,12" ishorizontal="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.18,0.23" minsize="350,250" maxsize="420,300" anchor="Center" relativeoffset="0,-0.1" style="ItemUI" />

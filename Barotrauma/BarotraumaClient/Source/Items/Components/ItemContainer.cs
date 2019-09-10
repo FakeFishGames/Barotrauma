@@ -200,11 +200,16 @@ namespace Barotrauma.Items.Components
                     containedItem.body.SetTransformIgnoreContacts(containedItem.body.SimPosition, currentRotation);
                 }
 
+                Vector2 origin = containedItem.Sprite.Origin;
+                if (item.FlippedX) { origin.X = containedItem.Sprite.SourceRect.Width - origin.X; }
+                if (item.FlippedY) { origin.Y = containedItem.Sprite.SourceRect.Height - origin.Y; }
+
                 containedItem.Sprite.Draw(
                     spriteBatch,
                     new Vector2(currentItemPos.X, -currentItemPos.Y),
                     containedItem.GetSpriteColor(),
-                    -currentRotation,
+                    origin,
+                    - currentRotation,
                     containedItem.Scale,
                     spriteEffects,
                     depth: ContainedSpriteDepth < 0.0f ? containedItem.Sprite.Depth : ContainedSpriteDepth);

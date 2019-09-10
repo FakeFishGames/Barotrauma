@@ -859,6 +859,9 @@ namespace Barotrauma
 
         private void FillStoreItemList()
         {
+            float prevStoreItemScroll = storeItemList.BarScroll;
+            float prevMyItemScroll = myItemList.BarScroll;
+
             int width = storeItemList.Rect.Width;
             HashSet<GUIComponent> existingItemFrames = new HashSet<GUIComponent>();
             foreach (MapEntityPrefab mapEntityPrefab in MapEntityPrefab.List)
@@ -883,6 +886,9 @@ namespace Barotrauma
 
             storeItemList.Content.RectTransform.SortChildren(
                 (x, y) => (x.GUIComponent.UserData as PurchasedItem).ItemPrefab.Name.CompareTo((y.GUIComponent.UserData as PurchasedItem).ItemPrefab.Name));
+
+            storeItemList.BarScroll = prevStoreItemScroll;
+            myItemList.BarScroll = prevMyItemScroll;
         }
 
         private void FilterStoreItems(MapEntityCategory? category, string filter)
@@ -904,7 +910,7 @@ namespace Barotrauma
                 btn.Selected = (MapEntityCategory)btn.UserData == selectedItemCategory;
             }
             storeItemList.UpdateScrollBarSize();
-            storeItemList.BarScroll = 0.0f;
+            //storeItemList.BarScroll = 0.0f;
         }
 
         public string GetMoney()

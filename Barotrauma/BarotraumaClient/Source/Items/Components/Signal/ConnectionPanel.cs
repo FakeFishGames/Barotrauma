@@ -40,8 +40,7 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
-
-            if (user != null && user.SelectedConstruction == item)
+            if (user != null && user.SelectedConstruction == item && HasRequiredItems(user, addMessage: false))
             {
                 if (rewireSoundChannel == null || !rewireSoundChannel.IsPlaying)
                 {

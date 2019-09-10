@@ -155,8 +155,8 @@ namespace Barotrauma
         public class SlotReference
         {
             public readonly Inventory ParentInventory;
-            public readonly InventorySlot Slot;
             public readonly int SlotIndex;
+            public InventorySlot Slot;
 
             public Inventory Inventory;
 
@@ -209,7 +209,14 @@ namespace Barotrauma
 
         public static SlotReference SelectedSlot
         {
-            get { return selectedSlot; }
+            get
+            {
+                if (selectedSlot?.ParentInventory?.Owner == null || selectedSlot.ParentInventory.Owner.Removed)
+                {
+                    return null;
+                }
+                return selectedSlot;
+            }
         }
 
         public virtual void CreateSlots()
@@ -430,6 +437,8 @@ namespace Barotrauma
 
             if (canMove)
             {
+                subInventory.HideTimer = 1.0f;
+                subInventory.OpenState = 1.0f;
                 if (subInventory.movableFrameRect.Contains(PlayerInput.MousePosition) && PlayerInput.RightButtonClicked())
                 {
                     container.Inventory.savedPosition = container.Inventory.originalPos;
@@ -771,7 +780,7 @@ namespace Barotrauma
                         if (selectedInventory.slots != null){ selectedInventory.slots[slotIndex].ShowBorderHighlight(Color.Red, 0.1f, 0.9f); }
                         GUI.PlayUISound(GUISoundType.PickItemFail);
                     }
-                    selectedInventory.HideTimer = 1.0f;
+                    selectedInventory.HideTimer = 2.0f;
                     if (selectedSlot.ParentInventory?.Owner is Item parentItem && parentItem.ParentInventory != null)
                     {
                         for (int i = 0; i < parentItem.ParentInventory.capacity; i++)
@@ -1100,9 +1109,9 @@ namespace Barotrauma
 
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
-            receivedItemIDs = new ushort[capacity];
-
-            for (int i = 0; i < capacity; i++)
+            byte itemCount = msg.ReadByte();
+            receivedItemIDs = new ushort[itemCount];
+            for (int i = 0; i < itemCount; i++)
             {
                 receivedItemIDs[i] = msg.ReadUInt16();
             }

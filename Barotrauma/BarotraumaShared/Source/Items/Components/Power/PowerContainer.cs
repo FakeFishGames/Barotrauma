@@ -241,7 +241,10 @@ namespace Barotrauma.Items.Components
 #endif
                     RechargeSpeed = maxRechargeSpeed * aiRechargeTargetRatio;
 #if CLIENT
-                    rechargeSpeedSlider.BarScroll = RechargeSpeed / Math.Max(maxRechargeSpeed, 1.0f);
+                    if (rechargeSpeedSlider != null)
+                    {
+                        rechargeSpeedSlider.BarScroll = RechargeSpeed / Math.Max(maxRechargeSpeed, 1.0f);
+                    }
 #endif
                     
                     character.Speak(TextManager.GetWithVariables("DialogChargeBatteries", new string[2] { "[itemname]", "[rate]" }, 
@@ -258,7 +261,10 @@ namespace Barotrauma.Items.Components
 #endif
                     RechargeSpeed = 0.0f;
 #if CLIENT
-                    rechargeSpeedSlider.BarScroll = RechargeSpeed / Math.Max(maxRechargeSpeed, 1.0f);
+                    if (rechargeSpeedSlider != null)
+                    {
+                        rechargeSpeedSlider.BarScroll = RechargeSpeed / Math.Max(maxRechargeSpeed, 1.0f);
+                    }
 #endif
                     character.Speak(TextManager.GetWithVariables("DialogStopChargingBatteries", new string[2] { "[itemname]", "[rate]" },
                         new string[2] { item.Name, ((int)(rechargeSpeed / maxRechargeSpeed * 100.0f)).ToString() },
@@ -273,14 +279,21 @@ namespace Barotrauma.Items.Components
         {
             if (connection.Name == "set_rate")
             {
-                float tempSpeed;
-                if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out tempSpeed))
+                if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempSpeed))
                 {
-                    if (!MathUtils.IsValid(tempSpeed)) return;
-                    RechargeSpeed = MathHelper.Clamp(tempSpeed / 100.0f, 0.0f, 1.0f) * MaxRechargeSpeed;
+                    if (!MathUtils.IsValid(tempSpeed)) { return; }
+
+                    float rechargeRate = MathHelper.Clamp(tempSpeed / 100.0f, 0.0f, 1.0f);
+                    RechargeSpeed = rechargeRate * MaxRechargeSpeed;
+#if CLIENT
+                    if (rechargeSpeedSlider != null)
+                    {
+                        rechargeSpeedSlider.BarScroll = rechargeRate;
+                    }
+#endif
                 }
             }
-            if (!connection.IsPower) return;
+            if (!connection.IsPower) { return; }
 
             if (connection.Name == "power_in")
             {

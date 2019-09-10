@@ -3451,11 +3451,39 @@
   <traitorgoalwithtimelimitinfotext>[infotext] Complete this goal within [timelimit].</traitorgoalwithtimelimitinfotext>
   <traitorgoalwithdurationinfotext>[infotext] The goal must be completed for [duration].</traitorgoalwithdurationinfotext>
   <traitorgoalwithcumulativedurationinfotext>[infotext] The goal must be completed for total of [duration].</traitorgoalwithcumulativedurationinfotext>
+  <traitorgoalwaitfortraitorsinfotext>Wait for [remaining] of [count] traitors to complete their tasks.</traitorgoalwaitfortraitorsinfotext>
   <failed>Failed</failed>
   <pausemenuquitverificationeditor>Are you sure you want to return to the main menu? All your unsaved progress will be lost.</pausemenuquitverificationeditor>
   <mapentitycategory.decorative>Decorative</mapentitycategory.decorative>
   <mapentitycategory.wall>Wall</mapentitycategory.wall>
+  <karma.resetkarmabetweenrounds>Reset karma between rounds</karma.resetkarmabetweenrounds>
+  <enablesplashscreen>Enable splash screen</enablesplashscreen>
   
+  <servertag.casual>Casual</servertag.casual>
+  <servertagdescription.casual>Having fun is more important than completing the objective. A good choice for new players.</servertagdescription.casual>
+  <servertag.serious>Serious</servertag.serious>
+  <servertagdescription.serious>The crew should focus on working together efficiently and completing their objective. No unnecessary messing around.</servertagdescription.serious>
+  <servertag.roleplaying>Roleplaying</servertag.roleplaying>
+  <servertagdescription.roleplaying>The crew should aim to act like a real submarine crew. Chain of command is important, as is taking care of your responsibilities and following orders. Speaking out-of-character should be avoided when a round is running.</servertagdescription.roleplaying>
+  <servertag.somethingelse>Something else</servertag.somethingelse>
+  <servertagdescription.somethingelse>Gameplay differs significantly from the usual Barotrauma gameplay. Modded servers, very unconventional subs, battle royale rounds, shuttle racing, deathrun maps... Anything goes!</servertagdescription.somethingelse>
+  <servertag.rampage>Rampage</servertag.rampage>
+  <servertagdescription.rampage>Get ready to fight for your life! A server heavily geared towards combat. This can mean player-versus-player combat, PvE or both — see the server description before you start wrenching your crewmates' faces.</servertagdescription.rampage>
+
+  <servertag.modded>Modded</servertag.modded>
+  <servertagdescription.modded>One or more mods enabled. Installing mods from the Workshop may be required to join the server.</servertagdescription.modded>
+  <servertag.247>24/7</servertag.247>
+  <servertagdescription.247>Runs around the clock.</servertagdescription.247>
+  <servertag.nofriendlyfire>Friendly fire off</servertag.nofriendlyfire>
+  <servertagdescription.nofriendlyfire>Causing damage to your crew mates is disabled.</servertagdescription.nofriendlyfire>
+  <servertag.voipdisabled>Voice chat disabled</servertag.voipdisabled>
+  <servertagdescription.voipdisabled>Voice chat is disabled.</servertagdescription.voipdisabled>
+  <servertag.karmadisabled>Karma disabled</servertag.karmadisabled>
+  <servertagdescription.karmadisabled>Karma system is disabled.</servertagdescription.karmadisabled>
+
+  <invalidcontentpackage>Content package '[packagename]' cannot be loaded.</invalidcontentpackage>
+  <xmlfileinvalid>File '[filepath]' is not a valid XML file.</xmlfileinvalid>
+
   <!-- Changed values as of 13th of August -->
   <traitorgoaldestroyitems>Dispose of at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>
   <karma.kickbanthreshold>Kick/Ban threshold</karma.kickbanthreshold>

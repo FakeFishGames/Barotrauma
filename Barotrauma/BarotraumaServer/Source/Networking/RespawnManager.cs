@@ -327,7 +327,7 @@ namespace Barotrauma.Networking
 
         public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
-            msg.WriteRangedIntegerDeprecated(0, Enum.GetNames(typeof(State)).Length, (int)CurrentState);
+            msg.WriteRangedInteger((int)CurrentState, 0, Enum.GetNames(typeof(State)).Length);
 
             switch (CurrentState)
             {

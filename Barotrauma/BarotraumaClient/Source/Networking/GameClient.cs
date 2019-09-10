@@ -396,15 +396,13 @@ namespace Barotrauma.Networking
         private bool connectCancelled;
         private void CancelConnect()
         {
-            if (!(GameMain.ServerChildProcess?.HasExited??true))
+            if (!(GameMain.ServerChildProcess?.HasExited ?? true))
             {
                 GameMain.ServerChildProcess.Kill();
                 GameMain.ServerChildProcess = null;
             }
-
             connectCancelled = true;
-            clientPeer?.Close();
-            clientPeer = null;
+            Disconnect();
         }
 
         // Before main looping starts, we loop here and wait for approval message
@@ -554,7 +552,7 @@ namespace Barotrauma.Networking
             UpdateHUD(deltaTime);
 
             base.Update(deltaTime);
-            
+
             try
             {
                 clientPeer?.Update(deltaTime);
@@ -562,9 +560,12 @@ namespace Barotrauma.Networking
             catch (Exception e)
             {
                 string errorMsg = "Error while reading a message from server. {" + e + "}. ";
-                if (GameMain.Client == null) { errorMsg += "Client disposed."; }                
-                errorMsg+= "\n" + e.StackTrace;
-
+                if (GameMain.Client == null) { errorMsg += "Client disposed."; }
+                errorMsg += "\n" + e.StackTrace;
+                if (e.InnerException != null)
+                {
+                    errorMsg += "\nInner exception: " + e.InnerException.Message + "\n" + e.InnerException.StackTrace;
+                }
                 GameAnalyticsManager.AddErrorEventOnce("GameClient.Update:CheckServerMessagesException" + e.TargetSite.ToString(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 DebugConsole.ThrowError("Error while reading a message from server.", e);
                 new GUIMessageBox(TextManager.Get("Error"), TextManager.GetWithVariables("MessageReadError", new string[2] { "[message]", "[targetsite]" }, new string[2] { e.Message, e.TargetSite.ToString() }));
@@ -636,6 +637,10 @@ namespace Barotrauma.Networking
                     catch (Exception e)
                     {
                         string errorMsg = "Error while reading an ingame update message from server. {" + e + "}\n" + e.StackTrace;
+                        if (e.InnerException != null)
+                        {
+                            errorMsg += "\nInner exception: " + e.InnerException.Message + "\n" + e.InnerException.StackTrace;
+                        }
                         GameAnalyticsManager.AddErrorEventOnce("GameClient.ReadDataMessage:ReadIngameUpdate", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                         throw;
                     }
@@ -1096,6 +1101,28 @@ namespace Barotrauma.Networking
 
             if (campaign == null)
             {
+                //this shouldn't happen, TrySelectSub should stop the coroutine if the correct sub/shuttle cannot be found
+                if (GameMain.NetLobbyScreen.SelectedSub == null ||
+                    GameMain.NetLobbyScreen.SelectedSub.Name != subName ||
+                    GameMain.NetLobbyScreen.SelectedSub.MD5Hash?.Hash != subHash)
+                {
+                    string errorMsg = "Failed to select submarine \"" + subName + "\" (hash: " + subHash + ").";
+                    DebugConsole.ThrowError(errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:FailedToSelectSub" + subName, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    CoroutineManager.StartCoroutine(EndGame(""));
+                    yield return CoroutineStatus.Failure;
+                }
+                if (GameMain.NetLobbyScreen.SelectedShuttle == null ||
+                    GameMain.NetLobbyScreen.SelectedShuttle.Name != shuttleName ||
+                    GameMain.NetLobbyScreen.SelectedShuttle.MD5Hash?.Hash != shuttleHash)
+                {
+                    string errorMsg = "Failed to select shuttle \"" + shuttleName + "\" (hash: " + shuttleHash + ").";
+                    DebugConsole.ThrowError(errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:FailedToSelectShuttle" + shuttleName, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    CoroutineManager.StartCoroutine(EndGame(""));
+                    yield return CoroutineStatus.Failure;
+                }
+
                 GameMain.GameSession = missionIndex < 0 ?
                     new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, MissionType.None) :
                     new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, MissionPrefab.List[missionIndex]);

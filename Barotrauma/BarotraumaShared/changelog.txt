@@ -2,16 +2,6 @@
 v0.9.3.0
 ---------------------------------------------------------------------------------------------------------
 
-Karma improvements:
-- Attacking someone who has just recently attacked you doesn't reduce karma.
-- The karma penalty from attacking someone scales according to their karma (i.e. smaller penalty for
-attacking a griefer whose karma is low).
-- Fixed karma decreasing when moving a wire from a connection to another.
-- Damaging characters by performing CPR doesn't decrease karma.
-- Reviving characters with CPR increases karma.
-- Made the default karma settings a little less strict.
-- Fixed clients always getting kicked (never banned) if the "kicks before ban" karma setting is set above 0.
-
 Traitor improvements:
 - Players who haven't been a traitor yet are more likely to get selected as a traitor.
 - If both teams have a traitor during a combat mission, traitor win will result in the opposite team's victory.
@@ -20,10 +10,11 @@ Traitor improvements:
 the submarine" traitor task.
 
 Multiplayer fixes:
-- Less restrictive client name symbol constraints. Fixes clients failing to join servers if their name
-contains Chinese symbols for example.
 - Fixed server not sending a condition update for an item that gets removed when its condition drops to zero.
 Caused potassium and magnesium to explode continuously client-side when immersed in water.
+- Fixed server list only displaying servers that are located close to the client.
+- Fixed server list displaying the selected game mode incorrectly.
+- Fixed Chinese server names and descriptions showing up as "?????" in the server list when not playing in Chinese.
 - Fixed occasional "error while reading a message from the server" console errors when joining a server.
 - Fixed clients occasionally timing out and disconnecting during the loading screens.
 - Fixed character name box resetting in the server lobby when another client joins or disconnects.
@@ -34,9 +25,23 @@ the report buttons.
 prompt is active and then enters something in the console.
 - Fixed full SteamP2P servers not showing up on the server list regardless of the filters.
 - Fixed "remove ban" and "range ban" buttons in the server settings menu doing nothing.
+- Fixed switches occasionally getting desynced between clients.
+- Added a tickbox for selecting/deselecting all permissions to the client management panel.
+- Fixed clients with campaign management permissions not seeing the permissions of newly joined clients.
+- Fixed statuseffects with a duration not having an effect on karma.
+- Causing an "oxygen low" affliction decreases karma (for example when injecting large amounts of fentanyl).
+- Fixed scroll values resetting in the multiplayer campaign store menu when purchasing/selling items.
 
-Miscellanous fixes:
-- Fixed mechanic tutorial crashing after the welding task when playing in Russian.
+Miscellaneous improvements:
+- Attempting to drop an item to an empty inventory slot that's not of the right type (e.g. trying to put 
+an extinguisher in the normal inventory slots), automatically moves the item to the correct slot if it's free.
+- Made irrelevant items (light components, lamps, small automated pumps, etc) non-interactable in the tutorials.
+- The first patient cannot be healed in the doctor tutorial until the "take the patient to the medbay" 
+objective has been completed.
+- The docking interface does not become active in the captain tutorial when leaving the first outpost.
+- Added sounds for rewiring and repairing.
+
+Miscellaneous fixes:
 - Fixed skills not having any effect on repair durations.
 - Fixed inability to enable content packages created for a version prior to 0.9.2.0 (ones that have the 
 content package in the Data/ContentPackages folder instead of in the mod folder).
@@ -60,6 +65,47 @@ spawned automatically when the SMG/coilgun is fired.
 difficult to hit the crawler after it falls to the ground).
 - Enemies steer back towards the level if they end up outside the boundaries.
 - Added confirmation popups when exiting the sub editor or character editor to prevent losing unsaved work.
+- Fixed reactor warning lights being clickable and becoming invisible when pressed.
+- Fixed CPR button becoming invisible when pressed.
+- Fixed water occasionally flowing only through one gap in a hull, for example water only draining 
+through a hole at a one side of a room even if there is another hole at the other side of the room. 
+- Fixed scrollbars not resizing when filtering lists (e.g. the submarine list in the "new game" menu).
+- Fixed being able to fire flamers (and other repair tools) through walls and doors.
+- Fixed flamers working underwater when the water is shallow enough for the character to stand.
+- Fixed battery recharge rate slider not moving when the recharge rate is set by an incoming signal 
+or a remote player.
+- Fixed some connection panels being rewireable in vanilla subs when a wire is equipped.
+- Fixed some pre-placed body armors and grenades in vanilla subs having an incorrect scale.
+- Fixed crashing when a character gains a skill level on a skill that's not initially configured 
+for the character class.
+- Fixed "Add File" dialog of the Workshop publish screen always using the mod's root folder as the file 
+path even if the file is in a subfolder.
+- Fixed contentpackage version number not being updated when updating an older workshop item.
+- Fixed subinventories closing when items are dropped into or removed from them, which made reloading 
+weapons or putting several items into a container cumbersome.
+
+---------------------------------------------------------------------------------------------------------
+v0.9.2.2
+---------------------------------------------------------------------------------------------------------
+
+Karma improvements:
+- Attacking someone who has just recently attacked you doesn't reduce karma.
+- The karma penalty from attacking someone scales according to their karma (i.e. smaller penalty for 
+attacking a griefer whose karma is low).
+- Damaging characters by performing CPR doesn't decrease karma.
+- Fixed karma decreasing when moving a wire from a connection to another.
+- Reviving characters with CPR increases karma.
+- Made the default karma settings a little less strict.
+- Fixed clients always getting kicked (never banned) if the "kicks before ban" karma setting is set above 0.
+- Players aren't notified about their karma decreasing when it decreases "naturally" towards the neutral
+value of 50.
+
+Bugfixes:
+- Fixed mechanic tutorial crashing after the welding task when playing in Russian.
+- Less restrictive client name symbol constraints. Fixes clients failing to join servers if their name 
+contains Chinese symbols for example.
+- Fixed inability to enable/update content packages created for a version prior to 0.9.2.0 (ones that have 
+the content package in the Data/ContentPackages folder instead of in the mod folder).
 
 ---------------------------------------------------------------------------------------------------------
 v0.9.2.1

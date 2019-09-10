@@ -13,6 +13,7 @@ namespace Barotrauma
         public Entity Entity;
         public List<ISerializableEntity> Targets;
         public float Timer;
+        public Character User;
     }
     
     partial class StatusEffect
@@ -514,6 +515,7 @@ namespace Barotrauma
                 if (existingEffect != null)
                 {
                     existingEffect.Timer = Math.Max(existingEffect.Timer, duration);
+                    existingEffect.User = user;
                     return;
                 }
             }
@@ -552,6 +554,7 @@ namespace Barotrauma
                 if (existingEffect != null)
                 {
                     existingEffect.Timer = Math.Max(existingEffect.Timer, duration);
+                    existingEffect.User = user;
                     return;
                 }
             }
@@ -605,7 +608,8 @@ namespace Barotrauma
                     Parent = this,
                     Timer = duration,
                     Entity = entity,
-                    Targets = targets
+                    Targets = targets,
+                    User = user
                 };
 
                 DurationList.Add(element);
@@ -828,12 +832,12 @@ namespace Barotrauma
                         if (target is Character character)
                         {
                             if (character.Removed) { continue; }
-                            character.AddDamage(character.WorldPosition, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false);
+                            character.AddDamage(character.WorldPosition, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attacker: element.User);
                         }
                         else if (target is Limb limb)
                         {
                             if (limb.character.Removed) { continue; }
-                            limb.character.DamageLimb(limb.WorldPosition, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f);
+                            limb.character.DamageLimb(limb.WorldPosition, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: element.User);
                         }
                     }
 
@@ -855,7 +859,7 @@ namespace Barotrauma
                             float prevVitality = targetCharacter.Vitality;
                             targetCharacter.CharacterHealth.ReduceAffliction(targetLimb, reduceAffliction.First, reduceAffliction.Second * deltaTime);
 #if SERVER
-                            GameMain.Server.KarmaManager.OnCharacterHealthChanged(targetCharacter, element.Parent.user, prevVitality - targetCharacter.Vitality);
+                            GameMain.Server.KarmaManager.OnCharacterHealthChanged(targetCharacter, element.User, prevVitality - targetCharacter.Vitality);
 #endif
                         }
                     }
@@ -863,7 +867,7 @@ namespace Barotrauma
 
                 element.Timer -= deltaTime;
 
-                if (element.Timer > 0.0f) continue;
+                if (element.Timer > 0.0f) { continue; }
                 DurationList.Remove(element);
             }
         }
@@ -875,20 +879,17 @@ namespace Barotrauma
             CoroutineManager.StopCoroutines("statuseffect");
             DelayedEffect.DelayList.Clear();
             DurationList.Clear();
-#if CLIENT
-            //ActiveLoopingSounds.Clear();
-#endif
         }
 
         public void AddTag(string tag)
         {
-            if (tags.Contains(tag)) return;
+            if (tags.Contains(tag)) { return; }
             tags.Add(tag);
         }
 
         public bool HasTag(string tag)
         {
-            if (tag == null) return true;
+            if (tag == null) { return true; }
 
             return (tags.Contains(tag) || tags.Contains(tag.ToLowerInvariant()));
         }

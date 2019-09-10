@@ -24,10 +24,11 @@ namespace Barotrauma
             private string targetHullNameText;
 
             public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[identifier]", "[target]", "[targethullname]" });
-            public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { targetNameText ?? "", targetContainerNameText ?? "", targetHullNameText ?? "" });
+            public override IEnumerable<string> InfoTextValues(Traitor traitor) => base.InfoTextValues(traitor).Concat(new string[] { targetNameText ?? "", targetContainerNameText ?? "", targetHullNameText ?? "" });
 
-            public override bool IsCompleted => target != null && target.ParentInventory == Traitor.Character.Inventory;
-            public override bool CanBeCompleted {
+            public override bool IsCompleted => target != null && Traitors.Any(traitor => traitor.Character.HasItem(target));
+            public override bool CanBeCompleted
+            {
                 get
                 {
                     if (!base.CanBeCompleted)
@@ -51,7 +52,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        if (target.Submarine.TeamID != Traitor.Character.TeamID)
+                        if (Traitors.All(traitor => target.Submarine.TeamID != traitor.Character.TeamID))
                         {
                             return false;
                         }
@@ -69,26 +70,24 @@ namespace Barotrauma
 
             protected Item FindRandomContainer(bool includeNew, bool includeExisting)
             {
-                int itemsCount = Item.ItemList.Count;
-                int startIndex = TraitorMission.Random(itemsCount);
-                Item fallback = null;
-                for (int i = 0; i < itemsCount; ++i)
+                List<Item> suitableItems = new List<Item>();
+                foreach (Item item in Item.ItemList)
                 {
-                    var item = Item.ItemList[(i + startIndex) % itemsCount];
-                    if (item.Submarine == null || item.Submarine.TeamID != Traitor.Character.TeamID)
+                    if (item.Submarine == null || Traitors.All(traitor => item.Submarine.TeamID != traitor.Character.TeamID))
                     {
                         continue;
                     }
-
                     if (item.GetComponent<ItemContainer>() != null && allowedContainerIdentifiers.Contains(item.prefab.Identifier))
                     {
                         if ((includeNew && !item.OwnInventory.IsFull()) || (includeExisting && item.OwnInventory.FindItemByIdentifier(targetPrefab.Identifier) != null))
                         {
-                            return item;
+                            suitableItems.Add(item);
                         }
                     }
                 }
-                return null;
+
+                if (suitableItems.Count == 0) { return null; }
+                return suitableItems[TraitorMission.Random(suitableItems.Count)];
             }
 
             public override bool Start(Traitor traitor)
@@ -96,6 +95,10 @@ namespace Barotrauma
                 if (!base.Start(traitor))
                 {
                     return false;
+                }
+                if (targetPrefab != null)
+                {
+                    return true;
                 }
                 targetPrefab = FindItemPrefab(identifier);
                 if (targetPrefab == null)

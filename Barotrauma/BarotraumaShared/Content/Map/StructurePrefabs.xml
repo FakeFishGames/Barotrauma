@@ -990,13 +990,13 @@
   </structure>
   <!-- BACK WALLS START -->
   <Wall_B name="BackWall Ballast A1" identifier="FF_Wall_B" description="Ballast back wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/BackgroundWalls.png" sourcerect="512,688,512,256" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
+    <sprite texture="Content/Map/BackgroundWalls.png" sourcerect="513,688,510,256" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Wall_B>
   <Wall_BP name="BackWall Ballast A2" identifier="FF_Wall_BP" description="Ballast back wall with pipe" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_Ballast_Pipe.png" sourcerect="0,0,512,256" depth="0.98" premultiplyalpha="false" />
   </Wall_BP>
   <Wall_BC name="BackWall Ballast C" identifier="bwbc" description="Ballast back wall with pipe" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/BackgroundWalls.png" sourcerect="0,688,512,256" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
+    <sprite texture="Content/Map/BackgroundWalls.png" sourcerect="1,688,510,256" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Wall_BC>
   <Wall_C1 name="BackWall C1" identifier="FF_Wall_C1" description="Mushy grey wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="0,0,672,224" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
@@ -1008,13 +1008,13 @@
     <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="0,448,672,224" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Wall_C3>
   <Wall_D1 name="BackWall D1" identifier="FF_Wall_D1" description="Metal wall 1" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/BackgroundWalls.png" sourcerect="334,0,688,240" depth="0.98" premultiplyalpha="false" />
+    <sprite texture="Content/Map/BackgroundWalls.png" sourcerect="335,0,687,240" depth="0.98" premultiplyalpha="false" />
   </Wall_D1>
   <Wall_D2 name="BackWall D2" identifier="FF_Wall_D2" description="Metal wall 2" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/BackgroundWalls.png" sourcerect="334,224,688,240" depth="0.98" premultiplyalpha="false" />
+    <sprite texture="Content/Map/BackgroundWalls.png" sourcerect="335,224,687,240" depth="0.98" premultiplyalpha="false" />
   </Wall_D2>
   <Wall_D3 name="BackWall D3" identifier="FF_Wall_D3" description="Metal wall 3" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/BackgroundWalls.png" sourcerect="334,464,688,224" depth="0.98" premultiplyalpha="false" />
+    <sprite texture="Content/Map/BackgroundWalls.png" sourcerect="335,464,687,224" depth="0.98" premultiplyalpha="false" />
   </Wall_D3>
   <Wall_E name="BackWall E" identifier="FF_Wall_E" description="Block wall lit" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_E.png" sourcerect="0,0,512,256" depth="0.98" premultiplyalpha="false" />
@@ -1023,13 +1023,13 @@
     <sprite texture="Content/Map/FF_Wall_F.png" sourcerect="0,0,658,322" depth="0.98" />
   </Wall_F>-->
   <Wall_G1 name="BackWall G1" identifier="FF_Wall_G1" description="General grey back wall 1" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/BackgroundWalls.png" sourcerect="0,0,334,240" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
+    <sprite texture="Content/Map/BackgroundWalls.png" sourcerect="1,0,332,240" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Wall_G1>
   <Wall_G2 name="BackWall G2" identifier="FF_Wall_G2" description="General grey back wall 2" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/BackgroundWalls.png" sourcerect="0,222,334,240" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
+    <sprite texture="Content/Map/BackgroundWalls.png" sourcerect="1,222,332,240" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Wall_G2>
   <Wall_G3 name="BackWall G3" identifier="FF_Wall_G3" description="General grey back wall 3" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/BackgroundWalls.png" sourcerect="0,444,334,224" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
+    <sprite texture="Content/Map/BackgroundWalls.png" sourcerect="1,444,332,224" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Wall_G3>
   <Wall_H1 name="BackWall H1" identifier="FF_Wall_H1" description="Airlock Background" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5">
     <sprite texture="Content/Map/bWall_Airlock_A1.png" sourcerect="0,0,512,512" depth="0.98" premultiplyalpha="false" />
@@ -1515,8 +1515,9 @@
     <sprite texture="Content/Map/testroom.png" sourcerect="338,907,38,32" depth="0.85" />
   </CableHolderVertical3>
   <topwindow name="Window Top" identifier="topwindow" width="128" height="49" body="true" health="100" tags="glass">
-    <sprite texture="Content/Map/testroom.png" sourcerect="208,848,128,80" depth="0.05" />
-    <backgroundsprite texture="Content/Map/testroom.png" sourcerect="344,848,128,80" depth="0.85" />
+    <Upgrade gameversion="0.9.2.0" rectheight="49"/>
+    <sprite texture="Content/Map/testroom.png" sourcerect="208,848,128,49" depth="0.05" />
+    <backgroundsprite texture="Content/Map/testroom.png" sourcerect="344,848,128,49" depth="0.85" />
   </topwindow>
   <verticalwindow name="Window Vertical" identifier="verticalwindow" width="128" height="224" body="true" health="100" tags="glass">
     <sprite texture="Content/Map/testroom.png" sourcerect="368,544,128,224" depth="0.05" />
@@ -1530,11 +1531,13 @@
     <sprite texture="Content/Map/testroom.png" sourcerect="896,80,64,128" depth="0.06" />
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="961,80,64,128" depth="0.85" />
   </verticalresizablewindow>
-  <largeplatform name="Platform Large" identifier="largeplatform" allowattachitems="true" width="64" height="52" resizehorizontal="true" body="true" platform="true">
-    <sprite texture="Content/Map/testroom.png" sourcerect="896,0,128,52" depth="0.9" />
+  <largeplatform name="Platform Large" identifier="largeplatform" allowattachitems="true" width="64" height="51" resizehorizontal="true" body="true" platform="true">
+    <Upgrade gameversion="0.9.3.0" rectheight="51"/>
+    <sprite texture="Content/Map/testroom.png" sourcerect="897,0,126,51" depth="0.9" />
   </largeplatform>
-  <platform name="Platform Basic" identifier="platform" allowattachitems="true" width="64" height="26" resizehorizontal="true" body="true" platform="true">
-    <sprite texture="Content/Map/testroom.png" sourcerect="896,52,128,27" depth="0.9" />
+  <platform name="Platform Basic" identifier="platform" allowattachitems="true" width="64" height="27" resizehorizontal="true" body="true" platform="true">
+    <Upgrade gameversion="0.9.3.0" rectheight="27"/>  
+    <sprite texture="Content/Map/testroom.png" sourcerect="897,52,126,27" depth="0.9" />
   </platform>
   <roughbgwall name="BackWall Rough" identifier="roughbgwall" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="200,104,240,240" depth="0.98" />

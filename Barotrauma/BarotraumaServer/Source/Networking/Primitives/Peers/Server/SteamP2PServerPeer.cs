@@ -40,7 +40,7 @@ namespace Barotrauma.Networking
                 Retries = 0;
                 SteamID = steamId;
                 PasswordSalt = null;
-                UpdateTime = Timing.TotalTime;
+                UpdateTime = Timing.TotalTime+Timing.Step*3.0;
                 TimeOut = NetworkConnection.TimeoutThreshold;
                 AuthSessionStarted = false;
             }
@@ -228,7 +228,7 @@ namespace Barotrauma.Networking
             
             if (isServerMessage)
             {
-                DebugConsole.ThrowError("got server message from" + senderSteamId.ToString());
+                DebugConsole.ThrowError("Got server message from" + senderSteamId.ToString());
                 return;
             }
 
@@ -346,7 +346,11 @@ namespace Barotrauma.Networking
                     NetOutgoingMessage outMsg = netServer.CreateMessage();
                     outMsg.Write(OwnerSteamID);
                     outMsg.Write((byte)(PacketHeader.IsConnectionInitializationStep | PacketHeader.IsServerMessage));
-                    netServer.SendMessage(outMsg, netConnection, NetDeliveryMethod.ReliableUnordered);
+                    NetSendResult result = netServer.SendMessage(outMsg, netConnection, NetDeliveryMethod.ReliableUnordered);
+                    if (result != NetSendResult.Sent && result != NetSendResult.Queued)
+                    {
+                        DebugConsole.NewMessage("Failed to send connection confirmation message to owner: " + result.ToString(), Microsoft.Xna.Framework.Color.Yellow);
+                    }
                     break;
                 case NetConnectionStatus.Disconnected:
                     DebugConsole.NewMessage("Owner disconnected: closing the server...");
@@ -367,6 +371,8 @@ namespace Barotrauma.Networking
             //DebugConsole.NewMessage(initializationStep+" "+pendingClient.InitializationStep);
 
             if (pendingClient.InitializationStep != initializationStep) return;
+
+            pendingClient.UpdateTime = Timing.TotalTime+Timing.Step;
 
             switch (initializationStep)
             {
@@ -549,6 +555,10 @@ namespace Barotrauma.Networking
             if (netConnection != null)
             {
                 NetSendResult result = netServer.SendMessage(outMsg, netConnection, NetDeliveryMethod.ReliableUnordered);
+                if (result != NetSendResult.Sent && result != NetSendResult.Queued)
+                {
+                    DebugConsole.NewMessage("Failed to send initialization step " + pendingClient.InitializationStep.ToString() + " to pending client: " + result.ToString(), Microsoft.Xna.Framework.Color.Yellow);
+                }
             }
         }
 
@@ -609,7 +619,11 @@ namespace Barotrauma.Networking
             lidgrenMsg.Write((UInt16)length);
             lidgrenMsg.Write(msgData, 0, length);
 
-            netServer.SendMessage(lidgrenMsg, netConnection, lidgrenDeliveryMethod);
+            NetSendResult result = netServer.SendMessage(lidgrenMsg, netConnection, lidgrenDeliveryMethod);
+            if (result != NetSendResult.Sent && result != NetSendResult.Queued)
+            {
+                DebugConsole.NewMessage("Failed to send message to " + conn.Name + ": " + result.ToString(), Microsoft.Xna.Framework.Color.Yellow);
+            }
         }
 
         private void SendDisconnectMessage(UInt64 steamId, string msg)
@@ -622,7 +636,11 @@ namespace Barotrauma.Networking
             lidgrenMsg.Write((byte)(PacketHeader.IsDisconnectMessage | PacketHeader.IsServerMessage));
             lidgrenMsg.Write(msg);
 
-            netServer.SendMessage(lidgrenMsg, netConnection, NetDeliveryMethod.ReliableUnordered);
+            NetSendResult result = netServer.SendMessage(lidgrenMsg, netConnection, NetDeliveryMethod.ReliableUnordered);
+            if (result != NetSendResult.Sent && result != NetSendResult.Queued)
+            {
+                DebugConsole.NewMessage("Failed to send disconnect message to " + Steam.SteamManager.SteamIDUInt64ToString(steamId) + ": " + result.ToString(), Microsoft.Xna.Framework.Color.Yellow);
+            }
         }
 
         private void Disconnect(NetworkConnection conn, string msg, bool sendDisconnectMessage)

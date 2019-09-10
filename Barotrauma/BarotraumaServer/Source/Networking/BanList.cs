@@ -18,7 +18,7 @@ namespace Barotrauma.Networking
             this.ExpirationTime = expirationTime;
             this.UniqueIdentifier = LastIdentifier; LastIdentifier++;
 
-            this.IsRangeBan = IP.IndexOf(".x")>-1;
+            this.IsRangeBan = IP.IndexOf(".x") > -1;
         }
 
         public BannedPlayer(string name, ulong steamID, string reason, DateTime? expirationTime)
@@ -30,6 +30,8 @@ namespace Barotrauma.Networking
             this.UniqueIdentifier = LastIdentifier; LastIdentifier++;
 
             this.IsRangeBan = false;
+
+            this.IP = "";
         }
 
         public bool CompareTo(string ipCompare)
@@ -278,6 +280,9 @@ namespace Barotrauma.Networking
         {
             try
             {
+                if (outMsg == null) { throw new ArgumentException("OutMsg was null"); }
+                if (GameMain.Server == null) { throw new Exception("GameMain.Server was null"); }
+
                 if (!c.HasPermission(ClientPermissions.Ban))
                 {
                     outMsg.Write(false); outMsg.WritePadBits();

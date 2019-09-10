@@ -35,7 +35,7 @@ namespace Barotrauma
                         break;
                     case "sound":
                         var sound = Submarine.LoadRoundSound(subElement);
-                        if (sound != null)
+                        if (sound?.Sound != null)
                         {
                             loopSound = subElement.GetAttributeBool("loop", false);
                             if (subElement.Attribute("selectionmode") != null)
