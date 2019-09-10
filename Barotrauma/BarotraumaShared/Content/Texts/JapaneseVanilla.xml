@@ -2517,8 +2517,7 @@
 <entitydescription.greatercomponent>signal_in1インプットがsignal_in2インプットより大きいならば、信号を送ります。</entitydescription.greatercomponent>
 <entityname.colorcomponent>色コンポーネント</entityname.colorcomponent>
 <entitydescription.colorcomponent>灯火管制のために結合された色信号を出力します。</entitydescription.colorcomponent>
-<entityname.subtractcomponent><!-- No data --></entityname.subtractcomponent>
-<!-- 減算コンポーネント -->
+<entityname.subtractcomponent>減算コンポーネント</entityname.subtractcomponent>
 <entitydescription.subtractcomponent>受け取られた信号の取り去られた値を出力します。</entitydescription.subtractcomponent>
 <entityname.multiplycomponent>乗算コンポーネント</entityname.multiplycomponent>
 <entitydescription.multiplycomponent>受け取られた信号の製品を出力します。</entitydescription.multiplycomponent>
