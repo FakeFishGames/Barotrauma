@@ -3516,8 +3516,8 @@
   <servertagdescription.voip.true>Voice chat is enabled.</servertagdescription.voip.true>
   <servertag.voip.false>Voice chat disabled</servertag.voip.false>
   <servertagdescription.voip.false>Voice chat is disabled.</servertagdescription.voip.false>
-  <servertag.karma.true>Karma disabled</servertag.karma.true>
-  <servertagdescription.karma.true>Karma system is disabled.</servertagdescription.karma.true>
+  <servertag.karma.true>Karma enabled</servertag.karma.true>
+  <servertagdescription.karma.true>Karma system is enabled.</servertagdescription.karma.true>
   <servertag.karma.false>Karma disabled</servertag.karma.false>
   <servertagdescription.karma.false>Karma system is disabled.</servertagdescription.karma.false>
   <servertag.traitors.true>Traitors enabled</servertag.traitors.true>
@@ -3532,6 +3532,12 @@
   <friendplayingbarotrauma>Playing Barotrauma</friendplayingbarotrauma>
   <friendplayinganothergame>Playing another game</friendplayinganothergame>
   <friendnotplaying>Not playing</friendnotplaying>
+
+  <serversettingsplaystyle>Play style</serversettingsplaystyle>
+
+  <serversettingsallowfriendlyfire>Allow friendly fire</serversettingsallowfriendlyfire>
+  <serversettingsallowrewiring>Allow rewiring</serversettingsallowrewiring>
+  <serversettingsallowdisguises>Allow disguises</serversettingsallowdisguises>
 
   <!-- Changed values as of 13th of August -->
   <traitorgoaldestroyitems>Dispose of at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>
