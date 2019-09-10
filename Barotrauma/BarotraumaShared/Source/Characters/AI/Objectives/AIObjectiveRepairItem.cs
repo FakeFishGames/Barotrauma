@@ -111,7 +111,9 @@ namespace Barotrauma
                 if (fuel == null)
                 {
                     RemoveSubObjective(ref goToObjective);
-                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, item.Identifiers, repairTool.Item.GetComponent<ItemContainer>(), objectiveManager));
+                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, item.Identifiers, repairTool.Item.GetComponent<ItemContainer>(), objectiveManager), 
+                        onCompleted: () => RemoveSubObjective(ref refuelObjective),
+                        onAbandon: () => Abandon = true);
                     return;
                 }
             }
@@ -141,12 +143,14 @@ namespace Barotrauma
                         else if (Item.Condition < previousCondition)
                         {
                             // If the current condition is less than the previous condition, we can't complete the task, so let's abandon it. The item is probably deteriorating at a greater speed than we can repair it.
-                            Abandon = true;
-                            character?.Speak(TextManager.GetWithVariable("DialogCannotRepair", "[itemname]", Item.Name, true), null, 0.0f, "cannotrepair", 10.0f);
-                        }
+                            Abandon = true;                        }
                     }
                     if (Abandon)
                     {
+                        if (IsRepairing)
+                        {
+                            character?.Speak(TextManager.GetWithVariable("DialogCannotRepair", "[itemname]", Item.Name, true), null, 0.0f, "cannotrepair", 10.0f);
+                        }
                         repairable.StopRepairing(character);
                     }
                     else
@@ -175,7 +179,14 @@ namespace Barotrauma
                         }
                         return objective;
                     },                    
-                    onAbandon: () => character.Speak(TextManager.GetWithVariable("DialogCannotRepair", "[itemname]", Item.Name, true), null, 0.0f, "cannotrepair", 10.0f));
+                    onAbandon: () =>
+                    {
+                        Abandon = true;
+                        if (IsRepairing)
+                        {
+                            character.Speak(TextManager.GetWithVariable("DialogCannotRepair", "[itemname]", Item.Name, true), null, 0.0f, "cannotrepair", 10.0f);
+                        }
+                    });
             }
         }
 

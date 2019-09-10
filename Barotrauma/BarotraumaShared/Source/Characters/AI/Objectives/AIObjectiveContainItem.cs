@@ -78,7 +78,7 @@ namespace Barotrauma
                     if (!character.CanInteractWith(container.Item, out _, checkLinked: false))
                     {
                         TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(container.Item, character, objectiveManager), 
-                            onAbandon: () => RemoveSubObjective(ref goToObjective),
+                            onAbandon: () => Abandon = true,
                             onCompleted: () => RemoveSubObjective(ref goToObjective));
                         return;
                     }

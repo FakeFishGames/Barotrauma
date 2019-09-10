@@ -72,7 +72,7 @@ namespace Barotrauma
                 if (containedItems.None(i => i.HasTag("weldingfueltank") && i.Condition > 0.0f))
                 {
                     TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, "weldingfueltank", weldingTool.GetComponent<ItemContainer>(), objectiveManager), 
-                        onAbandon: () => RemoveSubObjective(ref refuelObjective),
+                        onAbandon: () => Abandon = true,
                         onCompleted: () => RemoveSubObjective(ref refuelObjective));
                     return;
                 }
@@ -99,7 +99,7 @@ namespace Barotrauma
             if (canOperate)
             {
                 TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: "", requireEquip: true, operateTarget: Leak), 
-                    onAbandon: () => RemoveSubObjective(ref operateObjective),
+                    onAbandon: () => Abandon = true,
                     onCompleted: () => RemoveSubObjective(ref operateObjective));
             }
             else
@@ -108,7 +108,7 @@ namespace Barotrauma
                 {
                     CloseEnough = reach
                 }, 
-                onAbandon: () => RemoveSubObjective(ref gotoObjective),
+                onAbandon: () => Abandon = true,
                 onCompleted: () => RemoveSubObjective(ref gotoObjective));
             }
         }
