@@ -935,7 +935,6 @@ namespace Barotrauma
                 NewMessage((GameSettings.VerboseLogging ? "Enabled" : "Disabled") + " verbose logging.", Color.White);
             }, isCheat: false));
 
-
             commands.Add(new Command("calculatehashes", "calculatehashes [content package name]: Show the MD5 hashes of the files in the selected content package. If the name parameter is omitted, the first content package is selected.", (string[] args) =>
             {
                 if (args.Length > 0)
@@ -962,6 +961,21 @@ namespace Barotrauma
                 {
                     GameMain.Config.SelectedContentPackages.Select(cp => cp.Name).ToArray()
                 };
+            }));
+
+            commands.Add(new Command("debugai", "", onExecute: (string[] args) =>
+            {
+                var commands = new List<KeyValuePair<string, string[]>>()
+                {
+                    new KeyValuePair<string, string[]>("debugdraw", new string[]{ "true" }),
+                    new KeyValuePair<string, string[]>("los", new string[]{ "true" }),
+                    new KeyValuePair<string, string[]>("lights", new string[]{ "false" }),
+                    new KeyValuePair<string, string[]>("freecam", new string[0]),
+                };
+                foreach (var command in commands)
+                {
+                    Commands.Find(c => c.names.Any(n => n.Equals(command.Key, StringComparison.OrdinalIgnoreCase)))?.Execute(command.Value);
+                }
             }));
 
 #if DEBUG
