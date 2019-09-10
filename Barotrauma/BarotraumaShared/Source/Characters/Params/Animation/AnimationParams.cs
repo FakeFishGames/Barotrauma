@@ -36,7 +36,7 @@ namespace Barotrauma
         [Serialize(1f, true, description: "Separate multiplier for the head lift"), Editable(MinValueFloat = 0, MaxValueFloat = 2, ValueStep = 0.1f)]
         public float StepLiftHeadMultiplier { get; set; }
 
-        [Serialize(0f, true, description: "How much the body raises when taking a step. In pixels."), Editable(MinValueFloat = 0, MaxValueFloat = 100, ValueStep = 0.1f)]
+        [Serialize(0f, true, description: "How much the body raises when taking a step."), Editable(MinValueFloat = 0, MaxValueFloat = 100, ValueStep = 0.1f)]
         public float StepLiftAmount { get; set; }
 
         [Serialize(-0.5f, true, description: "When does the body raise when taking a step. The default (0.5) is in the middle of the step."), Editable(MinValueFloat = -1, MaxValueFloat = 1, DecimalCount = 2, ValueStep = 0.1f)]
