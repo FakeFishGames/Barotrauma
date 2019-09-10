@@ -262,13 +262,11 @@ namespace Barotrauma
                         {
                             if (!objective.Start(traitor))
                             {
-                                pendingObjectives.Remove(objective);
-                                completedObjectives.Add(objective);
-                                if (pendingObjectives.Count > 0)
-                                {
-                                    objective.EndMessage();
-                                }
-                                continue;
+                                //the mission fails if an objective cannot be started
+                                objective.EndMessage();
+                                objective.End(true);
+                                pendingObjectives.Clear();
+                                break;
                             }
                             startedObjectives.Add(objective);
                         }
