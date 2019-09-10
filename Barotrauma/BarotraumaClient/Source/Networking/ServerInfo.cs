@@ -96,7 +96,7 @@ namespace Barotrauma.Networking
 
             if (frame == null) return;
 
-            var previewContainer =  new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 1.0f), frame.RectTransform, Anchor.Center))
+            var previewContainer =  new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), frame.RectTransform, Anchor.Center))
             {
                 Stretch = true
             };
@@ -122,10 +122,16 @@ namespace Barotrauma.Networking
 
             // left column -----------------------------------------------------------------------------
 
-            var leftColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 1.0f), columnContainer.RectTransform))
+            var leftColumnHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 1.0f), columnContainer.RectTransform), childAnchor: Anchor.CenterRight)
             {
                 Stretch = true
             };
+
+            var leftColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.975f, 1.0f), leftColumnHolder.RectTransform))
+            {
+                Stretch = true
+            };
+
             float elementHeight = 0.075f;
 
             var title = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), leftColumn.RectTransform), ServerName, font: GUI.LargeFont);
