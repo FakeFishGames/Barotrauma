@@ -626,10 +626,7 @@ namespace Barotrauma
 
         private static void HandlePersistingElements(float deltaTime)
         {
-            if (GUIMessageBox.VisibleBox != null && GUIMessageBox.VisibleBox.UserData as string != "verificationprompt" && GUIMessageBox.VisibleBox.UserData as string != "bugreporter")
-            {
-                GUIMessageBox.VisibleBox.AddToGUIUpdateList();
-            }
+            GUIMessageBox.AddActiveToGUIUpdateList();
 
             if (pauseMenuOpen)
             {

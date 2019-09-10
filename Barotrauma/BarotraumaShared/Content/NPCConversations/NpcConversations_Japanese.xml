@@ -1,0 +1,661 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Conversations identifier="vanillaconversations" Language="Japanese" nowhitespace="True">
+
+<!-- Personality traits -->
+<PersonalityTrait name="Professional" alloweddialogtags="professional,none" commonness="1" />
+<PersonalityTrait name="Laid-back" alloweddialogtags="laid-back,none" commonness="1" />
+<PersonalityTrait name="Rude" alloweddialogtags="rude,none" commonness="1" />
+<PersonalityTrait name="Tough" alloweddialogtags="tough,none" commonness="1" />
+<PersonalityTrait name="Joker" alloweddialogtags="joker,none" commonness="1" />
+<PersonalityTrait name="Broken English" alloweddialogtags="brokenenglish" commonness="1" />
+<PersonalityTrait name="Fearful" alloweddialogtags="fearful,none" commonness="1" />
+<PersonalityTrait name="Crazy" alloweddialogtags="crazy,none" commonness="1" />
+
+<!-- Generic conversation -->
+<Conversation line="さあ皆さん、彼女を連れ出してちょっと出かけましょう！" speaker="0" flags="Initial" allowedjobs="captain">
+	<Conversation line="" speaker="0"/>
+	<Conversation line="アイアイアイ。" speaker="1">
+		<Conversation line="アイ、サー！" speaker="2"/>
+		<Conversation line="はい船長！" speaker="2" speakertags="brokenenglish"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="船の中で海まで行く彼ら；" speaker="0" flags="Initial" allowedjobs="captain">
+	<Conversation line="大きな海域でビジネスをします；" speaker="0">
+		<Conversation line="これらは神の作品と彼の深淵を見ます。" speaker="0">
+			<Conversation line="さお私達は行きます！幸運を祈る、クルー！" speaker="0"/>
+			<Conversation line="ここは全然、神の作品ではありません。" speaker="1" speakertags="joker,tough,professional"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="いざ出発―長い旅路の始まり！" speaker="0" flags="Initial" allowedjobs="captain">
+	<Conversation line="アイ、サー！" speaker="1"/>
+	<Conversation line="アイアイ！" speaker="1"/>
+	<Conversation line="幸運を祈る、野郎ども！" speaker="1" allowedjobs="watchman"/>
+</Conversation>
+
+<Conversation line="ようこそ！手と腕を船外に出さないでください。" speaker="0" flags="Initial" allowedjobs="captain" speakertags="joker">
+	<Conversation line="アイ、サー！" speaker="1"/>
+	<Conversation line="アイアイ！" speaker="1"/>
+</Conversation>
+
+<Conversation line="クルー、出発準備せよ、これから長い旅路だぞ！" speaker="0" flags="Initial" allowedjobs="captain" speakertags="brokenenglish">
+	<Conversation line="アイ、サー！" speaker="1"/>
+	<Conversation line="アイアイ！" speaker="1"/>
+	<Conversation line="ホンクマザーは私たちの魂に慈悲を持っています。" speaker="1" speakertags="crazy"/>
+	<Conversation line="幸運を祈る、野郎ども！" speaker="1" allowedjobs="watchman"/>
+</Conversation>
+
+<Conversation line="キャプテンが話しています！ミッションの準備完了、幸運を祈ります！" speaker="0" flags="Initial" allowedjobs="captain" speakertags="brokenenglish">
+	<Conversation line="アイ、サー！" speaker="1"/>
+	<Conversation line="アイアイ！" speaker="1">
+		<Conversation line="アイ、サー！" speaker="2"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="今回、私たちのために海洋にあるものを見てみましょう！" speaker="0" flags="Initial" allowedjobs="captain">
+	<Conversation line="私の推測では怪物、ぞっとするような死、および永遠の暗闇が待ち受けていることでしょう。" speaker="1" speakertags="joker,fearful">
+		<Conversation line="静かにしてください。あなたの皮肉はいりません。" speaker="0" speakertags="professional"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="用意できているみんな？その方がいいですよ。もう後戻りできません。" speaker="0" flags="Initial" allowedjobs="captain">
+	<Conversation line="" speaker="0"/>
+	<Conversation line="アイ、サー！" speaker="1">
+		<Conversation line="これをしましょう！" speaker="2"/>
+		<Conversation line="準備万端です！" speaker="2" speakertags="brokenenglish"/>
+		<Conversation line="おおー！！死よどんとこい！" speaker="2" speakertags="crazy"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="私は冷たい。" speaker="0" maxintensity="0.4"/>
+
+<Conversation line="私はこれについては悪い感じがあり..." speaker="0" speakertags="fearful" maxintensity="0.4">
+	<Conversation line="私は、かつて言ったこの高齢のキャプテンを知っていました…" speaker="1" speakertags="professional,tough">
+		<Conversation line="あなたは嵐を静めることができないので、トライするのをやめてください。" speaker="1">
+			<Conversation line="できることは静かにすることです。嵐はすぎさるでしょう。" speaker="1">
+				<Conversation line="... あなた、あなたはとんでもないばか野郎です。" speaker="0" speakertags="rude,fearful"/>
+			</Conversation>
+		</Conversation>
+	</Conversation>
+	<Conversation line="私は、私達がみなすると確信しています。" speaker="1"/>
+	<Conversation line="またガスを持っていますか？" speaker="1" speakertags="joker"/>
+</Conversation>
+
+<Conversation line="私には船体がきしむ音が聞こえました。" speaker="0" speakertags="fearful" maxintensity="0.4">
+	<Conversation line="私も聞こえました。" speaker="1" speakertags="brokenenglish"/>
+	<Conversation line="" speaker="1" speakertags="joker"/>
+</Conversation>
+
+<Conversation line="家に帰って熟成したカドモスのボトルを開けるのが待ち遠しいです。" speaker="0" speakertags="laid-back" maxintensity="0.2">
+	<Conversation line="仕事に集中してください。さもないと、あなたは、棺の中におさまることでしょう。" speaker="1" speakertags="professional,tough,rude">
+		<Conversation line="あはは！棺埋葬！それが最後に起こったのはいつでしたか？" speaker="2" speakertags="laid-back,joker"/>
+	</Conversation>
+	<Conversation line="今は全然、家について考えられません。これから長い道のりです。" speaker="1" speakertags="professional,tough"/>
+	<Conversation line="カドモス魚は小便します。強いやつがいいな。" speaker="1" speakertags="brokenenglish"/>
+</Conversation>
+
+<Conversation line="地球海軍でやつらが行っていたこと…。" speaker="0" allowedjobs="captain" speakertags="professional,tough" maxintensity="0.3">
+	<Conversation line="物事を行うことに取りかかる方法は2つしかありません:正しくそれをするか、再びそれをします。" speaker="0">
+		<Conversation line="しかしここではあてはまらない。ユーロパには次のチャンスが全然ありません。" speaker="0">
+			<Conversation line="従って、皆さん、目の前の仕事に集中してください。" speaker="0"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="私はポパイ、男性船員です！" speaker="0" allowedjobs="medicaldoctor" speakertags="laid-back,joker" maxintensity="0.2">
+	<Conversation line="私はフィニッチに強い、ホウレンソウを食べるから！" speaker="0">
+		<Conversation line="ドクター、あなたは再びエタノールの隠し場所にいましたか？" speaker="1">
+			<Conversation line="わかりました、やめます。" speaker="0"/>
+			<Conversation line="気分を明るくしようとしているところ申し訳ありません。" speaker="0"/>
+		</Conversation>
+	</Conversation>
+	<Conversation line="私のボートには歌がありません。" speaker="1" allowedjobs="captain" speakertags="professional,tough"/>
+</Conversation>
+
+<Conversation line="太陽が恋しいです。" speaker="0" maxintensity="0.2">
+	<Conversation line="" speaker="0" flags="Casual"/>
+	<Conversation line="私は、日光があなたに癌を与えると耳にしました。私達はそれなしでより裕福です。" speaker="1">
+		<Conversation line="木星はまたあなたに癌を与えます。私はいつでも木星より太陽をとりますよ。" speaker="0">
+			<Conversation line="やめてくれ。" speaker="2" speakertags="professional,tough"/>
+		</Conversation>
+	</Conversation>
+	<Conversation line="いいかげんにしてください。" speaker="1" speakertags="professional,tough"/>
+</Conversation>
+
+<Conversation line="殻は私をぞっとさせます。" speaker="0" speakertags="fearful" maxintensity="0.2">
+	<Conversation line="" speaker="0" flags="Casual"/>
+	<Conversation line="私も。私がいつか感染したら、鎗を私の頭に突き刺すと約束してください。" speaker="1">
+		<Conversation line="私はむしろあなたにカルキサナイドの打撃を与えるだろう。" speaker="2" allowedjobs="medicaldoctor"/>
+		<Conversation line="私はカルキサナイドで行ってきただろうが、槍でもいいでしょう。" speaker="2" allowedjobs="medicaldoctor" speakertags="rude"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="あなたたちの中で、労働組合を耳にした人はいますか？" speaker="0" maxintensity="0.2">
+	<Conversation line="完全性の独占の独占の完全性の独占の完全性の完全性によって増大されたものを改善している取引。" speaker="0" flags="Psychosis">
+		<Conversation line="交渉安全基準と退職と退職と退職と労働者。労働者を改善している交取引。" speaker="0" flags="Psychosis"/>
+	</Conversation>
+	<Conversation line="それは共産主義の話です。連立は、私達が必要な唯一の組合です。" speaker="1" allowedjobs="captain" speakertags="professional,tough,rude"/>
+	<Conversation line="はい、それは何でしょうか？" speaker="1">
+		<Conversation line="組合をつくるべきだと思います。" speaker="0">
+			<Conversation line="私達はいくつかのよりよい安全基準、適切な賃金、退職金を使うことができました…" speaker="0">
+				<Conversation line="退職するのに十分長生きしているとお思いで?" speaker="1">
+					<Conversation line="ええ、本当にそう思いますよ。" speaker="0"/>
+					<Conversation line="なるほど。" speaker="0"/>
+				</Conversation>
+				<Conversation line="安全基準？組合は、モレクを遠ざけるか、あなたが、リークをどうにか対処しようとしている時にあなたの手を握ろうとしていますか？" speaker="1" speakertags="rude,tough">
+					<Conversation line="それは、私が言いたかったことではありません。" speaker="0"/>
+					<Conversation line="一理ありますね。" speaker="0"/>
+				</Conversation>
+			</Conversation>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="これまで、それが外でプレッシャーにさらされる時に、何が人体に起こるかわかります？" speaker="0" speakertags="fearful" maxintensity="0.2">
+	<Conversation line="これからわかるでしょう。" speaker="0" flags="Psychosis">
+		<Conversation line="はい、私はあなたと話しています。" speaker="0" flags="Psychosis"/>
+	</Conversation>
+	<Conversation line="想像できますよ。" speaker="1">
+		<Conversation line="それでも、私の頭からイメージを拭い去ることができません。" speaker="0">
+			<Conversation line="油圧プレスの下の肉と骨格のバッグ、それは、私が唯一思い描けることです。" speaker="0"/>
+			<Conversation line="ユーロパの愛情ある抱擁。" speaker="2" speakertags="crazy"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="速く彼女をつかまえて、彼女を深くつかまえてください…" speaker="0" flags="Casual" speakertags="joker,laid-back" maxintensity="0.3">
+	<Conversation line="魚が眠る所で、彼女をつかまえてください！" speaker="0">
+		<Conversation line="この、不快な、くそっ、水圧が…" speaker="0">
+			<Conversation line="ちょうどシャークのように彼女をとらえてください！" speaker="0">
+				<Conversation line="私のボートには歌ありません。" speaker="1" allowedjobs="captain" speakertags="professional,tough">
+					<Conversation line="" speaker="0"/>
+					<Conversation line="OK、OK、もう盛り上げようとはしませんよ！" speaker="0"/>
+				</Conversation>
+				<Conversation line="私は、それが地球歌であると知っているけれども、それは私達のためにふさわしすぎます！" speaker="1"/>
+			</Conversation>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="私達はもうそこにいますか？" speaker="0" speakertags="joker" maxintensity="0.2">
+	<Conversation line="" speaker="0" flags="Casual"/>
+	<Conversation line="黙ってください。" speaker="1" speakertags="rude"/>
+	<Conversation line="それでも面白くありません。" speaker="1"/>
+	<Conversation line="全く面白くありません。" speaker="1" speakertags="brokenenglish"/>
+</Conversation>
+
+<Conversation line="地球を覚えている人はいますか？" speaker="0" maxintensity="0.2">
+	<Conversation line="地球、地球、地球。それはあなたがそれを見に行くことはありません。残念です。" speaker="0" flags="Psychosis"/>
+	<Conversation line="私は高齢であるけれども、そんなに高齢ではありません。" speaker="1"/>
+	<Conversation line="私のおじいちゃんは地球人でした。" speaker="1">
+		<Conversation line="私は、半分作り話だと確信しているけれども、私は彼の話を聞くことが大好きでした。" speaker="1">
+			<Conversation line="あなたのまわりで空を見て、あなたの家からたった今歩いて出ると想像することができますか？" speaker="1">
+				<Conversation line="それは素晴らしいですね。" speaker="0">
+					<Conversation line="巨大なガスがあなたを放射能で黒焦げにするのを、心配することなく見上げています…" speaker="2"/>
+				</Conversation>
+			</Conversation>
+			<Conversation line="鳥を見るのが大好きだったでしょう。" speaker="1">
+				<Conversation line="そして犬、そしてゾウ。" speaker="0"/>
+				<Conversation line="そしてリノサウルス！" speaker="2" speakertags="brokenenglish"/>
+			</Conversation>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="あなたは、遺跡を建てた人たちに、何が起こったのだろうかと思ったことがありますか？" speaker="0" maxintensity="0.2">
+	<Conversation line="地下室の中で果てしなく隠れる悪夢は 続きます。計り知れない時間が過ぎ、いやだ、やだ、やだ！" speaker="0" flags="Psychosis"/>
+	<Conversation line="そうじゃない人は？" speaker="1"/>
+	<Conversation line="研究者に考えてもらいます。" speaker="1">
+		<Conversation line="ぐだぐだ悩むよりももっと大事なことをしなさいよ。" speaker="1"/>
+	</Conversation>
+	<Conversation line="深海だけが知っています。" speaker="1" speakertags="crazy"/>
+	<Conversation line="私はそれについて考えるけれども、誰も知らないと思います。" speaker="2" speakertags="brokenenglish"/>
+</Conversation>
+
+<Conversation line="これまで遺跡を守るものの一つを見たことありますか？" speaker="0" maxintensity="0.2">
+	<Conversation line="ええ、忘れられたらいいのに。" speaker="1" speakertags="fearful"/>
+	<Conversation line="研究所で1つ持っています。" speaker="1">
+		<Conversation line="彼らは、それが有機物でないと言います--動物よりロボットに近い。" speaker="1">
+			<Conversation line="それらは出血しません;それは確かです。" speaker="0"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="タバコはこのごろではとても高価です。" speaker="0" speakertags="laid-back" maxintensity="0.2">
+	<Conversation line="それについて私に話してください。" speaker="1"/>
+	<Conversation line="うんそうですね、水耕栽培の農場は高価です。" speaker="1">
+		<Conversation line="タバコよりもより有益なものに使うのは理にかなっています。" speaker="1"/>
+		<Conversation line="水耕栽培とは何ですか？" speaker="2" speakertags="brokenenglish">
+			<Conversation line="水で栽培。ここにある全てのもののように。" speaker="1"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="あなたはそれを聞きましたか？" speaker="0" maxintensity="0.4">
+	<Conversation line="何を聞きましたか？" speaker="1">
+		<Conversation line="何か船体が裂けるような音。" speaker="0">
+			<Conversation line="たぶん私の想像の産物。" speaker="0"/>
+		</Conversation>
+		<Conversation line="外からの深いうめき音。" speaker="0">
+			<Conversation line="クラブメン。あなたに言いましたよ。" speaker="1" speakertags="crazy"/>
+			<Conversation line="多分船体の音でしょう。落ち着いでください。" speaker="1"/>
+			<Conversation line="またガスを持っていますか？" speaker="1" speakertags="joker"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="私は先日老練な船乗りのマニュアルを読みました。" speaker="0" maxintensity="0.2">
+	<Conversation line="不思議な古代の専門用語で理解できませんでした。" speaker="0">
+		<Conversation line="例えば、右舷とはいったい何ですか？" speaker="0">
+			<Conversation line="多分あなたと同じような推測ですよ。" speaker="1"/>
+			<Conversation line="上の方、たぶん？ほら、星に向かって？" speaker="1"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="あなたは、月全体が私達の敵であるという感じを受けることがありますか？" speaker="0" maxintensity="0.3">
+	<Conversation line="あなたのように。" speaker="0" flags="Psychosis">
+		<Conversation line="はい、私はあなたと話しています。" speaker="0" flags="Psychosis"/>
+	</Conversation>
+	<Conversation line="さて、それは、落ち着く最も住みよい場所ではありません。" speaker="1">
+		<Conversation line="この状況から、実際そうであると思います。" speaker="2">
+			<Conversation line="私が言わんとしていることはわかりますよね。" speaker="1"/>
+		</Conversation>
+	</Conversation>
+	<Conversation line="あなたは波を止めることができないけれども、あなたは、サーフィンすることを学ぶことができます。" speaker="1"/>
+	<Conversation line="私達はここに属していません--それは確かです。" speaker="1">
+		<Conversation line="" speaker="0" flags="Casual"/>
+		<Conversation line="たとえ、私達が何をしても、事態は悪化の一途です。" speaker="0">
+			<Conversation line="もう十分です。それは信者のでたらめのように聞こえはじめています。" speaker="2" speakertags="professional"/>
+		</Conversation>
+		<Conversation line="もう十分です。それは信者のでたらめのように聞こえはじめています。" speaker="2" speakertags="professional"/>
+	</Conversation>
+	<Conversation line="それでも面白くありません。十分です。" speaker="1" speakertags="professional,tough"/>
+</Conversation>
+
+<Conversation line="太陽への、2番目で太陽への2番目…" speaker="0" speakertags="laid-back,crazy" maxintensity="0.2">
+	<Conversation line="木星のように、私達はそれらの…。" speaker="0">
+		<Conversation line="" speaker="0" flags="Casual"/>
+		<Conversation line="あなたが本当に歌わなければならないならば、どうぞ、ヘッドホンをオフにしてください。" speaker="1" speakertags="professional"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="このクソが！" speaker="0" speakertags="fearful">
+	<Conversation line="家に帰りたい！" speaker="0"/>
+</Conversation>
+
+<Conversation line="どうにかしたい！" speaker="0" speakertags="tough" maxintensity="0.2"/>
+
+<Conversation line="静かな海は熟練した船員を作りません。" speaker="0" speakertags="tough">
+	<Conversation line="荒海は船員を殺します！" speaker="1" speakertags="brokenenglish"/>
+</Conversation>
+
+<Conversation line="船にコーヒーメーカーを手に入れるべきです。" speaker="0" speakertags="laid-back" maxintensity="0.2">
+	<Conversation line="あなたは、私が、あなたが何をほのめかしているかを知らないと思います？" speaker="1" flags="PsychosisSelf">
+		<Conversation line="コーヒー？うん、正しい…" speaker="1" flags="PsychosisSelf">
+			<Conversation line="直ぐに終わりますよ。" speaker="1" flags="PsychosisSelf"/>
+		</Conversation>
+	</Conversation>
+	<Conversation line="そうですね。" speaker="1"/>
+	<Conversation line="私はコーヒーを飲みません。" speaker="1"/>
+	<Conversation line="" speaker="0"/>
+</Conversation>
+
+<Conversation line="私は先日クローラーに会いました。恐ろしい生き物。" speaker="0" speakertags="joker,crazy" maxintensity="0.2"/>
+
+<Conversation line="魚を与えてください。そうすれば、あなたは1日の間彼に与えます。" speaker="0" speakertags="joker" maxintensity="0.4">
+	<Conversation line="魚に与えてください。そうすれば、あなたは1日の間彼に与えます。" speaker="0" flags="Psychosis">
+		<Conversation line="魚を与えてください。そうすれば、あなたはその人のために彼に与えます。" speaker="0" flags="Psychosis">
+			<Conversation line="魚を与えてください。" speaker="0" flags="Psychosis">
+				<Conversation line="魚を与えてください。" speaker="0" flags="Psychosis">
+					<Conversation line="魚を与えてください。" speaker="0" flags="Psychosis">
+						<Conversation line="いいえ！" speaker="1" flags="PsychosisSelf"/>
+					</Conversation>
+				</Conversation>
+			</Conversation>
+		</Conversation>
+	</Conversation>
+	<Conversation line="釣りを教えてください、そうすれば、おそらく悲惨な事故で死ぬでしょう。" speaker="0" speakertags="joker">
+		<Conversation line="そうならないんじゃないですか。" speaker="1">
+			<Conversation line="ここではまさにそうなるでしょう。" speaker="0"/>
+		</Conversation>
+		<Conversation line="冗談で十分です。" speaker="0" speakertags="professional,rude"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="ほら、私は先日すばらしいビジネス考えを持っていました。" speaker="0" speakertags="joker,laid-back" maxintensity="0.2">
+	<Conversation line="しかし、他に日がありません。" speaker="0" flags="Psychosis">
+		<Conversation line="これのどれも無意味です。" speaker="0" flags="Psychosis"/>
+	</Conversation>
+	<Conversation line="最後まで私を聞いてください。これで大儲けできますよ。" speaker="0">
+		<Conversation line="誰かがより大きな酸素タンクを作り始めたとしたら？" speaker="0">
+			<Conversation line="1,2時間続くようなもの？" speaker="0">
+				<Conversation line="私は専門家ではないですが、技術的には可能でしょう。" speaker="0">
+					<Conversation line="ねえ、手元の作業に焦点を当ててはどうですか？" speaker="1" speakertags="professional"/>
+					<Conversation line="わからない…技術的な理由が何かあるんでしょう。そうでなければ、もう既に作っているでしょう。" speaker="1"/>
+					<Conversation line="良いアイデアです！" speaker="1" speakertags="brokenenglish">
+						<Conversation line="ねえ、手元の作業に焦点を当ててはどうですか？" speaker="2" speakertags="professional"/>
+					</Conversation>
+				</Conversation>
+			</Conversation>
+		</Conversation>
+		<Conversation line="防水性の配電盤。" speaker="0">
+			<Conversation line="ねえ、私って天才じゃない？" speaker="0">
+				<Conversation line="ねえ、手元の作業に焦点を当ててはどうですか？" speaker="1" speakertags="professional"/>
+				<Conversation line="通気口がある理由があるに違いないです。" speaker="1">
+					<Conversation line="そうでなければ、もう既に防水性の物を作っているでしょう。" speaker="1"/>
+				</Conversation>
+				<Conversation line="素晴らしいアイデアです！" speaker="1" speakertags="brokenenglish">
+					<Conversation line="ねえ、手元の作業に焦点を当ててはどうですか？" speaker="2" speakertags="professional"/>
+				</Conversation>
+			</Conversation>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="ここはひどく静かだ。" speaker="0" maxintensity="0.3">
+	<Conversation line="ああああああああああああああああああああ！" speaker="0" flags="Psychosis">
+		<Conversation line="ああああああああああああああああああああ！" speaker="0" flags="Psychosis">
+			<Conversation line="ああああああああああああああああああああ！" speaker="0" flags="Psychosis"/>
+		</Conversation>
+	</Conversation>
+	<Conversation line="私のヘッドセット、まだ使えてる？" speaker="0">
+		<Conversation line="ええ。おしゃべきは最小限に根。" speaker="1" speakertags="professional"/>
+		<Conversation line="大きな声ではっきりと聞こえますよ。" speaker="1"/>
+		<Conversation line="ええよく聞こえますよ！" speaker="1" speakertags="brokenenglish"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="ラジオチェック。" speaker="0" speakertags="professional" maxintensity="0.3">
+	<Conversation line="ラジオチェック。" speaker="1" flags="PsychosisSelf">
+		<Conversation line="ラジオをチェックしてください。" speaker="1" flags="PsychosisSelf">
+			<Conversation line="電波。放出。放射能。" speaker="1" flags="PsychosisSelf">
+				<Conversation line="ラジオ！" speaker="1" flags="PsychosisSelf">
+					<Conversation line="ラジオ。" speaker="1" flags="PsychosisSelf"/>
+				</Conversation>
+			</Conversation>
+		</Conversation>
+	</Conversation>
+	<Conversation line="騒々しく、クリアです。" speaker="1" speakertags="professional"/>
+	<Conversation line="よく、読み取り可能です。" speaker="1" speakertags="professional"/>
+	<Conversation line="いいですね！" speaker="1"/>
+	<Conversation line="はい、あなたの声は良く聞こえますよ！" speaker="1" speakertags="brokenenglish"/>
+</Conversation>
+
+<Conversation line="あなたにはクラブマンが歌うのが聞こえますか？" speaker="0" speakertags="crazy" maxintensity="0.2">
+	<Conversation line="" speaker="0"/>
+	<Conversation line="いいえ！。" speaker="1"/>
+	<Conversation line="最後に、クラブマンは存在していません。" speaker="1"/>
+</Conversation>
+
+<Conversation line="中に？" speaker="0" speakertags="crazy" maxintensity="0.2">
+	<Conversation line="より深いダイビング？いいえ、中に飛び込みます。" speaker="0" speakertags="crazy" maxintensity="0.2">
+		<Conversation line="" speaker="0"/>
+		<Conversation line="このクソ野郎めが。" speaker="1" speakertags="rude"/>
+		<Conversation line="分かりません。" speaker="1" speakertags="brokenenglish"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="神は氷のつらなりを透かして見ることができますか？" speaker="0" speakertags="crazy" maxintensity="0.2">
+	<Conversation line="それとも、木星ですか？" speaker="0" speakertags="crazy">
+		<Conversation line="" speaker="0"/>
+		<Conversation line="無意味です。" speaker="1"/>
+	</Conversation>
+	<Conversation line="または、深海かも。私たちをにらんでいます。" speaker="0" speakertags="crazy">
+		<Conversation line="まさにカルトでしょう―そこに何かありますよ。" speaker="0" speakertags="crazy">
+			<Conversation line="" speaker="0"/>
+			<Conversation line="お願いします。" speaker="1"/>
+			<Conversation line="たぶん、たぶん。" speaker="1">
+				<Conversation line="心配するよりもっと大事なことがありますよ。" speaker="1"/>
+			</Conversation>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="時々、自分がひもで操られたパペット人形のように感じます。" speaker="0" speakertags="crazy" maxintensity="0.3">
+	<Conversation line="カーテンの向こうのダンスと、娯楽に飢えています。" speaker="0">
+		<Conversation line="" speaker="1"/>
+		<Conversation line="私の船で踊ったり死んだりしないでください。" speaker="1" allowedjobs="captain"/>
+		<Conversation line="どれも面白くないです。" speaker="1" speakertags="professional"/>
+		<Conversation line="*ため息*" speaker="1"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="これは、試練になろうとしています。" speaker="0" minintensity="0.3" maxintensity="0.5"/>
+
+<Conversation line="緊迫しています。" speaker="0" minintensity="0.3" maxintensity="0.6"/>
+
+<Conversation line="これをできます。" speaker="0" minintensity="0.3"/>
+
+<Conversation line="最後にいくらかの行動！" speaker="0" speakertags="tough" minintensity="0.3"/>
+
+<Conversation line="彼女の仕事は始まりました！" speaker="0" speakertags="crazy" minintensity="0.3" maxintensity="0.6"/>
+
+<Conversation line="アッオー。" speaker="0" minintensity="0.5"/>
+
+<Conversation line="後退しただけ！" speaker="0" speakertags="tough" minintensity="0.5"/>
+
+<Conversation line="潮がどれくらいはやく向きをかえますか？" speaker="0" minintensity="0.5"/>
+
+<Conversation line="この最悪！" speaker="0" speakertags="brokenenglish" minintensity="0.5"/>
+
+<Conversation line="全然だめ！" speaker="0" speakertags="brokenenglish" minintensity="0.5"/>
+
+<Conversation line="船隊に加わってください、ワクワクしますよと連中は言いました！" speaker="0" speakertags="joker" minintensity="0.5"/>
+
+<Conversation line="この後に飲み物が必要です！" speaker="0" speakertags="joker,laid-back" minintensity="0.5"/>
+
+<Conversation line="さあ、クルー、あなたが持っているものを見せて！" speaker="0" allowedjobs="captain" speakertags="professional,tough,laid-back" minintensity="0.5"/>
+
+<Conversation line="私達はまだ危機を脱していません！" speaker="0" allowedjobs="captain" minintensity="0.5"/>
+
+<Conversation line="死にたくない！" speaker="0" speakertags="fearful" minintensity="0.6"/>
+
+<Conversation line="代わりに植物学者になるべきでした！" speaker="0" speakertags="joker" minintensity="0.6"/>
+
+<Conversation line="頑張れ、大丈夫だ！" speaker="0" speakertags="tough" minintensity="0.6">
+	<Conversation line="本当？" speaker="1" speakertags="fearful"/>
+</Conversation>
+
+<Conversation line="もうこんなことはこりごりだ！" speaker="0" speakertags="rude" minintensity="0.6"/>
+
+<Conversation line="無理だったら、私の母に愛しているって伝えてください！" speaker="0" speakertags="fearful" minintensity="0.6">
+	<Conversation line="黙れクソ野郎！" speaker="1" speakertags="rude"/>
+	<Conversation line="いい加減にしなさい！大丈夫だから！" speaker="1" speakertags="professional"/>
+</Conversation>
+
+<Conversation line="ここから脱出できたらもう辞めてやる！" speaker="0" speakertags="joker,laid-back" minintensity="0.6"/>
+
+<Conversation line="命の灯が消えようとし、もう渇きは感じられない…" speaker="0" speakertags="crazy" minintensity="0.7"/>
+
+<Conversation line="今回は本当に最低だったな。" speaker="0" speakertags="rude" minintensity="0.8"/>
+
+<Conversation line="おお神。" speaker="0" minintensity="0.8"/>
+
+<Conversation line="おやまあ。" speaker="0" speakertags="joker" minintensity="0.8"/>
+
+<Conversation line="お役に立てて幸栄です。" speaker="0" speakertags="professional" minintensity="0.8"/>
+
+<Conversation line="この深さに飛び込むときにはいつも不安です。" speaker="0" flags="SubmarineDeep">
+	<Conversation line="" speaker="0" flags="Casual"/>
+	<Conversation line="大丈夫でしょう。彼女はもっと深かったですよ。" speaker="1" speakertags="tough"/>
+</Conversation>
+
+<Conversation line="この深さを進むのは恐ろしい。" speaker="0" flags="SubmarineDeep" speakertags="brokenenglish">
+	<Conversation line="" speaker="0" flags="Casual"/>
+	<Conversation line="彼女がそう言いました。" speaker="1" speakertags="joker"/>
+	<Conversation line="大丈夫でしょう。彼女はもっと深かったですよ。" speaker="1" speakertags="tough"/>
+</Conversation>
+
+<Conversation line="船体のうなり音が聞こえますか？これ本当に大丈夫ですか？" speaker="0" flags="SubmarineDeep" speakertags="fearful">
+	<Conversation line="安全を求めていたなら、この船隊に加わるべきではありませんでした。" speaker="1" speakertags="tough,rude"/>
+	<Conversation line="何とかなるさ。彼女はもっと深かったです。" speaker="1" speakertags="tough"/>
+	<Conversation line="大丈夫でしょう。でも溶接工をスタンバイさせてください。" speaker="1"/>
+</Conversation>
+
+<!-- Afflictions -->
+<Conversation line="私はふらふらしています。" speaker="0" flags="Bloodloss"/>
+
+<Conversation line="気分があまりよくありません。" speaker="0" flags="Bloodloss"/>
+
+<Conversation line="私は血漿が必要だと思います。" speaker="0" flags="Bloodloss"/>
+
+<Conversation line="げっぷ" speaker="0" flags="DrunkMedium"/>
+
+<Conversation line="あんまりこういうことを言わないけど、あなたたち最高。" speaker="0" flags="DrunkMedium">
+	<Conversation line="他にすぐれたクルーなんていないわ！" speaker="0" flags="DrunkMedium">
+		<Conversation line="酔っぱらってますか？" speaker="1" flags="DrunkMedium">
+			<Conversation line="もういいから落ち着いてください！" speaker="2" flags="DrunkMedium"/>
+			<Conversation line="いや別に、一口やってだぇ。" speaker="0" flags="DrunkMedium"/>
+			<Conversation line="いや。あんたたちにどれだけ私が感謝しているかを伝えたかっただけ！" speaker="0" flags="DrunkMedium"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="ふふ..." speaker="0" flags="DrunkMedium"/>
+
+<Conversation line="聞こえる…ここから出して！" speaker="0" flags="DrunkMedium" minintensity="0.5"/>
+
+<Conversation line="ちょっと、よ、横になりたい…。" speaker="0" flags="DrunkHigh">
+	<Conversation line="おおこのクソ野郎。酔いが醒めるまでどっかいけ。" speaker="1" speakertags="professional,tough,rude"/>
+	<Conversation line="" speaker="0"/>
+</Conversation>
+
+<Conversation line="この酔っ払い船員とどうすればいいっていうんだ、この酔っ払い船員とどうすればいいっていうんだ…" speaker="0" flags="DrunkHigh">
+	<Conversation line="朝早く！" speaker="0" flags="DrunkHigh">
+		<Conversation line="仕事できる状態じゃないでしょう、船員。酔いが醒めたら、真剣な話をしましょう・" speaker="1" allowedjobs="captain" speakertags="professional,tough,rude">
+			<Conversation line="はは、これをで、できますよ！" speaker="0" flags="DrunkHigh"/>
+		</Conversation>
+		<Conversation line="誰かさんは陽気だな！" speaker="1" speakertags="joker"/>
+		<Conversation line="おおこのクソ野郎。酔いが醒めるまでどっかいけ。" speaker="1" speakertags="professional,tough,rude"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="こ、これを揺り動かしているボートはなぜ悪いですか？" speaker="0" flags="DrunkHigh">
+	<Conversation line="たぶんあなたでしょう？" speaker="1"/>
+	<Conversation line="きちんと行動してください！" speaker="1"/>
+	<Conversation line="" speaker="0"/>
+</Conversation>
+
+<Conversation line="気分があまりよくありません。" speaker="0" flags="OpiateWithdrawalLow"/>
+
+<Conversation line="吐き気がします…。" speaker="0" flags="OpiateWithdrawalLow"/>
+
+<Conversation line="足がめちゃくちゃ痛いです。モルヒネを売っていい？" speaker="0" flags="OpiateWithdrawalMedium">
+	<Conversation line="足には何も異常ないですよ。モルヒネはしばらく抑えましょう。" speaker="1" allowedjobs="medicaldoctor"/>
+	<Conversation line="あなたの足に問題はありません、この麻薬中毒者。" speaker="1" speakertags="rude"/>
+</Conversation>
+
+<Conversation line="できません。" speaker="0" flags="OpiateWithdrawalMedium"/>
+
+<Conversation line="もう吐きそうです。" speaker="0" flags="OpiateWithdrawalMedium"/>
+
+<Conversation line="ここにいるべきじゃない。帰りたいよう。" speaker="0" flags="OpiateWithdrawalMedium"/>
+
+<Conversation line="もう死にそう！できません！" speaker="0" flags="OpiateWithdrawalHigh">
+	<Conversation line="ナロキソン注射を使ったら。" speaker="1" allowedjobs="medicaldoctor"/>
+	<Conversation line="いい加減にしてください。" speaker="1" speakertags="rude"/>
+	<Conversation line="" speaker="0"/>
+</Conversation>
+
+<Conversation line="私達は、部屋の中の象について話す必要があります。" speaker="0" flags="Psychosis">
+	<Conversation line="みなさんは、私が誰について話しているかを知っています。" speaker="0">
+		<Conversation line="これを続行できません。続行するなら、彼らは誰かを殺させるでしょう。" speaker="0">
+			<Conversation line="私達が最初にそれをしない限り。" speaker="1"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="私達は、ここを出る必要があります。" speaker="0" flags="PsychosisSelf">
+	<Conversation line="さて現在。" speaker="0" flags="PsychosisSelf"/>
+</Conversation>
+
+<Conversation line="彼女の遺産を継ぐんでしょう、彼はもう彼女にぞっこんです。" speaker="0" flags="Psychosis">
+	<Conversation line="じっと聞き入ってください、これは例えではありません。" speaker="0" flags="Psychosis">
+		<Conversation line="摩擦があってもこの遺志は変えません。" speaker="0" flags="Psychosis"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="現実：いつの日か、かけらを集めて私たちの現実の一つにしよう。" speaker="0" flags="Psychosis">
+	<Conversation line="そしてとてもよく知っている安全の知識。" speaker="0" flags="Psychosis">
+		<Conversation line="それが唯一の生き方か、無力感から逃れるためにその日暮らしをしています。" speaker="0" flags="Psychosis"/>
+		<Conversation line="そして、空虚な海は、そのような脅威を生むというかけ離れたパンドラの箱を開けることがほとんどです。" speaker="0" flags="Psychosis"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="バン！そして私たちは見た。" speaker="0" flags="Psychosis">
+	<Conversation line="私たちの魚も来ました、船と一緒に。" speaker="0" flags="Psychosis">
+		<Conversation line="沢山かみつきました！時間を叫ぶと魚がやってきました。" speaker="0" flags="Psychosis">
+			<Conversation line="沢山かみつきました！いやです、１回だけじゃない。いやです。" speaker="0" flags="Psychosis"/>
+			<Conversation line="そんなはずは！そんなはずは、と魚は言いました。" speaker="0" flags="Psychosis">
+				<Conversation line="しかし、それは正しくない、知ってますよね。" speaker="1" flags="Psychosis"/>
+			</Conversation>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="ちくしょう、モルヒネは一体どこにある？" speaker="0" flags="OpiateWithdrawalHigh">
+	<Conversation line="あなたはこれ以上必要でありません。私達は、あなたのためナロキソンを取ってくる必要があります。" speaker="1" allowedjobs="medicaldoctor"/>
+	<Conversation line="手に届かない所にあるといいな。" speaker="1" speakertags="rude"/>
+	<Conversation line="どうしましたか？怪我しましたか？" speaker="1">
+		<Conversation line="もう死にそうだ。モルヒネなしじゃもうだめだ。" speaker="0"/>
+		<Conversation line="筋肉が痙攣して心臓が爆発しそうだ！もう我慢できない！" speaker="0"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="撃たれた！包帯を持ってきてください！" speaker="0" flags="GunshotWound"/>
+
+<Conversation line="助けて、撃たれました！" speaker="0" flags="GunshotWound"/>
+
+<!-- Outpost Watchmen -->
+<Conversation line="こんにちは、船員たち！" speaker="0" flags="EnterEndOutpost" allowedjobs="watchman">
+	<Conversation line="前哨基地の残りは工事中であるけれども、どうぞ、さかのぼって数ヶ月にチェックをしてください！" speaker="0">
+		<Conversation line="しかし私はあなたに、販売と仕事を捜している人々のために、私達が持っている実績表を示すことができます。" speaker="0">
+			<Conversation line="準備ができたら、私はあなたに近くの位置へのナビゲーション手順を与えることができます。" speaker="0"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="見慣れた顔が見れてうれしい！ここではあまり多くの訪問者がいません。" speaker="0" flags="EnterEndOutpost" allowedjobs="watchman">
+	<Conversation line="前哨基地の残りは工事中であるけれども、どうぞ、さかのぼって数ヶ月にチェックをしてください！" speaker="0">
+		<Conversation line="しかし、あなたが供給品または特別なクルーが必要ならば、私に知らせてください。" speaker="0">
+			<Conversation line="準備ができたら、私はあなたに近くの位置へのナビゲーション手順を与えることができます。" speaker="0"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="もう引き返しますか?" speaker="0" flags="EnterStartOutpost" allowedjobs="watchman">
+	<Conversation line="あなたがより多くの供給品かクルーが必要であるか、ただ、別の位置に引き返したいならば、どうぞ、私に知らせてください。" speaker="0"/>
+</Conversation>
+
+<Conversation line="はい、何ができますか？" speaker="0" flags="WatchmanInteract" allowedjobs="watchman"/>
+
+<Conversation line="あなたは何が必要ですか？" speaker="0" flags="WatchmanInteract" allowedjobs="watchman"/>
+
+<Conversation line="OK、これを終わらせましょう。私には、するべき仕事があります。" speaker="0" flags="WatchmanInteract" allowedjobs="watchman"/>
+
+<Conversation line="ごめんなさい、私は、より地位が高い人と話す必要があります。キャンペーン管理特権を持つあなたのクルーの中の誰でも？" speaker="0" flags="WatchmanInteractNotAllowed" allowedjobs="watchman"/>
+
+<Conversation line="あなたの船が適切に埠頭につくまで、私はあなたを入らせることができません。または少なくとも前哨基地に十分近づくまで。" speaker="0" flags="WatchmanInteractNoLeavingSub" allowedjobs="watchman"/>
+
+<Conversation line="潜水艦を置いていきたいのですか？前哨基地に近づけてください。" speaker="0" flags="WatchmanInteractNoLeavingSub" allowedjobs="watchman"/>
+
+<!-- Changed values -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- New additions -->
+
+</Conversations>

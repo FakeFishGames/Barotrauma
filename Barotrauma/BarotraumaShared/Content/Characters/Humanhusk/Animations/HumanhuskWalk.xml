@@ -24,4 +24,10 @@
   animationtype="Walk"
   legbendtorque="50"
   footangle="-90"
-  crouchingfootmoveoffset="0,0" />
+  crouchingfootmoveoffset="0,0"
+  crouchingheadpos="0.65"
+  crouchingheadangle="-10"
+  stepliftheadmultiplier="1"
+  stepliftamount="0"
+  stepliftoffset="-0.5"
+  stepliftfrequency="2" />

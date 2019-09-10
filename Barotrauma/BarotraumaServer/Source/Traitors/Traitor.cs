@@ -32,27 +32,27 @@ namespace Barotrauma
             Client ownerClient = server.ConnectedClients.Find(c => c.Connection == server.OwnerConnection);
             if (traitorClient != ownerClient && ownerClient != null && ownerClient.Character == null)
             {
-                GameMain.Server.SendTraitorMessage(ownerClient, CurrentObjective.StartMessageServerText, TraitorMessageType.ServerMessageBox);
+                GameMain.Server.SendTraitorMessage(ownerClient, CurrentObjective.StartMessageServerText, Mission?.Identifier, TraitorMessageType.ServerMessageBox);
             }
         }
 
-        public void SendChatMessage(string serverText)
+        public void SendChatMessage(string serverText, string iconIdentifier)
         {
             Client traitorClient = GameMain.Server.ConnectedClients.Find(c => c.Character == Character);
-            GameMain.Server.SendTraitorMessage(traitorClient, serverText, TraitorMessageType.Server);
+            GameMain.Server.SendTraitorMessage(traitorClient, serverText, iconIdentifier, TraitorMessageType.Server);
         }
 
-        public void SendChatMessageBox(string serverText)
+        public void SendChatMessageBox(string serverText, string iconIdentifier)
         {
             Client traitorClient = GameMain.Server.ConnectedClients.Find(c => c.Character == Character);
-            GameMain.Server.SendTraitorMessage(traitorClient, serverText, TraitorMessageType.ServerMessageBox);
+            GameMain.Server.SendTraitorMessage(traitorClient, serverText, iconIdentifier, TraitorMessageType.ServerMessageBox);
         }
 
-        public void UpdateCurrentObjective(string objectiveText)
+        public void UpdateCurrentObjective(string objectiveText, string iconIdentifier)
         {
             Client traitorClient = GameMain.Server.ConnectedClients.Find(c => c.Character == Character);
             Character.TraitorCurrentObjective = objectiveText;
-            GameMain.Server.SendTraitorMessage(traitorClient, Character.TraitorCurrentObjective, TraitorMessageType.Objective);
+            GameMain.Server.SendTraitorMessage(traitorClient, Character.TraitorCurrentObjective, iconIdentifier, TraitorMessageType.Objective);
         }
     }
 }

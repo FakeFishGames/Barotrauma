@@ -5,8 +5,8 @@ using System.Xml.Linq;
 using System.Linq;
 using Barotrauma.Networking;
 
-namespace Barotrauma {
-
+namespace Barotrauma
+{
     class TraitorMissionPrefab
     {
         public class TraitorMissionEntry
@@ -416,6 +416,7 @@ namespace Barotrauma {
             }
 
             return new Traitor.TraitorMission(
+                Identifier,
                 StartText ?? "TraitorMissionStartMessage",
                 EndMessageSuccessText ?? "TraitorObjectiveEndMessageSuccess",
                 EndMessageSuccessDeadText ?? "TraitorObjectiveEndMessageSuccessDead",

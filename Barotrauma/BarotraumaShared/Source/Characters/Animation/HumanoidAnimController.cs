@@ -637,9 +637,15 @@ namespace Barotrauma
             }
             else
             {
-                if (!onGround) movement = Vector2.Zero;
+                if (!onGround)
+                {
+                    movement = Vector2.Zero;
+                }
+                
+                float stepLift = TargetMovement.X == 0.0f ? 0 : 
+                    (float)Math.Sin(WalkPos * CurrentGroundedParams.StepLiftFrequency + MathHelper.Pi * CurrentGroundedParams.StepLiftOffset) * (CurrentGroundedParams.StepLiftAmount / 100);
 
-                float y = colliderPos.Y;
+                float y = colliderPos.Y + stepLift;
                 if (TorsoPosition.HasValue)
                 {
                     y += TorsoPosition.Value;
@@ -648,7 +654,7 @@ namespace Barotrauma
                     MathUtils.SmoothStep(torso.SimPosition,
                     new Vector2(footMid + movement.X * TorsoLeanAmount, y), getUpForce);
 
-                y = colliderPos.Y;
+                y = colliderPos.Y + stepLift * CurrentGroundedParams.StepLiftHeadMultiplier;
                 if (HeadPosition.HasValue)
                 {
                     y += HeadPosition.Value;

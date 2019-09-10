@@ -15,6 +15,13 @@ namespace Barotrauma
         public AutonomousObjective(XElement element)
         {
             identifier = element.GetAttributeString("identifier", null);
+
+            //backwards compatibility
+            if (string.IsNullOrEmpty(identifier))
+            {
+                identifier = element.GetAttributeString("aitag", null);
+            }
+
             option = element.GetAttributeString("option", null);
             priorityModifier = element.GetAttributeFloat("prioritymodifier", 1);
             priorityModifier = MathHelper.Max(priorityModifier, 0);

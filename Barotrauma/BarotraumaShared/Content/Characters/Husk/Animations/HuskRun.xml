@@ -11,9 +11,9 @@
   handmovestrength="1.4"
   handclampy="-0.2"
   headposition="1.346125"
-  torsoposition="1.193129"
+  torsoposition="1.075236"
   headleanamount="0.3803026"
-  torsoleanamount="0.2007057"
+  torsoleanamount="0.2816843"
   footmoveoffset="0.2,0"
   movementspeed="4.290948"
   headangle="-29.3491"
@@ -26,4 +26,8 @@
   footangle="-90"
   crouchingfootmoveoffset="0,0"
   crouchingheadpos="0.65"
-  crouchingheadangle="-10" />
+  crouchingheadangle="-10"
+  stepliftheadmultiplier="1"
+  stepliftamount="10"
+  stepliftoffset="-0.5"
+  stepliftfrequency="2" />

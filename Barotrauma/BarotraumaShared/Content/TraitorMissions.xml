@@ -164,6 +164,8 @@
 
   <TraitorMission identifier="SabotageReactor_Assassinate">
 
+    <Icon texture="Content/UI/MissionIcons.png" sourcerect="512,0,256,256" color="200,0,0,255"/>
+    
     <StartInfoText id="MVPtraitormissionStartInfoText" />
     
     <Objective>
@@ -199,6 +201,8 @@
 
   <TraitorMission identifier="flood_1">
 
+    <Icon texture="Content/UI/MissionIcons.png" sourcerect="256,0,256,256" color="255,127,39,255"/>
+    
     <StartInfoText id="flood_1_traitormissionStartInfoText"/>
 
     <Objective>
@@ -240,7 +244,9 @@
   </TraitorMission>
 
   <TraitorMission identifier="flood2">
-   
+
+    <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+    
     <StartInfoText id="flood_2_traitormissionStartInfoText"/>
 
     <Objective>
@@ -283,6 +289,8 @@
 
   <TraitorMission identifier="flood2">
 
+    <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+    
     <Role id="t1" jobs="captain, engineer" />
     <Role id="t2" />
     

@@ -557,6 +557,9 @@ namespace Barotrauma
                 movementAngle -= MathHelper.TwoPi;
             }
 
+            float stepLift = TargetMovement.X == 0.0f ? 0 :
+                (float)Math.Sin(WalkPos * CurrentGroundedParams.StepLiftFrequency + MathHelper.Pi * CurrentGroundedParams.StepLiftOffset) * (CurrentGroundedParams.StepLiftAmount / 100);
+
             Limb torso = GetLimb(LimbType.Torso);
             if (torso != null)
             {
@@ -566,7 +569,7 @@ namespace Barotrauma
                 }
                 if (TorsoPosition.HasValue)
                 {
-                    Vector2 pos = colliderBottom + Vector2.UnitY * TorsoPosition.Value;
+                    Vector2 pos = colliderBottom + new Vector2(0, TorsoPosition.Value + stepLift);
 
                     if (torso != MainLimb)
                     {
@@ -588,7 +591,7 @@ namespace Barotrauma
                 }
                 if (HeadPosition.HasValue)
                 {
-                    Vector2 pos = colliderBottom + Vector2.UnitY * HeadPosition.Value;
+                    Vector2 pos = colliderBottom + new Vector2(0, HeadPosition.Value + stepLift * CurrentGroundedParams.StepLiftHeadMultiplier);
 
                     if (head != MainLimb)
                     {

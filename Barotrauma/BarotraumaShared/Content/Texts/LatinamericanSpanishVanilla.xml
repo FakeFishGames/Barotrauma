@@ -120,7 +120,7 @@
 <modstab>Modificaciones suscritas</modstab>
 <downloadbutton>Suscribirse</downloadbutton>
 <subscribedmods>Modificaciones</subscribedmods>
-<nosubscribedmods>No te has suscrito a ninguna modificación en el taller de Steam. ¡Selecciona la pestaña Modificaciones populares para encontrar algunas!</nosubscribedmods>
+<nosubscribedmods>No te has suscrito a ninguna modificación en Steam Workshop. ¡Selecciona la pestaña Modificaciones populares para encontrar algunas!</nosubscribedmods>
 <popularmods>Modificaciones populares</popularmods>
 <findmodsbutton>Buscar más modificaciones...</findmodsbutton>
 <workshopitemunsubscribe>Cancelar suscripción</workshopitemunsubscribe>
@@ -141,7 +141,7 @@
 <workshopitemtitle>Título</workshopitemtitle>
 <workshopitemdescription>Descripción</workshopitemdescription>
 <workshopitemtags>Etiquetas</workshopitemtags>
-<workshopitemcreatehelptext>Puedes usar esta pestaña para publicar nuevos artículos en el Taller de Steam. Puedes seleccionar un submarino existente o un paquete de contenido en el menú Tus artículos de la izquierda, o bien crear un artículo totalmente nuevo haciendo clic en el botón Crear un artículo nuevo.</workshopitemcreatehelptext>
+<workshopitemcreatehelptext>Puedes usar esta pestaña para publicar nuevos artículos en el Steam Workshop. Puedes seleccionar un submarino existente o un paquete de contenido en el menú Tus artículos de la izquierda, o bien crear un artículo totalmente nuevo haciendo clic en el botón Crear un artículo nuevo.</workshopitemcreatehelptext>
 <workshopitempreviewimage>Imagen de vista previa</workshopitempreviewimage>
 <workshopitembrowse>Explorar...</workshopitembrowse>
 <workshopitemcorepackage>Paquete esencial</workshopitemcorepackage>
@@ -149,20 +149,20 @@
 <workshopitemfiles>Archivos incluidos en el artículo</workshopitemfiles>
 <workshopitemshowfolder>Mostrar carpeta</workshopitemshowfolder>
 <workshopitemchangenote>Nota de cambios</workshopitemchangenote>
-<workshopitemchangenotetooltip>Estás publicando una actualización para un artículo existente del Taller. Puedes usar la nota de cambios para explicar las novedades que trae la actualización.</workshopitemchangenotetooltip>
+<workshopitemchangenotetooltip>Estás publicando una actualización para un artículo existente de Steam Workshop. Puedes usar la nota de cambios para explicar las novedades que trae la actualización.</workshopitemchangenotetooltip>
 <workshopitemrefreshfilelist>Actualizar</workshopitemrefreshfilelist>
 <workshopitemaddfiles>Añadir archivos...</workshopitemaddfiles>
 <workshopitempublish>Publicar artículo</workshopitempublish>
 <workshopitemupdate>Actualizar artículo</workshopitemupdate>
 <workshopitemdelete>Borrar artículo</workshopitemdelete>
-<workshopitemdeletetooltip>Borra el artículo del Taller de Steam.</workshopitemdeletetooltip>
-<workshopitemdeleteverification>¿Seguro que quieres borrar el artículo [itemname] del Taller de Steam?</workshopitemdeleteverification>
-<workshopitempublishtooltip>Envía los archivos al Taller de Steam.</workshopitempublishtooltip>
-<workshopitemfileincluded>El archivo se incluirá en el artículo del Taller.</workshopitemfileincluded>
-<workshopitemfilenotincluded>El archivo no se encuentra en la carpeta del artículo del Taller y no se incluirá en él. Esto puede ser conveniente si quieres que el mod use los archivos básicos que ya tienen los jugadores; de lo contrario, deberías copiar el archivo a la carpeta del artículo del Taller.</workshopitemfilenotincluded>
+<workshopitemdeletetooltip>Borra el artículo de Steam Workshop.</workshopitemdeletetooltip>
+<workshopitemdeleteverification>¿Seguro que quieres borrar el artículo [itemname] de Steam Workshop?</workshopitemdeleteverification>
+<workshopitempublishtooltip>Envía los archivos a Steam Workshop.</workshopitempublishtooltip>
+<workshopitemfileincluded>El archivo se incluirá en el artículo de Steam Workshop.</workshopitemfileincluded>
+<workshopitemfilenotincluded>El archivo no se encuentra en la carpeta del artículo de Steam Workshop y no se incluirá en él. Esto puede ser conveniente si quieres que el mod use los archivos básicos que ya tienen los jugadores; de lo contrario, deberías copiar el archivo a la carpeta del artículo del Steam Workshop.</workshopitemfilenotincluded>
 <workshopitemfilenotfound>No se encuentra el archivo.</workshopitemfilenotfound>
 <workshopitemillegalpath>Los artículos de Workshop solo tienen permitido modificar archivos de la carpeta Mods o añadir archivos de submarinos a la carpeta Submarines. Crea una subcarpeta aparte para los archivos.</workshopitemillegalpath>
-<workshopitemrefreshfilelisttooltip>Vuelve a cargar el archivo de configuración del artículo del Taller (filelist.xml dentro de la carpeta del artículo) y añade a la lista de archivos todos los archivos nuevos que contenga.</workshopitemrefreshfilelisttooltip>
+<workshopitemrefreshfilelisttooltip>Vuelve a cargar el archivo de configuración del artículo de Steam Workshop (filelist.xml dentro de la carpeta del artículo) y añade a la lista de archivos todos los archivos nuevos que contenga.</workshopitemrefreshfilelisttooltip>
 <workshoppublishpleasewait>Espera</workshoppublishpleasewait>
 <workshoppublishinprogress>Publicando [itemname] en Steam Workshop.</workshoppublishinprogress>
 <workshopitempublished>¡[itemname] ya está disponible en Steam Workshop!</workshopitempublished>
@@ -1399,7 +1399,7 @@
 <entitydescription.windoweddoor>Una puerta corrediza con ventana integrada.</entitydescription.windoweddoor>
 <entityname.hatch>Escotilla</entityname.hatch>
 <entitydescription.hatch>Una puerta, pero en el eje horizontal.</entitydescription.hatch>
-<entityname.dockingport>Puerto de atraque</entityname.dockingport>
+<entityname.dockingport>Dependencias de la tripulación</entityname.dockingport>
 <entitydescription.dockingport>Una interfaz de atraque alineada verticalmente. Se fija a otro puerto de atraque para formar un cierre estanco y permitir el paso entre submarinos, batiscafos y destinos.</entitydescription.dockingport>
 <entityname.dockinghatch>Escotilla de atraque</entityname.dockinghatch>
 <entitydescription.dockinghatch>Una interfaz de atraque alineada horizontalmente. Se fija a otra escotilla de atraque para formar un cierre estanco y permitir el paso entre submarinos, batiscafos y destinos.</entitydescription.dockinghatch>
@@ -1659,7 +1659,7 @@
 <minimapairqualityunavailable>Datos de la calidad del aire no disponibles</minimapairqualityunavailable>
 <pumppowered>Alimentado</pumppowered>
 <pumpin>ADENTRO</pumpin>
-<pumpout>r</pumpout>
+<pumpout>AFUERA</pumpout>
 <pumpspeed>Velocidad de bombeo</pumpspeed>
 <reactorautotemp>Control automático</reactorautotemp>
 <reactoroutput>Rendimiento: [kw] kW</reactoroutput>
@@ -2104,7 +2104,7 @@
 <jobname.assistant>Ayudante</jobname.assistant>
 <jobdescription.assistant>Los ayudantes no tienen responsabilidades o áreas de competencia concretas. Es un buen puesto para los recién llegados que quieran empezar a trabajar en un submarino sin asumir tareas para las que no estén cualificados.</jobdescription.assistant>
 <jobname.watchman>Vigilante</jobname.watchman>
-<jobdescription.watchman><!-- No data --></jobdescription.watchman>
+<jobdescription.watchman></jobdescription.watchman>
 
 <!-- Locations -->
 <locationname.none>Formación natural</locationname.none>
@@ -2630,7 +2630,7 @@
 <connection.sonardataout>datos_sal</connection.sonardataout>
 <label.outpostinfodisplay1>Te damos la bienvenida. Niveles de oxígeno: nominales. Niveles de energía: nominales. Niveles de radiación: subóptimos. Pronóstico del tiempo para hoy: frío y húmedo.</label.outpostinfodisplay1>
 <label.navterminaldock>Atracar</label.navterminaldock>
-  <label.navterminalundock>Desatracar</label.navterminalundock>
+<label.navterminalundock>Desatracar</label.navterminalundock>
 <connectionerrornoresponse>No hay respuesta del servidor. Podría ser un problema de conexión por parte del servidor.</connectionerrornoresponse>
 <dialognorescuetargets>¡Nadie parece necesitar asistencia médica en este momento!</dialognorescuetargets>
 <dialognorescuetargets>No creo que nadie necesite asistencia médica por el momento.</dialognorescuetargets>
@@ -2757,15 +2757,15 @@
 <serversettingsgeneraltab>General</serversettingsgeneraltab>
 <serversettingsantigriefingtab>Antidolor</serversettingsantigriefingtab>
 <serverprocessclosed>El proceso del servidor se cerró de forma repentina. Es posible que se haya generado un informe de error (servercrashreport.log) en el directorio raíz del juego.</serverprocessclosed>
-<serverprocesscrashed>El proceso del servidor se cerró de forma repentina. Es posible que se haya generado un informe de error (servercrashreport.log) en el directorio raíz del juego.</serverprocesscrashed>
+<serverprocesscrashed>El proceso del servidor se detuvo de forma repentina. Es posible que se haya generado un informe de error (servercrashreport.log) en el directorio raíz del juego.</serverprocesscrashed>
 <disconnectreason.servercrashed>El servidor se cayó.</disconnectreason.servercrashed>
 
 <!-- Workshop -->
 <workshoperroronenable>No se puede habilitar el artículo de Workshop [itemname].</workshoperroronenable>
 
 <!-- Audio -->
-<dynamicrangecompression>Compresión de rango dinámica</dynamicrangecompression>
-<dynamicrangecompressiontooltip>Ajusta el volumen del juego automáticamente para evitar que se distorsione.</dynamicrangecompressiontooltip>
+<dynamicrangecompression>Compresión de rango dinámico</dynamicrangecompression>
+<dynamicrangecompressiontooltip>Ajusta el volumen del juego automáticamente para evitar la distorsión del sonido.</dynamicrangecompressiontooltip>
 <voipnodevices>No se encuentran dispositivos de grabación de audio</voipnodevices>
 
 <!-- Misc -->
@@ -2777,7 +2777,7 @@
 <!-- Submarine labels -->
 <label.betadeck>Cubierta beta</label.betadeck>
 <label.airlock>Compartimento estanco</label.airlock>
-<label.dockingport>Puerto de atraque</label.dockingport>
+<label.dockingport>Dependencias de la tripulación</label.dockingport>
 <label.weapons>Armas</label.weapons>
 <label.cargo>Bodega de carga</label.cargo>
 <label.crewquarters>Dependencias de la tripulación</label.crewquarters>
@@ -2891,6 +2891,5 @@
 <flood_2_objectivesuccessmessage3>¡Excelente! Recuerda, camarada: ¡no existen planes malos, tan solo malos objetivos!</flood_2_objectivesuccessmessage3>
 <flood_2_traitorobjectivestartmessage4>¡Rápido, aprovecha la confusión y liquida a los cerdos más peligrosos cuanto antes!\n[traitorgoalinfos]</flood_2_traitorobjectivestartmessage4>
 <flood_2_objectivesuccessmessage4>Mientras los liquidas te das cuenta, con cierta amargura, de que tu receptor ya no emite sonido alguno. Tus camaradas te han dejado a merced de la Madre Europa.</flood_2_objectivesuccessmessage4>
-
 
 </infotexts>
