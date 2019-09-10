@@ -393,6 +393,53 @@ namespace Barotrauma.Networking
 
                 PingHQuery = SteamManager.Instance.ServerList.HQueryPing(MatchmakingPingResponse, IPAddress.Parse(IP), int.Parse(QueryPort));
             }
+            else if (OwnerID != 0)
+            {
+                if (SteamFriend == null)
+                {
+                    SteamFriend = SteamManager.Instance.Friends.Get(OwnerID);
+                }
+                if (LobbyID == 0)
+                {
+                    SteamFriend.Refresh();
+                    if (SteamFriend.IsPlayingThisGame && SteamFriend.ServerLobbyId != 0)
+                    {
+                        LobbyID = SteamFriend.ServerLobbyId;
+                        SteamManager.Instance.LobbyList.SetManualLobbyDataCallback(LobbyID, (lobby) =>
+                        {
+                            SteamManager.Instance.LobbyList.SetManualLobbyDataCallback(LobbyID, null);
+                            if (OwnerID != lobby.Owner) { return; }
+                            if (string.IsNullOrWhiteSpace(lobby.GetData("haspassword"))) { return; }
+                            bool.TryParse(lobby.GetData("haspassword"), out bool hasPassword);
+                            int.TryParse(lobby.GetData("playercount"), out int currPlayers);
+                            int.TryParse(lobby.GetData("maxplayernum"), out int maxPlayers);
+                            //UInt64.TryParse(lobby.GetData("connectsteamid"), out ulong connectSteamId);
+                            string ip = lobby.GetData("hostipaddress");
+                            if (string.IsNullOrWhiteSpace(ip)) { ip = ""; }
+
+                            ServerName = lobby.Name;
+                            Port = "";
+                            QueryPort = "";
+                            IP = ip;
+                            PlayerCount = currPlayers;
+                            MaxPlayers = maxPlayers;
+                            HasPassword = hasPassword;
+                            RespondedToSteamQuery = true;
+                            LobbyID = lobby.LobbyID;
+                            OwnerID = lobby.Owner;
+                            PingChecked = false;
+                            SteamManager.AssignLobbyDataToServerInfo(lobby, this);
+
+                            onServerRulesReceived?.Invoke(this);
+                        });
+                        SteamManager.Instance.LobbyList.RequestLobbyData(LobbyID);
+                    }
+                    else
+                    {
+                        DebugConsole.ThrowError(SteamFriend.Name+" "+SteamFriend.IsPlayingThisGame + " " + SteamFriend.ServerLobbyId.ToString());
+                    }
+                }
+            }
         }
 
         public XElement ToXElement()

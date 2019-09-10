@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 using SteamNative;
 
+
+//TODO: this entire file is the main reason why we need to update this library
 namespace Facepunch.Steamworks
 {
     public partial class LobbyList : IDisposable
@@ -11,6 +13,8 @@ namespace Facepunch.Steamworks
 
         //The list of retrieved lobbies
         public List<Lobby> Lobbies { get; private set; }
+
+        public Dictionary<ulong, Action<Lobby>> ManualLobbyDataCallbacks { get; private set; }
 
         //True when all the possible lobbies have had their data updated
         //if the number of lobbies is now equal to the initial request number, we've found all lobbies
@@ -21,9 +25,13 @@ namespace Facepunch.Steamworks
 
         internal LobbyList(Client client)
         {
+            client.RegisterCallback<SteamNative.LobbyDataUpdate_t>(OnLobbyDataUpdated);
+
             this.client = client;
             Lobbies = new List<Lobby>();
             requests = new List<ulong>();
+
+            ManualLobbyDataCallbacks = new Dictionary<ulong, Action<Lobby>>();
         }
 
         /// <summary>
@@ -77,7 +85,6 @@ namespace Facepunch.Steamworks
 
         }
 
-        bool registeredLobbyDataUpdated = false; 
         void OnLobbyList(LobbyMatchList_t callback, bool error)
         {
             if (error) return;
@@ -107,11 +114,6 @@ namespace Facepunch.Steamworks
                 {
                     //else we need to get the info for the missing lobby
                     client.native.matchmaking.RequestLobbyData(lobby);
-                    if (!registeredLobbyDataUpdated)
-                    {
-                        client.RegisterCallback<SteamNative.LobbyDataUpdate_t>(OnLobbyDataUpdated);
-                        registeredLobbyDataUpdated = true;
-                    }
                 }
 
             }
@@ -135,19 +137,30 @@ namespace Facepunch.Steamworks
         {
             if (callback.Success == 1) //1 if success, 0 if failure
             {
+                if (ManualLobbyDataCallbacks.ContainsKey(callback.SteamIDLobby))
+                {
+                    ManualLobbyDataCallbacks[callback.SteamIDLobby]?.Invoke(Lobby.FromSteam(client, callback.SteamIDLobby));
+                }
+
                 //find the lobby that has been updated
                 Lobby lobby = Lobbies.Find(x => x != null && x.LobbyID == callback.SteamIDLobby);
 
                 //if this lobby isn't yet in the list of lobbies, we know that we should add it
                 if (lobby == null)
                 {
-                    lobby = Lobby.FromSteam(client, callback.SteamIDLobby);
-                    Lobbies.Add(lobby);
-                    checkFinished();
+                    if (requests.Contains(callback.SteamIDLobby))
+                    {
+                        lobby = Lobby.FromSteam(client, callback.SteamIDLobby);
+                        Lobbies.Add(lobby);
+                        checkFinished();
+                    }
                 }
 
                 //otherwise lobby data in general was updated and you should listen to see what changed
-                if (OnLobbiesUpdated != null) { OnLobbiesUpdated(); }
+                if (requests.Contains(callback.SteamIDLobby))
+                {
+                    OnLobbiesUpdated?.Invoke();
+                }
             }
         }
 
@@ -156,6 +169,38 @@ namespace Facepunch.Steamworks
         public Lobby GetLobbyFromID(ulong lobbyId)
         {
             return Lobby.FromSteam(client, lobbyId);
+        }
+
+        public void RequestLobbyData(ulong lobby)
+        {
+            client.native.matchmaking.RequestLobbyData(lobby);
+        }
+
+        public void SetManualLobbyDataCallback(ulong steamId, Action<Lobby> callback)
+        {
+            if (callback != null)
+            {
+                if (ManualLobbyDataCallbacks == null)
+                {
+                    ManualLobbyDataCallbacks = new Dictionary<ulong, Action<Lobby>>();
+                }
+                if (!ManualLobbyDataCallbacks.ContainsKey(steamId))
+                {
+                    ManualLobbyDataCallbacks.Add(steamId, callback);
+                }
+                else
+                {
+                    ManualLobbyDataCallbacks[steamId] = callback;
+                }
+            }
+            else
+            {
+                if (ManualLobbyDataCallbacks == null) { return; }
+                if (ManualLobbyDataCallbacks.ContainsKey(steamId))
+                {
+                    ManualLobbyDataCallbacks.Remove(steamId);
+                }
+            }
         }
 
         public void Dispose()

@@ -407,49 +407,54 @@ namespace Barotrauma.Steam
                     OwnerID = lobby.Owner
                 };
                 serverInfo.PingChecked = false;
-                serverInfo.ServerMessage = lobby.GetData("message");
-                serverInfo.GameVersion = lobby.GetData("version");
-
-                serverInfo.ContentPackageNames.AddRange(lobby.GetData("contentpackage").Split(','));
-                serverInfo.ContentPackageHashes.AddRange(lobby.GetData("contentpackagehash").Split(','));
-                serverInfo.ContentPackageWorkshopUrls.AddRange(lobby.GetData("contentpackageurl").Split(','));
-
-                serverInfo.UsingWhiteList = getLobbyBool("usingwhitelist");
-                SelectionMode selectionMode;
-                if (Enum.TryParse(lobby.GetData("modeselectionmode"), out selectionMode)) { serverInfo.ModeSelectionMode = selectionMode; }
-                if (Enum.TryParse(lobby.GetData("subselectionmode"), out selectionMode)) { serverInfo.SubSelectionMode = selectionMode; }
-
-                serverInfo.AllowSpectating = getLobbyBool("allowspectating");
-                serverInfo.AllowRespawn = getLobbyBool("allowrespawn");
-                serverInfo.VoipEnabled = getLobbyBool("voicechatenabled");
-                serverInfo.KarmaEnabled = getLobbyBool("karmaenabled");
-                serverInfo.FriendlyFireEnabled = getLobbyBool("friendlyfireenabled");
-                if (Enum.TryParse(lobby.GetData("traitors"), out YesNoMaybe traitorsEnabled)) { serverInfo.TraitorsEnabled = traitorsEnabled; }
-
-                serverInfo.GameStarted = lobby.GetData("gamestarted") == "True";
-                serverInfo.GameMode = lobby.GetData("gamemode");
-                if (Enum.TryParse(lobby.GetData("playstyle"), out PlayStyle playStyle)) serverInfo.PlayStyle = playStyle;
-
-                if (serverInfo.ContentPackageNames.Count != serverInfo.ContentPackageHashes.Count ||
-                    serverInfo.ContentPackageHashes.Count != serverInfo.ContentPackageWorkshopUrls.Count)
-                {
-                    //invalid contentpackage info
-                    serverInfo.ContentPackageNames.Clear();
-                    serverInfo.ContentPackageHashes.Clear();
-                }
-
-                bool? getLobbyBool(string key)
-                {
-                    string data = lobby.GetData(key);
-                    if (string.IsNullOrEmpty(data)) { return null; }
-                    return data == "True" || data == "true";
-                }
+                AssignLobbyDataToServerInfo(lobby, serverInfo);
 
                 onServerFound(serverInfo);
                 //onServerRulesReceived(serverInfo);
             }
 
             onFinished();
+        }
+
+        public static void AssignLobbyDataToServerInfo(LobbyList.Lobby lobby, ServerInfo serverInfo)
+        {
+            serverInfo.ServerMessage = lobby.GetData("message");
+            serverInfo.GameVersion = lobby.GetData("version");
+
+            serverInfo.ContentPackageNames.AddRange(lobby.GetData("contentpackage").Split(','));
+            serverInfo.ContentPackageHashes.AddRange(lobby.GetData("contentpackagehash").Split(','));
+            serverInfo.ContentPackageWorkshopUrls.AddRange(lobby.GetData("contentpackageurl").Split(','));
+
+            serverInfo.UsingWhiteList = getLobbyBool("usingwhitelist");
+            SelectionMode selectionMode;
+            if (Enum.TryParse(lobby.GetData("modeselectionmode"), out selectionMode)) { serverInfo.ModeSelectionMode = selectionMode; }
+            if (Enum.TryParse(lobby.GetData("subselectionmode"), out selectionMode)) { serverInfo.SubSelectionMode = selectionMode; }
+
+            serverInfo.AllowSpectating = getLobbyBool("allowspectating");
+            serverInfo.AllowRespawn = getLobbyBool("allowrespawn");
+            serverInfo.VoipEnabled = getLobbyBool("voicechatenabled");
+            serverInfo.KarmaEnabled = getLobbyBool("karmaenabled");
+            serverInfo.FriendlyFireEnabled = getLobbyBool("friendlyfireenabled");
+            if (Enum.TryParse(lobby.GetData("traitors"), out YesNoMaybe traitorsEnabled)) { serverInfo.TraitorsEnabled = traitorsEnabled; }
+
+            serverInfo.GameStarted = lobby.GetData("gamestarted") == "True";
+            serverInfo.GameMode = lobby.GetData("gamemode");
+            if (Enum.TryParse(lobby.GetData("playstyle"), out PlayStyle playStyle)) serverInfo.PlayStyle = playStyle;
+
+            if (serverInfo.ContentPackageNames.Count != serverInfo.ContentPackageHashes.Count ||
+                serverInfo.ContentPackageHashes.Count != serverInfo.ContentPackageWorkshopUrls.Count)
+            {
+                //invalid contentpackage info
+                serverInfo.ContentPackageNames.Clear();
+                serverInfo.ContentPackageHashes.Clear();
+            }
+
+            bool? getLobbyBool(string key)
+            {
+                string data = lobby.GetData(key);
+                if (string.IsNullOrEmpty(data)) { return null; }
+                return data == "True" || data == "true";
+            }
         }
 
         private static void UpdateServerQuery(ServerList.Request query, Action<Networking.ServerInfo> onServerFound, Action<Networking.ServerInfo> onServerRulesReceived, bool includeUnresponsive)
