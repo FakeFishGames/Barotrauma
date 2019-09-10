@@ -125,7 +125,7 @@ namespace Barotrauma
                 {
                     if (repairable.CurrentFixer != null && repairable.CurrentFixer != character)
                     {
-                        // Someone else is repairing the target. Abandon the objective if the other is better at this then us.
+                        // Someone else is repairing the target. Abandon the objective if the other is better at this than us.
                         Abandon = repairable.DegreeOfSuccess(character) < repairable.DegreeOfSuccess(repairable.CurrentFixer);
                     }
                     if (!Abandon)

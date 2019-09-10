@@ -16,6 +16,12 @@ namespace Barotrauma
         public virtual bool AbandonWhenCannotCompleteSubjectives => true;
 
         /// <summary>
+        /// Can there be multiple objective instaces of the same type? Currently multiple instances are not allowed for subobjectives.
+        /// In theory, there could be multiple subobjectives of same type for concurrent objectives, but that would make things more complex -> potential issues
+        /// </summary>
+        public virtual bool AllowMultipleInstances => false;
+
+        /// <summary>
         /// Run the main objective with all subobjectives concurrently?
         /// If false, the main objective will continue only when all the subobjectives have been removed (done).
         /// </summary>
@@ -28,7 +34,7 @@ namespace Barotrauma
         public float PriorityModifier { get; private set; } = 1;
         public readonly Character character;
         public readonly AIObjectiveManager objectiveManager;
-        public string Option { get; protected set; }
+        public string Option { get; set; }
 
         private bool _abandon;
         protected bool Abandon
@@ -140,6 +146,8 @@ namespace Barotrauma
         }
 
         public virtual float GetPriority() => Priority * PriorityModifier;
+
+        public virtual bool IsDuplicate<T>(T otherObjective) where T : AIObjective => otherObjective.Option == Option;
 
         public virtual void Update(float deltaTime)
         {
