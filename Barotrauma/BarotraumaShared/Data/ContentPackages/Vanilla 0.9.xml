@@ -93,6 +93,7 @@
   <Text file="Content/Texts/SimplifiedChineseVanilla.xml" />
   <Text file="Content/Texts/TraditionalChineseVanilla.xml" />
   <Text file="Content/Texts/CastilianSpanishVanilla.xml" />
+  <Text file="Content/Texts/JapaneseVanilla.xml" />
   <Text file="Content/Texts/LatinamericanSpanishVanilla.xml" />
   <Text file="Content/Texts/PolishVanilla.xml" />
   <Text file="Content/Texts/TurkishVanilla.xml" />
@@ -117,6 +118,11 @@
   <NPCConversations file="Content/NPCConversations/NpcConversations_BrazilianPortuguese.xml"/>
   <NPCConversations file="Content/NPCConversations/NpcConversations_SimplifiedChinese.xml"/>
   <NPCConversations file="Content/NPCConversations/NpcConversations_TraditionalChinese.xml"/>
+  <NPCConversations file="Content/NPCConversations/NpcConversations_CastilianSpanish.xml"/>
+  <NPCConversations file="Content/NPCConversations/NpcConversations_Japanese.xml"/>
+  <NPCConversations file="Content/NPCConversations/NpcConversations_LatinamericanSpanish.xml"/>
+  <NPCConversations file="Content/NPCConversations/NpcConversations_Polish.xml"/>
+  <NPCConversations file="Content/NPCConversations/NpcConversations_Turkish.xml"/>
   <Jobs file="Content/Jobs.xml" />
   <Sounds file="Content/Sounds/sounds.xml" />
   <Tutorials file="Content/Tutorials/Tutorials.xml" />
