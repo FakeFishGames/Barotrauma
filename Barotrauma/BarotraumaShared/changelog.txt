@@ -1,4 +1,14 @@
 ---------------------------------------------------------------------------------------------------------
+v0.9.3.2
+---------------------------------------------------------------------------------------------------------
+
+- Fixed a networking error that prevented clients from selecting the correct submarine in multiplayer if
+the settings menu had been toggled open, which caused the client to start the round with an incorrect
+submarine and get kicked out from the server due to entity ID mismatch errors.
+- Added Japanese translation.
+- Added Polish, Spanish and Turkish NPC conversations.
+
+---------------------------------------------------------------------------------------------------------
 v0.9.3.1
 ---------------------------------------------------------------------------------------------------------
 
