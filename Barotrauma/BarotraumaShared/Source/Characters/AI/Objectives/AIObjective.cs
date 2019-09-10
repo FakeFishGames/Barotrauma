@@ -34,7 +34,7 @@ namespace Barotrauma
         public float PriorityModifier { get; private set; } = 1;
         public readonly Character character;
         public readonly AIObjectiveManager objectiveManager;
-        public string Option { get; set; }
+        public string Option { get; private set; }
 
         private bool _abandon;
         protected bool Abandon
