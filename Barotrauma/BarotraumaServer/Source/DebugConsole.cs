@@ -1139,14 +1139,7 @@ namespace Barotrauma
             commands.Add(new Command("mission", "mission [name]/[index]: Select the mission type for the next round. The parameter can either be the name or the index number of the mission type (0 = first mission type, 1 = second mission type, etc).", (string[] args) =>
             {
                 int index = -1;
-                if (int.TryParse(string.Join(" ", args), out index))
-                {
-                    GameMain.NetLobbyScreen.MissionTypeIndex = index;
-                }
-                else
-                {
-                    GameMain.NetLobbyScreen.MissionTypeName = string.Join(" ", args);
-                }
+                GameMain.NetLobbyScreen.MissionTypeName = string.Join(" ", args);
                 NewMessage("Set mission to " + GameMain.NetLobbyScreen.MissionTypeName, Color.Cyan);
             },
             () =>

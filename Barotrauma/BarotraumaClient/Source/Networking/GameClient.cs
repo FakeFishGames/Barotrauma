@@ -1395,7 +1395,7 @@ namespace Barotrauma.Networking
                             bool allowSpectating        = inc.ReadBoolean();
 
                             YesNoMaybe traitorsEnabled  = (YesNoMaybe)inc.ReadRangedInteger(0, 2);
-                            int missionTypeIndex        = inc.ReadRangedInteger(0, Enum.GetValues(typeof(MissionType)).Length - 1);
+                            MissionType missionType     = (MissionType)inc.ReadRangedInteger(0, (int)MissionType.All);
                             int modeIndex               = inc.ReadByte();
 
                             string levelSeed            = inc.ReadString();
@@ -1430,7 +1430,7 @@ namespace Barotrauma.Networking
                                 GameMain.NetLobbyScreen.TrySelectSub(selectShuttleName, selectShuttleHash, GameMain.NetLobbyScreen.ShuttleList.ListBox);
 
                                 GameMain.NetLobbyScreen.SetTraitorsEnabled(traitorsEnabled);
-                                GameMain.NetLobbyScreen.SetMissionType(missionTypeIndex);
+                                GameMain.NetLobbyScreen.SetMissionType(missionType);
 
                                 if (!allowModeVoting) GameMain.NetLobbyScreen.SelectMode(modeIndex);
 

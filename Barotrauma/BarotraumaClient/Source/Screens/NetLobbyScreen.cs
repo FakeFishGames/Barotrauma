@@ -34,8 +34,8 @@ namespace Barotrauma
         private GUIButton[] botSpawnModeButtons;
         private GUITextBlock botSpawnModeText;
 
-        private GUIButton[] missionTypeButtons;
-        private GUIComponent missionTypeContainer;
+        private GUITickBox[] missionTypeTickBoxes;
+        private GUIListBox missionTypeList;
 
         private GUIListBox jobList;
 
@@ -192,12 +192,40 @@ namespace Barotrauma
             get { return modeList.SelectedData as GameModePreset; }
         }
 
-        public int MissionTypeIndex
+        public MissionType MissionType
         {
-            get { return (int)missionTypeContainer.UserData; }
-            set { missionTypeContainer.UserData = value; }
+            get
+            {
+                MissionType retVal = MissionType.None;
+                int index = 0;
+                foreach (MissionType type in Enum.GetValues(typeof(MissionType)))
+                {
+                    if (type == MissionType.None || type == MissionType.All) { continue; }
+
+                    if (missionTypeTickBoxes[index].Selected)
+                    {
+                        retVal = (MissionType)((int)retVal | (int)type);
+                    }
+
+                    index++;
+                }
+
+                return retVal;
+            }
+            set
+            {
+                int index = 0;
+                foreach (MissionType type in Enum.GetValues(typeof(MissionType)))
+                {
+                    if (type == MissionType.None || type == MissionType.All) { continue; }
+
+                    missionTypeTickBoxes[index].Selected = (((int)type & (int)value) != 0);
+
+                    index++;
+                }
+            }
         }
-        
+
         public List<JobPrefab> JobPreferences
         {
             get
@@ -428,7 +456,7 @@ namespace Barotrauma
             //gamemode ------------------------------------------------------------------
 
             var modeLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), midInfoColumn.RectTransform), TextManager.Get("GameMode"));
-            modeList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), midInfoColumn.RectTransform))
+            modeList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.2f), midInfoColumn.RectTransform))
             {
                 OnSelected = VotableClicked
             };
@@ -444,10 +472,10 @@ namespace Barotrauma
             {
                 if (mode.IsSinglePlayer) continue;
 
-                GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), modeList.Content.RectTransform),
+                GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.333f), modeList.Content.RectTransform),
                     mode.Name, style: "ListBoxElement", textAlignment: Alignment.CenterLeft)
                 {
-                    UserData = mode
+                    UserData = mode,
                 };
                 //TODO: translate mission descriptions
                 if (TextManager.Language == "English")
@@ -458,39 +486,38 @@ namespace Barotrauma
 
             //mission type ------------------------------------------------------------------
 
-            missionTypeContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), midInfoColumn.RectTransform), isHorizontal: true)
+            var missionTypeLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), midInfoColumn.RectTransform), TextManager.Get("MissionType"));
+
+            missionTypeList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.15f), midInfoColumn.RectTransform))
             {
-                UserData = 0,
-                Visible = false,
-                Stretch = true
+                OnSelected = (component, obj) => { return false; }
             };
 
-            var missionTypeText = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), missionTypeContainer.RectTransform),
-                TextManager.Get("MissionType"));
-            missionTypeButtons = new GUIButton[2];
-            missionTypeButtons[0] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), missionTypeContainer.RectTransform), "<")
+            missionTypeTickBoxes = new GUITickBox[Enum.GetValues(typeof(MissionType)).Length - 2];
+            int index = 0;
+            foreach (MissionType missionType in Enum.GetValues(typeof(MissionType)))
             {
-                OnClicked = (button, obj) =>
+                if (missionType == MissionType.None || missionType == MissionType.All) { continue; }
+                
+                GUIFrame frame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.25f), missionTypeList.Content.RectTransform), style: "ListBoxElement");
+
+                missionTypeTickBoxes[index] = new GUITickBox(new RectTransform(Vector2.One, frame.RectTransform),
+                    TextManager.Get("MissionType." + missionType.ToString()))
                 {
-                    GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, missionType: -1);
+                    UserData = (int)missionType,
+                    OnSelected = (tickbox) =>
+                    {
+                        int missionTypeOr = tickbox.Selected ? (int)tickbox.UserData : (int)MissionType.None;
+                        int missionTypeAnd = (int)MissionType.All & (!tickbox.Selected ? (~(int)tickbox.UserData) : (int)MissionType.All);
+                        GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, (int)missionTypeOr, (int)missionTypeAnd);
+                        return true;
+                    }
+                };
 
-                    return true;
-                }
-            };
+                index++;
+            }
 
-            new GUITextBlock(new RectTransform(new Vector2(0.4f, 1.0f), missionTypeContainer.RectTransform),
-                TextManager.Get("MissionType.Random"), textAlignment: Alignment.Center);
-            missionTypeButtons[1] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), missionTypeContainer.RectTransform), ">")
-            {
-                OnClicked = (button, obj) =>
-                {
-                    GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, missionType: 1);
-
-                    return true;
-                }
-            };
-
-            clientDisabledElements.AddRange(missionTypeButtons);
+            clientDisabledElements.AddRange(missionTypeTickBoxes);
 
             //seed ------------------------------------------------------------------
 
@@ -833,8 +860,11 @@ namespace Barotrauma
         {
             ServerName.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             ServerMessage.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
-            missionTypeButtons[0].Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
-            missionTypeButtons[1].Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            missionTypeList.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            foreach (var tickBox in missionTypeTickBoxes)
+            {
+                tickBox.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            }
             traitorProbabilityButtons[0].Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             traitorProbabilityButtons[1].Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             botCountButtons[0].Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
@@ -1170,13 +1200,10 @@ namespace Barotrauma
             autoRestartBox.Selected = enabled;
             autoRestartTimer = timer;
         }
-        
-        public void SetMissionType(int missionTypeIndex)
+
+        public void SetMissionType(MissionType missionType)
         {
-            if (missionTypeIndex < 0 || missionTypeIndex >= Enum.GetValues(typeof(MissionType)).Length) return;
-            
-            ((GUITextBlock)missionTypeContainer.GetChild(2)).Text = TextManager.Get("MissionType." + ((MissionType)missionTypeIndex).ToString());
-            missionTypeContainer.UserData = ((MissionType)missionTypeIndex);
+            MissionType = missionType;
         }
 
         public void UpdateSubList(GUIComponent subList, List<Submarine> submarines)
@@ -1882,7 +1909,7 @@ namespace Barotrauma
             
             if (modeList.SelectedIndex != modeIndex) { modeList.Select(modeIndex, true); }
             
-            missionTypeContainer.Visible = SelectedMode != null && SelectedMode.Identifier == "mission";
+            missionTypeList.Visible = SelectedMode != null && SelectedMode.Identifier == "mission";
         }
 
         private bool SelectMode(GUIComponent component, object obj)
@@ -1892,7 +1919,7 @@ namespace Barotrauma
             GameModePreset modePreset = obj as GameModePreset;
             if (modePreset == null) return false;
             
-            missionTypeContainer.Visible = modePreset.Identifier == "mission";
+            missionTypeList.Visible = modePreset.Identifier == "mission";
             if (modePreset.Identifier == "multiplayercampaign")
             {
                 //campaign selected and the campaign view has not been set up yet

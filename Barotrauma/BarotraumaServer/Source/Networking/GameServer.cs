@@ -1547,7 +1547,7 @@ namespace Barotrauma.Networking
 
                 outmsg.WriteRangedInteger((int)serverSettings.TraitorsEnabled, 0, 2);
 
-                outmsg.WriteRangedInteger((GameMain.NetLobbyScreen.MissionTypeIndex), 0, Enum.GetValues(typeof(MissionType)).Length - 1);
+                outmsg.WriteRangedInteger((int)GameMain.NetLobbyScreen.MissionType, 0, (int)MissionType.All);
 
                 outmsg.Write((byte)GameMain.NetLobbyScreen.SelectedModeIndex);
                 outmsg.Write(GameMain.NetLobbyScreen.LevelSeed);
@@ -1764,7 +1764,7 @@ namespace Barotrauma.Networking
             //don't instantiate a new gamesession if we're playing a campaign
             if (campaign == null || GameMain.GameSession == null)
             {
-                GameMain.GameSession = new GameSession(selectedSub, "", selectedMode, (MissionType)GameMain.NetLobbyScreen.MissionTypeIndex);
+                GameMain.GameSession = new GameSession(selectedSub, "", selectedMode, GameMain.NetLobbyScreen.MissionType);
             }
 
             List<Client> playingClients = new List<Client>(connectedClients);
@@ -1965,7 +1965,7 @@ namespace Barotrauma.Networking
 
             msg.Write((byte)GameMain.Config.LosMode);
 
-            msg.Write((byte)GameMain.NetLobbyScreen.MissionTypeIndex);
+            msg.Write((byte)GameMain.NetLobbyScreen.MissionType);
 
             msg.Write(selectedSub.Name);
             msg.Write(selectedSub.MD5Hash.Hash);

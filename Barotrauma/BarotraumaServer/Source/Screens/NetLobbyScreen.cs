@@ -74,26 +74,24 @@ namespace Barotrauma
             get { return GameModes[SelectedModeIndex]; }
         }
 
-        private int missionTypeIndex;
-        public int MissionTypeIndex
+        private MissionType missionType;
+        public MissionType MissionType
         {
-            get { return missionTypeIndex; }
+            get { return missionType; }
             set
             {
                 lastUpdateID++;
-                missionTypeIndex = MathHelper.Clamp(value, 0, Enum.GetValues(typeof(MissionType)).Length - 1);
+                missionType = value;
             }
         }
 
         public string MissionTypeName
         {
-            get { return ((MissionType)missionTypeIndex).ToString(); }
+            get { return missionType.ToString(); }
             set
             {
-                if (Enum.TryParse(value, out MissionType missionType))
-                {
-                    missionTypeIndex = (int)missionType;
-                }
+                Enum.TryParse(value, out missionType);
+                lastUpdateID++;
             }
         }
 

@@ -6,14 +6,15 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
+    [Flags]
     public enum MissionType
     {
-        Random,
-        None,
-        Salvage,
-        Monster,
-        Cargo,
-        Combat
+        None = 0x0,
+        Salvage = 0x1,
+        Monster = 0x2,
+        Cargo = 0x4,
+        Combat = 0x8,
+        All = 0xf
     }
 
     class MissionPrefab
@@ -150,11 +151,6 @@ namespace Barotrauma
             if (!Enum.TryParse(missionTypeName, out type))
             {
                 DebugConsole.ThrowError("Error in mission prefab \"" + Name + "\" - \"" + missionTypeName + "\" is not a valid mission type.");
-                return;
-            }
-            if (type == MissionType.Random)
-            {
-                DebugConsole.ThrowError("Error in mission prefab \"" + Name + "\" - mission type cannot be random.");
                 return;
             }
             if (type == MissionType.None)
