@@ -7,6 +7,7 @@ the settings menu had been toggled open, which caused the client to start the ro
 submarine and get kicked out from the server due to entity ID mismatch errors.
 - Added Japanese translation.
 - Added Polish, Spanish and Turkish NPC conversations.
+- Improvements to Russian and Spanish translations.
 
 ---------------------------------------------------------------------------------------------------------
 v0.9.3.1
