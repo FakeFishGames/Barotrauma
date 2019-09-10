@@ -440,17 +440,11 @@ namespace Barotrauma
             };
             voiceChatScrollBar.OnMoved(voiceChatScrollBar, voiceChatScrollBar.BarScroll);
 
-            var leftTickBoxes = new GUILayoutGroup(new RectTransform(new Vector2(0.28f, 0.06f), tabs[(int)Tab.Audio].RectTransform, Anchor.TopLeft)
-            { RelativeOffset = new Vector2(0.02f, 0.32f) })
-            { RelativeSpacing = 0.01f };
-            var centerTickBoxes = new GUILayoutGroup(new RectTransform(new Vector2(0.4f, 0.06f), tabs[(int)Tab.Audio].RectTransform, Anchor.TopLeft)
-            { RelativeOffset = new Vector2(0.3f, 0.32f) })
-            { RelativeSpacing = 0.01f };
-            var rightTickBoxes = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 0.06f), tabs[(int)Tab.Audio].RectTransform, Anchor.TopRight)
+            var tickBoxes = new GUILayoutGroup(new RectTransform(new Vector2(0.28f, 0.15f), tabs[(int)Tab.Audio].RectTransform, Anchor.TopLeft)
             { RelativeOffset = new Vector2(0.02f, 0.32f) })
             { RelativeSpacing = 0.01f };
 
-            GUITickBox muteOnFocusLostBox = new GUITickBox(new RectTransform(tickBoxScale / 0.06f, leftTickBoxes.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get("MuteOnFocusLost"));
+            GUITickBox muteOnFocusLostBox = new GUITickBox(new RectTransform(tickBoxScale / 0.18f, tickBoxes.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get("MuteOnFocusLost"));
             muteOnFocusLostBox.Selected = MuteOnFocusLost;
             muteOnFocusLostBox.ToolTip = TextManager.Get("MuteOnFocusLostToolTip");
             muteOnFocusLostBox.OnSelected = (tickBox) =>
@@ -460,7 +454,7 @@ namespace Barotrauma
                 return true;
             };
 
-            GUITickBox dynamicRangeCompressionTickBox = new GUITickBox(new RectTransform(tickBoxScale / 0.06f, centerTickBoxes.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get("DynamicRangeCompression"));
+            GUITickBox dynamicRangeCompressionTickBox = new GUITickBox(new RectTransform(tickBoxScale / 0.18f, tickBoxes.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get("DynamicRangeCompression"));
             dynamicRangeCompressionTickBox.Selected = DynamicRangeCompressionEnabled;
             dynamicRangeCompressionTickBox.ToolTip = TextManager.Get("DynamicRangeCompressionToolTip");
             dynamicRangeCompressionTickBox.OnSelected = (tickBox) =>
@@ -470,7 +464,7 @@ namespace Barotrauma
                 return true;
             };
 
-            GUITickBox voipAttenuationTickBox = new GUITickBox(new RectTransform(tickBoxScale / 0.06f, rightTickBoxes.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get("VoipAttenuation"));
+            GUITickBox voipAttenuationTickBox = new GUITickBox(new RectTransform(tickBoxScale / 0.18f, tickBoxes.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get("VoipAttenuation"));
             voipAttenuationTickBox.Selected = VoipAttenuationEnabled;
             voipAttenuationTickBox.ToolTip = TextManager.Get("VoipAttenuationToolTip");
             voipAttenuationTickBox.OnSelected = (tickBox) =>
@@ -480,8 +474,8 @@ namespace Barotrauma
                 return true;
             };
 
-            var voipSettings = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.4f), tabs[(int)Tab.Audio].RectTransform, Anchor.TopCenter)
-            { RelativeOffset = new Vector2(0.0f, 0.38f) })
+            var voipSettings = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.35f), tabs[(int)Tab.Audio].RectTransform, Anchor.TopCenter)
+            { RelativeOffset = new Vector2(0.0f, 0.47f) })
             { RelativeSpacing = 0.01f };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), voipSettings.RectTransform), TextManager.Get("VoiceChat"));
