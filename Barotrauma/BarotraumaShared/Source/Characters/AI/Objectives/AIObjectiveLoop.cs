@@ -41,6 +41,7 @@ namespace Barotrauma
         protected override bool Check() => false;
         public override bool CanBeCompleted => true;
         public override bool AbandonWhenCannotCompleteSubjectives => false;
+        public override bool AllowSubObjectiveSorting => true;
 
         public override bool IsLoop { get => true; set => throw new System.Exception("Trying to set the value for IsLoop from: " + System.Environment.StackTrace); }
 
@@ -70,7 +71,7 @@ namespace Barotrauma
             foreach (var objective in Objectives)
             {
                 var target = objective.Key;
-                if (!objective.Value.CanBeCompleted)
+                if (!objective.Value.CanBeCompleted && !ignoreList.Contains(target))
                 {
                     ignoreList.Add(target);
                     targetUpdateTimer = 0;
@@ -150,12 +151,12 @@ namespace Barotrauma
                 if (!Objectives.TryGetValue(target, out AIObjective objective))
                 {
                     objective = ObjectiveConstructor(target);
-                    objective.Completed += () => OnObjectiveCompleted(objective, target);
                     Objectives.Add(target, objective);
                     if (!subObjectives.Contains(objective))
                     {
                         subObjectives.Add(objective);
                     }
+                    objective.Completed += () => OnObjectiveCompleted(objective, target);
                 }
             }
         }
