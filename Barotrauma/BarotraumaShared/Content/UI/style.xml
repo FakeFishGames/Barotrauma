@@ -759,12 +759,11 @@
 
     <GUIFrame
       padding="40.0, 20.0, 40.0, 20.0"
-      color="200,200,200,255"
-      hovercolor="200,200,200,255"
-      selectedcolor="200,200,200,255"
-      outlinecolor="200,200,200,255"
+      color="255,255,255,255"
+      hovercolor="255,255,255,255"
+      selectedcolor="255,255,255,255"
       textcolor="127,140,153,255">
-      <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect ="746, 704, 120, 120" slice="754, 711, 865, 816"/>
+      <Sprite texture="Content/UI/UI_Atlas2.png" state="None" sourcerect="136,611,148,129" slice="158,633,255,714"/>
     </GUIFrame>
   </GUIMessageBox.InGame>
 
