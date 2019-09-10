@@ -74,7 +74,7 @@ namespace Barotrauma
                     // Don't allow to operate an item that someone already operates, unless this objective is an order
                     if (objectiveManager.CurrentOrder != this && Character.CharacterList.Any(c => c.SelectedConstruction == target.Item && c != character && HumanAIController.IsFriendly(c)))
                     {
-                        Abandon = true;
+                        // Don't abandon
                         return;
                     }
                     if (character.SelectedConstruction != target.Item)
