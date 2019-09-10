@@ -368,6 +368,8 @@ namespace Barotrauma.Networking
 
         public void QueryLiveInfo(Action<Networking.ServerInfo> onServerRulesReceived)
         {
+            if (!SteamManager.IsInitialized) { return; }
+
             if (int.TryParse(QueryPort, out _))
             {
                 if (PingHQuery != null)
