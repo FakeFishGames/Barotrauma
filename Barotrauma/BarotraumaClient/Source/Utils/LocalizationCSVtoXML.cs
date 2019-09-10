@@ -17,9 +17,9 @@ namespace Barotrauma
         private const string infoTextPath = "Content/Texts";
         private const string xmlHeader = "<?xml version=\"1.0\" encoding=\"utf-8\"?>";
 
-        private static string[,] translatedLanguageNames = new string[11, 2] { { "English", "English" }, { "French", "Français" }, { "German", "Deutsch" }, 
+        private static string[,] translatedLanguageNames = new string[12, 2] { { "English", "English" }, { "French", "Français" }, { "German", "Deutsch" }, 
             { "Russian", "Русский" }, { "Brazilian Portuguese", "Português brasileiro" }, { "Simplified Chinese", "中文(简体)" }, { "Traditional Chinese", "中文(繁體)" },
-            { "Castilian Spanish", "Castellano" }, { "Latinamerican Spanish", "Español Latinoamericano" }, { "Polish", "Polski" }, { "Turkish", "Türkçe" } };
+            { "Castilian Spanish", "Castellano" }, { "Latinamerican Spanish", "Español Latinoamericano" }, { "Polish", "Polski" }, { "Turkish", "Türkçe" }, { "Japanese", "日本語" } };
 
         public static void Convert()
         {

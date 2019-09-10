@@ -96,6 +96,7 @@
   <Text file="Content/Texts/LatinamericanSpanish/LatinamericanSpanishVanilla.xml" />
   <Text file="Content/Texts/Polish/PolishVanilla.xml" />
   <Text file="Content/Texts/Turkish/TurkishVanilla.xml" />
+  <Text file="Content/Texts/Japanese/JapaneseVanilla.xml" />
   <UIStyle file="Content/UI/style.xml"/>  
   <Afflictions file="Content/Afflictions.xml"/>
   <Structure file="Content/Map/StructurePrefabs.xml" />
@@ -116,6 +117,11 @@
   <NPCConversations file="Content/NPCConversations/BrazilianPortuguese/NpcConversations_BrazilianPortuguese.xml"/>
   <NPCConversations file="Content/NPCConversations/SimplifiedChinese/NpcConversations_SimplifiedChinese.xml"/>
   <NPCConversations file="Content/NPCConversations/TraditionalChinese/NpcConversations_TraditionalChinese.xml"/>
+  <NPCConversations file="Content/NPCConversations/CastilianSpanish/NpcConversations_CastilianSpanish.xml"/>
+  <NPCConversations file="Content/NPCConversations/LatinamericanSpanish/NpcConversations_LatinamericanSpanish.xml"/>
+  <NPCConversations file="Content/NPCConversations/Polish/NpcConversations_Polish.xml"/>
+  <NPCConversations file="Content/NPCConversations/Turkish/NpcConversations_Turkish.xml"/>
+  <NPCConversations file="Content/NPCConversations/Japanese/NpcConversations_Japanese.xml"/>
   <Jobs file="Content/Jobs.xml" />
   <Sounds file="Content/Sounds/sounds.xml" />
   <Tutorials file="Content/Tutorials/Tutorials.xml" />

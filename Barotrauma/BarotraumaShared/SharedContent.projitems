@@ -28,8 +28,14 @@
     <Folder Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\Captain\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\Medic\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\Security\" />
+    <Folder Include="$(MSBuildThisFileDirectory)Content\NPCConversations\Japanese\" />
+    <Folder Include="$(MSBuildThisFileDirectory)Content\NPCConversations\CastilianSpanish\" />
+    <Folder Include="$(MSBuildThisFileDirectory)Content\NPCConversations\LatinamericanSpanish\" />
+    <Folder Include="$(MSBuildThisFileDirectory)Content\NPCConversations\Turkish\" />
+    <Folder Include="$(MSBuildThisFileDirectory)Content\NPCConversations\Polish\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Texts\LatinamericanSpanish\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Texts\CastilianSpanish\" />
+    <Folder Include="$(MSBuildThisFileDirectory)Content\Texts\Japanese\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Texts\Polish\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Texts\Turkish\" />
     <Folder Include="$(MSBuildThisFileDirectory)Data\Saves\" />
