@@ -796,8 +796,8 @@ namespace Barotrauma
                     (!filterTraitor.Selected || serverInfo.TraitorsEnabled == YesNoMaybe.Yes) &&
                     (!filterVoip.Selected || serverInfo.VoipEnabled == true) &&
                     ((selectedTab == Tab.Browse) ||
-                     (selectedTab == Tab.Recent && recentServers.Any(info => info.OwnerID == serverInfo.OwnerID || (info.IP == serverInfo.IP && info.Port == serverInfo.Port))) ||
-                     (selectedTab == Tab.Favorites && favoriteServers.Any(info => info.OwnerID == serverInfo.OwnerID || (info.IP == serverInfo.IP && info.Port == serverInfo.Port))));
+                     (selectedTab == Tab.Recent && recentServers.Any(info => (serverInfo.OwnerID != 0 && info.OwnerID == serverInfo.OwnerID) || (info.IP == serverInfo.IP && info.Port == serverInfo.Port))) ||
+                     (selectedTab == Tab.Favorites && favoriteServers.Any(info => (serverInfo.OwnerID != 0 && info.OwnerID == serverInfo.OwnerID) || (info.IP == serverInfo.IP && info.Port == serverInfo.Port))));
             }
 
             if (serverList.Content.Children.All(c => !c.Visible))
