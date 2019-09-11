@@ -242,16 +242,16 @@ namespace Barotrauma
             //empty guiframe as a separator
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), paddedLeftPanel.RectTransform) { AbsoluteOffset = new Point(0, TopPanel.Rect.Height) }, style: null);
 
-            var itemCountText = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.0f), paddedLeftPanel.RectTransform), TextManager.Get("Items"));
-            var itemCount = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), itemCountText.RectTransform, Anchor.TopRight, Pivot.TopLeft), "", textAlignment: Alignment.TopRight);
+            var itemCountText = new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.0f), paddedLeftPanel.RectTransform), TextManager.Get("Items"));
+            var itemCount = new GUITextBlock(new RectTransform(new Vector2(0.33f, 1.0f), itemCountText.RectTransform, Anchor.TopRight, Pivot.TopLeft), "", textAlignment: Alignment.TopRight);
             itemCount.TextGetter = () =>
             {
                 itemCount.TextColor = ToolBox.GradientLerp(Item.ItemList.Count / 5000.0f, Color.LightGreen, Color.Yellow, Color.Red);
                 return Item.ItemList.Count.ToString();
             };
 
-            var structureCountText = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.0f), paddedLeftPanel.RectTransform), TextManager.Get("Structures"));
-            var structureCount = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), structureCountText.RectTransform, Anchor.TopRight, Pivot.TopLeft), "", textAlignment: Alignment.TopRight);
+            var structureCountText = new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.0f), paddedLeftPanel.RectTransform), TextManager.Get("Structures"));
+            var structureCount = new GUITextBlock(new RectTransform(new Vector2(0.33f, 1.0f), structureCountText.RectTransform, Anchor.TopRight, Pivot.TopLeft), "", textAlignment: Alignment.TopRight);
             structureCount.TextGetter = () =>
             {
                 int count = (MapEntity.mapEntityList.Count - Item.ItemList.Count - Hull.hullList.Count - WayPoint.WayPointList.Count - Gap.GapList.Count);
@@ -259,16 +259,16 @@ namespace Barotrauma
                 return count.ToString();
             };
 
-            var wallCountText = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.0f), paddedLeftPanel.RectTransform), TextManager.Get("Walls"));
-            var wallCount = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), wallCountText.RectTransform, Anchor.TopRight, Pivot.TopLeft), "", textAlignment: Alignment.TopRight);
+            var wallCountText = new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.0f), paddedLeftPanel.RectTransform), TextManager.Get("Walls"));
+            var wallCount = new GUITextBlock(new RectTransform(new Vector2(0.33f, 1.0f), wallCountText.RectTransform, Anchor.TopRight, Pivot.TopLeft), "", textAlignment: Alignment.TopRight);
             wallCount.TextGetter = () =>
             {
                 wallCount.TextColor = ToolBox.GradientLerp(Structure.WallList.Count / 500.0f, Color.LightGreen, Color.Yellow, Color.Red);
                 return Structure.WallList.Count.ToString();
             };
             
-            var lightCountText = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.0f), paddedLeftPanel.RectTransform), TextManager.Get("SubEditorLights"));
-            var lightCount = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), lightCountText.RectTransform, Anchor.TopRight, Pivot.TopLeft), "", textAlignment: Alignment.TopRight);
+            var lightCountText = new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.0f), paddedLeftPanel.RectTransform), TextManager.Get("SubEditorLights"));
+            var lightCount = new GUITextBlock(new RectTransform(new Vector2(0.33f, 1.0f), lightCountText.RectTransform, Anchor.TopRight, Pivot.TopLeft), "", textAlignment: Alignment.TopRight);
             lightCount.TextGetter = () =>
             {
                 int disabledItemLightCount = 0;
@@ -281,8 +281,8 @@ namespace Barotrauma
                 lightCount.TextColor = ToolBox.GradientLerp(count / 250.0f, Color.LightGreen, Color.Yellow, Color.Red);
                 return count.ToString();
             };
-            var shadowCastingLightCountText = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.0f), paddedLeftPanel.RectTransform), TextManager.Get("SubEditorShadowCastingLights"));
-            var shadowCastingLightCount = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), shadowCastingLightCountText.RectTransform, Anchor.TopRight, Pivot.TopLeft), "", textAlignment: Alignment.TopRight);
+            var shadowCastingLightCountText = new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.0f), paddedLeftPanel.RectTransform), TextManager.Get("SubEditorShadowCastingLights"));
+            var shadowCastingLightCount = new GUITextBlock(new RectTransform(new Vector2(0.33f, 1.0f), shadowCastingLightCountText.RectTransform, Anchor.TopRight, Pivot.TopLeft), "", textAlignment: Alignment.TopRight);
             shadowCastingLightCount.TextGetter = () =>
             {
                 int disabledItemLightCount = 0;
