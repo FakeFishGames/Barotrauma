@@ -342,7 +342,10 @@ namespace Barotrauma
             {
                 var selectionTick = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("servertag." + playStyle))
                 {
-                    ToolTip = TextManager.Get("servertag." + playStyle)
+                    ToolTip = TextManager.Get("servertag." + playStyle),
+                    Selected = true,
+                    OnSelected = (tickBox) => { FilterServers(); return true; },
+                    UserData = playStyle
                 };
                 playStyleTickBoxes.Add(selectionTick);
                 filterTextList.Add(selectionTick.TextBlock);
@@ -812,6 +815,16 @@ namespace Barotrauma
                     ((selectedTab == Tab.Browse) ||
                      (selectedTab == Tab.Recent && recentServers.Any(info => (serverInfo.OwnerID != 0 && info.OwnerID == serverInfo.OwnerID) || (info.IP == serverInfo.IP && info.Port == serverInfo.Port))) ||
                      (selectedTab == Tab.Favorites && favoriteServers.Any(info => (serverInfo.OwnerID != 0 && info.OwnerID == serverInfo.OwnerID) || (info.IP == serverInfo.IP && info.Port == serverInfo.Port))));
+
+                foreach (GUITickBox tickBox in playStyleTickBoxes)
+                {
+                    var playStyle = (PlayStyle)tickBox.UserData;
+                    if (!tickBox.Selected && serverInfo.PlayStyle == playStyle)
+                    {
+                        child.Visible = false;
+                        break;
+                    }
+                }
             }
 
             if (serverList.Content.Children.All(c => !c.Visible))
