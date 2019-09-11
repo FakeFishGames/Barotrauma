@@ -67,6 +67,31 @@ namespace Barotrauma
         private List<ServerInfo> favoriteServers;
         private List<ServerInfo> recentServers;
 
+        private enum Tab
+        {
+            Browse = 0,
+            Recent = 1,
+            Favorites = 2
+        };
+        private Tab selectedTab;
+        private Tab SelectedTab
+        {
+            get { return selectedTab; }
+            set
+            {
+                if (selectedTab == value) { return; }
+                var tabVals = Enum.GetValues(typeof(Tab));
+                for (int i = 0; i < tabVals.Length; i++)
+                {
+                    tabButtons[i].Selected = false;
+                }
+                tabButtons[(int)value].Selected = true;
+                selectedTab = value;
+                FilterServers();
+            }
+        }
+        private GUIButton[] tabButtons;
+
         //server playstyle and tags
         public Sprite[] PlayStyleBanners
         {
@@ -147,7 +172,7 @@ namespace Barotrauma
 
             var infoHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.33f), topRow.RectTransform), isHorizontal: true) { RelativeSpacing = 0.05f,  Stretch = true };
 
-            var clientNameHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.2f, 1.0f), infoHolder.RectTransform)) { RelativeSpacing = 0.05f };
+            var clientNameHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.4f, 1.0f), infoHolder.RectTransform)) { RelativeSpacing = 0.05f };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), clientNameHolder.RectTransform), TextManager.Get("YourName"));
             clientNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.5f), clientNameHolder.RectTransform), "")
@@ -162,7 +187,24 @@ namespace Barotrauma
                 clientNameBox.Text = SteamManager.GetUsername();
             }
 
-            friendsButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 1.0f), infoHolder.RectTransform, Anchor.BottomRight), childAnchor: Anchor.BottomRight) { RelativeSpacing = 0.005f, IsHorizontal = true };
+            var tabButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 1.25f), infoHolder.RectTransform) { RelativeOffset = new Vector2(-0.3f, 0.0f) }, childAnchor: Anchor.BottomLeft) { RelativeSpacing = 0.005f, IsHorizontal = true };
+
+            var tabVals = Enum.GetValues(typeof(Tab));
+            tabButtons = new GUIButton[tabVals.Length];
+            foreach (Tab tab in tabVals)
+            {
+                tabButtons[(int)tab] = new GUIButton(new RectTransform(new Vector2(0.3f, 0.5f), tabButtonHolder.RectTransform),
+                        tab.ToString(), style: "GUITabButton")
+                {
+                    OnClicked = (btn, usrdat) =>
+                    {
+                        SelectedTab = tab;
+                        return false;
+                    }
+                };
+            }
+
+            friendsButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 1.0f), infoHolder.RectTransform, Anchor.BottomRight), childAnchor: Anchor.BottomRight) { RelativeSpacing = 0.01f, IsHorizontal = true };
             friendsList = new List<FriendInfo>();
 
             //-------------------------------------------------------------------------------------
@@ -496,6 +538,9 @@ namespace Barotrauma
 
             //recent and favorite servers
             ReadServerMemFromFile(recentServersFile, ref recentServers);
+            ReadServerMemFromFile(favoriteServersFile, ref favoriteServers);
+
+            SelectedTab = Tab.Browse;
         }
 
         private void ReadServerMemFromFile(string file, ref List<ServerInfo> servers)
@@ -690,6 +735,7 @@ namespace Barotrauma
         public override void Select()
         {
             base.Select();
+            SelectedTab = Tab.Browse;
             RefreshServers();
         }
 
@@ -748,7 +794,10 @@ namespace Barotrauma
                     (!filterKarma.Selected || serverInfo.KarmaEnabled == true) &&
                     (!filterFriendlyFire.Selected || serverInfo.FriendlyFireEnabled == true) &&
                     (!filterTraitor.Selected || serverInfo.TraitorsEnabled == YesNoMaybe.Yes) &&
-                    (!filterVoip.Selected || serverInfo.VoipEnabled == true);
+                    (!filterVoip.Selected || serverInfo.VoipEnabled == true) &&
+                    ((selectedTab == Tab.Browse) ||
+                     (selectedTab == Tab.Recent && recentServers.Any(info => info.OwnerID == serverInfo.OwnerID || (info.IP == serverInfo.IP && info.Port == serverInfo.Port))) ||
+                     (selectedTab == Tab.Favorites && favoriteServers.Any(info => info.OwnerID == serverInfo.OwnerID || (info.IP == serverInfo.IP && info.Port == serverInfo.Port))));
             }
 
             if (serverList.Content.Children.All(c => !c.Visible))
@@ -1105,9 +1154,8 @@ namespace Barotrauma
 
             refreshDisableTimer = DateTime.Now + AllowedRefreshInterval;
 
-            foreach (ServerInfo info in recentServers)
+            foreach (ServerInfo info in recentServers.Concat(favoriteServers))
             {
-                DebugConsole.NewMessage(info.ServerName + " " + info.ServerMessage + " " + info.QueryPort);
                 AddToServerList(info);
                 info.QueryLiveInfo(UpdateServerInfo);
             }
@@ -1190,7 +1238,7 @@ namespace Barotrauma
         private void AddToServerList(ServerInfo serverInfo)
         {
             var serverFrame = serverList.Content.FindChild(d => (d.UserData is ServerInfo info) &&
-                                                                (info.LobbyID==serverInfo.LobbyID && info.IP==serverInfo.IP && info.Port==serverInfo.Port));
+                                                                (info.OwnerID==serverInfo.OwnerID && info.IP==serverInfo.IP && info.Port==serverInfo.Port));
 
             if (serverFrame == null)
             {

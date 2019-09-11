@@ -85,21 +85,30 @@ namespace Facepunch.Steamworks
 
             unsafe void RunInternal()
             {
+                string queryType = "";
                 if ( FileId.Count != 0 )
                 {
                     var fileArray = FileId.Select( x => (SteamNative.PublishedFileId_t)x ).ToArray();
                     _resultsRemain = fileArray.Length;
 
                     Handle = workshop.ugc.CreateQueryUGCDetailsRequest( fileArray );
+                    queryType = "DetailsRequest";
                 }
                 else if ( UserId.HasValue )
                 {
                     uint accountId = (uint)( UserId.Value & 0xFFFFFFFFul );
                     Handle = workshop.ugc.CreateQueryUserUGCRequest( accountId, (SteamNative.UserUGCList)( int)UserQueryType, (SteamNative.UGCMatchingUGCType)( int)QueryType, SteamNative.UserUGCListSortOrder.LastUpdatedDesc, UploaderAppId, AppId, (uint)_resultPage + 1 );
+                    queryType = "UserRequest";
                 }
                 else
                 {
                     Handle = workshop.ugc.CreateQueryAllUGCRequest( (SteamNative.UGCQuery)(int)Order, (SteamNative.UGCMatchingUGCType)(int)QueryType, UploaderAppId, AppId, (uint)_resultPage + 1 );
+                    queryType = "AllRequest";
+                }
+
+                if (Handle == 0xfffffffffffffffful)
+                {
+                    throw new Exception("Steam UGC "+queryType+" Query Handle invalid!");
                 }
 
                 if ( !string.IsNullOrEmpty( SearchText ) )
@@ -246,7 +255,7 @@ namespace Facepunch.Steamworks
 
             public void Dispose()
             {
-                // ReleaseQueryUGCRequest
+                workshop.ugc.ReleaseQueryUGCRequest(Handle);
             }
         }
 
