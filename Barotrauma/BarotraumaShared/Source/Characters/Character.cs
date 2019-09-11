@@ -2799,5 +2799,30 @@ namespace Barotrauma
             }
             return visibleHulls;
         }
+
+        public Vector2 GetRelativeSimPosition(ISpatialEntity target)
+        {
+            Vector2 targetPos = target.SimPosition;
+            if (Submarine == null && target.Submarine != null)
+            {
+                // outside and targeting inside
+                targetPos += target.Submarine.SimPosition;
+            }
+            else if (Submarine != null && target.Submarine == null)
+            {
+                // inside and targeting outside
+                targetPos -= Submarine.SimPosition;
+            }
+            else if (Submarine != target.Submarine)
+            {
+                if (Submarine != null && target.Submarine != null)
+                {
+                    // both inside, but in different subs
+                    Vector2 diff = Submarine.SimPosition - target.Submarine.SimPosition;
+                    targetPos -= diff;
+                }
+            }
+            return targetPos;
+        }
     }
 }

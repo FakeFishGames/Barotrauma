@@ -544,23 +544,7 @@ namespace Barotrauma
             }
             else
             {
-                // Take the sub position into account in the sim pos
-                if (Character.Submarine == null && SelectedAiTarget.Entity.Submarine != null)
-                {
-                    attackSimPos += SelectedAiTarget.Entity.Submarine.SimPosition;
-                }
-                else if (Character.Submarine != null && SelectedAiTarget.Entity.Submarine == null)
-                {
-                    attackSimPos -= Character.Submarine.SimPosition;
-                }
-                else if (Character.Submarine != SelectedAiTarget.Entity.Submarine)
-                {
-                    if (Character.Submarine != null && SelectedAiTarget.Entity.Submarine != null)
-                    {
-                        Vector2 diff = Character.Submarine.SimPosition - SelectedAiTarget.Entity.Submarine.SimPosition;
-                        attackSimPos -= diff;
-                    }
-                }
+                attackSimPos = Character.GetRelativeSimPosition(SelectedAiTarget.Entity);
             }
 
             if (Math.Abs(Character.AnimController.movement.X) > 0.1f && !Character.AnimController.InWater &&
@@ -1053,7 +1037,8 @@ namespace Barotrauma
             }
 
             Vector2 mouthPos = Character.AnimController.GetMouthPosition().Value;
-            Vector2 attackSimPosition = Character.Submarine == null ? ConvertUnits.ToSimUnits(SelectedAiTarget.WorldPosition) : SelectedAiTarget.SimPosition;
+            //Vector2 attackSimPosition = Character.Submarine == null ? ConvertUnits.ToSimUnits(SelectedAiTarget.WorldPosition) : SelectedAiTarget.SimPosition;
+            Vector2 attackSimPosition = Character.GetRelativeSimPosition(SelectedAiTarget.Entity);
 
             Vector2 limbDiff = attackSimPosition - mouthPos;
             float limbDist = limbDiff.Length();
