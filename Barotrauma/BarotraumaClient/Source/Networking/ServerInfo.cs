@@ -443,7 +443,7 @@ namespace Barotrauma.Networking
                     }
                     else
                     {
-                        DebugConsole.ThrowError(SteamFriend.Name+" "+SteamFriend.IsPlayingThisGame + " " + SteamFriend.ServerLobbyId.ToString());
+                        RespondedToSteamQuery = false;
                     }
                 }
             }
