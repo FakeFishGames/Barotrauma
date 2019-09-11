@@ -114,7 +114,7 @@ namespace Barotrauma
                     }
 
                     string savePath = SaveUtil.CreateSavePath(isMultiplayer ? SaveUtil.SaveType.Multiplayer : SaveUtil.SaveType.Singleplayer, saveNameBox.Text);
-                    bool hasRequiredContentPackages = selectedSub.RequiredContentPackages.All(cp => GameMain.SelectedPackages.Any(cp2 => cp2.Name == cp));
+                    bool hasRequiredContentPackages = selectedSub.RequiredContentPackagesInstalled;
 
                     if (selectedSub.HasTag(SubmarineTag.Shuttle) || !hasRequiredContentPackages)
                     {

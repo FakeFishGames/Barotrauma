@@ -1312,6 +1312,7 @@ namespace Barotrauma.Networking
             {
                 outmsg.Write(subList[i].Name);
                 outmsg.Write(subList[i].MD5Hash.ToString());
+                outmsg.Write(subList[i].RequiredContentPackagesInstalled);
             }
 
             outmsg.Write(GameStarted);

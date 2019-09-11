@@ -1237,16 +1237,14 @@ namespace Barotrauma.Networking
             {
                 string subName = inc.ReadString();
                 string subHash = inc.ReadString();
+                bool requiredContentPackagesInstalled = inc.ReadBoolean();
 
-                var matchingSub = Submarine.SavedSubmarines.FirstOrDefault(s => s.Name == subName && s.MD5Hash.Hash == subHash);
-                if (matchingSub != null)
-                {
-                    serverSubmarines.Add(matchingSub);
-                }
-                else
-                {
-                    serverSubmarines.Add(new Submarine(Path.Combine(Submarine.SavePath, subName) + ".sub", subHash, false));
-                }
+                var matchingSub =
+                    Submarine.SavedSubmarines.FirstOrDefault(s => s.Name == subName && s.MD5Hash.Hash == subHash) ??
+                    new Submarine(Path.Combine(Submarine.SavePath, subName) + ".sub", subHash, false);
+
+                matchingSub.RequiredContentPackagesInstalled = requiredContentPackagesInstalled;
+                serverSubmarines.Add(matchingSub);
             }
 
             GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.SubList, serverSubmarines);

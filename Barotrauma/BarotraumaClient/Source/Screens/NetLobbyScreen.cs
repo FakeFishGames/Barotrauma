@@ -1247,6 +1247,12 @@ namespace Barotrauma
                 };
             }
 
+            if (!sub.RequiredContentPackagesInstalled)
+            {
+                subTextBlock.TextColor = Color.Lerp(subTextBlock.TextColor, Color.DarkRed, 0.5f);
+                frame.ToolTip = TextManager.Get("ContentPackageMismatch") + "\n\n" + frame.ToolTip;
+            }
+
             if (sub.HasTag(SubmarineTag.Shuttle))
             {
                 new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), frame.RectTransform, Anchor.CenterRight) { RelativeOffset = new Vector2(0.1f, 0.0f) },
@@ -1270,14 +1276,32 @@ namespace Barotrauma
 
         public bool VotableClicked(GUIComponent component, object userData)
         {
-            if (GameMain.Client == null) return false;
+            if (GameMain.Client == null) { return false; }
             
             VoteType voteType;
             if (component.Parent == GameMain.NetLobbyScreen.SubList.Content)
             {
                 if (!GameMain.Client.ServerSettings.Voting.AllowSubVoting)
                 {
-                    if (GameMain.Client.HasPermission(ClientPermissions.SelectSub))
+                    var selectedSub = component.UserData as Submarine;
+                    if (!selectedSub.RequiredContentPackagesInstalled)
+                    {
+                        var msgBox = new GUIMessageBox(TextManager.Get("ContentPackageMismatch"),
+                            selectedSub.RequiredContentPackages.Any() ?
+                            TextManager.GetWithVariable("ContentPackageMismatchWarning", "[requiredcontentpackages]", string.Join(", ", selectedSub.RequiredContentPackages)) :
+                            TextManager.Get("ContentPackageMismatchWarningGeneric"),
+                            new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+
+                        msgBox.Buttons[0].OnClicked = msgBox.Close;
+                        msgBox.Buttons[0].OnClicked += (button, obj) =>
+                        {
+                            GameMain.Client.RequestSelectSub(component.Parent.GetChildIndex(component), isShuttle: false);
+                            return true;
+                        };
+                        msgBox.Buttons[1].OnClicked = msgBox.Close;
+                        return false;
+                    }
+                    else if (GameMain.Client.HasPermission(ClientPermissions.SelectSub))
                     {
                         GameMain.Client.RequestSelectSub(component.Parent.GetChildIndex(component), isShuttle: false);
                         return true;
@@ -1714,16 +1738,6 @@ namespace Barotrauma
             jobInfoFrame?.AddToGUIUpdateList();
         }
         
-        public List<Submarine> GetSubList()
-        {
-            List<Submarine> subs = new List<Submarine>();
-            foreach (GUIComponent component in subList.Content.Children)
-            {
-                if (component.UserData is Submarine) subs.Add((Submarine)component.UserData);
-            }
-
-            return subs;
-        }
 
         public override void Update(double deltaTime)
         {

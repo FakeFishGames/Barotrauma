@@ -3523,7 +3523,9 @@
 
   <subeditorlights>Lights</subeditorlights>
   <subeditorshadowcastinglights>Shadow-casting lights</subeditorshadowcastinglights>
-  
+
+  <contentpackagemismatchwarninggeneric>The submarine may not be compatible with the currently selected content packages. Are you sure you want to choose the submarine?</contentpackagemismatchwarninggeneric>
+
   <!-- Changed values as of 13th of August -->
   <traitorgoaldestroyitems>Dispose of at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>
   <karma.kickbanthreshold>Kick/Ban threshold</karma.kickbanthreshold>
