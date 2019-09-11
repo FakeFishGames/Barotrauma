@@ -131,7 +131,8 @@ namespace Barotrauma
         private readonly GUITickBox filterTraitor;
         //private readonly GUITickBox filterModded;
         private readonly GUITickBox filterVoip;
-        List<GUITextBlock> playStyleTextBlocks;
+        private readonly List<GUITickBox> playStyleTickBoxes;
+        private readonly List<GUITextBlock> playStyleTextBlocks;
 
         private string sortedBy;
         
@@ -336,6 +337,7 @@ namespace Barotrauma
             // Play Style Selection
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), filterHolder.RectTransform), TextManager.Get("ServerSettingsPlayStyle"));
 
+            playStyleTickBoxes = new List<GUITickBox>();
             playStyleTextBlocks = new List<GUITextBlock>();
             GUIRadioButtonGroup selectionPlayStyle = new GUIRadioButtonGroup();
             foreach (PlayStyle playStyle in Enum.GetValues(typeof(PlayStyle)))
@@ -344,8 +346,9 @@ namespace Barotrauma
                 {
                     ToolTip = TextManager.Get("servertag." + playStyle)
                 };
-                selectionPlayStyle.AddRadioButton(playStyle, selectionTick);
+
                 playStyleTextBlocks.Add(selectionTick.TextBlock);
+                playStyleTickBoxes.Add(selectionTick);
             }
 
             filterTextList.AddRange(playStyleTextBlocks);
