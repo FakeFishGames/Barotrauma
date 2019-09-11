@@ -87,20 +87,31 @@ namespace Barotrauma
                 Abandon = true;
                 return;
             }
-            Vector2 gapDiff = Leak.WorldPosition - character.WorldPosition;
+            Vector2 toLeak = Leak.WorldPosition - character.WorldPosition;
             // TODO: use the collider size/reach?
-            if (!character.AnimController.InWater && Math.Abs(gapDiff.X) < 100 && gapDiff.Y < 0.0f && gapDiff.Y > -150)
+            if (!character.AnimController.InWater && Math.Abs(toLeak.X) < 100 && toLeak.Y < 0.0f && toLeak.Y > -150)
             {
                 HumanAIController.AnimController.Crouching = true;
             }
-            // Use a greater reach, because the distance is calculated from the character to the leak, not from the item to the leak.
-            float reach = repairTool.Range + ((HumanoidAnimController)character.AnimController).ArmLength;
-            bool canOperate = gapDiff.LengthSquared() < reach * reach;
+            float reach = repairTool.Range + ConvertUnits.ToDisplayUnits(((HumanoidAnimController)character.AnimController).ArmLength);
+            bool canOperate = toLeak.LengthSquared() < reach * reach;
             if (canOperate)
             {
                 TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: "", requireEquip: true, operateTarget: Leak), 
                     onAbandon: () => Abandon = true,
-                    onCompleted: () => RemoveSubObjective(ref operateObjective));
+                    onCompleted: () =>
+                    {
+                        RemoveSubObjective(ref operateObjective);
+                        if (!Check())
+                        {
+                            // Failed to operate. Probably too far.
+                            Abandon = true;
+                        }
+                        else
+                        {
+                            RemoveSubObjective(ref operateObjective);
+                        }
+                    });
             }
             else
             {
@@ -108,7 +119,18 @@ namespace Barotrauma
                 {
                     CloseEnough = reach
                 }, 
-                onAbandon: () => Abandon = true,
+                onAbandon: () =>
+                {
+                    // If we are almost there, we can try to operate.
+                    if ((Leak.WorldPosition - character.WorldPosition).LengthSquared() > reach * reach * 2)
+                    {
+                        Abandon = true;
+                    }
+                    else
+                    {
+                        RemoveSubObjective(ref gotoObjective);
+                    }
+                },
                 onCompleted: () => RemoveSubObjective(ref gotoObjective));
             }
         }
