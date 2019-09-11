@@ -193,6 +193,10 @@ namespace Barotrauma
             {
                 character.AIController.SteeringManager.SteeringSeek(currentTarget.SimPosition);
             }
+            else
+            {
+                Wander(deltaTime);
+            }
         }
 
         public void Wander(float deltaTime)
