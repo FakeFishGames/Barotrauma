@@ -152,22 +152,9 @@ namespace Barotrauma
             if (currentPath == null || needsNewPath || findPathTimer < -1.0f)
             {
                 IsPathDirty = true;
-
-                if (findPathTimer > 0.0f) return Vector2.Zero;
-                
+                if (findPathTimer > 0.0f) { return Vector2.Zero; }
                 currentTarget = target;
-                Vector2 pos = host.SimPosition;
-                // TODO: remove this and handle differently?
-                if (character != null && character.Submarine == null)
-                {
-                    var targetHull = Hull.FindHull(FarseerPhysics.ConvertUnits.ToDisplayUnits(target), null, false);
-                    if (targetHull != null && targetHull.Submarine != null)
-                    {
-                        pos -= targetHull.Submarine.SimPosition;
-                    }
-                }
-
-                var newPath = pathFinder.FindPath(pos, target, character.Submarine, "(Character: " + character.Name + ")", startNodeFilter, endNodeFilter);
+                var newPath = pathFinder.FindPath(host.SimPosition, target, character.Submarine, "(Character: " + character.Name + ")", startNodeFilter, endNodeFilter);
                 bool useNewPath = currentPath == null || needsNewPath || currentPath.Finished;
                 if (!useNewPath && currentPath != null && currentPath.CurrentNode != null && newPath.Nodes.Any() && !newPath.Unreachable)
                 {
@@ -180,24 +167,19 @@ namespace Barotrauma
                 {
                     currentPath = newPath;
                 }
-
                 findPathTimer = Rand.Range(1.0f, 1.2f);
-
                 IsPathDirty = false;
                 return DiffToCurrentNode();                
             }
 
             Vector2 diff = DiffToCurrentNode();
-
             var collider = character.AnimController.Collider;
             //if not in water and the waypoint is between the top and bottom of the collider, no need to move vertically
             if (!character.AnimController.InWater && !character.IsClimbing && diff.Y < collider.height / 2 + collider.radius)
             {
                 diff.Y = 0.0f;
             }
-
-            if (diff.LengthSquared() < 0.001f) return -host.Steering;
-
+            if (diff.LengthSquared() < 0.001f) { return -host.Steering; }
             return Vector2.Normalize(diff) * weight;          
         }
 
@@ -439,7 +421,10 @@ namespace Barotrauma
                                 // It's possible that we could reach another buttons.
                                 // If this becomes an issue, we could go through them here and check if any of them are reachable
                                 // (would have to cache a collection of buttons instead of a single reference in the CanAccess filter method above)
-                                //currentPath.Unreachable = true;
+                                if (Submarine.PickBody(character.SimPosition, closestButton.Item.SimPosition, collisionCategory: Physics.CollisionWall | Physics.CollisionLevel) != null)
+                                {
+                                    currentPath.Unreachable = true;
+                                }
                                 return;
                             }
                         }

@@ -185,31 +185,12 @@ namespace Barotrauma
                     OnCompleted();
                     return;
                 }
-                Vector2 currTargetSimPos = Vector2.Zero;
-                currTargetSimPos = Target.SimPosition;
-                // Take the sub position into account in the sim pos
-                if (SteeringManager != PathSteering && character.Submarine == null && Target.Submarine != null)
-                {
-                    currTargetSimPos += Target.Submarine.SimPosition;
-                }
-                else if (character.Submarine != null && Target.Submarine == null)
-                {
-                    currTargetSimPos -= character.Submarine.SimPosition;
-                }
-                else if (character.Submarine != Target.Submarine)
-                {
-                    if (character.Submarine != null && Target.Submarine != null)
-                    {
-                        Vector2 diff = character.Submarine.SimPosition - Target.Submarine.SimPosition;
-                        currTargetSimPos -= diff;
-                    }
-                }
                 if (PathSteering != null)
                 {
                     PathSteering.startNodeFilter = startNodeFilter;
                     PathSteering.endNodeFilter = endNodeFilter;
                 }
-                SteeringManager.SteeringSeek(currTargetSimPos);
+                SteeringManager.SteeringSeek(character.GetRelativeSimPosition(Target));
                 if (SteeringManager != PathSteering)
                 {
                     SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: 5, weight: 1, heading: VectorExtensions.Forward(character.AnimController.Collider.Rotation));
