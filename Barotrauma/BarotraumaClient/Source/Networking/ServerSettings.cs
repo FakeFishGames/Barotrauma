@@ -334,23 +334,29 @@ namespace Barotrauma.Networking
 
             // Play Style Selection
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsPlayStyle"));
-            var selectionFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.3f), serverTab.RectTransform))
+            var playStyleSelection = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.16f), serverTab.RectTransform))
             {
-                Stretch = true,
-                RelativeSpacing = 0.05f
+                AutoHideScrollBar = true,
+                UseGridLayout = true
             };
 
+            List<GUITickBox> playStyleTickBoxes = new List<GUITickBox>();
             GUIRadioButtonGroup selectionPlayStyle = new GUIRadioButtonGroup();
-            for (int i = 0; i < 5; i++)
+            foreach (PlayStyle playStyle in Enum.GetValues(typeof(PlayStyle)))
             {
-                var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.15f, 1.0f), selectionFrame.RectTransform), TextManager.Get("servertag." + ((PlayStyle)i).ToString()), font: GUI.SmallFont);
-                selectionPlayStyle.AddRadioButton((PlayStyle)i, selectionTick);
+                var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.32f, 0.49f), playStyleSelection.Content.RectTransform), TextManager.Get("servertag." + playStyle), font: GUI.SmallFont)
+                {
+                    ToolTip = TextManager.Get("servertagdescription." + playStyle)
+                };
+                selectionPlayStyle.AddRadioButton(playStyle, selectionTick);
+                playStyleTickBoxes.Add(selectionTick);
             }
             GetPropertyData("PlayStyle").AssignGUIComponent(selectionPlayStyle);
+            GUITextBlock.AutoScaleAndNormalize(playStyleTickBoxes.Select(t => t.TextBlock));
 
             // Sub Selection
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsSubSelection"));
-            selectionFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), isHorizontal: true)
+            var selectionFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), isHorizontal: true)
             {
                 Stretch = true,
                 RelativeSpacing = 0.05f
