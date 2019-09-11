@@ -132,7 +132,6 @@ namespace Barotrauma
         //private readonly GUITickBox filterModded;
         private readonly GUITickBox filterVoip;
         private readonly List<GUITickBox> playStyleTickBoxes;
-        private readonly List<GUITextBlock> playStyleTextBlocks;
 
         private string sortedBy;
         
@@ -338,7 +337,6 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), filterHolder.RectTransform), TextManager.Get("ServerSettingsPlayStyle"));
 
             playStyleTickBoxes = new List<GUITickBox>();
-            playStyleTextBlocks = new List<GUITextBlock>();
             GUIRadioButtonGroup selectionPlayStyle = new GUIRadioButtonGroup();
             foreach (PlayStyle playStyle in Enum.GetValues(typeof(PlayStyle)))
             {
@@ -346,12 +344,10 @@ namespace Barotrauma
                 {
                     ToolTip = TextManager.Get("servertag." + playStyle)
                 };
-
-                playStyleTextBlocks.Add(selectionTick.TextBlock);
                 playStyleTickBoxes.Add(selectionTick);
+                filterTextList.Add(selectionTick.TextBlock);
             }
 
-            filterTextList.AddRange(playStyleTextBlocks);
 
             filterContainer.RectTransform.SizeChanged += () =>
             {
@@ -809,10 +805,10 @@ namespace Barotrauma
                     (!filterIncompatible.Selected || !incompatible) &&
                     (!filterFull.Selected || serverInfo.PlayerCount < serverInfo.MaxPlayers) &&
                     (!filterEmpty.Selected || serverInfo.PlayerCount > 0) && 
-                    (!filterKarma.Selected || serverInfo.KarmaEnabled == true || serverInfo.KarmaEnabled != null) &&
-                    ((!filterFriendlyFire.Selected || serverInfo.FriendlyFireEnabled == false) && serverInfo.FriendlyFireEnabled == null) &&
-                    ((!filterTraitor.Selected || serverInfo.TraitorsEnabled == YesNoMaybe.Yes || serverInfo.TraitorsEnabled == YesNoMaybe.Maybe) && serverInfo.TraitorsEnabled != null) &&
-                    ((!filterVoip.Selected || serverInfo.VoipEnabled == true) && serverInfo.VoipEnabled != null) &&
+                    (!filterKarma.Selected || serverInfo.KarmaEnabled == true) &&
+                    (!filterFriendlyFire.Selected || serverInfo.FriendlyFireEnabled == false) &&
+                    (!filterTraitor.Selected || serverInfo.TraitorsEnabled == YesNoMaybe.Yes || serverInfo.TraitorsEnabled == YesNoMaybe.Maybe) &&
+                    (!filterVoip.Selected || serverInfo.VoipEnabled == true) &&
                     ((selectedTab == Tab.Browse) ||
                      (selectedTab == Tab.Recent && recentServers.Any(info => (serverInfo.OwnerID != 0 && info.OwnerID == serverInfo.OwnerID) || (info.IP == serverInfo.IP && info.Port == serverInfo.Port))) ||
                      (selectedTab == Tab.Favorites && favoriteServers.Any(info => (serverInfo.OwnerID != 0 && info.OwnerID == serverInfo.OwnerID) || (info.IP == serverInfo.IP && info.Port == serverInfo.Port))));
