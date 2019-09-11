@@ -1395,14 +1395,7 @@ namespace Barotrauma
         public bool CanSeeCharacter(Character target)
         {
             Limb seeingLimb = GetSeeingLimb();
-            foreach (var targetLimb in target.AnimController.Limbs)
-            {
-                if (CanSeeTarget(targetLimb, seeingLimb))
-                {
-                    return true;
-                }
-            }
-            return false;
+            return target.AnimController.Limbs.Any(l => CanSeeTarget(l, seeingLimb));
         }
 
         private Limb GetSeeingLimb()
