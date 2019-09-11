@@ -77,12 +77,16 @@ namespace Barotrauma
                     () => new AIObjectiveFindDivingGear(character, needsDivingSuit, objectiveManager),
                     onAbandon: () =>
                     {
-                        // Reset the devotion.
                         Priority = 0;
                         searchHullTimer = Math.Min(1, searchHullTimer);
                         RemoveSubObjective(ref divingGearObjective);
                     },
-                    onCompleted: () => RemoveSubObjective(ref divingGearObjective));
+                    onCompleted: () =>
+                    {
+                        Priority = 0;
+                        searchHullTimer = Math.Min(1, searchHullTimer);
+                        RemoveSubObjective(ref divingGearObjective);
+                    });
             }
             else
             {
@@ -116,11 +120,13 @@ namespace Barotrauma
                             },
                             onCompleted: () =>
                             {
-                                RemoveSubObjective(ref goToObjective);
-                                if (currenthullSafety > HumanAIController.HULL_SAFETY_THRESHOLD)
+                                if (currenthullSafety > HumanAIController.HULL_SAFETY_THRESHOLD || 
+                                    HumanAIController.NeedsDivingGear(character, currentHull, out bool needsSuit) && (needsSuit ? HumanAIController.HasDivingSuit(character) : HumanAIController.HasDivingMask(character)))
                                 {
                                     Priority = 0;
+                                    searchHullTimer = Math.Min(1, searchHullTimer);
                                 }
+                                RemoveSubObjective(ref goToObjective);
                             },
                             onAbandon: () =>
                             {

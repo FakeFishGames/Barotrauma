@@ -25,6 +25,8 @@ namespace Barotrauma
 
         private readonly HashSet<Item> containedItems = new HashSet<Item>();
 
+        public bool AllowToFindDivingGear { get; set; }
+
         public AIObjectiveContainItem(Character character, string itemIdentifier, ItemContainer container, AIObjectiveManager objectiveManager, float priorityModifier = 1)
             : this(character, new string[] { itemIdentifier }, container, objectiveManager, priorityModifier) { }
 
@@ -77,7 +79,7 @@ namespace Barotrauma
                 {
                     if (!character.CanInteractWith(container.Item, out _, checkLinked: false))
                     {
-                        TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(container.Item, character, objectiveManager), 
+                        TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(container.Item, character, objectiveManager, getDivingGearIfNeeded: AllowToFindDivingGear), 
                             onAbandon: () => Abandon = true,
                             onCompleted: () => RemoveSubObjective(ref goToObjective));
                         return;
@@ -93,7 +95,8 @@ namespace Barotrauma
                     {
                         GetItemPriority = GetItemPriority,
                         ignoredContainerIdentifiers = ignoredContainerIdentifiers,
-                        ignoredItems = containedItems
+                        ignoredItems = containedItems,
+                        AllowToFindDivingGear = this.AllowToFindDivingGear
                     }, onAbandon: () =>
                     {
                         Abandon = true;

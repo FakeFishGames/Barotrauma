@@ -26,6 +26,8 @@ namespace Barotrauma
         private AIObjectiveGoTo goToObjective;
         private float currItemPriority;
 
+        public bool AllowToFindDivingGear { get; set; }
+
         public override float GetPriority()
         {
             if (objectiveManager.CurrentOrder == this)
@@ -155,10 +157,7 @@ namespace Barotrauma
                 TryAddSubObjective(ref goToObjective,
                     constructor: () =>
                     {
-                        //check if we're already looking for a diving gear
-                        bool gettingDivingGear = (targetItem != null && targetItem.Prefab.Identifier == "divingsuit" || targetItem.HasTag("diving")) ||
-                                                (itemIdentifiers != null && (itemIdentifiers.Contains("diving") || itemIdentifiers.Contains("divingsuit")));
-                        return new AIObjectiveGoTo(moveToTarget, character, objectiveManager, repeat: false, getDivingGearIfNeeded: !gettingDivingGear);
+                        return new AIObjectiveGoTo(moveToTarget, character, objectiveManager, repeat: false, getDivingGearIfNeeded: AllowToFindDivingGear);
                     },
                     onAbandon: () =>
                     {

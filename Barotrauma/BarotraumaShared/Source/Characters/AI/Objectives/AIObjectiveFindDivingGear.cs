@@ -42,7 +42,7 @@ namespace Barotrauma
                     {
                         character.Speak(TextManager.Get("DialogGetDivingGear"), null, 0.0f, "getdivinggear", 30.0f);
                     }
-                    return new AIObjectiveGetItem(character, gearTag, objectiveManager, equip: true);
+                    return new AIObjectiveGetItem(character, gearTag, objectiveManager, equip: true) { AllowToFindDivingGear = false };
                 }, 
                 onAbandon: () => Abandon = true,
                 onCompleted: () => RemoveSubObjective(ref getDivingGear));
@@ -88,7 +88,7 @@ namespace Barotrauma
                         TryAddSubObjective(ref getOxygen, () =>
                         {
                             character.Speak(TextManager.Get("DialogGetOxygenTank"), null, 0, "getoxygentank", 30.0f);
-                            return new AIObjectiveContainItem(character, new string[] { "oxygentank", "oxygensource" }, item.GetComponent<ItemContainer>(), objectiveManager);
+                            return new AIObjectiveContainItem(character, new string[] { "oxygentank", "oxygensource" }, item.GetComponent<ItemContainer>(), objectiveManager) { AllowToFindDivingGear = false };
                         }, 
                         onAbandon: () => Abandon = true,
                         onCompleted: () => RemoveSubObjective(ref getOxygen));
