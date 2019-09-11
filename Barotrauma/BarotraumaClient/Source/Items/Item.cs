@@ -26,6 +26,9 @@ namespace Barotrauma
         public float LastImpactSoundTime;
         public const float ImpactSoundInterval = 0.2f;
 
+        private bool editingHUDRefreshPending;
+        private float editingHUDRefreshTimer;
+
         class SpriteState
         {
             public float RotationState;
@@ -439,21 +442,22 @@ namespace Barotrauma
 
         public override void UpdateEditing(Camera cam)
         {
-            if (editingHUD == null || editingHUD.UserData as Item != this)
+            if (editingHUD == null || editingHUD.UserData as Item != this || 
+                (editingHUDRefreshPending && editingHUDRefreshTimer <= 0.0f))
             {
                 editingHUD = CreateEditingHUD(Screen.Selected != GameMain.SubEditorScreen);
             }
 
-            if (Screen.Selected != GameMain.SubEditorScreen) return;
+            if (Screen.Selected != GameMain.SubEditorScreen) { return; }
 
-            if (Character.Controlled == null) activeHUDs.Clear();
+            if (Character.Controlled == null) { activeHUDs.Clear(); }
 
-            if (!Linkable) return;
+            if (!Linkable) { return; }
 
-            if (!PlayerInput.KeyDown(Keys.Space)) return;
+            if (!PlayerInput.KeyDown(Keys.Space)) { return; }
             bool lClick = PlayerInput.LeftButtonClicked();
             bool rClick = PlayerInput.RightButtonClicked();
-            if (!lClick && !rClick) return;
+            if (!lClick && !rClick) { return; }
 
             Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
             var otherEntity = mapEntityList.FirstOrDefault(e => e != this && e.IsHighlighted && e.IsMouseOn(position));
@@ -474,6 +478,8 @@ namespace Barotrauma
         
         public GUIComponent CreateEditingHUD(bool inGame = false)
         {
+            editingHUDRefreshPending = false;
+
             int heightScaled = (int)(20 * GUI.Scale);
             editingHUD = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.25f), GUI.Canvas, Anchor.CenterRight) { MinSize = new Point(400, 0) }) { UserData = this };
             GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.95f, 0.8f), editingHUD.RectTransform, Anchor.Center), style: null)
@@ -673,6 +679,8 @@ namespace Barotrauma
                 UpdateEditing(cam);
                 editingHUDCreated = editingHUD != null && editingHUD != prevEditingHUD;
             }
+
+            editingHUDRefreshTimer -= deltaTime;
 
             List<ItemComponent> prevActiveHUDs = new List<ItemComponent>(activeHUDs);
             List<ItemComponent> activeComponents = new List<ItemComponent>(components);
@@ -918,6 +926,7 @@ namespace Barotrauma
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
                     ReadPropertyChange(msg, false);
+                    editingHUDRefreshPending = true;
                     break;
                 case NetEntityEvent.Type.Invalid:
                     break;
@@ -956,6 +965,7 @@ namespace Barotrauma
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
                     WritePropertyChange(msg, extraData, true);
+                    editingHUDRefreshTimer = 1.0f;
                     break;
                 case NetEntityEvent.Type.Combine:
                     UInt16 combineTargetID = (UInt16)extraData[1];
