@@ -71,8 +71,9 @@ namespace Barotrauma
             foreach (var objective in Objectives)
             {
                 var target = objective.Key;
-                if (!objective.Value.CanBeCompleted && !ignoreList.Contains(target))
+                if (!objective.Value.CanBeCompleted)
                 {
+                    // TODO: leaks that cannot be accessed from inside cause FixLeak objective to fail, but for some reason it's not ignored. Make sure that it is.
                     ignoreList.Add(target);
                     targetUpdateTimer = 0;
                 }

@@ -11,6 +11,8 @@ namespace Barotrauma
     {
         public override string DebugTag => "pump water";
         public override bool KeepDivingGearOn => true;
+        public override bool IgnoreUnsafeHulls => true;
+
         private IEnumerable<Pump> pumpList;
 
         public AIObjectivePumpWater(Character character, AIObjectiveManager objectiveManager, string option, float priorityModifier = 1)
