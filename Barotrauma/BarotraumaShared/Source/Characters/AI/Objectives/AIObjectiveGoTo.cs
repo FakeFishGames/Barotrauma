@@ -118,7 +118,7 @@ namespace Barotrauma
             }
             else if (waitUntilPathUnreachable < 0)
             {
-                if (SteeringManager == PathSteering && PathSteering.CurrentPath != null && PathSteering.CurrentPath.Unreachable)
+                if (SteeringManager == PathSteering && PathSteering.CurrentPath != null && PathSteering.CurrentPath.Unreachable && !PathSteering.IsPathDirty)
                 {
                     if (repeat)
                     {
