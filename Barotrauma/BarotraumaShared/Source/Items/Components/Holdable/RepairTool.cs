@@ -386,27 +386,48 @@ namespace Barotrauma.Items.Components
         private float sinTime;
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
-            if (!(objective.OperateTarget is Gap leak)) return true;
-
-            Vector2 fromItemToLeak = leak.WorldPosition - item.WorldPosition;
-            float dist = fromItemToLeak.Length();
+            if (!(objective.OperateTarget is Gap leak)) { return true; }
+            if (leak.Submarine == null) { return true; }
+            Vector2 fromCharacterToLeak = leak.WorldPosition - character.WorldPosition;
+            float dist = fromCharacterToLeak.Length();
+            float reach = Range + ConvertUnits.ToDisplayUnits(((HumanoidAnimController)character.AnimController).ArmLength);
 
             //too far away -> consider this done and hope the AI is smart enough to move closer
-            if (dist > Range * 3.0f) { return true; }
-
-            // TODO: use the collider size?
-            if (!character.AnimController.InWater && character.AnimController is HumanoidAnimController &&
-                Math.Abs(fromItemToLeak.X) < 100.0f && fromItemToLeak.Y < 0.0f && fromItemToLeak.Y > -150.0f)
-            {
-                ((HumanoidAnimController)character.AnimController).Crouching = true;
-            }
+            if (dist > reach * 3) { return true; }
 
             //steer closer if almost in range
-            if (dist > Range)
+            if (dist > reach)
             {
-                Vector2 standPos = new Vector2(Math.Sign(-fromItemToLeak.X), Math.Sign(-fromItemToLeak.Y)) / 2;
-                if (!character.AnimController.InWater)
+                if (character.AnimController.InWater)
                 {
+                    if (character.AIController.SteeringManager is IndoorsSteeringManager indoorSteering)
+                    {
+                        // Swimming inside the sub
+                        if (indoorSteering.CurrentPath != null && !indoorSteering.IsPathDirty && indoorSteering.CurrentPath.Unreachable)
+                        {
+                            Vector2 dir = Vector2.Normalize(fromCharacterToLeak);
+                            character.AIController.SteeringManager.SteeringManual(deltaTime, dir / 2);
+                        }
+                        else
+                        {
+                            character.AIController.SteeringManager.SteeringSeek(character.GetRelativeSimPosition(leak));
+                        }
+                    }
+                    else
+                    {
+                        // Swimming outside the sub
+                        character.AIController.SteeringManager.SteeringSeek(character.GetRelativeSimPosition(leak));
+                    }
+                }
+                else
+                {
+                    // TODO: use the collider size?
+                    if (!character.AnimController.InWater && character.AnimController is HumanoidAnimController &&
+                        Math.Abs(fromCharacterToLeak.X) < 100.0f && fromCharacterToLeak.Y < 0.0f && fromCharacterToLeak.Y > -150.0f)
+                    {
+                        ((HumanoidAnimController)character.AnimController).Crouching = true;
+                    }
+                    Vector2 standPos = new Vector2(Math.Sign(-fromCharacterToLeak.X), Math.Sign(-fromCharacterToLeak.Y)) / 2;
                     if (leak.IsHorizontal)
                     {
                         standPos.X *= 2;
@@ -416,32 +437,17 @@ namespace Barotrauma.Items.Components
                     {
                         standPos.X = 0;
                     }
-                }
-                if (character.AIController.SteeringManager is IndoorsSteeringManager indoorSteering)
-                {
-                    if (indoorSteering.CurrentPath != null && !indoorSteering.IsPathDirty && indoorSteering.CurrentPath.Unreachable)
-                    {
-                        Vector2 dir = Vector2.Normalize(standPos - character.WorldPosition);
-                        character.AIController.SteeringManager.SteeringManual(deltaTime, dir / 2);
-                    }
-                    else
-                    {
-                        character.AIController.SteeringManager.SteeringSeek(standPos);
-                    }
-                }
-                else
-                {
                     character.AIController.SteeringManager.SteeringSeek(standPos);
                 }
             }
             else
             {
-                if (dist < Range / 2)
+                if (dist < reach / 2)
                 {
                     // Too close -> steer away
                     character.AIController.SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(character.SimPosition - leak.SimPosition) / 2);
                 }
-                else if (dist <= Range)
+                else if (dist <= reach)
                 {
                     // In range
                     character.AIController.SteeringManager.Reset();
@@ -451,7 +457,7 @@ namespace Barotrauma.Items.Components
                     return false;
                 }
             }
-            sinTime += deltaTime;
+            sinTime += deltaTime / 2;
             character.CursorPosition = leak.Position + VectorExtensions.Forward(Item.body.TransformedRotation + (float)Math.Sin(sinTime), dist);
             if (item.RequireAimToUse)
             {
@@ -470,6 +476,7 @@ namespace Barotrauma.Items.Components
                 }
             }
             // Press the trigger only when the tool is approximately facing the target.
+            Vector2 fromItemToLeak = leak.WorldPosition - item.WorldPosition;
             var angle = VectorExtensions.Angle(VectorExtensions.Forward(item.body.TransformedRotation), fromItemToLeak);
             if (angle < MathHelper.PiOver4)
             {
