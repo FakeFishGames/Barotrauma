@@ -370,13 +370,13 @@ namespace Barotrauma
                         door = currentWaypoint.ConnectedGap.ConnectedDoor;
                         if (door.LinkedGap.IsHorizontal)
                         {
-                            int currentDir = Math.Sign(nextWaypoint.WorldPosition.X - door.Item.WorldPosition.X);
-                            shouldBeOpen = (door.Item.WorldPosition.X - character.WorldPosition.X) * currentDir > -50.0f;
+                            int dir = Math.Sign(nextWaypoint.WorldPosition.X - door.Item.WorldPosition.X);
+                            shouldBeOpen = (door.Item.WorldPosition.X - character.WorldPosition.X) * dir > -50.0f;
                         }
                         else
                         {
-                            int currentDir = Math.Sign(nextWaypoint.WorldPosition.Y - door.Item.WorldPosition.Y);
-                            shouldBeOpen = (door.Item.WorldPosition.Y - character.WorldPosition.Y) * currentDir > -80.0f;
+                            int dir = Math.Sign(nextWaypoint.WorldPosition.Y - door.Item.WorldPosition.Y);
+                            shouldBeOpen = (door.Item.WorldPosition.Y - character.WorldPosition.Y) * dir > -80.0f;
                         }
                     }
                 }
@@ -391,7 +391,18 @@ namespace Barotrauma
                     bool canAccess = CanAccessDoor(door, button =>
                     {
                         if (currentWaypoint == null) { return true; }
-                        float distance = Vector2.DistanceSquared(button.Item.WorldPosition, door.Item.WorldPosition);
+                        // Check that the button is on the right side of the door.
+                        if (door.LinkedGap.IsHorizontal)
+                        {
+                            int dir = Math.Sign(nextWaypoint.WorldPosition.X - door.Item.WorldPosition.X);
+                            if (button.Item.WorldPosition.X * dir > door.Item.WorldPosition.X * dir) { return false; }
+                        }
+                        else
+                        {
+                            int dir = Math.Sign(nextWaypoint.WorldPosition.Y - door.Item.WorldPosition.Y);
+                            if (button.Item.WorldPosition.Y * dir > door.Item.WorldPosition.Y * dir) { return false; }
+                        }
+                        float distance = Vector2.DistanceSquared(button.Item.WorldPosition, character.WorldPosition);
                         if (closestButton == null || distance < closestDist)
                         {
                             closestButton = button;
@@ -417,12 +428,19 @@ namespace Barotrauma
                             }
                             else
                             {
-                                // Can't reach the button closest to the door.
+                                // Can't reach the button closest to the character.
                                 // It's possible that we could reach another buttons.
                                 // If this becomes an issue, we could go through them here and check if any of them are reachable
                                 // (would have to cache a collection of buttons instead of a single reference in the CanAccess filter method above)
-                                if (Submarine.PickBody(character.SimPosition, closestButton.Item.SimPosition, collisionCategory: Physics.CollisionWall | Physics.CollisionLevel) != null)
+                                var body = Submarine.PickBody(character.SimPosition, character.GetRelativeSimPosition(closestButton.Item), collisionCategory: Physics.CollisionWall | Physics.CollisionLevel);
+                                if (body != null)
                                 {
+                                    if (body.UserData is Item item)
+                                    {
+                                        var d = item.GetComponent<Door>();
+                                        if (d == null || d.IsOpen) { return; }
+                                    }
+                                    // The button is on the wrong side of the door or a wall
                                     currentPath.Unreachable = true;
                                 }
                                 return;
