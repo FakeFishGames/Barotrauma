@@ -3521,6 +3521,9 @@
   <roomname.droneballast>Drone Ballast</roomname.droneballast>
   
 
+  <subeditorlights>Lights</subeditorlights>
+  <subeditorshadowcastinglights>Shadow-casting lights</subeditorshadowcastinglights>
+  
   <!-- Changed values as of 13th of August -->
   <traitorgoaldestroyitems>Dispose of at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>
   <karma.kickbanthreshold>Kick/Ban threshold</karma.kickbanthreshold>

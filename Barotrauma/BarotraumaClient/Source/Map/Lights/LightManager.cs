@@ -72,6 +72,11 @@ namespace Barotrauma.Lights
 
         private float ambientLightUpdateTimer;
 
+        public IEnumerable<LightSource> Lights
+        {
+            get { return lights; }
+        }
+
         public LightManager(GraphicsDevice graphics, ContentManager content)
         {
             lights = new List<LightSource>();
