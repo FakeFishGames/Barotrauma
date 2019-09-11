@@ -126,16 +126,12 @@ namespace Barotrauma
         private readonly GUITickBox filterIncompatible;
         private readonly GUITickBox filterFull;
         private readonly GUITickBox filterEmpty;
-        private readonly GUITickBox filterPlayStyleSerious;
-        private readonly GUITickBox filterPlayStyleRoleplay;
-        private readonly GUITickBox filterPlayStyleCasual;
-        private readonly GUITickBox filterPlayStyleSomethingDifferent;
-        private readonly GUITickBox filterPlayStyleRampage;
         private readonly GUITickBox filterFriendlyFire;
         private readonly GUITickBox filterKarma;
         private readonly GUITickBox filterTraitor;
         //private readonly GUITickBox filterModded;
         private readonly GUITickBox filterVoip;
+        List<GUITextBlock> playStyleTextBlocks;
 
         private string sortedBy;
         
@@ -298,30 +294,32 @@ namespace Barotrauma
             filterTextList.Add(filterEmpty.TextBlock);
 
             // Filter Tags
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), filterHolder.RectTransform), TextManager.Get("servertags"));
+
             filterKarma = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("servertag.karma.true"))
             {
-                ToolTip = TextManager.Get("servertagdescription.karma.true"),
+                ToolTip = TextManager.Get("servertag.karma.true"),
                 OnSelected = (tickBox) => { FilterServers(); return true; }
             };
             filterTextList.Add(filterKarma.TextBlock);
 
             filterTraitor = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("servertag.traitors.true"))
             {
-                ToolTip = TextManager.Get("servertagdescription.traitors.true"),
+                ToolTip = TextManager.Get("servertag.traitors.true"),
                 OnSelected = (tickBox) => { FilterServers(); return true; }
             };
             filterTextList.Add(filterTraitor.TextBlock);
 
-            filterFriendlyFire = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("servertag.friendlyfire.true"))
+            filterFriendlyFire = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("servertag.friendlyfire.false"))
             {
-                ToolTip = TextManager.Get("servertagdescription.friendlyfire.true"),
+                ToolTip = TextManager.Get("servertag.friendlyfire.false"),
                 OnSelected = (tickBox) => { FilterServers(); return true; }
             };
             filterTextList.Add(filterFriendlyFire.TextBlock);
 
             filterVoip = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("servertag.voip.true"))
             {
-                ToolTip = TextManager.Get("servertagdescription.voip.true"),
+                ToolTip = TextManager.Get("servertag.voip.true"),
                 OnSelected = (tickBox) => { FilterServers(); return true; }
             };
             filterTextList.Add(filterVoip.TextBlock);
@@ -334,6 +332,23 @@ namespace Barotrauma
             };
             filterTextList.Add(filterModded.TextBlock);
             */
+
+            // Play Style Selection
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), filterHolder.RectTransform), TextManager.Get("ServerSettingsPlayStyle"));
+
+            playStyleTextBlocks = new List<GUITextBlock>();
+            GUIRadioButtonGroup selectionPlayStyle = new GUIRadioButtonGroup();
+            foreach (PlayStyle playStyle in Enum.GetValues(typeof(PlayStyle)))
+            {
+                var selectionTick = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("servertag." + playStyle))
+                {
+                    ToolTip = TextManager.Get("servertag." + playStyle)
+                };
+                selectionPlayStyle.AddRadioButton(playStyle, selectionTick);
+                playStyleTextBlocks.Add(selectionTick.TextBlock);
+            }
+
+            filterTextList.AddRange(playStyleTextBlocks);
 
             filterContainer.RectTransform.SizeChanged += () =>
             {
@@ -791,10 +806,10 @@ namespace Barotrauma
                     (!filterIncompatible.Selected || !incompatible) &&
                     (!filterFull.Selected || serverInfo.PlayerCount < serverInfo.MaxPlayers) &&
                     (!filterEmpty.Selected || serverInfo.PlayerCount > 0) && 
-                    (!filterKarma.Selected || serverInfo.KarmaEnabled == true) &&
-                    (!filterFriendlyFire.Selected || serverInfo.FriendlyFireEnabled == true) &&
-                    (!filterTraitor.Selected || serverInfo.TraitorsEnabled == YesNoMaybe.Yes) &&
-                    (!filterVoip.Selected || serverInfo.VoipEnabled == true) &&
+                    (!filterKarma.Selected || serverInfo.KarmaEnabled == true || serverInfo.KarmaEnabled != null) &&
+                    ((!filterFriendlyFire.Selected || serverInfo.FriendlyFireEnabled == false) && serverInfo.FriendlyFireEnabled == null) &&
+                    ((!filterTraitor.Selected || serverInfo.TraitorsEnabled == YesNoMaybe.Yes || serverInfo.TraitorsEnabled == YesNoMaybe.Maybe) && serverInfo.TraitorsEnabled != null) &&
+                    ((!filterVoip.Selected || serverInfo.VoipEnabled == true) && serverInfo.VoipEnabled != null) &&
                     ((selectedTab == Tab.Browse) ||
                      (selectedTab == Tab.Recent && recentServers.Any(info => info.OwnerID == serverInfo.OwnerID || (info.IP == serverInfo.IP && info.Port == serverInfo.Port))) ||
                      (selectedTab == Tab.Favorites && favoriteServers.Any(info => info.OwnerID == serverInfo.OwnerID || (info.IP == serverInfo.IP && info.Port == serverInfo.Port))));
