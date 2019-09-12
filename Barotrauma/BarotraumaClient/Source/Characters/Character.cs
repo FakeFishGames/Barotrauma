@@ -577,6 +577,7 @@ namespace Barotrauma
                 }
             }
 
+            CharacterHealth.UpdateClientSpecific(deltaTime);
             if (controlled == this)
             {
                 CharacterHealth.UpdateHUD(deltaTime);
@@ -612,7 +613,7 @@ namespace Barotrauma
             CharacterHUD.Draw(spriteBatch, this, cam);
             if (drawHealth) CharacterHealth.DrawHUD(spriteBatch);
         }
-
+        
         public virtual void DrawFront(SpriteBatch spriteBatch, Camera cam)
         {
             if (!Enabled) return;
@@ -713,12 +714,14 @@ namespace Barotrauma
 
             if (IsDead) return;
             
-            if (Vitality < MaxVitality * 0.98f && hudInfoVisible)
+            if (CharacterHealth.DisplayedVitality < MaxVitality * 0.98f && hudInfoVisible)
             {
+                hudInfoAlpha = Math.Max(hudInfoAlpha, Math.Min(CharacterHealth.DamageOverlayTimer, 1.0f));
+
                 Vector2 healthBarPos = new Vector2(pos.X - 50, -pos.Y);
                 GUI.DrawProgressBar(spriteBatch, healthBarPos, new Vector2(100.0f, 15.0f),
-                    Vitality / MaxVitality, 
-                    Color.Lerp(Color.Red, Color.Green, Vitality / MaxVitality) * 0.8f * hudInfoAlpha,
+                    CharacterHealth.DisplayedVitality / MaxVitality, 
+                    Color.Lerp(Color.Red, Color.Green, CharacterHealth.DisplayedVitality / MaxVitality) * 0.8f * hudInfoAlpha,
                     new Color(0.5f, 0.57f, 0.6f, 1.0f) * hudInfoAlpha);
             }
         }
