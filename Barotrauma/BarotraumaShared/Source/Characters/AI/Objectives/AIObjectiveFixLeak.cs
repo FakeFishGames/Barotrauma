@@ -45,7 +45,7 @@ namespace Barotrauma
             if (weldingTool == null)
             {
                 TryAddSubObjective(ref getWeldingTool, () => new AIObjectiveGetItem(character, "weldingtool", objectiveManager, true), 
-                    onAbandon: () => RemoveSubObjective(ref getWeldingTool),
+                    onAbandon: () => Abandon = true,
                     onCompleted: () => RemoveSubObjective(ref getWeldingTool));
                 return;
             }
