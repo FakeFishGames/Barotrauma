@@ -60,7 +60,7 @@ namespace Barotrauma
         }
 
         public GUIMessageBox(string headerText, string text, string[] buttons, Vector2? relativeSize = null, Point? minSize = null, Alignment textAlignment = Alignment.TopLeft, Type type = Type.Default, string tag = "", Sprite icon = null)
-            : base(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: "GUIMessageBox." + type)
+            : base(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: GUI.Style.GetComponentStyle("GUIMessageBox." + type) != null ? "GUIMessageBox." + type : "GUIMessageBox")
         {
             int width = (int)(DefaultWidth * (type == Type.Default ? 1.0f : 1.5f)), height = 0;
             if (relativeSize.HasValue)
@@ -153,7 +153,8 @@ namespace Barotrauma
                 var buttonContainer = new GUIFrame(new RectTransform(new Vector2(0.15f, 1.0f), horizontalLayoutGroup.RectTransform), style: null);
                 Buttons = new List<GUIButton>(1)
                 {
-                    new GUIButton(new RectTransform(new Vector2(0.5f, 0.5f), buttonContainer.RectTransform, Anchor.Center), style: "GUIButtonSolidHorizontalArrow")
+                    new GUIButton(new RectTransform(new Vector2(0.5f, 0.5f), buttonContainer.RectTransform, Anchor.Center), 
+                        style: GUI.Style.GetComponentStyle("GUIButtonSolidHorizontalArrow") != null ? "GUIButtonSolidHorizontalArrow" : "GUIButtonHorizontalArrow")
                     {
                         OnClicked = Close
                     }
