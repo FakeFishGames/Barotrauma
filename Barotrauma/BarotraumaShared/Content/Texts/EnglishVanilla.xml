@@ -3526,6 +3526,18 @@
 
   <contentpackagemismatchwarninggeneric>The submarine may not be compatible with the currently selected content packages. Are you sure you want to choose the submarine?</contentpackagemismatchwarninggeneric>
 
+  <label.activatedischargecoils>Discharge Coils</label.activatedischargecoils>
+  <label.lights1>Lights 1</label.lights1>
+  <label.lights2>Lights 2</label.lights2>
+  <label.lights3>Lights 3</label.lights3>
+  <label.lights4>Lights 4</label.lights4>
+  <label.lights5>Lights 5</label.lights5>
+  <label.pumps1>Pumps 1</label.pumps1>
+  <label.pumps2>Pumps 2</label.pumps2>
+  <label.dronecharge>Drone Charge</label.dronecharge>
+  <label.meltdown>Meltdown</label.meltdown>
+
+
   <!-- Changed values as of 13th of August -->
   <traitorgoaldestroyitems>Dispose of at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>
   <karma.kickbanthreshold>Kick/Ban threshold</karma.kickbanthreshold>
