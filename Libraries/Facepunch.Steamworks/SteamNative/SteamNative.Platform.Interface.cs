@@ -349,7 +349,7 @@ namespace SteamNative
 			int /*int*/ ISteamMatchmaking_GetNumLobbyMembers( ulong steamIDLobby );
 			CSteamID /*(class CSteamID)*/ ISteamMatchmaking_GetLobbyMemberByIndex( ulong steamIDLobby, int /*int*/ iMember );
 			IntPtr ISteamMatchmaking_GetLobbyData( ulong steamIDLobby, string /*const char **/ pchKey );
-			bool /*bool*/ ISteamMatchmaking_SetLobbyData( ulong steamIDLobby, string /*const char **/ pchKey, string /*const char **/ pchValue );
+			bool /*bool*/ ISteamMatchmaking_SetLobbyData( ulong steamIDLobby, IntPtr /*const char **/ pchKey, IntPtr /*const char **/ pchValue );
 			int /*int*/ ISteamMatchmaking_GetLobbyDataCount( ulong steamIDLobby );
 			bool /*bool*/ ISteamMatchmaking_GetLobbyDataByIndex( ulong steamIDLobby, int /*int*/ iLobbyData, System.Text.StringBuilder /*char **/ pchKey, int /*int*/ cchKeyBufferSize, System.Text.StringBuilder /*char **/ pchValue, int /*int*/ cchValueBufferSize );
 			bool /*bool*/ ISteamMatchmaking_DeleteLobbyData( ulong steamIDLobby, string /*const char **/ pchKey );
