@@ -31,7 +31,11 @@ namespace Barotrauma
             if (Character.CharacterList.Any(c => c.CurrentHull == targetHull && !HumanAIController.IsFriendly(c))) { return 0; }
             // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
             float dist = Math.Abs(character.WorldPosition.X - targetHull.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - targetHull.WorldPosition.Y) * 2.0f;
-            float distanceFactor = MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 10000, dist));
+            float distanceFactor = MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 5000, dist));
+            if (targetHull == character.CurrentHull)
+            {
+                distanceFactor = 1;
+            }
             float severity = AIObjectiveExtinguishFires.GetFireSeverity(targetHull);
             float severityFactor = MathHelper.Lerp(0, 1, severity / 100);
             float devotion = Math.Min(Priority, 10) / 100;

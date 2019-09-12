@@ -33,7 +33,11 @@ namespace Barotrauma
             if (Item.Repairables.Any(r => r.CurrentFixer != null && r.CurrentFixer != character)) { return 0; }
             // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
             float dist = Math.Abs(character.WorldPosition.X - Item.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - Item.WorldPosition.Y) * 2.0f;
-            float distanceFactor = MathHelper.Lerp(1, 0.5f, MathUtils.InverseLerp(0, 10000, dist));
+            float distanceFactor = MathHelper.Lerp(1, 0.25f, MathUtils.InverseLerp(0, 5000, dist));
+            if (Item.CurrentHull == character.CurrentHull)
+            {
+                distanceFactor = 1;
+            }
             float damagePriority = MathHelper.Lerp(1, 0, Item.Condition / Item.MaxCondition);
             float successFactor = MathHelper.Lerp(0, 1, Item.Repairables.Average(r => r.DegreeOfSuccess(character)));
             float isSelected = IsRepairing ? 50 : 0;
