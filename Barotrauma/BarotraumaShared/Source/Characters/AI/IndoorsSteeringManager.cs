@@ -163,7 +163,7 @@ namespace Barotrauma
                     // It's possible that the current path was calculated from a start point that is no longer valid.
                     // Therefore, let's accept also paths with a greater cost than the current, if the current node is much farther than the new start node.
                     useNewPath = newPath.Cost < currentPath.Cost ||
-                        Vector2.DistanceSquared(character.WorldPosition, currentPath.CurrentNode.WorldPosition) > Math.Pow(Vector2.Distance(character.WorldPosition, newPath.Nodes.First().WorldPosition) * 2, 2);
+                        Vector2.DistanceSquared(character.WorldPosition, currentPath.CurrentNode.WorldPosition) > Math.Pow(Vector2.Distance(character.WorldPosition, newPath.Nodes.First().WorldPosition) * 3, 2);
                 }
                 if (useNewPath)
                 {
