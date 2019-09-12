@@ -21,7 +21,7 @@ namespace Barotrauma
         public string Identifier { get; private set; }
 
         [Serialize(1.0f, true, description: "The probability for the affliction to be applied."), Editable(minValue: 0f, maxValue: 1f)]
-        public float Probability { get; private set; }
+        public float Probability { get; private set; } = 1.0f;
 
         public float DamagePerSecond;
         public float DamagePerSecondTimer;
