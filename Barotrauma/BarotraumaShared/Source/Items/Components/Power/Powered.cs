@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Xml.Linq;
 using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 #if CLIENT
 using Barotrauma.Sounds;
 #endif
@@ -9,12 +10,14 @@ namespace Barotrauma.Items.Components
 {
     partial class Powered : ItemComponent
     {
+        private static List<Powered> poweredList = new List<Powered>();
+
         //the amount of power CURRENTLY consumed by the item
         //negative values mean that the item is providing power to connected items
         protected float currPowerConsumption;
 
         //current voltage of the item (load / power)
-        protected float voltage;
+        private float voltage;
 
         //the minimum voltage required for the item to work
         protected float minVoltage;
@@ -76,6 +79,7 @@ namespace Barotrauma.Items.Components
         public Powered(Item item, XElement element)
             : base(item, element)
         {
+            poweredList.Add(this);
             InitProjectSpecific(element);
         }
 
@@ -83,8 +87,10 @@ namespace Barotrauma.Items.Components
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1.0f)
         {
-            if (currPowerConsumption == 0.0f) voltage = 0.0f;
-            if (connection.IsPower) voltage = Math.Max(0.0f, power);                
+            if (updatingPower) { return; }
+
+            if (currPowerConsumption == 0.0f) { voltage = 0.0f; }
+            if (connection.IsPower){ voltage = Math.Max(0.0f, power); }              
         }
 
         protected void UpdateOnActiveEffects(float deltaTime)
@@ -125,10 +131,67 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
             UpdateOnActiveEffects(deltaTime);
-
-            voltage = 0.0f;
         }
 
+        public static void UpdatePower()
+        {
+            //reset power first
+            foreach (Powered powered in poweredList)
+            {
+                powered.updatingPower = true;
+                powered.voltage = 0.0f;
+                if (powered is PowerTransfer pt)
+                {
+                    powered.CurrPowerConsumption = 0.0f;
+                    pt.PowerLoad = 0.0f;
+                }
+            }
 
+            foreach (Powered powered in poweredList)
+            {
+                if (powered is PowerTransfer pt) { continue; }
+                if (powered.currPowerConsumption > 0.0f)
+                {
+                    //consuming power
+                    powered.item.SendSignal(0, "", "power_in", null, -powered.currPowerConsumption, source: powered.Item);
+                    powered.item.SendSignal(0, "", "power", null, -powered.currPowerConsumption, source: powered.Item);
+                }
+                else if (powered.currPowerConsumption < 0.0f)
+                {
+                    //providing power
+                    powered.item.SendSignal(0, "", "power_out", null, -powered.currPowerConsumption, source: powered.Item);
+                    powered.item.SendSignal(0, "", "power", null, -powered.currPowerConsumption, source: powered.Item);
+                }
+                if (powered is PowerContainer pc)
+                {
+                    powered.item.SendSignal(0, "", "power_out", null, pc.CurrPowerOutput, source: powered.Item);
+                    powered.item.SendSignal(0, "", "power", null, pc.CurrPowerOutput, source: powered.Item);
+                }
+            }
+            foreach (Powered powered in poweredList)
+            {
+                powered.updatingPower = false;                
+            }
+            foreach (Powered powered in poweredList)
+            {
+                if (powered is PowerTransfer pt)
+                {
+                    float voltageOut = -pt.CurrPowerConsumption / Math.Max(pt.PowerLoad, 1.0f);                    
+                    powered.item.SendSignal(0, "", "power_out", null, voltageOut, source: powered.Item);
+                    powered.item.SendSignal(0, "", "power", null, voltageOut, source: powered.Item);
+                }
+                else if (powered is PowerContainer pc)
+                {
+                    //powered.item.SendSignal(0, "", "power_out", null, pc., source: powered.Item);
+                }
+            }
+        }
+
+        protected bool updatingPower;
+
+        protected override void RemoveComponentSpecific()
+        {
+            poweredList.Remove(this);
+        }
     }
 }

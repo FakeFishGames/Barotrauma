@@ -131,7 +131,7 @@ namespace Barotrauma.Items.Components
             {
                 if (charging)
                 {
-                    if (voltage > minVoltage || powerConsumption <= 0.0f)
+                    if (Voltage > minVoltage || powerConsumption <= 0.0f)
                     {
                         Discharge();
                     }
@@ -142,8 +142,6 @@ namespace Barotrauma.Items.Components
             {
                 IsActive = false;
             }
-
-            voltage = 0.0f;
         }
 
         public override void UpdateBroken(float deltaTime, Camera cam)

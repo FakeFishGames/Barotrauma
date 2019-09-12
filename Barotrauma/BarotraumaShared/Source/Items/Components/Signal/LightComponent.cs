@@ -216,19 +216,12 @@ namespace Barotrauma.Items.Components
 #endif
             }
             
-            if (powerConsumption == 0.0f)
-            {
-                voltage = 1.0f;
-            }
-            else
-            {
-                currPowerConsumption = powerConsumption;                
-            }
+            currPowerConsumption = powerConsumption;
 
-            if (Rand.Range(0.0f, 1.0f) < 0.05f && voltage < Rand.Range(0.0f, minVoltage))
+            if (Rand.Range(0.0f, 1.0f) < 0.05f && Voltage < Rand.Range(0.0f, minVoltage))
             {
 #if CLIENT
-                if (voltage > 0.1f)
+                if (Voltage > 0.1f)
                 {
                     SoundPlayer.PlaySound("zap", item.WorldPosition, hullGuess: item.CurrentHull);
                 }
@@ -237,7 +230,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                lightBrightness = MathHelper.Lerp(lightBrightness, Math.Min(voltage, 1.0f), 0.1f);
+                lightBrightness = MathHelper.Lerp(lightBrightness, Math.Min(Voltage, 1.0f), 0.1f);
             }
 
             if (blinkFrequency > 0.0f)
@@ -262,8 +255,6 @@ namespace Barotrauma.Items.Components
             {
                 UpdateAITarget(item.AiTarget);
             }
-
-            voltage -= deltaTime;
         }
                 
 #if CLIENT

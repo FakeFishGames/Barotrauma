@@ -59,7 +59,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            hasPower = voltage >= minVoltage;
+            hasPower = Voltage >= minVoltage;
             if (!hasPower) { return; }
 
             var repairable = item.GetComponent<Repairable>();
@@ -70,10 +70,8 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
-            if (powerConsumption == 0.0f) { voltage = 1.0f; }
-
-            progressTimer += deltaTime * voltage;
-            Voltage -= deltaTime * 10.0f;
+            if (powerConsumption <= 0.0f) { Voltage = 1.0f; }
+            progressTimer += deltaTime * Voltage;
 
             var targetItem = inputContainer.Inventory.Items.LastOrDefault(i => i != null);
             if (targetItem == null) { return; }
@@ -99,7 +97,7 @@ namespace Barotrauma.Items.Components
                     float condition = deconstructProduct.CopyCondition ?
                         percentageHealth * itemPrefab.Health :
                         itemPrefab.Health * deconstructProduct.OutCondition;
-                    
+
                     //container full, drop the items outside the deconstructor
                     if (emptySlots <= 0)
                     {
@@ -111,7 +109,7 @@ namespace Barotrauma.Items.Components
                         emptySlots--;
                     }
                 }
-                
+
                 if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
                 {
                     if (targetItem.Prefab.DeconstructItems.Any())
@@ -149,8 +147,6 @@ namespace Barotrauma.Items.Components
                     progressState = 0.0f;
                 }
             }
-
-            voltage -= deltaTime * 10.0f;
         }
 
         private void PutItemsToLinkedContainer()

@@ -8,10 +8,10 @@ namespace Barotrauma.Items.Components
 {
     partial class PowerTransfer : Powered
     {
-        private static float fullPower;
+        /*private static float fullPower;
         private static float fullLoad;
 
-        private int updateCount;
+        private int updateCount;*/
 
         //affects how fast changes in power/load are carried over the grid
         static float inertia = 5.0f;
@@ -32,13 +32,14 @@ namespace Barotrauma.Items.Components
         //a list of connections a given connection is connected to, either directly or via other power transfer components
         private Dictionary<Connection, HashSet<Connection>> connectedRecipients = new Dictionary<Connection, HashSet<Connection>>();
 
-        private float powerLoad;
+        protected float powerLoad;
 
         private bool isBroken;
 
         public float PowerLoad
         {
             get { return powerLoad; }
+            set { powerLoad = value; }
         }
 
         [Editable, Serialize(true, true, description: "Can the item be damaged if too much power is supplied to the power grid.")]
@@ -146,7 +147,7 @@ namespace Barotrauma.Items.Components
                 isBroken = false;
             }
             
-            if (updateCount > 0)
+            /*if (updateCount > 0)
             {
                 //this junction box has already been updated this frame
                 updateCount--;
@@ -235,7 +236,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            updateCount = 0;
+            updateCount = 0;*/
         }
 
         public override bool Pick(Character picker)
@@ -319,7 +320,7 @@ namespace Barotrauma.Items.Components
 
         //a recursive function that goes through all the junctions and adds up
         //all the generated/consumed power of the constructions connected to the grid
-        private void CheckJunctions(float deltaTime, bool increaseUpdateCount = true, float clampPower = float.MaxValue, float clampLoad = float.MaxValue)
+        /*private void CheckJunctions(float deltaTime, bool increaseUpdateCount = true, float clampPower = float.MaxValue, float clampLoad = float.MaxValue)
         {
             if (increaseUpdateCount)
             {
@@ -411,7 +412,7 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
-        }
+        }*/
 
         public void SetAllConnectionsDirty()
         {
@@ -443,7 +444,28 @@ namespace Barotrauma.Items.Components
         
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power, float signalStrength = 1.0f)
         {
-            if (connection.IsPower) return;
+            if (item.Condition <= 0.0f) { return; }
+            if (connection.IsPower)
+            {
+                if (!updatingPower) { return; }
+
+                //we've already received this signal
+                for (int i = 0; i<source.LastSentSignalRecipients.Count -1;i++)
+                {
+                    if (source.LastSentSignalRecipients[i] == item) { return; }
+                }
+
+                if (power < 0.0f)
+                {
+                    powerLoad -= power;
+                }
+                else
+                {
+                    currPowerConsumption -= power;
+                }
+                connection.SendSignal(stepsTaken, signal, source, sender, power, signalStrength);
+                return;
+            }
 
             base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power);
 

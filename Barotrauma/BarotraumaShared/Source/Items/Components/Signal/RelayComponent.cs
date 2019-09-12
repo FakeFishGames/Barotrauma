@@ -70,7 +70,40 @@ namespace Barotrauma.Items.Components
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
-            if (connection.IsPower || item.Condition <= 0.0f) { return; }
+            if (item.Condition <= 0.0f) { return; }
+
+            if (connection.IsPower)
+            {
+                if (!updatingPower || !IsOn) { return; }
+
+                //we've already received this signal
+                for (int i = 0; i < source.LastSentSignalRecipients.Count - 1; i++)
+                {
+                    if (source.LastSentSignalRecipients[i] == item) { return; }
+                }
+
+                if (power < 0.0f)
+                {
+                    if (!connection.IsOutput) { return; }
+                    //power being drawn from the power_out connection
+                    powerLoad -= power;
+                    //pass the load to items connected to the input
+                    item.Connections.Find(c => c.Name == "power_in")?.SendSignal(stepsTaken, signal, source, sender, power, signalStrength);
+                }
+                else
+                {
+                    if (connection.IsOutput) { return; }
+                    //power being supplied to the power_in connection
+                    if (currPowerConsumption - power < -MaxPower)
+                    {
+                        power += MaxPower + (currPowerConsumption - power);
+                    }
+                    currPowerConsumption -= power;
+                    //pass the power forwards
+                    item.Connections.Find(c => c.Name == "power_out")?.SendSignal(stepsTaken, signal, source, sender, power, signalStrength);
+                }
+                return;
+            }
 
             if (connectionPairs.TryGetValue(connection.Name, out string outConnection))
             {

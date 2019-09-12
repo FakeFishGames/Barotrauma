@@ -160,7 +160,7 @@ namespace Barotrauma.Items.Components
 
             if (currentMode == Mode.Active)
             {
-                if ((voltage >= minVoltage || powerConsumption <= 0.0f) &&
+                if ((Voltage >= minVoltage || powerConsumption <= 0.0f) &&
                     (!UseTransducers || connectedTransducers.Count > 0))
                 {
                     if (currentPingIndex != -1)

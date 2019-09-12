@@ -199,7 +199,7 @@ namespace Barotrauma.Items.Components
 
             progressState = fabricatedItem == null ? 0.0f : (requiredTime - timeUntilReady) / requiredTime;
 
-            hasPower = voltage >= minVoltage;
+            hasPower = Voltage >= minVoltage;
             if (!hasPower) { return; }
             
             var repairable = item.GetComponent<Repairable>();
@@ -210,10 +210,9 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
-            if (powerConsumption <= 0) { voltage = 1.0f; }
+            if (powerConsumption <= 0) { Voltage = 1.0f; }
 
-            timeUntilReady -= deltaTime * voltage;
-            voltage -= deltaTime * 10.0f;
+            timeUntilReady -= deltaTime * Voltage;
 
             if (timeUntilReady > 0.0f) { return; }
 

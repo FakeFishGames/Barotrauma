@@ -209,7 +209,7 @@ namespace Barotrauma.Items.Components
 
             currPowerConsumption = powerConsumption;
 
-            if (voltage < minVoltage && currPowerConsumption > 0.0f) { return; }
+            if (Voltage < minVoltage && currPowerConsumption > 0.0f) { return; }
 
             if (user != null && user.Removed)
             {
@@ -253,8 +253,6 @@ namespace Barotrauma.Items.Components
             targetLevel += (neutralBallastLevel - 0.5f) * 100.0f;
 
             item.SendSignal(0, targetLevel.ToString(CultureInfo.InvariantCulture), "velocity_y_out", null);
-
-            voltage -= deltaTime;
         }
 
         private void UpdateAutoPilot(float deltaTime)

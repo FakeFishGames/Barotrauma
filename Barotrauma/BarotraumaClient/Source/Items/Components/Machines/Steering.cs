@@ -423,7 +423,7 @@ namespace Barotrauma.Items.Components
             int x = rect.X;
             int y = rect.Y;
 
-            if (voltage < minVoltage && currPowerConsumption > 0.0f) return;
+            if (Voltage < minVoltage && currPowerConsumption > 0.0f) return;
 
             Rectangle velRect = new Rectangle(x + 20, y + 20, width - 40, height - 40);
             Vector2 displaySubPos = (-sonar.DisplayOffset * sonar.Zoom) / sonar.Range * sonar.DisplayRadius * sonar.Zoom;
@@ -630,7 +630,7 @@ namespace Barotrauma.Items.Components
 
             autoPilotControlsDisabler.Visible = !AutoPilot;
 
-            if (voltage < minVoltage && currPowerConsumption > 0.0f)
+            if (Voltage < minVoltage && currPowerConsumption > 0.0f)
             {
                 tipContainer.Visible = true;
                 tipContainer.Text = noPowerTip;

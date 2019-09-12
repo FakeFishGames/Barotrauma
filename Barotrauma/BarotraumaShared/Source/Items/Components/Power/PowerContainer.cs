@@ -14,7 +14,7 @@ namespace Barotrauma.Items.Components
 
         private float charge;
 
-        private float rechargeVoltage;
+        //private float rechargeVoltage;
 
         //how fast the battery can be recharged
         private float maxRechargeSpeed;
@@ -155,9 +155,7 @@ namespace Barotrauma.Items.Components
                         continue;
                     }
                     if (!pt.IsActive || !pt.CanTransfer) { continue; }
-
                     gridLoad += pt.PowerLoad;
-                    gridPower -= pt.CurrPowerConsumption;
                 }
             }
             
@@ -168,59 +166,45 @@ namespace Barotrauma.Items.Components
             
             if (charge >= capacity)
             {
-                rechargeVoltage = 0.0f;
+                //rechargeVoltage = 0.0f;
                 charge = capacity;
-
                 CurrPowerConsumption = 0.0f;
             }
             else
             {
                 currPowerConsumption = MathHelper.Lerp(currPowerConsumption, rechargeSpeed, 0.05f);
-                Charge += currPowerConsumption * rechargeVoltage / 3600.0f;
+                Charge += currPowerConsumption * Voltage / 3600.0f;
             }
-                        
-            //provide power to the grid
-            if (gridLoad > 0.0f)
+                       
+
+            if (charge <= 0.0f)
             {
-                if (charge <= 0.0f)
-                {
-                    CurrPowerOutput = 0.0f;
-                    charge = 0.0f;
-                    return;
-                }
-
-                if (gridPower < gridLoad)
-                {
-                    //output starts dropping when the charge is less than 10%
-                    float maxOutputRatio = 1.0f;
-                    if (chargeRatio < 0.1f)
-                    {
-                        maxOutputRatio = Math.Max(chargeRatio * 10.0f, 0.0f);
-                    }
-
-                    CurrPowerOutput = MathHelper.Lerp(
-                       CurrPowerOutput,
-                       Math.Min(MaxOutPut * maxOutputRatio, gridLoad),
-                       deltaTime * 10.0f);
-                }
-                else
-                {
-                    CurrPowerOutput = MathHelper.Lerp(CurrPowerOutput, 0.0f, deltaTime * 10.0f);
-                }
-
-                Charge -= CurrPowerOutput / 3600.0f;
+                CurrPowerOutput = 0.0f;
+                charge = 0.0f;
+                return;
             }
+
+            //output starts dropping when the charge is less than 10%
+            float maxOutputRatio = 1.0f;
+            if (chargeRatio < 0.1f)
+            {
+                maxOutputRatio = Math.Max(chargeRatio * 10.0f, 0.0f);
+            }
+
+            CurrPowerOutput = Math.Min(MaxOutPut * maxOutputRatio, gridLoad);
+            Charge += currPowerConsumption / 3600.0f;
+            
             item.SendSignal(0, ((int)Charge).ToString(), "charge", null);
             item.SendSignal(0, ((int)((Charge / capacity) * 100)).ToString(), "charge_%", null);
             item.SendSignal(0, ((int)((RechargeSpeed / maxRechargeSpeed) * 100)).ToString(), "charge_rate", null);
 
-            foreach (Pair<Powered, Connection> connected in directlyConnected)
+            /*foreach (Pair<Powered, Connection> connected in directlyConnected)
             {
                 connected.First.ReceiveSignal(0, "", connected.Second, source: item, sender: null, 
                     power: gridLoad <= 0.0f ? 1.0f : CurrPowerOutput / gridLoad);
             }
 
-            rechargeVoltage = 0.0f;
+            rechargeVoltage = 0.0f;*/
         }
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
@@ -290,12 +274,12 @@ namespace Barotrauma.Items.Components
 #endif
                 }
             }
-            if (!connection.IsPower) { return; }
+            /*if (!connection.IsPower) { return; }
 
             if (connection.Name == "power_in")
             {
                 rechargeVoltage = Math.Min(power, 1.0f);
-            }
+            }*/
         }
     }
 }
