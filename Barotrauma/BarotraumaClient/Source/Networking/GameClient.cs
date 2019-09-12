@@ -641,6 +641,9 @@ namespace Barotrauma.Networking
                         {
                             errorMsg += "\nInner exception: " + e.InnerException.Message + "\n" + e.InnerException.StackTrace;
                         }
+#if DEBUG
+                        DebugConsole.ThrowError("Error while reading an ingame update message from server.", e);
+#endif
                         GameAnalyticsManager.AddErrorEventOnce("GameClient.ReadDataMessage:ReadIngameUpdate", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                         throw;
                     }
