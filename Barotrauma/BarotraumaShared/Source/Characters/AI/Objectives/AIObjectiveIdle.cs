@@ -130,7 +130,7 @@ namespace Barotrauma
                     currentTarget = ToolBox.SelectWeightedRandom(targetHulls, hullWeights, Rand.RandSync.Unsynced);
                     bool isCurrentHullAllowed = !IsForbidden(character.CurrentHull);
                     // Check that there is no unsafe or forbidden hulls on the way to the target
-                    var path = PathSteering.PathFinder.FindPath(character.SimPosition, currentTarget.SimPosition);
+                    var path = PathSteering.PathFinder.FindPath(character.SimPosition, currentTarget.SimPosition, nodeFilter: node => node.Waypoint.CurrentHull != null);
                     if (path.Unreachable || path.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull) || isCurrentHullAllowed && IsForbidden(n.CurrentHull)))
                     {
                         //can't go to this room, remove it from the list and try another room next frame
@@ -152,7 +152,7 @@ namespace Barotrauma
                     bool isRoomNameFound = currentTarget.DisplayName != null;
                     errorMsg = "(Character " + character.Name + " idling, target " + (isRoomNameFound ? currentTarget.DisplayName : currentTarget.ToString()) + ")";
 #endif
-                    var path = PathSteering.PathFinder.FindPath(character.SimPosition, currentTarget.SimPosition, errorMsgStr: errorMsg);
+                    var path = PathSteering.PathFinder.FindPath(character.SimPosition, currentTarget.SimPosition, errorMsgStr: errorMsg, nodeFilter: node => node.Waypoint.CurrentHull != null);
                     PathSteering.SetPath(path);
                 }
 
@@ -191,7 +191,14 @@ namespace Barotrauma
 
             if (currentTarget != null)
             {
-                character.AIController.SteeringManager.SteeringSeek(currentTarget.SimPosition);
+                if (SteeringManager == PathSteering)
+                {
+                    PathSteering.SteeringSeek(character.GetRelativeSimPosition(currentTarget), weight: 1, nodeFilter: node => node.Waypoint.CurrentHull != null);
+                }
+                else
+                {
+                    character.AIController.SteeringManager.SteeringSeek(character.GetRelativeSimPosition(currentTarget));
+                }
             }
             else
             {

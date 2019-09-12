@@ -142,10 +142,12 @@ namespace Barotrauma
             IsPathDirty = false;
         }
 
-        public Func<PathNode, bool> startNodeFilter;
-        public Func<PathNode, bool> endNodeFilter;
+        public void SteeringSeek(Vector2 target, float weight, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null)
+        {
+            steering += CalculateSteeringSeek(target, weight, startNodeFilter, endNodeFilter, nodeFilter);
+        }
 
-        protected override Vector2 DoSteeringSeek(Vector2 target, float weight)
+        private Vector2 CalculateSteeringSeek(Vector2 target, float weight, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null)
         {
             bool needsNewPath = currentPath == null || (currentPath.Unreachable || currentPath.NextNode == null) || Vector2.DistanceSquared(target, currentTarget) > 1;
             //find a new path if one hasn't been found yet or the target is different from the current target
@@ -154,13 +156,13 @@ namespace Barotrauma
                 IsPathDirty = true;
                 if (findPathTimer > 0.0f) { return Vector2.Zero; }
                 currentTarget = target;
-                var newPath = pathFinder.FindPath(host.SimPosition, target, character.Submarine, "(Character: " + character.Name + ")", startNodeFilter, endNodeFilter);
+                var newPath = pathFinder.FindPath(host.SimPosition, target, character.Submarine, "(Character: " + character.Name + ")", startNodeFilter, endNodeFilter, nodeFilter);
                 bool useNewPath = currentPath == null || needsNewPath || currentPath.Finished;
                 if (!useNewPath && currentPath != null && currentPath.CurrentNode != null && newPath.Nodes.Any() && !newPath.Unreachable)
                 {
                     // It's possible that the current path was calculated from a start point that is no longer valid.
                     // Therefore, let's accept also paths with a greater cost than the current, if the current node is much farther than the new start node.
-                    useNewPath = newPath.Cost < currentPath.Cost || 
+                    useNewPath = newPath.Cost < currentPath.Cost ||
                         Vector2.DistanceSquared(character.WorldPosition, currentPath.CurrentNode.WorldPosition) > Math.Pow(Vector2.Distance(character.WorldPosition, newPath.Nodes.First().WorldPosition) * 2, 2);
                 }
                 if (useNewPath)
@@ -169,7 +171,7 @@ namespace Barotrauma
                 }
                 findPathTimer = Rand.Range(1.0f, 1.2f);
                 IsPathDirty = false;
-                return DiffToCurrentNode();                
+                return DiffToCurrentNode();
             }
 
             Vector2 diff = DiffToCurrentNode();
@@ -180,8 +182,10 @@ namespace Barotrauma
                 diff.Y = 0.0f;
             }
             if (diff.LengthSquared() < 0.001f) { return -host.Steering; }
-            return Vector2.Normalize(diff) * weight;          
+            return Vector2.Normalize(diff) * weight;
         }
+
+        protected override Vector2 DoSteeringSeek(Vector2 target, float weight) => CalculateSteeringSeek(target, weight, null, null, null);
 
         private Vector2 DiffToCurrentNode()
         {

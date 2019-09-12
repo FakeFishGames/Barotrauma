@@ -15,7 +15,7 @@ namespace Barotrauma
 
         protected ISteerable host;
 
-        private Vector2 steering;
+        protected Vector2 steering;
 
         private Vector2? avoidObstaclePos;
         private float rayCastTimer;
