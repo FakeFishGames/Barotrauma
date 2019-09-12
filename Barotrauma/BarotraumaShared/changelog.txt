@@ -1,4 +1,45 @@
 ---------------------------------------------------------------------------------------------------------
+v0.9.301.0 (test build)
+---------------------------------------------------------------------------------------------------------
+
+- Added Japanese localization.
+- Added Polish, Spanish and Turkish NPC conversations.
+- Improvements to the Russian and Spanish translations.
+- Fixed index out of range exception being thrown during character initialization/removal if the client has 
+highlighted an inventory slot whose index is outside the capacity of the inventory whose slots are being 
+created/removed. Caused characters to be created without an inventory, animcontroller or AI controller 
+if the exception was thrown during character creation.
+- Fixed Traitor's "find an item" objectives not being considered complete if the target item is inside 
+another item within the traitor's inventory.
+- Fixed inability to start a campaign due to the checks that make sure the correct sub is selected in 
+netlobbyscreen's submarine list.
+- More detailed "x is not a valid XML file" error messages.
+- Fixed inability to open the pause menu if an inventory slot had been highlighted when exiting 
+the game screen.
+- Fixed welded door sprites "twitching" when the submarine moves.
+- Improved mission and traitor info popups.
+- Fixed draggable inventories getting stuck to a half-open state if the item is equipped when 
+the inventory is opening/closing.
+- Fixed crashing when a character with no hands or arms drops a holdable item.
+- Non-humanoids (i.e. monsters controlled by a player) cannot be assigned as traitors.
+- Traitor missions are considered unsuccessful if the objectives cannot be completed (for example if the
+submarine doesn't have suitable containers to place the traitor items inside).
+- Fixed the "Barotrauma" title text staying invisible in the main menu when coming back from the credits.
+- Fixed clients not refreshing an item's editing hud when a remote player adjusts the values (i.e. if two 
+players had selected the same lamp and one changed the color value, the other client wouldn't see 
+the value change in the editing hud).
+- Fixed server using the provided campaign savefile name as-is (without the required .save file extension) 
+when starting a new campaign through the console. Caused clients to throw "File transfer failed (wrong 
+file extension """!)" errors and prevented them from receiving the save files.
+- Show the number of lights (total and shadow-casting) in the sub editor.
+- Fixed a couple of the additive light sprites being slightly offset from the lamp.
+- Fixed servers being able to start the round multiple times by spamming the "start" console command 
+before loading the round finishes.
+- Clients don't display client-side vitality changes in healthbars until the actual vitality is received 
+from the server. Fixes health occasionally dropping and then jumping back up if the client predicts damage 
+incorrectly (e.g. if a melee attack hits client-side but doesn't server-side).
+
+---------------------------------------------------------------------------------------------------------
 v0.9.300.0 (test build)
 ---------------------------------------------------------------------------------------------------------
 
