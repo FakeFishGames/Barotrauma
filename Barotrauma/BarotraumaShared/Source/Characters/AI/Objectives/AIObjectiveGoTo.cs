@@ -187,12 +187,16 @@ namespace Barotrauma
                 }
                 if (PathSteering != null)
                 {
-                    PathSteering.startNodeFilter = startNodeFilter;
-                    PathSteering.endNodeFilter = endNodeFilter;
+                    Func<PathNode, bool> nodeFilter = null;
+                    if (!AllowGoingOutside)
+                    {
+                        nodeFilter = node => node.Waypoint.CurrentHull != null;
+                    }
+                    PathSteering.SteeringSeek(character.GetRelativeSimPosition(Target), 1, startNodeFilter, endNodeFilter, nodeFilter);
                 }
-                SteeringManager.SteeringSeek(character.GetRelativeSimPosition(Target));
-                if (SteeringManager != PathSteering)
+                else
                 {
+                    SteeringManager.SteeringSeek(character.GetRelativeSimPosition(Target));
                     SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: 5, weight: 1, heading: VectorExtensions.Forward(character.AnimController.Collider.Rotation));
                 }
             }

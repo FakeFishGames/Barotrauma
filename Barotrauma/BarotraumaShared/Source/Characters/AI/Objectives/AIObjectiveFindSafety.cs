@@ -205,7 +205,10 @@ namespace Barotrauma
                     //skip the hull if the safety is already less than the best hull
                     //(no need to do the expensive pathfinding if we already know we're not going to choose this hull)
                     if (hullSafety < bestValue) { continue; }
-                    var path = PathSteering.PathFinder.FindPath(character.SimPosition, hull.SimPosition);
+                    // Don't allow to go outside if not already outside.
+                    var path = character.CurrentHull != null ? 
+                        PathSteering.PathFinder.FindPath(character.SimPosition, hull.SimPosition, nodeFilter: node => node.Waypoint.CurrentHull != null) : 
+                        PathSteering.PathFinder.FindPath(character.SimPosition, hull.SimPosition);
                     if (path.Unreachable)
                     {
                         HumanAIController.UnreachableHulls.Add(hull);

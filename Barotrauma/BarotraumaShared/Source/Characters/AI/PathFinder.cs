@@ -157,12 +157,13 @@ namespace Barotrauma
             }
         }
 
-        public SteeringPath FindPath(Vector2 start, Vector2 end, Submarine hostSub = null, string errorMsgStr = null, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null)
+        public SteeringPath FindPath(Vector2 start, Vector2 end, Submarine hostSub = null, string errorMsgStr = null, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null)
         {            
             float closestDist = 0.0f;
             PathNode startNode = null;
             foreach (PathNode node in nodes)
             {
+                if (nodeFilter != null && !nodeFilter(node)) { continue; }
                 if (startNodeFilter != null && !startNodeFilter(node)) { continue; }
                 Vector2 nodePos = node.Position;
                 if (hostSub != null)
@@ -220,6 +221,7 @@ namespace Barotrauma
             PathNode endNode = null;
             foreach (PathNode node in nodes)
             {
+                if (nodeFilter != null && !nodeFilter(node)) { continue; }
                 if (endNodeFilter != null && !endNodeFilter(node)) { continue; }
                 Vector2 nodePos = node.Position;
                 if (hostSub != null)
@@ -264,7 +266,7 @@ namespace Barotrauma
                 return new SteeringPath(true);
             }
 
-            var path = FindPath(startNode, endNode);
+            var path = FindPath(startNode, endNode, nodeFilter);
 
             return path;
         }
@@ -297,7 +299,7 @@ namespace Barotrauma
             return FindPath(startNode, endNode);
         }
 
-        private SteeringPath FindPath(PathNode start, PathNode end)
+        private SteeringPath FindPath(PathNode start, PathNode end, Func<PathNode, bool> filter = null)
         {
             if (start == end)
             {
@@ -323,7 +325,8 @@ namespace Barotrauma
                 float dist = float.MaxValue;
                 foreach (PathNode node in nodes)
                 {
-                    if (node.state != 1) continue;
+                    if (filter != null && !filter(node)) { continue; }
+                    if (node.state != 1) { continue; }
                     if (node.F < dist)
                     {
                         dist = node.F;
@@ -331,7 +334,7 @@ namespace Barotrauma
                     }
                 }
 
-                if (currNode == null || currNode == end) break;
+                if (currNode == null || currNode == end) { break; }
 
                 currNode.state = 2;
 
@@ -369,7 +372,7 @@ namespace Barotrauma
                         if (GetNodePenalty != null)
                         {
                             float? nodePenalty = GetNodePenalty(currNode, nextNode);
-                            if (nodePenalty == null) continue;
+                            if (nodePenalty == null) { continue; }
                             tempG += nodePenalty.Value;
                         }
 
