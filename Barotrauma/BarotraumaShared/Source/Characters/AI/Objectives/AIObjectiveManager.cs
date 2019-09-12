@@ -13,7 +13,7 @@ namespace Barotrauma
         public const float OrderPriority = 70;
         public const float RunPriority = 50;
         // Constantly increases the priority of the selected objective, unless overridden
-        public const float baseDevotion = 2;
+        public const float baseDevotion = 3;
 
         public List<AIObjective> Objectives { get; private set; } = new List<AIObjective>();
 
