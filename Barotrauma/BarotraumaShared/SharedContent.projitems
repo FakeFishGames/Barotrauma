@@ -2390,6 +2390,9 @@
     <None Include="$(MSBuildThisFileDirectory)Submarines\Nautilus.sub">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="$(MSBuildThisFileDirectory)Submarines\Nautilusdrone.sub">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)Content\Characters\Carrier\CARRIER_alarmLoop.ogg">
