@@ -506,7 +506,8 @@ namespace Barotrauma
                 }
             }
             else
-            { 
+            {
+                titleText.Visible = true;
                 selectedTab = 0;
             }
 

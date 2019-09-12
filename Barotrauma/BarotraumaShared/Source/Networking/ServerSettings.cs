@@ -721,12 +721,18 @@ namespace Barotrauma.Networking
             }
         }
 
+        private string karmaPreset = "default";
         [Serialize("default", true)]
         public string KarmaPreset
         {
-            get;
-            set;
-        } = "default";
+            get { return karmaPreset; }
+            set
+            {
+                if (karmaPreset == value) { return; }
+                GameMain.NetworkMember?.KarmaManager?.SelectPreset(value);
+                karmaPreset = value;
+            }
+        }
 
         [Serialize("sandbox", true)]
         public string GameModeIdentifier

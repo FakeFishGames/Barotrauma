@@ -1976,7 +1976,7 @@ namespace Barotrauma
             SerializableProperty property = allProperties[propertyIndex].Second;
             if (inGameEditableOnly && parentObject is ItemComponent ic)
             {
-                if (!ic.AllowInGameEditing) allowEditing = false;
+                if (!ic.AllowInGameEditing) { allowEditing = false; }
             }
 
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer && !CanClientAccess(sender))
