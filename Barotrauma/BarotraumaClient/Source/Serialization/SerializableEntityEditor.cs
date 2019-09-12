@@ -524,7 +524,7 @@ namespace Barotrauma
             var editableAttribute = property.GetAttribute<Editable>();
             GUITextBox propertyBox = new GUITextBox(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform))
             {
-                Enabled = !editableAttribute.ReadOnly,
+                Enabled = editableAttribute != null && !editableAttribute.ReadOnly,
                 ToolTip = toolTip,
                 Font = GUI.SmallFont,
                 Text = value,
