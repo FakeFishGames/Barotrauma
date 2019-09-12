@@ -133,7 +133,7 @@ namespace Barotrauma
 
         public override void CreateSlots()
         {
-            if (slots == null) slots = new InventorySlot[capacity];
+            if (slots == null) { slots = new InventorySlot[capacity]; }
             
             for (int i = 0; i < capacity; i++)
             {
@@ -179,9 +179,11 @@ namespace Barotrauma
             highlightedSubInventorySlots.RemoveWhere(s => s.Inventory.OpenState <= 0.0f);
             foreach (var subSlot in highlightedSubInventorySlots)
             {
-                subSlot.Slot = slots[subSlot.SlotIndex];
+                if (subSlot.ParentInventory == this && subSlot.SlotIndex > 0 && subSlot.SlotIndex < slots.Length)
+                {
+                    subSlot.Slot = slots[subSlot.SlotIndex];
+                }
             }
-            //highlightedSubInventorySlots.Clear();
 
             screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
             CalculateBackgroundFrame();
