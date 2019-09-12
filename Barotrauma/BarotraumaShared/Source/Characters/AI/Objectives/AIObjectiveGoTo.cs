@@ -139,7 +139,7 @@ namespace Barotrauma
 #if DEBUG
                 DebugConsole.NewMessage($"{character.Name}: Cannot reach the target: {Target.ToString()}", Color.Yellow);
 #endif
-                if (objectiveManager.CurrentOrder != null)
+                if (objectiveManager.CurrentOrder != null && objectiveManager.CurrentOrder.ReportFailures)
                 {
                     character.Speak(TextManager.Get("DialogCannotReach"), identifier: "cannotreach", minDurationBetweenSimilar: 10.0f);
                 }
