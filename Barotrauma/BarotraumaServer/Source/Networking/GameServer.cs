@@ -1658,6 +1658,8 @@ namespace Barotrauma.Networking
 
         public bool StartGame()
         {
+            if (initiatedStartGame || gameStarted) { return false; }
+
             Log("Starting a new round...", ServerLog.MessageType.ServerMessage);
 
             Submarine selectedSub = null;

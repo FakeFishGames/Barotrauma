@@ -1207,7 +1207,7 @@ namespace Barotrauma
 
             commands.Add(new Command("startgame|startround|start", "start/startgame/startround: Start a new round.", (string[] args) =>
             {
-                if (Screen.Selected == GameMain.GameScreen) return;
+                if (Screen.Selected == GameMain.GameScreen) { return; }
                 if (!GameMain.Server.StartGame()) NewMessage("Failed to start a new round", Color.Yellow);
             }));
 
