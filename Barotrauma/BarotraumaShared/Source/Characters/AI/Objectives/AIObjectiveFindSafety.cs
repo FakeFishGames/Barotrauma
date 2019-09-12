@@ -139,46 +139,46 @@ namespace Barotrauma
                         RemoveSubObjective(ref goToObjective);
                     }
                 }
-                if (currentHull == null) { return; }
-                //goto objective doesn't exist (a safe hull not found, or a path to a safe hull not found)
-                // -> attempt to manually steer away from hazards
-                Vector2 escapeVel = Vector2.Zero;
-                // TODO: optimize
-                foreach (FireSource fireSource in HumanAIController.VisibleHulls.SelectMany(h => h.FireSources))
+                if (currentHull != null)
                 {
-                    Vector2 dir = character.Position - fireSource.Position;
-                    float distMultiplier = MathHelper.Clamp(100.0f / Vector2.Distance(fireSource.Position, character.Position), 0.1f, 10.0f);
-                    escapeVel += new Vector2(Math.Sign(dir.X) * distMultiplier, !character.IsClimbing ? 0 : Math.Sign(dir.Y) * distMultiplier);
-                }
-                foreach (Character enemy in Character.CharacterList)
-                {
-                    if (enemy.IsDead || enemy.IsUnconscious || enemy.Removed || HumanAIController.IsFriendly(enemy)) { continue; }
-                    if (HumanAIController.VisibleHulls.Contains(enemy.CurrentHull))
+                    //goto objective doesn't exist (a safe hull not found, or a path to a safe hull not found)
+                    // -> attempt to manually steer away from hazards
+                    Vector2 escapeVel = Vector2.Zero;
+                    // TODO: optimize
+                    foreach (FireSource fireSource in HumanAIController.VisibleHulls.SelectMany(h => h.FireSources))
                     {
-                        Vector2 dir = character.Position - enemy.Position;
-                        float distMultiplier = MathHelper.Clamp(100.0f / Vector2.Distance(enemy.Position, character.Position), 0.1f, 10.0f);
+                        Vector2 dir = character.Position - fireSource.Position;
+                        float distMultiplier = MathHelper.Clamp(100.0f / Vector2.Distance(fireSource.Position, character.Position), 0.1f, 10.0f);
                         escapeVel += new Vector2(Math.Sign(dir.X) * distMultiplier, !character.IsClimbing ? 0 : Math.Sign(dir.Y) * distMultiplier);
                     }
-                }
-                if (escapeVel != Vector2.Zero)
-                {
-                    float left = currentHull.Rect.X + 50;
-                    float right = currentHull.Rect.Right - 50;
-                    //only move if we haven't reached the edge of the room
-                    if (escapeVel.X < 0 && character.Position.X > left || escapeVel.X > 0 && character.Position.X < right)
+                    foreach (Character enemy in Character.CharacterList)
                     {
-                        character.AIController.SteeringManager.SteeringManual(deltaTime, escapeVel);
+                        if (enemy.IsDead || enemy.IsUnconscious || enemy.Removed || HumanAIController.IsFriendly(enemy)) { continue; }
+                        if (HumanAIController.VisibleHulls.Contains(enemy.CurrentHull))
+                        {
+                            Vector2 dir = character.Position - enemy.Position;
+                            float distMultiplier = MathHelper.Clamp(100.0f / Vector2.Distance(enemy.Position, character.Position), 0.1f, 10.0f);
+                            escapeVel += new Vector2(Math.Sign(dir.X) * distMultiplier, !character.IsClimbing ? 0 : Math.Sign(dir.Y) * distMultiplier);
+                        }
                     }
-                    else
+                    if (escapeVel != Vector2.Zero)
                     {
-                        character.AnimController.TargetDir = escapeVel.X < 0.0f ? Direction.Right : Direction.Left;
-                        character.AIController.SteeringManager.Reset();
+                        float left = currentHull.Rect.X + 50;
+                        float right = currentHull.Rect.Right - 50;
+                        //only move if we haven't reached the edge of the room
+                        if (escapeVel.X < 0 && character.Position.X > left || escapeVel.X > 0 && character.Position.X < right)
+                        {
+                            character.AIController.SteeringManager.SteeringManual(deltaTime, escapeVel);
+                        }
+                        else
+                        {
+                            character.AnimController.TargetDir = escapeVel.X < 0.0f ? Direction.Right : Direction.Left;
+                            character.AIController.SteeringManager.Reset();
+                        }
+                        return;
                     }
                 }
-                else
-                {
-                    objectiveManager.GetObjective<AIObjectiveIdle>().Wander(deltaTime);
-                }
+                objectiveManager.GetObjective<AIObjectiveIdle>().Wander(deltaTime);
             }
         }
 
