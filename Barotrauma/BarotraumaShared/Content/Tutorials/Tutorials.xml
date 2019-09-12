@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Tutorials>
   <MechanicTutorial identifier="tutorial.mechanictraining" playablecontentpath="Content/Tutorials/TutorialVideos/" tutorialtype="scenario" submarinepath="Content/Tutorials/Dugong_Tutorial.sub" startoutpostpath="Content/Tutorials/TutorialOutpost.sub" levelseed="nLoZLLtza" levelparams="ColdCavernsTutorial" spawnpointtype="human" spawnsub="startoutpost">
-    <Character name="Human">
+    <Character name="Human" speciesname="Human">
       <Job identifier="mechanic">
         <Skill identifier="electrical" level="20"/>
         <Skill identifier="mechanical" level="50"/>
@@ -67,7 +67,7 @@
   </MechanicTutorial>
 
   <EngineerTutorial identifier="tutorial.engineertraining" playablecontentpath="Content/Tutorials/TutorialVideos/" tutorialtype="scenario" submarinepath="Content/Tutorials/Dugong_Tutorial.sub" startoutpostpath="Content/Tutorials/TutorialOutpost.sub" levelseed="nLoZLLtza" levelparams="ColdCavernsTutorial" spawnpointtype="human" spawnsub="startoutpost">
-    <Character name="Human">
+    <Character name="Human" speciesname="Human">>
       <Job identifier="engineer">
         <Skill identifier="electrical" level="50"/>
         <Skill identifier="mechanical" level="20"/>
@@ -106,7 +106,7 @@
 
 
   <DoctorTutorial identifier="tutorial.medicaldoctortraining" playablecontentpath="Content/Tutorials/TutorialVideos/" tutorialtype="scenario" submarinepath="Content/Tutorials/Dugong_Tutorial.sub" startoutpostpath="Content/Tutorials/TutorialOutpost.sub" levelseed="nLoZLLtza" levelparams="ColdCavernsTutorial" spawnpointtype="human" spawnsub="startoutpost">
-    <Character name="Human">
+    <Character name="Human" speciesname="Human">
       <Job identifier="medicaldoctor">
         <Skill identifier="medical" level="70"/>
         <Skill identifier="weapons" level="20"/>
@@ -151,7 +151,7 @@
   </DoctorTutorial>
 
   <OfficerTutorial identifier="tutorial.securityofficertraining" playablecontentpath="Content/Tutorials/TutorialVideos/" tutorialtype="scenario" submarinepath="Content/Tutorials/Dugong_Tutorial.sub" startoutpostpath="Content/Tutorials/TutorialOutpost.sub" levelseed="nLoZLLtza" levelparams="ColdCavernsTutorial" spawnpointtype="human" spawnsub="startoutpost">
-    <Character name="Human">
+    <Character name="Human" speciesname="Human">
       <Job identifier="securityofficer">
         <Skill identifier="medical" level="20"/>
         <Skill identifier="weapons" level="70"/>
@@ -197,7 +197,7 @@
   </OfficerTutorial>
 
   <CaptainTutorial identifier="tutorial.captaintraining" playablecontentpath="Content/Tutorials/TutorialVideos/" tutorialtype="scenario" submarinepath="Content/Tutorials/Dugong_Tutorial.sub" startoutpostpath="Content/Tutorials/TutorialOutpost.sub" levelseed="nLoZLLtza" levelparams="ColdCavernsTutorial" spawnpointtype="human" spawnsub="startoutpost">
-    <Character name="Human">
+    <Character name="Human" speciesname="Human">
       <Job identifier="captain">
         <Skill identifier="medical" level="20"/>
         <Skill identifier="weapons" level="20"/>
