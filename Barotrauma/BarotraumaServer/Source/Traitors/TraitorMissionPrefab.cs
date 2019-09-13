@@ -521,7 +521,7 @@ namespace Barotrauma
             if (jobs != null)
             {
                 var jobsSet = new HashSet<string>(jobs.Select(job => job.ToLower(CultureInfo.InvariantCulture)));
-                filters.Add(character => jobsSet.Contains(character.Info.Job.Name.ToLower(CultureInfo.InvariantCulture)));
+                filters.Add(character => character.Info?.Job != null && jobsSet.Contains(character.Info.Job.Name.ToLower(CultureInfo.InvariantCulture)));
             }
             return new Role(filters);
         }

@@ -1,5 +1,5 @@
-﻿//#define SERVER_IS_TRAITOR
-//#define ALLOW_SOLO_TRAITOR
+﻿//#define ALLOW_SOLO_TRAITOR
+//#define ALLOW_NONHUMANOID_TRAITOR
 
 using System;
 using Barotrauma.Networking;
@@ -68,8 +68,7 @@ namespace Barotrauma
                 {
                     if (Traitors.Any() && allObjectives.Count > 0)
                     {
-
-                        TextManager.JoinServerMessages("\n",
+                        return TextManager.JoinServerMessages("\n",
                             Traitors.Values.Select(traitor =>
                             {
                                 var isSuccess = completedObjectives.Count >= allObjectives.Count;
@@ -97,16 +96,18 @@ namespace Barotrauma
             protected List<Tuple<Client, Character>> FindTraitorCandidates(GameServer server, Character.TeamType team, RoleFilter traitorRoleFilter)
             {
                 var traitorCandidates = new List<Tuple<Client, Character>>();
-#if SERVER_IS_TRAITOR
-                if (server.Character != null)
+                foreach (Client c in server.ConnectedClients)
                 {
-                    traitorCandidates.Add(server.Character);
-                }
-                else
+                    if (c.Character == null || c.Character.IsDead || c.Character.Removed || !traitorRoleFilter(c.Character) ||
+                        (team != Character.TeamType.None && c.Character.TeamID != team))
+                    {
+                        continue;
+                    }
+#if !ALLOW_NONHUMANOID_TRAITOR
+                    if (!c.Character.IsHumanoid) { continue; }
 #endif
-                {
-                    traitorCandidates.AddRange(server.ConnectedClients.FindAll(c => c.Character != null && !c.Character.IsDead && (team == Character.TeamType.None || c.Character.TeamID == team) && traitorRoleFilter(c.Character)).ConvertAll(client => Tuple.Create(client, client.Character)));
-                }
+                    traitorCandidates.Add(Tuple.Create(c, c.Character));
+                }                
                 return traitorCandidates;
             }
 
@@ -222,9 +223,11 @@ namespace Barotrauma
                 {
                     traitor.Greet(server, CodeWords, CodeResponse, message => messages[traitor].Add(message));
                 }
+
                 messages.ForEach(traitor => traitor.Value.ForEach(message => traitor.Key.SendChatMessage(message, Identifier)));
                 messages.ForEach(traitor => traitor.Value.ForEach(message => traitor.Key.SendChatMessageBox(message, Identifier)));
-                Update(0.0f, GameMain.Server.EndGame);
+                Update(0.0f, () => { GameMain.Server.TraitorManager.ShouldEndRound = true; });
+
 #if SERVER
                 foreach (var traitor in Traitors.Values)
                 {
@@ -264,13 +267,10 @@ namespace Barotrauma
                         {
                             if (!objective.Start(traitor))
                             {
-                                pendingObjectives.Remove(objective);
-                                completedObjectives.Add(objective);
-                                if (pendingObjectives.Count > 0)
-                                {
-                                    objective.EndMessage();
-                                }
-                                continue;
+                                //the mission fails if an objective cannot be started
+                                objective.EndMessage();
+                                pendingObjectives.Clear();
+                                break;
                             }
                             startedObjectives.Add(objective);
                         }

@@ -758,8 +758,12 @@ namespace Barotrauma.Networking
 
             karmaSettingsBlocker = new GUIFrame(new RectTransform(Vector2.One, karmaSettingsContainer.RectTransform, Anchor.CenterLeft) { MaxSize = new Point(karmaSettingsList.Content.Rect.Width, int.MaxValue) }, 
                 style: "InnerFrame");
+            karmaPresetDD.SelectItem(KarmaPreset);
             karmaPresetDD.OnSelected = (selected, obj) =>
             {
+                string newKarmaPreset = obj as string;
+                if (newKarmaPreset == KarmaPreset) { return true; }
+
                 List<NetPropertyData> properties = netProperties.Values.ToList();
                 List<object> prevValues = new List<object>();
                 foreach (NetPropertyData prop in netProperties.Values)
@@ -772,7 +776,7 @@ namespace Barotrauma.Networking
                     GameMain.NetworkMember?.KarmaManager?.SaveCustomPreset();
                     GameMain.NetworkMember?.KarmaManager?.Save();
                 }
-                KarmaPreset = obj as string;
+                KarmaPreset = newKarmaPreset;
                 GameMain.NetworkMember.KarmaManager.SelectPreset(KarmaPreset);
                 karmaSettingsList.Content.ClearChildren();
                 karmaSettingsBlocker.Visible = !karmaBox.Selected || KarmaPreset != "custom";
@@ -783,7 +787,6 @@ namespace Barotrauma.Networking
                 }
                 return true;
             };
-            karmaPresetDD.SelectItem(KarmaPreset);
             AssignGUIComponent("KarmaPreset", karmaPresetDD);
             karmaBox.OnSelected = (tb) =>
             {
@@ -837,15 +840,15 @@ namespace Barotrauma.Networking
         {
             if (settingsFrame == null)
             {
+                CreateSettingsFrame();
+            }
+            else
+            {
                 if (KarmaPreset == "custom")
                 {
                     GameMain.NetworkMember?.KarmaManager?.SaveCustomPreset();
                     GameMain.NetworkMember?.KarmaManager?.Save();
                 }
-                CreateSettingsFrame();
-            }
-            else
-            {
                 ClientAdminWrite(NetFlags.Properties);
                 foreach (NetPropertyData prop in netProperties.Values)
                 {
