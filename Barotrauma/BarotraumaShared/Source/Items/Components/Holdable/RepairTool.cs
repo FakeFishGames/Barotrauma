@@ -394,8 +394,8 @@ namespace Barotrauma.Items.Components
             float reach = Range + ConvertUnits.ToDisplayUnits(((HumanoidAnimController)character.AnimController).ArmLength);
 
             //too far away -> consider this done and hope the AI is smart enough to move closer
-            if (dist > reach * 3) { return true; }
-
+            if (dist > reach * 2) { return true; }
+            character.AIController.SteeringManager.Reset();
             //steer closer if almost in range
             if (dist > reach)
             {
@@ -407,7 +407,7 @@ namespace Barotrauma.Items.Components
                         if (indoorSteering.CurrentPath != null && !indoorSteering.IsPathDirty && indoorSteering.CurrentPath.Unreachable)
                         {
                             Vector2 dir = Vector2.Normalize(fromCharacterToLeak);
-                            character.AIController.SteeringManager.SteeringManual(deltaTime, dir / 2);
+                            character.AIController.SteeringManager.SteeringManual(deltaTime, dir);
                         }
                         else
                         {
@@ -446,20 +446,32 @@ namespace Barotrauma.Items.Components
                 if (dist < reach / 2)
                 {
                     // Too close -> steer away
-                    character.AIController.SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(character.SimPosition - leak.SimPosition) / 2);
+                    character.AIController.SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(character.SimPosition - leak.SimPosition));
                 }
                 else if (dist <= reach)
                 {
                     // In range
-                    character.AIController.SteeringManager.Reset();
-                }
-                else
-                {
-                    return false;
+                    character.CursorPosition = leak.Position;
+                    character.CursorPosition += VectorExtensions.Forward(Item.body.TransformedRotation + (float)Math.Sin(sinTime) / 2, dist / 2);
+                    if (character.AnimController.InWater)
+                    {
+                        var torso = character.AnimController.GetLimb(LimbType.Torso);
+                        // Turn facing the target when not moving (handled in the animcontroller if not moving)
+                        Vector2 mousePos = ConvertUnits.ToSimUnits(character.CursorPosition);
+                        Vector2 diff = (mousePos - torso.SimPosition) * character.AnimController.Dir;
+                        float newRotation = MathUtils.VectorToAngle(diff);
+                        character.AnimController.Collider.SmoothRotate(newRotation, 5.0f);
+
+                        if (VectorExtensions.Angle(VectorExtensions.Forward(torso.body.TransformedRotation), fromCharacterToLeak) < MathHelper.PiOver4)
+                        {
+                            // Swim past
+                            Vector2 moveDir = leak.IsHorizontal ? Vector2.UnitY : Vector2.UnitX;
+                            moveDir *= character.AnimController.Dir;
+                            character.AIController.SteeringManager.SteeringManual(deltaTime, moveDir);
+                        }
+                    }
                 }
             }
-            sinTime += deltaTime / 2;
-            character.CursorPosition = leak.Position + VectorExtensions.Forward(Item.body.TransformedRotation + (float)Math.Sin(sinTime), dist);
             if (item.RequireAimToUse)
             {
                 bool isOperatingButtons = false;
@@ -475,14 +487,33 @@ namespace Barotrauma.Items.Components
                 {
                     character.SetInput(InputType.Aim, false, true);
                 }
+                bool isAiming = false;
+                var holdable = item.GetComponent<Holdable>();
+                if (holdable != null)
+                {
+                    isAiming = holdable.ControlPose;
+                }
+                sinTime = isAiming ? sinTime + deltaTime * 5 : 0;
             }
             // Press the trigger only when the tool is approximately facing the target.
             Vector2 fromItemToLeak = leak.WorldPosition - item.WorldPosition;
             var angle = VectorExtensions.Angle(VectorExtensions.Forward(item.body.TransformedRotation), fromItemToLeak);
             if (angle < MathHelper.PiOver4)
             {
-                character.SetInput(InputType.Shoot, false, true);
-                Use(deltaTime, character);
+                // Check that we don't hit any friendlies
+                if (Submarine.PickBodies(item.SimPosition, leak.SimPosition, collisionCategory: Physics.CollisionCharacter).None(hit =>
+                {
+                    if (hit.UserData is Character c)
+                    {
+                        if (c == character) { return false; }
+                        return HumanAIController.IsFriendly(character, c);
+                    }
+                    return false;  
+                }))
+                {
+                    character.SetInput(InputType.Shoot, false, true);
+                    Use(deltaTime, character);
+                }
             }
 
             bool leakFixed = (leak.Open <= 0.0f || leak.Removed) && 
@@ -490,7 +521,6 @@ namespace Barotrauma.Items.Components
 
             if (leakFixed && leak.FlowTargetHull != null)
             {
-                sinTime = 0;
                 if (!leak.FlowTargetHull.ConnectedGaps.Any(g => !g.IsRoomToRoom && g.Open > 0.0f))
                 {
                     
