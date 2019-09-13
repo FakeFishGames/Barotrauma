@@ -934,24 +934,27 @@ namespace Barotrauma
             var linkHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), msgBox.Content.RectTransform)) { Stretch = true, RelativeSpacing = 0.025f };
             linkHolder.RectTransform.MaxSize = new Point(int.MaxValue, linkHolder.Rect.Height);
 
-            List<Pair<string, string>> links = new List<Pair<string, string>>()
-                {
-                    new Pair<string, string>(TextManager.Get("bugreportfeedbackform"),"https://barotraumagame.com/feedback"),
-                    new Pair<string, string>(TextManager.Get("bugreportgithubform"),"https://github.com/Regalis11/Barotrauma/issues/new?template=bug_report.md")
-                };
-            foreach (var link in links)
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), linkHolder.RectTransform), TextManager.Get("bugreportfeedbackform"), style: "MainMenuGUIButton", textAlignment: Alignment.Left)
             {
-                new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), linkHolder.RectTransform), link.First, style: "MainMenuGUIButton", textAlignment: Alignment.Left)
+                UserData = "https://steamcommunity.com/app/602960/discussions/1/",
+                OnClicked = (btn, userdata) =>
                 {
-                    UserData = link.Second,
-                    OnClicked = (btn, userdata) =>
-                    {
-                        ShowOpenUrlInWebBrowserPrompt(userdata as string);
-                        msgBox.Close();
-                        return true;
-                    }
-                };
-            }
+                    SteamManager.OverlayCustomURL(userdata as string);
+                    msgBox.Close();
+                    return true;
+                }
+            };
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), linkHolder.RectTransform), TextManager.Get("bugreportgithubform"), style: "MainMenuGUIButton", textAlignment: Alignment.Left)
+            {
+                UserData = "https://github.com/Regalis11/Barotrauma/issues/new?template=bug_report.md",
+                OnClicked = (btn, userdata) =>
+                {
+                    ShowOpenUrlInWebBrowserPrompt(userdata as string);
+                    msgBox.Close();
+                    return true;
+                }
+            };
 
             msgBox.InnerFrame.RectTransform.MinSize = new Point(0,
                 msgBox.InnerFrame.Rect.Height + linkHolder.Rect.Height + msgBox.Content.AbsoluteSpacing * 2 + (int)(50 * GUI.Scale));

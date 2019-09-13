@@ -3290,7 +3290,6 @@
   <editordisclaimerdiscordlink>Barotrauma Discord Server</editordisclaimerdiscordlink>
   <editordisclaimerforumlink>Barotrauma Forums</editordisclaimerforumlink>
   <bugreportgithubform>GitHub issue form</bugreportgithubform>
-  <bugreportfeedbackform>Barotrauma feedback form</bugreportfeedbackform>
   <bugreportbutton>Report a bug</bugreportbutton>
   <centerarealockedheader>Mysteries lie ahead...</centerarealockedheader>
   <centerarealockedtext>This area is unreachable in this version of Barotrauma. Please wait for future updates!</centerarealockedtext>
@@ -3548,4 +3547,6 @@
   <mechanic.fabricatetext>Now that we have all of the required materials, we can fabricate a fire extinguisher. Find it in the list, load the fabricator with materials and press the button to start fabricating.\n\nWhen done, the fabricated item can be found in the fabricator’s output slot. As the fire extinguisher is an item that requires the use of both hands, equip the item by double-clicking on it.</mechanic.fabricatetext>
 
   <editordisclaimerdiscordurl>https://discordapp.com/invite/undertow</editordisclaimerdiscordurl>
+
+  <bugreportfeedbackform>Help and technical support</bugreportfeedbackform>
 </infotexts>
