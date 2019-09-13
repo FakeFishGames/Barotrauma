@@ -639,157 +639,154 @@
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,0,512,32" depth="0.96" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Pipe A1 90deg" identifier="ventpipea190deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="561,1,30,510" depth="0.96" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="544,0,32,512" depth="0.96" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Pipe A2" identifier="ventpipea2" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,32,460,33" depth="0.96" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,32,448,32" depth="0.96" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Pipe A2 90deg" identifier="ventpipea290deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="591,1,33,456" depth="0.96" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="576,0,32,448" depth="0.96" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Pipe A3" identifier="ventpipea3" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,81,512,23" depth="0.96" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,96,512,24" depth="0.96" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Pipe A3 90deg" identifier="ventpipea390deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="640,0,24,511" depth="0.96" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="640,0,24,512" depth="0.96" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Pipe A4" identifier="ventpipea4" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,112,496,17" depth="0.96" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,128,480,16" depth="0.96" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Pipe A4 90deg" identifier="ventpipea490deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="671,0,17,496" depth="0.96" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="672,0,17,480" depth="0.96" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Pipe A5" identifier="ventpipea5" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,145,513,47" depth="0.96" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,160,512,48" depth="0.96" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Pipe A5 90deg" identifier="ventpipea590deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="703,0,49,511" depth="0.96" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="704,0,48,512" depth="0.96" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Pipe A6" identifier="ventpipea6" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,208,513,63" depth="0.96" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,208,512,64" depth="0.96" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Pipe A6 90deg" identifier="ventpipea690deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="767,0,65,510" depth="0.96" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="768,0,64,512" depth="0.96" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Pipe A7" identifier="ventpipea7" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,300,512,58" depth="0.96" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,288,512,64" depth="0.96" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Pipe A7 90deg" identifier="ventpipea790deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="858,0,61,511" depth="0.96" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="864,0,64,512" depth="0.96" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Pipe A8" identifier="ventpipea8" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,368,333,43" depth="0.96" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,384,256,32" depth="0.96" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Pipe A8 90deg" identifier="ventpipea890deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="928,1,42,329" depth="0.96" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="928,0,32,256" depth="0.96" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Pipe A9" identifier="ventpipea9" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="1,432,161,32" depth="0.96" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,448,161,32" depth="0.96" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Pipe A9 90deg" identifier="ventpipea990deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="991,0,33,160" depth="0.96" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="992,0,32,160" depth="0.96" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Pipe Cap A1" identifier="ventpipecapa1" description="Decorative ventilation piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="373,368,11,33" depth="0.96" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="288,384,16,32" depth="0.96" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Pipe  Cap A1 90deg" identifier="ventpipecapa190deg" description="Decorative ventilation piece" resizevertical="false" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="928,366,32,17" depth="0.96" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="928,368,32,16" depth="0.96" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Medium Pipe Bend A1" identifier="ventmediumpipebenda1" description="Visual Ventilation Medium Pipe Bend piece" resizevertical="false" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="293,423,51,52" depth="0.96" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="448,384,48,48" depth="0.96" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Large Pipe Bend A1" identifier="ventlargepipebenda1" description="Visual Ventilation Large Pipe Bend piece" resizevertical="false" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="186,417,70,73" depth="0.96" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="352,384,64,64" depth="0.96" origin="0.5,0.5" />
   </ventilation>
   <!--Ventilation Connectors Cosmetic-->
   <ventilation name="Vent Connector A1" identifier="ventconnectora1" description="Visual Vent Connector piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="1,511,128,115" depth="0.92" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="1,511,127,113" depth="0.92" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Connector A2" identifier="ventconnectora2" description="Visual Vent Connector piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="177,512,208,102" depth="0.92" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="192,512,208,105" depth="0.92" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Connector A3" identifier="ventconnectora3" description="Visual Vent Connector piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="8,655,148,98" depth="0.92" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,640,149,96" depth="0.92" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Connector A4" identifier="ventconnectora4" description="Visual Vent Connector piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="175,635,196,77" depth="0.92" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="192,640,192,64" depth="0.92" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Connector A5" identifier="ventconnectora5" description="Visual Vent Connector piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="1,768,215,94" depth="0.92" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="1,768,215,91" depth="0.92" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Connector A6" identifier="ventconnectora6" description="Visual Vent Connector piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,870,190,68" depth="0.92" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,864,176,64" depth="0.92" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Connector A7" identifier="ventconnectora7" description="Visual Vent Connector piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,943,193,66" depth="0.92" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,960,176,64" depth="0.92" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Connector Cap A1" identifier="ventconnectorcapa1" description="Visual Vent Connector Cap piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="248,762,59,49" depth="0.92" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="224,768,59,49" depth="0.92" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Connector Cap A2" identifier="ventconnectorcapa2" description="Visual Vent Connector Cap piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="250,818,25,30" depth="0.92" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="288,768,26,32" depth="0.92" origin="0.5,0.5" />
   </ventilation>
   <!--Ventilation Duct Cosmetic-->
-  <!--<ventilation name="Vent Duct A1" identifier="ventducta1" description="Visual Vent Duct piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="513,521,94,96" depth="0.92" origin="0.5,0.5" />
+  <ventilation name="Vent Duct A1" identifier="ventducta1" description="Visual Vent Duct piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="512,512,96,96" depth="0.92" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Duct A1 90 deg" identifier="ventducta190deg" description="Visual Vent Duct piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="613,521,95,95" depth="0.92" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="608,512,96,96" depth="0.92" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Duct A2" identifier="ventducta2" description="Visual Vent Duct piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="719,521,66,65" depth="0.92" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="736,544,64,64" depth="0.92" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Duct A2 90 deg" identifier="ventducta290deg" description="Visual Vent Duct piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="788,521,62,63" depth="0.92" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="800,544,62,63" depth="0.92" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Bend Duct A1" identifier="ventbendducta1" description="Visual Vent Bend Duct piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="879,518,63,62" depth="0.92" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="896,544,64,64" depth="0.92" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Bend Duct A2" identifier="ventbendducta2" description="Visual Vent Bend Duct piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="952,520,63,63" depth="0.92" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="960,544,64,64" depth="0.92" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Small Duct Reducer A" identifier="ventsmallductreducera" description="Visual Vent Small Duct Reducer piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="516,626,55,95" depth="0.92" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="512,640,32,96" depth="0.92" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Large Duct Reducer A" identifier="ventlargeductreducera" description="Visual Vent Large Duct Reducer piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="586,627,153,96" depth="0.92" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="576,640,160,96" depth="0.92" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Medium Duct Reducer A1" identifier="ventlargeductreducera1" description="Visual Vent Large Duct Reducer piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="748,628,64,127" depth="0.92" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="768,640,64,128" depth="0.92" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Medium Duct Reducer A2" identifier="ventlargeductreducera2" description="Visual Vent Large Duct Reducer piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="825,626,63,126" depth="0.92" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="848,640,64,128" depth="0.92" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Duct Fan A" identifier="ventductfana" description="Visual Vent Duct Fan piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="918,626,62,126" depth="0.92" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="928,640,64,128" depth="0.92" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Duct B1" identifier="ventductb1" description="Visual Vent Duct piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="527,774,94,59" depth="0.92" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="472,768,113,64" depth="0.92" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Duct B1 90 deg" identifier="ventductb190deg" description="Visual Vent Duct piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="634,767,59,94" depth="0.92" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="800,864,64,112" depth="0.92" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Duct B2" identifier="ventductlongb2" description="Visual Vent Duct piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="716,769,240,42" depth="0.92" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="224,841,224,48" depth="0.92" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Duct B2 90 deg" identifier="ventductb290deg" description="Visual Vent Duct piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="966,773,43,238" depth="0.92" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="953,800,48,224" depth="0.92" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Duct Bend B1" identifier="ventductbendb1" description="Visual Vent Duct Bend piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="524,873,96,103" depth="0.92" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="505,864,112,112" depth="0.92" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Duct Bend B2" identifier="ventductbendb2" description="Visual Vent Duct Bend piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="635,902,96,76" depth="0.92" origin="0.5,0.5" />
-  </ventilation>
-  <ventilation name="Vent Duct Bend B3" identifier="ventductbendb3" description="Visual Vent Duct Bend piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="738,900,97,77" depth="0.92" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="640,832,128,112" depth="0.92" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Duct Reducer B" identifier="ventductreducerb" description="Visual Vent Duct Reducer piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="716,819,97,46" depth="0.92" origin="0.5,0.5" />
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="473,832,112,32" depth="0.92" origin="0.5,0.5" />
   </ventilation>
   <ventilation name="Vent Duct Reducer B 90 deg" identifier="ventductreducerb90deg" description="Visual Vent Duct Reducer piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
-    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="837,875,46,97" depth="0.92" origin="0.5,0.5" />
-  </ventilation>-->
+    <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="768,864,32,112" depth="0.92" origin="0.5,0.5" />
+  </ventilation>
   <!-- VENTILATION - Cosmetic ENDS -->
   <!-- TAILS START-->
   <extA_Tail name="Tail Fin Old A" identifier="extA_Tail" description="Submarine tail temp" scale="1.2" body="true" bodywidth="80" bodyheight="330" bodyoffset="-20,0" castshadow="false" health="200">
@@ -1515,7 +1512,7 @@
     <sprite texture="Content/Map/testroom.png" sourcerect="338,907,38,32" depth="0.85" />
   </CableHolderVertical3>
   <topwindow name="Window Top" identifier="topwindow" width="128" height="49" body="true" health="100" tags="glass">
-    <Upgrade gameversion="0.9.2.0" rectheight="49"/>
+    <Upgrade gameversion="0.9.2.0" rectheight="49" />
     <sprite texture="Content/Map/testroom.png" sourcerect="208,848,128,49" depth="0.05" />
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="344,848,128,49" depth="0.85" />
   </topwindow>
@@ -1532,11 +1529,11 @@
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="961,80,64,128" depth="0.85" />
   </verticalresizablewindow>
   <largeplatform name="Platform Large" identifier="largeplatform" allowattachitems="true" width="64" height="51" resizehorizontal="true" body="true" platform="true">
-    <Upgrade gameversion="0.9.3.0" rectheight="51"/>
+    <Upgrade gameversion="0.9.3.0" rectheight="51" />
     <sprite texture="Content/Map/testroom.png" sourcerect="897,0,126,51" depth="0.9" />
   </largeplatform>
   <platform name="Platform Basic" identifier="platform" allowattachitems="true" width="64" height="27" resizehorizontal="true" body="true" platform="true">
-    <Upgrade gameversion="0.9.3.0" rectheight="27"/>  
+    <Upgrade gameversion="0.9.3.0" rectheight="27" />
     <sprite texture="Content/Map/testroom.png" sourcerect="897,52,126,27" depth="0.9" />
   </platform>
   <roughbgwall name="BackWall Rough" identifier="roughbgwall" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
