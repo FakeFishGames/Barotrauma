@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<PlayStyle>
+<PlayStyles>
   <PlayStyleBanner identifier="Serious" texture="Content/UI/Server/playstylebanners1.png" sourcerect="0,0,1024,410" color="0,128,192"/>
   <PlayStyleBanner identifier="Roleplay" texture="Content/UI/Server/playstylebanners1.png" sourcerect="0,512,1024,410" color="128,64,0"/>
   <PlayStyleBanner identifier="Casual" texture="Content/UI/Server/playstylebanners2.png" sourcerect="0,0,1024,410" color="34,160,117" />
@@ -19,4 +19,4 @@
   <!-- TODO: request new traitors icons -->
   <PlayStyleIcon identifier="traitors.true" texture="Content/UI/Server/ServerPlayStyleIcons.png" sourcerect="256,128,128,128" color="190,60,60"/>
   <PlayStyleIcon identifier="traitors.false" texture="Content/UI/Server/ServerPlayStyleIcons.png" sourcerect="256,128,128,128" color="100,100,100"/>
-</PlayStyle>
+</PlayStyles>

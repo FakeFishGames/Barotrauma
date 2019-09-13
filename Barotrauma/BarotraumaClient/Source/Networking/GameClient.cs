@@ -1415,7 +1415,8 @@ namespace Barotrauma.Networking
                                 serverSettings.ClientRead(settingsBuf);
                                 if (!IsServerOwner)
                                 {
-                                    GameMain.ServerListScreen.AddToRecentServers(serverEndpoint, serverSettings);
+                                    ServerInfo info = GameMain.ServerListScreen.UpdateServerInfoWithServerSettings(serverEndpoint, serverSettings);
+                                    GameMain.ServerListScreen.AddToRecentServers(info);
                                 }
 
                                 GameMain.NetLobbyScreen.LastUpdateID = updateID;

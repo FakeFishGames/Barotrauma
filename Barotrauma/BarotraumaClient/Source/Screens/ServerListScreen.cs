@@ -556,8 +556,11 @@ namespace Barotrauma
             //recent and favorite servers
             ReadServerMemFromFile(recentServersFile, ref recentServers);
             ReadServerMemFromFile(favoriteServersFile, ref favoriteServers);
+            recentServers.ForEach(s => s.Recent = true);
+            favoriteServers.ForEach(s => s.Favorite = true);
 
             SelectedTab = Tab.Browse;
+            tabButtons[(int)selectedTab].Selected = true;
         }
 
         private void ReadServerMemFromFile(string file, ref List<ServerInfo> servers)
@@ -592,7 +595,7 @@ namespace Barotrauma
             doc.Save(file);
         }
 
-        public void AddToRecentServers(object endpoint, ServerSettings serverSettings)
+        public ServerInfo UpdateServerInfoWithServerSettings(object endpoint, ServerSettings serverSettings)
         {
             UInt64 steamId = 0;
             string ip = ""; string port = "";
@@ -611,13 +614,14 @@ namespace Barotrauma
                     port = address[address.Length - 1];
                 }
             }
-            
 
-            ServerInfo info = recentServers.Find(s => s.IP == ip && s.Port == port && s.OwnerID == steamId);
+            bool isInfoNew = false;
+            ServerInfo info = serverList.Content.FindChild(d => (d.UserData is ServerInfo serverInfo) &&
+                                                        ((serverInfo.OwnerID != 0 && steamId == serverInfo.OwnerID) || (ip == serverInfo.IP && port == serverInfo.Port))).UserData as ServerInfo;
             if (info == null)
             {
+                isInfoNew = true;
                 info = new ServerInfo();
-                recentServers.Add(info);
             }
 
             info.ServerName = serverSettings.ServerName;
@@ -643,7 +647,57 @@ namespace Barotrauma
             info.PingChecked = false;
             info.HasPassword = serverSettings.HasPassword;
 
+            if (isInfoNew)
+            {
+                AddToServerList(info);
+            }
+
+            return info;
+        }
+
+        public void AddToRecentServers(ServerInfo info)
+        {
+            info.Recent = true;
+            ServerInfo existingInfo = recentServers.Find(serverInfo => (serverInfo.OwnerID != 0 && info.OwnerID == serverInfo.OwnerID) || (info.IP == serverInfo.IP && info.Port == serverInfo.Port));
+            if (existingInfo == null)
+            {
+                recentServers.Add(info);
+            }
+            else
+            {
+                int index = recentServers.IndexOf(existingInfo);
+                recentServers[index] = info;
+            }
+
             WriteServerMemToFile(recentServersFile, recentServers);
+        }
+
+        public void AddToFavoriteServers(ServerInfo info)
+        {
+            info.Favorite = true;
+            ServerInfo existingInfo = favoriteServers.Find(serverInfo => (serverInfo.OwnerID != 0 && info.OwnerID == serverInfo.OwnerID) || (info.IP == serverInfo.IP && info.Port == serverInfo.Port));
+            if (existingInfo == null)
+            {
+                favoriteServers.Add(info);
+            }
+            else
+            {
+                int index = favoriteServers.IndexOf(existingInfo);
+                favoriteServers[index] = info;
+            }
+
+            WriteServerMemToFile(favoriteServersFile, favoriteServers);
+        }
+
+        public void RemoveFromFavoriteServers(ServerInfo info)
+        {
+            info.Favorite = false;
+            ServerInfo existingInfo = favoriteServers.Find(serverInfo => (serverInfo.OwnerID != 0 && info.OwnerID == serverInfo.OwnerID) || (info.IP == serverInfo.IP && info.Port == serverInfo.Port));
+            if (existingInfo != null)
+            {
+                favoriteServers.Remove(existingInfo);
+                WriteServerMemToFile(favoriteServersFile, favoriteServers);
+            }
         }
 
         private void OnResolutionChanged()
@@ -813,8 +867,8 @@ namespace Barotrauma
                     (!filterTraitor.Selected || serverInfo.TraitorsEnabled == YesNoMaybe.Yes || serverInfo.TraitorsEnabled == YesNoMaybe.Maybe) &&
                     (!filterVoip.Selected || serverInfo.VoipEnabled == true) &&
                     ((selectedTab == Tab.Browse) ||
-                     (selectedTab == Tab.Recent && recentServers.Any(info => (serverInfo.OwnerID != 0 && info.OwnerID == serverInfo.OwnerID) || (info.IP == serverInfo.IP && info.Port == serverInfo.Port))) ||
-                     (selectedTab == Tab.Favorites && favoriteServers.Any(info => (serverInfo.OwnerID != 0 && info.OwnerID == serverInfo.OwnerID) || (info.IP == serverInfo.IP && info.Port == serverInfo.Port))));
+                     (selectedTab == Tab.Recent && serverInfo.Recent) ||
+                     (selectedTab == Tab.Favorites && serverInfo.Favorite));
 
                 foreach (GUITickBox tickBox in playStyleTickBoxes)
                 {
@@ -1172,6 +1226,14 @@ namespace Barotrauma
                         CanBeFocused = false
                     };
                 }
+                else
+                {
+                    foreach (ServerInfo info in recentServers.Concat(favoriteServers))
+                    {
+                        AddToServerList(info);
+                        info.QueryLiveInfo(UpdateServerInfo);
+                    }
+                }
             }
             else
             {
@@ -1180,12 +1242,6 @@ namespace Barotrauma
             }
 
             refreshDisableTimer = DateTime.Now + AllowedRefreshInterval;
-
-            foreach (ServerInfo info in recentServers.Concat(favoriteServers))
-            {
-                AddToServerList(info);
-                info.QueryLiveInfo(UpdateServerInfo);
-            }
 
             yield return CoroutineStatus.Success;
         }
@@ -1265,7 +1321,7 @@ namespace Barotrauma
         private void AddToServerList(ServerInfo serverInfo)
         {
             var serverFrame = serverList.Content.FindChild(d => (d.UserData is ServerInfo info) &&
-                                                                (info.OwnerID==serverInfo.OwnerID && info.IP==serverInfo.IP && info.Port==serverInfo.Port));
+                                                                ((info.OwnerID != 0 && info.OwnerID==serverInfo.OwnerID) || (info.IP==serverInfo.IP && info.Port==serverInfo.Port)));
 
             if (serverFrame == null)
             {
@@ -1280,8 +1336,23 @@ namespace Barotrauma
                     //RelativeSpacing = 0.02f
                 };
             }
+            else
+            {
+                int index = recentServers.IndexOf(serverFrame.UserData as ServerInfo);
+                if (index >= 0)
+                {
+                    recentServers[index] = serverInfo;
+                    serverInfo.Recent = true;
+                }
+                index = favoriteServers.IndexOf(serverFrame.UserData as ServerInfo);
+                if (index >= 0)
+                {
+                    favoriteServers[index] = serverInfo;
+                    serverInfo.Favorite = true;
+                }
+            }
             serverFrame.UserData = serverInfo;
-            
+
             UpdateServerInfo(serverInfo);
 
             SortList(sortedBy, toggle: false);
@@ -1290,7 +1361,8 @@ namespace Barotrauma
 
         private void UpdateServerInfo(ServerInfo serverInfo)
         {
-            var serverFrame = serverList.Content.FindChild(serverInfo);
+            var serverFrame = serverList.Content.FindChild(d => (d.UserData is ServerInfo info) &&
+                                                                ((info.OwnerID != 0 && info.OwnerID == serverInfo.OwnerID) || (info.IP == serverInfo.IP && info.Port == serverInfo.Port)));
             if (serverFrame == null) return;
 
             var serverContent = serverFrame.Children.First() as GUILayoutGroup;

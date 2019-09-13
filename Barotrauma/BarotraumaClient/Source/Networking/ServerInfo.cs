@@ -41,6 +41,9 @@ namespace Barotrauma.Networking
         public string GameMode;
         public PlayStyle? PlayStyle;
 
+        public bool Recent;
+        public bool Favorite;
+
         public bool? RespondedToSteamQuery = null;
 
         public Facepunch.Steamworks.SteamFriend SteamFriend;
@@ -107,6 +110,23 @@ namespace Barotrauma.Networking
             float playStyleBannerAspectRatio = playStyleBannerSprite.SourceRect.Width / (playStyleBannerSprite.SourceRect.Height * 0.625f);
             var playStyleBanner = new GUIImage(new RectTransform(new Vector2(1.0f, 1.0f / playStyleBannerAspectRatio), previewContainer.RectTransform, Anchor.TopCenter, scaleBasis: ScaleBasis.BothWidth),
                                                playStyleBannerSprite, null, true);
+
+            GUITickBox favoriteTickBox = new GUITickBox(new RectTransform(new Vector2(0.05f, 0.05f), frame.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.05f, 0.01f) }, "", null, "GUIServerListFavoriteTickBox")
+            {
+                Selected = Favorite,
+                OnSelected = (tickbox) =>
+                {
+                    if (tickbox.Selected)
+                    {
+                        GameMain.ServerListScreen.AddToFavoriteServers(this);
+                    }
+                    else
+                    {
+                        GameMain.ServerListScreen.RemoveFromFavoriteServers(this);
+                    }
+                    return true;
+                }
+            };
 
             var playStyleName = new GUITextBlock(new RectTransform(new Vector2(0.15f, 0.0f), playStyleBanner.RectTransform) { RelativeOffset = new Vector2(0.01f, 0.06f) },
                 TextManager.AddPunctuation(':', TextManager.Get("serverplaystyle"), TextManager.Get("servertag."+ playStyle)), textColor: Color.White, 
