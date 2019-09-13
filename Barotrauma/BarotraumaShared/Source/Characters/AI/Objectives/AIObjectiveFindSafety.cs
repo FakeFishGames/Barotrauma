@@ -73,8 +73,8 @@ namespace Barotrauma
             }
             if (needsEquipment)
             {
-                TryAddSubObjective(ref divingGearObjective,
-                    () => new AIObjectiveFindDivingGear(character, needsDivingSuit, objectiveManager),
+                TryAddSubObjective(ref divingGearObjective, 
+                    constructor: () => new AIObjectiveFindDivingGear(character, needsDivingSuit, objectiveManager),
                     onAbandon: () =>
                     {
                         Priority = 0;

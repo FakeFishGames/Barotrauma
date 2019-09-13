@@ -103,14 +103,11 @@ namespace Barotrauma
                     onAbandon: () => Abandon = true,
                     onCompleted: () =>
                     {
-                        if (!Check())
+                        if (Check()) { IsCompleted = true; }
+                        else
                         {
                             // Failed to operate. Probably too far.
                             Abandon = true;
-                        }
-                        else
-                        {
-                            RemoveSubObjective(ref operateObjective);
                         }
                     });
             }
@@ -122,13 +119,15 @@ namespace Barotrauma
                 }, 
                 onAbandon: () =>
                 {
-                    // If we are almost there, we can try to operate.
-                    if ((Leak.WorldPosition - character.WorldPosition).LengthSquared() > reach * reach * 2)
+                    if (Check()) { IsCompleted = true; }
+                    else if ((Leak.WorldPosition - character.WorldPosition).LengthSquared() > reach * reach * 2)
                     {
+                        // Too far
                         Abandon = true;
                     }
                     else
                     {
+                        // We are close, try again.
                         RemoveSubObjective(ref gotoObjective);
                     }
                 },
