@@ -115,6 +115,8 @@ namespace Barotrauma
             {
                 TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(Leak, character, objectiveManager)
                 {
+                    // Allow to go outside only when ordered to fix leaks
+                    AllowGoingOutside = HumanAIController.CurrentOrder != null,
                     CloseEnough = reach
                 }, 
                 onAbandon: () =>
