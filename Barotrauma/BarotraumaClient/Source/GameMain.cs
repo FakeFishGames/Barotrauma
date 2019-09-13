@@ -765,8 +765,11 @@ namespace Barotrauma
                         {
                             GUI.TogglePauseMenu();
                         }
-                        else if ((Character.Controlled?.SelectedConstruction == null || !Character.Controlled.SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null))
-                            && Inventory.SelectedSlot == null && CharacterHealth.OpenHealthWindow == null)
+                        //open the pause menu if not controlling a character OR if the character has no UIs active that can be closed with ESC
+                        else if (Character.Controlled == null ||
+                            ((Character.Controlled.SelectedConstruction == null || !Character.Controlled.SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null))
+                            //TODO: do we need to check Inventory.SelectedSlot?
+                            && Inventory.SelectedSlot == null && CharacterHealth.OpenHealthWindow == null))
                         {
                             // Otherwise toggle pausing, unless another window/interface is open.
                             GUI.TogglePauseMenu();
@@ -911,7 +914,7 @@ namespace Barotrauma
                     UserData = link.Second,
                     OnClicked = (btn, userdata) =>
                     {
-                        Process.Start(userdata as string);
+                        ShowOpenUrlInWebBrowserPrompt(userdata as string);
                         return true;
                     }
                 };
@@ -943,7 +946,7 @@ namespace Barotrauma
                     UserData = link.Second,
                     OnClicked = (btn, userdata) =>
                     {
-                        Process.Start(userdata as string);
+                        ShowOpenUrlInWebBrowserPrompt(userdata as string);
                         msgBox.Close();
                         return true;
                     }
@@ -970,6 +973,24 @@ namespace Barotrauma
             if (GameSettings.SendUserStatistics) GameAnalytics.OnQuit();
             if (GameSettings.SaveDebugConsoleLogs) DebugConsole.SaveLogs();
             base.OnExiting(sender, args);
+        }
+
+        public void ShowOpenUrlInWebBrowserPrompt(string url)
+        {
+            if (string.IsNullOrEmpty(url)) { return; }
+
+            var msgBox = new GUIMessageBox("", TextManager.GetWithVariable("openlinkinbrowserprompt", "[link]", url),
+                new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
+            {
+                UserData = "verificationprompt"
+            };
+            msgBox.Buttons[0].OnClicked = (btn, userdata) =>
+            {
+                Process.Start(url);
+                msgBox.Close();
+                return true;
+            };
+            msgBox.Buttons[1].OnClicked = msgBox.Close;
         }
     }
 }

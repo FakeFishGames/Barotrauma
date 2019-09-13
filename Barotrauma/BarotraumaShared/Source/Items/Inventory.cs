@@ -11,7 +11,7 @@ namespace Barotrauma
     {
         public readonly Entity Owner;
 
-        protected int capacity;
+        protected readonly int capacity;
 
         public Item[] Items;
         protected bool[] hideEmptySlot;

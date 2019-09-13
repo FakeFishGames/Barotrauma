@@ -12,9 +12,9 @@ namespace Barotrauma.Items.Components
             public bool ContinuousSignal;
             public bool State;
             public string Connection;
-            [Serialize("", false, translationTextTag: "Label.", description: "The text displayed on this button/tickbox.")]
+            [Serialize("", false, translationTextTag: "Label.", description: "The text displayed on this button/tickbox."), Editable]
             public string Label { get; set; }
-            [Serialize("1", false, description: "The signal sent out when this button is pressed or this tickbox checked.")]
+            [Serialize("1", false, description: "The signal sent out when this button is pressed or this tickbox checked."), Editable]
             public string Signal { get; set; }
 
             public string Name => "CustomInterfaceElement";
