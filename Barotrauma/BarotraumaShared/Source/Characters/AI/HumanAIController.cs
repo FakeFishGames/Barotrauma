@@ -234,6 +234,22 @@ namespace Barotrauma
             float speedMultiplier = Character.SpeedMultiplier;
             if (run || speedMultiplier <= 0.0f) targetMovement *= speedMultiplier;
             Character.ResetSpeedMultiplier();   // Reset, items will set the value before the next update
+
+            if (Character.AnimController.InWater && !(ObjectiveManager.GetActiveObjective() is AIObjectiveGoTo) && targetMovement.LengthSquared() < 0.0025f)
+            {
+                bool isAiming = false;
+                var holdable = Character.SelectedConstruction?.GetComponent<Items.Components.Holdable>();
+                if (holdable != null)
+                {
+                    isAiming = holdable.ControlPose;
+                }
+                if (!isAiming)
+                {
+                    // Swim in place so that we don't fall motionless and look dead.
+                    targetMovement = new Vector2(targetMovement.Y, -0.05f);
+                }
+            }
+
             Character.AnimController.TargetMovement = targetMovement;
 
             if (!Character.LockHands)
