@@ -1602,24 +1602,27 @@ namespace Barotrauma
         {
             if (GameMain.NetworkMember == null) return;
 
-            float lowestSubPos = ConvertUnits.ToSimUnits(Submarine.Loaded.Min(s => s.HiddenSubPosition.Y - s.Borders.Height - 128.0f));
-
-            for (int i = 0; i < character.MemState.Count; i++ )
+            float lowestSubPos = float.MaxValue;
+            if (Submarine.Loaded.Any())
             {
-                if (character.Submarine == null)
+                lowestSubPos = ConvertUnits.ToSimUnits(Submarine.Loaded.Min(s => s.HiddenSubPosition.Y - s.Borders.Height - 128.0f));
+                for (int i = 0; i < character.MemState.Count; i++)
                 {
-                    //transform in-sub coordinates to outside coordinates
-                    if (character.MemState[i].Position.Y > lowestSubPos)
-                        character.MemState[i].TransformInToOutside();
-                }
-                else if (currentHull?.Submarine != null)
-                {
-                    //transform outside coordinates to in-sub coordinates
-                    if (character.MemState[i].Position.Y < lowestSubPos)
-                        character.MemState[i].TransformOutToInside(currentHull.Submarine);
+                    if (character.Submarine == null)
+                    {
+                        //transform in-sub coordinates to outside coordinates
+                        if (character.MemState[i].Position.Y > lowestSubPos)
+                            character.MemState[i].TransformInToOutside();
+                    }
+                    else if (currentHull?.Submarine != null)
+                    {
+                        //transform outside coordinates to in-sub coordinates
+                        if (character.MemState[i].Position.Y < lowestSubPos)
+                            character.MemState[i].TransformOutToInside(currentHull.Submarine);
+                    }
                 }
             }
-            
+
             UpdateNetPlayerPositionProjSpecific(deltaTime, lowestSubPos);
         }
         
