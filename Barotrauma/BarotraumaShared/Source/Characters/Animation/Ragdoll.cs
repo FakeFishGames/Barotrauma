@@ -261,10 +261,9 @@ namespace Barotrauma
         public bool Draggable => RagdollParams.Draggable;
         public bool CanEnterSubmarine => RagdollParams.CanEnterSubmarine;
 
-        public float Dir
-        {
-            get { return ((dir == Direction.Left) ? -1.0f : 1.0f); }
-        }
+        public float Dir => dir == Direction.Left ? -1.0f : 1.0f;
+
+        public Direction Direction => dir;
 
         public bool InWater
         {
