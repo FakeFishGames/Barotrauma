@@ -294,21 +294,12 @@ namespace SteamNative
 		
 		// bool
 		public bool SetLobbyData( CSteamID steamIDLobby /*class CSteamID*/, string pchKey /*const char **/, string pchValue /*const char **/ )
-        {
-            byte[] pchKeyBytes = Encoding.UTF8.GetBytes(pchKey + "\0");
-            byte[] pchValueBytes = Encoding.UTF8.GetBytes(pchValue + "\0");
-
-            GCHandle handleKey = GCHandle.Alloc(pchKeyBytes, GCHandleType.Pinned);
-            GCHandle handleValue = GCHandle.Alloc(pchValueBytes, GCHandleType.Pinned);
-            
-            bool retVal = platform.ISteamMatchmaking_SetLobbyData( steamIDLobby.Value, handleKey.AddrOfPinnedObject(), handleValue.AddrOfPinnedObject());
-            handleKey.Free(); handleValue.Free();
-
-            return retVal;
-        }
-
-        // void
-        public void SetLobbyGameServer( CSteamID steamIDLobby /*class CSteamID*/, uint unGameServerIP /*uint32*/, ushort unGameServerPort /*uint16*/, CSteamID steamIDGameServer /*class CSteamID*/ )
+		{
+			return platform.ISteamMatchmaking_SetLobbyData( steamIDLobby.Value, pchKey, pchValue );
+		}
+		
+		// void
+		public void SetLobbyGameServer( CSteamID steamIDLobby /*class CSteamID*/, uint unGameServerIP /*uint32*/, ushort unGameServerPort /*uint16*/, CSteamID steamIDGameServer /*class CSteamID*/ )
 		{
 			platform.ISteamMatchmaking_SetLobbyGameServer( steamIDLobby.Value, unGameServerIP, unGameServerPort, steamIDGameServer.Value );
 		}
