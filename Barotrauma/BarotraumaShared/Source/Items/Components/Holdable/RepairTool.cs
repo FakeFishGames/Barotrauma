@@ -113,6 +113,7 @@ namespace Barotrauma.Items.Components
             if (activeTimer <= 0.0f) IsActive = false;
         }
 
+        private List<Body> ignoredBodies = new List<Body>();
         public override bool Use(float deltaTime, Character character = null)
         {
             if (character == null || character.Removed) return false;
@@ -169,7 +170,7 @@ namespace Barotrauma.Items.Components
                     (float)Math.Cos(item.body.Rotation),
                     (float)Math.Sin(item.body.Rotation)) * Range * item.body.Dir);
 
-            List<Body> ignoredBodies = new List<Body>();
+            ignoredBodies.Clear();
             foreach (Limb limb in character.AnimController.Limbs)
             {
                 if (Rand.Range(0.0f, 0.5f) > degreeOfSuccess) continue;
