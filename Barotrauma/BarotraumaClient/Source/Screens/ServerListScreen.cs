@@ -270,6 +270,7 @@ namespace Barotrauma
             filterSameVersion = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("FilterSameVersion"))
             {
                 ToolTip = TextManager.Get("FilterSameVersion"),
+                Selected = true,
                 OnSelected = (tickBox) => { FilterServers(); return true; }
             };
             filterTextList.Add(filterSameVersion.TextBlock);
