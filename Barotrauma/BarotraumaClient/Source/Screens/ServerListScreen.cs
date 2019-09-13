@@ -127,6 +127,7 @@ namespace Barotrauma
         private readonly GUITickBox filterIncompatible;
         private readonly GUITickBox filterFull;
         private readonly GUITickBox filterEmpty;
+        private readonly GUITickBox filterWhitelisted;
         private readonly GUITickBox filterFriendlyFire;
         private readonly GUITickBox filterKarma;
         private readonly GUITickBox filterTraitor;
@@ -302,6 +303,13 @@ namespace Barotrauma
                 OnSelected = (tickBox) => { FilterServers(); return true; }
             };
             filterTextList.Add(filterEmpty.TextBlock);
+
+            filterWhitelisted = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("FilterWhitelistedServers"))
+            {
+                ToolTip = TextManager.Get("FilterWhitelistedServers"),
+                OnSelected = (tickBox) => { FilterServers(); return true; }
+            };
+            filterTextList.Add(filterWhitelisted.TextBlock);
 
             // Filter Tags
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), filterHolder.RectTransform), TextManager.Get("servertags"));
@@ -872,7 +880,8 @@ namespace Barotrauma
                     (!filterPassword.Selected || !serverInfo.HasPassword) &&
                     (!filterIncompatible.Selected || !incompatible) &&
                     (!filterFull.Selected || serverInfo.PlayerCount < serverInfo.MaxPlayers) &&
-                    (!filterEmpty.Selected || serverInfo.PlayerCount > 0) && 
+                    (!filterEmpty.Selected || serverInfo.PlayerCount > 0) &&
+                    (!filterWhitelisted.Selected || serverInfo.UsingWhiteList == true) &&
                     (!filterKarma.Selected || serverInfo.KarmaEnabled == true) &&
                     (!filterFriendlyFire.Selected || serverInfo.FriendlyFireEnabled == false) &&
                     (!filterTraitor.Selected || serverInfo.TraitorsEnabled == YesNoMaybe.Yes || serverInfo.TraitorsEnabled == YesNoMaybe.Maybe) &&
