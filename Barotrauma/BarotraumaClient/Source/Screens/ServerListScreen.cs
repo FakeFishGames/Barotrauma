@@ -867,7 +867,7 @@ namespace Barotrauma
 
                 child.Visible =
                     serverInfo.ServerName.ToLowerInvariant().Contains(searchBox.Text.ToLowerInvariant()) &&
-                    (!filterSameVersion.Selected || serverInfo.GameVersion == GameMain.Version.ToString()) &&
+                    (!filterSameVersion.Selected || (remoteVersion != null && remoteVersion == GameMain.Version)) &&
                     (!filterPassword.Selected || !serverInfo.HasPassword) &&
                     (!filterIncompatible.Selected || !incompatible) &&
                     (!filterFull.Selected || serverInfo.PlayerCount < serverInfo.MaxPlayers) &&
@@ -878,7 +878,8 @@ namespace Barotrauma
                     (!filterVoip.Selected || serverInfo.VoipEnabled == true) &&
                     ((selectedTab == Tab.Browse) ||
                      (selectedTab == Tab.Recent && serverInfo.Recent) ||
-                     (selectedTab == Tab.Favorites && serverInfo.Favorite));
+                     (selectedTab == Tab.Favorites && serverInfo.Favorite)) &&
+                    (remoteVersion != null && remoteVersion <= GameMain.Version);
 
                 foreach (GUITickBox tickBox in playStyleTickBoxes)
                 {
