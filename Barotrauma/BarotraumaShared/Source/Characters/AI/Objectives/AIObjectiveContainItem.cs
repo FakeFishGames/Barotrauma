@@ -25,7 +25,7 @@ namespace Barotrauma
 
         private readonly HashSet<Item> containedItems = new HashSet<Item>();
 
-        public bool AllowToFindDivingGear { get; set; }
+        public bool AllowToFindDivingGear { get; set; } = true;
 
         public AIObjectiveContainItem(Character character, string itemIdentifier, ItemContainer container, AIObjectiveManager objectiveManager, float priorityModifier = 1)
             : this(character, new string[] { itemIdentifier }, container, objectiveManager, priorityModifier) { }

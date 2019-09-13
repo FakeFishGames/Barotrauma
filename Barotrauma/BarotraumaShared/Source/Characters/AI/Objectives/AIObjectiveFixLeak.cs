@@ -103,7 +103,6 @@ namespace Barotrauma
                     onAbandon: () => Abandon = true,
                     onCompleted: () =>
                     {
-                        RemoveSubObjective(ref operateObjective);
                         if (!Check())
                         {
                             // Failed to operate. Probably too far.
