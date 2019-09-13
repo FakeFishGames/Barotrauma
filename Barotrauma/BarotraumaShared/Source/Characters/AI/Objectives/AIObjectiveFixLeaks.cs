@@ -20,7 +20,7 @@ namespace Barotrauma
         public static float GetLeakSeverity(Gap leak)
         {
             if (leak == null) { return 0; }
-            float sizeFactor = MathHelper.Lerp(1, 10, MathUtils.InverseLerp(0, 200, (leak.IsHorizontal ? leak.Rect.Width : leak.Rect.Height)));
+            float sizeFactor = MathHelper.Lerp(1, 10, MathUtils.InverseLerp(0, 200, leak.Size));
             float severity = sizeFactor * leak.Open;
             if (!leak.IsRoomToRoom)
             {
