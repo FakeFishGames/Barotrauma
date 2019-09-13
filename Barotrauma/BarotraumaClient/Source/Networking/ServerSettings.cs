@@ -759,6 +759,8 @@ namespace Barotrauma.Networking
             karmaSettingsBlocker = new GUIFrame(new RectTransform(Vector2.One, karmaSettingsContainer.RectTransform, Anchor.CenterLeft) { MaxSize = new Point(karmaSettingsList.Content.Rect.Width, int.MaxValue) }, 
                 style: "InnerFrame");
             karmaPresetDD.SelectItem(KarmaPreset);
+            karmaSettingsBlocker.Visible = !karmaBox.Selected || KarmaPreset != "custom";
+            GameMain.NetworkMember.KarmaManager.CreateSettingsFrame(karmaSettingsList.Content);
             karmaPresetDD.OnSelected = (selected, obj) =>
             {
                 string newKarmaPreset = obj as string;
