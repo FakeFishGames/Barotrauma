@@ -202,7 +202,7 @@ namespace Barotrauma
             {
                 Objectives.Sort((x, y) => y.GetPriority().CompareTo(x.GetPriority()));
             }
-            CurrentObjective?.SortSubObjectives();
+            GetCurrentObjective()?.SortSubObjectives();
         }
         
         public void DoCurrentObjective(float deltaTime)
