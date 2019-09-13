@@ -1,4 +1,117 @@
 ---------------------------------------------------------------------------------------------------------
+v0.9.301.0 (test build)
+---------------------------------------------------------------------------------------------------------
+
+- Added Japanese localization.
+- Added Polish, Spanish and Turkish NPC conversations.
+- Improvements to the Russian and Spanish translations.
+- Fixed index out of range exception being thrown during character initialization/removal if the client has 
+highlighted an inventory slot whose index is outside the capacity of the inventory whose slots are being 
+created/removed. Caused characters to be created without an inventory, animcontroller or AI controller 
+if the exception was thrown during character creation.
+- Fixed Traitor's "find an item" objectives not being considered complete if the target item is inside 
+another item within the traitor's inventory.
+- Fixed inability to start a campaign due to the checks that make sure the correct sub is selected in 
+netlobbyscreen's submarine list.
+- More detailed "x is not a valid XML file" error messages.
+- Fixed inability to open the pause menu if an inventory slot had been highlighted when exiting 
+the game screen.
+- Fixed welded door sprites "twitching" when the submarine moves.
+- Improved mission and traitor info popups.
+- Fixed draggable inventories getting stuck to a half-open state if the item is equipped when 
+the inventory is opening/closing.
+- Fixed crashing when a character with no hands or arms drops a holdable item.
+- Non-humanoids (i.e. monsters controlled by a player) cannot be assigned as traitors.
+- Traitor missions are considered unsuccessful if the objectives cannot be completed (for example if the
+submarine doesn't have suitable containers to place the traitor items inside).
+- Fixed the "Barotrauma" title text staying invisible in the main menu when coming back from the credits.
+- Fixed clients not refreshing an item's editing hud when a remote player adjusts the values (i.e. if two 
+players had selected the same lamp and one changed the color value, the other client wouldn't see 
+the value change in the editing hud).
+- Fixed server using the provided campaign savefile name as-is (without the required .save file extension) 
+when starting a new campaign through the console. Caused clients to throw "File transfer failed (wrong 
+file extension """!)" errors and prevented them from receiving the save files.
+- Show the number of lights (total and shadow-casting) in the sub editor.
+- Fixed a couple of the additive light sprites being slightly offset from the lamp.
+- Fixed servers being able to start the round multiple times by spamming the "start" console command 
+before loading the round finishes.
+- Clients don't display client-side vitality changes in healthbars until the actual vitality is received 
+from the server. Fixes health occasionally dropping and then jumping back up if the client predicts damage 
+incorrectly (e.g. if a melee attack hits client-side but doesn't server-side).
+
+---------------------------------------------------------------------------------------------------------
+v0.9.300.0 (test build)
+---------------------------------------------------------------------------------------------------------
+
+Modding improvements:
+- Mods can override specific content without having to create a completely new content package. This can
+be done by surrounding the element with "<override></override>" (for example, an Item or a Character
+config element you want to replace a vanilla Item/Character with). The overrides work based on identifiers;
+for instance, if you configure an item with the identifier "wrench" and surround it with the override
+tags, it will replace the vanilla wrench.
+- Content package load order: the game will first load the core package, then other content in the order
+ of selection (proper ui still pending). The load order is saved in the config_player.xml.
+- Made AI orders and event manager settings moddable.
+- The engine and reactor sound ranges can now be modified in the item XML.
+- The husk affliction can now be modified and applied on any character.
+- Support for multiple simultaneous husk afflictions based on the same system.
+- Support for multiple husk appendages. Made the attachment limb configurable in the affliction definition.
+- Additional content package validity checks during startup: make sure all XML files in the package can 
+be loaded, and disable the package if they can't. Fixes tons of console errors on startup when a mod with 
+invalid XML files is enabled.
+- Don't allow publishing workshop items that contain invalid XML files.
+- Don't allow selecting invalid content packages in the settings menu.
+
+Character editor improvements:
+- Improved layout, hotkeys, general UI/UX improvements.
+- Support for editing the character configuration files including health, ai, inventory, sounds, particles etc.
+- Support for limb sounds.
+- Support for light sources attached to limbs.
+- Support for adding and removing attacks.
+- Support for afflictions in attacks.
+- Support for damage modifiers in limbs.
+- New functionality: creating limbs (without having to operate on duplicates).
+- Support for creating humanoids.
+- Allow to create new characters based on an existing character (copy character).
+- Added a limb specific "sprite orientation" that overrides the universal "spritesheet orientation".
+- Option for mirroring limb sprites.
+- Option for hiding the limb sprite (invisible limbs).
+- Multiple minor additions and changes, like an option to enable lights or to display the damage modifiers
+drawn on the character.
+
+Misc improvements:
+- Increased default VOIP and microphone volume and the maximum values.
+- Force a restart when switching the language.
+
+Bugfixes:
+- Fixed clients failing to select the submarine selected by the server if the settings menu is opened
+while in the server lobby. Caused the clients to start the round with an incorrect submarine, which lead to 
+tons of ID mismatch errors that usually caused the client to get disconnected as soon as a round starts.
+- Fixed crashing when the recharge speed of a PowerContainer with no interface (e.g. Alien Generator) is 
+adjusted by a signal or a bot.
+- Fixed an occasional crash when a bot starts retreating away from an enemy immediately after spawning.
+- Fixed traitor missions almost always placing the mission-related items inside the same containers.
+- Fixed traitor goal durations being displayed as "duration(xx) seconds" instead of "xx seconds".
+- Fixed rewiring sound playing whenever a remote player is using a rewireable device.
+- Fixed subinventories not opening when grabbing another character with no items in the corresponding slot.
+- Fixed light sprites being mirrored when the item is mirrored, even if the mirroring the item's sprite 
+had been disabled (e.g. junction boxes).
+- Fixed motion sensor detection area not being flipped when the item is mirrored.
+- Fixed status monitor not mirroring rooms on the display in mirrored subs.
+- Fixed engine propeller position not being flipped when the item is mirrored.
+- Fixed diving suits being displayed in an incorrect position when the locker has been flipped on either axis.
+- AI characters turn autotemp back on when leaving the reactor.
+- Fixed item sprites becoming unmirrored when a damaged sprite is fading in.
+- Fixed damaged item sprites that are set to fade in according to the damage always being drawn at full opacity.
+- Fixed spectators being distributed into teams in combat missions, potentially leading to imbalanced crew sizes.
+- Notify the client using the "togglekarmatestmode" command about the test mode being enabled/disabled.
+- Send karma change notifications when karma has changed by 1 unit or more when test mode is enabled, not 
+just when an action causes an immediate change of 1 unit or more.
+- Fixed adjacent sprites bleeding into the platform and topwindow sprites.
+- Fixed autocompleting submarine/shuttle names when using the submarine/shuttle console commands.
+- Fixed some items (like sonar beacon) attracting monsters even when they're powered off.
+
+---------------------------------------------------------------------------------------------------------
 v0.9.3.0
 ---------------------------------------------------------------------------------------------------------
 

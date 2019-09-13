@@ -209,7 +209,7 @@ namespace Barotrauma
                     characterFiles[i] = Path.GetFileNameWithoutExtension(characterFiles[i]).ToLowerInvariant();
                 }
 
-                foreach (JobPrefab jobPrefab in JobPrefab.List)
+                foreach (JobPrefab jobPrefab in JobPrefab.List.Values)
                 {
                     characterFiles.Add(jobPrefab.Name);
                 }
@@ -965,7 +965,6 @@ namespace Barotrauma
             }));
 
 #if DEBUG
-            /*TODO: reimplement
             commands.Add(new Command("simulatedlatency", "simulatedlatency [minimumlatencyseconds] [randomlatencyseconds]: applies a simulated latency to network messages. Useful for simulating real network conditions when testing the multiplayer locally.", (string[] args) =>
             {
                 if (args.Count() < 2 || (GameMain.NetworkMember == null)) return;
@@ -982,18 +981,19 @@ namespace Barotrauma
 #if CLIENT
                 if (GameMain.Client != null)
                 {
-                    GameMain.Client.NetPeerConfiguration.SimulatedMinimumLatency = minimumLatency;
-                    GameMain.Client.NetPeerConfiguration.SimulatedRandomLatency = randomLatency;
+                    GameMain.Client.SimulatedMinimumLatency = minimumLatency;
+                    GameMain.Client.SimulatedRandomLatency = randomLatency;
                 }
 #elif SERVER
                 if (GameMain.Server != null)
                 {
-                    GameMain.Server.NetPeerConfiguration.SimulatedMinimumLatency = minimumLatency;
-                    GameMain.Server.NetPeerConfiguration.SimulatedRandomLatency = randomLatency;
+                    GameMain.Server.SimulatedMinimumLatency = minimumLatency;
+                    GameMain.Server.SimulatedRandomLatency = randomLatency;
                 }
 #endif
                 NewMessage("Set simulated minimum latency to " + minimumLatency + " and random latency to " + randomLatency + ".", Color.White);
             }));
+
             commands.Add(new Command("simulatedloss", "simulatedloss [lossratio]: applies simulated packet loss to network messages. For example, a value of 0.1 would mean 10% of the packets are dropped. Useful for simulating real network conditions when testing the multiplayer locally.", (string[] args) =>
             {
                 if (args.Count() < 1 || (GameMain.NetworkMember == null)) return;
@@ -1005,12 +1005,12 @@ namespace Barotrauma
 #if CLIENT
                 if (GameMain.Client != null)
                 {
-                    GameMain.Client.NetPeerConfiguration.SimulatedLoss = loss;
+                    GameMain.Client.SimulatedLoss = loss;
                 }
 #elif SERVER
                 if (GameMain.Server != null)
                 {
-                    GameMain.Server.NetPeerConfiguration.SimulatedLoss = loss;
+                    GameMain.Server.SimulatedLoss = loss;
                 }
 #endif
                 NewMessage("Set simulated packet loss to " + (int)(loss * 100) + "%.", Color.White);
@@ -1026,16 +1026,16 @@ namespace Barotrauma
 #if CLIENT
                 if (GameMain.Client != null)
                 {
-                    GameMain.Client.NetPeerConfiguration.SimulatedDuplicatesChance = duplicates;
+                    GameMain.Client.SimulatedDuplicatesChance = duplicates;
                 }
 #elif SERVER
                 if (GameMain.Server != null)
                 {
-                    GameMain.Server.NetPeerConfiguration.SimulatedDuplicatesChance = duplicates;
+                    GameMain.Server.SimulatedDuplicatesChance = duplicates;
                 }
 #endif
                 NewMessage("Set packet duplication to " + (int)(duplicates * 100) + "%.", Color.White);
-            }));*/
+            }));
 #endif
 
             //"dummy commands" that only exist so that the server can give clients permissions to use them
@@ -1338,8 +1338,8 @@ namespace Barotrauma
             WayPoint spawnPoint = null;
 
             string characterLowerCase = args[0].ToLowerInvariant();
-            JobPrefab job = JobPrefab.List.Find(jp => jp.Name.ToLowerInvariant() == characterLowerCase || jp.Identifier.ToLowerInvariant() == characterLowerCase);
-            bool human = job != null || characterLowerCase == "human";
+            JobPrefab.List.TryGetValue(characterLowerCase, out JobPrefab job);
+            bool human = job != null || characterLowerCase == Character.HumanSpeciesName;
 
             if (args.Length > 1)
             {
@@ -1389,7 +1389,7 @@ namespace Barotrauma
 
             if (human)
             {
-                CharacterInfo characterInfo = new CharacterInfo(Character.HumanConfigFile, jobPrefab: job);
+                CharacterInfo characterInfo = new CharacterInfo(Character.HumanSpeciesName, jobPrefab: job);
                 spawnedCharacter = Character.Create(characterInfo, spawnPosition, ToolBox.RandomSeed(8));
                 if (job != null)
                 {

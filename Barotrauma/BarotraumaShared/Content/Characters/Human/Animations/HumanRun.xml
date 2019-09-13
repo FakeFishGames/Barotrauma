@@ -24,4 +24,10 @@
   backwardsmovementmultiplier="0.75"
   animationtype="Run"
   legbendtorque="30"
-  footangle="-90" />
+  footangle="-90"
+  crouchingheadpos="0.65"
+  crouchingheadangle="-10"
+  stepliftheadmultiplier="0"
+  stepliftamount="3.999999"
+  stepliftoffset="-0.5"
+  stepliftfrequency="2" />

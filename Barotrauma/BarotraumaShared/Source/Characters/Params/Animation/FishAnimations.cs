@@ -16,7 +16,7 @@ namespace Barotrauma
 
         protected static FishWalkParams Empty = new FishWalkParams();
 
-        public override void CreateSnapshot() => CreateSnapshot<FishWalkParams>();
+        public override void StoreSnapshot() => StoreSnapshot<FishWalkParams>();
     }
 
     class FishRunParams : FishGroundedParams
@@ -32,7 +32,7 @@ namespace Barotrauma
 
         protected static FishRunParams Empty = new FishRunParams();
 
-        public override void CreateSnapshot() => CreateSnapshot<FishRunParams>();
+        public override void StoreSnapshot() => StoreSnapshot<FishRunParams>();
     }
 
     class FishSwimFastParams : FishSwimParams
@@ -43,7 +43,7 @@ namespace Barotrauma
             return GetAnimParams<FishSwimFastParams>(character.SpeciesName, AnimationType.SwimFast, fileName);
         }
 
-        public override void CreateSnapshot() => CreateSnapshot<FishSwimFastParams>();
+        public override void StoreSnapshot() => StoreSnapshot<FishSwimFastParams>();
     }
 
     class FishSwimSlowParams : FishSwimParams
@@ -54,7 +54,7 @@ namespace Barotrauma
             return GetAnimParams<FishSwimSlowParams>(character.SpeciesName, AnimationType.SwimSlow, fileName);
         }
 
-        public override void CreateSnapshot() => CreateSnapshot<FishSwimSlowParams>();
+        public override void StoreSnapshot() => StoreSnapshot<FishSwimSlowParams>();
     }
 
     abstract class FishGroundedParams : GroundedMovementParams, IFishAnimation
@@ -69,38 +69,38 @@ namespace Barotrauma
             return true;
         }
 
-        [Serialize(true, true), Editable(ToolTip = "Should the character be flipped depending on which direction it faces. Should usually be enabled on all characters that have distinctive upper and lower sides.")]
+        [Editable, Serialize(true, true, description: "Should the character be flipped depending on which direction it faces. Should usually be enabled on all characters that have distinctive upper and lower sides.")]
         public bool Flip { get; set; }
 
-        [Serialize(10.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 100, ToolTip = "How much force is used to move the head to the correct position.")]
+        [Serialize(10.0f, true, description: "How much force is used to move the head to the correct position."), Editable(MinValueFloat = 0, MaxValueFloat = 100)]
         public float HeadMoveForce { get; set; }
 
-        [Serialize(10.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 100, ToolTip = "How much force is used to move the torso to the correct position.")]
+        [Serialize(10.0f, true, description: "How much force is used to move the torso to the correct position."), Editable(MinValueFloat = 0, MaxValueFloat = 100)]
         public float TorsoMoveForce { get; set; }
 
-        [Serialize(8.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 100, ToolTip = "How much force is used to move the feet to the correct position.")]
+        [Serialize(8.0f, true, description: "How much force is used to move the feet to the correct position."), Editable(MinValueFloat = 0, MaxValueFloat = 100)]
         public float FootMoveForce { get; set; }
 
-        [Serialize(50.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 500, ToolTip = "How much torque is used to rotate the head to the correct orientation.")]
+        [Serialize(50.0f, true, description: "How much torque is used to rotate the head to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 500)]
         public float HeadTorque { get; set; }
 
-        [Serialize(50.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 500, ToolTip = "How much torque is used to rotate the torso to the correct orientation.")]
+        [Serialize(50.0f, true, description: "How much torque is used to rotate the torso to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 500)]
         public float TorsoTorque { get; set; }
 
-        [Serialize(50.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 500, ToolTip = "How much torque is used to rotate the tail to the correct orientation.")]
+        [Serialize(50.0f, true, description: "How much torque is used to rotate the tail to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 500)]
         public float TailTorque { get; set; }
 
-        [Serialize(25.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 500, ToolTip = "How much torque is used to rotate the feet to the correct orientation.")]
+        [Serialize(25.0f, true, description: "How much torque is used to rotate the feet to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 500)]
         public float FootTorque { get; set; }
 
-        [Serialize(0.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 500, ToolTip = "Optional torque that's constantly applied to legs.")]
+        [Serialize(0.0f, true, description: "Optional torque that's constantly applied to legs."), Editable(MinValueFloat = 0, MaxValueFloat = 500)]
         public float LegTorque { get; set; }
 
         /// <summary>
         /// The angle of the collider when standing (i.e. out of water).
         /// In degrees.
         /// </summary>
-        [Serialize(0f, true), Editable(MinValueFloat = -360, MaxValueFloat = 360, ToolTip = "The angle of the character's collider when standing.")]
+        [Serialize(0f, true, description: "The angle of the character's collider when standing."), Editable(MinValueFloat = -360, MaxValueFloat = 360)]
         public float ColliderStandAngle
         {
             get => MathHelper.ToDegrees(ColliderStandAngleInRadians);
@@ -140,13 +140,13 @@ namespace Barotrauma
 
     abstract class FishSwimParams : SwimParams, IFishAnimation
     {
-        [Serialize(false, true), Editable(ToolTip = "TODO")]
+        [Serialize(false, true, description: "TODO"), Editable]
         public bool UseSineMovement { get; set; }
 
-        [Serialize(true, true), Editable(ToolTip = "Should the character be flipped depending on which direction it faces. Should usually be enabled on all characters that have distinctive upper and lower sides.")]
+        [Editable, Serialize(true, true, description: "Should the character be flipped depending on which direction it faces. Should usually be enabled on all characters that have distinctive upper and lower sides.")]
         public bool Flip { get; set; }
 
-        [Serialize(true, true), Editable(ToolTip = "If enabled, the character will simply be mirrored horizontally when it wants to turn around. If disabled, it will rotate itself to face the other direction.")]
+        [Editable, Serialize(true, true, description: "If enabled, the character will simply be mirrored horizontally when it wants to turn around. If disabled, it will rotate itself to face the other direction.")]
         public bool Mirror { get; set; }
 
         [Serialize(1f, true), Editable]
@@ -155,19 +155,19 @@ namespace Barotrauma
         [Serialize(10.0f, true), Editable]
         public float WaveLength { get; set; }
 
-        [Serialize(true, true), Editable(ToolTip = "Should the character face towards the direction it's heading.")]
+        [Editable, Serialize(true, true, description: "Should the character face towards the direction it's heading.")]
         public bool RotateTowardsMovement { get; set; }
 
-        [Serialize(25.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 500, ToolTip = "How much torque is used to rotate the torso to the correct orientation.")]
+        [Serialize(25.0f, true, description: "How much torque is used to rotate the torso to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 500)]
         public float TorsoTorque { get; set; }
-        
-        [Serialize(25.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 500, ToolTip = "How much torque is used to rotate the head to the correct orientation.")]
+
+        [Serialize(25.0f, true, description: "How much torque is used to rotate the head to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 500)]
         public float HeadTorque { get; set; }
 
-        [Serialize(50.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 500, ToolTip = "How much torque is used to rotate the tail to the correct orientation.")]
+        [Serialize(50.0f, true, description: "How much torque is used to rotate the tail to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 500)]
         public float TailTorque { get; set; }
 
-        [Serialize(25.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 500, ToolTip = "How much torque is used to rotate the feet to the correct orientation.")]
+        [Serialize(25.0f, true, description: "How much torque is used to rotate the feet to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 500)]
         public float FootTorque { get; set; }
 
         [Serialize(null, true), Editable]

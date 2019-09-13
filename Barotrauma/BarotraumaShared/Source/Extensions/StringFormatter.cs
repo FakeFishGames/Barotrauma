@@ -23,6 +23,11 @@ namespace Barotrauma
             }
             return new string(newString.SelectMany(str => str.ToCharArray()).ToArray());
         }
+        
+        public static string Remove(this string s, string substring)
+        {
+            return s.Replace(substring, string.Empty);
+        }
 
         public static string Remove(this string s, Func<char, bool> predicate)
         {

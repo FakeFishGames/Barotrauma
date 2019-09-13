@@ -57,7 +57,7 @@ namespace Barotrauma.Items.Components
         protected CoroutineHandle delayedCorrectionCoroutine;
         protected float correctionTimer;
                 
-        [Editable, Serialize(0.0f, false)]
+        [Editable, Serialize(0.0f, false, description: "How long it takes to pick up the item (in seconds).")]
         public float PickingTime
         {
             get;
@@ -114,45 +114,42 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize(false, false)] //Editable for doors to do their magic
+        [Editable, Serialize(false, false, description: "Can the item be picked up (or interacted with, if the pick action does something else than picking up the item).")] //Editable for doors to do their magic
         public bool CanBePicked
         {
             get { return canBePicked; }
             set { canBePicked = value; }
         }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Should the interface of the item (if it has one) be drawn when the item is equipped.")]
         public bool DrawHudWhenEquipped
         {
             get;
             private set;
         }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Can the item be selected by interacting with it.")]
         public bool CanBeSelected
         {
             get { return canBeSelected; }
             set { canBeSelected = value; }
         }
 
-        //Transfer conditions between same prefab items
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Can the item be combined with other items of the same type.")]
         public bool CanBeCombined
         {
             get { return canBeCombined; }
             set { canBeCombined = value; }
         }
 
-        //Remove item if combination results in 0 condition
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Should the item be removed if combining it with an other item causes the condition of this item to drop to 0.")]
         public bool RemoveOnCombined
         {
             get { return removeOnCombined; }
             set { removeOnCombined = value; }
         }
         
-        //Can the "Use" action be triggered by characters or just other items/statuseffects
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Can the \"Use\" action of the item be triggered by characters or just other items/StatusEffects.")]
         public bool CharacterUsable
         {
             get { return characterUsable; }
@@ -160,7 +157,7 @@ namespace Barotrauma.Items.Components
         }
 
         //Remove item if combination results in 0 condition
-        [Serialize(true, false), Editable(ToolTip = "Can the properties of the component be edited in-game (only applicable if the component has in-game editable properties).")]
+        [Serialize(true, false, description: "Can the properties of the component be edited in-game (only applicable if the component has in-game editable properties)."), Editable()]
         public bool AllowInGameEditing
         {
             get;
@@ -179,7 +176,7 @@ namespace Barotrauma.Items.Components
             protected set;
         }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Should the item be deleted when it's used.")]
         public bool DeleteOnUse
         {
             get;
@@ -196,7 +193,7 @@ namespace Barotrauma.Items.Components
             get { return name; }
         }
         
-        [Editable, Serialize("", true, translationTextTag: "ItemMsg")]
+        [Editable, Serialize("", true, translationTextTag: "ItemMsg", description: "A text displayed next to the item when it's highlighted (generally instructs how to interact with the item, e.g. \"[Mouse1] Pick up\").")]
         public string Msg
         {
             get;
@@ -213,7 +210,7 @@ namespace Barotrauma.Items.Components
         /// <summary>
         /// How useful the item is in combat? Used by AI to decide which item it should use as a weapon. For the sake of clarity, use a value between 0 and 100 (not enforced).
         /// </summary>
-        [Serialize(0f, false)]
+        [Serialize(0f, false, description: "How useful the item is in combat? Used by AI to decide which item it should use as a weapon. For the sake of clarity, use a value between 0 and 100 (not enforced).")]
         public float CombatPriority { get; private set; }
 
         public ItemComponent(Item item, XElement element) 

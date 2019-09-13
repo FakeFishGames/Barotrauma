@@ -73,8 +73,8 @@ namespace Barotrauma
             int objectiveCount = Objectives.Count;
             foreach (var automaticOrder in character.Info.Job.Prefab.AutomaticOrders)
             {
-                var orderPrefab = Order.PrefabList.Find(o => o.AITag == automaticOrder.aiTag);
-                if (orderPrefab == null) { throw new Exception("Could not find a matching prefab by ai tag: " + automaticOrder.aiTag); }
+                var orderPrefab = Order.GetPrefab(automaticOrder.identifier);
+                if (orderPrefab == null) { throw new Exception($"Could not find a matching prefab by the identifier: '{automaticOrder.identifier}'"); }
                 // TODO: Similar code is used in CrewManager:815-> DRY
                 var matchingItems = orderPrefab.ItemIdentifiers.Any() ?
                     Item.ItemList.FindAll(it => orderPrefab.ItemIdentifiers.Contains(it.Prefab.Identifier) || it.HasTag(orderPrefab.ItemIdentifiers)) :
@@ -231,7 +231,7 @@ namespace Barotrauma
         {
             if (order == null) { return null; }
             AIObjective newObjective;
-            switch (order.AITag.ToLowerInvariant())
+            switch (order.Identifier.ToLowerInvariant())
             {
                 case "follow":
                     if (orderGiver == null) { return null; }

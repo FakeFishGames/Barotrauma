@@ -306,6 +306,20 @@ namespace Barotrauma
             private set;
         }
 
+        private bool? requiredContentPackagesInstalled;
+        public bool RequiredContentPackagesInstalled
+        {
+            get
+            {
+                if (requiredContentPackagesInstalled.HasValue) { return requiredContentPackagesInstalled.Value; }
+                return RequiredContentPackages.All(cp => GameMain.SelectedPackages.Any(cp2 => cp2.Name == cp));
+            }
+            set
+            {
+                requiredContentPackagesInstalled = value;
+            }
+        }
+
         //constructors & generation ----------------------------------------------------
 
         public Submarine(string filePath, string hash = "", bool tryLoad = true) : base(null)

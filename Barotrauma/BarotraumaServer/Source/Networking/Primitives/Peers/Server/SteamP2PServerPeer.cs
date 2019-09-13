@@ -610,7 +610,12 @@ namespace Barotrauma.Networking
                     lidgrenDeliveryMethod = NetDeliveryMethod.ReliableOrdered;
                     break;
             }
-
+#if DEBUG
+            netPeerConfiguration.SimulatedDuplicatesChance = GameMain.Server.SimulatedDuplicatesChance;
+            netPeerConfiguration.SimulatedMinimumLatency = GameMain.Server.SimulatedMinimumLatency;
+            netPeerConfiguration.SimulatedRandomLatency = GameMain.Server.SimulatedRandomLatency;
+            netPeerConfiguration.SimulatedLoss = GameMain.Server.SimulatedLoss;
+#endif
             NetOutgoingMessage lidgrenMsg = netServer.CreateMessage();
             byte[] msgData = new byte[1500];
             msg.PrepareForSending(ref msgData, out bool isCompressed, out int length);

@@ -151,7 +151,7 @@ namespace Barotrauma
             private set;
         }
 
-        [Serialize("0,0", true), Editable(ToolTip = "The position of the drop shadow relative to the structure. If set to zero, the shadow is positioned automatically so that it points towards the sub's center of mass.")]
+        [Editable, Serialize("0,0", true, description: "The position of the drop shadow relative to the structure. If set to zero, the shadow is positioned automatically so that it points towards the sub's center of mass.")]
         public Vector2 DropShadowOffset
         {
             get;

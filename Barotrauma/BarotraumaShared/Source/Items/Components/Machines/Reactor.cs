@@ -65,7 +65,7 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        [Editable(0.0f, float.MaxValue, ToolTip = "How much power (kW) the reactor generates when operating at full capacity."), Serialize(10000.0f, true)]
+        [Editable(0.0f, float.MaxValue), Serialize(10000.0f, true, description: "How much power (kW) the reactor generates when operating at full capacity.")]
         public float MaxPowerOutput
         {
             get { return maxPowerOutput; }
@@ -75,21 +75,21 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        [Editable(0.0f, float.MaxValue, ToolTip = "How long the temperature has to stay critical until a meltdown occurs."), Serialize(120.0f, true)]
+        [Editable(0.0f, float.MaxValue), Serialize(120.0f, true, description: "How long the temperature has to stay critical until a meltdown occurs.")]
         public float MeltdownDelay
         {
             get { return meltDownDelay; }
             set { meltDownDelay = Math.Max(value, 0.0f); }
         }
 
-        [Editable(0.0f, float.MaxValue, ToolTip = "How long the temperature has to stay critical until the reactor catches fire."), Serialize(30.0f, true)]
+        [Editable(0.0f, float.MaxValue), Serialize(30.0f, true, description: "How long the temperature has to stay critical until the reactor catches fire.")]
         public float FireDelay
         {
             get { return fireDelay; }
             set { fireDelay = Math.Max(value, 0.0f); }
         }
 
-        [Serialize(0.0f, true)]
+        [Serialize(0.0f, true, description: "Current temperature of the reactor (0% - 100%). Indended to be used by StatusEffect conditionals.")]
         public float Temperature
         {
             get { return temperature; }
@@ -100,7 +100,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(0.0f, true)]
+        [Serialize(0.0f, true, description: "Current fission rate of the reactor (0% - 100%). Intended to be used by StatusEffect conditionals (setting the value from XML is not recommended).")]
         public float FissionRate
         {
             get { return fissionRate; }
@@ -111,7 +111,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(0.0f, true)]
+        [Serialize(0.0f, true, description: "Current turbine output of the reactor (0% - 100%). Intended to be used by StatusEffect conditionals (setting the value from XML is not recommended).")]
         public float TurbineOutput
         {
             get { return turbineOutput; }
@@ -122,7 +122,7 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        [Serialize(0.2f, true), Editable(0.0f, 1000.0f, ToolTip = "How fast the condition of the contained fuel rods deteriorates.")]
+        [Serialize(0.2f, true, description: "How fast the condition of the contained fuel rods deteriorates per second."), Editable(0.0f, 1000.0f)]
         public float FuelConsumptionRate
         {
             get { return fuelConsumptionRate; }
@@ -133,7 +133,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(false, true)]
+        [Serialize(false, true, description: "Is the temperature currently critical. Intended to be used by StatusEffect conditionals (setting the value from XML has no effect).")]
         public bool TemperatureCritical
         {
             get { return temperature > allowedTemperature.Y; }
@@ -145,7 +145,7 @@ namespace Barotrauma.Items.Components
         private float targetFissionRate;
         private float targetTurbineOutput;
         
-        [Serialize(false, true)]
+        [Serialize(false, true, description: "Is the automatic temperature control currently on. Indended to be used by StatusEffect conditionals (setting the value from XML is not recommended).")]
         public bool AutoTemp
         {
             get { return autoTemp; }

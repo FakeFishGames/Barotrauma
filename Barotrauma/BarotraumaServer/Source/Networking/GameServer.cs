@@ -1321,6 +1321,7 @@ namespace Barotrauma.Networking
             {
                 outmsg.Write(subList[i].Name);
                 outmsg.Write(subList[i].MD5Hash.ToString());
+                outmsg.Write(subList[i].RequiredContentPackagesInstalled);
             }
 
             outmsg.Write(GameStarted);
@@ -1856,7 +1857,7 @@ namespace Barotrauma.Networking
 
                     if (client.CharacterInfo == null)
                     {
-                        client.CharacterInfo = new CharacterInfo(Character.HumanConfigFile, client.Name);
+                        client.CharacterInfo = new CharacterInfo(Character.HumanSpeciesName, client.Name);
                     }
                     characterInfos.Add(client.CharacterInfo);
                     if (client.CharacterInfo.Job == null || client.CharacterInfo.Job.Prefab != client.AssignedJob)
@@ -1869,7 +1870,7 @@ namespace Barotrauma.Networking
                 int botsToSpawn = serverSettings.BotSpawnMode == BotSpawnMode.Fill ? serverSettings.BotCount - characterInfos.Count : serverSettings.BotCount;
                 for (int i = 0; i < botsToSpawn; i++)
                 {
-                    var botInfo = new CharacterInfo(Character.HumanConfigFile);
+                    var botInfo = new CharacterInfo(Character.HumanSpeciesName);
                     characterInfos.Add(botInfo);
                     bots.Add(botInfo);
                 }
@@ -2757,12 +2758,13 @@ namespace Barotrauma.Networking
             serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
         }
 
-        public void SendTraitorMessage(Client client, string message, TraitorMessageType messageType)
+        public void SendTraitorMessage(Client client, string message, string missionIdentifier, TraitorMessageType messageType)
         {
             if (client == null) { return; }
             var msg = new WriteOnlyMessage();
             msg.Write((byte)ServerPacketHeader.TRAITOR_MESSAGE);
             msg.Write((byte)messageType);
+            msg.Write(missionIdentifier ?? "");
             msg.Write(message);
             serverPeer.Send(msg, client.Connection, DeliveryMethod.ReliableOrdered);
         }
@@ -2852,15 +2854,17 @@ namespace Barotrauma.Networking
 
             List<JobPrefab> jobPreferences = new List<JobPrefab>();
             int count = message.ReadByte();
+            // TODO: modding support?
             for (int i = 0; i < Math.Min(count, 3); i++)
             {
                 string jobIdentifier = message.ReadString();
-
-                JobPrefab jobPrefab = JobPrefab.List.Find(jp => jp.Identifier == jobIdentifier);
-                if (jobPrefab != null) jobPreferences.Add(jobPrefab);
+                if (JobPrefab.List.TryGetValue(jobIdentifier, out JobPrefab jobPrefab))
+                {
+                    jobPreferences.Add(jobPrefab);
+                }
             }
 
-            sender.CharacterInfo = new CharacterInfo(Character.HumanConfigFile, sender.Name);
+            sender.CharacterInfo = new CharacterInfo(Character.HumanSpeciesName, sender.Name);
             sender.CharacterInfo.RecreateHead(headSpriteId, race, gender, hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
 
             //if the client didn't provide job preferences, we'll use the preferences that are randomly assigned in the Client constructor
@@ -2873,10 +2877,11 @@ namespace Barotrauma.Networking
 
         public void AssignJobs(List<Client> unassigned)
         {
+            var jobList = JobPrefab.List.Values.ToList();
             unassigned = new List<Client>(unassigned);
 
             Dictionary<JobPrefab, int> assignedClientCount = new Dictionary<JobPrefab, int>();
-            foreach (JobPrefab jp in JobPrefab.List)
+            foreach (JobPrefab jp in jobList)
             {
                 assignedClientCount.Add(jp, 0);
             }
@@ -2924,7 +2929,7 @@ namespace Barotrauma.Networking
             {
                 unassignedJobsFound = false;
 
-                foreach (JobPrefab jobPrefab in JobPrefab.List)
+                foreach (JobPrefab jobPrefab in jobList)
                 {
                     if (unassigned.Count == 0) break;
                     if (jobPrefab.MinNumber < 1 || assignedClientCount[jobPrefab] >= jobPrefab.MinNumber) continue;
@@ -2962,22 +2967,22 @@ namespace Barotrauma.Networking
             foreach (Client c in unassigned)
             {
                 //find all jobs that are still available
-                var remainingJobs = JobPrefab.List.FindAll(jp => assignedClientCount[jp] < jp.MaxNumber && c.Karma >= jp.MinKarma);
+                var remainingJobs = jobList.FindAll(jp => assignedClientCount[jp] < jp.MaxNumber && c.Karma >= jp.MinKarma);
 
                 //all jobs taken, give a random job
                 if (remainingJobs.Count == 0)
                 {
                     DebugConsole.ThrowError("Failed to assign a suitable job for \"" + c.Name + "\" (all jobs already have the maximum numbers of players). Assigning a random job...");
-                    int jobIndex = Rand.Range(0, JobPrefab.List.Count);
+                    int jobIndex = Rand.Range(0, jobList.Count);
                     int skips = 0;
-                    while (c.Karma < JobPrefab.List[jobIndex].MinKarma)
+                    while (c.Karma < jobList[jobIndex].MinKarma)
                     {
                         jobIndex++;
                         skips++;
-                        if (jobIndex >= JobPrefab.List.Count) jobIndex -= JobPrefab.List.Count;
-                        if (skips >= JobPrefab.List.Count) break;
+                        if (jobIndex >= jobList.Count) jobIndex -= jobList.Count;
+                        if (skips >= jobList.Count) break;
                     }
-                    c.AssignedJob = JobPrefab.List[jobIndex];
+                    c.AssignedJob = jobList[jobIndex];
                     assignedClientCount[c.AssignedJob]++;
                 }
                 else //some jobs still left, choose one of them by random
@@ -2990,8 +2995,9 @@ namespace Barotrauma.Networking
 
         public void AssignBotJobs(List<CharacterInfo> bots, Character.TeamType teamID)
         {
+            var jobList = JobPrefab.List.Values.ToList();
             Dictionary<JobPrefab, int> assignedPlayerCount = new Dictionary<JobPrefab, int>();
-            foreach (JobPrefab jp in JobPrefab.List)
+            foreach (JobPrefab jp in jobList)
             {
                 assignedPlayerCount.Add(jp, 0);
             }
@@ -3013,7 +3019,7 @@ namespace Barotrauma.Networking
             List<CharacterInfo> unassignedBots = new List<CharacterInfo>(bots);
             foreach (CharacterInfo bot in bots)
             {
-                foreach (JobPrefab jobPrefab in JobPrefab.List)
+                foreach (JobPrefab jobPrefab in jobList)
                 {
                     if (jobPrefab.MinNumber < 1 || assignedPlayerCount[jobPrefab] >= jobPrefab.MinNumber) continue;
                     bot.Job = new Job(jobPrefab);
@@ -3027,12 +3033,12 @@ namespace Barotrauma.Networking
             foreach (CharacterInfo c in unassignedBots)
             {
                 //find all jobs that are still available
-                var remainingJobs = JobPrefab.List.FindAll(jp => assignedPlayerCount[jp] < jp.MaxNumber);
+                var remainingJobs = jobList.FindAll(jp => assignedPlayerCount[jp] < jp.MaxNumber);
                 //all jobs taken, give a random job
                 if (remainingJobs.Count == 0)
                 {
                     DebugConsole.ThrowError("Failed to assign a suitable job for bot \"" + c.Name + "\" (all jobs already have the maximum numbers of players). Assigning a random job...");
-                    c.Job = new Job(JobPrefab.List[Rand.Range(0, JobPrefab.List.Count)]);
+                    c.Job = Job.Random();
                     assignedPlayerCount[c.Job.Prefab]++;
                 }
                 else //some jobs still left, choose one of them by random

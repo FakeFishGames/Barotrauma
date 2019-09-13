@@ -660,6 +660,8 @@ namespace Barotrauma
 
         static Regex isCJK = new Regex(
             @"\p{IsHangulJamo}|" +
+            @"\p{IsHiragana}|" +
+            @"\p{IsKatakana}|" +
             @"\p{IsCJKRadicalsSupplement}|" +
             @"\p{IsCJKSymbolsandPunctuation}|" +
             @"\p{IsEnclosedCJKLettersandMonths}|" +

@@ -95,7 +95,7 @@ namespace Barotrauma.Tutorials
             crowbar.Unequip(mechanic);
             mechanic.Inventory.RemoveItem(crowbar);
 
-            var repairOrder = Order.PrefabList.Find(order => order.AITag == "repairsystems");
+            var repairOrder = Order.GetPrefab("repairsystems");
             mechanic_repairIcon = repairOrder.SymbolSprite;
             mechanic_repairIconColor = repairOrder.Color;
             mechanic_weldIcon = new Sprite("Content/UI/IconAtlas.png", new Rectangle(1, 256, 127, 127), new Vector2(0.5f, 0.5f));

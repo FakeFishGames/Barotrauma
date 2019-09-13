@@ -951,7 +951,7 @@ namespace Barotrauma
                 TraitorManager traitorManager = GameMain.Server.TraitorManager;
                 if (traitorManager == null || traitorManager.Traitors == null || !traitorManager.Traitors.Any())
                 {
-                    GameMain.Server.SendTraitorMessage(client,"There are no traitors at the moment.", TraitorMessageType.Console);
+                    GameMain.Server.SendTraitorMessage(client, "There are no traitors at the moment.", "", TraitorMessageType.Console);
                     return;
                 }
                 foreach (Traitor t in traitorManager.Traitors)
@@ -965,11 +965,11 @@ namespace Barotrauma
                             $"[traitorgoals]={traitorGoals.Substring(traitorGoalsStart)}",
                             $"[traitorname]={t.Character.Name}",
                             "Traitor [traitorname]'s current goals are:\n[traitorgoals]"
-                            }.Where(s => !string.IsNullOrEmpty(s))), TraitorMessageType.Console);
+                            }.Where(s => !string.IsNullOrEmpty(s))), t.Mission?.Identifier, TraitorMessageType.Console);
                     }
                     else
                     {
-                        GameMain.Server.SendTraitorMessage(client, string.Format("- Traitor {0} has no current objective.", t.Character.Name), TraitorMessageType.Console);
+                        GameMain.Server.SendTraitorMessage(client, string.Format("- Traitor {0} has no current objective.", "", t.Character.Name), "", TraitorMessageType.Console);
                     }
                 }
                 //GameMain.Server.SendTraitorMessage(client, "The code words are: " + traitorManager.CodeWords + ", response: " + traitorManager.CodeResponse + ".", TraitorMessageType.Console);

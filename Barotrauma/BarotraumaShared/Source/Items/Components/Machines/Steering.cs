@@ -74,9 +74,10 @@ namespace Barotrauma.Items.Components
                 }
             }
         }
-        
-        [Editable(0.0f, 1.0f, decimals: 3, ToolTip = "How full the ballast tanks should be when the submarine is not being steered upwards/downwards."
-            +" Can be used to compensate if the ballast tanks are too large/small relative to the size of the submarine."), Serialize(0.5f, true)]
+
+        [Editable(0.0f, 1.0f, decimals: 3),
+        Serialize(0.5f, true, description: "How full the ballast tanks should be when the submarine is not being steered upwards/downwards."
+            + " Can be used to compensate if the ballast tanks are too large/small relative to the size of the submarine.")]
         public float NeutralBallastLevel
         {
             get { return neutralBallastLevel; }
@@ -86,7 +87,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(1000.0f, true)]
+        [Serialize(1000.0f, true, description: "How close the docking port has to be to another docking port for the docking mode to become active.")]
         public float DockingAssistThreshold
         {
             get;

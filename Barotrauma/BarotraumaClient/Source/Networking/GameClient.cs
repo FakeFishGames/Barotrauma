@@ -221,7 +221,7 @@ namespace Barotrauma.Networking
             fileReceiver.OnFinished += OnFileReceived;
             fileReceiver.OnTransferFailed += OnTransferFailed;
 
-            characterInfo = new CharacterInfo(Character.HumanConfigFile, name, null)
+            characterInfo = new CharacterInfo(Character.HumanSpeciesName, name, null)
             {
                 Job = null
             };
@@ -913,8 +913,12 @@ namespace Barotrauma.Networking
         private void ReadTraitorMessage(IReadMessage inc)
         {
             TraitorMessageType messageType = (TraitorMessageType)inc.ReadByte();
+            string missionIdentifier = inc.ReadString();
             string message = inc.ReadString();
             message = TextManager.GetServerMessage(message);
+
+            var missionPrefab = TraitorMissionPrefab.List.Find(t => t.Identifier == missionIdentifier);
+            Sprite icon = missionPrefab?.Icon;
 
             switch(messageType) {
                 case TraitorMessageType.Objective:
@@ -935,7 +939,11 @@ namespace Barotrauma.Networking
                     DebugConsole.NewMessage(message);
                     break;
                 case TraitorMessageType.ServerMessageBox:
-                    new GUIMessageBox("", message);
+                    var msgBox = new GUIMessageBox("", message, new string[0], type: GUIMessageBox.Type.InGame, icon: icon);
+                    if (msgBox.Icon != null)
+                    {
+                        msgBox.IconColor = missionPrefab.IconColor;
+                    }
                     break;
                 case TraitorMessageType.Server:
                 default:
@@ -1232,16 +1240,14 @@ namespace Barotrauma.Networking
             {
                 string subName = inc.ReadString();
                 string subHash = inc.ReadString();
+                bool requiredContentPackagesInstalled = inc.ReadBoolean();
 
-                var matchingSub = Submarine.SavedSubmarines.FirstOrDefault(s => s.Name == subName && s.MD5Hash.Hash == subHash);
-                if (matchingSub != null)
-                {
-                    serverSubmarines.Add(matchingSub);
-                }
-                else
-                {
-                    serverSubmarines.Add(new Submarine(Path.Combine(Submarine.SavePath, subName) + ".sub", subHash, false));
-                }
+                var matchingSub =
+                    Submarine.SavedSubmarines.FirstOrDefault(s => s.Name == subName && s.MD5Hash.Hash == subHash) ??
+                    new Submarine(Path.Combine(Submarine.SavePath, subName) + ".sub", subHash, false);
+
+                matchingSub.RequiredContentPackagesInstalled = requiredContentPackagesInstalled;
+                serverSubmarines.Add(matchingSub);
             }
 
             GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.SubList, serverSubmarines);

@@ -41,7 +41,7 @@ namespace Barotrauma
             {
                 if (subElement.Name.ToString().ToLowerInvariant() != "sprite") continue;
 
-                Sprite = new Sprite(subElement);
+                Sprite = new Sprite(subElement, lazyLoad: true);
                 break;
             }
         }

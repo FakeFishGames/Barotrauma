@@ -86,11 +86,7 @@ namespace Barotrauma
             set { chromaticAberrationStrength = MathHelper.Clamp(value, 0.0f, 100.0f); }
         }
 
-        public string BloodDecalName
-        {
-            get;
-            private set;
-        }
+        public string BloodDecalName => Params.BloodDecal;
                 
         private List<ParticleEmitter> bloodEmitters = new List<ParticleEmitter>();
         public IEnumerable<ParticleEmitter> BloodEmitters
@@ -137,22 +133,18 @@ namespace Barotrauma
             get { return activeObjectiveEntities; }
         }
 
-        partial void InitProjSpecific(XDocument doc)
+        partial void InitProjSpecific(XElement mainElement)
         {
-            soundInterval = doc.Root.GetAttributeFloat("soundinterval", 10.0f);
+            soundInterval = mainElement.GetAttributeFloat("soundinterval", 10.0f);
             soundTimer = Rand.Range(0.0f, soundInterval);
 
-            BloodDecalName = doc.Root.GetAttributeString("blooddecal", "");
-
             sounds = new List<CharacterSound>();
-            foreach (XElement subElement in doc.Root.Elements())
+            Params.Sounds.ForEach(s => sounds.Add(new CharacterSound(s)));
+
+            foreach (XElement subElement in mainElement.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
-                    case "sound":
-                        var characterSound = new CharacterSound(subElement);
-                        if (characterSound.Sound != null) { sounds.Add(characterSound); }
-                        break;
                     case "damageemitter":
                         damageEmitters.Add(new ParticleEmitter(subElement));
                         break;
@@ -216,7 +208,7 @@ namespace Barotrauma
                 float targetOffsetAmount = 0.0f;
                 if (moveCam)
                 {
-                    if (needsAir &&
+                    if (NeedsAir &&
                         pressureProtection < 80.0f &&
                         (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure > 0.0f))
                     {
@@ -542,7 +534,7 @@ namespace Barotrauma
                 {                    
                     switch (AIController.State)
                     {
-                        case AIController.AIState.Attack:
+                        case AIState.Attack:
                             PlaySound(CharacterSound.SoundType.Attack);
                             break;
                         default:

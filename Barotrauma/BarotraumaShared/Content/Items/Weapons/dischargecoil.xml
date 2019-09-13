@@ -2,7 +2,7 @@
 <Items>
   <Item name="Electrical Discharge Coil" identifier="dischargecoil" category="Machine">
     <!-- TODO: electrical discharge coil sprite -->
-    <Sprite texture="coilgunbase.png" depth="0.01" sourcerect="12,184,232,38" />
+    <Sprite texture="Turrets.png" depth="0.01" sourcerect="12,184,232,38" />
     <ElectricalDischarger duration="0.25" outdoorsonly="true" powerconsumption="10000">
       <Attack targetimpulse="50">
         <Affliction identifier="stun" strength="8"/>

@@ -17,7 +17,7 @@ namespace Barotrauma.Items.Components
         
         private bool hasPower;
 
-        [Serialize(0.0f, true)]
+        [Serialize(0.0f, true, description: "How fast the item is currently pumping water (-100 = full speed out, 100 = full speed in). Intended to be used by StatusEffect conditionals (setting this value in XML has no effect).")]
         public float FlowPercentage
         {
             get { return flowPercentage; }
@@ -29,7 +29,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(80.0f, false)]
+        [Serialize(80.0f, false, description: "How fast the item pumps water in/out when operating at 100%.")]
         public float MaxFlow
         {
             get { return maxFlow; }

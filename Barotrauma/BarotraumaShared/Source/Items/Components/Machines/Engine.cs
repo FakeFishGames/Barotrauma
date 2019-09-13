@@ -22,8 +22,8 @@ namespace Barotrauma.Items.Components
 
         private float prevVoltage;
         
-        [Editable(0.0f, 10000000.0f, ToolTip = "The amount of force exerted on the submarine when the engine is operating at full power."), 
-        Serialize(2000.0f, true)]
+        [Editable(0.0f, 10000000.0f), 
+        Serialize(2000.0f, true, description: "The amount of force exerted on the submarine when the engine is operating at full power.")]
         public float MaxForce
         {
             get { return maxForce; }
@@ -33,7 +33,9 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize("0.0,0.0", true)]
+        [Editable, Serialize("0.0,0.0", true, 
+            description: "The position of the propeller as an offset from the item's center (in pixels)."+
+            " Determines where the particles spawn and the position that causes characters to take damage from the engine if the PropellerDamage is defined.")]
         public Vector2 PropellerPos
         {
             get;

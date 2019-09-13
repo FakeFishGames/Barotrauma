@@ -15,7 +15,7 @@ namespace Barotrauma.Items.Components
         //openState when the vertices of the convex hull were last calculated
         private float lastConvexHullState;
 
-        [Serialize("1,1", false)]
+        [Serialize("1,1", false, description: "The scale of the shadow-casting area of the door (relative to the actual size of the door).")]
         public Vector2 ShadowScale
         {
             get;

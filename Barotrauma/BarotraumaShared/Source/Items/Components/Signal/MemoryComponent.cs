@@ -4,7 +4,7 @@ namespace Barotrauma.Items.Components
 {
     class MemoryComponent : ItemComponent
     {
-        [InGameEditable, Serialize("", true)]
+        [InGameEditable, Serialize("", true, description: "The currently stored signal the item outputs.")]
         public string Value
         {
             get;

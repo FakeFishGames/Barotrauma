@@ -254,7 +254,7 @@ namespace Barotrauma
             protected set;
         }
         
-        [Serialize("1.0,1.0,1.0,1.0", true), Editable(ToolTip = "Changes the color of the item this item is contained inside. Only has an effect if either of the UseContainedSpriteColor or UseContainedInventoryIconColor property of the container is set to true.")]
+        [Editable, Serialize("1.0,1.0,1.0,1.0", true, description: "Changes the color of the item this item is contained inside. Only has an effect if either of the UseContainedSpriteColor or UseContainedInventoryIconColor property of the container is set to true.")]
         public Color ContainerColor
         {
             get;
@@ -505,7 +505,7 @@ namespace Barotrauma
             get { return ownInventory; }
         }
 
-        [Serialize(false, true), Editable(ToolTip =
+        [Editable, Serialize(false, true, description:
             "Enable if you want to display the item HUD side by side with another item's HUD, when linked together. " +
             "Disclaimer: It's possible or even likely that the views block each other, if they were not designed to be viewed together!")]
         public bool DisplaySideBySideWhenLinked { get; set; }

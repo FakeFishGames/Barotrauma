@@ -612,7 +612,8 @@
       <input name="set_color" displayname="connection.setcolor" />
     </ConnectionPanel>
   </Item>
-  <Item name="Oxygen Detector" identifier="oxygendetector" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a value between 0-100 depending on the quality of the surrounding air." scale="0.16" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="Oxygen Detector" identifier="oxygendetector" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a value between 0-100 depending on the quality of the surrounding air." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <Upgrade gameversion="0.9.3.1" scale="0.5"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -626,9 +627,9 @@
       <RequiredItem identifier="silicon" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,256,64,64" origin="0.5,0.5" />
-    <Sprite texture="detectors.png" depth="0.8" sourcerect="128,0,140,89" origin="0.5,0.5" />
+    <Sprite texture="detectors.png" depth="0.8" sourcerect="43,0,44,29" origin="0.5,0.5" />
     <OxygenDetector canbeselected="true" />
-    <Body width="31" height="24" density="30" />
+    <Body width="44" height="30" density="30" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
       <RequiredItem identifier="wrench" type="Equipped" />
     </Holdable>
@@ -638,7 +639,8 @@
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Water Detector" identifier="waterdetector" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a signal when the detector is submerged." scale="0.16" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="Water Detector" identifier="waterdetector" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a signal when the detector is submerged." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <Upgrade gameversion="0.9.3.1" scale="0.5"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -652,9 +654,9 @@
       <RequiredItem identifier="silicon" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,256,64,64" origin="0.5,0.5" />
-    <Sprite texture="detectors.png" depth="0.8" sourcerect="0,0,129,89" origin="0.5,0.5" />
+    <Sprite texture="detectors.png" depth="0.8" sourcerect="0,0,40,37" origin="0.5,0.5" />
     <WaterDetector canbeselected="true" />
-    <Body width="31" height="24" density="30" />
+    <Body width="40" height="37" density="30" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
       <RequiredItem identifier="wrench" type="Equipped" />
     </Holdable>
@@ -664,7 +666,8 @@
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Smoke Detector" identifier="smokedetector" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a signal when it senses smoke." scale="0.16" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="Smoke Detector" identifier="smokedetector" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a signal when it senses smoke." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <Upgrade gameversion="0.9.3.1" scale="0.5"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -678,9 +681,9 @@
       <RequiredItem identifier="silicon" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,320,64,64" origin="0.5,0.5" />
-    <Sprite texture="detectors.png" depth="0.8" sourcerect="269,0,140,89" origin="0.5,0.5" />
+    <Sprite texture="detectors.png" depth="0.8" sourcerect="87,0,45,29" origin="0.5,0.5" />
     <SmokeDetector FireSizeThreshold="50" />
-    <Body width="31" height="24" density="30" />
+    <Body width="44" height="30" density="30" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
       <RequiredItem identifier="wrench" type="Equipped" />
     </Holdable>
@@ -690,7 +693,8 @@
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Motion Detector" identifier="motiondetector" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a signal when it detects movement." scale="0.16" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="Motion Detector" identifier="motiondetector" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a signal when it detects movement." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <Upgrade gameversion="0.9.3.1" scale="0.5"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -704,9 +708,9 @@
       <RequiredItem identifier="silicon" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,256,64,64" origin="0.5,0.5" />
-    <Sprite texture="detectors.png" depth="0.8" sourcerect="0,89,140,133" origin="0.5,0.5" />
+    <Sprite texture="detectors.png" depth="0.8" sourcerect="0,36,43,36" origin="0.5,0.5" />
     <MotionSensor range="100" canbeselected="true" />
-    <Body width="31" height="24" density="30" />
+    <Body width="42" height="36" density="30" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
       <RequiredItem identifier="wrench" type="Equipped" />
     </Holdable>
@@ -885,9 +889,10 @@
       <input name="set_state" displayname="connection.setstate" />
     </ConnectionPanel>
   </Item>
-  <Item name="Camera" identifier="camera" category="Electrical" Tags="smallitem" focusonselected="true" offsetonselected="500" cargocontaineridentifier="metalcrate" description="Typically used in photonics masts to provide the crew with a high-resolution view of the area outside the sub." Scale="0.16">
+  <Item name="Camera" identifier="camera" category="Electrical" Tags="smallitem" focusonselected="true" offsetonselected="500" cargocontaineridentifier="metalcrate" description="Typically used in photonics masts to provide the crew with a high-resolution view of the area outside the sub." Scale="0.5">
+    <Upgrade gameversion="0.9.3.1" scale="0.5"/>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,320,64,64" origin="0.5,0.5" />
-    <Sprite texture="camera.png" depth="0.8" sourcerect="0,0,176,137" origin="0.5,0.5" />
+    <Sprite texture="detectors.png" depth="0.8" sourcerect="131,44,60,46" origin="0.5,0.5" />
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver" type="Equipped" />

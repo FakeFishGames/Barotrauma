@@ -637,9 +637,15 @@ namespace Barotrauma
             }
             else
             {
-                if (!onGround) movement = Vector2.Zero;
+                if (!onGround)
+                {
+                    movement = Vector2.Zero;
+                }
+                
+                float stepLift = TargetMovement.X == 0.0f ? 0 : 
+                    (float)Math.Sin(WalkPos * CurrentGroundedParams.StepLiftFrequency + MathHelper.Pi * CurrentGroundedParams.StepLiftOffset) * (CurrentGroundedParams.StepLiftAmount / 100);
 
-                float y = colliderPos.Y;
+                float y = colliderPos.Y + stepLift;
                 if (TorsoPosition.HasValue)
                 {
                     y += TorsoPosition.Value;
@@ -648,7 +654,7 @@ namespace Barotrauma
                     MathUtils.SmoothStep(torso.SimPosition,
                     new Vector2(footMid + movement.X * TorsoLeanAmount, y), getUpForce);
 
-                y = colliderPos.Y;
+                y = colliderPos.Y + stepLift * CurrentGroundedParams.StepLiftHeadMultiplier;
                 if (HeadPosition.HasValue)
                 {
                     y += HeadPosition.Value;
@@ -809,10 +815,11 @@ namespace Barotrauma
                     //get the elbow to a neutral rotation
                     if (Math.Abs(hand.body.AngularVelocity) < 10.0f)
                     {
-                        LimbJoint elbow =
-                        GetJointBetweenLimbs(armType, hand.type) ??
-                        GetJointBetweenLimbs(armType, foreArmType);
-                        hand.body.ApplyTorque(MathHelper.Clamp(-elbow.JointAngle, -MathHelper.PiOver2, MathHelper.PiOver2) * hand.Mass * 10.0f);
+                        LimbJoint elbow = GetJointBetweenLimbs(armType, hand.type) ?? GetJointBetweenLimbs(armType, foreArmType);
+                        if (elbow != null)
+                        {
+                            hand.body.ApplyTorque(MathHelper.Clamp(-elbow.JointAngle, -MathHelper.PiOver2, MathHelper.PiOver2) * hand.Mass * 10.0f);
+                        }
                     }
                 }
             }
@@ -1848,7 +1855,11 @@ namespace Barotrauma
             }
             var torso = GetLimb(LimbType.Torso);
             var waist = GetJointBetweenLimbs(LimbType.Waist, upperLeg.type);
-            Vector2 waistPos = waist.LimbA == upperLeg ? waist.WorldAnchorA : waist.WorldAnchorB;
+            Vector2 waistPos = Vector2.Zero;
+            if (waist != null)
+            {
+                waistPos = waist.LimbA == upperLeg ? waist.WorldAnchorA : waist.WorldAnchorB;
+            }
 
             //distance from waist joint to the target position
             float c = Vector2.Distance(pos, waistPos);

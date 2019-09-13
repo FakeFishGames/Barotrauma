@@ -180,6 +180,8 @@
     identifier="huskinfection"
     description="Something dark and unpleasant moves in the mouth. They are rendered completely mute, save for occasional clicking sounds apparently emanating from deep within the throat."
     type="huskinfection"
+    targets="human"
+    huskedspeciesname="[speciesname]husk"
     causeofdeathdescription="Taken over by a husk parasite"
     selfcauseofdeathdescription="You have been taken over by the husk parasite."
     limbspecific="false"

@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
   <Item name="Junction Box" identifier="junctionbox" category="Electrical" description="Serves as a hub for power distribution and relaying signals between devices." scale="0.75">
-    <Sprite texture="FF_junctionbox.png" sourcerect="0,0,73,121" depth="0.8" canflipx="false" origin="0.5,0.5" />
-    <BrokenSprite texture="FF_junctionbox.png" sourcerect="73,0,73,123" depth="0.8" maxcondition="80" fadein="true" />
-    <BrokenSprite texture="FF_junctionbox.png" sourcerect="146,0,73,123" depth="0.8" maxcondition="0" />
+    <Sprite texture="JunctionBox.png" sourcerect="0,0,73,121" depth="0.8" canflipx="false" origin="0.5,0.5" />
+    <BrokenSprite texture="JunctionBox.png" sourcerect="73,0,73,123" depth="0.8" maxcondition="80" fadein="true" />
+    <BrokenSprite texture="JunctionBox.png" sourcerect="146,0,73,123" depth="0.8" maxcondition="0" />
     <PowerTransfer canbeselected="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.2,0.15" minsize="350,160" maxsize="420,190" anchor="Center" style="ItemUI" />
       <StatusEffect type="InWater" target="This" condition="-0.25">
@@ -11,11 +11,11 @@
       </StatusEffect>
     </PowerTransfer>
     <LightComponent range="10.0" lightcolor="255,255,255,5" powerconsumption="1" IsOn="true" castshadows="false" allowingameediting="false">
-      <sprite texture="Content/Items/Electricity/FF_junctionboxAdditive.png" sourcerect="0,0,73,121" depth="0.1" origin="0.5,0.5" alpha="1.0" />
+      <sprite texture="Content/Items/Electricity/JunctionBox.png" sourcerect="0,121,73,121" depth="0.1" origin="0.5,0.5" alpha="1.0" />
       <IsActive targetitemcomponent="PowerTransfer" overload="eq False" />
     </LightComponent>
     <LightComponent range="10.0" lightcolor="255,255,255,5" powerconsumption="1" IsOn="false" castshadows="false" allowingameediting="false" blinkfrequency="1.5">
-      <sprite texture="Content/Items/Electricity/FF_junctionboxAdditive.png" sourcerect="73,0,73,123" depth="0.1" origin="0.5,0.5" alpha="1.0" />
+      <sprite texture="Content/Items/Electricity/JunctionBox.png" sourcerect="73,121,73,123" depth="0.1" origin="0.5,0.5" alpha="1.0" />
       <IsActive targetitemcomponent="PowerTransfer" overload="eq True" />
     </LightComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
@@ -43,9 +43,9 @@
     </Repairable>
   </Item>
   <Item name="Junction Box" identifier="junctionbox_tutorial" nameidentifier="junctionbox" category="Electrical" description="Junction box with only a single power output." scale="0.75" hideinmenus="true">
-    <Sprite texture="FF_junctionbox.png" sourcerect="0,0,73,121" depth="0.8" canflipx="false" origin="0.5,0.5" />
-    <BrokenSprite texture="FF_junctionbox.png" sourcerect="73,0,73,123" depth="0.8" maxcondition="80" fadein="true" />
-    <BrokenSprite texture="FF_junctionbox.png" sourcerect="146,0,73,123" depth="0.8" maxcondition="0" />
+    <Sprite texture="JunctionBox.png" sourcerect="0,0,73,121" depth="0.8" canflipx="false" origin="0.5,0.5" />
+    <BrokenSprite texture="JunctionBox.png" sourcerect="73,0,73,123" depth="0.8" maxcondition="80" fadein="true" />
+    <BrokenSprite texture="JunctionBox.png" sourcerect="146,0,73,123" depth="0.8" maxcondition="0" />
     <PowerTransfer canbeselected="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.2,0.15" minsize="350,160" maxsize="420,190" anchor="Center" style="ItemUI" />
       <StatusEffect type="InWater" target="This" condition="-0.25">
@@ -108,11 +108,12 @@
       <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="2" mincondition="0.0" maxcondition="15.0" />
     </Repairable>
   </Item>
-  <Item name="ShuttleBattery" identifier="shuttlebattery" tags="battery" category="Electrical" Scale="0.2" description="Generally used for storing backup power in case of a reactor failure.">
-    <Sprite texture="ShuttleBattery.png" sourcerect="0,0,299,307" depth="0.8" />
+  <Item name="ShuttleBattery" identifier="shuttlebattery" tags="battery" category="Electrical" Scale="0.5" description="Generally used for storing backup power in case of a reactor failure.">
+    <Upgrade gameversion="0.9.3.1" scale="0.5" indicatorposition="21,12" indicatorsize="54,35"/>
+    <Sprite texture="battery.png" sourcerect="0,207,120,125" depth="0.8" />
     <BrokenSprite texture="ShuttleBattery.png" sourcerect="299,0,299,307" depth="0.8" maxcondition="80" fadein="true" />
     <BrokenSprite texture="ShuttleBattery.png" sourcerect="598,0,299,307" depth="0.8" maxcondition="0" />
-    <PowerContainer capacity="2000.0" maxrechargespeed="500.0" maxoutput="1000.0" canbeselected="true" indicatorposition="59,30" indicatorsize="132,83" ishorizontal="true" msg="ItemMsgInteractSelect">
+    <PowerContainer capacity="2000.0" maxrechargespeed="500.0" maxoutput="1000.0" canbeselected="true" indicatorposition="21,12" indicatorsize="54,35" ishorizontal="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.18,0.23" minsize="350,250" maxsize="420,300" anchor="Center" relativeoffset="0,-0.1" style="ItemUI" />
       <StatusEffect type="OnActive" target="Contained" targetidentifiers="loadable" Condition="2.0" />
     </PowerContainer>
@@ -138,9 +139,9 @@
     </ItemContainer>
   </Item>
   <Item name="Supercapacitor" identifier="supercapacitor" category="Electrical" Scale="0.5" description="Can deliver charge much faster than batteries.">
-    <Sprite texture="supercapacitor.png" depth="0.8" sourcerect="0,16,154,160" />
-    <BrokenSprite texture="supercapacitor.png" sourcerect="154,16,154,160" depth="0.8" maxcondition="80" fadein="true" />
-    <BrokenSprite texture="supercapacitor.png" sourcerect="308,16,154,160" depth="0.8" maxcondition="0" />
+    <Sprite texture="battery.png" depth="0.8" sourcerect="0,334,154,160" />
+    <BrokenSprite texture="battery.png" sourcerect="154,334,155,161" depth="0.8" maxcondition="80" fadein="true" />
+    <BrokenSprite texture="battery.png" sourcerect="309,334,155,161" depth="0.8" maxcondition="0" />
     <PowerContainer capacity="20.0" maxrechargespeed="20.0" maxoutput="2000000.0" canbeselected="true" indicatorposition="51,16" indicatorsize="47,12" ishorizontal="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.18,0.23" minsize="350,250" maxsize="420,300" anchor="Center" relativeoffset="0,-0.1" style="ItemUI" />
     </PowerContainer>
@@ -182,7 +183,7 @@
       <RequiredItem identifier="lithium" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,0,64,64" origin="0.5,0.5" />
-    <Sprite texture="battery.png" sourcerect="3,336,57,40" depth="0.8" />
+    <Sprite texture="battery.png" sourcerect="357,0,57,38" depth="0.8" />
     <Body width="55" height="38" density="30" />
     <Pickable slots="Any,RightHand,LeftHand" msg="ItemMsgPickUpSelect" />
   </Item>
@@ -197,7 +198,7 @@
       <RequiredItem identifier="zinc" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="514,832,62,64" origin="0.5,0.5" />
-    <Sprite texture="battery.png" sourcerect="64,336,62,41" depth="0.8" />
+    <Sprite texture="battery.png" sourcerect="417,0,61,38" depth="0.8" />
     <Body width="55" height="38" density="30" />
     <Pickable slots="Any,RightHand,LeftHand" msg="ItemMsgPickUpSelect" />
   </Item>

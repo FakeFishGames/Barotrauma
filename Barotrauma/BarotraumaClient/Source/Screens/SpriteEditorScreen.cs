@@ -301,7 +301,7 @@ namespace Barotrauma
                     if (file.Path.EndsWith(".xml"))
                     {
                         XDocument doc = XMLExtensions.TryLoadXml(file.Path);
-                        if (doc != null && doc.Root != null)
+                        if (doc != null)
                         {
                             LoadSprites(doc.Root);
                         }

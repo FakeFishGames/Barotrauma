@@ -20,8 +20,8 @@ namespace Barotrauma
             get { return aiController; }
         }
         
-        public AICharacter(string file, Vector2 position, string seed, CharacterInfo characterInfo = null, bool isNetworkPlayer = false, RagdollParams ragdoll = null)
-            : base(file, position, seed, characterInfo, isNetworkPlayer, ragdoll)
+        public AICharacter(string speciesName, Vector2 position, string seed, CharacterInfo characterInfo = null, bool isNetworkPlayer = false, RagdollParams ragdoll = null)
+            : base(speciesName, position, seed, characterInfo, isNetworkPlayer, ragdoll)
         {
             InitProjSpecific();
         }

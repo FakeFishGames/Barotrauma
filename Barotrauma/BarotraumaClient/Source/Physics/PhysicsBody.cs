@@ -17,7 +17,7 @@ namespace Barotrauma
             get { return bodyShapeTexture; }
         }
 
-        public void Draw(DeformableSprite deformSprite, Camera cam, Vector2 scale, Color color)
+        public void Draw(DeformableSprite deformSprite, Camera cam, Vector2 scale, Color color, bool mirror = false)
         {
             if (!Enabled) return;
             UpdateDrawPosition();
@@ -25,17 +25,23 @@ namespace Barotrauma
                 new Vector3(DrawPosition, MathHelper.Clamp(deformSprite.Sprite.Depth, 0, 1)), 
                 deformSprite.Origin, 
                 -DrawRotation, 
-                scale, 
-                color,
-                flip: Dir < 0);
+                scale, color, Dir < 0, mirror);
         }
 
-        public void Draw(SpriteBatch spriteBatch, Sprite sprite, Color color, float? depth = null, float scale = 1.0f)
+        public void Draw(SpriteBatch spriteBatch, Sprite sprite, Color color, float? depth = null, float scale = 1.0f, bool mirrorX = false, bool mirrorY = false)
         {
             if (!Enabled) return;
             UpdateDrawPosition();
             if (sprite == null) return;
             SpriteEffects spriteEffect = (Dir == 1.0f) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
+            if (mirrorX)
+            {
+                spriteEffect = spriteEffect == SpriteEffects.None ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+            }
+            if (mirrorY)
+            {
+                spriteEffect |= SpriteEffects.FlipVertically;
+            }
             sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color, -drawRotation, scale, spriteEffect, depth);
         }
 
@@ -134,14 +140,17 @@ namespace Barotrauma
                 rot -= MathHelper.PiOver2;
             }
             
-            spriteBatch.Draw(
-                bodyShapeTexture,
-                new Vector2(DrawPosition.X, -DrawPosition.Y),
-                null,
-                color,
-                rot,
-                new Vector2(bodyShapeTexture.Width / 2, bodyShapeTexture.Height / 2),
-                1.0f / bodyShapeTextureScale, SpriteEffects.None, 0.0f);
+            if (bodyShapeTexture != null)
+            {
+                spriteBatch.Draw(
+                    bodyShapeTexture,
+                    new Vector2(DrawPosition.X, -DrawPosition.Y),
+                    null,
+                    color,
+                    rot,
+                    new Vector2(bodyShapeTexture.Width / 2, bodyShapeTexture.Height / 2),
+                    1.0f / bodyShapeTextureScale, SpriteEffects.None, 0.0f);
+            }
         }
 
         public PosInfo ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime, string parentDebugName)

@@ -7,9 +7,7 @@ namespace Barotrauma
     {
         public static Character Controlled = null;
 
-        partial void InitProjSpecific(XDocument doc)
-        {
-        }
+        partial void InitProjSpecific(XElement mainElement) { }
 
         partial void OnAttackedProjSpecific(Character attacker, AttackResult attackResult)
         {

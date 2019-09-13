@@ -61,7 +61,7 @@ namespace Barotrauma.Items.Components
         public bool CanBeWelded = true;
 
         private float stuck;
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false, description: "How badly stuck the door is (in percentages). If the percentage reaches 100, the door needs to be cut open to make it usable again.")]
         public float Stuck
         {
             get { return stuck; }
@@ -74,10 +74,10 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(3.0f, true), Editable]
+        [Serialize(3.0f, true, description: "How quickly the door opens."), Editable]
         public float OpeningSpeed { get; private set; }
 
-        [Serialize(3.0f, true), Editable]
+        [Serialize(3.0f, true, description: "How quickly the door closes."), Editable]
         public float ClosingSpeed { get; private set; }
 
         public bool? PredictedState { get; private set; }
@@ -121,10 +121,10 @@ namespace Barotrauma.Items.Components
 
         public bool IsHorizontal { get; private set; }
 
-        [Serialize("0.0,0.0,0.0,0.0", false)]
+        [Serialize("0.0,0.0,0.0,0.0", false, description: "Position and size of the window on the door. The upper left corner is 0,0. Set the width and height to 0 if you don't want the door to have a window.")]
         public Rectangle Window { get; set; }
 
-        [Editable, Serialize(false, true)]
+        [Editable, Serialize(false, true, description: "Is the door currently open.")]
         public bool IsOpen
         {
             get { return isOpen; }
@@ -135,7 +135,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "If the door has integrated buttons, it can be opened by interacting with it directly (instead of using buttons wired to it).")]
         public bool HasIntegratedButtons { get; private set; }
                 
         public float OpenState
@@ -153,7 +153,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Characters and items cannot pass through impassable doors. Useful for things such as ducts that should only let water and air through.")]
         public bool Impassable
         {
             get;
