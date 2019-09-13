@@ -110,7 +110,7 @@ namespace Barotrauma
                     objectiveCount++;
                 }
             }
-            WaitTimer = Math.Max(WaitTimer, Rand.Range(0.5f, 1f) * objectiveCount);
+            _waitTimer = Math.Max(_waitTimer, Rand.Range(0.5f, 1f) * objectiveCount);
         }
 
         public void AddObjective<T>(T objective, float delay, Action callback = null) where T : AIObjective
