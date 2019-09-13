@@ -617,7 +617,7 @@ namespace Barotrauma
 
             bool isInfoNew = false;
             ServerInfo info = serverList.Content.FindChild(d => (d.UserData is ServerInfo serverInfo) &&
-                                                        ((serverInfo.OwnerID != 0 && steamId == serverInfo.OwnerID) || (ip == serverInfo.IP && port == serverInfo.Port))).UserData as ServerInfo;
+                                                        (steamId != 0 ? steamId == serverInfo.OwnerID : (ip == serverInfo.IP && port == serverInfo.Port))).UserData as ServerInfo;
             if (info == null)
             {
                 isInfoNew = true;
@@ -658,7 +658,7 @@ namespace Barotrauma
         public void AddToRecentServers(ServerInfo info)
         {
             info.Recent = true;
-            ServerInfo existingInfo = recentServers.Find(serverInfo => (serverInfo.OwnerID != 0 && info.OwnerID == serverInfo.OwnerID) || (info.IP == serverInfo.IP && info.Port == serverInfo.Port));
+            ServerInfo existingInfo = recentServers.Find(serverInfo => info.OwnerID == serverInfo.OwnerID && (info.OwnerID != 0 ? true : (info.IP == serverInfo.IP && info.Port == serverInfo.Port)));
             if (existingInfo == null)
             {
                 recentServers.Add(info);
@@ -675,7 +675,7 @@ namespace Barotrauma
         public void AddToFavoriteServers(ServerInfo info)
         {
             info.Favorite = true;
-            ServerInfo existingInfo = favoriteServers.Find(serverInfo => (serverInfo.OwnerID != 0 && info.OwnerID == serverInfo.OwnerID) || (info.IP == serverInfo.IP && info.Port == serverInfo.Port));
+            ServerInfo existingInfo = favoriteServers.Find(serverInfo => info.OwnerID == serverInfo.OwnerID && (info.OwnerID != 0 ? true : (info.IP == serverInfo.IP && info.Port == serverInfo.Port)));
             if (existingInfo == null)
             {
                 favoriteServers.Add(info);
@@ -692,7 +692,7 @@ namespace Barotrauma
         public void RemoveFromFavoriteServers(ServerInfo info)
         {
             info.Favorite = false;
-            ServerInfo existingInfo = favoriteServers.Find(serverInfo => (serverInfo.OwnerID != 0 && info.OwnerID == serverInfo.OwnerID) || (info.IP == serverInfo.IP && info.Port == serverInfo.Port));
+            ServerInfo existingInfo = favoriteServers.Find(serverInfo => info.OwnerID == serverInfo.OwnerID && (info.OwnerID != 0 ? true : (info.IP == serverInfo.IP && info.Port == serverInfo.Port)));
             if (existingInfo != null)
             {
                 favoriteServers.Remove(existingInfo);
@@ -1228,7 +1228,8 @@ namespace Barotrauma
                 }
                 else
                 {
-                    foreach (ServerInfo info in recentServers.Concat(favoriteServers))
+                    List<ServerInfo> knownServers = recentServers.Concat(favoriteServers).ToList();
+                    foreach (ServerInfo info in knownServers)
                     {
                         AddToServerList(info);
                         info.QueryLiveInfo(UpdateServerInfo);
@@ -1321,7 +1322,8 @@ namespace Barotrauma
         private void AddToServerList(ServerInfo serverInfo)
         {
             var serverFrame = serverList.Content.FindChild(d => (d.UserData is ServerInfo info) &&
-                                                                ((info.OwnerID != 0 && info.OwnerID==serverInfo.OwnerID) || (info.IP==serverInfo.IP && info.Port==serverInfo.Port)));
+                                                                info.OwnerID == serverInfo.OwnerID &&
+                                                                (serverInfo.OwnerID != 0 ? true : (info.IP == serverInfo.IP && info.Port == serverInfo.Port)));
 
             if (serverFrame == null)
             {
@@ -1362,7 +1364,8 @@ namespace Barotrauma
         private void UpdateServerInfo(ServerInfo serverInfo)
         {
             var serverFrame = serverList.Content.FindChild(d => (d.UserData is ServerInfo info) &&
-                                                                ((info.OwnerID != 0 && info.OwnerID == serverInfo.OwnerID) || (info.IP == serverInfo.IP && info.Port == serverInfo.Port)));
+                                                                info.OwnerID == serverInfo.OwnerID &&
+                                                                (serverInfo.OwnerID != 0 ? true : (info.IP == serverInfo.IP && info.Port == serverInfo.Port)));
             if (serverFrame == null) return;
 
             var serverContent = serverFrame.Children.First() as GUILayoutGroup;

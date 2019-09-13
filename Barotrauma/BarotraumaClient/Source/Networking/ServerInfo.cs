@@ -435,13 +435,17 @@ namespace Barotrauma.Networking
                         SteamManager.Instance.LobbyList.SetManualLobbyDataCallback(LobbyID, (lobby) =>
                         {
                             SteamManager.Instance.LobbyList.SetManualLobbyDataCallback(LobbyID, null);
-                            if (OwnerID != lobby.Owner) { return; }
+                            
                             if (string.IsNullOrWhiteSpace(lobby.GetData("haspassword"))) { return; }
                             bool.TryParse(lobby.GetData("haspassword"), out bool hasPassword);
                             int.TryParse(lobby.GetData("playercount"), out int currPlayers);
                             int.TryParse(lobby.GetData("maxplayernum"), out int maxPlayers);
                             //UInt64.TryParse(lobby.GetData("connectsteamid"), out ulong connectSteamId);
                             string ip = lobby.GetData("hostipaddress");
+                            UInt64 ownerId = SteamManager.SteamIDStringToUInt64(lobby.GetData("ownerid"));
+
+                            if (OwnerID != ownerId) { return; }
+
                             if (string.IsNullOrWhiteSpace(ip)) { ip = ""; }
 
                             ServerName = lobby.Name;
@@ -453,7 +457,7 @@ namespace Barotrauma.Networking
                             HasPassword = hasPassword;
                             RespondedToSteamQuery = true;
                             LobbyID = lobby.LobbyID;
-                            OwnerID = lobby.Owner;
+                            OwnerID = ownerId;
                             PingChecked = false;
                             SteamManager.AssignLobbyDataToServerInfo(lobby, this);
 
@@ -480,7 +484,7 @@ namespace Barotrauma.Networking
 
             element.SetAttributeValue("ServerName", ServerName);
             element.SetAttributeValue("ServerMessage", ServerMessage);
-            if (LobbyID == 0 || OwnerID == 0)
+            if (OwnerID == 0)
             {
                 element.SetAttributeValue("IP", IP);
                 element.SetAttributeValue("Port", Port);
