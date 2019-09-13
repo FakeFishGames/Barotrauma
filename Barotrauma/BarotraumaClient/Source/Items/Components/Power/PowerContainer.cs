@@ -80,6 +80,7 @@ namespace Barotrauma.Items.Components
 
         public override void OnItemLoaded()
         {
+            base.OnItemLoaded();
             if (rechargeSpeedSlider != null)
             {
                 rechargeSpeedSlider.BarScroll = rechargeSpeed / MaxRechargeSpeed;

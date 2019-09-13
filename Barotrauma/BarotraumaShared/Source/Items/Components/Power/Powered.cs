@@ -25,6 +25,8 @@ namespace Barotrauma.Items.Components
         //the maximum amount of power the item can draw from connected items
         protected float powerConsumption;
 
+        protected Connection powerIn, powerOut;
+
         [Editable, Serialize(0.5f, true, description: "The minimum voltage required for the device to function. " +
             "The voltage is calculated as power / powerconsumption, meaning that a device " +
             "with a power consumption of 1000 kW would need at least 500 kW of power to work if the minimum voltage is set to 0.5.")]
@@ -85,13 +87,13 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjectSpecific(XElement element);
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1.0f)
+        /*public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1.0f)
         {
             if (updatingPower) { return; }
 
             if (currPowerConsumption == 0.0f) { voltage = 0.0f; }
             if (connection.IsPower){ voltage = Math.Max(0.0f, power); }              
-        }
+        }*/
 
         protected void UpdateOnActiveEffects(float deltaTime)
         {
@@ -133,6 +135,41 @@ namespace Barotrauma.Items.Components
             UpdateOnActiveEffects(deltaTime);
         }
 
+        public override void OnItemLoaded()
+        {
+            if (item.Connections == null) { return; }
+            foreach (Connection c in item.Connections)
+            {
+                if (!c.IsPower) { continue; }
+                if (this is PowerTransfer pt)
+                {
+                    if (c.Name == "power_in")
+                    {
+                        powerIn = c;
+                    }
+                    else if (c.Name == "power_out")
+                    {
+                        powerOut = c;
+                    }
+                    else if (c.Name == "power")
+                    {
+                        powerIn = powerOut = c;
+                    }
+                }
+                else
+                {
+                    if (c.IsOutput)
+                    {
+                        powerOut = c;
+                    }
+                    else
+                    {
+                        powerIn = c;
+                    }
+                }
+            }
+        }
+
         public static void UpdatePower()
         {
             //reset power first
@@ -153,19 +190,16 @@ namespace Barotrauma.Items.Components
                 if (powered.currPowerConsumption > 0.0f)
                 {
                     //consuming power
-                    powered.item.SendSignal(0, "", "power_in", null, -powered.currPowerConsumption, source: powered.Item);
-                    powered.item.SendSignal(0, "", "power", null, -powered.currPowerConsumption, source: powered.Item);
+                    powered.item.SendSignal(0, "", powered.powerIn, null, -powered.currPowerConsumption, source: powered.Item);
                 }
                 else if (powered.currPowerConsumption < 0.0f)
                 {
                     //providing power
-                    powered.item.SendSignal(0, "", "power_out", null, -powered.currPowerConsumption, source: powered.Item);
-                    powered.item.SendSignal(0, "", "power", null, -powered.currPowerConsumption, source: powered.Item);
+                    powered.item.SendSignal(0, "", powered.powerOut, null, -powered.currPowerConsumption, source: powered.Item);
                 }
                 if (powered is PowerContainer pc)
                 {
-                    powered.item.SendSignal(0, "", "power_out", null, pc.CurrPowerOutput, source: powered.Item);
-                    powered.item.SendSignal(0, "", "power", null, pc.CurrPowerOutput, source: powered.Item);
+                    powered.item.SendSignal(0, "", powered.powerOut, null, pc.CurrPowerOutput, source: powered.Item);
                 }
             }
             foreach (Powered powered in poweredList)
@@ -174,15 +208,29 @@ namespace Barotrauma.Items.Components
             }
             foreach (Powered powered in poweredList)
             {
-                if (powered is PowerTransfer pt)
+                if (powered is PowerTransfer || powered is PowerContainer || powered.powerIn == null) { continue; }
+                if (powered.powerConsumption <= 0.0f)
                 {
-                    float voltageOut = -pt.CurrPowerConsumption / Math.Max(pt.PowerLoad, 1.0f);                    
-                    powered.item.SendSignal(0, "", "power_out", null, voltageOut, source: powered.Item);
-                    powered.item.SendSignal(0, "", "power", null, voltageOut, source: powered.Item);
+                    powered.voltage = 1.0f;
+                    continue;
                 }
-                else if (powered is PowerContainer pc)
+
+                foreach (Connection powerSource in powered.powerIn.Recipients)
                 {
-                    //powered.item.SendSignal(0, "", "power_out", null, pc., source: powered.Item);
+                    if (!powerSource.IsPower || !powerSource.IsOutput) { continue; }
+                    var pt = powerSource.Item.GetComponent<PowerTransfer>();
+                    if (pt != null)
+                    {
+                        float voltage = -pt.CurrPowerConsumption / Math.Max(pt.PowerLoad, 1.0f);
+                        powered.voltage = Math.Max(powered.voltage, voltage);
+                        continue;
+                    }
+                    var pc = powerSource.Item.GetComponent<PowerContainer>();
+                    if (pc != null)
+                    {
+                        float voltage = -pc.CurrPowerOutput / Math.Max(powered.CurrPowerConsumption, 1.0f);
+                        powered.voltage += voltage;
+                    }
                 }
             }
         }

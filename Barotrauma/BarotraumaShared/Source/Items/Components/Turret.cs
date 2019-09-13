@@ -192,6 +192,7 @@ namespace Barotrauma.Items.Components
 
         public override void OnItemLoaded()
         {
+            base.OnItemLoaded();
             var lightComponents = item.GetComponents<LightComponent>();
             if (lightComponents != null && lightComponents.Count() > 0)
             {

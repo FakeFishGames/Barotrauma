@@ -208,6 +208,7 @@ namespace Barotrauma.Items.Components
 
         public override void OnItemLoaded()
         {
+            base.OnItemLoaded();
             zoomSlider.BarScroll = MathUtils.InverseLerp(MinZoom, MaxZoom, zoom);
             //make the sonarView customcomponent render the steering view so it gets drawn in front of the sonar
             item.GetComponent<Steering>()?.AttachToSonarHUD(sonarView);

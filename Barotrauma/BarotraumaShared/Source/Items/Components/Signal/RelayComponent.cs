@@ -84,23 +84,46 @@ namespace Barotrauma.Items.Components
 
                 if (power < 0.0f)
                 {
-                    if (!connection.IsOutput) { return; }
+                    if (!connection.IsOutput || powerIn == null) { return; }
                     //power being drawn from the power_out connection
                     powerLoad -= power;
+                                
+                    if (powerOut != null)
+                    {
+                        //TODO: rework this
+                        foreach (Connection recipient in powerOut.Recipients)
+                        {
+                            var pt = recipient.Item.GetComponent<PowerTransfer>();
+                            if (pt != null)
+                            {
+                                float adjacentPower = -pt.CurrPowerConsumption;
+                                float adjacentLoad = pt.PowerLoad;
+                                if (adjacentPower > adjacentLoad)
+                                {
+                                    power += adjacentPower - adjacentLoad;
+                                    powerLoad -= adjacentPower - adjacentLoad;
+                                }
+                            }
+                        }
+                    }
+
+     
                     //pass the load to items connected to the input
-                    item.Connections.Find(c => c.Name == "power_in")?.SendSignal(stepsTaken, signal, source, sender, power, signalStrength);
+                    powerIn.SendSignal(stepsTaken, signal, source, sender, power, signalStrength);
                 }
                 else
                 {
-                    if (connection.IsOutput) { return; }
+                    if (connection.IsOutput || powerOut == null) { return; }
                     //power being supplied to the power_in connection
                     if (currPowerConsumption - power < -MaxPower)
                     {
                         power += MaxPower + (currPowerConsumption - power);
                     }
+
+
                     currPowerConsumption -= power;
                     //pass the power forwards
-                    item.Connections.Find(c => c.Name == "power_out")?.SendSignal(stepsTaken, signal, source, sender, power, signalStrength);
+                    powerOut.SendSignal(stepsTaken, signal, source, sender, power, signalStrength);
                 }
                 return;
             }

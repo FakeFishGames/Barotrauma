@@ -290,6 +290,7 @@ namespace Barotrauma.Items.Components
 
         public override void OnItemLoaded()
         {
+            base.OnItemLoaded();
             turbineOutputScrollBar.BarScroll = targetTurbineOutput / 100.0f;
             fissionRateScrollBar.BarScroll = targetFissionRate / 100.0f;
             var itemContainer = item.GetComponent<ItemContainer>();

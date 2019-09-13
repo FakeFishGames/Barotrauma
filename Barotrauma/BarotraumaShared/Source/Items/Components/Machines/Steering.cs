@@ -162,6 +162,7 @@ namespace Barotrauma.Items.Components
 
         public override void OnItemLoaded()
         {
+            base.OnItemLoaded();
             sonar = item.GetComponent<Sonar>();
         }
 

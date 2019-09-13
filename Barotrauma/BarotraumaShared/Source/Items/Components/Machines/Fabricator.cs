@@ -70,6 +70,7 @@ namespace Barotrauma.Items.Components
 
         public override void OnItemLoaded()
         {
+            base.OnItemLoaded();
             var containers = item.GetComponents<ItemContainer>().ToList();
             if (containers.Count < 2)
             {

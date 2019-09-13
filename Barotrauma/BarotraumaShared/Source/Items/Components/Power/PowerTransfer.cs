@@ -432,6 +432,7 @@ namespace Barotrauma.Items.Components
 
         public override void OnItemLoaded()
         {
+            base.OnItemLoaded();
             var connections = Item.Connections;
             powerConnections = connections == null ? new List<Connection>() : connections.FindAll(c => c.IsPower);  
             if (connections == null)
