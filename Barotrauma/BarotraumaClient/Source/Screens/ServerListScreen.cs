@@ -122,6 +122,7 @@ namespace Barotrauma
 
         //filters
         private readonly GUITextBox searchBox;
+        private readonly GUITickBox filterSameVersion;
         private readonly GUITickBox filterPassword;
         private readonly GUITickBox filterIncompatible;
         private readonly GUITickBox filterFull;
@@ -265,6 +266,14 @@ namespace Barotrauma
             var filterHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), filterContainer.RectTransform)) { RelativeSpacing = 0.005f };
 
             List<GUITextBlock> filterTextList = new List<GUITextBlock>();
+
+            filterSameVersion = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("FilterSameVersion"))
+            {
+                ToolTip = TextManager.Get("FilterSameVersion"),
+                OnSelected = (tickBox) => { FilterServers(); return true; }
+            };
+            filterTextList.Add(filterSameVersion.TextBlock);
+
             filterPassword = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("FilterPassword"))
             {
                 ToolTip = TextManager.Get("FilterPassword"),
@@ -858,6 +867,7 @@ namespace Barotrauma
 
                 child.Visible =
                     serverInfo.ServerName.ToLowerInvariant().Contains(searchBox.Text.ToLowerInvariant()) &&
+                    (!filterSameVersion.Selected || serverInfo.GameVersion == GameMain.Version.ToString()) &&
                     (!filterPassword.Selected || !serverInfo.HasPassword) &&
                     (!filterIncompatible.Selected || !incompatible) &&
                     (!filterFull.Selected || serverInfo.PlayerCount < serverInfo.MaxPlayers) &&

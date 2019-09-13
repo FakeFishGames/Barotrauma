@@ -3539,6 +3539,8 @@
   <serversettingsallowrewiring>Allow rewiring</serversettingsallowrewiring>
   <serversettingsallowdisguises>Allow disguises</serversettingsallowdisguises>
 
+  <filtersameversion>Same version</filtersameversion>
+
   <!-- Changed values as of 13th of August -->
   <traitorgoaldestroyitems>Dispose of at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>
   <karma.kickbanthreshold>Kick/Ban threshold</karma.kickbanthreshold>
