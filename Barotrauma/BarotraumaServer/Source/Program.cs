@@ -62,6 +62,23 @@ namespace Barotrauma
         
         static void CrashDump(GameMain game, string filePath, Exception exception)
         {
+            try
+            {
+                GameMain.Server?.ServerSettings?.SaveSettings();
+                GameMain.Server?.ServerSettings?.BanList.Save();
+                if (GameMain.Server?.ServerSettings?.KarmaPreset == "custom")
+                {
+                    GameMain.Server?.KarmaManager?.SaveCustomPreset();
+                    GameMain.Server?.KarmaManager?.Save();
+                }
+            }
+            //gotta catch them all, we don't want to crash while writing a crash report
+            catch (Exception e)
+            {
+                string errorMsg = "Exception thrown while writing a crash report: " + e.Message + "\n" + e.StackTrace;
+                GameAnalyticsManager.AddErrorEventOnce("CrashDump:FailedToSaveSettings", EGAErrorSeverity.Error, errorMsg);
+            }
+
             int existingFiles = 0;
             string originalFilePath = filePath;
             while (File.Exists(filePath))

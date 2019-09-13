@@ -981,6 +981,7 @@ namespace Barotrauma
         public void ShowOpenUrlInWebBrowserPrompt(string url)
         {
             if (string.IsNullOrEmpty(url)) { return; }
+            if (GUIMessageBox.VisibleBox?.UserData as string == "verificationprompt") { return; }
 
             var msgBox = new GUIMessageBox("", TextManager.GetWithVariable("openlinkinbrowserprompt", "[link]", url),
                 new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
