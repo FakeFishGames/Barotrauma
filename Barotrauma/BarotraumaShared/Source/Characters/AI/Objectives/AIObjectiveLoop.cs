@@ -72,12 +72,12 @@ namespace Barotrauma
             foreach (var objective in Objectives)
             {
                 var target = objective.Key;
-                if (!objective.Value.CanBeCompleted)
-                {
-                    // TODO: leaks that cannot be accessed from inside cause FixLeak objective to fail, but for some reason it's not ignored. Make sure that it is.
-                    ignoreList.Add(target);
-                    targetUpdateTimer = 0;
-                }
+                //if (!objective.Value.CanBeCompleted && !ignoreList.Contains(target))
+                //{
+                //    // TODO: leaks that cannot be accessed from inside cause FixLeak objective to fail, but for some reason it's not ignored. Make sure that it is.
+                //    ignoreList.Add(target);
+                //    targetUpdateTimer = 0;
+                //}
                 if (!Targets.Contains(target))
                 {
                     subObjectives.Remove(objective.Value);
@@ -158,7 +158,17 @@ namespace Barotrauma
                     {
                         subObjectives.Add(objective);
                     }
-                    objective.Completed += () => OnObjectiveCompleted(objective, target);
+                    objective.Completed += () =>
+                    {
+                        Objectives.Remove(target);
+                        OnObjectiveCompleted(objective, target);
+                    };
+                    objective.Abandoned += () =>
+                    {
+                        Objectives.Remove(target);
+                        ignoreList.Add(target);
+                        targetUpdateTimer = 0;
+                    };
                 }
             }
         }
