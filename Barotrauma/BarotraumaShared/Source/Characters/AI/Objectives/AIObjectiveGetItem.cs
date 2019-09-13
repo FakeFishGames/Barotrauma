@@ -26,7 +26,7 @@ namespace Barotrauma
         private AIObjectiveGoTo goToObjective;
         private float currItemPriority;
 
-        public bool AllowToFindDivingGear { get; set; }
+        public bool AllowToFindDivingGear { get; set; } = true;
 
         public override float GetPriority()
         {
