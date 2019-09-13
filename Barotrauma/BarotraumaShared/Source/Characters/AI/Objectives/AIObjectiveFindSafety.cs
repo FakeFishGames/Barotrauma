@@ -178,7 +178,10 @@ namespace Barotrauma
                         return;
                     }
                 }
-                objectiveManager.GetObjective<AIObjectiveIdle>().Wander(deltaTime);
+                if (divingGearObjective == null && goToObjective == null)
+                {
+                    objectiveManager.GetObjective<AIObjectiveIdle>().Wander(deltaTime);
+                }
             }
         }
 
