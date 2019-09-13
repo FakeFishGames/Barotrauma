@@ -155,6 +155,7 @@ namespace Barotrauma.Items.Components
                         continue;
                     }
                     if (!pt.IsActive || !pt.CanTransfer) { continue; }
+                    gridPower -= pt.CurrPowerConsumption;
                     gridLoad += pt.PowerLoad;
                 }
             }
@@ -190,9 +191,17 @@ namespace Barotrauma.Items.Components
             {
                 maxOutputRatio = Math.Max(chargeRatio * 10.0f, 0.0f);
             }
-
-            CurrPowerOutput = Math.Min(MaxOutPut * maxOutputRatio, gridLoad);
-            Charge += currPowerConsumption / 3600.0f;
+            if (gridLoad > gridPower)
+            {
+                CurrPowerOutput += deltaTime * 1000.0f;
+            }
+            else
+            {
+                CurrPowerOutput -= deltaTime * 1000.0f;
+            }
+            float maxOutput = Math.Min(MaxOutPut * maxOutputRatio, gridLoad);
+            CurrPowerOutput = MathHelper.Clamp(CurrPowerOutput, 0.0f, maxOutput);
+            Charge -= CurrPowerOutput / 3600.0f;
             
             item.SendSignal(0, ((int)Charge).ToString(), "charge", null);
             item.SendSignal(0, ((int)((Charge / capacity) * 100)).ToString(), "charge_%", null);
