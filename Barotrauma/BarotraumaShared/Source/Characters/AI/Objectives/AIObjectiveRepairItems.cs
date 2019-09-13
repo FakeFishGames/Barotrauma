@@ -58,7 +58,7 @@ namespace Barotrauma
             return true;
         }
 
-        protected override float TargetEvaluation() => Targets.Max(t => 100 - t.ConditionPercentage);
+        protected override float TargetEvaluation() => Targets.Max(t => character.SelectedConstruction == t && t.ConditionPercentage < 100 ? 100 : 100 - t.ConditionPercentage);
         protected override IEnumerable<Item> GetList() => Item.ItemList;
 
         protected override AIObjective ObjectiveConstructor(Item item) 
