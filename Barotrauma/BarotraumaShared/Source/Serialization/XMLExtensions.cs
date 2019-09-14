@@ -537,18 +537,14 @@ namespace Barotrauma
 
             if (strComponents.Length < 3)
             {
-                bool hexFailed = false;
+                bool hexFailed = true;
                 stringColor = stringColor.Trim();
                 if (stringColor[0]=='#')
                 {
                     stringColor = stringColor.Substring(1);
 
                     int colorInt = 0;
-                    if (!int.TryParse(stringColor, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out colorInt))
-                    {
-                        hexFailed = true;
-                    }
-                    else
+                    if (int.TryParse(stringColor, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out colorInt))
                     {
                         if (stringColor.Length == 6)
                         {
@@ -558,6 +554,8 @@ namespace Barotrauma
                         components[1] = ((float)((colorInt & 0x00ff0000) >> 16)) / 255.0f;
                         components[2] = ((float)((colorInt & 0x0000ff00) >> 8)) / 255.0f;
                         components[3] = ((float)(colorInt & 0x000000ff)) / 255.0f;
+
+                        hexFailed = false;
                     }
                 }
 
@@ -573,17 +571,16 @@ namespace Barotrauma
                 {
                     float.TryParse(strComponents[i], NumberStyles.Float, CultureInfo.InvariantCulture, out components[i]);
                 }
-            }
 
-
-            if (components.Any(c => c > 1.0f))
-            {
-                for (int i = 0; i < 4; i++)
+                if (components.Any(c => c > 1.0f))
                 {
-                    components[i] = components[i] / 255.0f;
+                    for (int i = 0; i < 4; i++)
+                    {
+                        components[i] = components[i] / 255.0f;
+                    }
+                    //alpha defaults to 1.0 if not given
+                    if (strComponents.Length < 4) components[3] = 1.0f;
                 }
-                //alpha defaults to 1.0 if not given
-                if (strComponents.Length < 4) components[3] = 1.0f;
             }
 
             return new Color(components[0], components[1], components[2], components[3]);
