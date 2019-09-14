@@ -1,6 +1,5 @@
 ﻿using Barotrauma.Networking;
 using FarseerPhysics;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -36,7 +35,7 @@ namespace Barotrauma.Items.Components
 
         private Character user;
         
-        [Serialize("0,0", false)]
+        [Serialize("0,0", false, description: "The position of the barrel relative to the upper left corner of the base sprite (in pixels).")]
         public Vector2 BarrelPos
         {
             get 
@@ -58,21 +57,21 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false, description: "The impulse applied to the physics body of the projectile (the higher the impulse, the faster the projectiles are launched).")]
         public float LaunchImpulse
         {
             get { return launchImpulse; }
             set { launchImpulse = value; }
         }
 
-        [Serialize(5.0f, false), Editable(0.0f, 1000.0f)]
+        [Editable(0.0f, 1000.0f), Serialize(5.0f, false, description: "The period of time the user has to wait between shots.")]
         public float Reload
         {
             get { return reloadTime; }
             set { reloadTime = value; }
         }
 
-        [Serialize("0.0,0.0", true), Editable]
+        [Editable, Serialize("0.0,0.0", true, description: "The range at which the barrel can rotate. TODO")]
         public Vector2 RotationLimits
         {
             get
@@ -95,39 +94,49 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(5.0f, false), Editable(0.0f, 1000.0f, DecimalCount = 2)]
+        [Editable(0.0f, 1000.0f, DecimalCount = 2),
+            Serialize(5.0f, false, description: "How much torque is applied to rotate the barrel when the item is used by a character"
+            + " with insufficient skills to operate it. Higher values make the barrel rotate faster.")]
         public float SpringStiffnessLowSkill
         {
             get;
             private set;
         }
-        [Serialize(2.0f, false), Editable(0.0f, 1000.0f, DecimalCount = 2)]
+        [Editable(0.0f, 1000.0f, DecimalCount = 2),
+            Serialize(2.0f, false, description: "How much torque is applied to rotate the barrel when the item is used by a character"
+            + " with sufficient skills to operate it. Higher values make the barrel rotate faster.")]
         public float SpringStiffnessHighSkill
         {
             get;
             private set;
         }
 
-        [Serialize(50.0f, false), Editable(0.0f, 1000.0f, DecimalCount = 2)]
+        [Editable(0.0f, 1000.0f, DecimalCount = 2),
+            Serialize(50.0f, false, description: "How much torque is applied to resist the movement of the barrel when the item is used by a character"
+            + " with insufficient skills to operate it. Higher values make the aiming more \"snappy\", stopping the barrel from swinging around the direction it's being aimed at.")]
         public float SpringDampingLowSkill
         {
             get;
             private set;
         }
-        [Serialize(10.0f, false), Editable(0.0f, 1000.0f, DecimalCount = 2)]
+        [Editable(0.0f, 1000.0f, DecimalCount = 2),
+            Serialize(10.0f, false, description: "How much torque is applied to resist the movement of the barrel when the item is used by a character"
+            + " with sufficient skills to operate it. Higher values make the aiming more \"snappy\", stopping the barrel from swinging around the direction it's being aimed at.")]
         public float SpringDampingHighSkill
         {
             get;
             private set;
         }
 
-        [Serialize(1.0f, false), Editable(0.0f, 100.0f, DecimalCount = 2)]
+        [Editable(0.0f, 100.0f, DecimalCount = 2),
+            Serialize(1.0f, false, description: "Maximum angular velocity of the barrel when used by a character with insufficient skills to operate it.")]
         public float RotationSpeedLowSkill
         {
             get;
             private set;
         }
-        [Serialize(5.0f, false), Editable(0.0f, 100.0f, DecimalCount = 2)]
+        [Editable(0.0f, 100.0f, DecimalCount = 2),
+            Serialize(5.0f, false, description: "Maximum angular velocity of the barrel when used by a character with sufficient skills to operate it."),]
         public float RotationSpeedHighSkill
         {
             get;
@@ -135,7 +144,7 @@ namespace Barotrauma.Items.Components
         }
 
         private float baseRotationRad;
-        [Serialize(0.0f, true), Editable(0.0f, 360.0f)]
+        [Editable(0.0f, 360.0f), Serialize(0.0f, true, description: "The angle of the turret's base in degrees.")]
         public float BaseRotation
         {
             get { return MathHelper.ToDegrees(baseRotationRad); }
@@ -674,7 +683,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             Item item = (Item)extraData[2];
             msg.Write(item.Removed ? (ushort)0 : item.ID);

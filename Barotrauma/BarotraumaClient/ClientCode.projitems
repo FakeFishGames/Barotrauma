@@ -36,10 +36,12 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Events\Missions\CombatMission.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Events\Missions\Mission.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Events\Missions\MissionMode.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Events\Missions\MissionPrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Fonts\ScalableFont.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameMain.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\CrewManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameMode.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\CampaignMode.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\MultiPlayerCampaign.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\SinglePlayerCampaign.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\Tutorials\BasicTutorial.cs" />
@@ -160,10 +162,15 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\EntitySpawner.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\FileTransfer\FileReceiver.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\GameClient.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\KarmaManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetEntityEvent\ClientEntityEventManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetEntityEvent\NetEntityEvent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetStats.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\OrderChatMessage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Primitives\Peers\ClientPeer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Primitives\Peers\LidgrenClientPeer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Primitives\Peers\SteamP2PClientPeer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Primitives\Peers\SteamP2POwnerPeer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\RespawnManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\ServerInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\ServerLog.cs" />
@@ -187,7 +194,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Screens\BlurEffect.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Screens\CampaignSetupUI.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Screens\CampaignUI.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Screens\CharacterEditorScreen.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Screens\CharacterEditor\CharacterEditorScreen.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Screens\CharacterEditor\Wizard.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Screens\CreditsPlayer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Screens\GameScreen.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Screens\LevelEditorScreen.cs" />
@@ -202,6 +210,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Screens\SubEditorScreen.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Serialization\SerializableEntityEditor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sounds\OggSound.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Sounds\OpenAL\Al.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Sounds\OpenAL\Alc.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sounds\Sound.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sounds\SoundChannel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sounds\SoundFilters.cs" />
@@ -219,8 +229,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sprite\Sprite.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sprite\SpriteSheet.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\StatusEffects\StatusEffect.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\LocalizationCSVtoXML.cs">
-    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Traitors\TraitorMissionPrefab.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\CrossThread.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\LocalizationCSVtoXML.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\MathUtils.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\OpenFileDialog.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\TextureLoader.cs" />

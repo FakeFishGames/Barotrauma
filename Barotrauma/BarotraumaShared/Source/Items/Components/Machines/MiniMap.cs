@@ -22,23 +22,23 @@ namespace Barotrauma.Items.Components
 
         private bool hasPower;
 
-        private Dictionary<Hull, HullData> hullDatas;
+        private readonly Dictionary<Hull, HullData> hullDatas;
 
-        [Editable(ToolTip = "Does the machine require inputs from water detectors in order to show the water levels inside rooms."), Serialize(false, true)]
+        [Editable, Serialize(false, true, description: "Does the machine require inputs from water detectors in order to show the water levels inside rooms.")]
         public bool RequireWaterDetectors
         {
             get;
             set;
         }
 
-        [Editable(ToolTip = "Does the machine require inputs from oxygen detectors in order to show the oxygen levels inside rooms."), Serialize(true, true)]
+        [Editable, Serialize(true, true, description: "Does the machine require inputs from oxygen detectors in order to show the oxygen levels inside rooms.")]
         public bool RequireOxygenDetectors
         {
             get;
             set;
         }
 
-        [Editable(ToolTip = "Should damaged walls be displayed by the machine."), Serialize(true, true)]
+        [Editable, Serialize(true, true, description: "Should damaged walls be displayed by the machine.")]
         public bool ShowHullIntegrity
         {
             get;

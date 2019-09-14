@@ -11,6 +11,7 @@ namespace Barotrauma
     {
         private static List<ScalableFont> FontList = new List<ScalableFont>();
         private static Library Lib = null;
+        private static object mutex = new object();
 
         private string filename;
         private Face face;
@@ -26,6 +27,12 @@ namespace Barotrauma
         uint[] currentDynamicPixelBuffer;
 
         public bool DynamicLoading
+        {
+            get;
+            private set;
+        }
+
+        public bool IsCJK
         {
             get;
             private set;
@@ -57,39 +64,48 @@ namespace Barotrauma
         }
 
         public ScalableFont(XElement element, GraphicsDevice gd = null)
-            : this (element.GetAttributeString("file", ""), (uint)element.GetAttributeInt("size", 14), gd, element.GetAttributeBool("dynamicloading", false))
-        {            
+            : this(
+                element.GetAttributeString("file", ""),
+                (uint)element.GetAttributeInt("size", 14),
+                gd,
+                element.GetAttributeBool("dynamicloading", false),
+                element.GetAttributeBool("iscjk", false))
+        {
         }
 
-        public ScalableFont(string filename, uint size, GraphicsDevice gd = null, bool dynamicLoading = false)
+        public ScalableFont(string filename, uint size, GraphicsDevice gd = null, bool dynamicLoading = false, bool isCJK = false)
         {
-            if (Lib == null) Lib = new Library();
-            this.filename = filename;
-            this.face = null;
-            foreach (ScalableFont font in FontList)
+            lock (mutex)
             {
-                if (font.filename == filename)
+                if (Lib == null) Lib = new Library();
+                this.filename = filename;
+                this.face = null;
+                foreach (ScalableFont font in FontList)
                 {
-                    this.face = font.face;
-                    break;
+                    if (font.filename == filename)
+                    {
+                        this.face = font.face;
+                        break;
+                    }
                 }
-            }
-            if (this.face == null)
-            {
-                this.face = new Face(Lib, filename);
-            }
-            this.size = size;
-            this.textures = new List<Texture2D>();
-            this.texCoords = new Dictionary<uint, GlyphData>();
-            this.DynamicLoading = dynamicLoading;
-            this.graphicsDevice = gd;
+                if (this.face == null)
+                {
+                    this.face = new Face(Lib, filename);
+                }
+                this.size = size;
+                this.textures = new List<Texture2D>();
+                this.texCoords = new Dictionary<uint, GlyphData>();
+                this.DynamicLoading = dynamicLoading;
+                this.IsCJK = isCJK;
+                this.graphicsDevice = gd;
 
-            if (gd != null && !dynamicLoading)
-            {
-                RenderAtlas(gd);
-            }
+                if (gd != null && !dynamicLoading)
+                {
+                    RenderAtlas(gd);
+                }
 
-            FontList.Add(this);
+                FontList.Add(this);
+            }
         }
 
         /// <summary>
@@ -112,7 +128,10 @@ namespace Barotrauma
             this.texDims = texDims;
             this.baseChar = baseChar;
 
-            face.SetPixelSizes(0, size);
+            lock (mutex)
+            {
+                face.SetPixelSizes(0, size);
+            }
             textures.ForEach(t => t.Dispose());
             textures.Clear();
             texCoords.Clear();
@@ -123,14 +142,20 @@ namespace Barotrauma
                 pixelBuffer[i] = 0;
             }
 
-            textures.Add(new Texture2D(gd, texDims, texDims, false, SurfaceFormat.Color));
+            CrossThread.RequestExecutionOnMainThread(() =>
+            {
+                textures.Add(new Texture2D(gd, texDims, texDims, false, SurfaceFormat.Color));
+            });
             int texIndex = 0;
 
             Vector2 currentCoords = Vector2.Zero;
             int nextY = 0;
 
-            face.LoadGlyph(face.GetCharIndex(baseChar), LoadFlags.Default, LoadTarget.Normal);
-            baseHeight = face.Glyph.Metrics.Height.ToInt32();
+            lock (mutex)
+            {
+                face.LoadGlyph(face.GetCharIndex(baseChar), LoadFlags.Default, LoadTarget.Normal);
+                baseHeight = face.Glyph.Metrics.Height.ToInt32();
+            }
             //lineHeight = baseHeight;
             for (int i = 0; i < charRanges.Length; i += 2)
             {
@@ -138,76 +163,85 @@ namespace Barotrauma
                 uint end = charRanges[i + 1];
                 for (uint j = start; j <= end; j++)
                 {
-                    uint glyphIndex = face.GetCharIndex(j);
-                    if (glyphIndex == 0) continue;
-                    face.LoadGlyph(glyphIndex, LoadFlags.Default, LoadTarget.Normal);
-                    if (face.Glyph.Metrics.Width == 0 || face.Glyph.Metrics.Height == 0)
+                    lock (mutex)
                     {
-                        if (face.Glyph.Metrics.HorizontalAdvance > 0)
+                        uint glyphIndex = face.GetCharIndex(j);
+                        if (glyphIndex == 0) continue;
+                        face.LoadGlyph(glyphIndex, LoadFlags.Default, LoadTarget.Normal);
+                        if (face.Glyph.Metrics.Width == 0 || face.Glyph.Metrics.Height == 0)
                         {
-                            //glyph is empty, but char still applies advance
-                            GlyphData blankData = new GlyphData();
-                            blankData.advance = (float)face.Glyph.Metrics.HorizontalAdvance;
-                            blankData.texIndex = -1; //indicates no texture because the glyph is empty
-                            texCoords.Add(j, blankData);
+                            if (face.Glyph.Metrics.HorizontalAdvance > 0)
+                            {
+                                //glyph is empty, but char still applies advance
+                                GlyphData blankData = new GlyphData();
+                                blankData.advance = (float)face.Glyph.Metrics.HorizontalAdvance;
+                                blankData.texIndex = -1; //indicates no texture because the glyph is empty
+                                texCoords.Add(j, blankData);
+                            }
+                            continue;
                         }
-                        continue;
-                    }
-                    //stacktrace doesn't really work that well when RenderGlyph throws an exception
-                    face.Glyph.RenderGlyph(RenderMode.Normal);
-                    byte[] bitmap = face.Glyph.Bitmap.BufferData;
-                    int glyphWidth = face.Glyph.Bitmap.Width;
-                    int glyphHeight = bitmap.Length / glyphWidth;
+                        //stacktrace doesn't really work that well when RenderGlyph throws an exception
+                        face.Glyph.RenderGlyph(RenderMode.Normal);
+                        byte[] bitmap = face.Glyph.Bitmap.BufferData;
+                        int glyphWidth = face.Glyph.Bitmap.Width;
+                        int glyphHeight = bitmap.Length / glyphWidth;
 
-                    //if (glyphHeight>lineHeight) lineHeight=glyphHeight;
+                        //if (glyphHeight>lineHeight) lineHeight=glyphHeight;
 
-                    if (glyphWidth > texDims - 1 || glyphHeight > texDims - 1)
-                    {
-                        throw new Exception(filename + ", " + size.ToString() + ", "+ (char)j + "; Glyph dimensions exceed texture atlas dimensions");
-                    }
-
-                    nextY = Math.Max(nextY, glyphHeight + 2);
-
-                    if (currentCoords.X + glyphWidth + 2 > texDims - 1)
-                    {
-                        currentCoords.X = 0;
-                        currentCoords.Y += nextY;
-                        nextY = 0;
-                    }
-                    if (currentCoords.Y + glyphHeight + 2 > texDims - 1)
-                    {
-                        currentCoords.X = 0;
-                        currentCoords.Y = 0;
-                        textures[texIndex].SetData<uint>(pixelBuffer);
-                        textures.Add(new Texture2D(gd, texDims, texDims, false, SurfaceFormat.Color));
-                        texIndex++;
-                        for (int k = 0; k < texDims * texDims; k++)
+                        if (glyphWidth > texDims - 1 || glyphHeight > texDims - 1)
                         {
-                            pixelBuffer[k] = 0;
+                            throw new Exception(filename + ", " + size.ToString() + ", " + (char)j + "; Glyph dimensions exceed texture atlas dimensions");
                         }
-                    }
 
-                    GlyphData newData = new GlyphData
-                    {
-                        advance = (float)face.Glyph.Metrics.HorizontalAdvance,
-                        texIndex = texIndex,
-                        texCoords = new Rectangle((int)currentCoords.X, (int)currentCoords.Y, glyphWidth, glyphHeight),
-                        drawOffset = new Vector2(face.Glyph.BitmapLeft, baseHeight * 14 / 10 - face.Glyph.BitmapTop)
-                    };
-                    texCoords.Add(j, newData);
+                        nextY = Math.Max(nextY, glyphHeight + 2);
 
-                    for (int y = 0; y < glyphHeight; y++)
-                    {
-                        for (int x = 0; x < glyphWidth; x++)
+                        if (currentCoords.X + glyphWidth + 2 > texDims - 1)
                         {
-                            byte byteColor = bitmap[x + y * glyphWidth];
-                            pixelBuffer[((int)currentCoords.X + x) + ((int)currentCoords.Y + y) * texDims] = (uint)(byteColor << 24 | byteColor << 16 | byteColor << 8 | byteColor);
+                            currentCoords.X = 0;
+                            currentCoords.Y += nextY;
+                            nextY = 0;
                         }
-                    }
+                        if (currentCoords.Y + glyphHeight + 2 > texDims - 1)
+                        {
+                            currentCoords.X = 0;
+                            currentCoords.Y = 0;
+                            CrossThread.RequestExecutionOnMainThread(() =>
+                            {
+                                textures[texIndex].SetData<uint>(pixelBuffer);
+                                textures.Add(new Texture2D(gd, texDims, texDims, false, SurfaceFormat.Color));
+                            });
+                            texIndex++;
+                            for (int k = 0; k < texDims * texDims; k++)
+                            {
+                                pixelBuffer[k] = 0;
+                            }
+                        }
 
-                    currentCoords.X += glyphWidth + 2;
+                        GlyphData newData = new GlyphData
+                        {
+                            advance = (float)face.Glyph.Metrics.HorizontalAdvance,
+                            texIndex = texIndex,
+                            texCoords = new Rectangle((int)currentCoords.X, (int)currentCoords.Y, glyphWidth, glyphHeight),
+                            drawOffset = new Vector2(face.Glyph.BitmapLeft, baseHeight * 14 / 10 - face.Glyph.BitmapTop)
+                        };
+                        texCoords.Add(j, newData);
+
+                        for (int y = 0; y < glyphHeight; y++)
+                        {
+                            for (int x = 0; x < glyphWidth; x++)
+                            {
+                                byte byteColor = bitmap[x + y * glyphWidth];
+                                pixelBuffer[((int)currentCoords.X + x) + ((int)currentCoords.Y + y) * texDims] = (uint)(byteColor << 24 | byteColor << 16 | byteColor << 8 | byteColor);
+                            }
+                        }
+
+                        currentCoords.X += glyphWidth + 2;
+                    }
                 }
-                textures[texIndex].SetData<uint>(pixelBuffer);
+                CrossThread.RequestExecutionOnMainThread(() =>
+                {
+                    textures[texIndex].SetData<uint>(pixelBuffer);
+                });
             }
         }
 
@@ -220,7 +254,10 @@ namespace Barotrauma
                 face.SetPixelSizes(0, size);
                 face.LoadGlyph(face.GetCharIndex(baseChar), LoadFlags.Default, LoadTarget.Normal);
                 baseHeight = face.Glyph.Metrics.Height.ToInt32();
-                textures.Add(new Texture2D(gd, texDims, texDims, false, SurfaceFormat.Color));
+                CrossThread.RequestExecutionOnMainThread(() =>
+                {
+                    textures.Add(new Texture2D(gd, texDims, texDims, false, SurfaceFormat.Color));
+                });
             }
 
             uint glyphIndex = face.GetCharIndex(character);
@@ -264,7 +301,10 @@ namespace Barotrauma
                 currentDynamicAtlasCoords.X = 0;
                 currentDynamicAtlasCoords.Y = 0;
                 currentDynamicAtlasNextY = 0;
-                textures.Add(new Texture2D(gd, texDims, texDims, false, SurfaceFormat.Color));
+                CrossThread.RequestExecutionOnMainThread(() =>
+                {
+                    textures.Add(new Texture2D(gd, texDims, texDims, false, SurfaceFormat.Color));
+                });
                 currentDynamicPixelBuffer = null;
             }
 
@@ -291,7 +331,10 @@ namespace Barotrauma
                     currentDynamicPixelBuffer[((int)currentDynamicAtlasCoords.X + x) + ((int)currentDynamicAtlasCoords.Y + y) * texDims] = (uint)(byteColor << 24 | byteColor << 16 | byteColor << 8 | byteColor);
                 }
             }
-            textures[newData.texIndex].SetData<uint>(currentDynamicPixelBuffer);
+            CrossThread.RequestExecutionOnMainThread(() =>
+            {
+                textures[newData.texIndex].SetData<uint>(currentDynamicPixelBuffer);
+            });
 
             currentDynamicAtlasCoords.X += glyphWidth + 2;
         }

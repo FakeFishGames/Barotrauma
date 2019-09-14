@@ -69,6 +69,10 @@ namespace Barotrauma
 
         public HumanAIController(Character c) : base(c)
         {
+            if (!c.IsHuman)
+            {
+                throw new System.Exception($"Tried to create a human ai controller for a non-human: {c.SpeciesName}!");
+            }
             insideSteering = new IndoorsSteeringManager(this, true, false);
             outsideSteering = new SteeringManager(this);
             objectiveManager = new AIObjectiveManager(c);
@@ -81,7 +85,7 @@ namespace Barotrauma
 
         public override void Update(float deltaTime)
         {
-            if (DisableCrewAI || Character.IsUnconscious) return;
+            if (DisableCrewAI || Character.IsUnconscious || Character.Removed) { return; }
 
             float maxDistanceToSub = 3000;
             if (Character.Submarine != null || SelectedAiTarget?.Entity?.Submarine != null && 
@@ -150,7 +154,23 @@ namespace Barotrauma
             bool run = objectiveManager.CurrentObjective.ForceRun || objectiveManager.GetCurrentPriority() > AIObjectiveManager.RunPriority;
             if (ObjectiveManager.CurrentObjective is AIObjectiveGoTo goTo && goTo.Target != null)
             {
-                run = Vector2.DistanceSquared(Character.WorldPosition, goTo.Target.WorldPosition) > 300 * 300;
+                if (Character.CurrentHull == null)
+                {
+                    run = Vector2.DistanceSquared(Character.WorldPosition, goTo.Target.WorldPosition) > 300 * 300;
+                }
+                else
+                {
+                    float yDiff = goTo.Target.WorldPosition.Y - Character.WorldPosition.Y;
+                    if (Math.Abs(yDiff) > 100)
+                    {
+                        run = true;
+                    }
+                    else
+                    {
+                        float xDiff = goTo.Target.WorldPosition.X - Character.WorldPosition.X;
+                        run = Math.Abs(xDiff) > 300;
+                    }
+                }
             }
             if (run)
             {
@@ -202,6 +222,35 @@ namespace Barotrauma
             if (run || speedMultiplier <= 0.0f) targetMovement *= speedMultiplier;
             Character.ResetSpeedMultiplier();   // Reset, items will set the value before the next update
             Character.AnimController.TargetMovement = targetMovement;
+
+            if (!Character.LockHands)
+            {
+                DropUnnecessaryItems();
+            }
+
+            if (Character.IsKeyDown(InputType.Aim))
+            {
+                var cursorDiffX = Character.CursorPosition.X - Character.Position.X;
+                if (cursorDiffX > 10.0f)
+                {
+                    Character.AnimController.TargetDir = Direction.Right;
+                }
+                else if (cursorDiffX < -10.0f)
+                {
+                    Character.AnimController.TargetDir = Direction.Left;
+                }
+
+                if (Character.SelectedConstruction != null) Character.SelectedConstruction.SecondaryUse(deltaTime, Character);
+
+            }
+            else if (Math.Abs(Character.AnimController.TargetMovement.X) > 0.1f && !Character.AnimController.InWater)
+            {
+                Character.AnimController.TargetDir = Character.AnimController.TargetMovement.X > 0.0f ? Direction.Right : Direction.Left;
+            }
+        }
+
+        private void DropUnnecessaryItems()
+        {
             if (!NeedsDivingGear(Character.CurrentHull))
             {
                 bool oxygenLow = Character.OxygenAvailable < CharacterHealth.LowOxygenThreshold;
@@ -262,26 +311,6 @@ namespace Barotrauma
                     }
                 }
             }
-
-            if (Character.IsKeyDown(InputType.Aim))
-            {
-                var cursorDiffX = Character.CursorPosition.X - Character.Position.X;
-                if (cursorDiffX > 10.0f)
-                {
-                    Character.AnimController.TargetDir = Direction.Right;
-                }
-                else if (cursorDiffX < -10.0f)
-                {
-                    Character.AnimController.TargetDir = Direction.Left;
-                }
-
-                if (Character.SelectedConstruction != null) Character.SelectedConstruction.SecondaryUse(deltaTime, Character);
-
-            }
-            else if (Math.Abs(Character.AnimController.TargetMovement.X) > 0.1f && !Character.AnimController.InWater)
-            {
-                Character.AnimController.TargetDir = Character.AnimController.TargetMovement.X > 0.0f ? Direction.Right : Direction.Left;
-            }
         }
 
         protected void ReportProblems()
@@ -299,7 +328,7 @@ namespace Barotrauma
                             AddTargets<AIObjectiveFightIntruders, Character>(Character, c);
                             if (newOrder == null)
                             {
-                                var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportintruders");
+                                var orderPrefab = Order.GetPrefab("reportintruders");
                                 newOrder = new Order(orderPrefab, c.CurrentHull, null, orderGiver: Character);
                             }
                         }
@@ -309,7 +338,7 @@ namespace Barotrauma
                         AddTargets<AIObjectiveExtinguishFires, Hull>(Character, hull);
                         if (newOrder == null)
                         {
-                            var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportfire");
+                            var orderPrefab = Order.GetPrefab("reportfire");
                             newOrder = new Order(orderPrefab, hull, null, orderGiver: Character);
                         }
                     }
@@ -322,7 +351,7 @@ namespace Barotrauma
                             {
                                 if (newOrder == null)
                                 {
-                                    var orderPrefab = Order.PrefabList.Find(o => o.AITag == "requestfirstaid");
+                                    var orderPrefab = Order.GetPrefab("requestfirstaid");
                                     newOrder = new Order(orderPrefab, c.CurrentHull, null, orderGiver: Character);
                                 }
                             }
@@ -335,7 +364,7 @@ namespace Barotrauma
                             AddTargets<AIObjectiveFixLeaks, Gap>(Character, gap);
                             if (newOrder == null && !gap.IsRoomToRoom)
                             {
-                                var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportbreach");
+                                var orderPrefab = Order.GetPrefab("reportbreach");
                                 newOrder = new Order(orderPrefab, hull, null, orderGiver: Character);
                             }
                         }
@@ -345,11 +374,11 @@ namespace Barotrauma
                         if (item.CurrentHull != hull) { continue; }
                         if (AIObjectiveRepairItems.IsValidTarget(item, Character))
                         {
-                            if (item.Repairables.All(r => item.Condition > r.ShowRepairUIThreshold)) { continue; }
+                            if (item.Repairables.All(r => item.ConditionPercentage > r.ShowRepairUIThreshold)) { continue; }
                             AddTargets<AIObjectiveRepairItems, Item>(Character, item);
                             if (newOrder == null)
                             {
-                                var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportbrokendevices");
+                                var orderPrefab = Order.GetPrefab("reportbrokendevices");
                                 newOrder = new Order(orderPrefab, item.CurrentHull, item.Repairables?.FirstOrDefault(), orderGiver: Character);
                             }
                         }
@@ -412,16 +441,24 @@ namespace Barotrauma
                 }
                 else
                 {
-                    float currentVitality = Character.CharacterHealth.Vitality;
-                    float dmgPercentage = damage / currentVitality * 100;
-                    if (dmgPercentage < currentVitality / 10)
+                    // If not on the same team, always stay defensive
+                    if (attacker.TeamID != Character.TeamID)
                     {
-                        // Don't retaliate on minor (accidental) dmg done by friendly characters
-                        AddCombatObjective(AIObjectiveCombat.CombatMode.Retreat, Rand.Range(0.5f, 1f, Rand.RandSync.Unsynced));
+                        AddCombatObjective(AIObjectiveCombat.CombatMode.Defensive, Rand.Range(0.5f, 1f, Rand.RandSync.Unsynced));
                     }
                     else
                     {
-                        AddCombatObjective(AIObjectiveCombat.CombatMode.Defensive, Rand.Range(0.5f, 1f, Rand.RandSync.Unsynced));
+                        float currentVitality = Character.CharacterHealth.Vitality;
+                        float dmgPercentage = damage / currentVitality * 100;
+                        if (dmgPercentage < currentVitality / 10)
+                        {
+                            // Don't retaliate on minor (accidental) dmg done by characters that are in the same team
+                            AddCombatObjective(AIObjectiveCombat.CombatMode.Retreat, Rand.Range(0.5f, 1f, Rand.RandSync.Unsynced));
+                        }
+                        else
+                        {
+                            AddCombatObjective(AIObjectiveCombat.CombatMode.Defensive, Rand.Range(0.5f, 1f, Rand.RandSync.Unsynced));
+                        }
                     }
                 }
             }
@@ -432,24 +469,25 @@ namespace Barotrauma
 
             void AddCombatObjective(AIObjectiveCombat.CombatMode mode, float delay = 0)
             {
+                bool holdPosition = Character.Info?.Job?.Prefab.Identifier == "watchman";
                 if (ObjectiveManager.CurrentObjective is AIObjectiveCombat combatObjective)
                 {
                     if (combatObjective.Enemy != attacker || (combatObjective.Enemy == null && attacker == null))
                     {
                         // Replace the old objective with the new.
                         ObjectiveManager.Objectives.Remove(combatObjective);
-                        objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker, mode, objectiveManager));
+                        objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker, mode, objectiveManager) { HoldPosition = holdPosition});
                     }
                 }
                 else
                 {
                     if (delay > 0)
                     {
-                        objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker, mode, objectiveManager), delay);
+                        objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker, mode, objectiveManager) { HoldPosition = holdPosition }, delay);
                     }
                     else
                     {
-                        objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker, mode, objectiveManager));
+                        objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker, mode, objectiveManager) { HoldPosition = holdPosition });
                     }
                 }
             }
@@ -586,7 +624,7 @@ namespace Barotrauma
 
         public static void RefreshTargets(Character character, Order order, Hull hull)
         {
-            switch (order.AITag)
+            switch (order.Identifier)
             {
                 case "reportfire":
                     AddTargets<AIObjectiveExtinguishFires, Hull>(character, hull);
@@ -606,7 +644,7 @@ namespace Barotrauma
                         if (item.CurrentHull != hull) { continue; }
                         if (AIObjectiveRepairItems.IsValidTarget(item, character))
                         {
-                            if (item.Repairables.All(r => item.Condition > r.ShowRepairUIThreshold)) { continue; }
+                            if (item.Repairables.All(r => item.ConditionPercentage > r.ShowRepairUIThreshold)) { continue; }
                             AddTargets<AIObjectiveRepairItems, Item>(character, item);
                         }
                     }
@@ -633,7 +671,7 @@ namespace Barotrauma
                     break;
                 default:
 #if DEBUG
-                    DebugConsole.ThrowError(order.AITag + " not implemented!");
+                    DebugConsole.ThrowError(order.Identifier + " not implemented!");
 #endif
                     break;
             }

@@ -335,8 +335,12 @@ namespace Barotrauma
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.03f), rightInfoColumn.RectTransform), style: null);
 
             //server info ------------------------------------------------------------------
-            
-            ServerName = new GUITextBox(new RectTransform(new Vector2(0.3f, 0.05f), infoFrameContent.RectTransform));
+
+            ServerName = new GUITextBox(new RectTransform(new Vector2(infoColumnContainer.RectTransform.RelativeSize.X, 0.05f), infoFrameContent.RectTransform))
+            {
+                MaxTextLength = NetConfig.ServerNameMaxLength,
+                OverflowClip = true
+            };
             ServerName.OnDeselected += (textBox, key) =>
             {
                 GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Name);
@@ -905,7 +909,7 @@ namespace Barotrauma
         {
             if (characterInfo == null)
             {
-                characterInfo = new CharacterInfo(Character.HumanConfigFile, GameMain.NetworkMember.Name, null);
+                characterInfo = new CharacterInfo(Character.HumanSpeciesName, GameMain.NetworkMember.Name, null);
                 characterInfo.RecreateHead(
                     GameMain.Config.CharacterHeadIndex,
                     GameMain.Config.CharacterRace,
@@ -1007,7 +1011,7 @@ namespace Barotrauma
                 int i = 1;
                 foreach (string jobIdentifier in GameMain.Config.JobPreferences)
                 {
-                    JobPrefab job = JobPrefab.List.Find(j => j.Identifier == jobIdentifier);
+                    if (!JobPrefab.List.TryGetValue(jobIdentifier, out JobPrefab job)) { continue; }
                     if (job == null || job.MaxNumber <= 0) continue;
 
                     var jobFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), jobList.Content.RectTransform) { MinSize = new Point(0, 20) }, style: "ListBoxElement")
@@ -1212,7 +1216,7 @@ namespace Barotrauma
                 CanBeFocused = false
             };
 
-            var matchingSub = Submarine.SavedSubmarines.FirstOrDefault(s => s.Name == sub.Name && s.MD5Hash.Hash == sub.MD5Hash.Hash);
+            var matchingSub = Submarine.SavedSubmarines.FirstOrDefault(s => s.Name == sub.Name && s.MD5Hash?.Hash == sub.MD5Hash?.Hash);
             if (matchingSub == null) matchingSub = Submarine.SavedSubmarines.FirstOrDefault(s => s.Name == sub.Name);
 
             if (matchingSub == null)
@@ -1220,7 +1224,7 @@ namespace Barotrauma
                 subTextBlock.TextColor = new Color(subTextBlock.TextColor, 0.5f);
                 frame.ToolTip = TextManager.Get("SubNotFound");
             }
-            else if (matchingSub.MD5Hash.Hash != sub.MD5Hash.Hash)
+            else if (matchingSub?.MD5Hash == null || matchingSub.MD5Hash?.Hash != sub.MD5Hash?.Hash)
             {
                 subTextBlock.TextColor = new Color(subTextBlock.TextColor, 0.5f);
                 frame.ToolTip = TextManager.Get("SubDoesntMatch");
@@ -1241,6 +1245,12 @@ namespace Barotrauma
                     ((Submarine)userdata).CreatePreviewWindow(new GUIMessageBox("", "", new Vector2(0.25f, 0.25f), new Point(500, 400)));
                     return true;
                 };
+            }
+
+            if (!sub.RequiredContentPackagesInstalled)
+            {
+                subTextBlock.TextColor = Color.Lerp(subTextBlock.TextColor, Color.DarkRed, 0.5f);
+                frame.ToolTip = TextManager.Get("ContentPackageMismatch") + "\n\n" + frame.ToolTip;
             }
 
             if (sub.HasTag(SubmarineTag.Shuttle))
@@ -1266,14 +1276,32 @@ namespace Barotrauma
 
         public bool VotableClicked(GUIComponent component, object userData)
         {
-            if (GameMain.Client == null) return false;
+            if (GameMain.Client == null) { return false; }
             
             VoteType voteType;
             if (component.Parent == GameMain.NetLobbyScreen.SubList.Content)
             {
                 if (!GameMain.Client.ServerSettings.Voting.AllowSubVoting)
                 {
-                    if (GameMain.Client.HasPermission(ClientPermissions.SelectSub))
+                    var selectedSub = component.UserData as Submarine;
+                    if (!selectedSub.RequiredContentPackagesInstalled)
+                    {
+                        var msgBox = new GUIMessageBox(TextManager.Get("ContentPackageMismatch"),
+                            selectedSub.RequiredContentPackages.Any() ?
+                            TextManager.GetWithVariable("ContentPackageMismatchWarning", "[requiredcontentpackages]", string.Join(", ", selectedSub.RequiredContentPackages)) :
+                            TextManager.Get("ContentPackageMismatchWarningGeneric"),
+                            new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+
+                        msgBox.Buttons[0].OnClicked = msgBox.Close;
+                        msgBox.Buttons[0].OnClicked += (button, obj) =>
+                        {
+                            GameMain.Client.RequestSelectSub(component.Parent.GetChildIndex(component), isShuttle: false);
+                            return true;
+                        };
+                        msgBox.Buttons[1].OnClicked = msgBox.Close;
+                        return false;
+                    }
+                    else if (GameMain.Client.HasPermission(ClientPermissions.SelectSub))
                     {
                         GameMain.Client.RequestSelectSub(component.Parent.GetChildIndex(component), isShuttle: false);
                         return true;
@@ -1379,25 +1407,44 @@ namespace Barotrauma
                 OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) ClosePlayerFrame(btn, userdata); return true; }
             };
 
-            Vector2 frameSize = GameMain.Client.HasPermission(ClientPermissions.ManagePermissions) ? new Vector2(.24f, .34f) : new Vector2(.24f, .14f);
+            Vector2 frameSize = GameMain.Client.HasPermission(ClientPermissions.ManagePermissions) ? new Vector2(.24f, .5f) : new Vector2(.24f, .24f);
 
-            var playerFrameInner = new GUIFrame(new RectTransform(frameSize, playerFrame.RectTransform, Anchor.Center));
-            var paddedPlayerFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), playerFrameInner.RectTransform, Anchor.Center))
+            var playerFrameInner = new GUIFrame(new RectTransform(frameSize, playerFrame.RectTransform, Anchor.Center) { MinSize = new Point(550, 0) });
+            var paddedPlayerFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.88f), playerFrameInner.RectTransform, Anchor.Center))
             {
                 Stretch = true,
-                RelativeSpacing = 0.05f
+                RelativeSpacing = 0.03f
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform), 
+            var headerContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform), isHorizontal: true)
+            {
+                Stretch = true
+            };
+            
+            var nameText = new GUITextBlock(new RectTransform(new Vector2(0.75f, 1.0f), headerContainer.RectTransform), 
                 text: selectedClient.Name, font: GUI.LargeFont);
 
-            //TODO: UI for client permission management
+            if (selectedClient.SteamID != 0 && Steam.SteamManager.IsInitialized)
+            {
+                var viewSteamProfileButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), headerContainer.RectTransform, Anchor.TopCenter),
+                        TextManager.Get("ViewSteamProfile"))
+                {
+                    UserData = selectedClient
+                };
+
+                GUITextBlock.AutoScaleAndNormalize(nameText, viewSteamProfileButton.TextBlock);
+
+                viewSteamProfileButton.OnClicked = (bt, userdata) =>
+                {
+                    Steam.SteamManager.Instance.Overlay.OpenUrl("https://steamcommunity.com/profiles/" + selectedClient.SteamID.ToString());
+                    return true;
+                };
+            }
+
             if (GameMain.Client.HasPermission(ClientPermissions.ManagePermissions))
             {
                 playerFrame.UserData = selectedClient;
-
-                //new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform), selectedClient.Connection.RemoteEndPoint.Address.ToString());
-
+                
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedPlayerFrame.RectTransform), 
                     TextManager.Get("Rank"));
                 var rankDropDown = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform),
@@ -1437,16 +1484,45 @@ namespace Barotrauma
                     Stretch = true,
                     RelativeSpacing = 0.05f
                 };
-                new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), permissionLabels.RectTransform), TextManager.Get("Permissions"));
-                new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), permissionLabels.RectTransform), TextManager.Get("PermittedConsoleCommands"));
-                
+                var permissionLabel = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), permissionLabels.RectTransform), TextManager.Get("Permissions"));
+                var consoleCommandLabel = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), permissionLabels.RectTransform), TextManager.Get("PermittedConsoleCommands"));
+                GUITextBlock.AutoScaleAndNormalize(permissionLabel, consoleCommandLabel);
+
                 var permissionContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.4f), paddedPlayerFrame.RectTransform), isHorizontal: true)
                 {
                     Stretch = true,
                     RelativeSpacing = 0.05f
                 };
 
-                var permissionsBox = new GUIListBox(new RectTransform(new Vector2(0.5f, 1.0f), permissionContainer.RectTransform))
+                var listBoxContainerLeft = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), permissionContainer.RectTransform))
+                {
+                    Stretch = true,
+                    RelativeSpacing = 0.05f
+                };
+
+                new GUITickBox(new RectTransform(new Vector2(0.15f, 0.15f), listBoxContainerLeft.RectTransform), TextManager.Get("all", fallBackTag: "clientpermission.all"))
+                {
+                    Enabled = !myClient,
+                    OnSelected = (tickbox) =>
+                    {
+                        //reset rank to custom
+                        rankDropDown.SelectItem(null);
+
+                        var client = playerFrame.UserData as Client;
+                        if (client == null) { return false; }
+
+                        foreach (GUIComponent child in tickbox.Parent.GetChild<GUIListBox>().Content.Children)
+                        {
+                            var permissionTickBox = child as GUITickBox;
+                            permissionTickBox.Enabled = false;
+                            permissionTickBox.Selected = tickbox.Selected;
+                            permissionTickBox.Enabled = true;
+                        }
+                        GameMain.Client.UpdateClientPermissions(client);
+                        return true;
+                    }
+                };
+                var permissionsBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), listBoxContainerLeft.RectTransform))
                 {
                     UserData = selectedClient
                 };
@@ -1467,10 +1543,9 @@ namespace Barotrauma
                             rankDropDown.SelectItem(null);
 
                             var client = playerFrame.UserData as Client;
-                            if (client == null) return false;
+                            if (client == null) { return false; }
 
                             var thisPermission = (ClientPermissions)tickBox.UserData;
-
                             if (tickBox.Selected)
                             {
                                 client.GivePermission(thisPermission);
@@ -1479,15 +1554,44 @@ namespace Barotrauma
                             {
                                 client.RemovePermission(thisPermission);
                             }
-
-                            GameMain.Client.UpdateClientPermissions(client);
-
+                            if (tickBox.Enabled)
+                            {
+                                GameMain.Client.UpdateClientPermissions(client);
+                            }
                             return true;
                         }
                     };
                 }
 
-                var commandList = new GUIListBox(new RectTransform(new Vector2(0.5f, 1.0f), permissionContainer.RectTransform))
+                var listBoxContainerRight = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), permissionContainer.RectTransform))
+                {
+                    Stretch = true,
+                    RelativeSpacing = 0.05f
+                };
+
+                new GUITickBox(new RectTransform(new Vector2(0.15f, 0.15f), listBoxContainerRight.RectTransform), TextManager.Get("all", fallBackTag: "clientpermission.all"))
+                {
+                    Enabled = !myClient,
+                    OnSelected = (tickbox) =>
+                    {
+                        //reset rank to custom
+                        rankDropDown.SelectItem(null);
+
+                        var client = playerFrame.UserData as Client;
+                        if (client == null) { return false; }
+
+                        foreach (GUIComponent child in tickbox.Parent.GetChild<GUIListBox>().Content.Children)
+                        {
+                            var commandTickBox = child as GUITickBox;
+                            commandTickBox.Enabled = false;
+                            commandTickBox.Selected = tickbox.Selected;
+                            commandTickBox.Enabled = true;
+                        }
+                        GameMain.Client.UpdateClientPermissions(client);
+                        return true;
+                    }
+                };
+                var commandList = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), listBoxContainerRight.RectTransform))
                 {
                     UserData = selectedClient
                 };
@@ -1518,61 +1622,65 @@ namespace Barotrauma
                         {
                             client.PermittedConsoleCommands.Add(selectedCommand);
                         }
-
-                        GameMain.Client.UpdateClientPermissions(client);
+                        if (tickBox.Enabled)
+                        {
+                            GameMain.Client.UpdateClientPermissions(client);
+                        }
                         return true;
                     };
                 }
             }
 
-            var buttonAreaUpper = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform), isHorizontal: true);
-            var buttonAreaLower = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform), isHorizontal: true);
+            var buttonAreaTop = myClient ? null : new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.08f), paddedPlayerFrame.RectTransform), isHorizontal: true);
+            var buttonAreaLower = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.08f), paddedPlayerFrame.RectTransform), isHorizontal: true);
             
             if (!myClient)
             {
                 if (GameMain.Client.HasPermission(ClientPermissions.Ban))
                 {
-                    var banButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaUpper.RectTransform),
+                    var banButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaTop.RectTransform),
                         TextManager.Get("Ban"))
                     {
                         UserData = selectedClient
                     };
-                    banButton.OnClicked += BanPlayer;
+                    banButton.OnClicked = (bt, userdata) => { BanPlayer(selectedClient); return true; };
                     banButton.OnClicked += ClosePlayerFrame;
 
-                    var rangebanButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaUpper.RectTransform),
+                    var rangebanButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaTop.RectTransform),
                         TextManager.Get("BanRange"))
                     {
                         UserData = selectedClient
                     };
-                    rangebanButton.OnClicked += BanPlayerRange;
+                    rangebanButton.OnClicked = (bt, userdata) => { BanPlayerRange(selectedClient); return true; };
                     rangebanButton.OnClicked += ClosePlayerFrame;
                 }
 
 
-                if (GameMain.Client != null && GameMain.Client.ServerSettings.Voting.AllowVoteKick && selectedClient != null)
+                if (GameMain.Client != null && GameMain.Client.ServerSettings.Voting.AllowVoteKick && 
+                    selectedClient != null && selectedClient.AllowKicking)
                 {
                     var kickVoteButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform),
                         TextManager.Get("VoteToKick"))
                     {
                         Enabled = !selectedClient.HasKickVoteFromID(GameMain.Client.ID),
-                        OnClicked = GameMain.Client.VoteForKick,
+                        OnClicked = (btn, userdata) => { GameMain.Client.VoteForKick(selectedClient); btn.Enabled = false; return true; },
                         UserData = selectedClient
                     };
                 }
 
-                if (GameMain.Client.HasPermission(ClientPermissions.Kick))
+                if (GameMain.Client.HasPermission(ClientPermissions.Kick) &&
+                    selectedClient != null && selectedClient.AllowKicking)
                 {
                     var kickButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform),
                         TextManager.Get("Kick"))
                     {
                         UserData = selectedClient
                     };
-                    kickButton.OnClicked = KickPlayer;
+                    kickButton.OnClicked = (bt, userdata) => { KickPlayer(selectedClient); return true; };
                     kickButton.OnClicked += ClosePlayerFrame;
                 }
 
-                new GUITickBox(new RectTransform(new Vector2(0.25f, 1.0f), buttonAreaUpper.RectTransform, Anchor.TopRight),
+                new GUITickBox(new RectTransform(new Vector2(0.25f, 1.0f), buttonAreaTop.RectTransform, Anchor.TopRight),
                     TextManager.Get("Mute"))
                 {
                     IgnoreLayoutGroups = true,
@@ -1597,28 +1705,22 @@ namespace Barotrauma
             return true;
         }
 
-        public bool KickPlayer(GUIButton button, object userData)
+        public void KickPlayer(Client client)
         {
-            Client client = userData as Client;
-            if (client == null || GameMain.NetworkMember == null) return false;
-            GameMain.Client.CreateKickReasonPrompt(client.Name, false);            
-            return false;
+            if (GameMain.NetworkMember == null || client == null) { return; }
+            GameMain.Client.CreateKickReasonPrompt(client.Name, false);    
         }
 
-        public bool BanPlayer(GUIButton button, object userData)
+        public void BanPlayer(Client client)
         {
-            Client client = userData as Client;
-            if (userData == null || GameMain.NetworkMember == null) return false;
-            GameMain.Client.CreateKickReasonPrompt(client.Name, true);
-            return false;
+            if (GameMain.NetworkMember == null || client == null) { return; }
+            GameMain.Client.CreateKickReasonPrompt(client.Name, ban: true, rangeBan: false);
         }
 
-        public bool BanPlayerRange(GUIButton button, object userData)
+        public void BanPlayerRange(Client client)
         {
-            Client client = userData as Client;
-            if (userData == null || GameMain.NetworkMember == null) return false;
-            GameMain.Client.CreateKickReasonPrompt(client.Name, true, true);
-            return false;
+            if (GameMain.NetworkMember == null || client == null) { return; }
+            GameMain.Client.CreateKickReasonPrompt(client.Name, ban: true, rangeBan: true);
         }
         
         public override void AddToGUIUpdateList()
@@ -1636,16 +1738,6 @@ namespace Barotrauma
             jobInfoFrame?.AddToGUIUpdateList();
         }
         
-        public List<Submarine> GetSubList()
-        {
-            List<Submarine> subs = new List<Submarine>();
-            foreach (GUIComponent component in subList.Content.Children)
-            {
-                if (component.UserData is Submarine) subs.Add((Submarine)component.UserData);
-            }
-
-            return subs;
-        }
 
         public override void Update(double deltaTime)
         {
@@ -1966,24 +2058,34 @@ namespace Barotrauma
 
         public bool TrySelectSub(string subName, string md5Hash, GUIListBox subList)
         {
-            if (GameMain.Client == null) return false;
+            if (GameMain.Client == null) { return false; }
 
             //already downloading the selected sub file
             if (GameMain.Client.FileReceiver.ActiveTransfers.Any(t => t.FileName == subName + ".sub"))
             {
                 return false;
             }
+            
+            Submarine sub = subList.Content.Children
+                .FirstOrDefault(c => c.UserData is Submarine s && s.Name == subName && s.MD5Hash?.Hash == md5Hash)?
+                .UserData as Submarine;
 
-            Submarine sub = Submarine.SavedSubmarines.FirstOrDefault(m => m.Name == subName && m.MD5Hash.Hash == md5Hash);
-            if (sub == null) sub = Submarine.SavedSubmarines.FirstOrDefault(m => m.Name == subName);
-
-            var matchingListSub = subList.Content.GetChildByUserData(sub);
-            if (sub != null && subList.SelectedData as Submarine == sub)
+            //matching sub found and already selected, all good
+            if (sub != null && subList.SelectedData is Submarine selectedSub && selectedSub.MD5Hash?.Hash == md5Hash)
             {
                 return true;
             }
 
-            if (matchingListSub != null)
+            //sub not found, see if we have a sub with the same name
+            if (sub == null)
+            {
+                sub = subList.Content.Children
+                    .FirstOrDefault(c => c.UserData is Submarine s && s.Name == subName)?
+                    .UserData as Submarine;
+            }
+
+            //found a sub that at least has the same name, select it
+            if (sub != null)
             {
                 if (subList.Parent is GUIDropDown subDropDown)
                 {
@@ -1992,7 +2094,7 @@ namespace Barotrauma
                 else
                 {
                     subList.OnSelected -= VotableClicked;
-                    subList.Select(subList.Content.GetChildIndex(matchingListSub), true);
+                    subList.Select(sub, force: true);
                     subList.OnSelected += VotableClicked;
                 }
 
@@ -2000,58 +2102,62 @@ namespace Barotrauma
                     FailedSelectedSub = null;
                 else
                     FailedSelectedShuttle = null;
+                
+                //hashes match, all good
+                if (sub.MD5Hash?.Hash == md5Hash)
+                {
+                    return true;
+                }
+            }
+            
+            //-------------------------------------------------------------------------------------
+            //if we get to this point, a matching sub was not found or it has an incorrect MD5 hash
+            
+            if (subList == SubList)
+                FailedSelectedSub = new Pair<string, string>(subName, md5Hash);
+            else
+                FailedSelectedShuttle = new Pair<string, string>(subName, md5Hash);
+
+            string errorMsg = "";
+            if (sub == null)
+            {
+                errorMsg = TextManager.GetWithVariable("SubNotFoundError", "[subname]", subName) + " ";
+            }
+            else if (sub.MD5Hash?.Hash == null)
+            {
+                errorMsg = TextManager.GetWithVariable("SubLoadError", "[subname]", subName) + " ";
+                subList.Content.GetChildByUserData(sub).GetChild<GUITextBox>().TextColor = Color.Red;
+            }
+            else
+            {
+                errorMsg = TextManager.GetWithVariables("SubDoesntMatchError", new string[3] { "[subname]" , "[myhash]", "[serverhash]" }, 
+                    new string[3] { sub.Name, sub.MD5Hash.ShortHash, Md5Hash.GetShortHash(md5Hash) }) + " ";
             }
 
-            if (sub == null || sub.MD5Hash.Hash != md5Hash)
+            errorMsg += TextManager.Get("DownloadSubQuestion");
+
+            //already showing a message about the same sub
+            if (GUIMessageBox.MessageBoxes.Any(mb => mb.UserData as string == "request" + subName))
             {
-                if (subList == SubList)
-                    FailedSelectedSub = new Pair<string, string>(subName, md5Hash);
-                else
-                    FailedSelectedShuttle = new Pair<string, string>(subName, md5Hash);
-
-                string errorMsg = "";
-                if (sub == null)
-                {
-                    errorMsg = TextManager.GetWithVariable("SubNotFoundError", "[subname]", subName) + " ";
-                }
-                else if (sub.MD5Hash.Hash == null)
-                {
-                    errorMsg = TextManager.GetWithVariable("SubLoadError", "[subname]", subName) + " ";
-                    if (matchingListSub != null) matchingListSub.GetChild<GUITextBox>().TextColor = Color.Red;
-                }
-                else
-                {
-                    errorMsg = TextManager.GetWithVariables("SubDoesntMatchError", new string[3] { "[subname]" , "[myhash]", "[serverhash]" }, 
-                        new string[3] { sub.Name, sub.MD5Hash.ShortHash, Md5Hash.GetShortHash(md5Hash) }) + " ";
-                }
-
-                errorMsg += TextManager.Get("DownloadSubQuestion");
-
-                //already showing a message about the same sub
-                if (GUIMessageBox.MessageBoxes.Any(mb => mb.UserData as string == "request" + subName))
-                {
-                    return false;
-                }
-
-                var requestFileBox = new GUIMessageBox(TextManager.Get("DownloadSubLabel"), errorMsg, 
-                    new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
-                {
-                    UserData = "request" + subName
-                };
-                requestFileBox.Buttons[0].UserData = new string[] { subName, md5Hash };
-                requestFileBox.Buttons[0].OnClicked += requestFileBox.Close;
-                requestFileBox.Buttons[0].OnClicked += (GUIButton button, object userdata) =>
-                {
-                    string[] fileInfo = (string[])userdata;
-                    GameMain.Client?.RequestFile(FileTransferType.Submarine, fileInfo[0], fileInfo[1]);
-                    return true;
-                };
-                requestFileBox.Buttons[1].OnClicked += requestFileBox.Close;
-
                 return false;
             }
 
-            return true;
+            var requestFileBox = new GUIMessageBox(TextManager.Get("DownloadSubLabel"), errorMsg, 
+                new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
+            {
+                UserData = "request" + subName
+            };
+            requestFileBox.Buttons[0].UserData = new string[] { subName, md5Hash };
+            requestFileBox.Buttons[0].OnClicked += requestFileBox.Close;
+            requestFileBox.Buttons[0].OnClicked += (GUIButton button, object userdata) =>
+            {
+                string[] fileInfo = (string[])userdata;
+                GameMain.Client?.RequestFile(FileTransferType.Submarine, fileInfo[0], fileInfo[1]);
+                return true;
+            };
+            requestFileBox.Buttons[1].OnClicked += requestFileBox.Close;
+
+            return false;            
         }
 
     }

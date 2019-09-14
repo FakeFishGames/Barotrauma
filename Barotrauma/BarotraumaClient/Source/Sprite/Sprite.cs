@@ -3,13 +3,15 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.IO;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {
     public partial class Sprite
     {
-        protected Texture2D texture;
+        private bool cannotBeLoaded;
 
+        protected Texture2D texture;
         public Texture2D Texture
         {
             get
@@ -55,7 +57,7 @@ namespace Barotrauma
 
         public void EnsureLazyLoaded()
         {
-            if (!lazyLoad || texture != null) { return; }
+            if (!lazyLoad || texture != null || cannotBeLoaded) { return; }
 
             Vector4 sourceVector = Vector4.Zero;
             bool temp2 = false;
@@ -73,16 +75,19 @@ namespace Barotrauma
                 if (s == this) { continue; }
                 if (s.FullPath == FullPath && s.texture != null) { s.texture = texture; }
             }
+            if (texture == null)
+            {
+                cannotBeLoaded = true;
+            }
         }
 
-        public void ReloadTexture()
-        {
-            var sprites = LoadedSprites.Where(s => s.Texture == texture).ToList();
-            texture.Dispose();
-            texture = null;
+        public void ReloadTexture(bool updateAllSprites = false) => ReloadTexture(updateAllSprites ? LoadedSprites.Where(s => s.Texture == texture) : new Sprite[] { this });
 
+        public void ReloadTexture(IEnumerable<Sprite> spritesToUpdate)
+        {
+            texture.Dispose();
             texture = TextureLoader.FromFile(FilePath, preMultipliedAlpha);
-            foreach (Sprite sprite in sprites)
+            foreach (Sprite sprite in spritesToUpdate)
             {
                 sprite.texture = texture;
             }
@@ -93,15 +98,21 @@ namespace Barotrauma
             sourceRect = new Rectangle(0, 0, texture.Width, texture.Height);
         }
 
-
         public static Texture2D LoadTexture(string file, bool preMultiplyAlpha = true)
         {
-
-            if (string.IsNullOrWhiteSpace(file)) { return new Texture2D(GameMain.GraphicsDeviceManager.GraphicsDevice, 1, 1); }
+            if (string.IsNullOrWhiteSpace(file))
+            {
+                Texture2D t = null;
+                CrossThread.RequestExecutionOnMainThread(() =>
+                {
+                    t = new Texture2D(GameMain.GraphicsDeviceManager.GraphicsDevice, 1, 1);
+                });
+                return t;
+            }
             file = Path.GetFullPath(file);
             foreach (Sprite s in list)
             {
-                if (s.FullPath == file && s.texture != null) { return s.texture; }
+                if (s.FullPath == file && s.texture != null && !s.texture.IsDisposed) { return s.texture; }
             }
 
             if (File.Exists(file))
@@ -305,16 +316,22 @@ namespace Barotrauma
             //check if another sprite is using the same texture
             if (!string.IsNullOrEmpty(FilePath)) //file can be empty if the sprite is created directly from a Texture2D instance
             {
-                foreach (Sprite s in list)
+                lock (list)
                 {
-                    if (s.FullPath == FullPath) return;
+                    foreach (Sprite s in list)
+                    {
+                        if (s.FullPath == FullPath) return;
+                    }
                 }
             }
             
             //if not, free the texture
             if (texture != null)
             {
-                texture.Dispose();
+                CrossThread.RequestExecutionOnMainThread(() =>
+                {
+                    texture.Dispose();
+                });
                 texture = null;
             }
         }

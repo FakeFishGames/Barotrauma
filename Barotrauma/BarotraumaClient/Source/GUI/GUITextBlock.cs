@@ -26,6 +26,7 @@ namespace Barotrauma
         public TextGetterHandler TextGetter;
 
         public bool Wrap;
+        private bool playerInput;
 
         public bool RoundToNearestPixel = true;
 
@@ -193,7 +194,7 @@ namespace Barotrauma
         /// If the rectT height is set 0, the height is calculated from the text.
         /// </summary>
         public GUITextBlock(RectTransform rectT, string text, Color? textColor = null, ScalableFont font = null, 
-            Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null) 
+            Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null, bool playerInput = false) 
             : base(style, rectT)
         {
             if (color.HasValue)
@@ -203,11 +204,17 @@ namespace Barotrauma
             if (textColor.HasValue)
             {
                 this.textColor = textColor.Value;
-            }
-            this.Font = font ?? GUI.Font;
+            }            
+
+            //if the text is in chinese/korean/japanese and we're not using a CJK-compatible font,
+            //use the default CJK font as a fallback
+            var selectedFont = font ?? GUI.Font;
+            if (TextManager.IsCJK(text) && !selectedFont.IsCJK) { selectedFont = GUI.CJKFont; }
+            this.Font = selectedFont;
             this.textAlignment = textAlignment;
             this.Wrap = wrap;
             this.Text = text ?? "";
+            this.playerInput = playerInput;
             if (rectT.Rect.Height == 0 && !string.IsNullOrEmpty(text))
             {
                 CalculateHeightFromText();
@@ -254,7 +261,7 @@ namespace Barotrauma
             
             if (Wrap && rect.Width > 0)
             {
-                wrappedText = ToolBox.WrapText(text, rect.Width - padding.X - padding.Z, Font, textScale);
+                wrappedText = ToolBox.WrapText(text, rect.Width - padding.X - padding.Z, Font, textScale, playerInput);
                 TextSize = MeasureText(wrappedText);
             }
             else if (OverflowClip)
@@ -389,7 +396,7 @@ namespace Barotrauma
         public static void AutoScaleAndNormalize(IEnumerable<GUITextBlock> textBlocks)
         {
             if (!textBlocks.Any()) { return; }
-            float minScale = textBlocks.First().TextScale;
+            float minScale = Math.Max(textBlocks.First().TextScale, 1.0f);
             foreach (GUITextBlock textBlock in textBlocks)
             {
                 textBlock.AutoScale = true;

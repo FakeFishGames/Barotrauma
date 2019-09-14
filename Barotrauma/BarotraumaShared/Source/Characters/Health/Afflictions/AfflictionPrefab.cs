@@ -3,11 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Xml.Linq;
+using System.Linq;
 
 namespace Barotrauma
 {
     public static class CPRSettings
     {
+        public static bool IsLoaded { get; private set; }
         public static float ReviveChancePerSkill { get; private set; }
         public static float ReviveChanceExponent { get; private set; }
         public static float ReviveChanceMin { get; private set; }
@@ -31,7 +33,50 @@ namespace Barotrauma
 
             DamageSkillThreshold = MathHelper.Clamp(element.GetAttributeFloat("damageskillthreshold", 40.0f), 0.0f, 100.0f);
             DamageSkillMultiplier = MathHelper.Clamp(element.GetAttributeFloat("damageskillmultiplier", 0.1f), 0.0f, 100.0f);
+            IsLoaded = true;
         }
+    }
+
+    class AfflictionPrefabHusk : AfflictionPrefab
+    {
+        public AfflictionPrefabHusk(XElement element, Type type = null) : base(element, type)
+        {
+            HuskedSpeciesName = element.GetAttributeString("huskedspeciesname", null);
+            if (HuskedSpeciesName == null)
+            {
+                DebugConsole.NewMessage($"No 'huskedspeciesname' defined for the husk affliction ({Identifier}) in {element.ToString()}", Color.Orange);
+                HuskedSpeciesName = "[speciesname]husk";
+            }
+            TargetSpecies = element.GetAttributeStringArray("targets", new string[0] { }, trim: true, convertToLowerInvariant: true);
+            if (TargetSpecies.Length == 0)
+            {
+                DebugConsole.NewMessage($"No 'targets' defined for the husk affliction ({Identifier}) in {element.ToString()}", Color.Orange);
+                TargetSpecies = new string[] { "human" };
+            }
+            var attachElement = element.GetChildElement("attachlimb");
+            if (attachElement != null)
+            {
+                AttachLimbId = attachElement.GetAttributeInt("id", -1);
+                AttachLimbName = attachElement.GetAttributeString("name", null);
+                AttachLimbType = Enum.TryParse(attachElement.GetAttributeString("type", "none"), true, out LimbType limbType) ? limbType : LimbType.None;
+            }
+            else
+            {
+                AttachLimbId = -1;
+                AttachLimbName = null;
+                AttachLimbType = LimbType.None;
+            }
+        }
+
+        // Use any of these to define which limb the appendage is attached to.
+        // If multiple are defined, the order of preference is: id, name, type.
+        public readonly int AttachLimbId;
+        public readonly string AttachLimbName;
+        public readonly LimbType AttachLimbType;
+
+        public readonly string HuskedSpeciesName;
+        public readonly string[] TargetSpecies;
+        public const string Tag = "[speciesname]";
     }
 
     class AfflictionPrefab
@@ -126,7 +171,6 @@ namespace Barotrauma
         public static AfflictionPrefab Bloodloss;
         public static AfflictionPrefab Pressure;
         public static AfflictionPrefab Stun;
-        public static AfflictionPrefab Husk;
 
         public static List<AfflictionPrefab> List = new List<AfflictionPrefab>();
 
@@ -157,6 +201,9 @@ namespace Barotrauma
         //how high the strength has to be for the affliction icon to be shown with a health scanner
         public readonly float ShowInHealthScannerThreshold = 0.05f;
 
+        //how much karma changes when a player applies this affliction to someone (per strength of the affliction)
+        public float KarmaChangeOnApplied;
+
         public float BurnOverlayAlpha;
         public float DamageOverlayAlpha;
 
@@ -184,44 +231,109 @@ namespace Barotrauma
             foreach (string filePath in filePaths)
             {
                 XDocument doc = XMLExtensions.TryLoadXml(filePath);
-                if (doc == null || doc.Root == null) continue;
-
-                foreach (XElement element in doc.Root.Elements())
+                if (doc == null) { continue; }
+                var mainElement = doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;
+                if (doc.Root.IsOverride())
                 {
-                    switch (element.Name.ToString().ToLowerInvariant())
+                    DebugConsole.ThrowError("Cannot override all afflictions, because many of them are required by the main game! Please try overriding them one by one.");
+                }
+                foreach (XElement element in mainElement.Elements())
+                {
+                    bool isOverride = element.IsOverride();
+                    XElement sourceElement = isOverride ? element.FirstElement() : element;
+                    string elementName = sourceElement.Name.ToString().ToLowerInvariant();
+                    string identifier = sourceElement.GetAttributeString("identifier", null);
+                    if (!elementName.Equals("cprsettings", StringComparison.OrdinalIgnoreCase))
                     {
-                        case "internaldamage":
-                            List.Add(InternalDamage = new AfflictionPrefab(element, typeof(Affliction)));
-                            break;
+                        if (string.IsNullOrWhiteSpace(identifier))
+                        {
+                            DebugConsole.ThrowError($"No identifier defined for the affliction '{elementName}' in file '{filePath}'");
+                            continue;
+                        }
+                        var duplicate = List.FirstOrDefault(a => a.Identifier == identifier);
+                        if (duplicate != null)
+                        {
+                            if (isOverride)
+                            {
+                                DebugConsole.NewMessage($"Overriding an affliction or a buff with the identifier '{identifier}' using the file '{filePath}'", Color.Yellow);
+                                List.Remove(duplicate);
+                            }
+                            else
+                            {
+                                DebugConsole.ThrowError($"Duplicate affliction: '{identifier}' defined in {elementName} of '{filePath}'");
+                                continue;
+                            }
+                        }
+                    }
+                    string type = sourceElement.GetAttributeString("type", null);
+                    if (sourceElement.Name.ToString().ToLowerInvariant() == "cprsettings")
+                    {
+                        //backwards compatibility
+                        type = "cprsettings";
+                    }
+
+                    AfflictionPrefab prefab = null;
+                    switch (type)
+                    {
                         case "bleeding":
-                            List.Add(Bleeding = new AfflictionPrefab(element, typeof(AfflictionBleeding)));
+                            prefab = new AfflictionPrefab(sourceElement, typeof(AfflictionBleeding));
                             break;
-                        case "burn":
-                            List.Add(Burn = new AfflictionPrefab(element, typeof(Affliction)));
-                            break;
-                        case "oxygenlow":
-                            List.Add(OxygenLow = new AfflictionPrefab(element, typeof(Affliction)));
-                            break;
-                        case "bloodloss":
-                            List.Add(Bloodloss = new AfflictionPrefab(element, typeof(Affliction)));
-                            break;
-                        case "pressure":
-                            List.Add(Pressure = new AfflictionPrefab(element, typeof(Affliction)));
-                            break;
-                        case "stun":
-                            List.Add(Stun = new AfflictionPrefab(element, typeof(Affliction)));
-                            break;
-                        case "husk":
-                        case "afflictionhusk":
-                            List.Add(Husk = new AfflictionPrefab(element, typeof(AfflictionHusk)));
+                        case "huskinfection":
+                            prefab = new AfflictionPrefabHusk(sourceElement, typeof(AfflictionHusk));
                             break;
                         case "cprsettings":
-                            CPRSettings.Load(element);
+                            if (CPRSettings.IsLoaded)
+                            {
+                                if (isOverride)
+                                {
+                                    DebugConsole.NewMessage($"Overriding the CPR settings with '{filePath}'", Color.Yellow);
+                                }
+                                else
+                                {
+                                    DebugConsole.ThrowError($"Error in '{filePath}': CPR settings already loaded. Add <override></override> tags as the parent of the custom CPRSettings to allow overriding the vanilla values.");
+                                    break;
+                                }
+                            }
+                            CPRSettings.Load(sourceElement);
+                            break;
+                        case "damage":
+                        case "burn":
+                        case "oxygenlow":
+                        case "bloodloss":
+                        case "stun":
+                        case "pressure":
+                        case "internaldamage":
+                            prefab = new AfflictionPrefab(sourceElement, typeof(Affliction));
                             break;
                         default:
-                            List.Add(new AfflictionPrefab(element));
+                            prefab = new AfflictionPrefab(sourceElement);
                             break;
                     }
+                    switch (identifier)
+                    {
+                        case "internaldamage":
+                            InternalDamage = prefab;
+                            break;
+                        case "bleeding":
+                            Bleeding = prefab;
+                            break;
+                        case "burn":
+                            Burn = prefab;
+                            break;
+                        case "oxygenlow":
+                            OxygenLow = prefab;
+                            break;
+                        case "bloodloss":
+                            Bloodloss = prefab;
+                            break;
+                        case "pressure":
+                            Pressure = prefab;
+                            break;
+                        case "stun":
+                            Stun = prefab;
+                            break;
+                    }
+                    if (prefab != null) { List.Add(prefab); }
                 }
             }
 
@@ -232,12 +344,15 @@ namespace Barotrauma
             if (Bloodloss == null) DebugConsole.ThrowError("Affliction \"Bloodloss\" not defined in the affliction prefabs.");
             if (Pressure == null) DebugConsole.ThrowError("Affliction \"Pressure\" not defined in the affliction prefabs.");
             if (Stun == null) DebugConsole.ThrowError("Affliction \"Stun\" not defined in the affliction prefabs.");
-            if (Husk == null) DebugConsole.ThrowError("Affliction \"Husk\" not defined in the affliction prefabs.");
         }
 
         public AfflictionPrefab(XElement element, Type type = null)
         {
             typeName = type == null ? element.Name.ToString() : type.Name;
+            if (typeName == "InternalDamage" && type == null)
+            {
+                type = typeof(Affliction);
+            }
 
             Identifier = element.GetAttributeString("identifier", "");
 
@@ -265,8 +380,11 @@ namespace Barotrauma
             DamageOverlayAlpha  = element.GetAttributeFloat("damageoverlayalpha", 0.0f);
             BurnOverlayAlpha    = element.GetAttributeFloat("burnoverlayalpha", 0.0f);
 
+            KarmaChangeOnApplied = element.GetAttributeFloat("karmachangeonapplied", 0.0f);
+
             CauseOfDeathDescription     = TextManager.Get("AfflictionCauseOfDeath." + Identifier, true) ?? element.GetAttributeString("causeofdeathdescription", "");
             SelfCauseOfDeathDescription = TextManager.Get("AfflictionCauseOfDeathSelf." + Identifier, true) ?? element.GetAttributeString("selfcauseofdeathdescription", "");
+
 
             AchievementOnRemoved = element.GetAttributeString("achievementonremoved", "");
             
@@ -299,7 +417,7 @@ namespace Barotrauma
             catch
             {
                 DebugConsole.ThrowError("Could not find an affliction class of the type \"" + typeName + "\".");
-                return;
+                type = typeof(Affliction);
             }
 
             constructor = type.GetConstructor(new[] { typeof(AfflictionPrefab), typeof(float) });

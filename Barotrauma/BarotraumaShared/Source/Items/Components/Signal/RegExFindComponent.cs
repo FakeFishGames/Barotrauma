@@ -16,16 +16,16 @@ namespace Barotrauma.Items.Components
 
         private bool nonContinuousOutputSent;
 
-        [InGameEditable, Serialize("1", true)]
+        [InGameEditable, Serialize("1", true, description: "The signal this item outputs when the received signal matches the regular expression.")]
         public string Output { get; set; }
 
-        [InGameEditable, Serialize("0", true)]
+        [Serialize("0", true, description: "The signal this item outputs when the received signal does not match the regular expression.")]
         public string FalseOutput { get; set; }
 
-        [Serialize(true, true), InGameEditable(ToolTip = "Should the component keep sending the output even after it stops receiving a signal, or only send an output when it receives a signal.")]
+        [InGameEditable, Serialize(true, true, description: "Should the component keep sending the output even after it stops receiving a signal, or only send an output when it receives a signal.")]
         public bool ContinuousOutput { get; set; }
 
-        [InGameEditable, Serialize("", true)]
+        [InGameEditable, Serialize("", true, description: "The regular expression used to check the incoming signals.")]
         public string Expression
         {
             get { return expression; }

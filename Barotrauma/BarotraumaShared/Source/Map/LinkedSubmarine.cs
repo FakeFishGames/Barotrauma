@@ -57,6 +57,8 @@ namespace Barotrauma
             linkedToID = new List<ushort>();
 
             InsertToList();
+
+            DebugConsole.Log("Created linked submarine (" + ID + ")");
         }
 
         public static LinkedSubmarine CreateDummy(Submarine mainSub, Submarine linkedSub)

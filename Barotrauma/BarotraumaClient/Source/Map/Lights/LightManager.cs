@@ -72,6 +72,11 @@ namespace Barotrauma.Lights
 
         private float ambientLightUpdateTimer;
 
+        public IEnumerable<LightSource> Lights
+        {
+            get { return lights; }
+        }
+
         public LightManager(GraphicsDevice graphics, ContentManager content)
         {
             lights = new List<LightSource>();
@@ -81,29 +86,33 @@ namespace Barotrauma.Lights
             visionCircle = Sprite.LoadTexture("Content/Lights/visioncircle.png", preMultiplyAlpha: false);
             highlightRaster = Sprite.LoadTexture("Content/UI/HighlightRaster.png", preMultiplyAlpha: false);
 
-            CreateRenderTargets(graphics);
             GameMain.Instance.OnResolutionChanged += () =>
             {
                 CreateRenderTargets(graphics);
             };
 
+            CrossThread.RequestExecutionOnMainThread(() =>
+            {
+                CreateRenderTargets(graphics);
+
 #if WINDOWS
-            LosEffect = content.Load<Effect>("Effects/losshader");
-            SolidColorEffect = content.Load<Effect>("Effects/solidcolor");
+                LosEffect = content.Load<Effect>("Effects/losshader");
+                SolidColorEffect = content.Load<Effect>("Effects/solidcolor");
 #else
-            LosEffect = content.Load<Effect>("Effects/losshader_opengl");
-            SolidColorEffect = content.Load<Effect>("Effects/solidcolor_opengl");
+                LosEffect = content.Load<Effect>("Effects/losshader_opengl");
+                SolidColorEffect = content.Load<Effect>("Effects/solidcolor_opengl");
 #endif
 
-            if (lightEffect == null)
-            {
-                lightEffect = new BasicEffect(GameMain.Instance.GraphicsDevice)
+                if (lightEffect == null)
                 {
-                    VertexColorEnabled = true,
-                    TextureEnabled = true,
-                    Texture = LightSource.LightTexture
-                };
-            }
+                    lightEffect = new BasicEffect(GameMain.Instance.GraphicsDevice)
+                    {
+                        VertexColorEnabled = true,
+                        TextureEnabled = true,
+                        Texture = LightSource.LightTexture
+                    };
+                }
+            });
 
             hullAmbientLights = new Dictionary<Hull, Color>();
             smoothedHullAmbientLights = new Dictionary<Hull, Color>();
@@ -256,20 +265,19 @@ namespace Barotrauma.Lights
                         (int)(GameMain.GraphicsWidth * currLightMapScale), (int)(GameMain.GraphicsHeight * currLightMapScale)), Color.Black);
                     spriteBatch.End();
                 }
-                else
+
+                visibleHulls = GetVisibleHulls(cam);
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, transformMatrix: spriteBatchTransform);            
+                foreach (Rectangle drawRect in visibleHulls.Values)
                 {
-                    visibleHulls = GetVisibleHulls(cam);
-                    spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, transformMatrix: spriteBatchTransform);            
-                    foreach (Rectangle drawRect in visibleHulls.Values)
-                    {
-                        //TODO: draw some sort of smoothed rectangle
-                        GUI.DrawRectangle(spriteBatch,
-                            new Vector2(drawRect.X, -drawRect.Y),
-                            new Vector2(drawRect.Width, drawRect.Height),
-                            Color.Black, true);
-                    }                
-                    spriteBatch.End();
-                }
+                    //TODO: draw some sort of smoothed rectangle
+                    GUI.DrawRectangle(spriteBatch,
+                        new Vector2(drawRect.X, -drawRect.Y),
+                        new Vector2(drawRect.Width, drawRect.Height),
+                        Color.Black, true);
+                }                
+                spriteBatch.End();
+                
 
                 graphics.BlendState = BlendState.Additive;
             }

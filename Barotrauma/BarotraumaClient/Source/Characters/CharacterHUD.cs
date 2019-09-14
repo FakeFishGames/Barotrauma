@@ -138,8 +138,8 @@ namespace Barotrauma
                 brokenItemsCheckTimer = 1.0f;
                 foreach (Item item in Item.ItemList)
                 {
-                    if (!item.Repairables.Any(r => item.Condition < r.ShowRepairUIThreshold)) { continue; }
-                    if (!Submarine.VisibleEntities.Contains(item)) { continue; }
+                    if (!item.Repairables.Any(r => item.ConditionPercentage < r.ShowRepairUIThreshold)) { continue; }
+                    if (Submarine.VisibleEntities != null && !Submarine.VisibleEntities.Contains(item)) { continue; }
 
                     Vector2 diff = item.WorldPosition - character.WorldPosition;
                     if (Submarine.CheckVisibility(character.SimPosition, character.SimPosition + ConvertUnits.ToSimUnits(diff)) == null)
@@ -210,13 +210,13 @@ namespace Barotrauma
 
                     GUI.DrawString(spriteBatch, textPos, focusName, nameColor, Color.Black * 0.7f, 2);
                     textPos.Y += offset.Y;
-                    if (character.FocusedCharacter.CanInventoryBeAccessed)
+                    if (character.FocusedCharacter.CanBeDragged)
                     {
                         GUI.DrawString(spriteBatch, textPos, GetCachedHudText("GrabHint", GameMain.Config.KeyBind(InputType.Grab).ToString()),
                             Color.LightGreen, Color.Black, 2, GUI.SmallFont);
                         textPos.Y += offset.Y;
                     }
-                    if (character.FocusedCharacter.CharacterHealth.UseHealthWindow)
+                    if (character.FocusedCharacter.CharacterHealth.UseHealthWindow && character.CanInteractWith(character.FocusedCharacter, 160f, false))
                     {
                         GUI.DrawString(spriteBatch, textPos, GetCachedHudText("HealHint", GameMain.Config.KeyBind(InputType.Health).ToString()),
                             Color.LightGreen, Color.Black, 2, GUI.SmallFont);
@@ -391,7 +391,7 @@ namespace Barotrauma
 
             if (!orderIndicatorCount.ContainsKey(target)) { orderIndicatorCount.Add(target, 0); }
 
-            Vector2 drawPos = target.WorldPosition + Vector2.UnitX * order.SymbolSprite.size.X * 1.5f * orderIndicatorCount[target];
+            Vector2 drawPos = target.DrawPosition + Vector2.UnitX * order.SymbolSprite.size.X * 1.5f * orderIndicatorCount[target];
             GUI.DrawIndicator(spriteBatch, drawPos, cam, 100.0f, order.SymbolSprite, order.Color * iconAlpha);
 
             orderIndicatorCount[target] = orderIndicatorCount[target] + 1;

@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Collections.Generic;
 using System.Xml.Linq;
-using OpenTK.Audio.OpenAL;
+using OpenAL;
 using Microsoft.Xna.Framework;
 using System.Linq;
 using System.IO;
@@ -20,7 +20,7 @@ namespace Barotrauma.Sounds
         }
         
         private IntPtr alcDevice;
-        private OpenTK.ContextHandle alcContext;
+        private IntPtr alcContext;
         
         public enum SourcePoolIndex
         {
@@ -42,11 +42,11 @@ namespace Barotrauma.Sounds
             {
                 if (Disabled) { return; }
                 listenerPosition = value;
-                AL.Listener(ALListener3f.Position,value.X,value.Y,value.Z);
-                ALError alError = AL.GetError();
-                if (alError != ALError.NoError)
+                Al.Listener3f(Al.Position,value.X,value.Y,value.Z);
+                int alError = Al.GetError();
+                if (alError != Al.NoError)
                 {
-                    throw new Exception("Failed to set listener position: " + AL.GetErrorString(alError));
+                    throw new Exception("Failed to set listener position: " + Al.GetErrorString(alError));
                 }
             }
         }
@@ -59,11 +59,11 @@ namespace Barotrauma.Sounds
             {
                 if (Disabled) { return; }
                 listenerOrientation[0] = value.X; listenerOrientation[1] = value.Y; listenerOrientation[2] = value.Z;
-                AL.Listener(ALListenerfv.Orientation, ref listenerOrientation);
-                ALError alError = AL.GetError();
-                if (alError != ALError.NoError)
+                Al.Listenerfv(Al.Orientation, listenerOrientation);
+                int alError = Al.GetError();
+                if (alError != Al.NoError)
                 {
-                    throw new Exception("Failed to set listener target vector: " + AL.GetErrorString(alError));
+                    throw new Exception("Failed to set listener target vector: " + Al.GetErrorString(alError));
                 }
             }
         }
@@ -74,11 +74,11 @@ namespace Barotrauma.Sounds
             {
                 if (Disabled) { return; }
                 listenerOrientation[3] = value.X; listenerOrientation[4] = value.Y; listenerOrientation[5] = value.Z;
-                AL.Listener(ALListenerfv.Orientation, ref listenerOrientation);
-                ALError alError = AL.GetError();
-                if (alError != ALError.NoError)
+                Al.Listenerfv(Al.Orientation, listenerOrientation);
+                int alError = Al.GetError();
+                if (alError != Al.NoError)
                 {
-                    throw new Exception("Failed to set listener up vector: " + AL.GetErrorString(alError));
+                    throw new Exception("Failed to set listener up vector: " + Al.GetErrorString(alError));
                 }
             }
         }
@@ -92,12 +92,53 @@ namespace Barotrauma.Sounds
                 if (Disabled) { return; }
                 if (Math.Abs(ListenerGain - value) < 0.001f) { return; }
                 listenerGain = value;
-                AL.Listener(ALListenerf.Gain, listenerGain);
-                ALError alError = AL.GetError();
-                if (alError != ALError.NoError)
+                Al.Listenerf(Al.Gain, listenerGain);
+                int alError = Al.GetError();
+                if (alError != Al.NoError)
                 {
-                    throw new Exception("Failed to set listener gain: " + AL.GetErrorString(alError));
+                    throw new Exception("Failed to set listener gain: " + Al.GetErrorString(alError));
                 }
+            }
+        }
+        
+        public float PlaybackAmplitude
+        {
+            get
+            {
+                float aggregateAmplitude = 0.0f;
+                //NOTE: this is obviously not entirely accurate;
+                //It assumes a linear falloff model, and assumes that audio
+                //is simply added together to produce the final result.
+                //Adjustments may be needed under certain scenarios.
+                for (int i=0;i<2;i++)
+                {
+                    foreach (SoundChannel soundChannel in playingChannels[i].Where(ch => ch != null))
+                    {
+                        float amplitude = soundChannel.CurrentAmplitude;
+                        amplitude *= soundChannel.Gain;
+                        float dist = Vector3.Distance(ListenerPosition, soundChannel.Position ?? ListenerPosition);
+                        if (dist > soundChannel.Near)
+                        {
+                            amplitude *= 1.0f - Math.Min(1.0f, (dist - soundChannel.Near) / (soundChannel.Far - soundChannel.Near));
+                        }
+                        aggregateAmplitude += amplitude;
+                    }
+                }
+                return aggregateAmplitude;
+            }
+        }
+        
+        public float CompressionDynamicRangeGain { get; private set; }
+
+        private float voipAttenuatedGain;
+        private double lastAttenuationTime;
+        public float VoipAttenuatedGain
+        {
+            get { return voipAttenuatedGain; }
+            set
+            {
+                lastAttenuationTime = Timing.TotalTime;
+                voipAttenuatedGain = value;
             }
         }
 
@@ -110,7 +151,43 @@ namespace Barotrauma.Sounds
             get { return loadedSounds.Select(s => s.Filename).Distinct().Count(); }
         }
 
-        private Dictionary<string, Pair<float, bool>> categoryModifiers;
+        private class CategoryModifier
+        {
+            public float[] GainMultipliers;
+            public bool Muffle;
+
+            public CategoryModifier(int gainMultiplierIndex, float gain, bool muffle)
+            {
+                Muffle = muffle;
+                GainMultipliers = new float[gainMultiplierIndex+1];
+                for (int i=0;i<GainMultipliers.Length;i++)
+                {
+                    if (i==gainMultiplierIndex)
+                    {
+                        GainMultipliers[i] = gain;
+                    }
+                    else
+                    {
+                        GainMultipliers[i] = 1.0f;
+                    }
+                }
+            }
+
+            public void SetGainMultiplier(int index, float gain)
+            {
+                if (GainMultipliers.Length < index+1)
+                {
+                    int oldLength = GainMultipliers.Length;
+                    Array.Resize(ref GainMultipliers, index + 1);
+                    for (int i=oldLength;i<GainMultipliers.Length;i++)
+                    {
+                        GainMultipliers[i] = 1.0f;
+                    }
+                }
+                GainMultipliers[index] = gain;
+            }
+        }
+        private Dictionary<string, CategoryModifier> categoryModifiers;
 
         public SoundManager()
         {
@@ -126,8 +203,8 @@ namespace Barotrauma.Sounds
                 return;
             }
 
-            AlcError alcError = Alc.GetError(alcDevice);
-            if (alcError != AlcError.NoError)
+            int alcError = Alc.GetError(alcDevice);
+            if (alcError != Alc.NoError)
             {
                 //The audio device probably wasn't ready, this happens quite often
                 //Just wait a while and try again
@@ -136,7 +213,7 @@ namespace Barotrauma.Sounds
                 alcDevice = Alc.OpenDevice(null);
 
                 alcError = Alc.GetError(alcDevice);
-                if (alcError != AlcError.NoError)
+                if (alcError != Alc.NoError)
                 {
                     DebugConsole.ThrowError("Error initializing ALC device: " + alcError.ToString() + ". Disabling audio playback...");
                     Disabled = true;
@@ -161,28 +238,28 @@ namespace Barotrauma.Sounds
             }
 
             alcError = Alc.GetError(alcDevice);
-            if (alcError != AlcError.NoError)
+            if (alcError != Alc.NoError)
             {
                 DebugConsole.ThrowError("Error after assigning ALC context: " + alcError.ToString() + ". Disabling audio playback...");
                 Disabled = true;
                 return;
             }
 
-            ALError alError = ALError.NoError;
+            int alError = Al.NoError;
 
             sourcePools = new SoundSourcePool[2];
             sourcePools[(int)SourcePoolIndex.Default] = new SoundSourcePool(SOURCE_COUNT);
             playingChannels[(int)SourcePoolIndex.Default] = new SoundChannel[SOURCE_COUNT];
 
-            sourcePools[(int)SourcePoolIndex.Voice] = new SoundSourcePool(8);
-            playingChannels[(int)SourcePoolIndex.Voice] = new SoundChannel[8];
+            sourcePools[(int)SourcePoolIndex.Voice] = new SoundSourcePool(16);
+            playingChannels[(int)SourcePoolIndex.Voice] = new SoundChannel[16];
 
-            AL.DistanceModel(ALDistanceModel.LinearDistanceClamped);
+            Al.DistanceModel(Al.LinearDistanceClamped);
             
-            alError = AL.GetError();
-            if (alError != ALError.NoError)
+            alError = Al.GetError();
+            if (alError != Al.NoError)
             {
-                DebugConsole.ThrowError("Error setting distance model: " + AL.GetErrorString(alError) + ". Disabling audio playback...");
+                DebugConsole.ThrowError("Error setting distance model: " + Al.GetErrorString(alError) + ". Disabling audio playback...");
                 Disabled = true;
                 return;
             }
@@ -190,6 +267,8 @@ namespace Barotrauma.Sounds
             ListenerPosition = Vector3.Zero;
             ListenerTargetVector = new Vector3(0.0f, 0.0f, 1.0f);
             ListenerUpVector = new Vector3(0.0f, -1.0f, 0.0f);
+
+            CompressionDynamicRangeGain = 1.0f;
         }
 
         public Sound LoadSound(string filename, bool stream = false)
@@ -202,7 +281,10 @@ namespace Barotrauma.Sounds
             }
 
             Sound newSound = new OggSound(this, filename, stream);
-            loadedSounds.Add(newSound);
+            lock (loadedSounds)
+            {
+                loadedSounds.Add(newSound);
+            }
             return newSound;
         }
 
@@ -225,7 +307,10 @@ namespace Barotrauma.Sounds
                 newSound.BaseFar = range;
             }
 
-            loadedSounds.Add(newSound);
+            lock (loadedSounds)
+            {
+                loadedSounds.Add(newSound);
+            }
             return newSound;
         }
 
@@ -239,7 +324,7 @@ namespace Barotrauma.Sounds
         {
             if (Disabled || srcInd < 0 || srcInd >= sourcePools[(int)poolIndex].ALSources.Length) return 0;
 
-            if (!AL.IsSource(sourcePools[(int)poolIndex].ALSources[srcInd]))
+            if (!Al.IsSource(sourcePools[(int)poolIndex].ALSources[srcInd]))
             {
                 throw new Exception("alSources[" + srcInd.ToString() + "] is invalid!");
             }
@@ -251,11 +336,12 @@ namespace Barotrauma.Sounds
         {
             if (Disabled) { return -1; }
 
-            lock (playingChannels)
+            //remove a channel that has stopped
+            //or hasn't even been assigned
+            int poolIndex = (int)newChannel.Sound.SourcePoolIndex;
+
+            lock (playingChannels[poolIndex])
             {
-                //remove a channel that has stopped
-                //or hasn't even been assigned
-                int poolIndex = (int)newChannel.Sound.SourcePoolIndex;
                 for (int i = 0; i < playingChannels[poolIndex].Length; i++)
                 {
                     if (playingChannels[poolIndex][i] == null || !playingChannels[poolIndex][i].IsPlaying)
@@ -265,10 +351,10 @@ namespace Barotrauma.Sounds
                         return i;
                     }
                 }
-
-                //we couldn't get a free source to assign to this channel!
-                return -1;
             }
+
+            //we couldn't get a free source to assign to this channel!
+            return -1;
         }
 
 #if DEBUG
@@ -276,8 +362,8 @@ namespace Barotrauma.Sounds
         {
             for (int i = 0; i < sourcePools[0].ALSources.Length; i++)
             {
-                AL.Source(sourcePools[0].ALSources[i], ALSourcef.MaxGain, i == ind ? 1.0f : 0.0f);
-                AL.Source(sourcePools[0].ALSources[i], ALSourcef.MinGain, 0.0f);
+                Al.Sourcef(sourcePools[0].ALSources[i], Al.MaxGain, i == ind ? 1.0f : 0.0f);
+                Al.Sourcef(sourcePools[0].ALSources[i], Al.MinGain, 0.0f);
             }
         }
 #endif
@@ -285,7 +371,7 @@ namespace Barotrauma.Sounds
         public bool IsPlaying(Sound sound)
         {
             if (Disabled) { return false; }
-            lock (playingChannels)
+            lock (playingChannels[(int)sound.SourcePoolIndex])
             {
                 for (int i = 0; i < playingChannels[(int)sound.SourcePoolIndex].Length; i++)
                 {
@@ -303,7 +389,7 @@ namespace Barotrauma.Sounds
         {
             if (Disabled) { return 0; }
             int count = 0;
-            lock (playingChannels)
+            lock (playingChannels[(int)sound.SourcePoolIndex])
             {
                 for (int i = 0; i < playingChannels[(int)sound.SourcePoolIndex].Length; i++)
                 {
@@ -320,7 +406,7 @@ namespace Barotrauma.Sounds
         public SoundChannel GetChannelFromSound(Sound sound)
         {
             if (Disabled) { return null; }
-            lock (playingChannels)
+            lock (playingChannels[(int)sound.SourcePoolIndex])
             {
                 for (int i = 0; i < playingChannels[(int)sound.SourcePoolIndex].Length; i++)
                 {
@@ -337,7 +423,7 @@ namespace Barotrauma.Sounds
         public void KillChannels(Sound sound)
         {
             if (Disabled) { return; }
-            lock (playingChannels)
+            lock (playingChannels[(int)sound.SourcePoolIndex])
             {
                 for (int i = 0; i < playingChannels[(int)sound.SourcePoolIndex].Length; i++)
                 {
@@ -352,32 +438,36 @@ namespace Barotrauma.Sounds
 
         public void RemoveSound(Sound sound)
         {
-            for (int i = 0; i < loadedSounds.Count; i++)
+            lock (loadedSounds)
             {
-                if (loadedSounds[i] == sound)
+                for (int i = 0; i < loadedSounds.Count; i++)
                 {
-                    loadedSounds.RemoveAt(i);
-                    return;
+                    if (loadedSounds[i] == sound)
+                    {
+                        loadedSounds.RemoveAt(i);
+                        return;
+                    }
                 }
             }
         }
 
-        public void SetCategoryGainMultiplier(string category, float gain)
+        public void SetCategoryGainMultiplier(string category, float gain, int index=0)
         {
             if (Disabled) { return; }
             category = category.ToLower();
-            if (categoryModifiers == null) categoryModifiers = new Dictionary<string, Pair<float, bool>>();
+            if (categoryModifiers == null) categoryModifiers = new Dictionary<string, CategoryModifier>();
             if (!categoryModifiers.ContainsKey(category))
             {
-                categoryModifiers.Add(category, new Pair<float, bool>(gain, false));
+                categoryModifiers.Add(category, new CategoryModifier(index, gain, false));
             }
             else
             {
-                categoryModifiers[category].First = gain;
+                categoryModifiers[category].SetGainMultiplier(index, gain);
             }
-            lock (playingChannels)
+
+            for (int i = 0; i < playingChannels.Length; i++)
             {
-                for (int i = 0; i < playingChannels.Length; i++)
+                lock (playingChannels[i])
                 {
                     for (int j = 0; j < playingChannels[i].Length; j++)
                     {
@@ -390,12 +480,24 @@ namespace Barotrauma.Sounds
             }
         }
 
-        public float GetCategoryGainMultiplier(string category)
+        public float GetCategoryGainMultiplier(string category, int index=-1)
         {
             if (Disabled) { return 0.0f; }
             category = category.ToLower();
             if (categoryModifiers == null || !categoryModifiers.ContainsKey(category)) return 1.0f;
-            return categoryModifiers[category].First;
+            if (index < 0)
+            {
+                float accumulatedMultipliers = 1.0f;
+                for (int i=0;i<categoryModifiers[category].GainMultipliers.Length;i++)
+                {
+                    accumulatedMultipliers *= categoryModifiers[category].GainMultipliers[i];
+                }
+                return accumulatedMultipliers;
+            }
+            else
+            {
+                return categoryModifiers[category].GainMultipliers[index];
+            }
         }
 
         public void SetCategoryMuffle(string category,bool muffle)
@@ -404,23 +506,26 @@ namespace Barotrauma.Sounds
 
             category = category.ToLower();
 
-            if (categoryModifiers == null) categoryModifiers = new Dictionary<string, Pair<float, bool>>();
+            if (categoryModifiers == null) categoryModifiers = new Dictionary<string, CategoryModifier>();
             if (!categoryModifiers.ContainsKey(category))
             {
-                categoryModifiers.Add(category, new Pair<float, bool>(1.0f, muffle));
+                categoryModifiers.Add(category, new CategoryModifier(0, 1.0f, muffle));
             }
             else
             {
-                categoryModifiers[category].Second = muffle;
+                categoryModifiers[category].Muffle = muffle;
             }
 
             for (int i = 0; i < playingChannels.Length; i++)
             {
-                for (int j = 0; j < playingChannels[i].Length; j++)
+                lock (playingChannels[i])
                 {
-                    if (playingChannels[i][j] != null && playingChannels[i][j].IsPlaying)
+                    for (int j = 0; j < playingChannels[i].Length; j++)
                     {
-                        if (playingChannels[i][j].Category.ToLower() == category) playingChannels[i][j].Muffled = muffle;
+                        if (playingChannels[i][j] != null && playingChannels[i][j].IsPlaying)
+                        {
+                            if (playingChannels[i][j].Category.ToLower() == category) playingChannels[i][j].Muffled = muffle;
+                        }
                     }
                 }
             }
@@ -432,7 +537,45 @@ namespace Barotrauma.Sounds
 
             category = category.ToLower();
             if (categoryModifiers == null || !categoryModifiers.ContainsKey(category)) return false;
-            return categoryModifiers[category].Second;
+            return categoryModifiers[category].Muffle;
+        }
+
+        public void Update()
+        {
+            if (GameMain.Client != null && GameMain.Config.VoipAttenuationEnabled)
+            {
+                if (Timing.TotalTime > lastAttenuationTime+0.2)
+                {
+                    voipAttenuatedGain = voipAttenuatedGain * 0.9f + 0.1f;
+                }
+            }
+            else
+            {
+                voipAttenuatedGain = 1.0f;
+            }
+            SetCategoryGainMultiplier("default", VoipAttenuatedGain, 1);
+            SetCategoryGainMultiplier("ui", VoipAttenuatedGain, 1);
+            SetCategoryGainMultiplier("waterambience", VoipAttenuatedGain, 1);
+            SetCategoryGainMultiplier("music", VoipAttenuatedGain, 1);
+
+            if (GameMain.Config.DynamicRangeCompressionEnabled)
+            {
+                float targetGain = (Math.Min(1.0f, 1.0f / PlaybackAmplitude) - 1.0f) * 0.5f + 1.0f;
+                if (targetGain < CompressionDynamicRangeGain)
+                {
+                    //if the target gain is lower than the current gain, lower the current gain immediately to prevent clipping
+                    CompressionDynamicRangeGain = targetGain;
+                }
+                else
+                {
+                    //otherwise, let it rise back smoothly
+                    CompressionDynamicRangeGain = (targetGain) * 0.05f + CompressionDynamicRangeGain * 0.95f;
+                }
+            }
+            else
+            {
+                CompressionDynamicRangeGain = 1.0f;
+            }
         }
 
         public void InitStreamThread()
@@ -455,9 +598,10 @@ namespace Barotrauma.Sounds
             while (areStreamsPlaying)
             {
                 areStreamsPlaying = false;
-                lock (playingChannels)
+
+                for (int i = 0; i < playingChannels.Length; i++)
                 {
-                    for (int i = 0; i < playingChannels.Length; i++)
+                    lock (playingChannels[i])
                     {
                         for (int j = 0; j < playingChannels[i].Length; j++)
                         {
@@ -488,14 +632,14 @@ namespace Barotrauma.Sounds
                 Thread.Sleep(10); //TODO: use a separate thread for network audio?
             }
         }
-        
+
         public void Dispose()
         {
             if (Disabled) { return; }
 
-            lock (playingChannels)
+            for (int i = 0; i < playingChannels.Length; i++)
             {
-                for (int i = 0; i < playingChannels.Length; i++)
+                lock (playingChannels[i])
                 {
                     for (int j = 0; j < playingChannels[i].Length; j++)
                     {
@@ -503,6 +647,7 @@ namespace Barotrauma.Sounds
                     }
                 }
             }
+
             streamingThread?.Join();
             for (int i = loadedSounds.Count - 1; i >= 0; i--)
             {
@@ -511,7 +656,7 @@ namespace Barotrauma.Sounds
             sourcePools[(int)SourcePoolIndex.Default]?.Dispose();
             sourcePools[(int)SourcePoolIndex.Voice]?.Dispose();
 
-            if (!Alc.MakeContextCurrent(OpenTK.ContextHandle.Zero))
+            if (!Alc.MakeContextCurrent(IntPtr.Zero))
             {
                 throw new Exception("Failed to detach the current ALC context! (error code: " + Alc.GetError(alcDevice).ToString() + ")");
             }

@@ -6,7 +6,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    abstract class CampaignMode : GameMode
+    abstract partial class CampaignMode : GameMode
     {
         public readonly CargoManager CargoManager;
 
@@ -111,9 +111,8 @@ namespace Barotrauma
             base.Update(deltaTime);
 
             if (!IsRunning) { return; }
-#if CLIENT
-            if (GameMain.Client != null) { return; }
-#endif
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
+
             if (!watchmenSpawned)
             {
                 if (Level.Loaded.StartOutpost != null) { startWatchman = SpawnWatchman(Level.Loaded.StartOutpost); }
@@ -128,7 +127,7 @@ namespace Barotrauma
                 foreach (Character character in Character.CharacterList)
                 {
 #if SERVER
-                    if (string.IsNullOrEmpty(character.OwnerClientIP)) { continue; }
+                    if (string.IsNullOrEmpty(character.OwnerClientEndPoint)) { continue; }
 #else
                     if (!CrewManager.GetCharacters().Contains(character)) { continue; }
 #endif
@@ -170,8 +169,8 @@ namespace Barotrauma
             string seed = outpost == Level.Loaded.StartOutpost ? map.SelectedLocation.Name : map.CurrentLocation.Name;
             Rand.SetSyncedSeed(ToolBox.StringToInt(seed));
 
-            JobPrefab watchmanJob = JobPrefab.List.Find(jp => jp.Identifier == "watchman");
-            CharacterInfo characterInfo = new CharacterInfo(Character.HumanConfigFile, jobPrefab: watchmanJob);
+            JobPrefab watchmanJob = JobPrefab.Get("watchman");
+            CharacterInfo characterInfo = new CharacterInfo(Character.HumanSpeciesName, jobPrefab: watchmanJob);
             var spawnedCharacter = Character.Create(characterInfo, watchmanSpawnpoint.WorldPosition,
                 Level.Loaded.Seed + (outpost == Level.Loaded.StartOutpost ? "start" : "end"));
             InitializeWatchman(spawnedCharacter);

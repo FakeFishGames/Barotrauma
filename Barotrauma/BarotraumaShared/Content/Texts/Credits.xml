@@ -144,12 +144,6 @@
 
   <spacing relativeheight="0.05"/>
 
-  <Text font="VideoTitleFont" color="255,255,255,255">Localization</Text>
-  <Text font="Font" color="150,150,150,255">Maria Lesk</Text>
-  <Text font="Font" color="150,150,150,255">Benjamin Kuhn</Text>
-
-  <spacing relativeheight="0.05"/>
-
   <Text font="VideoTitleFont" color="255,255,255,255">Mastering</Text>
   <Text font="Font" color="150,150,150,255">Eduard Wolf</Text>
   <Text font="Font" color="150,150,150,255">Robert Zillmer</Text>
@@ -167,6 +161,33 @@
   <Text font="Font" color="150,150,150,255">Saide Haberstroh</Text>
   <Text font="Font" color="150,150,150,255">Sven Eimuth</Text>
 
+  <spacing relativeheight="0.07"/>
+  
+  <Text font="VideoTitleFont" color="255,255,255,255" scale="1.2">Localization</Text>
+
+  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">Localization Director</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Maria Lesk</Text>  
+  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">English proofreading</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Paul Franzen</Text>
+  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">German translation, proofreading</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Synthesis</Text>
+  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">French translation, proofreading, LQA</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Synthesis</Text>
+  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">Castilian Spanish translation, proofreading, LQA</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Synthesis</Text>
+  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">Latin Spanish translation, proofreading, LQA</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Synthesis</Text>
+  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">Polish translation, proofreading, LQA</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Synthesis</Text>  
+  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">Russian translation, proofreading, LQA</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Uliana Erofeeva</Text>
+  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">Brazilian Portuguese translation, proofreading, LQA</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Synthesis</Text>
+  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">Chinese translation, proofreading, LQA</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">WhisperGames</Text>
+  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">Turkish translation, proofreading, LQA</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">AiBell Localization</Text>
+    
   <spacing relativeheight="0.2"/>
   
   <!-- ******************************************************* -->
@@ -211,6 +232,9 @@
   
   <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">HyperDescriptor</Text>
   <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Copyright (c) 2014 Pavel Nosovich. Released under the MIT license.</Text>
+
+  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">OpenAL Soft</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Released under the GNU Library General Public License, version 2. See OpenALSoft_LICENSE for the full license.</Text>
 
   <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">PK01, PK02 and Ancient Collection Texture packages</Text>
   <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Textures by Philip Klevestav are used in some of the sprites in the game.\nLicensed under Creative Commons Attribution 3.0 Unported \nhttps://creativecommons.org/licenses/by/3.0/</Text>

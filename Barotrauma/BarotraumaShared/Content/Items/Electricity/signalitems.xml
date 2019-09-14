@@ -147,7 +147,7 @@
     <Body width="36" height="36" density="30" />
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgPickUpSelect" />
   </Item>
-  <Item name="And Component" identifier="andcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends a signal when both inputs receive a signal within a set period of each other." scale="0.5" impactsoundtag="impact_metal_light">
+  <Item name="And Component" identifier="andcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends a signal when both inputs receive a signal within a set period of each other." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -169,14 +169,14 @@
     </Holdable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="signal_in1" displayname="connection.signalinx~[num]=1" />
       <input name="signal_in2" displayname="connection.signalinx~[num]=2" />
       <input name="set_output" displayname="connection.setoutput" />
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Equals Component" identifier="equalscomponent" category="Electrical" Tags="smallitem" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+  <Item name="Equals Component" identifier="equalscomponent" category="Electrical" Tags="smallitem" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -204,7 +204,7 @@
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Greater Component" identifier="greatercomponent" category="Electrical" Tags="smallitem" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+  <Item name="Greater Component" identifier="greatercomponent" category="Electrical" Tags="smallitem" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -232,7 +232,7 @@
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Adder Component" identifier="addercomponent" category="Electrical" Tags="smallitem" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+  <Item name="Adder Component" identifier="addercomponent" category="Electrical" Tags="smallitem" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -254,13 +254,13 @@
     </Holdable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="signal_in1" displayname="connection.signalinx~[num]=1" />
       <input name="signal_in2" displayname="connection.signalinx~[num]=2" />
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Color Component" identifier="colorcomponent" category="Electrical" Tags="smallitem" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+  <Item name="Color Component" identifier="colorcomponent" category="Electrical" Tags="smallitem" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -290,7 +290,7 @@
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Subtract Component" identifier="subtractcomponent" category="Electrical" Tags="smallitem" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+  <Item name="Subtract Component" identifier="subtractcomponent" category="Electrical" Tags="smallitem" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -318,7 +318,7 @@
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Multiply Component" identifier="multiplycomponent" category="Electrical" Tags="smallitem" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+  <Item name="Multiply Component" identifier="multiplycomponent" category="Electrical" Tags="smallitem" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -346,7 +346,7 @@
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Divide Component" identifier="dividecomponent" category="Electrical" Tags="smallitem" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+  <Item name="Divide Component" identifier="dividecomponent" category="Electrical" Tags="smallitem" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -374,7 +374,7 @@
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Or Component" identifier="orcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends a signal if either of the inputs receive a signal." scale="0.5" impactsoundtag="impact_metal_light">
+  <Item name="Or Component" identifier="orcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends a signal if either of the inputs receive a signal." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -396,14 +396,14 @@
     </Holdable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="signal_in1" displayname="connection.signalinx~[num]=1" />
       <input name="signal_in2" displayname="connection.signalinx~[num]=2" />
       <input name="set_output" displayname="connection.setoutput" />
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Xor Component" identifier="xorcomponent" category="Electrical" Tags="smallitem" linkable="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+  <Item name="Xor Component" identifier="xorcomponent" category="Electrical" Tags="smallitem" linkable="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -432,7 +432,7 @@
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Not Component" identifier="notcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends a signal when the input is NOT receiving a signal." scale="0.5" impactsoundtag="impact_metal_light">
+  <Item name="Not Component" identifier="notcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends a signal when the input is NOT receiving a signal." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -454,12 +454,12 @@
     </Holdable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="signal_in" displayname="connection.signalin" />
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Relay Component" identifier="relaycomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="When switched on, forwards all received signals from the input connections to the outputs." scale="0.5" impactsoundtag="impact_metal_light">
+  <Item name="Relay Component" identifier="relaycomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="When switched on, forwards all received signals from the input connections to the outputs." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -483,7 +483,7 @@
     </Holdable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="power_in" displayname="connection.powerin" />
       <input name="signal_in1" displayname="connection.signalinx~[num]=1" />
       <input name="signal_in2" displayname="connection.signalinx~[num]=2" />
@@ -492,10 +492,10 @@
       <output name="power_out" displayname="connection.powerout" />
       <output name="signal_out1" displayname="connection.signaloutx~[num]=1" />
       <output name="signal_out2" displayname="connection.signaloutx~[num]=2" />
-      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout"/>
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Delay Component" identifier="delaycomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Delays all received signals for a specific amount of time." scale="0.5" impactsoundtag="impact_metal_light">
+  <Item name="Delay Component" identifier="delaycomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Delays all received signals for a specific amount of time." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -517,12 +517,12 @@
     </Holdable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="signal_in" displayname="connection.signalin" />
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Memory Component" identifier="memorycomponent" category="Electrical" Tags="smallitem" linkable="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+  <Item name="Memory Component" identifier="memorycomponent" category="Electrical" Tags="smallitem" linkable="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -546,11 +546,11 @@
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <requireditem identifier="screwdriver" type="Equipped" />
       <input name="signal_in" displayname="connection.signalin" />
-      <input name="signal_store" displayname="connection.signalstore"/>
+      <input name="signal_store" displayname="connection.signalstore" />
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Light Component" identifier="lightcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+  <Item name="Light Component" identifier="lightcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -575,17 +575,13 @@
     </Holdable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
       <input name="set_color" displayname="connection.setcolor" />
     </ConnectionPanel>
   </Item>
-
-  <Item name="Light Component 90Deg" identifier="lightcomponent90"         
-    nameidentifier="lightcomponent"
-    Aliases="Light Component 90Deg"
-    category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+  <Item name="Light Component 90Deg" identifier="lightcomponent90" nameidentifier="lightcomponent" Aliases="Light Component 90Deg" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -610,14 +606,14 @@
     </Holdable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
       <input name="set_color" displayname="connection.setcolor" />
     </ConnectionPanel>
   </Item>
-
-  <Item name="Oxygen Detector" identifier="oxygendetector" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a value between 0-100 depending on the quality of the surrounding air." scale="0.16" impactsoundtag="impact_metal_light">
+  <Item name="Oxygen Detector" identifier="oxygendetector" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a value between 0-100 depending on the quality of the surrounding air." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <Upgrade gameversion="0.9.3.1" scale="0.5"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -631,19 +627,20 @@
       <RequiredItem identifier="silicon" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,256,64,64" origin="0.5,0.5" />
-    <Sprite texture="detectors.png" depth="0.8" sourcerect="128,0,140,89" origin="0.5,0.5" />
+    <Sprite texture="detectors.png" depth="0.8" sourcerect="43,0,44,29" origin="0.5,0.5" />
     <OxygenDetector canbeselected="true" />
-    <Body width="31" height="24" density="30" />
+    <Body width="44" height="30" density="30" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
       <RequiredItem identifier="wrench" type="Equipped" />
     </Holdable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Water Detector" identifier="waterdetector" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a signal when the detector is submerged." scale="0.16" impactsoundtag="impact_metal_light">
+  <Item name="Water Detector" identifier="waterdetector" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a signal when the detector is submerged." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <Upgrade gameversion="0.9.3.1" scale="0.5"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -657,19 +654,20 @@
       <RequiredItem identifier="silicon" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,256,64,64" origin="0.5,0.5" />
-    <Sprite texture="detectors.png" depth="0.8" sourcerect="0,0,129,89" origin="0.5,0.5" />
+    <Sprite texture="detectors.png" depth="0.8" sourcerect="0,0,40,37" origin="0.5,0.5" />
     <WaterDetector canbeselected="true" />
-    <Body width="31" height="24" density="30" />
+    <Body width="40" height="37" density="30" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
       <RequiredItem identifier="wrench" type="Equipped" />
     </Holdable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Smoke Detector" identifier="smokedetector" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a signal when it senses smoke." scale="0.16" impactsoundtag="impact_metal_light">
+  <Item name="Smoke Detector" identifier="smokedetector" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a signal when it senses smoke." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <Upgrade gameversion="0.9.3.1" scale="0.5"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -683,19 +681,20 @@
       <RequiredItem identifier="silicon" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,320,64,64" origin="0.5,0.5" />
-    <Sprite texture="detectors.png" depth="0.8" sourcerect="269,0,140,89" origin="0.5,0.5" />
+    <Sprite texture="detectors.png" depth="0.8" sourcerect="87,0,45,29" origin="0.5,0.5" />
     <SmokeDetector FireSizeThreshold="50" />
-    <Body width="31" height="24" density="30" />
+    <Body width="44" height="30" density="30" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
       <RequiredItem identifier="wrench" type="Equipped" />
     </Holdable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Motion Detector" identifier="motiondetector" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a signal when it detects movement." scale="0.16" impactsoundtag="impact_metal_light">
+  <Item name="Motion Detector" identifier="motiondetector" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a signal when it detects movement." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <Upgrade gameversion="0.9.3.1" scale="0.5"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -709,19 +708,19 @@
       <RequiredItem identifier="silicon" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,256,64,64" origin="0.5,0.5" />
-    <Sprite texture="detectors.png" depth="0.8" sourcerect="0,89,140,133" origin="0.5,0.5" />
+    <Sprite texture="detectors.png" depth="0.8" sourcerect="0,36,43,36" origin="0.5,0.5" />
     <MotionSensor range="100" canbeselected="true" />
-    <Body width="31" height="24" density="30" />
+    <Body width="42" height="36" density="30" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
       <RequiredItem identifier="wrench" type="Equipped" />
     </Holdable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout"/>
+      <RequiredItem identifier="screwdriver" type="Equipped" />
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Signal Check Component" identifier="signalcheckcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends a signal when a signal matching a specific value is received." scale="0.5" impactsoundtag="impact_metal_light">
+  <Item name="Signal Check Component" identifier="signalcheckcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends a signal when a signal matching a specific value is received." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -743,14 +742,14 @@
     </Holdable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="signal_in" displayname="connection.signalin" />
       <input name="set_output" displayname="connection.setoutput" />
       <input name="set_targetsignal" displayname="connection.settargetsignal" />
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="RegEx Find Component" identifier="regexcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends a signal if the received signal matches a specific regular expression pattern." scale="0.5" impactsoundtag="impact_metal_light">
+  <Item name="RegEx Find Component" identifier="regexcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends a signal if the received signal matches a specific regular expression pattern." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -772,12 +771,12 @@
     </Holdable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="signal_in" displayname="connection.signalin" />
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Oscillator" identifier="oscillator" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a periodic, oscillating signal." scale="0.5" impactsoundtag="impact_metal_light">
+  <Item name="Oscillator" identifier="oscillator" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a periodic, oscillating signal." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -799,13 +798,13 @@
     </Holdable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <input name="set_frequency" displayname="connection.setfrequency"/>
+      <RequiredItem identifier="screwdriver" type="Equipped" />
+      <input name="set_frequency" displayname="connection.setfrequency" />
       <input name="set_outputtype" displayname="connection.setoutputtype" />
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Wifi Component" identifier="wificomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Allows remote communication between other Wifi Components that are using the same channel." scale="0.5" impactsoundtag="impact_metal_light">
+  <Item name="Wifi Component" identifier="wificomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Allows remote communication between other Wifi Components that are using the same channel." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -827,12 +826,12 @@
     </Holdable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="signal_in" displayname="connection.signalin" />
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Emergency Siren" identifier="emergencysiren" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+  <Item name="Emergency Siren" identifier="emergencysiren" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="80" />
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Outpost" buyprice="100" />
@@ -845,7 +844,7 @@
       <RequiredItem identifier="fpgacircuit" />
       <RequiredItem identifier="steel" />
     </Fabricate>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="204,133,39,52" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="191,127,64,64" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="75,64,42,63" origin="0.5,0.5" />
     <Body radius="20" height="20" density="30" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
@@ -856,12 +855,12 @@
     </ItemComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
     </ConnectionPanel>
   </Item>
-  <Item name="Alarm Buzzer" identifier="alarmbuzzer" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+  <Item name="Alarm Buzzer" identifier="alarmbuzzer" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -874,7 +873,7 @@
       <RequiredItem identifier="fpgacircuit" />
       <RequiredItem identifier="tin" />
     </Fabricate>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="142,133,43,47" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,127,64,64" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="75,137,42,47" origin="0.5,0.5" />
     <Body radius="20" density="20" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
@@ -885,25 +884,26 @@
     </ItemComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
     </ConnectionPanel>
   </Item>
-  <Item name="Camera" identifier="camera" category="Electrical" Tags="smallitem" focusonselected="true" offsetonselected="500" cargocontaineridentifier="metalcrate" description="Typically used in photonics masts to provide the crew with a high-resolution view of the area outside the sub." Scale="0.16">
+  <Item name="Camera" identifier="camera" category="Electrical" Tags="smallitem" focusonselected="true" offsetonselected="500" cargocontaineridentifier="metalcrate" description="Typically used in photonics masts to provide the crew with a high-resolution view of the area outside the sub." Scale="0.5">
+    <Upgrade gameversion="0.9.3.1" scale="0.5"/>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,320,64,64" origin="0.5,0.5" />
-    <Sprite texture="camera.png" depth="0.8" sourcerect="0,0,176,137" origin="0.5,0.5" />
+    <Sprite texture="detectors.png" depth="0.8" sourcerect="131,44,60,46" origin="0.5,0.5" />
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <input name="control_in" displayname="connection.controlin"/>
+      <RequiredItem identifier="screwdriver" type="Equipped" />
+      <input name="control_in" displayname="connection.controlin" />
     </ConnectionPanel>
   </Item>
   <Item name="Camera" category="Legacy" nameidentifier="camera" Tags="smallitem" focusonselected="true" offsetonselected="500" cargocontaineridentifier="metalcrate" description="Typically used in photonics masts to provide the crew with a high-resolution view of the area outside the sub.">
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="1,123,16,32" origin="0.5,0.5" />
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="control_in" displayname="connection.controlin" />
     </ConnectionPanel>
   </Item>

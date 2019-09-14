@@ -9,32 +9,23 @@ namespace Barotrauma.Items.Components
     partial class MotionSensor : ItemComponent
     {
         private const float UpdateInterval = 0.1f;
-
-        private string output, falseOutput;
-
-        private bool motionDetected;
-
         private float rangeX, rangeY;
 
         private Vector2 detectOffset;
 
         private float updateTimer;
 
-        [Serialize(false, false)]
-        public bool MotionDetected
-        {
-            get { return motionDetected; }
-            set { motionDetected = value; }
-        }
+        [Serialize(false, false, description: "Has the item currently detected movement. Intended to be used by StatusEffect conditionals (setting this value in XML has no effect).")]
+        public bool MotionDetected { get; set; }
 
-        [Serialize(false, true), Editable]
+        [Editable, Serialize(false, true, description: "Should the sensor only detect the movement of humans?")]
         public bool OnlyHumans
         {
             get;
             set;
         }
 
-        [InGameEditable, Serialize(0.0f, true)]
+        [InGameEditable, Serialize(0.0f, true, description: "Horizontal detection range.")]
         public float RangeX
         {
             get { return rangeX; }
@@ -43,7 +34,7 @@ namespace Barotrauma.Items.Components
                 rangeX = MathHelper.Clamp(value, 0.0f, 1000.0f);
             }
         }
-        [InGameEditable, Serialize(0.0f, true)]
+        [InGameEditable, Serialize(0.0f, true, description: "Vertical movement detection range.")]
         public float RangeY
         {
             get { return rangeY; }
@@ -53,7 +44,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize("0,0", true), Editable(ToolTip = "The position to detect the movement at relative to the item. For example, 0,100 would detect movement 100 units above the item.")]
+        [Editable, Serialize("0,0", true, description: "The position to detect the movement at relative to the item. For example, 0,100 would detect movement 100 units above the item.")]
         public Vector2 DetectOffset
         {
             get { return detectOffset; }
@@ -65,21 +56,13 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [InGameEditable, Serialize("1", true)]
-        public string Output
-        {
-            get { return output; }
-            set { output = value; }
-        }
+        [InGameEditable, Serialize("1", true, description: "The signal the item outputs when it has detected movement.")]
+        public string Output { get; set; }
 
-        [InGameEditable, Serialize("", true)]
-        public string FalseOutput
-        {
-            get { return falseOutput; }
-            set { falseOutput = value; }
-        }
+        [InGameEditable, Serialize("", true, description: "The signal the item outputs when it has not detected movement.")]
+        public string FalseOutput { get; set; }
 
-        [Editable(ToolTip = "How fast the objects within the detector's range have to be moving (in m/s).", DecimalCount = 3), Serialize(0.01f, true)]
+        [Editable(DecimalCount = 3), Serialize(0.01f, true, description: "How fast the objects within the detector's range have to be moving (in m/s).")]
         public float MinimumVelocity
         {
             get;
@@ -88,7 +71,7 @@ namespace Barotrauma.Items.Components
 
 
         public MotionSensor(Item item, XElement element)
-            : base (item, element)
+            : base(item, element)
         {
             IsActive = true;
 
@@ -101,21 +84,21 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            string signalOut = motionDetected ? output : falseOutput;
+            string signalOut = MotionDetected ? Output : FalseOutput;
 
             if (!string.IsNullOrEmpty(signalOut)) item.SendSignal(1, signalOut, "state_out", null);
 
             updateTimer -= deltaTime;
             if (updateTimer > 0.0f) return;
 
-            motionDetected = false;
+            MotionDetected = false;
             updateTimer = UpdateInterval;
 
             if (item.body != null && item.body.Enabled)
             {
                 if (Math.Abs(item.body.LinearVelocity.X) > MinimumVelocity || Math.Abs(item.body.LinearVelocity.Y) > MinimumVelocity)
                 {
-                    motionDetected = true;
+                    MotionDetected = true;
                 }
             }
 
@@ -126,7 +109,7 @@ namespace Barotrauma.Items.Components
 
             foreach (Character c in Character.CharacterList)
             {
-                if (OnlyHumans && c.ConfigPath != Character.HumanConfigFile) { continue; }
+                if (OnlyHumans && !c.IsHuman) { continue; }
 
                 //do a rough check based on the position of the character's collider first
                 //before the more accurate limb-based check
@@ -140,11 +123,20 @@ namespace Barotrauma.Items.Components
                     if (limb.LinearVelocity.LengthSquared() <= MinimumVelocity * MinimumVelocity) continue;
                     if (MathUtils.CircleIntersectsRectangle(limb.WorldPosition, ConvertUnits.ToDisplayUnits(limb.body.GetMaxExtent()), detectRect))
                     {
-                        motionDetected = true;
+                        MotionDetected = true;
                         break;
                     }
                 }
             }
+        }
+
+        public override void FlipX(bool relativeToSub)
+        {
+            detectOffset.X = -detectOffset.X;
+        }
+        public override void FlipY(bool relativeToSub)
+        {
+            detectOffset.Y = -detectOffset.Y;
         }
     }
 }

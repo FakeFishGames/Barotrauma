@@ -68,13 +68,13 @@ namespace Barotrauma
         public void CreateAutonomousObjectives()
         {
             Objectives.Clear();
-            AddObjective(new AIObjectiveFindSafety(character, this), delay: Rand.Value() / 2);
-            AddObjective(new AIObjectiveIdle(character, this), delay: Rand.Value() / 2);
+            AddObjective(new AIObjectiveFindSafety(character, this));
+            AddObjective(new AIObjectiveIdle(character, this));
             int objectiveCount = Objectives.Count;
             foreach (var automaticOrder in character.Info.Job.Prefab.AutomaticOrders)
             {
-                var orderPrefab = Order.PrefabList.Find(o => o.AITag == automaticOrder.aiTag);
-                if (orderPrefab == null) { throw new Exception("Could not find a matching prefab by ai tag: " + automaticOrder.aiTag); }
+                var orderPrefab = Order.GetPrefab(automaticOrder.identifier);
+                if (orderPrefab == null) { throw new Exception($"Could not find a matching prefab by the identifier: '{automaticOrder.identifier}'"); }
                 // TODO: Similar code is used in CrewManager:815-> DRY
                 var matchingItems = orderPrefab.ItemIdentifiers.Any() ?
                     Item.ItemList.FindAll(it => orderPrefab.ItemIdentifiers.Contains(it.Prefab.Identifier) || it.HasTag(orderPrefab.ItemIdentifiers)) :
@@ -144,7 +144,7 @@ namespace Barotrauma
             if (previousObjective != CurrentObjective)
             {
                 CurrentObjective?.OnSelected();
-                GetObjective<AIObjectiveIdle>()?.SetRandom();
+                GetObjective<AIObjectiveIdle>().SetRandom();
             }
             return CurrentObjective;
         }
@@ -231,13 +231,13 @@ namespace Barotrauma
         {
             if (order == null) { return null; }
             AIObjective newObjective;
-            switch (order.AITag.ToLowerInvariant())
+            switch (order.Identifier.ToLowerInvariant())
             {
                 case "follow":
                     if (orderGiver == null) { return null; }
                     newObjective = new AIObjectiveGoTo(orderGiver, character, this, repeat: true, priorityModifier: priorityModifier)
                     {
-                        CloseEnough = 150,
+                        CloseEnough = 100,
                         AllowGoingOutside = true,
                         IgnoreIfTargetDead = true,
                         followControlledCharacter = orderGiver == character,

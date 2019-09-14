@@ -56,6 +56,8 @@ namespace Barotrauma.Particles
         private int animFrame;
 
         private float collisionUpdateTimer;
+
+        public bool HighQualityCollisionDetection;
                 
         public ParticlePrefab.DrawTargetType DrawTarget
         {
@@ -132,6 +134,8 @@ namespace Barotrauma.Particles
             
             velocityChange = prefab.VelocityChangeDisplay;
             velocityChangeWater = prefab.VelocityChangeWaterDisplay;
+
+            HighQualityCollisionDetection = false;
 
             OnChangeHull = null;
 
@@ -224,7 +228,7 @@ namespace Barotrauma.Particles
             }
             
             lifeTime -= deltaTime;
-            if (lifeTime <= 0.0f || color.A <= 0 || size.X <= 0.0f || size.Y <= 0.0f) return false;
+            if (lifeTime <= 0.0f || color.A <= 0 || size.X <= 0.0f || size.Y <= 0.0f) { return false; }
 
             if (hasSubEmitters)
             {
@@ -234,16 +238,23 @@ namespace Barotrauma.Particles
                 }
             }
 
-            if (!prefab.UseCollision) return true;
+            if (!prefab.UseCollision) { return true; }
 
-            collisionUpdateTimer -= deltaTime;
-            if (collisionUpdateTimer <= 0.0f)
+            if (HighQualityCollisionDetection)
             {
-                //more frequent collision updates if the particle is moving fast
-                collisionUpdateTimer = 0.5f - Math.Min((Math.Abs(velocity.X) + Math.Abs(velocity.Y)) * 0.001f, 0.4f);
                 return CollisionUpdate();
             }
-            
+            else
+            {
+                collisionUpdateTimer -= deltaTime;
+                if (collisionUpdateTimer <= 0.0f)
+                {
+                    //more frequent collision updates if the particle is moving fast
+                    collisionUpdateTimer = 0.5f - Math.Min((Math.Abs(velocity.X) + Math.Abs(velocity.Y)) * 0.01f, 0.45f);
+                    return CollisionUpdate();
+                }
+            }
+
             return true;
         }
 
@@ -288,7 +299,7 @@ namespace Barotrauma.Particles
                     bool gapFound = false;
                     foreach (Gap gap in hullGaps)
                     {
-                        if (gap.Open <= 0.0f || gap.IsHorizontal != (collisionNormal.X != 0.0f)) continue;
+                        if (gap.Open <= 0.9f || gap.IsHorizontal != (collisionNormal.X != 0.0f)) continue;
 
                         if (gap.IsHorizontal)
                         {

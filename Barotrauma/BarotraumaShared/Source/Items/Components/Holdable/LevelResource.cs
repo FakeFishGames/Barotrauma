@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
@@ -17,14 +16,14 @@ namespace Barotrauma.Items.Components
 
         private float deattachTimer;
 
-        [Serialize(1.0f, false)]
+        [Serialize(1.0f, false, description: "How long it takes to deattach the item from the level walls (in seconds).")]
         public float DeattachDuration
         {
             get;
             set;
         }
         
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false, description: "How far along the item is to being deattached. When the timer goes above DeattachDuration, the item is deattached.")]
         public float DeattachTimer
         {
             get { return deattachTimer; }
@@ -116,7 +115,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             msg.Write(deattachTimer);
         }

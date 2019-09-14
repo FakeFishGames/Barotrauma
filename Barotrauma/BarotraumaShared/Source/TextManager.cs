@@ -15,11 +15,17 @@ namespace Barotrauma
         //key = language
         private static Dictionary<string, List<TextPack>> textPacks = new Dictionary<string, List<TextPack>>();
 
-        private static string[] serverMessageCharacters = new string[] { "~", "[", "]", "=" };
+        private static readonly string[] serverMessageCharacters = new string[] { "~", "[", "]", "=" };
 
         public static string Language;
 
-        private static HashSet<string> availableLanguages = new HashSet<string>();
+        public static bool Initialized
+        {
+            get;
+            private set;
+        }
+
+        private static readonly HashSet<string> availableLanguages = new HashSet<string>();
         public static IEnumerable<string> AvailableLanguages
         {
             get { return availableLanguages; }
@@ -63,7 +69,7 @@ namespace Barotrauma
             }
             return language;
         }
-        
+
         public static void LoadTextPacks(IEnumerable<ContentPackage> selectedContentPackages)
         {
             availableLanguages.Clear();
@@ -99,6 +105,7 @@ namespace Barotrauma
                 availableLanguages.Add(textPack.Language);
                 textPacks.Add(textPack.Language, new List<TextPack>() { textPack });
             }
+            Initialized = true;
         }
 
         public static bool ContainsTag(string textTag)
@@ -203,7 +210,7 @@ namespace Barotrauma
                 }
             }
 
-            if (formatCapitals != null && !GameMain.Config.Language.Contains("Chinese"))
+            if (formatCapitals != null && (GameMain.Config == null || !GameMain.Config.Language.Contains("Chinese")))
             {
                 for (int i = 0; i < variableTags.Length; i++)
                 {
@@ -304,10 +311,105 @@ namespace Barotrauma
                 }
             }
 
-            return string.Format(text, args);     
+            try
+            {
+                return string.Format(text, args);  
+            }   
+            catch (FormatException)
+            {
+                string errorMsg = "Failed to format text \"" + text + "\", args: " + string.Join(", ", args);
+                GameAnalyticsManager.AddErrorEventOnce("TextManager.GetFormatted:FormatException", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                return text;
+            }
         }
 
+        public static string FormatServerMessage(string textId)
+        {
+            return $"{textId}~";
+        }
+
+        public static string FormatServerMessage(string message, IEnumerable<string> keys, IEnumerable<string> values)
+        {
+            if (keys == null || values == null || !keys.Any() || !values.Any())
+            {
+                return FormatServerMessage(message);
+            }
+            var startIndex = message.LastIndexOf('/') + 1;
+            var endIndex = message.IndexOf('~', startIndex);
+            if (endIndex == -1)
+            {
+                endIndex = message.Length - 1;
+            }
+            var textId = message.Substring(startIndex, endIndex - startIndex + 1);
+            var keysWithValues = keys.Zip(values, (key, value) => new { Key = key, Value = value });
+            var prefixEntries = keysWithValues.Select((kv, index) =>
+            {
+                if (kv.Value.IndexOfAny(new char[] { '~', '/' }) != -1)
+                {
+                    var kvStartIndex = kv.Value.LastIndexOf('/') + 1;
+                    return kv.Value.Substring(0, kvStartIndex) + $"[{textId}.{index}]={kv.Value.Substring(kvStartIndex)}";
+                }
+                else
+                {
+                    return null;
+                }
+            }).Where(e => e != null).ToArray();
+            return string.Join("",
+                (prefixEntries.Length > 0 ? string.Join("/", prefixEntries) + "/" : ""),
+                message,
+                string.Join("", keysWithValues.Select((kv, index) => kv.Value.IndexOfAny(new char[] { '~', '/' }) != -1 ? $"~{kv.Key}=[{textId}.{index}]" : $"~{kv.Key}={kv.Value}").ToArray())
+            );
+        }
+
+        static readonly string[] genderPronounVariables = {
+            "[genderpronoun]",
+            "[genderpronounpossessive]",
+            "[genderpronounreflexive]",
+            "[Genderpronoun]",
+            "[Genderpronounpossessive]",
+            "[Genderpronounreflexive]"
+        };
+
+        static readonly string[] genderPronounMaleValues = {
+             "PronounMaleLowercase",
+             "PronounPossessiveMaleLowercase",
+             "PronounReflexiveMaleLowercase",
+             "PronounMale",
+             "PronounPossessiveMale",
+             "PronounReflexiveMale"
+        };
+
+        static readonly string[] genderPronounFemaleValues = {
+             "PronounFemaleLowercase",
+             "PronounPossessiveFemaleLowercase",
+             "PronounReflexiveFemaleLowercase",
+             "PronounMale",
+             "PronounPossessiveFemale",
+             "PronounReflexiveFemale"
+        };
+
+        public static string FormatServerMessageWithGenderPronouns(Gender gender, string message, IEnumerable<string> keys, IEnumerable<string> values)
+        {
+            return FormatServerMessage(message, keys.Concat(genderPronounVariables), values.Concat(gender == Gender.Male ? genderPronounMaleValues : genderPronounFemaleValues));
+        }
+        
+        public static string JoinServerMessages(string separator, string[] parts, string namePrefix = "part.")
+        {
+            return string.Join("/",
+                string.Join("/", parts.Select((part, index) => $"[{namePrefix}{index}]={part}")), 
+                string.Join(separator, parts.Select((part, index) => $"[{namePrefix}{index}]")));
+        }
+
+        static readonly Regex reFormattedMessage = new Regex(@"^(?<variable>[\[\].a-z0-9_]+?)=(?<formatter>[a-z0-9_]+?)\((?<value>.+?)\)", RegexOptions.Compiled|RegexOptions.IgnoreCase);
+        static readonly Regex reReplacedMessage = new Regex(@"^(?<variable>[\[\].a-z0-9_]+?)=(?<message>.*)$", RegexOptions.Compiled|RegexOptions.IgnoreCase);
+        static readonly Dictionary<string, Func<string, string>> messageFormatters = new Dictionary<string, Func<string, string>>
+        {
+            { "duration", secondsValue => double.TryParse(secondsValue, out var seconds) ? $"{TimeSpan.FromSeconds(seconds):g}" : null }
+        };
+
         // Format: ServerMessage.Identifier1/ServerMessage.Indentifier2~[variable1]=value~[variable2]=value
+        // Also: replacement=ServerMessage.Identifier1~[variable1]=value/ServerMessage.Identifier2~[variable2]=replacement
+        // And: replacement=formatter(value)
         public static string GetServerMessage(string serverMessage)
         {
             if (!textPacks.ContainsKey(Language))
@@ -321,30 +423,76 @@ namespace Barotrauma
             }
 
             string[] messages = serverMessage.Split('/');
+            var replacedMessages = new Dictionary<string, string>();
+
+            bool translationsFound = false;
 
             try
             {
                 for (int i = 0; i < messages.Length; i++)
                 {
-                    if (!IsServerMessageWithVariables(messages[i])) // No variables, try to translate
+                    if (messages[i].EndsWith("~", StringComparison.Ordinal))
                     {
+                        messages[i] = messages[i].Substring(0, messages[i].Length - 1);
+                    }
+                    if (!IsServerMessageWithVariables(messages[i]) && !messages[i].Contains('=')) // No variables, try to translate
+                    {
+                        foreach (var replacedMessage in replacedMessages)
+                        {
+                            messages[i] = messages[i].Replace(replacedMessage.Key, replacedMessage.Value);
+                        }
+
                         if (messages[i].Contains(" ")) continue; // Spaces found, do not translate
                         string msg = Get(messages[i], true);
                         if (msg != null) // If a translation was found, otherwise use the original
                         {
                             messages[i] = msg;
+                            translationsFound = true;
                         }
                     }
                     else
                     {
+                        string messageVariable = null;
+                        var matchFormatted = reFormattedMessage.Match(messages[i]);
+                        if (matchFormatted.Success)
+                        {
+                            var formatter = matchFormatted.Groups["formatter"].ToString();
+                            if (messageFormatters.TryGetValue(formatter, out var formatterFn))
+                            {
+                                var formattedValue = formatterFn(matchFormatted.Groups["value"].ToString());
+                                if (formattedValue != null)
+                                {
+                                    messageVariable = matchFormatted.Groups["variable"].ToString();
+                                    messages[i] = formattedValue;
+                                }
+                            }
+                        }
+                        if (messageVariable == null)
+                        {
+                            var matchReplaced = reReplacedMessage.Match(messages[i]);
+                            if (matchReplaced.Success)
+                            {
+                                messageVariable = matchReplaced.Groups["variable"].ToString();
+                                messages[i] = matchReplaced.Groups["message"].ToString();
+                            }
+                        }
+
+                        foreach (var replacedMessage in replacedMessages)
+                        {
+                            messages[i] = messages[i].Replace(replacedMessage.Key, replacedMessage.Value);
+                        }
+
+
                         string[] messageWithVariables = messages[i].Split('~');
+
                         string msg = Get(messageWithVariables[0], true);
 
                         if (msg != null) // If a translation was found, otherwise use the original
                         {
                             messages[i] = msg;
+                            translationsFound = true;
                         }
-                        else
+                        else if (messageVariable == null)
                         {
                             continue; // No translation found, probably caused by player input -> skip variable handling
                         }
@@ -355,15 +503,31 @@ namespace Barotrauma
                             string[] variableAndValue = messageWithVariables[j].Split('=');
                             messages[i] = messages[i].Replace(variableAndValue[0], variableAndValue[1]);
                         }
+
+                        if (messageVariable != null)
+                        {
+                            replacedMessages[messageVariable] = messages[i];
+                            messages[i] = null;
+                        }
                     }
                 }
 
-                string translatedServerMessage = string.Empty;
-                for (int i = 0; i < messages.Length; i++)
+                if (translationsFound)
                 {
-                    translatedServerMessage += messages[i];
+                    string translatedServerMessage = string.Empty;
+                    for (int i = 0; i < messages.Length; i++)
+                    {
+                        if (messages[i] != null)
+                        {
+                            translatedServerMessage += messages[i];
+                        }
+                    }
+                    return translatedServerMessage;
                 }
-                return translatedServerMessage;
+                else
+                {
+                    return serverMessage;
+                }
             }
 
             catch (IndexOutOfRangeException exception)
@@ -409,7 +573,7 @@ namespace Barotrauma
             }
             return string.Join(separator, texts);
         }
-        
+
         public static string EnsureUTF8(string text)
         {
             byte[] bytes = Encoding.Default.GetBytes(text);
@@ -476,26 +640,28 @@ namespace Barotrauma
         {
             if (gender == Gender.Male)
             {
-                return text.Replace("[genderpronoun]",     Get("PronounMale").ToLower())
-                    .Replace("[genderpronounpossessive]",  Get("PronounPossessiveMale").ToLower())
-                    .Replace("[genderpronounreflexive]",   Get("PronounReflexiveMale").ToLower())
-                    .Replace("[Genderpronoun]",            Capitalize(Get("PronounMale")))
-                    .Replace("[Genderpronounpossessive]",  Capitalize(Get("PronounPossessiveMale")))
-                    .Replace("[Genderpronounreflexive]",   Capitalize(Get("PronounReflexiveMale")));
+                return text.Replace("[genderpronoun]",     Get("PronounMaleLowercase"))
+                    .Replace("[genderpronounpossessive]",  Get("PronounPossessiveMaleLowercase"))
+                    .Replace("[genderpronounreflexive]",   Get("PronounReflexiveMaleLowercase"))
+                    .Replace("[Genderpronoun]",            Get("PronounMale"))
+                    .Replace("[Genderpronounpossessive]",  Get("PronounPossessiveMale"))
+                    .Replace("[Genderpronounreflexive]",   Get("PronounReflexiveMale"));
             }
             else
             {
-                return text.Replace("[genderpronoun]",     Get("PronounFemale").ToLower())
-                    .Replace("[genderpronounpossessive]",  Get("PronounPossessiveFemale").ToLower())
-                    .Replace("[genderpronounreflexive]",   Get("PronounReflexiveFemale").ToLower())
-                    .Replace("[Genderpronoun]",            Capitalize(Get("PronounFemale")))
-                    .Replace("[Genderpronounpossessive]",  Capitalize(Get("PronounPossessiveFemale")))
-                    .Replace("[Genderpronounreflexive]",   Capitalize(Get("PronounReflexiveFemale")));
+                return text.Replace("[genderpronoun]",     Get("PronounFemaleLowercase"))
+                    .Replace("[genderpronounpossessive]",  Get("PronounPossessiveFemaleLowercase"))
+                    .Replace("[genderpronounreflexive]",   Get("PronounReflexiveFemaleLowerCase"))
+                    .Replace("[Genderpronoun]",            Get("PronounFemale"))
+                    .Replace("[Genderpronounpossessive]",  Get("PronounPossessiveFemale"))
+                    .Replace("[Genderpronounreflexive]",   Get("PronounReflexiveFemale"));
             }
         }
-        
+
         static Regex isCJK = new Regex(
             @"\p{IsHangulJamo}|" +
+            @"\p{IsHiragana}|" +
+            @"\p{IsKatakana}|" +
             @"\p{IsCJKRadicalsSupplement}|" +
             @"\p{IsCJKSymbolsandPunctuation}|" +
             @"\p{IsEnclosedCJKLettersandMonths}|" +
@@ -510,6 +676,7 @@ namespace Barotrauma
         /// </summary>
         public static bool IsCJK(string text)
         {
+            if (string.IsNullOrEmpty(text)) { return false; }
             return isCJK.IsMatch(text);
         }
 

@@ -7,7 +7,7 @@ using System.Xml.Linq;
 namespace Barotrauma.Networking
 {
     [Flags]
-    enum ClientPermissions
+    public enum ClientPermissions
     {
         None = 0x0,
         ManageRound = 0x1,
@@ -21,7 +21,8 @@ namespace Barotrauma.Networking
         ServerLog = 0x100,
         ManageSettings = 0x200,
         ManagePermissions = 0x400,
-        All = 0x7ff
+        KarmaImmunity = 0x800,
+        All = 0xFFF
     }
 
     class PermissionPreset
@@ -68,11 +69,12 @@ namespace Barotrauma.Networking
 
         public static void LoadAll(string file)
         {
-            if (!File.Exists(file)) return;
+            if (!File.Exists(file)) { return; }
 
             XDocument doc = XMLExtensions.TryLoadXml(file);
-            if (doc == null || doc.Root == null) return;
+            if (doc == null) { return; }
 
+            List.Clear();
             foreach (XElement element in doc.Root.Elements())
             {
                 List.Add(new PermissionPreset(element));

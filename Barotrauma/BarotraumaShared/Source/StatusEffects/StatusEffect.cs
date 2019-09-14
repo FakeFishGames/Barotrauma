@@ -13,6 +13,7 @@ namespace Barotrauma
         public Entity Entity;
         public List<ISerializableEntity> Targets;
         public float Timer;
+        public Character User;
     }
     
     partial class StatusEffect
@@ -120,6 +121,8 @@ namespace Barotrauma
         private Explosion explosion;
 
         private List<ItemSpawnInfo> spawnItems;
+
+        private Character user;
 
         public readonly float FireSize;
         
@@ -424,12 +427,12 @@ namespace Barotrauma
         public virtual bool HasRequiredConditions(List<ISerializableEntity> targets)
         {
             if (!propertyConditionals.Any()) return true;
+            if (requiredItems.All(ri => ri.MatchOnEmpty) && targets.Count == 0) return true;
             switch (conditionalComparison)
             {
                 case PropertyConditional.Comparison.Or:
                     foreach (ISerializableEntity target in targets)
                     {
-                        if (target == null || target.SerializableProperties == null) { continue; }
                         foreach (PropertyConditional pc in propertyConditionals)
                         {
                             if (!string.IsNullOrEmpty(pc.TargetItemComponentName))
@@ -446,7 +449,6 @@ namespace Barotrauma
                 case PropertyConditional.Comparison.And:
                     foreach (ISerializableEntity target in targets)
                     {
-                        if (target == null || target.SerializableProperties == null) { continue; }
                         foreach (PropertyConditional pc in propertyConditionals)
                         {
                             if (!string.IsNullOrEmpty(pc.TargetItemComponentName))
@@ -493,6 +495,7 @@ namespace Barotrauma
 
         public void SetUser(Character user)
         {
+            this.user = user;
             foreach (Affliction affliction in Afflictions)
             {
                 affliction.Source = user;
@@ -512,6 +515,7 @@ namespace Barotrauma
                 if (existingEffect != null)
                 {
                     existingEffect.Timer = Math.Max(existingEffect.Timer, duration);
+                    existingEffect.User = user;
                     return;
                 }
             }
@@ -550,6 +554,7 @@ namespace Barotrauma
                 if (existingEffect != null)
                 {
                     existingEffect.Timer = Math.Max(existingEffect.Timer, duration);
+                    existingEffect.User = user;
                     return;
                 }
             }
@@ -603,7 +608,8 @@ namespace Barotrauma
                     Parent = this,
                     Timer = duration,
                     Entity = entity,
-                    Targets = targets
+                    Targets = targets,
+                    User = user
                 };
 
                 DurationList.Add(element);
@@ -626,7 +632,7 @@ namespace Barotrauma
                 }                
             }
 
-            if (explosion != null && entity != null) explosion.Explode(entity.WorldPosition, entity);
+            if (explosion != null && entity != null) { explosion.Explode(entity.WorldPosition, damageSource: entity, attacker: user); }
 
             foreach (ISerializableEntity target in targets)
             {
@@ -637,31 +643,45 @@ namespace Barotrauma
 
                     if (target is Character character)
                     {
+                        if (character.Removed) { continue; }
                         character.LastDamageSource = entity;
                         foreach (Limb limb in character.AnimController.Limbs)
                         {
-                            limb.character.DamageLimb(entity.WorldPosition, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f);
+                            limb.character.DamageLimb(entity.WorldPosition, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source);
                             //only apply non-limb-specific afflictions to the first limb
                             if (!affliction.Prefab.LimbSpecific) { break; }
                         }
                     }
                     else if (target is Limb limb)
                     {
-                        limb.character.DamageLimb(entity.WorldPosition, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f);
+                        if (limb.character.Removed) { continue; }
+                        limb.character.DamageLimb(entity.WorldPosition, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source);
                     }
                 }
 
                 foreach (Pair<string, float> reduceAffliction in ReduceAffliction)
                 {
                     float reduceAmount = disableDeltaTime ? reduceAffliction.Second : reduceAffliction.Second * deltaTime;
+                    Limb targetLimb = null;
+                    Character targetCharacter = null;
                     if (target is Character character)
                     {
-                        character.CharacterHealth.ReduceAffliction(null, reduceAffliction.First, reduceAmount);
+                        targetCharacter = character;
                     }
                     else if (target is Limb limb)
                     {
-                        limb.character.CharacterHealth.ReduceAffliction(limb, reduceAffliction.First, reduceAmount);
+                        targetLimb = limb;
+                        targetCharacter = limb.character;
                     }
+                    if (targetCharacter != null && !targetCharacter.Removed)
+                    {
+                        float prevVitality = targetCharacter.Vitality;
+                        targetCharacter.CharacterHealth.ReduceAffliction(targetLimb, reduceAffliction.First, reduceAmount);
+#if SERVER
+                        GameMain.Server.KarmaManager.OnCharacterHealthChanged(targetCharacter, user, prevVitality - targetCharacter.Vitality);
+#endif
+                    }
+
                 }
             }
 
@@ -811,30 +831,43 @@ namespace Barotrauma
 
                         if (target is Character character)
                         {
-                            character.AddDamage(character.WorldPosition, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false);
+                            if (character.Removed) { continue; }
+                            character.AddDamage(character.WorldPosition, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attacker: element.User);
                         }
                         else if (target is Limb limb)
                         {
-                            limb.character.DamageLimb(limb.WorldPosition, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f);
+                            if (limb.character.Removed) { continue; }
+                            limb.character.DamageLimb(limb.WorldPosition, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: element.User);
                         }
                     }
 
                     foreach (Pair<string, float> reduceAffliction in element.Parent.ReduceAffliction)
                     {
-                        if (target is Character)
+                        Limb targetLimb = null;
+                        Character targetCharacter = null;
+                        if (target is Character character)
                         {
-                            ((Character)target).CharacterHealth.ReduceAffliction(null, reduceAffliction.First, reduceAffliction.Second * deltaTime);
+                            targetCharacter = character;
                         }
                         else if (target is Limb limb)
                         {
-                            limb.character.CharacterHealth.ReduceAffliction(limb, reduceAffliction.First, reduceAffliction.Second * deltaTime);
+                            targetLimb = limb;
+                            targetCharacter = limb.character;
+                        }
+                        if (targetCharacter != null && !targetCharacter.Removed)
+                        {
+                            float prevVitality = targetCharacter.Vitality;
+                            targetCharacter.CharacterHealth.ReduceAffliction(targetLimb, reduceAffliction.First, reduceAffliction.Second * deltaTime);
+#if SERVER
+                            GameMain.Server.KarmaManager.OnCharacterHealthChanged(targetCharacter, element.User, prevVitality - targetCharacter.Vitality);
+#endif
                         }
                     }
                 }
 
                 element.Timer -= deltaTime;
 
-                if (element.Timer > 0.0f) continue;
+                if (element.Timer > 0.0f) { continue; }
                 DurationList.Remove(element);
             }
         }
@@ -846,20 +879,17 @@ namespace Barotrauma
             CoroutineManager.StopCoroutines("statuseffect");
             DelayedEffect.DelayList.Clear();
             DurationList.Clear();
-#if CLIENT
-            //ActiveLoopingSounds.Clear();
-#endif
         }
 
         public void AddTag(string tag)
         {
-            if (tags.Contains(tag)) return;
+            if (tags.Contains(tag)) { return; }
             tags.Add(tag);
         }
 
         public bool HasTag(string tag)
         {
-            if (tag == null) return true;
+            if (tag == null) { return true; }
 
             return (tags.Contains(tag) || tags.Contains(tag.ToLowerInvariant()));
         }

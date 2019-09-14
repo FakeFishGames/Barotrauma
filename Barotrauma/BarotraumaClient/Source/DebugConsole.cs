@@ -63,11 +63,17 @@ namespace Barotrauma
             frame = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.45f), GUI.Canvas) { MinSize = new Point(400, 300), AbsoluteOffset = new Point(10, 10) },
                 color: new Color(0.4f, 0.4f, 0.4f, 0.8f));
 
-            var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), frame.RectTransform, Anchor.Center), style: null);
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), frame.RectTransform, Anchor.Center)) { RelativeSpacing = 0.01f };
 
-            var toggleText = new GUITextBlock(new RectTransform(new Point(paddedFrame.Rect.Width-30, 20), paddedFrame.RectTransform, Anchor.TopLeft), TextManager.Get("DebugConsoleHelpText"), new Color(150,150,200,255), GUI.SmallFont, Alignment.CenterLeft, style: null);
+            var toggleText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedFrame.RectTransform, Anchor.TopLeft), TextManager.Get("DebugConsoleHelpText"), Color.GreenYellow, GUI.SmallFont, Alignment.CenterLeft, style: null);
 
-            var closeButton = new GUIButton(new RectTransform(new Point(20, 20), paddedFrame.RectTransform, Anchor.TopRight), "X", color: Color.Red);
+            var closeButton = new GUIButton(new RectTransform(new Vector2(0.025f, 1.0f), toggleText.RectTransform, Anchor.TopRight), "X", style: null)
+            {
+                Color = Color.DarkRed,
+                HoverColor = Color.Red,
+                TextColor = Color.White,
+                OutlineColor = Color.Red
+            };
             closeButton.OnClicked += (btn, userdata) =>
             {
                 isOpen = false;
@@ -76,12 +82,12 @@ namespace Barotrauma
                 return true;
             };
 
-            listBox = new GUIListBox(new RectTransform(new Point(paddedFrame.Rect.Width, paddedFrame.Rect.Height - 50), paddedFrame.RectTransform, Anchor.Center)
+            listBox = new GUIListBox(new RectTransform(new Point(paddedFrame.Rect.Width, paddedFrame.Rect.Height - 60), paddedFrame.RectTransform, Anchor.Center)
             {
                 IsFixedSize = false
-            }, color: Color.Black * 0.9f);
+            }, color: Color.Black * 0.9f) { ScrollBarVisible = true };
 
-            textBox = new GUITextBox(new RectTransform(new Point(paddedFrame.Rect.Width, 20), paddedFrame.RectTransform, Anchor.BottomLeft)
+            textBox = new GUITextBox(new RectTransform(new Point(paddedFrame.Rect.Width, 30), paddedFrame.RectTransform, Anchor.BottomLeft)
             {
                 IsFixedSize = false
             });
@@ -127,17 +133,7 @@ namespace Barotrauma
 
             if (PlayerInput.KeyHit(Keys.F3))
             {
-                isOpen = !isOpen;
-                if (isOpen)
-                {
-                    textBox.Select();
-                    AddToGUIUpdateList();
-                }
-                else
-                {
-                    GUI.ForceMouseOn(null);
-                    textBox.Deselect();
-                }
+                Toggle();
             }
             else if (isOpen && PlayerInput.KeyHit(Keys.Escape))
             {
@@ -173,6 +169,21 @@ namespace Barotrauma
             }
         }
 
+        public static void Toggle()
+        {
+            isOpen = !isOpen;
+            if (isOpen)
+            {
+                textBox.Select();
+                AddToGUIUpdateList();
+            }
+            else
+            {
+                GUI.ForceMouseOn(null);
+                textBox.Deselect();
+            }
+        }
+
         public static void Draw(SpriteBatch spriteBatch)
         {
             if (!isOpen) return;
@@ -188,6 +199,7 @@ namespace Barotrauma
                     return client.HasPermission(ClientPermissions.Kick);
                 case "ban":
                 case "banip":
+                case "banendpoint":
                     return client.HasPermission(ClientPermissions.Ban);
                 case "unban":
                 case "unbanip":
@@ -200,6 +212,7 @@ namespace Barotrauma
                 case "togglehud":
                 case "toggleupperhud":
                 case "togglecharacternames":
+                case "fpscounter":
                     return true;
                 default:
                     return client.HasConsoleCommandPermission(command);
@@ -291,14 +304,27 @@ namespace Barotrauma
 
         private static void AssignOnClientExecute(string names, Action<string[]> onClientExecute)
         {
-            Command command = commands.First(c => c.names.Intersect(names.Split('|')).Count() > 0);
-            command.OnClientExecute = onClientExecute;
-            command.RelayToServer = false;
+            Command command = commands.Find(c => c.names.Intersect(names.Split('|')).Count() > 0);
+            if (command == null)
+            {
+                throw new Exception("AssignOnClientExecute failed. Command matching the name(s) \"" + names + "\" not found.");
+            }
+            else
+            {
+                command.OnClientExecute = onClientExecute;
+                command.RelayToServer = false;
+            }
         }
 
         private static void AssignRelayToServer(string names, bool relay)
         {
-            commands.First(c => c.names.Intersect(names.Split('|')).Count() > 0).RelayToServer = relay;
+            Command command = commands.Find(c => c.names.Intersect(names.Split('|')).Count() > 0);
+            if (command == null)
+            {
+                DebugConsole.Log("Could not assign to relay to server: " + names);
+                return;
+            }
+            command.RelayToServer = relay;
         }
 
         private static void InitProjectSpecific()
@@ -312,7 +338,7 @@ namespace Barotrauma
                     if (!(mp is ItemPrefab)) continue;
                     sb.AppendLine(mp.Name);
                 }
-                System.Windows.Clipboard.SetText(sb.ToString());
+                Clipboard.SetText(sb.ToString());
             }));
 #endif
 
@@ -339,16 +365,23 @@ namespace Barotrauma
                 }
             }));
 
-            commands.Add(new Command("startclient", "", (string[] args) =>
+            commands.Add(new Command("startlidgrenclient", "", (string[] args) =>
             {
                 if (args.Length == 0) return;
 
                 if (GameMain.Client == null)
                 {
-                    GameMain.Client = new GameClient("Name", args[0]);
+                    GameMain.Client = new GameClient("Name", args[0], 0);
                 }
             }));
 
+            commands.Add(new Command("startsteamp2pclient", "", (string[] args) =>
+            {
+                if (GameMain.Client == null)
+                {
+                    GameMain.Client = new GameClient("Name", null, 76561198977850505); //this is juan's alt account, feel free to abuse this one
+                }
+            }));
 
             commands.Add(new Command("enablecheats", "enablecheats: Enables cheat commands and disables Steam achievements during this play session.", (string[] args) =>
             {
@@ -446,6 +479,16 @@ namespace Barotrauma
 
             commands.Add(new Command("clientlist", "", (string[] args) => { }));
             AssignRelayToServer("clientlist", true);
+            commands.Add(new Command("say", "", (string[] args) => { }));
+            AssignRelayToServer("say", true);
+            commands.Add(new Command("msg", "", (string[] args) => { }));
+            AssignRelayToServer("msg", true);
+            commands.Add(new Command("setmaxplayers|maxplayers", "", (string[] args) => { }));
+            AssignRelayToServer("setmaxplayers", true);
+            commands.Add(new Command("setpassword|password", "", (string[] args) => { }));
+            AssignRelayToServer("setpassword", true);
+            commands.Add(new Command("traitorlist", "", (string[] args) => { }));
+            AssignRelayToServer("traitorlist", true);
 
             AssignOnExecute("control", (string[] args) =>
             {
@@ -528,6 +571,7 @@ namespace Barotrauma
                         if (args.Length < 3)
                         {
                             ThrowError("Not enough arguments provided! At least three required.");
+                            return;
                         }
                         if (!byte.TryParse(args[0], out byte r))
                         {
@@ -729,9 +773,15 @@ namespace Barotrauma
                 }
             }, isCheat: true));
 
-            commands.Add(new Command("messagebox", "", (string[] args) =>
+            commands.Add(new Command("messagebox|guimessagebox", "messagebox [header] [msg] [default/ingame]: Creates a message box.", (string[] args) =>
             {
-                new GUIMessageBox("", string.Join(" ", args));
+                var msgBox = new GUIMessageBox(
+                    args.Length > 0 ? args[0] : "",
+                    args.Length > 1 ? args[1] : "",
+                    buttons: new string[] { "OK" },
+                    type: args.Length < 3 || args[2] == "default" ? GUIMessageBox.Type.Default : GUIMessageBox.Type.InGame);
+
+                msgBox.Buttons[0].OnClicked = msgBox.Close;
             }));
 
             AssignOnExecute("debugdraw", (string[] args) =>
@@ -929,7 +979,36 @@ namespace Barotrauma
                 }
             }, isCheat: false));
 
+            commands.Add(new Command("setentityproperties", "setentityproperties [property name] [value]: Sets the value of some property on all selected items/structures in the sub editor.", (string[] args) =>
+            {
+                if (args.Length != 2 || Screen.Selected != GameMain.SubEditorScreen) { return; }
+                foreach (MapEntity me in MapEntity.SelectedList)
+                {
+                    if (me is ISerializableEntity serializableEntity)
+                    {
+                        if (serializableEntity.SerializableProperties == null)
+                        {
+                            continue;
+                        }
+                        if (!serializableEntity.SerializableProperties.TryGetValue(args[0].ToLowerInvariant(), out SerializableProperty property))
+                        {
+                            NewMessage("Property \"" + args[0] + "\" not found in the entity \"" + me.ToString() + "\".", Color.Orange);
+                            continue;
+                        }
+                        if (!property.TrySetValue(me, args[1]))
+                        {
+                            NewMessage("Failed to set the value of \"" + args[0] + "\" to \"" + args[1] + "\" on the entity \"" + me.ToString() + "\".", Color.Orange);
+                        }
+                    }
+                }
+            }));
+
 #if DEBUG
+            commands.Add(new Command("printreceivertransfers", "", (string[] args) =>
+            {
+                GameMain.Client.PrintReceiverTransters();
+            }));
+
             commands.Add(new Command("checkmissingloca", "", (string[] args) =>
             {
                 foreach (MapEntityPrefab me in MapEntityPrefab.List)
@@ -1048,7 +1127,7 @@ namespace Barotrauma
             {
                 string filePath = args.Length > 0 ? args[0] : "Content/Texts/EnglishVanilla.xml";
                 var doc = XMLExtensions.TryLoadXml(filePath);
-                if (doc?.Root == null) return;
+                if (doc == null) { return; }
                 List<string> lines = new List<string>();
                 foreach (XElement element in doc.Root.Elements())
                 {
@@ -1081,6 +1160,7 @@ namespace Barotrauma
                     return;
                 }
                 var doc = XMLExtensions.TryLoadXml(destinationPath);
+                if (doc == null) { return; }
                 int i = 0;
                 foreach (XElement element in doc.Root.Elements())
                 {
@@ -1112,6 +1192,8 @@ namespace Barotrauma
 
                 var sourceDoc = XMLExtensions.TryLoadXml(sourcePath);
                 var destinationDoc = XMLExtensions.TryLoadXml(destinationPath);
+
+                if (sourceDoc == null || destinationDoc == null) { return; }
 
                 XElement destinationElement = destinationDoc.Root.Elements().First();
                 foreach (XElement element in sourceDoc.Root.Elements())
@@ -1148,6 +1230,76 @@ namespace Barotrauma
                 }
                 File.WriteAllLines(filePath, lines);
             }));
+
+
+            commands.Add(new Command("itemcomponentdocumentation", "", (string[] args) =>
+            {
+                Dictionary<string, string> typeNames = new Dictionary<string, string>
+                {
+                    { "Single", "float"},
+                    { "Int32", "integer"},
+                    { "Boolean", "true/false"},
+                    { "String", "text"},
+                };
+
+                var itemComponentTypes = typeof(ItemComponent).Assembly.GetTypes().Where(type => type.IsSubclassOf(typeof(ItemComponent)));
+                string filePath = args.Length > 0 ? args[0] : "ItemComponentDocumentation.txt";
+                List<string> lines = new List<string>();
+                foreach (Type t in itemComponentTypes)
+                {
+                    lines.Add($"[n]{t.Name}[/b]");
+                    lines.Add("");
+
+                    var properties = t.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.DeclaredOnly);//.Cast<System.ComponentModel.PropertyDescriptor>();
+                    Dictionary<string, SerializableProperty> dictionary = new Dictionary<string, SerializableProperty>();
+                    foreach (var property in properties)
+                    {
+                        object[] attributes = property.GetCustomAttributes(true);
+                        Serialize serialize = attributes.FirstOrDefault(a => a is Serialize) as Serialize;
+                        if (serialize == null) { continue; }
+
+                        string propertyTypeName = property.PropertyType.Name;
+                        if (typeNames.ContainsKey(propertyTypeName))
+                        {
+                            propertyTypeName = typeNames[propertyTypeName];
+                        }
+                        else if (property.PropertyType.IsEnum)
+                        {
+                            List<string> valueNames = new List<string>();
+                            foreach (object enumValue in Enum.GetValues(property.PropertyType))
+                            {
+                                valueNames.Add(enumValue.ToString());
+                            }
+                            propertyTypeName = string.Join("/", valueNames);
+                        }
+
+                        lines.Add($"{property.Name} ({propertyTypeName})");
+
+                        if (!string.IsNullOrEmpty(serialize.Description))
+                        {
+                            lines.Add(serialize.Description);
+                        }
+                        Editable editable = attributes.FirstOrDefault(a => a is Editable) as Editable;
+                        if (editable != null)
+                        {
+                            if (editable.MinValueFloat > float.MinValue || editable.MaxValueFloat < float.MaxValue)
+                            {
+                                lines.Add("Range: " + editable.MinValueFloat+"-"+editable.MaxValueFloat);
+                            }
+                            else if (editable.MinValueInt > int.MinValue || editable.MaxValueInt < int.MaxValue)
+                            {
+                                lines.Add("Range: " + editable.MinValueInt + "-" + editable.MaxValueInt);
+                            }
+                        }
+
+                        lines.Add("Default value: " + serialize.defaultValue);
+                        lines.Add("");
+                    }
+                    lines.Add("");
+                }
+                File.WriteAllLines(filePath, lines);
+                System.Diagnostics.Process.Start(Path.GetFullPath(filePath));
+            }));
 #if DEBUG
             commands.Add(new Command("checkduplicates", "Checks the given language for duplicate translation keys and writes to file.", (string[] args) =>
             {
@@ -1172,6 +1324,8 @@ namespace Barotrauma
             {
                 GameMain.Config.MusicVolume = 0.5f;
                 GameMain.Config.SoundVolume = 0.5f;
+                GameMain.Config.DynamicRangeCompressionEnabled = true;
+                GameMain.Config.VoipAttenuationEnabled = true;
                 NewMessage("Music and sound volume set to 0.5", Color.Green);
 
                 GameMain.Config.GraphicsWidth = 0;
@@ -1278,7 +1432,7 @@ namespace Barotrauma
                     }
                     ShowQuestionPrompt("Permission to grant to client #" + id + "?", (perm) =>
                     {
-                        GameMain.Client.SendConsoleCommand("giveperm " + id + " " + perm);
+                        GameMain.Client?.SendConsoleCommand("giveperm " + id + " " + perm);
                     });
                 }
             );
@@ -1303,7 +1457,7 @@ namespace Barotrauma
 
                     ShowQuestionPrompt("Permission to revoke from client #" + id + "?", (perm) =>
                     {
-                        GameMain.Client.SendConsoleCommand("revokeperm " + id + " " + perm);
+                        GameMain.Client?.SendConsoleCommand("revokeperm " + id + " " + perm);
                     });
                 }
             );
@@ -1327,7 +1481,7 @@ namespace Barotrauma
                     }
                     ShowQuestionPrompt("Rank to grant to client #" + id + "?", (rank) =>
                     {
-                        GameMain.Client.SendConsoleCommand("giverank " + id + " " + rank);
+                        GameMain.Client?.SendConsoleCommand("giverank " + id + " " + rank);
                     });
                 }
             );
@@ -1346,7 +1500,7 @@ namespace Barotrauma
 
                     ShowQuestionPrompt("Console command permissions to grant to client #" + id + "? You may enter multiple commands separated with a space.", (commandNames) =>
                     {
-                        GameMain.Client.SendConsoleCommand("givecommandperm " + id + " " + commandNames);
+                        GameMain.Client?.SendConsoleCommand("givecommandperm " + id + " " + commandNames);
                     });
                 }
             );
@@ -1365,7 +1519,7 @@ namespace Barotrauma
 
                     ShowQuestionPrompt("Console command permissions to revoke from client #" + id + "? You may enter multiple commands separated with a space.", (commandNames) =>
                     {
-                        GameMain.Client.SendConsoleCommand("revokecommandperm " + id + " " + commandNames);
+                        GameMain.Client?.SendConsoleCommand("revokecommandperm " + id + " " + commandNames);
                     });
                 }
             );
@@ -1387,11 +1541,11 @@ namespace Barotrauma
             );
 
             AssignOnClientExecute(
-                "banip",
+                "banendpoint|banip",
                 (string[] args) =>
                 {
                     if (GameMain.Client == null || args.Length == 0) return;
-                    ShowQuestionPrompt("Reason for banning the ip \"" + args[0] + "\"?", (reason) =>
+                    ShowQuestionPrompt("Reason for banning the endpoint \"" + args[0] + "\"?", (reason) =>
                     {
                         ShowQuestionPrompt("Enter the duration of the ban (leave empty to ban permanently, or use the format \"[days] d [hours] h\")", (duration) =>
                         {
@@ -1406,8 +1560,8 @@ namespace Barotrauma
                                 banDuration = parsedBanDuration;
                             }
 
-                            GameMain.Client.SendConsoleCommand(
-                                "banip " +
+                            GameMain.Client?.SendConsoleCommand(
+                                "banendpoint " +
                                 args[0] + " " +
                                 (banDuration.HasValue ? banDuration.Value.TotalSeconds.ToString() : "0") + " " +
                                 reason);
@@ -1457,7 +1611,7 @@ namespace Barotrauma
                                 NewMessage("Index out of bounds!", Color.Red);
                                 return;
                             }
-                            GameMain.Client.SendConsoleCommand("campaigndestination " + destinationIndex);
+                            GameMain.Client?.SendConsoleCommand("campaigndestination " + destinationIndex);
                         });
                     }
                     else
@@ -1493,7 +1647,7 @@ namespace Barotrauma
                     return;
                 }
                 RagdollParams ragdollParams = character.AnimController.RagdollParams;
-                ragdollParams.LimbScale = value;
+                ragdollParams.LimbScale = MathHelper.Clamp(value, RagdollParams.MIN_SCALE, RagdollParams.MAX_SCALE);
                 var pos = character.WorldPosition;
                 character.AnimController.Recreate();
                 character.TeleportTo(pos);
@@ -1518,7 +1672,7 @@ namespace Barotrauma
                     return;
                 }
                 RagdollParams ragdollParams = character.AnimController.RagdollParams;
-                ragdollParams.JointScale = value;
+                ragdollParams.JointScale = MathHelper.Clamp(value, RagdollParams.MIN_SCALE, RagdollParams.MAX_SCALE);
                 var pos = character.WorldPosition;
                 character.AnimController.Recreate();
                 character.TeleportTo(pos);
@@ -1543,8 +1697,8 @@ namespace Barotrauma
                     return;
                 }
                 RagdollParams ragdollParams = character.AnimController.RagdollParams;
-                ragdollParams.LimbScale = value;
-                ragdollParams.JointScale = value;
+                ragdollParams.LimbScale = MathHelper.Clamp(value, RagdollParams.MIN_SCALE, RagdollParams.MAX_SCALE);
+                ragdollParams.JointScale = MathHelper.Clamp(value, RagdollParams.MIN_SCALE, RagdollParams.MAX_SCALE);
                 var pos = character.WorldPosition;
                 character.AnimController.Recreate();
                 character.TeleportTo(pos);
@@ -1571,7 +1725,7 @@ namespace Barotrauma
                     ThrowError("Not controlling any character!");
                     return;
                 }
-                character.AnimController.ResetRagdoll();
+                character.AnimController.ResetRagdoll(forceReload: true);
             }, isCheat: true));
 
             commands.Add(new Command("reloadwearables", "Reloads the sprites of all limbs and wearable sprites (clothing) of the controlled character. Provide id or name if you want to target another character.", args =>
@@ -1681,7 +1835,7 @@ namespace Barotrauma
                     {
                         if (limb.type != LimbType.Head)
                         {
-                            limb.RecreateSprite();
+                            limb.RecreateSprites();
                         }
                         foreach (var wearable in limb.WearingItems)
                         {
@@ -1750,6 +1904,21 @@ namespace Barotrauma
                     character.ReloadHead(id, hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
                 }
             }, isCheat: true));
+
+            commands.Add(new Command("spawnsub", "spawnsub [subname]: Spawn a submarine at the position of the cursor", (string[] args) =>
+            {
+                try
+                {
+                    Submarine spawnedSub = Submarine.Load(args[0], false);
+                    spawnedSub.SetPosition(GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition));
+                }
+                catch (Exception e)
+                {
+                    string errorMsg = "Failed to spawn a submarine. Arguments: \"" + string.Join(" ", args) + "\".";
+                    ThrowError(errorMsg, e);
+                    GameAnalyticsManager.AddErrorEventOnce("DebugConsole.SpawnSubmarine:Error", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg + '\n' + e.Message + '\n' + e.StackTrace);
+                }
+            }, isCheat: true));
         }
 
         private static void ReloadWearables(Character character, int variant = 0)
@@ -1779,6 +1948,11 @@ namespace Barotrauma
                 {
                     limb.HuskSprite.Sprite.ReloadXML();
                     limb.HuskSprite.Sprite.ReloadTexture();
+                }
+                if (limb.HerpesSprite != null)
+                {
+                    limb.HerpesSprite.Sprite.ReloadXML();
+                    limb.HerpesSprite.Sprite.ReloadTexture();
                 }
             }
         }

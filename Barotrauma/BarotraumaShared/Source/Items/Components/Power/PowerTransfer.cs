@@ -41,24 +41,31 @@ namespace Barotrauma.Items.Components
             get { return powerLoad; }
         }
 
-        [Serialize(true, true), Editable(ToolTip = "Can the item be damaged if too much power is supplied to the power grid.")]
+        [Editable, Serialize(true, true, description: "Can the item be damaged if too much power is supplied to the power grid.")]
         public bool CanBeOverloaded
         {
             get;
             set;
         }
 
-        [Serialize(2.0f, true), Editable(MinValueFloat = 1.0f, ToolTip = 
+        [Editable(MinValueFloat = 1.0f), Serialize(2.0f, true, description:
             "How much power has to be supplied to the grid relative to the load before item starts taking damage. "
-            +"E.g. a value of 2 means that the grid has to be receiving twice as much power as the devices in the grid are consuming.")]
+            + "E.g. a value of 2 means that the grid has to be receiving twice as much power as the devices in the grid are consuming.")]
         public float OverloadVoltage
         {
             get;
             set;
         }
 
-        [Serialize(0.15f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f, ToolTip = "The probability for a fire to start when the item breaks.")]
+        [Serialize(0.15f, true, description: "The probability for a fire to start when the item breaks."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
         public float FireProbability
+        {
+            get;
+            set;
+        }
+
+        [Serialize(false, false, description: "Is the item currently overloaded. Intended to be used by StatusEffect conditionals (setting the value from XML is not recommended).")]
+        public bool Overload
         {
             get;
             set;
@@ -115,6 +122,8 @@ namespace Barotrauma.Items.Components
         {
             base.UpdateBroken(deltaTime, cam);
 
+            Overload = false;
+
             if (!isBroken)
             {
                 powerLoad = 0.0f;
@@ -128,7 +137,8 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
             RefreshConnections();
-            if (!CanTransfer) return;
+
+            if (!CanTransfer) { return; }
 
             if (isBroken)
             {
@@ -143,6 +153,8 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
+            Overload = false;
+
             //reset and recalculate the power generated/consumed
             //by the constructions connected to the grid
             fullPower = 0.0f;
@@ -156,10 +168,11 @@ namespace Barotrauma.Items.Components
             foreach (Powered p in connectedList)
             {
                 PowerTransfer pt = p as PowerTransfer;
-                if (pt == null || pt.updateCount == 0) continue;
+                if (pt == null || pt.updateCount == 0) { continue; }
 
-                if (pt is RelayComponent != this is RelayComponent) continue;
+                if (pt is RelayComponent != this is RelayComponent) { continue; }
 
+                pt.Overload = false;
                 pt.powerLoad += (fullLoad - pt.powerLoad) / inertia;
                 pt.currPowerConsumption += (-fullPower - pt.currPowerConsumption) / inertia;
 
@@ -173,42 +186,38 @@ namespace Barotrauma.Items.Components
                 pt.Item.SendSignal(0, "", "power", null, voltage);
                 pt.Item.SendSignal(0, "", "power_out", null, voltage);
 
-#if CLIENT
-                //damage the item if voltage is too high 
-                //(except if running as a client)
-                if (GameMain.Client != null) continue;
-#endif
-
                 //items in a bad condition are more sensitive to overvoltage
-                float maxOverVoltage = MathHelper.Lerp(OverloadVoltage * 0.75f, OverloadVoltage, item.Condition / item.MaxCondition);
+                float maxOverVoltage = MathHelper.Lerp(OverloadVoltage * 0.75f, OverloadVoltage, pt.item.Condition / pt.item.MaxCondition);
                 maxOverVoltage = Math.Max(OverloadVoltage, 1.0f);
 
                 //if the item can't be fixed, don't allow it to break
-                if (!item.Repairables.Any() || !CanBeOverloaded) continue;
+                if (!pt.item.Repairables.Any() || !pt.CanBeOverloaded) { continue; }
 
                 //relays don't blow up if the power is higher than load, only if the output is high enough 
                 //(i.e. enough power passing through the relay)
-                if (this is RelayComponent) continue;
+                if (pt is RelayComponent) { continue; }
 
-                if (-pt.currPowerConsumption < Math.Max(pt.powerLoad, 200.0f) * maxOverVoltage) continue;
+                if (-pt.currPowerConsumption < Math.Max(pt.powerLoad, 200.0f) * maxOverVoltage) { continue; }
 
+                pt.Overload = true;
+#if CLIENT
+                //damage the item if voltage is too high 
+                //(except if running as a client)
+                if (GameMain.Client != null) { continue; }
+#endif
                 float prevCondition = pt.item.Condition;
                 pt.item.Condition -= deltaTime * 10.0f;
 
                 if (pt.item.Condition <= 0.0f && prevCondition > 0.0f)
                 {
 #if CLIENT
-                    if (sparkSounds.Count > 0)
-                    {
-                        var sparkSound = sparkSounds[Rand.Int(sparkSounds.Count)];
-                        SoundPlayer.PlaySound(sparkSound.Sound, pt.item.WorldPosition, sparkSound.Volume, sparkSound.Range,  pt.item.CurrentHull);
-                    }
+                    SoundPlayer.PlaySound("zap", item.WorldPosition, hullGuess: pt.item.CurrentHull);                    
 
                     Vector2 baseVel = Rand.Vector(300.0f);
                     for (int i = 0; i < 10; i++)
                     {
                         var particle = GameMain.ParticleManager.CreateParticle("spark", pt.item.WorldPosition,
-                            baseVel + Rand.Vector(100.0f), 0.0f, item.CurrentHull);
+                            baseVel + Rand.Vector(100.0f), 0.0f, pt.item.CurrentHull);
 
                         if (particle != null) particle.Size *= Rand.Range(0.5f, 1.0f);
                     }
@@ -218,8 +227,8 @@ namespace Barotrauma.Items.Components
                         GameMain.GameSession.EventManager.CurrentIntensity : 0.5f;
                     
                     //higher probability for fires if the current intensity is low
-                    if (FireProbability > 0.0f && 
-                        Rand.Range(0.0f, 1.0f) < MathHelper.Lerp(FireProbability, FireProbability * 0.1f, currentIntensity))
+                    if (pt.FireProbability > 0.0f && 
+                        Rand.Range(0.0f, 1.0f) < MathHelper.Lerp(pt.FireProbability, pt.FireProbability * 0.1f, currentIntensity))
                     {
                         new FireSource(pt.item.WorldPosition);
                     }
@@ -333,22 +342,22 @@ namespace Barotrauma.Items.Components
                 var recipients = c.Recipients;
                 foreach (Connection recipient in recipients)
                 {
-                    if (recipient?.Item == null) continue;
+                    if (recipient?.Item == null || !recipient.IsPower) { continue; }
 
                     Item it = recipient.Item;
-                    if (it.Condition <= 0.0f) continue;
+                    if (it.Condition <= 0.0f) { continue; }
 
                     foreach (ItemComponent ic in it.Components)
                     {
-                        if (!(ic is Powered powered) || !powered.IsActive) continue;
-                        if (connectedList.Contains(powered)) continue;
+                        if (!(ic is Powered powered) || !powered.IsActive) { continue; }
+                        if (connectedList.Contains(powered)) { continue; }
 
                         if (powered is PowerTransfer powerTransfer)
                         {
                             RelayComponent otherRelayComponent = powerTransfer as RelayComponent;
                             if ((thisRelayComponent == null) == (otherRelayComponent == null))
                             {
-                                if (!powerTransfer.CanTransfer) continue;
+                                if (!powerTransfer.CanTransfer) { continue; }
                                 powerTransfer.CheckJunctions(deltaTime, increaseUpdateCount, clampPower, clampLoad);
                             }
                             else
@@ -358,7 +367,7 @@ namespace Barotrauma.Items.Components
                                 float maxPowerOut = (thisRelayComponent != null && !c.IsOutput) ? 0.0f : clampLoad;
                                 if (maxPowerIn > 0.0f || maxPowerOut > 0.0f)
                                 {
-                                    powerTransfer.CheckJunctions(deltaTime, false,  maxPowerIn, maxPowerOut);
+                                    powerTransfer.CheckJunctions(deltaTime, false, maxPowerIn, maxPowerOut);
                                 }
                             }
 
@@ -455,7 +464,7 @@ namespace Barotrauma.Items.Components
                     }
 
                     bool broken = recipient.Item.Condition <= 0.0f;
-                    foreach (StatusEffect effect in recipient.effects)
+                    foreach (StatusEffect effect in recipient.Effects)
                     {
                         if (broken && effect.type != ActionType.OnBroken) continue;
                         recipient.Item.ApplyStatusEffect(effect, ActionType.OnUse, 1.0f, null, null, false, false);

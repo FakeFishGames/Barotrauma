@@ -1,5 +1,5 @@
 ﻿using System;
-using OpenTK.Audio.OpenAL;
+using OpenAL;
 using NVorbis;
 using System.Collections.Generic;
 
@@ -12,6 +12,9 @@ namespace Barotrauma.Sounds
         //key = sample rate, value = filter
         private static Dictionary<int, BiQuad> muffleFilters = new Dictionary<int, BiQuad>();
 
+        private static List<float> playbackAmplitude;
+        private const int AMPLITUDE_SAMPLE_COUNT = 4410; //100ms in a 44100hz file
+
         public OggSound(SoundManager owner, string filename, bool stream) : base(owner, filename, stream, true)
         {
             if (!ToolBox.IsProperFilenameCase(filename))
@@ -21,7 +24,7 @@ namespace Barotrauma.Sounds
 
             reader = new VorbisReader(filename);
 
-            ALFormat = reader.Channels == 1 ? ALFormat.Mono16 : ALFormat.Stereo16;
+            ALFormat = reader.Channels == 1 ? Al.FormatMono16 : Al.FormatStereo16;
             SampleRate = reader.SampleRate;
 
             if (!stream)
@@ -32,33 +35,54 @@ namespace Barotrauma.Sounds
                 short[] shortBuffer = new short[bufferSize];
 
                 int readSamples = reader.ReadSamples(floatBuffer, 0, bufferSize);
+
+                playbackAmplitude = new List<float>();
+                for (int i=0;i<bufferSize;i+=reader.Channels*AMPLITUDE_SAMPLE_COUNT)
+                {
+                    float maxAmplitude = 0.0f;
+                    for (int j=i;j<i+reader.Channels*AMPLITUDE_SAMPLE_COUNT;j++)
+                    {
+                        if (j >= bufferSize) { break; }
+                        maxAmplitude = Math.Max(maxAmplitude, Math.Abs(floatBuffer[j]));
+                    }
+                    playbackAmplitude.Add(maxAmplitude);
+                }
                 
                 CastBuffer(floatBuffer, shortBuffer, readSamples);
                 
-                AL.BufferData((int)ALBuffer, ALFormat, shortBuffer,
+                Al.BufferData(ALBuffer, ALFormat, shortBuffer,
                                 readSamples * sizeof(short), SampleRate);
 
-                ALError alError = AL.GetError();
-                if (alError != ALError.NoError)
+                int alError = Al.GetError();
+                if (alError != Al.NoError)
                 {
-                    throw new Exception("Failed to set buffer data for non-streamed audio! "+AL.GetErrorString(alError));
+                    throw new Exception("Failed to set buffer data for non-streamed audio! "+Al.GetErrorString(alError));
                 }
 
                 MuffleBuffer(floatBuffer, SampleRate, reader.Channels);
 
                 CastBuffer(floatBuffer, shortBuffer, readSamples);
 
-                AL.BufferData((int)ALMuffledBuffer, ALFormat, shortBuffer,
+                Al.BufferData(ALMuffledBuffer, ALFormat, shortBuffer,
                                 readSamples * sizeof(short), SampleRate);
 
-                alError = AL.GetError();
-                if (alError != ALError.NoError)
+                alError = Al.GetError();
+                if (alError != Al.NoError)
                 {
-                    throw new Exception("Failed to set buffer data for non-streamed audio! " + AL.GetErrorString(alError));
+                    throw new Exception("Failed to set buffer data for non-streamed audio! " + Al.GetErrorString(alError));
                 }
 
                 reader.Dispose();
             }
+        }
+
+        public override float GetAmplitudeAtPlaybackPos(int playbackPos)
+        {
+            if (playbackAmplitude == null || playbackAmplitude.Count == 0) { return 0.0f; }
+            int index = playbackPos / AMPLITUDE_SAMPLE_COUNT;
+            if (index < 0) { return 0.0f; }
+            if (index >= playbackAmplitude.Count) { index = playbackAmplitude.Count - 1; }
+            return playbackAmplitude[index];
         }
 
         public override int FillStreamBuffer(int samplePos, short[] buffer)

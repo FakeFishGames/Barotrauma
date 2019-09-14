@@ -7,13 +7,18 @@ namespace Barotrauma
     {
         public void CreateNetworkEvent(Entity entity, bool remove)
         {
+            CreateNetworkEventProjSpecific(entity, remove);
+        }
+
+        partial void CreateNetworkEventProjSpecific(Entity entity, bool remove)
+        {
             if (GameMain.Server != null && entity != null)
             {
                 GameMain.Server.CreateEntityEvent(this, new object[] { new SpawnOrRemove(entity, remove) });
             }
         }
 
-        public void ServerWrite(Lidgren.Network.NetBuffer message, Client client, object[] extraData = null)
+        public void ServerWrite(IWriteMessage message, Client client, object[] extraData = null)
         {
             if (GameMain.Server == null) return;
 

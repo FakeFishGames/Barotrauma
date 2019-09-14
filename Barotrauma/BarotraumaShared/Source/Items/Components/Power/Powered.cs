@@ -22,8 +22,8 @@ namespace Barotrauma.Items.Components
         //the maximum amount of power the item can draw from connected items
         protected float powerConsumption;
 
-        [Serialize(0.5f, true), Editable(ToolTip = "The minimum voltage required for the device to function. "+
-            "The voltage is calculated as power / powerconsumption, meaning that a device "+
+        [Editable, Serialize(0.5f, true, description: "The minimum voltage required for the device to function. " +
+            "The voltage is calculated as power / powerconsumption, meaning that a device " +
             "with a power consumption of 1000 kW would need at least 500 kW of power to work if the minimum voltage is set to 0.5.")]
         public float MinVoltage
         {
@@ -31,39 +31,42 @@ namespace Barotrauma.Items.Components
             set { minVoltage = value; }
         }
 
-        [Editable(ToolTip = "How much power the device draws (or attempts to draw) from the electrical grid."), Serialize(0.0f, true)]
+        [Editable, Serialize(0.0f, true, description: "How much power the device draws (or attempts to draw) from the electrical grid when active.")]
         public float PowerConsumption
         {
             get { return powerConsumption; }
             set { powerConsumption = value; }
         }
         
-        [Serialize(false, true)]
+        [Serialize(false, true, description: "Is the device currently active. Inactive devices don't consume power.")]
         public override bool IsActive
         {
             get { return base.IsActive; }
             set
             {
                 base.IsActive = value;
-                if (!value) currPowerConsumption = 0.0f;
+                if (!value)
+                {
+                    currPowerConsumption = 0.0f;
+                }
             }
         }
 
-        [Serialize(0.0f, true)]
+        [Serialize(0.0f, true, description: "The current power consumption of the device. Intended to be used by StatusEffect conditionals (setting the value from XML is not recommended).")]
         public float CurrPowerConsumption
         {
             get {return currPowerConsumption; }
             set { currPowerConsumption = value; }
         }
 
-        [Serialize(0.0f, true)]
+        [Serialize(0.0f, true, description: "The current voltage of the item (calculated as power consumption / available power). Intended to be used by StatusEffect conditionals (setting the value from XML is not recommended).")]
         public float Voltage
         {
             get { return voltage; }
             set { voltage = Math.Max(0.0f, value); }
         }
 
-        [Editable(ToolTip = "Can the item be damaged by electomagnetic pulses."), Serialize(true, true)]
+        [Editable, Serialize(true, true, description: "Can the item be damaged by electomagnetic pulses.")]
         public bool VulnerableToEMP
         {
             get;

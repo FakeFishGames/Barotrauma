@@ -1,6 +1,36 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <sounds>
   <!--<startupsound file="Content/Sounds/StartDrone.ogg"/>-->
+
+  <!--
+  <music file="Content/Sounds/Music/Simplex.ogg" type="default"/>
+  <music file="Content/Sounds/Music/Tenebrous Brothers Carnival - Prelude.ogg" type="default"/>
+  -->
+
+  <music file="Content/Sounds/Music/Main Menu Music.ogg" type="menu"/>
+
+  <music file="Content/Sounds/Music/Layer 3 - Leaving Start Location.ogg" type="start"/>
+
+  <music file="Content/Sounds/Music/Layer 4 - Arriving at Destination.ogg" type="endround"/>
+  <music file="Content/Sounds/Music/Road to Hell.ogg" type="crewdead"/>
+
+
+  <music file="Content/Sounds/Music/Desperation.ogg" type="default" intensityrange="0,30"/>
+  <music file="Content/Sounds/Music/Engine room whales.ogg" type="default" intensityrange="0,30"/>
+  <music file="Content/Sounds/Music/Somethings outside.ogg" type="default" intensityrange="0,30"/>
+
+  <music file="Content/Sounds/Music/Layer 0 - Basic.ogg" type="intensity" duckvolume="true" intensityrange="0,100"/>
+  <music file="Content/Sounds/Music/Intensity Layer 1.ogg" type="intensity" intensityrange="10,30"/>
+  <music file="Content/Sounds/Music/Intensity Layer 2.ogg" type="intensity" intensityrange="30,50"/>
+  <music file="Content/Sounds/Music/Intensity Layer 3.ogg" type="intensity" intensityrange="50,70"/>
+  <music file="Content/Sounds/Music/Intensity Layer 4.ogg" type="intensity" intensityrange="70,100"/>
+
+  <music file="Content/Sounds/Music/Layer 1 - Monsters Nearby.ogg" type="monster"/>
+
+  <music file="Content/Sounds/Music/Layer 2 - In The Ruins.ogg" type="ruins"/>
+  <music file="Content/Sounds/Music/Layer 5 - Submarine Flooded.ogg" type="flooded"/>
+  <music file="Content/Sounds/Music/Layer 11 - Crush Depth.ogg" type="deep"/>
+  <music file="Content/Sounds/Music/Layer 12 - Objective Complete.ogg" type="levelend"/>
   
   <damagesound file="Content/Sounds/Damage/StructureBlunt1.ogg" damagerange="0.0,30.0" damagesoundtype="StructureBlunt"/>
   <damagesound file="Content/Sounds/Damage/StructureBlunt2.ogg" damagerange="10.0,50.0" damagesoundtype="StructureBlunt"/>
@@ -79,6 +109,15 @@
   <splash file="Content/Sounds/Water/Splash8.ogg"/>
   <splash file="Content/Sounds/Water/Splash9.ogg"/>
 
+  <zap file="Content/Items/Electricity/Zap1.ogg" volume="1.0" range="500"/>
+  <zap file="Content/Items/Electricity/Zap2.ogg" volume="1.0" range="500"/>
+  <zap file="Content/Items/Electricity/Zap3.ogg" volume="1.0" range="500"/>
+  <zap file="Content/Items/Electricity/Zap4.ogg" volume="1.0" range="500"/>
+  <zap file="Content/Items/Electricity/Zap5.ogg" volume="1.0" range="500"/>
+
+  <rewire file="Content/Sounds/RewiringLoop.ogg" volume="1.0" range="1000"/>
+  <repair file="Content/Sounds/RepairLoop.ogg" volume="1.0" range="1000"/>
+  
   <flow file="Content/Sounds/Water/FlowSmall.ogg"/>
   <flow file="Content/Sounds/Water/FlowMedium.ogg"/>
   <flow file="Content/Sounds/Water/FlowLarge.ogg"/>
@@ -160,34 +199,4 @@
   <ambient file="Content/Sounds/Ambient/DistantPod2.ogg"/>
   <ambient file="Content/Sounds/Ambient/DistantPod3.ogg"/>
   <ambient file="Content/Sounds/Ambient/GlacialMovement.ogg"/>
-
-  <!--
-  <music file="Content/Sounds/Music/Simplex.ogg" type="default"/>
-  <music file="Content/Sounds/Music/Tenebrous Brothers Carnival - Prelude.ogg" type="default"/>
-  -->
-
-  <music file="Content/Sounds/Music/Main Menu Music.ogg" type="menu"/>
-  
-  <music file="Content/Sounds/Music/Layer 3 - Leaving Start Location.ogg" type="start"/>
-  
-  <music file="Content/Sounds/Music/Layer 4 - Arriving at Destination.ogg" type="endround"/>
-  <music file="Content/Sounds/Music/Road to Hell.ogg" type="crewdead"/>
-
-
-  <music file="Content/Sounds/Music/Desperation.ogg" type="default" intensityrange="0,30"/>
-  <music file="Content/Sounds/Music/Engine room whales.ogg" type="default" intensityrange="0,30"/>
-  <music file="Content/Sounds/Music/Somethings outside.ogg" type="default" intensityrange="0,30"/>
-
-  <music file="Content/Sounds/Music/Layer 0 - Basic.ogg" type="intensity" duckvolume="true" intensityrange="0,100"/>
-  <music file="Content/Sounds/Music/Intensity Layer 1.ogg" type="intensity" intensityrange="10,30"/>
-  <music file="Content/Sounds/Music/Intensity Layer 2.ogg" type="intensity" intensityrange="30,50"/>
-  <music file="Content/Sounds/Music/Intensity Layer 3.ogg" type="intensity" intensityrange="50,70"/>
-  <music file="Content/Sounds/Music/Intensity Layer 4.ogg" type="intensity" intensityrange="70,100"/>
-  
-  <music file="Content/Sounds/Music/Layer 1 - Monsters Nearby.ogg" type="monster"/>
-  
-  <music file="Content/Sounds/Music/Layer 2 - In The Ruins.ogg" type="ruins"/>
-  <music file="Content/Sounds/Music/Layer 5 - Submarine Flooded.ogg" type="flooded"/>
-  <music file="Content/Sounds/Music/Layer 11 - Crush Depth.ogg" type="deep"/>
-  <music file="Content/Sounds/Music/Layer 12 - Objective Complete.ogg" type="levelend"/>
 </sounds>

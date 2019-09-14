@@ -14,6 +14,12 @@ namespace Barotrauma
             get { return Math.Max(400, 400 * (GameMain.GraphicsWidth / 1920)); }
         }
 
+        public enum Type
+        {
+            Default,
+            InGame
+        }
+
         public List<GUIButton> Buttons { get; private set; } = new List<GUIButton>();
         //public GUIFrame BackgroundFrame { get; private set; }
         public GUILayoutGroup Content { get; private set; }
@@ -22,6 +28,29 @@ namespace Barotrauma
         public GUITextBlock Text { get; private set; }
         public string Tag { get; private set; }
 
+        public GUIImage Icon
+        {
+            get;
+            private set;
+        }
+
+        public Color IconColor
+        {
+            get { return Icon == null ? Color.White : Icon.Color; }
+            set
+            {
+                if (Icon == null) { return; }
+                Icon.Color = value;
+            }
+        }
+
+        private bool alwaysVisible;
+
+        private float openState;
+        private bool closing;
+
+        private Type type;
+
         public static GUIComponent VisibleBox => MessageBoxes.LastOrDefault();
 
         public GUIMessageBox(string headerText, string text, Vector2? relativeSize = null, Point? minSize = null)
@@ -29,12 +58,11 @@ namespace Barotrauma
         {
             this.Buttons[0].OnClicked = Close;
         }
-        
-        public GUIMessageBox(string headerText, string text, string[] buttons, Vector2? relativeSize = null, Point? minSize = null, Alignment textAlignment = Alignment.TopLeft, string tag = "")
-            : base(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: "")
+
+        public GUIMessageBox(string headerText, string text, string[] buttons, Vector2? relativeSize = null, Point? minSize = null, Alignment textAlignment = Alignment.TopLeft, Type type = Type.Default, string tag = "", Sprite icon = null)
+            : base(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: GUI.Style.GetComponentStyle("GUIMessageBox." + type) != null ? "GUIMessageBox." + type : "GUIMessageBox")
         {
-            //int width = (int)(DefaultWidth * GUI.Scale), height = 0;
-            int width = DefaultWidth, height = 0;
+            int width = (int)(DefaultWidth * (type == Type.Default ? 1.0f : 1.5f)), height = 0;
             if (relativeSize.HasValue)
             {
                 width = (int)(GameMain.GraphicsWidth * relativeSize.Value.X);
@@ -49,137 +77,198 @@ namespace Barotrauma
                 }
             }
 
-            InnerFrame = new GUIFrame(new RectTransform(new Point(width, height), RectTransform, Anchor.Center) { IsFixedSize = false }, style: null);
+            InnerFrame = new GUIFrame(new RectTransform(new Point(width, height), RectTransform, type == Type.InGame ? Anchor.TopCenter : Anchor.Center) { IsFixedSize = false }, style: null);
             GUI.Style.Apply(InnerFrame, "", this);
-
-            Content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), InnerFrame.RectTransform, Anchor.Center)) { AbsoluteSpacing = 5 };
+            this.type = type;
             Tag = tag;
-            
-            Header = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), 
-                headerText, textAlignment: Alignment.Center, wrap: true);
-            GUI.Style.Apply(Header, "", this);
-            Header.RectTransform.MinSize = new Point(0, Header.Rect.Height);
 
-            if (!string.IsNullOrWhiteSpace(text))
+            if (type == Type.Default)
             {
-                Text = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), 
-                    text, textAlignment: textAlignment, wrap: true);
-                GUI.Style.Apply(Text, "", this);
-                Text.RectTransform.NonScaledSize = Text.RectTransform.MinSize = Text.RectTransform.MaxSize = 
-                    new Point(Text.Rect.Width, Text.Rect.Height);
-                Text.RectTransform.IsFixedSize = true;
-            }
+                Content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), InnerFrame.RectTransform, Anchor.Center)) { AbsoluteSpacing = 5 };
+                            
+                Header = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), 
+                    headerText, textAlignment: Alignment.Center, wrap: true);
+                GUI.Style.Apply(Header, "", this);
+                Header.RectTransform.MinSize = new Point(0, Header.Rect.Height);
 
-            var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), Content.RectTransform, Anchor.BottomCenter, maxSize: new Point(1000, 50)),
-                isHorizontal: true, childAnchor: buttons.Length > 1 ? Anchor.BottomLeft : Anchor.Center)
-            {
-                AbsoluteSpacing = 5,
-                IgnoreLayoutGroups = true
-            };
-            buttonContainer.RectTransform.NonScaledSize = buttonContainer.RectTransform.MinSize = buttonContainer.RectTransform.MaxSize = 
-                new Point(buttonContainer.Rect.Width, (int)(30 * GUI.Scale));
-            buttonContainer.RectTransform.IsFixedSize = true;
-
-            if (height == 0)
-            {
-                height += Header.Rect.Height + Content.AbsoluteSpacing;
-                height += (Text == null ? 0 : Text.Rect.Height) + Content.AbsoluteSpacing;
-                height += buttonContainer.Rect.Height;
-                if (minSize.HasValue)
+                if (!string.IsNullOrWhiteSpace(text))
                 {
-                    height = Math.Max(height, minSize.Value.Y);
+                    Text = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), text, textAlignment: textAlignment, wrap: true);
+                    GUI.Style.Apply(Text, "", this);
+                    Text.RectTransform.NonScaledSize = Text.RectTransform.MinSize = Text.RectTransform.MaxSize = 
+                        new Point(Text.Rect.Width, Text.Rect.Height);
+                    Text.RectTransform.IsFixedSize = true;
                 }
 
-                InnerFrame.RectTransform.NonScaledSize = 
-                    new Point(InnerFrame.Rect.Width, (int)Math.Max(height / Content.RectTransform.RelativeSize.Y, height + (int)(50 * GUI.yScale)));
-                Content.RectTransform.NonScaledSize =
-                    new Point(Content.Rect.Width, height);
-            }
+                var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), Content.RectTransform, Anchor.BottomCenter, maxSize: new Point(1000, 50)),
+                    isHorizontal: true, childAnchor: buttons.Length > 1 ? Anchor.BottomLeft : Anchor.Center)
+                {
+                    AbsoluteSpacing = 5,
+                    IgnoreLayoutGroups = true
+                };
+                buttonContainer.RectTransform.NonScaledSize = buttonContainer.RectTransform.MinSize = buttonContainer.RectTransform.MaxSize = 
+                    new Point(buttonContainer.Rect.Width, (int)(30 * GUI.Scale));
+                buttonContainer.RectTransform.IsFixedSize = true;
 
-            Buttons = new List<GUIButton>(buttons.Length);
-            for (int i = 0; i < buttons.Length; i++)
+                if (height == 0)
+                {
+                    height += Header.Rect.Height + Content.AbsoluteSpacing;
+                    height += (Text == null ? 0 : Text.Rect.Height) + Content.AbsoluteSpacing;
+                    height += buttonContainer.Rect.Height;
+                    if (minSize.HasValue) { height = Math.Max(height, minSize.Value.Y); }
+
+                    InnerFrame.RectTransform.NonScaledSize = 
+                        new Point(InnerFrame.Rect.Width, (int)Math.Max(height / Content.RectTransform.RelativeSize.Y, height + (int)(50 * GUI.yScale)));
+                    Content.RectTransform.NonScaledSize =
+                        new Point(Content.Rect.Width, height);
+                }
+
+                Buttons = new List<GUIButton>(buttons.Length);
+                for (int i = 0; i < buttons.Length; i++)
+                {
+                    var button = new GUIButton(new RectTransform(new Vector2(Math.Min(0.9f / buttons.Length, 0.5f), 1.0f), buttonContainer.RectTransform), buttons[i], style: "GUIButtonLarge");
+                    Buttons.Add(button);
+                }
+            }
+            else if (type == Type.InGame)
             {
-                var button = new GUIButton(new RectTransform(new Vector2(Math.Min(0.9f / buttons.Length, 0.5f), 1.0f), buttonContainer.RectTransform), buttons[i], style: "GUIButtonLarge");
-                Buttons.Add(button);
-            }
+                InnerFrame.RectTransform.AbsoluteOffset = new Point(0, GameMain.GraphicsHeight);
+                alwaysVisible = true;
+                CanBeFocused = false;
+                GUI.Style.Apply(InnerFrame, "", this);
 
+                var horizontalLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.98f, 0.95f), InnerFrame.RectTransform, Anchor.Center), 
+                    isHorizontal: true, childAnchor: Anchor.CenterLeft)
+                {
+                    Stretch = true,
+                    RelativeSpacing = 0.02f
+                };
+                if (icon != null)
+                {
+                    Icon = new GUIImage(new RectTransform(new Vector2(0.2f, 0.95f), horizontalLayoutGroup.RectTransform), icon, scaleToFit: true);
+                }
+
+                Content = new GUILayoutGroup(new RectTransform(new Vector2(icon != null ? 0.65f : 0.85f, 1.0f), horizontalLayoutGroup.RectTransform));
+
+                var buttonContainer = new GUIFrame(new RectTransform(new Vector2(0.15f, 1.0f), horizontalLayoutGroup.RectTransform), style: null);
+                Buttons = new List<GUIButton>(1)
+                {
+                    new GUIButton(new RectTransform(new Vector2(0.5f, 0.5f), buttonContainer.RectTransform, Anchor.Center), 
+                        style: GUI.Style.GetComponentStyle("GUIButtonSolidHorizontalArrow") != null ? "GUIButtonSolidHorizontalArrow" : "GUIButtonHorizontalArrow")
+                    {
+                        OnClicked = Close
+                    }
+                };
+
+                Header = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), headerText, wrap: true);
+                GUI.Style.Apply(Header, "", this);
+                Header.RectTransform.MinSize = new Point(0, Header.Rect.Height);
+
+                if (!string.IsNullOrWhiteSpace(text))
+                {
+                    Text = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), text, textAlignment: textAlignment, wrap: true);
+                    GUI.Style.Apply(Text, "", this);
+                    /*Content.Recalculate();
+                    Text.RectTransform.NonScaledSize = Text.RectTransform.MinSize = Text.RectTransform.MaxSize =
+                        new Point(Text.Rect.Width, Text.Rect.Height);
+                    Text.RectTransform.IsFixedSize = true;*/
+                }
+
+                if (height == 0)
+                {
+                    height += Header.Rect.Height + Content.AbsoluteSpacing;
+                    height += (Text == null ? 0 : Text.Rect.Height) + Content.AbsoluteSpacing;
+                    if (minSize.HasValue) { height = Math.Max(height, minSize.Value.Y); }
+
+                    InnerFrame.RectTransform.NonScaledSize =
+                        new Point(InnerFrame.Rect.Width, (int)Math.Max(height / Content.RectTransform.RelativeSize.Y, height + (int)(50 * GUI.yScale)));
+                    Content.RectTransform.NonScaledSize =
+                        new Point(Content.Rect.Width, height);
+                }
+                Buttons[0].RectTransform.MaxSize = new Point(Math.Min(Buttons[0].Rect.Width, Buttons[0].Rect.Height));
+            }
+            
             MessageBoxes.Add(this);
         }
 
-        ///// <summary>
-        ///// This is the new constructor.
-        ///// TODO: for some reason the background does not prohibit input on the elements that are behind the box
-        ///// TODO: allow providing buttons in the constructor
-        ///// </summary>
-        /*public GUIMessageBox(RectTransform rectT, string headerText, string text, Alignment textAlignment = Alignment.TopCenter)
-            : base(rectT, "")
+        public static void AddActiveToGUIUpdateList()
         {
-            //BackgroundFrame = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight), rectT, Anchor.Center), null, Color.Black * 0.5f);
-            float headerHeight = 0.2f;
-            float margin = 0.05f;
-            InnerFrame = new GUIFrame(rectT);
-            GUI.Style.Apply(InnerFrame, "", this);
-            Header = null;
-            if (!string.IsNullOrWhiteSpace(headerText))
+            for (int i = 0; i < MessageBoxes.Count; i++)
             {
-                Header = new GUITextBlock(new RectTransform(new Vector2(1, headerHeight), InnerFrame.RectTransform, Anchor.TopCenter)
+                if (MessageBoxes[i] is GUIMessageBox alwaysVisibleMsgBox && alwaysVisibleMsgBox.alwaysVisible)
                 {
-                    RelativeOffset = new Vector2(0, margin)
-                }, headerText, textAlignment: Alignment.Center);
-                GUI.Style.Apply(Header, "", this);
+                    alwaysVisibleMsgBox.AddToGUIUpdateList();
+                    break;
+                }
             }
-            if (!string.IsNullOrWhiteSpace(text))
+            for (int i = MessageBoxes.Count - 1; i >= 0; i--)
             {
-                float offset = headerHeight + margin;
-                var size = Header == null ? Vector2.One : new Vector2(1 - margin * 2, 1 - offset + margin);
-                Text = new GUITextBlock(new RectTransform(size, InnerFrame.RectTransform, Anchor.TopCenter)
+                if (MessageBoxes[i].UserData as string == "verificationprompt" ||
+                    MessageBoxes[i].UserData as string == "bugreporter")
                 {
-                    RelativeOffset = new Vector2(0, offset)
-                }, text, textAlignment: textAlignment, wrap: true);
-                GUI.Style.Apply(Text, "", this);
+                    continue;
+                }
+                if (!(MessageBoxes[i] is GUIMessageBox msgBox) || !msgBox.alwaysVisible)
+                {
+                    MessageBoxes[i].AddToGUIUpdateList();
+                    break;
+                }
             }
-            MessageBoxes.Add(this);
-        }*/
+        }
 
-        //public override void AddToGUIUpdateList(bool ignoreChildren = false, bool updateLast = false)
-        //{
-        //    base.AddToGUIUpdateList(ignoreChildren, updateLast);
-        //}
+        protected override void Update(float deltaTime)
+        {
+            if (type == Type.InGame)
+            {
+                Vector2 initialPos = new Vector2(0.0f, GameMain.GraphicsHeight);
+                Vector2 defaultPos = new Vector2(0.0f, HUDLayoutSettings.InventoryAreaLower.Y - InnerFrame.Rect.Height - 20 * GUI.Scale);
+                Vector2 endPos = new Vector2(GameMain.GraphicsWidth, defaultPos.Y);
 
-        //public override void Draw(SpriteBatch spriteBatch, bool drawChildren = true)
-        //{
-        //    if (RectTransform == null)
-        //    {
-        //        base.Draw(spriteBatch, drawChildren);
-        //    }
-        //    else
-        //    {
-        //        // Custom draw order so that the background is rendered behind the parent.
-        //        if (drawChildren)
-        //        {
-        //            BackgroundFrame?.Draw(spriteBatch);
-        //        }
-        //        base.Draw(spriteBatch, false);
-        //        if (drawChildren)
-        //        {
-        //            InnerFrame?.Draw(spriteBatch);
-        //            Header?.Draw(spriteBatch);
-        //            Text?.Draw(spriteBatch);
-        //            Buttons.ForEach(b => b.Draw(spriteBatch));
-        //        }
-        //    }
-        //}
-        
+                /*for (int i = MessageBoxes.IndexOf(this); i >= 0; i--)
+                {
+                    if (MessageBoxes[i] is GUIMessageBox otherMsgBox && otherMsgBox != this && otherMsgBox.type == type && !otherMsgBox.closing)
+                    {
+                        defaultPos = new Vector2(
+                            Math.Max(otherMsgBox.InnerFrame.RectTransform.AbsoluteOffset.X + 10 * GUI.Scale, defaultPos.X),
+                            Math.Max(otherMsgBox.InnerFrame.RectTransform.AbsoluteOffset.Y + 10 * GUI.Scale, defaultPos.Y));
+                    }
+                }*/
+
+                if (!closing)
+                {
+                    InnerFrame.RectTransform.AbsoluteOffset = Vector2.SmoothStep(initialPos, defaultPos, openState).ToPoint();
+                    openState = Math.Min(openState + deltaTime * 2.0f, 1.0f);
+                }
+                else
+                {
+                    openState += deltaTime * 2.0f;
+                    InnerFrame.RectTransform.AbsoluteOffset = Vector2.SmoothStep(defaultPos, endPos, openState - 1.0f).ToPoint();
+                    if (openState >= 2.0f)
+                    {
+                        if (Parent != null) { Parent.RemoveChild(this); }
+                        if (MessageBoxes.Contains(this)) { MessageBoxes.Remove(this); }
+                    }
+                }
+            }
+        }
+
+
         public void Close()
         {
-            if (Parent != null) Parent.RemoveChild(this);
-            if (MessageBoxes.Contains(this)) MessageBoxes.Remove(this);
+            if (type == Type.InGame)
+            {
+                closing = true;
+            }
+            else
+            {
+                if (Parent != null) { Parent.RemoveChild(this); }
+                if (MessageBoxes.Contains(this)) { MessageBoxes.Remove(this); }
+            }
         }
 
         public bool Close(GUIButton button, object obj)
         {
-            Close();
-
+            Close();            
             return true;
         }
 

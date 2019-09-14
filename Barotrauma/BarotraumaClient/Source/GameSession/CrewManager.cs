@@ -20,8 +20,8 @@ namespace Barotrauma
         /// </summary>
         const float CharacterWaitOnSwitch = 10.0f;
 
-        private List<CharacterInfo> characterInfos = new List<CharacterInfo>();
-        private List<Character> characters = new List<Character>();
+        private readonly List<CharacterInfo> characterInfos = new List<CharacterInfo>();
+        private readonly List<Character> characters = new List<Character>();
 
         private Point screenResolution;
 
@@ -172,6 +172,11 @@ namespace Barotrauma
             }
 
             var reports = Order.PrefabList.FindAll(o => o.TargetAllCharacters && o.SymbolSprite != null);
+            if (reports.None())
+            {
+                DebugConsole.ThrowError("No valid orders for report buttons found! Cannot create report buttons. The orders for the report buttons must have 'targetallcharacters' attribute enabled and a valid 'symbolsprite' defined.");
+                return;
+            }
             reportButtonFrame = new GUILayoutGroup(new RectTransform(
                 new Point((HUDLayoutSettings.CrewArea.Height - (int)((reports.Count - 1) * 5 * GUI.Scale)) / reports.Count, HUDLayoutSettings.CrewArea.Height), guiFrame.RectTransform))
             {
@@ -190,7 +195,8 @@ namespace Barotrauma
                     {
                         if (Character.Controlled == null || Character.Controlled.SpeechImpediment >= 100.0f) { return false; }
                         SetCharacterOrder(null, order, null, Character.Controlled);
-                        foreach (var hull in Character.Controlled.GetVisibleHulls())
+                        var visibleHulls = new List<Hull>(Character.Controlled.GetVisibleHulls());
+                        foreach (var hull in visibleHulls)
                         {
                             HumanAIController.PropagateHullSafety(Character.Controlled, hull);
                             HumanAIController.RefreshTargets(Character.Controlled, order, hull);
@@ -455,9 +461,13 @@ namespace Barotrauma
                 isHorizontal: true, childAnchor: Anchor.CenterLeft)
             {
                 AbsoluteSpacing = (int)(10 * GUI.Scale),
-                UserData = "orderbuttons",
-                CanBeFocused = false
+                UserData = "orderbuttons"
             };
+
+            var spacer = new GUIFrame(new RectTransform(new Point(spacing, orderButtonFrame.Rect.Height), frame.RectTransform)
+            {
+                AbsoluteOffset = new Point(characterInfoWidth, 0)
+            });
 
             //listbox for holding the orders inappropriate for this character
             //(so we can easily toggle their visibility)
@@ -511,7 +521,7 @@ namespace Barotrauma
 
                     if (btn.GetChildByUserData("selected").Visible)
                     {
-                        SetCharacterOrder(character, Order.PrefabList.Find(o => o.AITag == "dismissed"), null, Character.Controlled);
+                        SetCharacterOrder(character, Order.GetPrefab("dismissed"), null, Character.Controlled);
                     }
                     else
                     {
@@ -941,7 +951,7 @@ namespace Barotrauma
             else
             {
                 orderTargetFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.2f + order.Options.Length * 0.1f, 0.18f), GUI.Canvas)
-                    { AbsoluteOffset = new Point(orderButton.Rect.Center.X, orderButton.Rect.Bottom) },
+                    { AbsoluteOffset = new Point((int)(200 * GUI.Scale), orderButton.Rect.Bottom) },
                     isHorizontal: true, childAnchor: Anchor.BottomLeft)
                 {
                     UserData = character,
@@ -970,6 +980,12 @@ namespace Barotrauma
                             return true;
                         }
                     };
+                    new GUIFrame(new RectTransform(Vector2.One * 1.5f, optionButton.RectTransform, Anchor.Center), style: "OuterGlow")
+                    {
+                        Color = Color.Black,
+                        HoverColor = Color.CadetBlue,
+                        PressedColor = Color.Black
+                    }.RectTransform.SetAsFirstChild();
 
                     OrderOptionButtons.Add(optionButton);
 
@@ -988,14 +1004,15 @@ namespace Barotrauma
                 color: matchingItems.Count > 1 ? Color.Black * 0.9f : Color.Black * 0.7f);
         }
 
-        public void HighlightOrderButton(Character character, string orderAiTag, Color color, Vector2? flashRectInflate = null)
+        public void HighlightOrderButton(Character character, string orderIdentifier, Color color, Vector2? flashRectInflate = null)
         {
-            var order = Order.PrefabList.Find(o => o.AITag == orderAiTag);
+            var order = Order.GetPrefab(orderIdentifier);
             if (order == null)
             {
-                DebugConsole.ThrowError("Could not find an order with the AI tag \"" + orderAiTag + "\".\n" + Environment.StackTrace);
+                DebugConsole.ThrowError("Could not find an order with the AI tag \"" + orderIdentifier + "\".\n" + Environment.StackTrace);
                 return;
             }
+            ToggleCrewAreaOpen = true;
             var characterElement = characterListBox.Content.FindChild(character);
             GUIButton orderBtn = characterElement.FindChild(order, recursive: true) as GUIButton;
             if (orderBtn.Frame.FlashTimer <= 0)
@@ -1238,7 +1255,11 @@ namespace Barotrauma
                 }
                 hoverArea.Inflate(100, 100);
 
-                if (!hoverArea.Contains(PlayerInput.MousePosition)) orderTargetFrame = null;
+                if (!hoverArea.Contains(PlayerInput.MousePosition) || PlayerInput.RightButtonClicked())
+                {
+                    orderTargetFrame = null;
+                    OrderOptionButtons.Clear();
+                }
             }
         }
 
@@ -1318,7 +1339,7 @@ namespace Barotrauma
             GUIComponent existingPreview = crewFrame.FindChild("SelectedCharacter");
             if (existingPreview != null) crewFrame.RemoveChild(existingPreview);
 
-            var previewPlayer = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.8f), crewFrame.RectTransform, Anchor.CenterRight) { RelativeOffset = new Vector2(0.05f, 0.0f) }, style: "InnerFrame")
+            var previewPlayer = new GUIFrame(new RectTransform(new Vector2(0.45f, 0.9f), crewFrame.RectTransform, Anchor.CenterRight) { RelativeOffset = new Vector2(0.05f, 0.0f) }, style: "InnerFrame")
             {
                 UserData = "SelectedCharacter"
             };
@@ -1348,7 +1369,9 @@ namespace Barotrauma
             {
                 reportButtonFrame.Visible = true;
 
-                var reportButtonParent = ChatBox ?? GameMain.Client.ChatBox;
+                var reportButtonParent = ChatBox ?? GameMain.Client?.ChatBox;
+                if (reportButtonParent == null) { return; }
+
                 reportButtonFrame.RectTransform.AbsoluteOffset = new Point(
                     Math.Min(reportButtonParent.GUIFrame.Rect.X, reportButtonParent.ToggleButton.Rect.X) - reportButtonFrame.Rect.Width - (int)(10 * GUI.Scale),
                     reportButtonParent.GUIFrame.Rect.Y);
@@ -1400,14 +1423,14 @@ namespace Barotrauma
         //    return true;
         //}
 
-        private void ToggleReportButton(string orderAiTag, bool enabled)
+        private void ToggleReportButton(string orderIdentifier, bool enabled)
         {
-            Order order = Order.PrefabList.Find(o => o.AITag == orderAiTag);
+            Order order = Order.GetPrefab(orderIdentifier);
 
             //already reported, disable the button
             /*if (GameMain.GameSession.CrewManager.ActiveOrders.Any(o =>
                 o.First.TargetEntity == Character.Controlled.CurrentHull &&
-                o.First.AITag == orderAiTag))
+                o.First.Identifier == orderIdentifier))
             {
                 enabled = false;
             }*/

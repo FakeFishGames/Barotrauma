@@ -1,5 +1,4 @@
 ﻿using Microsoft.Xna.Framework;
-using Lidgren.Network;
 using System;
 using System.Collections.Generic;
 
@@ -17,7 +16,7 @@ namespace Barotrauma.Networking
         }
     }
 
-    partial class BanList
+    public partial class BanList
     {
         private GUIComponent banFrame;
 
@@ -85,14 +84,12 @@ namespace Barotrauma.Networking
                     font: GUI.SmallFont);
 
                 var reasonText = new GUITextBlock(new RectTransform(new Vector2(0.6f, 0.0f), paddedPlayerFrame.RectTransform),
-                    TextManager.Get("BanReason") + 
+                    TextManager.Get("BanReason") + " " +
                         (string.IsNullOrEmpty(bannedPlayer.Reason) ? TextManager.Get("None") : ToolBox.LimitString(bannedPlayer.Reason, GUI.SmallFont, 170)),
                     font: GUI.SmallFont, wrap: true)
                 {
                     ToolTip = bannedPlayer.Reason
                 };
-
-
             }
 
             return banFrame;
@@ -101,11 +98,12 @@ namespace Barotrauma.Networking
         private bool RemoveBan(GUIButton button, object obj)
         {
             BannedPlayer banned = obj as BannedPlayer;
-            if (banned == null) return false;
+            if (banned == null) { return false; }
 
             localRemovedBans.Add(banned.UniqueIdentifier);
-
             RecreateBanFrame();
+
+            GameMain.Client?.ServerSettings?.ClientAdminWrite(ServerSettings.NetFlags.Properties);
 
             return true;
         }
@@ -113,23 +111,17 @@ namespace Barotrauma.Networking
         private bool RangeBan(GUIButton button, object obj)
         {
             BannedPlayer banned = obj as BannedPlayer;
-            if (banned == null) return false;
+            if (banned == null) { return false; }
 
             localRangeBans.Add(banned.UniqueIdentifier);
-
             RecreateBanFrame();
 
-            return true;
-        }
-
-        private bool CloseFrame(GUIButton button, object obj)
-        {
-            banFrame = null;
+            GameMain.Client?.ServerSettings?.ClientAdminWrite(ServerSettings.NetFlags.Properties);
 
             return true;
         }
-
-        public void ClientAdminRead(NetBuffer incMsg)
+        
+        public void ClientAdminRead(IReadMessage incMsg)
         {
             bool hasPermission = incMsg.ReadBoolean();
             if (!hasPermission)
@@ -142,8 +134,8 @@ namespace Barotrauma.Networking
             incMsg.ReadPadBits();
 
             bannedPlayers.Clear();
-            Int32 bannedPlayerCount = incMsg.ReadVariableInt32();
-            for (int i = 0; i < bannedPlayerCount; i++)
+            UInt32 bannedPlayerCount = incMsg.ReadVariableUInt32();
+            for (int i = 0; i < (int)bannedPlayerCount; i++)
             {
                 string name = incMsg.ReadString();
                 UInt16 uniqueIdentifier = incMsg.ReadUInt16();
@@ -172,7 +164,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void ClientAdminWrite(NetBuffer outMsg)
+        public void ClientAdminWrite(IWriteMessage outMsg)
         {
             outMsg.Write((UInt16)localRemovedBans.Count);
             foreach (UInt16 uniqueId in localRemovedBans)

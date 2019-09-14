@@ -30,24 +30,12 @@ namespace Barotrauma
 
         public SpriteSheet FocusIndicator { get; private set; }
             
-        public GUIStyle(string file, GraphicsDevice graphicsDevice)
+        public GUIStyle(XElement element, GraphicsDevice graphicsDevice)
         {
             this.graphicsDevice = graphicsDevice;
             componentStyles = new Dictionary<string, GUIComponentStyle>();
-
-            XDocument doc;
-            try
-            {
-                ToolBox.IsProperFilenameCase(file);
-                doc = XDocument.Load(file, LoadOptions.SetBaseUri);
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Loading style \"" + file + "\" failed", e);
-                return;
-            }
-            configElement = doc.Root;
-            foreach (XElement subElement in doc.Root.Elements())
+            configElement = element;
+            foreach (XElement subElement in configElement.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -113,26 +101,34 @@ namespace Barotrauma
 
         private void RescaleFonts()
         {
+            if (configElement == null) { return; }
+            if (configElement.Elements() == null) { return; }
             foreach (XElement subElement in configElement.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "font":
+                        if (Font == null) { continue; }
                         Font.Size = GetFontSize(subElement);
                         break;
                     case "smallfont":
+                        if (SmallFont == null) { continue; }
                         SmallFont.Size = GetFontSize(subElement);
                         break;
                     case "largefont":
+                        if (LargeFont == null) { continue; }
                         LargeFont.Size = GetFontSize(subElement);
                         break;
                     case "objectivetitle":
+                        if (ObjectiveTitleFont == null) { continue; }
                         ObjectiveTitleFont.Size = GetFontSize(subElement);
                         break;
                     case "objectivename":
+                        if (ObjectiveNameFont == null) { continue; }
                         ObjectiveNameFont.Size = GetFontSize(subElement);
                         break;
                     case "videotitle":
+                        if (VideoTitleFont == null) { continue; }
                         VideoTitleFont.Size = GetFontSize(subElement);
                         break;
                 }
@@ -144,7 +140,8 @@ namespace Barotrauma
             string file         = GetFontFilePath(element);
             uint size           = GetFontSize(element);
             bool dynamicLoading = GetFontDynamicLoading(element);
-            return new ScalableFont(file, size, graphicsDevice, dynamicLoading);
+            bool isCJK          = GetIsCJK(element);
+            return new ScalableFont(file, size, graphicsDevice, dynamicLoading, isCJK);
         }
 
         private uint GetFontSize(XElement element)
@@ -187,6 +184,20 @@ namespace Barotrauma
                 }
             }
             return element.GetAttributeBool("dynamicloading", false);
+        }
+
+        private bool GetIsCJK(XElement element)
+        {
+            foreach (XElement subElement in element.Elements())
+            {
+                if (subElement.Name.ToString().ToLowerInvariant() != "override") { continue; }
+                string language = subElement.GetAttributeString("language", "").ToLowerInvariant();
+                if (GameMain.Config.Language.ToLowerInvariant() == language)
+                {
+                    return subElement.GetAttributeBool("iscjk", false);
+                }
+            }
+            return element.GetAttributeBool("iscjk", false);
         }
 
         public GUIComponentStyle GetComponentStyle(string name)

@@ -1,9 +1,5 @@
 ﻿using Barotrauma.Items.Components;
-using Barotrauma.Networking;
-using Microsoft.Xna.Framework;
 using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -11,9 +7,6 @@ namespace Barotrauma
     {
         private Submarine[] subs;
         private List<Character>[] crews;
-
-        private bool initialized = false;
-        private int state = 0;
 
         private string[] descriptions;
         private static string[] teamNames = { "Team A", "Team B" };

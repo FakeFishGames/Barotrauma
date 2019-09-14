@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
 using System.Xml.Linq;
-using Lidgren.Network;
 using System.Collections.Generic;
 using System.IO;
 
@@ -81,10 +80,8 @@ namespace Barotrauma
 
             bool success =
                 GameMain.Server.ConnectedClients.Any(c => c.InGame && c.Character != null && !c.Character.IsDead);
-
-#if CLIENT
+            
             success = success || (GameMain.Server.Character != null && !GameMain.Server.Character.IsDead);
-#endif
 
             /*if (success)
             {
@@ -100,14 +97,11 @@ namespace Barotrauma
 
             GameMain.GameSession.EndRound("");
             
+            //client character has spawned this round -> remove old data (and replace with an up-to-date one if the client still has an alive character)
+            characterData.RemoveAll(cd => cd.HasSpawned);
+            
             foreach (Client c in GameMain.Server.ConnectedClients)
             {
-                if (c.HasSpawned)
-                {
-                    //client has spawned this round -> remove old data (and replace with new one if the client still has an alive character)
-                    characterData.RemoveAll(cd => cd.MatchesClient(c));
-                }
-                
                 if (c.Character?.Info != null && !c.Character.IsDead)
                 {
                     characterData.Add(new CharacterCampaignData(c));
@@ -119,11 +113,7 @@ namespace Barotrauma
             {
                 c.Inventory?.DeleteAllItems();
             }
-
-#if CLIENT
-            GameMain.GameSession.CrewManager.EndRound();
-#endif
-
+            
             if (success)
             {
                 bool atEndPosition = Submarine.MainSub.AtEndPosition;

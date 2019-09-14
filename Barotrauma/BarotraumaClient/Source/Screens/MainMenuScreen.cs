@@ -9,12 +9,13 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
     class MainMenuScreen : Screen
     {
-        public enum Tab { NewGame = 1, LoadGame = 2, HostServer = 3, Settings = 4, Tutorials = 5, JoinServer = 6, CharacterEditor = 7, SubmarineEditor = 8, QuickStartDev = 9, SteamWorkshop = 10, Credits = 11 }
+        public enum Tab { NewGame = 1, LoadGame = 2, HostServer = 3, Settings = 4, Tutorials = 5, JoinServer = 6, CharacterEditor = 7, SubmarineEditor = 8, QuickStartDev = 9, SteamWorkshop = 10, Credits = 11, Empty = 12 }
 
         private GUIComponent buttonsParent;
 
@@ -22,8 +23,8 @@ namespace Barotrauma
 
         private CampaignSetupUI campaignSetupUI;
 
-        private GUITextBox serverNameBox, portBox, queryPortBox, passwordBox, maxPlayersBox;
-        private GUITickBox isPublicBox, useUpnpBox;
+        private GUITextBox serverNameBox, /*portBox, queryPortBox,*/ passwordBox, maxPlayersBox;
+        private GUITickBox isPublicBox/*, useUpnpBox*/;
 
         private GUIButton joinServerButton, hostServerButton, steamWorkshopButton;
 
@@ -37,7 +38,11 @@ namespace Barotrauma
         private GUIComponent titleText;
 
         private CreditsPlayer creditsPlayer;
-        
+
+        #if OSX
+        private bool firstLoadOnMac = true;
+        #endif
+
         #region Creation
         public MainMenuScreen(GameMain game)
         {
@@ -198,10 +203,6 @@ namespace Barotrauma
                     UserData = Tab.SteamWorkshop,
                     OnClicked = SelectTab
                 };
-
-/*#if OSX && !DEBUG
-                steamWorkshopButton.Text += " (Not yet available on MacOS)";
-#endif*/
             }
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("SubEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
@@ -251,7 +252,7 @@ namespace Barotrauma
                 UserData = Tab.Settings,
                 OnClicked = SelectTab
             };
-            //TODO: translate
+
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), optionList.RectTransform), TextManager.Get("CreditsButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
                 ForceUpperCase = true,
@@ -318,7 +319,7 @@ namespace Barotrauma
                 StartNewGame = StartGame
             };
 
-            var hostServerScale = new Vector2(0.7f, 1.0f);
+            var hostServerScale = new Vector2(0.7f, 0.6f);
             menuTabs[(int)Tab.HostServer] = new GUIFrame(new RectTransform(
                 Vector2.Multiply(relativeSize, hostServerScale), GUI.Canvas, anchor, pivot, minSize.Multiply(hostServerScale), maxSize.Multiply(hostServerScale)) { RelativeOffset = relativeSpacing });
 
@@ -360,9 +361,9 @@ namespace Barotrauma
                 OnClicked = SelectTab
             };
         }
-#endregion
+        #endregion
 
-#region Selection
+        #region Selection
         public override void Select()
         {
             base.Select();
@@ -378,6 +379,25 @@ namespace Barotrauma
             ResetButtonStates(null);
 
             GameAnalyticsManager.SetCustomDimension01("");
+
+            #if OSX
+            // Hack for adjusting the viewport properly after splash screens on older Macs
+            if (firstLoadOnMac)
+            {
+                firstLoadOnMac = false;
+
+                menuTabs[(int)Tab.Empty] = new GUIFrame(new RectTransform(new Vector2(1f, 1f), GUI.Canvas), "", Color.Transparent)
+                {
+                    CanBeFocused = false
+                };
+                var emptyList = new GUIListBox(new RectTransform(new Vector2(0.0f, 0.0f), menuTabs[(int)Tab.Empty].RectTransform))
+                {
+                    CanBeFocused = false
+                };
+
+                SelectTab(null, Tab.Empty);
+            }
+            #endif
         }
 
         public override void Deselect()
@@ -486,7 +506,8 @@ namespace Barotrauma
                 }
             }
             else
-            { 
+            {
+                titleText.Visible = true;
                 selectedTab = 0;
             }
 
@@ -555,7 +576,7 @@ namespace Barotrauma
             //(gamesession.GameMode as SinglePlayerCampaign).GenerateMap(ToolBox.RandomSeed(8));
             gamesession.StartRound(ToolBox.RandomSeed(8));
             GameMain.GameScreen.Select();
-
+            // TODO: modding support
             string[] jobIdentifiers = new string[] { "captain", "engineer", "mechanic" };
             for (int i = 0; i < 3; i++)
             {
@@ -567,14 +588,14 @@ namespace Barotrauma
                     return;
                 }
                 var characterInfo = new CharacterInfo(
-                    Character.HumanConfigFile,
-                    jobPrefab: JobPrefab.List.Find(j => j.Identifier == jobIdentifiers[i]));
+                    Character.HumanSpeciesName,
+                    jobPrefab: JobPrefab.Get(jobIdentifiers[i]));
                 if (characterInfo.Job == null)
                 {
                     DebugConsole.ThrowError("Failed to find the job \"" + jobIdentifiers[i] + "\"!");
                 }
 
-                var newCharacter = Character.Create(Character.HumanConfigFile, spawnPoint.WorldPosition, ToolBox.RandomSeed(8), characterInfo);
+                var newCharacter = Character.Create(Character.HumanSpeciesName, spawnPoint.WorldPosition, ToolBox.RandomSeed(8), characterInfo);
                 newCharacter.GiveJobItems(spawnPoint);
                 gamesession.CrewManager.AddCharacter(newCharacter);
                 Character.Controlled = newCharacter;
@@ -679,7 +700,7 @@ namespace Barotrauma
                 return false;
             }
 
-            if (!int.TryParse(portBox.Text, out int port) || port < 0 || port > 65535)
+            /*if (!int.TryParse(portBox.Text, out int port) || port < 0 || port > 65535)
             {
                 portBox.Text = NetConfig.DefaultPort.ToString();
                 portBox.Flash();
@@ -696,38 +717,53 @@ namespace Barotrauma
                     portBox.Flash();
                     return false;
                 }
-            }
+            }*/
 
             GameMain.NetLobbyScreen = new NetLobbyScreen();
             try
             {
-                int ownerKey = Math.Max(CryptoRandom.Instance.Next(),1);
+                string exeName = ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.ServerExecutable)?.FirstOrDefault();
+                if (string.IsNullOrEmpty(exeName))
+                {
+                    DebugConsole.ThrowError("No server executable defined in the selected content packages. Attempting to use the default executable...");
+                    exeName = "DedicatedServer.exe";
+                }
 
                 string arguments = "-name \"" + name.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"" +
-                                   " -port " + port.ToString() +
-                                   " -queryport " + queryPort.ToString() +
+                                   " -public " + isPublicBox.Selected.ToString() +
                                    " -password \"" + passwordBox.Text.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"" +
-                                   " -upnp " + useUpnpBox.Selected +
-                                   " -playercount " + maxPlayersBox.Text +
-                                    " -ownerkey " + ownerKey.ToString();
+                                   " -maxplayers " + maxPlayersBox.Text;
 
-                string filename = "DedicatedServer.exe";
+                int ownerKey = 0;
+
+                if (Steam.SteamManager.GetSteamID()!=0)
+                {
+                    arguments += " -steamid " + Steam.SteamManager.GetSteamID();
+                }
+                else
+                {
+                    ownerKey = Math.Max(CryptoRandom.Instance.Next(), 1);
+                    arguments += " -ownerkey " + ownerKey;
+                }
+
+                string filename = exeName;
 #if LINUX || OSX
-                filename = "./DedicatedServer";
+                filename = "./" + Path.GetFileNameWithoutExtension(exeName);
 #endif
                 var processInfo = new ProcessStartInfo
                 {
                     FileName = filename,
-                    Arguments = arguments
+                    Arguments = arguments,
 #if !DEBUG
-                    ,
+                    CreateNoWindow = true,
+                    UseShellExecute = false,
                     WindowStyle = ProcessWindowStyle.Hidden
 #endif
                 };
                 GameMain.ServerChildProcess = Process.Start(processInfo);
                 Thread.Sleep(1000); //wait until the server is ready before connecting
 
-                GameMain.Client = new GameClient(name, "127.0.0.1:" + port.ToString(),ownerKey);
+                GameMain.Client = new GameClient(name, System.Net.IPAddress.Loopback.ToString(), Steam.SteamManager.GetSteamID(), name, ownerKey, true);
             }
             catch (Exception e)
             {
@@ -767,7 +803,10 @@ namespace Barotrauma
 #else
             joinServerButton.Enabled = true;
             hostServerButton.Enabled = true;
-            steamWorkshopButton.Enabled = true;
+            if (Steam.SteamManager.USE_STEAM)
+            {
+                steamWorkshopButton.Enabled = true;
+            }
 #endif
         }
 
@@ -834,7 +873,7 @@ namespace Barotrauma
                         GUI.DrawLine(spriteBatch, textPos, textPos - Vector2.UnitX * textSize.X, mouseOn ? Color.White : Color.White * 0.7f);
                         if (mouseOn && PlayerInput.LeftButtonClicked())
                         {
-                            Process.Start("http://privacypolicy.daedalic.com");
+                            GameMain.Instance.ShowOpenUrlInWebBrowserPrompt("http://privacypolicy.daedalic.com");
                         }
                     }
                     textPos.Y -= textSize.Y;
@@ -911,6 +950,20 @@ namespace Barotrauma
 #region UI Methods      
         private void CreateHostServerFields()
         {
+            int port = NetConfig.DefaultPort;
+            int queryPort = NetConfig.DefaultQueryPort;
+            int maxPlayers = 8;
+            if (File.Exists(ServerSettings.SettingsFile))
+            {
+                XDocument settingsDoc = XMLExtensions.TryLoadXml(ServerSettings.SettingsFile);
+                if (settingsDoc != null)
+                {
+                    port = settingsDoc.Root.GetAttributeInt("port", port);
+                    queryPort = settingsDoc.Root.GetAttributeInt("queryport", queryPort);
+                    maxPlayers = settingsDoc.Root.GetAttributeInt("maxplayers", maxPlayers);
+                }
+            }
+
             Vector2 textLabelSize = new Vector2(1.0f, 0.1f);
             Alignment textAlignment = Alignment.CenterLeft;
             Vector2 textFieldSize = new Vector2(0.5f, 1.0f);
@@ -925,12 +978,17 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("HostServerButton"), textAlignment: Alignment.Center, font: GUI.LargeFont) { ForceUpperCase = true };
 
             var label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("ServerName"), textAlignment: textAlignment);
-            serverNameBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment);
+            serverNameBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment)
+            { 
+                MaxTextLength = NetConfig.ServerNameMaxLength,
+                OverflowClip = true
+            };
 
+            /* TODO: allow lidgren servers from client?
             label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("ServerPort"), textAlignment: textAlignment);
             portBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment)
             {
-                Text = NetConfig.DefaultPort.ToString(),
+                Text = port.ToString(),
                 ToolTip = TextManager.Get("ServerPortToolTip")
             };
 
@@ -939,10 +997,10 @@ namespace Barotrauma
                 label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("ServerQueryPort"), textAlignment: textAlignment);
                 queryPortBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment)
                 {
-                    Text = NetConfig.DefaultQueryPort.ToString(),
+                    Text = queryPort.ToString(),
                     ToolTip = TextManager.Get("ServerQueryPortToolTip")
                 };
-            }
+            }*/
 
             var maxPlayersLabel = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("MaxPlayers"), textAlignment: textAlignment);
             var buttonContainer = new GUILayoutGroup(new RectTransform(textFieldSize, maxPlayersLabel.RectTransform, Anchor.CenterRight), isHorizontal: true)
@@ -958,7 +1016,7 @@ namespace Barotrauma
 
             maxPlayersBox = new GUITextBox(new RectTransform(new Vector2(0.6f, 1.0f), buttonContainer.RectTransform), textAlignment: Alignment.Center)
             {
-                Text = "8",
+                Text = maxPlayers.ToString(),
                 Enabled = false
             };
             new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonContainer.RectTransform), "+", textAlignment: Alignment.Center)
@@ -978,10 +1036,11 @@ namespace Barotrauma
                 ToolTip = TextManager.Get("PublicServerToolTip")
             };
             
+            /* TODO: remove UPnP altogether?
             useUpnpBox = new GUITickBox(new RectTransform(tickBoxSize, parent.RectTransform), TextManager.Get("AttemptUPnP"))
             {
                 ToolTip = TextManager.Get("AttemptUPnPToolTip")
-            };
+            };*/
 
             new GUIButton(new RectTransform(new Vector2(0.4f, 0.1f), menuTabs[(int)Tab.HostServer].RectTransform, Anchor.BottomRight)
             {

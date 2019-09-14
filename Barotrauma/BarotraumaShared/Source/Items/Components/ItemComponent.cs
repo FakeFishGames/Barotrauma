@@ -57,7 +57,7 @@ namespace Barotrauma.Items.Components
         protected CoroutineHandle delayedCorrectionCoroutine;
         protected float correctionTimer;
                 
-        [Editable, Serialize(0.0f, false)]
+        [Editable, Serialize(0.0f, false, description: "How long it takes to pick up the item (in seconds).")]
         public float PickingTime
         {
             get;
@@ -65,24 +65,30 @@ namespace Barotrauma.Items.Components
         }
 
         public Dictionary<string, SerializableProperty> SerializableProperties { get; protected set; }
-                
+
+        public float IsActiveTimer;
         public virtual bool IsActive
         {
             get { return isActive; }
             set 
             {
 #if CLIENT
-                if (!value && isActive)
+                if (!value)
                 {
-                    StopSounds(ActionType.OnActive);                    
+                    IsActiveTimer = 0.0f;
+                    if (isActive)
+                    {
+                        StopSounds(ActionType.OnActive);
+                    }
                 }
 #endif
-                if (AITarget != null) AITarget.Enabled = value;
-                isActive = value; 
+                isActive = value;
             }
         }
 
         private bool drawable = true;
+
+        public List<PropertyConditional> IsActiveConditionals;
 
         public bool Drawable
         {
@@ -108,45 +114,42 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize(false, false)] //Editable for doors to do their magic
+        [Editable, Serialize(false, false, description: "Can the item be picked up (or interacted with, if the pick action does something else than picking up the item).")] //Editable for doors to do their magic
         public bool CanBePicked
         {
             get { return canBePicked; }
             set { canBePicked = value; }
         }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Should the interface of the item (if it has one) be drawn when the item is equipped.")]
         public bool DrawHudWhenEquipped
         {
             get;
             private set;
         }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Can the item be selected by interacting with it.")]
         public bool CanBeSelected
         {
             get { return canBeSelected; }
             set { canBeSelected = value; }
         }
 
-        //Transfer conditions between same prefab items
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Can the item be combined with other items of the same type.")]
         public bool CanBeCombined
         {
             get { return canBeCombined; }
             set { canBeCombined = value; }
         }
 
-        //Remove item if combination results in 0 condition
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Should the item be removed if combining it with an other item causes the condition of this item to drop to 0.")]
         public bool RemoveOnCombined
         {
             get { return removeOnCombined; }
             set { removeOnCombined = value; }
         }
         
-        //Can the "Use" action be triggered by characters or just other items/statuseffects
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Can the \"Use\" action of the item be triggered by characters or just other items/StatusEffects.")]
         public bool CharacterUsable
         {
             get { return characterUsable; }
@@ -154,7 +157,7 @@ namespace Barotrauma.Items.Components
         }
 
         //Remove item if combination results in 0 condition
-        [Serialize(true, false), Editable(ToolTip = "Can the properties of the component be edited in-game (only applicable if the component has in-game editable properties).")]
+        [Serialize(true, false, description: "Can the properties of the component be edited in-game (only applicable if the component has in-game editable properties)."), Editable()]
         public bool AllowInGameEditing
         {
             get;
@@ -173,7 +176,7 @@ namespace Barotrauma.Items.Components
             protected set;
         }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Should the item be deleted when it's used.")]
         public bool DeleteOnUse
         {
             get;
@@ -190,7 +193,7 @@ namespace Barotrauma.Items.Components
             get { return name; }
         }
         
-        [Editable, Serialize("", true, translationTextTag: "ItemMsg")]
+        [Editable, Serialize("", true, translationTextTag: "ItemMsg", description: "A text displayed next to the item when it's highlighted (generally instructs how to interact with the item, e.g. \"[Mouse1] Pick up\").")]
         public string Msg
         {
             get;
@@ -203,12 +206,13 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        public AITarget AITarget
-        {
-            get;
-            private set;
-        }
-        
+
+        /// <summary>
+        /// How useful the item is in combat? Used by AI to decide which item it should use as a weapon. For the sake of clarity, use a value between 0 and 100 (not enforced).
+        /// </summary>
+        [Serialize(0f, false, description: "How useful the item is in combat? Used by AI to decide which item it should use as a weapon. For the sake of clarity, use a value between 0 and 100 (not enforced).")]
+        public float CombatPriority { get; private set; }
+
         public ItemComponent(Item item, XElement element) 
         {
             this.item = item;
@@ -256,6 +260,15 @@ namespace Barotrauma.Items.Components
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
+                    case "activeconditional":
+                    case "isactive":
+                        IsActiveConditionals = IsActiveConditionals ?? new List<PropertyConditional>();
+                        foreach (XAttribute attribute in subElement.Attributes())
+                        {
+                            if (attribute.Name.ToString().ToLowerInvariant() == "targetitemcomponent") { continue; }
+                            IsActiveConditionals.Add(new PropertyConditional(attribute));
+                        }
+                        break;
                     case "requireditem":
                     case "requireditems":
                         RelatedItem ri = RelatedItem.Load(subElement, item.Name);
@@ -297,12 +310,6 @@ namespace Barotrauma.Items.Components
 
                         effectList.Add(statusEffect);
 
-                        break;
-                    case "aitarget":
-                        AITarget = new AITarget(item, subElement)
-                        {
-                            Enabled = isActive
-                        };
                         break;
                     default:
                         if (LoadElemProjSpecific(subElement)) break;
@@ -378,7 +385,10 @@ namespace Barotrauma.Items.Components
                     item.Use(1.0f);
                     break;
                 case "toggle":
-                    IsActive = !isActive;
+                    if (signal != "0")
+                    {
+                        IsActive = !isActive;
+                    }
                     break;
                 case "set_active":
                 case "set_state":
@@ -404,8 +414,10 @@ namespace Barotrauma.Items.Components
                     {
                         if (item.ParentInventory != null)
                         {
-                            Character owner = (Character)item.ParentInventory.Owner;
-                            if (owner != null && owner.HasSelectedItem(item)) item.Unequip(owner);
+                            if (item.ParentInventory.Owner is Character owner && owner.HasSelectedItem(item))
+                            {
+                                item.Unequip(owner);
+                            }
                             item.ParentInventory.RemoveItem(item);
                         }
                         Entity.Spawner.AddToRemoveQueue(item);
@@ -418,8 +430,10 @@ namespace Barotrauma.Items.Components
                     {
                         if (this.Item.ParentInventory != null)
                         {
-                            Character owner = (Character)this.Item.ParentInventory.Owner;
-                            if (owner != null && owner.HasSelectedItem(this.Item)) this.Item.Unequip(owner);
+                            if (this.Item.ParentInventory.Owner is Character owner && owner.HasSelectedItem(this.Item))
+                            {
+                                this.Item.Unequip(owner);
+                            }
                             this.Item.ParentInventory.RemoveItem(this.Item);
                         }
                         Entity.Spawner.AddToRemoveQueue(this.Item);
@@ -456,12 +470,6 @@ namespace Barotrauma.Items.Components
                 delayedCorrectionCoroutine = null;
             }
 
-            if (AITarget != null)
-            {
-                AITarget.Remove();
-                AITarget = null;
-            }
-
             RemoveComponentSpecific();
         }
 
@@ -478,11 +486,6 @@ namespace Barotrauma.Items.Components
                 loopingSoundChannel = null;
             }
 #endif
-            if (AITarget != null)
-            {
-                AITarget.Remove();
-                AITarget = null;
-            }
 
             ShallowRemoveComponentSpecific();
         }
@@ -555,14 +558,14 @@ namespace Barotrauma.Items.Components
 
         public virtual void FlipY(bool relativeToSub) { }
 
-        public bool HasRequiredContainedItems(bool addMessage, string msg = null)
+        public bool HasRequiredContainedItems(Character user, bool addMessage, string msg = null)
         {
             if (!requiredItems.ContainsKey(RelatedItem.RelationType.Contained)) return true;
             if (item.OwnInventory == null) return false;
             
             foreach (RelatedItem ri in requiredItems[RelatedItem.RelationType.Contained])
             {
-                if (!item.OwnInventory.Items.Any(it => it != null && it.Condition > 0.0f && ri.MatchesItem(it)))
+                if (!ri.CheckRequirements(user, item))
                 {
 #if CLIENT
                     msg = msg ?? ri.Msg;
@@ -686,6 +689,8 @@ namespace Barotrauma.Items.Components
         /// </summary>
         public virtual void OnItemLoaded() { }
 
+        public virtual void OnScaleChanged() { }
+
         // TODO: Consider using generics, interfaces, or inheritance instead of reflection -> would be easier to debug when something changes/goes wrong.
         // For example, currently we can edit the constructors but they will fail in runtime because the parameters are not changed here.
         // It's also painful to find where the constructors are used, because the references exist only at runtime.
@@ -768,6 +773,7 @@ namespace Barotrauma.Items.Components
         public virtual void Reset()
         {
             SerializableProperties = SerializableProperty.DeserializeProperties(this, originalElement);
+            if (this is Pickable) { canBePicked = true; }
             ParseMsg();
             OverrideRequiredItems(originalElement);
         }

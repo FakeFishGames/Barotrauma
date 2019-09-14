@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace Barotrauma.Networking
@@ -11,10 +10,10 @@ namespace Barotrauma.Networking
         /// <summary>
         /// Write the events to the outgoing message. The recipient parameter is only needed for ServerEntityEventManager
         /// </summary>
-        protected void Write(NetOutgoingMessage msg, List<NetEntityEvent> eventsToSync, out List<NetEntityEvent> sentEvents, Client recipient = null)
+        protected void Write(IWriteMessage msg, List<NetEntityEvent> eventsToSync, out List<NetEntityEvent> sentEvents, Client recipient = null)
         {
             //write into a temporary buffer so we can write the number of events before the actual data
-            NetBuffer tempBuffer = new NetBuffer();
+            IWriteMessage tempBuffer = new WriteOnlyMessage();
 
             sentEvents = new List<NetEntityEvent>();
 
@@ -22,7 +21,7 @@ namespace Barotrauma.Networking
             foreach (NetEntityEvent e in eventsToSync)
             {
                 //write into a temporary buffer so we can write the length before the actual data
-                NetBuffer tempEventBuffer = new NetBuffer();
+                IWriteMessage tempEventBuffer = new WriteOnlyMessage();
                 try
                 {
                     WriteEvent(tempEventBuffer, e, recipient);
@@ -65,9 +64,9 @@ namespace Barotrauma.Networking
                     break;
                 }
 
-                tempBuffer.Write((UInt16)e.Entity.ID);
+                tempBuffer.Write(e.EntityID);
                 tempBuffer.Write((byte)tempEventBuffer.LengthBytes);
-                tempBuffer.Write(tempEventBuffer);
+                tempBuffer.Write(tempEventBuffer.Buffer, 0, tempEventBuffer.LengthBytes);
                 tempBuffer.WritePadBits();
                 sentEvents.Add(e);                
 
@@ -78,10 +77,10 @@ namespace Barotrauma.Networking
             {
                 msg.Write(eventsToSync[0].ID);
                 msg.Write((byte)eventCount);
-                msg.Write(tempBuffer);
+                msg.Write(tempBuffer.Buffer, 0, tempBuffer.LengthBytes);
             }
         }
 
-        protected abstract void WriteEvent(NetBuffer buffer, NetEntityEvent entityEvent, Client recipient = null);
+        protected abstract void WriteEvent(IWriteMessage buffer, NetEntityEvent entityEvent, Client recipient = null);
     }    
 }

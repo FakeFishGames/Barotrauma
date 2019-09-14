@@ -33,43 +33,9 @@ namespace Barotrauma
             }
         }
 
-        public class TargetingPriority
-        {
-            public string TargetTag;
-            public AIState State;
-            public float Priority;
-
-            public TargetingPriority(XElement element)
-            {
-                TargetTag = element.GetAttributeString("tag", "").ToLowerInvariant();
-                Enum.TryParse(element.GetAttributeString("state", ""), out State);
-                Priority = element.GetAttributeFloat("priority", 0.0f);
-            }
-
-            public TargetingPriority(string tag, AIState state, float priority)
-            {
-                TargetTag = tag;
-                State = state;
-                Priority = priority;
-            }
-        }
-
         private const float UpdateTargetsInterval = 1.0f;
 
         private const float RaycastInterval = 1.0f;
-
-        private bool attackWhenProvoked;
-
-        private Dictionary<string, TargetingPriority> targetingPriorities = new Dictionary<string, TargetingPriority>();
-        
-        //the preference to attack a specific type of target (-1.0 - 1.0)
-        //0.0 = doesn't attack targets of the type
-        //positive values = attacks targets of this type
-        //negative values = escapes targets of this type        
-        //private float attackRooms, attackHumans, attackWeaker, attackStronger, eatDeadPriority;
-
-        //determines which characters are considered weaker/stronger
-        private float combatStrength;
 
         private SteeringManager outsideSteering, insideSteering;
 
@@ -78,8 +44,17 @@ namespace Barotrauma
         private float raycastTimer;
                 
         private bool IsCoolDownRunning => AttackingLimb != null && AttackingLimb.attack.CoolDownTimer > 0;
-        
-        private bool aggressiveBoarding;
+
+        public float CombatStrength => Character.Params.AI.CombatStrength;
+
+        private float Sight => Character.Params.AI.Sight;
+        private float Hearing => Character.Params.AI.Hearing;
+        private float FleeHealthThreshold => Character.Params.AI.FleeHealthThreshold;
+
+        private float AggressionGreed => Character.Params.AI.AggressionGreed;
+        private float AggressionHurt => Character.Params.AI.AggressionHurt;
+
+        private bool AggressiveBoarding => Character.Params.AI.AggressiveBoarding;
 
         //a point in a wall which the Character is currently targeting
         private WallTarget wallTarget;
@@ -99,24 +74,14 @@ namespace Barotrauma
                 }
             }
         }
-
-        //flee when the health is below this value
-        private float fleeHealthThreshold;
         
         private AITargetMemory selectedTargetMemory;
         private float targetValue;
                 
         private Dictionary<AITarget, AITargetMemory> targetMemories;
-
-        //the eyesight of the NPC (0.0 = blind, 1.0 = sees every target within sightRange)
-        private float sight;
-        //how far the NPC can hear targets from (0.0 = deaf, 1.0 = hears every target within soundRange)
-        private float hearing;
-
+        
         private float colliderSize;
 
-        private readonly float aggressiongreed;
-        private readonly float aggressionhurt;
         // TODO: expose?
         private readonly float priorityFearIncreasement = 2;
         private readonly float memoryFadeTime = 0.5f;
@@ -128,7 +93,7 @@ namespace Barotrauma
         {
             get
             {
-                var targetingPriority = GetTargetingPriority("human");
+                var targetingPriority = GetTargetingPriority(Character.HumanSpeciesName);
                 return targetingPriority != null && targetingPriority.State == AIState.Attack && targetingPriority.Priority > 0.0f;
             }
         }
@@ -140,11 +105,6 @@ namespace Barotrauma
                 var targetingPriority = GetTargetingPriority("room");
                 return targetingPriority != null && targetingPriority.State == AIState.Attack && targetingPriority.Priority > 0.0f;
             }
-        }
-
-        public float CombatStrength
-        {
-            get { return combatStrength; }
         }
 
         public override bool CanEnterSubmarine
@@ -167,19 +127,26 @@ namespace Barotrauma
 
         public bool Reverse { get; private set; }
 
-        public EnemyAIController(Character c, string file, string seed) : base(c)
+        public EnemyAIController(Character c, string seed) : base(c)
         {
+            if (c.IsHuman)
+            {
+                throw new System.Exception($"Tried to create an enemy ai controller for human!");
+            }
+            string file = Character.GetConfigFilePath(c.SpeciesName);
+            if (!Character.TryGetConfigFile(file, out XDocument doc))
+            {
+                throw new System.Exception($"Failed to load the config file for {c.SpeciesName} from {file}!");
+            }
+            var mainElement = doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;
             targetMemories = new Dictionary<AITarget, AITargetMemory>();
             steeringManager = outsideSteering;
 
-            XDocument doc = XMLExtensions.TryLoadXml(file);
-            if (doc == null || doc.Root == null) return;
-
             List<XElement> aiElements = new List<XElement>();
             List<float> aiCommonness = new List<float>();
-            foreach (XElement element in doc.Root.Elements())
+            foreach (XElement element in mainElement.Elements())
             {
-                if (element.Name.ToString().ToLowerInvariant() != "ai") continue;                
+                if (!element.Name.ToString().Equals("ai", StringComparison.OrdinalIgnoreCase)) { continue; }                
                 aiElements.Add(element);
                 aiCommonness.Add(element.GetAttributeFloat("commonness", 1.0f));                
             }
@@ -194,21 +161,7 @@ namespace Barotrauma
             
             //choose a random ai element
             MTRandom random = new MTRandom(ToolBox.StringToInt(seed));
-            XElement aiElement = aiElements.Count == 1 ? 
-                aiElements[0] : ToolBox.SelectWeightedRandom(aiElements, aiCommonness, random);
-            
-            combatStrength      = aiElement.GetAttributeFloat("combatstrength", 1.0f);
-            attackWhenProvoked  = aiElement.GetAttributeBool("attackwhenprovoked", false);
-            aggressiveBoarding  = aiElement.GetAttributeBool("aggressiveboarding", false);
-
-            sight           = aiElement.GetAttributeFloat("sight", 0.0f);
-            hearing         = aiElement.GetAttributeFloat("hearing", 0.0f);
-
-            aggressionhurt = aiElement.GetAttributeFloat("aggressionhurt", 100f);
-            aggressiongreed = aiElement.GetAttributeFloat("aggressiongreed", 10f);
-
-            fleeHealthThreshold = aiElement.GetAttributeFloat("fleehealththreshold", 0.0f);
-
+            XElement aiElement = aiElements.Count == 1 ? aiElements[0] : ToolBox.SelectWeightedRandom(aiElements, aiCommonness, random);
             foreach (XElement subElement in aiElement.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -219,9 +172,6 @@ namespace Barotrauma
                     case "swarm":
                     case "swarmbehavior":
                         SwarmBehavior = new SwarmBehavior(subElement, this);
-                        break;
-                    case "targetpriority":
-                        targetingPriorities.Add(subElement.GetAttributeString("tag", "").ToLowerInvariant(), new TargetingPriority(subElement));
                         break;
                 }
             }
@@ -260,21 +210,18 @@ namespace Barotrauma
                     break;
             }
         }
-        
-        private TargetingPriority GetTargetingPriority(string targetTag)
-        {
-            if (targetingPriorities.TryGetValue(targetTag, out TargetingPriority priority))
-            {
-                return priority;
-            }
-            return null;
-        }
 
-        public override void SelectTarget(AITarget target)
+        private CharacterParams.AIParams AIParams => Character.Params.AI;
+        private CharacterParams.TargetParams GetTargetingPriority(string targetTag) => AIParams.GetTarget(targetTag, false);
+
+        public override void SelectTarget(AITarget target) => SelectTarget(target, 100);
+
+        public void SelectTarget(AITarget target, float priority)
         {
             SelectedAiTarget = target;
             selectedTargetMemory = GetTargetMemory(target);
-            targetValue = 100.0f;
+            selectedTargetMemory.Priority = priority;
+            targetValue = priority;
         }
         
         public override void Update(float deltaTime)
@@ -313,14 +260,14 @@ namespace Barotrauma
             }
             else
             {
-                UpdateTargets(Character, out TargetingPriority targetingPriority);
+                UpdateTargets(Character, out CharacterParams.TargetParams targetingPriority);
                 updateTargetsTimer = UpdateTargetsInterval;
 
                 if (SelectedAiTarget == null)
                 {
                     State = AIState.Idle;
                 }
-                else if (Character.Health < fleeHealthThreshold && SwarmBehavior == null)
+                else if (Character.HealthPercentage < FleeHealthThreshold && SwarmBehavior == null)
                 {
                     // Don't flee from damage if in a swarm.
                     State = AIState.Escape;
@@ -384,14 +331,17 @@ namespace Barotrauma
 
         private void UpdateIdle(float deltaTime)
         {
-            if (Character.Submarine == null && SimPosition.Y < ConvertUnits.ToSimUnits(Character.CharacterHealth.CrushDepth * 0.75f))
+            if (Character.Submarine == null && 
+                SimPosition.Y < ConvertUnits.ToSimUnits(Character.CharacterHealth.CrushDepth * 0.75f))
             {
                 //steer straight up if very deep
                 steeringManager.SteeringManual(deltaTime, Vector2.UnitY);
                 return;
             }
 
-            if (wallTarget != null) return;
+            SteerInsideLevel(deltaTime);
+
+            if (wallTarget != null) { return; }
             
             if (SelectedAiTarget != null)
             {
@@ -447,6 +397,10 @@ namespace Barotrauma
                         }
                     }
                 }
+            }
+            else
+            {
+                SteerInsideLevel(deltaTime);
             }
             if (escapePoint != Vector2.Zero && Vector2.DistanceSquared(Character.SimPosition, escapePoint) > 1)
             {
@@ -559,7 +513,7 @@ namespace Barotrauma
                 Character.AnimController.TargetDir = Character.WorldPosition.X < attackWorldPos.X ? Direction.Right : Direction.Left;
             }
 
-            if (aggressiveBoarding)
+            if (AggressiveBoarding)
             {
                 //targeting a wall section that can be passed through -> steer manually through the hole
                 if (wallTarget != null && wallTarget.SectionIndex > -1 && CanPassThroughHole(wallTarget.Structure, wallTarget.SectionIndex))
@@ -841,7 +795,7 @@ namespace Barotrauma
         private Limb GetAttackLimb(Vector2 attackWorldPos, Limb ignoredLimb = null)
         {
             AttackContext currentContext = Character.GetAttackContext();
-            var target = wallTarget != null ? wallTarget.Structure : SelectedAiTarget.Entity;
+            var target = wallTarget != null ? wallTarget.Structure : SelectedAiTarget?.Entity;
             Limb selectedLimb = null;
             float currentPriority = 0;
             foreach (Limb limb in Character.AnimController.Limbs)
@@ -907,7 +861,7 @@ namespace Barotrauma
                 {
                     if (wall.SectionBodyDisabled(i))
                     {
-                        if (aggressiveBoarding && CanPassThroughHole(wall, i))
+                        if (AggressiveBoarding && CanPassThroughHole(wall, i))
                         {
                             //aggressive boarders always target holes they can pass through
                             sectionIndex = i;
@@ -943,12 +897,26 @@ namespace Barotrauma
         {
             updateTargetsTimer = Math.Min(updateTargetsTimer, 0.1f);
 
-            if (attackResult.Damage > 0.0f && attackWhenProvoked)
+            if (attackResult.Damage > 0.0f && Character.Params.AI.AttackOnlyWhenProvoked)
             {
-                if (!(attacker is AICharacter) || (((AICharacter)attacker).AIController is HumanAIController))
+                string tag = attacker.SpeciesName.ToLowerInvariant();
+                if (AIParams.TryGetTarget(tag, out CharacterParams.TargetParams target))
                 {
-                    targetingPriorities["human"] = new TargetingPriority("human", AIState.Attack, 100.0f);
-                    targetingPriorities["room"] = new TargetingPriority("room", AIState.Attack, 100.0f);
+                    target.State = AIState.Attack;
+                    target.Priority = Math.Max(target.Priority, 100f);
+                }
+                else
+                {
+                    AIParams.TryAddNewTarget(tag, AIState.Attack, 100f, out _);
+                }
+                // If the target is a human and the human is inside a submarine, also target rooms. (TODO: should we remove this?)
+                if (attacker.Submarine != null && attacker.IsHuman)
+                {
+                    if (AIParams.TryGetTarget("room", out CharacterParams.TargetParams room))
+                    {
+                        room.State = AIState.Attack;
+                        room.Priority = 100f;
+                    }
                 }
             }
             
@@ -957,7 +925,7 @@ namespace Barotrauma
 
             if (attacker == null || attacker.AiTarget == null) return;
             AITargetMemory targetMemory = GetTargetMemory(attacker.AiTarget);
-            targetMemory.Priority += GetRelativeDamage(attackResult.Damage, Character.Vitality) * aggressionhurt;
+            targetMemory.Priority += GetRelativeDamage(attackResult.Damage, Character.Vitality) * AggressionHurt;
 
             // Reduce the cooldown so that the character can react
             // Only allow to react once. Otherwise would attack the target with only a fraction of cooldown
@@ -985,7 +953,7 @@ namespace Barotrauma
                 var aiTarget = wallTarget.Structure.AiTarget;
                 if (aiTarget != null && SelectedAiTarget != aiTarget)
                 {
-                    SelectTarget(aiTarget);
+                    SelectTarget(aiTarget, GetTargetMemory(SelectedAiTarget).Priority);
                 }
             }
             if (SelectedAiTarget.Entity is IDamageable damageTarget)
@@ -996,7 +964,7 @@ namespace Barotrauma
                     if (damageTarget.Health > 0)
                     {
                         // Managed to hit a living/non-destroyed target. Increase the priority more if the target is low in health -> dies easily/soon
-                        selectedTargetMemory.Priority += GetRelativeDamage(attackResult.Damage, damageTarget.Health) * aggressiongreed;
+                        selectedTargetMemory.Priority += GetRelativeDamage(attackResult.Damage, damageTarget.Health) * AggressionGreed;
                     }
                     else
                     {
@@ -1067,7 +1035,7 @@ namespace Barotrauma
         //goes through all the AItargets, evaluates how preferable it is to attack the target,
         //whether the Character can see/hear the target and chooses the most preferable target within
         //sight/hearing range
-        public AITarget UpdateTargets(Character character, out TargetingPriority priority)
+        public AITarget UpdateTargets(Character character, out CharacterParams.TargetParams priority)
         {
             if ((SelectedAiTarget != null || wallTarget != null) && IsLatchedOnSub)
             {
@@ -1143,11 +1111,11 @@ namespace Barotrauma
                     }
                     else if (targetCharacter.AIController is EnemyAIController enemy)
                     {
-                        if (enemy.combatStrength > combatStrength)
+                        if (enemy.CombatStrength > CombatStrength)
                         {
                             targetingTag = "stronger";
                         }
-                        else if (enemy.combatStrength < combatStrength)
+                        else if (enemy.CombatStrength < CombatStrength)
                         {
                             targetingTag = "weaker";
                         }
@@ -1175,7 +1143,7 @@ namespace Barotrauma
                         //target inside, AI outside -> we'll be attacking a wall between the characters so use the priority for attacking rooms
                         targetingTag = "room";
                     }
-                    else if (targetingPriorities.ContainsKey(targetCharacter.SpeciesName.ToLowerInvariant()))
+                    else if (AIParams.Targets.Any(t => t.Tag.Equals(targetCharacter.SpeciesName, StringComparison.OrdinalIgnoreCase)))
                     {
                         targetingTag = targetCharacter.SpeciesName.ToLowerInvariant();
                     }
@@ -1195,11 +1163,11 @@ namespace Barotrauma
                         }
 
                         door = item.GetComponent<Door>();
-                        foreach (TargetingPriority prio in targetingPriorities.Values)
+                        foreach (var prio in AIParams.Targets)
                         {
-                            if (item.HasTag(prio.TargetTag))
+                            if (item.HasTag(prio.Tag))
                             {
-                                targetingTag = prio.TargetTag;
+                                targetingTag = prio.Tag;
                                 break;
                             }
                         }
@@ -1231,7 +1199,7 @@ namespace Barotrauma
                         float wallMaxHealth = 400;  // Anything more than this is ignored -> 200 = 1
                         // Prefer weaker targets.
                         valueModifier *= MathHelper.Lerp(1.5f, 0.5f, MathUtils.InverseLerp(0, 1, s.Health / wallMaxHealth));
-                        if (aggressiveBoarding)
+                        if (AggressiveBoarding)
                         {
                             var hulls = s.Submarine.GetHulls(false);
                             for (int i = 0; i < s.Sections.Length; i++)
@@ -1284,7 +1252,7 @@ namespace Barotrauma
                         bool isOutdoor = door.LinkedGap?.FlowTargetHull != null && !door.LinkedGap.IsRoomToRoom;
                         bool isOpen = door.IsOpen || door.Item.Condition <= 0.0f;
                         //increase priority if the character is outside and an aggressive boarder, and the door is from outside to inside
-                        if (aggressiveBoarding)
+                        if (AggressiveBoarding)
                         {
                             if (character.CurrentHull == null)
                             {
@@ -1309,9 +1277,9 @@ namespace Barotrauma
                 }
 
                 if (targetingTag == null) continue;
-                if (!targetingPriorities.ContainsKey(targetingTag)) continue;
-
-                valueModifier *= targetingPriorities[targetingTag].Priority;
+                var targetPrio = GetTargetingPriority(targetingTag);
+                if (targetPrio == null) { continue; }
+                valueModifier *= targetPrio.Priority;
 
                 if (valueModifier == 0.0f) continue;
 
@@ -1323,7 +1291,7 @@ namespace Barotrauma
                 if (targetMemories.ContainsKey(target)) dist *= 0.5f;
 
                 //ignore target if it's too far to see or hear
-                if (dist > target.SightRange * sight && dist > target.SoundRange * hearing) continue;
+                if (dist > target.SightRange * Sight && dist > target.SoundRange * Hearing) continue;
                 if (!target.IsWithinSector(WorldPosition)) continue;
 
                 //if the target is very close, the distance doesn't make much difference 
@@ -1342,7 +1310,7 @@ namespace Barotrauma
                 {
                     newTarget = target;
                     selectedTargetMemory = targetMemory;
-                    priority = targetingPriorities[targetingTag];
+                    priority = GetTargetingPriority(targetingTag);
                     targetValue = valueModifier;
                 }
             }
@@ -1391,6 +1359,30 @@ namespace Barotrauma
             escapePoint = Vector2.Zero;
             wallTarget = null;
             AttackingLimb = null;
+        }
+
+        private void SteerInsideLevel(float deltaTime)
+        {
+            if (Level.Loaded == null) { return; } 
+            
+            Vector2 levelSimSize = new Vector2(
+                ConvertUnits.ToSimUnits(Level.Loaded.Size.X),
+                ConvertUnits.ToSimUnits(Level.Loaded.Size.Y));
+
+            float margin = 10.0f;
+
+            if (SimPosition.Y < 0.0f)
+            {
+                steeringManager.SteeringManual(deltaTime, Vector2.UnitY * MathUtils.InverseLerp(0.0f, -margin, SimPosition.Y));
+            }
+            if (SimPosition.X < 0.0f)
+            {
+                steeringManager.SteeringManual(deltaTime, Vector2.UnitX * MathUtils.InverseLerp(0.0f, -margin, SimPosition.X));
+            }
+            if (SimPosition.X > levelSimSize.X)
+            {
+                steeringManager.SteeringManual(deltaTime, Vector2.UnitX * MathUtils.InverseLerp(levelSimSize.X, levelSimSize.X + margin, SimPosition.X));
+            }            
         }
 
         private int GetMinimumPassableHoleCount()

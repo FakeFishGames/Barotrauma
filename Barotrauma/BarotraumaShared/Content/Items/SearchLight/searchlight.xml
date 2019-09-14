@@ -8,11 +8,13 @@
     focusonselected="true"
     offsetonselected="515"
     linkable="false"
-    Scale="0.16">
+    Scale="0.5">
+    
+    <Upgrade gameversion="0.9.3.0" scale="0.5"/>
+    
+    <Sprite texture="Content/Items/SearchLight/SearchLightBase.png" depth="0.01" sourcerect="0,0,98,81"/>
 
-    <Sprite texture="Content/Items/SearchLight/SearchLightBase.png" depth="0.01" sourcerect="0,0,308,242"/>
-
-    <Turret canbeselected="true" linkable="false" barrelpos="155,65" reload="999999999"
+    <Turret canbeselected="true" linkable="false" barrelpos="49,24" reload="999999999"
       rotationlimits="180,360"
       powerconsumption="10000.0"
       showchargeindicator="false"
@@ -20,7 +22,7 @@
       springstiffnesslowskill="25" springstiffnesshighskill="25"
       springdampinglowskill="5" springdampinghighskill="5"
       rotationspeedlowskill="0.5" rotationspeedhighskill="0.5">
-      <BarrelSprite texture="Content/Items/SearchLight/SearchLight.png" origin="0.5, 0.75" />
+      <BarrelSprite texture="Content/Items/SearchLight/SearchLightBase.png" sourcerect="99,0,64,88" origin="0.5, 0.75" />
       <LightComponent LightColor="1.0,1.0,1.0,1.0" Flicker="0.0" range="2500" IsOn="true" powerconsumption="50" drawbehindsubs="true">
         <LightTexture texture="Content/Lights/lightcone.png" origin="0.0, 0.5" size="1.0,1.0"/>
       </LightComponent>
@@ -28,7 +30,7 @@
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
       <input name="toggle" displayname="connection.togglestate"/>
       <input name="power_in" displayname="connection.powerin"/>
       <input name="position_in" displayname="connection.turretaimingin"/>

@@ -56,7 +56,21 @@ namespace Barotrauma
         {
             if (!Visible) return;
 
-            if (ProgressGetter != null) BarSize = ProgressGetter();   
+            if (ProgressGetter != null)
+            {
+                float newSize = MathHelper.Clamp(ProgressGetter(), 0.0f, 1.0f);
+                if (!MathUtils.IsValid(newSize))
+                {
+                    GameAnalyticsManager.AddErrorEventOnce(
+                        "GUIProgressBar.Draw:GetProgress",
+                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        "ProgressGetter of a GUIProgressBar (" + ProgressGetter.Target.ToString() + " - " + ProgressGetter.Method.ToString() + ") returned an invalid value (" + newSize + ")\n" + Environment.StackTrace);
+                }
+                else
+                {
+                    BarSize = newSize;
+                }
+            }
 
             Rectangle sliderRect = new Rectangle(
                     frame.Rect.X,

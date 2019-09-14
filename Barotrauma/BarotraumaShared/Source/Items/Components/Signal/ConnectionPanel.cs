@@ -1,6 +1,5 @@
 ﻿using Barotrauma.Networking;
 using FarseerPhysics;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -15,7 +14,14 @@ namespace Barotrauma.Items.Components
 
         private Character user;
 
-        [Serialize(false, true), Editable(ToolTip = "Locked connection panels cannot be rewired in-game.")]
+        /// <summary>
+        /// Wires that have been disconnected from the panel, but not removed completely (visible at the bottom of the connection panel).
+        /// </summary>
+        public readonly HashSet<Wire> DisconnectedWires = new HashSet<Wire>();
+
+        private List<ushort> disconnectedWireIds;
+
+        [Editable, Serialize(false, true, description: "Locked connection panels cannot be rewired in-game.")]
         public bool Locked
         {
             get;
@@ -58,6 +64,19 @@ namespace Barotrauma.Items.Components
             foreach (Connection c in Connections)
             {
                 c.ConnectLinked();
+            }
+
+            if (disconnectedWireIds != null)
+            {
+                foreach (ushort disconnectedWireId in disconnectedWireIds)
+                {
+                    if (!(Entity.FindEntityByID(disconnectedWireId) is Item wireItem)) { continue; }
+                    Wire wire = wireItem.GetComponent<Wire>();
+                    if (wire != null)
+                    {
+                        DisconnectedWires.Add(wire);
+                    }
+                }
             }
         }
 
@@ -103,6 +122,8 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
+            UpdateProjSpecific(deltaTime);
+
             if (user == null || user.SelectedConstruction != item)
             {
                 user = null;
@@ -113,6 +134,8 @@ namespace Barotrauma.Items.Components
 
             user.AnimController.UpdateUseItem(true, item.WorldPosition + new Vector2(0.0f, 100.0f) * (((float)Timing.TotalTime / 10.0f) % 0.1f));
         }
+
+        partial void UpdateProjSpecific(float deltaTime);
 
         public override bool Select(Character picker)
         {
@@ -171,6 +194,8 @@ namespace Barotrauma.Items.Components
             {
                 loadedConnections[i].wireId.CopyTo(Connections[i].wireId, 0);
             }
+
+            disconnectedWireIds = element.GetAttributeUshortArray("disconnectedwires", new ushort[0]).ToList();
         }
 
         public override XElement Save(XElement parentElement)
@@ -180,6 +205,11 @@ namespace Barotrauma.Items.Components
             foreach (Connection c in Connections)
             {
                 c.Save(componentElement);
+            }
+
+            if (DisconnectedWires.Count > 0)
+            {
+                componentElement.Add(new XAttribute("disconnectedwires", string.Join(",", DisconnectedWires.Select(w => w.Item.ID))));
             }
 
             return componentElement;
@@ -192,11 +222,20 @@ namespace Barotrauma.Items.Components
 
         protected override void RemoveComponentSpecific()
         {
+            foreach (Wire wire in DisconnectedWires.ToList())
+            {
+                if (wire.OtherConnection(null) == null) //wire not connected to anything else
+                {
+                    wire.Item.Drop(null);
+                }
+            }
+
+            DisconnectedWires.Clear();
             foreach (Connection c in Connections)
             {
                 foreach (Wire wire in c.Wires)
                 {
-                    if (wire == null) continue;
+                    if (wire == null) { continue; }
 
                     if (wire.OtherConnection(c) == null) //wire not connected to anything else
                     {
@@ -208,9 +247,15 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
+
+#if CLIENT
+            rewireSoundChannel?.FadeOutAndDispose();
+            rewireSoundChannel = null;
+#endif
         }
 
-        public void ClientWrite(NetBuffer msg, object[] extraData = null)
+
+        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
         {
             foreach (Connection connection in Connections)
             {
@@ -218,6 +263,12 @@ namespace Barotrauma.Items.Components
                 {
                     msg.Write(wire?.Item == null ? (ushort)0 : wire.Item.ID);
                 }
+            }
+
+            msg.Write((ushort)DisconnectedWires.Count());
+            foreach (Wire disconnectedWire in DisconnectedWires)
+            {
+                msg.Write(disconnectedWire.Item.ID);
             }
         }
     }

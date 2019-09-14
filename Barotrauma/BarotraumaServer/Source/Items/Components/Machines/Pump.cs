@@ -8,7 +8,7 @@ namespace Barotrauma.Items.Components
 {
     partial class Pump : Powered, IServerSerializable, IClientSerializable
     {
-        public void ServerRead(ClientNetObject type, Lidgren.Network.NetBuffer msg, Client c)
+        public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
         {
             float newFlowPercentage = msg.ReadRangedInteger(-10, 10) * 10.0f;
             bool newIsActive = msg.ReadBoolean();
@@ -32,10 +32,10 @@ namespace Barotrauma.Items.Components
             item.CreateServerEvent(this);
         }
 
-        public void ServerWrite(Lidgren.Network.NetBuffer msg, Client c, object[] extraData = null)
+        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             //flowpercentage can only be adjusted at 10% intervals -> no need for more accuracy than this
-            msg.WriteRangedInteger(-10, 10, (int)(flowPercentage / 10.0f));
+            msg.WriteRangedInteger((int)(flowPercentage / 10.0f), -10, 10);
             msg.Write(IsActive);
         }
     }

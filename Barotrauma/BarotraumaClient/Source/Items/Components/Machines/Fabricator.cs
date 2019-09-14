@@ -1,6 +1,5 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -34,6 +33,8 @@ namespace Barotrauma.Items.Components
 
         private GUIComponent inSufficientPowerWarning;
 
+        private FabricationRecipe pendingFabricatedItem;
+
         private Pair<Rectangle, string> tooltip;
 
         partial void InitProjSpecific()
@@ -42,6 +43,16 @@ namespace Barotrauma.Items.Components
             {
                 Stretch = true,
                 RelativeSpacing = 0.02f
+            };
+            
+            itemList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.5f), paddedFrame.RectTransform))
+            {
+                OnSelected = (GUIComponent component, object userdata) =>
+                {
+                    selectedItem = userdata as FabricationRecipe;
+                    if (selectedItem != null) { SelectItem(Character.Controlled, selectedItem); }
+                    return true;
+                }
             };
 
             var filterArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.06f), paddedFrame.RectTransform), isHorizontal: true)
@@ -55,16 +66,6 @@ namespace Barotrauma.Items.Components
             var clearButton = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), filterArea.RectTransform), "x")
             {
                 OnClicked = (btn, userdata) => { ClearFilter(); itemFilterBox.Flash(Color.White); return true; }
-            };
-
-            itemList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.5f), paddedFrame.RectTransform))
-            {
-                OnSelected = (GUIComponent component, object userdata) =>
-                {
-                    selectedItem = userdata as FabricationRecipe;
-                    if (selectedItem != null) { SelectItem(Character.Controlled, selectedItem); }
-                    return true;
-                }
             };
 
             inputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(0.7f, 0.15f), paddedFrame.RectTransform), style: null);
@@ -403,7 +404,7 @@ namespace Barotrauma.Items.Components
                 }
             }
         }
-
+        
         private bool StartButtonClicked(GUIButton button, object obj)
         {
             if (selectedItem == null) { return false; }
@@ -412,19 +413,22 @@ namespace Barotrauma.Items.Components
                 outputInventoryHolder.Flash(Color.Red);
                 return false;
             }
-
-            if (fabricatedItem == null)
+            
+            if (GameMain.Client != null)
             {
-                StartFabricating(selectedItem, Character.Controlled);
+                pendingFabricatedItem = fabricatedItem != null ? null : selectedItem;
+                item.CreateClientEvent(this);
             }
             else
             {
-                CancelFabricating(Character.Controlled);
-            }
-
-            if (GameMain.Client != null)
-            {
-                item.CreateClientEvent(this);
+                if (fabricatedItem == null)
+                {
+                    StartFabricating(selectedItem, Character.Controlled);
+                }
+                else
+                {
+                    CancelFabricating(Character.Controlled);
+                }
             }
 
             return true;
@@ -433,7 +437,7 @@ namespace Barotrauma.Items.Components
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
             activateButton.Enabled = false;
-            inSufficientPowerWarning.Visible = powerConsumption > 0 && voltage < minVoltage;
+            inSufficientPowerWarning.Visible = currPowerConsumption > 0 && !hasPower;
 
             var availableIngredients = GetAvailableIngredients();
             if (character != null)
@@ -455,13 +459,13 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ClientWrite(NetBuffer msg, object[] extraData = null)
+        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
         {
-            int itemIndex = fabricatedItem == null ? -1 : fabricationRecipes.IndexOf(fabricatedItem);
-            msg.WriteRangedInteger(-1, fabricationRecipes.Count - 1, itemIndex);
+            int itemIndex = pendingFabricatedItem == null ? -1 : fabricationRecipes.IndexOf(pendingFabricatedItem);
+            msg.WriteRangedInteger(itemIndex, -1, fabricationRecipes.Count - 1);
         }
 
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             int itemIndex = msg.ReadRangedInteger(-1, fabricationRecipes.Count - 1);
             UInt16 userID = msg.ReadUInt16();
@@ -474,8 +478,8 @@ namespace Barotrauma.Items.Components
             else
             {
                 //if already fabricating the selected item, return
-                if (fabricatedItem != null && fabricationRecipes.IndexOf(fabricatedItem) == itemIndex) return;
-                if (itemIndex < 0 || itemIndex >= fabricationRecipes.Count) return;
+                if (fabricatedItem != null && fabricationRecipes.IndexOf(fabricatedItem) == itemIndex) { return; }
+                if (itemIndex < 0 || itemIndex >= fabricationRecipes.Count) { return; }
 
                 SelectItem(user, fabricationRecipes[itemIndex]);
                 StartFabricating(fabricationRecipes[itemIndex], user);

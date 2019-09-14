@@ -207,20 +207,22 @@ namespace Barotrauma
             //clone links between the entities
             for (int i = 0; i < clones.Count; i++)
             {
-                if (entitiesToClone[i].linkedTo == null) continue;
+                if (entitiesToClone[i].linkedTo == null) { continue; }
                 foreach (MapEntity linked in entitiesToClone[i].linkedTo)
                 {
-                    if (!entitiesToClone.Contains(linked)) continue;
-
+                    if (!entitiesToClone.Contains(linked)) { continue; }
                     clones[i].linkedTo.Add(clones[entitiesToClone.IndexOf(linked)]);
                 }
             }
 
-            //connect clone wires to the clone items
+            //connect clone wires to the clone items and refresh links between doors and gaps
             for (int i = 0; i < clones.Count; i++)
             {
                 var cloneItem = clones[i] as Item;
-                if (cloneItem == null) continue;
+                if (cloneItem == null) { continue; }
+
+                var door = cloneItem.GetComponent<Door>();
+                if (door != null) { door.RefreshLinkedGap(); }
 
                 var cloneWire = cloneItem.GetComponent<Wire>();
                 if (cloneWire == null) continue;
@@ -231,7 +233,7 @@ namespace Barotrauma
 
                 for (int n = 0; n < 2; n++)
                 {
-                    if (originalWire.Connections[n] == null) continue;
+                    if (originalWire.Connections[n] == null) { continue; }
 
                     var connectedItem = originalWire.Connections[n].Item;
                     if (connectedItem == null) continue;
@@ -337,7 +339,16 @@ namespace Barotrauma
                 hull.Update(deltaTime, cam);
             }
 
-            foreach (Gap gap in Gap.GapList)
+            foreach (Structure structure in Structure.WallList)
+            {
+                structure.Update(deltaTime, cam);
+            }
+
+            //update gaps in random order, because otherwise in rooms with multiple gaps 
+            //the water/air will always tend to flow through the first gap in the list,
+            //which may lead to weird behavior like water draining down only through
+            //one gap in a room even if there are several
+            foreach (Gap gap in Gap.GapList.OrderBy(g => Rand.Int(int.MaxValue)))
             {
                 gap.Update(deltaTime, cam);
             }
@@ -555,7 +566,7 @@ namespace Barotrauma
             }
         }
         
-        [Serialize(1f, false), Editable(0.1f, 10f, DecimalCount = 3, ValueStep = 0.1f)]
+        [Serialize(1f, true), Editable(0.01f, 10f, DecimalCount = 3, ValueStep = 0.1f)]
         public virtual float Scale { get; set; } = 1;
         #endregion
     }

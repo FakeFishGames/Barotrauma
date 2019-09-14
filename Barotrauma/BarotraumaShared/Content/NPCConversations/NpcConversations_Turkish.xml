@@ -1,0 +1,661 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Conversations identifier="vanillaconversations" Language="Turkish" nowhitespace="False">
+
+<!-- Personality traits -->
+<PersonalityTrait name="Professional" alloweddialogtags="professional,none" commonness="1" />
+<PersonalityTrait name="Laid-back" alloweddialogtags="laid-back,none" commonness="1" />
+<PersonalityTrait name="Rude" alloweddialogtags="rude,none" commonness="1" />
+<PersonalityTrait name="Tough" alloweddialogtags="tough,none" commonness="1" />
+<PersonalityTrait name="Joker" alloweddialogtags="joker,none" commonness="1" />
+<PersonalityTrait name="Broken English" alloweddialogtags="brokenenglish" commonness="1" />
+<PersonalityTrait name="Fearful" alloweddialogtags="fearful,none" commonness="1" />
+<PersonalityTrait name="Crazy" alloweddialogtags="crazy,none" commonness="1" />
+
+<!-- Generic conversation -->
+<Conversation line="Pekâlâ millet, hadi onu gezintiye çıkaralım." speaker="0" flags="Initial" allowedjobs="captain">
+	<Conversation line="" speaker="0"/>
+	<Conversation line="Hay hay." speaker="1">
+		<Conversation line="Hay hay efendim!" speaker="2"/>
+		<Conversation line="Peki kaptan!" speaker="2" speakertags="brokenenglish"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Gemilerle denizin altına inerler;" speaker="0" flags="Initial" allowedjobs="captain">
+	<Conversation line="Büyük sularda işlerini yaparlar;" speaker="0">
+		<Conversation line="Tanrı'nın eserlerini ve o'nun derinliklerindeki harikaları görürler." speaker="0">
+			<Conversation line="Başlıyoruz! Bol şans ." speaker="0"/>
+			<Conversation line="Aşağıda Tanrı'nın eseri falan yok." speaker="1" speakertags="joker,tough,professional"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Sıkı çalışın. Önümüzde çok uzun bir yol var." speaker="0" flags="Initial" allowedjobs="captain">
+	<Conversation line="Peki efendim." speaker="1"/>
+	<Conversation line="Hay hay!" speaker="1"/>
+	<Conversation line="Bol şans çocuklar." speaker="1" allowedjobs="watchman"/>
+</Conversation>
+
+<Conversation line="Gemiye hoş geldiniz. Lütfen ellerinizi ve silahlarınızı her zaman için aracın içerisinde tutun." speaker="0" flags="Initial" allowedjobs="captain" speakertags="joker">
+	<Conversation line="Peki efendim." speaker="1"/>
+	<Conversation line="Hay hay!" speaker="1"/>
+</Conversation>
+
+<Conversation line="Hazır ol mürettebat, gidecek uzun bir yolumuz var." speaker="0" flags="Initial" allowedjobs="captain" speakertags="brokenenglish">
+	<Conversation line="Peki efendim." speaker="1"/>
+	<Conversation line="Hay hay!" speaker="1"/>
+	<Conversation line="Kornaanne ruhlarımıza merhamet etsin." speaker="1" speakertags="crazy"/>
+	<Conversation line="Bol şans çocuklar." speaker="1" allowedjobs="watchman"/>
+</Conversation>
+
+<Conversation line="Kaptanınız konuşuyor. Görevi hazır ol mürettebat ve bol şans!" speaker="0" flags="Initial" allowedjobs="captain" speakertags="brokenenglish">
+	<Conversation line="Peki efendim." speaker="1"/>
+	<Conversation line="Hay hay!" speaker="1">
+		<Conversation line="Peki efendim." speaker="2"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Bakalım okyanuslarda bizim için bu kez ne var." speaker="0" flags="Initial" allowedjobs="captain">
+	<Conversation line="Tahminimce korkunç canavarlar, dehşet verici bir ölüm ve sonsuz karanlık." speaker="1" speakertags="joker,fearful">
+		<Conversation line="Kapa çeneni. Acı sözlerine ihtiyacımız yok." speaker="0" speakertags="professional"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Herkes hazır mı? Olsanız iyi edersiniz. Artık geri dönüşü yok." speaker="0" flags="Initial" allowedjobs="captain">
+	<Conversation line="" speaker="0"/>
+	<Conversation line="Evet efendim." speaker="1">
+		<Conversation line="Hadi yapalım şu işi!" speaker="2"/>
+		<Conversation line="Her zaman hazırız!" speaker="2" speakertags="brokenenglish"/>
+		<Conversation line="Yaşasın! Hepimiz öleceğiz!" speaker="2" speakertags="crazy"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Üşüdüm." speaker="0" maxintensity="0.4"/>
+
+<Conversation line="Bununla ilgili kötü bir his var içimde…" speaker="0" speakertags="fearful" maxintensity="0.4">
+	<Conversation line="Tanıdığım eski bir kaptan şöyle derdi…" speaker="1" speakertags="professional,tough">
+		<Conversation line="Fırtınayı sakinleştiremezsin, o yüzden denemeyi bırak." speaker="1">
+			<Conversation line="Kendini sakinleştirmeyi dene. Fırtına geçecektir." speaker="1">
+				<Conversation line="Dostum, saçmalıyorsun." speaker="0" speakertags="rude,fearful"/>
+			</Conversation>
+		</Conversation>
+	</Conversation>
+	<Conversation line="Eminim ki hepimiz saçmalıyoruz." speaker="1"/>
+	<Conversation line="Yine gaz mı alıyorsun?" speaker="1" speakertags="joker"/>
+</Conversation>
+
+<Conversation line="Karinanın gıcırdadığını duyuyorum." speaker="0" speakertags="fearful" maxintensity="0.4">
+	<Conversation line="Ben de duyuyorum." speaker="1" speakertags="brokenenglish"/>
+	<Conversation line="" speaker="1" speakertags="joker"/>
+</Conversation>
+
+<Conversation line="Eve dönüp bir şişe Ol' Cadmus patlatmak için sabırsızlanıyorum." speaker="0" speakertags="laid-back" maxintensity="0.2">
+	<Conversation line="İşine odaklan yoksa tabutundaki o şişeye katılacaksın." speaker="1" speakertags="professional,tough,rude">
+		<Conversation line="Haha! Tabutla gömülme mi? O en son ne zaman oldu?" speaker="2" speakertags="laid-back,joker"/>
+	</Conversation>
+	<Conversation line="Evi düşünmenin sırası değil. Önümüzde uzun bir yol var." speaker="1" speakertags="professional,tough"/>
+	<Conversation line="Cadmus kötü. Ben daha sert seviyorum." speaker="1" speakertags="brokenenglish"/>
+</Conversation>
+
+<Conversation line="Dünya Deniz Kuvvetleri'nde şöyle derlerdi:" speaker="0" allowedjobs="captain" speakertags="professional,tough" maxintensity="0.3">
+	<Conversation line="İşleri yapmakla alakalı iki yol vardır. Ya doğru yaparsın ya da tekrar yaparsın." speaker="0">
+		<Conversation line="Ama burada öyle değil. Avrupa'da ikinci şans diye bir şey yoktur." speaker="0">
+			<Conversation line="O zaman herkes elindeki göreve odaklansın." speaker="0"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Ben denizci Popeye!" speaker="0" allowedjobs="medicaldoctor" speakertags="laid-back,joker" maxintensity="0.2">
+	<Conversation line="Bitiş noktasına ilk ben varak, çünkü ben yerim ıspanak!" speaker="0">
+		<Conversation line="Doktor, yine mi etanol zulasındaydın?" speaker="1">
+			<Conversation line="Tamam, duracağım." speaker="0"/>
+			<Conversation line="Modu yükseltmeye çalıştığım için kusura bakma." speaker="0"/>
+		</Conversation>
+	</Conversation>
+	<Conversation line="Benim gemimde şarkı söylemek yok." speaker="1" allowedjobs="captain" speakertags="professional,tough"/>
+</Conversation>
+
+<Conversation line="Güneşi özlüyorum." speaker="0" maxintensity="0.2">
+	<Conversation line="" speaker="0" flags="Casual"/>
+	<Conversation line="Gün ışığının kansere sebep olduğunu duydum. Onsuz daha iyiyiz." speaker="1">
+		<Conversation line="Jüpiter de kansere sebep oluyor. Ben Güneş'i Jüpiter'e tercih ederim." speaker="0">
+			<Conversation line="Kesin şunu!" speaker="2" speakertags="professional,tough"/>
+		</Conversation>
+	</Conversation>
+	<Conversation line="Kesin şunu!" speaker="1" speakertags="professional,tough"/>
+</Conversation>
+
+<Conversation line="Kabuklar beni korkutuyor." speaker="0" speakertags="fearful" maxintensity="0.2">
+	<Conversation line="" speaker="0" flags="Casual"/>
+	<Conversation line="Beni de. Bana bulaşırsa kafama bir şey fırlatacağına söz ver." speaker="1">
+		<Conversation line="Sana Kaliksanit vermeyi tercih ederim." speaker="2" allowedjobs="medicaldoctor"/>
+		<Conversation line="Ben de Kaliksanit verirdim ama bir şey de fırlatırım." speaker="2" allowedjobs="medicaldoctor" speakertags="rude"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="İşçi sendikalarını duyanınız oldu mu?" speaker="0" maxintensity="0.2">
+	<Conversation line="Bütünlüğün tekelliğinin tekelliğinin bütünlüğünün tekelliğinin bütünlüğünün bütünlüğü tarafından geliştirilmiş, iyileştirici bir ticaret." speaker="0" flags="Psychosis">
+		<Conversation line="Güvenlik standartları, emeklilik ve emeklilik ve emeklilik ve işçiler konusunda pazarlık ediliyor. İşçileri iyileştiren bir ticaret gibi." speaker="0" flags="Psychosis"/>
+	</Conversation>
+	<Conversation line="Komünist konuşması bu. İhtiyacımız olan tek birlik, Koalisyon'dur." speaker="1" allowedjobs="captain" speakertags="professional,tough,rude"/>
+	<Conversation line="Evet ama neden?" speaker="1">
+		<Conversation line="Bence bunu kanıtlamalıyız." speaker="0">
+			<Conversation line="Daha iyi güvenlik standartları, uygun bir ücret, emeklilik menfaatleri iyi olabilir." speaker="0">
+				<Conversation line="Sence emekli olacak kadar uzun süre yaşayacak mısın?" speaker="1">
+					<Conversation line="Öyle umuyorum." speaker="0"/>
+					<Conversation line="Güzel noktaya değindin." speaker="0"/>
+				</Conversation>
+				<Conversation line="Güvenlik standartları mı? Bu birlik Molekleri uzak mı tutacak ya da bir sızıntı olduğu sırada elinden mi tutacak?" speaker="1" speakertags="rude,tough">
+					<Conversation line="Demek istediğim bu değil." speaker="0"/>
+					<Conversation line="Sanırım haklısın." speaker="0"/>
+				</Conversation>
+			</Conversation>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Dışarıdaki baskıya maruz kaldığında insan vücuduna ne olduğunu gördünüz mü?" speaker="0" speakertags="fearful" maxintensity="0.2">
+	<Conversation line="Yakında greceksiniz." speaker="0" flags="Psychosis">
+		<Conversation line="Evet, sana diyorum." speaker="0" flags="Psychosis"/>
+	</Conversation>
+	<Conversation line="Hayal edebiliyorum." speaker="1">
+		<Conversation line="O görüntü hâlâ aklımdan çıkmıyor." speaker="0">
+			<Conversation line="Hidrolik basınç altında bir torba dolusu et ve kemik. Tanımlayabilmemin tek yolu bu." speaker="0"/>
+			<Conversation line="Avrupa'nın sevgi dolu kucaklaması." speaker="2" speakertags="crazy"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Hızlandırın, derine indirin…" speaker="0" flags="Casual" speakertags="joker,laid-back" maxintensity="0.3">
+	<Conversation line="Balıkların uyuduğu yere götürün." speaker="0">
+		<Conversation line="Derinliğe de lanet olsun, basınca da…" speaker="0">
+			<Conversation line="Harmancı gibi indir onu!" speaker="0">
+				<Conversation line="Benim gemimde şarkı söylemek yok." speaker="1" allowedjobs="captain" speakertags="professional,tough">
+					<Conversation line="" speaker="0"/>
+					<Conversation line="Tamam, tamam. Tekrar modu yükseltmeyi denemem!" speaker="0"/>
+				</Conversation>
+				<Conversation line="Bunun bir Kara şarkısı olduğunu biliyorum ama bize de çok uyuyor." speaker="1"/>
+			</Conversation>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Vardık mı?" speaker="0" speakertags="joker" maxintensity="0.2">
+	<Conversation line="" speaker="0" flags="Casual"/>
+	<Conversation line="Kapa çeneni!" speaker="1" speakertags="rude"/>
+	<Conversation line="Hâlâ komik değil." speaker="1"/>
+	<Conversation line="Komik değil." speaker="1" speakertags="brokenenglish"/>
+</Conversation>
+
+<Conversation line="Kara'yı hatırlayan var mı?" speaker="0" maxintensity="0.2">
+	<Conversation line="Kara, Kara, Kara. Bir daha asla göremeyecek olman çok kötü." speaker="0" flags="Psychosis"/>
+	<Conversation line="Yaşlıyım ama o kadar da değil." speaker="1"/>
+	<Conversation line="Büyükbabam bir Karacı'ydı." speaker="1">
+		<Conversation line="Yarısının uydurma olduğundan emin olsam da onun hikâyelerini dinlemeyi severdim." speaker="1">
+			<Conversation line="Evinden çıkıp da dört bir yanında gökyüzü gördüğünü hayal edebiliyor musun?" speaker="1">
+				<Conversation line="Kulağa harika geliyor." speaker="0">
+					<Conversation line="Radyasyonun kızdırdığı gaz devi için endişelenmenize gerek kalmadan bakarken..." speaker="2"/>
+				</Conversation>
+			</Conversation>
+			<Conversation line="Kuşları görmek isterdim." speaker="1">
+				<Conversation line="Ve köpekleri. Ve filleri." speaker="0"/>
+				<Conversation line="Ve gergedanları!" speaker="2" speakertags="brokenenglish"/>
+			</Conversation>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Kalıntıları inşa edenlere ne olduğunu hiç merak ettiniz mi?" speaker="0" maxintensity="0.2">
+	<Conversation line="Sığınaklar ve kalıcı kâbuslarda gizlidir. Hesaplanamaz ve gitmişr, dar dar!" speaker="0" flags="Psychosis"/>
+	<Conversation line="Kim değil ki?" speaker="1"/>
+	<Conversation line="Merak etme işini araştırmacılara bırakacağım." speaker="1">
+		<Conversation line="Burada endişelenilmesi gereken daha önemli şeyler var." speaker="1"/>
+	</Conversation>
+	<Conversation line="Sadece Abis bilir." speaker="1" speakertags="crazy"/>
+	<Conversation line="Bunu düşünüyorum ama kimsenin bildiğini sanmıyorum." speaker="2" speakertags="brokenenglish"/>
+</Conversation>
+
+<Conversation line="Kalıntıları koruyan şeylerden göreniniz oldu mu?" speaker="0" maxintensity="0.2">
+	<Conversation line="Evet ama keşke unutabilsem." speaker="1" speakertags="fearful"/>
+	<Conversation line="Enstitüde bir tane var." speaker="1">
+		<Conversation line="Canlı olmadığını söylüyorlar. Hayvan değil de daha çok robot gibiymiş." speaker="1">
+			<Conversation line="Kanları akmadığı kesin." speaker="0"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Bugünlerde sigaralar çok pahalı." speaker="0" speakertags="laid-back" maxintensity="0.2">
+	<Conversation line="Hiç sorma!" speaker="1"/>
+	<Conversation line="Evet, hidroponik tarlalar çok pahalı." speaker="1">
+		<Conversation line="O şeyleri tütün yapmak yerine daha faydalı işlerde kullanmak çok daha mantıklı." speaker="1"/>
+		<Conversation line="Hidroponik ne demek?" speaker="2" speakertags="brokenenglish">
+			<Conversation line="Suyla büyüyen demek. Buradaki her şey gibi. ???" speaker="1"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Duydun mu?" speaker="0" maxintensity="0.4">
+	<Conversation line="Neyi?" speaker="1">
+		<Conversation line="Sani bir şey karinaya pençe atıyor." speaker="0">
+			<Conversation line="Muhtemelen hayal görüyorum." speaker="0"/>
+		</Conversation>
+		<Conversation line="Dışarıdan derin bir inleme sesi geliyor." speaker="0">
+			<Conversation line="Akre Adamlar. Söylemiştim." speaker="1" speakertags="crazy"/>
+			<Conversation line="Muhtemelen karinadandır. Sakin ol." speaker="1"/>
+			<Conversation line="Yine mi gaz alıyorsun?" speaker="1" speakertags="joker"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Geçen gün eski bir denizci el kitabı okudum." speaker="0" maxintensity="0.2">
+	<Conversation line="Bazı kısımları hiç anlamadım çünkü çok gariplerdi, eskiden kalma terminoloji doluydu." speaker="0">
+		<Conversation line="Mesela, sancak da ne demek oluyor???" speaker="0">
+			<Conversation line="Ben de senin kadar biliyorum." speaker="1"/>
+			<Conversation line="Yukarıdadır belki. Hani yıldızlara doğru falan?" speaker="1"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Ayın bize karşı olduğunu hissettin mi hiç?" speaker="0" maxintensity="0.3">
+	<Conversation line="Senin gibi." speaker="0" flags="Psychosis">
+		<Conversation line="Evet, sana diyorum." speaker="0" flags="Psychosis"/>
+	</Conversation>
+	<Conversation line="Yerleşmek için pek de konuksever bir yer değil." speaker="1">
+		<Conversation line="Duruma bakılırsa öyle aslında." speaker="2">
+			<Conversation line="Ne demek istediğimi biliyorsun." speaker="1"/>
+		</Conversation>
+	</Conversation>
+	<Conversation line="Dalgaları durduramazsın ama sörf yapmayı öğrenebilirsin." speaker="1"/>
+	<Conversation line="Buraya ait olmadığımız kesin." speaker="1">
+		<Conversation line="" speaker="0" flags="Casual"/>
+		<Conversation line="Ne yaparsak yapalım işler ters gitmeye devam ediyor." speaker="0">
+			<Conversation line="Yeter! Tarikatçi saçmalıkları başlayacak gibi duruyor. ???" speaker="2" speakertags="professional"/>
+		</Conversation>
+		<Conversation line="Yeter! Tarikatçi saçmalıkları başlayacak gibi duruyor." speaker="2" speakertags="professional"/>
+	</Conversation>
+	<Conversation line="Yeter artık." speaker="1" speakertags="professional,tough"/>
+</Conversation>
+
+<Conversation line="Güneşin ardından ikinci, güneşin ardından ikinci…" speaker="0" speakertags="laid-back,crazy" maxintensity="0.2">
+	<Conversation line="Jüpiter gibi, bizler…" speaker="0">
+		<Conversation line="" speaker="0" flags="Casual"/>
+		<Conversation line="Eğer şarkı söylemen gerekiyorsa lütfen kulaklıkları kapa.???" speaker="1" speakertags="professional"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Berbat!" speaker="0" speakertags="fearful">
+	<Conversation line="Eve gitmek istiyorum." speaker="0"/>
+</Conversation>
+
+<Conversation line="Ben biraz aksiyon istiyorum." speaker="0" speakertags="tough" maxintensity="0.2"/>
+
+<Conversation line="Düz denizler, yetenekli denizciler yaratmaz." speaker="0" speakertags="tough">
+	<Conversation line="Sert deniz de ölü denizciler yaratır." speaker="1" speakertags="brokenenglish"/>
+</Conversation>
+
+<Conversation line="Gemiye bir kahve makinesi almalıyız." speaker="0" speakertags="laid-back" maxintensity="0.2">
+	<Conversation line="Neyi ima ettiğini anlamadım mı sence?" speaker="1" flags="PsychosisSelf">
+		<Conversation line="Kahve mi? Evet, doğru…" speaker="1" flags="PsychosisSelf">
+			<Conversation line="Yakında hepsi bitecek." speaker="1" flags="PsychosisSelf"/>
+		</Conversation>
+	</Conversation>
+	<Conversation line="Anlaştık." speaker="1"/>
+	<Conversation line="Ben kahve içmem." speaker="1"/>
+	<Conversation line="" speaker="0"/>
+</Conversation>
+
+<Conversation line="Geçen gün bir böcek gördüm. Korkunç yaratıklar." speaker="0" speakertags="joker,crazy" maxintensity="0.2"/>
+
+<Conversation line="Bir adama bir balık ver ve onu bir gün doyur." speaker="0" speakertags="joker" maxintensity="0.4">
+	<Conversation line="Bir balığa bir adam ver ve onu bir gün doyur." speaker="0" flags="Psychosis">
+		<Conversation line="Bir balık ver ve adam için onu doyur." speaker="0" flags="Psychosis">
+			<Conversation line="Bir balık ver." speaker="0" flags="Psychosis">
+				<Conversation line="Bir balık ver." speaker="0" flags="Psychosis">
+					<Conversation line="Bir balık ver." speaker="0" flags="Psychosis">
+						<Conversation line="Hayır!" speaker="1" flags="PsychosisSelf"/>
+					</Conversation>
+				</Conversation>
+			</Conversation>
+		</Conversation>
+	</Conversation>
+	<Conversation line="Bir adama balık tutmayı öğret ve büyük ihtimalle korkunç bir kazada ölsün." speaker="0" speakertags="joker">
+		<Conversation line="Devamının böyle olduğunu sanmıyorum." speaker="1">
+			<Conversation line="Devamı aynen böyle." speaker="0"/>
+		</Conversation>
+		<Conversation line="Yeter bu kadar şaka." speaker="0" speakertags="professional,rude"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Geçen gün aklıma harika bir iş fikri geldi." speaker="0" speakertags="joker,laid-back" maxintensity="0.2">
+	<Conversation line="Ama geçen gün diye bir şey yok." speaker="0" flags="Psychosis">
+		<Conversation line="Bunlar hiç mantıklı değil." speaker="0" flags="Psychosis"/>
+	</Conversation>
+	<Conversation line="Beni dinle! Bu işte çok para kazanabiliriz." speaker="0">
+		<Conversation line="Birisi daha büyük oksijen tankları yapmaya başlasa nasıl olur?" speaker="0">
+			<Conversation line="Bir veya iki saat dayanan cinslerden mi?" speaker="0">
+				<Conversation line="Uzman değilim ama bence teknik olarak mümkündür." speaker="0">
+					<Conversation line="Hey, elimizde tanka odaklansak nasıl olur?" speaker="1" speakertags="professional"/>
+					<Conversation line="Bilmiyorum… Teknik bir sebebi olması lazım. Aksi takdirde şimdiye çoktan yaparlardı." speaker="1"/>
+					<Conversation line="İyi fikir!" speaker="1" speakertags="brokenenglish">
+						<Conversation line="Hey, elimizde tanka odaklansak nasıl olur?" speaker="2" speakertags="professional"/>
+					</Conversation>
+				</Conversation>
+			</Conversation>
+		</Conversation>
+		<Conversation line="Su geçirmez bağlantı kutuları." speaker="0">
+			<Conversation line="Dâhice, haksız mıyım?" speaker="0">
+				<Conversation line="Hey, elimizde tanka odaklansak nasıl olur?" speaker="1" speakertags="professional"/>
+				<Conversation line="Bu havalandırma deliklerinin olmasının bir sebebi olmalı." speaker="1">
+					<Conversation line="Aksi takdirde su geçirmez olanlarını çoktan yaparlardı." speaker="1"/>
+				</Conversation>
+				<Conversation line="Harika bir fikir!" speaker="1" speakertags="brokenenglish">
+					<Conversation line="Hey, elimizde tanka odaklansak nasıl olur?" speaker="2" speakertags="professional"/>
+				</Conversation>
+			</Conversation>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Burası son derece sessiz." speaker="0" maxintensity="0.3">
+	<Conversation line="AAAAAAAAAAAAAAAAAAAAAAAAAA!" speaker="0" flags="Psychosis">
+		<Conversation line="AAAAAAAAAAAAAAAAAAAAAAAAAA!" speaker="0" flags="Psychosis">
+			<Conversation line="AAAAAAAAAAAAAAAAAAAAAAAAAA!" speaker="0" flags="Psychosis"/>
+		</Conversation>
+	</Conversation>
+	<Conversation line="Kulaklığım hâlâ çalışıyor mu?" speaker="0">
+		<Conversation line="Evet. Lütfen konuşmanı minimum düzeyde tut." speaker="1" speakertags="professional"/>
+		<Conversation line="Seni çok net duyuyorum." speaker="1"/>
+		<Conversation line="Evet, iyi duyuluyor." speaker="1" speakertags="brokenenglish"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Telsiz kontrol." speaker="0" speakertags="professional" maxintensity="0.3">
+	<Conversation line="Telsiz kontrol." speaker="1" flags="PsychosisSelf">
+		<Conversation line="Kontrol telsiz." speaker="1" flags="PsychosisSelf">
+			<Conversation line="Radyo dalgaları. Radyasyon. Radyasyon." speaker="1" flags="PsychosisSelf">
+				<Conversation line="Radyo." speaker="1" flags="PsychosisSelf">
+					<Conversation line="Radyo." speaker="1" flags="PsychosisSelf"/>
+				</Conversation>
+			</Conversation>
+		</Conversation>
+	</Conversation>
+	<Conversation line="Açık ve net." speaker="1" speakertags="professional"/>
+	<Conversation line="İyi ve anlaşılır." speaker="1" speakertags="professional"/>
+	<Conversation line="Çok iyi!" speaker="1"/>
+	<Conversation line="Evet, iyi duyuluyor." speaker="1" speakertags="brokenenglish"/>
+</Conversation>
+
+<Conversation line="Akrep adamların şarkı söylediklerini duyuyor musun?" speaker="0" speakertags="crazy" maxintensity="0.2">
+	<Conversation line="" speaker="0"/>
+	<Conversation line="Hayır." speaker="1"/>
+	<Conversation line="Son kez söylüyorum, Akrep Adam diye bir şey yok." speaker="1"/>
+</Conversation>
+
+<Conversation line="İçe doğru." speaker="0" speakertags="crazy" maxintensity="0.2">
+	<Conversation line="Daha derine dalmak mı? Hayır. Daha içe dalmak." speaker="0" speakertags="crazy" maxintensity="0.2">
+		<Conversation line="" speaker="0"/>
+		<Conversation line="Sen tam bir ümitsiz vakasın." speaker="1" speakertags="rude"/>
+		<Conversation line="Anlamıyorum." speaker="1" speakertags="brokenenglish"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Tanrı buz liglerini görebilir mi?" speaker="0" speakertags="crazy" maxintensity="0.2">
+	<Conversation line="Yoksa Jüpiter mi?" speaker="0" speakertags="crazy">
+		<Conversation line="" speaker="0"/>
+		<Conversation line="Hiç mantıklı değil." speaker="1"/>
+	</Conversation>
+	<Conversation line="Belki de Abis'tir, bizi içine çekiyor." speaker="0" speakertags="crazy">
+		<Conversation line="Bu kült tek bir konuda haklı, aşağıda bir şeyler var." speaker="0" speakertags="crazy">
+			<Conversation line="" speaker="0"/>
+			<Conversation line="Lütfen." speaker="1"/>
+			<Conversation line="Belki, belki." speaker="1">
+				<Conversation line="Ama şu anda endişelenmemiz gereken daha önemli şeyler var." speaker="1"/>
+			</Conversation>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Bazen ip üstündeki cambazlarmışız gibi hissediyorum.???" speaker="0" speakertags="crazy" maxintensity="0.3">
+	<Conversation line="Perdenin ardındaki şey eğlensin diye dans edip ölüyoruz." speaker="0">
+		<Conversation line="" speaker="1"/>
+		<Conversation line="Benim gemimde dans etmek ya da ölmek yok, lütfen." speaker="1" allowedjobs="captain"/>
+		<Conversation line="Ben bunu hiç eğlenceli bulmuyorum." speaker="1" speakertags="professional"/>
+		<Conversation line="(iç çeker)" speaker="1"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Zorlu bir iş olacak." speaker="0" minintensity="0.3" maxintensity="0.5"/>
+
+<Conversation line="Giderek kızışıyor." speaker="0" minintensity="0.3" maxintensity="0.6"/>
+
+<Conversation line="Bunu yapabiliriz." speaker="0" minintensity="0.3"/>
+
+<Conversation line="Sonunda biraz aksiyon!" speaker="0" speakertags="tough" minintensity="0.3"/>
+
+<Conversation line="Onun işi başladı." speaker="0" speakertags="crazy" minintensity="0.3" maxintensity="0.6"/>
+
+<Conversation line="???" speaker="0" minintensity="0.5"/>
+
+<Conversation line="Sadece bir aksilik." speaker="0" speakertags="tough" minintensity="0.5"/>
+
+<Conversation line="İşler bir anda tersine döndü." speaker="0" minintensity="0.5"/>
+
+<Conversation line="Çok kötü!" speaker="0" speakertags="brokenenglish" minintensity="0.5"/>
+
+<Conversation line="Hiç iyi değil." speaker="0" speakertags="brokenenglish" minintensity="0.5"/>
+
+<Conversation line="Filoya katıl, dediler. Heyecan verici bir tecrübe olacak, dediler!" speaker="0" speakertags="joker" minintensity="0.5"/>
+
+<Conversation line="Bundan sonra bir şeyler içmem gerekecek." speaker="0" speakertags="joker,laid-back" minintensity="0.5"/>
+
+<Conversation line="Pekâlâ mürettebat, neyiniz var neyiniz yok gösterin bana." speaker="0" allowedjobs="captain" speakertags="professional,tough,laid-back" minintensity="0.5"/>
+
+<Conversation line="Henüz tehlikeyi atlatmadık." speaker="0" allowedjobs="captain" minintensity="0.5"/>
+
+<Conversation line="Ölmek istemiyorum!" speaker="0" speakertags="fearful" minintensity="0.6"/>
+
+<Conversation line="Botanikçi olmalıydım!" speaker="0" speakertags="joker" minintensity="0.6"/>
+
+<Conversation line="Dayanın millet! Bunu yapabiliriz." speaker="0" speakertags="tough" minintensity="0.6">
+	<Conversation line="Emin misin?" speaker="1" speakertags="fearful"/>
+</Conversation>
+
+<Conversation line="Ben bu saçmalıktan bıktım!" speaker="0" speakertags="rude" minintensity="0.6"/>
+
+<Conversation line="Eğer başaramazsam anneme onu çok sevdiğimi söyle." speaker="0" speakertags="fearful" minintensity="0.6">
+	<Conversation line="Kapa lan çeneni!" speaker="1" speakertags="rude"/>
+	<Conversation line="Kes şunu! Başaracaksın." speaker="1" speakertags="professional"/>
+</Conversation>
+
+<Conversation line="Eğer başarabilirsek istifa edeceğim." speaker="0" speakertags="joker,laid-back" minintensity="0.6"/>
+
+<Conversation line="Ve böylece hayat çekildi ve susuzluğu giderildi…" speaker="0" speakertags="crazy" minintensity="0.7"/>
+
+<Conversation line="Bu kez gerçekten mahvolduk." speaker="0" speakertags="rude" minintensity="0.8"/>
+
+<Conversation line="Tanrım!" speaker="0" minintensity="0.8"/>
+
+<Conversation line="Olamaz." speaker="0" speakertags="joker" minintensity="0.8"/>
+
+<Conversation line="Size hizmet etmek bir onurdu beyler." speaker="0" speakertags="professional" minintensity="0.8"/>
+
+<Conversation line="Ne zaman bu kadar derine dalsak huzursuz hissederim." speaker="0" flags="SubmarineDeep">
+	<Conversation line="" speaker="0" flags="Casual"/>
+	<Conversation line="Sorun olmayacak. Daha derinlere dalmışlığı da var." speaker="1" speakertags="tough"/>
+</Conversation>
+
+<Conversation line="Bu kadar derine dalmamız çok korkunç." speaker="0" flags="SubmarineDeep" speakertags="brokenenglish">
+	<Conversation line="" speaker="0" flags="Casual"/>
+	<Conversation line="O da öyle dedi." speaker="1" speakertags="joker"/>
+	<Conversation line="Sorun olmayacak. Daha derinlere dalmışlığı da var." speaker="1" speakertags="tough"/>
+</Conversation>
+
+<Conversation line="Karinadaki uğultuyu duyuyor musun? Güvenli olduğundan emin misin?" speaker="0" flags="SubmarineDeep" speakertags="fearful">
+	<Conversation line="İstediğin şey güvenlikse filoya katılmaman gerekirdi." speaker="1" speakertags="tough,rude"/>
+	<Conversation line="Başaracağız. Daha derinlere dalmışlığı da var." speaker="1" speakertags="tough"/>
+	<Conversation line="Sorun olmamalı. Yine de kaynakları hazır tutun siz." speaker="1"/>
+</Conversation>
+
+<!-- Afflictions -->
+<Conversation line="Bayılacak gibiyim." speaker="0" flags="Bloodloss"/>
+
+<Conversation line="Kendimi hiç iyi hissetmiyorum." speaker="0" flags="Bloodloss"/>
+
+<Conversation line="Sanırım bana biraz kan plazması lazım. ???" speaker="0" flags="Bloodloss"/>
+
+<Conversation line="(geğirir)" speaker="0" flags="DrunkMedium"/>
+
+<Conversation line="Bunu bu kadar sık söylemem ama hepiniz harikasınız beyler." speaker="0" flags="DrunkMedium">
+	<Conversation line="Daha iyi bir mürettebat isteyemezdim." speaker="0" flags="DrunkMedium">
+		<Conversation line="Sarhoş musun?" speaker="1" flags="DrunkMedium">
+			<Conversation line="Sakin ol dostum, her şey yolunda." speaker="2" flags="DrunkMedium"/>
+			<Conversation line="Pek değilim. Birkaç yudum aldım sadece." speaker="0" flags="DrunkMedium"/>
+			<Conversation line="Ne? Ben sadece hepinize ne kadar minnettar olduğumu söylemek istemiştim." speaker="0" flags="DrunkMedium"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Hehe…" speaker="0" flags="DrunkMedium"/>
+
+<Conversation line="Beni dinleyin. Bu işten kurtulacağız." speaker="0" flags="DrunkMedium" minintensity="0.5"/>
+
+<Conversation line="Sanırım biraz uzanmam gerek." speaker="0" flags="DrunkHigh">
+	<Conversation line="Tanrı aşkına! Ayılana dek yolumuzdan çekil!" speaker="1" speakertags="professional,tough,rude"/>
+	<Conversation line="" speaker="0"/>
+</Conversation>
+
+<Conversation line="Sarhoş bir denizciyi ne yapmalı, sarhoş bir denizciyi ne yapmalı…" speaker="0" flags="DrunkHigh">
+	<Conversation line="Sabahın erken saatleri!" speaker="0" flags="DrunkHigh">
+		<Conversation line="Görevini yapabilecek durumda değilsin denizci. Ayıldığın zaman ciddi bir konuşma yapmamız gerekecek." speaker="1" allowedjobs="captain" speakertags="professional,tough,rude">
+			<Conversation line="Hayır, halledebilirim." speaker="0" flags="DrunkHigh"/>
+		</Conversation>
+		<Conversation line="Birisi iyi gününde." speaker="1" speakertags="joker"/>
+		<Conversation line="Tanrı aşkına! Ayılana dek yolumuzdan çekil!" speaker="1" speakertags="professional,tough,rude"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Neden gemi bu kadar çok sallanıyor?" speaker="0" flags="DrunkHigh">
+	<Conversation line="Sana öyle geldiğinden eminim." speaker="1"/>
+	<Conversation line="Kendine çeki düzen ver!" speaker="1"/>
+	<Conversation line="" speaker="0"/>
+</Conversation>
+
+<Conversation line="Kendimi hiç iyi hissetmiyorum." speaker="0" flags="OpiateWithdrawalLow"/>
+
+<Conversation line="Midem bulanıyor…" speaker="0" flags="OpiateWithdrawalLow"/>
+
+<Conversation line="Bacağım beni mahvediyor. Biraz morfin alabilir miyim?" speaker="0" flags="OpiateWithdrawalMedium">
+	<Conversation line="Bacağında bir sorun yok. Bence bir süre morfini kesmelisin." speaker="1" allowedjobs="medicaldoctor"/>
+	<Conversation line="Bacağında bir sorun yok esrarkeş." speaker="1" speakertags="rude"/>
+</Conversation>
+
+<Conversation line="Bunu yapamam." speaker="0" flags="OpiateWithdrawalMedium"/>
+
+<Conversation line="Sanırım kusacağım." speaker="0" flags="OpiateWithdrawalMedium"/>
+
+<Conversation line="Burada olmamalıyım. Eve gitmek istiyorum." speaker="0" flags="OpiateWithdrawalMedium"/>
+
+<Conversation line="Ölecekmişim gibi hissediyorum. Bunu yapamam!" speaker="0" flags="OpiateWithdrawalHigh">
+	<Conversation line="Bence bir fırt nalokson iyi gelir." speaker="1" allowedjobs="medicaldoctor"/>
+	<Conversation line="Kes şunu!" speaker="1" speakertags="rude"/>
+	<Conversation line="" speaker="0"/>
+</Conversation>
+
+<Conversation line="Odadaki fil hakkında konuşmamız lazım." speaker="0" flags="Psychosis">
+	<Conversation line="Kimden bahsettiğimi hepiniz biliyorsunuz." speaker="0">
+		<Conversation line="Bu böyle devam edemez. Böyle giderse birileri öldürülecek." speaker="0">
+			<Conversation line="Önce biz yapmazsak tabii." speaker="1"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Buradan çıkmamız gerek." speaker="0" flags="PsychosisSelf">
+	<Conversation line="Hemen." speaker="0" flags="PsychosisSelf"/>
+</Conversation>
+
+<Conversation line="Kimi yapar bir şey, bilmeceler dalınır vemilerin içine gibi acaba mı…" speaker="0" flags="Psychosis">
+	<Conversation line="İyice dinleyin, bu bir metafor değil." speaker="0" flags="Psychosis">
+		<Conversation line="Biz yanlışlıkları yapana kadar olur doğrular irade." speaker="0" flags="Psychosis"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Ama gerçeklikte bir gün tam gerçekliğimizden gelecek." speaker="0" flags="Psychosis">
+	<Conversation line="Ve güvenlik bilgisi uzaktan." speaker="0" flags="Psychosis">
+		<Conversation line="Kaçınılmazdan kaçamayacağımız yöne doğru yaşıyoruz." speaker="0" flags="Psychosis"/>
+		<Conversation line="En boş denizler bile kendi bilgisiyle içimize doğan bu karanlığa açıldı." speaker="0" flags="Psychosis"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="BAM! Sonra bkatık." speaker="0" flags="Psychosis">
+	<Conversation line="Balığımız da aşağı indi. Tekneyle." speaker="0" flags="Psychosis">
+		<Conversation line="Hiç de bile! Balığımız dedi ki balık gelmiş." speaker="0" flags="Psychosis">
+			<Conversation line="Hiç de bile! Hiç beğenmedim. Hayır." speaker="0" flags="Psychosis"/>
+			<Conversation line="Olmamalı! O şeyler balığa denmemeli!" speaker="0" flags="Psychosis">
+				<Conversation line="Ama bu doğru değil ve bunu biliyorsun." speaker="1" flags="Psychosis"/>
+			</Conversation>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Morfin hangi cehennemde?" speaker="0" flags="OpiateWithdrawalHigh">
+	<Conversation line="Artık ona ihtiyacın yok. Sana biraz nalokson vermeliyiz." speaker="1" allowedjobs="medicaldoctor"/>
+	<Conversation line="Umarım ulaşamayacağın bir yerdedir." speaker="1" speakertags="rude"/>
+	<Conversation line="Neler oluyor? Canın mı yanıyor?" speaker="1">
+		<Conversation line="Ölecekmişim gibi hissediyorum lan. Biraz morfin almazsam bunu yapamam." speaker="0"/>
+		<Conversation line="Kaslarıma kramp giriyor, kalbim de yerinden çıkmaz üzere. Dayanamıyorum." speaker="0"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Vuruldum! Bana bandaj getirin." speaker="0" flags="GunshotWound"/>
+
+<Conversation line="Yardım edin! Vuruldum!" speaker="0" flags="GunshotWound"/>
+
+<!-- Outpost Watchmen -->
+<Conversation line="Merhaba denizciler." speaker="0" flags="EnterEndOutpost" allowedjobs="watchman">
+	<Conversation line="Karakolun geri kalan kısmı yapım aşamasında ancak lütfen birkaç ay içinde tekrar kontrol edin!" speaker="0">
+		<Conversation line="Yine de size satılık olan malzemelerimizin listesini ve iş arayan kişileri gösterebilirim." speaker="0">
+			<Conversation line="Hazır olduğunuz zaman da en yakın lokasyonların navigasyon bilgilerini verebilirim." speaker="0"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Arkadaşça bir yüz görmek çok güzel. Bu taraflara çok fazla ziyaretçi gelmez." speaker="0" flags="EnterEndOutpost" allowedjobs="watchman">
+	<Conversation line="Karakolun geri kalan kısmı yapım aşamasında ancak lütfen birkaç ay içinde tekrar kontrol edin!" speaker="0">
+		<Conversation line="Ama eğer malzeme veya ekstra mürettebat ihtiyacınız olursa bana haber verin." speaker="0">
+			<Conversation line="Hazır olduğunuz zaman da en yakın lokasyonların navigasyon bilgilerini verebilirim." speaker="0"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Dönüyor musunuz?" speaker="0" flags="EnterStartOutpost" allowedjobs="watchman">
+	<Conversation line="Eğer daha fazla malzeme veya mürettebata ihtiyacınız olursa ya da başka bir lokasyona gitmek isterseniz lütfen bana haber verin." speaker="0"/>
+</Conversation>
+
+<Conversation line="Pekâlâ, senin için ne yapabilirim?" speaker="0" flags="WatchmanInteract" allowedjobs="watchman"/>
+
+<Conversation line="Neye ihtiyacın var?" speaker="0" flags="WatchmanInteract" allowedjobs="watchman"/>
+
+<Conversation line="Pekâlâ, hadi bitirelim şunu. Yapacak işlerim var." speaker="0" flags="WatchmanInteract" allowedjobs="watchman"/>
+
+<Conversation line="Üzgünüm ama üst düzey birisiyle konuşmam gerek." speaker="0" flags="WatchmanInteractNotAllowed" allowedjobs="watchman"/>
+
+<Conversation line="Geminiz düzgün şekilde yanaşmadan girmenize izin veremem. En azından karakola yeterince yaklaşın." speaker="0" flags="WatchmanInteractNoLeavingSub" allowedjobs="watchman"/>
+
+<Conversation line="Denizaltınızı arkada mı bırakmak istiyorsunuz? Lütfen karakola biraz daha yanaşın." speaker="0" flags="WatchmanInteractNoLeavingSub" allowedjobs="watchman"/>
+
+<!-- Changed values -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- New additions -->
+
+</Conversations>

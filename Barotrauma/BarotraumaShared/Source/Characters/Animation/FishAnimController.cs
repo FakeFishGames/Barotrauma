@@ -132,15 +132,18 @@ namespace Barotrauma
         {
             if (Frozen) return;
             if (MainLimb == null) { return; }
-            
+
+            levitatingCollider = true;
+
             if (!character.AllowInput)
             {
                 levitatingCollider = false;
                 Collider.FarseerBody.FixedRotation = false;
                 if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
                 {
-                    Collider.LinearVelocity = MainLimb.LinearVelocity;
+                    Collider.Enabled = false;
                     Collider.FarseerBody.FixedRotation = false;
+                    Collider.LinearVelocity = MainLimb.LinearVelocity;
                     Collider.SetTransformIgnoreContacts(MainLimb.SimPosition, MainLimb.Rotation);
                 }
                 if (character.IsDead && deathAnimTimer < deathAnimDuration)
@@ -486,9 +489,9 @@ namespace Barotrauma
                 {
                     case LimbType.LeftFoot:
                     case LimbType.RightFoot:
-                        if (CurrentSwimParams.FootAnglesInRadians.ContainsKey(limb.limbParams.ID))
+                        if (CurrentSwimParams.FootAnglesInRadians.ContainsKey(limb.Params.ID))
                         {
-                            SmoothRotateWithoutWrapping(limb, movementAngle + CurrentSwimParams.FootAnglesInRadians[limb.limbParams.ID] * Dir, MainLimb, FootTorque);
+                            SmoothRotateWithoutWrapping(limb, movementAngle + CurrentSwimParams.FootAnglesInRadians[limb.Params.ID] * Dir, MainLimb, FootTorque);
                         }
                         break;
                     case LimbType.Tail:
@@ -541,8 +544,6 @@ namespace Barotrauma
             //limbs are disabled when simple physics is enabled, no need to move them
             if (SimplePhysicsEnabled) { return; }
 
-            float mainLimbHeight = ColliderHeightFromFloor;
-
             Vector2 colliderBottom = GetColliderBottom();
 
             float movementAngle = 0.0f;
@@ -556,6 +557,9 @@ namespace Barotrauma
                 movementAngle -= MathHelper.TwoPi;
             }
 
+            float stepLift = TargetMovement.X == 0.0f ? 0 :
+                (float)Math.Sin(WalkPos * CurrentGroundedParams.StepLiftFrequency + MathHelper.Pi * CurrentGroundedParams.StepLiftOffset) * (CurrentGroundedParams.StepLiftAmount / 100);
+
             Limb torso = GetLimb(LimbType.Torso);
             if (torso != null)
             {
@@ -565,12 +569,12 @@ namespace Barotrauma
                 }
                 if (TorsoPosition.HasValue)
                 {
-                    Vector2 pos = colliderBottom + Vector2.UnitY * TorsoPosition.Value;
+                    Vector2 pos = colliderBottom + new Vector2(0, TorsoPosition.Value + stepLift);
 
                     if (torso != MainLimb)
+                    {
                         pos.X = torso.SimPosition.X;
-                    else
-                        mainLimbHeight = TorsoPosition.Value;
+                    }
 
                     torso.MoveToPos(pos, TorsoMoveForce);
                     torso.PullJointEnabled = true;
@@ -587,12 +591,12 @@ namespace Barotrauma
                 }
                 if (HeadPosition.HasValue)
                 {
-                    Vector2 pos = colliderBottom + Vector2.UnitY * HeadPosition.Value;
+                    Vector2 pos = colliderBottom + new Vector2(0, HeadPosition.Value + stepLift * CurrentGroundedParams.StepLiftHeadMultiplier);
 
                     if (head != MainLimb)
+                    {
                         pos.X = head.SimPosition.X;
-                    else
-                        mainLimbHeight = HeadPosition.Value;
+                    }
 
                     head.MoveToPos(pos, HeadMoveForce);
                     head.PullJointEnabled = true;
@@ -672,10 +676,10 @@ namespace Barotrauma
 #if CLIENT
                         if (playFootstepSound) { PlayImpactSound(limb); }
 #endif
-                        if (CurrentGroundedParams.FootAnglesInRadians.ContainsKey(limb.limbParams.ID))
+                        if (CurrentGroundedParams.FootAnglesInRadians.ContainsKey(limb.Params.ID))
                         {
                             SmoothRotateWithoutWrapping(limb,
-                                movementAngle + CurrentGroundedParams.FootAnglesInRadians[limb.limbParams.ID] * Dir,
+                                movementAngle + CurrentGroundedParams.FootAnglesInRadians[limb.Params.ID] * Dir,
                                 MainLimb, FootTorque);
                         }
                         break;

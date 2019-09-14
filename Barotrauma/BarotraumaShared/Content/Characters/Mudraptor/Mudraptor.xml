@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Character name="Mudraptor" humanoid="false">
+<Character speciesname="Mudraptor" humanoid="false">
   <ragdolls />
   <animations />
   
@@ -28,13 +28,18 @@
   <sound file="Content/Characters/Mudraptor/MUDRAPTOR_death1.ogg" state="Die" range="1000"/>
   <sound file="Content/Characters/Mudraptor/MUDRAPTOR_death2.ogg" state="Die" range="1000"/>
 
-  <Inventory slots="Any, Any" accessiblewhenalive="false">
+  <Inventory slots="Any, Any" accessiblewhenalive="false" commonness="15">
     <Item identifier="hydroxyapatite"/>
   </Inventory>
-  
+  <Inventory slots="Any, Any" accessiblewhenalive="false" commonness="1">
+    <Item identifier="hydroxyapatite"/>
+    <Item identifier="mudraptorshell"/>
+  </Inventory>
+
+
   <ai
     combatstrength="250"
-    sight="0.5"
+    sight="0.75"
     hearing="1.0"
     aggressiveboarding="true"
     fleehealththreshold="20"

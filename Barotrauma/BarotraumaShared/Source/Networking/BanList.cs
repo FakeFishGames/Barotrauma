@@ -18,7 +18,7 @@ namespace Barotrauma.Networking
     {
         const string SavePath = "Data/bannedplayers.txt";
 
-        private List<BannedPlayer> bannedPlayers;
+        private readonly List<BannedPlayer> bannedPlayers;
 
         public IEnumerable<string> BannedNames
         {

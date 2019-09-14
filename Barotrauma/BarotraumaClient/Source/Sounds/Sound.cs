@@ -1,5 +1,5 @@
 ﻿using System;
-using OpenTK.Audio.OpenAL;
+using OpenAL;
 using Microsoft.Xna.Framework;
 using System.IO;
 
@@ -57,7 +57,7 @@ namespace Barotrauma.Sounds
             get { return !Stream ? alMuffledBuffer : 0; }
         }
 
-        public ALFormat ALFormat
+        public int ALFormat
         {
             get;
             protected set;
@@ -91,26 +91,26 @@ namespace Barotrauma.Sounds
             
             if (!stream)
             {
-                AL.GenBuffer(out alBuffer);
-                ALError alError = AL.GetError();
-                if (alError != ALError.NoError)
+                Al.GenBuffer(out alBuffer);
+                int alError = Al.GetError();
+                if (alError != Al.NoError)
                 {
-                    throw new Exception("Failed to create OpenAL buffer for non-streamed sound: " + AL.GetErrorString(alError));
+                    throw new Exception("Failed to create OpenAL buffer for non-streamed sound: " + Al.GetErrorString(alError));
                 }
 
-                if (!AL.IsBuffer(alBuffer))
+                if (!Al.IsBuffer(alBuffer))
                 {
                     throw new Exception("Generated OpenAL buffer is invalid!");
                 }
 
-                AL.GenBuffer(out alMuffledBuffer);
-                alError = AL.GetError();
-                if (alError != ALError.NoError)
+                Al.GenBuffer(out alMuffledBuffer);
+                alError = Al.GetError();
+                if (alError != Al.NoError)
                 {
-                    throw new Exception("Failed to create OpenAL buffer for non-streamed sound: " + AL.GetErrorString(alError));
+                    throw new Exception("Failed to create OpenAL buffer for non-streamed sound: " + Al.GetErrorString(alError));
                 }
                 
-                if (!AL.IsBuffer(alMuffledBuffer))
+                if (!Al.IsBuffer(alMuffledBuffer))
                 {
                     throw new Exception("Generated OpenAL buffer is invalid!");
                 }
@@ -179,6 +179,8 @@ namespace Barotrauma.Sounds
 
         public abstract int FillStreamBuffer(int samplePos, short[] buffer);
 
+        public abstract float GetAmplitudeAtPlaybackPos(int playbackPos);
+
         public virtual void Dispose()
         {
             if (disposed) { return; }
@@ -186,32 +188,32 @@ namespace Barotrauma.Sounds
             Owner.KillChannels(this);
             if (alBuffer != 0)
             {
-                if (!AL.IsBuffer(alBuffer))
+                if (!Al.IsBuffer(alBuffer))
                 {
                     throw new Exception("Buffer to delete is invalid!");
                 }
             
-                AL.DeleteBuffer(ref alBuffer); alBuffer = 0;
+                Al.DeleteBuffer(alBuffer); alBuffer = 0;
 
-                ALError alError = AL.GetError();
-                if (alError != ALError.NoError)
+                int alError = Al.GetError();
+                if (alError != Al.NoError)
                 {
-                    throw new Exception("Failed to delete OpenAL buffer for non-streamed sound: " + AL.GetErrorString(alError));
+                    throw new Exception("Failed to delete OpenAL buffer for non-streamed sound: " + Al.GetErrorString(alError));
                 }
             }
             if (alMuffledBuffer != 0)
             {
-                if (!AL.IsBuffer(alMuffledBuffer))
+                if (!Al.IsBuffer(alMuffledBuffer))
                 {
                     throw new Exception("Buffer to delete is invalid!");
                 }
 
-                AL.DeleteBuffer(ref alMuffledBuffer); alMuffledBuffer = 0;
+                Al.DeleteBuffer(alMuffledBuffer); alMuffledBuffer = 0;
 
-                ALError alError = AL.GetError();
-                if (alError != ALError.NoError)
+                int alError = Al.GetError();
+                if (alError != Al.NoError)
                 {
-                    throw new Exception("Failed to delete OpenAL buffer for non-streamed sound: " + AL.GetErrorString(alError));
+                    throw new Exception("Failed to delete OpenAL buffer for non-streamed sound: " + Al.GetErrorString(alError));
                 }
             }
 

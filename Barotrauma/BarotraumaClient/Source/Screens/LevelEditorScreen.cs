@@ -501,7 +501,7 @@ namespace Barotrauma
             foreach (string configFile in GameMain.Instance.GetFilesOfType(ContentType.LevelGenerationParameters))
             {
                 XDocument doc = XMLExtensions.TryLoadXml(configFile);
-                if (doc == null || doc.Root == null) continue;
+                if (doc == null) { continue; }
 
                 foreach (LevelGenerationParams genParams in LevelGenerationParams.LevelParams)
                 {
@@ -523,7 +523,7 @@ namespace Barotrauma
             foreach (string configFile in GameMain.Instance.GetFilesOfType(ContentType.LevelObjectPrefabs))
             {
                 XDocument doc = XMLExtensions.TryLoadXml(configFile);
-                if (doc == null || doc.Root == null) continue;
+                if (doc == null) { continue; }
 
                 foreach (LevelObjectPrefab levelObjPrefab in LevelObjectPrefab.List)
                 {
@@ -549,7 +549,7 @@ namespace Barotrauma
             foreach (string configFile in GameMain.Instance.GetFilesOfType(ContentType.LevelGenerationParameters))
             {
                 XDocument doc = XMLExtensions.TryLoadXml(configFile);
-                if (doc == null || doc.Root == null) continue;
+                if (doc == null) { continue; }
 
                 bool elementFound = false;
                 foreach (XElement element in doc.Root.Elements())
@@ -664,7 +664,7 @@ namespace Barotrauma
                     foreach (string configFile in GameMain.Instance.GetFilesOfType(ContentType.LevelObjectPrefabs))
                     {
                         XDocument doc = XMLExtensions.TryLoadXml(configFile);
-                        if (doc?.Root == null) continue;
+                        if (doc == null) { continue; }
                         var newElement = new XElement(newPrefab.Name);
                         newPrefab.Save(newElement);
                         newElement.Add(new XElement("Sprite", 

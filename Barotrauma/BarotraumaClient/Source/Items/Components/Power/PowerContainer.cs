@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -74,7 +73,7 @@ namespace Barotrauma.Items.Components
             {
                 ProgressGetter = () => 
                 {
-                    return charge / capacity;
+                    return capacity <= 0.0f ? 1.0f : charge / capacity;
                 }
             };
         }
@@ -128,12 +127,12 @@ namespace Barotrauma.Items.Components
 
         }
         
-        public void ClientWrite(NetBuffer msg, object[] extraData)
+        public void ClientWrite(IWriteMessage msg, object[] extraData)
         {
-            msg.WriteRangedInteger(0, 10, (int)(rechargeSpeed / MaxRechargeSpeed * 10));
+            msg.WriteRangedInteger((int)(rechargeSpeed / MaxRechargeSpeed * 10), 0, 10);
         }
 
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             if (correctionTimer > 0.0f)
             {
@@ -141,7 +140,14 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            RechargeSpeed = msg.ReadRangedInteger(0, 10) / 10.0f * maxRechargeSpeed;
+            float rechargeRate = msg.ReadRangedInteger(0, 10) / 10.0f;
+            RechargeSpeed = rechargeRate * MaxRechargeSpeed;
+#if CLIENT
+            if (rechargeSpeedSlider != null)
+            {
+                rechargeSpeedSlider.BarScroll = rechargeRate;
+            }
+#endif
             Charge = msg.ReadRangedSingle(0.0f, 1.0f, 8) * capacity;
         }
     }

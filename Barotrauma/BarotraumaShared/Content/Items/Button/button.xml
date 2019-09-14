@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Button" identifier="button" category="Electrical" tags="smallitem" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+  <Item name="Button" identifier="button" category="Electrical" tags="smallitem" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Military" buyprice="80" />
@@ -12,8 +12,8 @@
       <Item identifier="plastic" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="10">
-      <RequiredItem identifier="fpgacircuit"/>
-      <RequiredItem identifier="plastic"/>
+      <RequiredItem identifier="fpgacircuit" />
+      <RequiredItem identifier="plastic" />
     </Fabricate>
     <Body width="36" height="40" density="40" />
     <Controller direction="None" canbepicked="true" msg="ItemMsgPressSelect">
@@ -29,23 +29,23 @@
       <requireditem identifier="wrench" type="Equipped" />
     </Holdable>
   </Item>
-  <Item name="Switch" identifier="switch" category="Electrical" tags="smallitem" cargocontaineridentifier="metalcrate" scale="0.7" impactsoundtag="impact_metal_light">
+  <Item name="Switch" identifier="switch" category="Electrical" tags="smallitem" cargocontaineridentifier="metalcrate" scale="0.7" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Military" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,448,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,448,64,64" origin="0.5,0.5" />
     <Sprite texture="button.png" sourcerect="45,1,18,31" depth="0.79" origin="0.5,0.5" />
     <Deconstruct time="10">
       <Item identifier="fpgacircuit" />
       <Item identifier="plastic" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="10">
-      <RequiredItem identifier="fpgacircuit"/>
-      <RequiredItem identifier="plastic"/>
+      <RequiredItem identifier="fpgacircuit" />
+      <RequiredItem identifier="plastic" />
     </Fabricate>
     <Body width="18" height="31" density="20" />
-    <Controller direction="None" canbepicked="true" msg="ItemMsgPressSelect">
+    <Controller direction="None" canbepicked="true" istoggle="true" msg="ItemMsgPressSelect">
       <sound file="Content/Items/Button/Switch1.ogg" type="OnUse" range="250.0" />
       <sound file="Content/Items/Button/Switch2.ogg" type="OnUse" range="250.0" />
     </Controller>

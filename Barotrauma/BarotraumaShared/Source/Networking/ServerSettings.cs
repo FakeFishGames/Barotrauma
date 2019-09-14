@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -14,23 +13,25 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Networking
 {
-    enum SelectionMode
+    public enum SelectionMode
     {
         Manual = 0, Random = 1, Vote = 2
     }
 
-    enum YesNoMaybe
+    public enum YesNoMaybe
     {
         No = 0, Maybe = 1, Yes = 2
     }
 
-    enum BotSpawnMode
+    public enum BotSpawnMode
     {
         Normal, Fill
     }
-    
+
     partial class ServerSettings : ISerializableEntity
     {
+        public const string SettingsFile = "serversettings.xml";
+
         [Flags]
         public enum NetFlags : byte
         {
@@ -48,27 +49,24 @@ namespace Barotrauma.Networking
             get { return "ServerSettings"; }
         }
 
+        /// <summary>
+        /// Have some of the properties listed in the server list changed
+        /// </summary>
+        public bool ServerDetailsChanged;
+
         public class SavedClientPermission
         {
-            public readonly string IP;
+            public readonly string EndPoint;
             public readonly ulong SteamID;
             public readonly string Name;
             public List<DebugConsole.Command> PermittedCommands;
 
             public ClientPermissions Permissions;
 
-            public SavedClientPermission(string name, IPAddress ip, ClientPermissions permissions, List<DebugConsole.Command> permittedCommands)
+            public SavedClientPermission(string name, string endpoint, ClientPermissions permissions, List<DebugConsole.Command> permittedCommands)
             {
                 this.Name = name;
-                this.IP = ip.IsIPv4MappedToIPv6 ? ip.MapToIPv4().ToString() : ip.ToString();
-                this.Permissions = permissions;
-                this.PermittedCommands = permittedCommands;
-            }
-            public SavedClientPermission(string name, string ip, ClientPermissions permissions, List<DebugConsole.Command> permittedCommands)
-            {
-                this.Name = name;
-                this.IP = ip;
-
+                this.EndPoint = endpoint;
                 this.Permissions = permissions;
                 this.PermittedCommands = permittedCommands;
             }
@@ -87,7 +85,7 @@ namespace Barotrauma.Networking
             private SerializableProperty property;
             private string typeString;
 
-            private ServerSettings serverSettings;
+            private object parentObject;
 
             public string Name
             {
@@ -96,19 +94,45 @@ namespace Barotrauma.Networking
 
             public object Value
             {
-                get { return property.GetValue(serverSettings); }
+                get { return property.GetValue(parentObject); }
+                set { property.SetValue(parentObject, value); }
             }
-            
-            public NetPropertyData(ServerSettings serverSettings, SerializableProperty property, string typeString)
+
+            public NetPropertyData(object parentObject, SerializableProperty property, string typeString)
             {
                 this.property = property;
                 this.typeString = typeString;
-                this.serverSettings = serverSettings;
+                this.parentObject = parentObject;
             }
-            
-            public void Read(NetBuffer msg)
+
+            public bool PropEquals(object a, object b)
             {
-                long oldPos = msg.Position;
+                switch (typeString)
+                {
+                    case "float":
+                        if (!(a is float?)) return false;
+                        if (!(b is float?)) return false;
+                        return MathUtils.NearlyEqual((float)a, (float)b);
+                    case "int":
+                        if (!(a is int?)) return false;
+                        if (!(b is int?)) return false;
+                        return (int)a == (int)b;
+                    case "bool":
+                        if (!(a is bool?)) return false;
+                        if (!(b is bool?)) return false;
+                        return (bool)a == (bool)b;
+                    case "Enum":
+                        if (!(a is Enum)) return false;
+                        if (!(b is Enum)) return false;
+                        return ((Enum)a).Equals((Enum)b);
+                    default:
+                        return a.ToString().Equals(b.ToString(), StringComparison.InvariantCulture);
+                }
+            }
+
+            public void Read(IReadMessage msg)
+            {
+                int oldPos = msg.BitPosition;
                 UInt32 size = msg.ReadVariableUInt32();
 
                 float x; float y; float z; float w;
@@ -119,28 +143,32 @@ namespace Barotrauma.Networking
                 {
                     case "float":
                         if (size != 4) break;
-                        property.SetValue(serverSettings, msg.ReadFloat());
+                        property.SetValue(parentObject, msg.ReadSingle());
+                        return;
+                    case "int":
+                        if (size != 4) break;
+                        property.SetValue(parentObject, msg.ReadInt32());
                         return;
                     case "vector2":
                         if (size != 8) break;
-                        x = msg.ReadFloat();
-                        y = msg.ReadFloat();
-                        property.SetValue(serverSettings, new Vector2(x, y));
+                        x = msg.ReadSingle();
+                        y = msg.ReadSingle();
+                        property.SetValue(parentObject, new Vector2(x, y));
                         return;
                     case "vector3":
                         if (size != 12) break;
-                        x = msg.ReadFloat();
-                        y = msg.ReadFloat();
-                        z = msg.ReadFloat();
-                        property.SetValue(serverSettings, new Vector3(x, y, z));
+                        x = msg.ReadSingle();
+                        y = msg.ReadSingle();
+                        z = msg.ReadSingle();
+                        property.SetValue(parentObject, new Vector3(x, y, z));
                         return;
                     case "vector4":
                         if (size != 16) break;
-                        x = msg.ReadFloat();
-                        y = msg.ReadFloat();
-                        z = msg.ReadFloat();
-                        w = msg.ReadFloat();
-                        property.SetValue(serverSettings, new Vector4(x, y, z, w));
+                        x = msg.ReadSingle();
+                        y = msg.ReadSingle();
+                        z = msg.ReadSingle();
+                        w = msg.ReadSingle();
+                        property.SetValue(parentObject, new Vector4(x, y, z, w));
                         return;
                     case "color":
                         if (size != 4) break;
@@ -148,7 +176,7 @@ namespace Barotrauma.Networking
                         g = msg.ReadByte();
                         b = msg.ReadByte();
                         a = msg.ReadByte();
-                        property.SetValue(serverSettings, new Color(r, g, b, a));
+                        property.SetValue(parentObject, new Color(r, g, b, a));
                         return;
                     case "rectangle":
                         if (size != 16) break;
@@ -156,27 +184,31 @@ namespace Barotrauma.Networking
                         iy = msg.ReadInt32();
                         width = msg.ReadInt32();
                         height = msg.ReadInt32();
-                        property.SetValue(serverSettings, new Rectangle(ix, iy, width, height));
+                        property.SetValue(parentObject, new Rectangle(ix, iy, width, height));
                         return;
                     default:
-                        msg.Position = oldPos; //reset position to properly read the string
+                        msg.BitPosition = oldPos; //reset position to properly read the string
                         string incVal = msg.ReadString();
-                        property.TrySetValue(serverSettings, incVal);
+                        property.TrySetValue(parentObject, incVal);
                         return;
                 }
 
                 //size didn't match: skip this
-                msg.Position += 8 * size;
+                msg.BitPosition += (int)(8 * size);
             }
 
-            public void Write(NetBuffer msg, object overrideValue = null)
+            public void Write(IWriteMessage msg, object overrideValue = null)
             {
-                if (overrideValue == null) overrideValue = property.GetValue(serverSettings);
+                if (overrideValue == null) overrideValue = property.GetValue(parentObject);
                 switch (typeString)
                 {
                     case "float":
                         msg.WriteVariableUInt32(4);
                         msg.Write((float)overrideValue);
+                        break;
+                    case "int":
+                        msg.WriteVariableUInt32(4);
+                        msg.Write((int)overrideValue);
                         break;
                     case "vector2":
                         msg.WriteVariableUInt32(8);
@@ -225,14 +257,14 @@ namespace Barotrauma.Networking
             private set;
         }
 
-        Dictionary<UInt32,NetPropertyData> netProperties;
+        Dictionary<UInt32, NetPropertyData> netProperties;
 
         partial void InitProjSpecific();
 
-        public ServerSettings(string serverName, int port, int queryPort, int maxPlayers, bool isPublic, bool enableUPnP)
-        {            
+        public ServerSettings(NetworkMember networkMember, string serverName, int port, int queryPort, int maxPlayers, bool isPublic, bool enableUPnP)
+        {
             ServerLog = new ServerLog(serverName);
-            
+
             Voting = new Voting();
 
             Whitelist = new WhiteList();
@@ -246,7 +278,7 @@ namespace Barotrauma.Networking
             ServerName = serverName;
             Port = port;
             QueryPort = queryPort;
-            //EnableUPnP = enableUPnP;
+            EnableUPnP = enableUPnP;
             this.maxPlayers = maxPlayers;
             this.isPublic = isPublic;
 
@@ -258,31 +290,56 @@ namespace Barotrauma.Networking
                 foreach (var property in saveProperties)
                 {
                     object value = property.GetValue(this);
-                    if (value == null) continue;
+                    if (value == null) { continue; }
 
                     string typeName = SerializableProperty.GetSupportedTypeName(value.GetType());
                     if (typeName != null || property.PropertyType.IsEnum)
                     {
                         NetPropertyData netPropertyData = new NetPropertyData(this, property, typeName);
-
                         UInt32 key = ToolBox.StringToUInt32Hash(property.Name, md5);
+                        if (netProperties.ContainsKey(key)){ throw new Exception("Hashing collision in ServerSettings.netProperties: " + netProperties[key] + " has same key as " + property.Name + " (" + key.ToString() + ")"); }
+                        netProperties.Add(key, netPropertyData);
+                    }
+                }
 
-                        if (netProperties.ContainsKey(key)) throw new Exception("Hashing collision in ServerSettings.netProperties: " + netProperties[key] + " has same key as " + property.Name + " (" + key.ToString() + ")");
+                var karmaProperties = SerializableProperty.GetProperties<Serialize>(networkMember.KarmaManager);
+                foreach (var property in karmaProperties)
+                {
+                    object value = property.GetValue(networkMember.KarmaManager);
+                    if (value == null) { continue; }
 
+                    string typeName = SerializableProperty.GetSupportedTypeName(value.GetType());
+                    if (typeName != null || property.PropertyType.IsEnum)
+                    {
+                        NetPropertyData netPropertyData = new NetPropertyData(networkMember.KarmaManager, property, typeName);
+                        UInt32 key = ToolBox.StringToUInt32Hash(property.Name, md5);
+                        if (netProperties.ContainsKey(key)) { throw new Exception("Hashing collision in ServerSettings.netProperties: " + netProperties[key] + " has same key as " + property.Name + " (" + key.ToString() + ")"); }
                         netProperties.Add(key, netPropertyData);
                     }
                 }
             }
         }
-        
+
         public string ServerName;
 
-        public string ServerMessageText;
+        private string serverMessageText;
+        public string ServerMessageText
+        {
+            get { return serverMessageText; }
+            set
+            {
+                if (serverMessageText == value) { return; }
+                serverMessageText = value;
+                ServerDetailsChanged = true;
+            }
+        }
 
         public int Port;
 
         public int QueryPort;
-        
+
+        public bool EnableUPnP;
+
         public ServerLog ServerLog;
 
         public Voting Voting;
@@ -290,10 +347,10 @@ namespace Barotrauma.Networking
         public Dictionary<string, bool> MonsterEnabled { get; private set; }
 
         public Dictionary<ItemPrefab, int> ExtraCargo { get; private set; }
-        
+
         private TimeSpan sparseUpdateInterval = new TimeSpan(0, 0, 0, 3);
         private float selectedLevelDifficulty;
-        private string password;
+        private byte[] password;
 
         public float AutoRestartTimer;
 
@@ -306,7 +363,7 @@ namespace Barotrauma.Networking
         public List<SavedClientPermission> ClientPermissions { get; private set; } = new List<SavedClientPermission>();
 
         public WhiteList Whitelist { get; private set; }
-        
+
         [Serialize(20, true)]
         public int TickRate
         {
@@ -360,7 +417,7 @@ namespace Barotrauma.Networking
         public bool StartWhenClientsReady
         {
             get;
-            private set;
+            set;
         }
 
         [Serialize(0.8f, true)]
@@ -370,17 +427,17 @@ namespace Barotrauma.Networking
             private set;
         }
 
+        private bool allowSpectating;
         [Serialize(true, true)]
         public bool AllowSpectating
         {
-            get;
-            private set;
-        }
-
-        [Serialize(true, true)]
-        public bool VoipEnabled {
-            get;
-            private set;
+            get { return allowSpectating; }
+            private set
+            {
+                if (allowSpectating == value) { return; }
+                allowSpectating = value;
+                ServerDetailsChanged = true;
+            }
         }
 
         [Serialize(true, true)]
@@ -411,11 +468,17 @@ namespace Barotrauma.Networking
             private set;
         }
 
+        private bool voiceChatEnabled;
         [Serialize(true, true)]
         public bool VoiceChatEnabled
         {
-            get;
-            set;
+            get { return voiceChatEnabled; }
+            set
+            {
+                if (voiceChatEnabled == value) { return; }
+                voiceChatEnabled = value;
+                ServerDetailsChanged = true;
+            }
         }
 
         [Serialize(800, true)]
@@ -444,9 +507,15 @@ namespace Barotrauma.Networking
 
         public bool HasPassword
         {
-            get { return !string.IsNullOrEmpty(password); }
+            get { return password != null; }
+#if CLIENT
+            set
+            {
+                password = value ? (password ?? new byte[1]) : null;
+            }
+#endif
         }
-        
+
         [Serialize(true, true)]
         public bool AllowVoteKick
         {
@@ -473,13 +542,19 @@ namespace Barotrauma.Networking
             }
         }
 
+        private bool allowRespawn;
         [Serialize(true, true)]
         public bool AllowRespawn
         {
-            get;
-            set;
+            get { return allowRespawn; ; }
+            set
+            {
+                if (allowRespawn == value) { return; }
+                allowRespawn = value;
+                ServerDetailsChanged = true;
+            }
         }
-        
+
         [Serialize(0, true)]
         public int BotCount
         {
@@ -493,7 +568,8 @@ namespace Barotrauma.Networking
             get;
             set;
         }
-        
+
+        [Serialize(BotSpawnMode.Normal, true)]
         public BotSpawnMode BotSpawnMode
         {
             get;
@@ -513,7 +589,63 @@ namespace Barotrauma.Networking
             set;
         }
 
+        [Serialize(true, true)]
+        public bool AllowRewiring
+        {
+            get;
+            set;
+        }
+
+        [Serialize(true, true)]
+        public bool AllowFriendlyFire
+        {
+            get;
+            set;
+        }
+
+        private YesNoMaybe traitorsEnabled;
+        [Serialize(YesNoMaybe.No, true)]
         public YesNoMaybe TraitorsEnabled
+        {
+            get { return traitorsEnabled; }
+            set
+            {
+                if (traitorsEnabled == value) { return; }
+                traitorsEnabled = value;
+                ServerDetailsChanged = true;
+            }
+        }
+
+        [Serialize(defaultValue: 1, isSaveable: true)]
+        public int TraitorsMinPlayerCount
+        {
+            get;
+            set;
+        }
+
+        [Serialize(defaultValue: 90.0f, isSaveable: true)]
+        public float TraitorsMinStartDelay
+        {
+            get;
+            set;
+        }
+
+        [Serialize(defaultValue: 180.0f, isSaveable: true)]
+        public float TraitorsMaxStartDelay
+        {
+            get;
+            set;
+        }
+
+        [Serialize(defaultValue: 30.0f, isSaveable: true)]
+        public float TraitorsMinRestartDelay
+        {
+            get;
+            set;
+        }
+
+        [Serialize(defaultValue: 90.0f, isSaveable: true)]
+        public float TraitorsMaxRestartDelay
         {
             get;
             set;
@@ -528,6 +660,7 @@ namespace Barotrauma.Networking
             {
                 subSelectionMode = value;
                 Voting.AllowSubVoting = subSelectionMode == SelectionMode.Vote;
+                ServerDetailsChanged = true;
             }
         }
 
@@ -540,11 +673,12 @@ namespace Barotrauma.Networking
             {
                 modeSelectionMode = value;
                 Voting.AllowModeVoting = modeSelectionMode == SelectionMode.Vote;
+                ServerDetailsChanged = true;
             }
         }
 
         public BanList BanList { get; private set; }
-        
+
         [Serialize(0.6f, true)]
         public float EndVoteRequiredRatio
         {
@@ -565,7 +699,7 @@ namespace Barotrauma.Networking
             get;
             private set;
         }
-        
+
         [Serialize(120.0f, true)]
         public float KickAFKTime
         {
@@ -573,25 +707,31 @@ namespace Barotrauma.Networking
             private set;
         }
 
-        [Serialize(true, true)]
-        public bool TraitorUseRatio
-        {
-            get;
-            private set;
-        }
-
-        [Serialize(0.2f, true)]
-        public float TraitorRatio
-        {
-            get;
-            private set;
-        }
-
+        private bool karmaEnabled;
         [Serialize(false, true)]
         public bool KarmaEnabled
         {
-            get;
-            set;
+            get { return karmaEnabled; }
+            set
+            {
+                karmaEnabled = value;
+#if CLIENT
+                if (karmaSettingsBlocker != null) { karmaSettingsBlocker.Visible = !karmaEnabled || karmaPresetDD.SelectedData as string != "custom"; }
+#endif
+            }
+        }
+
+        private string karmaPreset = "default";
+        [Serialize("default", true)]
+        public string KarmaPreset
+        {
+            get { return karmaPreset; }
+            set
+            {
+                if (karmaPreset == value) { return; }
+                GameMain.NetworkMember?.KarmaManager?.SelectPreset(value);
+                karmaPreset = value;
+            }
         }
 
         [Serialize("sandbox", true)]
@@ -607,10 +747,11 @@ namespace Barotrauma.Networking
             get;
             set;
         }
-        
+
         public int MaxPlayers
         {
             get { return maxPlayers; }
+            set { maxPlayers = MathHelper.Clamp(value, 1, NetConfig.MaxPlayers); }
         }
 
         public List<MissionType> AllowedRandomMissionTypes
@@ -619,32 +760,55 @@ namespace Barotrauma.Networking
             set;
         }
 
-        [Serialize(60f, true)]
+        [Serialize(60f * 60.0f, true)]
         public float AutoBanTime
         {
             get;
             private set;
         }
 
-        [Serialize(360f, true)]
+        [Serialize(60.0f * 60.0f * 24.0f, true)]
         public float MaxAutoBanTime
         {
             get;
             private set;
         }
-        
+
         public void SetPassword(string password)
         {
-            this.password = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password)));
+            if (string.IsNullOrEmpty(password))
+            {
+                this.password = null;
+            }
+            else
+            {
+                this.password = Lidgren.Network.NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password));
+            }
         }
 
-        public bool IsPasswordCorrect(string input, int nonce)
+        public static byte[] SaltPassword(byte[] password, int salt)
+        {
+            byte[] saltedPw = new byte[password.Length*2];
+            for (int i = 0; i < password.Length; i++)
+            {
+                saltedPw[(i * 2)] = password[i];
+                saltedPw[(i * 2) + 1] = (byte)((salt >> (8 * (i % 4))) & 0xff);
+            }
+            saltedPw = Lidgren.Network.NetUtility.ComputeSHAHash(saltedPw);
+            return saltedPw;
+        }
+
+        public bool IsPasswordCorrect(byte[] input, int salt)
         {
             if (!HasPassword) return true;
-            string saltedPw = password;
-            saltedPw = saltedPw + Convert.ToString(nonce);
-            saltedPw = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(saltedPw)));
-            return input == saltedPw;
+            byte[] saltedPw = SaltPassword(password, salt);
+            DebugConsole.NewMessage(ToolBox.ByteArrayToString(input)+" "+ToolBox.ByteArrayToString(saltedPw));
+            if (input.Length != saltedPw.Length) return false;
+            for (int i=0;i<input.Length;i++)
+            {
+                if (input[i] != saltedPw[i]) return false;
+            }
+            return true;
         }
 
         /// <summary>
@@ -675,7 +839,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void ReadMonsterEnabled(NetBuffer inc)
+        public void ReadMonsterEnabled(IReadMessage inc)
         {
             InitMonstersEnabled();
             List<string> monsterNames = MonsterEnabled.Keys.ToList();
@@ -686,7 +850,7 @@ namespace Barotrauma.Networking
             inc.ReadPadBits();
         }
 
-        public void WriteMonsterEnabled(NetBuffer msg, Dictionary<string, bool> monsterEnabled = null)
+        public void WriteMonsterEnabled(IWriteMessage msg, Dictionary<string, bool> monsterEnabled = null)
         {
             //monster spawn settings
             if (monsterEnabled == null) monsterEnabled = MonsterEnabled;
@@ -699,7 +863,7 @@ namespace Barotrauma.Networking
             msg.WritePadBits();
         }
 
-        public bool ReadExtraCargo(NetBuffer msg)
+        public bool ReadExtraCargo(IReadMessage msg)
         {
             bool changed = false;
             UInt32 count = msg.ReadUInt32();
@@ -724,7 +888,7 @@ namespace Barotrauma.Networking
             return changed;
         }
 
-        public void WriteExtraCargo(NetBuffer msg)
+        public void WriteExtraCargo(IWriteMessage msg)
         {
             if (ExtraCargo == null)
             {

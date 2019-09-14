@@ -119,7 +119,7 @@ namespace Barotrauma.Media
 
             /*using (var stream = File.OpenRead(filename))
             {*/
-            byte[] filenameBytes = Encoding.UTF8.GetBytes(filename);
+            byte[] filenameBytes = Encoding.UTF8.GetBytes(filename + "\0");
             byte[] filenameBytesNullTerminated = new byte[filenameBytes.Length + 1];
             filenameBytesNullTerminated[filenameBytes.Length] = 0;
             Array.Copy(filenameBytes, filenameBytesNullTerminated, filenameBytes.Length);
@@ -131,7 +131,10 @@ namespace Barotrauma.Media
             //LibVlcWrapper.LibVlcMethods.libvlc_media_release(media);
 
             //LibVlcWrapper.LibVlcMethods.libvlc_video_get_size(mediaPlayer, 0, out width, out height);
-            texture = new Texture2D(graphicsDevice, (int)width, (int)height);
+            CrossThread.RequestExecutionOnMainThread(() =>
+            {
+                texture = new Texture2D(graphicsDevice, (int)width, (int)height);
+            });
             Width = width; Height = height;
 
             unmanagedData = Marshal.AllocHGlobal(sizeof(int)*2+(int)(width*height*3));
@@ -147,7 +150,7 @@ namespace Barotrauma.Media
             IntPtr videoUnlockDelegatePtr = Marshal.GetFunctionPointerForDelegate(VideoUnlockDelegate);
             IntPtr videoDisplayDelegatePtr = Marshal.GetFunctionPointerForDelegate(VideoDisplayDelegate);
             LibVlcWrapper.LibVlcMethods.libvlc_video_set_callbacks(mediaPlayer, videoLockDelegatePtr, videoUnlockDelegatePtr, videoDisplayDelegatePtr, unmanagedData);
-            LibVlcWrapper.LibVlcMethods.libvlc_video_set_format(mediaPlayer, Encoding.UTF8.GetBytes("RV24"), (int)width, (int)height, (int)width * 3);
+            LibVlcWrapper.LibVlcMethods.libvlc_video_set_format(mediaPlayer, Encoding.UTF8.GetBytes("RV24\0"), (int)width, (int)height, (int)width * 3);
 
             IntPtr audioPlayDelegatePtr = Marshal.GetFunctionPointerForDelegate(AudioPlayDelegate);
             IntPtr audioPauseDelegatePtr = Marshal.GetFunctionPointerForDelegate(AudioPauseDelegate);
@@ -156,7 +159,7 @@ namespace Barotrauma.Media
             IntPtr audioDrainDelegatePtr = Marshal.GetFunctionPointerForDelegate(AudioDrainDelegate);
 
             LibVlcWrapper.LibVlcMethods.libvlc_audio_set_callbacks(mediaPlayer, audioPlayDelegatePtr, audioPauseDelegatePtr, audioResumeDelegatePtr, audioFlushDelegatePtr, audioDrainDelegatePtr, unmanagedData);
-            LibVlcWrapper.LibVlcMethods.libvlc_audio_set_format(mediaPlayer, Encoding.UTF8.GetBytes("S16N"), 44100, 2);
+            LibVlcWrapper.LibVlcMethods.libvlc_audio_set_format(mediaPlayer, Encoding.UTF8.GetBytes("S16N\0"), 44100, 2);
 
             LibVlcWrapper.LibVlcMethods.libvlc_audio_set_delay(mediaPlayer, 0);
 
@@ -216,7 +219,10 @@ namespace Barotrauma.Media
                                                           (byte)255);
                     }
                 }
-                texture.SetData(colors);
+                CrossThread.RequestExecutionOnMainThread(() =>
+                {
+                    texture.SetData(colors);
+                });
                 arr[0] = 0;
                 Marshal.Copy(arr, 0, changedPtr, 1);
             }

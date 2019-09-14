@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using System.Linq;
 
 namespace Barotrauma.Particles
 {
@@ -10,21 +11,47 @@ namespace Barotrauma.Particles
 
         public DecalManager()
         {
-            prefabs = new Dictionary<string, DecalPrefab>();
+            var decalElements = new Dictionary<string, XElement>();
             foreach (string configFile in GameMain.Instance.GetFilesOfType(ContentType.Decals))
             {
                 XDocument doc = XMLExtensions.TryLoadXml(configFile);
-                if (doc == null || doc.Root == null) continue;
+                if (doc == null) { continue; }
 
-                foreach (XElement element in doc.Root.Elements())
+                bool allowOverriding = false;
+                var mainElement = doc.Root;
+                if (doc.Root.IsOverride())
                 {
-                    if (prefabs.ContainsKey(element.Name.ToString()))
-                    {
-                        DebugConsole.ThrowError("Error in " + configFile + "! Each decal prefab must have a unique name.");
-                        continue;
-                    }
-                    prefabs.Add(element.Name.ToString(), new DecalPrefab(element));
+                    mainElement = doc.Root.FirstElement();
+                    allowOverriding = true;
                 }
+
+                foreach (XElement sourceElement in mainElement.Elements())
+                {
+                    var element = sourceElement.IsOverride() ? sourceElement.FirstElement() : sourceElement;
+                    string name = element.Name.ToString().ToLowerInvariant();
+                    if (decalElements.ContainsKey(name))
+                    {
+                        if (allowOverriding || sourceElement.IsOverride())
+                        {
+                            DebugConsole.NewMessage($"Overriding the existing decal prefab '{name}' using the file '{configFile}'", Color.Yellow);
+                            decalElements.Remove(name);
+                        }
+                        else
+                        {
+                            DebugConsole.ThrowError($"Error in '{configFile}': Duplicate decal prefab '{name}' found in '{configFile}'! Each decal prefab must have a unique name. " +
+                                "Use <override></override> tags to override prefabs.");
+                            continue;
+                        }
+
+                    }
+                    decalElements.Add(name, element);
+                }
+            }
+            //prefabs = decalElements.ToDictionary(d => d.Key, d => new DecalPrefab(d.Value));
+            prefabs = new Dictionary<string, DecalPrefab>();
+            foreach (var kvp in decalElements)
+            {
+                prefabs.Add(kvp.Key, new DecalPrefab(kvp.Value));
             }
 
         }

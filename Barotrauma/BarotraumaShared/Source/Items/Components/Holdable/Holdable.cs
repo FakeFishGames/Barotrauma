@@ -1,6 +1,5 @@
 ﻿using Barotrauma.Networking;
 using FarseerPhysics;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Xml.Linq;
@@ -40,7 +39,7 @@ namespace Barotrauma.Items.Components
             get { return item.body ?? body; }
         }
 
-        [Serialize(false, true)]
+        [Serialize(false, true, description: "Is the item currently attached to a wall (only valid if Attachable is set to true).")]
         public bool Attached
         {
             get { return attached && item.ParentInventory == null; }
@@ -51,56 +50,58 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(true, true)]
+        [Serialize(true, true, description: "Can the item be pointed to a specific direction or do the characters always hold it in a static pose.")]
         public bool Aimable
         {
             get;
             set;
         }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Should the character adjust its pose when aiming with the item. Most noticeable underwater, where the character will rotate its entire body to face the direction the item is aimed at.")]
         public bool ControlPose
         {
             get;
             set;
         }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Can the item be attached to walls.")]
         public bool Attachable
         {
             get { return attachable; }
             set { attachable = value; }
         }
 
-        [Serialize(true, false)]
+        [Serialize(true, false, description: "Can the item be reattached to walls after it has been deattached (only valid if Attachable is set to true).")]
         public bool Reattachable
         {
             get;
             set;
         }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Should the item be attached to a wall by default when it's placed in the submarine editor.")]
         public bool AttachedByDefault
         {
             get { return attachedByDefault; }
             set { attachedByDefault = value; }
         }
 
-        [Serialize("0.0,0.0", false),Editable]
+        [Editable, Serialize("0.0,0.0", false, description: "The position the character holds the item at (in pixels, as an offset from the character's shoulder)."+
+            " For example, a value of 10,-100 would make the character hold the item 100 pixels below the shoulder and 10 pixels forwards.")]
         public Vector2 HoldPos
         {
             get { return ConvertUnits.ToDisplayUnits(holdPos); }
             set { holdPos = ConvertUnits.ToSimUnits(value); }
         }
 
-        [Serialize("0.0,0.0", false)]
+        [Serialize("0.0,0.0", false, description: "The position the character holds the item at when aiming (in pixels, as an offset from the character's shoulder)."+
+            " Works similarly as HoldPos, except that the position is rotated according to the direction the player is aiming at. For example, a value of 10,-100 would make the character hold the item 100 pixels below the shoulder and 10 pixels forwards when aiming directly to the right.")]
         public Vector2 AimPos
         {
             get { return ConvertUnits.ToDisplayUnits(aimPos); }
             set { aimPos = ConvertUnits.ToSimUnits(value); }
         }
 
-        [Serialize(0.0f, false), Editable]
+        [Editable, Serialize(0.0f, false, description: "The rotation at which the character holds the item (in degrees, relative to the rotation of the character's hand).")]
         public float HoldAngle
         {
             get { return MathHelper.ToDegrees(holdAngle); }
@@ -108,21 +109,21 @@ namespace Barotrauma.Items.Components
         }
 
         private Vector2 swingAmount;
-        [Serialize("0.0,0.0", false), Editable]
+        [Editable, Serialize("0.0,0.0", false, description: "How much the item swings around when aiming/holding it (in pixels, as an offset from AimPos/HoldPos).")]
         public Vector2 SwingAmount
         {
             get { return ConvertUnits.ToDisplayUnits(swingAmount); }
             set { swingAmount = ConvertUnits.ToSimUnits(value); }
         }
         
-        [Serialize(0.0f, false), Editable]
+        [Editable, Serialize(0.0f, false, description: "How fast the item swings around when aiming/holding it (only valid if SwingAmount is set).")]
         public float SwingSpeed { get; set; }
 
-        [Serialize(false, false), Editable]
+        [Editable, Serialize(false, false, description: "Should the item swing around when it's being held.")]
         public bool SwingWhenHolding { get; set; }
-        [Serialize(false, false), Editable]
+        [Editable, Serialize(false, false, description: "Should the item swing around when it's being aimed.")]
         public bool SwingWhenAiming { get; set; }
-        [Serialize(false, false), Editable]
+        [Editable, Serialize(false, false, description: "Should the item swing around when it's being used (for example, when firing a weapon or a welding tool).")]
         public bool SwingWhenUsing { get; set; }
         
         public Holdable(Item item, XElement element)
@@ -222,24 +223,24 @@ namespace Barotrauma.Items.Components
                     item.body = body;
                 }
             }
-            
-            if (Pusher != null) Pusher.Enabled = false;
-            if (item.body != null) item.body.Enabled = true;
+
+            if (Pusher != null) { Pusher.Enabled = false; }
+            if (item.body != null){ item.body.Enabled = true; }
             IsActive = false;
 
             if (picker == null)
             {
-                if (dropper == null) return;
+                if (dropper == null) { return; }
                 picker = dropper;
             }
-            if (picker.Inventory == null) return;
+            if (picker.Inventory == null) { return; }
 
             item.Submarine = picker.Submarine;
             if (item.body != null)
             {
                 item.body.ResetDynamics();
-                Limb heldHand;
-                Limb arm;
+                Limb heldHand, arm;
+                Vector2 diff = Vector2.Zero;
                 if (picker.Inventory.IsInLimbSlot(item, InvSlotType.LeftHand))
                 {
                     heldHand = picker.AnimController.GetLimb(LimbType.LeftHand);
@@ -250,11 +251,18 @@ namespace Barotrauma.Items.Components
                     heldHand = picker.AnimController.GetLimb(LimbType.RightHand);
                     arm = picker.AnimController.GetLimb(LimbType.RightArm);
                 }
-
-                float xDif = (heldHand.SimPosition.X - arm.SimPosition.X) / 2f;
-                float yDif = (heldHand.SimPosition.Y - arm.SimPosition.Y) / 2.5f;
-                //hand simPosition is actually in the wrist so need to move the item out from it slightly
-                item.SetTransform(heldHand.SimPosition + new Vector2(xDif, yDif), 0.0f);
+                if (heldHand != null && arm != null)
+                {
+                    //hand simPosition is actually in the wrist so need to move the item out from it slightly
+                    diff = new Vector2(
+                        (heldHand.SimPosition.X - arm.SimPosition.X) / 2f,
+                        (heldHand.SimPosition.Y - arm.SimPosition.Y) / 2.5f);
+                    item.SetTransform(heldHand.SimPosition + diff, 0.0f);
+                }
+                else
+                {
+                    item.SetTransform(picker.SimPosition, 0.0f);
+                }                
             }
 
             picker.DeselectItem(item);
@@ -286,14 +294,21 @@ namespace Barotrauma.Items.Components
                 item.SetTransform(rightHand.SimPosition, 0.0f);
             }
 
-            bool alreadySelected = character.HasEquippedItem(item);
-            if (picker.TrySelectItem(item) || picker.HasEquippedItem(item))
+            bool alreadyEquipped = character.HasEquippedItem(item);
+            bool canSelect = picker.TrySelectItem(item);
+
+            if (canSelect || picker.HasEquippedItem(item))
             {
+                if (!canSelect)
+                {
+                    character.DeselectItem(item);
+                }
+
                 item.body.Enabled = true;
                 IsActive = true;
 
 #if SERVER
-                if (!alreadySelected) GameServer.Log(character.LogName + " equipped " + item.Name, ServerLog.MessageType.ItemInteraction);
+                if (!alreadyEquipped) GameServer.Log(character.LogName + " equipped " + item.Name, ServerLog.MessageType.ItemInteraction);
 #endif
             }
         }
@@ -557,8 +572,32 @@ namespace Barotrauma.Items.Components
                 DeattachFromWall();
             }
         }
+        
+        public override XElement Save(XElement parentElement)
+        {
+            if (!attachable)
+            {
+                return base.Save(parentElement);
+            }
 
-        public override void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+            var tempMsg = DisplayMsg;
+            var tempPickKey = PickKey;
+            var tempRequiredItems = requiredItems;
+
+            DisplayMsg = prevMsg;
+            PickKey = prevPickKey;
+            requiredItems = prevRequiredItems;
+            
+            XElement saveElement = base.Save(parentElement);
+
+            DisplayMsg = tempMsg;
+            PickKey = tempPickKey;
+            requiredItems = tempRequiredItems;
+
+            return saveElement;
+        }
+        
+        public override void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             base.ServerWrite(msg, c, extraData);
             if (!attachable || body == null) { return; }
@@ -568,11 +607,11 @@ namespace Barotrauma.Items.Components
             msg.Write(body.SimPosition.Y);
         }
 
-        public override void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public override void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             base.ClientRead(type, msg, sendingTime);
             bool shouldBeAttached = msg.ReadBoolean();
-            Vector2 simPosition = new Vector2(msg.ReadFloat(), msg.ReadFloat());
+            Vector2 simPosition = new Vector2(msg.ReadSingle(), msg.ReadSingle());
 
             if (!attachable)
             {

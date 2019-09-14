@@ -12,12 +12,7 @@ namespace Barotrauma
 {
     public static class XMLExtensions
     {
-        public static string ParseContentPathFromUri(this XObject element)
-        {
-            string[] splitted = element.BaseUri.Split(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
-            IEnumerable<string> filtered = splitted.SkipWhile(part => part != "Content");
-            return string.Join("/", filtered);
-        }
+        public static string ParseContentPathFromUri(this XObject element) => ToolBox.ConvertAbsoluteToRelativePath(element.BaseUri);
 
         public static XDocument TryLoadXml(string filePath)
         {
@@ -32,9 +27,11 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Couldn't load xml document \"" + filePath + "\"!", e);
                 return null;
             }
-
-            if (doc.Root == null) return null;
-
+            if (doc?.Root == null)
+            {
+                DebugConsole.ThrowError("File \"" + filePath + "\" could not be loaded: Document or the root element is invalid!");
+                return null;
+            }
             return doc;
         }
 
@@ -114,7 +111,7 @@ namespace Barotrauma
             string stringValue = element.Attribute(name).Value;
             if (string.IsNullOrEmpty(stringValue)) return defaultValue;
 
-            string[] splitValue = stringValue.Split(',');
+            string[] splitValue = stringValue.Split(',', '，');
 
             if (convertToLowerInvariant)
             {
@@ -286,6 +283,30 @@ namespace Barotrauma
             }
 
             return intValue;
+        }
+        public static ushort[] GetAttributeUshortArray(this XElement element, string name, ushort[] defaultValue)
+        {
+            if (element?.Attribute(name) == null) return defaultValue;
+
+            string stringValue = element.Attribute(name).Value;
+            if (string.IsNullOrEmpty(stringValue)) return defaultValue;
+
+            string[] splitValue = stringValue.Split(',');
+            ushort[] ushortValue = new ushort[splitValue.Length];
+            for (int i = 0; i < splitValue.Length; i++)
+            {
+                try
+                {
+                    ushort val = ushort.Parse(splitValue[i]);
+                    ushortValue[i] = val;
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Error in " + element + "! ", e);
+                }
+            }
+
+            return ushortValue;
         }
 
         public static bool GetAttributeBool(this XElement element, string name, bool defaultValue)
@@ -533,5 +554,19 @@ namespace Barotrauma
 
             return floatArray;
         }
+
+        public static bool IsOverride(this XElement element) => element.Name.ToString().Equals("override", StringComparison.OrdinalIgnoreCase);
+
+        public static XElement FirstElement(this XElement element) => element.Elements().FirstOrDefault();
+
+        /// <summary>
+        /// Returns the first child element that matches the name using the provided comparison method.
+        /// </summary>
+        public static XElement GetChildElement(this XContainer container, string name, StringComparison comparisonMethod = StringComparison.OrdinalIgnoreCase) => container.Elements().FirstOrDefault(e => e.Name.ToString().Equals(name, comparisonMethod));
+
+        /// <summary>
+        /// Returns all child elements that match the name using the provided comparison method.
+        /// </summary>
+        public static IEnumerable<XElement> GetChildElements(this XContainer container, string name, StringComparison comparisonMethod = StringComparison.OrdinalIgnoreCase) => container.Elements().Where(e => e.Name.ToString().Equals(name, comparisonMethod));
     }
 }

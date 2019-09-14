@@ -5,16 +5,13 @@ namespace Barotrauma.SpriteDeformations
 {
     class NoiseDeformationParams : SpriteDeformationParams
     {
-        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f,
-            ToolTip = "The frequency of the noise.")]
+        [Serialize(0.0f, true, description: "The frequency of the noise."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f)]
         public override float Frequency { get; set; }
 
-        [Serialize(1.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f,
-            ToolTip = "How much the noise distorts the sprite.")]
+        [Serialize(1.0f, true, description: "How much the noise distorts the sprite."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f)]
         public float Amplitude { get; set; }
 
-        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f,
-            ToolTip = "How fast the noise changes.")]
+        [Serialize(0.0f, true, description: "How fast the noise changes."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f)]
         public float ChangeSpeed { get; set; }
 
         public NoiseDeformationParams(XElement element) : base(element)

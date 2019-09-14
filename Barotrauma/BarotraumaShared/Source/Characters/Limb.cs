@@ -9,6 +9,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Networking;
+using LimbParams = Barotrauma.RagdollParams.LimbParams;
+using JointParams = Barotrauma.RagdollParams.JointParams;
 
 namespace Barotrauma
 {
@@ -21,14 +23,14 @@ namespace Barotrauma
     partial class LimbJoint : RevoluteJoint
     {
         public bool IsSevered;
-        public bool CanBeSevered => jointParams.CanBeSevered;
-        public readonly JointParams jointParams;
+        public bool CanBeSevered => Params.CanBeSevered;
+        public readonly JointParams Params;
         public readonly Ragdoll ragdoll;
         public readonly Limb LimbA, LimbB;
 
         public LimbJoint(Limb limbA, Limb limbB, JointParams jointParams, Ragdoll ragdoll) : this(limbA, limbB, Vector2.One, Vector2.One)
         {
-            this.jointParams = jointParams;
+            Params = jointParams;
             this.ragdoll = ragdoll;
             LoadParams();
         }
@@ -43,53 +45,31 @@ namespace Barotrauma
             LimbB = limbB;
         }
 
-        public void SaveParams()
-        {
-            // Saving to the params is handled only in the params level.
-            return;
-
-            jointParams.Stiffness = MaxMotorTorque;
-            if (ragdoll.IsFlipped)
-            {
-                jointParams.Limb1Anchor = ConvertUnits.ToDisplayUnits(new Vector2(-LocalAnchorA.X, LocalAnchorA.Y) / jointParams.Ragdoll.JointScale);
-                jointParams.Limb2Anchor = ConvertUnits.ToDisplayUnits(new Vector2(-LocalAnchorB.X, LocalAnchorB.Y) / jointParams.Ragdoll.JointScale);
-                jointParams.UpperLimit = MathHelper.ToDegrees(-LowerLimit);
-                jointParams.LowerLimit = MathHelper.ToDegrees(-UpperLimit);
-            }
-            else
-            {
-                jointParams.Limb1Anchor = ConvertUnits.ToDisplayUnits(LocalAnchorA / jointParams.Ragdoll.JointScale);
-                jointParams.Limb2Anchor = ConvertUnits.ToDisplayUnits(LocalAnchorB / jointParams.Ragdoll.JointScale);
-                jointParams.UpperLimit = MathHelper.ToDegrees(UpperLimit);
-                jointParams.LowerLimit = MathHelper.ToDegrees(LowerLimit);
-            }
-        }
-
         public void LoadParams()
         {
-            MaxMotorTorque = jointParams.Stiffness;
-            LimitEnabled = jointParams.LimitEnabled;
-            if (float.IsNaN(jointParams.LowerLimit))
+            MaxMotorTorque = Params.Stiffness;
+            LimitEnabled = Params.LimitEnabled;
+            if (float.IsNaN(Params.LowerLimit))
             {
-                jointParams.LowerLimit = 0;
+                Params.LowerLimit = 0;
             }
-            if (float.IsNaN(jointParams.UpperLimit))
+            if (float.IsNaN(Params.UpperLimit))
             {
-                jointParams.UpperLimit = 0;
+                Params.UpperLimit = 0;
             }
             if (ragdoll.IsFlipped)
             {
-                LocalAnchorA = ConvertUnits.ToSimUnits(new Vector2(-jointParams.Limb1Anchor.X, jointParams.Limb1Anchor.Y) * jointParams.Ragdoll.JointScale);
-                LocalAnchorB = ConvertUnits.ToSimUnits(new Vector2(-jointParams.Limb2Anchor.X, jointParams.Limb2Anchor.Y) * jointParams.Ragdoll.JointScale);
-                UpperLimit = MathHelper.ToRadians(-jointParams.LowerLimit);
-                LowerLimit = MathHelper.ToRadians(-jointParams.UpperLimit);
+                LocalAnchorA = ConvertUnits.ToSimUnits(new Vector2(-Params.Limb1Anchor.X, Params.Limb1Anchor.Y) * Params.Ragdoll.JointScale);
+                LocalAnchorB = ConvertUnits.ToSimUnits(new Vector2(-Params.Limb2Anchor.X, Params.Limb2Anchor.Y) * Params.Ragdoll.JointScale);
+                UpperLimit = MathHelper.ToRadians(-Params.LowerLimit);
+                LowerLimit = MathHelper.ToRadians(-Params.UpperLimit);
             }
             else
             {
-                LocalAnchorA = ConvertUnits.ToSimUnits(jointParams.Limb1Anchor * jointParams.Ragdoll.JointScale);
-                LocalAnchorB = ConvertUnits.ToSimUnits(jointParams.Limb2Anchor * jointParams.Ragdoll.JointScale);
-                UpperLimit = MathHelper.ToRadians(jointParams.UpperLimit);
-                LowerLimit = MathHelper.ToRadians(jointParams.LowerLimit);
+                LocalAnchorA = ConvertUnits.ToSimUnits(Params.Limb1Anchor * Params.Ragdoll.JointScale);
+                LocalAnchorB = ConvertUnits.ToSimUnits(Params.Limb2Anchor * Params.Ragdoll.JointScale);
+                UpperLimit = MathHelper.ToRadians(Params.UpperLimit);
+                LowerLimit = MathHelper.ToRadians(Params.LowerLimit);
             }
         }
     }
@@ -108,12 +88,12 @@ namespace Barotrauma
         /// Note that during the limb initialization, character.AnimController returns null, whereas this field is already assigned.
         /// </summary>
         public readonly Ragdoll ragdoll;
-        public readonly LimbParams limbParams;
+        public readonly LimbParams Params;
 
         //the physics body of the limb
         public PhysicsBody body;
                         
-        public Vector2 StepOffset => ConvertUnits.ToSimUnits(limbParams.StepOffset) * ragdoll.RagdollParams.JointScale;
+        public Vector2 StepOffset => ConvertUnits.ToSimUnits(Params.StepOffset) * ragdoll.RagdollParams.JointScale;
 
         public bool inWater;
 
@@ -133,11 +113,11 @@ namespace Barotrauma
 
         private Direction dir;
 
-        public int HealthIndex => limbParams.HealthIndex;
-        public float Scale => limbParams.Ragdoll.LimbScale;
-        public float AttackPriority => limbParams.AttackPriority;
-        public bool DoesFlip => limbParams.Flip;
-        public float SteerForce => limbParams.SteerForce;
+        public int HealthIndex => Params.HealthIndex;
+        public float Scale => Params.Ragdoll.LimbScale;
+        public float AttackPriority => Params.AttackPriority;
+        public bool DoesFlip => Params.Flip;
+        public float SteerForce => Params.SteerForce;
         
         public Vector2 DebugTargetPos;
         public Vector2 DebugRefPos;
@@ -198,7 +178,7 @@ namespace Barotrauma
             set { dir = (value == -1.0f) ? Direction.Left : Direction.Right; }
         }
 
-        public int RefJointIndex => limbParams.RefJoint;
+        public int RefJointIndex => Params.RefJoint;
 
         private List<WearableSprite> wearingItems;
         public List<WearableSprite> WearingItems
@@ -291,7 +271,7 @@ namespace Barotrauma
             get { return pullJoint.LocalAnchorA; }
         }
 
-        public string Name => limbParams.Name;
+        public string Name => Params.Name;
 
         public Dictionary<string, SerializableProperty> SerializableProperties
         {
@@ -303,7 +283,7 @@ namespace Barotrauma
         {
             this.ragdoll = ragdoll;
             this.character = character;
-            this.limbParams = limbParams;
+            this.Params = limbParams;
             wearingItems = new List<WearableSprite>();            
             dir = Direction.Right;
             body = new PhysicsBody(limbParams);
@@ -403,19 +383,19 @@ namespace Barotrauma
             return AddDamage(simPosition, afflictions, playSound);
         }
 
-        public AttackResult AddDamage(Vector2 simPosition, List<Affliction> afflictions, bool playSound)
+        public AttackResult AddDamage(Vector2 simPosition, IEnumerable<Affliction> afflictions, bool playSound)
         {
             List<DamageModifier> appliedDamageModifiers = new List<DamageModifier>();
             //create a copy of the original affliction list to prevent modifying the afflictions of an Attack/StatusEffect etc
-            afflictions = new List<Affliction>(afflictions);
-            for (int i = 0; i < afflictions.Count; i++)
+            var afflictionsCopy = afflictions.Where(a => Rand.Range(0.0f, 1.0f) <= a.Probability).ToList();
+            for (int i = 0; i < afflictionsCopy.Count; i++)
             {
                 foreach (DamageModifier damageModifier in damageModifiers)
                 {
-                    if (!damageModifier.MatchesAffliction(afflictions[i])) continue;
-                    if (SectorHit(damageModifier.ArmorSector, simPosition))
+                    if (!damageModifier.MatchesAffliction(afflictionsCopy[i])) continue;
+                    if (SectorHit(damageModifier.ArmorSectorInRadians, simPosition))
                     {
-                        afflictions[i] = afflictions[i].CreateMultiplied(damageModifier.DamageMultiplier);
+                        afflictionsCopy[i] = afflictionsCopy[i].CreateMultiplied(damageModifier.DamageMultiplier);
                         appliedDamageModifiers.Add(damageModifier);
                     }
                 }
@@ -424,19 +404,19 @@ namespace Barotrauma
                 {
                     foreach (DamageModifier damageModifier in wearable.WearableComponent.DamageModifiers)
                     {
-                        if (!damageModifier.MatchesAffliction(afflictions[i])) continue;
-                        if (SectorHit(damageModifier.ArmorSector, simPosition))
+                        if (!damageModifier.MatchesAffliction(afflictionsCopy[i])) continue;
+                        if (SectorHit(damageModifier.ArmorSectorInRadians, simPosition))
                         {
-                            afflictions[i] = afflictions[i].CreateMultiplied(damageModifier.DamageMultiplier);
+                            afflictionsCopy[i] = afflictionsCopy[i].CreateMultiplied(damageModifier.DamageMultiplier);
                             appliedDamageModifiers.Add(damageModifier);
                         }
                     }
                 }
             }
 
-            AddDamageProjSpecific(simPosition, afflictions, playSound, appliedDamageModifiers);
+            AddDamageProjSpecific(simPosition, afflictionsCopy, playSound, appliedDamageModifiers);
 
-            return new AttackResult(afflictions, this, appliedDamageModifiers);
+            return new AttackResult(afflictionsCopy, this, appliedDamageModifiers);
         }
 
         partial void AddDamageProjSpecific(Vector2 simPosition, List<Affliction> afflictions, bool playSound, List<DamageModifier> appliedDamageModifiers);
@@ -444,6 +424,8 @@ namespace Barotrauma
         public bool SectorHit(Vector2 armorSector, Vector2 simPosition)
         {
             if (armorSector == Vector2.Zero) { return false; }
+            //sector 360 degrees or more -> always hits
+            if (Math.Abs(armorSector.Y - armorSector.X) >= MathHelper.TwoPi) { return true; }
             float rotation = body.TransformedRotation;
             float offset = (MathHelper.PiOver2 - GetArmorSectorRotationOffset(armorSector)) * Dir;
             float hitAngle = VectorExtensions.Angle(VectorExtensions.Forward(rotation + offset), SimPosition - simPosition);
@@ -454,15 +436,13 @@ namespace Barotrauma
         protected float GetArmorSectorRotationOffset(Vector2 armorSector)
         {
             float midAngle = MathUtils.GetMidAngle(armorSector.X, armorSector.Y);
-            float spritesheetOrientation = MathHelper.ToRadians(limbParams.Ragdoll.SpritesheetOrientation);
+            float spritesheetOrientation = Params.GetSpriteOrientation();
             return midAngle + spritesheetOrientation;
         }
 
         protected float GetArmorSectorSize(Vector2 armorSector)
         {
-            float min = Math.Min(armorSector.X, armorSector.Y);
-            float max = Math.Max(armorSector.X, armorSector.Y);
-            return max - min;
+            return Math.Abs(armorSector.X - armorSector.Y);
         }
 
         public void Update(float deltaTime)
@@ -605,7 +585,7 @@ namespace Barotrauma
                 if (structureBody != null && attack.StickChance > Rand.Range(0.0f, 1.0f, Rand.RandSync.Server))
                 {
                     // TODO: use the hit pos?
-                    var localFront = body.GetLocalFront(MathHelper.ToRadians(ragdoll.RagdollParams.SpritesheetOrientation));
+                    var localFront = body.GetLocalFront(Params.GetSpriteOrientation());
                     var from = body.FarseerBody.GetWorldPoint(localFront);
                     var to = from;
                     var drawPos = body.DrawPosition;
@@ -665,7 +645,7 @@ namespace Barotrauma
             {
                 PhysicsBody mainLimbBody = ragdoll.MainLimb.body;
                 Body colliderBody = ragdoll.Collider.FarseerBody;
-                Vector2 mainLimbLocalFront = mainLimbBody.GetLocalFront(MathHelper.ToRadians(ragdoll.RagdollParams.SpritesheetOrientation));
+                Vector2 mainLimbLocalFront = mainLimbBody.GetLocalFront(ragdoll.MainLimb.Params.GetSpriteOrientation());
                 if (Dir < 0)
                 {
                     mainLimbLocalFront.X = -mainLimbLocalFront.X;
@@ -715,8 +695,7 @@ namespace Barotrauma
 
         public void LoadParams()
         {
-            attack?.Deserialize();
-            pullJoint.LocalAnchorA = ConvertUnits.ToSimUnits(limbParams.PullPos * Scale);
+            pullJoint.LocalAnchorA = ConvertUnits.ToSimUnits(Params.PullPos * Scale);
             LoadParamsProjSpecific();
         }
 

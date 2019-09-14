@@ -136,12 +136,13 @@ namespace Barotrauma
                     if (!handle.Coroutine.MoveNext()) return;
                 }
             }
-            catch (ThreadAbortException tae)
+            catch (ThreadAbortException)
             {
                 //not an error, don't worry about it
             }
             catch (Exception e)
             {
+                handle.Exception = e;
                 DebugConsole.ThrowError("Coroutine \"" + handle.Name + "\" has thrown an exception", e);
             }
         }
@@ -182,7 +183,7 @@ namespace Barotrauma
                 {
                     if (handle.Thread.ThreadState.HasFlag(ThreadState.Stopped))
                     {
-                        if ((CoroutineStatus)handle.Coroutine.Current == CoroutineStatus.Failure)
+                        if (handle.Exception!=null || (CoroutineStatus)handle.Coroutine.Current == CoroutineStatus.Failure)
                         {
                             DebugConsole.ThrowError("Coroutine \"" + handle.Name + "\" has failed");
                         }

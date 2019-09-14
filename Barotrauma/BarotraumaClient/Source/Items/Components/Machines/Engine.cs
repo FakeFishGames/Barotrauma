@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -134,13 +133,13 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ClientWrite(NetBuffer msg, object[] extraData = null)
+        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
         {
             //targetForce can only be adjusted at 10% intervals -> no need for more accuracy than this
-            msg.WriteRangedInteger(-10, 10, (int)(targetForce / 10.0f));
+            msg.WriteRangedInteger((int)(targetForce / 10.0f), -10, 10);
         }
 
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             if (correctionTimer > 0.0f)
             {

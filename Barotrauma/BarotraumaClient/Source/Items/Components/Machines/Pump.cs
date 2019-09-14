@@ -17,6 +17,7 @@ namespace Barotrauma.Items.Components
         private GUIScrollBar isActiveSlider;
         private GUIScrollBar pumpSpeedSlider;
         private GUITickBox powerIndicator;
+        private GUITickBox autoControlIndicator;
 
         private List<Pair<Vector2, ParticleEmitter>> pumpOutEmitters = new List<Pair<Vector2, ParticleEmitter>>(); 
         private List<Pair<Vector2, ParticleEmitter>> pumpInEmitters = new List<Pair<Vector2, ParticleEmitter>>(); 
@@ -71,9 +72,17 @@ namespace Barotrauma.Items.Components
                 return true;
             };
 
-            var rightArea = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 1.0f), paddedFrame.RectTransform, Anchor.CenterRight)) { RelativeSpacing = 0.1f };
+            var rightArea = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 0.95f), paddedFrame.RectTransform, Anchor.CenterRight))
+            {
+                RelativeSpacing = 0.1f,
+                Stretch = true
+            };
 
             powerIndicator = new GUITickBox(new RectTransform(new Point((int)(30 * GUI.Scale)), rightArea.RectTransform), TextManager.Get("PumpPowered"), style: "IndicatorLightGreen")
+            {
+                CanBeFocused = false
+            };
+            autoControlIndicator = new GUITickBox(new RectTransform(new Point((int)(30 * GUI.Scale)), rightArea.RectTransform), TextManager.Get("PumpAutoControl", fallBackTag: "ReactorAutoControl"), style: "IndicatorLightGreen")
             {
                 CanBeFocused = false
             };
@@ -86,12 +95,12 @@ namespace Barotrauma.Items.Components
             var sliderArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.3f), rightArea.RectTransform, Anchor.CenterLeft), isHorizontal: true)
             {
                 Stretch = true,
-                RelativeSpacing = 0.05f
+                RelativeSpacing = 0.01f
             };
 
-            var outLabel = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), sliderArea.RectTransform), 
-                TextManager.Get("PumpOut"), textAlignment: Alignment.Center, wrap: true, font: GUI.SmallFont);
-            pumpSpeedSlider = new GUIScrollBar(new RectTransform(new Vector2(0.8f, 1.0f), sliderArea.RectTransform), barSize: 0.25f, style: "GUISlider")
+            var outLabel = new GUITextBlock(new RectTransform(new Vector2(0.25f, 1.0f), sliderArea.RectTransform),
+                TextManager.Get("PumpOut"), textAlignment: Alignment.Center, wrap: false, font: GUI.SmallFont);
+            pumpSpeedSlider = new GUIScrollBar(new RectTransform(new Vector2(0.5f, 1.0f), sliderArea.RectTransform), barSize: 0.25f, style: "GUISlider")
             {
                 Step = 0.05f,
                 OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
@@ -109,9 +118,11 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
             };
-            var inLabel = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), sliderArea.RectTransform), 
-                TextManager.Get("PumpIn"), textAlignment: Alignment.Center, wrap: true, font: GUI.SmallFont);
+            var inLabel = new GUITextBlock(new RectTransform(new Vector2(0.25f, 1.0f), sliderArea.RectTransform), 
+                TextManager.Get("PumpIn"), textAlignment: Alignment.Center, wrap: false, font: GUI.SmallFont);
 
+            rightArea.Recalculate();
+            sliderArea.Recalculate();
             GUITextBlock.AutoScaleAndNormalize(outLabel, inLabel);
         }
 
@@ -120,7 +131,6 @@ namespace Barotrauma.Items.Components
             if (pumpSpeedSlider != null)
             {
                 pumpSpeedSlider.BarScroll = (flowPercentage + 100.0f) / 200.0f;
-
             }
         }
         
@@ -151,6 +161,8 @@ namespace Barotrauma.Items.Components
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
             powerIndicator.Selected = hasPower && IsActive;
+            autoControlIndicator.Selected = controlLockTimer > 0.0f && IsActive;
+            pumpSpeedSlider.Enabled = controlLockTimer <= 0.0f && IsActive;
 
             if (!PlayerInput.LeftButtonHeld())
             {
@@ -164,14 +176,14 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        public void ClientWrite(Lidgren.Network.NetBuffer msg, object[] extraData = null)
+        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
         {
             //flowpercentage can only be adjusted at 10% intervals -> no need for more accuracy than this
-            msg.WriteRangedInteger(-10, 10, (int)(flowPercentage / 10.0f));
+            msg.WriteRangedInteger((int)(flowPercentage / 10.0f), -10, 10);
             msg.Write(IsActive);
         }
 
-        public void ClientRead(ServerNetObject type, Lidgren.Network.NetBuffer msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             if (correctionTimer > 0.0f)
             {

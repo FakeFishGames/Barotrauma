@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -23,14 +22,14 @@ namespace Barotrauma.Items.Components
 
         }
 
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             int eventIndex = (int)extraData[2];
             int nodeStartIndex = eventIndex * MaxNodesPerNetworkEvent;
             int nodeCount = MathHelper.Clamp(nodes.Count - nodeStartIndex, 0, MaxNodesPerNetworkEvent);
 
-            msg.WriteRangedInteger(0, (int)Math.Ceiling(MaxNodeCount / (float)MaxNodesPerNetworkEvent), eventIndex);
-            msg.WriteRangedInteger(0, MaxNodesPerNetworkEvent, nodeCount);
+            msg.WriteRangedInteger(eventIndex, 0, (int)Math.Ceiling(MaxNodeCount / (float)MaxNodesPerNetworkEvent));
+            msg.WriteRangedInteger(nodeCount, 0, MaxNodesPerNetworkEvent);
             for (int i = nodeStartIndex; i < nodeStartIndex + nodeCount; i++)
             {
                 msg.Write(nodes[i].X);

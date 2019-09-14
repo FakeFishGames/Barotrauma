@@ -50,11 +50,12 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\AnimController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\FishAnimController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\HumanoidAnimController.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\Params\Animation\AnimationParams.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\Params\Animation\FishAnimations.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\Params\Animation\HumanoidAnimations.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\Params\EditableParams.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\Params\Ragdoll\RagdollParams.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Params\Animation\AnimationParams.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Params\Animation\FishAnimations.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Params\Animation\HumanoidAnimations.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Params\CharacterParams.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Params\EditableParams.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Params\Ragdoll\RagdollParams.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\Ragdoll.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Attack.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\CauseOfDeath.cs" />
@@ -66,6 +67,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\Afflictions\AfflictionHusk.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\Afflictions\AfflictionPrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\Afflictions\AfflictionPsychosis.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\Afflictions\AfflictionSpaceHerpes.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\Buffs\BuffDurationIncrease.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\CharacterHealth.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\DamageModifier.cs" />
@@ -226,6 +228,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\EntitySpawner.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\FileTransfer\FileTransfer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\INetSerializable.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\KarmaManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetBufferExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetConfig.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetEntityEvent\NetEntityEvent.cs" />
@@ -233,6 +236,13 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetIdUtils.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetworkMember.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\OrderChatMessage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Primitives\Enums.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Primitives\Message\IReadMessage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Primitives\Message\IWriteMessage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Primitives\NetworkConnection\NetworkConnection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Primitives\NetworkConnection\LidgrenConnection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Primitives\Message\Message.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Primitives\NetworkConnection\SteamP2PConnection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\RespawnManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\ServerLog.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\ServerSettings.cs" />

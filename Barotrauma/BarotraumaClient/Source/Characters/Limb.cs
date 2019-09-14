@@ -128,19 +128,12 @@ namespace Barotrauma
         }
 
         public WearableSprite HuskSprite { get; private set; }
+        public WearableSprite HerpesSprite { get; private set; }
 
-        public void LoadHuskSprite()
-        {
-            var info = character.Info;
-            if (info == null) { return; }
-            var element = info.FilterByTypeAndHeadID(character.Info.FilterElementsByGenderAndRace(character.Info.Wearables), WearableType.Husk).FirstOrDefault();
-            if (element != null)
-            {
-                HuskSprite = new WearableSprite(element.Element("sprite"), WearableType.Husk);
-            }
-        }
+        public void LoadHuskSprite() => HuskSprite = GetWearableSprite(WearableType.Husk);
+        public void LoadHerpesSprite() => HerpesSprite = GetWearableSprite(WearableType.Herpes);
 
-        public float TextureScale => limbParams.Ragdoll.TextureScale;
+        public float TextureScale => Params.Ragdoll.TextureScale;
 
         public Sprite DamagedSprite { get; private set; }
 
@@ -172,10 +165,11 @@ namespace Barotrauma
             set { burnOverLayStrength = MathHelper.Clamp(value, 0.0f, 100.0f); }
         }
 
-        public string HitSoundTag { get; private set; }
+        public string HitSoundTag => Params?.Sound?.Tag;
 
         partial void InitProjSpecific(XElement element)
         {
+            // TODO: we could also parse the limb params?
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -220,24 +214,37 @@ namespace Barotrauma
                         LightSource = new LightSource(subElement);
                         InitialLightSourceColor = LightSource.Color;
                         break;
-                    case "sound":
-                        HitSoundTag = subElement.GetAttributeString("tag", "");
-                        if (string.IsNullOrWhiteSpace(HitSoundTag))
-                        {
-                            //legacy support
-                            HitSoundTag = subElement.GetAttributeString("file", "");
-                        }
-                        break;
                 }
             }
         }
 
-        public void RecreateSprite()
+        public void RecreateSprites()
         {
-            if (Sprite == null) { return; }
-            Sprite.Remove();
-            var source = Sprite.SourceElement;
-            Sprite = new Sprite(source, file: GetSpritePath(source));
+            if (Sprite != null)
+            {
+                Sprite.Remove();
+                var source = Sprite.SourceElement;
+                Sprite = new Sprite(source, file: GetSpritePath(source));
+            }
+            if (DeformSprite != null)
+            {
+                DeformSprite.Remove();
+                var source = DeformSprite.Sprite.SourceElement;
+                DeformSprite = new DeformableSprite(source, filePath: GetSpritePath(source));
+            }
+            if (DamagedSprite != null)
+            {
+                DamagedSprite.Remove();
+                var source = DamagedSprite.SourceElement;
+                DamagedSprite = new Sprite(source, file: GetSpritePath(source));
+            }
+            for (int i = 0; i < ConditionalSprites.Count; i++)
+            {
+                var conditionalSprite = ConditionalSprites[i];
+                conditionalSprite.Remove();
+                var source = conditionalSprite.SourceElement;
+                ConditionalSprites[i] = new ConditionalSprite(source, character, file: GetSpritePath(source));
+            }
         }
 
         /// <summary>
@@ -270,9 +277,9 @@ namespace Barotrauma
         partial void LoadParamsProjSpecific()
         {
             bool isFlipped = dir == Direction.Left;
-            Sprite?.LoadParams(limbParams.normalSpriteParams, isFlipped);
-            DamagedSprite?.LoadParams(limbParams.damagedSpriteParams, isFlipped);
-            DeformSprite?.Sprite.LoadParams(limbParams.deformSpriteParams, isFlipped);
+            Sprite?.LoadParams(Params.normalSpriteParams, isFlipped);
+            DamagedSprite?.LoadParams(Params.damagedSpriteParams, isFlipped);
+            DeformSprite?.Sprite.LoadParams(Params.deformSpriteParams, isFlipped);
         }
 
         partial void AddDamageProjSpecific(Vector2 simPosition, List<Affliction> afflictions, bool playSound, List<DamageModifier> appliedDamageModifiers)
@@ -387,10 +394,10 @@ namespace Barotrauma
                     color *= SeveredFadeOutTime - severedFadeOutTimer;
                 }
             }
-
+            
             body.Dir = Dir;
 
-            bool hideLimb = wearingItems.Any(w => w != null && w.HideLimb);
+            bool hideLimb = Params.Hide || wearingItems.Any(w => w != null && w.HideLimb);
             body.UpdateDrawPosition();
 
             if (!hideLimb)
@@ -407,11 +414,11 @@ namespace Barotrauma
                     {
                         DeformSprite.Reset();
                     }
-                    body.Draw(DeformSprite, cam, Vector2.One * Scale * TextureScale, color);
+                    body.Draw(DeformSprite, cam, Vector2.One * Scale * TextureScale, color, Params.MirrorHorizontally);
                 }
                 else
                 {
-                    body.Draw(spriteBatch, activeSprite, color, null, Scale * TextureScale);
+                    body.Draw(spriteBatch, activeSprite, color, null, Scale * TextureScale, Params.MirrorHorizontally, Params.MirrorVertically);
                 }
             }
 
@@ -423,12 +430,29 @@ namespace Barotrauma
             float depthStep = 0.000001f;
             WearableSprite onlyDrawable = wearingItems.Find(w => w.HideOtherWearables);
             SpriteEffects spriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
+            if (Params.MirrorHorizontally)
+            {
+                spriteEffect = spriteEffect == SpriteEffects.None ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+            }
+            if (Params.MirrorVertically)
+            {
+                spriteEffect |= SpriteEffects.FlipVertically;
+            }
             if (onlyDrawable == null)
             {
-                if (HuskSprite != null && (character.SpeciesName == "Humanhusk" || (character.SpeciesName == "Human" &&
-                    character.CharacterHealth.GetAffliction<AfflictionHusk>("huskinfection")?.State == AfflictionHusk.InfectionState.Active)))
+                if (HerpesSprite != null)
+                {
+                    float herpesStrength = character.CharacterHealth.GetAfflictionStrength("spaceherpes");
+                    if (herpesStrength > 0.0f)
+                    {
+                        DrawWearable(HerpesSprite, depthStep, spriteBatch, color * Math.Min(herpesStrength / 10.0f, 1.0f), spriteEffect);
+                        depthStep += 0.000001f;
+                    }
+                }
+                if (HuskSprite != null && (character.IsHusk || character.CharacterHealth.GetAffliction<AfflictionHusk>("huskinfection")?.State == AfflictionHusk.InfectionState.Active))
                 {
                     DrawWearable(HuskSprite, depthStep, spriteBatch, color, spriteEffect);
+                    depthStep += 0.000001f;
                 }
                 foreach (WearableSprite wearable in OtherWearables)
                 {
@@ -449,12 +473,11 @@ namespace Barotrauma
             {
                 float depth = ActiveSprite.Depth - 0.0000015f;
 
-                // TODO: enable when the damage overlay textures have been remade.
-                //DamagedSprite.Draw(spriteBatch,
-                //    new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
-                //    color * Math.Min(damageOverlayStrength, 1.0f), ActiveSprite.Origin,
-                //    -body.DrawRotation,
-                //    1.0f, spriteEffect, depth);
+                DamagedSprite.Draw(spriteBatch,
+                    new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
+                    color * Math.Min(damageOverlayStrength, 1.0f), ActiveSprite.Origin,
+                    -body.DrawRotation,
+                    1.0f, spriteEffect, depth);
             }
 
             if (GameMain.DebugDraw)
@@ -472,7 +495,7 @@ namespace Barotrauma
                     from.Y = -from.Y;
                     Vector2 to = ConvertUnits.ToDisplayUnits(attachJoint.WorldAnchorB);
                     to.Y = -to.Y;
-                    var localFront = body.GetLocalFront(MathHelper.ToRadians(limbParams.Ragdoll.SpritesheetOrientation));
+                    var localFront = body.GetLocalFront(Params.GetSpriteOrientation());
                     var front = ConvertUnits.ToDisplayUnits(body.FarseerBody.GetWorldPoint(localFront));
                     front.Y = -front.Y;
                     GUI.DrawLine(spriteBatch, bodyDrawPos, front, Color.Yellow, width: 2);
@@ -483,22 +506,41 @@ namespace Barotrauma
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)to.X, (int)to.Y, 10, 10), Color.Red, true);
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)front.X, (int)front.Y, 10, 10), Color.Yellow, true);
 
-                    //Vector2 mainLimbFront = ConvertUnits.ToDisplayUnits(ragdoll.MainLimb.body.FarseerBody.GetWorldPoint(ragdoll.MainLimb.body.GetFrontLocal(MathHelper.ToRadians(ragdoll.RagdollParams.SpritesheetOrientation))));
+                    //Vector2 mainLimbFront = ConvertUnits.ToDisplayUnits(ragdoll.MainLimb.body.FarseerBody.GetWorldPoint(ragdoll.MainLimb.body.GetFrontLocal(MathHelper.ToRadians(limbParams.Orientation))));
                     //mainLimbFront.Y = -mainLimbFront.Y;
                     //var mainLimbDrawPos = ragdoll.MainLimb.body.DrawPosition;
                     //mainLimbDrawPos.Y = -mainLimbDrawPos.Y;
                     //GUI.DrawLine(spriteBatch, mainLimbDrawPos, mainLimbFront, Color.White, width: 5);
                     //GUI.DrawRectangle(spriteBatch, new Rectangle((int)mainLimbFront.X, (int)mainLimbFront.Y, 10, 10), Color.Yellow, true);
                 }
-                foreach (var modifier in damageModifiers)
+                DrawDamageModifiers(spriteBatch, cam, bodyDrawPos, isScreenSpace: false);
+            }
+        }
+
+        public void DrawDamageModifiers(SpriteBatch spriteBatch, Camera cam, Vector2 startPos, bool isScreenSpace)
+        {
+            foreach (var modifier in damageModifiers)
+            {
+                float rotation = -body.TransformedRotation + GetArmorSectorRotationOffset(modifier.ArmorSectorInRadians) * Dir;
+                Vector2 forward = VectorExtensions.Forward(rotation);
+                float size = ConvertUnits.ToDisplayUnits(body.GetSize().Length() / 2);
+                if (isScreenSpace)
                 {
-                    float rotation = -body.TransformedRotation + GetArmorSectorRotationOffset(modifier.ArmorSector) * Dir;
-                    Vector2 forward = VectorExtensions.Forward(rotation);
-                    float size = ConvertUnits.ToDisplayUnits(body.GetSize().Length() / 2);
-                    color = modifier.DamageMultiplier > 1 ? Color.Red : Color.GreenYellow;
-                    GUI.DrawLine(spriteBatch, bodyDrawPos, bodyDrawPos + Vector2.Normalize(forward) * size, color, width: (int)Math.Round(4 / cam.Zoom));
-                    ShapeExtensions.DrawSector(spriteBatch, bodyDrawPos, size, GetArmorSectorSize(modifier.ArmorSector) * Dir, 40, color, rotation + MathHelper.Pi, thickness: 2 / cam.Zoom);
+                    size *= cam.Zoom;
                 }
+                Color color = modifier.DamageMultiplier > 1 ? Color.Red : Color.GreenYellow;
+                int width = 4;
+                if (!isScreenSpace)
+                {
+                    width = (int)Math.Round(width / cam.Zoom);
+                }
+                GUI.DrawLine(spriteBatch, startPos, startPos + Vector2.Normalize(forward) * size, color, width: width);
+                int thickness = 2;
+                if (!isScreenSpace)
+                {
+                    thickness = (int)Math.Round(thickness / cam.Zoom);
+                }
+                ShapeExtensions.DrawSector(spriteBatch, startPos, size, GetArmorSectorSize(modifier.ArmorSectorInRadians) * Dir, 40, color, rotation + MathHelper.Pi, thickness);
             }
         }
 
@@ -564,6 +606,26 @@ namespace Barotrauma
                 Scale * textureScale, spriteEffect, depth);
         }
 
+        private WearableSprite GetWearableSprite(WearableType type, bool random = false)
+        {
+            var info = character.Info;
+            if (info == null) { return null; }
+            XElement element;
+            if (random)
+            {
+                element = info.FilterByTypeAndHeadID(character.Info.FilterElementsByGenderAndRace(character.Info.Wearables), type)?.FirstOrDefault();
+            }
+            else
+            {
+                element = info.FilterByTypeAndHeadID(character.Info.FilterElementsByGenderAndRace(character.Info.Wearables), type)?.GetRandom(Rand.RandSync.ClientOnly);
+            }
+            if (element != null)
+            {
+                return new WearableSprite(element.Element("sprite"), type);
+            }
+            return null;
+        }
+
         partial void RemoveProjSpecific()
         {
             Sprite?.Remove();
@@ -586,6 +648,9 @@ namespace Barotrauma
 
             HuskSprite?.Sprite.Remove();
             HuskSprite = null;
+
+            HerpesSprite?.Sprite.Remove();
+            HerpesSprite = null;
         }
     }
 }

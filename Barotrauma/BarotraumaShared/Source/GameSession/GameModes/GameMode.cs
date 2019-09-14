@@ -64,7 +64,7 @@ namespace Barotrauma
             isRunning = true;
         }
 
-        public virtual void MsgBox() { }
+        public virtual void ShowStartMessage() { }
         
         public virtual void AddToGUIUpdateList()
         {

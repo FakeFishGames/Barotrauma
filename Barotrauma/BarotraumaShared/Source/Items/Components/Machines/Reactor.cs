@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -52,6 +51,8 @@ namespace Barotrauma.Items.Components
         const float AIUpdateInterval = 0.2f;
         private float aiUpdateTimer;
 
+        private Character lastAIUser;
+
         private Character lastUser;
         private Character LastUser
         {
@@ -64,7 +65,7 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        [Editable(0.0f, float.MaxValue, ToolTip = "How much power (kW) the reactor generates when operating at full capacity."), Serialize(10000.0f, true)]
+        [Editable(0.0f, float.MaxValue), Serialize(10000.0f, true, description: "How much power (kW) the reactor generates when operating at full capacity.")]
         public float MaxPowerOutput
         {
             get { return maxPowerOutput; }
@@ -74,21 +75,21 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        [Editable(0.0f, float.MaxValue, ToolTip = "How long the temperature has to stay critical until a meltdown occurs."), Serialize(30.0f, true)]
+        [Editable(0.0f, float.MaxValue), Serialize(120.0f, true, description: "How long the temperature has to stay critical until a meltdown occurs.")]
         public float MeltdownDelay
         {
             get { return meltDownDelay; }
             set { meltDownDelay = Math.Max(value, 0.0f); }
         }
 
-        [Editable(0.0f, float.MaxValue, ToolTip = "How long the temperature has to stay critical until the reactor catches fire."), Serialize(10.0f, true)]
+        [Editable(0.0f, float.MaxValue), Serialize(30.0f, true, description: "How long the temperature has to stay critical until the reactor catches fire.")]
         public float FireDelay
         {
             get { return fireDelay; }
             set { fireDelay = Math.Max(value, 0.0f); }
         }
 
-        [Serialize(0.0f, true)]
+        [Serialize(0.0f, true, description: "Current temperature of the reactor (0% - 100%). Indended to be used by StatusEffect conditionals.")]
         public float Temperature
         {
             get { return temperature; }
@@ -99,7 +100,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(0.0f, true)]
+        [Serialize(0.0f, true, description: "Current fission rate of the reactor (0% - 100%). Intended to be used by StatusEffect conditionals (setting the value from XML is not recommended).")]
         public float FissionRate
         {
             get { return fissionRate; }
@@ -110,7 +111,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(0.0f, true)]
+        [Serialize(0.0f, true, description: "Current turbine output of the reactor (0% - 100%). Intended to be used by StatusEffect conditionals (setting the value from XML is not recommended).")]
         public float TurbineOutput
         {
             get { return turbineOutput; }
@@ -121,7 +122,7 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        [Serialize(0.2f, true), Editable(0.0f, 1000.0f, ToolTip = "How fast the condition of the contained fuel rods deteriorates.")]
+        [Serialize(0.2f, true, description: "How fast the condition of the contained fuel rods deteriorates per second."), Editable(0.0f, 1000.0f)]
         public float FuelConsumptionRate
         {
             get { return fuelConsumptionRate; }
@@ -132,12 +133,19 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        [Serialize(false, true, description: "Is the temperature currently critical. Intended to be used by StatusEffect conditionals (setting the value from XML has no effect).")]
+        public bool TemperatureCritical
+        {
+            get { return temperature > allowedTemperature.Y; }
+            set { /*do nothing*/ }
+        }
+
         private float correctTurbineOutput;
 
         private float targetFissionRate;
         private float targetTurbineOutput;
         
-        [Serialize(false, true)]
+        [Serialize(false, true, description: "Is the automatic temperature control currently on. Indended to be used by StatusEffect conditionals (setting the value from XML is not recommended).")]
         public bool AutoTemp
         {
             get { return autoTemp; }
@@ -186,6 +194,18 @@ namespace Barotrauma.Items.Components
                 }
             }
 #endif
+
+            //if an AI character was using the item on the previous frame but not anymore, turn autotemp on
+            // (= bots turn autotemp back on when leaving the reactor)
+            if (lastAIUser != null)
+            {
+                if (lastAIUser.SelectedConstruction != item && lastAIUser.CanInteractWith(item))
+                {
+                    AutoTemp = true;
+                    unsentChanges = true;
+                    lastAIUser = null;
+                }
+            }
 
             prevAvailableFuel = AvailableFuel;
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
@@ -254,15 +274,19 @@ namespace Barotrauma.Items.Components
             {
                 foreach (Connection connection in connections)
                 {
-                    if (!connection.IsPower) continue;
+                    if (!connection.IsPower) { continue; }
                     foreach (Connection recipient in connection.Recipients)
                     {
-                        if (!(recipient.Item is Item it)) continue;
+                        if (!(recipient.Item is Item it)) { continue; }
 
                         PowerTransfer pt = it.GetComponent<PowerTransfer>();
-                        if (pt == null) continue;
+                        if (pt == null) { continue; }
 
-                        load = Math.Max(load, pt.PowerLoad);
+                        //calculate how much external power there is in the grid 
+                        //(power coming from somewhere else than this reactor, e.g. batteries)
+                        float externalPower = Math.Max(CurrPowerConsumption - pt.CurrPowerConsumption, 0);
+                        //reduce the external power from the load to prevent overloading the grid
+                        load = Math.Max(load, pt.PowerLoad - externalPower);
                     }
                 }
             }
@@ -277,10 +301,17 @@ namespace Barotrauma.Items.Components
 
                 if (item.CurrentHull != null)
                 {
-                    //the sound can be heard from 20 000 display units away when running at full power
-                    item.CurrentHull.SoundRange = Math.Max(
-                        (-currPowerConsumption / MaxPowerOutput) * 20000.0f, 
-                        item.CurrentHull.AiTarget.SoundRange);
+                    var aiTarget = item.CurrentHull.AiTarget;
+                    float range = Math.Abs(currPowerConsumption) / MaxPowerOutput;
+                    float noise = MathHelper.Lerp(aiTarget.MinSoundRange, aiTarget.MaxSoundRange, range);
+                    aiTarget.SoundRange = Math.Max(aiTarget.SoundRange, noise);
+                }
+
+                if (item.AiTarget != null)
+                {
+                    var aiTarget = item.AiTarget;
+                    float range = Math.Abs(currPowerConsumption) / MaxPowerOutput;
+                    aiTarget.SoundRange = MathHelper.Lerp(aiTarget.MinSoundRange, aiTarget.MaxSoundRange, range);
                 }
             }
 
@@ -380,6 +411,14 @@ namespace Barotrauma.Items.Components
                 float prevFireTimer = fireTimer;
                 fireTimer += MathHelper.Lerp(deltaTime * 2.0f, deltaTime, item.Condition / item.MaxCondition);
 
+
+#if SERVER
+                if (fireTimer > Math.Min(5.0f, FireDelay / 2) && blameOnBroken?.Character?.SelectedConstruction == item)
+                {
+                    GameMain.Server.KarmaManager.OnReactorOverHeating(blameOnBroken.Character, deltaTime);
+                }
+#endif
+
                 if (fireTimer >= FireDelay && prevFireTimer < fireDelay)
                 {
                     new FireSource(item.WorldPosition);
@@ -420,6 +459,8 @@ namespace Barotrauma.Items.Components
         {
             base.UpdateBroken(deltaTime, cam);
 
+            item.SendSignal(0, ((int)(temperature * 100.0f)).ToString(), "temperature_out", null);
+
             currPowerConsumption = 0.0f;
             Temperature -= deltaTime * 1000.0f;
             targetFissionRate = Math.Max(targetFissionRate - deltaTime * 10.0f, 0.0f);
@@ -433,14 +474,8 @@ namespace Barotrauma.Items.Components
 
         private void MeltDown()
         {
-            if (item.Condition <= 0.0f) return;
-#if CLIENT
-            if (GameMain.Client != null) return;
-#endif
-
-#if SERVER
-            GameServer.Log("Reactor meltdown!", ServerLog.MessageType.ItemInteraction);
-#endif
+            if (item.Condition <= 0.0f) { return; }
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
 
             item.Condition = 0.0f;
             fireTimer = 0.0f;
@@ -457,9 +492,10 @@ namespace Barotrauma.Items.Components
             }
 
 #if SERVER
-            if (GameMain.Server != null && GameMain.Server.ConnectedClients.Contains(blameOnBroken))
+            GameServer.Log("Reactor meltdown!", ServerLog.MessageType.ItemInteraction);
+            if (GameMain.Server != null)
             {
-                blameOnBroken.Karma = 0.0f;
+                GameMain.Server.KarmaManager.OnReactorMeltdown(blameOnBroken?.Character);
             }
 #endif
         }
@@ -540,7 +576,7 @@ namespace Barotrauma.Items.Components
                 character.Speak(TextManager.Get("DialogReactorTaken"), null, 0.0f, "reactortaken", 10.0f);
             }
 
-            LastUser = character;
+            LastUser = lastAIUser = character;
             
             switch (objective.Option.ToLowerInvariant())
             {

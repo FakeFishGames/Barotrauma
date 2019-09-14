@@ -125,6 +125,8 @@ namespace Barotrauma
             InsertToList();
             WayPointList.Add(this);
 
+            DebugConsole.Log("Created waypoint (" + ID + ")");
+
             currentHull = Hull.FindHull(WorldPosition);
         }
 
@@ -646,8 +648,8 @@ namespace Barotrauma
             if (!string.IsNullOrWhiteSpace(jobIdentifier))
             {
                 w.assignedJob = 
-                    JobPrefab.List.Find(jp => jp.Identifier.ToLowerInvariant() == jobIdentifier) ??
-                    JobPrefab.List.Find(jp => jp.Name.ToLowerInvariant() == jobIdentifier);                
+                    JobPrefab.Get(jobIdentifier) ??
+                    JobPrefab.List.Values.FirstOrDefault(jp => jp.Name.ToLowerInvariant() == jobIdentifier);                
             }
 
             w.ladderId = (ushort)element.GetAttributeInt("ladders", 0);

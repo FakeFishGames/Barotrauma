@@ -5,19 +5,15 @@ namespace Barotrauma
 {
     partial class MissionMode : GameMode
     {
-        public override void MsgBox()
+        public override void ShowStartMessage()
         {
             if (mission == null) return;
 
-            var missionMsg = new GUIMessageBox(mission.Name, mission.Description, new Vector2(0.25f, 0.0f), new Point(400, 200))
+            new GUIMessageBox(mission.Name, mission.Description, new string[0], type: GUIMessageBox.Type.InGame, icon: mission.Prefab.Icon)
             {
+                IconColor = mission.Prefab.IconColor,
                 UserData = "missionstartmessage"
             };
-
-#if SERVER
-            Networking.GameServer.Log(TextManager.Get("Mission") + ": " + mission.Name, Networking.ServerLog.MessageType.ServerMessage);
-            Networking.GameServer.Log(mission.Description, Networking.ServerLog.MessageType.ServerMessage);
-#endif
         }
     }
 }

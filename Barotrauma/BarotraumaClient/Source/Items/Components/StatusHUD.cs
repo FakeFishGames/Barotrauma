@@ -33,14 +33,14 @@ namespace Barotrauma.Items.Components
             TextManager.Get("NotBreathing")
         };
 
-        [Serialize(500.0f, false)]
+        [Serialize(500.0f, false, description: "How close to a target the user must be to see their health data (in pixels).")]
         public float Range
         {
             get;
             private set;
         }
 
-        [Serialize(50.0f, false)]
+        [Serialize(50.0f, false, description: "The range within which the health info texts fades out.")]
         public float FadeOutRange
         {
             get;
@@ -58,7 +58,7 @@ namespace Barotrauma.Items.Components
         {
             base.Update(deltaTime, cam);
 
-            if (equipper == null)
+            if (equipper == null || equipper.Removed)
             {
                 IsActive = false;
                 return;

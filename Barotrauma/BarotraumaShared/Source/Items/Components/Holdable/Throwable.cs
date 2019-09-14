@@ -6,14 +6,12 @@ namespace Barotrauma.Items.Components
 {
     class Throwable : Holdable
     {
-        float throwForce;
+        private float throwForce, throwPos;
+        private bool throwing, throwDone;
 
-        float throwPos;
+        private bool midAir;
 
-        bool throwing;
-        bool throwDone;
-
-        [Serialize(1.0f, false)]
+        [Serialize(1.0f, false, description: "The impulse applied to the physics body of the item when thrown. Higher values make the item be thrown faster.")]
         public float ThrowForce
         {
             get { return throwForce; }
@@ -57,21 +55,36 @@ namespace Barotrauma.Items.Components
         
         public override void Update(float deltaTime, Camera cam)
         {
-            if (!item.body.Enabled) return;
+            if (!item.body.Enabled) { return; }
+            if (midAir)
+            {
+                if (item.body.LinearVelocity.LengthSquared() < 0.01f)
+                {
+                    item.body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionPlatform;
+                    midAir = false;
+                }
+                return;
+            }
+
             if (picker == null || picker.Removed || !picker.HasSelectedItem(item))
             {
                 IsActive = false;
                 return;
             }
 
-            if (picker.IsKeyDown(InputType.Aim) && picker.IsKeyHit(InputType.Shoot))
-                throwing = true;
+            if (picker.IsKeyDown(InputType.Aim) && picker.IsKeyHit(InputType.Shoot)) { throwing = true; }
+            if (!picker.IsKeyDown(InputType.Aim) && !throwing) { throwPos = 0.0f; }
+            bool aim = picker.IsKeyDown(InputType.Aim) && (picker.SelectedConstruction == null || picker.SelectedConstruction.GetComponent<Ladder>() != null);
 
-            if (!picker.IsKeyDown(InputType.Aim) && !throwing) throwPos = 0.0f;
+            if (picker.IsUnconscious || picker.IsDead || !picker.AllowInput)
+            {
+                throwing = false;
+                aim = false;
+            }
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, picker);
 
-            if (item.body.Dir != picker.AnimController.Dir) Flip();
+            if (item.body.Dir != picker.AnimController.Dir) { Flip(); }
 
             AnimController ac = picker.AnimController;
 
@@ -79,7 +92,6 @@ namespace Barotrauma.Items.Components
 
             if (!throwing)
             {
-                bool aim = picker.IsKeyDown(InputType.Aim) && (picker.SelectedConstruction == null || picker.SelectedConstruction.GetComponent<Ladder>() != null);
                 if (aim)
                 {
                     throwPos = MathUtils.WrapAnglePi(System.Math.Min(throwPos + deltaTime * 5.0f, MathHelper.PiOver2));
@@ -109,6 +121,10 @@ namespace Barotrauma.Items.Components
                     item.Drop(thrower, createNetworkEvent: GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer);
                     item.body.ApplyLinearImpulse(throwVector * throwForce * item.body.Mass * 3.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
 
+                    //disable platform collisions until the item comes back to rest again
+                    item.body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
+                    midAir = true;
+
                     ac.GetLimb(LimbType.Head).body.ApplyLinearImpulse(throwVector * 10.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
                     ac.GetLimb(LimbType.Torso).body.ApplyLinearImpulse(throwVector * 10.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
 
@@ -123,7 +139,8 @@ namespace Barotrauma.Items.Components
                     }
                     if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
                     {
-                        ApplyStatusEffects(ActionType.OnSecondaryUse, deltaTime, thrower); //Stun grenades, flares, etc. all have their throw-related things handled in "onSecondaryUse"
+                        //Stun grenades, flares, etc. all have their throw-related things handled in "onSecondaryUse"
+                        ApplyStatusEffects(ActionType.OnSecondaryUse, deltaTime, thrower, user: thrower);
                     }
                     throwing = false;
                 }

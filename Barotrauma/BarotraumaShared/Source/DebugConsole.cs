@@ -105,12 +105,20 @@ namespace Barotrauma
         public static bool CheatsEnabled;
 
         private static List<ColoredText> unsavedMessages = new List<ColoredText>();
-        private static int messagesPerFile = 800;
+        private static int messagesPerFile = 5000;
         public const string SavePath = "ConsoleLogs";
 
         private static void AssignOnExecute(string names, Action<string[]> onExecute)
         {
-            commands.First(c => c.names.Intersect(names.Split('|')).Count() > 0).OnExecute = onExecute;
+            var matchingCommand = commands.Find(c => c.names.Intersect(names.Split('|')).Count() > 0);
+            if (matchingCommand == null)
+            {
+                throw new Exception("AssignOnExecute failed. Command matching the name(s) \""+names+"\" not found.");
+            }
+            else
+            {
+                matchingCommand.OnExecute = onExecute;
+            }
         }
 
         static DebugConsole()
@@ -201,7 +209,7 @@ namespace Barotrauma
                     characterFiles[i] = Path.GetFileNameWithoutExtension(characterFiles[i]).ToLowerInvariant();
                 }
 
-                foreach (JobPrefab jobPrefab in JobPrefab.List)
+                foreach (JobPrefab jobPrefab in JobPrefab.List.Values)
                 {
                     characterFiles.Add(jobPrefab.Name);
                 }
@@ -251,16 +259,11 @@ namespace Barotrauma
                 spawnPosParams.ToArray()
                 };
             }, isCheat: true));
-
-
+            
             commands.Add(new Command("disablecrewai", "disablecrewai: Disable the AI of the NPCs in the crew.", (string[] args) =>
             {
                 HumanAIController.DisableCrewAI = true;
                 NewMessage("Crew AI disabled", Color.Red);
-                // This is probably not where it should be?
-                //ThrowError("Karma has not been fully implemented yet, and is disabled in this version of Barotrauma.");
-                /*if (GameMain.Server == null) return;
-                GameMain.Server.KarmaEnabled = !GameMain.Server.KarmaEnabled;*/
             }));
 
             commands.Add(new Command("enablecrewai", "enablecrewai: Enable the AI of the NPCs in the crew.", (string[] args) =>
@@ -291,6 +294,8 @@ namespace Barotrauma
 
             commands.Add(new Command("autorestarttimer", "autorestarttimer [seconds]: Set the current autorestart countdown to the specified value.", null));
 
+            commands.Add(new Command("startwhenclientsready", "startwhenclientsready [true/false]: Enable or disable automatically starting the round when clients are ready to start.", null));
+
             commands.Add(new Command("giveperm", "giveperm [id]: Grants administrative permissions to the player with the specified client ID.", null));
 
             commands.Add(new Command("revokeperm", "revokeperm [id]: Revokes administrative permissions to the player with the specified client ID.", null));
@@ -302,8 +307,31 @@ namespace Barotrauma
             commands.Add(new Command("revokecommandperm", "revokecommandperm [id]: Revokes permission to use the specified console commands from the player with the specified client ID.", null));
             
             commands.Add(new Command("showperm", "showperm [id]: Shows the current administrative permissions of the client with the specified client ID.", null));
+            
+            commands.Add(new Command("respawnnow", "respawnnow: Trigger a respawn immediately if there are any clients waiting to respawn.", null));
 
-            //commands.Add(new Command("togglekarma", "togglekarma: Toggles the karma system.", null));
+            commands.Add(new Command("showkarma", "showkarma: Show the current karma values of the players.", null));
+            commands.Add(new Command("togglekarma", "togglekarma: Toggle the karma system on/off.", null));
+            commands.Add(new Command("resetkarma", "resetkarma [client]: Resets the karma value of the specified client to 100.", null,
+            () =>
+            {
+                if (GameMain.NetworkMember?.ConnectedClients == null) { return null; }
+                return new string[][]
+                {
+                    GameMain.NetworkMember.ConnectedClients.Select(c => c.Name).ToArray()
+                };
+            }));
+            commands.Add(new Command("setkarma", "setkarma [client] [0-100]: Sets the karma of the specified client to the specified value.", null,
+            () =>
+            {
+                if (GameMain.NetworkMember?.ConnectedClients == null) { return null; }
+                return new string[][]
+                {
+                    GameMain.NetworkMember.ConnectedClients.Select(c => c.Name).ToArray(),
+                    new string[] { "50" }
+                };
+            }));
+            commands.Add(new Command("togglekarmatestmode", "togglekarmatestmode: Toggle the karma test mode on/off. When test mode is enabled, clients get notified when their karma value changes (including the reason for the increase/decrease) and the server doesn't ban clients whose karma decreases below the ban threshold.", null));
 
             commands.Add(new Command("kick", "kick [name]: Kick a player out of the server.", (string[] args) =>
             {
@@ -326,7 +354,7 @@ namespace Barotrauma
                 };
             }));
 
-            commands.Add(new Command("kickid", "kickid [id]: Kick the player with the specified client ID out of the server.", (string[] args) =>
+            commands.Add(new Command("kickid", "kickid [id]: Kick the player with the specified client ID out of the server.  You can see the IDs of the clients using the command \"clientlist\".", (string[] args) =>
             {
                 if (GameMain.NetworkMember == null || args.Length == 0) return;
 
@@ -378,7 +406,7 @@ namespace Barotrauma
                 };
             }));
                        
-            commands.Add(new Command("banid", "banid [id]: Kick and ban the player with the specified client ID from the server.", (string[] args) =>
+            commands.Add(new Command("banid", "banid [id]: Kick and ban the player with the specified client ID from the server. You can see the IDs of the clients using the command \"clientlist\".", (string[] args) =>
             {
                 if (GameMain.NetworkMember == null || args.Length == 0) return;
 
@@ -410,7 +438,7 @@ namespace Barotrauma
                 });
             }));
             
-            commands.Add(new Command("banip", "banip [ip]: Ban the IP address from the server.", null));
+            commands.Add(new Command("banendpoint|banip", "banendpoint [endpoint]: Ban the IP address/SteamID from the server.", null));
             
             commands.Add(new Command("teleportcharacter|teleport", "teleport [character name]: Teleport the specified character to the position of the cursor. If the name parameter is omitted, the controlled character will be teleported.", (string[] args) =>
             {
@@ -646,6 +674,25 @@ namespace Barotrauma
             },null));
 
 #if DEBUG
+            commands.Add(new Command("crash", "crash: Crashes the game.", (string[] args) =>
+            {
+                throw new Exception("crash command issued");
+            }));
+
+            commands.Add(new Command("teleportsub", "teleportsub [start/end]: Teleport the submarine to the start or end of the level. WARNING: does not take outposts into account, so often leads to physics glitches. Only use for debugging.", (string[] args) =>
+            {
+                if (Submarine.MainSub == null || Level.Loaded == null) return;
+
+                if (args.Length > 0 && args[0].ToLowerInvariant() == "start")
+                {
+                    Submarine.MainSub.SetPosition(Level.Loaded.StartPosition - Vector2.UnitY * Submarine.MainSub.Borders.Height);
+                }
+                else
+                {
+                    Submarine.MainSub.SetPosition(Level.Loaded.EndPosition - Vector2.UnitY * Submarine.MainSub.Borders.Height);
+                }
+            }, isCheat: true));
+
             commands.Add(new Command("waterphysicsparams", "waterphysicsparams [stiffness] [spread] [damping]: defaults 0.02, 0.05, 0.05", (string[] args) =>
             {
                 Vector2 explosionPos = GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
@@ -934,18 +981,19 @@ namespace Barotrauma
 #if CLIENT
                 if (GameMain.Client != null)
                 {
-                    GameMain.Client.NetPeerConfiguration.SimulatedMinimumLatency = minimumLatency;
-                    GameMain.Client.NetPeerConfiguration.SimulatedRandomLatency = randomLatency;
+                    GameMain.Client.SimulatedMinimumLatency = minimumLatency;
+                    GameMain.Client.SimulatedRandomLatency = randomLatency;
                 }
 #elif SERVER
                 if (GameMain.Server != null)
                 {
-                    GameMain.Server.NetPeerConfiguration.SimulatedMinimumLatency = minimumLatency;
-                    GameMain.Server.NetPeerConfiguration.SimulatedRandomLatency = randomLatency;
+                    GameMain.Server.SimulatedMinimumLatency = minimumLatency;
+                    GameMain.Server.SimulatedRandomLatency = randomLatency;
                 }
 #endif
                 NewMessage("Set simulated minimum latency to " + minimumLatency + " and random latency to " + randomLatency + ".", Color.White);
             }));
+
             commands.Add(new Command("simulatedloss", "simulatedloss [lossratio]: applies simulated packet loss to network messages. For example, a value of 0.1 would mean 10% of the packets are dropped. Useful for simulating real network conditions when testing the multiplayer locally.", (string[] args) =>
             {
                 if (args.Count() < 1 || (GameMain.NetworkMember == null)) return;
@@ -957,12 +1005,12 @@ namespace Barotrauma
 #if CLIENT
                 if (GameMain.Client != null)
                 {
-                    GameMain.Client.NetPeerConfiguration.SimulatedLoss = loss;
+                    GameMain.Client.SimulatedLoss = loss;
                 }
 #elif SERVER
                 if (GameMain.Server != null)
                 {
-                    GameMain.Server.NetPeerConfiguration.SimulatedLoss = loss;
+                    GameMain.Server.SimulatedLoss = loss;
                 }
 #endif
                 NewMessage("Set simulated packet loss to " + (int)(loss * 100) + "%.", Color.White);
@@ -978,12 +1026,12 @@ namespace Barotrauma
 #if CLIENT
                 if (GameMain.Client != null)
                 {
-                    GameMain.Client.NetPeerConfiguration.SimulatedDuplicatesChance = duplicates;
+                    GameMain.Client.SimulatedDuplicatesChance = duplicates;
                 }
 #elif SERVER
                 if (GameMain.Server != null)
                 {
-                    GameMain.Server.NetPeerConfiguration.SimulatedDuplicatesChance = duplicates;
+                    GameMain.Server.SimulatedDuplicatesChance = duplicates;
                 }
 #endif
                 NewMessage("Set packet duplication to " + (int)(duplicates * 100) + "%.", Color.White);
@@ -1235,9 +1283,8 @@ namespace Barotrauma
         {
             if (args.Length == 0) return null;
 
-            int characterIndex;
             string characterName;
-            if (int.TryParse(args.Last(), out characterIndex) && args.Length > 1)
+            if (int.TryParse(args.Last(), out int characterIndex) && args.Length > 1)
             {
                 characterName = string.Join(" ", args.Take(args.Length - 1)).ToLowerInvariant();
             }
@@ -1291,8 +1338,8 @@ namespace Barotrauma
             WayPoint spawnPoint = null;
 
             string characterLowerCase = args[0].ToLowerInvariant();
-            JobPrefab job = JobPrefab.List.Find(jp => jp.Name.ToLowerInvariant() == characterLowerCase || jp.Identifier.ToLowerInvariant() == characterLowerCase);
-            bool human = job != null || characterLowerCase == "human";
+            JobPrefab.List.TryGetValue(characterLowerCase, out JobPrefab job);
+            bool human = job != null || characterLowerCase == Character.HumanSpeciesName;
 
             if (args.Length > 1)
             {
@@ -1342,7 +1389,7 @@ namespace Barotrauma
 
             if (human)
             {
-                CharacterInfo characterInfo = new CharacterInfo(Character.HumanConfigFile, jobPrefab: job);
+                CharacterInfo characterInfo = new CharacterInfo(Character.HumanSpeciesName, jobPrefab: job);
                 spawnedCharacter = Character.Create(characterInfo, spawnPosition, ToolBox.RandomSeed(8));
                 if (job != null)
                 {
@@ -1391,51 +1438,32 @@ namespace Barotrauma
             Vector2? spawnPos = null;
             Inventory spawnInventory = null;
             
-            int extraParams = 0;
-            switch (args.Last().ToLowerInvariant())
+            if (args.Length > 1)
             {
-                case "cursor":
-                    extraParams = 1;
-                    spawnPos = cursorPos;
-                    break;
-                case "inventory":
-                    extraParams = 1;
-                    spawnInventory = controlledCharacter?.Inventory;
-                    break;
-                case "cargo":
-                    var wp = WayPoint.GetRandom(SpawnType.Cargo, null, Submarine.MainSub);
-                    spawnPos = wp == null ? Vector2.Zero : wp.WorldPosition;
-                    break;
-                //Dont do a thing, random is basically Human points anyways - its in the help description.
-                case "random":
-                    extraParams = 1;
-                    return;
-                default:
-                    extraParams = 0;
-                    break;
-            }
-
-            string itemName = string.Join(" ", args.Take(args.Length - extraParams)).ToLowerInvariant();
-
-            ItemPrefab itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
-            if (itemPrefab == null && extraParams == 0)
-            {
-#if SERVER
-                if (GameMain.Server != null)
+                switch (args.Last())
                 {
-                    var client = GameMain.Server.ConnectedClients.Find(c => c.Name.ToLower() == args.Last().ToLower());
-                    if (client != null)
-                    {
-                        extraParams += 1;
-                        itemName = string.Join(" ", args.Take(args.Length - extraParams)).ToLowerInvariant();
-                        if (client.Character != null && client.Character.Name == args.Last().ToLower()) spawnInventory = client.Character.Inventory;
-                        itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
-                    }
+                    case "cursor":
+                        spawnPos = cursorPos;
+                        break;
+                    case "inventory":
+                        spawnInventory = controlledCharacter?.Inventory;
+                        break;
+                    case "cargo":
+                        var wp = WayPoint.GetRandom(SpawnType.Cargo, null, Submarine.MainSub);
+                        spawnPos = wp == null ? Vector2.Zero : wp.WorldPosition;
+                        break;
+                    case "random":
+                        //Dont do a thing, random is basically Human points anyways - its in the help description.
+                        break;
+                    default:
+                        var matchingCharacter = FindMatchingCharacter(args.Skip(1).ToArray());
+                        if (matchingCharacter != null){ spawnInventory = matchingCharacter.Inventory; }
+                        break;
                 }
-#endif
             }
-            //Check again if the item can be found again after having checked for a character
-            if (itemPrefab == null)
+
+            string itemName = args[0].ToLowerInvariant();
+            if (!(MapEntityPrefab.Find(itemName) is ItemPrefab itemPrefab))
             {
                 errorMsg = "Item \"" + itemName + "\" not found!";
                 return;
@@ -1480,8 +1508,9 @@ namespace Barotrauma
         public static void NewMessage(string msg, Color color, bool isCommand = false)
         {
             if (string.IsNullOrEmpty((msg))) return;
-
+            
             var newMsg = new ColoredText(msg, color, isCommand);
+            
             lock (queuedMessages)
             {
                 queuedMessages.Enqueue(new ColoredText(msg, color, isCommand));
@@ -1569,13 +1598,17 @@ namespace Barotrauma
             if (e != null)
             {
                 error += " {" + e.Message + "}\n" + e.StackTrace;
+                if (e.InnerException != null)
+                {
+                    error += "\n\nInner exception: " + e.InnerException.Message + "\n" + e.InnerException.StackTrace;
+                }
             }
             System.Diagnostics.Debug.WriteLine(error);
             NewMessage(error, Color.Red);
 #if CLIENT
             if (createMessageBox)
             {
-                new GUIMessageBox(TextManager.Get("Error"), error);
+                CoroutineManager.StartCoroutine(CreateMessageBox(error));
             }
             else
             {
@@ -1583,7 +1616,20 @@ namespace Barotrauma
             }
 #endif
         }
-        
+
+#if CLIENT
+        private static IEnumerable<object> CreateMessageBox(string errorMsg)
+        {
+            while (GUI.Style == null)
+            {
+                yield return null;
+            }
+
+            new GUIMessageBox(TextManager.Get("Error"), errorMsg);
+            yield return CoroutineStatus.Success;
+        }
+#endif
+
         public static void SaveLogs()
         {
             if (unsavedMessages.Count == 0) return;
@@ -1600,7 +1646,14 @@ namespace Barotrauma
                 }
             }
 
-            string fileName = "DebugConsoleLog_" + DateTime.Now.ToShortDateString() + "_" + DateTime.Now.ToShortTimeString();
+            string fileName = "DebugConsoleLog_";
+#if SERVER
+            fileName += "Server_";
+#else
+            fileName += "Client_";
+#endif
+
+            fileName += DateTime.Now.ToShortDateString() + "_" + DateTime.Now.ToShortTimeString();
             var invalidChars = Path.GetInvalidFileNameChars();
             foreach (char invalidChar in invalidChars)
             {

@@ -1,20 +1,18 @@
-﻿using Barotrauma.Networking;
-
-namespace Barotrauma
+﻿namespace Barotrauma
 {
     partial class Mission
     {
-        public void ShowMessage(int index)
+        partial void ShowMessageProjSpecific(int index)
         {
-            if (index >= Headers.Count && index >= Messages.Count) return;
+            if (index >= Headers.Count && index >= Messages.Count) { return; }
 
             string header = index < Headers.Count ? Headers[index] : "";
             string message = index < Messages.Count ? Messages[index] : "";
 
-            //TODO: reimplement
-            //GameServer.Log(TextManager.Get("MissionInfo") + ": " + header + " - " + message, ServerLog.MessageType.ServerMessage);
-
-            new GUIMessageBox(header, message);
+            new GUIMessageBox(header, message, buttons: new string[0], type: GUIMessageBox.Type.InGame, icon: Prefab.Icon)
+            {
+                IconColor = Prefab.IconColor
+            };
         }
     }
 }

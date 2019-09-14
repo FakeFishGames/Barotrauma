@@ -107,6 +107,17 @@ namespace Barotrauma
             SetSlotPositions(layout);
         }
 
+        protected override ItemInventory GetActiveEquippedSubInventory(int slotIndex)
+        {
+            var item = Items[slotIndex];
+            if (item == null) return null;
+
+            var container = item.GetComponent<ItemContainer>();
+            if (container == null || !container.KeepOpenWhenEquipped || !character.HasEquippedItem(container.Item)) return null;
+
+            return container.Inventory;
+        }
+
         protected override void PutItem(Item item, int i, Character user, bool removeItem = true, bool createNetworkEvent = true)
         {
             base.PutItem(item, i, user, removeItem, createNetworkEvent);
@@ -115,13 +126,14 @@ namespace Barotrauma
 
         public override void RemoveItem(Item item)
         {
+            if (!Items.Contains(item)) { return; }
             base.RemoveItem(item);
             CreateSlots();
         }
 
         public override void CreateSlots()
         {
-            if (slots == null) slots = new InventorySlot[capacity];
+            if (slots == null) { slots = new InventorySlot[capacity]; }
             
             for (int i = 0; i < capacity; i++)
             {
@@ -164,7 +176,14 @@ namespace Barotrauma
 
             AssignQuickUseNumKeys();
 
-            highlightedSubInventorySlots.Clear();
+            highlightedSubInventorySlots.RemoveWhere(s => s.Inventory.OpenState <= 0.0f);
+            foreach (var subSlot in highlightedSubInventorySlots)
+            {
+                if (subSlot.ParentInventory == this && subSlot.SlotIndex > 0 && subSlot.SlotIndex < slots.Length)
+                {
+                    subSlot.Slot = slots[subSlot.SlotIndex];
+                }
+            }
 
             screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
             CalculateBackgroundFrame();
@@ -456,14 +475,19 @@ namespace Barotrauma
                     }
                 }
             }
-
+            
             List<SlotReference> hideSubInventories = new List<SlotReference>();
+            highlightedSubInventorySlots.RemoveWhere(s => 
+                s.ParentInventory == this &&
+                (s.SlotIndex < 0 || s.SlotIndex >= Items.Length || Items[s.SlotIndex] == null));
             foreach (var highlightedSubInventorySlot in highlightedSubInventorySlots)
             {
                 if (highlightedSubInventorySlot.ParentInventory == this)
                 {
                     UpdateSubInventory(deltaTime, highlightedSubInventorySlot.SlotIndex, cam);
                 }
+
+                if (!highlightedSubInventorySlot.Inventory.IsInventoryHoverAvailable(character, null)) continue;
 
                 Rectangle hoverArea = GetSubInventoryHoverArea(highlightedSubInventorySlot);
                 if (highlightedSubInventorySlot.Inventory?.slots == null || (!hoverArea.Contains(PlayerInput.MousePosition)))
@@ -476,35 +500,16 @@ namespace Barotrauma
                 }
             }
 
-            if (doubleClickedItem != null)
-            {
-                QuickUseItem(doubleClickedItem, true, true, true);
-            }
-            
             //activate the subinventory of the currently selected slot
             if (selectedSlot?.ParentInventory == this)
             {
                 var subInventory = GetSubInventory(selectedSlot.SlotIndex);
-                if (subInventory != null)
+                if (subInventory != null && subInventory.IsInventoryHoverAvailable(character, null))
                 {
                     selectedSlot.Inventory = subInventory;
                     if (!highlightedSubInventorySlots.Any(s => s.Inventory == subInventory))
                     {
-                        var slot = selectedSlot;
-                        highlightedSubInventorySlots.Add(selectedSlot);
-                        UpdateSubInventory(deltaTime, selectedSlot.SlotIndex, cam);
-
-                        //hide previously opened subinventories if this one overlaps with them
-                        Rectangle hoverArea = GetSubInventoryHoverArea(slot);
-                        foreach (SlotReference highlightedSubInventorySlot in highlightedSubInventorySlots)
-                        {
-                            if (highlightedSubInventorySlot == slot) continue;
-                            if (hoverArea.Intersects(GetSubInventoryHoverArea(highlightedSubInventorySlot)))
-                            {
-                                hideSubInventories.Add(highlightedSubInventorySlot);
-                                highlightedSubInventorySlot.Inventory.HideTimer = 0.0f;
-                            }
-                        }
+                        ShowSubInventory(selectedSlot, deltaTime, cam, hideSubInventories, false);
                     }
                 }
             }
@@ -513,66 +518,49 @@ namespace Barotrauma
             {
                 if (subInventorySlot.Inventory == null) continue;
                 subInventorySlot.Inventory.HideTimer -= deltaTime;
-                if (subInventorySlot.Inventory.HideTimer <= 0.0f)
+                if (subInventorySlot.Inventory.HideTimer < 0.25f)
                 {
                     highlightedSubInventorySlots.Remove(subInventorySlot);
                 }
             }
-            
-            for (int i = 0; i < capacity; i++)
+
+            if (character.SelectedCharacter == null) // Permanently open subinventories only available when the default UI layout is in use -> not when grabbing characters
             {
-                if (Items[i] != null && Items[i].AllowedSlots.Any(a => a != InvSlotType.Any))
+                for (int i = 0; i < capacity; i++)
                 {
-                    slots[i].EquipButtonState = slots[i].EquipButtonRect.Contains(PlayerInput.MousePosition) ? 
-                        GUIComponent.ComponentState.Hover : GUIComponent.ComponentState.None;
-                    if (PlayerInput.LeftButtonHeld() && PlayerInput.RightButtonHeld())
+                    var item = Items[i];
+                    if (item != null)
                     {
-                        slots[i].EquipButtonState = GUIComponent.ComponentState.None;
-                    }
-                    
-                    if (slots[i].EquipButtonState != GUIComponent.ComponentState.Hover)
-                    {
-                        slots[i].QuickUseTimer = Math.Max(0.0f, slots[i].QuickUseTimer - deltaTime * 5.0f);
-                        continue;
-                    }
-
-                    var quickUseAction = GetQuickUseAction(Items[i], allowEquip: true, allowInventorySwap: false, allowApplyTreatment: false);
-                    slots[i].QuickUseButtonToolTip = quickUseAction == QuickUseAction.None ? 
-                        "" : TextManager.Get("QuickUseAction." + quickUseAction.ToString());
-                    
-                    //equipped item that can't be put in the inventory, use delayed dropping
-                    if (quickUseAction == QuickUseAction.Drop)
-                    {
-                        slots[i].QuickUseButtonToolTip =
-                            TextManager.Get("QuickUseAction.HoldToUnequip", returnNull: true) ??
-                            (GameMain.Config.Language == "English" ?  "Hold to unequip" : TextManager.Get("QuickUseAction.Unequip"));
-
-                        if (PlayerInput.LeftButtonHeld())
+                        if (HideSlot(i)) continue;
+                        if (character.HasEquippedItem(item)) // Keep a subinventory display open permanently when the container is equipped
                         {
-                            slots[i].QuickUseTimer = Math.Max(0.1f, slots[i].QuickUseTimer + deltaTime);
-                            if (slots[i].QuickUseTimer >= 1.0f)
+                            var itemContainer = item.GetComponent<ItemContainer>();
+                            if (itemContainer != null && itemContainer.KeepOpenWhenEquipped && !highlightedSubInventorySlots.Any(s => s.Inventory == itemContainer.Inventory))
                             {
-                                Items[i].Drop(Character.Controlled);
-                                GUI.PlayUISound(GUISoundType.DropItem);
+                                ShowSubInventory(new SlotReference(this, slots[i], i, false, itemContainer.Inventory), deltaTime, cam, hideSubInventories, true);
                             }
                         }
-                        else
-                        {
-                            slots[i].QuickUseTimer = Math.Max(0.0f, slots[i].QuickUseTimer - deltaTime * 5.0f);
-                        }
                     }
-                    else
-                    {
-                        if (PlayerInput.LeftButtonDown()) slots[i].EquipButtonState = GUIComponent.ComponentState.Pressed;
-                        if (PlayerInput.LeftButtonClicked())
-                        {
-                            QuickUseItem(Items[i], allowEquip: true, allowInventorySwap: false, allowApplyTreatment: false);
-                        }
-                    }
-                    
                 }
             }
-            
+
+            if (doubleClickedItem != null)
+            {
+                QuickUseItem(doubleClickedItem, true, true, true);
+            }
+
+            for (int i = 0; i < capacity; i++)
+            {
+                var item = Items[i];
+                if (item != null)
+                {
+                    var slot = slots[i];
+                    if (item.AllowedSlots.Any(a => a != InvSlotType.Any))
+                    {
+                        HandleButtonEquipStates(item, slot, deltaTime);
+                    }
+                }
+            }
 
             //cancel dragging if too far away from the container of the dragged item
             if (draggingItem != null)
@@ -602,6 +590,92 @@ namespace Barotrauma
             }
 
             doubleClickedItem = null;
+        }
+
+        private void HandleButtonEquipStates(Item item, InventorySlot slot, float deltaTime)
+        {
+            slot.EquipButtonState = slot.EquipButtonRect.Contains(PlayerInput.MousePosition) ?
+                        GUIComponent.ComponentState.Hover : GUIComponent.ComponentState.None;
+            if (PlayerInput.LeftButtonHeld() && PlayerInput.RightButtonHeld())
+            {
+                slot.EquipButtonState = GUIComponent.ComponentState.None;
+            }
+
+            if (slot.EquipButtonState != GUIComponent.ComponentState.Hover)
+            {
+                slot.QuickUseTimer = Math.Max(0.0f, slot.QuickUseTimer - deltaTime * 5.0f);
+                return;
+            }
+
+            var quickUseAction = GetQuickUseAction(item, allowEquip: true, allowInventorySwap: false, allowApplyTreatment: false);
+            slot.QuickUseButtonToolTip = quickUseAction == QuickUseAction.None ?
+                "" : TextManager.Get("QuickUseAction." + quickUseAction.ToString());
+
+            //equipped item that can't be put in the inventory, use delayed dropping
+            if (quickUseAction == QuickUseAction.Drop)
+            {
+                slot.QuickUseButtonToolTip =
+                    TextManager.Get("QuickUseAction.HoldToUnequip", returnNull: true) ??
+                    (GameMain.Config.Language == "English" ? "Hold to unequip" : TextManager.Get("QuickUseAction.Unequip"));
+
+                if (PlayerInput.LeftButtonHeld())
+                {
+                    slot.QuickUseTimer = Math.Max(0.1f, slot.QuickUseTimer + deltaTime);
+                    if (slot.QuickUseTimer >= 1.0f)
+                    {
+                        item.Drop(Character.Controlled);
+                        GUI.PlayUISound(GUISoundType.DropItem);
+                    }
+                }
+                else
+                {
+                    slot.QuickUseTimer = Math.Max(0.0f, slot.QuickUseTimer - deltaTime * 5.0f);
+                }
+            }
+            else
+            {
+                if (PlayerInput.LeftButtonDown()) slot.EquipButtonState = GUIComponent.ComponentState.Pressed;
+                if (PlayerInput.LeftButtonClicked())
+                {
+                    QuickUseItem(item, allowEquip: true, allowInventorySwap: false, allowApplyTreatment: false);
+                }
+            }
+        }
+
+        private void ShowSubInventory(SlotReference slotRef, float deltaTime, Camera cam, List<SlotReference> hideSubInventories, bool isEquippedSubInventory)
+        {
+            Rectangle hoverArea = GetSubInventoryHoverArea(slotRef);
+            if (isEquippedSubInventory)
+            {
+                foreach (SlotReference highlightedSubInventorySlot in highlightedSubInventorySlots)
+                {
+                    if (highlightedSubInventorySlot == slotRef) continue;
+                    if (hoverArea.Intersects(GetSubInventoryHoverArea(highlightedSubInventorySlot)))
+                    {
+                        return; // If an equipped one intersects with a currently active hover one, do not open
+                    }
+                }
+            }
+
+            if (isEquippedSubInventory)
+            {
+                slotRef.Inventory.OpenState = 1.0f; // Reset animation when initially equipped
+            }
+
+            highlightedSubInventorySlots.Add(slotRef);
+            slotRef.Inventory.HideTimer = 1f;
+            UpdateSubInventory(deltaTime, slotRef.SlotIndex, cam);
+
+            //hide previously opened subinventories if this one overlaps with them
+            foreach (SlotReference highlightedSubInventorySlot in highlightedSubInventorySlots)
+            {
+                if (highlightedSubInventorySlot == slotRef) continue;
+                if (hoverArea.Intersects(GetSubInventoryHoverArea(highlightedSubInventorySlot)))
+                {
+                    hideSubInventories.Add(highlightedSubInventorySlot);
+                    highlightedSubInventorySlot.Inventory.HideTimer = 0.0f;
+                }
+            }
         }
         
         private void AssignQuickUseNumKeys()
@@ -633,14 +707,34 @@ namespace Barotrauma
             if (item.ParentInventory != this)
             {
                 //in another inventory -> attempt to place in the character's inventory
-                if (item.ParentInventory.Locked)
+                if (item.ParentInventory.Locked || item.ParentInventory == null)
                 {
                     return QuickUseAction.None;
                 }
                 else if (allowInventorySwap)
                 {
-                    return item.ParentInventory is CharacterInventory ?
-                        QuickUseAction.TakeFromCharacter : QuickUseAction.TakeFromContainer;
+                    if (item.Container == null || character.Inventory.FindIndex(item.Container) == -1) // Not a subinventory in the character's inventory
+                    {
+                        return item.ParentInventory is CharacterInventory ?
+                            QuickUseAction.TakeFromCharacter : QuickUseAction.TakeFromContainer;
+                    }
+                    else
+                    {
+                        var selectedContainer = character.SelectedConstruction?.GetComponent<ItemContainer>();
+                        if (selectedContainer != null &&
+                            selectedContainer.Inventory != null &&
+                            !selectedContainer.Inventory.Locked &&
+                            allowInventorySwap)
+                        {
+                            // Move the item from the subinventory to the selected container
+                            return QuickUseAction.PutToContainer;
+                        }
+                        else
+                        {
+                            // Take from the subinventory and place it in the character's main inventory if no target container is selected
+                            return QuickUseAction.TakeFromContainer;
+                        }
+                    }
                 }
             }
             else
@@ -752,11 +846,27 @@ namespace Barotrauma
                         character.SelectedBy.Inventory != null)
                     {
                         //item is in the inventory of another character -> attempt to get the item from there
-                        success = character.SelectedBy.Inventory.TryPutItem(item, Character.Controlled, item.AllowedSlots, true);
+                        success = character.SelectedBy.Inventory.TryPutItemWithAutoEquipCheck(item, Character.Controlled, item.AllowedSlots, true);
                     }
                     break;
                 case QuickUseAction.TakeFromContainer:
-                    success = TryPutItem(item, Character.Controlled, item.AllowedSlots, true);
+                    // Check open subinventories and put the item in it if equipped
+                    ItemInventory activeSubInventory = null;
+                    for (int i = 0; i < capacity; i++)
+                    {
+                        activeSubInventory = GetActiveEquippedSubInventory(i);
+                        if (activeSubInventory != null)
+                        {
+                            success = activeSubInventory.TryPutItem(item, Character.Controlled, item.AllowedSlots, true);
+                            break;
+                        }
+                    }                            
+
+                    // No subinventory found or placing unsuccessful -> attempt to put in the character's inventory
+                    if (!success)
+                    {
+                        success = TryPutItemWithAutoEquipCheck(item, Character.Controlled, item.AllowedSlots, true);
+                    }
                     break;  
             }
 

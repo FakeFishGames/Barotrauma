@@ -3,7 +3,6 @@ using Barotrauma.Networking;
 using Barotrauma.RuinGeneration;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -11,6 +10,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 using Voronoi2;
 
@@ -83,6 +83,7 @@ namespace Barotrauma
         private static float lastPickedFraction;
         private static Vector2 lastPickedNormal;
 
+        private Task hashTask;
         private Md5Hash hash;
         
         private string filePath;
@@ -166,10 +167,12 @@ namespace Barotrauma
         {
             get
             {
-                if (hash != null) return hash;
-
-                XDocument doc = OpenFile(filePath);
-                hash = new Md5Hash(doc);
+                if (hash == null)
+                {
+                    XDocument doc = OpenFile(filePath);
+                    StartHashDocTask(doc);
+                    hashTask.Wait();
+                }
 
                 return hash;
             }
@@ -297,6 +300,26 @@ namespace Barotrauma
             }
         }
 
+        public bool IsFileCorrupted
+        {
+            get;
+            private set;
+        }
+
+        private bool? requiredContentPackagesInstalled;
+        public bool RequiredContentPackagesInstalled
+        {
+            get
+            {
+                if (requiredContentPackagesInstalled.HasValue) { return requiredContentPackagesInstalled.Value; }
+                return RequiredContentPackages.All(cp => GameMain.SelectedPackages.Any(cp2 => cp2.Name == cp));
+            }
+            set
+            {
+                requiredContentPackagesInstalled = value;
+            }
+        }
+
         //constructors & generation ----------------------------------------------------
 
         public Submarine(string filePath, string hash = "", bool tryLoad = true) : base(null)
@@ -311,7 +334,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Error loading submarine " + filePath + "!", e);
             }
 
-            if (hash != "")
+            if (!string.IsNullOrWhiteSpace(hash))
             {
                 this.hash = new Md5Hash(hash);
             }
@@ -322,15 +345,25 @@ namespace Barotrauma
                 int maxLoadRetries = 4;
                 for (int i = 0; i <= maxLoadRetries; i++)
                 {
-                    doc = OpenFile(filePath);
+                    doc = OpenFile(filePath, out Exception e);
+                    if (e != null && !(e is IOException)) { break; }
                     if (doc != null || i == maxLoadRetries || !File.Exists(filePath)) { break; }
                     DebugConsole.NewMessage("Opening submarine file \"" + filePath + "\" failed, retrying in 250 ms...");
                     Thread.Sleep(250);
                 }
-                if (doc == null || doc.Root == null) { return; }
+                if (doc == null || doc.Root == null)
+                {
+                    IsFileCorrupted = true;
+                    return;
+                }
 
                 if (doc != null && doc.Root != null)
                 {
+                    if (string.IsNullOrWhiteSpace(hash))
+                    {
+                        StartHashDocTask(doc);
+                    }
+
                     displayName = TextManager.Get("Submarine.Name." + name, true);
                     if (displayName == null || displayName.Length == 0) displayName = name;
 
@@ -365,7 +398,9 @@ namespace Barotrauma
                         {
                             using (MemoryStream mem = new MemoryStream(Convert.FromBase64String(previewImageData)))
                             {
-                                PreviewImage = new Sprite(TextureLoader.FromStream(mem, preMultiplyAlpha: false), null, null);
+                                var texture = TextureLoader.FromStream(mem, preMultiplyAlpha: false, path: filePath);
+                                if (texture == null) { throw new Exception("PreviewImage texture returned null"); }
+                                PreviewImage = new Sprite(texture, null, null);
                             }
                         }
                         catch (Exception e)
@@ -382,8 +417,19 @@ namespace Barotrauma
 
             DockedTo = new List<Submarine>();
 
-            ID = ushort.MaxValue;
             FreeID();
+        }
+
+        public void StartHashDocTask(XDocument doc)
+        {
+            if (hash != null) { return; }
+            if (hashTask != null) { return; }
+
+            hashTask = new Task(() =>
+            {
+                hash = new Md5Hash(doc);
+            });
+            hashTask.Start();
         }
 
         public bool HasTag(SubmarineTag tag)
@@ -733,6 +779,12 @@ namespace Barotrauma
         private static readonly Dictionary<Body, float> bodyDist = new Dictionary<Body, float>();
         private static readonly List<Body> bodies = new List<Body>();
 
+        public static float LastPickedBodyDist(Body body)
+        {
+            if (!bodyDist.ContainsKey(body)) { return 0.0f; }
+            return bodyDist[body];
+        }
+
         /// <summary>
         /// Returns a list of physics bodies the ray intersects with, sorted according to distance (the closest body is at the beginning of the list).
         /// </summary>
@@ -893,7 +945,7 @@ namespace Barotrauma
             parents.Add(this);
 
             flippedX = !flippedX;
-
+            
             Item.UpdateHulls();
 
             List<Item> bodyItems = Item.ItemList.FindAll(it => it.Submarine == this && it.body != null);
@@ -936,6 +988,8 @@ namespace Barotrauma
                 entityGrid = null;
             }
             entityGrid = Hull.GenerateEntityGrid(this);
+
+            SubBody.FlipX();
 
             foreach (MapEntity mapEntity in subEntities)
             {
@@ -1055,16 +1109,14 @@ namespace Barotrauma
             //Level.Loaded.Move(-amount);
         }
 
-        public static Submarine FindClosest(Vector2 worldPosition, bool ignoreOutposts = false)
+        public static Submarine FindClosest(Vector2 worldPosition, bool ignoreOutposts = false, bool ignoreOutsideLevel = true)
         {
             Submarine closest = null;
             float closestDist = 0.0f;
             foreach (Submarine sub in loaded)
             {
-                if (ignoreOutposts && sub.IsOutpost)
-                {
-                    continue;
-                }
+                if (ignoreOutposts && sub.IsOutpost) { continue; }
+                if (ignoreOutsideLevel && Level.Loaded != null && sub.WorldPosition.Y > Level.Loaded.Size.Y) { continue; }
                 float dist = Vector2.DistanceSquared(worldPosition, sub.WorldPosition);
                 if (closest == null || dist < closestDist)
                 {
@@ -1127,7 +1179,6 @@ namespace Barotrauma
             savedSubmarines.Add(sub);
         }
 
-
         public static void RefreshSavedSub(string filePath)
         {
             string fullPath = Path.GetFullPath(filePath);
@@ -1138,8 +1189,15 @@ namespace Barotrauma
                     savedSubmarines[i].Dispose();
                 }
             }
-            savedSubmarines.Add(new Submarine(filePath));
-            savedSubmarines = savedSubmarines.OrderBy(s => s.filePath ?? "").ToList();
+            if (File.Exists(filePath))
+            {
+                var sub = new Submarine(filePath);
+                if (!sub.IsFileCorrupted)
+                {
+                    savedSubmarines.Add(sub);
+                }
+                savedSubmarines = savedSubmarines.OrderBy(s => s.filePath ?? "").ToList();
+            }
         }
 
         public static void RefreshSavedSubs()
@@ -1190,9 +1248,49 @@ namespace Barotrauma
                 }
             }
 
+            var contentPackageSubs = ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.Submarine);
+            foreach (string subPath in contentPackageSubs)
+            {
+                if (!filePaths.Any(fp => Path.GetFullPath(fp) == Path.GetFullPath(subPath)))
+                {
+                    filePaths.Add(subPath);
+                }
+            }
+
             foreach (string path in filePaths)
             {
-                savedSubmarines.Add(new Submarine(path));
+                var sub = new Submarine(path);
+                if (sub.IsFileCorrupted)
+                {
+#if CLIENT
+                    if (DebugConsole.IsOpen) { DebugConsole.Toggle(); }
+                    var deleteSubPrompt = new GUIMessageBox(
+                        TextManager.Get("Error"), 
+                        TextManager.GetWithVariable("SubLoadError", "[subname]", sub.name) +"\n"+
+                        TextManager.GetWithVariable("DeleteFileVerification", "[filename]", sub.name),
+                        new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+
+                    string filePath = path;
+                    deleteSubPrompt.Buttons[0].OnClicked += (btn, userdata) =>
+                    {
+                        try
+                        {
+                            File.Delete(filePath);
+                        }
+                        catch (Exception e)
+                        {
+                            DebugConsole.ThrowError($"Failed to delete file \"{filePath}\".", e);
+                        }
+                        deleteSubPrompt.Close();
+                        return true;
+                    };
+                    deleteSubPrompt.Buttons[1].OnClicked += deleteSubPrompt.Close;
+#endif
+                }
+                else
+                {
+                    savedSubmarines.Add(sub);
+                }
             }
         }
 
@@ -1200,8 +1298,14 @@ namespace Barotrauma
 
         public static XDocument OpenFile(string file)
         {
+            return OpenFile(file, out _);
+        }
+
+        public static XDocument OpenFile(string file, out Exception exception)
+        {
             XDocument doc = null;
             string extension = "";
+            exception = null;
 
             try
             {
@@ -1228,6 +1332,7 @@ namespace Barotrauma
                 }
                 catch (Exception e) 
                 {
+                    exception = e;
                     DebugConsole.ThrowError("Loading submarine \"" + file + "\" failed!", e);
                     return null;
                 }                
@@ -1242,6 +1347,7 @@ namespace Barotrauma
 
                 catch (Exception e)
                 {
+                    exception = e;
                     DebugConsole.ThrowError("Loading submarine \"" + file + "\" failed! (" + e.Message + ")");
                     return null;
                 }
@@ -1256,6 +1362,7 @@ namespace Barotrauma
 
                 catch (Exception e)
                 {
+                    exception = e;
                     DebugConsole.ThrowError("Loading submarine \"" + file + "\" failed! (" + e.Message + ")");
                     return null;
                 }
@@ -1405,7 +1512,7 @@ namespace Barotrauma
             }
 
 
-            ID = (ushort)(ushort.MaxValue - Submarine.loaded.IndexOf(this));
+            ID = (ushort)(ushort.MaxValue - 1 - Submarine.loaded.IndexOf(this));
         }
 
         public static Submarine Load(XElement element, bool unloadPrevious)
@@ -1553,7 +1660,7 @@ namespace Barotrauma
             if (MainSub == this) MainSub = null;
             if (MainSubs[1] == this) MainSubs[1] = null;
 
-            DockedTo.Clear();
+            DockedTo?.Clear();
         }
 
         public void Dispose()
@@ -1592,7 +1699,6 @@ namespace Barotrauma
                 if (wp.isObstructed) { continue; }
                 foreach (var connection in node.connections)
                 {
-                    bool isObstructed = false;
                     var connectedWp = connection.Waypoint;
                     if (connectedWp.isObstructed) { continue; }
                     Vector2 start = ConvertUnits.ToSimUnits(wp.WorldPosition);
@@ -1623,7 +1729,6 @@ namespace Barotrauma
                 if (wp.isObstructed) { continue; }
                 foreach (var connection in node.connections)
                 {
-                    bool isObstructed = false;
                     var connectedWp = connection.Waypoint;
                     if (connectedWp.isObstructed) { continue; }
                     Vector2 start = ConvertUnits.ToSimUnits(wp.WorldPosition) - otherSub.SimPosition;

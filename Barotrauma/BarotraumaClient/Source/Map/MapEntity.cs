@@ -132,96 +132,97 @@ namespace Barotrauma
                 selectedList.Clear();
                 return;
             }
-
-            if (PlayerInput.KeyDown(Keys.Delete))
+            if (GUI.KeyboardDispatcher.Subscriber == null)
             {
-                selectedList.ForEach(e => e.Remove());
-                selectedList.Clear();
-            }
-
-            if (PlayerInput.KeyDown(Keys.LeftControl) || PlayerInput.KeyDown(Keys.RightControl))
-            {
-                if (PlayerInput.KeyHit(Keys.C))
+                if (PlayerInput.KeyDown(Keys.Delete))
                 {
-                    CopyEntities(selectedList);
-                }
-                else if (PlayerInput.KeyHit(Keys.X))
-                {
-                    CopyEntities(selectedList);
-
                     selectedList.ForEach(e => e.Remove());
                     selectedList.Clear();
                 }
-                else if (copiedList.Count > 0 && PlayerInput.KeyHit(Keys.V))
+
+                if (PlayerInput.KeyDown(Keys.LeftControl) || PlayerInput.KeyDown(Keys.RightControl))
                 {
-                    List<MapEntity> prevEntities = new List<MapEntity>(mapEntityList);
-                    Clone(copiedList);
-
-                    var clones = mapEntityList.Except(prevEntities).ToList();
-
-                    Vector2 center = Vector2.Zero;
-                    clones.ForEach(c => center += c.WorldPosition);
-                    center = Submarine.VectorToWorldGrid(center / clones.Count);
-
-                    Vector2 moveAmount = Submarine.VectorToWorldGrid(cam.WorldViewCenter - center);
-
-                    selectedList = new List<MapEntity>(clones);
-                    foreach (MapEntity clone in selectedList)
+                    if (PlayerInput.KeyHit(Keys.C))
                     {
-                        clone.Move(moveAmount);
-                        clone.Submarine = Submarine.MainSub;
+                        CopyEntities(selectedList);
                     }
-                }
-                else if (PlayerInput.KeyHit(Keys.G))
-                {
-                    if (selectedList.Any())
+                    else if (PlayerInput.KeyHit(Keys.X))
                     {
-                        if (SelectionGroups.ContainsKey(selectedList.Last()))
+                        CopyEntities(selectedList);
+
+                        selectedList.ForEach(e => e.Remove());
+                        selectedList.Clear();
+                    }
+                    else if (copiedList.Count > 0 && PlayerInput.KeyHit(Keys.V))
+                    {
+                        List<MapEntity> prevEntities = new List<MapEntity>(mapEntityList);
+                        Clone(copiedList);
+
+                        var clones = mapEntityList.Except(prevEntities).ToList();
+
+                        Vector2 center = Vector2.Zero;
+                        clones.ForEach(c => center += c.WorldPosition);
+                        center = Submarine.VectorToWorldGrid(center / clones.Count);
+
+                        Vector2 moveAmount = Submarine.VectorToWorldGrid(cam.WorldViewCenter - center);
+
+                        selectedList = new List<MapEntity>(clones);
+                        foreach (MapEntity clone in selectedList)
                         {
-                            // Ungroup all selected
-                            selectedList.ForEach(e => SelectionGroups.Remove(e));
+                            clone.Move(moveAmount);
+                            clone.Submarine = Submarine.MainSub;
                         }
-                        else
+                    }
+                    else if (PlayerInput.KeyHit(Keys.G))
+                    {
+                        if (selectedList.Any())
                         {
-                            foreach (var entity in selectedList)
+                            if (SelectionGroups.ContainsKey(selectedList.Last()))
                             {
-                                // Remove the old group, if any
-                                SelectionGroups.Remove(entity);
-                                // Create a group that can be accessed with any member
-                                SelectionGroups.Add(entity, selectedList);
+                                // Ungroup all selected
+                                selectedList.ForEach(e => SelectionGroups.Remove(e));
+                            }
+                            else
+                            {
+                                foreach (var entity in selectedList)
+                                {
+                                    // Remove the old group, if any
+                                    SelectionGroups.Remove(entity);
+                                    // Create a group that can be accessed with any member
+                                    SelectionGroups.Add(entity, selectedList);
+                                }
+                            }
+                        }
+                    }
+                    else if (PlayerInput.KeyHit(Keys.Z))
+                    {
+                        SetPreviousRects(e => e.rectMemento.Undo());
+                    }
+                    else if (PlayerInput.KeyHit(Keys.R))
+                    {
+                        SetPreviousRects(e => e.rectMemento.Redo());
+                    }
+
+                    void SetPreviousRects(Func<MapEntity, Rectangle> memoryMethod)
+                    {
+                        foreach (var e in SelectedList)
+                        {
+                            if (e.rectMemento != null)
+                            {
+                                Point diff = memoryMethod(e).Location - e.Rect.Location;
+                                // We have to call the move method, because there's a lot more than just storing the rect (in some cases)
+                                // We also have to reassign the rect, because the move method does not set the width and height. They might have changed too.
+                                // The Rect property is virtual and it's overridden for structs. Setting the rect via the property should automatically recreate the sections for resizable structures.
+                                e.Move(diff.ToVector2());
+                                e.Rect = e.rectMemento.Current;
                             }
                         }
                     }
                 }
-                else if (PlayerInput.KeyHit(Keys.Z))
-                {
-                    SetPreviousRects(e => e.rectMemento.Undo());
-                }
-                else if (PlayerInput.KeyHit(Keys.R))
-                {
-                    SetPreviousRects(e => e.rectMemento.Redo());
-                }
-                void SetPreviousRects(Func<MapEntity, Rectangle> memoryMethod)
-                {
-                    foreach (var e in SelectedList)
-                    {
-                        if (e.rectMemento != null)
-                        {
-                            Point diff = memoryMethod(e).Location - e.Rect.Location;
-                            // We have to call the move method, because there's a lot more than just storing the rect (in some cases)
-                            // We also have to reassign the rect, because the move method does not set the width and height. They might have changed too.
-                            // The Rect property is virtual and it's overridden for structs. Setting the rect via the property should automatically recreate the sections for resizable structures.
-                            e.Move(diff.ToVector2());
-                            e.Rect = e.rectMemento.Current;
-                        }
-                    }
-                }
-            }
+            }            
 
             Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
-
             MapEntity highLightedEntity = null;
-
             if (startMovingPos == Vector2.Zero)
             {
                 List<MapEntity> highlightedEntities = new List<MapEntity>();
@@ -282,16 +283,19 @@ namespace Barotrauma
                 if (highLightedEntity != null) highLightedEntity.isHighlighted = true;
             }
 
-            Vector2 nudgeAmount = Vector2.Zero;
-            if (PlayerInput.KeyHit(Keys.Up))    nudgeAmount.Y = 1f;
-            if (PlayerInput.KeyHit(Keys.Down))  nudgeAmount.Y = -1f;
-            if (PlayerInput.KeyHit(Keys.Left))  nudgeAmount.X = -1f;
-            if (PlayerInput.KeyHit(Keys.Right)) nudgeAmount.X = 1f;            
-            if (nudgeAmount != Vector2.Zero)
+            if (GUI.KeyboardDispatcher.Subscriber == null)
             {
-                foreach (MapEntity entityToNudge in selectedList)
+                Vector2 nudgeAmount = Vector2.Zero;
+                if (PlayerInput.KeyHit(Keys.Up))    nudgeAmount.Y = 1f;
+                if (PlayerInput.KeyHit(Keys.Down))  nudgeAmount.Y = -1f;
+                if (PlayerInput.KeyHit(Keys.Left))  nudgeAmount.X = -1f;
+                if (PlayerInput.KeyHit(Keys.Right)) nudgeAmount.X = 1f;            
+                if (nudgeAmount != Vector2.Zero)
                 {
-                    entityToNudge.Move(nudgeAmount);
+                    foreach (MapEntity entityToNudge in selectedList)
+                    {
+                        entityToNudge.Move(nudgeAmount);
+                    }
                 }
             }
 
@@ -367,14 +371,39 @@ namespace Barotrauma
                         foreach (MapEntity e in newSelection)
                         {
                             if (selectedList.Contains(e))
-                                selectedList.Remove(e);
+                            {
+                                RemoveSelection(e);
+                            }
                             else
-                                selectedList.Add(e);
+                            {
+                                AddSelection(e);
+                            }
                         }
                     }
                     else
                     {
-                        selectedList = newSelection;
+                        selectedList = new List<MapEntity>(newSelection);
+                        //selectedList.Clear();
+                        //newSelection.ForEach(e => AddSelection(e));
+                        foreach (var entity in newSelection)
+                        {
+                            HandleDoorGapLinks(entity,
+                                onGapFound: (door, gap) =>
+                                {
+                                    door.RefreshLinkedGap();
+                                    if (!selectedList.Contains(gap))
+                                    {
+                                        selectedList.Add(gap);
+                                    }
+                                },
+                                onDoorFound: (door, gap) =>
+                                {
+                                    if (!selectedList.Contains(door.Item))
+                                    {
+                                        selectedList.Add(door.Item);
+                                    }
+                                });
+                        }
                     }
 
                     //select wire if both items it's connected to are selected
@@ -457,9 +486,13 @@ namespace Barotrauma
                     PlayerInput.KeyDown(Keys.RightControl))
                 {
                     if (selectedList.Contains(entity))
-                        selectedList.Remove(entity);
+                    {
+                        RemoveSelection(entity);
+                    }
                     else
-                        selectedList.Add(entity);
+                    {
+                        AddSelection(entity);
+                    }
                 }
                 else
                 {
@@ -468,6 +501,60 @@ namespace Barotrauma
 
                 return true;
             };
+        }
+
+        public static void AddSelection(MapEntity entity)
+        {
+            if (selectedList.Contains(entity)) { return; }
+            selectedList.Add(entity);
+            HandleDoorGapLinks(entity, 
+                onGapFound: (door, gap) =>
+                {
+                    door.RefreshLinkedGap();
+                    if (!selectedList.Contains(gap))
+                    {
+                        selectedList.Add(gap);
+                    }
+                }, 
+                onDoorFound: (door, gap) => 
+                {
+                    if (!selectedList.Contains(door.Item))
+                    {
+                        selectedList.Add(door.Item);
+                    }
+                });
+        }
+
+        private static void HandleDoorGapLinks(MapEntity entity, Action<Door, Gap> onGapFound, Action<Door, Gap> onDoorFound)
+        {
+            if (entity is Item i)
+            {
+                var door = i.GetComponent<Door>();
+                if (door != null)
+                {
+                    var gap = door.LinkedGap;
+                    if (gap != null)
+                    {
+                        onGapFound(door, gap);
+                    }
+                }
+            }
+            else if (entity is Gap gap)
+            {
+                var door = gap.ConnectedDoor;
+                if (door != null)
+                {
+                    onDoorFound(door, gap);
+                }
+            }
+        }
+
+        public static void RemoveSelection(MapEntity entity)
+        {
+            selectedList.Remove(entity);
+            HandleDoorGapLinks(entity,
+                onGapFound: (door, gap) => selectedList.Remove(gap),
+                onDoorFound: (door, gap) => selectedList.Remove(door.Item));
         }
         
         static partial void UpdateAllProjSpecific(float deltaTime)
@@ -533,13 +620,15 @@ namespace Barotrauma
             }
         }
 
+        public static List<MapEntity> FilteredSelectedList { get; private set; } = new List<MapEntity>();
+
         public static void UpdateEditor(Camera cam)
         {
             if (highlightedListBox != null) highlightedListBox.UpdateManually((float)Timing.Step);
 
             if (editingHUD != null)
             {
-                if (selectedList.Count == 0 || editingHUD.UserData != selectedList[0])
+                if (FilteredSelectedList.Count == 0 || editingHUD.UserData != FilteredSelectedList[0])
                 {
                     foreach (GUIComponent component in editingHUD.Children)
                     {
@@ -550,15 +639,20 @@ namespace Barotrauma
                     editingHUD = null;
                 }
             }
-
+            FilteredSelectedList.Clear();
             if (selectedList.Count == 0) return;
-
-            if (selectedList.Count == 1)
+            foreach (var e in selectedList)
             {
-                selectedList[0].UpdateEditing(cam);
-                if (selectedList[0].ResizeHorizontal || selectedList[0].ResizeVertical)
+                if (e is Gap gap && gap.ConnectedDoor != null) { continue; }
+                FilteredSelectedList.Add(e);
+            }
+            var first = FilteredSelectedList.FirstOrDefault();
+            if (first != null)
+            {
+                first.UpdateEditing(cam);
+                if (first.ResizeHorizontal || first.ResizeVertical)
                 {
-                    selectedList[0].UpdateResizing(cam);
+                    first.UpdateResizing(cam);
                 }
             }
 
@@ -622,12 +716,10 @@ namespace Barotrauma
             selectedList.Clear();
         }
 
-
         public static void SelectEntity(MapEntity entity)
         {
             DeselectAll();
-
-            selectedList.Add(entity);
+            AddSelection(entity);
         }
 
         /// <summary>

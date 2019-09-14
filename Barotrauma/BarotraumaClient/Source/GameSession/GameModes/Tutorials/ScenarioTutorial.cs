@@ -102,7 +102,7 @@ namespace Barotrauma.Tutorials
             Submarine.MainSub.GodMode = true;
 
             CharacterInfo charInfo = configElement.Element("Character") == null ?
-                new CharacterInfo(Character.HumanConfigFile, "", JobPrefab.List.Find(jp => jp.Identifier == "engineer")) :
+                new CharacterInfo(Character.HumanSpeciesName, "", JobPrefab.Get("engineer")) :
                 new CharacterInfo(configElement.Element("Character"));
 
             WayPoint wayPoint = GetSpawnPoint(charInfo);
@@ -125,6 +125,20 @@ namespace Barotrauma.Tutorials
             }
             idCard.AddTag("com");
             idCard.AddTag("eng");
+
+            List<Entity> entities = Entity.GetEntityList();
+
+            for (int i = 0; i < entities.Count; i++)
+            {
+                if (entities[i] is Item)
+                {
+                    Door door = (entities[i] as Item).GetComponent<Door>();
+                    if (door != null)
+                    {
+                        door.CanBeWelded = false;
+                    }
+                }
+            }
 
             tutorialCoroutine = CoroutineManager.StartCoroutine(UpdateState());
         }
@@ -162,9 +176,9 @@ namespace Barotrauma.Tutorials
             return WayPoint.GetRandom(spawnPointType, charInfo.Job, spawnSub);
         }
 
-        protected bool HasOrder(Character character, string aiTag, string option = null)
+        protected bool HasOrder(Character character, string identifier, string option = null)
         {
-            if (character.CurrentOrder?.AITag == aiTag)
+            if (character.CurrentOrder?.Identifier == identifier)
             {
                 if (option == null)
                 {

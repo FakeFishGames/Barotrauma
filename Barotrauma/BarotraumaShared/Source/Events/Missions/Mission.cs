@@ -32,7 +32,7 @@ namespace Barotrauma
             private set { failureMessage = value; }
         }
 
-        private string description;
+        protected string description;
         public virtual string Description
         {
             get { return description; }
@@ -154,6 +154,13 @@ namespace Barotrauma
             clients.ForEach(c => c.TeamID = Character.TeamType.Team1);
             return false; 
         }
+
+        protected void ShowMessage(int index)
+        {
+            ShowMessageProjSpecific(index);
+        }
+
+        partial void ShowMessageProjSpecific(int index);
 
         /// <summary>
         /// End the mission and give a reward if it was completed successfully

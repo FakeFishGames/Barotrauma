@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Jobs>
   <Job identifier="captain"
-       minnumber="1" maxnumber="1" minkarma="0.7" initialcount="1"
+       maxnumber="1" minkarma="45" initialcount="1"
        uicolor="0.65,0.73,0.84"
        vitalitymodifier="-20">
     <Skills>
@@ -30,13 +30,13 @@
       <sprite name="Portrait Clothing Captain" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="2,0"/>
     </PortraitClothing>
     <AutonomousObjectives>
-      <Order aitag="extinguishfires" prioritymodifier ="1"/>
-      <Order aitag="steer" option="maintainposition" prioritymodifier="0.5"/>
+      <Order identifier="extinguishfires" prioritymodifier ="1"/>
+      <Order identifier="steer" option="maintainposition" prioritymodifier="0.5"/>
     </AutonomousObjectives>
   </Job>
   
-  <Job identifier="engineer"      
-       minnumber="1" minkarma="0.5" initialcount="1"
+  <Job identifier="engineer"    
+       minkarma="30" initialcount="1"
        uicolor="0.88,0.72,0.43"
        vitalitymodifier="-10">
     <Skills>
@@ -66,18 +66,18 @@
       <sprite name="Portrait Clothing Engineer" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="0,0"/>
     </PortraitClothing>
     <AutonomousObjectives>
-      <Order aitag="extinguishfires" prioritymodifier ="1"/>
-      <Order aitag="repairsystems" option="jobspecific" prioritymodifier="1"/>
-      <Order aitag="fixleaks" prioritymodifier="0.75"/>
-      <Order aitag="operatereactor" option="powerup" prioritymodifier="0.3"/>
-      <Order aitag="repairsystems" option="all" prioritymodifier="0.5"/>
-      <Order aitag="chargebatteries" option="charge" prioritymodifier="0.25"/>
-      <Order aitag="pumpwater" option="pumpout" prioritymodifier="0.25"/>
+      <Order identifier="extinguishfires" prioritymodifier ="1"/>
+      <Order identifier="repairsystems" option="jobspecific" prioritymodifier="1"/>
+      <Order identifier="fixleaks" prioritymodifier="0.75"/>
+      <Order identifier="operatereactor" option="powerup" prioritymodifier="0.3"/>
+      <Order identifier="repairsystems" option="all" prioritymodifier="0.5"/>
+      <Order identifier="chargebatteries" option="charge" prioritymodifier="0.25"/>
+      <Order identifier="pumpwater" option="pumpout" prioritymodifier="0.25"/>
     </AutonomousObjectives>
   </Job>
 
   <Job identifier="mechanic"
-       minnumber="1" minkarma="0.5" initialcount="1"
+       minkarma="30" initialcount="1"
        uicolor="0.5,0.86,0.9"
        vitalitymodifier="-10">
     <Skills>
@@ -107,17 +107,17 @@
       <sprite name="Portrait Clothing Mechanic" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="1,0"/>
     </PortraitClothing>
     <AutonomousObjectives>
-      <Order aitag="extinguishfires" prioritymodifier ="1"/>
-      <Order aitag="fixleaks" prioritymodifier="1"/>
-      <Order aitag="repairsystems" option="jobspecific" prioritymodifier="1"/>
-      <Order aitag="repairsystems" option="all" prioritymodifier="0.5"/>
-      <Order aitag="pumpwater" option="pumpout" prioritymodifier="0.5"/>
-      <Order aitag="chargebatteries" option="charge" prioritymodifier="0.25"/>
+      <Order identifier="extinguishfires" prioritymodifier ="1"/>
+      <Order identifier="fixleaks" prioritymodifier="1"/>
+      <Order identifier="repairsystems" option="jobspecific" prioritymodifier="1"/>
+      <Order identifier="repairsystems" option="all" prioritymodifier="0.5"/>
+      <Order identifier="pumpwater" option="pumpout" prioritymodifier="0.5"/>
+      <Order identifier="chargebatteries" option="charge" prioritymodifier="0.25"/>
     </AutonomousObjectives>
   </Job>
 
   <Job identifier="securityofficer"
-       maxnumber="2" minkarma="0.7"
+       maxnumber="2" minkarma="40"
        uicolor="0.57,0.48,0.43"
        vitalitymodifier="0">
     <Skills>
@@ -146,18 +146,18 @@
       <sprite name="Portrait Clothing Security Officer" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="1,1"/>
     </PortraitClothing>
     <AutonomousObjectives>
-      <Order aitag="fightintruders" prioritymodifier="1"/>
-      <Order aitag="extinguishfires" prioritymodifier ="0.75"/>
-      <Order aitag="pumpwater" option="pumpout" prioritymodifier="0.25"/>
-      <Order aitag="chargebatteries" option="charge" prioritymodifier="0.25"/>
-      <Order aitag="fixleaks" prioritymodifier="0.2"/>
-      <Order aitag="repairsystems" option="all" prioritymodifier="0.2"/>
-      <Order aitag="operateweapons" option="holdfire" prioritymodifier="0.1"/>
+      <Order identifier="fightintruders" prioritymodifier="1"/>
+      <Order identifier="extinguishfires" prioritymodifier ="0.75"/>
+      <Order identifier="pumpwater" option="pumpout" prioritymodifier="0.25"/>
+      <Order identifier="chargebatteries" option="charge" prioritymodifier="0.25"/>
+      <Order identifier="fixleaks" prioritymodifier="0.2"/>
+      <Order identifier="repairsystems" option="all" prioritymodifier="0.2"/>
+      <Order identifier="operateweapons" option="holdfire" prioritymodifier="0.1"/>
     </AutonomousObjectives>
   </Job>
 
   <Job identifier="medicaldoctor"
-       maxnumber="2" minkarma="0.7"
+       maxnumber="2" minkarma="30"
        uicolor="0.81,0.31,0.19"
        vitalitymodifier="0">
     <Skills>
@@ -181,17 +181,17 @@
       <sprite name="Portrait Clothing Medic" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="0,1"/>
     </PortraitClothing>
     <AutonomousObjectives>
-      <Order aitag="extinguishfires" prioritymodifier ="1"/>
-      <Order aitag="rescue" prioritymodifier="1"/>
-      <Order aitag="pumpwater" option="pumpout" prioritymodifier="0.25"/>
-      <Order aitag="chargebatteries" option="charge" prioritymodifier="0.25"/>
-      <Order aitag="fixleaks" prioritymodifier="0.2"/>
-      <Order aitag="repairsystems" option="all" prioritymodifier="0.2"/>
+      <Order identifier="extinguishfires" prioritymodifier ="1"/>
+      <Order identifier="rescue" prioritymodifier="1"/>
+      <Order identifier="pumpwater" option="pumpout" prioritymodifier="0.25"/>
+      <Order identifier="chargebatteries" option="charge" prioritymodifier="0.25"/>
+      <Order identifier="fixleaks" prioritymodifier="0.2"/>
+      <Order identifier="repairsystems" option="all" prioritymodifier="0.2"/>
     </AutonomousObjectives>
   </Job>
 
   <Job identifier="assistant"
-       allowalways="true" minkarma="0.0"
+       allowalways="true" minkarma="0"
        vitalitymodifier="-10">
     <Skills>
       <Skill identifier="weapons" level="20,32"/>
@@ -215,11 +215,11 @@
       <sprite name="Portrait Clothing Assistant" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="0,2"/>
     </PortraitClothing>
     <AutonomousObjectives>
-      <Order aitag="extinguishfires" prioritymodifier ="1"/>
-      <Order aitag="chargebatteries" option="charge" prioritymodifier="1"/>
-      <Order aitag="pumpwater" option="pumpout" prioritymodifier="1"/>
-      <Order aitag="repairsystems" option="all" prioritymodifier="0.5"/>
-      <Order aitag="fixleaks" prioritymodifier="0.5"/>
+      <Order identifier="extinguishfires" prioritymodifier ="1"/>
+      <Order identifier="chargebatteries" option="charge" prioritymodifier="1"/>
+      <Order identifier="pumpwater" option="pumpout" prioritymodifier="1"/>
+      <Order identifier="repairsystems" option="all" prioritymodifier="0.5"/>
+      <Order identifier="fixleaks" prioritymodifier="0.5"/>
     </AutonomousObjectives>
   </Job>
 

@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -9,7 +8,7 @@ namespace Barotrauma
 {
     partial class Hull : MapEntity, ISerializableEntity, IServerSerializable, IClientSerializable
     {
-        private float lastSentVolume, lastSentOxygen;
+        private float lastSentVolume, lastSentOxygen, lastSentFireCount;
         private float sendUpdateTimer;
 
         public override bool IsMouseOn(Vector2 position)
@@ -34,6 +33,7 @@ namespace Barotrauma
             //or if oxygen percentage has changed by 5%
             if (Math.Abs(lastSentVolume - waterVolume) > Volume * 0.1f ||
                 Math.Abs(lastSentOxygen - OxygenPercentage) > 5f ||
+                lastSentFireCount != FireSources.Count ||
                 FireSources.Count > 0)
             {
                 sendUpdateTimer -= deltaTime;
@@ -42,12 +42,13 @@ namespace Barotrauma
                     GameMain.NetworkMember.CreateEntityEvent(this);
                     lastSentVolume = waterVolume;
                     lastSentOxygen = OxygenPercentage;
+                    lastSentFireCount = FireSources.Count;
                     sendUpdateTimer = NetConfig.HullUpdateInterval;
                 }
             }
         }
 
-        public void ServerWrite(NetBuffer message, Client c, object[] extraData = null)
+        public void ServerWrite(IWriteMessage message, Client c, object[] extraData = null)
         {
             message.WriteRangedSingle(MathHelper.Clamp(waterVolume / Volume, 0.0f, 1.5f), 0.0f, 1.5f, 8);
             message.WriteRangedSingle(MathHelper.Clamp(OxygenPercentage, 0.0f, 100.0f), 0.0f, 100.0f, 8);
@@ -55,7 +56,7 @@ namespace Barotrauma
             message.Write(FireSources.Count > 0);
             if (FireSources.Count > 0)
             {
-                message.WriteRangedInteger(0, 16, Math.Min(FireSources.Count, 16));
+                message.WriteRangedInteger(Math.Min(FireSources.Count, 16), 0, 16);
                 for (int i = 0; i < Math.Min(FireSources.Count, 16); i++)
                 {
                     var fireSource = FireSources[i];
@@ -71,7 +72,7 @@ namespace Barotrauma
         }
 
         //used when clients use the water/fire console commands
-        public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
+        public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
         {
             float newWaterVolume  = msg.ReadRangedSingle(0.0f, 1.5f, 8) * Volume;
 

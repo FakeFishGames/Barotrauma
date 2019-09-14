@@ -18,7 +18,7 @@
       <requireditem identifiers="wrench" type="Equipped" optional="false" />
     </Holdable>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
-      <requireditem identifiers="screwdriver,wire" type="Equipped" optional="false" />
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" />
       <input name="signal_in">
         <link w="5" />
       </input>
@@ -35,7 +35,7 @@
       <requireditem identifiers="wrench" type="Equipped" optional="false" />
     </Holdable>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
-      <requireditem identifiers="screwdriver,wire" type="Equipped" optional="false" />
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" />
       <output name="signal_out">
         <link w="5" />
         <link w="7" />

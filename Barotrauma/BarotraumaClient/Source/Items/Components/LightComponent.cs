@@ -1,6 +1,5 @@
 ﻿using Barotrauma.Lights;
 using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -29,14 +28,14 @@ namespace Barotrauma.Items.Components
 
         public override void FlipX(bool relativeToSub)
         {
-            if (light?.LightSprite != null)
+            if (light?.LightSprite != null && item.Prefab.CanSpriteFlipX)
             {
                 light.LightSpriteEffect = light.LightSpriteEffect == SpriteEffects.None ?
                     SpriteEffects.FlipHorizontally : SpriteEffects.None;                
             }
         }
 
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             IsOn = msg.ReadBoolean();
         }

@@ -119,6 +119,7 @@ namespace Barotrauma
             DecompressToDirectory(filePath, TempPath, null);
 
             XDocument doc = XMLExtensions.TryLoadXml(Path.Combine(TempPath, "gamesession.xml"));
+            if (doc == null) { return; }
 
             string subPath = Path.Combine(TempPath, doc.Root.GetAttributeString("submarine", "")) + ".sub";
             Submarine selectedSub = new Submarine(subPath, "");
@@ -130,6 +131,7 @@ namespace Barotrauma
             DebugConsole.Log("Loading save file for an existing game session (" + filePath + ")");
             DecompressToDirectory(filePath, TempPath, null);
             XDocument doc = XMLExtensions.TryLoadXml(Path.Combine(TempPath, "gamesession.xml"));
+            if (doc == null) { return; }
             gameSession.Load(doc.Root);
         }
 
@@ -378,8 +380,6 @@ namespace Barotrauma
                     Thread.Sleep(250);
                 }
             }
-
-
             return true;
         }
 
@@ -406,7 +406,7 @@ namespace Barotrauma
             }
         }
 
-        public static void CopyFolder(string sourceDirName, string destDirName, bool copySubDirs)
+        public static void CopyFolder(string sourceDirName, string destDirName, bool copySubDirs, bool overwriteExisting = false)
         {
             // Get the subdirectories for the specified directory.
             DirectoryInfo dir = new DirectoryInfo(sourceDirName);
@@ -429,8 +429,8 @@ namespace Barotrauma
             FileInfo[] files = dir.GetFiles();
             foreach (FileInfo file in files)
             {
-                string temppath = Path.Combine(destDirName, file.Name);
-                file.CopyTo(temppath, false);
+                string tempPath = Path.Combine(destDirName, file.Name);
+                file.CopyTo(tempPath, overwriteExisting);
             }
 
             // If copying subdirectories, copy them and their contents to new location.
@@ -438,8 +438,8 @@ namespace Barotrauma
             {
                 foreach (DirectoryInfo subdir in dirs)
                 {
-                    string temppath = Path.Combine(destDirName, subdir.Name);
-                    CopyFolder(subdir.FullName, temppath, copySubDirs);
+                    string tempPath = Path.Combine(destDirName, subdir.Name);
+                    CopyFolder(subdir.FullName, tempPath, copySubDirs, overwriteExisting);
                 }
             }
         }
@@ -470,7 +470,20 @@ namespace Barotrauma
             foreach (DirectoryInfo di in dir.GetDirectories())
             {
                 ClearFolder(di.FullName, ignoredFileNames);
-                di.Delete();
+                int maxRetries = 4;
+                for (int i = 0; i <= maxRetries; i++)
+                {
+                    try
+                    {
+                        di.Delete();
+                        break;
+                    }
+                    catch (IOException)
+                    {
+                        if (i >= maxRetries) { throw; }
+                        Thread.Sleep(250);
+                    }
+                }
             }
         }
     }

@@ -22,7 +22,7 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
-        [Editable(ToolTip = "How much oxygen the machine generates when operating at full power."), Serialize(100.0f, true)]
+        [Editable, Serialize(400.0f, true, description: "How much oxygen the machine generates when operating at full power.")]
         public float GeneratedAmount
         {
             get { return generatedAmount; }
@@ -62,8 +62,13 @@ namespace Barotrauma.Items.Components
             }
             
             CurrFlow = Math.Min(voltage, 1.0f) * generatedAmount * 100.0f;
+
             //less effective when in bad condition
-            CurrFlow *= MathHelper.Lerp(0.5f, 1.0f, item.Condition / item.MaxCondition);
+            float conditionMult = item.Condition / item.MaxCondition;
+            //100% condition = 100% oxygen
+            //50% condition = 25% oxygen
+            //20% condition = 4%
+            CurrFlow *= conditionMult * conditionMult;
 
             UpdateVents(CurrFlow);
             

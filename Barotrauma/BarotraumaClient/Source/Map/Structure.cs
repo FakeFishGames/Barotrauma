@@ -4,7 +4,6 @@ using Barotrauma.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -12,11 +11,6 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    partial class WallSection
-    {
-        public ConvexHull hull;
-    }
-
     partial class Structure : MapEntity, IDamageable, IServerSerializable
     {
         public static bool ShowWalls = true, ShowStructures = true;        
@@ -30,43 +24,14 @@ namespace Barotrauma
                 return HasBody ? ShowWalls : ShowStructures;;
             }
         }
-
-        // Only for testing in the debug build. Not saved.
-        protected Vector2 textureScale = Vector2.One;
         
-        [Editable(DecimalCount = 3, MinValueFloat = 0.01f, MaxValueFloat = 10f, ValueStep = 0.1f), Serialize("1.0, 1.0", false)]
-        public Vector2 TextureScale
-        {
-            get { return textureScale; }
-            set
-            {
-                textureScale = new Vector2(
-                    MathHelper.Clamp(value.X, 0.01f, 10),
-                    MathHelper.Clamp(value.Y, 0.01f, 10));
-            }
-        }
-
         private string specialTag;
         [Editable, Serialize("", true)]
         public string SpecialTag
         {
             get { return specialTag; }
             set { specialTag = value; }
-        }
-
-        // Only for testing in the debug build. Not saved.
-#if DEBUG
-        [Editable, Serialize(true, false)]
-#endif
-        public bool DrawTiled { get; protected set; } = true;
-        
-        protected Vector2 textureOffset = Vector2.Zero;
-        [Editable(MinValueFloat = -1000f, MaxValueFloat = 1000f, ValueStep = 10f), Serialize("0.0, 0.0", true)]
-        public Vector2 TextureOffset
-        {
-            get { return textureOffset; }
-            set { textureOffset = value; }
-        }
+        }        
 
         partial void InitProjSpecific()
         {
@@ -380,12 +345,23 @@ namespace Barotrauma
             }
         }
 
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
-            for (int i = 0; i < Sections.Length; i++)
+            byte sectionCount = msg.ReadByte();
+            if (sectionCount != Sections.Length)
+            {
+                string errorMsg = $"Error while reading a network event for the structure \"{Name}\". Section count does not match (server: {sectionCount} client: {Sections.Length})";
+                DebugConsole.NewMessage(errorMsg, Color.Red);
+                GameAnalyticsManager.AddErrorEventOnce("Structure.ClientRead:SectionCountMismatch", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+            }
+
+            for (int i = 0; i < sectionCount; i++)
             {
                 float damage = msg.ReadRangedSingle(0.0f, 1.0f, 8) * Health;
-                SetDamage(i, damage);
+                if (i < Sections.Length)
+                {
+                    SetDamage(i, damage);
+                }
             }
         }
     }

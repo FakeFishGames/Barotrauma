@@ -1,4 +1,5 @@
-﻿using Lidgren.Network;
+using Lidgren.Network;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +12,8 @@ namespace Barotrauma.Networking
 
         public string Name;
         public byte ID;
-        
+        public UInt64 SteamID;
+
         public Character.TeamType TeamID;
 
         private Character character;
@@ -37,8 +39,35 @@ namespace Barotrauma.Networking
                     HasSpawned = true;
 #if CLIENT
                     GameMain.GameSession?.CrewManager?.SetPlayerVoiceIconState(this, muted, mutedLocally);
+
+                    if (character == GameMain.Client.Character && GameMain.Client.SpawnAsTraitor)
+                    {
+                        character.IsTraitor = true;
+                        character.TraitorCurrentObjective = GameMain.Client.TraitorFirstObjective;
+                    }
 #endif
                 }
+            }
+        }
+
+        private Vector2 spectate_position;
+        public Vector2? SpectatePos
+        {
+            get
+            {
+                if (character == null || character.IsDead)
+                {
+                    return spectate_position;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+
+            set
+            {
+                spectate_position = value.Value;
             }
         }
 
@@ -157,7 +186,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void WritePermissions(NetBuffer msg)
+        public void WritePermissions(IWriteMessage msg)
         {
             msg.Write(ID);
             msg.Write((UInt16)Permissions);
@@ -170,7 +199,7 @@ namespace Barotrauma.Networking
                 }
             }
         }
-        public static void ReadPermissions(NetBuffer inc, out ClientPermissions permissions, out List<DebugConsole.Command> permittedCommands)
+        public static void ReadPermissions(IReadMessage inc, out ClientPermissions permissions, out List<DebugConsole.Command> permittedCommands)
         {
             UInt16 permissionsInt = inc.ReadUInt16();
 
@@ -199,7 +228,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void ReadPermissions(NetIncomingMessage inc)
+        public void ReadPermissions(IReadMessage inc)
         {
             ClientPermissions permissions = ClientPermissions.None;
             List<DebugConsole.Command> permittedCommands = new List<DebugConsole.Command>();

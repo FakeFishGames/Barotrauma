@@ -152,18 +152,39 @@ namespace Barotrauma
             foreach (string filePath in filePaths)
             {
                 XDocument doc = XMLExtensions.TryLoadXml(filePath);
-                if (doc == null || doc.Root == null) return;
-
-                foreach (XElement el in doc.Root.Elements())
-                {        
-                    StructurePrefab sp = Load(el);
-                    
-                    List.Add(sp);
+                if (doc == null) { return; }
+                var rootElement = doc.Root;
+                if (rootElement.IsOverride())
+                {
+                    foreach (var element in rootElement.Elements())
+                    {
+                        foreach (var childElement in element.Elements())
+                        {
+                            Load(childElement, true);
+                        }
+                    }
+                }
+                else
+                {
+                    foreach (var element in rootElement.Elements())
+                    {
+                        if (element.IsOverride())
+                        {
+                            foreach (var childElement in element.Elements())
+                            {
+                                Load(childElement, true);
+                            }
+                        }
+                        else
+                        {
+                            Load(element, false);
+                        }
+                    }
                 }
             }
         }
         
-        public static StructurePrefab Load(XElement element)
+        public static StructurePrefab Load(XElement element, bool allowOverride)
         {
             StructurePrefab sp = new StructurePrefab
             {
@@ -275,16 +296,10 @@ namespace Barotrauma
                 DebugConsole.ThrowError(
                     "Structure prefab \"" + sp.name + "\" has no identifier. All structure prefabs have a unique identifier string that's used to differentiate between items during saving and loading.");
             }
-            if (!string.IsNullOrEmpty(sp.identifier))
+            if (sp.HandleExisting(sp.Identifier, allowOverride))
             {
-                MapEntityPrefab existingPrefab = List.Find(e => e.Identifier == sp.identifier);
-                if (existingPrefab != null)
-                {
-                    DebugConsole.ThrowError(
-                        "Map entity prefabs \"" + sp.name + "\" and \"" + existingPrefab.Name + "\" have the same identifier!");
-                }
+                List.Add(sp);
             }
-
             return sp;
         }
 
@@ -308,18 +323,24 @@ namespace Barotrauma
                 if (ResizeHorizontal) placeSize.X = position.X - placePosition.X;
                 if (ResizeVertical) placeSize.Y = placePosition.Y - position.Y;
 
-                newRect = Submarine.AbsRect(placePosition, placeSize);
-
-                if (PlayerInput.LeftButtonReleased())
+                //don't allow resizing width/height to less than the grid size
+                if (ResizeHorizontal && Math.Abs(placeSize.X) < Submarine.GridSize.X)
                 {
-                    //don't allow resizing width/height to zero
-                   if ((!ResizeHorizontal || placeSize.X != 0.0f) && (!ResizeVertical || placeSize.Y != 0.0f))
-                    {
-                        newRect.Location -= MathUtils.ToPoint(Submarine.MainSub.Position);
+                    placeSize.X = Submarine.GridSize.X;
+                }
+                if (ResizeVertical && Math.Abs(placeSize.Y) < Submarine.GridSize.Y)
+                {
+                    placeSize.X = Submarine.GridSize.Y;
+                }
 
-                        var structure = new Structure(newRect, this, Submarine.MainSub);
-                        structure.Submarine = Submarine.MainSub;
-                    }
+                newRect = Submarine.AbsRect(placePosition, placeSize);
+                if (PlayerInput.LeftButtonReleased())
+                {                    
+                    newRect.Location -= MathUtils.ToPoint(Submarine.MainSub.Position);
+                    var structure = new Structure(newRect, this, Submarine.MainSub)
+                    {
+                        Submarine = Submarine.MainSub
+                    };                    
 
                     selected = null;
                     return;

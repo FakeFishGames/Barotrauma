@@ -10,6 +10,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
+using LimbParams = Barotrauma.RagdollParams.LimbParams;
+using JointParams = Barotrauma.RagdollParams.JointParams;
 
 namespace Barotrauma
 {
@@ -317,7 +319,7 @@ namespace Barotrauma
             }
             else
             {
-                items = limbs?.ToDictionary(l => l.limbParams, l => l.WearingItems);
+                items = limbs?.ToDictionary(l => l.Params, l => l.WearingItems);
             }
             foreach (var limbParams in RagdollParams.Limbs)
             {
@@ -327,7 +329,7 @@ namespace Barotrauma
                     limbParams.Radius = 10;
                 }
             }
-            foreach (var colliderParams in RagdollParams.ColliderParams)
+            foreach (var colliderParams in RagdollParams.Colliders)
             {
                 if (!PhysicsBody.IsValidShape(colliderParams.Radius, colliderParams.Height, colliderParams.Width))
                 {
@@ -352,11 +354,16 @@ namespace Barotrauma
                     limb.WearingItems.AddRange(itemList);
                 }
             }
-            if (character.SpeciesName.ToLowerInvariant() == "humanhusk")
+
+            if (character.IsHusk)
             {
-                if (Limbs.None(l => l.Name.ToLowerInvariant() == "huskappendage"))
+                if (Character.TryGetConfigFile(character.ConfigPath, out XDocument configFile))
                 {
-                    AfflictionHusk.AttachHuskAppendage(character, this);
+                    var mainElement = configFile.Root.IsOverride() ? configFile.Root.FirstElement() : configFile.Root;
+                    foreach (var huskAppendage in mainElement.GetChildElements("huskappendage"))
+                    {
+                        AfflictionHusk.AttachHuskAppendage(character, huskAppendage.GetAttributeString("affliction", string.Empty), huskAppendage, ragdoll: this);
+                    }
                 }
             }
         }
@@ -376,7 +383,7 @@ namespace Barotrauma
             }
             DebugConsole.Log($"Creating colliders from {RagdollParams.Name}.");
             collider = new List<PhysicsBody>();
-            foreach (ColliderParams cParams in RagdollParams.ColliderParams)
+            foreach (var cParams in RagdollParams.Colliders)
             {
                 if (!PhysicsBody.IsValidShape(cParams.Radius, cParams.Height, cParams.Width))
                 {
@@ -456,38 +463,18 @@ namespace Barotrauma
         /// </summary>
         public void SaveRagdoll(string fileNameWithoutExtension = null)
         {
-            SaveJoints();
-            SaveLimbs();
             RagdollParams.Save(fileNameWithoutExtension);
         }
 
         /// <summary>
         /// Resets the serializable data to the currently selected ragdoll params.
-        /// Force reloading always loads the xml stored in the disk.
+        /// Force reloading always loads the xml stored on the disk.
         /// </summary>
         public void ResetRagdoll(bool forceReload = false)
         {
             RagdollParams.Reset(forceReload);
             ResetJoints();
             ResetLimbs();
-        }
-
-        /// <summary>
-        /// Saves the current joint values to the serializable joint params. This method should properly handle character flipping. 
-        /// NOTE: Currently all the params are handled stored as SubRagdollParams and handled in the RagdollParams Save method. This method does nothing.
-        /// </summary>
-        public void SaveJoints()
-        {
-            LimbJoints.ForEach(j => j.SaveParams());
-        }
-
-        /// <summary>
-        /// Handles custom serialization per limb. Currently only the attacks need to be serialized, since they cannot be stored as SubRagdollParams (because they shouldn't be decoupled with ragdolls).
-        /// Note: Saving to file is not handled by this method. Calling RagdollParams.Save() after this method should work.
-        /// </summary>
-        public void SaveLimbs()
-        {
-            Limbs.ForEach(l => l.attack?.Serialize());
         }
 
         /// <summary>
@@ -1047,11 +1034,16 @@ namespace Barotrauma
 
         protected bool levitatingCollider = true;
 
+        /// <summary>
+        /// How long has the ragdoll stayed motionless
+        /// </summary>
+        private float bodyInRestTimer;
+
         public bool forceStanding;
 
         public void Update(float deltaTime, Camera cam)
         {
-            if (!character.Enabled || Frozen || Invalid) return;
+            if (!character.Enabled || Frozen || Invalid) { return; }
 
             CheckValidity();
 
@@ -1063,6 +1055,8 @@ namespace Barotrauma
 
             FindHull();
             PreventOutsideCollision();
+            
+            CheckBodyInRest(deltaTime);            
 
             splashSoundTimer -= deltaTime;
 
@@ -1245,7 +1239,7 @@ namespace Barotrauma
             rayEnd.Y -= Collider.height * 0.5f + Collider.radius + ColliderHeightFromFloor*1.2f;
 
             Vector2 colliderBottomDisplay = ConvertUnits.ToDisplayUnits(GetColliderBottom());
-            if (!inWater && !character.IsDead && character.Stun <= 0f && levitatingCollider && Collider.LinearVelocity.Y>-ImpactTolerance)
+            if (!inWater && !character.IsDead && character.Stun <= 0f && levitatingCollider && Collider.LinearVelocity.Y > -ImpactTolerance)
             {
                 float closestFraction = 1.0f;
                 Fixture closestFixture = null;
@@ -1315,6 +1309,29 @@ namespace Barotrauma
             UpdateProjSpecific(deltaTime);
         }
 
+        private void CheckBodyInRest(float deltaTime)
+        {
+            if (InWater || Collider.LinearVelocity.LengthSquared() > 0.01f || character.SelectedBy != null || !character.IsDead)
+            {
+                bodyInRestTimer = 0.0f;
+                foreach (Limb limb in Limbs)
+                {
+                    limb.body.PhysEnabled = true;
+                }
+            }
+            else if (Limbs.All(l => l != null && !l.body.Enabled || l.LinearVelocity.LengthSquared() < 0.001f))
+            {
+                bodyInRestTimer += deltaTime;
+                if (bodyInRestTimer > 1.0f)
+                {
+                    foreach (Limb limb in Limbs)
+                    {
+                        limb.body.PhysEnabled = false;
+                    }
+                }
+            }
+        }
+
         public bool Invalid { get; private set; }
         private int validityResets;
         private bool CheckValidity()
@@ -1353,10 +1370,12 @@ namespace Barotrauma
         private bool CheckValidity(PhysicsBody body)
         {
             string errorMsg = null;
-            string bodyName = body.UserData is Limb ? "Limb" : "Collider";
+            string bodyName = body.UserData is Limb limb ?
+                "Limb (" + limb.type + ")" :
+                "Collider";
             if (!MathUtils.IsValid(body.SimPosition) || Math.Abs(body.SimPosition.X) > 1e10f || Math.Abs(body.SimPosition.Y) > 1e10f)
             {
-                errorMsg = bodyName+ " position invalid (" + body.SimPosition + ", character: " + character.Name + "), resetting the ragdoll.";
+                errorMsg = bodyName + " position invalid (" + body.SimPosition + ", character: " + character.Name + "), resetting the ragdoll.";
             }
             else if (!MathUtils.IsValid(body.LinearVelocity) || Math.Abs(body.LinearVelocity.X) > 1000f || Math.Abs(body.LinearVelocity.Y) > 1000f)
             {
@@ -1396,10 +1415,10 @@ namespace Barotrauma
                 {
                     Collider.SetTransform(Vector2.Zero, 0.0f);
                 }
-                foreach (Limb limb in Limbs)
+                foreach (Limb otherLimb in Limbs)
                 {
-                    limb.body.SetTransform(Collider.SimPosition, 0.0f);
-                    limb.body.ResetDynamics();
+                    otherLimb.body.SetTransform(Collider.SimPosition, 0.0f);
+                    otherLimb.body.ResetDynamics();
                 }
                 SetInitialLimbPositions();
                 return false;
@@ -1427,7 +1446,7 @@ namespace Barotrauma
 
             Vector2 rayEnd = rayStart - new Vector2(0.0f, height);
 
-            var lowestLimb = FindLowestLimb();
+            //var lowestLimb = FindLowestLimb();
 
             float closestFraction = 1;
             GameMain.World.RayCast((fixture, point, normal, fraction) =>
@@ -1440,7 +1459,7 @@ namespace Barotrauma
                         break;
                     case Physics.CollisionPlatform:
                         Structure platform = fixture.Body.UserData as Structure;
-                        if (IgnorePlatforms || lowestLimb.Position.Y < platform.Rect.Y) return -1;
+                        if (IgnorePlatforms && TargetMovement.Y < -0.5f || Collider.Position.Y < platform.Rect.Y) return -1;
                         break;
                     case Physics.CollisionWall:
                     case Physics.CollisionLevel:

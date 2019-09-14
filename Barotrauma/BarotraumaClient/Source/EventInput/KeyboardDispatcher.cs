@@ -82,16 +82,5 @@ namespace EventInput
                     value.Selected = true;
             }
         }
-
-#if WINDOWS
-        //Thread has to be in Single Thread Apartment state in order to receive clipboard
-        string _pasteResult = "";
-        [STAThread]
-        void PasteThread()
-        {
-            _pasteResult = Clipboard.ContainsText() ? Clipboard.GetText() : "";
-        }
-#endif
-
     }
 }

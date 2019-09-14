@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Items.Components;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -9,9 +8,6 @@ namespace Barotrauma.Networking
 {
     enum ClientPacketHeader
     {
-        REQUEST_AUTH,   //ask the server if a password is needed, if so we'll get nonce for encryption
-        REQUEST_STEAMAUTH, //the same as REQUEST_AUTH, but in addition we want to authenticate the player's Steam ID
-        REQUEST_INIT,   //ask the server to give you initialization
         UPDATE_LOBBY,   //update state in lobby
         UPDATE_INGAME,  //update state ingame
 
@@ -35,7 +31,8 @@ namespace Barotrauma.Networking
         CHAT_MESSAGE,   //also self-explanatory
         VOTE,           //you get the idea
         CHARACTER_INPUT,
-        ENTITY_STATE
+        ENTITY_STATE,
+        SPECTATING_POS
     }
 
     enum ClientNetError
@@ -63,7 +60,9 @@ namespace Barotrauma.Networking
 
         QUERY_STARTGAME,    //ask the clients whether they're ready to start
         STARTGAME,          //start a new round
-        ENDGAME
+        ENDGAME,
+
+        TRAITOR_MESSAGE
     }
     enum ServerNetObject
     {
@@ -75,6 +74,14 @@ namespace Barotrauma.Networking
         ENTITY_POSITION,
         ENTITY_EVENT,
         ENTITY_EVENT_INITIAL,
+    }
+
+    enum TraitorMessageType
+    {
+        Server,
+        ServerMessageBox,
+        Objective,
+        Console
     }
 
     enum VoteType
@@ -93,6 +100,7 @@ namespace Barotrauma.Networking
         Banned,
         Kicked,
         ServerShutdown,
+        ServerCrashed,
         ServerFull,
         AuthenticationRequired,
         SteamAuthenticationRequired,
@@ -131,13 +139,7 @@ namespace Barotrauma.Networking
 #if DEBUG
         public Dictionary<string, long> messageCount = new Dictionary<string, long>();
 #endif
-
-        public NetPeer NetPeer
-        {
-            get;
-            protected set;
-        }
-
+        
         protected string name;
 
         protected ServerSettings serverSettings;
@@ -153,11 +155,11 @@ namespace Barotrauma.Networking
 
         public bool ShowNetStats;
 
-        public int Port
-        {
-            get;
-            set;
-        }
+#if DEBUG
+        public float SimulatedRandomLatency, SimulatedMinimumLatency;
+        public float SimulatedLoss;
+        public float SimulatedDuplicatesChance;
+#endif
 
         public int TickRate
         {
@@ -168,7 +170,13 @@ namespace Barotrauma.Networking
                 updateInterval = new TimeSpan(0, 0, 0, 0, MathHelper.Clamp(1000 / serverSettings.TickRate, 1, 500));
             }
         }
-        
+
+        public KarmaManager KarmaManager
+        {
+            get;
+            private set;
+        } = new KarmaManager();
+
         public string Name
         {
             get { return name; }
@@ -198,13 +206,7 @@ namespace Barotrauma.Networking
         {
             get { return serverSettings; }
         }
-        
-        public NetPeerConfiguration NetPeerConfiguration
-        {
-            get;
-            protected set;
-        }
-        
+
         public bool CanUseRadio(Character sender)
         {
             if (sender == null) return false;
@@ -214,7 +216,7 @@ namespace Barotrauma.Networking
                        
             var radioComponent = radio.GetComponent<WifiComponent>();
             if (radioComponent == null) return false;
-            return radioComponent.HasRequiredContainedItems(false);
+            return radioComponent.HasRequiredContainedItems(sender, addMessage: false);
         }
 
         public void AddChatMessage(string message, ChatMessageType type, string senderName = "", Character senderCharacter = null)
@@ -241,6 +243,32 @@ namespace Barotrauma.Networking
         public virtual void Update(float deltaTime) { }
 
         public virtual void Disconnect() { }
-    }
 
+        /// <summary>
+        /// Check if the two version are compatible (= if they can play together in multiplayer). 
+        /// Returns null if compatibility could not be determined (invalid/unknown version number).
+        /// </summary>
+        public static bool? IsCompatible(string myVersion, string remoteVersion)
+        {
+            if (string.IsNullOrEmpty(myVersion) || string.IsNullOrEmpty(remoteVersion)) { return null; }
+
+            if (!Version.TryParse(myVersion, out Version myVersionNumber)) { return null; }
+            if (!Version.TryParse(remoteVersion, out Version remoteVersionNumber)) { return null; }
+
+            return IsCompatible(myVersionNumber, remoteVersionNumber);
+        }
+
+        /// <summary>
+        /// Check if the two version are compatible (= if they can play together in multiplayer).
+        /// </summary>
+        public static bool IsCompatible(Version myVersion, Version remoteVersion)
+        {
+            //major.minor.build.revision
+            //revision number is ignored, other values have to match
+            return
+                myVersion.Major == remoteVersion.Major &&
+                myVersion.Minor == remoteVersion.Minor &&
+                myVersion.Build == remoteVersion.Build;
+        }
+    }
 }

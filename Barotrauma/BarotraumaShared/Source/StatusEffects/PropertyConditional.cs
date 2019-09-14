@@ -20,7 +20,8 @@ namespace Barotrauma
             SpeciesName,
             HasTag,
             HasStatusTag,
-            Affliction
+            Affliction,
+            EntityType
         }
 
         public enum Comparison
@@ -161,15 +162,18 @@ namespace Barotrauma
             {
                 case ConditionType.PropertyValue:
                     SerializableProperty property;
+                    if (target?.SerializableProperties == null) { return Operator == OperatorType.NotEquals; }
                     if (target.SerializableProperties.TryGetValue(AttributeName, out property))
                     {
                         return Matches(target, property);
                     }
                     return false;
                 case ConditionType.Name:
+                    if (target == null) { return Operator == OperatorType.NotEquals; }
                     return (Operator == OperatorType.Equals) == (target.Name == valStr);
                 case ConditionType.HasTag:
                     {
+                        if (target == null) { return Operator == OperatorType.NotEquals; }
                         string[] readTags = valStr.Split(',');
                         int matches = 0;
                         foreach (string tag in readTags)
@@ -179,6 +183,8 @@ namespace Barotrauma
                         return Operator == OperatorType.Equals ? matches >= readTags.Length : matches <= 0;
                     }
                 case ConditionType.HasStatusTag:
+                    if (target == null) { return Operator == OperatorType.NotEquals; }
+
                     List<DurationListElement> durations = StatusEffect.DurationList.FindAll(d => d.Targets.Contains(target));
                     List<DelayedListElement> delays = DelayedEffect.DelayList.FindAll(d => d.Targets.Contains(target));
 
@@ -218,10 +224,29 @@ namespace Barotrauma
                     }
                     return success;
                 case ConditionType.SpeciesName:
+                    if (target == null) { return Operator == OperatorType.NotEquals; }
                     Character targetCharacter = target as Character;
-                    if (targetCharacter == null) return false;
+                    if (targetCharacter == null) { return false; }
                     return (Operator == OperatorType.Equals) == (targetCharacter.SpeciesName == valStr);
+                case ConditionType.EntityType:
+                    switch (valStr)
+                    {
+                        case "character":
+                        case "Character":
+                            return (Operator == OperatorType.Equals) == target is Character;
+                        case "item":
+                        case "Item":
+                            return (Operator == OperatorType.Equals) == target is Item;
+                        case "structure":
+                        case "Structure":
+                            return (Operator == OperatorType.Equals) == target is Structure;
+                        case "null":
+                            return (Operator == OperatorType.Equals) == (target == null);
+                        default:
+                            return false;
+                    }
                 case ConditionType.Affliction:
+                    if (target == null) { return Operator == OperatorType.NotEquals; }
                     if (target is Character targetChar)
                     {
                         var health = targetChar.CharacterHealth;
@@ -277,7 +302,7 @@ namespace Barotrauma
                 case OperatorType.Equals:
                     if (type == typeof(bool))
                     {
-                        return ((bool)propertyValue) == (AttributeValue == "true");
+                        return ((bool)propertyValue) == (AttributeValue == "true" || AttributeValue == "True");
                     }
                     else if (FloatValue == null)
                     {
@@ -290,7 +315,7 @@ namespace Barotrauma
                 case OperatorType.NotEquals:
                     if (type == typeof(bool))
                     {
-                        return ((bool)propertyValue) != (AttributeValue == "true");
+                        return ((bool)propertyValue) != (AttributeValue == "true" || AttributeValue == "True");
                     }
                     else if (FloatValue == null)
                     {

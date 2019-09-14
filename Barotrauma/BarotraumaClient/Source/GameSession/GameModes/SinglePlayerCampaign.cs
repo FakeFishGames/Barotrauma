@@ -32,11 +32,11 @@ namespace Barotrauma
                 OnClicked = (btn, userdata) => { TryEndRound(GetLeavingSub()); return true; }
             };
 
-            foreach (JobPrefab jobPrefab in JobPrefab.List)
+            foreach (JobPrefab jobPrefab in JobPrefab.List.Values)
             {
                 for (int i = 0; i < jobPrefab.InitialCount; i++)
                 {
-                    CrewManager.AddCharacterInfo(new CharacterInfo(Character.HumanConfigFile, "", jobPrefab));
+                    CrewManager.AddCharacterInfo(new CharacterInfo(Character.HumanSpeciesName, "", jobPrefab));
                 }
             }
         }
@@ -256,6 +256,18 @@ namespace Barotrauma
                 {
                     if (c.Info == null || c.Inventory == null) { continue; }
                     var inventoryElement = new XElement("inventory");
+
+                    // Recharge headset batteries
+                    var headset = c.Inventory.FindItemByIdentifier("headset");
+                    if (headset != null)
+                    {
+                        var battery = headset.OwnInventory.FindItemByTag("loadable");
+                        if (battery != null)
+                        {
+                            battery.Condition = battery.MaxCondition;
+                        }
+                    }
+
                     c.SaveInventory(c.Inventory, inventoryElement);
                     c.Info.InventoryData = inventoryElement;
                     c.Inventory?.DeleteAllItems();
@@ -283,7 +295,7 @@ namespace Barotrauma
                         {
                             GameMain.GameSession.LoadPrevious();
                             GameMain.LobbyScreen.Select();
-                            GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox);
+                            (GUIMessageBox.VisibleBox as GUIMessageBox)?.Close();
                             return true;
                         }
                     };
@@ -291,7 +303,11 @@ namespace Barotrauma
                     var quitButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonArea.RectTransform),
                         TextManager.Get("QuitButton"));
                     quitButton.OnClicked += GameMain.LobbyScreen.QuitToMainMenu;
-                    quitButton.OnClicked += (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox); return true; };
+                    quitButton.OnClicked += (GUIButton button, object obj) =>
+                    {
+                        (GUIMessageBox.VisibleBox as GUIMessageBox)?.Close();
+                        return true;
+                    };
                 }
             }
 
@@ -407,7 +423,8 @@ namespace Barotrauma
         public override void Save(XElement element)
         {
             XElement modeElement = new XElement("SinglePlayerCampaign",
-                new XAttribute("money", Money),
+                // Refunds the money when save & quitting from the map if there are items selected in the store
+                new XAttribute("money", Money + (CargoManager != null ? CargoManager.GetTotalItemCost() : 0)),
                 new XAttribute("cheatsenabled", CheatsEnabled));
             CrewManager.Save(modeElement);
             Map.Save(modeElement);

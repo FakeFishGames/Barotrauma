@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Lidgren.Network;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System;
 
@@ -171,11 +173,25 @@ namespace Barotrauma
             get { return targetPos; }
             set { targetPos = value; }
         }
+
+        public Vector2 GetPosition()
+        {
+            return position;
+        }
                 
         // Auxiliary function to move the camera
         public void Translate(Vector2 amount)
         {
             position += amount;
+        }
+
+        public void ClientWrite(IWriteMessage msg)
+        {
+            if (Character.Controlled != null && !Character.Controlled.IsDead) { return; }
+
+            msg.Write((byte)ClientNetObject.SPECTATING_POS);
+            msg.Write(position.X);
+            msg.Write(position.Y);
         }
 
         private void CreateMatrices()

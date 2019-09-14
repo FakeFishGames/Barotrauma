@@ -286,7 +286,7 @@ namespace Barotrauma
             var waistJoint = GetJointBetweenLimbs(LimbType.Waist, upperLegType);
             Vector2 localAnchorWaist = Vector2.Zero;
             Vector2 localAnchorKnee = Vector2.Zero;
-            if (shoulder != null)
+            if (waistJoint != null)
             {
                 localAnchorWaist = waistJoint.LimbA.type == upperLegType ? waistJoint.LocalAnchorA : waistJoint.LocalAnchorB;
             }
@@ -298,6 +298,7 @@ namespace Barotrauma
             upperLegLength = Vector2.Distance(localAnchorWaist, localAnchorKnee);
 
             LimbJoint ankleJoint = GetJointBetweenLimbs(lowerLegType, footType);
+            if (ankleJoint == null || kneeJoint == null) { return; }
             lowerLegLength = Vector2.Distance(
                 kneeJoint.LimbA.type == lowerLegType ? kneeJoint.LocalAnchorA : kneeJoint.LocalAnchorB,
                 ankleJoint.LimbA.type == lowerLegType ? ankleJoint.LocalAnchorA : ankleJoint.LocalAnchorB);
@@ -537,14 +538,13 @@ namespace Barotrauma
 
             float limpAmount = 
                 character.CharacterHealth.GetAfflictionStrength("damage", leftFoot, true) +
-                character.CharacterHealth.GetAfflictionStrength("damage", rightFoot, true);
+                character.CharacterHealth.GetAfflictionStrength("damage", rightFoot, true) +
+                character.CharacterHealth.GetAfflictionStrength("spaceherpes");
             limpAmount = MathHelper.Clamp(limpAmount / 100.0f, 0.0f, 1.0f);
 
             float walkCycleMultiplier = 1.0f;
             if (Stairs != null)
             {
-                //TODO: allow editing these values in character editor?
-                bool running = Math.Abs(targetMovement.X) > 2.0f;
                 TargetMovement = new Vector2(MathHelper.Clamp(TargetMovement.X, -1.7f, 1.7f), TargetMovement.Y);                
                 walkCycleMultiplier *= 1.5f;                
             }
@@ -579,7 +579,7 @@ namespace Barotrauma
             if (limpAmount > 0.0f)
             {
                 //make the footpos oscillate when limping
-                footMid += (Math.Max(Math.Abs(walkPosX) * limpAmount, 0.0f) * Math.Min(Math.Abs(TargetMovement.X), 0.3f));
+                footMid += (Math.Max(Math.Abs(walkPosX) * limpAmount, 0.0f) * Math.Min(Math.Abs(TargetMovement.X), 0.3f)) * Dir;
             }
 
             movement = overrideTargetMovement == Vector2.Zero ?
@@ -637,9 +637,15 @@ namespace Barotrauma
             }
             else
             {
-                if (!onGround) movement = Vector2.Zero;
+                if (!onGround)
+                {
+                    movement = Vector2.Zero;
+                }
+                
+                float stepLift = TargetMovement.X == 0.0f ? 0 : 
+                    (float)Math.Sin(WalkPos * CurrentGroundedParams.StepLiftFrequency + MathHelper.Pi * CurrentGroundedParams.StepLiftOffset) * (CurrentGroundedParams.StepLiftAmount / 100);
 
-                float y = colliderPos.Y;
+                float y = colliderPos.Y + stepLift;
                 if (TorsoPosition.HasValue)
                 {
                     y += TorsoPosition.Value;
@@ -648,7 +654,7 @@ namespace Barotrauma
                     MathUtils.SmoothStep(torso.SimPosition,
                     new Vector2(footMid + movement.X * TorsoLeanAmount, y), getUpForce);
 
-                y = colliderPos.Y;
+                y = colliderPos.Y + stepLift * CurrentGroundedParams.StepLiftHeadMultiplier;
                 if (HeadPosition.HasValue)
                 {
                     y += HeadPosition.Value;
@@ -663,7 +669,13 @@ namespace Barotrauma
                 }
             }
 
-            if (TorsoAngle.HasValue) torso.body.SmoothRotate(TorsoAngle.Value * Dir, 50.0f);
+            if (TorsoAngle.HasValue)
+            {
+                float torsoAngle = TorsoAngle.Value;
+                float herpesStrength = character.CharacterHealth.GetAfflictionStrength("spaceherpes");
+                torsoAngle -= herpesStrength / 150.0f;
+                torso.body.SmoothRotate(torsoAngle * Dir, 50.0f);
+            }
             if (HeadAngle.HasValue) head.body.SmoothRotate(HeadAngle.Value * Dir, 50.0f);
 
             if (!onGround)
@@ -689,7 +701,6 @@ namespace Barotrauma
                 for (int i = -1; i < 2; i += 2)
                 {
                     Limb foot = i == -1 ? leftFoot : rightFoot;
-                    Limb leg = i == -1 ? leftLeg : rightLeg;
 
                     Vector2 footPos = stepSize * -i;
                     footPos += new Vector2(Math.Sign(movement.X) * FootMoveOffset.X, FootMoveOffset.Y);
@@ -705,6 +716,15 @@ namespace Barotrauma
                         footPos.Y *= 2.0f;
                     }
                     footPos.Y = Math.Min(waistPos.Y - colliderPos.Y - 0.4f, footPos.Y);
+
+#if CLIENT
+                    if ((i == 1 && Math.Sign(Math.Sin(WalkPos)) > 0 && Math.Sign(walkPosY) < 0) ||
+                        (i == -1 && Math.Sign(Math.Sin(WalkPos)) < 0 && Math.Sign(walkPosY) > 0))
+                    {
+                        PlayImpactSound(foot);
+                    }
+
+#endif
 
                     if (!foot.Disabled)
                     {
@@ -766,7 +786,6 @@ namespace Barotrauma
                     }
 
                     var foot = i == -1 ? rightFoot : leftFoot;
-                    Limb leg = i == -1 ? rightLeg : leftLeg;
 
                     if (!foot.Disabled)
                     {
@@ -796,10 +815,11 @@ namespace Barotrauma
                     //get the elbow to a neutral rotation
                     if (Math.Abs(hand.body.AngularVelocity) < 10.0f)
                     {
-                        LimbJoint elbow =
-                        GetJointBetweenLimbs(armType, hand.type) ??
-                        GetJointBetweenLimbs(armType, foreArmType);
-                        hand.body.ApplyTorque(MathHelper.Clamp(-elbow.JointAngle, -MathHelper.PiOver2, MathHelper.PiOver2) * hand.Mass * 10.0f);
+                        LimbJoint elbow = GetJointBetweenLimbs(armType, hand.type) ?? GetJointBetweenLimbs(armType, foreArmType);
+                        if (elbow != null)
+                        {
+                            hand.body.ApplyTorque(MathHelper.Clamp(-elbow.JointAngle, -MathHelper.PiOver2, MathHelper.PiOver2) * hand.Mass * 10.0f);
+                        }
                     }
                 }
             }
@@ -1101,7 +1121,7 @@ namespace Barotrauma
             //prevent the hands from going above the top of the ladders
             handPos.Y = Math.Min(-0.5f, handPos.Y);
 
-            if (!PlayerInput.KeyDown(InputType.Aim) || Math.Abs(movement.Y) > 0.01f)
+            if (!character.IsKeyDown(InputType.Aim) || Math.Abs(movement.Y) > 0.01f)
             {
                 MoveLimb(leftHand,
                     new Vector2(handPos.X,
@@ -1285,7 +1305,8 @@ namespace Barotrauma
 
             Vector2 colliderPos = GetColliderBottom();
 
-            bool wasCritical = target.Vitality < 0.0f;
+            float prevVitality = target.Vitality;
+            bool wasCritical = prevVitality < 0.0f;
             
             if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient) //Serverside code
             {
@@ -1344,7 +1365,7 @@ namespace Barotrauma
                                 AfflictionPrefab.InternalDamage.Instantiate((CPRSettings.DamageSkillThreshold - skill) * CPRSettings.DamageSkillMultiplier,
                                 source: character)
                             },
-                            0.0f, true, 0.0f, character);
+                            0.0f, true, 0.0f, attacker: null);
                     }
                     if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient) //Serverside code
                     {
@@ -1376,9 +1397,12 @@ namespace Barotrauma
                     character.Info.IncreaseSkillLevel("medical", 0.5f, character.WorldPosition + Vector2.UnitY * 150.0f);
                     SteamAchievementManager.OnCharacterRevived(target, character);
                     lastReviveTime = (float)Timing.TotalTime;
+#if SERVER
+                    GameMain.Server?.KarmaManager?.OnCharacterHealthChanged(target, character, damage: Math.Min(prevVitality - target.Vitality, 0.0f));
+#endif
                     //reset attacker, we don't want the character to start attacking us
                     //because we caused a bit of damage to them during CPR
-                    if (target.LastAttacker == character) target.LastAttacker = null;
+                    if (target.LastAttacker == character) { target.LastAttacker = null; }
                 }
             }
         }
@@ -1831,7 +1855,11 @@ namespace Barotrauma
             }
             var torso = GetLimb(LimbType.Torso);
             var waist = GetJointBetweenLimbs(LimbType.Waist, upperLeg.type);
-            Vector2 waistPos = waist.LimbA == upperLeg ? waist.WorldAnchorA : waist.WorldAnchorB;
+            Vector2 waistPos = Vector2.Zero;
+            if (waist != null)
+            {
+                waistPos = waist.LimbA == upperLeg ? waist.WorldAnchorA : waist.WorldAnchorB;
+            }
 
             //distance from waist joint to the target position
             float c = Vector2.Distance(pos, waistPos);

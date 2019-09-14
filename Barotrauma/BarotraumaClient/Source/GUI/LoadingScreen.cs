@@ -178,25 +178,27 @@ namespace Barotrauma
             }
             else if (DrawLoadingText)
             {
-                string loadText = "";
-                if (LoadState == 100.0f)
+                if (TextManager.Initialized)
                 {
-                    loadText = TextManager.Get("PressAnyKey");
-                }
-                else
-                {
-                    loadText = TextManager.Get("Loading");
-                    if (LoadState != null)
+                    string loadText;
+                    if (LoadState == 100.0f)
                     {
-                        loadText += " " + (int)LoadState + " %";
+                        loadText = TextManager.Get("PressAnyKey");
                     }
-                }
-
-                if (GUI.LargeFont != null)
-                {
-                    GUI.LargeFont.DrawString(spriteBatch, loadText.ToUpper(),
-                        new Vector2(GameMain.GraphicsWidth / 2.0f - GUI.LargeFont.MeasureString(loadText).X / 2.0f, GameMain.GraphicsHeight * 0.7f),
-                        Color.White);
+                    else
+                    {
+                        loadText = TextManager.Get("Loading");
+                        if (LoadState != null)
+                        {
+                            loadText += " " + (int)LoadState + " %";
+                        }
+                    }
+                    if (GUI.LargeFont != null)
+                    {
+                        GUI.LargeFont.DrawString(spriteBatch, loadText.ToUpper(),
+                            new Vector2(GameMain.GraphicsWidth / 2.0f - GUI.LargeFont.MeasureString(loadText).X / 2.0f, GameMain.GraphicsHeight * 0.7f),
+                            Color.White);
+                    }
                 }
 
                 if (GUI.Font != null && selectedTip != null)
@@ -295,7 +297,7 @@ namespace Barotrauma
                 spriteBatch.Draw(currSplashScreen.GetTexture(), new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
                 spriteBatch.End();
 
-                if (PlayerInput.KeyHit(Keys.Space) || PlayerInput.KeyHit(Keys.Enter) || PlayerInput.LeftButtonDown())
+                if (GameMain.WindowActive && (PlayerInput.KeyHit(Keys.Space) || PlayerInput.KeyHit(Keys.Enter) || PlayerInput.LeftButtonDown()))
                 {
                     currSplashScreen.Dispose(); currSplashScreen = null;
                 }

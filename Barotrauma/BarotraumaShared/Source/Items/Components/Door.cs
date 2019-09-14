@@ -22,7 +22,6 @@ namespace Barotrauma.Items.Components
         private float openState;
         private Sprite doorSprite, weldedSprite, brokenSprite;
         private bool scaleBrokenSprite, fadeBrokenSprite;
-        private bool createdNewGap;
         private bool autoOrientGap;
 
         private bool isStuck;
@@ -59,19 +58,27 @@ namespace Barotrauma.Items.Components
             get { return item.GetComponent<Repairable>()?.ShowRepairUIThreshold ?? 0.0f; }
         }
 
+        public bool CanBeWelded = true;
+
         private float stuck;
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false, description: "How badly stuck the door is (in percentages). If the percentage reaches 100, the door needs to be cut open to make it usable again.")]
         public float Stuck
         {
             get { return stuck; }
             set 
             {
-                if (isOpen || isBroken) return;
+                if (isOpen || isBroken || !CanBeWelded) return;
                 stuck = MathHelper.Clamp(value, 0.0f, 100.0f);
                 if (stuck <= 0.0f) isStuck = false;
                 if (stuck >= 100.0f) isStuck = true;
             }
         }
+
+        [Serialize(3.0f, true, description: "How quickly the door opens."), Editable]
+        public float OpeningSpeed { get; private set; }
+
+        [Serialize(3.0f, true, description: "How quickly the door closes."), Editable]
+        public float ClosingSpeed { get; private set; }
 
         public bool? PredictedState { get; private set; }
 
@@ -79,17 +86,19 @@ namespace Barotrauma.Items.Components
         {
             get
             {
-                if (linkedGap != null) return linkedGap;
-
-                foreach (MapEntity e in item.linkedTo)
+                if (linkedGap == null)
                 {
-                    linkedGap = e as Gap;
-                    if (linkedGap != null)
-                    {
-                        linkedGap.PassAmbientLight = Window != Rectangle.Empty;
-                        return linkedGap;
-                    }
+                    GetLinkedGap();
                 }
+                return linkedGap;
+            }
+        }
+
+        private void GetLinkedGap()
+        {
+            linkedGap = item.linkedTo.FirstOrDefault(e => e is Gap) as Gap;
+            if (linkedGap == null)
+            {
                 Rectangle rect = item.Rect;
                 if (IsHorizontal)
                 {
@@ -101,25 +110,21 @@ namespace Barotrauma.Items.Components
                     rect.X -= 5;
                     rect.Width += 10;
                 }
-
                 linkedGap = new Gap(rect, !IsHorizontal, Item.Submarine)
                 {
-                    Submarine = item.Submarine,
-                    PassAmbientLight = Window != Rectangle.Empty,
-                    Open = openState
+                    Submarine = item.Submarine
                 };
                 item.linkedTo.Add(linkedGap);
-                createdNewGap = true;
-                return linkedGap;
             }
+            RefreshLinkedGap();
         }
 
         public bool IsHorizontal { get; private set; }
 
-        [Serialize("0.0,0.0,0.0,0.0", false)]
+        [Serialize("0.0,0.0,0.0,0.0", false, description: "Position and size of the window on the door. The upper left corner is 0,0. Set the width and height to 0 if you don't want the door to have a window.")]
         public Rectangle Window { get; set; }
 
-        [Editable, Serialize(false, true)]
+        [Editable, Serialize(false, true, description: "Is the door currently open.")]
         public bool IsOpen
         {
             get { return isOpen; }
@@ -130,7 +135,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "If the door has integrated buttons, it can be opened by interacting with it directly (instead of using buttons wired to it).")]
         public bool HasIntegratedButtons { get; private set; }
                 
         public float OpenState
@@ -148,20 +153,20 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Characters and items cannot pass through impassable doors. Useful for things such as ducts that should only let water and air through.")]
         public bool Impassable
         {
             get;
             set;
         }
-
+        
         public Door(Item item, XElement element)
             : base(item, element)
         {
             IsHorizontal = element.GetAttributeBool("horizontal", false);
             canBePicked = element.GetAttributeBool("canbepicked", false);
             autoOrientGap = element.GetAttributeBool("autoorientgap", false);
-
+            
             foreach (XElement subElement in element.Elements())
             {
                 string texturePath = subElement.GetAttributeString("texture", "");
@@ -245,17 +250,14 @@ namespace Barotrauma.Items.Components
             if (item.Condition <= RepairThreshold) { return true; }
             if (requiredItems.Any() && !hasValidIdCard)
             {
-                ForceOpen(ActionType.OnPicked);
+                ToggleState(ActionType.OnPicked);
             }
             return false;
         }
 
-        private void ForceOpen(ActionType actionType)
+        private void ToggleState(ActionType actionType)
         {
-            SetState(PredictedState == null ? !isOpen : !PredictedState.Value, false, true); //crowbar function
-#if CLIENT
-            PlaySound(actionType, item.WorldPosition, picker);
-#endif
+            SetState(PredictedState == null ? !isOpen : !PredictedState.Value, false, true, forcedOpen: actionType == ActionType.OnPicked);
         }
 
         public override bool Select(Character character)
@@ -267,7 +269,7 @@ namespace Barotrauma.Items.Components
                 {
                     float originalPickingTime = PickingTime;
                     PickingTime = 0;
-                    ForceOpen(ActionType.OnUse);
+                    ToggleState(ActionType.OnUse);
                     PickingTime = originalPickingTime;
                 }
                 else if (hasRequiredItems)
@@ -297,12 +299,12 @@ namespace Barotrauma.Items.Components
             {
                 if (PredictedState == null)
                 {
-                    OpenState += deltaTime * (isOpen ? 2.0f : -2.0f);
+                    OpenState += deltaTime * (isOpen ? OpeningSpeed : -ClosingSpeed);
                     isClosing = openState > 0.0f && openState < 1.0f && !isOpen;
                 }
                 else
                 {
-                    OpenState += deltaTime * ((bool)PredictedState ? 2.0f : -2.0f);
+                    OpenState += deltaTime * ((bool)PredictedState ? OpeningSpeed : -ClosingSpeed);
                     isClosing = openState > 0.0f && openState < 1.0f && !(bool)PredictedState;
 
                     resetPredictionTimer -= deltaTime;
@@ -311,8 +313,7 @@ namespace Barotrauma.Items.Components
                         PredictedState = null;
                     }
                 }
-
-                LinkedGap.Open = openState;
+                LinkedGap.Open = isBroken ? 1.0f : openState;
             }
             
             if (isClosing)
@@ -362,12 +363,20 @@ namespace Barotrauma.Items.Components
 #endif
         }
 
-        public override void OnMapLoaded()
+        public void RefreshLinkedGap()
         {
             LinkedGap.ConnectedDoor = this;
-            LinkedGap.Open = openState;
-            if (createdNewGap && autoOrientGap) linkedGap.AutoOrient();
+            if (autoOrientGap)
+            {
+                LinkedGap.AutoOrient();
+            }
+            LinkedGap.Open = isBroken ? 1.0f : openState;
+            LinkedGap.PassAmbientLight = Window != Rectangle.Empty;
+        }
 
+        public override void OnMapLoaded()
+        {
+            RefreshLinkedGap();
 #if CLIENT
             Vector2[] corners = GetConvexHullCorners(Rectangle.Empty);
 
@@ -376,6 +385,18 @@ namespace Barotrauma.Items.Components
 
             UpdateConvexHulls();
 #endif
+        }
+
+        public override void OnScaleChanged()
+        {
+#if CLIENT
+            UpdateConvexHulls();
+#endif
+            if (linkedGap != null)
+            {
+                RefreshLinkedGap();
+                linkedGap.Rect = item.Rect;
+            }
         }
 
         protected override void RemoveComponentSpecific()
@@ -513,11 +534,11 @@ namespace Barotrauma.Items.Components
 
             if (connection.Name == "toggle")
             {
-                SetState(!wasOpen, false, true);
+                SetState(!wasOpen, false, true, forcedOpen: false);
             }
             else if (connection.Name == "set_state")
             {
-                SetState(signal != "0", false, true);
+                SetState(signal != "0", false, true, forcedOpen: false);
             }
 
 #if SERVER
@@ -530,9 +551,9 @@ namespace Barotrauma.Items.Components
 
         public void TrySetState(bool open, bool isNetworkMessage, bool sendNetworkMessage = false)
         {
-            SetState(open, isNetworkMessage, sendNetworkMessage);
+            SetState(open, isNetworkMessage, sendNetworkMessage, forcedOpen: false);
         }
 
-        partial void SetState(bool open, bool isNetworkMessage, bool sendNetworkMessage);
+        partial void SetState(bool open, bool isNetworkMessage, bool sendNetworkMessage, bool forcedOpen);
     }
 }

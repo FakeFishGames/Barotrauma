@@ -1,28 +1,29 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Alien Artifact" identifier="skyholderartifact" category="Alien" Tags="alien" sonarsize="30" scale="0.2" impactsoundtag="impact_metal_heavy">
-    <Sprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.6" sourcerect="0,0,167,168" origin="0.5,0.5" />
+  <Item name="Alien Artifact" identifier="skyholderartifact" category="Alien" Tags="alien" sonarsize="30" scale="0.5" impactsoundtag="impact_metal_heavy">
+    <Upgrade gameversion="0.9.3.1" scale="0.5"/>
+    <Sprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.6" sourcerect="0,0,68,69" origin="0.5,0.5" />
     <!-- central piece -->
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="0,0,167,168" origin="0.5,0.5" randomgroupid="1" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="0,173,170,248" origin="0.5,0.5" randomgroupid="1" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="174,8,164,238" origin="0.5,0.5" randomgroupid="1" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="174,260,247,248" origin="0.5,0.0" randomgroupid="1" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="0,0,68,69" origin="0.5,0.5" randomgroupid="1" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="0,69,68,99" origin="0.5,0.5" randomgroupid="1" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="69,2,67,99" origin="0.5,0.5" randomgroupid="1" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="70,101,98,102" origin="0.5,0.0" randomgroupid="1" />
     <!-- right piece-->
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.51" sourcerect="339,0,175,258" offset="30,0" origin="0.5,0.5" randomgroupid="2" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.51" sourcerect="0,0,167,168" offset="30,0" origin="0.5,0.5" randomgroupid="2" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.51" sourcerect="134,0,70,102" offset="30,0" origin="0.5,0.5" randomgroupid="2" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.51" sourcerect="0,0,68,69" offset="30,0" origin="0.5,0.5" randomgroupid="2" />
     <DecorativeSprite randomgroupid="2" />
     <!-- left piece-->
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.52" sourcerect="339,0,175,258" offset="-30,0" origin="0.5,0.5" randomgroupid="3" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.52" sourcerect="134,0,70,102" offset="-30,0" origin="0.5,0.5" randomgroupid="3" />
     <DecorativeSprite randomgroupid="3" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.52" sourcerect="0,0,167,168" offset="-30,0" origin="0.5,0.5" randomgroupid="3" rotationspeed="10" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.52" sourcerect="0,173,170,248" offset="-30,0" origin="0.5,0.5" randomgroupid="3" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.52" sourcerect="0,0,68,69" offset="-30,0" origin="0.5,0.5" randomgroupid="3" rotationspeed="10" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.52" sourcerect="0,69,68,99" offset="-30,0" origin="0.5,0.5" randomgroupid="3" />
     <!-- bottom piece-->
     <DecorativeSprite randomgroupid="4" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.53" sourcerect="339,0,175,258" offset="0,-30" origin="0.5,0.5" randomgroupid="4" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.53" sourcerect="0,0,167,168" offset="0,-30" origin="0.5,0.5" randomgroupid="4" rotationspeed="10" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.53" sourcerect="134,0,70,102" offset="0,-30" origin="0.5,0.5" randomgroupid="4" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.53" sourcerect="0,0,68,69" offset="0,-30" origin="0.5,0.5" randomgroupid="4" rotationspeed="10" />
     <!-- top piece-->
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.54" sourcerect="339,0,175,258" offset="0,30" origin="0.5,0.5" randomgroupid="5" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.54" sourcerect="0,0,167,168" offset="0,30" origin="0.5,0.5" randomgroupid="5" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.54" sourcerect="134,0,70,102" offset="0,30" origin="0.5,0.5" randomgroupid="5" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.54" sourcerect="0,0,68,69" offset="0,30" origin="0.5,0.5" randomgroupid="5" />
     <DecorativeSprite randomgroupid="5" />
     <Deconstruct time="30">
       <Item identifier="steel" />
@@ -30,34 +31,35 @@
       <Item identifier="oxygeniteshard" />
       <Item identifier="oxygeniteshard" />
     </Deconstruct>
-    <Body width="200" height="200" density="50" friction="0.95" />
+    <Body radius="45" density="50" friction="0.95" />
     <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10" msg="ItemMsgPickUpSelect">
       <StatusEffect type="Always" target="Hull" oxygen="-50000.0" />
     </Holdable>
   </Item>
-  <Item name="Alien Artifact" identifier="thermalartifact" category="Alien" Tags="alien" sonarsize="30" scale="0.2" impactsoundtag="impact_metal_heavy">
-    <Sprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.6" sourcerect="0,0,167,168" origin="0.5,0.5" />
+  <Item name="Alien Artifact" identifier="thermalartifact" category="Alien" Tags="alien" sonarsize="30" scale="0.5" impactsoundtag="impact_metal_heavy">
+    <Upgrade gameversion="0.9.3.1" scale="0.5"/>
+    <Sprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.6" sourcerect="0,0,68,69" origin="0.5,0.5" />
     <!-- central piece -->
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="0,0,167,168" origin="0.5,0.5" randomgroupid="1" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="0,173,170,248" origin="0.5,0.5" randomgroupid="1" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="174,8,164,238" origin="0.5,0.5" randomgroupid="1" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="174,260,247,248" origin="0.5,0.0" randomgroupid="1" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="0,0,68,69" origin="0.5,0.5" randomgroupid="1" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="0,69,68,99" origin="0.5,0.5" randomgroupid="1" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="69,2,67,99" origin="0.5,0.5" randomgroupid="1" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="70,101,98,102" origin="0.5,0.0" randomgroupid="1" />
     <!-- right piece-->
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.51" sourcerect="339,0,175,258" offset="30,0" origin="0.5,0.5" randomgroupid="2" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.51" sourcerect="0,0,167,168" offset="30,0" origin="0.5,0.5" randomgroupid="2" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.51" sourcerect="134,0,70,102" offset="30,0" origin="0.5,0.5" randomgroupid="2" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.51" sourcerect="0,0,68,69" offset="30,0" origin="0.5,0.5" randomgroupid="2" />
     <DecorativeSprite randomgroupid="2" />
     <!-- left piece-->
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.52" sourcerect="339,0,175,258" offset="-30,0" origin="0.5,0.5" randomgroupid="3" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.52" sourcerect="134,0,70,102" offset="-30,0" origin="0.5,0.5" randomgroupid="3" />
     <DecorativeSprite randomgroupid="3" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.52" sourcerect="0,0,167,168" offset="-30,0" origin="0.5,0.5" randomgroupid="3" rotationspeed="10" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.52" sourcerect="0,173,170,248" offset="-30,0" origin="0.5,0.5" randomgroupid="3" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.52" sourcerect="0,0,68,69" offset="-30,0" origin="0.5,0.5" randomgroupid="3" rotationspeed="10" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.52" sourcerect="0,69,68,99" offset="-30,0" origin="0.5,0.5" randomgroupid="3" />
     <!-- bottom piece-->
     <DecorativeSprite randomgroupid="4" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.53" sourcerect="339,0,175,258" offset="0,-30" origin="0.5,0.5" randomgroupid="4" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.53" sourcerect="0,0,167,168" offset="0,-30" origin="0.5,0.5" randomgroupid="4" rotationspeed="10" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.53" sourcerect="134,0,70,102" offset="0,-30" origin="0.5,0.5" randomgroupid="4" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.53" sourcerect="0,0,68,69" offset="0,-30" origin="0.5,0.5" randomgroupid="4" rotationspeed="10" />
     <!-- top piece-->
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.54" sourcerect="339,0,175,258" offset="0,30" origin="0.5,0.5" randomgroupid="5" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.54" sourcerect="0,0,167,168" offset="0,30" origin="0.5,0.5" randomgroupid="5" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.54" sourcerect="134,0,70,102" offset="0,30" origin="0.5,0.5" randomgroupid="5" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.54" sourcerect="0,0,68,69" offset="0,30" origin="0.5,0.5" randomgroupid="5" />
     <DecorativeSprite randomgroupid="5" />
     <Deconstruct time="30">
       <Item identifier="steel" />
@@ -65,36 +67,37 @@
       <Item identifier="incendium" />
       <Item identifier="incendium" />
     </Deconstruct>
-    <Body radius="28" density="50" friction="0.95" />
+    <Body radius="45" density="50" friction="0.95" />
     <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10" msg="ItemMsgPickUpSelect">
       <StatusEffect type="Always">
         <Fire />
       </StatusEffect>
     </Holdable>
   </Item>
-  <Item name="Alien Artifact" identifier="faradayartifact" category="Alien" Tags="alien" sonarsize="30" scale="0.2" impactsoundtag="impact_metal_heavy">
-    <Sprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.6" sourcerect="0,0,167,168" origin="0.5,0.5" />
+  <Item name="Alien Artifact" identifier="faradayartifact" category="Alien" Tags="alien" sonarsize="30" scale="0.5" impactsoundtag="impact_metal_heavy">
+    <Upgrade gameversion="0.9.3.1" scale="0.5"/>
+    <Sprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.6" sourcerect="0,0,68,69" origin="0.5,0.5" />
     <!-- central piece -->
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="0,0,167,168" origin="0.5,0.5" randomgroupid="1" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="0,173,170,248" origin="0.5,0.5" randomgroupid="1" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="174,8,164,238" origin="0.5,0.5" randomgroupid="1" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="174,260,247,248" origin="0.5,0.0" randomgroupid="1" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="0,0,68,69" origin="0.5,0.5" randomgroupid="1" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="0,69,68,99" origin="0.5,0.5" randomgroupid="1" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="69,2,67,99" origin="0.5,0.5" randomgroupid="1" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="70,101,98,102" origin="0.5,0.0" randomgroupid="1" />
     <!-- right piece-->
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.51" sourcerect="339,0,175,258" offset="30,0" origin="0.5,0.5" randomgroupid="2" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.51" sourcerect="0,0,167,168" offset="30,0" origin="0.5,0.5" randomgroupid="2" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.51" sourcerect="134,0,70,102" offset="30,0" origin="0.5,0.5" randomgroupid="2" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.51" sourcerect="0,0,68,69" offset="30,0" origin="0.5,0.5" randomgroupid="2" />
     <DecorativeSprite randomgroupid="2" />
     <!-- left piece-->
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.52" sourcerect="339,0,175,258" offset="-30,0" origin="0.5,0.5" randomgroupid="3" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.52" sourcerect="134,0,70,102" offset="-30,0" origin="0.5,0.5" randomgroupid="3" />
     <DecorativeSprite randomgroupid="3" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.52" sourcerect="0,0,167,168" offset="-30,0" origin="0.5,0.5" randomgroupid="3" rotationspeed="10" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.52" sourcerect="0,173,170,248" offset="-30,0" origin="0.5,0.5" randomgroupid="3" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.52" sourcerect="0,0,68,69" offset="-30,0" origin="0.5,0.5" randomgroupid="3" rotationspeed="10" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.52" sourcerect="0,69,68,99" offset="-30,0" origin="0.5,0.5" randomgroupid="3" />
     <!-- bottom piece-->
     <DecorativeSprite randomgroupid="4" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.53" sourcerect="339,0,175,258" offset="0,-30" origin="0.5,0.5" randomgroupid="4" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.53" sourcerect="0,0,167,168" offset="0,-30" origin="0.5,0.5" randomgroupid="4" rotationspeed="10" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.53" sourcerect="134,0,70,102" offset="0,-30" origin="0.5,0.5" randomgroupid="4" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.53" sourcerect="0,0,68,69" offset="0,-30" origin="0.5,0.5" randomgroupid="4" rotationspeed="10" />
     <!-- top piece-->
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.54" sourcerect="339,0,175,258" offset="0,30" origin="0.5,0.5" randomgroupid="5" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.54" sourcerect="0,0,167,168" offset="0,30" origin="0.5,0.5" randomgroupid="5" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.54" sourcerect="134,0,70,102" offset="0,30" origin="0.5,0.5" randomgroupid="5" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.54" sourcerect="0,0,68,69" offset="0,30" origin="0.5,0.5" randomgroupid="5" />
     <DecorativeSprite randomgroupid="5" />
     <Deconstruct time="30">
       <Item identifier="steel" />
@@ -102,39 +105,40 @@
       <Item identifier="fulgurium" />
       <Item identifier="fulgurium" />
     </Deconstruct>
-    <Body radius="25" density="50" friction="0.95" />
+    <Body radius="45" density="50" friction="0.95" />
     <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10" msg="ItemMsgPickUpSelect">
       <!-- EMP explosion every 10 seconds -->
-      <StatusEffect type="Always" target="This" Condition="0" delay="10" stackable="false" setvalue="true"/>
+      <StatusEffect type="Always" target="This" Condition="0" delay="10" stackable="false" setvalue="true" />
       <StatusEffect type="OnBroken" target="This" Condition="100">
         <Explosion range="200.0" empstrength="5" camerashake="0" stun="0" force="2.0" flames="false" smoke="false" shockwave="false" sparks="true" underwaterbubble="false" />
         <ParticleEmitter particle="artifactspark" anglemin="0" anglemax="360" particleamount="20" velocitymin="100" velocitymax="500" />
       </StatusEffect>
     </Holdable>
   </Item>
-  <Item name="Alien Artifact" identifier="nasonovartifact" category="Alien" Tags="alien,nasonov" pickdistance="150" indestructible="true" sonarsize="30" scale="0.2" impactsoundtag="impact_metal_heavy">
-    <Sprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.6" sourcerect="0,0,167,168" origin="0.5,0.5" />
+  <Item name="Alien Artifact" identifier="nasonovartifact" category="Alien" Tags="alien,nasonov" pickdistance="150" indestructible="true" sonarsize="30" scale="0.5" impactsoundtag="impact_metal_heavy">
+    <Upgrade gameversion="0.9.3.1" scale="0.5"/>
+    <Sprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.6" sourcerect="0,0,68,69" origin="0.5,0.5" />
     <!-- central piece -->
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="0,0,167,168" origin="0.5,0.5" randomgroupid="1" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="0,173,170,248" origin="0.5,0.5" randomgroupid="1" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="174,8,164,238" origin="0.5,0.5" randomgroupid="1" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="174,260,247,248" origin="0.5,0.0" randomgroupid="1" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="0,0,68,69" origin="0.5,0.5" randomgroupid="1" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="0,69,68,99" origin="0.5,0.5" randomgroupid="1" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="69,2,67,99" origin="0.5,0.5" randomgroupid="1" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="70,101,98,102" origin="0.5,0.0" randomgroupid="1" />
     <!-- right piece-->
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.51" sourcerect="339,0,175,258" offset="30,0" origin="0.5,0.5" randomgroupid="2" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.51" sourcerect="0,0,167,168" offset="30,0" origin="0.5,0.5" randomgroupid="2" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.51" sourcerect="134,0,70,102" offset="30,0" origin="0.5,0.5" randomgroupid="2" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.51" sourcerect="0,0,68,69" offset="30,0" origin="0.5,0.5" randomgroupid="2" />
     <DecorativeSprite randomgroupid="2" />
     <!-- left piece-->
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.52" sourcerect="339,0,175,258" offset="-30,0" origin="0.5,0.5" randomgroupid="3" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.52" sourcerect="134,0,70,102" offset="-30,0" origin="0.5,0.5" randomgroupid="3" />
     <DecorativeSprite randomgroupid="3" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.52" sourcerect="0,0,167,168" offset="-30,0" origin="0.5,0.5" randomgroupid="3" rotationspeed="10" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.52" sourcerect="0,173,170,248" offset="-30,0" origin="0.5,0.5" randomgroupid="3" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.52" sourcerect="0,0,68,69" offset="-30,0" origin="0.5,0.5" randomgroupid="3" rotationspeed="10" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.52" sourcerect="0,69,68,99" offset="-30,0" origin="0.5,0.5" randomgroupid="3" />
     <!-- bottom piece-->
     <DecorativeSprite randomgroupid="4" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.53" sourcerect="339,0,175,258" offset="0,-30" origin="0.5,0.5" randomgroupid="4" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.53" sourcerect="0,0,167,168" offset="0,-30" origin="0.5,0.5" randomgroupid="4" rotationspeed="10" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.53" sourcerect="134,0,70,102" offset="0,-30" origin="0.5,0.5" randomgroupid="4" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.53" sourcerect="0,0,68,69" offset="0,-30" origin="0.5,0.5" randomgroupid="4" rotationspeed="10" />
     <!-- top piece-->
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.54" sourcerect="339,0,175,258" offset="0,30" origin="0.5,0.5" randomgroupid="5" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.54" sourcerect="0,0,167,168" offset="0,30" origin="0.5,0.5" randomgroupid="5" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.54" sourcerect="134,0,70,102" offset="0,30" origin="0.5,0.5" randomgroupid="5" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.54" sourcerect="0,0,68,69" offset="0,30" origin="0.5,0.5" randomgroupid="5" />
     <DecorativeSprite randomgroupid="5" />
     <Deconstruct time="30">
       <Item identifier="steel" />
@@ -143,32 +147,33 @@
       <Item identifier="physicorium" />
     </Deconstruct>
     <AiTarget sightrange="10000.0" soundrange="10000" />
-    <Body width="55" height="55" density="50" friction="0.95" />
-    <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10" msg="ItemMsgPickUpSelect"/>
+    <Body radius="45" density="50" friction="0.95" />
+    <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10" msg="ItemMsgPickUpSelect" />
   </Item>
-  <Item name="Alien Artifact" identifier="psychosisartifact" category="Alien" Tags="alien" sonarsize="30" spritecolor="200,200,200,255" scale="0.2" impactsoundtag="impact_metal_heavy">
-    <Sprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.6" sourcerect="0,0,167,168" origin="0.5,0.5" />
+  <Item name="Alien Artifact" identifier="psychosisartifact" category="Alien" Tags="alien" sonarsize="30" spritecolor="200,200,200,255" scale="0.5" impactsoundtag="impact_metal_heavy">
+    <Upgrade gameversion="0.9.3.1" scale="0.5"/>
+    <Sprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.6" sourcerect="0,0,68,69" origin="0.5,0.5" />
     <!-- central piece -->
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="0,0,167,168" origin="0.5,0.5" randomgroupid="1" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="0,173,170,248" origin="0.5,0.5" randomgroupid="1" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="174,8,164,238" origin="0.5,0.5" randomgroupid="1" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="174,260,247,248" origin="0.5,0.0" randomgroupid="1" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="0,0,68,69" origin="0.5,0.5" randomgroupid="1" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="0,69,68,99" origin="0.5,0.5" randomgroupid="1" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="69,2,67,99" origin="0.5,0.5" randomgroupid="1" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="70,101,98,102" origin="0.5,0.0" randomgroupid="1" />
     <!-- right piece-->
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.51" sourcerect="339,0,175,258" offset="30,0" origin="0.5,0.5" randomgroupid="2" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.51" sourcerect="0,0,167,168" offset="30,0" origin="0.5,0.5" randomgroupid="2" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.51" sourcerect="134,0,70,102" offset="30,0" origin="0.5,0.5" randomgroupid="2" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.51" sourcerect="0,0,68,69" offset="30,0" origin="0.5,0.5" randomgroupid="2" />
     <DecorativeSprite randomgroupid="2" />
     <!-- left piece-->
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.52" sourcerect="339,0,175,258" offset="-30,0" origin="0.5,0.5" randomgroupid="3" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.52" sourcerect="134,0,70,102" offset="-30,0" origin="0.5,0.5" randomgroupid="3" />
     <DecorativeSprite randomgroupid="3" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.52" sourcerect="0,0,167,168" offset="-30,0" origin="0.5,0.5" randomgroupid="3" rotationspeed="10" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.52" sourcerect="0,173,170,248" offset="-30,0" origin="0.5,0.5" randomgroupid="3" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.52" sourcerect="0,0,68,69" offset="-30,0" origin="0.5,0.5" randomgroupid="3" rotationspeed="10" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.52" sourcerect="0,69,68,99" offset="-30,0" origin="0.5,0.5" randomgroupid="3" />
     <!-- bottom piece-->
     <DecorativeSprite randomgroupid="4" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.53" sourcerect="339,0,175,258" offset="0,-30" origin="0.5,0.5" randomgroupid="4" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.53" sourcerect="0,0,167,168" offset="0,-30" origin="0.5,0.5" randomgroupid="4" rotationspeed="10" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.53" sourcerect="134,0,70,102" offset="0,-30" origin="0.5,0.5" randomgroupid="4" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.53" sourcerect="0,0,68,69" offset="0,-30" origin="0.5,0.5" randomgroupid="4" rotationspeed="10" />
     <!-- top piece-->
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.54" sourcerect="339,0,175,258" offset="0,30" origin="0.5,0.5" randomgroupid="5" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.54" sourcerect="0,0,167,168" offset="0,30" origin="0.5,0.5" randomgroupid="5" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.54" sourcerect="134,0,70,102" offset="0,30" origin="0.5,0.5" randomgroupid="5" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.54" sourcerect="0,0,68,69" offset="0,30" origin="0.5,0.5" randomgroupid="5" />
     <DecorativeSprite randomgroupid="5" />
     <Deconstruct time="30">
       <Item identifier="steel" />
@@ -176,55 +181,50 @@
       <Item identifier="dementonite" />
       <Item identifier="dementonite" />
     </Deconstruct>
-    <Body radius="25" density="50" friction="0.95" />
+    <Body radius="45" density="50" friction="0.95" />
     <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10" msg="ItemMsgPickUpSelect">
       <StatusEffect type="OnContained" target="Character">
         <Affliction identifier="psychosis" strength="0.5" />
       </StatusEffect>
     </Holdable>
   </Item>
-
   <Item name="Alien Trinket" identifier="alientrinket1" category="Alien" Tags="alien, smallitem" scale="0.5" impactsoundtag="impact_metal_heavy">
-    <Sprite texture="AlienArtifact1.png" depth="0.7" sourcerect="431,258,82,85" origin="0.5,0.5" />
+    <Upgrade gameversion="0.9.3.1" scale="0.5"/>
+    <Sprite texture="AlienArtifact1.png" depth="0.7" sourcerect="172,203,73,76" origin="0.5,0.5" />
     <Deconstruct time="30">
       <Item identifier="oxygeniteshard" />
     </Deconstruct>
-    <Body width="48" height="48" density="20" />
-    <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5" msg="ItemMsgPickUpSelect">
-    </Holdable>
+    <Body width="70" height="70" density="20" />
+    <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5" msg="ItemMsgPickUpSelect"></Holdable>
   </Item>
-
   <Item name="Alien Curio" identifier="alientrinket2" category="Alien" Tags="alien, smallitem" scale="0.5" impactsoundtag="impact_metal_heavy">
-    <Sprite texture="AlienArtifact1.png" depth="0.7" sourcerect="85,430,89,83" origin="0.5,0.5" />
+    <Upgrade gameversion="0.9.3.1" scale="0.5"/>
+    <Sprite texture="AlienArtifact1.png" depth="0.7" sourcerect="86,203,82,74" origin="0.5,0.5" />
     <Deconstruct time="30">
       <Item identifier="sulphuriteshard" />
     </Deconstruct>
-    <Body width="48" height="48" density="20" />
-    <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5" msg="ItemMsgPickUpSelect">
-    </Holdable>
+    <Body width="80" height="72" density="20" />
+    <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5" msg="ItemMsgPickUpSelect"></Holdable>
   </Item>
-
   <Item name="Alien Ornament" identifier="alientrinket3" category="Alien" Tags="alien, smallitem" scale="0.5" impactsoundtag="impact_metal_heavy">
-    <Sprite texture="AlienArtifact1.png" depth="0.7" sourcerect="0,428,87,84" origin="0.5,0.5" />
+    <Upgrade gameversion="0.9.3.1" scale="0.5"/>
+    <Sprite texture="AlienArtifact1.png" depth="0.7" sourcerect="0,203,82,79" origin="0.5,0.5" />
     <Deconstruct time="30">
       <Item identifier="physicorium" />
     </Deconstruct>
-    <Body width="48" height="48" density="20" />
-    <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5" msg="ItemMsgPickUpSelect">
-    </Holdable>
+    <Body width="80" height="75" density="20" />
+    <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5" msg="ItemMsgPickUpSelect"></Holdable>
   </Item>
-
-
-  <Item name="Oxygenite Shard" identifier="oxygeniteshard" category="Alien" tags="alien,smallitem,oxygensource" impacttolerance="8" impactsoundtag="impact_metal_light">
+  <Item name="Oxygenite Shard" identifier="oxygeniteshard" category="Alien" scale="0.5" tags="alien,smallitem,oxygensource" impacttolerance="8" impactsoundtag="impact_metal_light">
     <Deconstruct time="20">
       <Item identifier="steel" />
       <Item identifier="liquidoxygenite" mincondition="0.1" />
       <Item identifier="liquidoxygenite" mincondition="0.5" />
       <Item identifier="liquidoxygenite" mincondition="0.9" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="200,835,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="200,835,50,56" origin="0.5,0.5" />
     <Sprite texture="AlienMaterials.png" depth="0.7" sourcerect="18,436,58,69" origin="0.5,0.5" />
-    <Body width="9" height="32" density="15" />
+    <Body radius="25" density="15" />
     <Throwable slots="Any,RightHand,LeftHand" handle1="0,-5" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect">
       <StatusEffect type="OnNotContained" target="Hull" oxygen="5000.0" />
       <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true">
@@ -241,7 +241,7 @@
       </StatusEffect>
     </Throwable>
   </Item>
-  <Item name="Sulphurite Shard" identifier="sulphuriteshard" category="Alien" tags="alien,smallitem" impacttolerance="8" impactsoundtag="impact_metal_light">
+  <Item name="Sulphurite Shard" identifier="sulphuriteshard" category="Alien" scale="0.5" tags="alien,smallitem" impacttolerance="8" impactsoundtag="impact_metal_light">
     <Deconstruct time="20">
       <Item identifier="steel" />
       <Item identifier="sulphuricacid" mincondition="0.1" />
@@ -249,20 +249,14 @@
       <Item identifier="sulphuricacid" mincondition="0.9" />
     </Deconstruct>
     <Sprite texture="AlienMaterials.png" depth="0.7" sourcerect="178,437,60,73" origin="0.5,0.5" />
-    <Body width="9" height="32" density="15" />
-    <Body width="8" height="32" density="15" />
+    <Body radius="25" density="15" />
     <Throwable slots="Any,RightHand,LeftHand" handle1="0,-5" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect">
       <StatusEffect type="OnBroken" target="This">
         <Remove />
       </StatusEffect>
     </Throwable>
   </Item>
-
-  <Item name="Alien Pistol"
-    identifier="alienpistol"
-    category="Equipment"
-    tags="smallitem,weapon,alien"
-    Scale="0.6" impactsoundtag="impact_metal_light">
+  <Item name="Alien Pistol" identifier="alienpistol" category="Equipment" tags="smallitem,weapon,alien" Scale="0.6" impactsoundtag="impact_metal_light">
     <InventoryIcon texture="alientools.png" sourcerect="0,50,54,32" />
     <Sprite texture="alientools.png" sourcerect="0,50,54,32" depth="0.55" />
     <Body radius="15" width="15" density="50" />
@@ -272,7 +266,6 @@
     <ItemContainer capacity="1" hideitems="false" itempos="20,-20">
       <Containable identifiers="alienpowercell" />
     </ItemContainer>
-
     <!--<RangedWeapon reload="0.5" barrelpos="14,6" spread="0" unskilledspread="2">
       <StatusEffect type="OnUse">
         <Explosion range="150.0" force="5" shockwave="false" smoke="false" flames="false" sparks="false" underwaterbubble="false" camerashake="6.0" />
@@ -281,31 +274,30 @@
       <RequiredItems identifier="alienpowercell" type="Contained" msg="ItemMsgAmmoRequired" />
       <RequiredSkill identifier="weapons" level="40" />
     </RangedWeapon>-->
-
     <RepairTool structurefixamount="-3.0" range="1000" barrelpos="25,5">
+      <sound file="Content/Items/Alien/AlienTurret1.ogg" type="OnUse" range="500.0" loop="false" />
       <RequiredItems identifier="alienpowercell" type="Contained" />
       <Fixable identifier="structure" />
-      <ParticleEmitter particle="plasma" particlespersecond="50" />
-      <ParticleEmitterHitStructure particle="plasmaspark" particlespersecond="100" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800" />
-      <ParticleEmitterHitItem particle="plasmaspark" particlespersecond="100" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800" />
-      <ParticleEmitterHitStructure particle="plasmasmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="20" />
-      <ParticleEmitterHitItem particle="plasmasmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100" />
-      <ParticleEmitterHitCharacter particle="fleshsmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100" />
-      <StatusEffect type="OnUse" target="This" Condition="-40" disabledeltatime="true" />
-      <StatusEffect type="OnUse" target="Contained" Condition="-20.0" />
-      <StatusEffect type="OnUse" target="UseTarget">
-        <Affliction identifier="burn" amount="5" />
+      <ParticleEmitter particle="plasma" particlespersecond="50" copyentityangle="true"/>
+      <ParticleEmitterHitStructure particle="plasmaspark" particleamount="10" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800" />
+      <ParticleEmitterHitItem particle="plasmaspark" particleamount="10" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800" />
+      <ParticleEmitterHitStructure particle="plasmasmoke" particleamount="5" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="20" />
+      <ParticleEmitterHitItem particle="plasmasmoke" particleamount="5" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100" />
+      <ParticleEmitterHitCharacter particle="fleshsmoke" particleamount="5" anglemin="0" anglemax="360" velocitymin="0" velocitymax="20" />
+      <ParticleEmitterHitCharacter particle="plasmaspark" particleamount="10" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800" />
+      <StatusEffect type="OnUse" target="This" Condition="-100" disabledeltatime="true" />
+      <StatusEffect type="OnUse" target="Contained" Condition="-5.0" disabledeltatime="true" />
+      <StatusEffect type="OnUse" target="UseTarget" disabledeltatime="true">
+        <Explosion range="150.0" force="3" shockwave="false" smoke="false" flames="false" sparks="false" underwaterbubble="false" camerashake="6.0">
+          <Affliction identifier="psychosis" strength="2" />
+        </Explosion>
+        <Affliction identifier="burn" amount="1" />
+        <Affliction identifier="stun" amount="1" />
+        <Affliction identifier="psychosis" strength="2" />
       </StatusEffect>
-      <StatusEffect type="OnFailure" target="Contained" Condition="-0.1" disabledeltatime="true"/>
-      <sound file="Content/Items/Alien/alienweapon.ogg" type="OnUse" range="800.0" loop="true" />
-      <LightComponent AllowInGameEditing="false" LightColor="0.8,0.7,1.0,1.0" Flicker="0.5" range="500">
-        <sprite texture="Content/Items/Electricity/lightsprite.png" origin="0.5,0.5" />
-      </LightComponent>
+      <StatusEffect type="OnFailure" target="Contained" Condition="-0.1" disabledeltatime="true" />
     </RepairTool>
-
   </Item>
-
-
   <Item name="Ancient Weapon" identifier="ancientweapon" category="Alien" Tags="alien,smallitem" impactsoundtag="impact_metal_light">
     <Deconstruct time="20">
       <Item identifier="steel" />
@@ -314,11 +306,11 @@
     </Deconstruct>
     <Sprite texture="alientools.png" depth="0.55" sourcerect="0,0,95,50" origin="0.5,0.4" />
     <Body width="85" height="40" density="15" />
-    <Holdable slots="Any,RightHand+LeftHand" aimpos="100,0" handle1="0,11" handle2="2,11" msg="ItemMsgPickUpSelect"/>
+    <Holdable slots="Any,RightHand+LeftHand" aimpos="100,0" handle1="0,11" handle2="2,11" msg="ItemMsgPickUpSelect" />
     <RepairTool structurefixamount="-3.0" range="600" barrelpos="30,15">
       <RequiredItems identifier="alienpowercell" type="Contained" />
       <Fixable identifier="structure" />
-      <ParticleEmitter particle="largeplasma" particlespersecond="50" />
+      <ParticleEmitter particle="largeplasma" particlespersecond="50" copyentityangle="true"/>
       <ParticleEmitterHitStructure particle="plasmaspark" particlespersecond="100" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800" />
       <ParticleEmitterHitItem particle="plasmaspark" particlespersecond="100" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800" />
       <ParticleEmitterHitStructure particle="plasmasmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="20" />
@@ -485,6 +477,9 @@
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
+    <LightComponent AllowInGameEditing="false" color="150,150,255,150" range="15" castshadows="false">
+      <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5" />
+    </LightComponent>
   </Item>
   <Item name="Alien Turret" identifier="alienturret" Tags="turret,alien" category="Alien" scale="0.5">
     <Sprite texture="Content/Items/Alien/AlienTurret.png" depth="0.5" sourcerect="293,28,141,456" canflipy="false" />
@@ -508,7 +503,7 @@
       <input name="power_in" displayname="connection.powerin" />
       <input name="position_in" displayname="connection.turretaimingin" />
       <input name="trigger_in" displayname="connection.turrettriggerin" />
-      <input name="toggle_light" displayname="connection.togglelight"/>
+      <input name="toggle_light" displayname="connection.togglelight" />
     </ConnectionPanel>
   </Item>
   <Item name="Alien Projectile" identifier="alienturretammo" category="Alien">
@@ -552,7 +547,7 @@
     <ConnectionPanel canbeselected="true" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <!-- break the item when a shutdown signal is received -->
-      <input name="activate" displayname="connection.turrettriggerin"/>
+      <input name="activate" displayname="connection.turrettriggerin" />
       <input name="shutdown" displayname="connection.shutdown">
         <StatusEffect type="OnUse" target="This" condition="-100" setvalue="true" />
       </input>
@@ -560,7 +555,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Alien Vent" identifier="alienvent" category="Alien" interactdistance="0" linkable="true">
-    <Sprite texture="Content/Items/OxygenGenerator/vent.png" depth="0.91" sourcerect="0,0,64,64" />
+    <Sprite texture="Content/Items/OxygenGenerator/oxygengenerator.png" depth="0.91" sourcerect="277,200,64,64"/>
     <Vent>
       <sound file="Content/Items/OxygenGenerator/Ventilation.ogg" type="OnActive" range="400.0" loop="true" />
       <StatusEffect type="NotInWater" target="NearbyCharacters" range="300">
@@ -591,7 +586,7 @@
     </LightComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
       <input name="set_color" displayname="connection.setcolor" />

@@ -57,14 +57,14 @@ namespace Barotrauma.Items.Components
 
         private float persistentStickJointTimer;
 
-        [Serialize(10.0f, false)]
+        [Serialize(10.0f, false, description: "The impulse applied to the physics body of the item when it's launched. Higher values make the projectile faster.")]
         public float LaunchImpulse
         {
             get { return launchImpulse; }
             set { launchImpulse = value; }
         }
 
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false, description: "The rotation of the item relative to the rotation of the weapon when launched (in degrees).")]
         public float LaunchRotation
         {
             get { return MathHelper.ToDegrees(LaunchRotationRadians); }
@@ -77,7 +77,7 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "When set to true, the item can stick to any target it hits.")]
         //backwards compatibility, can stick to anything
         public bool DoesStick
         {
@@ -85,36 +85,53 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Can the item stick to the character it hits.")]
         public bool StickToCharacters
         {
             get;
             set;
         }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Can the item stick to the structure it hits.")]
         public bool StickToStructures
         {
             get;
             set;
         }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Can the item stick to the item it hits.")]
         public bool StickToItems
         {
             get;
             set;
         }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Hitscan projectiles cast a ray forwards and immediately hit whatever the ray hits. "+
+            "It is recommended to use hitscans for very fast-moving projectiles such as bullets, because using extremely fast launch velocities may cause physics glitches.")]
         public bool Hitscan
         {
             get;
             set;
         }
 
-        [Serialize(false, false)]
+        [Serialize(1, false, description: "How many hitscans should be done when the projectile is launched. "
+            + "Multiple hitscans can be used to simulate weapons that fire multiple projectiles at the same time" +
+            " without having to actually use multiple projectile items, for example shotguns.")]
+        public int HitScanCount
+        {
+            get;
+            set;
+        }
+
+        [Serialize(false, false, description: "Should the item be deleted when it hits something.")]
         public bool RemoveOnHit
+        {
+            get;
+            set;
+        }
+
+        [Serialize(0.0f, false, description: "Random spread applied to the launch angle of the projectile (in degrees).")]
+        public float Spread
         {
             get;
             set;
@@ -154,17 +171,25 @@ namespace Barotrauma.Items.Components
 
         public override bool Use(float deltaTime, Character character = null)
         {
-            if (character != null && !characterUsable) return false;
+            if (character != null && !characterUsable) { return false; }
 
-            Vector2 launchDir = new Vector2((float)Math.Cos(item.body.Rotation), (float)Math.Sin(item.body.Rotation));
-
-            if (Hitscan)
+            for (int i = 0; i < HitScanCount; i++)
             {
-                DoHitscan(launchDir);
-            }
-            else
-            {
-                Launch(launchDir * launchImpulse * item.body.Mass);
+                float launchAngle = item.body.Rotation + MathHelper.ToRadians(Rand.Range(-Spread, Spread));
+                Vector2 launchDir = new Vector2((float)Math.Cos(launchAngle), (float)Math.Sin(launchAngle));
+                if (Hitscan)
+                {
+                    Vector2 prevSimpos = item.SimPosition;
+                    DoHitscan(launchDir);
+                    if (i < HitScanCount - 1)
+                    {
+                        item.SetTransform(prevSimpos, item.body.Rotation);
+                    }
+                }
+                else
+                {
+                    Launch(launchDir * launchImpulse * item.body.Mass);
+                }
             }
 
             User = character;
@@ -275,7 +300,14 @@ namespace Barotrauma.Items.Components
             //the raycast didn't hit anything -> the projectile flew somewhere outside the level and is permanently lost
             if (!hitSomething)
             {
-                Entity.Spawner.AddToRemoveQueue(item);
+                if (Entity.Spawner == null)
+                {
+                    item.Remove();
+                }
+                else
+                {
+                    Entity.Spawner.AddToRemoveQueue(item);
+                }
             }
         }
         
@@ -298,6 +330,9 @@ namespace Barotrauma.Items.Components
                 if (!fixture.CollisionCategories.HasFlag(Physics.CollisionCharacter) &&
                     !fixture.CollisionCategories.HasFlag(Physics.CollisionWall) &&
                     !fixture.CollisionCategories.HasFlag(Physics.CollisionLevel)) return true;
+
+                fixture.Body.GetTransform(out FarseerPhysics.Common.Transform transform);
+                if (!fixture.Shape.TestPoint(ref transform, ref rayStart)) { return true; }
 
                 hits.Add(new HitscanResult(fixture, rayStart, -dir, 0.0f));
                 return true;
@@ -377,11 +412,11 @@ namespace Barotrauma.Items.Components
 
         private bool OnProjectileCollision(Fixture target, Vector2 collisionNormal)
         {
-            if (User != null && User.Removed) User = null;
+            if (User != null && User.Removed) { User = null; }
 
-            if (IgnoredBodies.Contains(target.Body)) return false;
+            if (IgnoredBodies.Contains(target.Body)) { return false; }
 
-            if (target.UserData is Item) return false;
+            if (target.UserData is Item) { return false; }
 
             if (target.CollisionCategories == Physics.CollisionCharacter && !(target.Body.UserData is Limb))
             {
@@ -415,10 +450,21 @@ namespace Barotrauma.Items.Components
                 if (attack != null) { attackResult = attack.DoDamage(User, structure, item.WorldPosition, 1.0f); }
             }
 
-            if (character != null) character.LastDamageSource = item;
-            ApplyStatusEffects(ActionType.OnUse, 1.0f, character, target.Body.UserData as Limb, user: user);
-            ApplyStatusEffects(ActionType.OnImpact, 1.0f, character, target.Body.UserData as Limb, user: user);
-            
+            if (character != null) { character.LastDamageSource = item; }
+
+            if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
+            {
+                ApplyStatusEffects(ActionType.OnUse, 1.0f, character, target.Body.UserData as Limb, user: user);
+                ApplyStatusEffects(ActionType.OnImpact, 1.0f, character, target.Body.UserData as Limb, user: user);
+#if SERVER
+                if (GameMain.NetworkMember.IsServer)
+                {
+                    GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse });
+                    GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnImpact });
+                }
+#endif
+            }
+
             item.body.FarseerBody.OnCollision -= OnProjectileCollision;
 
             item.body.CollisionCategories = Physics.CollisionItem;

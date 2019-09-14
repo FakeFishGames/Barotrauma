@@ -181,14 +181,17 @@
     <Compile Include="Source\Characters\CharacterNetworking.cs" />
     <Compile Include="Source\DebugConsole.cs" />
     <Compile Include="Source\Events\Missions\CombatMission.cs" />
+    <Compile Include="Source\Events\Missions\Mission.cs" />
     <Compile Include="Source\GameMain.cs" />
     <Compile Include="Source\GameSession\CrewManager.cs" />
+    <Compile Include="Source\GameSession\GameModes\CampaignMode.cs" />
     <Compile Include="Source\GameSession\GameModes\CharacterCampaignData.cs" />
+    <Compile Include="Source\GameSession\GameModes\MissionMode.cs" />
     <Compile Include="Source\GameSession\GameModes\MultiPlayerCampaign.cs" />
-    <Compile Include="Source\GameSession\GameModes\TraitorManager.cs" />
     <Compile Include="Source\Items\Components\Door.cs" />
     <Compile Include="Source\Items\Components\ItemComponent.cs" />
     <Compile Include="Source\Items\Components\ItemLabel.cs" />
+    <Compile Include="Source\Items\Components\Machines\Controller.cs" />
     <Compile Include="Source\Items\Components\Machines\Deconstructor.cs" />
     <Compile Include="Source\Items\Components\Machines\Engine.cs" />
     <Compile Include="Source\Items\Components\Machines\Fabricator.cs" />
@@ -211,10 +214,13 @@
     <Compile Include="Source\Networking\EntitySpawner.cs" />
     <Compile Include="Source\Networking\FileTransfer\FileSender.cs" />
     <Compile Include="Source\Networking\GameServer.cs" />
-    <Compile Include="Source\Networking\GameServerLogin.cs" />
+    <Compile Include="Source\Networking\KarmaManager.cs" />
     <Compile Include="Source\Networking\NetEntityEvent\ServerEntityEventManager.cs" />
     <Compile Include="Source\Networking\NetworkMember.cs" />
     <Compile Include="Source\Networking\OrderChatMessage.cs" />
+    <Compile Include="Source\Networking\Primitives\Peers\Server\LidgrenServerPeer.cs" />
+    <Compile Include="Source\Networking\Primitives\Peers\Server\ServerPeer.cs" />
+    <Compile Include="Source\Networking\Primitives\Peers\Server\SteamP2PServerPeer.cs" />
     <Compile Include="Source\Networking\RespawnManager.cs" />
     <Compile Include="Source\Networking\ServerSettings.cs" />
     <Compile Include="Source\Networking\SteamManager.cs" />
@@ -226,6 +232,10 @@
     <Compile Include="Source\Program.cs" />
     <Compile Include="Source\Screens\NetLobbyScreen.cs" />
     <Compile Include="Source\Screens\UnimplementedScreen.cs" />
+    <Compile Include="Source\Traitors\Goals\GoalWaitForTraitors.cs" />
+    <Compile Include="Source\Traitors\Goals\HumanoidGoal.cs" />
+    <Compile Include="Source\Traitors\Goals\Modifiers\GoalIsOptional.cs" />
+    <Compile Include="Source\Traitors\Goals\Modifiers\Modifier.cs" />
     <Compile Include="Source\Utils\MonogameTypes\Color.cs" />
     <Compile Include="Source\Utils\MonogameTypes\Graphics\SpriteEffects.cs" />
     <Compile Include="Source\Utils\MonogameTypes\Input\KeyboardState.cs" />
@@ -236,6 +246,21 @@
     <Compile Include="Source\Utils\MonogameTypes\Rectangle.cs" />
     <Compile Include="Source\Utils\MonogameTypes\Vector4.cs" />
     <Compile Include="Source\Utils\XnaToConsoleColor.cs" />
+    <Compile Include="Source\Traitors\TraitorManager.cs" />
+    <Compile Include="Source\Traitors\TraitorMissionPrefab.cs" />
+    <Compile Include="Source\Traitors\Goals\Goal.cs" />
+    <Compile Include="Source\Traitors\Objective.cs" />
+    <Compile Include="Source\Traitors\TraitorMission.cs" />
+    <Compile Include="Source\Traitors\Goals\GoalKillTarget.cs" />
+    <Compile Include="Source\Traitors\Goals\Modifiers\GoalHasDuration.cs" />
+    <Compile Include="Source\Traitors\Goals\GoalSabotageItems.cs" />
+    <Compile Include="Source\Traitors\Goals\GoalDestroyItemsWithTag.cs" />
+    <Compile Include="Source\Traitors\Goals\GoalFloodPercentOfSub.cs" />
+    <Compile Include="Source\Traitors\Goals\GoalFindItem.cs" />
+    <Compile Include="Source\Traitors\Goals\GoalReplaceInventory.cs" />
+    <Compile Include="Source\Traitors\Traitor.cs" />
+    <Compile Include="Source\Traitors\Goals\Modifiers\GoalHasTimeLimit.cs" />
+    <Compile Include="Source\Traitors\Goals\GoalReachDistanceFromSub.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Libraries\Facepunch.Steamworks\Facepunch.Steamworks.csproj">
@@ -270,9 +295,6 @@
   <ItemGroup>
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
   <ItemGroup Condition="$(Configuration.EndsWith('Linux')) Or $(Configuration.EndsWith('Mac'))">
     <None Include="DedicatedServer">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -286,15 +308,15 @@
     <None Include="DedicatedServer.bin.osx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Source\Traitors\" />
+    <Folder Include="Source\Traitors\Goals\" />
+    <Folder Include="Source\Traitors\Goals\Modifiers\" />
   </ItemGroup>
   <Import Project="..\BarotraumaShared\SharedCode.projitems" Label="Shared" />
   <Import Project="..\BarotraumaShared\SharedContent.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\Libraries\NuGet\GameAnalytics.Mono.SDK.2.1.6\build\net45\GameAnalytics.Mono.SDK.targets" Condition="Exists('..\..\Libraries\NuGet\GameAnalytics.Mono.SDK.2.1.6\build\net45\GameAnalytics.Mono.SDK.targets')" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\..\Libraries\NuGet\GameAnalytics.Mono.SDK.2.1.6\build\net45\GameAnalytics.Mono.SDK.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\Libraries\NuGet\GameAnalytics.Mono.SDK.2.1.6\build\net45\GameAnalytics.Mono.SDK.targets'))" />
-  </Target>
 </Project>

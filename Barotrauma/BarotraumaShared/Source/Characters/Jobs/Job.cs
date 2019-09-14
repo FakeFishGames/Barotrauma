@@ -50,38 +50,25 @@ namespace Barotrauma
         public Job(XElement element)
         {
             string identifier = element.GetAttributeString("identifier", "").ToLowerInvariant();
-            prefab = JobPrefab.List.Find(jp => jp.Identifier.ToLowerInvariant() == identifier);
-
-            string name = "";
-            if (prefab == null)
+            if (!JobPrefab.List.TryGetValue(identifier, out JobPrefab p))
             {
-                name = element.GetAttributeString("name", "").ToLowerInvariant();
-                prefab = JobPrefab.List.Find(jp => jp.Name.ToLowerInvariant() == name);
+                DebugConsole.ThrowError($"Could not find the job {identifier}. Giving the character a random job.");
+                p = JobPrefab.Random();
             }
-            if (prefab == null)
-            {
-                DebugConsole.ThrowError("Could not find the job \"" + name + "\" (identifier " + identifier + "). Giving the character a random job.");
-                prefab = JobPrefab.List[Rand.Int(JobPrefab.List.Count)];
-            }
-
+            prefab = p;
             skills = new Dictionary<string, Skill>();
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLowerInvariant() != "skill") continue;
+                if (subElement.Name.ToString().ToLowerInvariant() != "skill") { continue; }
                 string skillIdentifier = subElement.GetAttributeString("identifier", "");
-                if (string.IsNullOrEmpty(skillIdentifier)) continue;
+                if (string.IsNullOrEmpty(skillIdentifier)) { continue; }
                 skills.Add(
                     skillIdentifier,
                     new Skill(skillIdentifier, subElement.GetAttributeFloat("level", 0)));
             }
         }
         
-        public static Job Random(Rand.RandSync randSync)
-        {
-            JobPrefab prefab = JobPrefab.List[Rand.Int(JobPrefab.List.Count - 1, randSync)];
-
-            return new Job(prefab);
-        }
+        public static Job Random(Rand.RandSync randSync = Rand.RandSync.Unsynced) => new Job(JobPrefab.Random(randSync));
 
         public float GetSkillLevel(string skillIdentifier)
         {
@@ -144,6 +131,15 @@ namespace Barotrauma
 #if SERVER
             if (GameMain.Server != null && Entity.Spawner != null)
             {
+                if (GameMain.Server.EntityEventManager.UniqueEvents.Any(ev => ev.Entity == item))
+                {
+                    string errorMsg = $"Error while spawning job items. Item {item.Name} created network events before the spawn event had been created.";
+                    DebugConsole.ThrowError(errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("Job.InitializeJobItem:EventsBeforeSpawning", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameMain.Server.EntityEventManager.UniqueEvents.RemoveAll(ev => ev.Entity == item);
+                    GameMain.Server.EntityEventManager.Events.RemoveAll(ev => ev.Entity == item);
+                }
+
                 Entity.Spawner.CreateNetworkEvent(item, false);
             }
 #endif

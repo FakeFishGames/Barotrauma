@@ -17,16 +17,20 @@ namespace Barotrauma.Items.Components
 
         private GUITextBlock hullNameText, hullBreachText, hullAirQualityText, hullWaterText;
 
+        private string noPowerTip = "";
+
         private List<Submarine> displayedSubs = new List<Submarine>();
 
         partial void InitProjSpecific(XElement element)
         {
-            GuiFrame.RectTransform.RelativeOffset = new Vector2(0.4f, 0.0f);
-            new GUICustomComponent(new RectTransform(new Vector2(0.9f, 0.85f), GuiFrame.RectTransform, Anchor.Center),
-                DrawHUDBack, null);
-            submarineContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.85f), GuiFrame.RectTransform, Anchor.Center), style: null);
+            noPowerTip = TextManager.Get("SteeringNoPowerTip");
 
-            new GUICustomComponent(new RectTransform(new Vector2(0.9f, 0.85f), GuiFrame.RectTransform, Anchor.Center),
+            GuiFrame.RectTransform.RelativeOffset = new Vector2(0.05f, 0.0f);
+            new GUICustomComponent(new RectTransform(new Vector2(0.95f, 0.9f), GuiFrame.RectTransform, Anchor.Center),
+                DrawHUDBack, null);
+            submarineContainer = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), GuiFrame.RectTransform, Anchor.Center), style: null);
+
+            new GUICustomComponent(new RectTransform(new Vector2(0.95f, 0.9f), GuiFrame.RectTransform, Anchor.Center),
                 DrawHUDFront, null)
             {
                 CanBeFocused = false
@@ -75,6 +79,11 @@ namespace Barotrauma.Items.Components
             displayedSubs.AddRange(item.Submarine.DockedTo);
         }
 
+        public override void FlipX(bool relativeToSub)
+        {
+            CreateHUD();
+        }
+
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
             //recreate HUD if the subs we should display have changed
@@ -105,6 +114,16 @@ namespace Barotrauma.Items.Components
 
         private void DrawHUDFront(SpriteBatch spriteBatch, GUICustomComponent container)
         {
+            if (voltage < minVoltage)
+        {
+                Vector2 textSize = GUI.Font.MeasureString(noPowerTip);
+                Vector2 textPos = GuiFrame.Rect.Center.ToVector2();
+
+                GUI.DrawString(spriteBatch, textPos - textSize / 2, noPowerTip,
+                    Color.Orange * (float)Math.Abs(Math.Sin(Timing.TotalTime)), Color.Black * 0.8f);
+                return;
+            }
+
             foreach (GUIComponent child in submarineContainer.Children.First().Children)
             {
                 if (child.UserData is Hull hull)
@@ -145,6 +164,11 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            if (voltage < minVoltage)
+            {
+                return;
+            }
+
             float scale = 1.0f;
             HashSet<Submarine> subs = new HashSet<Submarine>();
             foreach (Hull hull in Hull.hullList)
@@ -160,11 +184,21 @@ namespace Barotrauma.Items.Components
                     GetLinkedHulls(hull, hullData.LinkedHulls);
                     hullDatas.Add(hull, hullData);
                 }
+                
+                Color neutralColor = Color.DarkCyan;
+                if (hull.RoomName != null)
+                {
+                    if (hull.RoomName.Contains("ballast") || hull.RoomName.Contains("Ballast") ||
+                        hull.RoomName.Contains("airlock") || hull.RoomName.Contains("Airlock"))
+                    {
+                        neutralColor = new Color(9, 80, 159);
+                    }
+                }
 
                 if (hullData.Distort)
                 {
                     hullFrame.Children.First().Color = Color.Lerp(Color.Black, Color.DarkGray * 0.5f, Rand.Range(0.0f, 1.0f));
-                    hullFrame.Color = Color.DarkGray * 0.5f;
+                    hullFrame.Color = neutralColor * 0.5f;
                     continue;
                 }
                 
@@ -173,20 +207,23 @@ namespace Barotrauma.Items.Components
                     hullFrame.Parent.Rect.Width / (float)hull.Submarine.Borders.Width, 
                     hullFrame.Parent.Rect.Height / (float)hull.Submarine.Borders.Height);
                 
-                Color borderColor = Color.DarkCyan;
+                Color borderColor = neutralColor;
                 
                 float? gapOpenSum = 0.0f;
                 if (ShowHullIntegrity)
                 {
                     gapOpenSum = hull.ConnectedGaps.Where(g => !g.IsRoomToRoom).Sum(g => g.Open);
-                    borderColor = Color.Lerp(Color.DarkCyan, Color.Red, Math.Min((float)gapOpenSum, 1.0f));
+                    borderColor = Color.Lerp(neutralColor, Color.Red, Math.Min((float)gapOpenSum, 1.0f));
                 }
 
                 float? oxygenAmount = null;
                 if (!RequireOxygenDetectors || hullData?.Oxygen != null)
                 {
                     oxygenAmount = RequireOxygenDetectors ? hullData.Oxygen : hull.OxygenPercentage;
-                    GUI.DrawRectangle(spriteBatch, hullFrame.Rect, Color.Lerp(Color.Red * 0.5f, Color.Green * 0.3f, (float)oxygenAmount / 100.0f), true);
+                    GUI.DrawRectangle(
+                        spriteBatch, hullFrame.Rect, 
+                        Color.Lerp(Color.Red * 0.5f, Color.Green * 0.3f, (float)oxygenAmount / 100.0f), 
+                        true);
                 }
 
                 float? waterAmount = null;
@@ -215,7 +252,7 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    hullFrame.Children.First().Color = Color.DarkCyan * 0.8f;
+                    hullFrame.Children.First().Color = neutralColor * 0.8f;
                 }
 
                 if (mouseOnHull == hull)
@@ -272,8 +309,6 @@ namespace Barotrauma.Items.Components
                     GUI.DrawLine(spriteBatch, center + start, center + end, Color.DarkCyan * Rand.Range(0.3f, 0.35f), width: (int)(10 * GUI.Scale));
                 }
             }
-
-
         }
 
         private void GetLinkedHulls(Hull hull, List<Hull> linkedHulls)

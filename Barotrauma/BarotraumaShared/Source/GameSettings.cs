@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System.Xml;
+using System.IO;
+using Barotrauma.Extensions;
 #if CLIENT
 using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Tutorials;
@@ -45,6 +47,8 @@ namespace Barotrauma
 
         public bool PauseOnFocusLost { get; set; }
         public bool MuteOnFocusLost { get; set; }
+        public bool DynamicRangeCompressionEnabled { get; set; }
+        public bool VoipAttenuationEnabled { get; set; }
         public bool UseDirectionalVoiceChat { get; set; }
 
         public enum VoiceMode
@@ -142,6 +146,8 @@ namespace Barotrauma
         public bool CrewMenuOpen { get; set; } = true;
         public bool ChatOpen { get; set; } = true;
 
+        private string overrideSaveFolder, overrideMultiplayerSaveFolder;
+
         private bool unsavedSettings;
         public bool UnsavedSettings
         {
@@ -173,9 +179,9 @@ namespace Barotrauma
 #if CLIENT
                 if (GameMain.SoundManager != null)
                 {
-                    GameMain.SoundManager.SetCategoryGainMultiplier("default", soundVolume);
-                    GameMain.SoundManager.SetCategoryGainMultiplier("ui", soundVolume);
-                    GameMain.SoundManager.SetCategoryGainMultiplier("waterambience", soundVolume);
+                    GameMain.SoundManager.SetCategoryGainMultiplier("default", soundVolume, 0);
+                    GameMain.SoundManager.SetCategoryGainMultiplier("ui", soundVolume, 0);
+                    GameMain.SoundManager.SetCategoryGainMultiplier("waterambience", soundVolume, 0);
                 }
 #endif
             }
@@ -188,7 +194,7 @@ namespace Barotrauma
             {
                 musicVolume = MathHelper.Clamp(value, 0.0f, 1.0f);
 #if CLIENT
-                GameMain.SoundManager?.SetCategoryGainMultiplier("music", musicVolume);
+                GameMain.SoundManager?.SetCategoryGainMultiplier("music", musicVolume, 0);
 #endif
             }
         }
@@ -200,7 +206,7 @@ namespace Barotrauma
             {
                 voiceChatVolume = MathHelper.Clamp(value, 0.0f, 1.0f);
 #if CLIENT
-                GameMain.SoundManager?.SetCategoryGainMultiplier("voip", voiceChatVolume * 20.0f);
+                GameMain.SoundManager?.SetCategoryGainMultiplier("voip", voiceChatVolume * 30.0f, 0);
 #endif
             }
         }
@@ -210,7 +216,7 @@ namespace Barotrauma
             get { return microphoneVolume; }
             set
             {
-                microphoneVolume = MathHelper.Clamp(value, 0.1f, 5.0f);
+                microphoneVolume = MathHelper.Clamp(value, 0.2f, 10.0f);
             }
         }
         public string Language
@@ -219,7 +225,25 @@ namespace Barotrauma
             set { TextManager.Language = value; }
         }
 
-        public HashSet<ContentPackage> SelectedContentPackages { get; set; }
+        public readonly List<ContentPackage> SelectedContentPackages = new List<ContentPackage>();
+
+        public void SelectContentPackage(ContentPackage contentPackage)
+        {
+            if (!SelectedContentPackages.Contains(contentPackage))
+            {
+                SelectedContentPackages.Add(contentPackage);
+                ContentPackage.SortContentPackages();
+            }
+        }
+
+        public void DeselectContentPackage(ContentPackage contentPackage)
+        {
+            if (SelectedContentPackages.Contains(contentPackage))
+            {
+                SelectedContentPackages.Remove(contentPackage);
+                ContentPackage.SortContentPackages();
+            }
+        }
 
         private HashSet<string> selectedContentPackagePaths = new HashSet<string>();
 
@@ -264,7 +288,13 @@ namespace Barotrauma
         private static bool sendUserStatistics = true;
         public static bool SendUserStatistics
         {
-            get { return sendUserStatistics; }
+            get
+            {
+#if DEBUG
+                return false;
+#endif
+                return sendUserStatistics;
+            }
             set
             {
                 sendUserStatistics = value;
@@ -277,8 +307,7 @@ namespace Barotrauma
 
         public GameSettings()
         {
-            SelectedContentPackages = new HashSet<ContentPackage>();
-            ContentPackage.LoadAll(ContentPackage.Folder);
+            ContentPackage.LoadAll();
             CompletedTutorialNames = new List<string>();
 
             LoadDefaultConfig();
@@ -411,11 +440,11 @@ namespace Barotrauma
                 GraphicsWidth = 1024;
                 GraphicsHeight = 768;
                 MasterServerUrl = "";
-                SelectedContentPackages.Add(ContentPackage.List.Any() ? ContentPackage.List[0] : new ContentPackage(""));
+                SelectContentPackage(ContentPackage.List.Any() ? ContentPackage.List[0] : new ContentPackage(""));
                 jobPreferences = new List<string>();
-                foreach (JobPrefab job in JobPrefab.List)
+                foreach (string job in JobPrefab.List.Keys)
                 {
-                    jobPreferences.Add(job.Identifier);
+                    jobPreferences.Add(job);
                 }
                 return;
             }
@@ -435,6 +464,11 @@ namespace Barotrauma
             LoadAudioSettings(doc);
             LoadControls(doc);
             LoadContentPackages(doc);
+
+#if DEBUG
+            WindowMode = WindowMode.Windowed;
+#endif
+
             UnsavedSettings = false;
         }
 
@@ -605,6 +639,17 @@ namespace Barotrauma
             LoadControls(doc);
             LoadContentPackages(doc);
 
+            //allow overriding the save paths in the config file
+            if (doc.Root.Attribute("overridesavefolder") != null)
+            {
+                overrideSaveFolder = SaveUtil.SaveFolder = doc.Root.GetAttributeString("overridesavefolder", "");
+                overrideMultiplayerSaveFolder = SaveUtil.MultiplayerSaveFolder = Path.Combine(overrideSaveFolder, "Multiplayer");
+            }
+            if (doc.Root.Attribute("overridemultiplayersavefolder") != null)
+            {
+                overrideMultiplayerSaveFolder = SaveUtil.MultiplayerSaveFolder = doc.Root.GetAttributeString("overridemultiplayersavefolder", "");
+            }
+
             XElement tutorialsElement = doc.Root.Element("tutorials");
             if (tutorialsElement != null)
             {
@@ -627,6 +672,7 @@ namespace Barotrauma
         {
             var missingPackagePaths = new List<string>();
             var incompatiblePackages = new List<ContentPackage>();
+            var invalidPackages = new List<ContentPackage>();
             SelectedContentPackages.Clear();
             foreach (string path in contentPackagePaths)
             {
@@ -640,22 +686,21 @@ namespace Barotrauma
                 {
                     incompatiblePackages.Add(matchingContentPackage);
                 }
+                else if (!matchingContentPackage.CheckValidity(out List<string> errorMessages))
+                {
+                    invalidPackages.Add(matchingContentPackage);
+                }
                 else
                 {
                     SelectedContentPackages.Add(matchingContentPackage);
                 }
             }
 
+            ContentPackage.SortContentPackages();
             TextManager.LoadTextPacks(SelectedContentPackages);
 
             foreach (ContentPackage contentPackage in SelectedContentPackages)
             {
-                bool packageOk = contentPackage.VerifyFiles(out List<string> errorMessages);
-                if (!packageOk)
-                {
-                    DebugConsole.ThrowError("Error in content package \"" + contentPackage.Name + "\":\n" + string.Join("\n", errorMessages));
-                    continue;
-                }
                 foreach (ContentFile file in contentPackage.Files)
                 {
                     ToolBox.IsProperFilenameCase(file.Path);
@@ -665,7 +710,7 @@ namespace Barotrauma
             EnsureCoreContentPackageSelected();
 
             //save to get rid of the invalid selected packages in the config file
-            if (missingPackagePaths.Count > 0 || incompatiblePackages.Count > 0) { SaveNewPlayerConfig(); }
+            if (missingPackagePaths.Count > 0 || incompatiblePackages.Count > 0 || invalidPackages.Count > 0) { SaveNewPlayerConfig(); }
 
             //display error messages after all content packages have been loaded
             //to make sure the package that contains text files has been loaded before we attempt to use TextManager
@@ -673,10 +718,15 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError(TextManager.GetWithVariable("ContentPackageNotFound", "[packagepath]", missingPackagePath));
             }
+            foreach (ContentPackage invalidPackage in invalidPackages)
+            {
+                DebugConsole.ThrowError(TextManager.GetWithVariable("InvalidContentPackage", "[packagename]", invalidPackage.Name), createMessageBox: true);
+            }
             foreach (ContentPackage incompatiblePackage in incompatiblePackages)
             {
                 DebugConsole.ThrowError(TextManager.GetWithVariables(incompatiblePackage.GameVersion <= new Version(0, 0, 0, 0) ? "IncompatibleContentPackageUnknownVersion" : "IncompatibleContentPackage",
-                    new string[3] { "[packagename]", "[packageversion]", "[gameversion]" }, new string[3] { incompatiblePackage.Name, incompatiblePackage.GameVersion.ToString(), GameMain.Version.ToString() }));
+                    new string[3] { "[packagename]", "[packageversion]", "[gameversion]" }, new string[3] { incompatiblePackage.Name, incompatiblePackage.GameVersion.ToString(), GameMain.Version.ToString() }),
+                    createMessageBox: true);
             }
         }
 
@@ -686,14 +736,14 @@ namespace Barotrauma
 
             if (GameMain.VanillaContent != null)
             {
-                SelectedContentPackages.Add(GameMain.VanillaContent);
+                SelectContentPackage(GameMain.VanillaContent);
             }
             else
             {
                 var availablePackage = ContentPackage.List.FirstOrDefault(cp => cp.IsCompatible() && cp.CorePackage);
                 if (availablePackage != null)
                 {
-                    SelectedContentPackages.Add(availablePackage);
+                    SelectContentPackage(availablePackage);
                 }
             }
         }
@@ -732,6 +782,15 @@ namespace Barotrauma
                 new XAttribute("campaigndisclaimershown", CampaignDisclaimerShown),
                 new XAttribute("editordisclaimershown", EditorDisclaimerShown));
 
+            if (!string.IsNullOrEmpty(overrideSaveFolder))
+            {
+                doc.Root.Add(new XAttribute("overridesavefolder", overrideSaveFolder));
+            }
+            if (!string.IsNullOrEmpty(overrideMultiplayerSaveFolder))
+            {
+                doc.Root.Add(new XAttribute("overridemultiplayersavefolder", overrideMultiplayerSaveFolder));
+            }
+
             if (!ShowUserStatisticsPrompt)
             {
                 doc.Root.Add(new XAttribute("senduserstatistics", sendUserStatistics));
@@ -769,6 +828,8 @@ namespace Barotrauma
                 new XAttribute("voicechatvolume", voiceChatVolume),
                 new XAttribute("microphonevolume", microphoneVolume),
                 new XAttribute("muteonfocuslost", MuteOnFocusLost),
+                new XAttribute("dynamicrangecompressionenabled", DynamicRangeCompressionEnabled),
+                new XAttribute("voipattenuationenabled", VoipAttenuationEnabled),
                 new XAttribute("usedirectionalvoicechat", UseDirectionalVoiceChat),
                 new XAttribute("voicesetting", VoiceSetting),
                 new XAttribute("voicecapturedevice", VoiceCaptureDevice ?? ""),
@@ -882,7 +943,7 @@ namespace Barotrauma
             }
             AutoCheckUpdates = doc.Root.GetAttributeBool("autocheckupdates", AutoCheckUpdates);
             sendUserStatistics = doc.Root.GetAttributeBool("senduserstatistics", sendUserStatistics);
-            QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsubmarine", "");
+            QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsub", QuickStartSubmarineName);
             useSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", useSteamMatchmaking);
             requireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", requireSteamAuthentication);
             EnableSplashScreen = doc.Root.GetAttributeBool("enablesplashscreen", EnableSplashScreen);
@@ -969,8 +1030,11 @@ namespace Barotrauma
             {
                 SoundVolume = audioSettings.GetAttributeFloat("soundvolume", SoundVolume);
                 MusicVolume = audioSettings.GetAttributeFloat("musicvolume", MusicVolume);
+                DynamicRangeCompressionEnabled = audioSettings.GetAttributeBool("dynamicrangecompressionenabled", DynamicRangeCompressionEnabled);
+                VoipAttenuationEnabled = audioSettings.GetAttributeBool("voipattenuationenabled", VoipAttenuationEnabled);
                 VoiceChatVolume = audioSettings.GetAttributeFloat("voicechatvolume", VoiceChatVolume);
                 MuteOnFocusLost = audioSettings.GetAttributeBool("muteonfocuslost", MuteOnFocusLost);
+
                 UseDirectionalVoiceChat = audioSettings.GetAttributeBool("usedirectionalvoicechat", UseDirectionalVoiceChat);
                 VoiceCaptureDevice = audioSettings.GetAttributeString("voicecapturedevice", VoiceCaptureDevice);
                 NoiseGateThreshold = audioSettings.GetAttributeFloat("noisegatethreshold", NoiseGateThreshold);
@@ -1001,7 +1065,7 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "contentpackage":
-                        string path = System.IO.Path.GetFullPath(subElement.GetAttributeString("path", ""));
+                        string path = Path.GetFullPath(subElement.GetAttributeString("path", ""));
                         selectedContentPackagePaths.Add(path);
                         break;
                 }
@@ -1080,8 +1144,10 @@ namespace Barotrauma
             ChatOpen = true;
             soundVolume = 0.5f;
             musicVolume = 0.3f;
+            DynamicRangeCompressionEnabled = true;
+            VoipAttenuationEnabled = true;
             voiceChatVolume = 0.5f;
-            microphoneVolume = 1.0f;
+            microphoneVolume = 5.0f;
             AutoCheckUpdates = true;
             defaultPlayerName = string.Empty;
             HUDScale = 1;

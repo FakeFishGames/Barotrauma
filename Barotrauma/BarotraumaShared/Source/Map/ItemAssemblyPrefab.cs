@@ -12,10 +12,7 @@ namespace Barotrauma
     {
         private readonly XElement configElement;
         private readonly string configPath;
-
-        [Serialize(false, false)]
-        public bool HideInMenus { get; set; }
-        
+                
         public List<Pair<MapEntityPrefab, Rectangle>> DisplayEntities
         {
             get;
@@ -28,8 +25,8 @@ namespace Barotrauma
         {
             configPath = filePath;
             XDocument doc = XMLExtensions.TryLoadXml(filePath);
-            if (doc == null || doc.Root == null) return;
-            
+            if (doc == null) { return; }
+
             name = doc.Root.GetAttributeString("name", "");
             identifier = doc.Root.GetAttributeString("identifier", null) ?? name.ToLowerInvariant().Replace(" ", "");
             configElement = doc.Root;
@@ -107,7 +104,7 @@ namespace Barotrauma
             if (Screen.Selected == GameMain.SubEditorScreen)
             {
                 MapEntity.SelectedList.Clear();
-                MapEntity.SelectedList.AddRange(entities);
+                entities.ForEach(e => MapEntity.AddSelection(e));
             }
 #endif   
             return entities;

@@ -7,7 +7,7 @@
     allowedlinks="vent">
     
     <Sprite texture="oxygengenerator.png" depth="0.8" sourcerect="0,0,214,192"/>
-    <BrokenSprite texture="oxygengenerator.png" sourcerect="214,0,214,192" depth="0.8" maxcondition="40" fadein="true" />
+    <BrokenSprite texture="oxygengenerator.png" sourcerect="214,0,214,192" depth="0.8" maxcondition="80" fadein="true" />
     <BrokenSprite texture="oxygengenerator.png" sourcerect="428,0,214,192" depth="0.8" maxcondition="0" />
     <DecorativeSprite texture="oxygengenerator.png" sourcerect="0,199,214,31" depth="0.85" origin="0.5,3.5"
                       offset="0,7" offsetanim="Sine" offsetanimspeed="0.5">
@@ -42,10 +42,6 @@
   
     <OxygenGenerator powerconsumption="1000.0" minvoltage="0.5" canbeselected="true" msg="ItemMsgInteractSelect">
       <poweronsound file="Content/Items/PowerOnLight2.ogg" range="1500" loop="false" />
-      <sparksound file="Content/Items/Electricity/Zap2.ogg" range="500" loop="false"/>
-      <sparksound file="Content/Items/Electricity/Zap3.ogg" range="500" loop="false"/>
-      <sparksound file="Content/Items/Electricity/Zap4.ogg" range="500" loop="false"/>
-      <sparksound file="Content/Items/Electricity/Zap5.ogg" range="500" loop="false"/>
       <sound file="Content/Items/OxygenGenerator/OxygenGenerator.ogg" type="OnActive" range="1000.0" volumeproperty="CurrFlow" volume="0.001f" loop="true"/>    
       <StatusEffect type="OnFire" target="This" Condition="-0.5"/>
       <StatusEffect type="OnActive" target="Contained" targetidentifiers="oxygentank" Condition="2.0"/>
@@ -85,16 +81,12 @@
     linkable="true"
     allowedlinks="vent">
 
-    <Sprite texture="ShuttleOxygenerator.png" depth="0.8" sourcerect="0,0,186,125"/>
-    <BrokenSprite texture="ShuttleOxygenerator.png" sourcerect="0,125,186,125" depth="0.8" maxcondition="40" fadein="true" />
-    <BrokenSprite texture="ShuttleOxygenerator.png" sourcerect="0,250,186,125" depth="0.8" maxcondition="0" />
+    <Sprite texture="oxygengenerator.png" depth="0.8" sourcerect="648,0,186,125"/>
+    <BrokenSprite texture="oxygengenerator.png" sourcerect="648,125,186,125" depth="0.8" maxcondition="40" fadein="true" />
+    <BrokenSprite texture="oxygengenerator.png" sourcerect="648,250,186,125" depth="0.8" maxcondition="0" />
 
     <OxygenGenerator powerconsumption="1000.0" minvoltage="0.5" canbeselected = "true" msg="ItemMsgInteractSelect">
       <poweronsound file="Content/Items/PowerOnLight1.ogg" range="1000" loop="false" />
-      <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false"/>
-      <sparksound file="Content/Items/Electricity/Zap2.ogg" range="500" loop="false"/>
-      <sparksound file="Content/Items/Electricity/Zap3.ogg" range="500" loop="false"/>
-      <sparksound file="Content/Items/Electricity/Zap4.ogg" range="500" loop="false"/>
       <sound file="Content/Items/OxygenGenerator/OxygenGenerator.ogg" type="OnActive" range="1000.0" volumeproperty="CurrFlow" volume="0.001f" loop="true"/>
       <StatusEffect type="OnFire" target="This" Condition="-0.5"/>
       <StatusEffect type="OnActive" target="Contained" targetidentifiers="oxygentank" Condition="2.0"/>
@@ -134,15 +126,35 @@
     linkable="true"
     allowedlinks="oxygenerator"
     scale="0.8">
-
-    <Sprite texture="vent.png" depth="0.91" sourcerect="0,0,64,64"/>
-    <DecorativeSprite texture="vent.png" depth="0.92" sourcerect="68,4,56,56" rotationspeed="360" >
+    <Sprite texture="oxygengenerator.png" depth="0.91" sourcerect="277,200,64,64"/>
+    <DecorativeSprite texture="oxygengenerator.png" depth="0.92" sourcerect="345,204,56,56" rotationspeed="360" >
       <AnimationConditional OxygenFlow="gt 10" targetitemcomponent="Vent"/>
     </DecorativeSprite>
 
     <Vent>
       <sound file="Content/Items/OxygenGenerator/Ventilation.ogg" type="OnActive" range="400.0" volumeproperty="OxygenFlow" volume="0.0005f" loop="true"/>
     </Vent>
+  </Item>
 
+  <Item
+    name="Loose Vent"
+    identifier="loosevent"
+    category="Machine"
+    linkable="true"
+    allowedlinks="oxygenerator"
+    pickdistance="150"
+    scale="0.8"
+    interactdistance="10">
+    <Sprite texture="oxygengenerator.png" depth="0.91" sourcerect="277,200,64,64"/>
+    <DecorativeSprite texture="oxygengenerator.png" depth="0.92" sourcerect="345,204,56,56" rotationspeed="360" >
+      <AnimationConditional OxygenFlow="gt 10" targetitemcomponent="Vent"/>
+    </DecorativeSprite>
+    <Vent>
+      <sound file="Content/Items/OxygenGenerator/Ventilation.ogg" type="OnActive" range="400.0" volumeproperty="OxygenFlow" volume="0.0005f" loop="true"/>
+    </Vent>    
+    <ItemContainer capacity="1" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.25,0.3" anchor="Center" style="ItemUI" />
+      <Containable identifiers="smallitem,mediumitem" />
+    </ItemContainer>
   </Item>
 </Items>

@@ -1,9 +1,10 @@
-﻿using Lidgren.Network;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Networking;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -78,14 +79,33 @@ namespace Barotrauma
 
         public const float InsufficientOxygenThreshold = 30.0f;
         public const float LowOxygenThreshold = 50.0f;
-        protected float minVitality, maxVitality;
+        protected float minVitality;
+
+        protected float maxVitality
+        {
+            get => Character.Params.Health.Vitality;
+            set => Character.Params.Health.Vitality = value;
+        }
 
         public bool Unkillable;
 
-        //bleeding settings
-        public bool DoesBleed { get; private set; }
+        public bool DoesBleed
+        {
+            get => Character.Params.Health.DoesBleed;
+            private set => Character.Params.Health.DoesBleed = value;
+        }
 
-        public bool UseHealthWindow { get; set; }
+        public bool UseHealthWindow
+        {
+            get => Character.Params.Health.UseHealthWindow;
+            set => Character.Params.Health.UseHealthWindow = value;
+        }
+
+        public float CrushDepth
+        {
+            get => Character.Params.Health.CrushDepth;
+            private set => Character.Params.Health.CrushDepth = value;
+        }
 
         private List<LimbHealth> limbHealths = new List<LimbHealth>();
         //non-limb-specific afflictions
@@ -102,10 +122,11 @@ namespace Barotrauma
             get { return Vitality <= 0.0f; }
         }
 
-        public float CrushDepth { get; private set; }
         public float PressureKillDelay { get; private set; } = 5.0f;
 
         public float Vitality { get; private set; }
+
+        public float HealthPercentage => MathUtils.Percentage(Vitality, MaxVitality);
 
         public float MaxVitality
         {
@@ -168,7 +189,6 @@ namespace Barotrauma
         {
             this.Character = character;
             Vitality = 100.0f;
-            maxVitality = 100.0f;
 
             DoesBleed = true;
             UseHealthWindow = false;
@@ -185,15 +205,9 @@ namespace Barotrauma
             this.Character = character;
             InitIrremovableAfflictions();
 
-            CrushDepth = element.GetAttributeFloat("crushdepth", float.NegativeInfinity);
-
-            maxVitality = element.GetAttributeFloat("vitality", 100.0f);
             Vitality    = maxVitality;
 
-            DoesBleed               = element.GetAttributeBool("doesbleed", true);
-            UseHealthWindow         = element.GetAttributeBool("usehealthwindow", false);
-
-            minVitality = (character.ConfigPath == Character.HumanConfigFile) ? -100.0f : 0.0f;
+            minVitality = character.IsHuman ? -100.0f : 0.0f;
 
             limbHealths.Clear();
             foreach (XElement subElement in element.Elements())
@@ -225,10 +239,9 @@ namespace Barotrauma
 
         public IEnumerable<Affliction> GetAllAfflictions(Func<Affliction, bool> limbHealthFilter = null)
         {
-            // TODO: If there can be duplicates, we should use Union instead.
             return limbHealthFilter == null
-                ? afflictions.Concat(limbHealths.SelectMany(lh => lh.Afflictions))
-                : afflictions.Concat(limbHealths.SelectMany(lh => lh.Afflictions.Where(limbHealthFilter)));
+                ? afflictions.Union(limbHealths.SelectMany(lh => lh.Afflictions))
+                : afflictions.Where(limbHealthFilter).Union(limbHealths.SelectMany(lh => lh.Afflictions.Where(limbHealthFilter)));
         }
 
         private LimbHealth GetMatchingLimbHealth(Limb limb) => limbHealths[limb.HealthIndex];
@@ -240,11 +253,23 @@ namespace Barotrauma
         private IEnumerable<Affliction> GetMatchingAfflictions(LimbHealth limb, Func<Affliction, bool> predicate)
             => limb.Afflictions.Where(predicate).Union(afflictions.Where(a => predicate(a) && GetMatchingLimbHealth(a) == limb));
 
-        public Affliction GetAffliction(string afflictionType, bool allowLimbAfflictions = true)
+        public IEnumerable<Affliction> GetAfflictionsByType(string afflictionType, bool allowLimbAfflictions = true)
+        {
+            if (allowLimbAfflictions)
+            {
+                return GetAllAfflictions(a => a.Prefab.AfflictionType == afflictionType);
+            }
+            else
+            {
+                return afflictions.Where(a => a.Prefab.AfflictionType == afflictionType);
+            }
+        }
+
+        public Affliction GetAffliction(string identifier, bool allowLimbAfflictions = true)
         {
             foreach (Affliction affliction in afflictions)
             {
-                if (affliction.Prefab.AfflictionType == afflictionType) return affliction;
+                if (affliction.Prefab.Identifier == identifier) return affliction;
             }
             if (!allowLimbAfflictions) return null;
 
@@ -252,19 +277,30 @@ namespace Barotrauma
             {
                 foreach (Affliction affliction in limbHealth.Afflictions)
                 {
-                    if (affliction.Prefab.AfflictionType == afflictionType) return affliction;
+                    if (affliction.Prefab.Identifier == identifier) return affliction;
                 }
             }
 
             return null;
         }
 
-        public T GetAffliction<T>(string afflictionType, bool allowLimbAfflictions = true) where T : Affliction
+        public T GetAffliction<T>(string identifier, bool allowLimbAfflictions = true) where T : Affliction
         {
-            return GetAffliction(afflictionType, allowLimbAfflictions) as T;
+            return GetAffliction(identifier, allowLimbAfflictions) as T;
         }
 
-        public Affliction GetAffliction(string afflictionType, Limb limb)
+        public IEnumerable<Affliction> GetAfflictionsByType(string afflictionType, Limb limb)
+        {
+            if (limb.HealthIndex < 0 || limb.HealthIndex >= limbHealths.Count)
+            {
+                DebugConsole.ThrowError("Limb health index out of bounds. Character\"" + Character.Name +
+                    "\" only has health configured for" + limbHealths.Count + " limbs but the limb " + limb.type + " is targeting index " + limb.HealthIndex);
+                return null;
+            }
+            return limbHealths[limb.HealthIndex].Afflictions.Where(a => a.Prefab.AfflictionType == afflictionType);
+        }
+
+        public Affliction GetAffliction(string identifier, Limb limb)
         {
             if (limb.HealthIndex < 0 || limb.HealthIndex >= limbHealths.Count)
             {
@@ -274,7 +310,7 @@ namespace Barotrauma
             }
             foreach (Affliction affliction in limbHealths[limb.HealthIndex].Afflictions)
             {
-                if (affliction.Prefab.AfflictionType == afflictionType) return affliction;
+                if (affliction.Prefab.Identifier == identifier) return affliction;
             }
             return null;
         }
@@ -411,7 +447,7 @@ namespace Barotrauma
                     amount -= reduceAmount;
                 }
             }
-            
+            CalculateVitality();
         }
 
         public void ApplyDamage(Limb hitLimb, AttackResult attackResult)
@@ -520,8 +556,14 @@ namespace Barotrauma
         {
             if (!DoesBleed && newAffliction is AfflictionBleeding) return;
             if (!Character.NeedsAir && newAffliction.Prefab == AfflictionPrefab.OxygenLow) return;
-            // Currently only human can get the husk infection.
-            if (newAffliction.Prefab == AfflictionPrefab.Husk && Character.SpeciesName.ToLowerInvariant() != "human") { return; }
+            if (newAffliction.Prefab.AfflictionType == "huskinfection")
+            {
+                var huskPrefab = newAffliction.Prefab as AfflictionPrefabHusk;
+                if (huskPrefab.TargetSpecies.None(s => s.Equals(Character.SpeciesName, StringComparison.OrdinalIgnoreCase)))
+                {
+                    return;
+                }
+            }
             foreach (Affliction affliction in afflictions)
             {
                 if (newAffliction.Prefab == affliction.Prefab)
@@ -547,7 +589,10 @@ namespace Barotrauma
             CalculateVitality();
             if (Vitality <= MinVitality) Kill();
         }
-        
+
+
+        partial void UpdateProjSpecific(float deltaTime);
+
         partial void UpdateLimbAfflictionOverlays();
 
         public void Update(float deltaTime)
@@ -671,6 +716,10 @@ namespace Barotrauma
             
             var causeOfDeath = GetCauseOfDeath();
             Character.Kill(causeOfDeath.First, causeOfDeath.Second);
+#if CLIENT
+            DisplayVitalityDelay = 0.0f;
+            DisplayedVitality = Vitality;
+#endif
         }
 
         public Pair<CauseOfDeathType, Affliction> GetCauseOfDeath()
@@ -732,14 +781,14 @@ namespace Barotrauma
             return allAfflictions;
         }
 
-        public void ServerWrite(NetBuffer msg)
+        public void ServerWrite(IWriteMessage msg)
         {
             List<Affliction> activeAfflictions = afflictions.FindAll(a => a.Strength > 0.0f && a.Strength >= a.Prefab.ActivationThreshold);
 
             msg.Write((byte)activeAfflictions.Count);
             foreach (Affliction affliction in activeAfflictions)
             {
-                msg.WriteRangedInteger(0, AfflictionPrefab.List.Count - 1, AfflictionPrefab.List.IndexOf(affliction.Prefab));
+                msg.WriteRangedInteger(AfflictionPrefab.List.IndexOf(affliction.Prefab), 0, AfflictionPrefab.List.Count - 1);
                 msg.WriteRangedSingle(
                     MathHelper.Clamp(affliction.Strength, 0.0f, affliction.Prefab.MaxStrength), 
                     0.0f, affliction.Prefab.MaxStrength, 8);
@@ -758,8 +807,8 @@ namespace Barotrauma
             msg.Write((byte)limbAfflictions.Count);
             foreach (var limbAffliction in limbAfflictions)
             {
-                msg.WriteRangedInteger(0, limbHealths.Count - 1, limbHealths.IndexOf(limbAffliction.First));
-                msg.WriteRangedInteger(0, AfflictionPrefab.List.Count - 1, AfflictionPrefab.List.IndexOf(limbAffliction.Second.Prefab));
+                msg.WriteRangedInteger(limbHealths.IndexOf(limbAffliction.First), 0, limbHealths.Count - 1);
+                msg.WriteRangedInteger(AfflictionPrefab.List.IndexOf(limbAffliction.Second.Prefab), 0, AfflictionPrefab.List.Count - 1);
                 msg.WriteRangedSingle(
                     MathHelper.Clamp(limbAffliction.Second.Strength, 0.0f, limbAffliction.Second.Prefab.MaxStrength), 
                     0.0f, limbAffliction.Second.Prefab.MaxStrength, 8);

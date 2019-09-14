@@ -5658,8 +5658,8 @@ namespace SteamNative
 		internal bool DoNotRefresh; // m_bDoNotRefresh _Bool
 		[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
 		internal string GameDir; // m_szGameDir char [32]
-		[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
-		internal string Map; // m_szMap char [32]
+		[MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)]
+		internal byte[] Map; // m_szMap char [32]
 		[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)]
 		internal string GameDescription; // m_szGameDescription char [64]
 		internal uint AppID; // m_nAppID uint32
@@ -5672,8 +5672,8 @@ namespace SteamNative
 		internal bool Secure; // m_bSecure _Bool
 		internal uint TimeLastPlayed; // m_ulTimeLastPlayed uint32
 		internal int ServerVersion; // m_nServerVersion int
-		[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)]
-		internal string ServerName; // m_szServerName char [64]
+		[MarshalAs(UnmanagedType.ByValArray, SizeConst = 64)]
+		internal byte[] ServerName; // m_szServerName char [64]
 		[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
 		internal string GameTags; // m_szGameTags char [128]
 		internal ulong SteamID; // m_steamID class CSteamID
@@ -5707,8 +5707,8 @@ namespace SteamNative
 			internal bool DoNotRefresh; // m_bDoNotRefresh _Bool
 			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
 			internal string GameDir; // m_szGameDir char [32]
-			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
-			internal string Map; // m_szMap char [32]
+			[MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)]
+			internal byte[] Map; // m_szMap char [32]
 			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)]
 			internal string GameDescription; // m_szGameDescription char [64]
 			internal uint AppID; // m_nAppID uint32
@@ -5721,8 +5721,8 @@ namespace SteamNative
 			internal bool Secure; // m_bSecure _Bool
 			internal uint TimeLastPlayed; // m_ulTimeLastPlayed uint32
 			internal int ServerVersion; // m_nServerVersion int
-			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)]
-			internal string ServerName; // m_szServerName char [64]
+			[MarshalAs(UnmanagedType.ByValArray, SizeConst = 64)]
+			internal byte[] ServerName; // m_szServerName char [64]
 			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
 			internal string GameTags; // m_szGameTags char [128]
 			internal ulong SteamID; // m_steamID class CSteamID
@@ -5739,7 +5739,7 @@ namespace SteamNative
 					HadSuccessfulResponse = d.HadSuccessfulResponse,
 					DoNotRefresh = d.DoNotRefresh,
 					GameDir = d.GameDir,
-					Map = d.Map,
+					Map = (byte[])d.Map.Clone(),
 					GameDescription = d.GameDescription,
 					AppID = d.AppID,
 					Players = d.Players,
@@ -5749,7 +5749,7 @@ namespace SteamNative
 					Secure = d.Secure,
 					TimeLastPlayed = d.TimeLastPlayed,
 					ServerVersion = d.ServerVersion,
-					ServerName = d.ServerName,
+					ServerName = (byte[])d.ServerName.Clone(),
 					GameTags = d.GameTags,
 					SteamID = d.SteamID,
 				};

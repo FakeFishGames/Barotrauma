@@ -4,7 +4,6 @@ using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
 using FarseerPhysics.Factories;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -152,7 +151,7 @@ namespace Barotrauma
             private set;
         }
 
-        [Serialize("0,0", true), Editable(ToolTip = "The position of the drop shadow relative to the structure. If set to zero, the shadow is positioned automatically so that it points towards the sub's center of mass.")]
+        [Editable, Serialize("0,0", true, description: "The position of the drop shadow relative to the structure. If set to zero, the shadow is positioned automatically so that it points towards the sub's center of mass.")]
         public Vector2 DropShadowOffset
         {
             get;
@@ -181,6 +180,29 @@ namespace Barotrauma
                     }
                 }
             }
+        }
+
+
+        protected Vector2 textureScale = Vector2.One;
+
+        [Editable(DecimalCount = 3, MinValueFloat = 0.01f, MaxValueFloat = 10f, ValueStep = 0.1f), Serialize("1.0, 1.0", false)]
+        public Vector2 TextureScale
+        {
+            get { return textureScale; }
+            set
+            {
+                textureScale = new Vector2(
+                    MathHelper.Clamp(value.X, 0.01f, 10),
+                    MathHelper.Clamp(value.Y, 0.01f, 10));
+            }
+        }
+
+        protected Vector2 textureOffset = Vector2.Zero;
+        [Editable(MinValueFloat = -1000f, MaxValueFloat = 1000f, ValueStep = 10f), Serialize("0.0, 0.0", true)]
+        public Vector2 TextureOffset
+        {
+            get { return textureOffset; }
+            set { textureOffset = value; }
         }
 
         private Rectangle defaultRect;
@@ -214,6 +236,29 @@ namespace Barotrauma
                         sec.rect = secRect;
                     }
                 }          
+            }
+        }
+        
+        //for upgrading the dimensions of a structure from xml
+        [Serialize(0, false)]
+        public int RectWidth
+        {
+            get { return rect.Width; }
+            set
+            {
+                if (value <= 0) { return; }
+                Rect = new Rectangle(rect.X, rect.Y, value, rect.Height);
+            }
+        }
+        //for upgrading the dimensions of a structure from xml
+        [Serialize(0, false)]
+        public int RectHeight
+        {
+            get { return rect.Height; }
+            set
+            {
+                if (value <= 0) { return; }
+                Rect = new Rectangle(rect.X, rect.Y, rect.Width, value);
             }
         }
 
@@ -296,9 +341,8 @@ namespace Barotrauma
             defaultRect = rectangle;
 
             rect = rectangle;
-#if CLIENT
             TextureScale = sp.TextureScale;
-#endif
+
             spriteColor = prefab.SpriteColor;
             if (sp.IsHorizontal.HasValue)
             {
@@ -351,10 +395,17 @@ namespace Barotrauma
             // Only add ai targets automatically to submarine/outpost walls 
             if (aiTarget == null && HasBody && Tags.Contains("wall") && submarine != null && !Prefab.NoAITarget)
             {
-                aiTarget = new AITarget(this);
+                aiTarget = new AITarget(this)
+                {
+                    MinSightRange = 2000,
+                    MaxSightRange = 5000,
+                    MaxSoundRange = 0
+                };
             }
 
             InsertToList();
+            
+            DebugConsole.Log("Created " + Name + " (" + ID + ")");
         }
 
         partial void InitProjSpecific();
@@ -436,15 +487,16 @@ namespace Barotrauma
             {
                 if (IsHorizontal)
                 {
-                    xsections = (int)Math.Ceiling((float)rect.Width / WallSectionSize);
+                    //equivalent to (int)Math.Ceiling((double)rect.Width / WallSectionSize) without the potential for floating point indeterminism
+                    xsections = (rect.Width + WallSectionSize - 1) / WallSectionSize;
                     Sections = new WallSection[xsections];
-                    width = (int)WallSectionSize;
+                    width = WallSectionSize;
                 }
                 else
                 {
-                    ysections = (int)Math.Ceiling((float)rect.Height / WallSectionSize);
+                    ysections = (rect.Height + WallSectionSize - 1) / WallSectionSize;
                     Sections = new WallSection[ysections];
-                    height = (int)WallSectionSize;
+                    height = WallSectionSize;
                 }
             }
 
@@ -792,8 +844,7 @@ namespace Barotrauma
 
 
         }
-
-        partial void AdjustKarma(IDamageable attacker, float amount);
+        
 
         public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
         {
@@ -948,23 +999,18 @@ namespace Barotrauma
             bool hadHole = SectionBodyDisabled(sectionIndex);
             Sections[sectionIndex].damage = MathHelper.Clamp(damage, 0.0f, Prefab.Health);
             
-            //otherwise it's possible to infinitely gain karma by welding fixed things
             if (attacker != null && damageDiff != 0.0f)
             {
-                AdjustKarma(attacker, damageDiff);
-#if CLIENT
-                if (GameMain.Client == null)
+                OnHealthChangedProjSpecific(attacker, damageDiff);
+                if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
                 {
-#endif
                     if (damageDiff < 0.0f)
                     {
                         attacker.Info.IncreaseSkillLevel("mechanical", 
                             -damageDiff * SkillIncreaseMultiplier / Math.Max(attacker.GetSkillLevel("mechanical"), 1.0f),
                             SectionPosition(sectionIndex, true));                                    
                     }
-#if CLIENT
                 }
-#endif
             }
 
             bool hasHole = SectionBodyDisabled(sectionIndex);
@@ -973,6 +1019,8 @@ namespace Barotrauma
                         
             UpdateSections();
         }
+
+        partial void OnHealthChangedProjSpecific(Character attacker, float damageAmount);
 
         public void SetCollisionCategory(Category collisionCategory)
         {
@@ -1164,21 +1212,37 @@ namespace Barotrauma
                 ID = (ushort)int.Parse(element.Attribute("ID").Value)
             };
 
+            SerializableProperty.DeserializeProperties(s, element);
+
+            if (submarine?.GameVersion != null)
+            {
+                SerializableProperty.UpgradeGameVersion(s, s.Prefab.ConfigElement, submarine.GameVersion);
+            }
+
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString())
                 {
                     case "section":
                         int index = subElement.GetAttributeInt("i", -1);
-                        if (index == -1) continue;
-                        s.Sections[index].damage = subElement.GetAttributeFloat("damage", 0.0f);
+                        if (index == -1) { continue; }
+
+                        if (index < 0 || index >= s.SectionCount)
+                        {
+                            string errorMsg = $"Error while loading structure \"{s.Name}\". Section damage index out of bounds. Index: {index}, section count: {s.SectionCount}.";
+                            DebugConsole.ThrowError(errorMsg);
+                            GameAnalyticsManager.AddErrorEventOnce("Structure.Load:SectionIndexOutOfBounds", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                        }
+                        else
+                        {
+                            s.Sections[index].damage = subElement.GetAttributeFloat("damage", 0.0f);
+                        }
                         break;
                 }
             }
 
             if (element.GetAttributeBool("flippedx", false)) s.FlipX(false);
             if (element.GetAttributeBool("flippedy", false)) s.FlipY(false);
-            SerializableProperty.DeserializeProperties(s, element);
 
             //structures with a body drop a shadow by default
             if (element.Attribute("usedropshadow") == null)
@@ -1256,6 +1320,14 @@ namespace Barotrauma
         public virtual void Reset()
         {
             SerializableProperties = SerializableProperty.DeserializeProperties(this, Prefab.ConfigElement);
+        }
+
+        public override void Update(float deltaTime, Camera cam)
+        {
+            if (aiTarget != null)
+            {
+                aiTarget.SightRange = Submarine == null ? aiTarget.MinSightRange : Submarine.Velocity.Length() / 2 * aiTarget.MaxSightRange;
+            }
         }
     }
 }

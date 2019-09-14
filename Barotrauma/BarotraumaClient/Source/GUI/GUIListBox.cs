@@ -22,10 +22,9 @@ namespace Barotrauma
         public GUIScrollBar ScrollBar { get; private set; }
         public GUIFrame Content { get; private set; }
 
+        private Dictionary<GUIComponent, bool> childVisible = new Dictionary<GUIComponent, bool>();
+
         private int totalSize;
-
-        private int spacing;
-
         private bool childrenNeedsRecalculation;
         private bool scrollBarNeedsRecalculation;
 
@@ -95,11 +94,7 @@ namespace Barotrauma
             get { return totalSize; }
         }
 
-        public int Spacing
-        {
-            get { return spacing; }
-            set { spacing = value; }
-        }
+        public int Spacing { get; set; }
 
         public override Color Color
         {
@@ -244,37 +239,37 @@ namespace Barotrauma
                 {
                     if (ScrollBar.IsHorizontal)
                     {
-                        if (y + child.Rect.Height + spacing > Content.Rect.Height)
+                        if (y + child.Rect.Height + Spacing > Content.Rect.Height)
                         {
                             y = 0;
-                            x += child.Rect.Width + spacing;
+                            x += child.Rect.Width + Spacing;
                             if (child.RectTransform.AbsoluteOffset.X != x || child.RectTransform.AbsoluteOffset.Y != y)
                             {
                                 child.RectTransform.AbsoluteOffset = new Point(x, y);
                             }
-                            y += child.Rect.Height + spacing;
+                            y += child.Rect.Height + Spacing;
                         }
                         else
                         {
-                            y += child.Rect.Height + spacing;
+                            y += child.Rect.Height + Spacing;
                         }
 
                     }
                     else
                     {
-                        if (x + child.Rect.Width + spacing > Content.Rect.Width)
+                        if (x + child.Rect.Width + Spacing > Content.Rect.Width)
                         {
                             x = 0;
-                            y += child.Rect.Height + spacing;
+                            y += child.Rect.Height + Spacing;
                             if (child.RectTransform.AbsoluteOffset.X != x || child.RectTransform.AbsoluteOffset.Y != y)
                             {
                                 child.RectTransform.AbsoluteOffset = new Point(x, y);
                             }
-                            x += child.Rect.Width + spacing;
+                            x += child.Rect.Width + Spacing;
                         }
                         else
                         {
-                            x += child.Rect.Width + spacing;
+                            x += child.Rect.Width + Spacing;
                         }
                     }
                 }
@@ -282,11 +277,11 @@ namespace Barotrauma
                 {
                     if (ScrollBar.IsHorizontal)
                     {
-                        x += child.Rect.Width + spacing;
+                        x += child.Rect.Width + Spacing;
                     }
                     else
                     {
-                        y += child.Rect.Height + spacing;
+                        y += child.Rect.Height + Spacing;
                     }
                 }
             }
@@ -327,10 +322,23 @@ namespace Barotrauma
         public override void AddToGUIUpdateList(bool ignoreChildren = false, int order = 0)
         {
             if (!Visible) { return; }
+            
+            foreach (GUIComponent child in Content.Children)
+            {
+                if (!childVisible.ContainsKey(child)) { childVisible[child] = child.Visible; }
+                if (childVisible[child] != child.Visible)
+                {
+                    childVisible[child] = child.Visible;
+                    childrenNeedsRecalculation = true;
+                    scrollBarNeedsRecalculation = true;
+                    break;
+                }
+            }            
 
             if (childrenNeedsRecalculation)
             {
                 RecalculateChildren();
+                childVisible.Clear();
             }
 
             UpdateOrder = order;
@@ -511,30 +519,30 @@ namespace Barotrauma
                 {
                     if (ScrollBar.IsHorizontal)
                     {
-                        if (pos + child.Rect.Height + spacing > Content.Rect.Height)
+                        if (pos + child.Rect.Height + Spacing > Content.Rect.Height)
                         {
                             pos = 0;
-                            totalSize += child.Rect.Width + spacing;
+                            totalSize += child.Rect.Width + Spacing;
                         }
-                        pos += child.Rect.Height + spacing;
+                        pos += child.Rect.Height + Spacing;
 
                         if (child == children.Last())
                         {
-                            totalSize += child.Rect.Width + spacing;
+                            totalSize += child.Rect.Width + Spacing;
                         }
                     }
                     else
                     {
-                        if (pos + child.Rect.Width + spacing > Content.Rect.Width)
+                        if (pos + child.Rect.Width + Spacing > Content.Rect.Width)
                         {
                             pos = 0;
-                            totalSize += child.Rect.Height + spacing;
+                            totalSize += child.Rect.Height + Spacing;
                         }
-                        pos += child.Rect.Width + spacing;
+                        pos += child.Rect.Width + Spacing;
 
                         if (child == children.Last())
                         {
-                            totalSize += child.Rect.Height + spacing;
+                            totalSize += child.Rect.Height + Spacing;
                         }
                     }
                 }
@@ -545,7 +553,7 @@ namespace Barotrauma
                 {
                     totalSize += (ScrollBar.IsHorizontal) ? child.Rect.Width : child.Rect.Height;
                 }
-                totalSize += Content.CountChildren * spacing;
+                totalSize += Content.CountChildren * Spacing;
             }
 
 
@@ -651,7 +659,9 @@ namespace Barotrauma
                 case Keys.Up:
                     SelectPrevious();
                     break;
-                default:
+                case Keys.Enter:
+                case Keys.Space:
+                case Keys.Escape:
                     GUI.KeyboardDispatcher.Subscriber = null;
                     break;
             }

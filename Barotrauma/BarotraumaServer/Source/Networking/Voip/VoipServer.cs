@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Items.Components;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -9,11 +8,11 @@ namespace Barotrauma.Networking
 {
     class VoipServer
     {
-        private NetServer netServer;
+        private ServerPeer netServer;
         private List<VoipQueue> queues;
         private Dictionary<VoipQueue,DateTime> lastSendTime;
 
-        public VoipServer(NetServer server)
+        public VoipServer(ServerPeer server)
         {
             this.netServer = server;
             queues = new List<VoipQueue>();
@@ -54,15 +53,13 @@ namespace Barotrauma.Networking
 
                     if (!CanReceive(sender, recipient)) { continue; }
 
-                    NetOutgoingMessage msg = netServer.CreateMessage();
+                    IWriteMessage msg = new WriteOnlyMessage();
 
                     msg.Write((byte)ServerPacketHeader.VOICE);
                     msg.Write((byte)queue.QueueID);
                     queue.Write(msg);
-
-                    GameMain.Server.CompressOutgoingMessage(msg);
-
-                    netServer.SendMessage(msg, recipient.Connection, NetDeliveryMethod.Unreliable);
+                    
+                    netServer.Send(msg, recipient.Connection, DeliveryMethod.Unreliable);
                 }
             }
         }
@@ -77,12 +74,16 @@ namespace Barotrauma.Networking
             bool recipientSpectating = recipient.Character == null || recipient.Character.IsDead;
             bool senderSpectating = sender.Character == null || sender.Character.IsDead;
 
-            //spectators cannot speak with in-game players or vice versa
-            //TODO: allow spectators to hear the voice chat if close enough to the speaker?
-            if (recipientSpectating != senderSpectating) { return false; }
+            //TODO: only allow spectators to hear the voice chat if close enough to the speaker?
+
+            //non-spectators cannot hear spectators
+            if (senderSpectating && !recipientSpectating) { return false; }
 
             //both spectating, no need to do radio/distance checks
             if (recipientSpectating && senderSpectating) { return true; }
+
+            //spectators can hear non-spectators
+            if (!senderSpectating && recipientSpectating) { return true; }
 
             //sender can't speak
             if (sender.Character != null && sender.Character.SpeechImpediment >= 100.0f) { return false; }

@@ -2,7 +2,6 @@
 using Barotrauma.RuinGeneration;
 using Barotrauma.Sounds;
 using FarseerPhysics;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -46,7 +45,9 @@ namespace Barotrauma
 
             if (string.IsNullOrEmpty(filename))
             {
-                DebugConsole.ThrowError("Error when loading round sound (" + element + ") - file path not set");
+                string errorMsg = "Error when loading round sound (" + element + ") - file path not set";
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Submarine.LoadRoundSound:FilePathEmpty" + element.ToString(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg + "\n" + Environment.StackTrace);
                 return null;
             }
 
@@ -70,7 +71,9 @@ namespace Barotrauma
                 }
                 catch (FileNotFoundException e)
                 {
-                    DebugConsole.ThrowError("Failed to load sound file \"" + filename + "\".", e);
+                    string errorMsg = "Failed to load sound file \"" + filename + "\".";
+                    DebugConsole.ThrowError(errorMsg, e);
+                    GameAnalyticsManager.AddErrorEventOnce("Submarine.LoadRoundSound:FileNotFound" + filename, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg + "\n" + Environment.StackTrace);
                     return null;
                 }
             }
@@ -514,7 +517,7 @@ namespace Barotrauma
             }
         }
         
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             var posInfo = PhysicsBody.ClientRead(type, msg, sendingTime, parentDebugName: Name);
             msg.ReadPadBits();

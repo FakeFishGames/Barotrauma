@@ -41,8 +41,9 @@ namespace Barotrauma.Items.Components
             }
 
             Wire equippedWire = null;
-
-            if (!panel.Locked || Screen.Selected == GameMain.SubEditorScreen)
+            
+            bool allowRewiring = GameMain.NetworkMember?.ServerSettings == null || GameMain.NetworkMember.ServerSettings.AllowRewiring;
+            if (allowRewiring && (!panel.Locked || Screen.Selected == GameMain.SubEditorScreen))
             {
                 //if the Character using the panel has a wire item equipped
                 //and the wire hasn't been connected yet, draw it on the panel
@@ -73,10 +74,16 @@ namespace Barotrauma.Items.Components
                 //dropped or dragged from the panel to the players inventory
                 if (draggingConnected != null)
                 {
-                    int linkIndex = c.FindWireIndex(draggingConnected.Item);
-                    if (linkIndex > -1)
+                    //the wire can only be dragged out if it's not connected to anything at the other end
+                    if (Screen.Selected == GameMain.SubEditorScreen ||
+                        (draggingConnected.Connections[0] == null && draggingConnected.Connections[1] == null) ||
+                        (draggingConnected.Connections.Contains(c) && draggingConnected.Connections.Contains(null)))
                     {
-                        Inventory.draggingItem = c.wires[linkIndex].Item;
+                        int linkIndex = c.FindWireIndex(draggingConnected.Item);
+                        if (linkIndex > -1 || panel.DisconnectedWires.Contains(draggingConnected))
+                        {
+                            Inventory.draggingItem = draggingConnected.Item;
+                        }
                     }
                 }
 
@@ -108,59 +115,79 @@ namespace Barotrauma.Items.Components
 
             if (draggingConnected != null)
             {
-                DrawWire(spriteBatch, draggingConnected, draggingConnected.Item, PlayerInput.MousePosition, new Vector2(x + width / 2, y + height - 10), mouseInRect, null, panel, "");
+                if (mouseInRect)
+                {
+                    DrawWire(spriteBatch, draggingConnected, PlayerInput.MousePosition, new Vector2(x + width / 2, y + height - 10), null, panel, "");
+                }
 
                 if (!PlayerInput.LeftButtonHeld())
                 {
-                    if (GameMain.Client != null)
+                    if (draggingConnected.Connections[0]?.ConnectionPanel == panel ||
+                        draggingConnected.Connections[1]?.ConnectionPanel == panel)
                     {
-                        panel.Item.CreateClientEvent(panel);
+                        draggingConnected.RemoveConnection(panel.Item);
+                        panel.DisconnectedWires.Add(draggingConnected);
                     }
 
+                    if (GameMain.Client != null) { panel.Item.CreateClientEvent(panel); }
                     draggingConnected = null;
                 }
             }
 
             //if the Character using the panel has a wire item equipped
             //and the wire hasn't been connected yet, draw it on the panel
-            if (equippedWire != null)
+            if (equippedWire != null && (draggingConnected != equippedWire || !mouseInRect))
             {
                 if (panel.Connections.Find(c => c.Wires.Contains(equippedWire)) == null)
                 {
-                    DrawWire(spriteBatch, equippedWire, equippedWire.Item,
-                        new Vector2(x + width / 2, y + height - 100),
-                        new Vector2(x + width / 2, y + height), mouseInRect, null, panel, "");
+                    DrawWire(spriteBatch, equippedWire, new Vector2(x + width / 2, y + height - 150 * GUI.Scale),
+                        new Vector2(x + width / 2, y + height),
+                        null, panel, "");
 
-                    if (draggingConnected == equippedWire) Inventory.draggingItem = equippedWire.Item;
+                    if (draggingConnected == equippedWire) { Inventory.draggingItem = equippedWire.Item; }
                 }
             }
-            
+
+
+            float step = (width * 0.75f) / panel.DisconnectedWires.Count();
+            x = (int)(x + width / 2 - step * (panel.DisconnectedWires.Count() - 1) / 2);
+            foreach (Wire wire in panel.DisconnectedWires)
+            {
+                if (wire == draggingConnected && mouseInRect) { continue; }
+
+                Connection recipient = wire.OtherConnection(null);
+                string label = recipient == null ? "" : recipient.item.Name + $" ({recipient.DisplayName})";
+                if (wire.Locked) { label += "\n" + TextManager.Get("ConnectionLocked"); }
+                DrawWire(spriteBatch, wire, new Vector2(x, y + height - 100 * GUI.Scale),
+                    new Vector2(x, y + height),
+                    null, panel, label);
+                x += (int)step;
+            }
+
             //stop dragging a wire item if the cursor is within any connection panel
             //(so we don't drop the item when dropping the wire on a connection)
-            if (mouseInRect || GUI.MouseOn?.UserData is ConnectionPanel) Inventory.draggingItem = null;            
+            if (mouseInRect || GUI.MouseOn?.UserData is ConnectionPanel) { Inventory.draggingItem = null; }       
         }
 
         private void Draw(SpriteBatch spriteBatch, ConnectionPanel panel, Vector2 position, Vector2 labelPos, Vector2 wirePosition, bool mouseIn, Wire equippedWire, float wireInterval)
         {
-            //spriteBatch.DrawString(GUI.SmallFont, Name, new Vector2(labelPos.X, labelPos.Y-10), Color.White);
             GUI.DrawString(spriteBatch, labelPos, DisplayName, IsPower ? Color.Red : Color.White, Color.Black, 0, GUI.SmallFont);
-            
+
             connectionSprite.Draw(spriteBatch, position);
 
             for (int i = 0; i < MaxLinked; i++)
             {
-                if (wires[i] == null || wires[i].Hidden || draggingConnected == wires[i]) continue;
+                if (wires[i] == null || wires[i].Hidden || (draggingConnected == wires[i] && (mouseIn || Screen.Selected == GameMain.SubEditorScreen))) { continue; }
 
                 Connection recipient = wires[i].OtherConnection(this);
-                
-                string label = recipient == null ? "" :
-                    wires[i].Locked ? recipient.item.Name + "\n" + TextManager.Get("ConnectionLocked") : recipient.item.Name;
-                DrawWire(spriteBatch, wires[i], (recipient == null) ? wires[i].Item : recipient.item, position, wirePosition, mouseIn, equippedWire, panel, label);
+                string label = recipient == null ? "" : recipient.item.Name + $" ({recipient.DisplayName})";
+                if (wires[i].Locked) { label += "\n" + TextManager.Get("ConnectionLocked"); }
+                DrawWire(spriteBatch, wires[i], position, wirePosition, equippedWire, panel, label);
 
                 wirePosition.Y += wireInterval;
             }
 
-            if (draggingConnected != null && Vector2.Distance(position, PlayerInput.MousePosition) < 13.0f)
+            if (draggingConnected != null && Vector2.Distance(position, PlayerInput.MousePosition) < (20.0f * GUI.Scale))
             {
                 connectionSpriteHighlight.Draw(spriteBatch, position);
 
@@ -171,15 +198,15 @@ namespace Barotrauma.Items.Components
                     if (index > -1 && !Wires.Contains(draggingConnected))
                     {
                         bool alreadyConnected = draggingConnected.IsConnectedTo(panel.Item);
-
                         draggingConnected.RemoveConnection(panel.Item);
-
                         if (draggingConnected.Connect(this, !alreadyConnected, true))
                         {
                             var otherConnection = draggingConnected.OtherConnection(this);
                             SetWire(index, draggingConnected);
                         }
                     }
+                    if (GameMain.Client != null) { panel.Item.CreateClientEvent(panel); }
+                    draggingConnected = null;
                 }
             }
 
@@ -214,15 +241,8 @@ namespace Barotrauma.Items.Components
             flashTimer -= deltaTime;
         }
 
-        private static void DrawWire(SpriteBatch spriteBatch, Wire wire, Item item, Vector2 end, Vector2 start, bool mouseIn, Wire equippedWire, ConnectionPanel panel, string label)
+        private static void DrawWire(SpriteBatch spriteBatch, Wire wire, Vector2 end, Vector2 start, Wire equippedWire, ConnectionPanel panel, string label)
         {
-            if (draggingConnected == wire)
-            {
-                if (!mouseIn) return;
-                end = PlayerInput.MousePosition;
-                start.X = (start.X + end.X) / 2.0f;
-            }
-
             int textX = (int)start.X;
             if (start.X < end.X)
                 textX -= 10;
@@ -243,11 +263,19 @@ namespace Barotrauma.Items.Components
 
             if (!string.IsNullOrEmpty(label))
             {
-                GUI.DrawString(spriteBatch,
-                    new Vector2(start.X < end.X ? textX - GUI.SmallFont.MeasureString(label).X : textX, start.Y - 5.0f),
-                    label,
-                    (mouseOn ? Color.Gold : Color.White) * (wire.Locked ? 0.6f : 1.0f), Color.Black * 0.8f,
-                    3, GUI.SmallFont);
+                if (start.Y > panel.GuiFrame.Rect.Bottom - 1.0f)
+                {
+                    //wire at the bottom of the panel -> draw the text below the panel, tilted 45 degrees
+                    GUI.SmallFont.DrawString(spriteBatch, label, start + Vector2.UnitY * 20 * GUI.Scale, Color.White, 45.0f, Vector2.Zero, 1.0f, SpriteEffects.None, 0.0f);
+                }
+                else
+                {
+                    GUI.DrawString(spriteBatch,
+                        new Vector2(start.X < end.X ? textX - GUI.SmallFont.MeasureString(label).X : textX, start.Y - 5.0f),
+                        label,
+                        (mouseOn ? Color.Gold : Color.White) * (wire.Locked ? 0.6f : 1.0f), Color.Black * 0.8f,
+                        3, GUI.SmallFont);
+                }
             }
 
             var wireEnd = end + Vector2.Normalize(start - end) * 30.0f;
@@ -258,14 +286,14 @@ namespace Barotrauma.Items.Components
             {
                 spriteBatch.Draw(wireVertical.Texture, new Rectangle(wireEnd.ToPoint(), new Point(18, (int)dist)), wireVertical.SourceRect,
                     Color.Gold,
-                    MathUtils.VectorToAngle(end - start) + MathHelper.PiOver2,     //angle of line (calulated above)
+                    MathUtils.VectorToAngle(end - start) + MathHelper.PiOver2,
                     new Vector2(6, 0), // point in line about which to rotate
                     SpriteEffects.None,
                     0.0f);
             }
             spriteBatch.Draw(wireVertical.Texture, new Rectangle(wireEnd.ToPoint(), new Point(12, (int)dist)), wireVertical.SourceRect,
                 wire.Item.Color * alpha,
-                MathUtils.VectorToAngle(end - start) + MathHelper.PiOver2,     //angle of line (calulated above)
+                MathUtils.VectorToAngle(end - start) + MathHelper.PiOver2,
                 new Vector2(6, 0), // point in line about which to rotate
                 SpriteEffects.None,
                 0.0f);
@@ -278,10 +306,11 @@ namespace Barotrauma.Items.Components
                 {
                     ConnectionPanel.HighlightedWire = wire;
 
-                    if (!wire.Locked && (!panel.Locked || Screen.Selected == GameMain.SubEditorScreen))
+                    bool allowRewiring = GameMain.NetworkMember?.ServerSettings == null || GameMain.NetworkMember.ServerSettings.AllowRewiring;
+                    if (allowRewiring && !wire.Locked && (!panel.Locked || Screen.Selected == GameMain.SubEditorScreen))
                     {
                         //start dragging the wire
-                        if (PlayerInput.LeftButtonHeld()) draggingConnected = wire;
+                        if (PlayerInput.LeftButtonHeld()) { draggingConnected = wire; }
                     }
                 }
             }

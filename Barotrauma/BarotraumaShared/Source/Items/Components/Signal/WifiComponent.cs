@@ -19,16 +19,17 @@ namespace Barotrauma.Items.Components
 
         private string prevSignal;
 
-        public Character.TeamType TeamID;
+        [Serialize(Character.TeamType.None, false, description: "WiFi components can only communicate with components that have the same Team ID.")]
+        public Character.TeamType TeamID { get; set; }
 
-        [Serialize(20000.0f, false)]
+        [Serialize(20000.0f, false, description: "How close the recipient has to be to receive a signal from this WiFi component.")]
         public float Range
         {
             get { return range; }
             set { range = Math.Max(value, 0.0f); }
         }
 
-        [InGameEditable, Serialize(1, true)]
+        [InGameEditable, Serialize(1, true, description: "WiFi components can only communicate with components that use the same channel.")]
         public int Channel
         {
             get { return channel; }
@@ -38,25 +39,24 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable(ToolTip = 
-            "If enabled, any signals received from another chat-linked wifi component are displayed "+
-            "as chat messages in the chatbox of the player holding the item."), Serialize(false, false)]
+        [Editable, Serialize(false, false, description: "If enabled, any signals received from another chat-linked wifi component are displayed " +
+            "as chat messages in the chatbox of the player holding the item.")]
         public bool LinkToChat
         {
             get;
             set;
         }
 
-        [Editable(ToolTip = "How many seconds have to pass between signals for a message to be displayed in the chatbox. "+
-            "Setting this to a very low value is not recommended, because it may cause an excessive amount of chat messages to be created "+
-            "if there are chat-linked wifi components that transmit a continuous signal."), Serialize(1.0f, true)]
+        [Editable, Serialize(1.0f, true, description: "How many seconds have to pass between signals for a message to be displayed in the chatbox. " +
+            "Setting this to a very low value is not recommended, because it may cause an excessive amount of chat messages to be created " +
+            "if there are chat-linked wifi components that transmit a continuous signal.")]
         public float MinChatMessageInterval
         {
             get;
             set;
         }
 
-        [Editable(ToolTip = "If set to true, the component will only create chat messages when the received signal changes."), Serialize(false, true)]
+        [Editable, Serialize(false, true, description: "If set to true, the component will only create chat messages when the received signal changes.")]
         public bool DiscardDuplicateChatMessages
         {
             get;
@@ -72,7 +72,7 @@ namespace Barotrauma.Items.Components
 
         public bool CanTransmit()
         {
-            return HasRequiredContainedItems(true);
+            return HasRequiredContainedItems(user: null, addMessage: false);
         }
         
         public IEnumerable<WifiComponent> GetReceiversInRange()
@@ -82,10 +82,13 @@ namespace Barotrauma.Items.Components
 
         public bool CanReceive(WifiComponent sender)
         {
-            if (sender == null || sender.channel != channel || sender.TeamID != TeamID) return false;
-            if (Vector2.DistanceSquared(item.WorldPosition, sender.item.WorldPosition) > sender.range * sender.range) return false;
+            if (sender == null || sender.channel != channel) { return false; }
+            if (sender.TeamID == Character.TeamType.Team1 && TeamID == Character.TeamType.Team2) { return false; }
+            if (sender.TeamID == Character.TeamType.Team2 && TeamID == Character.TeamType.Team1) { return false; }
 
-            return HasRequiredContainedItems(false);
+            if (Vector2.DistanceSquared(item.WorldPosition, sender.item.WorldPosition) > sender.range * sender.range) { return false; }
+
+            return HasRequiredContainedItems(user: null, addMessage: false);
         }
 
         public override void Update(float deltaTime, Camera cam)

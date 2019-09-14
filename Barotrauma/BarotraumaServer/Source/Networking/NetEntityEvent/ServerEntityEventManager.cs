@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Extensions;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -10,7 +9,7 @@ namespace Barotrauma.Networking
     class ServerEntityEvent : NetEntityEvent
     {
         private IServerSerializable serializable;
-        
+                
 #if DEBUG
         public string StackTrace;
 #endif
@@ -21,11 +20,10 @@ namespace Barotrauma.Networking
             get { return createTime; }
         }
 
-        public ServerEntityEvent(IServerSerializable entity, UInt16 id)
-            : base(entity, id)
+        public ServerEntityEvent(IServerSerializable serializableEntity, UInt16 id)
+            : base(serializableEntity, id)
         {
-            serializable = entity;
-
+            serializable = serializableEntity;
             createTime = Timing.TotalTime;
 
 #if DEBUG
@@ -33,7 +31,7 @@ namespace Barotrauma.Networking
 #endif
         }
 
-        public void Write(NetBuffer msg, Client recipient)
+        public void Write(IWriteMessage msg, Client recipient)
         {
             serializable.ServerWrite(msg, recipient, Data);
         }
@@ -67,7 +65,7 @@ namespace Barotrauma.Networking
             public readonly Client Sender;
 
             public readonly UInt16 CharacterStateID;
-            public readonly NetBuffer Data;
+            public readonly ReadWriteMessage Data;
 
             public readonly Character Character;
 
@@ -75,7 +73,7 @@ namespace Barotrauma.Networking
 
             public bool IsProcessed;
 
-            public BufferedEvent(Client sender, Character senderCharacter, UInt16 characterStateID, IClientSerializable targetEntity, NetBuffer data)
+            public BufferedEvent(Client sender, Character senderCharacter, UInt16 characterStateID, IClientSerializable targetEntity, ReadWriteMessage data)
             {
                 this.Sender = sender;
                 this.Character = senderCharacter;
@@ -292,11 +290,16 @@ namespace Barotrauma.Networking
             bufferedEvents.Add(bufferedEvent);
         }
 
+        public void RefreshEntityIDs()
+        {
+            events.ForEach(e => e.RefreshEntityID());
+            uniqueEvents.ForEach(e => e.RefreshEntityID());
+        }
 
         /// <summary>
         /// Writes all the events that the client hasn't received yet into the outgoing message
         /// </summary>
-        public void Write(Client client, NetOutgoingMessage msg)
+        public void Write(Client client, IWriteMessage msg)
         {
             Write(client, msg, out _);
         }
@@ -304,7 +307,7 @@ namespace Barotrauma.Networking
         /// <summary>
         /// Writes all the events that the client hasn't received yet into the outgoing message
         /// </summary>
-        public void Write(Client client, NetOutgoingMessage msg, out List<NetEntityEvent> sentEvents)
+        public void Write(Client client, IWriteMessage msg, out List<NetEntityEvent> sentEvents)
         {
             List<NetEntityEvent> eventsToSync = null;
             if (client.NeedsMidRoundSync)
@@ -367,7 +370,7 @@ namespace Barotrauma.Networking
             foreach (NetEntityEvent entityEvent in sentEvents)
             {
                 (entityEvent as ServerEntityEvent).Sent = true;
-                client.EntityEventLastSent[entityEvent.ID] = NetTime.Now;
+                client.EntityEventLastSent[entityEvent.ID] = Lidgren.Network.NetTime.Now;
             }
         }
 
@@ -395,9 +398,10 @@ namespace Barotrauma.Networking
                 //find the first event that hasn't been sent in roundtriptime or at all
                 client.EntityEventLastSent.TryGetValue(eventList[i].ID, out double lastSent);
 
-                float minInterval = Math.Max(client.Connection.AverageRoundtripTime, (float)server.UpdateInterval.TotalSeconds * 2);
+                float avgRoundtripTime = 0.01f; //TODO: reimplement client.Connection.AverageRoundtripTime
+                float minInterval = Math.Max(avgRoundtripTime, (float)server.UpdateInterval.TotalSeconds * 2);
 
-                if (lastSent > NetTime.Now - Math.Min(minInterval, 0.5f))
+                if (lastSent > Lidgren.Network.NetTime.Now - Math.Min(minInterval, 0.5f))
                 {
                     continue;
                 }
@@ -440,7 +444,7 @@ namespace Barotrauma.Networking
         /// <summary>
         /// Read the events from the message, ignoring ones we've already received
         /// </summary>
-        public void Read(NetIncomingMessage msg, Client sender = null)
+        public void Read(IReadMessage msg, Client sender = null)
         {
             UInt16 firstEventID = msg.ReadUInt16();
             int eventCount = msg.ReadByte();
@@ -468,7 +472,7 @@ namespace Barotrauma.Networking
                     {
                         DebugConsole.NewMessage("Received msg " + thisEventID, Color.Red);
                     }
-                    msg.Position += msgLength * 8;
+                    msg.BitPosition += msgLength * 8;
                 }
                 else if (entity == null)
                 {
@@ -482,7 +486,7 @@ namespace Barotrauma.Networking
                             Microsoft.Xna.Framework.Color.Orange);
                     }
                     sender.LastSentEntityEventID++;
-                    msg.Position += msgLength * 8;
+                    msg.BitPosition += msgLength * 8;
                 }
                 else
                 {
@@ -493,8 +497,10 @@ namespace Barotrauma.Networking
 
                     UInt16 characterStateID = msg.ReadUInt16();
 
-                    NetBuffer buffer = new NetBuffer();
-                    buffer.Write(msg.ReadBytes(msgLength - 2));
+                    ReadWriteMessage buffer = new ReadWriteMessage();
+                    byte[] temp = msg.ReadBytes(msgLength - 2);
+                    buffer.Write(temp, 0, msgLength - 2);
+                    buffer.BitPosition = 0;
                     BufferEvent(new BufferedEvent(sender, sender.Character, characterStateID, entity, buffer));
 
                     sender.LastSentEntityEventID++;
@@ -503,7 +509,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        protected override void WriteEvent(NetBuffer buffer, NetEntityEvent entityEvent, Client recipient = null)
+        protected override void WriteEvent(IWriteMessage buffer, NetEntityEvent entityEvent, Client recipient = null)
         {
             var serverEvent = entityEvent as ServerEntityEvent;
             if (serverEvent == null) return;
@@ -511,7 +517,7 @@ namespace Barotrauma.Networking
             serverEvent.Write(buffer, recipient);
         }
 
-        protected void ReadEvent(NetBuffer buffer, INetSerializable entity, Client sender = null)
+        protected void ReadEvent(IReadMessage buffer, INetSerializable entity, Client sender = null)
         {
             var clientEntity = entity as IClientSerializable;
             if (clientEntity == null) return;

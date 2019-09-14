@@ -2,7 +2,6 @@
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -273,7 +272,7 @@ namespace Barotrauma
                         attack.Afflictions.Clear();
                         foreach (Affliction affliction in multipliedAfflictions)
                         {
-                            attack.Afflictions.Add(affliction);
+                            attack.Afflictions.Add(affliction, null);
                         }
                         attacks.Add(attack);
                         break;
@@ -314,7 +313,7 @@ namespace Barotrauma
             if (entity is Character character)
             {
                 if (character.CurrentHull != null) return false;
-                if (character.ConfigPath == Character.HumanConfigFile)
+                if (character.IsHuman)
                 {
                     if (!triggeredBy.HasFlag(TriggererType.Human)) return false;
                 }
@@ -598,7 +597,7 @@ namespace Barotrauma
             return vel.ClampLength(ConvertUnits.ToDisplayUnits(ForceVelocityLimit)) * currentForceFluctuation;            
         }
 
-        public void ServerWrite(NetBuffer msg, Client c)
+        public void ServerWrite(IWriteMessage msg, Client c)
         {
             if (ForceFluctuationStrength > 0.0f)
             {

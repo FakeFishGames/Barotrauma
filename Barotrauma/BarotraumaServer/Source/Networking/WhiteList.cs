@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -25,47 +24,45 @@ namespace Barotrauma.Networking
     {
         partial void InitProjSpecific()
         {
-            if (File.Exists(SavePath))
+            if (!File.Exists(SavePath)) { return; }
+            
+            string[] lines;
+            try
             {
-                string[] lines;
-                try
-                {
-                    lines = File.ReadAllLines(SavePath);
-                }
-                catch (Exception e)
-                {
-                    DebugConsole.ThrowError("Failed to open whitelist in " + SavePath, e);
-                    return;
-                }
+                lines = File.ReadAllLines(SavePath);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Failed to open whitelist in " + SavePath, e);
+                return;
+            }
 
-                foreach (string line in lines)
+            foreach (string line in lines)
+            {
+                if (line[0] == '#')
                 {
-                    if (line[0] == '#')
+                    string lineval = line.Substring(1, line.Length - 1);
+                    Int32.TryParse(lineval, out int intVal);
+                    if (lineval.ToLower() == "true" || intVal != 0)
                     {
-                        string lineval = line.Substring(1, line.Length - 1);
-                        int intVal = 0;
-                        Int32.TryParse(lineval, out intVal);
-                        if (lineval.ToLower() == "true" || intVal != 0)
-                        {
-                            Enabled = true;
-                        }
-                        else
-                        {
-                            Enabled = false;
-                        }
+                        Enabled = true;
                     }
                     else
                     {
-                        string[] separatedLine = line.Split(',');
-                        if (separatedLine.Length < 2) continue;
-
-                        string name = String.Join(",", separatedLine.Take(separatedLine.Length - 1));
-                        string ip = separatedLine.Last();
-
-                        whitelistedPlayers.Add(new WhiteListedPlayer(name, ip));
+                        Enabled = false;
                     }
                 }
-            }
+                else
+                {
+                    string[] separatedLine = line.Split(',');
+                    if (separatedLine.Length < 2) continue;
+
+                    string name = string.Join(",", separatedLine.Take(separatedLine.Length - 1));
+                    string ip = separatedLine.Last();
+
+                    whitelistedPlayers.Add(new WhiteListedPlayer(name, ip));
+                }
+            }            
         }
 
         public void Save()
@@ -119,9 +116,7 @@ namespace Barotrauma.Networking
         private void RemoveFromWhiteList(WhiteListedPlayer wlp)
         {
             GameServer.Log("Removing " + wlp.Name + " from whitelist", ServerLog.MessageType.ServerMessage);
-
             whitelistedPlayers.Remove(wlp);
-            Save();
         }
 
         private void AddToWhiteList(string name, string ip)
@@ -129,10 +124,9 @@ namespace Barotrauma.Networking
             if (string.IsNullOrWhiteSpace(name)) return;
             if (whitelistedPlayers.Any(x => x.Name.ToLower() == name.ToLower() && x.IP == ip)) return;
             whitelistedPlayers.Add(new WhiteListedPlayer(name, ip));
-            Save();
         }
 
-        public void ServerAdminWrite(NetBuffer outMsg, Client c)
+        public void ServerAdminWrite(IWriteMessage outMsg, Client c)
         {
             if (!c.HasPermission(ClientPermissions.ManageSettings))
             {
@@ -144,7 +138,7 @@ namespace Barotrauma.Networking
             outMsg.Write(Enabled);
 
             outMsg.WritePadBits();
-            outMsg.WriteVariableInt32(whitelistedPlayers.Count);
+            outMsg.WriteVariableUInt32((UInt32)whitelistedPlayers.Count);
             for (int i = 0; i < whitelistedPlayers.Count; i++)
             {
                 WhiteListedPlayer whitelistedPlayer = whitelistedPlayers[i];
@@ -159,13 +153,13 @@ namespace Barotrauma.Networking
             }
         }
 
-        public bool ServerAdminRead(NetBuffer incMsg, Client c)
+        public bool ServerAdminRead(IReadMessage incMsg, Client c)
         {
             if (!c.HasPermission(ClientPermissions.ManageSettings))
             {
                 bool enabled = incMsg.ReadBoolean(); incMsg.ReadPadBits();
                 UInt16 removeCount = incMsg.ReadUInt16();
-                incMsg.Position += removeCount * 4 * 8;
+                incMsg.BitPosition += removeCount * 4 * 8;
                 UInt16 addCount = incMsg.ReadUInt16();
                 for (int i = 0; i < addCount; i++)
                 {
@@ -201,8 +195,10 @@ namespace Barotrauma.Networking
                     GameServer.Log(c.Name + " added " + name + " to whitelist (" + ip + ")", ServerLog.MessageType.ConsoleUsage);
                     AddToWhiteList(name, ip);
                 }
-                
-                return removeCount > 0 || addCount > 0 || prevEnabled!=enabled;
+
+                bool changed = removeCount > 0 || addCount > 0 || prevEnabled != enabled;
+                if (changed) { Save(); }
+                return changed;
             }
         }
     }

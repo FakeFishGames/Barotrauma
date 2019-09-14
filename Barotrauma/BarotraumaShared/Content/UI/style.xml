@@ -13,8 +13,9 @@
   -->
 
   <Font file="Content/Fonts/Exo2-SemiBold.otf">
-    <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Medium.otf" dynamicloading="true"/>
-    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Medium.otf" dynamicloading="true"/>
+    <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Medium.otf" dynamicloading="true" iscjk="true"/>
+    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Medium.otf" dynamicloading="true" iscjk="true"/>
+    <override language="Japanese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Medium.otf" dynamicloading="true" iscjk="true"/>
     <Size maxresolution="1024,768" size="11"/>
     <Size maxresolution="1280,800" size="12"/>
     <Size maxresolution="1920,1080" size="14"/>
@@ -23,13 +24,15 @@
     <Size size="24"/>
   </Font>
   <UnscaledSmallFont file="Content/Fonts/Exo2-SemiBold.otf">
-    <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Medium.otf" dynamicloading="true"/>
-    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Medium.otf" dynamicloading="true"/>
+    <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Medium.otf" dynamicloading="true" iscjk="true"/>
+    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Medium.otf" dynamicloading="true" iscjk="true"/>
+    <override language="Japanese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Medium.otf" dynamicloading="true" iscjk="true"/>
     <Size size="12"/>
   </UnscaledSmallFont>
   <SmallFont file="Content/Fonts/Exo2-SemiBold.otf">
-    <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Medium.otf" dynamicloading="true"/>
-    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Medium.otf" dynamicloading="true"/>
+    <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Medium.otf" dynamicloading="true" iscjk="true"/>
+    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Medium.otf" dynamicloading="true" iscjk="true"/>
+    <override language="Japanese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Medium.otf" dynamicloading="true" iscjk="true"/>
     <Size maxresolution="1024,768" size="9"/>
     <Size maxresolution="1280,800" size="10"/>
     <Size maxresolution="1920,1080" size="12"/>
@@ -38,8 +41,9 @@
     <Size size="24"/>
   </SmallFont>
   <LargeFont file="Content/Fonts/Code Pro Bold.otf" size="22">
-    <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Bold.otf" dynamicloading="true"/>
-    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf" dynamicloading="true"/>
+    <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Bold.otf" dynamicloading="true" iscjk="true"/>
+    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf" dynamicloading="true" iscjk="true"/>
+    <override language="Japanese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf" dynamicloading="true" iscjk="true"/>
     <Size maxresolution="1024,768" size="15"/>
     <Size maxresolution="1280,800" size="16"/>
     <Size maxresolution="1920,1080" size="22"/>
@@ -48,8 +52,9 @@
     <Size size="44"/>
   </LargeFont>
   <VideoTitle file="Content/Fonts/BebasNeue-Regular.otf" size="28">
-    <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Bold.otf" dynamicloading="true"/>
-    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf" dynamicloading="true"/>
+    <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Bold.otf" dynamicloading="true" iscjk="true"/>
+    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf" dynamicloading="true" iscjk="true"/>
+    <override language="Japanese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf" dynamicloading="true" iscjk="true"/>
     <override language="Russian" file="Content/Fonts/NotoSans/NotoSans-Bold.ttf" dynamicloading="false"/>
     <Size maxresolution="1024,768" size="20"/>
     <Size maxresolution="1280,800" size="25"/>
@@ -59,8 +64,9 @@
     <Size size="56"/>
   </VideoTitle>
   <ObjectiveTitle file="Content/Fonts/Code Pro Bold.otf" size="14">
-    <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Bold.otf" dynamicloading="true"/>
-    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf" dynamicloading="true"/>
+    <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Bold.otf" dynamicloading="true" iscjk="true"/>
+    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf" dynamicloading="true" iscjk="true"/>
+    <override language="Japanese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf" dynamicloading="true" iscjk="true"/>
     <Size maxresolution="1024,768" size="10"/>
     <Size maxresolution="1280,800" size="12"/>
     <Size maxresolution="1920,1080" size="14"/>
@@ -69,9 +75,10 @@
     <Size size="24"/>    
   </ObjectiveTitle>
   <ObjectiveName file="Content/Fonts/BebasNeue-Regular.otf" size="22">
-    <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Bold.otf" dynamicloading="true"/>
-    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf" dynamicloading="true"/>
+    <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Bold.otf" dynamicloading="true" iscjk="true"/>
+    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf" dynamicloading="true" iscjk="true"/>
     <override language="Russian" file="Content/Fonts/NotoSans/NotoSans-Bold.ttf" dynamicloading="false"/>
+    <override language="Japanese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf" dynamicloading="true" iscjk="true"/>
     <Size maxresolution="1024,768" size="15"/>
     <Size maxresolution="1280,800" size="16"/>
     <Size maxresolution="1920,1080" size="22"/>
@@ -102,7 +109,7 @@
     hovercolor="255,255,255,204"
     selectedcolor="255,255,255,204">
 
-    <Sprite texture="Content/UI/InnerGlow.png"  sourcerect ="0,0,512,384" slice="128,128,384,256"/>
+    <Sprite texture="Content/UI/InnerGlow.png" sourcerect ="0,0,512,384" slice="128,128,384,256"/>
   </InnerGlow>
   
   <OuterGlow
@@ -206,6 +213,22 @@
       padding="10.0, 0.0, 10.0, 0.0"/>
   </GUIButton>
 
+  <GUIButtonSlicedTopAndBottom
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255"
+    pressedcolor="230,230,230,255">
+
+    <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect="683, 79, 129, 31" slice="687, 83, 808, 104"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect="888, 96, 129, 31" slice="893, 103, 1013, 120"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" sourcerect="553, 79, 129, 31" slice="557, 83, 676, 104"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Pressed" sourcerect="553, 79, 129, 31" slice="557, 83, 676, 104"/>
+
+    <GUITextBlock
+      textcolor="153,166,179,255"
+      padding="10.0, 0.0, 10.0, 0.0"/>
+  </GUIButtonSlicedTopAndBottom>
+  
   <MainMenuGUITextBlock
     textcolor="0,0,0,255"
     color="255,255,255,255"
@@ -392,6 +415,7 @@
     color="102,150,175,255"
     hovercolor="255,255,255,255"
     selectedcolor="255,255,255,255"
+    textcolor="127,140,153,255"
     pressedcolor="100,100,100,255">
 
     <Sprite texture="Content/UI/UI_Atlas.png" state="None" tile="false" maintainaspectratio="true" sourcerect="907,428,22,22"/>
@@ -428,10 +452,10 @@
     selectedcolor="204,204,204,204"
     pressedcolor="150,150,150,255">
 
-    <Sprite texture="Content/UI/inventoryAtlas.png" state="None" tile="false" sourcerect="471,947,24,69"/>
-    <Sprite texture="Content/UI/inventoryAtlas.png" state="Hover" tile="false" sourcerect="471,947,24,69"/>
-    <Sprite texture="Content/UI/inventoryAtlas.png" state="Selected" tile="false" sourcerect="471,947,24,69"/>
-    <Sprite texture="Content/UI/inventoryAtlas.png" state="Pressed" tile="false" sourcerect="471,947,24,69"/>
+    <Sprite texture="Content/UI/UI_Atlas2.png" state="None" tile="false" sourcerect="235,9,62,174"/>
+    <Sprite texture="Content/UI/UI_Atlas2.png" state="Hover" tile="false" sourcerect="235,9,62,174"/>
+    <Sprite texture="Content/UI/UI_Atlas2.png" state="Selected" tile="false" sourcerect="235,9,62,174"/>
+    <Sprite texture="Content/UI/UI_Atlas2.png" state="Pressed" tile="false" sourcerect="235,9,62,174"/>
 
     <GUITextBlock
       textcolor="153,166,179,255"
@@ -444,15 +468,47 @@
     selectedcolor="204,204,204,204"
     pressedcolor="150,150,150,255">
 
-    <Sprite texture="Content/UI/inventoryAtlas.png" state="None" tile="false" sourcerect="584,972,69,24"/>
-    <Sprite texture="Content/UI/inventoryAtlas.png" state="Hover" tile="false" sourcerect="584,972,69,24"/>
-    <Sprite texture="Content/UI/inventoryAtlas.png" state="Selected" tile="false" sourcerect="584,972,69,24"/>
-    <Sprite texture="Content/UI/inventoryAtlas.png" state="Pressed" tile="false" sourcerect="584,972,69,24"/>
+    <Sprite texture="Content/UI/UI_Atlas2.png" state="None" tile="false" sourcerect="308,1,174,63"/>
+    <Sprite texture="Content/UI/UI_Atlas2.png" state="Hover" tile="false" sourcerect="308,1,174,63"/>
+    <Sprite texture="Content/UI/UI_Atlas2.png" state="Selected" tile="false" sourcerect="308,1,174,63"/>
+    <Sprite texture="Content/UI/UI_Atlas2.png" state="Pressed" tile="false" sourcerect="308,1,174,63"/>
 
     <GUITextBlock
       textcolor="153,166,179,255"
       padding="0.0, 0.0, 0.0, 0.0"/>
   </GUIButtonVerticalArrow>
+
+  <GUIButtonSolidHorizontalArrow
+    color="204,204,204,204"
+    hovercolor="255,255,255,255"
+    selectedcolor="204,204,204,204"
+    pressedcolor="150,150,150,255">
+
+    <Sprite texture="Content/UI/UI_Atlas2.png" state="None" tile="false" sourcerect="308,66,68,131"/>
+    <Sprite texture="Content/UI/UI_Atlas2.png" state="Hover" tile="false" sourcerect="308,66,68,131"/>
+    <Sprite texture="Content/UI/UI_Atlas2.png" state="Selected" tile="false" sourcerect="308,66,68,131"/>
+    <Sprite texture="Content/UI/UI_Atlas2.png" state="Pressed" tile="false" sourcerect="308,66,68,131"/>
+
+    <GUITextBlock
+      textcolor="153,166,179,255"
+      padding="0.0, 0.0, 0.0, 0.0"/>
+  </GUIButtonSolidHorizontalArrow>
+
+  <GUIButtonSolidVerticalArrow
+    color="204,204,204,204"
+    hovercolor="255,255,255,255"
+    selectedcolor="204,204,204,204"
+    pressedcolor="150,150,150,255">
+
+    <Sprite texture="Content/UI/UI_Atlas2.png" state="None" tile="false" sourcerect="486,1,131,69"/>
+    <Sprite texture="Content/UI/UI_Atlas2.png" state="Hover" tile="false" sourcerect="486,1,131,69"/>
+    <Sprite texture="Content/UI/UI_Atlas2.png" state="Selected" tile="false" sourcerect="486,1,131,69"/>
+    <Sprite texture="Content/UI/UI_Atlas2.png" state="Pressed" tile="false" sourcerect="486,1,131,69"/>
+
+    <GUITextBlock
+      textcolor="153,166,179,255"
+      padding="0.0, 0.0, 0.0, 0.0"/>
+  </GUIButtonSolidVerticalArrow>
   
   <GUITextBlock
     textcolor="127,140,153,255"
@@ -675,7 +731,7 @@
       padding="0.0, 0.0, 0.0, 0.0"/>
   </GUIBugButton>
   
-  <GUIMessageBox    
+  <GUIMessageBox.Default
     color="0,0,0,204"
     hovercolor="0,0,0,204"
     selectedcolor="0,0,0,204"
@@ -690,10 +746,26 @@
       hovercolor="255,255,255,255"
       selectedcolor="255,255,255,255"  
       textcolor="0,0,0,255">
-
       <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="32, 541, 420, 220" slice="87,576,430,687"/>
     </GUIFrame>
-  </GUIMessageBox>
+  </GUIMessageBox.Default>
+  
+  <GUIMessageBox.InGame
+    color="0,0,0,0"
+    hovercolor="0,0,0,0"
+    selectedcolor="0,0,0,0"
+    pressedcolor="0,0,0,0"
+    textcolor="0,0,0,0">
+
+    <GUIFrame
+      padding="40.0, 20.0, 40.0, 20.0"
+      color="255,255,255,255"
+      hovercolor="255,255,255,255"
+      selectedcolor="255,255,255,255"
+      textcolor="127,140,153,255">
+      <Sprite texture="Content/UI/UI_Atlas2.png" state="None" sourcerect="136,611,148,129" slice="158,633,255,714"/>
+    </GUIFrame>
+  </GUIMessageBox.InGame>
 
   <GUIProgressBar
     padding="0.0, 0.0, 0.0, 0.0"
@@ -805,7 +877,8 @@
   <CPRButton
     color="230,230,230,255"
     hovercolor="255,255,255,255"
-    selectedcolor="230,230,230,255">
+    selectedcolor="230,230,230,255"
+    pressedcolor="200,200,200,255">
 
     <Sprite texture="Content/UI/Health/cprButton.png" state="None" tile="false" sourcerect ="0, 0, 64, 64"/>
     <Sprite texture="Content/UI/Health/cprButton.png" state="Hover" tile="false" sourcerect ="0, 0, 64, 64"/>
@@ -936,12 +1009,13 @@
   <IndicatorButton
     color="255,255,255,255"
     hovercolor="255,255,255,255"
-    selectedcolor="255,255,255,255">
+    selectedcolor="255,255,255,255"    
+    pressedcolor="200,200,200,255">
 
-    <Sprite texture="Content/Items/MachineInterface.png" state="None" sourcerect ="0,92,121,46" slice="18,103,104,129"/>
-    <Sprite texture="Content/Items/MachineInterface.png" state="Hover" sourcerect ="0,92,121,46" slice="18,103,104,129"/>
-    <Sprite texture="Content/Items/MachineInterface.png" state="Selected" sourcerect ="122,92,121,46" slice="139,103,225,129"/>
-    <Sprite texture="Content/Items/MachineInterface.png" state="Pressed" sourcerect ="0,92,121,46" slice="18,103,104,129"/>
+    <Sprite texture="Content/Items/MachineInterface.png" state="None" sourcerect="0,92,121,46" slice="18,103,104,129"/>
+    <Sprite texture="Content/Items/MachineInterface.png" state="Hover" sourcerect="0,92,121,46" slice="18,103,104,129"/>
+    <Sprite texture="Content/Items/MachineInterface.png" state="Selected" sourcerect="122,92,121,46" slice="139,103,225,129"/>
+    <Sprite texture="Content/Items/MachineInterface.png" state="Pressed" sourcerect="0,92,121,46" slice="18,103,104,129"/>
 
     <GUITextBlock
       textcolor="0,0,0,255"

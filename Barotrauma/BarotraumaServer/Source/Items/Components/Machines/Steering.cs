@@ -7,5 +7,11 @@ namespace Barotrauma.Items.Components
         public bool MaintainPos;
         public bool LevelStartSelected;
         public bool LevelEndSelected;
+
+        public bool UnsentChanges
+        {
+            get { return unsentChanges; }
+            set { unsentChanges = value; }
+        }
     }
 }

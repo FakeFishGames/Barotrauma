@@ -15,7 +15,20 @@ namespace Barotrauma
         {
             radioButtons = new Dictionary<Enum, GUITickBox>();
         }
-        
+
+        public override bool Enabled
+        {
+            get => base.Enabled;
+            set
+            {
+                base.Enabled = value;
+                foreach(KeyValuePair<Enum, GUITickBox> rbPair in radioButtons)
+                {
+                    rbPair.Value.Enabled = value;
+                }
+            }
+        }
+
         public void AddRadioButton(Enum key, GUITickBox radioButton)
         {
             if (selected == key) radioButton.Selected = true;

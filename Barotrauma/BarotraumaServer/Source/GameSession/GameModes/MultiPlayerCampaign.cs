@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -51,7 +50,8 @@ namespace Barotrauma
                 {
                     DebugConsole.ShowQuestionPrompt("Enter a save name for the campaign:", (string saveName) =>
                     {
-                        StartNewCampaign(saveName, GameMain.NetLobbyScreen.SelectedSub.FilePath, GameMain.NetLobbyScreen.LevelSeed);
+                        string savePath = SaveUtil.CreateSavePath(SaveUtil.SaveType.Multiplayer, saveName);
+                        StartNewCampaign(savePath, GameMain.NetLobbyScreen.SelectedSub.FilePath, GameMain.NetLobbyScreen.LevelSeed);
                     });
                 }
                 else
@@ -153,7 +153,7 @@ namespace Barotrauma
             return assignedJobs;
         }
 
-        public void ServerWrite(NetBuffer msg, Client c)
+        public void ServerWrite(IWriteMessage msg, Client c)
         {
             System.Diagnostics.Debug.Assert(map.Locations.Count < UInt16.MaxValue);
 
@@ -191,7 +191,7 @@ namespace Barotrauma
             }
         }
 
-        public void ServerRead(NetBuffer msg, Client sender)
+        public void ServerRead(IReadMessage msg, Client sender)
         {
             UInt16 selectedLocIndex = msg.ReadUInt16();
             byte selectedMissionIndex = msg.ReadByte();

@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name="Coelanth" humanoid="false">
+<Character speciesname="Coelanth" humanoid="false">
   
   <ragdolls folder="default"/>
   <animations folder="default"/>
@@ -13,8 +13,8 @@
     doesbleed="true"/>
 
   <sound file="Content/Characters/Coelanth/attack1.ogg" state="Attack" />
-  <sound file="Content/Characters/Coelanth/idle1.ogg" state="None" />
-  <sound file="Content/Characters/Coelanth/idle2.ogg" state="None" />
+  <sound file="Content/Characters/Coelanth/idle1.ogg" state="Idle" />
+  <sound file="Content/Characters/Coelanth/idle2.ogg" state="Idle" />
 
   <ai
     combatstrength="400"

@@ -9,9 +9,11 @@ namespace Barotrauma.Networking
     struct TempClient
     {
         public string Name;
+        public UInt64 SteamID;
         public byte ID;
         public UInt16 CharacterID;
         public bool Muted;
+        public bool AllowKicking;
     }
 
     partial class Client : IDisposable
@@ -36,6 +38,8 @@ namespace Barotrauma.Networking
 #endif
             }
         }
+
+        public bool AllowKicking;
 
         public void UpdateSoundPosition()
         {
@@ -73,7 +77,7 @@ namespace Barotrauma.Networking
             VoipQueue = null; VoipSound = null;
             if (ID == GameMain.Client.ID) return;
             VoipQueue = new VoipQueue(ID, false, true);
-            GameMain.Client.VoipClient.RegisterQueue(VoipQueue);
+            GameMain.Client?.VoipClient?.RegisterQueue(VoipQueue);
             VoipSound = null;
         }
 

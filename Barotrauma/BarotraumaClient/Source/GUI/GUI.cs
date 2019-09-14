@@ -1,3 +1,4 @@
+using Barotrauma.CharacterEditor;
 using Barotrauma.Extensions;
 using Barotrauma.Sounds;
 using Barotrauma.Tutorials;
@@ -8,6 +9,7 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -83,6 +85,7 @@ namespace Barotrauma
         public static ScalableFont VideoTitleFont => Style?.VideoTitleFont;
         public static ScalableFont ObjectiveTitleFont => Style?.ObjectiveTitleFont;
         public static ScalableFont ObjectiveNameFont => Style?.ObjectiveNameFont;
+        public static ScalableFont CJKFont { get; private set; }
 
         public static UISprite UIGlow => Style.UIGlow;
 
@@ -153,18 +156,43 @@ namespace Barotrauma
         public static void Init(GameWindow window, IEnumerable<ContentPackage> selectedContentPackages, GraphicsDevice graphicsDevice)
         {
             GUI.graphicsDevice = graphicsDevice;
-            var uiStyles = ContentPackage.GetFilesOfType(selectedContentPackages, ContentType.UIStyle).ToList();
-            if (uiStyles.Count == 0)
+
+            var files = ContentPackage.GetFilesOfType(selectedContentPackages, ContentType.UIStyle);
+            XElement selectedStyle = null;
+            foreach (var file in files)
+            {
+                XDocument doc = XMLExtensions.TryLoadXml(file);
+                if (doc == null) { continue; }
+                var mainElement = doc.Root;
+                if (doc.Root.IsOverride())
+                {
+                    mainElement = doc.Root.FirstElement();
+                    if (selectedStyle != null)
+                    {
+                        DebugConsole.NewMessage($"Overriding the ui styles with '{file}'", Color.Yellow);
+                    }
+                }
+                else if (selectedStyle != null)
+                {
+                    DebugConsole.ThrowError("Another ui style already loaded! Use <override></override> tags to override it.");
+                    break;
+                }
+                selectedStyle = mainElement;
+            }
+            if (selectedStyle == null)
             {
                 DebugConsole.ThrowError("No UI styles defined in the selected content package!");
-                return;
             }
-            else if (uiStyles.Count > 1)
+            else
             {
-                DebugConsole.ThrowError("Multiple UI styles defined in the selected content package! Selecting the first one.");
+                Style = new GUIStyle(selectedStyle, graphicsDevice);
             }
 
-            Style = new GUIStyle(uiStyles[0], graphicsDevice);
+            if (CJKFont == null)
+            {
+                CJKFont = new ScalableFont("Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf",
+                    Font.Size, graphicsDevice, dynamicLoading: true, isCJK: true);
+            }
         }
 
         public static void LoadContent(bool loadSounds = true)
@@ -184,8 +212,12 @@ namespace Barotrauma
                 sounds[(int)GUISoundType.DropItem] = GameMain.SoundManager.LoadSound("Content/Sounds/DropItem.ogg", false);
             }
             // create 1x1 texture for line drawing
-            t = new Texture2D(GraphicsDevice, 1, 1);
-            t.SetData(new Color[] { Color.White });// fill the texture with white
+            CrossThread.RequestExecutionOnMainThread(() =>
+            {
+                t = new Texture2D(GraphicsDevice, 1, 1);
+                t.SetData(new Color[] { Color.White });// fill the texture with white
+            });
+            
             SubmarineIcon = new Sprite("Content/UI/IconAtlas.png", new Rectangle(452, 385, 182, 81), new Vector2(0.5f, 0.5f));
             arrow = new Sprite("Content/UI/IconAtlas.png", new Rectangle(392, 393, 49, 45), new Vector2(0.5f, 0.5f));
             SpeechBubbleIcon = new Sprite("Content/UI/IconAtlas.png", new Rectangle(385, 449, 66, 60), new Vector2(0.5f, 0.5f));
@@ -274,7 +306,7 @@ namespace Barotrauma
                     Color.White, Color.Black * 0.5f, 0, SmallFont);
 
                 DrawString(spriteBatch, new Vector2(10, 40),
-                    "Bodies: " + GameMain.World.BodyList.Count + " (" + GameMain.World.BodyList.FindAll(b => b.Awake && b.Enabled).Count + " awake)",
+                    $"Bodies: {GameMain.World.BodyList.Count} ({GameMain.World.BodyList.FindAll(b => b.Awake && b.Enabled).Count} awake, {GameMain.World.BodyList.FindAll(b => b.Awake && b.BodyType == FarseerPhysics.Dynamics.BodyType.Dynamic && b.Enabled).Count} dynamic)",
                     Color.White, Color.Black * 0.5f, 0, SmallFont);
 
                 if (Screen.Selected.Cam != null)
@@ -304,6 +336,16 @@ namespace Barotrauma
                     int y = 0;
                     DrawString(spriteBatch, new Vector2(500, y),
                         "Sounds (Ctrl+S to hide): ", Color.White, Color.Black * 0.5f, 0, SmallFont);
+                    y += 15;
+
+                    DrawString(spriteBatch, new Vector2(500, y),
+                        "Current playback amplitude: " + GameMain.SoundManager.PlaybackAmplitude.ToString(), Color.White, Color.Black * 0.5f, 0, SmallFont);
+
+                    y += 15;
+
+                    DrawString(spriteBatch, new Vector2(500, y),
+                        "Compressed dynamic range gain: " + GameMain.SoundManager.CompressionDynamicRangeGain.ToString(), Color.White, Color.Black * 0.5f, 0, SmallFont);
+
                     y += 15;
 
                     DrawString(spriteBatch, new Vector2(500, y),
@@ -339,17 +381,20 @@ namespace Barotrauma
                                 soundStr += " (looping)";
                                 clr = Color.Yellow;
                             }
-
                             if (playingSoundChannel.IsStream)
                             {
                                 soundStr += " (streaming)";
                                 clr = Color.Lime;
                             }
-
                             if (!playingSoundChannel.IsPlaying)
                             {
                                 soundStr += " (stopped)";
                                 clr *= 0.5f;
+                            }
+                            else if (playingSoundChannel.Muffled)
+                            {
+                                soundStr += " (muffled)";
+                                clr = Color.Lerp(clr, Color.LightGray, 0.5f);
                             }
                         }
 
@@ -383,6 +428,10 @@ namespace Barotrauma
                 {
                     debugDrawEvents = !debugDrawEvents;
                 }
+                if (MouseOn != null)
+                {
+                    DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 500, 20), $"Selected UI Element: {MouseOn.GetType().ToString()}", Color.LightGreen, Color.Black * 0.5f, 0, SmallFont);
+                }
             }
 
             if (HUDLayoutSettings.DebugDraw) HUDLayoutSettings.Draw(spriteBatch);
@@ -391,7 +440,7 @@ namespace Barotrauma
 
             if (Character.Controlled?.Inventory != null)
             {
-                if (!Character.Controlled.LockHands && Character.Controlled.Stun >= -0.1f && !Character.Controlled.IsDead)
+                if (!Character.Controlled.LockHands && Character.Controlled.Stun < 0.1f && !Character.Controlled.IsDead)
                 {
                     Inventory.DrawFront(spriteBatch);
                 }
@@ -577,10 +626,7 @@ namespace Barotrauma
 
         private static void HandlePersistingElements(float deltaTime)
         {
-            if (GUIMessageBox.VisibleBox != null && GUIMessageBox.VisibleBox.UserData as string != "verificationprompt" && GUIMessageBox.VisibleBox.UserData as string != "bugreporter")
-            {
-                GUIMessageBox.VisibleBox.AddToGUIUpdateList();
-            }
+            GUIMessageBox.AddActiveToGUIUpdateList();
 
             if (pauseMenuOpen)
             {
@@ -634,6 +680,12 @@ namespace Barotrauma
                 }
             }
             return MouseOn;
+        }
+
+        public static bool HasSizeChanged(Point referenceResolution, float referenceUIScale, float referenceHUDScale)
+        {
+            return GameMain.GraphicsWidth != referenceResolution.X || GameMain.GraphicsHeight != referenceResolution.Y ||
+                   referenceUIScale != Inventory.UIScale || referenceHUDScale != Scale;
         }
 
         public static void Update(float deltaTime)
@@ -948,7 +1000,6 @@ namespace Barotrauma
         public static Texture2D CreateCircle(int radius, bool filled = false)
         {
             int outerRadius = radius * 2 + 2; // So circle doesn't go out of bounds
-            Texture2D texture = new Texture2D(GraphicsDevice, outerRadius, outerRadius);
 
             Color[] data = new Color[outerRadius * outerRadius];
 
@@ -986,16 +1037,19 @@ namespace Barotrauma
                 }
             }
 
-
-            texture.SetData(data);
+            Texture2D texture = null;
+            CrossThread.RequestExecutionOnMainThread(() =>
+            {
+                texture = new Texture2D(GraphicsDevice, outerRadius, outerRadius);
+                texture.SetData(data);
+            });
             return texture;
         }
 
         public static Texture2D CreateCapsule(int radius, int height)
         {
             int textureWidth = radius * 2, textureHeight = height + radius * 2;
-
-            Texture2D texture = new Texture2D(GraphicsDevice, textureWidth, textureHeight);
+            
             Color[] data = new Color[textureWidth * textureHeight];
 
             // Colour the entire texture transparent first.
@@ -1023,13 +1077,19 @@ namespace Barotrauma
                 TrySetArray(data, y * textureWidth + (textureWidth - 1), Color.White);
             }
 
-            texture.SetData(data);
+            Texture2D texture = null;
+            CrossThread.RequestExecutionOnMainThread(() =>
+            {
+                texture = new Texture2D(GraphicsDevice, textureWidth, textureHeight);
+                texture.SetData(data);
+            });
             return texture;
         }
 
         public static Texture2D CreateRectangle(int width, int height)
         {
-            Texture2D texture = new Texture2D(GraphicsDevice, width, height);
+            width = Math.Max(width, 1);
+            height = Math.Max(height, 1);
             Color[] data = new Color[width * height];
 
             for (int i = 0; i < data.Length; i++)
@@ -1047,7 +1107,12 @@ namespace Barotrauma
                 TrySetArray(data, (height - 1) * width + x, Color.White);
             }
 
-            texture.SetData(data);
+            Texture2D texture = null;
+            CrossThread.RequestExecutionOnMainThread(() =>
+            {
+                texture = new Texture2D(GraphicsDevice, width, height);
+                texture.SetData(data);
+            });
             return texture;
         }
 
@@ -1378,8 +1443,8 @@ namespace Barotrauma
                         Vector2 moveAmount = centerDiff == Point.Zero ? Rand.Vector(1.0f) : Vector2.Normalize(centerDiff.ToVector2());
 
                         //make sure we don't move the interfaces out of the screen
-                        Vector2 moveAmount1 = ClampMoveAmount(rect1, area, moveAmount * 10.0f * rect1Area / (rect1Area + rect2Area));
-                        Vector2 moveAmount2 = ClampMoveAmount(rect2, area, -moveAmount * 10.0f * rect1Area / (rect1Area + rect2Area));
+                        Vector2 moveAmount1 = ClampMoveAmount(rect1, area, moveAmount * 20.0f * rect1Area / (rect1Area + rect2Area));
+                        Vector2 moveAmount2 = ClampMoveAmount(rect2, area, -moveAmount * 20.0f * rect1Area / (rect1Area + rect2Area));
 
                         //move by 10 units in the desired direction and repeat until nothing overlaps
                         //(or after 100 iterations, in which case we'll just give up and let them overlap)
@@ -1444,6 +1509,9 @@ namespace Barotrauma
 
             if (pauseMenuOpen)
             {
+                Inventory.draggingItem = null;
+                Inventory.DraggingInventory = null;
+
                 PauseMenu = new GUIFrame(new RectTransform(Vector2.One, Canvas), style: null, color: Color.Black * 0.5f);
                     
                 var pauseMenuInner = new GUIFrame(new RectTransform(new Vector2(0.13f, 0.35f), PauseMenu.RectTransform, Anchor.Center) { MinSize = new Point(200, 300) });
@@ -1524,9 +1592,10 @@ namespace Barotrauma
                 button.OnClicked += (btn, userData) =>
                 {
                     var quitButton = button;
-                    if (GameMain.GameSession != null)
+                    if (GameMain.GameSession != null || (Screen.Selected is CharacterEditorScreen || Screen.Selected is SubEditorScreen))
                     {
-                        var msgBox = new GUIMessageBox("", TextManager.Get("PauseMenuQuitVerification"), new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") })
+                        string text = GameMain.GameSession == null ? "PauseMenuQuitVerificationEditor" : "PauseMenuQuitVerification";
+                        var msgBox = new GUIMessageBox("", TextManager.Get(text), new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") })
                         {
                             UserData = "verificationprompt"
                         };

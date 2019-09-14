@@ -10,9 +10,16 @@ namespace Barotrauma
 {
     class Order
     {
-        private static string ConfigFile = Path.Combine("Content", "Orders.xml");
-
-        public static List<Order> PrefabList;
+        public static Dictionary<string, Order> Prefabs { get; private set; }
+        public static List<Order> PrefabList { get; private set; }
+        public static Order GetPrefab(string identifier)
+        {
+            if (!Prefabs.TryGetValue(identifier, out Order order))
+            {
+                DebugConsole.ThrowError($"Cannot find an order with the identifier '{identifier}'!");
+            }
+            return order;
+        }
         
         public Order Prefab
         {
@@ -27,7 +34,7 @@ namespace Barotrauma
         public readonly Type ItemComponentType;
         public readonly string[] ItemIdentifiers;
 
-        public readonly string AITag;
+        public readonly string Identifier;
 
         public readonly Color Color;
 
@@ -49,24 +56,57 @@ namespace Barotrauma
 
         static Order()
         {
-            PrefabList = new List<Order>();
+            Prefabs = new Dictionary<string, Order>();
 
-            XDocument doc = XMLExtensions.TryLoadXml(ConfigFile);
-            if (doc == null || doc.Root == null) return;
-
-            foreach (XElement orderElement in doc.Root.Elements())
+            foreach (string file in GameMain.Instance.GetFilesOfType(ContentType.Orders))
             {
-                if (orderElement.Name.ToString().ToLowerInvariant() != "order") continue;
-                var newOrder = new Order(orderElement);
-                newOrder.Prefab = newOrder;
-                PrefabList.Add(newOrder);
+                XDocument doc = XMLExtensions.TryLoadXml(file);
+                if (doc == null) { continue; }
+                var mainElement = doc.Root;
+                bool allowOverriding = false;
+                if (doc.Root.IsOverride())
+                {
+                    mainElement = doc.Root.FirstElement();
+                    allowOverriding = true;
+                }
+                foreach (XElement sourceElement in mainElement.Elements())
+                {
+                    var orderElement = sourceElement.IsOverride() ? sourceElement.FirstElement() : sourceElement;
+                    string name = orderElement.Name.ToString();
+                    if (name.Equals("order", StringComparison.OrdinalIgnoreCase))
+                    {
+                        string identifier = orderElement.GetAttributeString("identifier", null);
+                        if (string.IsNullOrWhiteSpace(identifier))
+                        {
+                            DebugConsole.ThrowError($"Error in file {file}: The order element '{name}' does not have an identifier! All orders must have a unique identifier.");
+                            continue;
+                        }
+                        if (Prefabs.TryGetValue(identifier, out Order duplicate))
+                        {
+                            if (allowOverriding || sourceElement.IsOverride())
+                            {
+                                DebugConsole.NewMessage($"Overriding an existing order '{identifier}' with another one defined in '{file}'", Color.Yellow);
+                                Prefabs.Remove(identifier);
+                            }
+                            else
+                            {
+                                DebugConsole.ThrowError($"Error in file {file}: Duplicate element with the idenfitier '{identifier}' found in '{file}'! All orders must have a unique identifier. Use <override></override> tags to override an order with the same identifier.");
+                                continue;
+                            }
+                        }
+                        var newOrder = new Order(orderElement);
+                        newOrder.Prefab = newOrder;
+                        Prefabs.Add(identifier, newOrder);
+                    }
+                }
             }
+            PrefabList = new List<Order>(Prefabs.Values);
         }
 
         private Order(XElement orderElement)
         {
-            AITag = orderElement.GetAttributeString("aitag", "");
-            Name = TextManager.Get("OrderName." + AITag, true) ?? "Name not found";
+            Identifier = orderElement.GetAttributeString("identifier", "");
+            Name = TextManager.Get("OrderName." + Identifier, true) ?? "Name not found";
 
             string targetItemType = orderElement.GetAttributeString("targetitemtype", "");
             if (!string.IsNullOrWhiteSpace(targetItemType))
@@ -78,7 +118,7 @@ namespace Barotrauma
 
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Error in " + ConfigFile + ", item component type " + targetItemType + " not found", e);
+                    DebugConsole.ThrowError("Error in the order definitions: item component type " + targetItemType + " not found", e);
                 }
             }
 
@@ -90,14 +130,14 @@ namespace Barotrauma
             AppropriateJobs = orderElement.GetAttributeStringArray("appropriatejobs", new string[0]);
             Options = orderElement.GetAttributeStringArray("options", new string[0]);
 
-            string translatedOptionNames = TextManager.Get("OrderOptions." + AITag, true);
+            string translatedOptionNames = TextManager.Get("OrderOptions." + Identifier, true);
             if (translatedOptionNames == null)
             {
                 OptionNames = orderElement.GetAttributeStringArray("optionnames", new string[0]);
             }
             else
             {
-                string[] splitOptionNames = translatedOptionNames.Split(',');
+                string[] splitOptionNames = translatedOptionNames.Split(',', '，');
                 OptionNames = new string[Options.Length];
                 for (int i = 0; i < Options.Length && i < splitOptionNames.Length; i++)
                 {
@@ -116,7 +156,7 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "sprite":
-                        SymbolSprite = new Sprite(subElement);
+                        SymbolSprite = new Sprite(subElement, lazyLoad: true);
                         break;
                 }
             }
@@ -127,7 +167,7 @@ namespace Barotrauma
             Prefab = prefab;
 
             Name                = prefab.Name;
-            AITag               = prefab.AITag;
+            Identifier          = prefab.Identifier;
             ItemComponentType   = prefab.ItemComponentType;
             Options             = prefab.Options;
             SymbolSprite        = prefab.SymbolSprite;
@@ -168,7 +208,7 @@ namespace Barotrauma
         {
             orderOption = orderOption ?? "";
 
-            string messageTag = (givingOrderToSelf && !TargetAllCharacters ? "OrderDialogSelf." : "OrderDialog.") + AITag;
+            string messageTag = (givingOrderToSelf && !TargetAllCharacters ? "OrderDialogSelf." : "OrderDialog.") + Identifier;
             if (!string.IsNullOrEmpty(orderOption)) messageTag += "." + orderOption;
 
             if (targetCharacterName == null) targetCharacterName = "";

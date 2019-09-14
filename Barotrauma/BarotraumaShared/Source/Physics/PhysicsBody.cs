@@ -2,11 +2,12 @@
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Factories;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using LimbParams = Barotrauma.RagdollParams.LimbParams;
+using ColliderParams = Barotrauma.RagdollParams.ColliderParams;
 
 namespace Barotrauma
 {
@@ -375,7 +376,7 @@ namespace Barotrauma
             //Enum.TryParse(element.GetAttributeString("bodytype", "Dynamic"), out BodyType bodyType);
             body.BodyType = BodyType.Dynamic;
             body.CollisionCategories = Physics.CollisionItem;
-            body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
+            body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionPlatform;
             body.Friction = element.GetAttributeFloat("friction", 0.3f);
             body.Restitution = element.GetAttributeFloat("restitution", 0.05f);                    
             body.UserData = this;
@@ -512,11 +513,9 @@ namespace Barotrauma
 #endif
         }
         
-        public bool IsValidValue(float value, string valueName, float? minValue = null, float? maxValue = null)
+        public bool IsValidValue(float value, string valueName, float minValue = float.MinValue, float maxValue = float.MaxValue)
         {
-            if (!MathUtils.IsValid(value) ||
-                (minValue.HasValue && value < minValue.Value) ||
-                (maxValue.HasValue && value > maxValue.Value))
+            if (!MathUtils.IsValid(value) || value < minValue || value > maxValue)
             {
                 string userData = UserData == null ? "null" : UserData.ToString();
                 string errorMsg =
@@ -539,11 +538,11 @@ namespace Barotrauma
             return true;
         }
 
-        private bool IsValidValue(Vector2 value, string valueName, float? minValue = null, float? maxValue = null)
+        private bool IsValidValue(Vector2 value, string valueName, float minValue = float.MinValue, float maxValue = float.MaxValue)
         {
             if (!MathUtils.IsValid(value) ||
-                (minValue.HasValue && (value.X < minValue.Value || value.Y < minValue.Value)) ||
-                (maxValue.HasValue && (value.X > maxValue.Value || value.Y > maxValue)))
+                (value.X < minValue || value.Y < minValue) ||
+                (value.X > maxValue || value.Y > maxValue))
             {
                 string userData = UserData == null ? "null" : UserData.ToString();
                 string errorMsg =

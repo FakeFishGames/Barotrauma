@@ -24,17 +24,29 @@ namespace Barotrauma
         static void Main(string[] args)
         {
             GameMain game = null;
-            Thread inputThread = null;
 
 #if !DEBUG
             try
             {
 #endif
                 game = new GameMain(args);
-                inputThread = new Thread(new ThreadStart(DebugConsole.UpdateCommandLine));
-                inputThread.Start();
+                DebugConsole.InputThread = null;
+#if !DEBUG
+                if (!args.Contains("-ownerkey") && !args.Contains("-steamid"))
+                {
+#endif
+                    DebugConsole.InputThread = new Thread(new ThreadStart(DebugConsole.UpdateCommandLine));
+                    DebugConsole.InputThread.IsBackground = true;
+                    DebugConsole.InputThread.Start();
+#if !DEBUG
+                }
+                else
+                {
+                    Console.WriteLine("Server launched through client, command line IO disabled");
+                }
+#endif
                 game.Run();
-                inputThread.Abort(); inputThread.Join();
+                DebugConsole.InputThread?.Abort(); DebugConsole.InputThread?.Join();
                 if (GameSettings.SendUserStatistics) GameAnalytics.OnQuit();
                 SteamManager.ShutDown();
 #if !DEBUG
@@ -42,13 +54,31 @@ namespace Barotrauma
             catch (Exception e)
             {
                 CrashDump(game, "servercrashreport.log", e);
-                inputThread.Abort(); inputThread.Join();
+                GameMain.Server?.NotifyCrash();
+                DebugConsole.InputThread?.Abort(); DebugConsole.InputThread?.Join();
             }
 #endif
         }
         
         static void CrashDump(GameMain game, string filePath, Exception exception)
         {
+            try
+            {
+                GameMain.Server?.ServerSettings?.SaveSettings();
+                GameMain.Server?.ServerSettings?.BanList.Save();
+                if (GameMain.Server?.ServerSettings?.KarmaPreset == "custom")
+                {
+                    GameMain.Server?.KarmaManager?.SaveCustomPreset();
+                    GameMain.Server?.KarmaManager?.Save();
+                }
+            }
+            //gotta catch them all, we don't want to crash while writing a crash report
+            catch (Exception e)
+            {
+                string errorMsg = "Exception thrown while writing a crash report: " + e.Message + "\n" + e.StackTrace;
+                GameAnalyticsManager.AddErrorEventOnce("CrashDump:FailedToSaveSettings", EGAErrorSeverity.Error, errorMsg);
+            }
+
             int existingFiles = 0;
             string originalFilePath = filePath;
             while (File.Exists(filePath))
@@ -89,6 +119,17 @@ namespace Barotrauma
             sb.AppendLine(exception.StackTrace);
             sb.AppendLine("\n");
 
+            if (exception.InnerException != null)
+            {
+                sb.AppendLine("InnerException: " + exception.InnerException.Message);
+                if (exception.InnerException.TargetSite != null)
+                {
+                    sb.AppendLine("Target site: " + exception.InnerException.TargetSite.ToString());
+                }
+                sb.AppendLine("Stack trace: ");
+                sb.AppendLine(exception.InnerException.StackTrace);
+            }
+
             sb.AppendLine("Last debug messages:");
             for (int i = DebugConsole.Messages.Count - 1; i > 0 && i > DebugConsole.Messages.Count - 15; i-- )
             {
@@ -104,7 +145,7 @@ namespace Barotrauma
 
             if (GameSettings.SendUserStatistics)
             {
-                GameAnalytics.AddErrorEvent(EGAErrorSeverity.Error, crashReport);
+                GameAnalytics.AddErrorEvent(EGAErrorSeverity.Critical, crashReport);
                 GameAnalytics.OnQuit();
                 Console.Write("A crash report (\"crashreport.log\") was saved in the root folder of the game and sent to the developers.");
             }

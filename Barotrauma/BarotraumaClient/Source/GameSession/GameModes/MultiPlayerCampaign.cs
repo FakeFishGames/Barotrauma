@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -10,6 +9,8 @@ namespace Barotrauma
 {
     partial class MultiPlayerCampaign : CampaignMode
     {
+        public bool SuppressStateSending = false;
+
         private UInt16 startWatchmanID, endWatchmanID;
 
         public static GUIComponent StartCampaignSetup( IEnumerable<Submarine> submarines, IEnumerable<string> saveFiles)
@@ -129,7 +130,7 @@ namespace Barotrauma
             }
         }
 
-        public void ClientWrite(NetBuffer msg)
+        public void ClientWrite(IWriteMessage msg)
         {
             System.Diagnostics.Debug.Assert(map.Locations.Count < UInt16.MaxValue);
 
@@ -147,7 +148,7 @@ namespace Barotrauma
         }
 
         //static because we may need to instantiate the campaign if it hasn't been done yet
-        public static void ClientRead(NetBuffer msg)
+        public static void ClientRead(IReadMessage msg)
         {
             byte campaignID = msg.ReadByte();
             UInt16 updateID = msg.ReadUInt16();
@@ -177,7 +178,7 @@ namespace Barotrauma
             CharacterInfo myCharacterInfo = null;
             if (hasCharacterData)
             {
-                myCharacterInfo = CharacterInfo.ClientRead(Character.HumanConfigFile, msg);
+                myCharacterInfo = CharacterInfo.ClientRead(Character.HumanSpeciesName, msg);
             }
             
             MultiPlayerCampaign campaign = GameMain.GameSession?.GameMode as MultiPlayerCampaign;
@@ -213,6 +214,8 @@ namespace Barotrauma
             
             if (NetIdUtils.IdMoreRecent(updateID, campaign.lastUpdateID))
             {
+                campaign.SuppressStateSending = true;
+
                 campaign.Map.SetLocation(currentLocIndex == UInt16.MaxValue ? -1 : currentLocIndex);
                 campaign.Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
                 campaign.Map.SelectMission(selectedMissionIndex);
@@ -236,6 +239,8 @@ namespace Barotrauma
                 }
 
                 campaign.lastUpdateID = updateID;
+
+                campaign.SuppressStateSending = false;
             }
         }
 

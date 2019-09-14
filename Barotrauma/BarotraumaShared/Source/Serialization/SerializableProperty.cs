@@ -8,11 +8,10 @@ using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
 
-
 namespace Barotrauma
 {
     [AttributeUsage(AttributeTargets.Property)]
-    public class Editable : Attribute
+    class Editable : Attribute
     {
         public int MaxLength;
         public int DecimalCount = 1;
@@ -21,9 +20,12 @@ namespace Barotrauma
         public float MinValueFloat = float.MinValue, MaxValueFloat = float.MaxValue;
         public float ValueStep;
 
-        public string ToolTip;
-
         public string DisplayName;
+
+        /// <summary>
+        /// Currently implemented only for int fields. TODO: implement the remaining types (SerializableEntityEditor)
+        /// </summary>
+        public bool ReadOnly;
 
         public Editable(int maxLength = 20)
         {
@@ -45,7 +47,7 @@ namespace Barotrauma
     }
 
     [AttributeUsage(AttributeTargets.Property)]
-    public class InGameEditable : Editable
+    class InGameEditable : Editable
     {
     }
 
@@ -57,6 +59,8 @@ namespace Barotrauma
         public bool isSaveable;
         public string translationTextTag;
 
+        public string Description;
+
         /// <summary>
         /// Makes the property serializable to/from XML
         /// </summary>
@@ -64,11 +68,12 @@ namespace Barotrauma
         /// <param name="isSaveable">Is the value saved to XML when serializing.</param>
         /// <param name="translationTextTag">If set to anything else than null, SerializableEntityEditors will show what the text gets translated to or warn if the text is not found in the language files.
         /// Setting the value to a non-empty string will let the user select the text from one whose tag starts with the given string (e.g. RoomName. would show all texts with a RoomName.* tag)</param>
-        public Serialize(object defaultValue, bool isSaveable, string translationTextTag = null)
+        public Serialize(object defaultValue, bool isSaveable, string description = "", string translationTextTag = null)
         {
             this.defaultValue = defaultValue;
             this.isSaveable = isSaveable;
             this.translationTextTag = translationTextTag;
+            this.Description = description;
         }
     }
 
@@ -166,7 +171,6 @@ namespace Barotrauma
 
             try
             {
-
                 switch (typeName)
                 {
                     case "bool":
@@ -175,19 +179,25 @@ namespace Barotrauma
                         propertyInfo.SetValue(parentObject, boolValue, null);
                         break;
                     case "int":
-                        int intVal;
-                        if (int.TryParse(value, out intVal))
+                        if (int.TryParse(value, out int intVal))
                         {
                             if (TrySetValueWithoutReflection(parentObject, intVal)) { return true; }
                             propertyInfo.SetValue(parentObject, intVal, null);
                         }
+                        else
+                        {
+                            return false;
+                        }
                         break;
                     case "float":
-                        float floatVal;
-                        if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out floatVal))
+                        if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out float floatVal))
                         {
                             if (TrySetValueWithoutReflection(parentObject, floatVal)) { return true; }
                             propertyInfo.SetValue(parentObject, floatVal, null);
+                        }
+                        else
+                        {
+                            return false;
                         }
                         break;
                     case "string":
@@ -414,14 +424,14 @@ namespace Barotrauma
         {
             switch (Name)
             {
-                case "Condition":
-                    if (parentObject is Item item) { return item.Condition; }                    
-                    break;
                 case "Voltage":
                     if (parentObject is Powered powered) { return powered.Voltage; }
                     break;
                 case "Charge":
                     if (parentObject is PowerContainer powerContainer) { return powerContainer.Charge; }
+                    break;
+                case "Overload":
+                    if (parentObject is PowerTransfer powerTransfer) { return powerTransfer.Overload; }
                     break;
                 case "AvailableFuel":
                     { if (parentObject is Reactor reactor) { return reactor.AvailableFuel; } }
@@ -459,6 +469,21 @@ namespace Barotrauma
                     break;
                 case "IsOn":
                     { if (parentObject is LightComponent lightComponent) { return lightComponent.IsOn; } }
+                    break;
+                case "Condition":
+                    {
+                        if (parentObject is Item item) { return item.Condition; }
+                    }
+                    break;
+                case "ContainerIdentifier":
+                    {
+                        if (parentObject is Item item) { return item.ContainerIdentifier; }
+                    }
+                    break;
+                case "PhysicsBodyActive":
+                    {
+                        if (parentObject is Item item) { return item.PhysicsBodyActive; }
+                    }
                     break;
             }
 
@@ -648,6 +673,42 @@ namespace Barotrauma
 
                 element.Attribute(property.Name)?.Remove();
                 element.SetAttributeValue(property.NameToLowerInvariant, stringValue);
+            }
+        }
+
+        /// <summary>
+        /// Upgrade the properties of an entity saved with an older version of the game. Properties that should be upgraded are defined using "Upgrade" elements in the config file.
+        /// for example, <Upgrade gameversion="0.9.2.0" scale="0.5"/> would force the scale of the entity to 0.5 if it was saved with a version prior to 0.9.2.0.
+        /// </summary>
+        /// <param name="entity">The entity to upgrade</param>
+        /// <param name="configElement">The XML element to get the upgrade instructions from (e.g. the config of an item prefab)</param>
+        /// <param name="savedVersion">The game version the entity was saved with</param>
+        public static void UpgradeGameVersion(ISerializableEntity entity, XElement configElement, Version savedVersion)
+        {
+            foreach (XElement subElement in configElement.Elements())
+            {
+                if (subElement.Name.ToString().ToLowerInvariant() != "upgrade") { continue; }
+                var upgradeVersion = new Version(subElement.GetAttributeString("gameversion", "0.0.0.0"));
+                if (savedVersion >= upgradeVersion) { continue; }                
+                foreach (XAttribute attribute in subElement.Attributes())
+                {
+                    string attributeName = attribute.Name.ToString().ToLowerInvariant();
+                    if (attributeName == "gameversion") { continue; }
+                    if (entity.SerializableProperties.TryGetValue(attributeName, out SerializableProperty property))
+                    {
+                        property.TrySetValue(entity, attribute.Value);
+                    }
+                    else if (entity is Item item)
+                    {
+                        foreach (ISerializableEntity component in item.AllPropertyObjects)
+                        {
+                            if (component.SerializableProperties.TryGetValue(attributeName, out SerializableProperty componentProperty))
+                            {
+                                componentProperty.TrySetValue(component, attribute.Value);
+                            }
+                        }
+                    }
+                }                
             }
         }
     }

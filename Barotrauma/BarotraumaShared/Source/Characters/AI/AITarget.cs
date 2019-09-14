@@ -14,11 +14,6 @@ namespace Barotrauma
             get;
             private set;
         }
-
-        /// <summary>
-        /// Use as a minimum or static sight range.
-        /// </summary>
-        public static float StaticSightRange = 3000;
         
         private float soundRange;
         private float sightRange;
@@ -64,12 +59,18 @@ namespace Barotrauma
             }
         }
 
+        public float SonarDisruption
+        {
+            get;
+            set;
+        }
+
         public string SonarLabel;
 
         public bool Enabled = true;
 
         public float MinSoundRange, MinSightRange;
-        public float MaxSoundRange = float.MaxValue, MaxSightRange = float.MaxValue;
+        public float MaxSoundRange = 100000, MaxSightRange = 100000;
 
         public TargetType Type { get; private set; }
 
@@ -122,11 +123,12 @@ namespace Barotrauma
         {
             SightRange = element.GetAttributeFloat("sightrange", 0.0f);
             SoundRange = element.GetAttributeFloat("soundrange", 0.0f);
-            MinSightRange = element.GetAttributeFloat("minsightrange", SightRange);
-            MinSoundRange = element.GetAttributeFloat("minsoundrange", SoundRange);
+            MinSightRange = element.GetAttributeFloat("minsightrange", 0f);
+            MinSoundRange = element.GetAttributeFloat("minsoundrange", 0f);
             MaxSightRange = element.GetAttributeFloat("maxsightrange", SightRange);
             MaxSoundRange = element.GetAttributeFloat("maxsoundrange", SoundRange);
             FadeOutTime = element.GetAttributeFloat("fadeouttime", FadeOutTime);
+            SonarDisruption = element.GetAttributeFloat("sonardisruption", 0.0f);
             SonarLabel = element.GetAttributeString("sonarlabel", "");
             string typeString = element.GetAttributeString("type", "Any");
             if (Enum.TryParse(typeString, out TargetType t))
@@ -135,15 +137,9 @@ namespace Barotrauma
             }
         }
 
-        public AITarget(Entity e, float sightRange = -1, float soundRange = 0)
+        public AITarget(Entity e)
         {
             Entity = e;
-            if (sightRange < 0)
-            {
-                sightRange = StaticSightRange;
-            }
-            SightRange = sightRange;
-            SoundRange = soundRange;
             List.Add(this);
         }
 

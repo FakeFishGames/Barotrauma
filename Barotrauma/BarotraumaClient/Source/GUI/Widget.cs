@@ -58,6 +58,8 @@ namespace Barotrauma
         public event Action<SpriteBatch, float> PreDraw;
         public event Action<SpriteBatch, float> PostDraw;
 
+        public bool RequireMouseOn = true;
+
         public Action refresh;
 
         public object data;
@@ -109,13 +111,16 @@ namespace Barotrauma
         {
             PreUpdate?.Invoke(deltaTime);
             if (!enabled) { return; }
-            if (IsMouseOver)
+            if (IsMouseOver || (!RequireMouseOn && selectedWidgets.Contains(this) && PlayerInput.LeftButtonHeld()))
             {
                 Hovered?.Invoke();
-                if ((multiselect && !selectedWidgets.Contains(this)) || selectedWidgets.None())
+                if (RequireMouseOn || PlayerInput.LeftButtonDown())
                 {
-                    selectedWidgets.Add(this);
-                    Selected?.Invoke();
+                    if ((multiselect && !selectedWidgets.Contains(this)) || selectedWidgets.None())
+                    {
+                        selectedWidgets.Add(this);
+                        Selected?.Invoke();
+                    }
                 }
             }
             else if (selectedWidgets.Contains(this))

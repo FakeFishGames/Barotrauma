@@ -1,4 +1,5 @@
 ﻿using FarseerPhysics;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -19,7 +20,7 @@ namespace Barotrauma.Items.Components
         }
     }
 
-    partial class Controller : ItemComponent
+    partial class Controller : ItemComponent, IServerSerializable
     {
         //where the limbs of the user should be positioned when using the controller
         private List<LimbPos> limbPositions;
@@ -37,6 +38,8 @@ namespace Barotrauma.Items.Components
         private Item focusTarget;
         private float targetRotation;
 
+        private bool state;
+
         public Vector2 UserPos
         {
             get { return userPos; }
@@ -48,6 +51,13 @@ namespace Barotrauma.Items.Components
             get { return user; }
         }
 
+        [Editable, Serialize(false, false, description: "When enabled, the item will continuously send out a 0/1 signal and interacting with it will flip the signal (making the item behave like a switch). When disabled, the item will simply send out 1 when interacted with.")]
+        public bool IsToggle
+        {
+            get;
+            set;
+        }
+
         public Controller(Item item, XElement element)
             : base(item, element)
         {
@@ -55,7 +65,7 @@ namespace Barotrauma.Items.Components
 
             userPos = element.GetAttributeVector2("UserPos", Vector2.Zero);
 
-            Enum.TryParse<Direction>(element.GetAttributeString("direction", "None"), out dir);
+            Enum.TryParse(element.GetAttributeString("direction", "None"), out dir);
                 
             foreach (XElement el in element.Elements())
             {
@@ -83,7 +93,12 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam) 
         {
             this.cam = cam;
-            
+
+            if (IsToggle)
+            {
+                item.SendSignal(0, state ? "1" : "0", "signal_out", sender: null);
+            }
+
             if (user == null 
                 || user.Removed
                 || user.SelectedConstruction != item
@@ -94,7 +109,7 @@ namespace Barotrauma.Items.Components
                     CancelUsing(user);
                     user = null;
                 }
-                IsActive = false;
+                if (!IsToggle) { IsActive = false; }
                 return;
             }
 
@@ -169,7 +184,7 @@ namespace Barotrauma.Items.Components
             }
 
             item.SendSignal(0, "1", "trigger_out", user);
-            
+
             ApplyStatusEffects(ActionType.OnUse, 1.0f, activator);
             
             return true;
@@ -254,12 +269,23 @@ namespace Barotrauma.Items.Components
 
         public override bool Pick(Character picker)
         {
-            item.SendSignal(0, "1", "signal_out", picker);
-
+            if (IsToggle)
+            {
+                if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
+                {
+                    state = !state;
+#if SERVER
+                    item.CreateServerEvent(this);
+#endif
+                }
+            }
+            else
+            {
+                item.SendSignal(0, "1", "signal_out", picker);
+            }
 #if CLIENT
             PlaySound(ActionType.OnUse, item.WorldPosition, picker);
 #endif
-
             return true;
         }
 

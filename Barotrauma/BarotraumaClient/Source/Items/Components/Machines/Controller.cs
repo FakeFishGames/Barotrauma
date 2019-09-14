@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma.Items.Components
 {
@@ -38,6 +39,8 @@ namespace Barotrauma.Items.Components
         private void ToggleCrewArea(bool value, bool storeOriginalState)
         {
             var crewManager = GameMain.GameSession.CrewManager;
+            if (crewManager == null) { return; }
+
             if (storeOriginalState)
             {
                 crewAreaOriginalState = crewManager.ToggleCrewAreaOpen;
@@ -48,6 +51,8 @@ namespace Barotrauma.Items.Components
         private void ToggleChatBox(bool value, bool storeOriginalState)
         {
             var crewManager = GameMain.GameSession.CrewManager;
+            if (crewManager == null) { return; }
+
             if (crewManager.IsSinglePlayer)
             {
                 if (crewManager.ChatBox != null)
@@ -67,6 +72,11 @@ namespace Barotrauma.Items.Components
                 }
                 GameMain.Client.ChatBox.ToggleOpen = value;
             }
+        }
+
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        {
+            state = msg.ReadBoolean();
         }
     }
 }

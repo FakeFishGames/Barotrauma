@@ -1,7 +1,6 @@
 ﻿using Barotrauma.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -229,7 +228,13 @@ namespace Barotrauma
 
             surface = rect.Y - rect.Height;
 
-            aiTarget = new AITarget(this);
+            aiTarget = new AITarget(this)
+            {
+                MinSightRange = 2000,
+                MaxSightRange = 5000,
+                MaxSoundRange = 5000,
+                SoundRange = 0
+            };
 
             hullList.Add(this);
 
@@ -242,6 +247,8 @@ namespace Barotrauma
             WaterVolume = 0.0f;
 
             InsertToList();
+
+            DebugConsole.Log("Created hull (" + ID + ")");
         }
 
         public static Rectangle GetBorders()
@@ -416,13 +423,14 @@ namespace Barotrauma
 
         public override void Update(float deltaTime, Camera cam)
         {
+            base.Update(deltaTime, cam);
             UpdateProjSpecific(deltaTime, cam);
 
             Oxygen -= OxygenDeteriorationSpeed * deltaTime;
 
             FireSource.UpdateAll(FireSources, deltaTime);
 
-            aiTarget.SightRange = Submarine == null ? 0.0f : Math.Max(Submarine.Velocity.Length() * 2000.0f, AITarget.StaticSightRange);
+            aiTarget.SightRange = Submarine == null ? aiTarget.MinSightRange : Submarine.Velocity.Length() / 2 * aiTarget.MaxSightRange;
             aiTarget.SoundRange -= deltaTime * 1000.0f;
          
             if (!update)

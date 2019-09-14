@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using Lidgren.Network;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -13,9 +12,9 @@ namespace Barotrauma.Items.Components
             public bool ContinuousSignal;
             public bool State;
             public string Connection;
-            [Serialize("", false, translationTextTag = "Label.")]
+            [Serialize("", false, translationTextTag: "Label.", description: "The text displayed on this button/tickbox."), Editable]
             public string Label { get; set; }
-            [Serialize("1", false)]
+            [Serialize("1", false, description: "The signal sent out when this button is pressed or this tickbox checked."), Editable]
             public string Signal { get; set; }
 
             public string Name => "CustomInterfaceElement";
@@ -41,7 +40,7 @@ namespace Barotrauma.Items.Components
         }
 
         private string[] labels;
-        [Serialize("", true)]
+        [Serialize("", true, description: "The texts displayed on the buttons/tickboxes, separated by commas.")]
         public string Labels
         {
             get { return string.Join(",", labels); }
@@ -56,7 +55,7 @@ namespace Barotrauma.Items.Components
             }
         }
         private string[] signals;
-        [Serialize("", true)]
+        [Serialize("", true, description: "The signals sent when the buttons are pressed or the tickboxes checked, separated by commas.")]
         public string Signals
         {
             //use semicolon as a separator because comma may be needed in the signals (for color or vector values for example)

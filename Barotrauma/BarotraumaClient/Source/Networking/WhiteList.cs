@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -60,6 +59,7 @@ namespace Barotrauma.Networking
                     addNewButton.Enabled = box.Selected;
 
                     localEnabled = box.Selected;
+
 
                     return true;
                 }
@@ -145,16 +145,12 @@ namespace Barotrauma.Networking
         {
             if (obj is WhiteListedPlayer)
             {
-                WhiteListedPlayer wlp = obj as WhiteListedPlayer;
-                if (wlp == null) return false;
-
+                if (!(obj is WhiteListedPlayer wlp)) return false;
                 if (!localRemoved.Contains(wlp.UniqueIdentifier)) localRemoved.Add(wlp.UniqueIdentifier);
             }
             else if (obj is LocalAdded)
             {
-                LocalAdded lad = obj as LocalAdded;
-                if (lad == null) return false;
-
+                if (!(obj is LocalAdded lad)) return false;
                 if (localAdded.Contains(lad)) localAdded.Remove(lad);
             }
 
@@ -180,7 +176,7 @@ namespace Barotrauma.Networking
             return true;
         }
 
-        public void ClientAdminRead(NetBuffer incMsg)
+        public void ClientAdminRead(IReadMessage incMsg)
         {
             bool hasPermission = incMsg.ReadBoolean();
             if (!hasPermission)
@@ -195,8 +191,8 @@ namespace Barotrauma.Networking
             incMsg.ReadPadBits();
 
             whitelistedPlayers.Clear();
-            Int32 bannedPlayerCount = incMsg.ReadVariableInt32();
-            for (int i = 0; i < bannedPlayerCount; i++)
+            UInt32 bannedPlayerCount = incMsg.ReadVariableUInt32();
+            for (int i = 0; i < (int)bannedPlayerCount; i++)
             {
                 string name = incMsg.ReadString();
                 UInt16 uniqueIdentifier = incMsg.ReadUInt16();
@@ -210,7 +206,6 @@ namespace Barotrauma.Networking
                 {
                     ip = "IP concealed by host";
                 }
-                DebugConsole.NewMessage("nerd: " + name, Color.Lime);
                 whitelistedPlayers.Add(new WhiteListedPlayer(name, uniqueIdentifier, ip));
             }
 
@@ -220,7 +215,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void ClientAdminWrite(NetBuffer outMsg)
+        public void ClientAdminWrite(IWriteMessage outMsg)
         {
             outMsg.Write(localEnabled);
             outMsg.WritePadBits();
