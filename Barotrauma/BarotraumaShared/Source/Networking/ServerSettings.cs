@@ -31,10 +31,10 @@ namespace Barotrauma.Networking
     public enum PlayStyle
     {
         Serious = 0,
-        Roleplay = 1,
-        Casual = 2,
-        SomethingDifferent = 3,
-        Rampage = 4
+        Casual = 1,
+        Roleplay = 2,
+        Rampage = 3,
+        SomethingDifferent = 4
     }
 
     partial class ServerSettings : ISerializableEntity

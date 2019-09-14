@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <PlayStyles>
-  <PlayStyleBanner identifier="Serious" texture="Content/UI/Server/playstylebanners1.png" sourcerect="0,0,1024,410" color="0,128,192"/>
-  <PlayStyleBanner identifier="Roleplay" texture="Content/UI/Server/playstylebanners1.png" sourcerect="0,512,1024,410" color="128,64,0"/>
-  <PlayStyleBanner identifier="Casual" texture="Content/UI/Server/playstylebanners2.png" sourcerect="0,0,1024,410" color="34,160,117" />
-  <PlayStyleBanner identifier="SomethingDifferent" texture="Content/UI/Server/playstylebanners2.png" sourcerect="0,512,1024,410" color="150,100,140"/>
-  <PlayStyleBanner identifier="Rampage" texture="Content/UI/Server/playstylebanners3.png" sourcerect="0,0,1024,410" color="200,0,0"/>
+  <PlayStyleBanner identifier="Serious" texture="Content/UI/Server/PlayStyleBanners1.png" sourcerect="0,0,1024,410" color="#20686c"/>
+  <PlayStyleBanner identifier="Casual" texture="Content/UI/Server/PlayStyleBanners1.png" sourcerect="0,512,1024,410" color="#1f661c"/>
+  <PlayStyleBanner identifier="Roleplay" texture="Content/UI/Server/PlayStyleBanners2.png" sourcerect="0,0,1024,410" color="#8b1b45" />
+  <PlayStyleBanner identifier="Rampage" texture="Content/UI/Server/PlayStyleBanners2.png" sourcerect="0,512,1024,410" color="#8a3622"/>
+  <PlayStyleBanner identifier="SomethingDifferent" texture="Content/UI/Server/PlayStyleBanners3.png" sourcerect="0,0,1024,410" color="#6d2460"/>
 
-  <PlayStyleIcon identifier="friendlyfire.true" texture="Content/UI/Server/ServerListIcons.png" sourcerect="0,0,128,128" color="255,255,255"/>
-  <PlayStyleIcon identifier="friendlyfire.false" texture="Content/UI/Server/ServerListIcons.png" sourcerect="0,256,128,128" color="255,255,255"/>
-  <PlayStyleIcon identifier="modded.true" texture="Content/UI/Server/ServerListIcons.png" sourcerect="128,0,128,128" color="255,255,255"/>
-  <PlayStyleIcon identifier="modded.false" texture="Content/UI/Server/ServerListIcons.png" sourcerect="128,256,128,128" color="255,255,255"/>
-  <PlayStyleIcon identifier="karma.true" texture="Content/UI/Server/ServerListIcons.png" sourcerect="256,0,128,128" color="255,255,255"/>
-  <PlayStyleIcon identifier="karma.false" texture="Content/UI/Server/ServerListIcons.png" sourcerect="256,256,128,128" color="255,255,255"/>
-  <PlayStyleIcon identifier="247.true" texture="Content/UI/Server/ServerListIcons.png" sourcerect="0,128,128,128" color="255,255,255"/>
-  <PlayStyleIcon identifier="247.false" texture="Content/UI/Server/ServerListIcons.png" sourcerect="0,384,128,128" color="255,255,255"/>
-  <PlayStyleIcon identifier="voip.true" texture="Content/UI/Server/ServerListIcons.png" sourcerect="128,128,128,128" color="255,255,255"/>
-  <PlayStyleIcon identifier="voip.false" texture="Content/UI/Server/ServerListIcons.png" sourcerect="128,384,128,128" color="255,255,255"/>
+  <PlayStyleIcon identifier="friendlyfire.true" texture="Content/UI/Server/ServerListIcons.png" sourcerect="0,0,128,128" color="#ffffff"/>
+  <PlayStyleIcon identifier="friendlyfire.false" texture="Content/UI/Server/ServerListIcons.png" sourcerect="0,256,128,128" color="#ffffff"/>
+  <PlayStyleIcon identifier="modded.true" texture="Content/UI/Server/ServerListIcons.png" sourcerect="128,0,128,128" color="#ffffff"/>
+  <PlayStyleIcon identifier="modded.false" texture="Content/UI/Server/ServerListIcons.png" sourcerect="128,256,128,128" color="#ffffff"/>
+  <PlayStyleIcon identifier="karma.true" texture="Content/UI/Server/ServerListIcons.png" sourcerect="256,0,128,128" color="#ffffff"/>
+  <PlayStyleIcon identifier="karma.false" texture="Content/UI/Server/ServerListIcons.png" sourcerect="256,256,128,128" color="#ffffff"/>
+  <PlayStyleIcon identifier="247.true" texture="Content/UI/Server/ServerListIcons.png" sourcerect="0,128,128,128" color="#ffffff"/>
+  <PlayStyleIcon identifier="247.false" texture="Content/UI/Server/ServerListIcons.png" sourcerect="0,384,128,128" color="#ffffff"/>
+  <PlayStyleIcon identifier="voip.true" texture="Content/UI/Server/ServerListIcons.png" sourcerect="128,128,128,128" color="#ffffff"/>
+  <PlayStyleIcon identifier="voip.false" texture="Content/UI/Server/ServerListIcons.png" sourcerect="128,384,128,128" color="#ffffff"/>
   <!-- TODO: request new traitors icons -->
-  <PlayStyleIcon identifier="traitors.true" texture="Content/UI/Server/ServerPlayStyleIcons.png" sourcerect="256,128,128,128" color="190,60,60"/>
-  <PlayStyleIcon identifier="traitors.false" texture="Content/UI/Server/ServerPlayStyleIcons.png" sourcerect="256,128,128,128" color="100,100,100"/>
+  <PlayStyleIcon identifier="traitors.true" texture="Content/UI/Server/ServerPlayStyleIcons.png" sourcerect="256,128,128,128" color="#be3c3c"/>
+  <PlayStyleIcon identifier="traitors.false" texture="Content/UI/Server/ServerPlayStyleIcons.png" sourcerect="256,128,128,128" color="#646464"/>
 </PlayStyles>

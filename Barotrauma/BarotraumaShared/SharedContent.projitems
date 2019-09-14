@@ -698,13 +698,13 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\UI\Server\FavoriteStars.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\UI\Server\playstylebanners1.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\UI\Server\PlayStyleBanners1.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\UI\Server\playstylebanners2.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\UI\Server\PlayStyleBanners2.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\UI\Server\playstylebanners3.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\UI\Server\PlayStyleBanners3.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\UI\Server\PlayStyles.xml">
