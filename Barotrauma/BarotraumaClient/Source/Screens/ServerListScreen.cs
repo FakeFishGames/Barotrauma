@@ -131,7 +131,7 @@ namespace Barotrauma
         private readonly GUITickBox filterFriendlyFire;
         private readonly GUITickBox filterKarma;
         private readonly GUITickBox filterTraitor;
-        //private readonly GUITickBox filterModded;
+        private readonly GUITickBox filterModded;
         private readonly GUITickBox filterVoip;
         private readonly List<GUITickBox> playStyleTickBoxes;
         private readonly List<GUITickBox> gameModeTickBoxes;
@@ -353,14 +353,13 @@ namespace Barotrauma
             };
             filterTextList.Add(filterVoip.TextBlock);
 
-            /*
-            filterModded = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("servertag.modded.true"))
+            
+            filterModded = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filters.Content.RectTransform), TextManager.Get("servertag.modded.true"))
             {
-                ToolTip = TextManager.Get("servertagdescription.modded.true"),
+                ToolTip = TextManager.Get("servertag.modded.true"),
                 OnSelected = (tickBox) => { FilterServers(); return true; }
             };
             filterTextList.Add(filterModded.TextBlock);
-            */
 
             // Play Style Selection
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), filters.Content.RectTransform), TextManager.Get("ServerSettingsPlayStyle"))
@@ -917,6 +916,7 @@ namespace Barotrauma
                     (!filterFriendlyFire.Selected || serverInfo.FriendlyFireEnabled == false) &&
                     (!filterTraitor.Selected || serverInfo.TraitorsEnabled == YesNoMaybe.Yes || serverInfo.TraitorsEnabled == YesNoMaybe.Maybe) &&
                     (!filterVoip.Selected || serverInfo.VoipEnabled == true) &&
+                    (!filterModded.Selected || serverInfo.GetPlayStyleTags().Any(t => t.Contains("modded.true"))) &&
                     ((selectedTab == Tab.Browse) ||
                      (selectedTab == Tab.Recent && serverInfo.Recent) ||
                      (selectedTab == Tab.Favorites && serverInfo.Favorite)) &&
