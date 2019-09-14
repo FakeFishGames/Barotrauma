@@ -134,6 +134,7 @@ namespace Barotrauma
         //private readonly GUITickBox filterModded;
         private readonly GUITickBox filterVoip;
         private readonly List<GUITickBox> playStyleTickBoxes;
+        private readonly List<GUITickBox> gameModeTickBoxes;
 
         private string sortedBy;
         
@@ -223,40 +224,47 @@ namespace Barotrauma
 
             // filters -------------------------------------------
 
-            var filters = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f), serverListHolder.RectTransform, Anchor.Center), style: null)
+            var filtersHolder = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f), serverListHolder.RectTransform, Anchor.Center), style: null)
             {
                 Color = new Color(12, 14, 15, 255) * 0.5f,
                 OutlineColor = Color.Black
             };
+
+            var filters = new GUIListBox(new RectTransform(new Vector2(0.98f, 1.0f), filtersHolder.RectTransform, Anchor.CenterRight), style: null)
+            {
+                ScrollBarVisible = true
+            };
+
             var filterToggle = new GUIButton(new RectTransform(new Vector2(0.02f, 1.0f), serverListHolder.RectTransform, Anchor.CenterRight) { MinSize = new Point(20, 0) }, style: "UIToggleButton")
             {
                 OnClicked = (btn, userdata) =>
                 {
-                    filters.RectTransform.RelativeSize = new Vector2(0.25f, 1.0f);
-                    filters.Visible = !filters.Visible;
-                    filters.IgnoreLayoutGroups = !filters.Visible;
+                    filtersHolder.RectTransform.RelativeSize = new Vector2(0.25f, 1.0f);
+                    filtersHolder.Visible = !filtersHolder.Visible;
+                    filtersHolder.IgnoreLayoutGroups = !filtersHolder.Visible;
                     serverListHolder.Recalculate();
-                    btn.Children.ForEach(c => c.SpriteEffects = !filters.Visible ? SpriteEffects.None : SpriteEffects.FlipHorizontally);
+                    btn.Children.ForEach(c => c.SpriteEffects = !filtersHolder.Visible ? SpriteEffects.None : SpriteEffects.FlipHorizontally);
                     return true;
                 }
             };
             filterToggle.Children.ForEach(c => c.SpriteEffects = SpriteEffects.FlipHorizontally);
 
-            var filterContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.99f), filters.RectTransform, Anchor.Center))
+            /*var filterContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.99f), filters.Content.RectTransform, Anchor.Center))
             {
                 Stretch = true,
                 RelativeSpacing = 0.015f
-            };
+            };*/
 
-            var filterTitle = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), filterContainer.RectTransform), TextManager.Get("FilterServers"), font: GUI.LargeFont)
+            var filterTitle = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), filters.Content.RectTransform), TextManager.Get("FilterServers"), font: GUI.LargeFont)
             {
                 Padding = Vector4.Zero,
-                AutoScale = true
+                AutoScale = true,
+                CanBeFocused = false
             };
 
             float elementHeight = 0.05f;
 
-            var searchHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, elementHeight), filterContainer.RectTransform), isHorizontal: true) { Stretch = true };
+            var searchHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, elementHeight), filters.Content.RectTransform), isHorizontal: true) { Stretch = true };
 
             var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), searchHolder.RectTransform), TextManager.Get("Search") + "...");
             searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), searchHolder.RectTransform), "");
@@ -264,11 +272,11 @@ namespace Barotrauma
             searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = true; };
             searchBox.OnTextChanged += (txtBox, txt) => { FilterServers(); return true; };
 
-            var filterHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), filterContainer.RectTransform)) { RelativeSpacing = 0.005f };
+            //var filterHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), filters.Content.RectTransform)) { RelativeSpacing = 0.005f };
 
             List<GUITextBlock> filterTextList = new List<GUITextBlock>();
 
-            filterSameVersion = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("FilterSameVersion"))
+            filterSameVersion = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filters.Content.RectTransform), TextManager.Get("FilterSameVersion"))
             {
                 ToolTip = TextManager.Get("FilterSameVersion"),
                 Selected = true,
@@ -276,35 +284,35 @@ namespace Barotrauma
             };
             filterTextList.Add(filterSameVersion.TextBlock);
 
-            filterPassword = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("FilterPassword"))
+            filterPassword = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filters.Content.RectTransform), TextManager.Get("FilterPassword"))
             {
                 ToolTip = TextManager.Get("FilterPassword"),
                 OnSelected = (tickBox) => { FilterServers(); return true; }
             };
             filterTextList.Add(filterPassword.TextBlock);
 
-            filterIncompatible = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("FilterIncompatibleServers"))
+            filterIncompatible = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filters.Content.RectTransform), TextManager.Get("FilterIncompatibleServers"))
             {
                 ToolTip = TextManager.Get("FilterIncompatibleServers"),
                 OnSelected = (tickBox) => { FilterServers(); return true; }
             };
             filterTextList.Add(filterIncompatible.TextBlock);
 
-            filterFull = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("FilterFullServers"))
+            filterFull = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filters.Content.RectTransform), TextManager.Get("FilterFullServers"))
             {
                 ToolTip = TextManager.Get("FilterFullServers"),
                 OnSelected = (tickBox) => { FilterServers(); return true; }
             };
             filterTextList.Add(filterFull.TextBlock);
 
-            filterEmpty = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("FilterEmptyServers"))
+            filterEmpty = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filters.Content.RectTransform), TextManager.Get("FilterEmptyServers"))
             {
                 ToolTip = TextManager.Get("FilterEmptyServers"),
                 OnSelected = (tickBox) => { FilterServers(); return true; }
             };
             filterTextList.Add(filterEmpty.TextBlock);
 
-            filterWhitelisted = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("FilterWhitelistedServers"))
+            filterWhitelisted = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filters.Content.RectTransform), TextManager.Get("FilterWhitelistedServers"))
             {
                 ToolTip = TextManager.Get("FilterWhitelistedServers"),
                 OnSelected = (tickBox) => { FilterServers(); return true; }
@@ -312,30 +320,33 @@ namespace Barotrauma
             filterTextList.Add(filterWhitelisted.TextBlock);
 
             // Filter Tags
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), filterHolder.RectTransform), TextManager.Get("servertags"));
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), filters.Content.RectTransform), TextManager.Get("servertags"))
+            {
+                CanBeFocused = false
+            };
 
-            filterKarma = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("servertag.karma.true"))
+            filterKarma = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filters.Content.RectTransform), TextManager.Get("servertag.karma.true"))
             {
                 ToolTip = TextManager.Get("servertag.karma.true"),
                 OnSelected = (tickBox) => { FilterServers(); return true; }
             };
             filterTextList.Add(filterKarma.TextBlock);
 
-            filterTraitor = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("servertag.traitors.true"))
+            filterTraitor = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filters.Content.RectTransform), TextManager.Get("servertag.traitors.true"))
             {
                 ToolTip = TextManager.Get("servertag.traitors.true"),
                 OnSelected = (tickBox) => { FilterServers(); return true; }
             };
             filterTextList.Add(filterTraitor.TextBlock);
 
-            filterFriendlyFire = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("servertag.friendlyfire.false"))
+            filterFriendlyFire = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filters.Content.RectTransform), TextManager.Get("servertag.friendlyfire.false"))
             {
                 ToolTip = TextManager.Get("servertag.friendlyfire.false"),
                 OnSelected = (tickBox) => { FilterServers(); return true; }
             };
             filterTextList.Add(filterFriendlyFire.TextBlock);
 
-            filterVoip = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("servertag.voip.true"))
+            filterVoip = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filters.Content.RectTransform), TextManager.Get("servertag.voip.true"))
             {
                 ToolTip = TextManager.Get("servertag.voip.true"),
                 OnSelected = (tickBox) => { FilterServers(); return true; }
@@ -352,13 +363,15 @@ namespace Barotrauma
             */
 
             // Play Style Selection
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), filterHolder.RectTransform), TextManager.Get("ServerSettingsPlayStyle"));
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), filters.Content.RectTransform), TextManager.Get("ServerSettingsPlayStyle"))
+            {
+                CanBeFocused = false
+            };
 
             playStyleTickBoxes = new List<GUITickBox>();
-            GUIRadioButtonGroup selectionPlayStyle = new GUIRadioButtonGroup();
             foreach (PlayStyle playStyle in Enum.GetValues(typeof(PlayStyle)))
             {
-                var selectionTick = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("servertag." + playStyle))
+                var selectionTick = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filters.Content.RectTransform), TextManager.Get("servertag." + playStyle))
                 {
                     ToolTip = TextManager.Get("servertag." + playStyle),
                     Selected = true,
@@ -369,16 +382,34 @@ namespace Barotrauma
                 filterTextList.Add(selectionTick.TextBlock);
             }
 
+            // Game mode Selection
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), filters.Content.RectTransform), TextManager.Get("gamemode"));
 
-            filterContainer.RectTransform.SizeChanged += () =>
+            gameModeTickBoxes = new List<GUITickBox>();
+            foreach (GameModePreset mode in GameModePreset.List)
             {
-                filterContainer.RectTransform.RecalculateChildren(true, true);
+                if (mode.IsSinglePlayer) continue;
+
+                var selectionTick = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filters.Content.RectTransform), mode.Name)
+                {
+                    ToolTip = mode.Name,
+                    Selected = true,
+                    OnSelected = (tickBox) => { FilterServers(); return true; },
+                    UserData = mode.Name
+                };
+                gameModeTickBoxes.Add(selectionTick);
+                filterTextList.Add(selectionTick.TextBlock);
+            }
+
+            filters.Content.RectTransform.SizeChanged += () =>
+            {
+                filters.Content.RectTransform.RecalculateChildren(true, true);
                 filterTextList.ForEach(t => t.Text = t.ToolTip);
                 GUITextBlock.AutoScaleAndNormalize(filterTextList);
                 if (filterTextList[0].TextScale < 0.8f)
                 {
                     filterTextList.ForEach(t => t.TextScale = 1.0f);
-                    filterTextList.ForEach(t => t.Text = ToolBox.LimitString(t.Text, t.Font, (int)(filterContainer.Rect.Width * 0.8f)));
+                    filterTextList.ForEach(t => t.Text = ToolBox.LimitString(t.Text, t.Font, (int)(filters.Content.Rect.Width * 0.8f)));
                 }
             };
 
@@ -894,7 +925,18 @@ namespace Barotrauma
                 foreach (GUITickBox tickBox in playStyleTickBoxes)
                 {
                     var playStyle = (PlayStyle)tickBox.UserData;
+
                     if (!tickBox.Selected && serverInfo.PlayStyle == playStyle)
+                    {
+                        child.Visible = false;
+                        break;
+                    }
+                }
+
+                foreach (GUITickBox tickBox in gameModeTickBoxes)
+                {
+                    var gameMode = (string)tickBox.UserData;
+                    if (!tickBox.Selected && serverInfo.GameMode == gameMode.ToLowerInvariant())
                     {
                         child.Visible = false;
                         break;
