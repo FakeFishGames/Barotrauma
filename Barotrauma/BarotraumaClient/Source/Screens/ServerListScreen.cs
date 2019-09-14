@@ -936,7 +936,7 @@ namespace Barotrauma
                 foreach (GUITickBox tickBox in gameModeTickBoxes)
                 {
                     var gameMode = (string)tickBox.UserData;
-                    if (!tickBox.Selected && serverInfo.GameMode == gameMode.ToLowerInvariant())
+                    if (!tickBox.Selected && (serverInfo.GameMode == gameMode.ToLowerInvariant() || serverInfo.GameMode == gameMode))
                     {
                         child.Visible = false;
                         break;
