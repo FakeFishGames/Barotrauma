@@ -34,6 +34,9 @@ namespace Barotrauma.Items.Components
 
         private GUICustomComponent sonarView;
 
+        private Sprite directionalPingBackground;
+        private Sprite[] directionalPingButton;
+
         private float displayBorderSize;
 
         private List<SonarBlip> sonarBlips;
@@ -179,8 +182,8 @@ namespace Barotrauma.Items.Components
                         directionalPingBackground = new Sprite(subElement);
                         break;
                     case "directionalpingbutton":
-                        if (directionalPingButton==null) { directionalPingButton = new Sprite[3]; }
-                        int index = subElement.GetAttributeInt("index",0);
+                        if (directionalPingButton == null) { directionalPingButton = new Sprite[3]; }
+                        int index = subElement.GetAttributeInt("index", 0);
                         directionalPingButton[index] = new Sprite(subElement);
                         break;
                     case "screenoverlay":
@@ -367,21 +370,21 @@ namespace Barotrauma.Items.Components
                 prevDockingDist = float.MaxValue;
             }
 
-            if (steering != null)
+            if (steering != null && directionalPingButton != null)
             {
                 steering.SteerRadius = useDirectionalPing && pingDragDirection != null ?
                     -1.0f :
                     PlayerInput.LeftButtonDown() || !PlayerInput.LeftButtonHeld() ?
                         (float?)((sonarView.Rect.Width / 2) - (directionalPingButton[0].size.X * sonarView.Rect.Width / screenBackground.size.X)) :
-                        null;
+                        null;                
             }
 
             if (useDirectionalPing && PlayerInput.LeftButtonHeld())
             {
-                if ((MouseInDirectionalPingRing(sonarView.Rect, false) && PlayerInput.LeftButtonDown()) || pingDragDirection!=null)
+                if ((MouseInDirectionalPingRing(sonarView.Rect, false) && PlayerInput.LeftButtonDown()) || pingDragDirection != null)
                 {
                     Vector2 newDragDir = Vector2.Normalize(PlayerInput.MousePosition - sonarView.Rect.Center.ToVector2());
-                    if (pingDragDirection==null && !MouseInDirectionalPingRing(sonarView.Rect, true))
+                    if (pingDragDirection == null && !MouseInDirectionalPingRing(sonarView.Rect, true))
                     {
                         directionalSlider.BarScrollValue = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(newDragDir));
                         directionalSlider.OnMoved(directionalSlider, directionalSlider.BarScroll);
@@ -391,7 +394,7 @@ namespace Barotrauma.Items.Components
                         float newAngle = MathUtils.VectorToAngle(newDragDir);
                         float oldAngle = MathUtils.VectorToAngle(pingDragDirection.Value);
                         float pingAngle = MathUtils.VectorToAngle(pingDirection);
-                        pingAngle = MathUtils.WrapAngleTwoPi(pingAngle+MathUtils.GetShortestAngle(oldAngle, newAngle));
+                        pingAngle = MathUtils.WrapAngleTwoPi(pingAngle + MathUtils.GetShortestAngle(oldAngle, newAngle));
                         directionalSlider.BarScrollValue = pingAngle;
                         directionalSlider.OnMoved(directionalSlider, directionalSlider.BarScroll);
                     }
@@ -445,7 +448,7 @@ namespace Barotrauma.Items.Components
         
         private bool MouseInDirectionalPingRing(Rectangle rect, bool onButton)
         {
-            if (!useDirectionalPing) { return false; }
+            if (!useDirectionalPing || directionalPingButton == null) { return false; }
 
             float endRadius = rect.Width / 2.0f;
             float startRadius = endRadius - directionalPingButton[0].size.X * rect.Width / screenBackground.size.X;
@@ -480,7 +483,7 @@ namespace Barotrauma.Items.Components
             if (useDirectionalPing)
             {
                 directionalPingBackground?.Draw(spriteBatch, center, 0.0f, rect.Width / directionalPingBackground.size.X);
-                if (directionalPingButton!=null)
+                if (directionalPingButton != null)
                 {
                     int buttonSprIndex = 0;
                     if (pingDragDirection != null)
