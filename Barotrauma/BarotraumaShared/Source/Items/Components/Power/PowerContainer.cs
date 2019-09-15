@@ -28,10 +28,7 @@ namespace Barotrauma.Items.Components
         protected Vector2 indicatorPosition, indicatorSize;
 
         protected bool isHorizontal;
-
-        //a list of powered devices connected directly to this item
-        private readonly List<Pair<Powered, Connection>> directlyConnected = new List<Pair<Powered, Connection>>(10);
-
+        
         public float CurrPowerOutput
         {
             get;
@@ -134,11 +131,9 @@ namespace Barotrauma.Items.Components
             float chargeRatio = charge / capacity;
             float gridPower = 0.0f;
             float gridLoad = 0.0f;
-            directlyConnected.Clear();
-
             foreach (Connection c in item.Connections)
             {
-                if (c.Name == "power_in") continue;
+                if (!c.IsPower || !c.IsOutput) { continue; }
                 foreach (Connection c2 in c.Recipients)
                 {
                     if (c2.Item.Condition <= 0.0f) { continue; }
@@ -149,7 +144,6 @@ namespace Barotrauma.Items.Components
                         foreach (Powered powered in c2.Item.GetComponents<Powered>())
                         {
                             if (!powered.IsActive) continue;
-                            directlyConnected.Add(new Pair<Powered, Connection>(powered, c2));
                             gridLoad += powered.CurrPowerConsumption;
                         }
                         continue;
@@ -193,27 +187,19 @@ namespace Barotrauma.Items.Components
             }
             if (gridLoad > gridPower)
             {
-                CurrPowerOutput += deltaTime * 1000.0f;
+                CurrPowerOutput += deltaTime * Math.Max(gridLoad * 0.1f, 10.0f);
             }
             else
             {
-                CurrPowerOutput -= deltaTime * 1000.0f;
+                CurrPowerOutput -= deltaTime * Math.Max(gridLoad * 0.1f, 10.0f);
             }
             float maxOutput = Math.Min(MaxOutPut * maxOutputRatio, gridLoad);
             CurrPowerOutput = MathHelper.Clamp(CurrPowerOutput, 0.0f, maxOutput);
             Charge -= CurrPowerOutput / 3600.0f;
             
-            item.SendSignal(0, ((int)Charge).ToString(), "charge", null);
-            item.SendSignal(0, ((int)((Charge / capacity) * 100)).ToString(), "charge_%", null);
-            item.SendSignal(0, ((int)((RechargeSpeed / maxRechargeSpeed) * 100)).ToString(), "charge_rate", null);
-
-            /*foreach (Pair<Powered, Connection> connected in directlyConnected)
-            {
-                connected.First.ReceiveSignal(0, "", connected.Second, source: item, sender: null, 
-                    power: gridLoad <= 0.0f ? 1.0f : CurrPowerOutput / gridLoad);
-            }
-
-            rechargeVoltage = 0.0f;*/
+            item.SendSignal(0, ((int)Math.Round(Charge)).ToString(), "charge", null);
+            item.SendSignal(0, ((int)Math.Round((Charge / capacity) * 100)).ToString(), "charge_%", null);
+            item.SendSignal(0, ((int)Math.Round((RechargeSpeed / maxRechargeSpeed) * 100)).ToString(), "charge_rate", null);
         }
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)

@@ -10,7 +10,9 @@ namespace Barotrauma.Items.Components
 {
     partial class Powered : ItemComponent
     {
-        private static List<Powered> poweredList = new List<Powered>();
+        private static readonly List<Powered> poweredList = new List<Powered>();
+
+        protected static HashSet<PowerTransfer> lastPowerProbeRecipients = new HashSet<PowerTransfer>();
 
         //the amount of power CURRENTLY consumed by the item
         //negative values mean that the item is providing power to connected items
@@ -170,12 +172,28 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public static void UpdatePower()
+        private static float updateTimer;
+        protected static float UpdateInterval = 0.5f;
+
+        public virtual void ReceivePowerProbeSignal(Connection connection, Item source, float power) { }
+
+        public static void UpdatePower(float deltaTime)
         {
+            if (updateTimer > 0.0f)
+            {
+                updateTimer -= deltaTime;
+                return;
+            }
+            updateTimer = UpdateInterval;
+			UpdateInterval = 0.2f;
+
+            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+            sw.Start();
+            
             //reset power first
             foreach (Powered powered in poweredList)
             {
-                powered.updatingPower = true;
+                //powered.updatingPower = true;
                 powered.voltage = 0.0f;
                 if (powered is PowerTransfer pt)
                 {
@@ -190,30 +208,35 @@ namespace Barotrauma.Items.Components
                 if (powered.currPowerConsumption > 0.0f)
                 {
                     //consuming power
-                    powered.item.SendSignal(0, "", powered.powerIn, null, -powered.currPowerConsumption, source: powered.Item);
+                    lastPowerProbeRecipients.Clear();
+                    powered.powerIn?.SendPowerProbeSignal(powered.item, -powered.currPowerConsumption);
+                    //powered.item.SendSignal(0, "", powered.powerIn, null, -powered.currPowerConsumption, source: powered.Item, applyOnUseStatusEffects: false);
                 }
                 else if (powered.currPowerConsumption < 0.0f)
                 {
                     //providing power
-                    powered.item.SendSignal(0, "", powered.powerOut, null, -powered.currPowerConsumption, source: powered.Item);
+                    lastPowerProbeRecipients.Clear();
+                    powered.powerOut?.SendPowerProbeSignal(powered.item, -powered.currPowerConsumption);
+                    //powered.item.SendSignal(0, "", powered.powerOut, null, -powered.currPowerConsumption, source: powered.Item);
                 }
                 if (powered is PowerContainer pc)
                 {
-                    powered.item.SendSignal(0, "", powered.powerOut, null, pc.CurrPowerOutput, source: powered.Item);
+                    if (pc.CurrPowerOutput <= 0.0f) { continue; }
+                    lastPowerProbeRecipients.Clear();
+                    powered.powerOut?.SendPowerProbeSignal(powered.item, pc.CurrPowerOutput);
+                    //powered.item.SendSignal(0, "", powered.powerOut, null, pc.CurrPowerOutput, source: powered.Item);
                 }
             }
+
             foreach (Powered powered in poweredList)
             {
-                powered.updatingPower = false;                
-            }
-            foreach (Powered powered in poweredList)
-            {
-                if (powered is PowerTransfer || powered is PowerContainer || powered.powerIn == null) { continue; }
-                if (powered.powerConsumption <= 0.0f)
+                if (powered is PowerTransfer) { continue; }
+                if (powered.powerConsumption <= 0.0f && !(powered is PowerContainer))
                 {
                     powered.voltage = 1.0f;
                     continue;
                 }
+                if (powered.powerIn == null) { continue; }
 
                 foreach (Connection powerSource in powered.powerIn.Recipients)
                 {
@@ -233,10 +256,12 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
+
+            sw.Stop();
+
+            System.Diagnostics.Debug.WriteLine("power: "+sw.ElapsedTicks+", "+sw.ElapsedMilliseconds);
         }
-
-        protected bool updatingPower;
-
+        
         protected override void RemoveComponentSpecific()
         {
             poweredList.Remove(this);

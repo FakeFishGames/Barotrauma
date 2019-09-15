@@ -354,7 +354,7 @@ namespace Barotrauma
                 gap.Update(deltaTime, cam);
             }
 
-            Powered.UpdatePower();
+            Powered.UpdatePower(deltaTime);
             foreach (Item item in Item.ItemList)
             {
                 item.Update(deltaTime, cam);

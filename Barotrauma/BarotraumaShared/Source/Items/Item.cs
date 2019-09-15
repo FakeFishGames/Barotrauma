@@ -465,7 +465,7 @@ namespace Barotrauma
         {
             get;
             private set;
-        } = new List<Item>();
+        } = new List<Item>(20);
 
         public string ConfigFile
         {
