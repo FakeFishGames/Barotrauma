@@ -559,8 +559,8 @@ namespace Barotrauma.Items.Components
         {
             base.RemoveComponentSpecific();
 
-            if (barrelSprite != null) barrelSprite.Remove();
-            if (railSprite != null) railSprite.Remove();
+            barrelSprite?.Remove(); barrelSprite = null;
+            railSprite?.Remove(); railSprite = null;
 
 #if CLIENT
             moveSoundChannel?.Dispose(); moveSoundChannel = null;

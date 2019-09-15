@@ -10,21 +10,37 @@ namespace Barotrauma.Items.Components
 {
     partial class Powered : ItemComponent
     {
+        private static float updateTimer;
+        protected static float UpdateInterval = 0.5f;
+
+        /// <summary>
+        /// List of all powered ItemComponents
+        /// </summary>
         private static readonly List<Powered> poweredList = new List<Powered>();
 
+        /// <summary>
+        /// Items that have already received the "probe signal" that's used to distribute power and load across the grid
+        /// </summary>
         protected static HashSet<PowerTransfer> lastPowerProbeRecipients = new HashSet<PowerTransfer>();
 
-        //the amount of power CURRENTLY consumed by the item
-        //negative values mean that the item is providing power to connected items
+        /// <summary>
+        /// The amount of power currently consumed by the item. Negative values mean that the item is providing power to connected items
+        /// </summary>
         protected float currPowerConsumption;
 
-        //current voltage of the item (load / power)
+        /// <summary>
+        /// Current voltage of the item (load / power)
+        /// </summary>
         private float voltage;
 
-        //the minimum voltage required for the item to work
+        /// <summary>
+        /// The minimum voltage required for the item to work
+        /// </summary>
         protected float minVoltage;
 
-        //the maximum amount of power the item can draw from connected items
+        /// <summary>
+        /// The maximum amount of power the item can draw from connected items
+        /// </summary>
         protected float powerConsumption;
 
         protected Connection powerIn, powerOut;
@@ -89,31 +105,26 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjectSpecific(XElement element);
 
-        /*public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1.0f)
-        {
-            if (updatingPower) { return; }
-
-            if (currPowerConsumption == 0.0f) { voltage = 0.0f; }
-            if (connection.IsPower){ voltage = Math.Max(0.0f, power); }              
-        }*/
-
         protected void UpdateOnActiveEffects(float deltaTime)
         {
-            if (currPowerConsumption == 0.0f)
+            if (currPowerConsumption <= 0.0f)
             {
                 //if the item consumes no power, ignore the voltage requirement and
                 //apply OnActive statuseffects as long as this component is active
-                if (powerConsumption == 0.0f)
+                if (powerConsumption <= 0.0f)
                 {
                     ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
                 }
                 return;
             }
 
-#if CLIENT
             if (voltage > minVoltage)
             {
                 ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
+            }
+#if CLIENT
+            if (voltage > minVoltage)
+            {
                 if (!powerOnSoundPlayed && powerOnSound != null)
                 {
                     SoundPlayer.PlaySound(powerOnSound.Sound, item.WorldPosition, powerOnSound.Volume, powerOnSound.Range, item.CurrentHull);                    
@@ -123,11 +134,6 @@ namespace Barotrauma.Items.Components
             else if (voltage < 0.1f)
             {
                 powerOnSoundPlayed = false;
-            }
-#else
-            if (voltage > minVoltage)
-            {
-                ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
             }
 #endif
         }
@@ -171,10 +177,7 @@ namespace Barotrauma.Items.Components
                 }
             }
         }
-
-        private static float updateTimer;
-        protected static float UpdateInterval = 0.5f;
-
+        
         public virtual void ReceivePowerProbeSignal(Connection connection, Item source, float power) { }
 
         public static void UpdatePower(float deltaTime)
@@ -187,13 +190,9 @@ namespace Barotrauma.Items.Components
             updateTimer = UpdateInterval;
 			UpdateInterval = 0.2f;
 
-            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
-            sw.Start();
-            
             //reset power first
             foreach (Powered powered in poweredList)
             {
-                //powered.updatingPower = true;
                 powered.voltage = 0.0f;
                 if (powered is PowerTransfer pt)
                 {
@@ -202,6 +201,8 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            //go through all the devices that are consuming/providing power
+            //and send out a "probe signal" which the PowerTransfer components use to add up the grid power/load
             foreach (Powered powered in poweredList)
             {
                 if (powered is PowerTransfer pt) { continue; }
@@ -210,24 +211,23 @@ namespace Barotrauma.Items.Components
                     //consuming power
                     lastPowerProbeRecipients.Clear();
                     powered.powerIn?.SendPowerProbeSignal(powered.item, -powered.currPowerConsumption);
-                    //powered.item.SendSignal(0, "", powered.powerIn, null, -powered.currPowerConsumption, source: powered.Item, applyOnUseStatusEffects: false);
                 }
                 else if (powered.currPowerConsumption < 0.0f)
                 {
                     //providing power
                     lastPowerProbeRecipients.Clear();
                     powered.powerOut?.SendPowerProbeSignal(powered.item, -powered.currPowerConsumption);
-                    //powered.item.SendSignal(0, "", powered.powerOut, null, -powered.currPowerConsumption, source: powered.Item);
                 }
                 if (powered is PowerContainer pc)
                 {
                     if (pc.CurrPowerOutput <= 0.0f) { continue; }
+                    //providing power
                     lastPowerProbeRecipients.Clear();
                     powered.powerOut?.SendPowerProbeSignal(powered.item, pc.CurrPowerOutput);
-                    //powered.item.SendSignal(0, "", powered.powerOut, null, pc.CurrPowerOutput, source: powered.Item);
                 }
             }
 
+            //go through powered items and calculate their current voltage
             foreach (Powered powered in poweredList)
             {
                 if (powered is PowerTransfer) { continue; }
@@ -256,10 +256,6 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
-
-            sw.Stop();
-
-            System.Diagnostics.Debug.WriteLine("power: "+sw.ElapsedTicks+", "+sw.ElapsedMilliseconds);
         }
         
         protected override void RemoveComponentSpecific()

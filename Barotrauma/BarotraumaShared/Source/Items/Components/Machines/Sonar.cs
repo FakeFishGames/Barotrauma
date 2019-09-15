@@ -233,6 +233,7 @@ namespace Barotrauma.Items.Components
 
         protected override void RemoveComponentSpecific()
         {
+            base.RemoveComponentSpecific();
             sonarBlip?.Remove();
             pingCircle?.Remove();
             directionalPingCircle?.Remove();

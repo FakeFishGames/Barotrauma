@@ -605,14 +605,15 @@ namespace Barotrauma.Items.Components
         
         protected override void RemoveComponentSpecific()
         {
-            graphLine.Remove();
-            fissionRateMeter.Remove();
-            turbineOutputMeter.Remove();
-            meterPointer.Remove();
-            sectorSprite.Remove();
-            tempMeterFrame.Remove();
-            tempMeterBar.Remove();
-            tempRangeIndicator.Remove();
+            base.RemoveComponentSpecific();
+            graphLine?.Remove();
+            fissionRateMeter?.Remove();
+            turbineOutputMeter?.Remove();
+            meterPointer?.Remove();
+            sectorSprite?.Remove();
+            tempMeterFrame?.Remove();
+            tempMeterBar?.Remove();
+            tempRangeIndicator?.Remove();
         }
 
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)

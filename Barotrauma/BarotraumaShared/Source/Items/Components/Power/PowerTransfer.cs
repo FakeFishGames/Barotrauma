@@ -8,7 +8,6 @@ namespace Barotrauma.Items.Components
 {
     partial class PowerTransfer : Powered
     {
-
         public List<Connection> PowerConnections { get; private set; }
 
         private readonly Dictionary<Connection, bool> connectionDirty = new Dictionary<Connection, bool>();
@@ -296,51 +295,25 @@ namespace Barotrauma.Items.Components
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power, float signalStrength = 1.0f)
         {
-            if (item.Condition <= 0.0f) { return; }
-            if (connection.IsPower)
-            {
-                /*if (!updatingPower) { return; }
-
-                //we've already received this signal
-                for (int i = 0; i<source.LastSentSignalRecipients.Count -1;i++)
-                {
-                    if (source.LastSentSignalRecipients[i] == item) { return; }
-                }
-
-                if (power < 0.0f)
-                {
-                    powerLoad -= power;
-                }
-                else
-                {
-                    currPowerConsumption -= power;
-                }
-                connection.SendSignal(stepsTaken, signal, source, sender, power, signalStrength);*/
-                return;
-            }
-
-            base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power);
-
-            if (!connectedRecipients.ContainsKey(connection)) return;
+            if (item.Condition <= 0.0f || connection.IsPower) { return; }
+            if (!connectedRecipients.ContainsKey(connection)) { return; }
 
             if (connection.Name.Length > 5 && connection.Name.Substring(0, 6) == "signal")
             {
                 foreach (Connection recipient in connectedRecipients[connection])
                 {
-                    if (recipient.Item == item || recipient.Item == source) continue;
+                    if (recipient.Item == item || recipient.Item == source) { continue; }
 
                     foreach (ItemComponent ic in recipient.Item.Components)
                     {
                         //powertransfer components don't need to receive the signal in the pass-through signal connections
                         //because we relay it straight to the connected items without going through the whole chain of junction boxes
-                        if (ic is PowerTransfer && connection.Name.Contains("signal")) continue;
+                        if (ic is PowerTransfer && connection.Name.Contains("signal")) { continue; }
                         ic.ReceiveSignal(stepsTaken, signal, recipient, source, sender, 0.0f, signalStrength);
                     }
 
-                    bool broken = recipient.Item.Condition <= 0.0f;
                     foreach (StatusEffect effect in recipient.Effects)
                     {
-                        if (broken && effect.type != ActionType.OnBroken) continue;
                         recipient.Item.ApplyStatusEffect(effect, ActionType.OnUse, 1.0f, null, null, false, false);
                     }
                 }

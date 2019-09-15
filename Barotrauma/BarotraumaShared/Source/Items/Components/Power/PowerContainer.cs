@@ -204,9 +204,7 @@ namespace Barotrauma.Items.Components
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
-#if CLIENT
-            if (GameMain.Client != null) return false;
-#endif
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return false; }
 
             if (string.IsNullOrEmpty(objective.Option) || objective.Option.ToLowerInvariant() == "charge")
             {
@@ -253,6 +251,8 @@ namespace Barotrauma.Items.Components
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power, float signalStrength = 1.0f)
         {
+            if (connection.IsPower) { return; }
+
             if (connection.Name == "set_rate")
             {
                 if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempSpeed))
@@ -269,12 +269,6 @@ namespace Barotrauma.Items.Components
 #endif
                 }
             }
-            /*if (!connection.IsPower) { return; }
-
-            if (connection.Name == "power_in")
-            {
-                rechargeVoltage = Math.Min(power, 1.0f);
-            }*/
         }
     }
 }
