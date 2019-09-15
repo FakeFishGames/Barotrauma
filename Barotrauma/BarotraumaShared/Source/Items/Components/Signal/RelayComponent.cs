@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
@@ -62,7 +63,9 @@ namespace Barotrauma.Items.Components
         {
             RefreshConnections();
 
-            if (!CanTransfer) { return; }
+            item.SendSignal(0, IsOn ? "1" : "0", "state_out", null);
+			
+            if (!CanTransfer) { Voltage = 0.0f; return; }
 
             if (isBroken)
             {
@@ -71,31 +74,20 @@ namespace Barotrauma.Items.Components
             }
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
-            item.SendSignal(0, IsOn ? "1" : "0", "state_out", null);
 
             if (powerOut != null)
             {
-                bool overloaded = false;
-                float adjacentLoad = 0.0f;
+                float overload = -1000.0f;
                 foreach (Connection recipient in powerOut.Recipients)
                 {
                     var pt = recipient.Item.GetComponent<PowerTransfer>();
                     if (pt != null)
                     {
-                        float adjacentPower = -pt.CurrPowerConsumption;
-                        adjacentLoad = pt.PowerLoad;
-                        if (adjacentPower > adjacentLoad)
-                        {
-                            reduceLoad = Math.Min(reduceLoad + deltaTime * Math.Max(adjacentLoad * 0.1f, 10.0f), adjacentLoad);
-                            overloaded = true;
-                            break;
-                        }
+						overload = Math.Max(-pt.CurrPowerConsumption - pt.PowerLoad, overload);
                     }
                 }
-                if (!overloaded)
-                {
-                    reduceLoad = Math.Max(reduceLoad - deltaTime * Math.Max(adjacentLoad * 0.1f, 10.0f), 0.0f);
-                }
+                reduceLoad += overload * deltaTime * 0.5f;
+                reduceLoad = MathHelper.Clamp(reduceLoad, 0.0f, -currPowerConsumption + reduceLoad);
             }
 
             if (Math.Min(-currPowerConsumption, PowerLoad) > maxPower && CanBeOverloaded)
@@ -115,12 +107,18 @@ namespace Barotrauma.Items.Components
             if (power < 0.0f)
             {
                 if (!connection.IsOutput || powerIn == null) { return; }
+
                 //power being drawn from the power_out connection
                 powerLoad -= Math.Min(power + reduceLoad, 0.0f);
                 power = Math.Min(power + reduceLoad, 0.0f);
 
+				float loadOut = -power;
+                if (loadOut > MaxPower)
+                {
+                    loadOut -= loadOut - MaxPower;
+                }
                 //pass the load to items connected to the input
-                powerIn.SendPowerProbeSignal(source, power);
+                powerIn.SendPowerProbeSignal(source, -loadOut);
             }
             else
             {

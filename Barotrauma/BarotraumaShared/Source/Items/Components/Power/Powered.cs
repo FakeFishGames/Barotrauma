@@ -205,7 +205,7 @@ namespace Barotrauma.Items.Components
             //and send out a "probe signal" which the PowerTransfer components use to add up the grid power/load
             foreach (Powered powered in poweredList)
             {
-                if (powered is PowerTransfer pt) { continue; }
+                if (powered is PowerTransfer) { continue; }
                 if (powered.currPowerConsumption > 0.0f)
                 {
                     //consuming power
@@ -230,7 +230,11 @@ namespace Barotrauma.Items.Components
             //go through powered items and calculate their current voltage
             foreach (Powered powered in poweredList)
             {
-                if (powered is PowerTransfer) { continue; }
+                if (powered is PowerTransfer pt1 || (pt1 = powered.Item.GetComponent<PowerTransfer>()) != null) 
+				{
+                    powered.voltage = -pt1.CurrPowerConsumption / Math.Max(pt1.PowerLoad, 1.0f);
+					continue; 
+				}
                 if (powered.powerConsumption <= 0.0f && !(powered is PowerContainer))
                 {
                     powered.voltage = 1.0f;

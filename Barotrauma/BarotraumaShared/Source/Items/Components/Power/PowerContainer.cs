@@ -185,14 +185,9 @@ namespace Barotrauma.Items.Components
             {
                 maxOutputRatio = Math.Max(chargeRatio * 10.0f, 0.0f);
             }
-            if (gridLoad > gridPower)
-            {
-                CurrPowerOutput += deltaTime * Math.Max(gridLoad * 0.1f, 10.0f);
-            }
-            else
-            {
-                CurrPowerOutput -= deltaTime * Math.Max(gridLoad * 0.1f, 10.0f);
-            }
+
+            CurrPowerOutput += (gridLoad - gridPower) * deltaTime;
+
             float maxOutput = Math.Min(MaxOutPut * maxOutputRatio, gridLoad);
             CurrPowerOutput = MathHelper.Clamp(CurrPowerOutput, 0.0f, maxOutput);
             Charge -= CurrPowerOutput / 3600.0f;
