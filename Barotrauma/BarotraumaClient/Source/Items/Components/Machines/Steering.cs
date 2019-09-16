@@ -317,7 +317,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (GameMain.Client == null)
                     {
-                        item.SendSignal(0, "1", "toggle_docking", sender: Character.Controlled);
+                        item.SendSignal(0, "1", "toggle_docking", sender: null);
                     }
                     else
                     {
@@ -826,12 +826,18 @@ namespace Barotrauma.Items.Components
             int msgStartPos = msg.BitPosition;
 
             bool autoPilot                  = msg.ReadBoolean();
+            bool dockingButtonClicked       = msg.ReadBoolean();
             Vector2 newSteeringInput        = steeringInput;
             Vector2 newTargetVelocity       = targetVelocity;
             float newSteeringAdjustSpeed    = steeringAdjustSpeed;
             bool maintainPos                = false;
             Vector2? newPosToMaintain       = null;
             bool headingToStart             = false;
+
+            if (dockingButtonClicked)
+            {
+                item.SendSignal(0, "1", "toggle_docking", sender: null);
+            }
 
             if (autoPilot)
             {
