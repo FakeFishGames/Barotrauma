@@ -1115,9 +1115,22 @@ namespace Barotrauma
                     var avatarImage = friend.GetAvatar(avatarSize);
                     if (avatarImage != null)
                     {
+                        const int desaturatedWeight = 155;
+
+                        byte[] avatarData = (byte[])avatarImage.Data.Clone();
+                        for (int i=0;i<avatarData.Length;i+=4)
+                        {
+                            int average = (avatarData[i + 0] + avatarData[i + 1] + avatarData[i + 2]) / 3;
+                            int chn0 = ((avatarData[i + 0] * (255 - desaturatedWeight)) / 255) + ((average * desaturatedWeight) / 255);
+                            int chn1 = ((avatarData[i + 1] * (255 - desaturatedWeight)) / 255) + ((average * desaturatedWeight) / 255);
+                            int chn2 = ((avatarData[i + 2] * (255 - desaturatedWeight)) / 255) + ((average * desaturatedWeight) / 255);
+                            avatarData[i + 0] = chn0 > 255 ? (byte)255 : (byte)chn0;
+                            avatarData[i + 1] = chn1 > 255 ? (byte)255 : (byte)chn1;
+                            avatarData[i + 2] = chn2 > 255 ? (byte)255 : (byte)chn2;
+                        }
                         //TODO: create an avatar atlas?
                         var avatarTexture = new Texture2D(GameMain.Instance.GraphicsDevice, avatarImage.Width, avatarImage.Height);
-                        avatarTexture.SetData(avatarImage.Data);
+                        avatarTexture.SetData(avatarData);
 
                         info.Sprite = new Sprite(avatarTexture, null, null);
                     }
