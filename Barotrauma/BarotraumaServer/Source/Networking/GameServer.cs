@@ -119,6 +119,7 @@ namespace Barotrauma.Networking
             LastClientListUpdateID = 0;
 
             serverSettings = new ServerSettings(this, name, port, queryPort, maxPlayers, isPublic, attemptUPnP);
+            KarmaManager.SelectPreset(serverSettings.KarmaPreset);
             if (!string.IsNullOrEmpty(password))
             {
                 serverSettings.SetPassword(password);
