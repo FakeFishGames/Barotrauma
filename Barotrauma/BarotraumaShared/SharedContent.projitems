@@ -82,16 +82,7 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Electricparasite\Electricparasites.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Electricparasite\Ragdolls\ElectricparasiteDefaultRagdoll - Copy.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Electricparasite\Ragdolls\ElectricparasiteDefaultRagdoll.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Electricparasite\Ragdolls\ElectricparasiteDefaultRagdoll2.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Electricparasite\Ragdolls\ElectricparasiteDefaultRagdoll_bu.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Legacycharybdis\Legacycharybdis.xml">
