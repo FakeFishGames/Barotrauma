@@ -29,15 +29,27 @@ namespace Barotrauma
         protected override bool Check() => false;
         public override bool CanBeCompleted => true;
 
+        private bool resetPriority;
+
         public override void Update(float deltaTime)
         {
+            if (resetPriority)
+            {
+                Priority = 0;
+                resetPriority = false;
+                return;
+            }
             if (character.CurrentHull == null)
             {
                 currenthullSafety = 0;
                 Priority = objectiveManager.CurrentOrder is AIObjectiveGoTo ? 0 : 100;
                 return;
             }
-            if (character.OxygenAvailable < CharacterHealth.LowOxygenThreshold) { Priority = 100; }
+            if (character.OxygenAvailable < CharacterHealth.LowOxygenThreshold)
+            {
+                // TODO: is this the reason for the priority not resetting?
+                Priority = 100;
+            }
             currenthullSafety = HumanAIController.CurrentHullSafety;
             if (currenthullSafety > HumanAIController.HULL_SAFETY_THRESHOLD)
             {
@@ -77,13 +89,13 @@ namespace Barotrauma
                     constructor: () => new AIObjectiveFindDivingGear(character, needsDivingSuit, objectiveManager),
                     onAbandon: () =>
                     {
-                        Priority = 0;
+                        resetPriority = true;
                         searchHullTimer = Math.Min(1, searchHullTimer);
                         RemoveSubObjective(ref divingGearObjective);
                     },
                     onCompleted: () =>
                     {
-                        Priority = 0;
+                        resetPriority = true;
                         searchHullTimer = Math.Min(1, searchHullTimer);
                         RemoveSubObjective(ref divingGearObjective);
                     });
@@ -123,7 +135,7 @@ namespace Barotrauma
                                 if (currenthullSafety > HumanAIController.HULL_SAFETY_THRESHOLD || 
                                     HumanAIController.NeedsDivingGear(character, currentHull, out bool needsSuit) && (needsSuit ? HumanAIController.HasDivingSuit(character) : HumanAIController.HasDivingMask(character)))
                                 {
-                                    Priority = 0;
+                                    resetPriority = true;
                                     searchHullTimer = Math.Min(1, searchHullTimer);
                                 }
                                 RemoveSubObjective(ref goToObjective);
