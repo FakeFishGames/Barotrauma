@@ -88,6 +88,7 @@ namespace Barotrauma.CharacterEditor
 
         private List<LimbJoint> selectedJoints = new List<LimbJoint>();
         private List<Limb> selectedLimbs = new List<Limb>();
+        private HashSet<Character> editedCharacters = new HashSet<Character>();
 
         private bool isEndlessRunner;
 
@@ -188,6 +189,9 @@ namespace Barotrauma.CharacterEditor
             jointStartLimb = null;
             allFiles = null;
             onlyShowSourceRectForSelectedLimbs = false;
+            editedCharacters.Clear();
+            selectedJoints.Clear();
+            selectedLimbs.Clear();
             if (character != null)
             {
                 if (character.AnimController != null)
@@ -198,50 +202,56 @@ namespace Barotrauma.CharacterEditor
                     }
                 }
             }
+            character = null;
             Wizard.instance?.Reset();
         }
 
-        private void Reset()
+        private void Reset(IEnumerable<Character> characters = null)
         {
-            ResetVariables();
-            if (character != null)
+            if (characters == null)
             {
-                CharacterParams.Reset(true);
-                AnimParams.ForEach(a => a.Reset(true));
-                RagdollParams.Reset(true);
-                RagdollParams.ClearHistory();
-                CurrentAnimation.ClearHistory();
-                if (!character.Removed)
-                {
-                    character.Remove();
-                }
-                character = null;
+                characters = editedCharacters;
             }
+            characters.ForEach(c => ResetParams(c));
+            ResetVariables();
+        }
+
+        private void ResetParams(Character character)
+        {
+            character.Params.Reset(true);
+            foreach (var animation in character.AnimController.AllAnimParams)
+            {
+                animation.Reset(true);
+                animation.ClearHistory();
+            }
+            character.AnimController.RagdollParams.Reset(true);
+            character.AnimController.RagdollParams.ClearHistory();
+            character.ForceRun = false;
+            character.AnimController.ForceSelectAnimationType = AnimationType.NotDefined;
         }
 
         public override void Deselect()
         {
             base.Deselect();
-
             SoundPlayer.OverrideMusicType = null;
             GameMain.SoundManager.SetCategoryGainMultiplier("waterambience", GameMain.Config.SoundVolume, 0);
-
-            // TODO: reset the changes for vanilla characters if not on debug build
             GUI.ForceMouseOn(null);
             if (isEndlessRunner)
             {
                 Submarine.MainSub.Remove();
+                GameMain.World.ProcessChanges();
                 isEndlessRunner = false;
                 Reset();
-                GameMain.World.ProcessChanges();
+                if (character != null && !character.Removed)
+                {
+                    character.Remove();
+                }
             }
             else
             {
-                if (character != null)
-                {
-                    character.ForceRun = false;
-                    character.AnimController.ForceSelectAnimationType = AnimationType.NotDefined;
-                }
+#if !DEBUG
+                Reset(Character.CharacterList.Where(c => VanillaCharacters.Any(vchar => vchar == c.ConfigPath)));
+#endif
             }
             GameMain.Instance.OnResolutionChanged -= OnResolutionChanged;
             GameMain.LightManager.LightingEnabled = true;
@@ -626,7 +636,7 @@ namespace Barotrauma.CharacterEditor
             {
                 if (character.AnimController.Invalid)
                 {
-                    Reset();
+                    Reset(new Character[] { character });
                     SpawnCharacter(currentCharacterConfig);
                 }
 
@@ -1529,6 +1539,7 @@ namespace Barotrauma.CharacterEditor
             CurrentAnimation.StoreSnapshot();
             RagdollParams.StoreSnapshot();
             Cam.Position = character.WorldPosition;
+            editedCharacters.Add(character);
         }
 
         private void ClearWidgets()
