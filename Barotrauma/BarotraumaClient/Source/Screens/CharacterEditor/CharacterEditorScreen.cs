@@ -226,6 +226,7 @@ namespace Barotrauma.CharacterEditor
             SoundPlayer.OverrideMusicType = null;
             GameMain.SoundManager.SetCategoryGainMultiplier("waterambience", GameMain.Config.SoundVolume, 0);
 
+            // TODO: reset the changes for vanilla characters if not on debug build
             GUI.ForceMouseOn(null);
             if (isEndlessRunner)
             {
