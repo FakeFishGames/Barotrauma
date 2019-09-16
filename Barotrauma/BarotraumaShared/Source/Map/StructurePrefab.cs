@@ -330,7 +330,7 @@ namespace Barotrauma
                 }
                 if (ResizeVertical && Math.Abs(placeSize.Y) < Submarine.GridSize.Y)
                 {
-                    placeSize.X = Submarine.GridSize.Y;
+                    placeSize.Y = Submarine.GridSize.Y;
                 }
 
                 newRect = Submarine.AbsRect(placePosition, placeSize);
