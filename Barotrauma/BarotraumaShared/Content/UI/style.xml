@@ -655,13 +655,12 @@
   </GUIRadioButton>
   
   <GUIServerListFavoriteTickBox
-    color="200,200,200,255"
+    color="160,160,160,255"
     hovercolor="170,170,255,255"
-    selectedcolor="255,255,255,255" >
-    <Sprite texture="Content/UI/Server/FavoriteStars.png" state="None" tile="false" maintainaspectratio="true" sourcerect ="0, 0, 32, 32"/>
-    <Sprite texture="Content/UI/Server/FavoriteStars.png" state="Hover" tile="false" maintainaspectratio="true" sourcerect ="0, 0, 32, 32"/>
-    <Sprite texture="Content/UI/Server/FavoriteStars.png" state="Pressed" tile="false" maintainaspectratio="true" sourcerect ="0, 0, 32, 32"/>
-    <Sprite texture="Content/UI/Server/FavoriteStars.png" state="Selected" tile="false" maintainaspectratio="true" sourcerect ="32, 0, 32, 32"/>
+    selectedcolor="30,240,120,255" >
+    <Sprite texture="Content/UI/Server/FavouriteIcon.png" state="None" tile="false" maintainaspectratio="true" sourcerect ="0, 0, 38, 36"/>
+    <Sprite texture="Content/UI/Server/FavouriteIcon.png" state="Hover" tile="false" maintainaspectratio="true" sourcerect ="0, 0, 38, 36"/>
+    <Sprite texture="Content/UI/Server/FavouriteIcon.png" state="Selected" tile="false" maintainaspectratio="true" sourcerect ="0, 0, 38, 36"/>
   </GUIServerListFavoriteTickBox>
 
   <GUIServerListPasswordTickBox
