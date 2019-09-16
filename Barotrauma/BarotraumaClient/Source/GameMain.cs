@@ -729,7 +729,7 @@ namespace Barotrauma
                             GameMain.MainMenuScreen.Select();
                         }
                         UInt64 serverSteamId = SteamManager.SteamIDStringToUInt64(ConnectEndpoint);
-                        Client = new GameClient(SteamManager.GetUsername(),
+                        Client = new GameClient(Config.PlayerName,
                                                 serverSteamId != 0 ? null : ConnectEndpoint,
                                                 serverSteamId,
                                                 string.IsNullOrWhiteSpace(ConnectName) ? ConnectEndpoint : ConnectName);

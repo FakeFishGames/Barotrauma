@@ -1550,30 +1550,36 @@ namespace Barotrauma
                 }
                 else
                 {
-                    int parsedNum = 0;
-                    if (!int.TryParse(currNum, out parsedNum))
+                    if (!int.TryParse(currNum, out int parsedNum) || parsedNum < 0)
                     {
                         return false;
                     }
-
-                    switch (c)
+                    try
                     {
-                        case 'd':
-                            timeSpan += new TimeSpan(parsedNum, 0, 0, 0, 0);
-                            break;
-                        case 'h':
-                            timeSpan += new TimeSpan(0, parsedNum, 0, 0, 0);
-                            break;
-                        case 'm':
-                            timeSpan += new TimeSpan(0, 0, parsedNum, 0, 0);
-                            break;
-                        case 's':
-                            timeSpan += new TimeSpan(0, 0, 0, parsedNum, 0);
-                            break;
-                        default:
-                            return false;
+                        switch (c)
+                        {
+                            case 'd':
+                                timeSpan += new TimeSpan(parsedNum, 0, 0, 0, 0);
+                                break;
+                            case 'h':
+                                timeSpan += new TimeSpan(0, parsedNum, 0, 0, 0);
+                                break;
+                            case 'm':
+                                timeSpan += new TimeSpan(0, 0, parsedNum, 0, 0);
+                                break;
+                            case 's':
+                                timeSpan += new TimeSpan(0, 0, 0, parsedNum, 0);
+                                break;
+                            default:
+                                return false;
+                        }
                     }
-
+                    catch (ArgumentOutOfRangeException)
+                    {
+                        ThrowError($"{parsedNum} {c} exceeds the maximum supported time span. Using the maximum time span {TimeSpan.MaxValue} instead.");
+                        timeSpan = TimeSpan.MaxValue;
+                        return true;
+                    }
                     currNum = "";
                 }
             }

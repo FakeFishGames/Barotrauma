@@ -251,18 +251,18 @@ namespace Barotrauma
         public bool AutoCheckUpdates { get; set; }
         public bool WasGameUpdated { get; set; }
 
-        private string defaultPlayerName;
-        public string DefaultPlayerName
+        private string playerName;
+        public string PlayerName
         {
             get
             {
-                return defaultPlayerName ?? "";
+                return string.IsNullOrWhiteSpace(playerName) ? Steam.SteamManager.GetUsername() : playerName;
             }
             set
             {
-                if (defaultPlayerName != value)
+                if (playerName != value)
                 {
-                    defaultPlayerName = value;
+                    playerName = value;
                 }
             }
         }
@@ -575,7 +575,7 @@ namespace Barotrauma
             doc.Root.Add(gameplay);
 
             var playerElement = new XElement("player",
-                new XAttribute("name", defaultPlayerName ?? ""),
+                new XAttribute("name", playerName ?? ""),
                 new XAttribute("headindex", CharacterHeadIndex),
                 new XAttribute("gender", CharacterGender),
                 new XAttribute("race", CharacterRace),
@@ -881,7 +881,7 @@ namespace Barotrauma
             doc.Root.Add(gameplay);
 
             var playerElement = new XElement("player",
-                new XAttribute("name", defaultPlayerName ?? ""),
+                new XAttribute("name", playerName ?? ""),
                 new XAttribute("headindex", CharacterHeadIndex),
                 new XAttribute("gender", CharacterGender),
                 new XAttribute("race", CharacterRace),
@@ -969,7 +969,7 @@ namespace Barotrauma
             XElement playerElement = doc.Root.Element("player");
             if (playerElement != null)
             {
-                defaultPlayerName = playerElement.GetAttributeString("name", defaultPlayerName);
+                playerName = playerElement.GetAttributeString("name", playerName);
                 CharacterHeadIndex = playerElement.GetAttributeInt("headindex", CharacterHeadIndex);
                 if (Enum.TryParse(playerElement.GetAttributeString("gender", "none"), true, out Gender g))
                 {
@@ -1149,7 +1149,7 @@ namespace Barotrauma
             voiceChatVolume = 0.5f;
             microphoneVolume = 5.0f;
             AutoCheckUpdates = true;
-            defaultPlayerName = string.Empty;
+            playerName = string.Empty;
             HUDScale = 1;
             InventoryScale = 1;
             AutoUpdateWorkshopItems = true;
