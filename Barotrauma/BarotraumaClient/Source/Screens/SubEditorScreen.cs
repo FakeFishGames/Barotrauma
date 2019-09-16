@@ -2433,10 +2433,13 @@ namespace Barotrauma
             Submarine.DrawBack(spriteBatch, editing: true);
 
             spriteBatch.End();
+
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: cam.Transform);
+            Submarine.DrawDamageable(spriteBatch, null, editing: true);
+            spriteBatch.End();
 
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: cam.Transform);
             Submarine.DrawFront(spriteBatch, editing: true);
-
             if (!CharacterMode && !WiringMode && GUI.MouseOn == null)
             {
                 MapEntityPrefab.Selected?.DrawPlacing(spriteBatch, cam);                

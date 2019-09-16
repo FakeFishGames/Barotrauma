@@ -92,7 +92,7 @@ namespace Barotrauma
 
         public virtual void Draw(SpriteBatch spriteBatch, bool editing, bool back = true) { }
 
-        public virtual void DrawDamage(SpriteBatch spriteBatch, Effect damageEffect) { }
+        public virtual void DrawDamage(SpriteBatch spriteBatch, Effect damageEffect, bool editing) { }
 
         /// <summary>
         /// Update the selection logic in submarine editor

@@ -170,9 +170,9 @@ namespace Barotrauma
             Draw(spriteBatch, editing, back, null);
         }
 
-        public override void DrawDamage(SpriteBatch spriteBatch, Effect damageEffect)
+        public override void DrawDamage(SpriteBatch spriteBatch, Effect damageEffect, bool editing)
         {
-            Draw(spriteBatch, false, false, damageEffect);
+            Draw(spriteBatch, editing, false, damageEffect);
         }
 
         private void Draw(SpriteBatch spriteBatch, bool editing, bool back = true, Effect damageEffect = null)
@@ -265,7 +265,7 @@ namespace Barotrauma
                 }
             }
 
-            if (back == depth > 0.5f || editing)
+            if (back == depth > 0.5f)
             {
                 SpriteEffects oldEffects = prefab.sprite.effects;
                 prefab.sprite.effects ^= SpriteEffects;
