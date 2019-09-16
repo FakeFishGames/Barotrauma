@@ -861,7 +861,9 @@ namespace Barotrauma
             doc.Root.Add(keyMappingElement);
             for (int i = 0; i < keyMapping.Length; i++)
             {
-                if (keyMapping[i].MouseButton == null)
+                var key = keyMapping[i];
+                if (key == null) { continue; }
+                if (key.MouseButton == null)
                 {
                     keyMappingElement.Add(new XAttribute(((InputType)i).ToString(), keyMapping[i].Key));
                 }

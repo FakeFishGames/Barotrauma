@@ -278,9 +278,19 @@ namespace Barotrauma
                         }
                         catch (Exception e)
                         {
-                            errorMessages.Add(TextManager.GetWithVariables("xmlfileinvalid", 
-                                new string[] { "[filepath]", "[errormessage]" },
-                                new string[] { file.Path, e.Message }));
+                            if (TextManager.Initialized)
+                            {
+                                errorMessages.Add(TextManager.GetWithVariables("xmlfileinvalid",
+                                    new string[] { "[filepath]", "[errormessage]" },
+                                    new string[] { file.Path, e.Message }));
+                            }
+                            else
+                            {
+                                errorMessages.Add($"XML File Invalid. PATH: {file.Path}, ERROR: {e.Message}");
+#if DEBUG
+                                throw e;
+#endif
+                            }
                         }
                         break;
                 }
