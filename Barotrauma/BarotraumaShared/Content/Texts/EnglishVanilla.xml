@@ -3537,6 +3537,7 @@
   <label.dronecharge>Drone Charge</label.dronecharge>
   <label.meltdown>Meltdown</label.meltdown>
 
+  <campaignfiletransferinprogress>Please wait for the campaign save file to finish downloading.</campaignfiletransferinprogress>
 
   <!-- Changed values as of 13th of August -->
   <traitorgoaldestroyitems>Dispose of at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>

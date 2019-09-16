@@ -2132,7 +2132,15 @@ namespace Barotrauma.Networking
 
         public bool SpectateClicked(GUIButton button, object userData)
         {
-            if (button != null) button.Enabled = false;
+            MultiPlayerCampaign campaign = 
+                GameMain.NetLobbyScreen.SelectedMode == GameMain.GameSession?.GameMode.Preset ?
+                GameMain.GameSession?.GameMode as MultiPlayerCampaign : null;
+            if (campaign != null && campaign.LastSaveID < campaign.PendingSaveID)
+            {
+                new GUIMessageBox("", TextManager.Get("campaignfiletransferinprogress"));
+                return false;
+            }
+            if (button != null) { button.Enabled = false; }
 
             IWriteMessage readyToStartMsg = new WriteOnlyMessage();
             readyToStartMsg.Write((byte)ClientPacketHeader.RESPONSE_STARTGAME);
