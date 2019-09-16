@@ -12,6 +12,8 @@ namespace Barotrauma.Items.Components
 
         private bool isOn;
 
+        private float reduceLoad;
+
         private static readonly Dictionary<string, string> connectionPairs = new Dictionary<string, string>
         {
             { "power_in", "power_out"},
@@ -55,10 +57,9 @@ namespace Barotrauma.Items.Components
             : base(item, element)
         {
             IsActive = true;
+            reduceLoad = MaxPower;
         }
-
-        private float reduceLoad;
-
+        
         public override void Update(float deltaTime, Camera cam)
         {
             RefreshConnections();
@@ -77,17 +78,20 @@ namespace Barotrauma.Items.Components
 
             if (powerOut != null)
             {
-                float overload = -1000.0f;
+				bool overloaded = false;
                 foreach (Connection recipient in powerOut.Recipients)
                 {
                     var pt = recipient.Item.GetComponent<PowerTransfer>();
                     if (pt != null)
                     {
-						overload = Math.Max(-pt.CurrPowerConsumption - pt.PowerLoad, overload);
+						float overload = -pt.CurrPowerConsumption - pt.PowerLoad;
+						reduceLoad += overload * deltaTime * 0.5f;
+						overloaded = true;
                     }
                 }
-                reduceLoad += overload * deltaTime * 0.5f;
-                reduceLoad = MathHelper.Clamp(reduceLoad, 0.0f, -currPowerConsumption + reduceLoad);
+                reduceLoad = overloaded ?
+					MathHelper.Clamp(reduceLoad, 0.0f, MaxPower): 					
+					Math.Max(reduceLoad - MaxPower * deltaTime, 0.0f);
             }
 
             if (Math.Min(-currPowerConsumption, PowerLoad) > maxPower && CanBeOverloaded)
@@ -112,13 +116,8 @@ namespace Barotrauma.Items.Components
                 powerLoad -= Math.Min(power + reduceLoad, 0.0f);
                 power = Math.Min(power + reduceLoad, 0.0f);
 
-				float loadOut = -power;
-                if (loadOut > MaxPower)
-                {
-                    loadOut -= loadOut - MaxPower;
-                }
                 //pass the load to items connected to the input
-                powerIn.SendPowerProbeSignal(source, -loadOut);
+                powerIn.SendPowerProbeSignal(source, Math.Max(power, -MaxPower));
             }
             else
             {
@@ -130,8 +129,20 @@ namespace Barotrauma.Items.Components
                 }
 
                 currPowerConsumption -= power;
-                //pass the power forwards
-                powerOut.SendPowerProbeSignal(source, power);
+
+                foreach (Connection recipient in powerOut.Recipients)
+                {
+                    if (!recipient.IsPower) { continue; }
+                    var powered = recipient.Item.GetComponent<Powered>();
+                    if (powered == null) { continue; }
+					
+					float load = powered.CurrPowerConsumption;
+					var powerTransfer = powered as PowerTransfer;
+					if (powerTransfer != null) { load = powerTransfer.PowerLoad;  }
+
+                    float powerOut = power * (load / Math.Max(powerLoad + reduceLoad, 1.0f));
+                    powered.ReceivePowerProbeSignal(recipient, source, Math.Min(powerOut, power));
+                }
             }
             
         }

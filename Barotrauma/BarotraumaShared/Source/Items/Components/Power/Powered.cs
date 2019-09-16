@@ -212,6 +212,10 @@ namespace Barotrauma.Items.Components
                     lastPowerProbeRecipients.Clear();
                     powered.powerIn?.SendPowerProbeSignal(powered.item, -powered.currPowerConsumption);
                 }
+            }
+            foreach (Powered powered in poweredList)
+            {
+                if (powered is PowerTransfer) { continue; }
                 else if (powered.currPowerConsumption < 0.0f)
                 {
                     //providing power
@@ -226,7 +230,6 @@ namespace Barotrauma.Items.Components
                     powered.powerOut?.SendPowerProbeSignal(powered.item, pc.CurrPowerOutput);
                 }
             }
-
             //go through powered items and calculate their current voltage
             foreach (Powered powered in poweredList)
             {
