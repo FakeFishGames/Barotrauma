@@ -990,19 +990,19 @@
     <sprite texture="Content/Map/BackgroundWalls.png" sourcerect="513,688,510,256" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Wall_B>
   <Wall_BP name="BackWall Ballast A2" identifier="FF_Wall_BP" description="Ballast back wall with pipe" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="0,672,512,256" depth="0.98" premultiplyalpha="false" />
+    <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="1,672,510,256" depth="0.98" premultiplyalpha="false" />
   </Wall_BP>
   <Wall_BC name="BackWall Ballast C" identifier="bwbc" description="Ballast back wall with pipe" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/BackgroundWalls.png" sourcerect="1,688,510,256" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Wall_BC>
   <Wall_C1 name="BackWall C1" identifier="FF_Wall_C1" description="Mushy grey wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="0,0,672,224" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
+    <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="1,0,670,224" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Wall_C1>
   <Wall_C2 name="BackWall C2" identifier="FF_Wall_C2" description="Mushy grey wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="0,224,672,224" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
+    <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="1,224,670,224" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Wall_C2>
   <Wall_C3 name="BackWall C3" identifier="FF_Wall_C3" description="Mushy grey Greeble wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="0,448,672,224" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
+    <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="1,448,670,224" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Wall_C3>
   <Wall_D1 name="BackWall D1" identifier="FF_Wall_D1" description="Metal wall 1" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/BackgroundWalls.png" sourcerect="335,0,687,240" depth="0.98" premultiplyalpha="false" />
@@ -1014,7 +1014,7 @@
     <sprite texture="Content/Map/BackgroundWalls.png" sourcerect="335,464,687,224" depth="0.98" premultiplyalpha="false" />
   </Wall_D3>
   <Wall_E name="BackWall E" identifier="FF_Wall_E" description="Block wall lit" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="512,672,512,256" depth="0.98" premultiplyalpha="false" />
+    <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="513,672,510,256" depth="0.98" premultiplyalpha="false" />
   </Wall_E>
   <!--<Wall_F name="BackWall G1" identifier="FF_Wall_F" description="Machinery back wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_F.png" sourcerect="0,0,658,322" depth="0.98" />
