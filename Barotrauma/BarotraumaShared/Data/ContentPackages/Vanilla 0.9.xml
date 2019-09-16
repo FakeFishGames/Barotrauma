@@ -54,8 +54,10 @@
   <Character file="Content/Characters/Coelanth/Coelanth.xml" />
   <Character file="Content/Characters/Crawler/Crawler.xml" />
   <Character file="Content/Characters/Endworm/Endworm.xml" />
+  <Character file="Content/Characters/Electricparasite/Electricparasite.xml" />
   <Character file="Content/Characters/Fractalguardian/Fractalguardian.xml" />
-  <Character file="Content/Characters/Fractalguardian2/Fractalguardian2.xml" /> 
+  <Character file="Content/Characters/Fractalguardian2/Fractalguardian2.xml" />
+  <Character file="Content/Characters/Hammerhead/Hammerhead.xml" />
   <Character file="Content/Characters/Human/Human.xml" />
   <Character file="Content/Characters/Husk/Husk.xml" />
   <Character file="Content/Characters/Humanhusk/Humanhusk.xml" />
@@ -71,7 +73,6 @@
   <Character file="Content/Characters/Tigerthresher/Tigerthresher.xml" />
   <Character file="Content/Characters/Tigerthresherboss/Tigerthresherboss.xml" />
   <Character file="Content/Characters/Watcher/Watcher.xml" />
-  <Character file="Content/Characters/Hammerhead/Hammerhead.xml" />
   <Outpost file="Content/Map/Outposts/Outpost.sub" />
   <Outpost file="Content/Map/Outposts/Outpost2.sub" />
   <Outpost file="Content/Map/Outposts/Outpost3.sub" />
