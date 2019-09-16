@@ -190,7 +190,13 @@ namespace Barotrauma.CharacterEditor
             onlyShowSourceRectForSelectedLimbs = false;
             if (character != null)
             {
-                character.AnimController.Collider.PhysEnabled = true;
+                if (character.AnimController != null)
+                {
+                    if (character.AnimController.Collider != null)
+                    {
+                        character.AnimController.Collider.PhysEnabled = true;
+                    }
+                }
             }
             Wizard.instance?.Reset();
         }
