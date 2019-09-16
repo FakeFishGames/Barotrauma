@@ -6,9 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
-#if CLIENT
-using Barotrauma.Particles;
-#endif
 
 namespace Barotrauma.Items.Components
 {
@@ -33,6 +30,20 @@ namespace Barotrauma.Items.Components
 
         [Serialize(0.0f, false, description: "The distance at which the item can repair targets.")]
         public float Range { get; set; }
+
+        [Serialize(0.0f, false, description: "Random spread applied to the firing angle when used by a character with sufficient skills to use the tool (in degrees).")]
+        public float Spread
+        {
+            get;
+            set;
+        }
+
+        [Serialize(0.0f, false, description: "Random spread applied to the firing angle when used by a character with insufficient skills to use the tool (in degrees).")]
+        public float UnskilledSpread
+        {
+            get;
+            set;
+        }
 
         [Serialize(0.0f, false, description: "How many units of damage the item removes from structures per second.")]
         public float StructureFixAmount
@@ -164,10 +175,12 @@ namespace Barotrauma.Items.Components
                 if (item.Submarine != null) { rayStart += item.Submarine.SimPosition; }
             }
 
+            float spread = MathHelper.ToRadians(MathHelper.Lerp(UnskilledSpread, Spread, degreeOfSuccess));
+            float angle = item.body.Rotation + spread * Rand.Range(-0.5f, 0.5f);
             Vector2 rayEnd = rayStart + 
                 ConvertUnits.ToSimUnits(new Vector2(
-                    (float)Math.Cos(item.body.Rotation),
-                    (float)Math.Sin(item.body.Rotation)) * Range * item.body.Dir);
+                    (float)Math.Cos(angle),
+                    (float)Math.Sin(angle)) * Range * item.body.Dir);
 
             List<Body> ignoredBodies = new List<Body>();
             foreach (Limb limb in character.AnimController.Limbs)
