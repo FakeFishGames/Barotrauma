@@ -719,6 +719,9 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\UI\MissionIcons.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\UI\Server\SlantedButtons.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\UI\tutorialAtlas.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

@@ -221,7 +221,7 @@
       textcolor="153,166,179,255"
       padding="10.0, 0.0, 10.0, 0.0"/>
   </GUIButtonSlicedTopAndBottom>
-  
+
   <MainMenuGUITextBlock
     textcolor="0,0,0,255"
     color="255,255,255,255"
@@ -404,6 +404,7 @@
     <Sprite texture="Content/UI/CampaignUIAtlas.png" sourcerect="225,741,200,200" tile="false" maintainaspectratio="true"/>
   </RepairItemsButton>
   
+  <!-- TODO: seems to be unused, remove? -->
   <GUIButtonServerListInfo
     color="102,150,175,255"
     hovercolor="255,255,255,255"
@@ -416,6 +417,47 @@
     <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" tile="false" maintainaspectratio="true" sourcerect="907,428,22,22"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Pressed" tile="false" maintainaspectratio="true" sourcerect="907,428,22,22"/>    
   </GUIButtonServerListInfo>
+
+  <GUIButtonServerListTabLeft
+    color="255,255,255,255"
+    hovercolor="200,200,255,255"
+    selectedcolor="255,255,255,255"
+    pressedcolor="255,255,255,255"
+    textcolor="153,166,179,255">
+    
+    <Sprite texture="Content/UI/Server/SlantedButtons.png" tile="false" state="None" sourcerect="0, 144, 221, 32"/>
+    <Sprite texture="Content/UI/Server/SlantedButtons.png" tile="false" state="Hover" sourcerect="0, 0, 221, 32"/>
+    <Sprite texture="Content/UI/Server/SlantedButtons.png" tile="false" state="Selected" sourcerect="0, 0, 221, 32"/>
+    <Sprite texture="Content/UI/Server/SlantedButtons.png" tile="false" state="Pressed" sourcerect="0, 288, 221, 32"/>
+
+    <GUITextBlock
+      textcolor="153,166,179,255"
+      padding="0.0, 0.0, 10.0, 0.0"/>
+  </GUIButtonServerListTabLeft>
+
+  <GUIButtonServerListTabMiddle
+    color="255,255,255,255"
+    hovercolor="200,200,255,255"
+    selectedcolor="255,255,255,255"
+    pressedcolor="255,255,255,255"
+    textcolor="153,166,179,255">
+    
+    <Sprite texture="Content/UI/Server/SlantedButtons.png" tile="false" state="None" sourcerect="0, 192, 221, 32"/>
+    <Sprite texture="Content/UI/Server/SlantedButtons.png" tile="false" state="Hover" sourcerect="0, 48, 221, 32"/>
+    <Sprite texture="Content/UI/Server/SlantedButtons.png" tile="false" state="Selected" sourcerect="0, 48, 221, 32"/>
+    <Sprite texture="Content/UI/Server/SlantedButtons.png" tile="false" state="Pressed" sourcerect="0, 336, 221, 32"/>
+
+    <GUITextBlock
+      textcolor="153,166,179,255"
+      padding="10.0, 0.0, 10.0, 0.0"/>
+  </GUIButtonServerListTabMiddle>
+
+  <GUIFrameServerListTabRight
+    color="255,255,255,255"
+    textcolor="153,166,179,255">
+    
+    <Sprite texture="Content/UI/Server/SlantedButtons.png" tile="false" state="None" sourcerect="0, 240, 267, 32"/>
+  </GUIFrameServerListTabRight>
 
   <GUIButtonRefresh
     color="204,204,204,255"

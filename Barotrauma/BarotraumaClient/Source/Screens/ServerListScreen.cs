@@ -67,20 +67,20 @@ namespace Barotrauma
         private List<ServerInfo> favoriteServers;
         private List<ServerInfo> recentServers;
 
-        private enum Tab
+        private enum ServerListTab
         {
-            Browse = 0,
-            Recent = 1,
-            Favorites = 2
+            All = 0,
+            Favorites = 1,
+            Recent = 2
         };
-        private Tab selectedTab;
-        private Tab SelectedTab
+        private ServerListTab selectedTab;
+        private ServerListTab SelectedTab
         {
             get { return selectedTab; }
             set
             {
                 if (selectedTab == value) { return; }
-                var tabVals = Enum.GetValues(typeof(Tab));
+                var tabVals = Enum.GetValues(typeof(ServerListTab));
                 for (int i = 0; i < tabVals.Length; i++)
                 {
                     tabButtons[i].Selected = false;
@@ -170,9 +170,9 @@ namespace Barotrauma
                 AutoScale = true
             };
 
-            var infoHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.33f), topRow.RectTransform), isHorizontal: true) { RelativeSpacing = 0.05f,  Stretch = true };
+            var infoHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.33f), topRow.RectTransform), isHorizontal: true) { RelativeSpacing = 0.05f,  Stretch = false };
 
-            var clientNameHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.36f, 1.0f), infoHolder.RectTransform)) { RelativeSpacing = 0.05f };
+            var clientNameHolder = new GUILayoutGroup(new RectTransform(new Vector2(sidebarWidth, 1.0f), infoHolder.RectTransform)) { RelativeSpacing = 0.05f };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), clientNameHolder.RectTransform), TextManager.Get("YourName"));
             clientNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.5f), clientNameHolder.RectTransform), "")
@@ -187,14 +187,18 @@ namespace Barotrauma
                 clientNameBox.Text = SteamManager.GetUsername();
             }
 
-            var tabButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 1.25f), infoHolder.RectTransform) { RelativeOffset = new Vector2(-0.3f, 0.0f) }, childAnchor: Anchor.BottomLeft) { RelativeSpacing = 0.005f, IsHorizontal = true };
+            var tabButtonHolder = new GUIFrame(new RectTransform(new Vector2(1.0f - (sidebarWidth*2.0f), 1.25f), infoHolder.RectTransform), style: null);
 
-            var tabVals = Enum.GetValues(typeof(Tab));
+            var tabVals = Enum.GetValues(typeof(ServerListTab));
             tabButtons = new GUIButton[tabVals.Length];
-            foreach (Tab tab in tabVals)
+            int ind = 0;
+            foreach (ServerListTab tab in tabVals)
             {
-                tabButtons[(int)tab] = new GUIButton(new RectTransform(new Vector2(0.3f, 0.5f), tabButtonHolder.RectTransform),
-                        tab.ToString(), style: "GUITabButton")
+                tabButtons[(int)tab] = new GUIButton(new RectTransform(new Vector2(0.25f, 0.5f), tabButtonHolder.RectTransform)
+                {
+                    RelativeOffset = new Vector2(-0.06f + 0.22f * ind, 0.5f)
+                },
+                        TextManager.Get("ServerListTab."+tab.ToString()), style: "GUIButtonServerListTab"+(ind==0 ? "Left" : "Middle"))
                 {
                     OnClicked = (btn, usrdat) =>
                     {
@@ -202,9 +206,11 @@ namespace Barotrauma
                         return false;
                     }
                 };
+                ind++;
             }
 
-            friendsButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 1.0f), infoHolder.RectTransform, Anchor.BottomRight), childAnchor: Anchor.BottomRight) { RelativeSpacing = 0.01f, IsHorizontal = true };
+            var friendsButtonFrame = new GUIFrame(new RectTransform(new Vector2(0.31f, 0.5f), tabButtonHolder.RectTransform) { RelativeOffset = new Vector2(0.60f, 0.5f) }, style: "GUIFrameServerListTabRight");
+            friendsButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), friendsButtonFrame.RectTransform, Anchor.BottomRight), childAnchor: Anchor.BottomRight) { RelativeSpacing = 0.01f, IsHorizontal = true };
             friendsList = new List<FriendInfo>();
 
             //-------------------------------------------------------------------------------------
@@ -622,7 +628,7 @@ namespace Barotrauma
             recentServers.ForEach(s => s.Recent = true);
             favoriteServers.ForEach(s => s.Favorite = true);
 
-            SelectedTab = Tab.Browse;
+            SelectedTab = ServerListTab.All;
             tabButtons[(int)selectedTab].Selected = true;
 
             RecalculateHolder();
@@ -871,7 +877,7 @@ namespace Barotrauma
         public override void Select()
         {
             base.Select();
-            SelectedTab = Tab.Browse;
+            SelectedTab = ServerListTab.All;
             RefreshServers();
         }
 
@@ -934,9 +940,9 @@ namespace Barotrauma
                     (!filterTraitor.Selected || serverInfo.TraitorsEnabled == YesNoMaybe.Yes || serverInfo.TraitorsEnabled == YesNoMaybe.Maybe) &&
                     (!filterVoip.Selected || serverInfo.VoipEnabled == true) &&
                     (!filterModded.Selected || serverInfo.GetPlayStyleTags().Any(t => t.Contains("modded.true"))) &&
-                    ((selectedTab == Tab.Browse) ||
-                     (selectedTab == Tab.Recent && serverInfo.Recent) ||
-                     (selectedTab == Tab.Favorites && serverInfo.Favorite)) &&
+                    ((selectedTab == ServerListTab.All) ||
+                     (selectedTab == ServerListTab.Recent && serverInfo.Recent) ||
+                     (selectedTab == ServerListTab.Favorites && serverInfo.Favorite)) &&
                     (remoteVersion != null && remoteVersion <= GameMain.Version);
 
                 foreach (GUITickBox tickBox in playStyleTickBoxes)
@@ -1115,7 +1121,7 @@ namespace Barotrauma
                     var avatarImage = friend.GetAvatar(avatarSize);
                     if (avatarImage != null)
                     {
-                        const int desaturatedWeight = 155;
+                        const int desaturatedWeight = 200;
 
                         byte[] avatarData = (byte[])avatarImage.Data.Clone();
                         for (int i=0;i<avatarData.Length;i+=4)
@@ -1188,7 +1194,7 @@ namespace Barotrauma
                         mainColor = friend.PlayingThisGame ? new Color(96, 196, 83) : new Color(83, 164, 196);
                     }
 
-                    var guiButton = new GUIButton(new RectTransform(Vector2.One * 0.6f, friendsButtonHolder.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: null)
+                    var guiButton = new GUIButton(new RectTransform(Vector2.One, friendsButtonHolder.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: null)
                     {
                         Color = mainColor,
                         HoverColor = hoverColor,
@@ -1243,7 +1249,7 @@ namespace Barotrauma
 
             if (friendsList.Count > 0)
             {
-                friendsDropdownButton = new GUIButton(new RectTransform(Vector2.One * 0.6f, friendsButtonHolder.RectTransform, Anchor.BottomRight, Pivot.BottomRight, scaleBasis: ScaleBasis.BothHeight), "\u2022 \u2022 \u2022", style: null)
+                friendsDropdownButton = new GUIButton(new RectTransform(Vector2.One, friendsButtonHolder.RectTransform, Anchor.BottomRight, Pivot.BottomRight, scaleBasis: ScaleBasis.BothHeight), "\u2022 \u2022 \u2022", style: null)
                 {
                     Color = mainColor,
                     SelectedColor = hoverColor,
@@ -1254,8 +1260,8 @@ namespace Barotrauma
                     Font = GUI.ObjectiveNameFont,
                     OnClicked = (button, udt) =>
                     {
-                        friendsDropdown.RectTransform.NonScaledSize = new Point(friendsButtonHolder.Rect.Height * 5, friendsButtonHolder.Rect.Height * 4);
-                        friendsDropdown.RectTransform.RelativeOffset = new Vector2(0.155f, 0.215f);
+                        friendsDropdown.RectTransform.NonScaledSize = new Point(friendsButtonHolder.Rect.Height * 5 * 166 / 100, friendsButtonHolder.Rect.Height * 4 * 166 / 100);
+                        friendsDropdown.RectTransform.RelativeOffset = new Vector2(0.295f, 0.235f);
                         friendsDropdown.RectTransform.RecalculateChildren(true);
                         friendsDropdown.RectTransform.SetPosition(Anchor.TopRight);
 
@@ -1270,8 +1276,8 @@ namespace Barotrauma
                 friendsDropdown.Visible = false;
             }
 
-            friendsDropdown.RectTransform.NonScaledSize = new Point(friendsButtonHolder.Rect.Height * 5, friendsButtonHolder.Rect.Height * 4);
-            friendsDropdown.RectTransform.RelativeOffset = new Vector2(0.155f, 0.215f);
+            friendsDropdown.RectTransform.NonScaledSize = new Point(friendsButtonHolder.Rect.Height * 5 * 166 / 100, friendsButtonHolder.Rect.Height * 4 * 166 / 100);
+            friendsDropdown.RectTransform.RelativeOffset = new Vector2(0.295f, 0.235f);
             friendsDropdown.RectTransform.RecalculateChildren(true);
             friendsDropdown.RectTransform.SetPosition(Anchor.TopRight);
 
