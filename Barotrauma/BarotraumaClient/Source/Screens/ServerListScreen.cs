@@ -1126,13 +1126,20 @@ namespace Barotrauma
                         byte[] avatarData = (byte[])avatarImage.Data.Clone();
                         for (int i=0;i<avatarData.Length;i+=4)
                         {
-                            int average = (avatarData[i + 0] + avatarData[i + 1] + avatarData[i + 2]) / 3;
-                            int chn0 = ((avatarData[i + 0] * (255 - desaturatedWeight)) / 255) + ((average * desaturatedWeight) / 255);
-                            int chn1 = ((avatarData[i + 1] * (255 - desaturatedWeight)) / 255) + ((average * desaturatedWeight) / 255);
-                            int chn2 = ((avatarData[i + 2] * (255 - desaturatedWeight)) / 255) + ((average * desaturatedWeight) / 255);
+                            int luma = (avatarData[i + 0] * 299 + avatarData[i + 1] * 587 + avatarData[i + 2] * 114) / 1000;
+                            int chn0 = ((avatarData[i + 0]  * (255 - desaturatedWeight)) / 255) + ((luma * desaturatedWeight) / 255);
+                            int chn1 = ((avatarData[i + 1] * (255 - desaturatedWeight)) / 255) + ((luma * desaturatedWeight) / 255);
+                            int chn2 = ((avatarData[i + 2] * (255 - desaturatedWeight)) / 255) + ((luma * desaturatedWeight) / 255);
+                            int chn3 = 255;
+
+                            chn0 = chn0 * chn3 / 255;
+                            chn1 = chn1 * chn3 / 255;
+                            chn2 = chn2 * chn3 / 255;
+
                             avatarData[i + 0] = chn0 > 255 ? (byte)255 : (byte)chn0;
                             avatarData[i + 1] = chn1 > 255 ? (byte)255 : (byte)chn1;
                             avatarData[i + 2] = chn2 > 255 ? (byte)255 : (byte)chn2;
+                            avatarData[i + 3] = chn3 > 255 ? (byte)255 : (byte)chn3;
                         }
                         //TODO: create an avatar atlas?
                         var avatarTexture = new Texture2D(GameMain.Instance.GraphicsDevice, avatarImage.Width, avatarImage.Height);
@@ -1187,11 +1194,11 @@ namespace Barotrauma
                 {
                     if (friend.InServer)
                     {
-                        mainColor = new Color(96, 196, 83);
+                        mainColor = new Color(45, 125, 70);
                     }
                     else
                     {
-                        mainColor = friend.PlayingThisGame ? new Color(96, 196, 83) : new Color(83, 164, 196);
+                        mainColor = friend.PlayingThisGame ? new Color(45, 125, 70) : new Color(60, 60, 80);
                     }
 
                     var guiButton = new GUIButton(new RectTransform(Vector2.One, friendsButtonHolder.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: null)
@@ -1209,7 +1216,12 @@ namespace Barotrauma
                     {
                         var avatarHolder = new GUILayoutGroup(new RectTransform(Vector2.One * 0.925f, guiButton.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.025f, 0.025f) });
 
-                        var guiImage = new GUIImage(new RectTransform(Vector2.One, avatarHolder.RectTransform), friend.Sprite, null, true);
+                        var imgColor = new Color(mainColor.R / 255.0f * 3.0f, mainColor.G / 255.0f * 3.0f, mainColor.B / 255.0f * 3.0f);
+                        var imgHoverColor = new Color(hoverColor.R / 255.0f * 3.0f, hoverColor.G / 255.0f * 3.0f, hoverColor.B / 255.0f * 3.0f);
+                        var guiImage = new GUIImage(new RectTransform(Vector2.One, avatarHolder.RectTransform), friend.Sprite, null, true)
+                        {
+                            Color = imgColor
+                        };
                         guiImage.ToolTip = friend.Name + "\n" + friend.Status;
                     }
                 }
