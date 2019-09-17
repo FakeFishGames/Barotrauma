@@ -1067,8 +1067,6 @@ namespace Barotrauma
                 ChangeSubDescription(textBox, text);
                 return true;
             };
-            descriptionBox.Text = Submarine.MainSub == null ? "" : Submarine.MainSub.Description;
-            submarineDescriptionCharacterCount.Text = descriptionBox.Text.Length + " / " + submarineDescriptionLimit;
 
             var crewSizeArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.03f), leftColumn.RectTransform), isHorizontal: true) { AbsoluteSpacing = 5 };
 
@@ -1286,7 +1284,10 @@ namespace Barotrauma
             {
                 OnClicked = SaveSub
             };
-
+            paddedSaveFrame.Recalculate();
+            leftColumn.Recalculate();
+            descriptionBox.Text = Submarine.MainSub == null ? "" : Submarine.MainSub.Description;
+            submarineDescriptionCharacterCount.Text = descriptionBox.Text.Length + " / " + submarineDescriptionLimit;
         }
 
 
