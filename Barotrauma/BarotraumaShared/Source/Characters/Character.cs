@@ -2501,7 +2501,7 @@ namespace Barotrauma
                 Vector2 diff = dir;
                 if (diff == Vector2.Zero) diff = Rand.Vector(1.0f);
                 hitLimb.body.ApplyLinearImpulse(Vector2.Normalize(diff) * attackImpulse, hitLimb.SimPosition + ConvertUnits.ToSimUnits(diff),
-                        maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                        maxVelocity: NetConfig.MaxPhysicsBodyVelocity * 0.5f);
             }
             Vector2 simPos = hitLimb.SimPosition + ConvertUnits.ToSimUnits(dir);
             AttackResult attackResult = hitLimb.AddDamage(simPos, afflictions, playSound);
