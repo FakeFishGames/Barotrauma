@@ -11,6 +11,7 @@ namespace Barotrauma
         public override bool ForceRun => true;
         public override bool KeepDivingGearOn => true;
         public override bool IgnoreUnsafeHulls => true;
+        public override bool IsLoop { get => true; set => throw new System.Exception("Trying to set the value for IsLoop from: " + System.Environment.StackTrace); }
 
         // TODO: expose?
         const float priorityIncrease = 100;

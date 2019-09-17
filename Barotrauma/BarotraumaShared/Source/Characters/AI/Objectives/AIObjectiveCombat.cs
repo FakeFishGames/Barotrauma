@@ -139,7 +139,6 @@ namespace Barotrauma
             {
                 coolDownTimer -= deltaTime;
             }
-            if (Abandon) { return; }
             if (seekAmmunition == null)
             {
                 if (TryArm())
