@@ -645,6 +645,8 @@ namespace Barotrauma
         }
 
 
+        public static bool HasDivingGear(Character character) => HasDivingSuit(character) || HasDivingMask(character);
+
         /// <summary>
         /// Check whether the character has a diving suit in usable condition plus some oxygen.
         /// </summary>

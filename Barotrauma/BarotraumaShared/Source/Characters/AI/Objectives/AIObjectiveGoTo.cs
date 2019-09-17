@@ -170,7 +170,7 @@ namespace Barotrauma
                     }
                     else if (needsDivingGear)
                     {
-                        needsEquipment = !HumanAIController.HasDivingMask(character) && !HumanAIController.HasDivingSuit(character);
+                        needsEquipment = !HumanAIController.HasDivingGear(character);
                     }
                     if (needsEquipment)
                     {

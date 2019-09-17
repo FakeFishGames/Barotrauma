@@ -45,9 +45,8 @@ namespace Barotrauma
                 Priority = objectiveManager.CurrentOrder is AIObjectiveGoTo ? 0 : 100;
                 return;
             }
-            if (character.OxygenAvailable < CharacterHealth.LowOxygenThreshold)
+            if (HumanAIController.NeedsDivingGear(character, character.CurrentHull, out _) && !HumanAIController.HasDivingGear(character))
             {
-                // TODO: is this the reason for the priority not resetting?
                 Priority = 100;
             }
             currenthullSafety = HumanAIController.CurrentHullSafety;
