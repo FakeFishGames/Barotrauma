@@ -99,6 +99,8 @@ namespace Barotrauma
         protected override void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
+
+            if (Parent != null) { state = Parent.State; }
             Color currColor = GetCurrentColor(state);
             if (style != null)
             {
