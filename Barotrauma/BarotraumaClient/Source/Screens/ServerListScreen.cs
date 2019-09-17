@@ -1134,7 +1134,7 @@ namespace Barotrauma
                         for (int i=0;i<avatarData.Length;i+=4)
                         {
                             int luma = (avatarData[i + 0] * 299 + avatarData[i + 1] * 587 + avatarData[i + 2] * 114) / 1000;
-                            luma = (int)(luma * 0.5f + ((luma / 100.0f) * (luma / 255.0f) * 127.0f));
+                            luma = (int)(luma * 0.7f + ((luma / 100.0f) * (luma / 255.0f) * 255.0f * 0.3f));
                             int chn0 = ((avatarData[i + 0]  * (255 - desaturatedWeight)) / 255) + ((luma * desaturatedWeight) / 255);
                             int chn1 = ((avatarData[i + 1] * (255 - desaturatedWeight)) / 255) + ((luma * desaturatedWeight) / 255);
                             int chn2 = ((avatarData[i + 2] * (255 - desaturatedWeight)) / 255) + ((luma * desaturatedWeight) / 255);
@@ -1255,8 +1255,6 @@ namespace Barotrauma
 
                     if (friend.Sprite != null)
                     {
-                        var avatarHolder = new GUILayoutGroup(new RectTransform(Vector2.One * 0.925f, guiButton.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.025f, 0.025f) });
-
                         Color BrightenColor(Color color)
                         {
                             Vector3 hls = ToolBox.RgbToHLS(color);
@@ -1269,12 +1267,20 @@ namespace Barotrauma
                         var imgColor = BrightenColor(mainColor);
                         var imgHoverColor = BrightenColor(hoverColor);
                         var imgPressColor = BrightenColor(pressColor);
-                        var guiImage = new GUIImage(new RectTransform(Vector2.One, avatarHolder.RectTransform), friend.Sprite, null, true)
+                        var guiImage = new GUIImage(new RectTransform(Vector2.One * 0.925f, guiButton.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.025f, 0.025f) }, friend.Sprite, null, true)
                         {
                             Color = imgColor,
                             HoverColor = imgHoverColor,
                             SelectedColor = imgHoverColor,
                             PressedColor = imgPressColor
+                        };
+                        guiImage = new GUIImage(new RectTransform(Vector2.One * 0.925f, guiButton.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.025f, 0.025f) }, friend.Sprite, null, true)
+                        {
+                            Color = Color.White * 0.8f,
+                            HoverColor = Color.White * 0.8f,
+                            SelectedColor = Color.White * 0.8f,
+                            PressedColor = Color.White * 0.8f,
+                            BlendState = BlendState.Additive
                         };
                         guiImage.ToolTip = friend.Name + "\n" + friend.Status;
                     }
