@@ -112,7 +112,7 @@ namespace Barotrauma.Networking
             var title = new GUITextBlock(new RectTransform(new Vector2(0.9f, 0.0f), titleContainer.RectTransform, Anchor.CenterLeft), ServerName, font: GUI.LargeFont);
             title.Text = ToolBox.LimitString(title.Text, title.Font, title.Rect.Width);
 
-            title.Padding = new Vector4(10, 0, 0, 0);
+            title.Padding = new Vector4(10, 0, 0, 10);
 
             GUITickBox favoriteTickBox = new GUITickBox(new RectTransform(new Vector2(0.9f, 0.85f), titleContainer.RectTransform, Anchor.CenterRight, scaleBasis: ScaleBasis.BothHeight) { RelativeOffset = new Vector2(0.0f, 0.1f) }, "", null, "GUIServerListFavoriteTickBox")
             {

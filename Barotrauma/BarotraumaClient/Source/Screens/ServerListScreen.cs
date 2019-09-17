@@ -230,12 +230,18 @@ namespace Barotrauma
 
             GUILayoutGroup serverListContainer = null;
             GUIFrame filtersHolder = null;
+            GUIButton filterToggle = null;
 
             void RecalculateHolder()
             {
                 float listContainerSubtract = filtersHolder.Visible ? sidebarWidth : 0.0f;
                 listContainerSubtract += serverPreview.Visible ? sidebarWidth : 0.0f;
-                serverListContainer.RectTransform.RelativeSize = new Vector2(0.98f - listContainerSubtract, 1.0f);
+
+                float toggleButtonsSubtract = 1.1f * filterToggle.Rect.Width / serverListHolder.Rect.Width;
+                listContainerSubtract += filterToggle.Visible ? toggleButtonsSubtract : 0.0f;
+                listContainerSubtract += serverPreviewToggleButton.Visible ? toggleButtonsSubtract : 0.0f;
+
+                serverListContainer.RectTransform.RelativeSize = new Vector2(1.0f - listContainerSubtract, 1.0f);
                 serverListHolder.Recalculate();
             }
 
@@ -252,7 +258,7 @@ namespace Barotrauma
                 ScrollBarVisible = true
             };
 
-            var filterToggle = new GUIButton(new RectTransform(new Vector2(0.01f, 1.0f), serverListHolder.RectTransform, Anchor.CenterRight) { MinSize = new Point(20, 0) }, style: "UIToggleButton")
+            filterToggle = new GUIButton(new RectTransform(new Vector2(0.01f, 1.0f), serverListHolder.RectTransform, Anchor.CenterRight) { MinSize = new Point(20, 0) }, style: "UIToggleButton")
             {
                 OnClicked = (btn, userdata) =>
                 {
@@ -588,6 +594,7 @@ namespace Barotrauma
                 {
                     labelText.Text = ToolBox.LimitString(labelText.ToolTip, labelText.Font, labelText.Rect.Width);
                 }
+                RecalculateHolder();
             };
 
             button.SelectedColor = button.Color;
