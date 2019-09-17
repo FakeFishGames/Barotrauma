@@ -582,17 +582,26 @@ namespace Barotrauma.Items.Components
             {
                 case "powerup":
                     shutDown = false;
-                    //characters with insufficient skill levels simply set the autotemp on instead of trying to adjust the temperature manually
-                    if (degreeOfSuccess < 0.5f)
+                    if (objective.Override || !autoTemp)
                     {
-                        if (!autoTemp) unsentChanges = true;
-                        AutoTemp = true;
-                    }
-                    else
-                    {
-                        AutoTemp = false;
-                        unsentChanges = true;
-                        UpdateAutoTemp(MathHelper.Lerp(0.5f, 2.0f, degreeOfSuccess), 1.0f);
+                        //characters with insufficient skill levels simply set the autotemp on instead of trying to adjust the temperature manually
+                        if (degreeOfSuccess < 0.5f)
+                        {
+                            if (!autoTemp)
+                            {
+                                unsentChanges = true;
+                            }
+                            AutoTemp = true;
+                        }
+                        else
+                        {
+                            if (autoTemp)
+                            {
+                                unsentChanges = true;
+                            }
+                            AutoTemp = false;
+                            UpdateAutoTemp(MathHelper.Lerp(0.5f, 2.0f, degreeOfSuccess), 1.0f);
+                        }
                     }
 #if CLIENT
                     onOffSwitch.BarScroll = 0.0f;

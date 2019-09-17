@@ -298,7 +298,9 @@ namespace Barotrauma
                     if (order.TargetItemComponent == null) { return null; }
                     newObjective = new AIObjectiveOperateItem(order.TargetItemComponent, character, this, option, requireEquip: false, useController: order.UseController, priorityModifier: priorityModifier)
                     {
-                        IsLoop = true
+                        IsLoop = true,
+                        // Don't override auto control unless it's an order by a player
+                        Override = orderGiver == Character.Controlled || orderGiver.IsRemotePlayer
                     };
                     break;
             }
