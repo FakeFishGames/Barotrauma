@@ -184,9 +184,10 @@ namespace Barotrauma.Items.Components
             return (picker != null);
         }
 
-        public override bool Combine(Item item)
+        public override bool Combine(Item item, Character user)
         {
-            if (!ContainableItems.Any(x => x.MatchesItem(item))) return false;
+            if (!ContainableItems.Any(x => x.MatchesItem(item))) { return false; }
+            if (user != null && !user.CanAccessInventory(Inventory)) { return false; }
             
             if (Inventory.TryPutItem(item, null))
             {            

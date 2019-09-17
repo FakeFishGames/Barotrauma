@@ -397,7 +397,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public virtual bool Combine(Item item) 
+        public virtual bool Combine(Item item, Character user) 
         {
             if (canBeCombined && this.item.Prefab == item.Prefab && item.Condition > 0.0f && this.item.Condition > 0.0f)
             {

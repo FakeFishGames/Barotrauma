@@ -173,7 +173,7 @@ namespace Barotrauma
                 wifiComponent.TeamID = character.TeamID;
             }
             
-            if (parentItem != null) parentItem.Combine(item);
+            if (parentItem != null) parentItem.Combine(item, user: null);
 
             foreach (XElement childItemElement in itemElement.Elements())
             {

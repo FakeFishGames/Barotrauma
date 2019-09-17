@@ -185,7 +185,7 @@ namespace Barotrauma
             else
             {
                 identifiers = element.GetAttributeStringArray("identifiers", new string[0]);
-                if (identifiers.Length == 0) identifiers = element.GetAttributeStringArray("identifier", new string[0]);
+                if (identifiers.Length == 0) { identifiers = element.GetAttributeStringArray("identifier", new string[0]); }
             }
 
             string[] excludedIdentifiers = element.GetAttributeStringArray("excludedidentifiers", new string[0]);
