@@ -1128,12 +1128,13 @@ namespace Barotrauma
                     var avatarImage = friend.GetAvatar(avatarSize);
                     if (avatarImage != null)
                     {
-                        const int desaturatedWeight = 200;
+                        const int desaturatedWeight = 180;
 
                         byte[] avatarData = (byte[])avatarImage.Data.Clone();
                         for (int i=0;i<avatarData.Length;i+=4)
                         {
                             int luma = (avatarData[i + 0] * 299 + avatarData[i + 1] * 587 + avatarData[i + 2] * 114) / 1000;
+                            luma = (int)(luma * 0.5f + ((luma / 100.0f) * (luma / 255.0f) * 127.0f));
                             int chn0 = ((avatarData[i + 0]  * (255 - desaturatedWeight)) / 255) + ((luma * desaturatedWeight) / 255);
                             int chn1 = ((avatarData[i + 1] * (255 - desaturatedWeight)) / 255) + ((luma * desaturatedWeight) / 255);
                             int chn2 = ((avatarData[i + 2] * (255 - desaturatedWeight)) / 255) + ((luma * desaturatedWeight) / 255);
@@ -1254,9 +1255,18 @@ namespace Barotrauma
                     {
                         var avatarHolder = new GUILayoutGroup(new RectTransform(Vector2.One * 0.925f, guiButton.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.025f, 0.025f) });
 
-                        var imgColor = new Color(mainColor.R / 255.0f * 3.0f, mainColor.G / 255.0f * 3.0f, mainColor.B / 255.0f * 3.0f);
-                        var imgHoverColor = new Color(hoverColor.R / 255.0f * 3.0f, hoverColor.G / 255.0f * 3.0f, hoverColor.B / 255.0f * 3.0f);
-                        var imgPressColor = new Color(pressColor.R / 255.0f * 3.0f, pressColor.G / 255.0f * 3.0f, pressColor.B / 255.0f * 3.0f);
+                        Color BrightenColor(Color color)
+                        {
+                            Vector3 hls = ToolBox.RgbToHLS(color);
+                            hls.Y = hls.Y * 0.3f + 0.7f;
+                            hls.Z = hls.Z * 0.6f + 0.4f;
+
+                            return ToolBox.HLSToRGB(hls);
+                        }
+
+                        var imgColor = BrightenColor(mainColor);
+                        var imgHoverColor = BrightenColor(hoverColor);
+                        var imgPressColor = BrightenColor(pressColor);
                         var guiImage = new GUIImage(new RectTransform(Vector2.One, avatarHolder.RectTransform), friend.Sprite, null, true)
                         {
                             Color = imgColor,
