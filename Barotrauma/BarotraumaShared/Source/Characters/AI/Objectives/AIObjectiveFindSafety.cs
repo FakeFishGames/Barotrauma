@@ -11,6 +11,7 @@ namespace Barotrauma
         public override bool ForceRun => true;
         public override bool KeepDivingGearOn => true;
         public override bool IgnoreUnsafeHulls => true;
+        public override bool ConcurrentObjectives => true;
         public override bool IsLoop { get => true; set => throw new System.Exception("Trying to set the value for IsLoop from: " + System.Environment.StackTrace); }
 
         // TODO: expose?
@@ -83,14 +84,15 @@ namespace Barotrauma
             {
                 needsEquipment = !HumanAIController.HasDivingGear(character, AIObjectiveFindDivingGear.lowOxygenThreshold);
             }
+            if (needsEquipment && divingGearObjective == null)
             {
+                RemoveSubObjective(ref goToObjective);
                 TryAddSubObjective(ref divingGearObjective, 
                     constructor: () => new AIObjectiveFindDivingGear(character, needsDivingSuit, objectiveManager),
                     onAbandon: () =>
                     {
-                        resetPriority = true;
                         searchHullTimer = Math.Min(1, searchHullTimer);
-                        RemoveSubObjective(ref divingGearObjective);
+                        // Don't reset the diving gear objective, because it's possible that there is no diving gear -> seek a safe hull and then reset so that we can check again.
                     },
                     onCompleted: () =>
                     {
@@ -99,7 +101,7 @@ namespace Barotrauma
                         RemoveSubObjective(ref divingGearObjective);
                     });
             }
-            else
+            else if (divingGearObjective == null || !divingGearObjective.CanBeCompleted)
             {
                 if (currenthullSafety < HumanAIController.HULL_SAFETY_THRESHOLD)
                 {
@@ -138,6 +140,8 @@ namespace Barotrauma
                                     searchHullTimer = Math.Min(1, searchHullTimer);
                                 }
                                 RemoveSubObjective(ref goToObjective);
+                                // If diving gear objective failed, let's reset it here.
+                                RemoveSubObjective(ref divingGearObjective);
                             },
                             onAbandon: () =>
                             {
@@ -150,6 +154,7 @@ namespace Barotrauma
                         RemoveSubObjective(ref goToObjective);
                     }
                 }
+                if (subObjectives.Any(so => so.CanBeCompleted)) { return; }
                 if (currentHull != null)
                 {
                     //goto objective doesn't exist (a safe hull not found, or a path to a safe hull not found)
@@ -189,10 +194,7 @@ namespace Barotrauma
                         return;
                     }
                 }
-                if (divingGearObjective == null && goToObjective == null)
-                {
-                    objectiveManager.GetObjective<AIObjectiveIdle>().Wander(deltaTime);
-                }
+                objectiveManager.GetObjective<AIObjectiveIdle>().Wander(deltaTime);
             }
         }
 
