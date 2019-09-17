@@ -107,12 +107,18 @@ namespace Barotrauma.Items.Components
                 if (!MathUtils.IsValid(value)) return;              
                 rechargeSpeed = MathHelper.Clamp(value, 0.0f, maxRechargeSpeed);
                 rechargeSpeed = MathUtils.RoundTowardsClosest(rechargeSpeed, Math.Max(maxRechargeSpeed * 0.1f, 1.0f));
+                if (isRunning)
+                {
+                    HasBeenTuned = true;
+                }
             }
         }
 
         public float RechargeRatio => RechargeSpeed / MaxRechargeSpeed;
 
         public const float aiRechargeTargetRatio = 0.5f;
+        private bool isRunning;
+        public bool HasBeenTuned { get; private set; }
 
         public PowerContainer(Item item, XElement element)
             : base(item, element)
@@ -131,6 +137,7 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam) 
         {
+            isRunning = true;
             float chargeRatio = charge / capacity;
             float gridPower = 0.0f;
             float gridLoad = 0.0f;
@@ -228,6 +235,11 @@ namespace Barotrauma.Items.Components
 #if CLIENT
             if (GameMain.Client != null) return false;
 #endif
+            if (objective.Override)
+            {
+                HasBeenTuned = false;
+            }
+            if (HasBeenTuned) { return true; }
 
             if (string.IsNullOrEmpty(objective.Option) || objective.Option.ToLowerInvariant() == "charge")
             {

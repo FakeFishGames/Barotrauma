@@ -57,6 +57,7 @@ namespace Barotrauma
 
         private bool IsReady(PowerContainer battery)
         {
+            if (battery.HasBeenTuned && character.CurrentOrder == null) { return true; }
             if (Option == "charge")
             {
                 return battery.RechargeRatio >= PowerContainer.aiRechargeTargetRatio;
@@ -67,10 +68,11 @@ namespace Barotrauma
             }
         }
 
-        protected override AIObjective ObjectiveConstructor(PowerContainer battery) 
-            => new AIObjectiveOperateItem(battery, character, objectiveManager, Option, false, priorityModifier: PriorityModifier)
+        protected override AIObjective ObjectiveConstructor(PowerContainer battery) =>
+            new AIObjectiveOperateItem(battery, character, objectiveManager, Option, false, priorityModifier: PriorityModifier)
             {
                 IsLoop = false,
+                Override = character.CurrentOrder != null,
                 completionCondition = () => IsReady(battery)
             };
 
