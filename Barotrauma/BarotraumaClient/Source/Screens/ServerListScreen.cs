@@ -1180,8 +1180,10 @@ namespace Barotrauma
 
             friendsList.Sort((a, b) =>
             {
-                if (a.InServer && !b.InServer) { return 1; }
-                if (b.InServer && !a.InServer) { return -1; }
+                if (a.InServer && !b.InServer) { return -1; }
+                if (b.InServer && !a.InServer) { return 1; }
+                if (a.PlayingThisGame && !b.PlayingThisGame) { return -1; }
+                if (b.PlayingThisGame && !a.PlayingThisGame) { return 1; }
                 return 0;
             });
 
