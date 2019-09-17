@@ -152,6 +152,7 @@ namespace Barotrauma
             }
             if (previousObjective != CurrentObjective)
             {
+                previousObjective?.OnDeselected();
                 CurrentObjective?.OnSelected();
                 GetObjective<AIObjectiveIdle>().SetRandom();
             }

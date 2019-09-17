@@ -102,8 +102,6 @@ namespace Barotrauma
 
         public override float GetPriority() => (Enemy != null && (Enemy.Removed || Enemy.IsDead)) ? 0 : Math.Min(100 * PriorityModifier, 100);
 
-        public override void OnSelected() => Weapon = null;
-
         public override void Update(float deltaTime)
         {
             base.Update(deltaTime);

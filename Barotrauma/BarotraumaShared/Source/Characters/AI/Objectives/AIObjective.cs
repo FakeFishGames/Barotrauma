@@ -77,6 +77,8 @@ namespace Barotrauma
 
         public event Action Completed;
         public event Action Abandoned;
+        public event Action Selected;
+        public event Action Deselected;
 
         protected HumanAIController HumanAIController => character.AIController as HumanAIController;
         protected IndoorsSteeringManager PathSteering => HumanAIController.PathSteering;
@@ -238,11 +240,13 @@ namespace Barotrauma
 
         public virtual void OnSelected()
         {
-            // Should we reset steering here?
-            //if (!ConcurrentObjectives)
-            //{
-            //    SteeringManager.Reset();
-            //}
+            Reset();
+            Selected?.Invoke();
+        }
+
+        public virtual void OnDeselected()
+        {
+            Deselected?.Invoke();
         }
 
         protected virtual void OnCompleted()
