@@ -2475,6 +2475,20 @@ namespace Barotrauma
         {
             if (Removed) { return new AttackResult(); }
 
+            //character inside the sub received damage from a monster outside the sub
+            //can happen during normal gameplay if someone for example fires a ranged weapon from outside, 
+            //the intention of this error message is to diagnose an issue with monsters being able to damage characters from outside
+            if (attacker?.AIController is EnemyAIController && Submarine != null && attacker.Submarine == null)
+            {
+                string errorMsg = $"Character {Name} received damage from outside the sub while inside (attacker: {attacker.Name})";
+                GameAnalyticsManager.AddErrorEventOnce("Character.DamageLimb:DamageFromOutside" + Name + attacker.Name,
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Warning,
+                    errorMsg + "\n" + Environment.StackTrace);
+#if DEBUG
+                DebugConsole.ThrowError(errorMsg);
+#endif
+            }
+
             if (attacker != null && attacker != this && GameMain.NetworkMember != null && !GameMain.NetworkMember.ServerSettings.AllowFriendlyFire)
             {
                 if (attacker.TeamID == TeamID) { return new AttackResult(); }
