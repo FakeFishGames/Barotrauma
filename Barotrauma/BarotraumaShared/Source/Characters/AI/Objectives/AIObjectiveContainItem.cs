@@ -26,6 +26,7 @@ namespace Barotrauma
         private readonly HashSet<Item> containedItems = new HashSet<Item>();
 
         public bool AllowToFindDivingGear { get; set; } = true;
+        public float ConditionLevel { get; set; }
 
         public AIObjectiveContainItem(Character character, string itemIdentifier, ItemContainer container, AIObjectiveManager objectiveManager, float priorityModifier = 1)
             : this(character, new string[] { itemIdentifier }, container, objectiveManager, priorityModifier) { }
@@ -64,9 +65,11 @@ namespace Barotrauma
             return 1.0f;
         }
 
+        private bool CheckItem(Item item) => itemIdentifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id)) && item.ConditionPercentage > ConditionLevel;
+
         protected override void Act(float deltaTime)
         {
-            Item itemToContain = character.Inventory.FindItem(i => itemIdentifiers.Any(id => id == i.Prefab.Identifier || i.HasTag(id)) && i.Condition > 0 && i.Container != container.Item, true);
+            Item itemToContain = character.Inventory.FindItem(i => CheckItem(i) && i.Container != container.Item, recursive: true);
             if (itemToContain != null)
             {
                 // Contain the item
@@ -108,7 +111,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            if (container.Inventory.FindItem(i => itemIdentifiers.Any(id => i.Prefab.Identifier == id || i.HasTag(id)), false) != null)
+                            if (container.Inventory.FindItem(i => CheckItem(i), recursive: false) != null)
                             {
                                 IsCompleted = true;
                             }

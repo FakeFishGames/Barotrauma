@@ -166,11 +166,11 @@ namespace Barotrauma
                     bool needsEquipment = false;
                     if (needsDivingSuit)
                     {
-                        needsEquipment = !HumanAIController.HasDivingSuit(character);
+                        needsEquipment = !HumanAIController.HasDivingSuit(character, AIObjectiveFindDivingGear.lowOxygenThreshold);
                     }
                     else if (needsDivingGear)
                     {
-                        needsEquipment = !HumanAIController.HasDivingGear(character);
+                        needsEquipment = !HumanAIController.HasDivingGear(character, AIObjectiveFindDivingGear.lowOxygenThreshold);
                     }
                     if (needsEquipment)
                     {

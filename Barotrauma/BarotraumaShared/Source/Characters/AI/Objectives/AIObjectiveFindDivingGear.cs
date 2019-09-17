@@ -17,9 +17,9 @@ namespace Barotrauma
         private AIObjectiveGetItem getDivingGear;
         private AIObjectiveContainItem getOxygen;
 
-        protected override bool Check() => HumanAIController.HasItem(character, gearTag, "oxygensource") || HumanAIController.HasItem(character, fallbackTag, "oxygensource");
+        public static float lowOxygenThreshold = 10;
 
-        public override float GetPriority() => MathHelper.Clamp(100 - character.OxygenAvailable - 10, 0, 100);
+        protected override bool Check() => HumanAIController.HasItem(character, gearTag, "oxygensource") || HumanAIController.HasItem(character, fallbackTag, "oxygensource");
 
         public AIObjectiveFindDivingGear(Character character, bool needDivingSuit, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier)
         {
@@ -67,7 +67,7 @@ namespace Barotrauma
                         containedItem.Drop(character);
                     }
                 }
-                if (containedItems.None(it => it.HasTag("oxygensource") && it.Condition > 0.0f))
+                if (containedItems.None(it => it.HasTag("oxygensource") && it.Condition > lowOxygenThreshold))
                 {
                     var oxygenTank = character.Inventory.FindItemByTag("oxygensource", true);
                     if (oxygenTank != null)
@@ -85,12 +85,30 @@ namespace Barotrauma
                     }
                     else
                     {
+                        // Seek oxygen that has min 10% condition left
                         TryAddSubObjective(ref getOxygen, () =>
                         {
                             character.Speak(TextManager.Get("DialogGetOxygenTank"), null, 0, "getoxygentank", 30.0f);
-                            return new AIObjectiveContainItem(character, new string[] { "oxygentank", "oxygensource" }, item.GetComponent<ItemContainer>(), objectiveManager) { AllowToFindDivingGear = false };
+                            return new AIObjectiveContainItem(character, new string[] { "oxygentank", "oxygensource" }, item.GetComponent<ItemContainer>(), objectiveManager)
+                            {
+                                AllowToFindDivingGear = false,
+                                ConditionLevel = lowOxygenThreshold
+                            };
                         }, 
-                        onAbandon: () => Abandon = true,
+                        onAbandon: () =>
+                        {
+                            // Try to seek any oxygen sources
+                            TryAddSubObjective(ref getOxygen, () =>
+                            {
+                                return new AIObjectiveContainItem(character, new string[] { "oxygentank", "oxygensource" }, item.GetComponent<ItemContainer>(), objectiveManager)
+                                {
+                                    AllowToFindDivingGear = false,
+                                    ConditionLevel = 0
+                                };
+                            },
+                            onAbandon: () => Abandon = true,
+                            onCompleted: () => RemoveSubObjective(ref getOxygen));
+                        },
                         onCompleted: () => RemoveSubObjective(ref getOxygen));
                     }
                 }

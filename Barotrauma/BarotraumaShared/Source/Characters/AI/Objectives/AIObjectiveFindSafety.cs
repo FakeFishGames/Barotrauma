@@ -76,13 +76,12 @@ namespace Barotrauma
             bool needsEquipment = false;
             if (needsDivingSuit)
             {
-                needsEquipment = !HumanAIController.HasDivingSuit(character);
+                needsEquipment = !HumanAIController.HasDivingSuit(character, AIObjectiveFindDivingGear.lowOxygenThreshold);
             }
             else if (needsDivingGear)
             {
-                needsEquipment = !HumanAIController.HasDivingMask(character) && !HumanAIController.HasDivingSuit(character);
+                needsEquipment = !HumanAIController.HasDivingGear(character, AIObjectiveFindDivingGear.lowOxygenThreshold);
             }
-            if (needsEquipment)
             {
                 TryAddSubObjective(ref divingGearObjective, 
                     constructor: () => new AIObjectiveFindDivingGear(character, needsDivingSuit, objectiveManager),
@@ -127,7 +126,7 @@ namespace Barotrauma
                         TryAddSubObjective(ref goToObjective, 
                             constructor: () => new AIObjectiveGoTo(currentSafeHull, character, objectiveManager, getDivingGearIfNeeded: true)
                             {
-                                AllowGoingOutside = HumanAIController.HasDivingSuit(character)
+                                AllowGoingOutside = HumanAIController.HasDivingSuit(character, conditionPercentage: 50)
                             },
                             onCompleted: () =>
                             {

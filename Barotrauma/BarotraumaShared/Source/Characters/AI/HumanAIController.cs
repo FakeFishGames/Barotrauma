@@ -645,17 +645,17 @@ namespace Barotrauma
         }
 
 
-        public static bool HasDivingGear(Character character) => HasDivingSuit(character) || HasDivingMask(character);
+        public static bool HasDivingGear(Character character, float conditionPercentage = 0) => HasDivingSuit(character, conditionPercentage) || HasDivingMask(character, conditionPercentage);
 
         /// <summary>
         /// Check whether the character has a diving suit in usable condition plus some oxygen.
         /// </summary>
-        public static bool HasDivingSuit(Character character) => HasItem(character, "divingsuit", "oxygensource");
+        public static bool HasDivingSuit(Character character, float conditionPercentage = 0) => HasItem(character, "divingsuit", "oxygensource", conditionPercentage);
 
         /// <summary>
         /// Check whether the character has a diving mask in usable condition plus some oxygen.
         /// </summary>
-        public static bool HasDivingMask(Character character) => HasItem(character, "divingmask", "oxygensource");
+        public static bool HasDivingMask(Character character, float conditionPercentage = 0) => HasItem(character, "divingmask", "oxygensource", conditionPercentage);
 
         public static bool HasItem(Character character, string identifier, string containedTag, float conditionPercentage = 0)
         {
