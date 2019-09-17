@@ -84,7 +84,7 @@ namespace Barotrauma
             {
                 needsEquipment = !HumanAIController.HasDivingGear(character, AIObjectiveFindDivingGear.lowOxygenThreshold);
             }
-            if (needsEquipment && divingGearObjective == null)
+            if (needsEquipment && divingGearObjective == null && !character.LockHands)
             {
                 RemoveSubObjective(ref goToObjective);
                 TryAddSubObjective(ref divingGearObjective, 

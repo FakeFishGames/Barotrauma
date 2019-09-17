@@ -60,6 +60,11 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
+            if (character.LockHands)
+            {
+                Abandon = true;
+                return;
+            }
             ItemComponent target = useController ? controller : component;
             if (useController && controller == null)
             {

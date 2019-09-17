@@ -29,6 +29,11 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
+            if (character.LockHands)
+            {
+                Abandon = true;
+                return;
+            }
             var item = character.Inventory.FindItemByIdentifier(gearTag, true) ?? character.Inventory.FindItemByTag(gearTag, true);
             if (item == null && fallbackTag != gearTag)
             {

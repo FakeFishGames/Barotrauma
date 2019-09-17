@@ -103,6 +103,7 @@ namespace Barotrauma
 
         public override float GetPriority()
         {
+            if (character.LockHands) { return 0; }
             if (character.Submarine == null) { return 0; }
             if (Targets.None()) { return 0; }
             // Allow the target value to be more than 100.

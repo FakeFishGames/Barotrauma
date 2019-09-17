@@ -37,6 +37,8 @@ namespace Barotrauma
         public bool IgnoreIfTargetDead { get; set; }
         public bool AllowGoingOutside { get; set; }
 
+        public override bool AbandonWhenCannotCompleteSubjectives => !repeat;
+
         public ISpatialEntity Target { get; private set; }
 
         public override float GetPriority()
@@ -99,15 +101,18 @@ namespace Barotrauma
                 }
             }
             var targetHull = Target is Hull h ? h : Target is Item i ? i.CurrentHull : Target is Character c ? c.CurrentHull : character.CurrentHull;
-            // Abandon if going through unsafe paths. Note ignores unsafe nodes when following an order or when the objective is set to ignore unsafe hulls.
-            bool containsUnsafeNodes = HumanAIController.CurrentOrder == null && !HumanAIController.ObjectiveManager.CurrentObjective.IgnoreUnsafeHulls
-                && PathSteering != null && PathSteering.CurrentPath != null
-                && PathSteering.CurrentPath.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull));
-            if (containsUnsafeNodes || HumanAIController.UnreachableHulls.Contains(targetHull))
+            if (!followControlledCharacter)
             {
-                Abandon = true;
-                SteeringManager.Reset();
-                return;
+                // Abandon if going through unsafe paths. Note ignores unsafe nodes when following an order or when the objective is set to ignore unsafe hulls.
+                bool containsUnsafeNodes = HumanAIController.CurrentOrder == null && !HumanAIController.ObjectiveManager.CurrentObjective.IgnoreUnsafeHulls
+                    && PathSteering != null && PathSteering.CurrentPath != null
+                    && PathSteering.CurrentPath.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull));
+                if (containsUnsafeNodes || HumanAIController.UnreachableHulls.Contains(targetHull))
+                {
+                    Abandon = true;
+                    SteeringManager.Reset();
+                    return;
+                }
             }
             bool insideSteering = SteeringManager == PathSteering && PathSteering.CurrentPath != null && !PathSteering.IsPathDirty;
             bool isInside = character.CurrentHull != null;
@@ -147,7 +152,7 @@ namespace Barotrauma
             }
             else
             {
-                if (getDivingGearIfNeeded)
+                if (getDivingGearIfNeeded && !character.LockHands)
                 {
                     Character followTarget = Target as Character;
                     bool needsDivingGear = HumanAIController.NeedsDivingGear(character, targetHull, out bool needsDivingSuit);
