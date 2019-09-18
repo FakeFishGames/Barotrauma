@@ -1548,12 +1548,12 @@ namespace Barotrauma
             bool leftHand = Inventory.IsInLimbSlot(item, InvSlotType.LeftHand);
 
             bool selected = false;
-            if (rightHand && SelectedItems[0] == null)
+            if (rightHand && (selectedItems[0] == null || selectedItems[0] == item))
             {
                 selectedItems[0] = item;
                 selected = true;
             }
-            if (leftHand && SelectedItems[1] == null)
+            if (leftHand && (selectedItems[1] == null || selectedItems[1] == item))
             {
                 selectedItems[1] = item;
                 selected = true;
