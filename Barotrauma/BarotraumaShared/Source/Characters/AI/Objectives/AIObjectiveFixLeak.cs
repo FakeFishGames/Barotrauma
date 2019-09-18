@@ -25,11 +25,11 @@ namespace Barotrauma
             Leak = leak;
         }
 
-        protected override bool Check() => Leak.Open <= 0.0f || Leak.Removed;
+        protected override bool Check() => Leak.Open <= 0 || Leak.Removed;
 
         public override float GetPriority()
         {
-            if (Leak.Open == 0.0f) { return 0.0f; }
+            if (Leak.Removed || Leak.Open <= 0) { return 0; }
             float xDist = Math.Abs(character.WorldPosition.X - Leak.WorldPosition.X);
             float yDist = Math.Abs(character.WorldPosition.Y - Leak.WorldPosition.Y);
             // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally).
