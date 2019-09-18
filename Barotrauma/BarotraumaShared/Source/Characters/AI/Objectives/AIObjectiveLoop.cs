@@ -12,7 +12,7 @@ namespace Barotrauma
         public Dictionary<T, AIObjective> Objectives { get; private set; } = new Dictionary<T, AIObjective>();
         protected HashSet<T> ignoreList = new HashSet<T>();
         private float ignoreListTimer;
-        private float targetUpdateTimer;
+        protected float targetUpdateTimer;
 
         // By default, doesn't clear the list automatically
         protected virtual float IgnoreListClearInterval => 0;

@@ -34,7 +34,17 @@ namespace Barotrauma
                         {
                             subObjectives.Add(objective);
                         }
-                        objective.Completed += () => OnObjectiveCompleted(objective, item);
+                        objective.Completed += () =>
+                        {
+                            Objectives.Remove(item);
+                            OnObjectiveCompleted(objective, item);
+                        };
+                        objective.Abandoned += () =>
+                        {
+                            Objectives.Remove(item);
+                            ignoreList.Add(item);
+                            targetUpdateTimer = 0;
+                        };
                     }
                     break;
                 }
