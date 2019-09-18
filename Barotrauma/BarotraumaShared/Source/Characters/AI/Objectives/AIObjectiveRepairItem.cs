@@ -142,7 +142,8 @@ namespace Barotrauma
                         else if (Item.Condition < previousCondition)
                         {
                             // If the current condition is less than the previous condition, we can't complete the task, so let's abandon it. The item is probably deteriorating at a greater speed than we can repair it.
-                            Abandon = true;                        }
+                            Abandon = true;
+                        }
                     }
                     if (Abandon)
                     {
