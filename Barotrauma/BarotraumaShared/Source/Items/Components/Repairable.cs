@@ -335,7 +335,7 @@ namespace Barotrauma.Items.Components
                 else if (ic is Pump pump)
                 {
                     //pumps don't deteriorate if they're not running
-                    if (Math.Abs(pump.FlowPercentage) > 1.0f) { return true; }
+                    if (Math.Abs(pump.FlowPercentage) > 1.0f && pump.IsActive) { return true; }
                 }
                 else if (ic is Reactor reactor)
                 {
