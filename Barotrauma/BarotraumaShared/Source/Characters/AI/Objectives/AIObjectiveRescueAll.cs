@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Barotrauma
@@ -9,8 +10,8 @@ namespace Barotrauma
         public override bool ForceRun => true;
         public override bool IgnoreUnsafeHulls => true;
 
-        private const float vitalityThreshold = 0.8f;
-        private const float vitalityThresholdForOrders = 0.95f;
+        private const float vitalityThreshold = 80;
+        private const float vitalityThresholdForOrders = 95;
         public static float GetVitalityThreshold(AIObjectiveManager manager)
         {
             if (manager == null)
@@ -30,9 +31,9 @@ namespace Barotrauma
 
         protected override IEnumerable<Character> GetList() => Character.CharacterList;
 
-        protected override float TargetEvaluation() => Targets.Max(t => GetVitalityFactor(t)) * 100;
+        protected override float TargetEvaluation() => Targets.Max(t => GetVitalityFactor(t));
 
-        public static float GetVitalityFactor(Character character) => (character.MaxVitality - character.Vitality) / character.MaxVitality;
+        public static float GetVitalityFactor(Character character) => Math.Min(character.HealthPercentage - character.Bleeding - character.Bloodloss - Math.Min(character.Oxygen, 0), 100);
 
         protected override AIObjective ObjectiveConstructor(Character target)
             => new AIObjectiveRescue(character, target, objectiveManager, PriorityModifier);
@@ -46,16 +47,18 @@ namespace Barotrauma
             if (!HumanAIController.IsFriendly(character, target)) { return false; }
             if (character.AIController is HumanAIController humanAI)
             {
-                if (target.Bleeding < 1 && target.Vitality / target.MaxVitality > GetVitalityThreshold(humanAI.ObjectiveManager)) { return false; }
+                if (GetVitalityFactor(target) > GetVitalityThreshold(humanAI.ObjectiveManager)) { return false; }
             }
             else
             {
-                if (target.Bleeding < 1 && target.Vitality / target.MaxVitality > vitalityThreshold) { return false; }
+                if (GetVitalityFactor(target) > vitalityThreshold) { return false; }
             }
             if (target.Submarine == null) { return false; }
             if (target.Submarine.TeamID != character.Submarine.TeamID) { return false; }
             if (target.CurrentHull == null) { return false; }
             if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(target.CurrentHull, true)) { return false; }
+            // Don't go into rooms that have enemies
+            if (Character.CharacterList.Any(c => c.CurrentHull == target.CurrentHull && !c.IsDead && !c.Removed && !c.IsUnconscious && !HumanAIController.IsFriendly(character, c))) { return false; }
             return true;
         }
     }
