@@ -33,6 +33,9 @@ namespace Barotrauma
         private bool loadSub;
         private Submarine sub;
 
+        private ushort originalLinkedToID;
+        private DockingPort originalLinkedPort;
+
         public Submarine Sub
         {
             get
@@ -154,35 +157,35 @@ namespace Barotrauma
                     saveElement = element
                 };
 
+                bool purchasedLostShuttles = GameMain.GameSession.GameMode is CampaignMode campaign && campaign.PurchasedLostShuttles;
                 string levelSeed = element.GetAttributeString("location", "");
-                if (!string.IsNullOrWhiteSpace(levelSeed) && GameMain.GameSession.Level != null && GameMain.GameSession.Level.Seed != levelSeed)
+                if (!string.IsNullOrWhiteSpace(levelSeed) && 
+                    GameMain.GameSession.Level != null && 
+                    GameMain.GameSession.Level.Seed != levelSeed &&
+                    !purchasedLostShuttles)
                 {
                     linkedSub.loadSub = false;
                     return null;
                 }
 
                 linkedSub.loadSub = true;
-
                 linkedSub.rect.Location = MathUtils.ToPoint(pos);
             }
 
             linkedSub.filePath = element.GetAttributeString("filepath", "");
-
-            string linkedToString = element.GetAttributeString("linkedto", "");
-            if (linkedToString != "")
+            string[] linkedToIds = element.GetAttributeStringArray("linkedto", new string[0]); 
+            for (int i = 0; i < linkedToIds.Length; i++)
             {
-                string[] linkedToIds = linkedToString.Split(',');
-                for (int i = 0; i < linkedToIds.Length; i++)
-                {
-                    linkedSub.linkedToID.Add((ushort)int.Parse(linkedToIds[i]));
-                }
+                linkedSub.linkedToID.Add((ushort)int.Parse(linkedToIds[i]));
             }
+            linkedSub.originalLinkedToID = (ushort)element.GetAttributeInt("originallinkedto", 0);
+            
             return linkedSub;
         }
 
         public override void OnMapLoaded()
         {
-            if (!loadSub) return;
+            if (!loadSub) { return; }
 
             sub = Submarine.Load(saveElement, false);
             
@@ -211,8 +214,10 @@ namespace Barotrauma
 
             if (linkedPort == null)
             {
-                return;
+                linkedPort = (FindEntityByID(originalLinkedToID) as Item)?.GetComponent<DockingPort>();
+                if (linkedPort == null) { return; }
             }
+            originalLinkedPort = linkedPort;
 
             float closestDistance = 0.0f;
             foreach (DockingPort port in DockingPort.List)
@@ -271,7 +276,7 @@ namespace Barotrauma
                 var linkedPort = linkedTo.FirstOrDefault(lt => (lt is Item) && ((Item)lt).GetComponent<DockingPort>() != null);
                 if (linkedPort != null)
                 {
-                    if (saveElement.Attribute("linkedto") != null) saveElement.Attribute("linkedto").Remove();
+                    if (saveElement.Attribute("linkedto") != null) { saveElement.Attribute("linkedto").Remove(); }
                     saveElement.Add(new XAttribute("linkedto", linkedPort.ID));
                 }
             }
@@ -279,6 +284,14 @@ namespace Barotrauma
             {
                 saveElement = new XElement("LinkedSubmarine");
                 sub.SaveToXElement(saveElement);
+            }
+            if (originalLinkedPort != null)
+            {
+                saveElement.Add(new XAttribute("originallinkedto", originalLinkedPort.Item.ID));
+            }
+            else
+            {
+                saveElement.Add(new XAttribute("originallinkedto", originalLinkedToID));
             }
 
             if (sub != null)
@@ -301,13 +314,13 @@ namespace Barotrauma
                 {
                     saveElement.SetAttributeValue("location", Level.Loaded.Seed);
                     saveElement.SetAttributeValue("worldpos", XMLExtensions.Vector2ToString(sub.SubBody.Position));
+                    Submarine.MainSub.SubsLeftBehind = true;
                 }
                 else
                 {
                     if (saveElement.Attribute("location") != null) saveElement.Attribute("location").Remove();
                     if (saveElement.Attribute("worldpos") != null) saveElement.Attribute("worldpos").Remove();
                 }
-
                 saveElement.SetAttributeValue("pos", XMLExtensions.Vector2ToString(Position - Submarine.HiddenSubPosition));
             }
 

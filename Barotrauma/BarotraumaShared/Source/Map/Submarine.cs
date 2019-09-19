@@ -273,6 +273,7 @@ namespace Barotrauma
                 }
                 return subsLeftBehind.Value;
             }
+            set { subsLeftBehind = value; }
         }
 
         public new Vector2 DrawPosition
