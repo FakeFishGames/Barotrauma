@@ -1437,7 +1437,23 @@ namespace Barotrauma
 
             Vector2? spawnPos = null;
             Inventory spawnInventory = null;
-            
+
+            string itemName = args[0].ToLowerInvariant();
+            if (!(MapEntityPrefab.Find(itemName, showErrorMessages: false) is ItemPrefab itemPrefab))
+            {
+                errorMsg = "Item \"" + itemName + "\" not found!";
+                var matching = MapEntityPrefab.List.Find(me => me.Name.ToLowerInvariant().StartsWith(itemName) && me is ItemPrefab);
+                if (matching != null)
+                {
+                    errorMsg += $" Did you mean \"{matching.Name}\"?";
+                    if (matching.Name.Contains(" "))
+                    {
+                        errorMsg += $" Please note that you should surround multi-word names with quotation marks (e.q. spawnitem \"{matching.Name}\")";
+                    }
+                }
+                return;
+            }
+
             if (args.Length > 1)
             {
                 switch (args.Last())
@@ -1461,14 +1477,7 @@ namespace Barotrauma
                         break;
                 }
             }
-
-            string itemName = args[0].ToLowerInvariant();
-            if (!(MapEntityPrefab.Find(itemName) is ItemPrefab itemPrefab))
-            {
-                errorMsg = "Item \"" + itemName + "\" not found!";
-                return;
-            }
-
+            
             if ((spawnPos == null || spawnPos == Vector2.Zero) && spawnInventory == null)
             {
                 var wp = WayPoint.GetRandom(SpawnType.Human, null, Submarine.MainSub);
