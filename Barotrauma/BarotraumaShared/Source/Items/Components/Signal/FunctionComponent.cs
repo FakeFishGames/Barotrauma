@@ -42,12 +42,12 @@ namespace Barotrauma.Items.Components
                     break;
                 case FunctionType.Factorial:
                     int intVal = (int)Math.Min(value, 20);
-                    int factorial = 1;
+                    ulong factorial = 1;
                     for (int i = intVal; i > 0; i--)
                     {
-                        factorial *= i;
+                        factorial *= (ulong)i;
                     }
-                    item.SendSignal(0, intVal.ToString(), "signal_out", null);
+                    item.SendSignal(0, factorial.ToString(), "signal_out", null);
                     break;
                 default:
                     throw new NotImplementedException($"Function {Function} has not been implemented.");
