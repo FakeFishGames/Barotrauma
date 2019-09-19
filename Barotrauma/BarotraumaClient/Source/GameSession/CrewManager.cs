@@ -1014,7 +1014,7 @@ namespace Barotrauma
             }
             var characterElement = characterListBox.Content.FindChild(character);
             GUIButton orderBtn = characterElement.FindChild(order, recursive: true) as GUIButton;
-            if (orderBtn.Frame.FlashTimer <= 0)
+            if (orderBtn.FlashTimer <= 0)
             {
                 orderBtn.Flash(color, 1.5f, false, flashRectInflate);
             }

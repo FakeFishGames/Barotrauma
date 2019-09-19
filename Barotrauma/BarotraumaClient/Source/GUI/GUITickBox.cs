@@ -74,7 +74,19 @@ namespace Barotrauma
             get
             {
                 if (!CanBeFocused) return Rectangle.Empty;
-                return ClampMouseRectToParent ? ClampRect(box.Rect) : box.Rect;
+                Rectangle union = Rectangle.Union(box.Rect, TextBlock.Rect);
+                Vector2 textPos = TextBlock.Rect.Location.ToVector2() + TextBlock.TextPos + TextBlock.TextOffset;
+                Vector2 textSize = TextBlock.Font.MeasureString(TextBlock.Text);
+                union = Rectangle.Union(union, new Rectangle(textPos.ToPoint(), textSize.ToPoint()));
+                return ClampMouseRectToParent ? ClampRect(union) : union;
+            }
+        }
+
+        public override Rectangle Rect
+        {
+            get
+            {
+                return MouseRect;
             }
         }
 
@@ -121,7 +133,9 @@ namespace Barotrauma
 
         public GUITickBox(RectTransform rectT, string label, ScalableFont font = null, string style = "") : base(null, rectT)
         {
-            box = new GUIFrame(new RectTransform(new Point(rectT.Rect.Height, rectT.Rect.Height), rectT, Anchor.CenterLeft)
+            CanBeFocused = true;
+
+            box = new GUIFrame(new RectTransform(Vector2.One, rectT, Anchor.CenterLeft, scaleBasis: ScaleBasis.BothHeight)
             {
                 IsFixedSize = false
             }, string.Empty, Color.DarkGray)
@@ -131,7 +145,10 @@ namespace Barotrauma
                 CanBeFocused = false
             };
             GUI.Style.Apply(box, style == "" ? "GUITickBox" : style);
-            text = new GUITextBlock(new RectTransform(Vector2.One, rectT, Anchor.CenterLeft) { AbsoluteOffset = new Point(box.Rect.Width, 0) }, label, font: font, textAlignment: Alignment.CenterLeft);
+            text = new GUITextBlock(new RectTransform(Vector2.One, rectT, Anchor.CenterLeft) { AbsoluteOffset = new Point(box.Rect.Width, 0) }, label, font: font, textAlignment: Alignment.CenterLeft)
+            {
+                CanBeFocused = false
+            };
             GUI.Style.Apply(text, "GUIButtonHorizontal", this);
             Enabled = true;
 
@@ -148,7 +165,7 @@ namespace Barotrauma
 
         private void ResizeBox()
         {
-            box.RectTransform.NonScaledSize = new Point(RectTransform.NonScaledSize.Y);
+            //box.RectTransform.NonScaledSize = new Point(RectTransform.NonScaledSize.Y);
             text.RectTransform.NonScaledSize = new Point(Rect.Width - box.Rect.Width, text.Rect.Height);
             text.RectTransform.AbsoluteOffset = new Point(box.Rect.Width, 0);
         }

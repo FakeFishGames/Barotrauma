@@ -153,6 +153,8 @@ namespace Barotrauma
         
         public GUIButton(RectTransform rectT, string text = "", Alignment textAlignment = Alignment.Center, string style = "", Color? color = null) : base(style, rectT)
         {
+            CanBeFocused = true;
+
             if (color.HasValue)
             {
                 this.color = color.Value;

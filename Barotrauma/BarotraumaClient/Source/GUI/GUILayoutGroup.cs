@@ -72,6 +72,8 @@ namespace Barotrauma
 
         public GUILayoutGroup(RectTransform rectT, bool isHorizontal = false, Anchor childAnchor = Anchor.TopLeft) : base(null, rectT)
         {
+            CanBeFocused = false;
+
             this.isHorizontal = isHorizontal;
             this.childAnchor = childAnchor;
             rectT.ChildrenChanged += (child) => needsToRecalculate = true;

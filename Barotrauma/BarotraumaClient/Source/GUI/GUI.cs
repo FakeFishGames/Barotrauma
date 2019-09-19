@@ -706,6 +706,7 @@ namespace Barotrauma
             for (int i = updateList.Count - 1; i > inventoryIndex; i--)
             {
                 GUIComponent c = updateList[i];
+                if (!c.CanBeFocused) { continue; }
                 if (c.MouseRect.Contains(PlayerInput.MousePosition))
                 {
                     MouseOn = c;

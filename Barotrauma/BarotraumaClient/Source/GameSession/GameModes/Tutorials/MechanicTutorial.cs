@@ -416,9 +416,9 @@ namespace Barotrauma.Tutorials
 
                         if (mechanic_deconstructor.InputContainer.Inventory.FindItemByIdentifier("oxygentank") != null && !mechanic_deconstructor.IsActive)
                         {
-                            if (mechanic_deconstructor.ActivateButton.Frame.FlashTimer <= 0)
+                            if (mechanic_deconstructor.ActivateButton.FlashTimer <= 0)
                             {
-                                mechanic_deconstructor.ActivateButton.Frame.Flash(highlightColor, 1.5f, false);
+                                mechanic_deconstructor.ActivateButton.Flash(highlightColor, 1.5f, false);
                             }
                         }
                     }
@@ -452,9 +452,9 @@ namespace Barotrauma.Tutorials
                         }
                         else if (mechanic_fabricator.InputContainer.Inventory.FindItemByIdentifier("aluminium") != null && mechanic_fabricator.InputContainer.Inventory.FindItemByIdentifier("sodium") != null && !mechanic_fabricator.IsActive)
                         {
-                            if (mechanic_fabricator.ActivateButton.Frame.FlashTimer <= 0)
+                            if (mechanic_fabricator.ActivateButton.FlashTimer <= 0)
                             {
-                                mechanic_fabricator.ActivateButton.Frame.Flash(highlightColor, 1.5f, false);
+                                mechanic_fabricator.ActivateButton.Flash(highlightColor, 1.5f, false);
                             }
                         }
                         else if (mechanic.Inventory.FindItemByIdentifier("aluminium") != null || mechanic.Inventory.FindItemByIdentifier("sodium") != null)
@@ -544,9 +544,9 @@ namespace Barotrauma.Tutorials
                     }
                     else if (IsSelectedItem(mechanic_brokenPump.Item) && repairablePumpComponent.CurrentFixer == null)
                     {
-                        if (repairablePumpComponent.RepairButton.Frame.FlashTimer <= 0)
+                        if (repairablePumpComponent.RepairButton.FlashTimer <= 0)
                         {
-                            repairablePumpComponent.RepairButton.Frame.Flash();
+                            repairablePumpComponent.RepairButton.Flash();
                         }
                     }
                 }

@@ -135,6 +135,8 @@ namespace Barotrauma
 
         public GUIListBox(RectTransform rectT, bool isHorizontal = false, Color? color = null, string style = "") : base(style, rectT)
         {
+            CanBeFocused = true;
+
             selected = new List<GUIComponent>();
 
             Point frameSize = isHorizontal ? 
@@ -295,7 +297,7 @@ namespace Barotrauma
                 if (child == null) continue;
 
                 // selecting
-                if (Enabled && child.CanBeFocused && (GUI.IsMouseOn(child)) && child.Rect.Contains(PlayerInput.MousePosition))
+                if (Enabled && CanBeFocused && child.CanBeFocused && (GUI.IsMouseOn(child)) && child.Rect.Contains(PlayerInput.MousePosition))
                 {
                     child.State = ComponentState.Hover;
                     if (PlayerInput.LeftButtonClicked())

@@ -231,6 +231,8 @@ namespace Barotrauma
             Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null)
             : base(style, rectT)
         {
+            CanBeFocused = true;
+
             Enabled = true;
             this.color = color ?? Color.White;
             frame = new GUIFrame(new RectTransform(Vector2.One, rectT, Anchor.Center), style, color);
