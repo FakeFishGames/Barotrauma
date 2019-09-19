@@ -171,6 +171,7 @@ namespace Barotrauma
             msg.Write(Money);
             msg.Write(PurchasedHullRepairs);
             msg.Write(PurchasedItemRepairs);
+            msg.Write(PurchasedLostShuttles);
 
             msg.Write((UInt16)CargoManager.PurchasedItems.Count);
             foreach (PurchasedItem pi in CargoManager.PurchasedItems)
@@ -197,6 +198,7 @@ namespace Barotrauma
             byte selectedMissionIndex = msg.ReadByte();
             bool purchasedHullRepairs = msg.ReadBoolean();
             bool purchasedItemRepairs = msg.ReadBoolean();
+            bool purchasedLostShuttles = msg.ReadBoolean();
             UInt16 purchasedItemCount = msg.ReadUInt16();
 
             List<PurchasedItem> purchasedItems = new List<PurchasedItem>();
@@ -237,6 +239,19 @@ namespace Barotrauma
                 {
                     this.PurchasedItemRepairs = false;
                     Money += ItemRepairCost;
+                }
+            }
+            if (purchasedLostShuttles != this.PurchasedLostShuttles)
+            {
+                if (purchasedLostShuttles && Money >= ShuttleReplaceCost)
+                {
+                    this.PurchasedLostShuttles = true;
+                    Money -= ShuttleReplaceCost;
+                }
+                else if (!purchasedItemRepairs)
+                {
+                    this.PurchasedLostShuttles = false;
+                    Money += ShuttleReplaceCost;
                 }
             }
 

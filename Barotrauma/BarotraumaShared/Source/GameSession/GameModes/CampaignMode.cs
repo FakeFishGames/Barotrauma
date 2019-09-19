@@ -13,7 +13,7 @@ namespace Barotrauma
         public bool CheatsEnabled;
 
         const int InitialMoney = 8700;
-        public const int HullRepairCost = 500, ItemRepairCost = 500;
+        public const int HullRepairCost = 500, ItemRepairCost = 500, ShuttleReplaceCost = 1000;
 
         protected bool watchmenSpawned;
         protected Character startWatchman, endWatchman;
@@ -21,7 +21,7 @@ namespace Barotrauma
         //key = dialog flag, double = Timing.TotalTime when the line was last said
         private Dictionary<string, double> dialogLastSpoken = new Dictionary<string, double>();
 
-        public bool PurchasedHullRepairs, PurchasedItemRepairs;
+        public bool PurchasedHullRepairs, PurchasedLostShuttles, PurchasedItemRepairs;
 
         protected Map map;
         public Map Map

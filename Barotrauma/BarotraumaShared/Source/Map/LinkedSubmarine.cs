@@ -196,7 +196,6 @@ namespace Barotrauma
                 sub.SetPosition(WorldPosition);                
             }
 
-
             DockingPort linkedPort = null;
             DockingPort myPort = null;
             
@@ -258,9 +257,7 @@ namespace Barotrauma
                 {
                     var doc = Submarine.OpenFile(filePath);
                     saveElement = doc.Root;
-
                     saveElement.Name = "LinkedSubmarine";
-
                     saveElement.Add(new XAttribute("filepath", filePath));
                 }
                 else
@@ -300,12 +297,10 @@ namespace Barotrauma
                     }
                 }
 
-
                 if (leaveBehind)
                 {
                     saveElement.SetAttributeValue("location", Level.Loaded.Seed);
                     saveElement.SetAttributeValue("worldpos", XMLExtensions.Vector2ToString(sub.SubBody.Position));
-
                 }
                 else
                 {
@@ -315,8 +310,6 @@ namespace Barotrauma
 
                 saveElement.SetAttributeValue("pos", XMLExtensions.Vector2ToString(Position - Submarine.HiddenSubPosition));
             }
-
-
 
             parentElement.Add(saveElement);
 

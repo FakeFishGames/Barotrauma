@@ -3537,6 +3537,9 @@
 
   <openlinkinbrowserprompt>Do you want to open the link "[link]" in your web browser?</openlinkinbrowserprompt>
 
+  <replacelostshuttles>Replace lost shuttles</replacelostshuttles>
+  <replaceshuttles>Replace</replaceshuttles>
+  
   <!-- Changed values as of 13th of August -->
   <traitorgoaldestroyitems>Dispose of at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>
   <karma.kickbanthreshold>Kick/Ban threshold</karma.kickbanthreshold>

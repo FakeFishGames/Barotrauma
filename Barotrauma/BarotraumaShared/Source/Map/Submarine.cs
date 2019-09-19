@@ -246,6 +246,35 @@ namespace Barotrauma
             }
         }
 
+        private bool? subsLeftBehind;
+        public bool SubsLeftBehind
+        {
+            get
+            {
+                if (subsLeftBehind.HasValue) { return subsLeftBehind.Value; }
+
+                XDocument doc = null;
+                try
+                {
+                    doc = OpenFile(filePath, out Exception e);
+                    if (doc?.Root == null) { return false; }
+                }
+                catch { return false; }
+
+                subsLeftBehind = false;
+                foreach (XElement element in doc.Root.Elements())
+                {
+                    if (element.Name.ToString().ToLowerInvariant() != "linkedsubmarine") { continue; }
+                    if (element.Attribute("location") != null)
+                    {
+                        subsLeftBehind = true;
+                        break;
+                    }
+                }
+                return subsLeftBehind.Value;
+            }
+        }
+
         public new Vector2 DrawPosition
         {
             get;
@@ -389,6 +418,17 @@ namespace Barotrauma
                     foreach (string contentPackageName in contentPackageNames)
                     {
                         RequiredContentPackages.Add(contentPackageName);
+                    }
+
+                    subsLeftBehind = false;
+                    foreach (XElement element in doc.Root.Elements())
+                    {
+                        if (element.Name.ToString().ToLowerInvariant() != "linkedsubmarine") { continue; }
+                        if (element.Attribute("location") != null)
+                        {
+                            subsLeftBehind = true;
+                            break;
+                        }
                     }
 #if CLIENT                    
                     string previewImageData = doc.Root.GetAttributeString("previewimage", "");

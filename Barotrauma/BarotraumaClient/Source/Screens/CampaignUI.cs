@@ -27,7 +27,7 @@ namespace Barotrauma
         private GUIComponent selectedLocationInfo;
         private GUIListBox selectedMissionInfo;
 
-        private GUIButton repairHullsButton, repairItemsButton;
+        private GUIButton repairHullsButton, replaceShuttlesButton, repairItemsButton;
 
         private GUIFrame characterPreviewFrame;
 
@@ -281,6 +281,8 @@ namespace Barotrauma
                 TextGetter = GetMoney
             };
 
+            // repair hulls -----------------------------------------------
+
             var repairHullsHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), repairContent.RectTransform), childAnchor: Anchor.TopRight)
             {
                 RelativeSpacing = 0.05f,
@@ -295,7 +297,7 @@ namespace Barotrauma
             {
                 ForceUpperCase = true
             };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), repairHullsHolder.RectTransform), "500", textAlignment: Alignment.Right, font: GUI.LargeFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), repairHullsHolder.RectTransform), CampaignMode.HullRepairCost.ToString(), textAlignment: Alignment.Right, font: GUI.LargeFont);
             repairHullsButton = new GUIButton(new RectTransform(new Vector2(0.4f, 0.3f), repairHullsHolder.RectTransform), TextManager.Get("Repair"), style: "GUIButtonLarge")
             {
                 OnClicked = (btn, userdata) =>
@@ -324,6 +326,8 @@ namespace Barotrauma
                 CanBeFocused = false
             };
 
+            // repair items -------------------------------------------
+
             var repairItemsHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), repairContent.RectTransform), childAnchor: Anchor.TopRight)
             {
                 RelativeSpacing = 0.05f,
@@ -338,7 +342,7 @@ namespace Barotrauma
             {
                 ForceUpperCase = true
             };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), repairItemsHolder.RectTransform), "500", textAlignment: Alignment.Right, font: GUI.LargeFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), repairItemsHolder.RectTransform), CampaignMode.ItemRepairCost.ToString(), textAlignment: Alignment.Right, font: GUI.LargeFont);
             repairItemsButton = new GUIButton(new RectTransform(new Vector2(0.4f, 0.3f), repairItemsHolder.RectTransform), TextManager.Get("Repair"), style: "GUIButtonLarge")
             {
                 OnClicked = (btn, userdata) =>
@@ -366,6 +370,52 @@ namespace Barotrauma
             {
                 CanBeFocused = false
             };
+
+            // replace lost shuttles -------------------------------------------
+
+            var replaceShuttlesHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), repairContent.RectTransform), childAnchor: Anchor.TopRight)
+            {
+                RelativeSpacing = 0.05f,
+                Stretch = true
+            };
+            new GUIImage(new RectTransform(new Vector2(0.3f, 1.0f), replaceShuttlesHolder.RectTransform, Anchor.CenterLeft), "ReplaceShuttlesButton")
+            {
+                IgnoreLayoutGroups = true,
+                CanBeFocused = false
+            };
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), replaceShuttlesHolder.RectTransform), TextManager.Get("ReplaceLostShuttles"), textAlignment: Alignment.Right, font: GUI.LargeFont)
+            {
+                ForceUpperCase = true
+            };
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), replaceShuttlesHolder.RectTransform), CampaignMode.ShuttleReplaceCost.ToString(), textAlignment: Alignment.Right, font: GUI.LargeFont);
+            replaceShuttlesButton = new GUIButton(new RectTransform(new Vector2(0.4f, 0.3f), replaceShuttlesHolder.RectTransform), TextManager.Get("ReplaceShuttles"), style: "GUIButtonLarge")
+            {
+                OnClicked = (btn, userdata) =>
+                {
+                    if (campaign.PurchasedLostShuttles)
+                    {
+                        campaign.Money += CampaignMode.ShuttleReplaceCost;
+                        campaign.PurchasedLostShuttles = false;
+                    }
+                    else
+                    {
+                        if (campaign.Money >= CampaignMode.ShuttleReplaceCost)
+                        {
+                            campaign.Money -= CampaignMode.ShuttleReplaceCost;
+                            campaign.PurchasedLostShuttles = true;
+                        }
+                    }
+                    GameMain.Client?.SendCampaignState();
+                    btn.GetChild<GUITickBox>().Selected = campaign.PurchasedLostShuttles;
+
+                    return true;
+                }
+            };
+            new GUITickBox(new RectTransform(new Vector2(0.65f), replaceShuttlesButton.RectTransform, Anchor.CenterLeft) { AbsoluteOffset = new Point(10, 0) }, "")
+            {
+                CanBeFocused = false
+            };
+
 
             // mission info -------------------------------------------------------------------------
 
@@ -853,6 +903,19 @@ namespace Barotrauma
                         (Campaign.PurchasedItemRepairs || Campaign.Money >= CampaignMode.ItemRepairCost) &&
                         (GameMain.Client == null || GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign));
                     repairItemsButton.GetChild<GUITickBox>().Selected = Campaign.PurchasedItemRepairs;
+
+                    if (GameMain.GameSession?.Submarine == null || !GameMain.GameSession.Submarine.SubsLeftBehind)
+                    {
+                        replaceShuttlesButton.Enabled = false;
+                        replaceShuttlesButton.GetChild<GUITickBox>().Selected = false;
+                    }
+                    else
+                    {
+                        replaceShuttlesButton.Enabled =
+                            (Campaign.PurchasedLostShuttles || Campaign.Money >= CampaignMode.ShuttleReplaceCost) &&
+                            (GameMain.Client == null || GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign));
+                        replaceShuttlesButton.GetChild<GUITickBox>().Selected = Campaign.PurchasedLostShuttles;
+                    }
                     break;
             }
         }
