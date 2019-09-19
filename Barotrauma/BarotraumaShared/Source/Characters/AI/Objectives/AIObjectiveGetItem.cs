@@ -98,7 +98,7 @@ namespace Barotrauma
                     return;
                 }
             }
-            if (IsTakenBySomeone(targetItem))
+            if (character.IsItemTakenBySomeoneElse(targetItem))
             {
 #if DEBUG
                 DebugConsole.NewMessage($"{character.Name}: Found an item, but it's already equipped by someone else. Aborting.", Color.Yellow);
@@ -107,18 +107,18 @@ namespace Barotrauma
             }
             if (character.CanInteractWith(targetItem, out _, checkLinked: false))
             {
+                var pickable = targetItem.GetComponent<Pickable>();
+                if (pickable == null)
+                {
+#if DEBUG
+                    DebugConsole.NewMessage($"{character.Name}: Target not pickable. Aborting.", Color.Yellow);
+#endif
+                    Abandon = true;
+                    return;
+                }
                 targetItem.TryInteract(character, forceSelectKey: true);
                 if (equip)
                 {
-                    var pickable = targetItem.GetComponent<Pickable>();
-                    if (pickable == null)
-                    {
-#if DEBUG
-                        DebugConsole.NewMessage($"{character.Name}: Target not pickable. Aborting.", Color.Yellow);
-#endif
-                        Abandon = true;
-                        return;
-                    }
                     int targetSlot = -1;
                     //check if all the slots required by the item are free
                     foreach (InvSlotType slots in pickable.AllowedSlots)
@@ -138,19 +138,34 @@ namespace Barotrauma
                             otherItem.Drop(character);
                         }
                     }
-                    character.Inventory.TryPutItem(targetItem, targetSlot, false, false, character);
-                }
-                IsCompleted = true;
+                    if (character.Inventory.TryPutItem(targetItem, targetSlot, false, false, character))
+                    {
+                        IsCompleted = true;
+                    }
+                    else
+                    {
 #if DEBUG
-                if (!character.HasItem(targetItem))
-                {
-                    DebugConsole.NewMessage($"{character.Name}: Failed to move the item into the character inventory. Aborting.", Color.Red);
-                }
-                if (equip && !character.HasEquippedItem(targetItem))
-                {
-                    DebugConsole.NewMessage($"{character.Name}: Failed to equip the item. Aborting.", Color.Red);
-                }
+                        DebugConsole.NewMessage($"{character.Name}: Failed to equip/move the item '{targetItem.Name}' into the character inventory. Aborting.", Color.Red);
 #endif
+                        Abandon = true;
+                    }
+                }
+                else
+                {
+                    targetItem.ParentInventory.RemoveItem(targetItem);
+                    if (character.Inventory.TryPutItem(targetItem, null, new List<InvSlotType>() { InvSlotType.Any }))
+                    {
+                        IsCompleted = true;
+                    }
+                    else
+                    {
+                        Abandon = true;
+#if DEBUG
+                        DebugConsole.NewMessage($"{character.Name}: Failed to equip/move the item '{targetItem.Name}' into the character inventory. Aborting.", Color.Red);
+#endif
+                        targetItem.Drop(character);
+                    }
+                }
             }
             else
             {
@@ -192,15 +207,15 @@ namespace Barotrauma
                 var item = Item.ItemList[currSearchIndex];
                 if (ignoredItems.Contains(item)) { continue; }
                 if (item.Submarine == null) { continue; }
-                else if (item.Submarine.TeamID != character.TeamID) { continue; }
-                else if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { continue; }
+                if (item.Submarine.TeamID != character.TeamID) { continue; }
+                if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { continue; }
                 if (item.CurrentHull == null || item.Condition <= 0.0f) { continue; }
                 if (itemIdentifiers.None(id => item.Prefab.Identifier == id || item.HasTag(id))) { continue; }
                 if (ignoredContainerIdentifiers != null && item.Container != null)
                 {
                     if (ignoredContainerIdentifiers.Contains(item.ContainerIdentifier)) { continue; }
                 }
-                if (IsTakenBySomeone(item)) { continue; }
+                if (character.IsItemTakenBySomeoneElse(item)) { continue; }
                 float itemPriority = 1;
                 if (GetItemPriority != null)
                 {
@@ -246,7 +261,5 @@ namespace Barotrauma
             }
             return false;
         }
-
-        private bool IsTakenBySomeone(Item item) => item.FindParentInventory(i => i.Owner != character && i.Owner is Character owner && !owner.IsDead) != null;
     }
 }

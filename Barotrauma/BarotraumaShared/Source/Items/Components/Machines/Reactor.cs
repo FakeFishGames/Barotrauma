@@ -506,6 +506,8 @@ namespace Barotrauma.Items.Components
             return picker != null;
         }
 
+        private int itemIndex;
+        private List<Item> ignoredContainers = new List<Item>();
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return false; }
@@ -517,13 +519,32 @@ namespace Barotrauma.Items.Components
             //characters with insufficient skill levels don't refuel the reactor
             if (degreeOfSuccess > 0.2f)
             {
-                //remove used-up fuel from the reactor
-                var containedItems = item.ContainedItems;
-                foreach (Item item in containedItems)
-                {
-                    if (item != null && item.Condition <= 0.0f)
+                // Find a valid container that can be used with this reactor
+                if (!character.FindItem(ref itemIndex, new string[] { "cabinet" }, out Item targetContainer, ignoredItems: ignoredContainers,
+                    customPredicate: i =>
                     {
-                        item.Drop(character);
+                        var container = i.GetComponent<ItemContainer>();
+                        return container != null && !container.Inventory.IsFull();
+                    }))
+                {
+                    return false;
+                }
+
+                if (objective.SubObjectives.None())
+                {
+                    var containedItems = item.ContainedItems;
+                    foreach (Item fuelRod in containedItems)
+                    {
+                        if (fuelRod != null && fuelRod.Condition <= 0.0f)
+                        {
+                            var decontainObjective = new AIObjectiveDecontainItem(character, fuelRod, item.GetComponent<ItemContainer>(), objective.objectiveManager, targetContainer?.GetComponent<ItemContainer>());
+                            decontainObjective.Abandoned += () => 
+                            {
+                                itemIndex = 0;
+                                ignoredContainers.Add(targetContainer);
+                            };
+                            objective.AddSubObjectiveInQueue(decontainObjective);
+                        }
                     }
                 }
 
@@ -536,6 +557,7 @@ namespace Barotrauma.Items.Components
                 //load more fuel if the current maximum output is only 50% of the current load
                 if (NeedMoreFuel(minimumOutputRatio: 0.5f))
                 {
+                    aiUpdateTimer = AIUpdateInterval;
                     if (objective.SubObjectives.None())
                     {
                         var containFuelObjective = new AIObjectiveContainItem(character, new string[] { "fuelrod", "reactorfuel" }, item.GetComponent<ItemContainer>(), objective.objectiveManager)
@@ -555,7 +577,6 @@ namespace Barotrauma.Items.Components
                         objective.AddSubObjective(containFuelObjective);
                         character?.Speak(TextManager.Get("DialogReactorFuel"), null, 0.0f, "reactorfuel", 30.0f);
                     }
-                    aiUpdateTimer = AIUpdateInterval;
                     return false;
                 }
                 else if (TooMuchFuel())

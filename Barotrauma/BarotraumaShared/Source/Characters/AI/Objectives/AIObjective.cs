@@ -115,12 +115,23 @@ namespace Barotrauma
             Act(deltaTime);
         }
 
-        // TODO: go through AIOperate methods where subobjectives are added and ensure that they add the subobjectives correctly -> use TryAddSubObjective method instead?
+        // TODO: check turret aioperate
         public void AddSubObjective(AIObjective objective)
         {
             var type = objective.GetType();
             subObjectives.RemoveAll(o => o.GetType() == type);
             subObjectives.Add(objective);
+        }
+
+        /// <summary>
+        /// This method allows multiple subobjectives of same type. Use with caution.
+        /// </summary>
+        public void AddSubObjectiveInQueue(AIObjective objective)
+        {
+            if (!subObjectives.Contains(objective))
+            {
+                subObjectives.Add(objective);
+            }
         }
 
         public void RemoveSubObjective<T>(ref T objective) where T : AIObjective

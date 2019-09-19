@@ -532,7 +532,10 @@ namespace Barotrauma
                         if (container.Item.ParentInventory == character.Inventory)
                         {
                             character.Inventory.RemoveItem(ammunition);
-                            container.Inventory.TryPutItem(ammunition, null);
+                            if (!container.Inventory.TryPutItem(ammunition, null))
+                            {
+                                ammunition.Drop(character);
+                            }
                         }
                         else
                         {

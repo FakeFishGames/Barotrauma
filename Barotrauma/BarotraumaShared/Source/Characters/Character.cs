@@ -1511,8 +1511,7 @@ namespace Barotrauma
             return (wall == null || !wall.CastShadow) && (door == null || door.IsOpen);
         }
 
-        public bool HasItem(Item item, bool requireEquipped = false) => 
-            requireEquipped ? HasEquippedItem(item) : item.FindParentInventory(i => i.Owner == this) != null;
+        public bool HasItem(Item item, bool requireEquipped = false) => requireEquipped ? HasEquippedItem(item) : item.IsOwnedBy(this);
 
         public bool HasEquippedItem(Item item)
         {
@@ -1600,6 +1599,57 @@ namespace Barotrauma
             }
             return true;
         }
+
+        private float _closestItemDistance;
+        private Item _foundItem;
+        /// <summary>
+        /// Finds the closest item seeking by identifiers or tags from the world.
+        /// Ignores items that are outside or in another team's submarine or in a submarine that is not connected to this submarine.
+        /// Also ignores items that are taken by someone else.
+        /// The method is run in steps for performance reasons. So you'll have to provide the reference to the itemIndex.
+        /// Returns false while running and true when done.
+        /// </summary>
+        public bool FindItem(ref int itemIndex, IEnumerable<string> identifiers, out Item targetItem, bool ignoreBroken = true, 
+            IEnumerable<Item> ignoredItems = null, IEnumerable<string> ignoredContainerIdentifiers = null, 
+            Func<Item, bool> customPredicate = null, float maxItemDistance = 10000)
+        {
+            if (itemIndex == 0)
+            {
+                _foundItem = null;
+                _closestItemDistance = maxItemDistance;
+            }
+            for (int i = 0; i < 10 && itemIndex < Item.ItemList.Count - 1; i++)
+            {
+                itemIndex++;
+                var item = Item.ItemList[itemIndex];
+                if (ignoredItems != null && ignoredItems.Contains(item)) { continue; }
+                if (item.Submarine == null) { continue; }
+                if (item.Submarine.TeamID != TeamID) { continue; }
+                if (Submarine != null && !Submarine.IsEntityFoundOnThisSub(item, true)) { continue; }
+                if (item.CurrentHull == null) { continue; }
+                if (ignoreBroken && item.Condition <= 0) { continue; }
+                if (identifiers.None(id => item.Prefab.Identifier == id || item.HasTag(id))) { continue; }
+                if (ignoredContainerIdentifiers != null && item.Container != null)
+                {
+                    if (ignoredContainerIdentifiers.Contains(item.ContainerIdentifier)) { continue; }
+                }
+                if (IsItemTakenBySomeoneElse(item)) { continue; }
+                if (customPredicate != null && !customPredicate(item)) { continue; }
+                Item rootContainer = item.GetRootContainer();
+                Vector2 itemPos = (rootContainer ?? item).WorldPosition;
+                // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
+                float dist = Math.Abs(WorldPosition.X - itemPos.X) + Math.Abs(WorldPosition.Y - itemPos.Y) * 2.0f;
+                if (dist < _closestItemDistance)
+                {
+                    _closestItemDistance = dist;
+                    _foundItem = item;
+                }
+            }
+            targetItem = _foundItem;
+            return itemIndex >= Item.ItemList.Count - 1;
+        }
+
+        public bool IsItemTakenBySomeoneElse(Item item) => item.FindParentInventory(i => i.Owner != this && i.Owner is Character owner && !owner.IsDead && !owner.Removed) != null;
 
         public bool CanInteractWith(Character c, float maxDist = 200.0f, bool checkVisibility = true)
         {
