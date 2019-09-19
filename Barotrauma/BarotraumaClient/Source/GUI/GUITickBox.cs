@@ -6,6 +6,7 @@ namespace Barotrauma
 {
     public class GUITickBox : GUIComponent
     {
+        private GUILayoutGroup layoutGroup;
         private GUIFrame box;
         private GUITextBlock text;
 
@@ -127,7 +128,9 @@ namespace Barotrauma
         {
             CanBeFocused = true;
 
-            box = new GUIFrame(new RectTransform(Vector2.One, rectT, Anchor.CenterLeft, scaleBasis: ScaleBasis.BothHeight)
+            layoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, rectT), true);
+
+            box = new GUIFrame(new RectTransform(Vector2.One, layoutGroup.RectTransform, scaleBasis: ScaleBasis.BothHeight)
             {
                 IsFixedSize = false
             }, string.Empty, Color.DarkGray)
@@ -137,7 +140,8 @@ namespace Barotrauma
                 CanBeFocused = false
             };
             GUI.Style.Apply(box, style == "" ? "GUITickBox" : style);
-            text = new GUITextBlock(new RectTransform(Vector2.One, rectT, Anchor.CenterLeft) { AbsoluteOffset = new Point(box.Rect.Width, 0) }, label, font: font, textAlignment: Alignment.CenterLeft)
+            Vector2 textBlockScale = new Vector2((rectT.Rect.Width - rectT.Rect.Height) / rectT.Rect.Width, 1.0f);
+            text = new GUITextBlock(new RectTransform(textBlockScale, layoutGroup.RectTransform), label, font: font, textAlignment: Alignment.CenterLeft)
             {
                 CanBeFocused = false
             };
@@ -157,10 +161,8 @@ namespace Barotrauma
 
         private void ResizeBox()
         {
-            //box.RectTransform.NonScaledSize = new Point(RectTransform.NonScaledSize.Y);
-            box.RectTransform.RecalculateScale(true);
-            text.RectTransform.NonScaledSize = new Point(Rect.Width - box.Rect.Width, text.Rect.Height);
-            text.RectTransform.AbsoluteOffset = new Point(box.Rect.Width, 0);
+            Vector2 textBlockScale = new Vector2((layoutGroup.RectTransform.Rect.Width - layoutGroup.RectTransform.Rect.Height) / layoutGroup.RectTransform.Rect.Width, 1.0f);
+            text.RectTransform.RelativeSize = textBlockScale;
         }
         
         protected override void Update(float deltaTime)
