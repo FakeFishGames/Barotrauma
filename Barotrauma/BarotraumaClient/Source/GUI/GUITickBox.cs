@@ -166,7 +166,8 @@ namespace Barotrauma
         private void ResizeBox()
         {
             //box.RectTransform.NonScaledSize = new Point(RectTransform.NonScaledSize.Y);
-            text.RectTransform.NonScaledSize = new Point(Rect.Width - box.Rect.Width, text.Rect.Height);
+            box.RectTransform.RecalculateScale(true);
+            text.RectTransform.NonScaledSize = new Point(base.Rect.Width - box.Rect.Width, text.Rect.Height);
             text.RectTransform.AbsoluteOffset = new Point(box.Rect.Width, 0);
         }
         
