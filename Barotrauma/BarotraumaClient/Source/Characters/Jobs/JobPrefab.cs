@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -32,10 +33,12 @@ namespace Barotrauma
                 { RelativeOffset = new Vector2(0.0f, 0.2f + descriptionBlock.RectTransform.RelativeSize.Y) });
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), itemContainer.RectTransform),
                 TextManager.Get("Items", fallBackTag: "mapentitycategory.equipment"), font: GUI.LargeFont);
-            foreach (string itemName in ItemNames)
+            foreach (string itemName in ItemNames.Distinct())
             {
+                int count = ItemNames.Count(i => i == itemName);
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), itemContainer.RectTransform),
-                    "   - " + itemName, font: GUI.SmallFont);
+                    "   - " + (count == 1 ? itemName : itemName + " x" + count),
+                    font: GUI.SmallFont);
             }
 
             return backFrame;

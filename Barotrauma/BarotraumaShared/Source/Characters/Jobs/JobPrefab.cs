@@ -159,35 +159,7 @@ namespace Barotrauma
                 {
                     case "items":
                         Items = subElement;
-                        foreach (XElement itemElement in subElement.Elements())
-                        {
-                            if (itemElement.Element("name") != null)
-                            {
-                                DebugConsole.ThrowError("Error in job config \"" + Name + "\" - use identifiers instead of names to configure the items.");
-                                ItemNames.Add(itemElement.GetAttributeString("name", ""));
-                                continue;
-                            }
-
-                            string itemIdentifier = itemElement.GetAttributeString("identifier", "");
-                            if (string.IsNullOrWhiteSpace(itemIdentifier))
-                            {
-                                DebugConsole.ThrowError("Error in job config \"" + Name + "\" - item with no identifier.");
-                                ItemNames.Add("");
-                            }
-                            else
-                            {
-                                var prefab = MapEntityPrefab.Find(null, itemIdentifier) as ItemPrefab;
-                                if (prefab == null)
-                                {
-                                    DebugConsole.ThrowError("Error in job config \"" + Name + "\" - item prefab \""+itemIdentifier+"\" not found.");
-                                    ItemNames.Add("");
-                                }
-                                else
-                                {
-                                    ItemNames.Add(prefab.Name);
-                                }
-                            }                            
-                        }
+                        loadItemNames(subElement);
                         break;
                     case "skills":
                         foreach (XElement skillElement in subElement.Elements())
@@ -198,6 +170,40 @@ namespace Barotrauma
                     case "autonomousobjectives":
                         subElement.Elements().ForEach(order => AutomaticOrders.Add(new AutonomousObjective(order)));
                         break;
+                }
+            }
+
+            void loadItemNames(XElement parentElement)
+            {
+                foreach (XElement itemElement in parentElement.Elements())
+                {
+                    if (itemElement.Element("name") != null)
+                    {
+                        DebugConsole.ThrowError("Error in job config \"" + Name + "\" - use identifiers instead of names to configure the items.");
+                        ItemNames.Add(itemElement.GetAttributeString("name", ""));
+                        continue;
+                    }
+
+                    string itemIdentifier = itemElement.GetAttributeString("identifier", "");
+                    if (string.IsNullOrWhiteSpace(itemIdentifier))
+                    {
+                        DebugConsole.ThrowError("Error in job config \"" + Name + "\" - item with no identifier.");
+                        ItemNames.Add("");
+                    }
+                    else
+                    {
+                        var prefab = MapEntityPrefab.Find(null, itemIdentifier) as ItemPrefab;
+                        if (prefab == null)
+                        {
+                            DebugConsole.ThrowError("Error in job config \"" + Name + "\" - item prefab \"" + itemIdentifier + "\" not found.");
+                            ItemNames.Add("");
+                        }
+                        else
+                        {
+                            ItemNames.Add(prefab.Name);
+                        }
+                    }
+                    loadItemNames(itemElement);
                 }
             }
 
