@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
 using System.Linq;
+using Barotrauma.Items.Components;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -303,6 +305,27 @@ namespace Barotrauma
         {
             get;
             private set;
+        }
+
+        private HashSet<string> preferredContainers = new HashSet<string>();
+        [Serialize("", true, description: "Define containers (by identifiers or tags) that this item should be placed in. These are preferences, which are not enforced.")]
+        public string PreferredContainers
+        {
+            get { return string.Join(",", preferredContainers); }
+            set
+            {
+                preferredContainers.Clear();
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    string[] splitTags = value.Split(',');
+                    foreach (string tag in splitTags)
+                    {
+                        string[] splitTag = tag.Split(':');
+                        splitTag[0] = splitTag[0].ToLowerInvariant();
+                        preferredContainers.Add(string.Join(":", splitTag));
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -783,9 +806,22 @@ namespace Barotrauma
             }
             return prefab;
         }
+
         public IEnumerable<PriceInfo> GetPrices()
         {
             return prices?.Values;
+        }
+
+        public bool IsContainerPreferred(ItemContainer itemContainer)
+        {
+            if (preferredContainers.None()) { return true; }
+            return preferredContainers.Any(id => itemContainer.Item.Prefab.Identifier == id || itemContainer.Item.HasTag(id));
+        }
+
+        public bool IsContainerPreferred(string[] identifiersOrTags)
+        {
+            if (preferredContainers.None()) { return true; }
+            return preferredContainers.Any(id => preferredContainers.Any(p => p == id));
         }
     }
 }

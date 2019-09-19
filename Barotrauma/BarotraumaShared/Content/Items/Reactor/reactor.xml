@@ -76,6 +76,7 @@
     name="Fuel Rod"
     identifier="fuelrod"
     Tags="smallitem,reactorfuel"
+    preferredcontainers="steelcabinet,mediumsteelcabinet,mediumwindowedsteelcabinet"
     cargocontaineridentifier="metalcrate"
     scale="0.5">
 

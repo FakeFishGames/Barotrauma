@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma.Items.Components
 {
@@ -54,13 +55,45 @@ namespace Barotrauma.Items.Components
         [Serialize(5, false, description: "How many inventory slots the inventory has per row.")]
         public int SlotsPerRow { get; set; }
 
-        public List<RelatedItem> ContainableItems { get; private set; }
+        private HashSet<string> containableRestrictions = new HashSet<string>();
+        [Editable, Serialize("", true, description: "Define items (by identifiers or tags) that bots should place inside this container. If empty, no restrictions are applied.")]
+        public string ContainableRestrictions
+        {
+            get { return string.Join(",", containableRestrictions); }
+            set
+            {
+                containableRestrictions.Clear();
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    string[] splitTags = value.Split(',');
+                    foreach (string tag in splitTags)
+                    {
+                        string[] splitTag = tag.Split(':');
+                        splitTag[0] = splitTag[0].ToLowerInvariant();
+                        containableRestrictions.Add(string.Join(":", splitTag));
+                    }
+                }
+            }
+        }
+
+        public bool ShouldBeContained(string[] identifiersOrTags)
+        {
+            if (containableRestrictions.None()) { return true; }
+            return identifiersOrTags.Any(id => containableRestrictions.Any(r => r == id));
+        }
+
+        public bool ShouldBeContained(Item item)
+        {
+            if (containableRestrictions.None()) { return true; }
+            return containableRestrictions.Any(id => item.Prefab.Identifier == id || item.HasTag(id));
+        }
+
+        public List<RelatedItem> ContainableItems { get; private set; } = new List<RelatedItem>();
 
         public ItemContainer(Item item, XElement element)
             : base (item, element)
         {
-            Inventory = new ItemInventory(item, this, capacity, SlotsPerRow);            
-            ContainableItems = new List<RelatedItem>();
+            Inventory = new ItemInventory(item, this, capacity, SlotsPerRow);
             
             foreach (XElement subElement in element.Elements())
             {
