@@ -79,6 +79,7 @@ namespace Barotrauma
                 Vector2 textPos = TextBlock.Rect.Location.ToVector2() + TextBlock.TextPos + TextBlock.TextOffset;
                 Vector2 textSize = TextBlock.Font.MeasureString(TextBlock.Text);
                 union = Rectangle.Union(union, new Rectangle(textPos.ToPoint(), textSize.ToPoint()));
+                union = Rectangle.Union(union, Rect);
                 return ClampMouseRectToParent ? ClampRect(union) : union;
             }
         }

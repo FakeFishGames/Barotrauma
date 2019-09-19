@@ -492,11 +492,6 @@ namespace Barotrauma
             {
                 OnSelected = (component, obj) =>
                 {
-                    int ind = (int)obj;
-
-                    if (GUI.MouseOn == missionTypeTickBoxes[ind]) { return false; }
-                    missionTypeTickBoxes[ind].Selected = !missionTypeTickBoxes[ind].Selected;
-
                     return false;
                 }
             };
