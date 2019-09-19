@@ -1187,24 +1187,12 @@ namespace Barotrauma
                 return 0;
             });
 
-            Color mainColor = new Color(45, 125, 70);
-            Color hoverColor = new Color(53, 72, 76);
-            Color pressColor = new Color(255, 255, 255);
-
             friendsButtonHolder.ClearChildren();
-
-            mainColor = new Color(73, 98, 103);
 
             if (friendsList.Count > 0)
             {
-                friendsDropdownButton = new GUIButton(new RectTransform(Vector2.One, friendsButtonHolder.RectTransform, Anchor.BottomRight, Pivot.BottomRight, scaleBasis: ScaleBasis.BothHeight), "\u2022 \u2022 \u2022", style: null)
+                friendsDropdownButton = new GUIButton(new RectTransform(Vector2.One, friendsButtonHolder.RectTransform, Anchor.BottomRight, Pivot.BottomRight, scaleBasis: ScaleBasis.BothHeight), "\u2022 \u2022 \u2022", style: "GUIButtonFriendsDropdown")
                 {
-                    Color = mainColor,
-                    SelectedColor = hoverColor,
-                    HoverColor = hoverColor,
-                    OutlineColor = new Color(27, 36, 38),
-                    PressedColor = hoverColor,
-                    TextColor = Color.White,
                     Font = GUI.ObjectiveNameFont,
                     OnClicked = (button, udt) =>
                     {
@@ -1233,25 +1221,22 @@ namespace Barotrauma
 
                 if (buttonCount <= 5)
                 {
+                    string style = "GUIButtonFriendNotPlaying";
                     if (friend.InServer)
                     {
-                        mainColor = new Color(45, 125, 70);
+                        style = "GUIButtonFriendPlaying";
                     }
                     else
                     {
-                        mainColor = friend.PlayingThisGame ? new Color(45, 125, 70) : new Color(60, 60, 80);
+                        style = friend.PlayingThisGame ? "GUIButtonFriendPlaying" : "GUIButtonFriendNotPlaying";
                     }
 
-                    var guiButton = new GUIButton(new RectTransform(Vector2.One, friendsButtonHolder.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: null)
+                    var guiButton = new GUIButton(new RectTransform(Vector2.One, friendsButtonHolder.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: style)
                     {
-                        Color = mainColor,
-                        HoverColor = hoverColor,
-                        SelectedColor = hoverColor,
-                        PressedColor = pressColor,
-                        OutlineColor = Color.Transparent,
                         UserData = friend,
                         OnClicked = OpenFriendPopup
                     };
+                    guiButton.ToolTip = friend.Name + "\n" + friend.Status;
 
                     if (friend.Sprite != null)
                     {
@@ -1264,15 +1249,17 @@ namespace Barotrauma
                             return ToolBox.HLSToRGB(hls);
                         }
 
-                        var imgColor = BrightenColor(mainColor);
-                        var imgHoverColor = BrightenColor(hoverColor);
-                        var imgPressColor = BrightenColor(pressColor);
+                        var imgColor = BrightenColor(guiButton.Color);
+                        var imgHoverColor = BrightenColor(guiButton.HoverColor);
+                        var imgSelectColor = BrightenColor(guiButton.SelectedColor);
+                        var imgPressColor = BrightenColor(guiButton.PressedColor);
                         var guiImage = new GUIImage(new RectTransform(Vector2.One * 0.925f, guiButton.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.025f, 0.025f) }, friend.Sprite, null, true)
                         {
                             Color = imgColor,
                             HoverColor = imgHoverColor,
-                            SelectedColor = imgHoverColor,
-                            PressedColor = imgPressColor
+                            SelectedColor = imgSelectColor,
+                            PressedColor = imgPressColor,
+                            CanBeFocused = false
                         };
                         guiImage = new GUIImage(new RectTransform(Vector2.One * 0.925f, guiButton.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.025f, 0.025f) }, friend.Sprite, null, true)
                         {
@@ -1280,37 +1267,24 @@ namespace Barotrauma
                             HoverColor = Color.White * 0.8f,
                             SelectedColor = Color.White * 0.8f,
                             PressedColor = Color.White * 0.8f,
-                            BlendState = BlendState.Additive
+                            BlendState = BlendState.Additive,
+                            CanBeFocused = false
                         };
-                        guiImage.ToolTip = friend.Name + "\n" + friend.Status;
                     }
                 }
 
-                var friendFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.167f), friendsDropdown.Content.RectTransform), style: null)
-                {
-                    Color = new Color(27, 36, 38),
-                    HoverColor = new Color(44, 59, 62),
-                    SelectedColor = new Color(27, 36, 38),
-                    PressedColor = pressColor,
-                    OutlineColor = Color.Black
-                };
+                var friendFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.167f), friendsDropdown.Content.RectTransform), style: "GUIFrameFriendsDropdown");
                 var guiImage2TheSequel = new GUIImage(new RectTransform(Vector2.One * 0.9f, friendFrame.RectTransform, Anchor.CenterLeft, scaleBasis: ScaleBasis.BothHeight) { RelativeOffset = new Vector2(0.02f, 0.02f) } , friend.Sprite, null, true);
 
                 var textBlock = new GUITextBlock(new RectTransform(Vector2.One * 0.8f, friendFrame.RectTransform, Anchor.CenterLeft, scaleBasis: ScaleBasis.BothHeight) { RelativeOffset = new Vector2(1.0f / 7.7f, 0.0f) }, friend.Name + "\n" + friend.Status)
                 {
-                    TextColor = mainColor,
                     Font = GUI.SmallFont
                 };
 
                 if (friend.InServer)
                 {
-                    var joinButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.6f), friendFrame.RectTransform, Anchor.CenterRight) { RelativeOffset = new Vector2(0.05f, 0.0f) }, "Join", style: null)
+                    var joinButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.6f), friendFrame.RectTransform, Anchor.CenterRight) { RelativeOffset = new Vector2(0.05f, 0.0f) }, "Join", style: "GUIButtonJoinFriend")
                     {
-                        Color = new Color(43, 71, 93),
-                        TextColor = new Color(90, 190, 249),
-                        HoverColor = new Color(53, 88, 115),
-                        SelectedColor = new Color(53, 88, 115),
-                        PressedColor = pressColor,
                         UserData = friend
                     };
                     joinButton.OnClicked = JoinFriend;

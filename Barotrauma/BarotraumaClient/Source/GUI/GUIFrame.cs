@@ -20,7 +20,7 @@ namespace Barotrauma
 
             Color currColor = GetCurrentColor(state);
 
-            if (sprites == null || !sprites.Any()) GUI.DrawRectangle(spriteBatch, Rect, currColor * (currColor.A/255.0f), true);
+            if (sprites == null || !sprites.Any(s => s.Value.Any())) GUI.DrawRectangle(spriteBatch, Rect, currColor * (currColor.A/255.0f), true);
             base.Draw(spriteBatch);
 
             if (OutlineColor != Color.Transparent)
