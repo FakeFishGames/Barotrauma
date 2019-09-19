@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma.Items.Components
 {
@@ -535,23 +536,25 @@ namespace Barotrauma.Items.Components
                 //load more fuel if the current maximum output is only 50% of the current load
                 if (NeedMoreFuel(minimumOutputRatio: 0.5f))
                 {
-                    var containFuelObjective = new AIObjectiveContainItem(character, new string[] { "fuelrod", "reactorfuel" }, item.GetComponent<ItemContainer>(), objective.objectiveManager)
+                    if (objective.SubObjectives.None())
                     {
-                        targetItemCount = item.ContainedItems.Count(i => i != null && i.Prefab.Identifier == "fuelrod" || i.HasTag("reactorfuel")) + 1,
-                        GetItemPriority = (Item fuelItem) =>
+                        var containFuelObjective = new AIObjectiveContainItem(character, new string[] { "fuelrod", "reactorfuel" }, item.GetComponent<ItemContainer>(), objective.objectiveManager)
                         {
-                            if (fuelItem.ParentInventory?.Owner is Item)
+                            targetItemCount = item.ContainedItems.Count(i => i != null && i.Prefab.Identifier == "fuelrod" || i.HasTag("reactorfuel")) + 1,
+                            GetItemPriority = (Item fuelItem) =>
                             {
-                                //don't take fuel from other reactors
-                                if (((Item)fuelItem.ParentInventory.Owner).GetComponent<Reactor>() != null) return 0.0f;
+                                if (fuelItem.ParentInventory?.Owner is Item)
+                                {
+                                    //don't take fuel from other reactors
+                                    if (((Item)fuelItem.ParentInventory.Owner).GetComponent<Reactor>() != null) return 0.0f;
+                                }
+                                return 1.0f;
                             }
-                            return 1.0f;
-                        }
-                    };
-                    objective.AddSubObjective(containFuelObjective);
-
-                    character?.Speak(TextManager.Get("DialogReactorFuel"), null, 0.0f, "reactorfuel", 30.0f);
-
+                        };
+                        containFuelObjective.Abandoned += () => objective.Abandon = true;
+                        objective.AddSubObjective(containFuelObjective);
+                        character?.Speak(TextManager.Get("DialogReactorFuel"), null, 0.0f, "reactorfuel", 30.0f);
+                    }
                     aiUpdateTimer = AIUpdateInterval;
                     return false;
                 }

@@ -39,7 +39,7 @@ namespace Barotrauma
         public string Option { get; private set; }
 
         private bool _abandon;
-        protected bool Abandon
+        public bool Abandon
         {
             get { return _abandon; }
             set
