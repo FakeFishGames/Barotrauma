@@ -3537,6 +3537,32 @@
 
   <openlinkinbrowserprompt>Do you want to open the link "[link]" in your web browser?</openlinkinbrowserprompt>
 
+  <entityname.sincomponent>Sin Component</entityname.sincomponent>
+  <entitydescription.sincomponent>Outputs the sine of the input.</entitydescription.sincomponent>
+  <entityname.coscomponent>Cos Component</entityname.coscomponent>
+  <entitydescription.coscomponent>Outputs the cosine of the input.</entitydescription.coscomponent>
+  <entityname.tancomponent>Tan Component</entityname.tancomponent>
+  <entitydescription.tancomponent>Outputs the tangent of the input.</entitydescription.tancomponent>
+  <entityname.asincomponent>Asin Component</entityname.asincomponent>
+  <entitydescription.asincomponent>Outputs the angle whose sine is equal to the input.</entitydescription.asincomponent>
+  <entityname.acoscomponent>Acos Component</entityname.acoscomponent>
+  <entitydescription.acoscomponent>Outputs the angle whose cosine is equal to the input.</entitydescription.acoscomponent>
+  <entityname.atancomponent>Atan Component</entityname.atancomponent>
+  <entitydescription.atancomponent>Outputs the angle whose tangent is equal to the input.</entitydescription.atancomponent>
+
+  <entityname.modulocomponent>Modulo Component</entityname.modulocomponent>
+  <entitydescription.modulocomponent>Outputs the remainder when the input is divided by a specific number.</entitydescription.modulocomponent>
+  <entityname.roundcomponent>Round Component</entityname.roundcomponent>
+  <entitydescription.roundcomponent>Rounds a numerical input to the nearest integer value.</entitydescription.roundcomponent>
+  <entityname.ceilcomponent>Ceil Component</entityname.ceilcomponent>
+  <entitydescription.ceilcomponent>Outputs the smallest integer value that is bigger than or equal to the input.</entitydescription.ceilcomponent>
+  <entityname.floorcomponent>Floor Component</entityname.floorcomponent>
+  <entitydescription.floorcomponent>Outputs the greates integer value that is less than or equal to the input.</entitydescription.floorcomponent>
+  <entityname.factorialcomponent>Factorial Component</entityname.factorialcomponent>
+  <entitydescription.factorialcomponent>Outputs the factorial of the input.</entitydescription.factorialcomponent>
+
+  <connection.setmodulus>set_modulus</connection.setmodulus>
+  
   <!-- Changed values as of 13th of August -->
   <traitorgoaldestroyitems>Dispose of at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>
   <karma.kickbanthreshold>Kick/Ban threshold</karma.kickbanthreshold>
@@ -3549,4 +3575,5 @@
   <editordisclaimerdiscordurl>https://discordapp.com/invite/undertow</editordisclaimerdiscordurl>
 
   <bugreportfeedbackform>Help and technical support</bugreportfeedbackform>
+
 </infotexts>
