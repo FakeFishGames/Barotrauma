@@ -407,7 +407,7 @@ namespace Barotrauma
             }
 
             // Game mode Selection
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), filters.Content.RectTransform), TextManager.Get("gamemode"));
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), filters.Content.RectTransform), TextManager.Get("gamemode")) { CanBeFocused = false };
 
             gameModeTickBoxes = new List<GUITickBox>();
             foreach (GameModePreset mode in GameModePreset.List)

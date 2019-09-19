@@ -697,6 +697,7 @@ namespace Barotrauma
         /// </summary>
         public static GUIComponent UpdateMouseOn()
         {
+            GUIComponent prevMouseOn = MouseOn;
             MouseOn = null;
             int inventoryIndex = -1;
             if (Inventory.IsMouseOnInventory())
@@ -709,7 +710,10 @@ namespace Barotrauma
                 if (!c.CanBeFocused) { continue; }
                 if (c.MouseRect.Contains(PlayerInput.MousePosition))
                 {
-                    MouseOn = c;
+                    if ((!PlayerInput.LeftButtonHeld() && !PlayerInput.LeftButtonClicked()) || c == prevMouseOn)
+                    {
+                        MouseOn = c;
+                    }
                     break;
                 }
             }

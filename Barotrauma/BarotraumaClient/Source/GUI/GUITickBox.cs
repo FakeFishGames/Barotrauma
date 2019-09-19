@@ -82,14 +82,6 @@ namespace Barotrauma
             }
         }
 
-        public override Rectangle Rect
-        {
-            get
-            {
-                return MouseRect;
-            }
-        }
-
         public override ScalableFont Font
         {
             get
@@ -167,7 +159,7 @@ namespace Barotrauma
         {
             //box.RectTransform.NonScaledSize = new Point(RectTransform.NonScaledSize.Y);
             box.RectTransform.RecalculateScale(true);
-            text.RectTransform.NonScaledSize = new Point(base.Rect.Width - box.Rect.Width, text.Rect.Height);
+            text.RectTransform.NonScaledSize = new Point(Rect.Width - box.Rect.Width, text.Rect.Height);
             text.RectTransform.AbsoluteOffset = new Point(box.Rect.Width, 0);
         }
         
