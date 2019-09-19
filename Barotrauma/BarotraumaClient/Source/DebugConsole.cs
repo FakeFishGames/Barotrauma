@@ -1247,7 +1247,7 @@ namespace Barotrauma
                 List<string> lines = new List<string>();
                 foreach (Type t in itemComponentTypes)
                 {
-                    lines.Add($"[n]{t.Name}[/b]");
+                    lines.Add($"[b]{t.Name}[/b]");
                     lines.Add("");
 
                     var properties = t.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.DeclaredOnly);//.Cast<System.ComponentModel.PropertyDescriptor>();
