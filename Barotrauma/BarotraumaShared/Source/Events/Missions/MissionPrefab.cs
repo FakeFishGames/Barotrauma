@@ -17,7 +17,7 @@ namespace Barotrauma
         All = 0xf
     }
 
-    class MissionPrefab
+    partial class MissionPrefab
     {
         public static readonly List<MissionPrefab> List = new List<MissionPrefab>();
 
@@ -29,7 +29,7 @@ namespace Barotrauma
             { MissionType.Combat, typeof(CombatMission) },
         };
         
-        private ConstructorInfo constructor;
+        private readonly ConstructorInfo constructor;
 
         public readonly MissionType type;
 
@@ -160,7 +160,11 @@ namespace Barotrauma
             }
 
             constructor = missionClasses[type].GetConstructor(new[] { typeof(MissionPrefab), typeof(Location[]) });
+
+            InitProjSpecific(element);
         }
+        
+        partial void InitProjSpecific(XElement element);
 
         public bool IsAllowed(Location from, Location to)
         {

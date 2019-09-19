@@ -44,12 +44,14 @@ namespace Barotrauma
             HuskedSpeciesName = element.GetAttributeString("huskedspeciesname", null);
             if (HuskedSpeciesName == null)
             {
-                DebugConsole.ThrowError($"No 'huskedspeciesname' defined for the husk affliction ({Identifier}) in {element.ToString()}");
+                DebugConsole.NewMessage($"No 'huskedspeciesname' defined for the husk affliction ({Identifier}) in {element.ToString()}", Color.Orange);
+                HuskedSpeciesName = "[speciesname]husk";
             }
             TargetSpecies = element.GetAttributeStringArray("targets", new string[0] { }, trim: true, convertToLowerInvariant: true);
             if (TargetSpecies.Length == 0)
             {
-                DebugConsole.ThrowError($"No 'targets' defined for the husk affliction ({Identifier}) in {element.ToString()}");
+                DebugConsole.NewMessage($"No 'targets' defined for the husk affliction ({Identifier}) in {element.ToString()}", Color.Orange);
+                TargetSpecies = new string[] { "human" };
             }
             var attachElement = element.GetChildElement("attachlimb");
             if (attachElement != null)
@@ -264,6 +266,11 @@ namespace Barotrauma
                         }
                     }
                     string type = sourceElement.GetAttributeString("type", null);
+                    if (sourceElement.Name.ToString().ToLowerInvariant() == "cprsettings")
+                    {
+                        //backwards compatibility
+                        type = "cprsettings";
+                    }
 
                     AfflictionPrefab prefab = null;
                     switch (type)
@@ -295,6 +302,7 @@ namespace Barotrauma
                         case "bloodloss":
                         case "stun":
                         case "pressure":
+                        case "internaldamage":
                             prefab = new AfflictionPrefab(sourceElement, typeof(Affliction));
                             break;
                         default:
@@ -325,7 +333,7 @@ namespace Barotrauma
                             Stun = prefab;
                             break;
                     }
-                    List.Add(prefab);
+                    if (prefab != null) { List.Add(prefab); }
                 }
             }
 
@@ -341,6 +349,10 @@ namespace Barotrauma
         public AfflictionPrefab(XElement element, Type type = null)
         {
             typeName = type == null ? element.Name.ToString() : type.Name;
+            if (typeName == "InternalDamage" && type == null)
+            {
+                type = typeof(Affliction);
+            }
 
             Identifier = element.GetAttributeString("identifier", "");
 
@@ -405,7 +417,7 @@ namespace Barotrauma
             catch
             {
                 DebugConsole.ThrowError("Could not find an affliction class of the type \"" + typeName + "\".");
-                return;
+                type = typeof(Affliction);
             }
 
             constructor = type.GetConstructor(new[] { typeof(AfflictionPrefab), typeof(float) });

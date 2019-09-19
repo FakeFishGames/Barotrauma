@@ -33,6 +33,18 @@ namespace Barotrauma
         [Serialize(0f, true, description: "How high above the ground the character's torso is positioned."), Editable(DecimalCount = 2)]
         public float TorsoPosition { get; set; }
 
+        [Serialize(1f, true, description: "Separate multiplier for the head lift"), Editable(MinValueFloat = 0, MaxValueFloat = 2, ValueStep = 0.1f)]
+        public float StepLiftHeadMultiplier { get; set; }
+
+        [Serialize(0f, true, description: "How much the body raises when taking a step."), Editable(MinValueFloat = 0, MaxValueFloat = 100, ValueStep = 0.1f)]
+        public float StepLiftAmount { get; set; }
+
+        [Serialize(-0.5f, true, description: "When does the body raise when taking a step. The default (0.5) is in the middle of the step."), Editable(MinValueFloat = -1, MaxValueFloat = 1, DecimalCount = 2, ValueStep = 0.1f)]
+        public float StepLiftOffset { get; set; }
+
+        [Serialize(2f, true, description: "How frequently the body raises when taking a step. The default is 2 (after every step)."), Editable(MinValueFloat = 0, MaxValueFloat = 10, ValueStep = 0.1f)]
+        public float StepLiftFrequency { get; set; }
+
         [Serialize(0.75f, true, description: "The character's movement speed is multiplied with this value when moving backwards."), Editable(MinValueFloat = 0.1f, MaxValueFloat = 0.99f, DecimalCount = 2)]
         public float BackwardsMovementMultiplier { get; set; }
     }

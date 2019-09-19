@@ -510,7 +510,12 @@ namespace Barotrauma.Networking
                 }
 
                 float endRoundDelay = 1.0f;
-                if (serverSettings.AutoRestart && isCrewDead)
+                if (TraitorManager?.ShouldEndRound ?? false)
+                {
+                    endRoundDelay = 5.0f;
+                    endRoundTimer += deltaTime;
+                }
+                else if (serverSettings.AutoRestart && isCrewDead)
                 {
                     endRoundDelay = 5.0f;
                     endRoundTimer += deltaTime;
@@ -536,7 +541,11 @@ namespace Barotrauma.Networking
 
                 if (endRoundTimer >= endRoundDelay)
                 {
-                    if (serverSettings.AutoRestart && isCrewDead)
+                    if (TraitorManager?.ShouldEndRound ?? false)
+                    {
+                        Log("Ending round (a traitor completed their mission)", ServerLog.MessageType.ServerMessage);
+                    }
+                    else if (serverSettings.AutoRestart && isCrewDead)
                     {
                         Log("Ending round (entire crew dead)", ServerLog.MessageType.ServerMessage);
                     }
@@ -1312,6 +1321,7 @@ namespace Barotrauma.Networking
             {
                 outmsg.Write(subList[i].Name);
                 outmsg.Write(subList[i].MD5Hash.ToString());
+                outmsg.Write(subList[i].RequiredContentPackagesInstalled);
             }
 
             outmsg.Write(GameStarted);
@@ -1649,6 +1659,8 @@ namespace Barotrauma.Networking
 
         public bool StartGame()
         {
+            if (initiatedStartGame || gameStarted) { return false; }
+
             Log("Starting a new round...", ServerLog.MessageType.ServerMessage);
 
             Submarine selectedSub = null;

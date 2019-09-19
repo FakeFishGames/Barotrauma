@@ -1437,7 +1437,23 @@ namespace Barotrauma
 
             Vector2? spawnPos = null;
             Inventory spawnInventory = null;
-            
+
+            string itemName = args[0].ToLowerInvariant();
+            if (!(MapEntityPrefab.Find(itemName, showErrorMessages: false) is ItemPrefab itemPrefab))
+            {
+                errorMsg = "Item \"" + itemName + "\" not found!";
+                var matching = MapEntityPrefab.List.Find(me => me.Name.ToLowerInvariant().StartsWith(itemName) && me is ItemPrefab);
+                if (matching != null)
+                {
+                    errorMsg += $" Did you mean \"{matching.Name}\"?";
+                    if (matching.Name.Contains(" "))
+                    {
+                        errorMsg += $" Please note that you should surround multi-word names with quotation marks (e.q. spawnitem \"{matching.Name}\")";
+                    }
+                }
+                return;
+            }
+
             if (args.Length > 1)
             {
                 switch (args.Last())
@@ -1461,14 +1477,7 @@ namespace Barotrauma
                         break;
                 }
             }
-
-            string itemName = args[0].ToLowerInvariant();
-            if (!(MapEntityPrefab.Find(itemName) is ItemPrefab itemPrefab))
-            {
-                errorMsg = "Item \"" + itemName + "\" not found!";
-                return;
-            }
-
+            
             if ((spawnPos == null || spawnPos == Vector2.Zero) && spawnInventory == null)
             {
                 var wp = WayPoint.GetRandom(SpawnType.Human, null, Submarine.MainSub);
@@ -1550,30 +1559,36 @@ namespace Barotrauma
                 }
                 else
                 {
-                    int parsedNum = 0;
-                    if (!int.TryParse(currNum, out parsedNum))
+                    if (!int.TryParse(currNum, out int parsedNum) || parsedNum < 0)
                     {
                         return false;
                     }
-
-                    switch (c)
+                    try
                     {
-                        case 'd':
-                            timeSpan += new TimeSpan(parsedNum, 0, 0, 0, 0);
-                            break;
-                        case 'h':
-                            timeSpan += new TimeSpan(0, parsedNum, 0, 0, 0);
-                            break;
-                        case 'm':
-                            timeSpan += new TimeSpan(0, 0, parsedNum, 0, 0);
-                            break;
-                        case 's':
-                            timeSpan += new TimeSpan(0, 0, 0, parsedNum, 0);
-                            break;
-                        default:
-                            return false;
+                        switch (c)
+                        {
+                            case 'd':
+                                timeSpan += new TimeSpan(parsedNum, 0, 0, 0, 0);
+                                break;
+                            case 'h':
+                                timeSpan += new TimeSpan(0, parsedNum, 0, 0, 0);
+                                break;
+                            case 'm':
+                                timeSpan += new TimeSpan(0, 0, parsedNum, 0, 0);
+                                break;
+                            case 's':
+                                timeSpan += new TimeSpan(0, 0, 0, parsedNum, 0);
+                                break;
+                            default:
+                                return false;
+                        }
                     }
-
+                    catch (ArgumentOutOfRangeException)
+                    {
+                        ThrowError($"{parsedNum} {c} exceeds the maximum supported time span. Using the maximum time span {TimeSpan.MaxValue} instead.");
+                        timeSpan = TimeSpan.MaxValue;
+                        return true;
+                    }
                     currNum = "";
                 }
             }

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<infotexts language="Russian" nowhitespace="false" translatedname="Русский">
+<infotexts language="Russian" translatedname="Русский">
 
 <!-- Loading Screen -->
 <loading>Загрузка...</loading>
@@ -71,7 +71,7 @@
 <tutorialbutton>Тренировка</tutorialbutton>
 <newgamebutton>Новая игра</newgamebutton>
 <loadgamebutton>Загрузка</loadgamebutton>
-<joinserverbutton>Браузер серверов</joinserverbutton>
+<joinserverbutton>Подключиться к серверу</joinserverbutton>
 <hostserverbutton>Создать сервер</hostserverbutton>
 <subeditorbutton>Редактор подлодки</subeditorbutton>
 <charactereditorbutton>Редактор персонажа</charactereditorbutton>
@@ -97,7 +97,7 @@
 <maxplayers>Макс. игроков</maxplayers>
 <password>Пароль</password>
 <publicserver>Открытые сервера</publicserver>
-<publicservertooltip>Открытые сервера отображаются в списке доступных серверов на вкладке «Браузер серверов».</publicservertooltip>
+<publicservertooltip>Открытые сервера отображаются в списке доступных серверов на вкладке «Подключиться к серверу».</publicservertooltip>
 <attemptupnp>Направить порт через UPnP</attemptupnp>
 <attemptupnptooltip>UPnP позволяет перенаправлять порты на маршрутизаторе, чтобы игроки могли подключиться к вашему серверу. Однако не все маршрутизаторы поддерживают технологию UPnP, и, если игроки не смогут подключиться к вашему серверу, вам может потребоваться настроить перенаправление порта вручную (подробные инструкции в файле readme).</attemptupnptooltip>
 <startserverbutton>Начать</startserverbutton>
@@ -116,11 +116,11 @@
 
 <!-- Steam Workshop menu -->
 <browsetab>Популярные моды</browsetab>
-<publishtab>Публикация</publishtab>
-<modstab>Подписки на моды</modstab>
+<publishtab>Опубликовать</publishtab>
+<modstab>Подписка на моды</modstab>
 <downloadbutton>Подписаться</downloadbutton>
 <subscribedmods>Моды</subscribedmods>
-<nosubscribedmods>Вы не подписаны ни на один мод в мастерской Steam. Чтобы начать, выберите закладку «Популярные моды»!</nosubscribedmods>
+<nosubscribedmods>Вы не подписаны ни на один мод в мастерской Steam. Чтобы начать, щелкните на кнопку «Найти другие моды» ниже!</nosubscribedmods>
 <popularmods>Популярные моды</popularmods>
 <findmodsbutton>Найти другие моды…</findmodsbutton>
 <workshopitemunsubscribe>Отписаться</workshopitemunsubscribe>
@@ -162,7 +162,7 @@
 <workshopitemfilenotincluded>Файл не найден в папке предмета для мастерской и не будет добавлен в предмет для мастерской. Этот может быть желательным в том случае, если вы хотите, чтобы мод использовал оригинальные файлы, которые уже есть у игроков - в противном случае вам следует скопировать этот файл в папку предмета для мастерской.</workshopitemfilenotincluded>
 <workshopitemfilenotfound>Файл не найден.</workshopitemfilenotfound>
 <workshopitemillegalpath>Предметы из мастерской могут только модифицировать файлы в папке Mods или добавлять файлы подлодок в папке Submarines. Пожалуйста, создайте для этих файлов отдельную подпапку.</workshopitemillegalpath>
-<workshopitemrefreshfilelisttooltip>Перезагрузите файл конфигурации предмета мастерской (filelist.xml в папке предмета) и добавьте все новые файлы в список файлов.</workshopitemrefreshfilelisttooltip>
+<workshopitemrefreshfilelisttooltip>Перезагрузите файл конфигурации предмета мастерской (metadata.xml в папке предмета) и добавьте все новые файлы в список файлов.</workshopitemrefreshfilelisttooltip>
 <workshoppublishpleasewait>Пожалуйста, подождите</workshoppublishpleasewait>
 <workshoppublishinprogress>Предмет «[itemname]» публикуется в мастерской Steam.</workshoppublishinprogress>
 <workshopitempublished>Предмет «[itemname]» доступен в мастерской Steam!</workshopitempublished>
@@ -221,7 +221,7 @@
 <enablevsync>Вертикальная синхронизация</enablevsync>
 <enablevsynctooltip>Синхронизация частоты кадров игры с частотой обновления вашего монитора. Помогает предотвратить разрывы экрана.</enablevsynctooltip>
 <particlelimit>Максимальное количество частиц</particlelimit>
-<loseffect>Линия видимости</loseffect>
+<loseffect>Эффект линии видимости</loseffect>
 <losmodenone>Нет</losmodenone>
 <losmodetransparent>Прозрачная</losmodetransparent>
 <losmodeopaque>Непрозрачная</losmodeopaque>
@@ -291,7 +291,7 @@
 <setlegacybindingstooltip>Использовать схему управления из старых пробных версий Barotrauma (E - выбор предмета и отмена выбора, ЛКМ - использование предмета в руке).</setlegacybindingstooltip>
 
 <!-- Server settings -->
-<serversettingsroundstab>Геймплей</serversettingsroundstab>
+<serversettingsroundstab>Раунды</serversettingsroundstab>
 <serversettingsservertab>Сервер</serversettingsservertab>
 <serversettingsbanlisttab>Черный список</serversettingsbanlisttab>
 <serversettingswhitelisttab>Белый список</serversettingswhitelisttab>
@@ -299,12 +299,12 @@
 <serversettingsmodeselection>Выбор режима игры</serversettingsmodeselection>
 <serversettingsendroundwhendestreached>Конец раунда по прибытии в пункт назначения</serversettingsendroundwhendestreached>
 <serversettingsendroundvoting>Конец раунда решением голосования</serversettingsendroundvoting>
-<serversettingsendroundvotesrequired>Требуется голосов: </serversettingsendroundvotesrequired>
+<serversettingsendroundvotesrequired>Требуется голосов:</serversettingsendroundvotesrequired>
 <serversettingsallowrespawning>Разрешить возрождение</serversettingsallowrespawning>
-<serversettingsrespawninterval>Интервал: </serversettingsrespawninterval>
+<serversettingsrespawninterval>Интервал:</serversettingsrespawninterval>
 <serversettingsminrespawn>Минимальное количество игроков для возрождения:</serversettingsminrespawn>
 <serversettingsminrespawntooltip>Какой процент игроков должен быть убит/находиться в режиме зрителя, чтобы можно было отправить челнок возрождения.</serversettingsminrespawntooltip>
-<serversettingsrespawnduration>Время действия челнока возрождения:</serversettingsrespawnduration>
+<serversettingsrespawnduration>Время действия челнока возрождения</serversettingsrespawnduration>
 <serversettingsrespawndurationtooltip>Время, которое дается возродившимся игрокам, чтобы добраться на челноке возрождения до основной подлодки. Если это время выйдет, челнок автоматически покинет уровень.</serversettingsrespawndurationtooltip>
 <serversettingsmonsterspawns>Появлений чудовищ</serversettingsmonsterspawns>
 <serversettingsadditionalcargo>Дополнительный груз</serversettingsadditionalcargo>
@@ -313,8 +313,8 @@
 <serversettingsstartwhenclientsreadyratio>Требуется готовность [percentage]% игроков</serversettingsstartwhenclientsreadyratio>
 <serversettingsallowspectating>Разрешить наблюдение</serversettingsallowspectating>
 <serversettingsallowvotekick>Разрешить исключение игроков голосованием</serversettingsallowvotekick>
-<serversettingskickvotesrequired>Требуется голосов: </serversettingskickvotesrequired>
-<serversettingsautobantime>Длительность автоблокировки:</serversettingsautobantime>
+<serversettingskickvotesrequired>Требуется голосов:</serversettingskickvotesrequired>
+<serversettingsautobantime>Длительность автоматической блокировки:</serversettingsautobantime>
 <serversettingssharesubfiles>Поделиться файлами подлодки с игроками</serversettingssharesubfiles>
 <serversettingsrandomizeseed>Задавать уровню новый случайный шифр между раундами</serversettingsrandomizeseed>
 <serversettingssavelogs>Сохранить журналы сервера</serversettingssavelogs>
@@ -400,7 +400,7 @@
 <unknown>Неизвестно</unknown>
 <none>Нет</none>
 <any>Любой</any>
-<close>Закрыть</close>
+<close>Ближайший</close>
 <cancel>Отмена</cancel>
 <done>Готово</done>
 <delete>Удалить</delete>
@@ -461,7 +461,7 @@
 <!-- Campaign -->
 <campaignsetup>Настройка кампании</campaignsetup>
 <newcampaign>Новая кампания</newcampaign>
-<loadcampaign>Загр. кампанию</loadcampaign>
+<loadcampaign>Загрузить кампанию</loadcampaign>
 <loadbutton>Загрузить</loadbutton>
 <deletebutton>Удалить</deletebutton>
 <subnotselected>Подлодка не выбрана!</subnotselected>
@@ -469,8 +469,8 @@
 <selectedsub>Выбранная подлодка</selectedsub>
 <savenameinuseheader>Название сохранения уже используется</savenameinuseheader>
 <savenameinusetext>Пожалуйста, выберите другое название для файла сохранения</savenameinusetext>
-<savename>Название сохранения</savename>
-<savefile.defaultname>Сохранение</savefile.defaultname>
+<savename>Сохранить игру</savename>
+<savefile.defaultname>Сохранить</savefile.defaultname>
 <lastsaved>Последнее сохранение</lastsaved>
 <mapseed>Шифр карты</mapseed>
 <startcampaignbutton>Начать</startcampaignbutton>
@@ -522,28 +522,28 @@
 <skillincreased>[name] развивает свой навык «[skillname]» до [newlevel] уровня!</skillincreased>
 <endroundsubnotatlevelend>Подлодка не находится ни одного из концов уровня. Хотите прервать миссию и закончить раунд?</endroundsubnotatlevelend>
 <crewdeadnorespawns>На сервере не осталось живых игроков, а возрождение в этом раунде отключено. Если никто не оживет и не вернется в игру, сервер автоматически завершит раунд через [time] сек.</crewdeadnorespawns>
-<minimapoutpostdockinginfo>[outpost]: вы стоите в доке.\nЧтобы начать управлять подлодкой, выйдите из дока.</minimapoutpostdockinginfo>
+<minimapoutpostdockinginfo>Вы стоите в доке у аванпоста [outpost].\nЧтобы начать управлять подлодкой, выйдите из дока.</minimapoutpostdockinginfo>
 <cargospawnnotification>Купленные припасы доставлены в следующее помещение: [roomname].</cargospawnnotification>
 
 <!-- Server list -->
-<joinserver>Браузер серверов</joinserver>
-<yourname>Имя игрока</yourname>
+<joinserver>Подключиться к серверу</joinserver>
+<yourname>Ваше имя</yourname>
 <serverip>IP-адрес сервера</serverip>
 <serverlistname>Название</serverlistname>
 <serverlistplayers>Игроки</serverlistplayers>
 <serverlistversion>Версия игры</serverlistversion>
-<serverlisthaspassword>Пароль</serverlisthaspassword>
+<serverlisthaspassword>Защищен паролем</serverlisthaspassword>
 <serverlistusingwhitelist>Использует белый список</serverlistusingwhitelist>
 <serverlistcontentpackages>Наборы контента</serverlistcontentpackages>
 <serverlistsubselection>Выбор подлодки</serverlistsubselection>
 <serverlistmodeselection>Выбор режима игры</serverlistmodeselection>
 <serverlistallowspectating>Разрешить наблюдение</serverlistallowspectating>
-<serverlistcompatible>Совмест.</serverlistcompatible>
+<serverlistcompatible>Совместимо</serverlistcompatible>
 <serverlistping>Пинг</serverlistping>
 <serverlistroundstarted>Раунд начался</serverlistroundstarted>
 <serverlistroundnotstarted>Раунд не начался</serverlistroundnotstarted>
 <serverlistinfo>Информация</serverlistinfo>
-<serverlistrefresh>Сканировать серверы</serverlistrefresh>
+<serverlistrefresh>Обновить</serverlistrefresh>
 <serverlistjoin>Присоединиться</serverlistjoin>
 <serverlistunknownversion>Не удалось определить совместимость (неизвестная версия игры)</serverlistunknownversion>
 <serverlistnosteamqueryresponse>Не удалось определить совместимость с сервером, так как он не отвечает на запросы. Такое может происходить, если сервер отключен или тот, кто его создал, не перенаправил свой порт запроса. Тем не менее, вы можете попробовать подключиться к этому серверу.</serverlistnosteamqueryresponse>
@@ -556,11 +556,11 @@
 <serverlistsubscribemissingpackagestooltip>Подпишитесь на недостающие наборы в мастерской Steam и откройте меню мастерской - там вы сможете их загрузить и включить.</serverlistsubscribemissingpackagestooltip>
 <serverlistsubscribemissingpackagestooltipnosteam>Недостающие наборы контента можно найти в мастерской Steam, но если вы не покупали Barotrauma в Steam все функции Steam будут недоступны.</serverlistsubscribemissingpackagestooltipnosteam>
 <filterservers>Фильтр серверов</filterservers>
-<filterpassword>Без пароля</filterpassword>
-<filterincompatibleservers>Скрыть несовместимые</filterincompatibleservers>
-<filterfullservers>Скрыть заполненные</filterfullservers>
-<filteremptyservers>Скрыть пустые</filteremptyservers>
-<nomatchingservers>Подходящие серверы не найдены.</nomatchingservers>
+<filterpassword>Пароль не требуется</filterpassword>
+<filterincompatibleservers>Скрыть несовмест. сервера</filterincompatibleservers>
+<filterfullservers>Скрыть заполненные сервера</filterfullservers>
+<filteremptyservers>Скрыть пустые сервера</filteremptyservers>
+<nomatchingservers>Подходящие сервера не найдены.</nomatchingservers>
 <refreshingserverlist>Обновление списка серверов...</refreshingserverlist>
 <noservers>Не удалось найти ни одного сервера.</noservers>
 <serverlistnosteamconnection>Не удалось найти ни одного сервера (нет подключения к Steam).</serverlistnosteamconnection>
@@ -637,7 +637,7 @@
 <startgamebutton>Начать</startgamebutton>
 <readytostarttickbox>Готовы начать</readytostarttickbox>
 <roundstartingpleasewait>Пожалуйста, подождите</roundstartingpleasewait>
-<roundstarting>Ожидаем начала раунда.</roundstarting>
+<roundstarting>Ожидаем начало раунда.</roundstarting>
 <serversettingsbutton>Настройки</serversettingsbutton>
 <spectatebutton>Наблюдать</spectatebutton>
 <gender>Пол</gender>
@@ -788,13 +788,13 @@
 <missionheader0.killhammerhead>Цель уничтожена</missionheader0.killhammerhead>
 <missionmessage0.killhammerhead>Молотоглав убит. Выведите подлодку из пещеры, чтобы получить награду.</missionmessage0.killhammerhead>
 <missionname.killcrawlerswarm1>Уничтожение роя</missionname.killcrawlerswarm1>
-<missiondescription.killcrawlerswarm1>Небольшой рой монстров ([monster]) терроризирует суда, следующие по маршруту [location1] - [location2]. Команде, способной нейтрализовать его, полагается достойная награда в размере [reward] кред.</missiondescription.killcrawlerswarm1>
+<missiondescription.killcrawlerswarm1>Небольшой рой ползунов терроризирует суда, плавающие по маршруту [location1] - [location2]. Команде, способной нейтрализовать его, полагается достойная награда в размере [reward] кред.</missiondescription.killcrawlerswarm1>
 <missionsonarlabel.killcrawlerswarm1>Рой</missionsonarlabel.killcrawlerswarm1>
 <missionsuccess.killcrawlerswarm1>Рой уничтожен</missionsuccess.killcrawlerswarm1>
 <missionheader0.killcrawlerswarm1>Цель уничтожена</missionheader0.killcrawlerswarm1>
 <missionmessage0.killcrawlerswarm1>Рой уничтожен. Выведите подлодку из пещеры, чтобы получить награду.</missionmessage0.killcrawlerswarm1>
-<missionname.killcrawlerswarm2>Уничтожение роя</missionname.killcrawlerswarm2>
-<missiondescription.killcrawlerswarm2>Большой рой монстров ([monster]) терроризирует суда, следующие по маршруту [location1] - [location2]. Команде, способной нейтрализовать его, полагается достойная награда в размере [reward] кред.</missiondescription.killcrawlerswarm2>
+<missionname.killcrawlerswarm2>Уничтожьте рой</missionname.killcrawlerswarm2>
+<missiondescription.killcrawlerswarm2>Большой рой ползунов терроризирует суда, плавающие по маршруту [location1] - [location2]. Команде, способной нейтрализовать его, полагается достойная награда в размере [reward] кред.</missiondescription.killcrawlerswarm2>
 <missionsonarlabel.killcrawlerswarm2>Рой</missionsonarlabel.killcrawlerswarm2>
 <missionsuccess.killcrawlerswarm2>Рой уничтожен.</missionsuccess.killcrawlerswarm2>
 <missionheader0.killcrawlerswarm2>Цель уничтожена</missionheader0.killcrawlerswarm2>
@@ -818,13 +818,13 @@
 <missionheader0.salvagekillcarrier>Цель уничтожена</missionheader0.salvagekillcarrier>
 <missionmessage0.salvagekillcarrier>Судя по всему, пропавшее судно было заражено каким-то паразитическим организмом, из-за чего попыталось атаковать вашу подлодку. Похоже, вам удалось его нейтрализовать. Сообщите о происшествии заказчикам из точки «[location2]».</missionmessage0.salvagekillcarrier>
 <missionname.cargocompoundn>Взрывной груз</missionname.cargocompoundn>
-<missiondescription.cargocompoundn>Местный торговец оружием предлагает [reward] кред. за доставку двух ящиков взрывчатки его клиенту в точке [location2].</missiondescription.cargocompoundn>
+<missiondescription.cargocompoundn>Местный торговец оружием предлагает [reward] кред. За доставку двух ящиков взрывчатки его клиенту в точке «[location2]»</missiondescription.cargocompoundn>
 <missionsuccess.cargocompoundn>Вы успешно доставили взрывчатку.</missionsuccess.cargocompoundn>
 <missionname.cargovolatilecompoundn>Взрывной груз</missionname.cargovolatilecompoundn>
-<missiondescription.cargovolatilecompoundn>Местный торговец оружием предлагает [reward] кред. за доставку двух ящиков взрывчатки его клиенту в точке [location2].</missiondescription.cargovolatilecompoundn>
+<missiondescription.cargovolatilecompoundn>Местный торговец оружием предлагает [reward] кред. За доставку двух ящиков взрывчатки его клиенту в точке «[location2]»</missiondescription.cargovolatilecompoundn>
 <missionsuccess.cargovolatilecompoundn>Вы успешно доставили взрывчатку.</missionsuccess.cargovolatilecompoundn>
 <missionname.cargochemicals>Доставка химикатов</missionname.cargochemicals>
-<missiondescription.cargochemicals>Исследователи из точки [location1] ищут того, кто сможет выполнить доставку опасных химикатов. Пункт назначения: [location2]. Награда: [reward] кред.</missiondescription.cargochemicals>
+<missiondescription.cargochemicals>Исследователи из точки «[location1]» ищут того, кто сможет выполнить доставку опасных химикатов. Пункт назначения: «[location1]». Награда: [reward] кред.</missiondescription.cargochemicals>
 <missionsuccess.cargochemicals>Вы успешно доставили химикаты.</missionsuccess.cargochemicals>
 <missionname.cargohuskeggs>Биологическая угроза</missionname.cargohuskeggs>
 <missiondescription.cargohuskeggs>Местные исследователи предлагают [reward] кред. за доставку контейнера с яйцами трупного паразита. Пункт назначения: [location2].</missiondescription.cargohuskeggs>
@@ -835,17 +835,17 @@
 <missionname.cargoclowngear>Слава красному носу</missionname.cargoclowngear>
 <missiondescription.cargoclowngear>Местный клоунский синдикат предлагает [reward] кред. за доставку клоунских принадлежностей. Пункт назначения: [location2].</missiondescription.cargoclowngear>
 <missionsuccess.cargoclowngear>Вы успешно доставили клоунское оборудование.</missionsuccess.cargoclowngear>
-<missionname.cargoconstructionminerals>Доставка материалов для аванпоста шахтеров</missionname.cargoconstructionminerals>
+<missionname.cargoconstructionminerals>Доставка материалов для шахтерского аванпоста</missionname.cargoconstructionminerals>
 <missiondescription.cargoconstructionminerals>В точку «[location2]» необходимо доставить партию строительных материалов. Заказчик - местный бригадир - готов заплатить вам [reward] кред.</missiondescription.cargoconstructionminerals>
 <missionsuccess.cargoconstructionminerals>Вы успешно доставили материалы.</missionsuccess.cargoconstructionminerals>
-<missionname.cargosecurityminerals>Доставка материалов для аванпоста шахтеров</missionname.cargosecurityminerals>
-<missiondescription.cargosecurityminerals>Службе безопасности в точке [location2] нужно доставить материалы для производства оружия. Если все пройдет, как надо, можете рассчитывать на награду в [reward] кред.</missiondescription.cargosecurityminerals>
+<missionname.cargosecurityminerals>Доставка материалов для шахтерского аванпоста</missionname.cargosecurityminerals>
+<missiondescription.cargosecurityminerals>Службе безопасности в точке «[location2]» нужно доставить материалы для производства оружия. Если все пройдет, как надо, можете рассчитывать на награду в [reward] кред.</missiondescription.cargosecurityminerals>
 <missionsuccess.cargosecurityminerals>Вы успешно доставили материалы.</missionsuccess.cargosecurityminerals>
 <missionname.cargomeditems>Доставка медицинских материалов</missionname.cargomeditems>
-<missiondescription.cargomeditems>В точку [location2] необходимо доставить медицинских материалов. Если справитесь, можете рассчитывать на награду в [reward] кред.</missiondescription.cargomeditems>
+<missiondescription.cargomeditems>В точку «[location2]» необходимо доставить медицинских материалов. Если справитесь, можете рассчитывать на награду в [reward] кред.</missiondescription.cargomeditems>
 <missionsuccess.cargomeditems>Вы успешно доставили материалы.</missionsuccess.cargomeditems>
 <missionname.personneltransport>Пассажирские перевозки</missionname.personneltransport>
-<missiondescription.personneltransport>У нас тут пассажир, которому срочно надо попасть в точку [location2]. Если доставите его туда целым и невредимым, станете на [reward] кред. богаче.</missiondescription.personneltransport>
+<missiondescription.personneltransport>У нас тут пассажир, которому срочно надо попасть в точку «[location2]». Если доставите его туда целым и невредимым, станете на [reward] кред. богаче.</missiondescription.personneltransport>
 <missionsuccess.personneltransport>Вы успешно доставили пассажира.</missionsuccess.personneltransport>
 <missionname.prospect>Изыскание</missionname.prospect>
 <missiondescription.prospect>[resourcename] - очень ценный ресурс, и шахтеры готовы начать добычу, если вы докажете, что в районе между «[location1]» и шахтерским аванпостом в точке «[location2]» находятся достаточно большие его залежи. Если вам удастся найти не менее [quantity] единиц, вы получите награду в размере [reward] кред. и сможете оставить все, что нашли, себе.</missiondescription.prospect>
@@ -863,7 +863,6 @@
 <missiondescription2.pvpmission>Вы состоите в революционной организации, выступающей против Коалиции Европы. Ваши агенты в точке «[location1]» докладывают, что Коалиция отправила за вами одну из своих боевых подлодок. Уничтожьте противника любыми доступными средствами.</missiondescription2.pvpmission>
 <missionteam1.pvpmission>Коалиция</missionteam1.pvpmission>
 <missionteam2.pvpmission>Мятежники</missionteam2.pvpmission>
-<missionsuccess.pvpmission>Судно [loser] было побеждено командой судна [winner]!</missionsuccess.pvpmission>
 <missionfailure.pvpmission>Обе команды погибли</missionfailure.pvpmission>
 
 <!-- Entity categories -->
@@ -966,7 +965,7 @@
 <entityname.healthscanner>Информационный экран сканера здоровья</entityname.healthscanner>
 <entitydescription.healthscanner>Информационный экран, на котором отображается информация о жизненных показателях и состоянии находящихся поблизости людей.</entitydescription.healthscanner>
 <entityname.doctorsuniform>Форма врача</entityname.doctorsuniform>
-<entitydescription.doctorsuniform>В ней вы будете выглядеть как человек, способный оказать первую медицинскую помощь.</entitydescription.doctorsuniform>
+<entitydescription.doctorsuniform>В ней вы будете выглядеть, как человек, способный оказать первую медицинскую помощь.</entitydescription.doctorsuniform>
 <entityname.orangejumpsuit>Оранжевый комбинезон</entityname.orangejumpsuit>
 <entitydescription.orangejumpsuit>Жаропрочная ткань обеспечивает определенную защиту от огня.</entitydescription.orangejumpsuit>
 <entityname.bluejumpsuit>Синий комбинезон</entityname.bluejumpsuit>
@@ -982,7 +981,7 @@
 <entityname.assistantclothes>Одежда помощника</entityname.assistantclothes>
 <entitydescription.assistantclothes>Даже помощникам нужна одежда.</entitydescription.assistantclothes>
 <entityname.watchmanclothes>Одежда сторожа</entityname.watchmanclothes>
-<entitydescription.watchmanclothes>В ней вы будете выглядеть как человек, способный предложить работу любому прохожему.</entitydescription.watchmanclothes>
+<entitydescription.watchmanclothes>В ней вы будете выглядеть, как человек, способный предложить работу любому прохожему.</entitydescription.watchmanclothes>
 <entityname.securityuniform>Форма сотрудника службы безопасности</entityname.securityuniform>
 <entitydescription.securityuniform>Уважай мою власть!</entitydescription.securityuniform>
 <entityname.bodyarmor>Бронежилет</entityname.bodyarmor>
@@ -990,13 +989,13 @@
 <entityname.ballistichelmet>Пуленепробиваемый шлем</entityname.ballistichelmet>
 <entitydescription.ballistichelmet>Хотя шлем и не способен защитить от большинства обитателей океана, он будет более чем полезен, если на борту подлодки окажется предатель.</entitydescription.ballistichelmet>
 <entityname.handcuffs>Наручники</entityname.handcuffs>
-<entitydescription.handcuffs>Позволяют обездвиживать проблемных игроков.</entitydescription.handcuffs>
+<entitydescription.handcuffs>Позволяют обездвиживать проблемных игроков</entitydescription.handcuffs>
 <entityname.riotshield>Полицейский щит</entityname.riotshield>
-<entitydescription.riotshield>Защищает от урона.</entitydescription.riotshield>
+<entitydescription.riotshield>Защищает от урона</entitydescription.riotshield>
 <entityname.divingmask>Подводная маска</entityname.divingmask>
-<entitydescription.divingmask>Достаточно компактная, чтобы везде носить ее с собой, эта маска все же не защитит вас от высокого давления воды в случае полноценной пробоины корпуса.</entitydescription.divingmask>
+<entitydescription.divingmask>Достаточно компактная, чтобы везде носить ее с собой, эта маска все же не защитит вас от веского давления воды в случае полноценной пробоины корпуса.</entitydescription.divingmask>
 <entityname.divingsuit>Водолазный скафандр</entityname.divingsuit>
-<entitydescription.divingsuit>Водолазный костюм с поддержанием атмосферного давления. Способен выдержать колоссальное давление воды под ледяной корой Европы.</entitydescription.divingsuit>
+<entitydescription.divingsuit>Водолазный костюм с поддержанием атмосферного давления. Способен выдержать даже колоссальное давление воды под ледяной корой Европы.</entitydescription.divingsuit>
 <entityname.underwaterscooter>Подводный скутер</entityname.underwaterscooter>
 <entitydescription.underwaterscooter>Подводное транспортное устройство, работающее от батарей.</entitydescription.underwaterscooter>
 <entityname.antibleeding1>Бинт</entityname.antibleeding1>
@@ -1018,7 +1017,7 @@
 <entityname.wrench>Гаечный ключ</entityname.wrench>
 <entitydescription.wrench>Позволяет чинить механические устройства.</entitydescription.wrench>
 <entityname.crowbar>Лом</entityname.crowbar>
-<entitydescription.crowbar>Вскрывает люки и двери. Может использоваться как ударное оружие.</entitydescription.crowbar>
+<entitydescription.crowbar>Вскрывает люки и двери. Может использовать как ударное оружие.</entitydescription.crowbar>
 <entityname.handheldsonar>Ручной сонар</entityname.handheldsonar>
 <entitydescription.handheldsonar>Портативный сонар. Очень полезен во время исследований.</entitydescription.handheldsonar>
 <entityname.sonarbeacon>Сонарный маяк</entityname.sonarbeacon>
@@ -1030,7 +1029,7 @@
 <entityname.alienflare>Инопланетный сигнальный огонь</entityname.alienflare>
 <entitydescription.alienflare>Временный портативный источник света. Помогает размечать путь, когда вы исследуете местность за пределами подлодки. Горит дольше, чем обычный сигнальный огонь.</entitydescription.alienflare>
 <entityname.coilgunammobox>Ящик с боеприпасами для магнитной пушки</entityname.coilgunammobox>
-<entitydescription.coilgunammobox>Боеприпасы для магнитной пушки.</entitydescription.coilgunammobox>
+<entitydescription.coilgunammobox>Боеприпасы для магнитной пушки</entitydescription.coilgunammobox>
 <entityname.uex>UEX</entityname.uex>
 <entitydescription.uex>Простая взрывчатка. Соединение натрия и фосфора.</entitydescription.uex>
 <entityname.c4block>Блок C-4</entityname.c4block>
@@ -1044,11 +1043,11 @@
 <entityname.detonator>Детонатор</entityname.detonator>
 <entitydescription.detonator>Устройство, взрывающее содержащуюся в нем взрывчатку после получения соответствующего сигнала.</entitydescription.detonator>
 <entityname.spear>Гарпун</entityname.spear>
-<entitydescription.spear>Гарпун для подводного ружья.</entitydescription.spear>
+<entitydescription.spear>Гарпун для подводного ружья</entitydescription.spear>
 <entityname.alienspear>Физикориевый гарпун</entityname.alienspear>
 <entitydescription.alienspear>Гарпун для подводного ружья, созданный из инопланетного материала.</entitydescription.alienspear>
 <entityname.explosivespear>Взрывной гарпун</entityname.explosivespear>
-<entitydescription.explosivespear>Гарпун для подводного ружья.</entitydescription.explosivespear>
+<entitydescription.explosivespear>Гарпун для подводного ружья</entitydescription.explosivespear>
 <entityname.harpoongun>Подводное ружье</entityname.harpoongun>
 <entitydescription.harpoongun>Стреляет гарпунами, взрывными гарпунами и инопланетными гарпунами.</entitydescription.harpoongun>
 <entityname.syringegun>Шприц-пистолет</entityname.syringegun>
@@ -1063,10 +1062,10 @@
 <entitydescription.empgrenade>Повреждает электрическое оборудование.</entitydescription.empgrenade>
 <entityname.fraggrenade>Осколочная граната</entityname.fraggrenade>
 <entitydescription.fraggrenade>Осколочная граната общего назначения. Использовать с максимальной осторожностью.</entitydescription.fraggrenade>
-<entityname.incendiumgrenade>Граната с воспламенитом</entityname.incendiumgrenade>
+<entityname.incendiumgrenade>Граната с воспламенитом.</entityname.incendiumgrenade>
 <entitydescription.incendiumgrenade>Зажигательная граната. Использовать с максимальной осторожностью.</entitydescription.incendiumgrenade>
 <entityname.stunbaton>Шоковая дубинка</entityname.stunbaton>
-<entitydescription.stunbaton>Если устного приказа недостаточно, возможно, крепкий удар и разряд тока смогут выбить всю дурь из головы проблемного члена экипажа.</entitydescription.stunbaton>
+<entitydescription.stunbaton>Если устного приказа недостаточно, возможно крепкий удар и разряд тока смогут выбить всю дурь из головы проблемного члена экипажа.</entitydescription.stunbaton>
 <entityname.divingknife>Нож ныряльщика</entityname.divingknife>
 <entitydescription.divingknife>Режет, колет, рубит и рассекает.</entitydescription.divingknife>
 <entityname.bikehorn>Велосипедный гудок</entityname.bikehorn>
@@ -1074,7 +1073,7 @@
 <entityname.oxygenitetank>Баллон с кислородитом</entityname.oxygenitetank>
 <entitydescription.oxygenitetank>Баллон, содержащий жидкий кислородит.</entitydescription.oxygenitetank>
 <entityname.batterycell>Аккумулятор</entityname.batterycell>
-<entitydescription.batterycell>Используется в качестве источника питания различных портативных устройств. Большинство подлодок оснащено резервными стационарными батареями с разъемами для зарядки аккумуляторов.</entitydescription.batterycell>
+<entitydescription.batterycell>Использует в качестве источника питания различных портативных устройств. Большинство подлодок оснащено резервными стационарными батареями с разъемами для зарядки аккумуляторов.</entitydescription.batterycell>
 <entityname.fulguriumbatterycell>Грозовиевый аккумулятор</entityname.fulguriumbatterycell>
 <entitydescription.fulguriumbatterycell>Аккумулятор, изготовленный из редкого и не до конца изученного вещества - грозовия.</entitydescription.fulguriumbatterycell>
 <entityname.alienarmor>Физикориевый бронежилет</entityname.alienarmor>
@@ -1092,7 +1091,7 @@
 <entityname.supercapacitor>Суперконденсатор</entityname.supercapacitor>
 <entitydescription.supercapacitor>Доставляет заряд гораздо быстрее, чем батареи.</entitydescription.supercapacitor>
 <entityname.chargingdock>Станция зарядки</entityname.chargingdock>
-<entitydescription.chargingdock>Настенная станция зарядки аккумуляторов.</entitydescription.chargingdock>
+<entitydescription.chargingdock>Настенная станция зарядки аккумуляторов</entitydescription.chargingdock>
 <entityname.fpgacircuit>Схема на базе ППВМ</entityname.fpgacircuit>
 <entitydescription.fpgacircuit>Программируемая пользователем вентильная матрица - универсальная схема, конфигурацию которой можно свободно менять для использования в ряде электрических устройств.</entitydescription.fpgacircuit>
 <entityname.andcomponent>Элемент «И»</entityname.andcomponent>
@@ -1160,7 +1159,7 @@
 <entityname.alienblood>Инопланетная кровь</entityname.alienblood>
 <entitydescription.alienblood>Кровь одного из обитателей Европы. После переработки из нее можно получить кровезаменитель для оказания помощи при кровопотере.</entitydescription.alienblood>
 <entityname.huskeggs>Яйца велонацепса каликса</entityname.huskeggs>
-<entitydescription.huskeggs>Спящие яйца организма, более известного как «трупный паразит».</entitydescription.huskeggs>
+<entitydescription.huskeggs>Спящие яйца организма, более известного как «трупный паразит»</entitydescription.huskeggs>
 <entityname.carbon>Углерод</entityname.carbon>
 <entitydescription.carbon>Чаще всего используется в производстве стали и пластика.</entitydescription.carbon>
 <entityname.iron>Железо</entityname.iron>
@@ -1186,7 +1185,7 @@
 <entityname.magnesium>Магний</entityname.magnesium>
 <entitydescription.magnesium>Используется в производстве взрывчатых веществ и медикаментов. Агрессивно реагирует на контакт с водой.</entitydescription.magnesium>
 <entityname.lithium>Литий</entityname.lithium>
-<entitydescription.lithium>Чаще всего используется в производстве батарей и нейролептиков.</entitydescription.lithium>
+<entitydescription.lithium>Чаще всего используется в производстве батарей и жидких тоников и нейролептиков.</entitydescription.lithium>
 <entityname.chlorine>Хлорин</entityname.chlorine>
 <entitydescription.chlorine>Чаще всего используется в производстве физраствора для лечения кровопотери, а также для создания хлоральгидрата - мощного успокоительного.</entitydescription.chlorine>
 <entityname.slimebacteria>Слизистые бактерии</entityname.slimebacteria>
@@ -1194,7 +1193,7 @@
 <entityname.titanite>Титанит</entityname.titanite>
 <entitydescription.titanite>Минерал, содержащий титан и железо.</entitydescription.titanite>
 <entityname.brockite>Брокит</entityname.brockite>
-<entitydescription.brockite>Минерал, содержащий торий и фосфор.</entitydescription.brockite>
+<entitydescription.brockite>Минерал, содержащий титан и фосфор.</entitydescription.brockite>
 <entityname.thorianite>Торианит</entityname.thorianite>
 <entitydescription.thorianite>Редкий минерал, содержащий торий.</entitydescription.thorianite>
 <entityname.amblygonite>Амблигонит</entityname.amblygonite>
@@ -1216,9 +1215,9 @@
 <entityname.stannite>Станнит</entityname.stannite>
 <entitydescription.stannite>Минерал, состоящий из меди, железа и жести.</entitydescription.stannite>
 <entityname.chalcopyrite>Халькопирит</entityname.chalcopyrite>
-<entitydescription.chalcopyrite>Минерал, содержащий медь.</entitydescription.chalcopyrite>
+<entitydescription.chalcopyrite>Минерал, содержащий медь</entitydescription.chalcopyrite>
 <entityname.esperite>Эсперит</entityname.esperite>
-<entitydescription.esperite>Минерал, состоящий из цинка и свинца.</entitydescription.esperite>
+<entitydescription.esperite>Минерал, состоящий их цинка и свинца</entitydescription.esperite>
 <entityname.galena>Галена</entityname.galena>
 <entitydescription.galena>Минерал, состоящий преимущественно из свинца.</entitydescription.galena>
 <entityname.triphylite>Трифилин</entityname.triphylite>
@@ -1252,7 +1251,7 @@
 <entityname.antibiotics>Антибиотики широкого спектра</entityname.antibiotics>
 <entitydescription.antibiotics>Мягкий антибиотик, уничтожающий большинство болезнетворных бактерий, однако при этом он сам наносит определенный вред организму. Используется в качестве компонента многих медикаментов.</entitydescription.antibiotics>
 <entityname.stabilozine>Стабилоцин</entityname.stabilozine>
-<entitydescription.stabilozine>Используется в качестве компонента в различных медикаментах. Сам по себе может применяться для лечения внутренних повреждений и ожогов. Чуть более эффективен при кислородной недостаточности.</entitydescription.stabilozine>
+<entitydescription.stabilozine>Используется в качестве компонента в различных медикаментах. Сам по себе, может применяться для лечения внутренних повреждений и ожогов. Чуть более эффективен при кислородной недостаточности.</entitydescription.stabilozine>
 <entityname.ethanol>Этанол</entityname.ethanol>
 <entitydescription.ethanol>Медицинский спирт, который используется в качестве компонента различных медикаментов. Пить его на службе не рекомендуется.</entitydescription.ethanol>
 <entityname.sulphuricacid>Серная кислота</entityname.sulphuricacid>
@@ -1284,7 +1283,7 @@
 <entityname.steroids>Анаболические стероиды</entityname.steroids>
 <entitydescription.steroids>Временно увеличивают мышечную силу и физические показатели.</entitydescription.steroids>
 <entityname.hyperzine>Гиперцин</entityname.hyperzine>
-<entitydescription.hyperzine>Крайне мощный мышечный стимулятор - то что нужно, чтобы совершить тот самый важный рывок.</entitydescription.hyperzine>
+<entitydescription.hyperzine>Крайне мощный мышечный стимулятор - то, что нужно, чтобы совершить тот самый важный рывок.</entitydescription.hyperzine>
 <entityname.morbusine>Морбузин</entityname.morbusine>
 <entitydescription.morbusine>Сильнодействующий нейротоксин.</entitydescription.morbusine>
 <entityname.chloralhydrate>Хлоральгидрат</entityname.chloralhydrate>
@@ -1348,7 +1347,7 @@
 <entityname.adrenalinegland>Адреналиновая железа</entityname.adrenalinegland>
 <entitydescription.adrenalinegland>Содержит большое количество адреналина, который можно извлечь при помощи деконструтора.</entitydescription.adrenalinegland>
 <entityname.guitar>Гитара</entityname.guitar>
-<entitydescription.guitar>Старая акустическая гитара.</entitydescription.guitar>
+<entitydescription.guitar>Старая акустическая гитара</entitydescription.guitar>
 <entityname.harmonica>Губная гармошка</entityname.harmonica>
 <entitydescription.harmonica>Старая губная гармошка ручной работы.</entitydescription.harmonica>
 <entityname.bgrock1>Фоновый камень 1</entityname.bgrock1>
@@ -1360,15 +1359,15 @@
 <entityname.bgrock4>Фоновый камень 4</entityname.bgrock4>
 <entitydescription.bgrock4><!-- No data --></entitydescription.bgrock4>
 <entityname.suppliescabinet>Хозяйственный шкаф</entityname.suppliescabinet>
-<entitydescription.suppliescabinet>Место хранения для предметов небольшого и среднего размера.</entitydescription.suppliescabinet>
+<entitydescription.suppliescabinet>Место хранения для предметов меньшего и среднего размера.</entitydescription.suppliescabinet>
 <entityname.mediumsteelcabinet>Средний стальной шкаф</entityname.mediumsteelcabinet>
-<entitydescription.mediumsteelcabinet>Место хранения для предметов небольшого и среднего размера.</entitydescription.mediumsteelcabinet>
+<entitydescription.mediumsteelcabinet>Место хранения для предметов меньшего и среднего размера.</entitydescription.mediumsteelcabinet>
 <entityname.mediumwindowedsteelcabinet>Средний стальной шкаф с окном</entityname.mediumwindowedsteelcabinet>
-<entitydescription.mediumwindowedsteelcabinet>Место хранения для предметов небольшого и среднего размера.</entitydescription.mediumwindowedsteelcabinet>
+<entitydescription.mediumwindowedsteelcabinet>Место хранения для предметов меньшего и среднего размера.</entitydescription.mediumwindowedsteelcabinet>
 <entityname.steelcabinet>Большой стальной шкаф</entityname.steelcabinet>
-<entitydescription.steelcabinet>Место хранения для предметов небольшого и среднего размера.</entitydescription.steelcabinet>
+<entitydescription.steelcabinet>Место хранения для предметов меньшего и среднего размера.</entitydescription.steelcabinet>
 <entityname.securesteelcabinet>Защищенный стальной шкаф</entityname.securesteelcabinet>
-<entitydescription.securesteelcabinet>Запираемое хранилище для предметов небольшого и среднего размера.</entitydescription.securesteelcabinet>
+<entitydescription.securesteelcabinet>Запираемое хранилище для предметов меньшего и среднего размера.</entitydescription.securesteelcabinet>
 <entityname.railgunshellrack>Стойка для снарядов рельсотрона</entityname.railgunshellrack>
 <entitydescription.railgunshellrack>Удобный способ хранения снарядов рельсотрона.</entitydescription.railgunshellrack>
 <entityname.coilgunammoshelf>Полка с боеприпасами для магнитной пушки</entityname.coilgunammoshelf>
@@ -1406,7 +1405,7 @@
 <entityname.ductblock>Сливной клапан</entityname.ductblock>
 <entitydescription.ductblock>Клапан с механическим управлением, который можно открывать или закрывать для перемещения воды.</entitydescription.ductblock>
 <entityname.label>Вывеска</entityname.label>
-<entitydescription.label>Декоративная вывеска с текстом.</entitydescription.label>
+<entitydescription.label>Декоративная вывеска с текстом</entitydescription.label>
 <entityname.textdisplay>Текстовый экран</entityname.textdisplay>
 <entitydescription.textdisplay>Экран с бегущей строкой.</entitydescription.textdisplay>
 <entityname.ladder>Лестница</entityname.ladder>
@@ -1432,7 +1431,7 @@
 <entityname.nuclearshell>Ядерный заряд</entityname.nuclearshell>
 <entitydescription.nuclearshell>Ядерный заряд для рельсотрона.</entitydescription.nuclearshell>
 <entityname.alienshell>Физикориевый снаряд</entityname.alienshell>
-<entitydescription.alienshell>Необходим для стрельбы из рельсотрона.</entitydescription.alienshell>
+<entitydescription.alienshell>Необходим для стрельбы из магнитной пушки.</entitydescription.alienshell>
 
 <!-- Alien -->
 <entityname.skyholderartifact>Небесный инопланетный артефакт</entityname.skyholderartifact>
@@ -1446,15 +1445,15 @@
 <entityname.psychosisartifact>Психотропный инопланетный артефакт</entityname.psychosisartifact>
 <entitydescription.psychosisartifact>Артефакт, найденный в инопланетных руинах.</entitydescription.psychosisartifact>
 <entityname.alientrinket1>Инопланетная безделушка</entityname.alientrinket1>
-<entitydescription.alientrinket1>Небольшой артефакт, найденный в инопланетных руинах.</entitydescription.alientrinket1>
+<entitydescription.alientrinket1>Небольшой артефакт, найденный в инопланетных руинах</entitydescription.alientrinket1>
 <entityname.alientrinket2>Инопланетная вещица</entityname.alientrinket2>
-<entitydescription.alientrinket2>Небольшой артефакт, найденный в инопланетных руинах.</entitydescription.alientrinket2>
+<entitydescription.alientrinket2>Небольшой артефакт, найденный в инопланетных руинах</entitydescription.alientrinket2>
 <entityname.alientrinket3>Инопланетное украшение</entityname.alientrinket3>
-<entitydescription.alientrinket3>Небольшой артефакт, найденный в инопланетных руинах.</entitydescription.alientrinket3>
+<entitydescription.alientrinket3>Небольшой артефакт, найденный в инопланетных руинах</entitydescription.alientrinket3>
 <entityname.oxygeniteshard>Осколок кислородита</entityname.oxygeniteshard>
-<entitydescription.oxygeniteshard>Инопланетный минерал.</entitydescription.oxygeniteshard>
+<entitydescription.oxygeniteshard>Инопланетный минерал</entitydescription.oxygeniteshard>
 <entityname.sulphuriteshard>Осколок сернита</entityname.sulphuriteshard>
-<entitydescription.sulphuriteshard>Инопланетный минерал.</entitydescription.sulphuriteshard>
+<entitydescription.sulphuriteshard>Инопланетный минерал</entitydescription.sulphuriteshard>
 <entityname.ancientweapon>Древнее оружие</entityname.ancientweapon>
 <entitydescription.ancientweapon>Очень мощное оружие.</entitydescription.ancientweapon>
 <entityname.alienhatch>Инопланетный люк</entityname.alienhatch>
@@ -1503,7 +1502,7 @@
 <roomname.subbottomleft>Нижняя задняя часть</roomname.subbottomleft>
 <roomname.subbottomcenter>Нижняя средняя часть</roomname.subbottomcenter>
 <roomname.subbottomright>Нижняя передняя часть</roomname.subbottomright>
-<roomname.subdiroclock>[dir] ч.</roomname.subdiroclock>
+<roomname.subdiroclock>[dir] час.</roomname.subdiroclock>
 <roomname.ballasttank1>Камера балласта A</roomname.ballasttank1>
 <roomname.ballasttank2>Камера балласта B</roomname.ballasttank2>
 <roomname.ballasttank3>Камера балласта C</roomname.ballasttank3>
@@ -1556,15 +1555,15 @@
 <label.alphadeck>Палуба «Альфа»</label.alphadeck>
 <label.gammadeck>Палуба «Гамма»</label.gammadeck>
 <label.deltadeck>Палуба «Дельта»</label.deltadeck>
-<label.readytodock>Готов к стык.</label.readytodock>
-<label.docked>Пристыкован</label.docked>
+<label.readytodock>Готовность к стыковке</label.readytodock>
+<label.docked>Стыковка выполнена</label.docked>
 <label.emergencydooroverride>Автоматическая блокировка двери</label.emergencydooroverride>
 <label.emergencyhatchoverride>Автоматическая блокировка люка</label.emergencyhatchoverride>
 <label.supplies>Припасы</label.supplies>
 <label.togglebatteries>Вкл./Откл. батареи</label.togglebatteries>
 <label.togglesiren>Вкл./Откл. сирену</label.togglesiren>
 <label.emergency>Авария</label.emergency>
-<label.backuppowerarray>Зап. энергосеть</label.backuppowerarray>
+<label.backuppowerarray>Вспомогательная энергосеть</label.backuppowerarray>
 <label.dronecontrol>Управление дроном</label.dronecontrol>
 <label.statuslabel>Статус</label.statuslabel>
 <label.onlinelabel>Вкл.</label.onlinelabel>
@@ -1643,7 +1642,7 @@
 <fabricatorrequireditems>Необходимые предметы</fabricatorrequireditems>
 <fabricatorrequiredtime>Необходимое время</fabricatorrequiredtime>
 <fabricatorrequiredcondition>Состояние</fabricatorrequiredcondition>
-<fabricatorrequiredskills>Необходимые навыки</fabricatorrequiredskills>
+<fabricatorrequiredskills>Навыки, необходимые для калибровки</fabricatorrequiredskills>
 <fabricatorcreate>Создать</fabricatorcreate>
 <fabricatorcancel>Отмена</fabricatorcancel>
 <uilabel.input>Сырье</uilabel.input>
@@ -1656,10 +1655,10 @@
 <minimapwaterlevel>Уровень воды</minimapwaterlevel>
 <minimapwaterlevelunavailable>Данные об уровне воды недоступны</minimapwaterlevelunavailable>
 <minimapairquality>Качество воздуха</minimapairquality>
-<minimapairqualityunavailable>Данных о качестве воздуха нет</minimapairqualityunavailable>
+<minimapairqualityunavailable>Данные о качестве воздуха недоступны</minimapairqualityunavailable>
 <pumppowered>Есть питание</pumppowered>
-<pumpin>НАБОР</pumpin>
-<pumpout>СБРОС</pumpout>
+<pumpin>НАКАЧКА</pumpin>
+<pumpout>ОТКАЧКА</pumpout>
 <pumpspeed>Скорость перекачки</pumpspeed>
 <reactorautotemp>Автоматическое управление</reactorautotemp>
 <reactoroutput>Выход: [kw] кВт</reactoroutput>
@@ -1673,12 +1672,12 @@
 <reactorwarningoverheating>Перегрев</reactorwarningoverheating>
 <reactorwarninglowoutput>Низкая выработка</reactorwarninglowoutput>
 <reactorwarninghighoutput>Высокая выработка</reactorwarninghighoutput>
-<reactorwarninglowfuel>Нехватка топлива</reactorwarninglowfuel>
+<reactorwarninglowfuel>Недостаточно топлива</reactorwarninglowfuel>
 <reactorwarningfuelout>Топливо закончилось</reactorwarningfuelout>
-<reactorwarningmeltdown>Плавление</reactorwarningmeltdown>
+<reactorwarningmeltdown>Расплавление</reactorwarningmeltdown>
 <reactorwarningscram>Аварийная остановка</reactorwarningscram>
 <reactortipfissionrate>Когда вы увеличиваете скорость расщепления, реактор начинает потреблять больше топлива и производить больше тепла. Тепловая энергия вращает турбину, которая вырабатывает электричество.</reactortipfissionrate>
-<reactortipturbineoutput>Чем выше выработка турбины, тем больше электричества пытается произвести реактор. Если по отношению к скорости расщепления выработка окажется слишком велика, реактор начнет остывать, если слишком мала - перегреваться.</reactortipturbineoutput>
+<reactortipturbineoutput>Чем выше выработка турбины, тем больше электричества пытается произвести реактор. Если по отношению к скорости расщепления, выработка окажется слишком велика, реактор начнет остывать, если слишком мала - перегреваться.</reactortipturbineoutput>
 <reactortiptemperature>Температура ядра реактора. Температура считается оптимальной, когда шкала находится между красными индикаторами.</reactortiptemperature>
 <reactortipload>Объем энергии, потребляемой устройствами, подключенными к реактору.</reactortipload>
 <reactortippower>Объем энергии, производимой реактором.</reactortippower>
@@ -1813,7 +1812,7 @@
 <dialogturrettargetdead>Кажется, есть попадание!</dialogturrettargetdead>
 <dialogturrettargetdead>И-и-и-и... Готово!</dialogturrettargetdead>
 <dialogchargebatteries>[itemname]: заряжено на [rate]%!</dialogchargebatteries>
-<dialogchargebatteries>[itemname] заряжается. Уже [rate]%!</dialogchargebatteries>
+<dialogchargebatteries>[itemname] заряжается. Уже[rate]%!</dialogchargebatteries>
 <dialognobatteries>Какие еще батареи?</dialognobatteries>
 <dialognobatteries>На этой лодке нет никаких батарей!</dialognobatteries>
 <dialognobatteries>Не могу найти батареи!</dialognobatteries>
@@ -1833,7 +1832,7 @@
 <dialoggetoxygentank>Мне нужен кислород!</dialoggetoxygentank>
 <dialoglowoxygen>Я теряю сознание!</dialoglowoxygen>
 <dialoglowoxygen>Нечем дышать!</dialoglowoxygen>
-<dialoglowoxygen>Задыхаюсь.</dialoglowoxygen>
+<dialoglowoxygen>Задыхаюсь</dialoglowoxygen>
 <dialogbleeding>Помогите, я истекаю кровью!</dialogbleeding>
 <dialogbleeding>У меня кровь!</dialogbleeding>
 <dialogbleeding>Я теряю много крови!</dialogbleeding>
@@ -1854,7 +1853,7 @@
 <dialogsonartarget>Вижу цель на сонаре. Направление: [direction]!</dialogsonartarget>
 <dialogsonartarget>Какой-то импульс на сонаре. Направление: [direction]!</dialogsonartarget>
 <dialogsonartarget>На сонаре что-то есть. Направление: [direction]!</dialogsonartarget>
-<dialogsonartarget>Вижу цель! Направление: [direction]!</dialogsonartarget>
+<dialogsonartarget>Вижу цель: Направление: [direction]!</dialogsonartarget>
 <dialogsonartargetlarge>Большая цель на сонаре. Направление: [direction]!</dialogsonartargetlarge>
 <dialogsonartargetlarge>Сильный источник сигнала! Направление: [direction]!</dialogsonartargetlarge>
 <dialogsonartargetlarge>На сонаре что-то крупное. Направление: [direction]!</dialogsonartargetlarge>
@@ -2026,7 +2025,7 @@
 <afflictioncauseofdeath.burn>Сгорает насмерть.</afflictioncauseofdeath.burn>
 <afflictioncauseofdeathself.burn>Вы сгорели насмерть.</afflictioncauseofdeathself.burn>
 <afflictionname.oxygenlow>Нехватка кислорода</afflictionname.oxygenlow>
-<afflictiondescription.oxygenlow>Кожа - бледная и холодная. Губы начали синеть.</afflictiondescription.oxygenlow>
+<afflictiondescription.oxygenlow>Кожа - бледная и холодная. Гуды начали синеть.</afflictiondescription.oxygenlow>
 <afflictioncauseofdeath.oxygenlow>Погибает от удушья.</afflictioncauseofdeath.oxygenlow>
 <afflictioncauseofdeathself.oxygenlow>Вы погибли от удушья.</afflictioncauseofdeathself.oxygenlow>
 <afflictionname.bloodloss>Кровопотеря</afflictionname.bloodloss>
@@ -2114,35 +2113,35 @@
 <locationchange.none.changeto.research>[previousname]: основан новый исследовательский аванпост.</locationchange.none.changeto.research>
 <locationname.city>Колония</locationname.city>
 <locationnameformat.city>[name]</locationnameformat.city>
+<locationnameformat.city>Город «[name]»</locationnameformat.city>
 <locationnameformat.city>Город [name]</locationnameformat.city>
-<locationnameformat.city>Город [name]</locationnameformat.city>
-<locationnameformat.city>Станция [name]</locationnameformat.city>
+<locationnameformat.city>Станция «[name]»</locationnameformat.city>
 <locationname.outpost>Жилой аванпост</locationname.outpost>
-<locationnameformat.outpost>Жилой аванпост [name]</locationnameformat.outpost>
-<locationnameformat.outpost>Аванпост [name]</locationnameformat.outpost>
-<locationchange.outpost.changeto.city>[previousname] теперь называется [name].</locationchange.outpost.changeto.city>
+<locationnameformat.outpost>Жилой аванпост «[name]»</locationnameformat.outpost>
+<locationnameformat.outpost>Аванпост «[name]»</locationnameformat.outpost>
+<locationchange.outpost.changeto.city>[previousname] теперь называется «[name]».</locationchange.outpost.changeto.city>
 <locationchange.outpost.changeto.city>[previousname] становится городом.</locationchange.outpost.changeto.city>
 <locationname.military>Военный аванпост</locationname.military>
 <locationnameformat.military>[name]</locationnameformat.military>
-<locationnameformat.military>Центр [name]</locationnameformat.military>
-<locationnameformat.military>Станция [name]</locationnameformat.military>
-<locationnameformat.military>Укрепление [name]</locationnameformat.military>
+<locationnameformat.military>Центр «[name]»</locationnameformat.military>
+<locationnameformat.military>Станция «[name]»</locationnameformat.military>
+<locationnameformat.military>Укрепление «[name]»</locationnameformat.military>
 <locationname.research>Исследовательский аванпост</locationname.research>
-<locationnameformat.research>Исследовательская станция [name]</locationnameformat.research>
-<locationnameformat.research>Исследовательский центр [name]</locationnameformat.research>
-<locationnameformat.research>Институт астробиологии [name]</locationnameformat.research>
-<locationnameformat.research>Биомедицинский исследовательский центр [name]</locationnameformat.research>
+<locationnameformat.research>Исследовательская станция «[name]»</locationnameformat.research>
+<locationnameformat.research>Исследовательский центр «[name]»</locationnameformat.research>
+<locationnameformat.research>Институт астробиологии «[name]»</locationnameformat.research>
+<locationnameformat.research>Биомедицинский исследовательский центр «[name]»</locationnameformat.research>
 <locationname.mine>Шахтерский аванпост</locationname.mine>
-<locationnameformat.mine>Добывающий центр [name]</locationnameformat.mine>
-<locationnameformat.mine>Старательский участок [name]</locationnameformat.mine>
-<locationnameformat.mine>Старательский аванпост [name]</locationnameformat.mine>
-<locationnameformat.mine>Шахта [name]</locationnameformat.mine>
+<locationnameformat.mine>Добывающий центр «[name]»</locationnameformat.mine>
+<locationnameformat.mine>Старательский участок «[name]»</locationnameformat.mine>
+<locationnameformat.mine>Старательский аванпост «[name]»</locationnameformat.mine>
+<locationnameformat.mine>Шахта «[name]»</locationnameformat.mine>
 <locationname.lair>Нерестилище</locationname.lair>
-<locationnameformat.lair>Нерестилище [name]</locationnameformat.lair>
-<locationnameformat.lair>Улей [name]</locationnameformat.lair>
+<locationnameformat.lair>Нерестилище «[name]»</locationnameformat.lair>
+<locationnameformat.lair>Улей «[name]»</locationnameformat.lair>
 <locationchange.lair.changeto.none>[previousname] остается без населения.</locationchange.lair.changeto.none>
 <locationname.ruins>Инопланетные руины</locationname.ruins>
-<locationnameformat.ruins>Руины [name]</locationnameformat.ruins>
+<locationnameformat.ruins>Руины «[name]»</locationnameformat.ruins>
 <locationchange.ruins.changeto.outpost>[previousname]: основан аванпост.</locationchange.ruins.changeto.outpost>
 <locationchange.ruins.changeto.military>[previousname]: основан военный аванпост.</locationchange.ruins.changeto.military>
 <locationchange.ruins.changeto.research>[previousname]: основан исследовательский аванпост.</locationchange.ruins.changeto.research>
@@ -2217,19 +2216,20 @@
 <!-- Room 1 -->
 <mechanic.opendoor>Двери</mechanic.opendoor>
 <mechanic.opendoorobjective>Откройте дверь, нажав прилегающую к ней кнопку</mechanic.opendoorobjective>
-<mechanic.opendoortext>Чтобы двигаться, нажимайте {0}, {1}, {2}, {3}. Чтобы использовать предметы и устройства, нажмите {4}.\n\nЧтобы открыть дверь, наведите на нее указатель и нажмите {5}.</mechanic.opendoortext>
+<mechanic.opendoortext>Чтобы двигаться, нажимайте {0}, {1}, {2}, {3}. Чтобы использовать предметы и устройства, нажмите {4}.\n\nЧтобы открыть эту дверь, наведите на нее указатель и нажмите {5}.</mechanic.opendoortext>
 
 <!-- Room 2 -->
 <mechanic.equipment>Контейнеры</mechanic.equipment>
 <mechanic.equipmentobjective>Заберите свое снаряжение из шкафа</mechanic.equipmentobjective>
-<mechanic.equipmenttext>Предметы хранятся в шкафах разного размера. Чтобы узнать, что лежит внутри шкафа, обыщите его ({0}). Чтобы переместить предмет между вашим персонажем и шкафом, просто перетащите его или дважды щелкните по нему левой кнопкой мыши.\n\nКогда предмет находится в инвентаре персонажа, его можно надеть/взять в руки. Для этого вы можете дважды щелкнуть по нему левой кнопкой мыши или нажать клавишу ячейки, в которую вы хотите его переместить.\n\nЧтобы закрыть это меню, нажмите {1}.</mechanic.equipmenttext>
+<mechanic.equipmenttext>Предметы хранятся в шкафах разного размера. Чтобы узнать, что лежит внутри шкафа, используйте его ({0}). Чтобы переместить предмет между вашим персонажем и контейнером, просто перетащите его или дважды щелкните по нему левой кнопкой мыши.\n\nКогда предмет находится в инвентаре персонажа, его можно надеть/взять в руки. Для этого вы также можете дважды щелкнуть по нему левой кнопкой мыши или нажать клавишу ячейки, в которую вы хотите его переместить.\n\nЧтобы закрыть это меню, нажмите {1}.</mechanic.equipmenttext>
 
 <!-- Room 3 -->
 <mechanic.welding>Протечки</mechanic.welding>
 <mechanic.weldingobjective>Устраните протечку</mechanic.weldingobjective>
-<mechanic.weldingtext>Чтобы устранять протечки, возьмите в руки сварочный аппарат (дважды щелкните по нему левой кнопкой мыши). Чтобы использовать некоторые предметы, например этот сварочный аппарат, их нужно держать в обеих руках.\n\nКогда вы держите сварочный аппарат в руках, зажмите {0}, чтобы прицелиться. Пока вы целитесь, удерживайте {1}, чтобы варить.</mechanic.weldingtext>
+<mechanic.weldingtext>Чтобы устранять протечки, возьмите в руки сварочный аппарат (дважды щелкните по нему левой кнопкой мыши). Чтобы использовать некоторые предметы, как, например, этот сварочный аппарат, их нужно держат в обеих руках.\n\nКогда вы держите сварочный аппарат в руках, зажмите {0}, чтобы прицелиться. Пока вы целитесь, удерживайте {1}, чтобы варить.</mechanic.weldingtext>
 <mechanic.drain>Водяные насосы</mechanic.drain>
 <mechanic.drainobjective>Включите ближний к вам насос, чтобы откачать лишнюю воду</mechanic.drainobjective>
+<mechanic.draintext>Когда подлодка затоплена, лишнюю воду можно откачать при помощи насосов. Обычно насосы получают сигнал от датчиков воды или навигационных терминалов, но некоторые можно использовать и вручную. Чтобы включить этот насос, используйте его ({0}) и переведите выключатель в положение «Вкл.»</mechanic.draintext>
 
 <!-- Room 4 -->
 <mechanic.deconstruct>Создание предметов, часть 1</mechanic.deconstruct>
@@ -2258,9 +2258,9 @@
 <mechanic.repairpumptext>Механическое и электрическое оборудование нуждается в постоянном ремонте и обслуживании. Иначе оно сломается и перестанет работать. Чтобы выполнить ремонт, возьмите в руки гаечный ключ, подойдите к нужному устройству и используйте его ({0}).\n\nПредметы, которым требуется техническое обслуживание, помечены значком ремонта.</mechanic.repairpumptext>
 
 <!-- Submarine -->
-<mechanic.repairsubmarine>Обслуживание подлодки</mechanic.repairsubmarine>
+<mechanic.repairsubmarine>Обслуживание подводной лодки</mechanic.repairsubmarine>
 <mechanic.repairsubmarineobjective>Почините двигатель и балластные насосы</mechanic.repairsubmarineobjective>
-<mechanic.repairsubmarinetext>Вы находитесь на борту подлодки, и именно на них происходит основное действие игры Barotrauma. Это упрощенная версия подлодки, но, когда вы начнете игру, то сможете выбрать подлодку на свой вкус. Сейчас водолазный скафандр можно снять. (Либо нажмите и удерживайте кнопку «Снять/Убрать» над ячейкой снаряжения, либо просто перетащите скафандр за пределы ячейки.)\n\nВнутри подлодки много активных точек, и поначалу вам может быть трудно быстро найти то, что нужно.\n\nНайдите двигатель (обычно он находится в задней части подлодки) и балластные насосы (в нижней части; у некоторых подлодок несколько балластных баков).</mechanic.repairsubmarinetext>
+<mechanic.repairsubmarinetext>Вы находитесь на борту подводной лодки, где происходит основное действие игры Barotrauma. Это упрощенная версия подлодки, но, когда вы начнете игру, вы сможете выбрать любую из множества подлодок на свой вкус. Сейчас водолазный скафандр можно снять. (Либо нажмите и удерживайте кнопку «Снять/Убрать» над ячейкой снаряжения, либо просто перетащите скафандр за пределы ячейки.)\n\nВнутри подлодки, как правило, довольно тесно, и найти то, что вам нужно, пока вы не освоитесь в игре, будет непросто.\n\nНайдите двигатель (обычно он находится в задней части подлодки) и балластные насосы (в нижней части; у некоторых подлодок несколько балластных баков).</mechanic.repairsubmarinetext>
 
 <!-- Engineer tutorial -->
 <!-- Radio -->
@@ -2275,7 +2275,7 @@
 <!-- Room 2 -->
 <engineer.equipment>Контейнеры</engineer.equipment>
 <engineer.equipmentobjective>Заберите свое снаряжение из шкафа</engineer.equipmentobjective>
-<engineer.equipmenttext>Предметы хранятся в шкафах разного размера. Чтобы узнать, что лежит внутри шкафа, обыщите его ({0}). Чтобы переместить предмет между вашим персонажем и шкафом, просто перетащите его или дважды щелкните по нему левой кнопкой мыши.\n\nКогда предмет находится в инвентаре персонажа, его можно надеть/взять в руки. Для этого вы можете дважды щелкнуть по нему левой кнопкой мыши или нажать клавишу ячейки, в которую вы хотите его переместить.\n\nЧтобы закрыть это меню, нажмите {1}.</engineer.equipmenttext>
+<engineer.equipmenttext>Предметы хранятся в шкафах разного размера. Чтобы узнать, что лежит внутри шкафа, используйте его ({0}). Чтобы переместить предмет между вашим персонажем и контейнером, просто перетащите его или дважды щелкните по нему левой кнопкой мыши.\n\nКогда предмет находится в инвентаре персонажа, его можно надеть/взять в руки. Для этого вы также можете дважды щелкнуть по нему левой кнопкой мыши или нажать клавишу ячейки, в которую вы хотите его переместить.\n\nЧтобы закрыть это меню, нажмите {1}.</engineer.equipmenttext>
 
 <!-- Room 3 -->
 <engineer.reactor>Реактор</engineer.reactor>
@@ -2285,12 +2285,12 @@
 <!-- Room 4 -->
 <engineer.repairjunctionbox>Обслуживание</engineer.repairjunctionbox>
 <engineer.repairjunctionboxobjective>Почините сломанную кабельную коробку</engineer.repairjunctionboxobjective>
-<engineer.repairjunctionboxtext>Как и механическое оборудование, кабельные коробки нуждаются в обслуживании и ремонте. Но помимо износа, они боятся воды и электрического перенапряжения.\n\nДля ремонта механического оборудования вы использовали гаечный ключ, но здесь вам потребуется отвертка. В остальном же все то же самое. Чтобы открыть меню ремонта, берите отвертку в руку, и используйте устройство ({0}).</engineer.repairjunctionboxtext>
+<engineer.repairjunctionboxtext>Так же, как и механическое оборудование, кабельные коробки нуждаются в обслуживании и ремонте. Но, помимо износа, они боятся воды и электрического перенапряжения.\n\nДля ремонта механического оборудования вы использовали гаечный ключ, но здесь вам потребуется отвертка. В остальном же все то же самое. Чтобы открыть меню ремонта, берите отвертку в руку, и используйте устройство ({0}).</engineer.repairjunctionboxtext>
 
 <!-- Room 5 -->
 <engineer.wirejunctionboxes>Проводка</engineer.wirejunctionboxes>
 <engineer.wirejunctionboxesobjective>Соедините кабельные коробки</engineer.wirejunctionboxesobjective>
-<engineer.wirejunctionboxestext>Кабельные коробки - основной способ подключения устройств подлодки к энергосети. Соедините их проводами, и по ним побежит ток.\n\nЧтобы подключить провод к устройству, возьмите в одну руку отвертку, а в другую - кусок провода. Затем используйте ({0}) устройство, к которому вы хотите подключить провод. Откроется панель подключения с парой контактов и торчащим снизу проводом. Перетащите провод на контакт и нажмите {1}, чтобы закрыть панель. Повторите эти же действия у следующего устройства.\n\nЕсли в панели подключения не отображается болтающийся провод, значит вы скорее всего забыли взять его в руку.</engineer.wirejunctionboxestext>
+<engineer.wirejunctionboxestext>Кабельные коробки - основной способ подключения устройств подлодки к энергосети. Соедините их проводами, и по ним побежит ток.\n\nЧтобы подключить провод к устройству, возьмите в одну руку отвертку, а в другую - кусок провода. Затем используйте ({0}) устройство, к которому вы хотите подключить провод. Откроется панель подключения с парой контактов и торчащим снизу проводом. Перетащите провод на контакт и нажмите {1}, чтобы закрыть панель. Повторите эти же действия у следующего устройства.\n\nЕсли в панели подключения не отображается болтающийся провод, значит, вы, скорее всего, забыли взять его в руку.</engineer.wirejunctionboxestext>
 
 <!-- Submarine -->
 <engineer.repairelectricalroom>Электрощитовая</engineer.repairelectricalroom>
@@ -2304,7 +2304,7 @@
 <!-- Radio -->
 <officer.radio.wakeup>Кто-то из службы безопасности уцелел? У нас пробоина в корпусе и незваные гости!</officer.radio.wakeup>
 <officer.radio.equipment>Хватай все, что может тебе пригодиться, и разберись с этими тварями.</officer.radio.equipment>
-<officer.radio.crawlerdead>Неплохо, но этот ползун совсем маленький - детеныш, наверное. Там впереди что-то покрупнее, так что будь начеку.</officer.radio.crawlerdead>
+<officer.radio.crawlerdead>Неплохо, но этот ползун совсем маленький - ребенок, наверное. Там впереди что-то покрупнее, так что будь начеку.</officer.radio.crawlerdead>
 <officer.radio.somethingbig>Сонар что-то засек - что-то очень большое. Заряжай магнитную пушку и постарайся уничтожить этого гада.</officer.radio.somethingbig>
 <officer.radio.hammerheaddead>Стрелять ты умеешь. Жаль только, станцию уже не спасти. Спускайся на подлодку - мы сматываемся, пока еще есть время.</officer.radio.hammerheaddead>
 <officer.radio.submarine>Добро пожаловать на борт. Твое первое задание - убедиться, что мы готовы к встрече с любым неприятелем. Так что для начала осмотри вооружение.</officer.radio.submarine>
@@ -2313,9 +2313,9 @@
 <!-- Room 2 -->
 <officer.equipment>Контейнеры</officer.equipment>
 <officer.equipmentobjective>Заберите свое снаряжение из шкафа</officer.equipmentobjective>
-<officer.equipmenttext>Предметы хранятся в шкафах разного размера. Чтобы узнать, что лежит внутри шкафа, обыщите его ({0}). Чтобы переместить предмет между вашим персонажем и шкафом, просто перетащите его или дважды щелкните по нему левой кнопкой мыши.\n\nКогда предмет находится в инвентаре персонажа, его можно надеть/взять в руки. Для этого вы можете дважды щелкнуть по нему левой кнопкой мыши или нажать клавишу ячейки, в которую вы хотите его переместить.\n\nЧтобы закрыть это меню, нажмите {1}.</officer.equipmenttext>
+<officer.equipmenttext>Предметы хранятся в шкафах разного размера. Чтобы узнать, что лежит внутри шкафа, используйте его ({0}). Чтобы переместить предмет между вашим персонажем и контейнером, просто перетащите его или дважды щелкните по нему левой кнопкой мыши.\n\nКогда предмет находится в инвентаре персонажа, его можно надеть/взять в руки. Для этого вы также можете дважды щелкнуть по нему левой кнопкой мыши или нажать клавишу ячейки, в которую вы хотите его переместить.\n\nЧтобы закрыть это меню, нажмите {1}.</officer.equipmenttext>
 <officer.meleeweapon>Оружие ближнего боя</officer.meleeweapon>
-<officer.meleeweaponobjective>Возьмите в руки оружие ближнего боя и наденьте защитное снаряжение</officer.meleeweaponobjective>
+<officer.meleeweaponobjective>возьмите в руки оружие ближнего боя и наденьте защитное снаряжение</officer.meleeweaponobjective>
 <officer.meleeweapontext>Чтобы взять в руки оружие, дважды щелкните по нему в своем инвентаре. Чтобы использовать оружие, нужна хотя бы одна свободная рука. Чтобы надеть снаряжение, либо дважды щелкните по нему левой кнопкой мыши, либо просто перетащите его в соответствующие ячейки в инвентаре персонажа.\n\nЧтобы подготовить оружие к бою, зажмите {0}, а чтобы ударить нажмите {1}.</officer.meleeweapontext>
 
 <!-- Room 3 -->
@@ -2329,12 +2329,12 @@
 <officer.somethingbigtext>Магнитными пушками оборудовано большинство подлодок. Для работы им нужны короткие импульсы тока и ящики боеприпасов.\n\nЧтобы подготовить магнитную пушку, сначала убедитесь, что суперконденсатор заряжен - для этого нужно установить достаточно высокую скорость перезарядки (50% обычно хватает), затем загрузите полные ящики боеприпасов в зарядник магнитной пушки.\n\nПохоже, ящики боеприпасов, заряженные в магнитную пушку, пустые. Чтобы извлечь пустые ящики, перетащите их за пределы зарядника. Чтобы выбросить пустые ящики, удерживайте зеленую стрелку над ящиком с боеприпасами, пока держите его в руках.\n\nЯщики с боеприпасами довольно тяжелые и неповоротливые. Переносить ящик можно только двумя руками, и поместить его в инвентарь нельзя. Чтобы выбросить ящик, перетащите его за пределы ячейки, в которой он находится, или нажмите кнопку «Снять/Убрать», расположенную над той же ячейкой.</officer.somethingbigtext>
 <officer.hammerhead>Магнитная пушка, часть 2</officer.hammerhead>
 <officer.hammerheadobjective>Убейте атакующего Молотоглава</officer.hammerheadobjective>
-<officer.hammerheadtext>Чтобы стрелять из магнитной пушки, используйте ({0}) перископ. В режиме перископа, прицельтесь с помощью мыши и нажмите {1}, чтобы открыть огонь. Чтобы завершить прицеливание, нажмите {2}.\n\nЭто орудие расходует большое количество энергии, поэтому старайтесь стрелять умеренно. Иначе заряда суперконденсатора надолго не хватит.</officer.hammerheadtext>
+<officer.hammerheadtext>Чтобы стрелять из магнитной пушки, используйте ({0}) перископ. В режиме перископа, прицельтесь с помощью мыши и нажмите {1}, чтобы открыть огонь. Чтобы завершить прицеливание, еще раз нажмите {2}.\n\nЭто орудие расходует большое количество энергии, поэтому старайтесь стрелять умеренно. Иначе заряда суперконденсатора надолго не хватит.</officer.hammerheadtext>
 
 <!-- Room 5 -->
 <officer.rangedweapon>Оружие дальнего боя</officer.rangedweapon>
 <officer.rangedweaponobjective>Возьмите оружие дальнего боя</officer.rangedweaponobjective>
-<officer.rangedweapontext>Оружие дальнего боя работает так же, как и оружие ближнего боя. Главное отличие: его точность зависит от того, насколько хорошо персонаж умеет обращаться с оружием. Удерживайте {0}, чтобы целиться, и нажмите {1}, чтобы выстрелить.\n\nИ, конечно, оружие не будет стрелять без боеприпасов. Наведите указатель мыши на оружие дальнего боя, чтобы узнать, сколько в нем осталось пуль, гарпунов и так далее. Чтобы зарядить оружие, перетащите боеприпасы в соответствующие ячейки или на само оружие.</officer.rangedweapontext>
+<officer.rangedweapontext>Оружие дальнего боя работает так же, как и оружие ближнего боя. Главное отличие: его точность зависит от того, насколько хорошо персонаж умеет обращаться с оружием. Удерживайте {0}, чтобы целиться, и нажмите {1}, чтобы стрелять.\n\nИ, конечно, оружие не будет стрелять без боеприпасов. Наведите указатель мыши на оружие дальнего боя, чтобы узнать, сколько в нем осталось пуль, гарпунов и так далее. Чтобы зарядить оружие, перетащите боеприпасы в соответствующие ячейки или на само оружие.</officer.rangedweapontext>
 
 <!-- Room 6 -->
 <officer.mudraptor>Грязевые рапторы</officer.mudraptor>
@@ -2357,7 +2357,7 @@
 <!-- Room 3 -->
 <doctor.supplies>Контейнеры</doctor.supplies>
 <doctor.suppliesobjective>Найдите медикаменты</doctor.suppliesobjective>
-<doctor.suppliestext>Предметы хранятся в шкафах разного размера. Чтобы узнать, что лежит внутри шкафа, обыщите его ({0}). Чтобы переместить предмет между вашим персонажем и шкафом, просто перетащите его или дважды щелкните по нему левой кнопкой мыши.\n\nКогда предмет находится в инвентаре персонажа, его можно надеть/взять в руки. Для этого вы можете дважды щелкнуть по нему левой кнопкой мыши или нажать клавишу ячейки, в которую вы хотите его переместить.\n\nЧтобы закрыть это меню, нажмите {1}.</doctor.suppliestext>
+<doctor.suppliestext>Предметы хранятся в шкафах разного размера. Чтобы узнать, что лежит внутри шкафа, используйте его ({0}). Чтобы переместить предмет между вашим персонажем и контейнером, просто перетащите его или дважды щелкните по нему левой кнопкой мыши.\n\nКогда предмет находится в инвентаре персонажа, его можно надеть/взять в руки. Для этого вы также можете дважды щелкнуть по нему левой кнопкой мыши или нажать клавишу ячейки, в которую вы хотите его переместить.\n\nЧтобы закрыть это меню, нажмите {1}.</doctor.suppliestext>
 <doctor.openmedicalinterface>Врачебное меню</doctor.openmedicalinterface>
 <doctor.openmedicalinterfaceobjective>Откройте врачебное меню</doctor.openmedicalinterfaceobjective>
 <doctor.openmedicalinterfacetext>Чтобы открыть врачебное меню, нажмите {0}, или щелкните по своей шкале здоровья.</doctor.openmedicalinterfacetext>
@@ -2378,7 +2378,7 @@
 <!-- Room 6 -->
 <doctor.cpr>Реанимация</doctor.cpr>
 <doctor.cprobjective>Проведите реанимацию</doctor.cprobjective>
-<doctor.cprtext>Получив слишком много травм, персонаж теряет сознание. В таком состоянии его уровень кислорода постепенно снижается, и, когда он опустится до нуля, персонаж умрет. Однако, пока он не умер, его можно реанимировать и поставить на ноги.\n\nЧтобы реанимировать персонажа, откройте врачебное меню ({0}) и нажмите зеленую кнопку «Реанимация». Этот процесс может занять какое-то время.</doctor.cprtext>
+<doctor.cprtext>Получив слишком много травм, персонаж теряет сознание. В таком состоянии его уровень кислорода постепенно снижается и когда он опустится до нуля, персонаж умрет. Однако, пока он не умер, его можно реанимировать и поставить на ноги.\n\nЧтобы реанимировать персонажа, откройте врачебное меню ({0}) и нажмите зеленую кнопку «Реанимация». Этот процесс может занять какое-то время.</doctor.cprtext>
 
 <!-- Submarine -->
 <doctor.submarine>Медицинская помощь</doctor.submarine>
@@ -2404,7 +2404,7 @@
 <captain.commandsecuritytext>Чтобы приказать кому-нибудь встать за орудия, нажмите кнопку «Использовать орудия» в списке рядом с портретом персонажа. Затем выберете оружие, которым нужно управлять.</captain.commandsecuritytext>
 <captain.commandengineer>Команды, часть 4</captain.commandengineer>
 <captain.commandengineerobjective>Прикажите инженеру зарядить реактор</captain.commandengineerobjective>
-<captain.commandengineertext>Чтобы приказать кому-нибудь зарядить реактор, откройте меню команд и выберите «Заняться реактором», а затем нажмите «Запустить». После этого персонаж займется реактором.</captain.commandengineertext>
+<captain.commandengineertext>Чтобы приказать кому-нибудь зарядить реактор, откройте меню команд и выберите «Работа с реактором», а затем нажмите «Зарядить». После этого персонаж займется реактором.</captain.commandengineertext>
 <captain.undock>Расстыковка</captain.undock>
 <captain.undockobjective>Отстыкуйтесь от станции</captain.undockobjective>
 <captain.undocktext>Чтобы начать движение, сначала нужно отстыковаться от аванпоста. Чтобы это сделать, откройте навигационную консоль и нажмите кнопку «Начать/Закончить стыковку».</captain.undocktext>
@@ -2413,7 +2413,7 @@
 <captain.navigatetext>Нажмите на экран сонара, чтобы проложить курс для подлодки. Навигационный терминал автоматически скорректирует настройки балласта и режим работы двигателя в соответствии с новым маршрутом.\n\nЧтобы посмотреть, куда движется подлодка, включите активный сонар. Для этого найдите настройки сонара рядом с экраном и переключите его режим работы с «пассивного» на «активный».\n\nДвигайтесь осторожно. Чем выше скорость подлодки, тем сложнее будет ее остановить. От столкновений со стенами пещеры может пострадать корпус, и могут появиться протечки. В рамках этого обучения подлодка будет защищена от появления пробоин.</captain.navigatetext>
 <captain.dock>Стыковка</captain.dock>
 <captain.dockobjective>Состыкуйтесь со станцией назначения</captain.dockobjective>
-<captain.docktext>Чтобы выполнить стыковку, пришвартуйте судно так, чтобы его стыковочный порт сошелся со стыковочным портом аванпоста и активируйте стыковочные зажимы. На экране сонара порты отмечены зеленым цветом.\n\nКогда порты окажутся рядом друг с другом, на экране сонара появится линия. Когда эта линия будет полностью окрашена в зеленый цвет, нажмите «Начать/Закончить стыковку». После этого положение подлодки зафиксируется. Стыковочный люк не закроется, пока работают стыковочные зажимы.\n\nЗанимая положение для стыковки, старайтесь избегать резких движений, так как они легко могут сместить вас с нужной позиции. Двигайтесь медленно и осторожно, избегая столкновений с аванпостом. Используйте автопилот и функцию «Сохранять положение», чтобы выбрать позицию, на которую вы хотите вывести подводную лодку.</captain.docktext>
+<captain.docktext>Чтобы выполнить стыковку, поставьте судно так, чтобы его стыковочный порт сошелся со стыковочным портом аванпоста и активируйте стыковочные зажимы. На экране сонара порты отмечены зеленым цветом.\n\nКогда порты окажутся рядом друг с другом, на экране сонара появится линия. Когда эта линия будет полностью окрашена в зеленый цвет, нажмите «Начать/Закончить стыковку». После этого положение подлодки зафиксируется. Стыковочный люк не закроется, пока работают стыковочные зажимы.\n\nЗанимая положение для стыковки, старайтесь избегать резких движений, так как они легко могут легко сместить вас с нужной позиции. Двигайтесь медленно и осторожно, избегая столкновений с аванпостом. Используйте автопилот и функцию «Сохранять положение», чтобы выбрать позицию, на которую вы хотите вывести подводную лодку.</captain.docktext>
 
 <!-- Karma system -->
 <karma>Карма</karma>
@@ -2421,17 +2421,17 @@
 <resetkarma>Сбросить карму</resetkarma>
 <karmadecreased>Ваша карма ухудшилась на [karmadecrease].</karmadecreased>
 <karmaincreased>Ваша карма улучшилась на [karmaincrease].</karmaincreased>
-<karmabanwarning>Внимание: значение вашей опасно мало. Если оно опустится ниже, вы будете заблокированы на этом сервере.</karmabanwarning>
+<karmabanwarning>Внимание: если значение вашей кармы опустится ниже отметки [banthreshold], вы будете заблокированы на этом сервере.</karmabanwarning>
 <karmabanned>Вы заблокированы на этом сервере, поскольку ваша карма опустилась ниже отметки [banthreshold].</karmabanned>
 <karmajobdisallowed>У вас слишком плохая карма, и вам не разрешено выбирать эту профессию ([yourkarma]/[minkarma]).</karmajobdisallowed>
 
 <!-- Disclaimers -->
 <campaigndisclaimertitle>Добро пожаловать в Barotrauma!</campaigndisclaimertitle>
-<campaigndisclaimertext>Barotrauma находится в раннем доступе, и работа над игрой еще не завершена.\n\nВ режиме кампании по-прежнему не хватает многих функций, которые мы намерены включить в полную версию игры, и одиночный режим до сих пор во многом уступает сетевому. В текущей версии новичкам играть в одиночку будет значительно сложнее, чем с другими игроками. Конечно, ваш экипаж под управлением ИИ может помочь вам справиться с некоторыми задачами, но все же толку от них куда меньше, чем от настоящих игроков. Если вам интересно, чего ждать от будущих обновлений, нажмите кнопку «План развития».\n\nОднако прежде чем окунуться в сетевую игру, мы все же рекомендуем вам пройти одиночное обучение. Всего доброго, удачи и семь футов под килем!</campaigndisclaimertext>
-<campaignroadmaptitle>План развития</campaignroadmaptitle>
-<campaignroadmaptext>- Возможность полноценного исследования локаций: в данный момент все места на карте кампании представлены в виде меню, в которых можно покупать припасы и нанимать новых членов экипажа, но во время раннего доступа они превратятся в полноценные локации, которые можно будет исследовать.\n\n- Расширенный сюжет: вы сможете больше узнать о мире Barotrauma, общаясь с неигровыми персонажами, а также исследуя аванпосты и инопланетные объекты.\n\n- Новый тип миссий: мы планируем ввести в игру различные типы миссий, такие, например, как перевозка пассажиров и спасение имущества с затонувших судов.\n\n- Баланс: в данный момент экономика в режиме кампании не очень сбалансирована, но мы сможем сосредоточиться на этом вопросе, как только в игре появится больше контента.\n\n- Конечная цель: сейчас завершить кампанию невозможно, но в будущих версиях игры у вас появится возможность добраться до таинственного места в центре карты...</campaignroadmaptext>
+<campaigndisclaimertext>Не забывайте, что Barotrauma по-прежнему находится в раннем доступе, и работа над игрой еще не завершена.\n\nВ режиме кампании по-прежнему не хватает многих функций, которые мы намерены включить в полную версию игры, и одиночный режим до сих пор во многом уступает многопользовательскому. В текущей версии новичкам играть в одиночку будет значительно сложнее, чем с другими игроками. Конечно, ваш экипаж под управлением ИИ может помочь вам справиться с некоторыми задачами, но все же толку от них куда меньше, чем от настоящих игроков. Если вам интересно, чего ждать от будущих обновлений, нажмите кнопку «План развития режима кампании».\n\nОднако, прежде чем окунуться в сетевую игру, мы все же рекомендуем вам пройти одиночное обучение. Всего доброго, удачи и семь футов под килем!</campaigndisclaimertext>
+<campaignroadmaptitle>План развития режима кампании</campaignroadmaptitle>
+<campaignroadmaptext>- Возможность полноценного исследования локаций: в данный момент все места на карте кампании представлены в виде меню, в которых можно покупать припасы и нанимать новых членов экипажа, но во время раннего доступа, они превратятся в полноценные локации, которые можно будет исследовать.\n\n- Расширенный сюжет: вы сможете больше узнать о мире Barotrauma, общаясь с неигровыми персонажами, а также исследуя аванпосты и инопланетные объекты.\n\n- Новый тип миссий: мы планируем ввести в игру различные типы миссий, такие, например, как перевозка пассажиров и спасение имущества с затонувших судов.\n\n- Баланс: в данный момент экономика в режиме кампании не очень сбалансирована, но мы сможем сосредоточиться на этом вопросе, как только в игре появится больше контента.\n\n- Конечная цель: сейчас завершить кампанию невозможно, но в будущих версиях игры у вас появится возможность добраться до таинственного места в центре карты...</campaignroadmaptext>
 <editordisclaimertitle>Редакторы</editordisclaimertitle>
-<editordisclaimertext>Редакторы подводной лодки и персонажей - это инструменты модификации игры, которые позволяют расширять ее за счет создания собственных подлодок и чудовищ. Своими творениями можно делиться в мастерской Steam.\n\nВ данный момент существуют только англоязычные версии редакторов. Процесс создания полностью рабочей подлодки или полноценно функционирующего чудовища может быть весьма увлекательным, но, к сожалению, пока мы не подготовили каких-то уроков или инструкций по работе с ними. Однако, если вы все же хотите воспользоваться ими, возможно, вы сможете найти интересующую вас информацию, если пройдете по одной из этих ссылок:</editordisclaimertext>
+<editordisclaimertext>Редакторы подводной лодки и персонажей - это инструменты модификации игры, которые позволяют расширять ее за счет создания собственных-х подлодок и чудовищ. Своими творениями можно делиться в мастерской Steam.\n\nВ данный момент существуют только англоязычные версии редакторов. Процесс создания полностью рабочей подлодки или полноценно функционирующего чудовища может быть весьма увлекательным, но, к сожалению, пока мы не подготовили каких-то уроков или инструкций по работе с ними. Однако, если вы все же хотите воспользоваться ими, возможно, вы сможете найти интересующую вас информацию, если пройдете по одной из этих ссылок:</editordisclaimertext>
 <editordisclaimerwikilink>Страница Barotrauma в Wiki</editordisclaimerwikilink>
 <editordisclaimerdiscordlink>Сервер Barotrauma в Discord</editordisclaimerdiscordlink>
 <editordisclaimerforumlink>Форумы Barotrauma</editordisclaimerforumlink>
@@ -2445,12 +2445,12 @@
 
 <!-- New additions -->
 <creditsbutton>Авторы</creditsbutton>
-<orderoptions.operatereactor>Запустить, Выключить</orderoptions.operatereactor>
+<orderoptions.operatereactor>Запустить, выключить</orderoptions.operatereactor>
 <orderoptions.operateweapons>Огонь по готовности, Не стрелять</orderoptions.operateweapons>
 <orderoptions.steer>Сохранять позицию, Двигаться обратно, Двигаться к цели</orderoptions.steer>
-<orderoptions.chargebatteries>Зарядить, Прекратить зарядку</orderoptions.chargebatteries>
-<orderoptions.pumpwater>Выкачать, Прекратить качать</orderoptions.pumpwater>
-<orderoptions.repairsystems>Починить поломку, Починить все</orderoptions.repairsystems>
+<orderoptions.chargebatteries>Зарядить, Прекратить заряд</orderoptions.chargebatteries>
+<orderoptions.pumpwater>Выкачать, прекратить качать</orderoptions.pumpwater>
+<orderoptions.repairsystems>Починить конкретное, починить все</orderoptions.repairsystems>
 
 <ordername.dismissed>Отпустить</ordername.dismissed>
 <ordername.follow>Сопровождать</ordername.follow>
@@ -2578,321 +2578,13 @@
 <connection.waterdatain>данные_воды_вкл</connection.waterdatain>
 <connection.oxygendatain>данные_воздуха_вкл</connection.oxygendatain>
 
-<!-- *** New additions *** -->
-<itemmsgoxygenrefill>Вставьте кислородный баллон, чтобы наполнить его</itemmsgoxygenrefill>
-<missionfailed>Миссия не удалась</missionfailed>
-<label.highpressurewarning>ВНИМАНИЕ: высокое давление</label.highpressurewarning>
-<label.reactortempwarning>Внимание: t реактора</label.reactortempwarning>
-<addercomponent.timeframe>Врем. отрезок</addercomponent.timeframe>
-<addercomponent.clampmin>Зажим - мин.</addercomponent.clampmin>
-<addercomponent.clampmax>Зажим - макс.</addercomponent.clampmax>
-<equalscomponent.timeframe>Врем. отрезок</equalscomponent.timeframe>
-<equalscomponent.output>Выход</equalscomponent.output>
-<equalscomponent.falseoutput>Неверный выход</equalscomponent.falseoutput>
-<andcomponent.timeframe>Врем. отрезок</andcomponent.timeframe>
-<andcomponentcomponent.output>Выход</andcomponentcomponent.output>
-<andcomponentcomponent.falseoutput>Неверный выход</andcomponentcomponent.falseoutput>
-<oscillatorcomponent.timeframe>Врем. отрезок</oscillatorcomponent.timeframe>
-<oscillatorcomponent.outputtype>Тип выхода</oscillatorcomponent.outputtype>
-<delaycomponent.delay>Задержка</delaycomponent.delay>
-<delaycomponent.resetwhensignalreceived>Сброс при получении сигнала</delaycomponent.resetwhensignalreceived>
-<delaycomponent.resetwhendifferentsignalreceived>Сброс при получении другого сигнала</delaycomponent.resetwhendifferentsignalreceived>
-<regexfindcomponent.output>Выход</regexfindcomponent.output>
-<regexfindcomponent.falseoutput>Неверный выход</regexfindcomponent.falseoutput>
-<regexfindcomponent.expression>Выражение</regexfindcomponent.expression>
-<regexfindcomponent.continuousoutput>Продолжительный выход</regexfindcomponent.continuousoutput>
-<memorycomponent.value>Значение</memorycomponent.value>
-<motionsensor.output>Выход</motionsensor.output>
-<motionsensor.falseoutput>Неверный выход</motionsensor.falseoutput>
-<motionsensor.rangex>Разброс X</motionsensor.rangex>
-<motionsensor.rangey>Разброс Y</motionsensor.rangey>
-<signalcheckcomponent.targetsignal>Сигнал цели</signalcheckcomponent.targetsignal>
-<signalcheckcomponent.output>Выход</signalcheckcomponent.output>
-<signalcheckcomponent.falseoutput>Неверный выход</signalcheckcomponent.falseoutput>
-<waterdetector.output>Выход</waterdetector.output>
-<waterdetector.falseoutput>Неверный выход</waterdetector.falseoutput>
-<wificomponent.channel>Канал</wificomponent.channel>
-<quickuseaction.holdtounequip>Удерживать, чтобы снять</quickuseaction.holdtounequip>
-<entityname.incendiumfueltank>Канистра топлива из воспламенита</entityname.incendiumfueltank>
-<entityname.physicoriumammobox>Ящик физикориевых снарядов</entityname.physicoriumammobox>
-<entityname.physicoriumbolt>Физикориевый снаряд</entityname.physicoriumbolt>
-<statisticspromptheader>Хотите помочь нам сделать Barotrauma лучше?</statisticspromptheader>
-<statisticsprompttext>Вы позволяете Barotrauma отправлять статистику использования и отчеты об ошибках разработчикам? Все данные анонимны, не включают никакой личной информации и используются исключительно с диагностики ошибок и улучшения игры Barotrauma.</statisticsprompttext>
-<centerarealockedheader>Тайны ждут впереди…</centerarealockedheader>
-<centerarealockedtext>В текущей версии Barotrauma эта зона недоступна. Пожалуйста, подождите будущих обновлений!</centerarealockedtext>
-<connection.dockingproximitysensor>датчик_близости</connection.dockingproximitysensor>
-<connection.signalx>сигнал_[num]</connection.signalx>
-<connection.set_text>сигнал_[num]</connection.set_text>
-<connection.stateout>состояние_выкл</connection.stateout>
-<connection.turretaimingout>позиция_выкл</connection.turretaimingout>
-<connection.turrettriggerout>вызвать_выкл</connection.turrettriggerout>
-<connection.sonardataout>данные_выкл</connection.sonardataout>
-<label.outpostinfodisplay1>Добро пожаловать. Уровни кислорода: номинальные. Уровни энергии: номинальные. Уровни радиации: субоптимальные. Прогноз погоды на сегодня: холодно и мокро.</label.outpostinfodisplay1>
-<label.navterminaldock>Стыковка</label.navterminaldock>
-<label.navterminalundock>Отплытие</label.navterminalundock>
-<connectionerrornoresponse>Нет ответа от сервера. Возможно, это проблема соединения со стороны сервера.</connectionerrornoresponse>
-<dialognorescuetargets>Сейчас никому не требуется медицинская помощь!</dialognorescuetargets>
-<dialognorescuetargets>Не думаю, что сейчас кому-то требуется медпомощь.</dialognorescuetargets>
-<workshoppublisherror.limitexceeded>Не удалось опубликовать предмет в мастерской (лимит превышен). Убедитесь, что вы включили Steam Cloud и не превысили квоту Steam Cloud. </workshoppublisherror.limitexceeded>
-<workshoppublisherror.limiteduseraccount>Не удалось опубликовать предмет в мастерской. Пользователи с ограниченным аккаунтом не имеют доступа к публикациям в мастерской Steam. Вам нужно потратить не менее 5$ в магазине Steam, чтобы снять ограничение.</workshoppublisherror.limiteduseraccount>
-<workshoppublisherror.banned>Не удалось опубликовать предмет в мастерской, так как аккаунт заблокирован.</workshoppublisherror.banned>
-<workshoppublisherror.insufficientprivilege>Не удалось опубликовать предмет в мастерской (запрет доступа). Это могло случиться в результате блокировки в хабе, блокировки аккаунта или блокировки в сообществе. Возможно, вам придется связаться с поддержкой Steam.</workshoppublisherror.insufficientprivilege>
-<workshoppublisherror.serviceunavailable>Не удалось опубликовать предмет в мастерской (сервис недоступен). Возможно, возникла проблема с серверами мастерской. Пожалуйста, попробуйте снова через несколько секунд.</workshoppublisherror.serviceunavailable>
-<workshopitemupdated>Предмет [itemname] в мастерской успешно обновлен.</workshopitemupdated>
-<workshopitemupdatefailed>Не удалось обновить предмет [itemname] в мастерской. [errormessage]</workshopitemupdatefailed>
-<workshopfilenotfound>Файл [path] не найден.</workshopfilenotfound>
-<debugconsolehelptext>Консоль разработчика - нажмите F3, чтобы открыть/закрыть; введите help, чтобы посмотреть список доступных команд</debugconsolehelptext>
-<voipnodevices>Не найдены устройства захвата звука</voipnodevices>
-<wrongfiletype>Неверный тип файла!</wrongfiletype>
-<charactereditor.contentpackagenameinuse>Набор контента с таким именем уже существует. Пожалуйста, придумайте другое имя или выберите существующий набор из выпадающего меню, если хотите добавить персонажа в него.</charactereditor.contentpackagenameinuse>
-<servermessage.previousclientname>Пользователь [client] ранее использовал имя [previousname] на сервере.</servermessage.previousclientname>
-<serverlistdirectjoin>Прямое присоединение</serverlistdirectjoin>
-<causeofdeath.unknown>Неизвестно</causeofdeath.unknown>
-<self_causeofdeathdescription.unknown>Вы погибли.</self_causeofdeathdescription.unknown>
+<!-- NEW VALUES -->
+<privacypolicy>Политика конфиденциальности</privacypolicy>
 
-<!-- Generic strings (new) -->
-<pending>Ожидание</pending>
-<inprogress>В процессе</inprogress>
-<complete>Выполнено</complete>
+<lightcomponent.lightcolor>Цвет</lightcomponent.lightcolor>
 
-<!-- Traitor mission (new) -->
-<traitormissionstartmessage>Вы предатель! Вам удалось стать членом экипажа подлодки, а теперь пора приниматься за дело.</traitormissionstartmessage>
-<traitormissionfailuremessage>Вы провалили задание. В результате задание было отменено, и вы теперь член экипажа. Ведите себя тихо, пока с вами снова не свяжутся.</traitormissionfailuremessage>
-<traitormissionsuccessmessage>Вам удалось саботировать планы экипажа подлодки. За вами уже выслан эвакуационный шатл.</traitormissionsuccessmessage>
-
-<!-- Traitor objectives (new) -->
-<traitorobjectivestartmessage>У вас новое задание. Нужно выполнить следующие цели:\n[traitorgoalinfos]</traitorobjectivestartmessage>
-<traitorobjectivestartmessageserver>[traitorname] - предатель со следующими целями:\n[traitorgoalinfos]</traitorobjectivestartmessageserver>
-<traitorobjectiveendmessagesuccess>[traitorname] - предатель, которому удалось выполнить выданные цели:\n [traitorgoalinfos]</traitorobjectiveendmessagesuccess>
-<traitorobjectiveendmessagesuccessdead>[traitorname] - предатель, которому удалось выполнить выданные цели, но, к сожалению, не удалось остаться в живых. Цели:\n [traitorgoalinfos]</traitorobjectiveendmessagesuccessdead>
-<traitorobjectiveendmessagesuccessdetained>[traitorname] - предатель, которому удалось выполнить выданные цели, но не удалось избежать ареста. Цели:\n [traitorgoalinfos]</traitorobjectiveendmessagesuccessdetained>
-<traitorobjectiveendmessagefailure>[traitorname] - предатель, которому не удалось выполнить выданные цели:\n [traitorgoalinfos]</traitorobjectiveendmessagefailure>
-<traitorobjectiveendmessagefailuredead>[traitorname] - предатель, которому не удалось выполнить выданные цели и остаться в живых. Цели:\n [traitorgoalinfos]</traitorobjectiveendmessagefailuredead>
-<traitorobjectiveendmessagefailuredetained>[traitorname] - предатель, которому не удалось выполнить выданные цели и избежать ареста. Цели:\n [traitorgoalinfos]</traitorobjectiveendmessagefailuredetained>
-<traitorobjectivegoalinfoformat>- [statustext]\n</traitorobjectivegoalinfoformat>
-
-<!-- Traitor goals (new) -->
-<traitorgoalstatustextformat>[infotext] ([status])</traitorgoalstatustextformat>
-<traitorgoaltimelimitfailure>Вам не удалось достичь цели вовремя.</traitorgoaltimelimitfailure>
-<traitorgoalkilltargetinfo>Убить: [targetname].</traitorgoalkilltargetinfo>
-<traitorgoalkilleveryoneinfo>Убить всех членов экипажа.</traitorgoalkilleveryoneinfo>
-<traitorgoalfinditeminfo>Ваша цель: [identifier]. Вы найдете ее здесь: [targethullname].</traitorgoalfinditeminfo>
-<traitorgoalcausereactormeltdown>Вызвать таяние реактора.</traitorgoalcausereactormeltdown>
-<traitorgoaldestroyitems>Уничтожить на подлодке: [tag] (не менее [percentage] процентов)</traitorgoaldestroyitems>
-<traitorgoalfloodpercentofsub>Затопите не менее [percentage] процентов подлодки.</traitorgoalfloodpercentofsub>
-<traitorgoaljamsonarinfo>Спрячьте действующий глушитель сонара так, чтобы его не нашли в течение [duration] сек.</traitorgoaljamsonarinfo>
-<traitorgoaljamsonarinfoalt>Заглушите сонар подлодки на [duration] сек.</traitorgoaljamsonarinfoalt>
-<traitorgoalsabotageinfo>Саботируйте цель [target], чтобы ее состояние было не выше [threshold]%.</traitorgoalsabotageinfo>
-<traitorgoalpoisoninfo>Вколите цели [targetname]: [poison].</traitorgoalpoisoninfo>
-<traitorgoaltamperoxygeninfo>Замените не менее [percentage] процентов кислородных баллонов в снаряжении для ныряния на сварочное топливо.</traitorgoaltamperoxygeninfo>
-<traitorgoaltampercoilguninfo>Зарядите холостые патроны в зарядники всех магнитных пушек.</traitorgoaltampercoilguninfo>
-<traitorgoaltampercoilguninfomulti>Зарядите холостые патроны в зарядники [number] магнитных пушек.</traitorgoaltampercoilguninfomulti>
-<traitorgoaltamperrailguninfo>Зарядите холостой снаряд в зарядники всех рельсотронов.</traitorgoaltamperrailguninfo>
-<traitorgoaltamperrailguninfomulti>Зарядите холостые снаряды ([number]) в зарядник рельсотрона.</traitorgoaltamperrailguninfomulti>
-
-<!-- Items (new) -->
-<entityname.flamer>Огнемет</entityname.flamer>
-<entitydescription.flamer>Огневое оружие, которое выстреливает потоком горящего сварочного топлива.</entitydescription.flamer>
-<entityname.smg>ПП</entityname.smg>
-<entitydescription.smg>Пистолет-пулемет .45 калибра.</entitydescription.smg>
-<entityname.smgmagazine>Обойма для ПП</entityname.smgmagazine>
-<entitydescription.smgmagazine>Обойма для 15 патронов .45 калибра.</entitydescription.smgmagazine>
-<entityname.smground>Патрон для ПП</entityname.smground>
-<entitydescription.smground>Патрон .45 калибра для пистолета-пулемета.</entitydescription.smground>
-<entityname.grenadelauncher>Гранатомет</entityname.grenadelauncher>
-<entitydescription.grenadelauncher>Портативный гранатомет для 40-мм гранат.</entitydescription.grenadelauncher>
-<entityname.40mmgrenade>40-мм граната</entityname.40mmgrenade>
-<entitydescription.40mmgrenade>Снаряд для гранатомета.</entitydescription.40mmgrenade>
-<entityname.40mmstungrenade>40-мм оглушающая граната</entityname.40mmstungrenade>
-<entitydescription.40mmstungrenade>Снаряд для гранатомета. Несмертельный.</entitydescription.40mmstungrenade>
-<entityname.shotgun>Дробовик</entityname.shotgun>
-<entitydescription.shotgun>Дробовик, разработанный для контроля толпы.</entitydescription.shotgun>
-<entityname.shotgunshell>Патрон для дробовика</entityname.shotgunshell>
-<entitydescription.shotgunshell>Патроны для дробовика. Смертельный.</entitydescription.shotgunshell>
-<entityname.stungun>Электрошокер</entityname.stungun>
-<entitydescription.stungun>Оружие, которое выстреливает электрическими дротиками.</entitydescription.stungun>
-<entityname.stungundart>Дротик для электрошокера</entityname.stungundart>
-<entitydescription.stungundart>Вызывает электрошок, который выводит цель из строя. Несмертельный.</entitydescription.stungundart>
-<entityname.toyhammer>Игрушечный молот</entityname.toyhammer>
-<entitydescription.toyhammer>Несмертельный, но жутко бесит.</entitydescription.toyhammer>
-<entityname.coilgunammoboxexplosive>Ящик взрывных снарядов</entityname.coilgunammoboxexplosive>
-<entitydescription.coilgunammoboxexplosive>Снаряды для магнитной пушки. Взрываются при столкновении с целью.</entitydescription.coilgunammoboxexplosive>
-<entityname.coilgunammoboxpiercing>Ящик пробивных снарядов</entityname.coilgunammoboxpiercing>
-<entitydescription.coilgunammoboxpiercing>Снаряд для магнитной пушки с пробивающими способностями.</entitydescription.coilgunammoboxpiercing>
-<entityname.coilgunboltexplosive>Взрывной снаряд магнитной пушки</entityname.coilgunboltexplosive>
-<entitydescription.coilgunboltexplosive>Снаряды для магнитной пушки. Взрываются при столкновении с целью.</entitydescription.coilgunboltexplosive>
-<entityname.coilgunboltpiercing>Пробивной снаряд магнитной пушки</entityname.coilgunboltpiercing>
-<entitydescription.coilgunboltpiercing>Снаряд для магнитной пушки с пробивающими способностями.</entitydescription.coilgunboltpiercing>
-<entityname.crawlermask>Маска ползуна</entityname.crawlermask>
-<entitydescription.crawlermask>Помогает сохранить анонимность. Подходит для некоторых вечеринок.</entitydescription.crawlermask>
-<entityname.huskstinger>Жало оболочки</entityname.huskstinger>
-<entitydescription.huskstinger>Самодельное колющее оружие.</entitydescription.huskstinger>
-<entityname.shellshield>Фрагмент панциря молоха</entityname.shellshield>
-<entitydescription.shellshield>Крепкий кусок панциря молоха.</entitydescription.shellshield>
-<entityname.mudraptorshell>Шкура грязевого раптора</entityname.mudraptorshell>
-<entitydescription.mudraptorshell>Защитная шкура грязевого раптора.</entitydescription.mudraptorshell>
-<entityname.accordion>Аккордеон</entityname.accordion>
-<entitydescription.accordion>Старый аккордеон ручной работы.</entitydescription.accordion>
-<entityname.bongodrums>Бонго</entityname.bongodrums>
-<entitydescription.bongodrums>Пара старых барабанов ручной работы.</entitydescription.bongodrums>
-<entityname.captainspipe>Трубка капитана</entityname.captainspipe>
-<entitydescription.captainspipe>Для успокоения нервов, когда на море качка.</entitydescription.captainspipe>
-
-<workshop.contenttag.eventset>Набор событий</workshop.contenttag.eventset>
-<workshop.contenttag.totalconversion>Полная конверсия</workshop.contenttag.totalconversion>
-<workshop.contenttag.itemassembly>Сборка предмета</workshop.contenttag.itemassembly>
-<workshop.contenttag.language>Язык</workshop.contenttag.language>
-
-<serverplaystyle>Игровой стиль</serverplaystyle>
-<servertags>Хештеги сервера</servertags>
-<servermotd>Сообщение дня</servermotd>
-<serverbanner>Баннер сервера</serverbanner>
-<serverlogo>Эмблема сервера</serverlogo>
-<servertagline>Подзаголовок</servertagline>
-
-
-<!-- *** August additions *** -->
-<!-- Server -->
-<serversettingsgeneraltab>Общие</serversettingsgeneraltab>
-<serversettingsantigriefingtab>Анти-грифинг</serversettingsantigriefingtab>
-<serverprocessclosed>Непредвиденное завершение процесса на сервере. В корневой папке игры мог быть создан отчет о сбое (servercrashreport.log).</serverprocessclosed>
-<serverprocesscrashed>Сбой процесса на сервере. В корневой папке игры создан отчет о сбое (servercrashreport.log).</serverprocesscrashed>
-<disconnectreason.servercrashed>Сбой на сервере.</disconnectreason.servercrashed>
-
-<!-- Workshop -->
-<workshoperroronenable>Не удается включить предмет из мастерской «[itemname]»</workshoperroronenable>
-
-<!-- Audio -->
-<dynamicrangecompression>Компрессия динамического диапазона</dynamicrangecompression>
-<dynamicrangecompressiontooltip>Автоматически настраивает громкость в игре для предотвращения появления звуковых помех.</dynamicrangecompressiontooltip>
-<voipnodevices>Не найдено ни одно устройство захвата звука</voipnodevices>
-
-<!-- Misc -->
-<pumpautocontrol>Автоматическое управление</pumpautocontrol>
-<viewsteamprofile>Просмотр профиля Steam</viewsteamprofile>
-<deletefileverification>Вы уверены, что хотите удалить [filename]?</deletefileverification>
-<connection.activate>активировать</connection.activate>
-
-<!-- Submarine labels -->
-<label.betadeck>Палуба «Бета»</label.betadeck>
-<label.airlock>Шлюз</label.airlock>
-<label.dockingport>Стык. порт</label.dockingport>
-<label.weapons>Оружие</label.weapons>
-<label.cargo>Груз. отсек</label.cargo>
-<label.crewquarters>Жилой отсек</label.crewquarters>
-<label.electrical1>Щитовая №1</label.electrical1>
-<label.electrical2>Щитовая №2</label.electrical2>
-<label.medical>Медотсек</label.medical>
-<label.engineering>Инженерная</label.engineering>
-<label.ballast>Балласт</label.ballast>
-<label.reactor>Реактор</label.reactor>
-<label.armory>Арсенал</label.armory>
-<label.batteryoutput>Мощность батареи</label.batteryoutput>
-<label.onoff>Вкл./Откл.</label.onoff>
-<label.bilge>Днище</label.bilge>
-<label.powermainline>Силовая магистраль</label.powermainline>
-<label.command>Мостик</label.command>
-<label.engine>Двигатель</label.engine>
-
-<!-- Karma system -->
-<karma.kickbanthreshold>Порог блокировки</karma.kickbanthreshold>
-<karma.kickbanthresholdtooltip>Игроки, чья карма опуститься ниже это отметки, будут заблокированы на этом сервере.</karma.kickbanthresholdtooltip>
-<karma.karmadecay>Скорость убывания кармы</karma.karmadecay>
-<karma.karmadecaytooltip>Какое количество кармы вы теряете каждую секунду, когда ее значение находится выше порога кармы.</karma.karmadecaytooltip>
-<karma.karmadecaythreshold>Порог убывания кармы</karma.karmadecaythreshold>
-<karma.karmadecaythresholdtooltip>Карма постепенно убывает, если ее значение находится выше этого порога.</karma.karmadecaythresholdtooltip>
-<karma.karmaincrease>Скорость увеличения кармы</karma.karmaincrease>
-<karma.karmaincreasetooltip>Какое количество кармы вы получаете каждую секунду, когда ее значение находится ниже порога увеличения.</karma.karmaincreasetooltip>
-<karma.karmaincreasethreshold>Порог увеличения кармы</karma.karmaincreasethreshold>
-<karma.karmaincreasethresholdtooltip>Карма постепенно увеличивается, если ее значение находится выше этого порога.</karma.karmaincreasethresholdtooltip>
-<karma.structurerepairkarmaincrease>Ремонт сооружения</karma.structurerepairkarmaincrease>
-<karma.structurerepairkarmaincreasetooltip>Какое количество кармы вы получаете за ремонт сооружений (очки начисляются в зависимости от объема устраненных повреждений: например, если выбрать 0,5, то за восстановление стены с 0 до 100 вы получите 5 очков кармы).</karma.structurerepairkarmaincreasetooltip>
-<karma.structuredamagekarmadecrease>Повреждение сооружения</karma.structuredamagekarmadecrease>
-<karma.structuredamagekarmadecreasetooltip>Какое количество кармы вы теряете за повреждение сооружений (очки снимаются в зависимости от объема нанесенных повреждений: например, если выбрать 0,5, то за разрушение стены с 0 до 100 вы потеряете 5 очков кармы).</karma.structuredamagekarmadecreasetooltip>
-<karma.itemrepairkarmaincrease>Ремонт устройства</karma.itemrepairkarmaincrease>
-<karma.itemrepairkarmaincreasetooltip>Какое количество кармы вы получаете за ремонт устройства (очки начисляются в зависимости от объема устраненных повреждений: например, если выбрать 0,5, то за восстановление устройства с 0 до 100 вы получите 5 очков кармы).</karma.itemrepairkarmaincreasetooltip>
-<karma.damageenemykarmaincrease>Урон противнику</karma.damageenemykarmaincrease>
-<karma.damageenemykarmaincreasetooltip>Какое количество кармы вы получаете за нанесение урона врагам (очки начисляются в зависимости от объема нанесенного урона).</karma.damageenemykarmaincreasetooltip>
-<karma.healfriendlykarmaincrease>Исцеление союзника</karma.healfriendlykarmaincrease>
-<karma.healfriendlykarmaincreasetooltip>Какое количество кармы вы получаете за исцеление других членов экипажа (в зависимости от объема исцеления).</karma.healfriendlykarmaincreasetooltip>
-<karma.damagefriendlykarmadecrease>Урон союзнику</karma.damagefriendlykarmadecrease>
-<karma.damagefriendlykarmadecreasetooltip>Какое количество кармы вы теряете, нанося урон другим членам экипажа (в зависимости от объема нанесенного урона).</karma.damagefriendlykarmadecreasetooltip>
-<karma.reactormeltdownkarmadecrease>Расплавление реактора</karma.reactormeltdownkarmadecrease>
-<karma.reactormeltdownkarmadecreasetooltip>Какое количество кармы теряет игрок, вызывая расплавление реактора.</karma.reactormeltdownkarmadecreasetooltip>
-<karma.reactoroverheatkarmadecrease>Перегрев реактора</karma.reactoroverheatkarmadecrease>
-<karma.reactoroverheatkarmadecreasetooltip>Какое количество кармы ежесекундно теряет игрок, который работает с реактором, пока его температура остается за критической отметкой.</karma.reactoroverheatkarmadecreasetooltip>
-<karma.extinguishfirekarmaincrease>Тушение пожаров</karma.extinguishfirekarmaincrease>
-<karma.extinguishfirekarmaincreasetooltip>Какое количество кармы ежесекундно получает игрок во время тушения пожаров.</karma.extinguishfirekarmaincreasetooltip>
-<karma.allowedwiredisconnectionsperminute>Допустимое количество отключенных за одну минуту проводов</karma.allowedwiredisconnectionsperminute>
-<karma.allowedwiredisconnectionsperminutetooltip>Какое количество проводов может за одну минуту отключить игрок, прежде чем он начнет терять карму.</karma.allowedwiredisconnectionsperminutetooltip>
-<karma.wiredisconnectionkarmadecrease>Отключение множества проводов</karma.wiredisconnectionkarmadecrease>
-<karma.wiredisconnectionkarmadecreasetooltip>Какое количество кармы теряет игрок, который отключает больше допустимого количества проводов.</karma.wiredisconnectionkarmadecreasetooltip>
-<karma.spamfilterkarmadecrease>Активация спам-фильтра</karma.spamfilterkarmadecrease>
-<karma.spamfilterkarmadecreasetooltip>Какое количество кармы теряет игрок, который активировал спам-фильтр текстового чата.</karma.spamfilterkarmadecreasetooltip>
-<karma.herpesthreshold>Порог космического герпеса</karma.herpesthreshold>
-<karma.herpesthresholdtooltip>Насколько сильна должна опуститься карма игрока, прежде чем он заразится космическим герпесом.</karma.herpesthresholdtooltip>
-<karma.positiveactions>Полезные действия</karma.positiveactions>
-<karma.negativeactions>Вредные действия</karma.negativeactions>
-<karmapreset.default>По умолчанию</karmapreset.default>
-<karmapreset.strict>Строго</karmapreset.strict>
-<karmapreset.custom>Свои условия</karmapreset.custom>
-<karmadecreasedunknownamount>Ваша карма понизилась</karmadecreasedunknownamount>
-<karmaincreasedunknownamount>Ваша карма увеличилась</karmaincreasedunknownamount>
-<afflictionname.spaceherpes>Космический герпес</afflictionname.spaceherpes>
-<afflictiondescription.spaceherpes>Лицо пациента покрыто жуткими нарывами и язвами.</afflictiondescription.spaceherpes>
-<afflictionname.invertcontrols>Дезориентация</afflictionname.invertcontrols>
-<afflictiondescription.invertcontrols>Глаза пациента мечутся из стороны в сторону, похоже, он испытывает проблемы с ориентированием в пространстве.</afflictiondescription.invertcontrols>
-
-
-<damagebutton>Урон</damagebutton>
-<pending>На рассмотрении</pending>
-<inprogress>В процессе</inprogress>
-<complete>Завершено</complete>
-
-<!-- Traitor goals -->
-<traitorgoalfindcontainerinfo>[targethullname] - надо срочно отправляться сюда. Там, внутри объекта «[target]», находится ваша следующая цель.</traitorgoalfindcontainerinfo>
-<traitorgoaldestroyoxygen>Уничтожить не менее [percentage] процентов не носимых кислородных баллонов на борту подлодки.</traitorgoaldestroyoxygen>
-<traitorgoalsabotagedurationinfo>Саботировать работу объекта «[tag]», понизив его производительность до [threshold]% не менее чем на [duration] сек.</traitorgoalsabotagedurationinfo>
-<traitorgoalescape>Бежать к ближайшему челноку.</traitorgoalescape>
-
-<!-- MVP traitor mission text package -->
-<mvptraitormissionstartinfotext>Внутри вашей головы раздается крик, достаточно громкий, чтобы напугать вас: «К ТЕБЕ ВЗЫВАЕТ КУЛЬТ ПАРАЗИТА. СЛУЖИ НАМ!»</mvptraitormissionstartinfotext>
-<mvptraitorobjectivestartmessage1>Постепенно в вашем сознании начинает формироваться идея, которая, несмотря на всю свою будничность, кажется вам необычайно соблазнительной:\n[traitorgoalinfos]</mvptraitorobjectivestartmessage1>
-<mvp_goalinfotext_1>Обыщите шкафчики. Под одним из запасных кислородных баллонов спрятано особое послание специально для вас.</mvp_goalinfotext_1>
-<mvpobjectivesuccessmessage1>Ваши ожидания оправдались: под одним из баллонов лежал кусок грязной бумаги, испещренный примитивными символами. Хотя вам каким-то образом удалось расшифровать закодированные в них указания.</mvpobjectivesuccessmessage1>
-<mvptraitorobjectivestartmessage2>Ваша первая задача:\n[traitorgoalinfos]</mvptraitorobjectivestartmessage2>
-<mvpobjectivesuccessmessage2>Выполнение первого поручения приносит вам поистине невиданное удовольствие. На миг в вашей голове раздается сухой безумный хохот, который быстро сменяется жутковатым влажным пощелкиванием.</mvpobjectivesuccessmessage2>
-<mvptraitorobjectivestartmessage3>Вы читаете следующее зашифрованное указание:\n[traitorgoalinfos]</mvptraitorobjectivestartmessage3>
-<mvpobjectivesuccessmessage3>Дело сделано. На подлодке царит хаос. Голос в вашей голове стихает, ваша судьба предрешена.</mvpobjectivesuccessmessage3>
-
-<!-- flood_1 traitor mission text package -->
-<flood_1_traitormissionstartinfotext>Слава красному носу!</flood_1_traitormissionstartinfotext>
-<flood_1_traitorobjectivestartmessage1>Пробил час. Пора вспомнить все, что вам сказал человек с раскрашенным лицом в погрузочном доке Линии Миноса, и браться за работу:\n[traitorgoalinfos]</flood_1_traitorobjectivestartmessage1>
-<flood_1_goalinfotext_1>Обыщите ящики с аварийными припасами в каждом помещении. В одном из них агент спрятал кнопку.</flood_1_goalinfotext_1>
-<flood_1_objectivesuccessmessage1>Вы быстро кладете кнопку в карман и стараетесь вести себя естественно. ХИ-ХИ!</flood_1_objectivesuccessmessage1>
-<flood_1_traitorobjectivestartmessage2>Далее вы должны найти взрывчатку, до того как это сделает кто-то другой!\n[traitorgoalinfos]</flood_1_traitorobjectivestartmessage2>
-<flood_1_goalinfotext_2>Заберите взрывчатку из медицинского отсека.</flood_1_goalinfotext_2>
-<flood_1_objectivesuccessmessage2>Пока все складывается идеально. Вы хватаете взрывчатку и стараетесь не хихикать слишком громко.</flood_1_objectivesuccessmessage2>
-<flood_1_traitorobjectivestartmessage3>И, наконец, человек с раскрашенным лицом сказал вам найти то, что поможет активировать бомбу!\n[traitorgoalinfos]</flood_1_traitorobjectivestartmessage3>
-<flood_1_goalinfotext_3>Обыщите стальные шкафчики на подлодке и найдите детонатор.</flood_1_goalinfotext_3>
-<flood_1_objectivesuccessmessage3>Агент постарался на славу! Теперь у вас есть все, чтобы начать вечеринку.</flood_1_objectivesuccessmessage3>
-<flood_1_traitorobjectivestartmessage4>Разместите детонатор на стене в подходящем месте, затем установите на безопасном расстоянии кнопку и соедините их проводом — и пускай оно все рванет и затопит это ржавое корыто!\n[traitorgoalinfos]</flood_1_traitorobjectivestartmessage4>
-<flood_1_objectivesuccessmessage4>ХИ-ХИ! ХИ-ХИ! Внутри подлодки уже достаточно воды, ваше задание выполнено. Осталось только добраться вплавь до ближайшего аванпоста и доложить об успехе человеку с раскрашенным лицом...</flood_1_objectivesuccessmessage4>
-
-<!-- flood_2 traitor mission text package -->
-<flood_2_traitormissionstartinfotext>Украдкой оглядевшись, вы понимаете, что за вами никто не наблюдает, а значит, пора действовать.</flood_2_traitormissionstartinfotext>
-<flood_2_traitorobjectivestartmessage1>Вы потратили несколько месяцев, втираясь в доверие к членам экипажа. Пора пожинать плоды своих трудов.\n[traitorgoalinfos]</flood_2_traitorobjectivestartmessage1>
-<flood_2_goalinfotext_1>Обыщите ящики с припасами на случай аварии. В одной из подводных масок спрятан низкочастотный радиоприемник, который потребуется вам для достижения вашей цели.</flood_2_goalinfotext_1>
-<flood_2_objectivesuccessmessage1>Вы находите крохотный приемник и включаете его.</flood_2_objectivesuccessmessage1>
-<flood_2_traitorobjectivestartmessage2>Приемник шипит и потрескивает, но сквозь шум помех вам все же удается разобрать сообщение: «Руководство Сил сопротивления Европы разрешает приступить к выполнению задания. Для начала потребуется отвлекающий маневр».\n[traitorgoalinfos]</flood_2_traitorobjectivestartmessage2>
-<flood_2_objectivesuccessmessage2>Славная работа. Без кислорода эти свиньи скоро начнут паниковать.</flood_2_objectivesuccessmessage2>
-<flood_2_traitorobjectivestartmessage3>А теперь устроим небольшой потоп — пора искупать этих грязных фашистов:\n[traitorgoalinfos]</flood_2_traitorobjectivestartmessage3>
-<flood_2_objectivesuccessmessage3>Превосходно! Помни, товарищ! Не бывает плохой тактики — бывают неподходящие цели!</flood_2_objectivesuccessmessage3>
-<flood_2_traitorobjectivestartmessage4>Скорее! Пока есть возможность, воспользуйся замешательством и убей столько грязных свиней, сколько сможешь!\n[traitorgoalinfos]</flood_2_traitorobjectivestartmessage4>
-<flood_2_objectivesuccessmessage4>Расправляясь с заклятыми врагами, вы с горечью замечаете, что ваш передатчик вдруг умолкает. Ваши товарищи бросили вас, оставив на милость Матери Европы.</flood_2_objectivesuccessmessage4>
-
-<!-- modified values: -->
-<mechanic.draintext>Когда подлодка затоплена, лишнюю воду можно откачать при помощи насосов. Обычно насосы получают сигнал от датчиков воды или навигационных терминалов, но некоторые можно использовать и вручную. Чтобы включить насос, используйте {0} и переведите выключатель в положение «Вкл.»</mechanic.draintext>
-
-
+<connection.batterychargestatusout>заряд</connection.batterychargestatusout>
+<connection.batterychargepercentage>заряд_%</connection.batterychargepercentage>
+<connection.batterysetrechargespeed>назначить_скорость перезарядки</connection.batterysetrechargespeed>
+<connection.batteryrechargespeedout>скорость_перезарядки_выкл</connection.batteryrechargespeedout>
 </infotexts>

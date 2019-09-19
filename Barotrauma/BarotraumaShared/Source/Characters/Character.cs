@@ -875,7 +875,7 @@ namespace Barotrauma
             var name = mainElement.GetAttributeString("name", null);
             if (name != null)
             {
-                DebugConsole.ThrowError($"Error in {file}: 'name' is deprecated! Use 'speciesname' instead.");
+                DebugConsole.NewMessage($"Error in {file}: 'name' is deprecated! Use 'speciesname' instead.", Color.Orange);
             }
             else
             {

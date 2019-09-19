@@ -1012,6 +1012,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Could not find an order with the AI tag \"" + orderIdentifier + "\".\n" + Environment.StackTrace);
                 return;
             }
+            ToggleCrewAreaOpen = true;
             var characterElement = characterListBox.Content.FindChild(character);
             GUIButton orderBtn = characterElement.FindChild(order, recursive: true) as GUIButton;
             if (orderBtn.FlashTimer <= 0)

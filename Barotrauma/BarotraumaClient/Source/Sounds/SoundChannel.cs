@@ -289,8 +289,11 @@ namespace Barotrauma.Sounds
             get
             {
                 if (!IsPlaying) { return 0.0f; }
-
+                
                 uint alSource = Sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex);
+
+                if (alSource == 0) { return 0.0f; }
+
                 if (!IsStream)
                 {
                     int playbackPos; Al.GetSourcei(alSource, Al.SampleOffset, out playbackPos);

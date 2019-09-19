@@ -14,6 +14,8 @@
     spawntype="ruin"
     itemidentifier="skyholderartifact">
 
+    <Icon texture="Content/UI/MissionIcons2.png" sourcerect="512,0,256,256" color="49,93,233"/>
+
     <LocationType from="City" to="Research"/>
     <LocationType from="City" to="None"/>
     <LocationType from="City" to="Lair"/>
@@ -48,6 +50,8 @@
     spawntype="ruin"
     itemidentifier="thermalartifact">
 
+    <Icon texture="Content/UI/MissionIcons2.png" sourcerect="512,0,256,256" color="49,93,233"/>
+    
     <LocationType from="City" to="Research"/>
     <LocationType from="City" to="None"/>
     <LocationType from="City" to="Lair"/>
@@ -82,6 +86,8 @@
     spawntype="cave"
     itemidentifier="thermalartifact">
 
+    <Icon texture="Content/UI/MissionIcons2.png" sourcerect="768,0,256,256" color="49,93,233"/>
+    
     <LocationType from="City" to="Research"/>
     <LocationType from="City" to="None"/>
     <LocationType from="City" to="Lair"/>
@@ -149,6 +155,8 @@
     spawntype="cave"
     itemidentifier="nasonovartifact">
 
+    <Icon texture="Content/UI/MissionIcons2.png" sourcerect="768,0,256,256" color="49,93,233"/>
+    
     <LocationType from="City" to="Research"/>
     <LocationType from="City" to="None"/>
     <LocationType from="City" to="Lair"/>
@@ -179,6 +187,8 @@
     successmessage="The Moloch has been killed."
     monsterfile="Content/Characters/Molochboss/Molochboss.xml">
 
+    <Icon texture="Content/UI/MissionIcons2.png" sourcerect="768,512,256,256" color="214,50,48"/>
+    
     <LocationType from="City" to="None"/>
     <LocationType from="City" to="City"/>
     <LocationType from="City" to="Outpost"/>
@@ -234,6 +244,8 @@
     successmessage="The Tiger Thresher has been killed."
     monsterfile="Content/Characters/Tigerthresherboss/Tigerthresherboss.xml">
     <message header="Target terminated" text="The thresher is dead. Navigate the submarine out of the cavern to claim the reward."/>
+
+    <Icon texture="Content/UI/MissionIcons2.png" sourcerect="256,768,256,256" color="214,50,48"/>
     
     <LocationType from="City" to="None"/>
     <LocationType from="City" to="City"/>
@@ -292,6 +304,8 @@
     monsterfile="Content/Characters/Hammerhead/Hammerhead.xml">
     <message header="Target terminated" text="The Hammerhead is dead. Navigate the submarine out of the cavern to claim the reward."/>
 
+    <Icon texture="Content/UI/MissionIcons2.png" sourcerect="512,768,256,256" color="214,50,48"/>
+    
     <LocationType from="City" to="None"/>
     <LocationType from="City" to="City"/>
     <LocationType from="City" to="Outpost"/>
@@ -349,6 +363,8 @@
     monstercount="10" >   
     <message header="Target terminated" text="The swarm is terminated. Navigate the submarine out of the cavern to claim the reward."/>
 
+    <Icon texture="Content/UI/MissionIcons2.png" sourcerect="768,768,256,256" color="214,50,48"/>
+    
     <LocationType from="City" to="None"/>
     <LocationType from="City" to="City"/>
     <LocationType from="City" to="Outpost"/>
@@ -405,6 +421,8 @@
     monsterfile="Content/Characters/Crawler/Crawler.xml"
     monstercount="18" >
     <message header="Target terminated" text="The swarm is terminated. Navigate the submarine out of the cavern to claim the reward."/>
+
+    <Icon texture="Content/UI/MissionIcons2.png" sourcerect="768,768,256,256" color="214,50,48"/>
 
     <LocationType from="City" to="None"/>
     <LocationType from="City" to="City"/>
@@ -481,7 +499,9 @@
     sonarlabel="Infrasonic signal"
     successmessage="It turns out the signal was emitted by a Moloch. The researchers of [location1] have agreed to pay you the reward nevertheless for getting rid of the Moloch."
     monsterfile="Content/Characters/Moloch/Moloch.xml">
-    
+
+    <Icon texture="Content/UI/MissionIcons2.png" sourcerect="512,0,256,256" color="49,93,233"/>
+
     <LocationType from="City" to="Research"/>
     <LocationType from="City" to="None"/>
     <LocationType from="City" to="Lair"/>
@@ -510,6 +530,8 @@
     sonarlabel="Emergency Signal"
     successmessage="The researchers of [location2] are eager to know all the details of the encounter, but seem hesitant to answer any questions regarding the vessel. They do however offer you 2000 credits as &quot;reimbursement for your troubles&quot;."
     monsterfile="Content/Characters/Carrier/Carrier.xml">
+
+    <Icon texture="Content/UI/MissionIcons2.png" sourcerect="256,512,256,256" color="64,188,216"/>
     
     <LocationType from="City" to="Research"/>
     <LocationType from="City" to="None"/>
@@ -551,6 +573,8 @@
       </Item>
     </Items>
 
+    <Icon texture="Content/UI/MissionIcons2.png" sourcerect="0,256,256,256" color="243,146,55"/>
+    
     <LocationType from="City" to="City"/>
     <LocationType from="City" to="Outpost"/>
     <LocationType from="City" to="Military"/>
@@ -592,6 +616,8 @@
       </Item>
     </Items>
 
+    <Icon texture="Content/UI/MissionIcons2.png" sourcerect="0,256,256,256" color="243,146,55"/>
+    
     <LocationType from="City" to="City"/>
     <LocationType from="City" to="Outpost"/>
     <LocationType from="City" to="Military"/>
@@ -628,6 +654,8 @@
       </Item>
     </Items>
 
+    <Icon texture="Content/UI/MissionIcons2.png" sourcerect="256,256,256,256" color="243,146,55"/>
+    
     <LocationType from="City" to="City"/>
     <LocationType from="City" to="Outpost"/>
     <LocationType from="City" to="Military"/>
@@ -663,6 +691,8 @@
         <Item identifier="huskeggs" amount="10"/>
       </Item>
     </Items>
+
+    <Icon texture="Content/UI/MissionIcons2.png" sourcerect="512,256,256,256" color="243,146,55"/>
     
     <LocationType from="City" to="City"/>
     <LocationType from="City" to="Outpost"/>
@@ -701,6 +731,8 @@
         <Item identifier="nitroglycerin" amount="10"/>
       </Item>
     </Items>
+
+    <Icon texture="Content/UI/MissionIcons2.png" sourcerect="0,256,256,256" color="243,146,55"/>
     
     <LocationType from="City" to="City"/>
     <LocationType from="City" to="Outpost"/>
@@ -747,6 +779,8 @@
         <Item identifier="bikehorn" amount="20"/>
       </Item>
     </Items>
+
+    <Icon texture="Content/UI/MissionIcons2.png" sourcerect="768,256,256,256" color="243,146,55"/>
     
     <LocationType from="City" to="City"/>
     <LocationType from="City" to="Outpost"/>
@@ -802,7 +836,9 @@
         <Item identifier="titanium" amount="10"/>
       </Item>
     </Items>
-      
+
+    <Icon texture="Content/UI/MissionIcons2.png" sourcerect="256,0,256,256" color="243,146,55"/>
+    
     <LocationType from="City" to="Outpost"/>
     <LocationType from="Mine" to="City"/>
     <LocationType from="Mine" to="Outpost"/>
@@ -838,6 +874,8 @@
       </Item>
     </Items>
 
+    <Icon texture="Content/UI/MissionIcons2.png" sourcerect="256,0,256,256" color="243,146,55"/>
+    
     <LocationType from="City" to="Military"/>
     <LocationType from="Mine" to="City"/>
     <LocationType from="Mine" to="Outpost"/>
@@ -872,6 +910,8 @@
       </Item>
     </Items>
 
+    <Icon texture="Content/UI/MissionIcons2.png" sourcerect="0,0,256,256" color="243,146,55"/>
+    
     <LocationType from="City" to="City"/>
     <LocationType from="City" to="Outpost"/>
     <LocationType from="City" to="Military"/>
@@ -901,9 +941,10 @@
       <Item identifier="metalcrate">
         <Item identifier="morbusineantidote" amount="5"/>
       </Item>
-
     </Items>
 
+    <Icon texture="Content/UI/MissionIcons2.png" sourcerect="0,0,256,256" color="243,146,55"/>
+    
     <LocationType from="City" to="City"/>
     <LocationType from="City" to="Outpost"/>
     <LocationType from="City" to="Military"/>
@@ -938,5 +979,7 @@
     
     successmessage="The [loser] vessel has been defeated by the [winner] crew!"
     failuremessage="Both crews have perished.">
+
+    <Icon texture="Content/UI/MissionIcons2.png" sourcerect="0,768,256,256" color="243,146,55"/>
   </CombatMission>
 </Missions>

@@ -27,11 +27,15 @@ namespace Barotrauma.Items.Components
 
         private GUITickBox directionalTickBox;
         private GUIScrollBar directionalSlider;
+        private Vector2? pingDragDirection = null;
 
         private GUILayoutGroup activeControlsContainer;
         private GUIFrame controlContainer;
 
         private GUICustomComponent sonarView;
+
+        private Sprite directionalPingBackground;
+        private Sprite[] directionalPingButton;
 
         private float displayBorderSize;
 
@@ -149,14 +153,10 @@ namespace Barotrauma.Items.Components
                 {
                     showDirectionalIndicatorTimer = 1.0f;
                     float pingAngle = MathHelper.Lerp(0.0f, MathHelper.TwoPi, scroll);
-                    pingDirection = new Vector2((float)Math.Cos(pingAngle), (float)Math.Sin(pingAngle));
-                    if (GameMain.Client != null)
-                    {
-                        unsentChanges = true;
-                        correctionTimer = CorrectionDelay;
-                    }
+                    SetPingDirection(new Vector2((float)Math.Cos(pingAngle), (float)Math.Sin(pingAngle)));
                     return true;
-                }
+                },
+                Range = new Vector2(0,MathHelper.TwoPi)
             };
             
             signalWarningText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), paddedControlContainer.RectTransform), "", Color.Orange, textAlignment: Alignment.Center);
@@ -177,6 +177,14 @@ namespace Barotrauma.Items.Components
                         break;
                     case "directionalpingcircle":
                         directionalPingCircle = new Sprite(subElement);
+                        break;
+                    case "directionalpingbackground":
+                        directionalPingBackground = new Sprite(subElement);
+                        break;
+                    case "directionalpingbutton":
+                        if (directionalPingButton == null) { directionalPingButton = new Sprite[3]; }
+                        int index = subElement.GetAttributeInt("index", 0);
+                        directionalPingButton[index] = new Sprite(subElement);
                         break;
                     case "screenoverlay":
                         screenOverlay = new Sprite(subElement);
@@ -204,6 +212,16 @@ namespace Barotrauma.Items.Components
             int viewSize = (int)Math.Min(GuiFrame.Rect.Width - 150, GuiFrame.Rect.Height * 0.9f);
             sonarView.RectTransform.NonScaledSize = new Point(viewSize);
             controlContainer.RectTransform.AbsoluteOffset = new Point((int)(viewSize * 0.9f), 0);
+        }
+
+        private void SetPingDirection(Vector2 direction)
+        {
+            pingDirection = direction;
+            if (GameMain.Client != null)
+            {
+                unsentChanges = true;
+                correctionTimer = CorrectionDelay;
+            }
         }
 
         public override void OnItemLoaded()
@@ -352,6 +370,43 @@ namespace Barotrauma.Items.Components
                 prevDockingDist = float.MaxValue;
             }
 
+            if (steering != null && directionalPingButton != null)
+            {
+                steering.SteerRadius = useDirectionalPing && pingDragDirection != null ?
+                    -1.0f :
+                    PlayerInput.LeftButtonDown() || !PlayerInput.LeftButtonHeld() ?
+                        (float?)((sonarView.Rect.Width / 2) - (directionalPingButton[0].size.X * sonarView.Rect.Width / screenBackground.size.X)) :
+                        null;                
+            }
+
+            if (useDirectionalPing && PlayerInput.LeftButtonHeld())
+            {
+                if ((MouseInDirectionalPingRing(sonarView.Rect, false) && PlayerInput.LeftButtonDown()) || pingDragDirection != null)
+                {
+                    Vector2 newDragDir = Vector2.Normalize(PlayerInput.MousePosition - sonarView.Rect.Center.ToVector2());
+                    if (pingDragDirection == null && !MouseInDirectionalPingRing(sonarView.Rect, true))
+                    {
+                        directionalSlider.BarScrollValue = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(newDragDir));
+                        directionalSlider.OnMoved(directionalSlider, directionalSlider.BarScroll);
+                    }
+                    else if (pingDragDirection != null)
+                    {
+                        float newAngle = MathUtils.VectorToAngle(newDragDir);
+                        float oldAngle = MathUtils.VectorToAngle(pingDragDirection.Value);
+                        float pingAngle = MathUtils.VectorToAngle(pingDirection);
+                        pingAngle = MathUtils.WrapAngleTwoPi(pingAngle + MathUtils.GetShortestAngle(oldAngle, newAngle));
+                        directionalSlider.BarScrollValue = pingAngle;
+                        directionalSlider.OnMoved(directionalSlider, directionalSlider.BarScroll);
+                    }
+
+                    pingDragDirection = newDragDir;
+                }
+            }
+            else
+            {
+                pingDragDirection = null;
+            }
+
             for (var pingIndex = 0; pingIndex < activePingsCount; ++pingIndex)
             {
                 var activePing = activePings[pingIndex];
@@ -391,6 +446,28 @@ namespace Barotrauma.Items.Components
             prevPassivePingRadius = passivePingRadius;
         }
         
+        private bool MouseInDirectionalPingRing(Rectangle rect, bool onButton)
+        {
+            if (!useDirectionalPing || directionalPingButton == null) { return false; }
+
+            float endRadius = rect.Width / 2.0f;
+            float startRadius = endRadius - directionalPingButton[0].size.X * rect.Width / screenBackground.size.X;
+
+            Vector2 center = rect.Center.ToVector2();
+
+            float dist = Vector2.DistanceSquared(PlayerInput.MousePosition,center);
+            
+            bool retVal = (dist >= startRadius*startRadius) && (dist < endRadius*endRadius);
+            if (onButton)
+            {
+                float pingAngle = MathUtils.VectorToAngle(pingDirection);
+                float mouseAngle = MathUtils.VectorToAngle(Vector2.Normalize(PlayerInput.MousePosition - center));
+                retVal &= Math.Abs(MathUtils.GetShortestAngle(mouseAngle, pingAngle)) < MathHelper.ToRadians(DirectionalPingSector * 0.5f);
+            }
+
+            return retVal;
+        }
+
         private void DrawSonar(SpriteBatch spriteBatch, Rectangle rect)
         {
             displayBorderSize = 0.2f;
@@ -401,6 +478,24 @@ namespace Barotrauma.Items.Components
             if (screenBackground != null)
             {
                 screenBackground.Draw(spriteBatch, center, 0.0f, rect.Width / screenBackground.size.X);
+            }
+
+            if (useDirectionalPing)
+            {
+                directionalPingBackground?.Draw(spriteBatch, center, 0.0f, rect.Width / directionalPingBackground.size.X);
+                if (directionalPingButton != null)
+                {
+                    int buttonSprIndex = 0;
+                    if (pingDragDirection != null)
+                    {
+                        buttonSprIndex = 2;
+                    }
+                    else if (MouseInDirectionalPingRing(rect, true))
+                    {
+                        buttonSprIndex = 1;
+                    }
+                    directionalPingButton[buttonSprIndex]?.Draw(spriteBatch, center, MathUtils.VectorToAngle(pingDirection), rect.Width / directionalPingBackground.size.X);
+                }
             }
 
             if (currentMode == Mode.Active && currentPingIndex != -1)

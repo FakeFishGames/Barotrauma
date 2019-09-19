@@ -641,6 +641,9 @@ namespace Barotrauma.Networking
                         {
                             errorMsg += "\nInner exception: " + e.InnerException.Message + "\n" + e.InnerException.StackTrace;
                         }
+#if DEBUG
+                        DebugConsole.ThrowError("Error while reading an ingame update message from server.", e);
+#endif
                         GameAnalyticsManager.AddErrorEventOnce("GameClient.ReadDataMessage:ReadIngameUpdate", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                         throw;
                     }
@@ -1105,48 +1108,47 @@ namespace Barotrauma.Networking
                 }
             }
 
-            //this shouldn't happen, TrySelectSub should stop the coroutine if the correct sub/shuttle cannot be found
-            if (GameMain.NetLobbyScreen.SelectedSub == null ||
-                GameMain.NetLobbyScreen.SelectedSub.Name != subName ||
-                GameMain.NetLobbyScreen.SelectedSub.MD5Hash?.Hash != subHash)
-            {
-                string errorMsg = "Failed to select submarine \"" + subName + "\" (hash: " + subHash + ").";
-                if (GameMain.NetLobbyScreen.SelectedSub == null)
-                {
-                    errorMsg += "\n" + "SelectedSub is null";
-                }
-                else
-                {
-                    if (GameMain.NetLobbyScreen.SelectedSub.Name != subName)
-                    {
-                        errorMsg += "\n" + "Name mismatch: " + GameMain.NetLobbyScreen.SelectedSub.Name + " != " + subName;
-                    }
-                    if (GameMain.NetLobbyScreen.SelectedSub.MD5Hash?.Hash != subHash)
-                    {
-                        errorMsg += "\n" + "Hash mismatch: " + GameMain.NetLobbyScreen.SelectedSub.MD5Hash?.Hash + " != " + subHash;
-                    }
-                }
-                DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:FailedToSelectSub" + subName, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
-                CoroutineManager.StartCoroutine(EndGame(""));
-                yield return CoroutineStatus.Failure;
-            }
-
-            if (GameMain.NetLobbyScreen.SelectedShuttle == null ||
-                GameMain.NetLobbyScreen.SelectedShuttle.Name != shuttleName ||
-                GameMain.NetLobbyScreen.SelectedShuttle.MD5Hash?.Hash != shuttleHash)
-            {
-                string errorMsg = "Failed to select shuttle \"" + shuttleName + "\" (hash: " + shuttleHash + ").";
-                DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:FailedToSelectShuttle" + shuttleName, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
-                CoroutineManager.StartCoroutine(EndGame(""));
-                yield return CoroutineStatus.Failure;
-            }
-
             Rand.SetSyncedSeed(seed);
 
             if (campaign == null)
             {
+                //this shouldn't happen, TrySelectSub should stop the coroutine if the correct sub/shuttle cannot be found
+                if (GameMain.NetLobbyScreen.SelectedSub == null ||
+                    GameMain.NetLobbyScreen.SelectedSub.Name != subName ||
+                    GameMain.NetLobbyScreen.SelectedSub.MD5Hash?.Hash != subHash)
+                {
+                    string errorMsg = "Failed to select submarine \"" + subName + "\" (hash: " + subHash + ").";
+                    if (GameMain.NetLobbyScreen.SelectedSub == null)
+                    {
+                        errorMsg += "\n" + "SelectedSub is null";
+                    }
+                    else
+                    {
+                        if (GameMain.NetLobbyScreen.SelectedSub.Name != subName)
+                        {
+                            errorMsg += "\n" + "Name mismatch: " + GameMain.NetLobbyScreen.SelectedSub.Name + " != " + subName;
+                        }
+                        if (GameMain.NetLobbyScreen.SelectedSub.MD5Hash?.Hash != subHash)
+                        {
+                            errorMsg += "\n" + "Hash mismatch: " + GameMain.NetLobbyScreen.SelectedSub.MD5Hash?.Hash + " != " + subHash;
+                        }
+                    }
+                    DebugConsole.ThrowError(errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:FailedToSelectSub" + subName, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    CoroutineManager.StartCoroutine(EndGame(""));
+                    yield return CoroutineStatus.Failure;
+                }
+                if (GameMain.NetLobbyScreen.SelectedShuttle == null ||
+                    GameMain.NetLobbyScreen.SelectedShuttle.Name != shuttleName ||
+                    GameMain.NetLobbyScreen.SelectedShuttle.MD5Hash?.Hash != shuttleHash)
+                {
+                    string errorMsg = "Failed to select shuttle \"" + shuttleName + "\" (hash: " + shuttleHash + ").";
+                    DebugConsole.ThrowError(errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:FailedToSelectShuttle" + shuttleName, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    CoroutineManager.StartCoroutine(EndGame(""));
+                    yield return CoroutineStatus.Failure;
+                }
+
                 GameMain.GameSession = missionIndex < 0 ?
                     new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, MissionType.None) :
                     new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, MissionPrefab.List[missionIndex]);
@@ -1253,16 +1255,14 @@ namespace Barotrauma.Networking
             {
                 string subName = inc.ReadString();
                 string subHash = inc.ReadString();
+                bool requiredContentPackagesInstalled = inc.ReadBoolean();
 
-                var matchingSub = Submarine.SavedSubmarines.FirstOrDefault(s => s.Name == subName && s.MD5Hash.Hash == subHash);
-                if (matchingSub != null)
-                {
-                    serverSubmarines.Add(matchingSub);
-                }
-                else
-                {
-                    serverSubmarines.Add(new Submarine(Path.Combine(Submarine.SavePath, subName) + ".sub", subHash, false));
-                }
+                var matchingSub =
+                    Submarine.SavedSubmarines.FirstOrDefault(s => s.Name == subName && s.MD5Hash.Hash == subHash) ??
+                    new Submarine(Path.Combine(Submarine.SavePath, subName) + ".sub", subHash, false);
+
+                matchingSub.RequiredContentPackagesInstalled = requiredContentPackagesInstalled;
+                serverSubmarines.Add(matchingSub);
             }
 
             GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.SubList, serverSubmarines);

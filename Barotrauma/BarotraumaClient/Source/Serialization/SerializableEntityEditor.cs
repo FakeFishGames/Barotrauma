@@ -385,24 +385,37 @@ namespace Barotrauma
             {
                 ToolTip = toolTip
             };
-            GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform,
-                Anchor.TopRight), GUINumberInput.NumberType.Int)
-            {
-                ToolTip = toolTip,
-                Font = GUI.SmallFont
-            };
             var editableAttribute = property.GetAttribute<Editable>();
-            numberInput.MinValueInt = editableAttribute.MinValueInt;
-            numberInput.MaxValueInt = editableAttribute.MaxValueInt;
-            numberInput.IntValue = value;
-            numberInput.OnValueChanged += (numInput) =>
+            GUIComponent field;
+            if (editableAttribute.ReadOnly)
             {
-                if (property.TrySetValue(entity, numInput.IntValue))
+                var numberInput = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform, Anchor.TopRight), value.ToString())
                 {
-                    TrySendNetworkUpdate(entity, property);
-                }
-            };
-            if (!Fields.ContainsKey(property.Name)) { Fields.Add(property.Name, new GUIComponent[] { numberInput }); }
+                    ToolTip = toolTip,
+                    Font = GUI.SmallFont
+                };
+                field = numberInput as GUIComponent;
+            }
+            else
+            {
+                var numberInput = new GUINumberInput(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform, Anchor.TopRight), GUINumberInput.NumberType.Int)
+                {
+                    ToolTip = toolTip,
+                    Font = GUI.SmallFont
+                };
+                numberInput.MinValueInt = editableAttribute.MinValueInt;
+                numberInput.MaxValueInt = editableAttribute.MaxValueInt;
+                numberInput.IntValue = value;
+                numberInput.OnValueChanged += (numInput) =>
+                {
+                    if (property.TrySetValue(entity, numInput.IntValue))
+                    {
+                        TrySendNetworkUpdate(entity, property);
+                    }
+                };
+                field = numberInput as GUIComponent;
+            }
+            if (!Fields.ContainsKey(property.Name)) { Fields.Add(property.Name, new GUIComponent[] { field }); }
             return frame;
         }
 
@@ -508,8 +521,10 @@ namespace Barotrauma
             {
                 ToolTip = toolTip
             };
+            var editableAttribute = property.GetAttribute<Editable>();
             GUITextBox propertyBox = new GUITextBox(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform))
             {
+                Enabled = editableAttribute != null && !editableAttribute.ReadOnly,
                 ToolTip = toolTip,
                 Font = GUI.SmallFont,
                 Text = value,

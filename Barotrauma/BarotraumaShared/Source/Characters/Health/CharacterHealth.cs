@@ -589,7 +589,10 @@ namespace Barotrauma
             CalculateVitality();
             if (Vitality <= MinVitality) Kill();
         }
-        
+
+
+        partial void UpdateProjSpecific(float deltaTime);
+
         partial void UpdateLimbAfflictionOverlays();
 
         public void Update(float deltaTime)
@@ -713,6 +716,10 @@ namespace Barotrauma
             
             var causeOfDeath = GetCauseOfDeath();
             Character.Kill(causeOfDeath.First, causeOfDeath.Second);
+#if CLIENT
+            DisplayVitalityDelay = 0.0f;
+            DisplayedVitality = Vitality;
+#endif
         }
 
         public Pair<CauseOfDeathType, Affliction> GetCauseOfDeath()

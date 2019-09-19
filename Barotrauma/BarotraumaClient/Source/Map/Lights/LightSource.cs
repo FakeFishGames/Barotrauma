@@ -901,13 +901,21 @@ namespace Barotrauma.Lights
 
             if (GameMain.DebugDraw)
             {
+                Vector2 drawPos = position;
+                if (ParentSub != null) { drawPos += ParentSub.DrawPosition; }
+                drawPos.Y = -drawPos.Y;
+
+                if (CastShadows && Screen.Selected == GameMain.SubEditorScreen)
+                {
+                    GUI.DrawRectangle(spriteBatch, drawPos - Vector2.One * 20, Vector2.One * 40, Color.Orange, isFilled: false);
+                    GUI.DrawLine(spriteBatch, drawPos - Vector2.One * 20, drawPos + Vector2.One * 20, Color.Orange);
+                    GUI.DrawLine(spriteBatch, drawPos - new Vector2(1.0f, -1.0f) * 20, drawPos + new Vector2(1.0f, -1.0f) * 20, Color.Orange);
+                }
+
                 //visualize light recalculations
                 float timeSinceRecalculation = (float)Timing.TotalTime - lastRecalculationTime;
                 if (timeSinceRecalculation < 0.1f)
                 {
-                    Vector2 drawPos = position;
-                    if (ParentSub != null) drawPos += ParentSub.DrawPosition;
-                    drawPos.Y = -drawPos.Y;
                     GUI.DrawRectangle(spriteBatch, drawPos - Vector2.One * 10, Vector2.One * 20, Color.Red * (1.0f - timeSinceRecalculation * 10.0f), isFilled: true);
                     GUI.DrawLine(spriteBatch, drawPos - Vector2.One * Range, drawPos + Vector2.One * Range, Color);
                     GUI.DrawLine(spriteBatch, drawPos - new Vector2(1.0f, -1.0f) * Range, drawPos + new Vector2(1.0f, -1.0f) * Range, Color);

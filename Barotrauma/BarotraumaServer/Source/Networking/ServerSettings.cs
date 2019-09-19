@@ -42,7 +42,7 @@ namespace Barotrauma.Networking
             Whitelist.ServerAdminWrite(outMsg, c);
         }
 
-        public void ServerWrite(IWriteMessage outMsg,Client c)
+        public void ServerWrite(IWriteMessage outMsg, Client c)
         {
             outMsg.Write(ServerName);
             outMsg.Write(ServerMessageText);
@@ -69,8 +69,8 @@ namespace Barotrauma.Networking
                 outMsg.WritePadBits();
             }
         }
-        
-        public void ServerRead(IReadMessage incMsg,Client c)
+
+        public void ServerRead(IReadMessage incMsg, Client c)
         {
             if (!c.HasPermission(Networking.ClientPermissions.ManageSettings)) return;
 
@@ -91,7 +91,7 @@ namespace Barotrauma.Networking
                 if (ServerMessageText != serverMessageText) changed = true;
                 ServerMessageText = serverMessageText;
             }
-            
+                        
             if (flags.HasFlag(NetFlags.Properties))
             {
                 changed |= ReadExtraCargo(incMsg);
@@ -168,7 +168,15 @@ namespace Barotrauma.Networking
                 changed |= true;
             }
 
-            if (changed) GameMain.NetLobbyScreen.LastUpdateID++;
+            if (changed)
+            {
+                if (KarmaPreset == "custom")
+                {
+                    GameMain.NetworkMember?.KarmaManager?.SaveCustomPreset();
+                    GameMain.NetworkMember?.KarmaManager?.Save();
+                }
+                GameMain.NetLobbyScreen.LastUpdateID++;
+            }
         }
 
         public void SaveSettings()

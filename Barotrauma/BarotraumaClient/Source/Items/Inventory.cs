@@ -209,7 +209,14 @@ namespace Barotrauma
 
         public static SlotReference SelectedSlot
         {
-            get { return selectedSlot; }
+            get
+            {
+                if (selectedSlot?.ParentInventory?.Owner == null || selectedSlot.ParentInventory.Owner.Removed)
+                {
+                    return null;
+                }
+                return selectedSlot;
+            }
         }
 
         public virtual void CreateSlots()
@@ -430,6 +437,8 @@ namespace Barotrauma
 
             if (canMove)
             {
+                subInventory.HideTimer = 1.0f;
+                subInventory.OpenState = 1.0f;
                 if (subInventory.movableFrameRect.Contains(PlayerInput.MousePosition) && PlayerInput.RightButtonClicked())
                 {
                     container.Inventory.savedPosition = container.Inventory.originalPos;

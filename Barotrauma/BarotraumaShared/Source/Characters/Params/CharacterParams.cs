@@ -60,6 +60,11 @@ namespace Barotrauma
         public bool Load()
         {
             bool success = base.Load(File);
+            if (string.IsNullOrEmpty(SpeciesName) && MainElement != null)
+            {
+                //backwards compatibility
+                SpeciesName = MainElement.GetAttributeString("name", "");
+            }
             CreateSubParams();
             return success;
         }

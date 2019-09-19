@@ -86,6 +86,19 @@ namespace Barotrauma.Items.Components
             set;
         } = true;
 
+        private float steerRadius;
+        public float? SteerRadius
+        {
+            get
+            {
+                return steerRadius;
+            }
+            set
+            {
+                steerRadius = value ?? (steerArea.Rect.Width / 2);
+            }
+        }
+
         public List<DockingPort> DockingSources = new List<DockingPort>();
         public DockingPort ActiveDockingSource, DockingTarget;
 
@@ -384,6 +397,8 @@ namespace Barotrauma.Items.Components
             statusContainer.RectTransform.AbsoluteOffset = new Point((int)(viewSize * 0.9f), 0);
             steerArea.RectTransform.NonScaledSize = new Point(viewSize);
             dockingContainer.RectTransform.AbsoluteOffset = new Point((int)(viewSize * 0.9f), 0);
+
+            steerRadius = steerArea.Rect.Width / 2;
         }
 
         private void FindConnectedDockingPort()
@@ -661,7 +676,7 @@ namespace Barotrauma.Items.Components
 
             pressureWarningText.Visible = item.Submarine != null && item.Submarine.AtDamageDepth && Timing.TotalTime % 1.0f < 0.5f;
 
-            if (Vector2.Distance(PlayerInput.MousePosition, steerArea.Rect.Center.ToVector2()) < steerArea.Rect.Width / 2)
+            if (Vector2.DistanceSquared(PlayerInput.MousePosition, steerArea.Rect.Center.ToVector2()) < steerRadius * steerRadius)
             {
                 if (PlayerInput.LeftButtonHeld())
                 {

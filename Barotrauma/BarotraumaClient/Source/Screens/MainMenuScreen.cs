@@ -508,7 +508,8 @@ namespace Barotrauma
                 }
             }
             else
-            { 
+            {
+                titleText.Visible = true;
                 selectedTab = 0;
             }
 
@@ -875,7 +876,7 @@ namespace Barotrauma
                         GUI.DrawLine(spriteBatch, textPos, textPos - Vector2.UnitX * textSize.X, mouseOn ? Color.White : Color.White * 0.7f);
                         if (mouseOn && PlayerInput.LeftButtonClicked())
                         {
-                            Process.Start("http://privacypolicy.daedalic.com");
+                            GameMain.Instance.ShowOpenUrlInWebBrowserPrompt("http://privacypolicy.daedalic.com");
                         }
                     }
                     textPos.Y -= textSize.Y;

@@ -9,8 +9,9 @@ namespace Barotrauma
 {
     public partial class Sprite
     {
-        protected Texture2D texture;
+        private bool cannotBeLoaded;
 
+        protected Texture2D texture;
         public Texture2D Texture
         {
             get
@@ -56,7 +57,7 @@ namespace Barotrauma
 
         public void EnsureLazyLoaded()
         {
-            if (!lazyLoad || texture != null) { return; }
+            if (!lazyLoad || texture != null || cannotBeLoaded) { return; }
 
             Vector4 sourceVector = Vector4.Zero;
             bool temp2 = false;
@@ -73,6 +74,10 @@ namespace Barotrauma
             {
                 if (s == this) { continue; }
                 if (s.FullPath == FullPath && s.texture != null) { s.texture = texture; }
+            }
+            if (texture == null)
+            {
+                cannotBeLoaded = true;
             }
         }
 

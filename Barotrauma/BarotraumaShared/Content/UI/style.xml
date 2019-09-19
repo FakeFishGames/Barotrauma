@@ -15,6 +15,7 @@
   <Font file="Content/Fonts/Exo2-SemiBold.otf">
     <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Medium.otf" dynamicloading="true" iscjk="true"/>
     <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Medium.otf" dynamicloading="true" iscjk="true"/>
+    <override language="Japanese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Medium.otf" dynamicloading="true" iscjk="true"/>
     <Size maxresolution="1024,768" size="11"/>
     <Size maxresolution="1280,800" size="12"/>
     <Size maxresolution="1920,1080" size="14"/>
@@ -25,11 +26,13 @@
   <UnscaledSmallFont file="Content/Fonts/Exo2-SemiBold.otf">
     <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Medium.otf" dynamicloading="true" iscjk="true"/>
     <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Medium.otf" dynamicloading="true" iscjk="true"/>
+    <override language="Japanese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Medium.otf" dynamicloading="true" iscjk="true"/>
     <Size size="12"/>
   </UnscaledSmallFont>
   <SmallFont file="Content/Fonts/Exo2-SemiBold.otf">
     <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Medium.otf" dynamicloading="true" iscjk="true"/>
     <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Medium.otf" dynamicloading="true" iscjk="true"/>
+    <override language="Japanese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Medium.otf" dynamicloading="true" iscjk="true"/>
     <Size maxresolution="1024,768" size="9"/>
     <Size maxresolution="1280,800" size="10"/>
     <Size maxresolution="1920,1080" size="12"/>
@@ -40,6 +43,7 @@
   <LargeFont file="Content/Fonts/Code Pro Bold.otf" size="22">
     <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Bold.otf" dynamicloading="true" iscjk="true"/>
     <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf" dynamicloading="true" iscjk="true"/>
+    <override language="Japanese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf" dynamicloading="true" iscjk="true"/>
     <Size maxresolution="1024,768" size="15"/>
     <Size maxresolution="1280,800" size="16"/>
     <Size maxresolution="1920,1080" size="22"/>
@@ -50,6 +54,7 @@
   <VideoTitle file="Content/Fonts/BebasNeue-Regular.otf" size="28">
     <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Bold.otf" dynamicloading="true" iscjk="true"/>
     <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf" dynamicloading="true" iscjk="true"/>
+    <override language="Japanese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf" dynamicloading="true" iscjk="true"/>
     <override language="Russian" file="Content/Fonts/NotoSans/NotoSans-Bold.ttf" dynamicloading="false"/>
     <Size maxresolution="1024,768" size="20"/>
     <Size maxresolution="1280,800" size="25"/>
@@ -61,6 +66,7 @@
   <ObjectiveTitle file="Content/Fonts/Code Pro Bold.otf" size="14">
     <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Bold.otf" dynamicloading="true" iscjk="true"/>
     <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf" dynamicloading="true" iscjk="true"/>
+    <override language="Japanese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf" dynamicloading="true" iscjk="true"/>
     <Size maxresolution="1024,768" size="10"/>
     <Size maxresolution="1280,800" size="12"/>
     <Size maxresolution="1920,1080" size="14"/>
@@ -72,6 +78,7 @@
     <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Bold.otf" dynamicloading="true" iscjk="true"/>
     <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf" dynamicloading="true" iscjk="true"/>
     <override language="Russian" file="Content/Fonts/NotoSans/NotoSans-Bold.ttf" dynamicloading="false"/>
+    <override language="Japanese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf" dynamicloading="true" iscjk="true"/>
     <Size maxresolution="1024,768" size="15"/>
     <Size maxresolution="1280,800" size="16"/>
     <Size maxresolution="1920,1080" size="22"/>
@@ -844,12 +851,11 @@
 
     <GUIFrame
       padding="40.0, 20.0, 40.0, 20.0"
-      color="200,200,200,255"
-      hovercolor="200,200,200,255"
-      selectedcolor="200,200,200,255"
-      outlinecolor="200,200,200,255"
+      color="255,255,255,255"
+      hovercolor="255,255,255,255"
+      selectedcolor="255,255,255,255"
       textcolor="127,140,153,255">
-      <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect ="746, 704, 120, 120" slice="754, 711, 865, 816"/>
+      <Sprite texture="Content/UI/UI_Atlas2.png" state="None" sourcerect="136,611,148,129" slice="158,633,255,714"/>
     </GUIFrame>
   </GUIMessageBox.InGame>
 

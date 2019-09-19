@@ -36,6 +36,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Events\Missions\CombatMission.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Events\Missions\Mission.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Events\Missions\MissionMode.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Events\Missions\MissionPrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Fonts\ScalableFont.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameMain.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\CrewManager.cs" />

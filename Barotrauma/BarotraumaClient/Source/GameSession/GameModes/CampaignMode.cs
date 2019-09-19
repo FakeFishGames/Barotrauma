@@ -9,8 +9,9 @@ namespace Barotrauma
         {
             if (Mission == null) return;
 
-            new GUIMessageBox(Mission.Name, Mission.Description, new string[0], type: GUIMessageBox.Type.InGame)
+            new GUIMessageBox(Mission.Name, Mission.Description, new string[0], type: GUIMessageBox.Type.InGame, icon: Mission.Prefab.Icon)
             {
+                IconColor = Mission.Prefab.IconColor,
                 UserData = "missionstartmessage"
             };
         }

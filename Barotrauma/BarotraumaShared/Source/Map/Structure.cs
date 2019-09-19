@@ -435,19 +435,20 @@ namespace Barotrauma
         private void CreateStairBodies()
         {
             Bodies = new List<Body>();
+                        
+            float stairAngle = MathHelper.ToRadians(Math.Min(Prefab.StairAngle, 75.0f));
 
-            float bodyWidth = ConvertUnits.ToSimUnits(rect.Width * Math.Sqrt(2.0));
+            float bodyWidth = ConvertUnits.ToSimUnits(rect.Width / Math.Cos(stairAngle));
             float bodyHeight = ConvertUnits.ToSimUnits(10);
+
+            float stairHeight = rect.Width * (float)Math.Tan(stairAngle);
 
             Body newBody = BodyFactory.CreateRectangle(GameMain.World,
                 bodyWidth, bodyHeight, 1.5f);
 
             newBody.BodyType = BodyType.Static;
-            Vector2 stairPos = new Vector2(Position.X, rect.Y - rect.Height + rect.Width / 2.0f);
-            /*stairPos += new Vector2(
-                (StairDirection == Direction.Right) ? -Submarine.GridSize.X * 1.5f : Submarine.GridSize.X * 1.5f,
-                -Submarine.GridSize.Y * 2.0f);*/
-            newBody.Rotation = (StairDirection == Direction.Right) ? MathHelper.PiOver4 : -MathHelper.PiOver4;
+            Vector2 stairPos = new Vector2(Position.X, rect.Y - rect.Height + stairHeight / 2.0f);
+            newBody.Rotation = (StairDirection == Direction.Right) ? stairAngle : -stairAngle;
             newBody.CollisionCategories = Physics.CollisionStairs;
             newBody.Friction = 0.8f;
             newBody.UserData = this;
