@@ -604,7 +604,7 @@ namespace Barotrauma
             for (int i = 0; i < 3; i++)
             {
                 string langStr = "VoiceMode." + ((VoiceMode)i).ToString();
-                var tick = new GUITickBox(new RectTransform(tickBoxScale / 0.4f, voipSettings.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get(langStr))
+                var tick = new GUITickBox(new RectTransform(tickBoxScale / 0.4f, voipSettings.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get(langStr), style: "GUIRadioButton")
                 {
                     ToolTip = TextManager.Get(langStr + "ToolTip")
                 };

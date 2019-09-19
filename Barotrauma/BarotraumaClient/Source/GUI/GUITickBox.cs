@@ -1,5 +1,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Generic;
 
 namespace Barotrauma
@@ -141,7 +142,7 @@ namespace Barotrauma
                 CanBeFocused = false
             };
             GUI.Style.Apply(box, style == "" ? "GUITickBox" : style);
-            Vector2 textBlockScale = new Vector2((rectT.Rect.Width - rectT.Rect.Height) / rectT.Rect.Width, 1.0f);
+            Vector2 textBlockScale = new Vector2((float)(Rect.Width - Rect.Height) / (float)Math.Max(Rect.Width, 1.0), 1.0f);
             text = new GUITextBlock(new RectTransform(textBlockScale, layoutGroup.RectTransform), label, font: font, textAlignment: Alignment.CenterLeft)
             {
                 CanBeFocused = false
@@ -162,8 +163,9 @@ namespace Barotrauma
 
         private void ResizeBox()
         {
-            Vector2 textBlockScale = new Vector2((layoutGroup.RectTransform.Rect.Width - layoutGroup.RectTransform.Rect.Height) / layoutGroup.RectTransform.Rect.Width, 1.0f);
+            Vector2 textBlockScale = new Vector2((float)(Rect.Width - Rect.Height) / (float)Math.Max(Rect.Width, 1.0), 1.0f);
             text.RectTransform.RelativeSize = textBlockScale;
+            text.SetTextPos();
         }
         
         protected override void Update(float deltaTime)

@@ -344,7 +344,7 @@ namespace Barotrauma.Networking
             GUIRadioButtonGroup selectionPlayStyle = new GUIRadioButtonGroup();
             foreach (PlayStyle playStyle in Enum.GetValues(typeof(PlayStyle)))
             {
-                var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.32f, 0.49f), playStyleSelection.Content.RectTransform), TextManager.Get("servertag." + playStyle), font: GUI.SmallFont)
+                var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.32f, 0.49f), playStyleSelection.Content.RectTransform), TextManager.Get("servertag." + playStyle), font: GUI.SmallFont, style: "GUIRadioButton")
                 {
                     ToolTip = TextManager.Get("servertagdescription." + playStyle)
                 };
@@ -365,7 +365,7 @@ namespace Barotrauma.Networking
             GUIRadioButtonGroup selectionMode = new GUIRadioButtonGroup();
             for (int i = 0; i < 3; i++)
             {
-                var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), selectionFrame.RectTransform), TextManager.Get(((SelectionMode)i).ToString()), font: GUI.SmallFont);
+                var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), selectionFrame.RectTransform), TextManager.Get(((SelectionMode)i).ToString()), font: GUI.SmallFont, style: "GUIRadioButton");
                 selectionMode.AddRadioButton((SelectionMode)i, selectionTick);
             }
             DebugConsole.NewMessage(SubSelectionMode.ToString(), Color.White);
@@ -382,7 +382,7 @@ namespace Barotrauma.Networking
             selectionMode = new GUIRadioButtonGroup();
             for (int i = 0; i < 3; i++)
             {
-                var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), selectionFrame.RectTransform), TextManager.Get(((SelectionMode)i).ToString()), font: GUI.SmallFont);
+                var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), selectionFrame.RectTransform), TextManager.Get(((SelectionMode)i).ToString()), font: GUI.SmallFont, style: "GUIRadioButton");
                 selectionMode.AddRadioButton((SelectionMode)i, selectionTick);
             }
             GetPropertyData("ModeSelectionMode").AssignGUIComponent(selectionMode);

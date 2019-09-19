@@ -154,7 +154,7 @@ namespace Barotrauma.Items.Components
             };
 
             maintainPosTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), paddedAutoPilotControls.RectTransform),
-                TextManager.Get("SteeringMaintainPos"), font: GUI.SmallFont)
+                TextManager.Get("SteeringMaintainPos"), font: GUI.SmallFont, style: "GUIRadioButton")
             {
                 Enabled = false,
                 Selected = maintainPos,
@@ -191,7 +191,7 @@ namespace Barotrauma.Items.Components
 
             levelStartTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), paddedAutoPilotControls.RectTransform),
                 GameMain.GameSession?.StartLocation == null ? "" : ToolBox.LimitString(GameMain.GameSession.StartLocation.Name, 20),
-                font: GUI.SmallFont)
+                font: GUI.SmallFont, style: "GUIRadioButton")
             {
                 Enabled = false,
                 Selected = levelStartSelected,
@@ -218,7 +218,7 @@ namespace Barotrauma.Items.Components
 
             levelEndTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), paddedAutoPilotControls.RectTransform),
                 GameMain.GameSession?.EndLocation == null ? "" : ToolBox.LimitString(GameMain.GameSession.EndLocation.Name, 20),
-                font: GUI.SmallFont)
+                font: GUI.SmallFont, style: "GUIRadioButton")
             {
                 Enabled = false,
                 Selected = levelEndSelected,

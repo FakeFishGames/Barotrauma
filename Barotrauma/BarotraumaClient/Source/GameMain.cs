@@ -861,6 +861,7 @@ namespace Barotrauma
             {
                 spriteBatch.Begin();
                 GUI.DrawRectangle(spriteBatch, GUI.MouseOn.MouseRect, Color.Lime);
+                GUI.DrawRectangle(spriteBatch, GUI.MouseOn.Rect, Color.Cyan);
                 spriteBatch.End();
             }
 
