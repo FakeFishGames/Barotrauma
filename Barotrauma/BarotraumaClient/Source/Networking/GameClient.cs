@@ -1111,11 +1111,27 @@ namespace Barotrauma.Networking
                 GameMain.NetLobbyScreen.SelectedSub.MD5Hash?.Hash != subHash)
             {
                 string errorMsg = "Failed to select submarine \"" + subName + "\" (hash: " + subHash + ").";
+                if (GameMain.NetLobbyScreen.SelectedSub == null)
+                {
+                    errorMsg += "\n" + "SelectedSub is null";
+                }
+                else
+                {
+                    if (GameMain.NetLobbyScreen.SelectedSub.Name != subName)
+                    {
+                        errorMsg += "\n" + "Name mismatch: " + GameMain.NetLobbyScreen.SelectedSub.Name + " != " + subName;
+                    }
+                    if (GameMain.NetLobbyScreen.SelectedSub.MD5Hash?.Hash != subHash)
+                    {
+                        errorMsg += "\n" + "Hash mismatch: " + GameMain.NetLobbyScreen.SelectedSub.MD5Hash?.Hash + " != " + subHash;
+                    }
+                }
                 DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:FailedToSelectSub" + subName, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 CoroutineManager.StartCoroutine(EndGame(""));
                 yield return CoroutineStatus.Failure;
             }
+
             if (GameMain.NetLobbyScreen.SelectedShuttle == null ||
                 GameMain.NetLobbyScreen.SelectedShuttle.Name != shuttleName ||
                 GameMain.NetLobbyScreen.SelectedShuttle.MD5Hash?.Hash != shuttleHash)

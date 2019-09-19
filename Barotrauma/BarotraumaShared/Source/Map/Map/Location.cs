@@ -65,7 +65,11 @@ namespace Barotrauma
 
         public int SelectedMissionIndex
         {
-            get { return availableMissions.IndexOf(SelectedMission); }
+            get
+            {
+                if (SelectedMission == null) { return -1; }
+                return availableMissions.IndexOf(SelectedMission);
+            }
             set
             {
                 if (value < 0 || value >= AvailableMissions.Count())
