@@ -83,7 +83,7 @@ namespace Barotrauma
                     {
                         for (int i = 0; i < wall.SectionCount; i++)
                         {
-                            wall.AddDamage(i, -100000.0f);
+                            wall.AddDamage(i, -wall.Prefab.Health);
                         }
                     }
                 }
@@ -104,6 +104,7 @@ namespace Barotrauma
                 }
                 PurchasedItemRepairs = false;
             }
+            PurchasedLostShuttles = false;
         }
 
         public override void Update(float deltaTime)
