@@ -511,10 +511,10 @@ namespace Barotrauma.Items.Components
 
         private int itemIndex;
         private List<Item> ignoredContainers = new List<Item>();
-        private bool FindSuitableContainer(Character character, Func<Item, bool> predicate, out Item suitableContainer)
+        private bool FindSuitableContainer(Character character, Func<Item, float> priority, out Item suitableContainer)
         {
             suitableContainer = null;
-            if (character.FindItem(ref itemIndex, new string[] { "cabinet" }, out Item targetContainer, ignoredItems: ignoredContainers, customPredicate: predicate))
+            if (character.FindItem(ref itemIndex, new string[] { "cabinet" }, out Item targetContainer, ignoredItems: ignoredContainers, customPriorityFunction: priority))
             {
                 suitableContainer = targetContainer;
                 return true;
@@ -540,31 +540,31 @@ namespace Barotrauma.Items.Components
                     {
                         if (fuelRod != null && fuelRod.Condition <= 0.0f)
                         {
-                            if (!FindSuitableContainer(character, i =>
-                            {
-                                var container = i.GetComponent<ItemContainer>();
-                                if (container == null) { return false; }
-                                if (!fuelRod.Prefab.IsContainerPreferred(container) || !container.ShouldBeContained(fuelTags)) { return false; }
-                                return !container.Inventory.IsFull();
-                            }, out Item targetContainer))
+                            if (!FindSuitableContainer(character, 
+                                priority: i =>
+                                {
+                                    var container = i.GetComponent<ItemContainer>();
+                                    if (container == null) { return 0; }
+                                    if (container.Inventory.IsFull()) { return 0; }
+                                    if (container.ShouldBeContained(fuelTags, out bool isRestrictionsDefined))
+                                    {
+                                        if (isRestrictionsDefined)
+                                        {
+                                            return 3;
+                                        }
+                                        else
+                                        {
+                                            return fuelRod.Prefab.IsContainerPreferred(container) ? 2 : 1;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        return 0;
+                                    }
+                                }, out Item targetContainer))
                             {
                                 return false;
                             }
-
-                            // TODO
-                            //// Not found, try again without preference.
-                            //itemIndex = 0;
-                            //if (!FindSuitableContainer(character, i =>
-                            //{
-                            //    var container = i.GetComponent<ItemContainer>();
-                            //    if (container == null) { return false; }
-                            //    if (!container.ShouldBeContained(fuelTags)) { return false; }
-                            //    return !container.Inventory.IsFull();
-                            //}))
-                            //{
-                            //    return false;
-                            //}
-
                             var decontainObjective = new AIObjectiveDecontainItem(character, fuelRod, item.GetComponent<ItemContainer>(), objective.objectiveManager, targetContainer?.GetComponent<ItemContainer>());
                             decontainObjective.Abandoned += () => 
                             {

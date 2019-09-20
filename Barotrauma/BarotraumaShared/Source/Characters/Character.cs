@@ -1600,7 +1600,7 @@ namespace Barotrauma
             return true;
         }
 
-        private float _closestItemDistance;
+        private float _selectedItemPriority;
         private Item _foundItem;
         /// <summary>
         /// Finds the closest item seeking by identifiers or tags from the world.
@@ -1611,12 +1611,12 @@ namespace Barotrauma
         /// </summary>
         public bool FindItem(ref int itemIndex, IEnumerable<string> identifiers, out Item targetItem, bool ignoreBroken = true, 
             IEnumerable<Item> ignoredItems = null, IEnumerable<string> ignoredContainerIdentifiers = null, 
-            Func<Item, bool> customPredicate = null, float maxItemDistance = 10000)
+            Func<Item, bool> customPredicate = null, Func<Item, float> customPriorityFunction = null, float maxItemDistance = 10000)
         {
             if (itemIndex == 0)
             {
                 _foundItem = null;
-                _closestItemDistance = maxItemDistance;
+                _selectedItemPriority = 0;
             }
             for (int i = 0; i < 10 && itemIndex < Item.ItemList.Count - 1; i++)
             {
@@ -1635,13 +1635,18 @@ namespace Barotrauma
                 }
                 if (IsItemTakenBySomeoneElse(item)) { continue; }
                 if (customPredicate != null && !customPredicate(item)) { continue; }
+                float itemPriority = customPriorityFunction != null ? customPriorityFunction(item) : 1;
+                if (itemPriority <= 0) { continue; }
                 Item rootContainer = item.GetRootContainer();
                 Vector2 itemPos = (rootContainer ?? item).WorldPosition;
-                // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
-                float dist = Math.Abs(WorldPosition.X - itemPos.X) + Math.Abs(WorldPosition.Y - itemPos.Y) * 2.0f;
-                if (dist < _closestItemDistance)
+                float yDist = Math.Abs(WorldPosition.Y - itemPos.Y);
+                yDist = yDist > 100 ? yDist * 5 : 0;
+                float dist = Math.Abs(WorldPosition.X - itemPos.X) + yDist;
+                float distanceFactor = MathHelper.Lerp(1, 0, MathUtils.InverseLerp(0, maxItemDistance, dist));
+                itemPriority *= distanceFactor;
+                if (itemPriority > _selectedItemPriority)
                 {
-                    _closestItemDistance = dist;
+                    _selectedItemPriority = itemPriority;
                     _foundItem = item;
                 }
             }

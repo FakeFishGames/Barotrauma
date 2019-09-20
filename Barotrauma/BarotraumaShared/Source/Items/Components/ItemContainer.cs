@@ -76,15 +76,17 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public bool ShouldBeContained(string[] identifiersOrTags)
+        public bool ShouldBeContained(string[] identifiersOrTags, out bool isRestrictionsDefined)
         {
-            if (containableRestrictions.None()) { return true; }
+            isRestrictionsDefined = containableRestrictions.Any();
+            if (!isRestrictionsDefined) { return true; }
             return identifiersOrTags.Any(id => containableRestrictions.Any(r => r == id));
         }
 
-        public bool ShouldBeContained(Item item)
+        public bool ShouldBeContained(Item item, out bool isRestrictionsDefined)
         {
-            if (containableRestrictions.None()) { return true; }
+            isRestrictionsDefined = containableRestrictions.Any();
+            if (!isRestrictionsDefined) { return true; }
             return containableRestrictions.Any(id => item.Prefab.Identifier == id || item.HasTag(id));
         }
 
