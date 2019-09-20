@@ -122,22 +122,7 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-#if CLIENT
-            foreach (Wire wire in DisconnectedWires)
-            {
-                if (Rand.Range(0.0f, 500.0f) < 1.0f)
-                {
-                    SoundPlayer.PlaySound("zap", item.WorldPosition, hullGuess: item.CurrentHull);
-                    Vector2 baseVel = new Vector2(0.0f, -100.0f);
-                    for (int i = 0; i < 5; i++)
-                    {
-                        var particle = GameMain.ParticleManager.CreateParticle("spark", item.WorldPosition,
-                            baseVel + Rand.Vector(100.0f), 0.0f, item.CurrentHull);
-                        if (particle != null) { particle.Size *= Rand.Range(0.5f, 1.0f); }
-                    }
-                }
-            }
-#endif
+            UpdateProjSpecific(deltaTime);
 
             if (user == null || user.SelectedConstruction != item)
             {
@@ -149,6 +134,8 @@ namespace Barotrauma.Items.Components
 
             user.AnimController.UpdateUseItem(true, item.WorldPosition + new Vector2(0.0f, 100.0f) * (((float)Timing.TotalTime / 10.0f) % 0.1f));
         }
+
+        partial void UpdateProjSpecific(float deltaTime);
 
         public override bool Select(Character picker)
         {
@@ -260,7 +247,13 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
+
+#if CLIENT
+            rewireSoundChannel?.FadeOutAndDispose();
+            rewireSoundChannel = null;
+#endif
         }
+
 
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)
         {

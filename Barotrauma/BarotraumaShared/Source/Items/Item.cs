@@ -126,24 +126,6 @@ namespace Barotrauma
             }
         }
 
-        public delegate bool InventoryFilter(Inventory inventory);
-        public Inventory FindParentInventory(InventoryFilter filter)
-        {
-            if (parentInventory != null)
-            {
-                if (filter(parentInventory))
-                {
-                    return parentInventory;
-                }
-                var owner = parentInventory.Owner as Item;
-                if (owner != null)
-                {
-                    return owner.FindParentInventory(filter);
-                }
-            }
-            return null;
-        }
-
         private Item container;
         public Item Container
         {
@@ -172,6 +154,13 @@ namespace Barotrauma
         
         [Editable, Serialize(false, true)]
         public bool HiddenInGame
+        {
+            get;
+            set;
+        }
+
+        [Editable, Serialize(false, true)]
+        public bool NonInteractable
         {
             get;
             set;
@@ -398,6 +387,7 @@ namespace Barotrauma
                     }
                     else if (!MathUtils.NearlyEqual(lastSentCondition, condition) && (condition <= 0.0f || condition >= Prefab.Health))
                     {
+                        sendConditionUpdateTimer = 0.0f;
                         conditionUpdatePending = true;
                     }
                 }
@@ -955,7 +945,6 @@ namespace Barotrauma
                 return CurrentHull;
             }
 
-
             CurrentHull = Hull.FindHull(WorldPosition, CurrentHull);
             if (body != null && body.Enabled)
             {
@@ -978,7 +967,23 @@ namespace Barotrauma
 
             return rootContainer;
         }
-                
+
+        public Inventory FindParentInventory(Func<Inventory, bool> predicate)
+        {
+            if (parentInventory != null)
+            {
+                if (predicate(parentInventory))
+                {
+                    return parentInventory;
+                }
+                if (parentInventory.Owner is Item owner)
+                {
+                    return owner.FindParentInventory(predicate);
+                }
+            }
+            return null;
+        }
+
         public void SetContainedItemPositions()
         {
             foreach (ItemComponent component in components)
@@ -1137,6 +1142,17 @@ namespace Barotrauma
             return CurrentHull.WaterVolume > 0.0f && Position.Y < surfaceY;
         }
 
+        public void SendPendingNetworkUpdates()
+        {
+            if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsServer) { return; }
+            if (conditionUpdatePending)
+            {
+                GameMain.NetworkMember.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
+                lastSentCondition = condition;
+                sendConditionUpdateTimer = NetConfig.ItemConditionUpdateInterval;
+                conditionUpdatePending = false;
+            }
+        }
 
         public override void Update(float deltaTime, Camera cam)
         {
@@ -1153,16 +1169,10 @@ namespace Barotrauma
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
             {
                 sendConditionUpdateTimer -= deltaTime;
-                if (conditionUpdatePending)
+                if (conditionUpdatePending && sendConditionUpdateTimer <= 0.0f)
                 {
-                    if (sendConditionUpdateTimer <= 0.0f)
-                    {
-                        GameMain.NetworkMember.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
-                        lastSentCondition = condition;
-                        sendConditionUpdateTimer = NetConfig.ItemConditionUpdateInterval;
-                        conditionUpdatePending = false;
-                    }
-                }
+                    SendPendingNetworkUpdates();
+                }                
             }
             
             ApplyStatusEffects(ActionType.Always, deltaTime, null);
@@ -1878,7 +1888,7 @@ namespace Barotrauma
                 var propertyOwner = allProperties.Find(p => p.Second == property);
                 if (allProperties.Count > 1)
                 {
-                    msg.WriteRangedIntegerDeprecated(0, allProperties.Count - 1, allProperties.FindIndex(p => p.Second == property));
+                    msg.WriteRangedInteger(allProperties.FindIndex(p => p.Second == property), 0, allProperties.Count - 1);
                 }
 
                 object value = property.GetValue(propertyOwner.First);
@@ -2141,7 +2151,8 @@ namespace Barotrauma
             if (element.GetAttributeBool("flippedx", false)) item.FlipX(false);
             if (element.GetAttributeBool("flippedy", false)) item.FlipY(false);
 
-            item.condition = element.GetAttributeFloat("condition", item.Prefab.Health);
+            float condition = element.GetAttributeFloat("condition", item.MaxCondition);
+            item.condition = MathHelper.Clamp(condition, 0, item.MaxCondition);
             item.lastSentCondition = item.condition;
 
             item.SetActiveSprite();

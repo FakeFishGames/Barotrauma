@@ -9,6 +9,11 @@ namespace Barotrauma
     {
         public void CreateSettingsFrame(GUIComponent parent)
         {
+            if (TextManager.ContainsTag("Karma.ResetKarmaBetweenRounds"))
+            {
+                CreateLabeledTickBox(parent, "ResetKarmaBetweenRounds");
+            }
+
             CreateLabeledSlider(parent, 0.0f, 40.0f, 1.0f, "KickBanThreshold");
             if (TextManager.ContainsTag("Karma.KicksBeforeBan"))
             {
@@ -101,6 +106,15 @@ namespace Barotrauma
                 MaxValueFloat = max
             };
             GameMain.NetworkMember.ServerSettings.AssignGUIComponent(propertyName, numInput);
+        }
+
+        private void CreateLabeledTickBox(GUIComponent parent, string propertyName)
+        {
+            var tickBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.1f), parent.RectTransform), TextManager.Get("Karma." + propertyName))
+            {
+                ToolTip = TextManager.Get("Karma." + propertyName + "ToolTip", returnNull: true) ?? ""
+            };
+            GameMain.NetworkMember.ServerSettings.AssignGUIComponent(propertyName, tickBox);
         }
     }
 }

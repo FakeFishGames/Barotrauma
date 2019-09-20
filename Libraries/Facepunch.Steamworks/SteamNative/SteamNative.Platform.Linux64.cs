@@ -1125,7 +1125,7 @@ namespace SteamNative
 				
 				return Native.SteamAPI_ISteamMatchmaking_GetLobbyData(_ptr, steamIDLobby, pchKey);
 			}
-			public virtual bool /*bool*/ ISteamMatchmaking_SetLobbyData( ulong steamIDLobby, string /*const char **/ pchKey, string /*const char **/ pchValue )
+			public virtual bool /*bool*/ ISteamMatchmaking_SetLobbyData( ulong steamIDLobby, IntPtr /*const char **/ pchKey, IntPtr /*const char **/ pchValue )
 			{
 				if ( _ptr == IntPtr.Zero ) throw new System.Exception( "ISteamMatchmaking _ptr is null!" );
 				
@@ -4461,7 +4461,7 @@ namespace SteamNative
 				[DllImport( "libsteam_api64.so" )] internal static extern int /*int*/ SteamAPI_ISteamMatchmaking_GetNumLobbyMembers( IntPtr ISteamMatchmaking, ulong steamIDLobby );
 				[DllImport( "libsteam_api64.so" )] internal static extern CSteamID /*(class CSteamID)*/ SteamAPI_ISteamMatchmaking_GetLobbyMemberByIndex( IntPtr ISteamMatchmaking, ulong steamIDLobby, int /*int*/ iMember );
 				[DllImport( "libsteam_api64.so" )] internal static extern IntPtr SteamAPI_ISteamMatchmaking_GetLobbyData( IntPtr ISteamMatchmaking, ulong steamIDLobby, string /*const char **/ pchKey );
-				[DllImport( "libsteam_api64.so" )] internal static extern bool /*bool*/ SteamAPI_ISteamMatchmaking_SetLobbyData( IntPtr ISteamMatchmaking, ulong steamIDLobby, string /*const char **/ pchKey, string /*const char **/ pchValue );
+				[DllImport( "libsteam_api64.so" )] internal static extern bool /*bool*/ SteamAPI_ISteamMatchmaking_SetLobbyData( IntPtr ISteamMatchmaking, ulong steamIDLobby, IntPtr /*const char **/ pchKey, IntPtr /*const char **/ pchValue );
 				[DllImport( "libsteam_api64.so" )] internal static extern int /*int*/ SteamAPI_ISteamMatchmaking_GetLobbyDataCount( IntPtr ISteamMatchmaking, ulong steamIDLobby );
 				[DllImport( "libsteam_api64.so" )] internal static extern bool /*bool*/ SteamAPI_ISteamMatchmaking_GetLobbyDataByIndex( IntPtr ISteamMatchmaking, ulong steamIDLobby, int /*int*/ iLobbyData, System.Text.StringBuilder /*char **/ pchKey, int /*int*/ cchKeyBufferSize, System.Text.StringBuilder /*char **/ pchValue, int /*int*/ cchValueBufferSize );
 				[DllImport( "libsteam_api64.so" )] internal static extern bool /*bool*/ SteamAPI_ISteamMatchmaking_DeleteLobbyData( IntPtr ISteamMatchmaking, ulong steamIDLobby, string /*const char **/ pchKey );

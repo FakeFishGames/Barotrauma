@@ -90,6 +90,7 @@ namespace Barotrauma.Items.Components
             item.body.FarseerBody.CollisionCategories = Physics.CollisionProjectile;
             item.body.FarseerBody.CollidesWith = Physics.CollisionCharacter | Physics.CollisionWall;
             item.body.FarseerBody.OnCollision += OnCollision;
+            item.body.FarseerBody.IsBullet = true;
 
             if (!character.AnimController.InWater)
             {
@@ -207,9 +208,9 @@ namespace Barotrauma.Items.Components
         private void RestoreCollision()
         {
             item.body.FarseerBody.OnCollision -= OnCollision;
-
             item.body.CollisionCategories = Physics.CollisionItem;
             item.body.CollidesWith = Physics.CollisionWall;
+            item.body.FarseerBody.IsBullet = false;
         }
 
 

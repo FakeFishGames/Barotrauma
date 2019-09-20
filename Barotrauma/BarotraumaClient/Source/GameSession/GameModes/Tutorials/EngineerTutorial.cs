@@ -169,7 +169,9 @@ namespace Barotrauma.Tutorials
             }
 
             engineer_wire_1 = Item.ItemList.Find(i => i.HasTag("engineer_wire_1"));
+            engineer_wire_1.SpriteColor = Color.Transparent;
             engineer_wire_2 = Item.ItemList.Find(i => i.HasTag("engineer_wire_2"));
+            engineer_wire_2.SpriteColor = Color.Transparent;
             engineer_lamp_1 = Item.ItemList.Find(i => i.HasTag("engineer_lamp_1")).GetComponent<Powered>();
             engineer_lamp_2 = Item.ItemList.Find(i => i.HasTag("engineer_lamp_2")).GetComponent<Powered>();
             engineer_fourthDoor = Item.ItemList.Find(i => i.HasTag("engineer_fourthdoor")).GetComponent<Door>();
@@ -416,6 +418,8 @@ namespace Barotrauma.Tutorials
             do { CheckJunctionBoxHighlights(); yield return null; } while (!engineer_submarineJunctionBox_1.IsFullCondition || !engineer_submarineJunctionBox_2.IsFullCondition || !engineer_submarineJunctionBox_3.IsFullCondition);
             CheckJunctionBoxHighlights();
             RemoveCompletedObjective(segments[4]);
+            yield return new WaitForSeconds(2f, false);
+
             TriggerTutorialSegment(5); // Powerup reactor
             SetHighlight(engineer_submarineReactor.Item, true);
             engineer.AddActiveObjectiveEntity(engineer_submarineReactor.Item, engineer_reactorIcon, engineer_reactorIconColor);
@@ -424,6 +428,8 @@ namespace Barotrauma.Tutorials
             SetHighlight(engineer_submarineReactor.Item, false);
             RemoveCompletedObjective(segments[5]);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.Complete"), ChatMessageType.Radio, null);
+
+            yield return new WaitForSeconds(4f, false);
 
             CoroutineManager.StartCoroutine(TutorialCompleted());
         }
@@ -472,17 +478,31 @@ namespace Barotrauma.Tutorials
 
         private void CheckGhostWires()
         {
-            if (engineer_wire_1 != null && engineer_lamp_1.Voltage > engineer_lamp_1.MinVoltage)
+            Color wireColor = 
+                Color.Orange *
+                    MathHelper.Lerp(0.25f, 0.75f, (float)(Math.Sin((Timing.TotalTime * 4.0f)) + 1.0f) / 2.0f);
+
+            if (engineer_wire_1 != null)
             {
-                engineer_wire_1.Remove();
-                engineer_wire_1 = null;
+                engineer_wire_1.SpriteColor = wireColor;
+                if (engineer_lamp_1.Voltage > engineer_lamp_1.MinVoltage)
+                {
+                    engineer_wire_1.Remove();
+                    engineer_wire_1 = null;
+                }
             }
 
-            if (engineer_wire_2 != null && engineer_lamp_2.Voltage > engineer_lamp_2.MinVoltage)
+
+            if (engineer_wire_2 != null)
             {
-                engineer_wire_2.Remove();
-                engineer_wire_2 = null;
+                engineer_wire_2.SpriteColor = wireColor;
+                if (engineer_lamp_2.Voltage > engineer_lamp_2.MinVoltage)
+                {
+                    engineer_wire_2.Remove();
+                    engineer_wire_2 = null;
+                }
             }
+
         }
 
         private void HandleJunctionBoxWiringHighlights()

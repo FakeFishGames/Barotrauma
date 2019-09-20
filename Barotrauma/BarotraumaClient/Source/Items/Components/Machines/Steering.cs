@@ -73,11 +73,18 @@ namespace Barotrauma.Items.Components
             set { maintainPosTickBox.Selected = value; }
         }
 
+        private bool dockingModeEnabled;
         public bool DockingModeEnabled
+        {
+            get { return UseAutoDocking && dockingModeEnabled; }
+            set { dockingModeEnabled = value; }
+        }
+
+        public bool UseAutoDocking
         {
             get;
             set;
-        }
+        } = true;
 
         public List<DockingPort> DockingSources = new List<DockingPort>();
         public DockingPort ActiveDockingSource, DockingTarget;
@@ -726,6 +733,8 @@ namespace Barotrauma.Items.Components
                 inputCumulation = 0;
                 keyboardInput = Vector2.Zero;
             }
+
+            if (!UseAutoDocking) { return; }
             
             float closestDist = DockingAssistThreshold * DockingAssistThreshold;
             DockingModeEnabled = false;

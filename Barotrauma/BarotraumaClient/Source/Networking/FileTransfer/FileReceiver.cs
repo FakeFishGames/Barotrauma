@@ -460,13 +460,13 @@ namespace Barotrauma.Networking
                     }
                     catch (Exception e)
                     {
-                        ErrorMessage = "Loading received submarine ''" + fileTransfer.FileName + "'' failed! {" + e.Message + "}";
+                        ErrorMessage = "Loading received submarine \"" + fileTransfer.FileName + "\" failed! {" + e.Message + "}";
                         return false;
                     }
 
                     if (stream == null)
                     {
-                        ErrorMessage = "Decompressing received submarine file''" + fileTransfer.FilePath + "'' failed!";
+                        ErrorMessage = "Decompressing received submarine file \"" + fileTransfer.FilePath + "\" failed!";
                         return false;
                     }
 
@@ -490,7 +490,7 @@ namespace Barotrauma.Networking
                         stream.Close();
                         stream.Dispose();
 
-                        ErrorMessage = "Parsing file ''" + fileTransfer.FilePath + "'' failed! The file may not be a valid submarine file.";
+                        ErrorMessage = "Parsing file \"" + fileTransfer.FilePath + "\" failed! The file may not be a valid submarine file.";
                         return false;
                     }
 

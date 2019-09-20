@@ -7,6 +7,11 @@ namespace Barotrauma
     {
         public void CreateNetworkEvent(Entity entity, bool remove)
         {
+            CreateNetworkEventProjSpecific(entity, remove);
+        }
+
+        partial void CreateNetworkEventProjSpecific(Entity entity, bool remove)
+        {
             if (GameMain.Server != null && entity != null)
             {
                 GameMain.Server.CreateEntityEvent(this, new object[] { new SpawnOrRemove(entity, remove) });

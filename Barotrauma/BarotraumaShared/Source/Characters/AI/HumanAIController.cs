@@ -81,7 +81,7 @@ namespace Barotrauma
 
         public override void Update(float deltaTime)
         {
-            if (DisableCrewAI || Character.IsUnconscious) return;
+            if (DisableCrewAI || Character.IsUnconscious || Character.Removed) { return; }
 
             float maxDistanceToSub = 3000;
             if (Character.Submarine != null || SelectedAiTarget?.Entity?.Submarine != null && 

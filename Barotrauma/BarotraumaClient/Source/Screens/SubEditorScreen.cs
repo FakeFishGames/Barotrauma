@@ -23,7 +23,7 @@ namespace Barotrauma
             "CrewExperienceHigh"
         };
 
-        private readonly Point defaultPreviewImageSize = new Point(512, 368);
+        private readonly Point defaultPreviewImageSize = new Point(640, 368);
 
         private Camera cam;
 
@@ -158,7 +158,26 @@ namespace Barotrauma
 
             var button = new GUIButton(new RectTransform(new Vector2(0.07f, 0.9f), paddedTopPanel.RectTransform, Anchor.CenterLeft), TextManager.Get("Back"))
             {
-                OnClicked = GameMain.MainMenuScreen.ReturnToMainMenu
+                OnClicked = (b, d) =>
+                {
+                    var msgBox = new GUIMessageBox("", TextManager.Get("PauseMenuQuitVerificationEditor"), new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") })
+                    {
+                        UserData = "verificationprompt"
+                    };
+                    msgBox.Buttons[0].OnClicked = (yesBtn, userdata) =>
+                    {
+                        GUIMessageBox.CloseAll();
+                        GameMain.MainMenuScreen.Select();
+                        return true;
+                    };
+                    msgBox.Buttons[0].OnClicked += msgBox.Close;
+                    msgBox.Buttons[1].OnClicked = (_, userdata) =>
+                    {
+                        msgBox.Close();
+                        return true;
+                    };
+                    return true;
+                }
             };
 
             button = new GUIButton(new RectTransform(new Vector2(0.07f, 0.9f), paddedTopPanel.RectTransform, Anchor.CenterLeft) { RelativeOffset = new Vector2(0.07f, 0.0f) }, TextManager.Get("OpenSubButton"))
@@ -497,9 +516,8 @@ namespace Barotrauma
 
             foreach (MapEntityPrefab ep in MapEntityPrefab.List)
             {
-                var itemAssemblyPrefab = ep as ItemAssemblyPrefab;
 #if !DEBUG
-                if (itemAssemblyPrefab != null && itemAssemblyPrefab.HideInMenus) { continue; }                
+                if (ep.HideInMenus) { continue; }                
 #endif
 
                 bool legacy = ep.Category == MapEntityCategory.Legacy;
@@ -548,7 +566,7 @@ namespace Barotrauma
                     };
                 }
 
-                if (ep.Category == MapEntityCategory.ItemAssembly)
+                if (ep is ItemAssemblyPrefab itemAssemblyPrefab)
                 {
                     new GUICustomComponent(new RectTransform(new Vector2(1.0f, 0.75f),
                         paddedFrame.RectTransform, Anchor.TopCenter), onDraw: itemAssemblyPrefab.DrawIcon, onUpdate: null)
@@ -2448,7 +2466,7 @@ namespace Barotrauma
                 Matrix.CreateScale(new Vector3(scale, scale, 1)) *
                 viewMatrix;
 
-            Sprite backgroundSprite = LevelGenerationParams.LevelParams.Find(l => l.BackgroundTopSprite != null).BackgroundTopSprite;
+            /*Sprite backgroundSprite = LevelGenerationParams.LevelParams.Find(l => l.BackgroundTopSprite != null).BackgroundTopSprite;*/
 
             using (RenderTarget2D rt = new RenderTarget2D(
                  GameMain.Instance.GraphicsDevice,
@@ -2457,14 +2475,14 @@ namespace Barotrauma
             {
                 GameMain.Instance.GraphicsDevice.SetRenderTarget(rt);
 
-                GameMain.Instance.GraphicsDevice.Clear(Color.Black);
+                GameMain.Instance.GraphicsDevice.Clear(new Color(8, 13, 19));
 
-                if (backgroundSprite != null)
+                /*if (backgroundSprite != null)
                 {
                     spriteBatch.Begin();
                     backgroundSprite.DrawTiled(spriteBatch, Vector2.Zero, new Vector2(width, height), color: new Color(0.025f, 0.075f, 0.131f, 1.0f));
                     spriteBatch.End();
-                }
+                }*/
 
                 spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, null, null, null, null, transform);
                 Submarine.Draw(spriteBatch, false);

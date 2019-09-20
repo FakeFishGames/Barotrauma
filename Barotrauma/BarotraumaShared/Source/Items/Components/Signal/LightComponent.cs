@@ -160,6 +160,14 @@ namespace Barotrauma.Items.Components
             item.AddTag("light");
         }
 
+#if CLIENT
+        public override void OnScaleChanged()
+        {
+            light.SpriteScale = Vector2.One * item.Scale;
+            light.Position = ParentBody != null ? ParentBody.Position : item.Position;
+        }
+#endif
+
         public override void OnItemLoaded()
         {
             base.OnItemLoaded();
@@ -175,7 +183,6 @@ namespace Barotrauma.Items.Components
             UpdateOnActiveEffects(deltaTime);
 
 #if CLIENT
-            light.SpriteScale = Vector2.One * item.Scale;
             light.ParentSub = item.Submarine;
             if (item.Container != null)
             {

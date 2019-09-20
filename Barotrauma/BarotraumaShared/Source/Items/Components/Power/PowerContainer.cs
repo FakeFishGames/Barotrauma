@@ -273,14 +273,18 @@ namespace Barotrauma.Items.Components
         {
             if (connection.Name == "set_rate")
             {
-                float tempSpeed;
-                if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out tempSpeed))
+                if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempSpeed))
                 {
-                    if (!MathUtils.IsValid(tempSpeed)) return;
-                    RechargeSpeed = MathHelper.Clamp(tempSpeed / 100.0f, 0.0f, 1.0f) * MaxRechargeSpeed;
+                    if (!MathUtils.IsValid(tempSpeed)) { return; }
+
+                    float rechargeRate = MathHelper.Clamp(tempSpeed / 100.0f, 0.0f, 1.0f);
+                    RechargeSpeed = rechargeRate * MaxRechargeSpeed;
+#if CLIENT
+                    rechargeSpeedSlider.BarScroll = rechargeRate;
+#endif
                 }
             }
-            if (!connection.IsPower) return;
+            if (!connection.IsPower) { return; }
 
             if (connection.Name == "power_in")
             {

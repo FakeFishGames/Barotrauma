@@ -77,7 +77,10 @@ namespace Barotrauma
             get;
             protected set;
         }
-        
+
+        [Serialize(false, false)]
+        public bool HideInMenus { get; set; }
+
         [Serialize(false, false)]
         public bool Linkable
         {

@@ -113,8 +113,8 @@ namespace Barotrauma
                 var tickBox = new GUITickBox(new RectTransform(tickBoxScale, contentPackageList.Content.RectTransform, scaleBasis: ScaleBasis.BothHeight), contentPackage.Name)
                 {
                     UserData = contentPackage,
-                    OnSelected = SelectContentPackage,
-                    Selected = SelectedContentPackages.Contains(contentPackage)
+                    Selected = SelectedContentPackages.Contains(contentPackage),
+                    OnSelected = SelectContentPackage
                 };
                 if (contentPackage.CorePackage)
                 {
@@ -153,11 +153,6 @@ namespace Barotrauma
                 UnsavedSettings = true;
 
                 var msgBox = new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("RestartRequiredLanguage"));
-                //change fonts to the default font of the new language to make sure
-                //they can be displayed when for example changing from English to Chinese
-                var defaultFont = GUI.Style.LoadCurrentDefaultFont();
-                msgBox.Header.Font = defaultFont;
-                msgBox.Text.Font = defaultFont;
 
                 return true;
             };
@@ -445,17 +440,11 @@ namespace Barotrauma
             };
             voiceChatScrollBar.OnMoved(voiceChatScrollBar, voiceChatScrollBar.BarScroll);
 
-            var leftTickBoxes = new GUILayoutGroup(new RectTransform(new Vector2(0.28f, 0.06f), tabs[(int)Tab.Audio].RectTransform, Anchor.TopLeft)
-            { RelativeOffset = new Vector2(0.02f, 0.32f) })
-            { RelativeSpacing = 0.01f };
-            var centerTickBoxes = new GUILayoutGroup(new RectTransform(new Vector2(0.4f, 0.06f), tabs[(int)Tab.Audio].RectTransform, Anchor.TopLeft)
-            { RelativeOffset = new Vector2(0.3f, 0.32f) })
-            { RelativeSpacing = 0.01f };
-            var rightTickBoxes = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 0.06f), tabs[(int)Tab.Audio].RectTransform, Anchor.TopRight)
+            var tickBoxes = new GUILayoutGroup(new RectTransform(new Vector2(0.28f, 0.15f), tabs[(int)Tab.Audio].RectTransform, Anchor.TopLeft)
             { RelativeOffset = new Vector2(0.02f, 0.32f) })
             { RelativeSpacing = 0.01f };
 
-            GUITickBox muteOnFocusLostBox = new GUITickBox(new RectTransform(tickBoxScale / 0.06f, leftTickBoxes.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get("MuteOnFocusLost"));
+            GUITickBox muteOnFocusLostBox = new GUITickBox(new RectTransform(tickBoxScale / 0.18f, tickBoxes.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get("MuteOnFocusLost"));
             muteOnFocusLostBox.Selected = MuteOnFocusLost;
             muteOnFocusLostBox.ToolTip = TextManager.Get("MuteOnFocusLostToolTip");
             muteOnFocusLostBox.OnSelected = (tickBox) =>
@@ -465,7 +454,7 @@ namespace Barotrauma
                 return true;
             };
 
-            GUITickBox dynamicRangeCompressionTickBox = new GUITickBox(new RectTransform(tickBoxScale / 0.06f, centerTickBoxes.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get("DynamicRangeCompression"));
+            GUITickBox dynamicRangeCompressionTickBox = new GUITickBox(new RectTransform(tickBoxScale / 0.18f, tickBoxes.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get("DynamicRangeCompression"));
             dynamicRangeCompressionTickBox.Selected = DynamicRangeCompressionEnabled;
             dynamicRangeCompressionTickBox.ToolTip = TextManager.Get("DynamicRangeCompressionToolTip");
             dynamicRangeCompressionTickBox.OnSelected = (tickBox) =>
@@ -475,7 +464,7 @@ namespace Barotrauma
                 return true;
             };
 
-            GUITickBox voipAttenuationTickBox = new GUITickBox(new RectTransform(tickBoxScale / 0.06f, rightTickBoxes.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get("VoipAttenuation"));
+            GUITickBox voipAttenuationTickBox = new GUITickBox(new RectTransform(tickBoxScale / 0.18f, tickBoxes.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get("VoipAttenuation"));
             voipAttenuationTickBox.Selected = VoipAttenuationEnabled;
             voipAttenuationTickBox.ToolTip = TextManager.Get("VoipAttenuationToolTip");
             voipAttenuationTickBox.OnSelected = (tickBox) =>
@@ -485,8 +474,8 @@ namespace Barotrauma
                 return true;
             };
 
-            var voipSettings = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.4f), tabs[(int)Tab.Audio].RectTransform, Anchor.TopCenter)
-            { RelativeOffset = new Vector2(0.0f, 0.38f) })
+            var voipSettings = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.35f), tabs[(int)Tab.Audio].RectTransform, Anchor.TopCenter)
+            { RelativeOffset = new Vector2(0.0f, 0.47f) })
             { RelativeSpacing = 0.01f };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), voipSettings.RectTransform), TextManager.Get("VoiceChat"));
@@ -631,18 +620,21 @@ namespace Barotrauma
             var dbMeter = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.25f), voiceActivityGroup.RectTransform), 0.0f, Color.Lime);
             dbMeter.ProgressGetter = () =>
             {
-                if (VoipCapture.Instance == null) return 0.0f;
+                if (VoipCapture.Instance == null) { return 0.0f; }
                 dbMeter.Color = VoipCapture.Instance.LastdB > NoiseGateThreshold ? Color.Lime : Color.Orange; //TODO: i'm a filthy hack
-                return ((float)VoipCapture.Instance.LastdB + 100.0f) / 100.0f;
+
+                float scrollVal = double.IsNegativeInfinity(VoipCapture.Instance.LastdB) ? 0.0f : ((float)VoipCapture.Instance.LastdB + 100.0f) / 100.0f;
+                return scrollVal * scrollVal;
             };
             var noiseGateSlider = new GUIScrollBar(new RectTransform(Vector2.One, dbMeter.RectTransform, Anchor.Center), color: Color.White, barSize: 0.03f);
             noiseGateSlider.Frame.Visible = false;
             noiseGateSlider.Step = 0.01f;
             noiseGateSlider.Range = new Vector2(-100.0f, 0.0f);
-            noiseGateSlider.BarScrollValue = NoiseGateThreshold;
+            noiseGateSlider.BarScroll = MathUtils.InverseLerp(-1.0f, 0.0f, NoiseGateThreshold);
+            noiseGateSlider.BarScroll *= noiseGateSlider.BarScroll;
             noiseGateSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
-                NoiseGateThreshold = scrollBar.BarScrollValue;
+                NoiseGateThreshold = MathHelper.Lerp(-100.0f, 0.0f, (float)Math.Sqrt(scrollBar.BarScroll));
                 UnsavedSettings = true;
                 return true;
             };
@@ -1018,6 +1010,7 @@ namespace Barotrauma
                     SelectedContentPackages.Remove(contentPackage);
                 }
             }
+            if (contentPackage.GetFilesOfType(ContentType.Submarine).Any()) { Submarine.RefreshSavedSubs(); }
             UnsavedSettings = true;
             return true;
         }

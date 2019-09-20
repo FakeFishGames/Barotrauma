@@ -83,6 +83,7 @@ namespace Barotrauma
         public static ScalableFont VideoTitleFont => Style?.VideoTitleFont;
         public static ScalableFont ObjectiveTitleFont => Style?.ObjectiveTitleFont;
         public static ScalableFont ObjectiveNameFont => Style?.ObjectiveNameFont;
+        public static ScalableFont CJKFont { get; private set; }
 
         public static UISprite UIGlow => Style.UIGlow;
 
@@ -154,6 +155,7 @@ namespace Barotrauma
         {
             GUI.graphicsDevice = graphicsDevice;
             var uiStyles = ContentPackage.GetFilesOfType(selectedContentPackages, ContentType.UIStyle).ToList();
+
             if (uiStyles.Count == 0)
             {
                 DebugConsole.ThrowError("No UI styles defined in the selected content package!");
@@ -165,6 +167,11 @@ namespace Barotrauma
             }
 
             Style = new GUIStyle(uiStyles[0], graphicsDevice);
+            if (CJKFont == null)
+            {
+                CJKFont = new ScalableFont("Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf",
+                    Font.Size, graphicsDevice, dynamicLoading: true, isCJK: true);
+            }
         }
 
         public static void LoadContent(bool loadSounds = true)
@@ -408,7 +415,7 @@ namespace Barotrauma
 
             if (Character.Controlled?.Inventory != null)
             {
-                if (!Character.Controlled.LockHands && Character.Controlled.Stun >= -0.1f && !Character.Controlled.IsDead)
+                if (!Character.Controlled.LockHands && Character.Controlled.Stun < 0.1f && !Character.Controlled.IsDead)
                 {
                     Inventory.DrawFront(spriteBatch);
                 }
@@ -1563,9 +1570,10 @@ namespace Barotrauma
                 button.OnClicked += (btn, userData) =>
                 {
                     var quitButton = button;
-                    if (GameMain.GameSession != null)
+                    if (GameMain.GameSession != null || (Screen.Selected is CharacterEditorScreen charEditScreen || Screen.Selected is SubEditorScreen subEditScreen))
                     {
-                        var msgBox = new GUIMessageBox("", TextManager.Get("PauseMenuQuitVerification"), new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") })
+                        string text = GameMain.GameSession == null ? "PauseMenuQuitVerificationEditor" : "PauseMenuQuitVerification";
+                        var msgBox = new GUIMessageBox("", TextManager.Get(text), new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") })
                         {
                             UserData = "verificationprompt"
                         };

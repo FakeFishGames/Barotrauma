@@ -1296,7 +1296,6 @@ namespace Barotrauma
 
         public override void Update(float deltaTime, Camera cam)
         {
-            base.Update(deltaTime, cam);
             if (aiTarget != null)
             {
                 aiTarget.SightRange = Submarine == null ? aiTarget.MinSightRange : Submarine.Velocity.Length() / 2 * aiTarget.MaxSightRange;

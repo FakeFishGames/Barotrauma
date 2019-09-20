@@ -13,6 +13,8 @@ namespace Barotrauma.Networking
 
     public abstract class NetworkConnection
     {
+        public const double TimeoutThreshold = 60.0; //full minute for timeout because loading screens can take quite a while
+
         public string Name;
 
         public UInt64 SteamID

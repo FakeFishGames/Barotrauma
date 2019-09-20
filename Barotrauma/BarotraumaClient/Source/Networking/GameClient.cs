@@ -396,15 +396,13 @@ namespace Barotrauma.Networking
         private bool connectCancelled;
         private void CancelConnect()
         {
-            if (!(GameMain.ServerChildProcess?.HasExited??true))
+            if (!(GameMain.ServerChildProcess?.HasExited ?? true))
             {
                 GameMain.ServerChildProcess.Kill();
                 GameMain.ServerChildProcess = null;
             }
-
             connectCancelled = true;
-            clientPeer?.Close();
-            clientPeer = null;
+            Disconnect();
         }
 
         // Before main looping starts, we loop here and wait for approval message
@@ -554,14 +552,20 @@ namespace Barotrauma.Networking
             UpdateHUD(deltaTime);
 
             base.Update(deltaTime);
-            
+
             try
             {
                 clientPeer?.Update(deltaTime);
             }
             catch (Exception e)
             {
-                string errorMsg = "Error while reading a message from server. {" + e + "}\n" + e.StackTrace;
+                string errorMsg = "Error while reading a message from server. {" + e + "}. ";
+                if (GameMain.Client == null) { errorMsg += "Client disposed."; }
+                errorMsg += "\n" + e.StackTrace;
+                if (e.InnerException != null)
+                {
+                    errorMsg += "\nInner exception: " + e.InnerException.Message + "\n" + e.InnerException.StackTrace;
+                }
                 GameAnalyticsManager.AddErrorEventOnce("GameClient.Update:CheckServerMessagesException" + e.TargetSite.ToString(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 DebugConsole.ThrowError("Error while reading a message from server.", e);
                 new GUIMessageBox(TextManager.Get("Error"), TextManager.GetWithVariables("MessageReadError", new string[2] { "[message]", "[targetsite]" }, new string[2] { e.Message, e.TargetSite.ToString() }));
@@ -603,7 +607,7 @@ namespace Barotrauma.Networking
 
             if (IsServerOwner && connected && !connectCancelled)
             {
-                if (GameMain.ServerChildProcess?.HasExited??true)
+                if (GameMain.ServerChildProcess?.HasExited ?? true)
                 {
                     Disconnect();
                     var msgBox = new GUIMessageBox(TextManager.Get("ConnectionLost"), TextManager.Get("ServerProcessClosed"));
@@ -626,9 +630,34 @@ namespace Barotrauma.Networking
                     ReadLobbyUpdate(inc);
                     break;
                 case ServerPacketHeader.UPDATE_INGAME:
-                    ReadIngameUpdate(inc);
+                    try
+                    {
+                        ReadIngameUpdate(inc);
+                    }
+                    catch (Exception e)
+                    {
+                        string errorMsg = "Error while reading an ingame update message from server. {" + e + "}\n" + e.StackTrace;
+                        if (e.InnerException != null)
+                        {
+                            errorMsg += "\nInner exception: " + e.InnerException.Message + "\n" + e.InnerException.StackTrace;
+                        }
+                        GameAnalyticsManager.AddErrorEventOnce("GameClient.ReadDataMessage:ReadIngameUpdate", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                        throw;
+                    }
                     break;
                 case ServerPacketHeader.VOICE:
+                    if (VoipClient == null)
+                    {
+                        string errorMsg = "Failed to read a voice packet from the server (VoipClient == null). ";
+                        if (GameMain.Client == null) { errorMsg += "Client disposed. "; }
+                        errorMsg += "\n" + Environment.StackTrace;
+                        GameAnalyticsManager.AddErrorEventOnce(
+                            "GameClient.ReadDataMessage:VoipClientNull", 
+                            GameMain.Client == null ? GameAnalyticsSDK.Net.EGAErrorSeverity.Error : GameAnalyticsSDK.Net.EGAErrorSeverity.Warning, 
+                            errorMsg);
+                        return;
+                    }
+
                     VoipClient.Read(inc);
                     break;
                 case ServerPacketHeader.QUERY_STARTGAME:
@@ -728,7 +757,7 @@ namespace Barotrauma.Networking
 
             string[] splitMsg = disconnectMsg.Split('/');
             DisconnectReason disconnectReason = DisconnectReason.Unknown;
-            if (splitMsg.Length > 0) Enum.TryParse(splitMsg[0], out disconnectReason);
+            if (splitMsg.Length > 0) { Enum.TryParse(splitMsg[0], out disconnectReason); }
 
             if (disconnectMsg == Lidgren.Network.NetConnection.NoResponseMessage)
             {
@@ -736,6 +765,19 @@ namespace Barotrauma.Networking
             }
 
             DebugConsole.NewMessage("Received a disconnect message (" + disconnectMsg + ")");
+
+            if (disconnectReason != DisconnectReason.Banned &&
+                disconnectReason != DisconnectReason.ServerShutdown &&
+                disconnectReason != DisconnectReason.TooManyFailedLogins &&
+                disconnectReason != DisconnectReason.NotOnWhitelist &&
+                disconnectReason != DisconnectReason.MissingContentPackage &&
+                disconnectReason != DisconnectReason.InvalidVersion)
+            {
+                GameAnalyticsManager.AddErrorEventOnce(
+                "GameClient.HandleDisconnectMessage", 
+                GameAnalyticsSDK.Net.EGAErrorSeverity.Debug, 
+                "Client received a disconnect message. Reason: " + disconnectReason.ToString() + ", message: " + disconnectMsg);
+            }
 
             if (disconnectReason == DisconnectReason.ServerFull)
             {
@@ -1059,6 +1101,28 @@ namespace Barotrauma.Networking
 
             if (campaign == null)
             {
+                //this shouldn't happen, TrySelectSub should stop the coroutine if the correct sub/shuttle cannot be found
+                if (GameMain.NetLobbyScreen.SelectedSub == null ||
+                    GameMain.NetLobbyScreen.SelectedSub.Name != subName ||
+                    GameMain.NetLobbyScreen.SelectedSub.MD5Hash?.Hash != subHash)
+                {
+                    string errorMsg = "Failed to select submarine \"" + subName + "\" (hash: " + subHash + ").";
+                    DebugConsole.ThrowError(errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:FailedToSelectSub" + subName, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    CoroutineManager.StartCoroutine(EndGame(""));
+                    yield return CoroutineStatus.Failure;
+                }
+                if (GameMain.NetLobbyScreen.SelectedShuttle == null ||
+                    GameMain.NetLobbyScreen.SelectedShuttle.Name != shuttleName ||
+                    GameMain.NetLobbyScreen.SelectedShuttle.MD5Hash?.Hash != shuttleHash)
+                {
+                    string errorMsg = "Failed to select shuttle \"" + shuttleName + "\" (hash: " + shuttleHash + ").";
+                    DebugConsole.ThrowError(errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:FailedToSelectShuttle" + shuttleName, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    CoroutineManager.StartCoroutine(EndGame(""));
+                    yield return CoroutineStatus.Failure;
+                }
+
                 GameMain.GameSession = missionIndex < 0 ?
                     new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, MissionType.None) :
                     new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, MissionPrefab.List[missionIndex]);
@@ -1252,7 +1316,8 @@ namespace Barotrauma.Networking
                     {
                         existingClient.SetPermissions(permissions, permittedConsoleCommands);
                         name = tc.Name;
-                        if (GameMain.NetLobbyScreen.CharacterNameBox != null)
+                        if (GameMain.NetLobbyScreen.CharacterNameBox != null &&
+                            !GameMain.NetLobbyScreen.CharacterNameBox.Selected)
                         {
                             GameMain.NetLobbyScreen.CharacterNameBox.Text = name;
                         }

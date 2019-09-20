@@ -373,7 +373,7 @@ namespace Barotrauma.Tutorials
                     HighlightInventorySlot(officer.Inventory, "harpoongun", highlightColor, 0.5f, 0.5f, 0f);
                 }
                 yield return null;
-            } while (!harpoonGunChamber.Inventory.IsFull()); // Wait until all five harpons loaded
+            } while (!harpoonGunChamber.Inventory.IsFull()); // Wait until all six harpoons loaded
             RemoveCompletedObjective(segments[5]);
             SetHighlight(officer_rangedWeaponCabinet.Item, false);
             SetDoorAccess(officer_fourthDoor, officer_fourthDoorLight, true);

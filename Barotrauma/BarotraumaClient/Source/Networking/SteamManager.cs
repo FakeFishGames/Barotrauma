@@ -218,9 +218,9 @@ namespace Barotrauma.Steam
             instance.client.Lobby.CurrentLobbyData.SetData("allowrespawn", serverSettings.AllowRespawn.ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("traitors", serverSettings.TraitorsEnabled.ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("gamestarted", GameMain.Client.GameStarted.ToString());
-            instance.client.Lobby.CurrentLobbyData.SetData("gamemode", serverSettings.GameModeIdentifier);
+            instance.client.Lobby.CurrentLobbyData.SetData("gamemode", GameMain.NetLobbyScreen?.SelectedMode?.Identifier??"");
 
-            DebugConsole.NewMessage("Lobby updated!", Microsoft.Xna.Framework.Color.Lime);
+            DebugConsole.Log("Lobby updated!");
         }
 
         public static void LeaveLobby()
@@ -770,6 +770,14 @@ namespace Barotrauma.Steam
             ContentPackage tempContentPackage = new ContentPackage(Path.Combine(existingItem.Directory.FullName, MetadataFileName));
             string installedContentPackagePath = Path.GetFullPath(GetWorkshopItemContentPackagePath(tempContentPackage));
             contentPackage = ContentPackage.List.Find(cp => Path.GetFullPath(cp.Path) == installedContentPackagePath);
+
+            if (contentPackage == null && tempContentPackage.GameVersion <= new Version(0, 9, 1, 0))
+            {
+                //try finding the content package in the lega
+                installedContentPackagePath = Path.GetFullPath(GetWorkshopItemContentPackagePath(tempContentPackage, legacy: false));
+                contentPackage = ContentPackage.List.Find(cp => Path.GetFullPath(cp.Path) == installedContentPackagePath);
+            }
+
             if (tempContentPackage.GameVersion > new Version(0, 9, 1, 0))
             {
                 itemEditor.Folder = Path.GetDirectoryName(installedContentPackagePath);
@@ -784,6 +792,7 @@ namespace Barotrauma.Steam
                     contentPackage.Path = newPath;
                     itemEditor.Folder = newDir;
                     if (!Directory.Exists(newDir)) { Directory.CreateDirectory(newDir); }
+                    if (File.Exists(newPath)) { File.Delete(newPath); }
                     File.Move(installedContentPackagePath, newPath);
                     //move all files inside the Mods folder
                     foreach (ContentFile cf in contentPackage.Files)
@@ -793,10 +802,12 @@ namespace Barotrauma.Steam
                         {
                             string destinationPath = Path.Combine(newDir, cf.Path);
                             if (!Directory.Exists(Path.GetDirectoryName(destinationPath))) { Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)); }
+                            if (File.Exists(destinationPath)) { File.Delete(destinationPath); }
                             File.Move(cf.Path, destinationPath);
                             cf.Path = destinationPath;
                         }
                     }
+                    contentPackage.GameVersion = GameMain.Version;
                     contentPackage.Save(contentPackage.Path);
                 }
                 catch (Exception e)
@@ -1202,7 +1213,22 @@ namespace Barotrauma.Steam
                 return false;                
             }
 
-            string metaDataPath = Path.Combine(item.Directory.FullName, MetadataFileName);
+            string metaDataPath = "";
+            try
+            {
+                metaDataPath = Path.Combine(item.Directory.FullName, MetadataFileName);
+            }
+            catch (ArgumentException e)
+            {
+                string errorMessage = "Metadata file for the Workshop item \"" + item.Title +
+                    "\" not found. Could not combine path (" + (item.Directory.FullName ?? "directory name empty") + ").";
+                DebugConsole.ThrowError(errorMessage);
+                GameAnalyticsManager.AddErrorEventOnce("SteamManager.CheckWorkshopItemEnabled:PathCombineException" + item.Title,
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    errorMessage);
+                return false;
+            }
+
             if (!File.Exists(metaDataPath))
             {
                 DebugConsole.ThrowError("Metadata file for the Workshop item \"" + item.Title + "\" not found. The file may be corrupted.");
@@ -1310,11 +1336,17 @@ namespace Barotrauma.Steam
 
         public static string GetWorkshopItemContentPackagePath(ContentPackage contentPackage)
         {
+            return GetWorkshopItemContentPackagePath(contentPackage, legacy: contentPackage.GameVersion <= new Version(0, 9, 1, 0));
+        }
+
+        private static string GetWorkshopItemContentPackagePath(ContentPackage contentPackage, bool legacy)
+        {
             string fileName = contentPackage.Name;
-            string invalidChars = ToolBox.RemoveInvalidFileNameChars(fileName);
-            return contentPackage.GameVersion > new Version(0, 9, 1, 0) ?
-                Path.Combine("Mods", fileName, MetadataFileName) :
-                Path.Combine("Data", "ContentPackages", fileName + ".xml"); //legacy support
+            fileName = ToolBox.RemoveInvalidFileNameChars(fileName);
+
+            return legacy ?
+                Path.Combine("Data", "ContentPackages", fileName + ".xml") :
+                Path.Combine("Mods", fileName, MetadataFileName);
         }
 
         #endregion

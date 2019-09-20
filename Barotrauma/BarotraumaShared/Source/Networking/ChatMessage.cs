@@ -233,11 +233,10 @@ namespace Barotrauma.Networking
         public static bool CanUseRadio(Character sender, out WifiComponent radio)
         {
             radio = null;
-            if (sender == null) { return false; }
-            var senderItem = sender.Inventory.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
-            if (senderItem == null) { return false; }
-            radio = senderItem.GetComponent<WifiComponent>();
-            return sender.HasEquippedItem(senderItem) && radio.CanTransmit();
+            if (sender?.Inventory == null || sender.Removed) { return false; }
+            radio = sender.Inventory.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null)?.GetComponent<WifiComponent>();
+            if (radio?.Item == null) { return false; }
+            return sender.HasEquippedItem(radio.Item) && radio.CanTransmit();
         }
     }
 }

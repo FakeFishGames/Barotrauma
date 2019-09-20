@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma.Items.Components
 {
@@ -71,6 +72,11 @@ namespace Barotrauma.Items.Components
                 }
                 GameMain.Client.ChatBox.ToggleOpen = value;
             }
+        }
+
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        {
+            state = msg.ReadBoolean();
         }
     }
 }

@@ -311,7 +311,16 @@ namespace Barotrauma
                 }
             }
 
-            return string.Format(text, args);
+            try
+            {
+                return string.Format(text, args);  
+            }   
+            catch (FormatException)
+            {
+                string errorMsg = "Failed to format text \"" + text + "\", args: " + string.Join(", ", args);
+                GameAnalyticsManager.AddErrorEventOnce("TextManager.GetFormatted:FormatException", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                return text;
+            }
         }
 
         public static string FormatServerMessage(string textId)
@@ -621,6 +630,8 @@ namespace Barotrauma
 
         static Regex isCJK = new Regex(
             @"\p{IsHangulJamo}|" +
+            @"\p{IsHiragana}|" +
+            @"\p{IsKatakana}|" +
             @"\p{IsCJKRadicalsSupplement}|" +
             @"\p{IsCJKSymbolsandPunctuation}|" +
             @"\p{IsEnclosedCJKLettersandMonths}|" +
@@ -635,6 +646,7 @@ namespace Barotrauma
         /// </summary>
         public static bool IsCJK(string text)
         {
+            if (string.IsNullOrEmpty(text)) { return false; }
             return isCJK.IsMatch(text);
         }
 

@@ -37,8 +37,8 @@ namespace Barotrauma.Networking
                 Retries = 0;
                 SteamID = null;
                 PasswordSalt = null;
-                UpdateTime = Timing.TotalTime;
-                TimeOut = 20.0;
+                UpdateTime = Timing.TotalTime+Timing.Step*3.0;
+                TimeOut = NetworkConnection.TimeoutThreshold;
                 AuthSessionStarted = false;
             }
         }
@@ -319,13 +319,15 @@ namespace Barotrauma.Networking
         {
             if (netServer == null) { return; }
 
-            pendingClient.TimeOut = 20.0;
+            pendingClient.TimeOut = NetworkConnection.TimeoutThreshold;
 
             ConnectionInitialization initializationStep = (ConnectionInitialization)inc.ReadByte();
 
             //DebugConsole.NewMessage(initializationStep+" "+pendingClient.InitializationStep);
 
             if (pendingClient.InitializationStep != initializationStep) return;
+
+            pendingClient.UpdateTime = Timing.TotalTime + Timing.Step;
 
             switch (initializationStep)
             {
@@ -522,6 +524,7 @@ namespace Barotrauma.Networking
                 }
 
                 OnInitializationComplete?.Invoke(newConnection);
+                return;
             }
 
 
@@ -554,6 +557,10 @@ namespace Barotrauma.Networking
             }
 
             NetSendResult result = netServer.SendMessage(outMsg, pendingClient.Connection, NetDeliveryMethod.ReliableUnordered);
+            if (result != NetSendResult.Sent && result != NetSendResult.Queued)
+            {
+                DebugConsole.NewMessage("Failed to send initialization step " + pendingClient.InitializationStep.ToString() + " to pending client: " + result.ToString(), Microsoft.Xna.Framework.Color.Yellow);
+            }
             //DebugConsole.NewMessage("sent update to pending client: "+result);
         }
 
@@ -588,7 +595,7 @@ namespace Barotrauma.Networking
             if (netServer == null) { return; }
 
             PendingClient pendingClient = pendingClients.Find(c => c.SteamID == steamID);
-            DebugConsole.NewMessage(steamID + " validation: " + status+", "+(pendingClient!=null));
+            DebugConsole.Log(steamID + " validation: " + status+", "+(pendingClient!=null));
             
             if (pendingClient == null)
             {
@@ -653,7 +660,11 @@ namespace Barotrauma.Networking
             lidgrenMsg.Write((UInt16)length);
             lidgrenMsg.Write(msgData, 0, length);
 
-            netServer.SendMessage(lidgrenMsg, lidgrenConn.NetConnection, lidgrenDeliveryMethod);
+            NetSendResult result = netServer.SendMessage(lidgrenMsg, lidgrenConn.NetConnection, lidgrenDeliveryMethod);
+            if (result != NetSendResult.Sent && result != NetSendResult.Queued)
+            {
+                DebugConsole.NewMessage("Failed to send message to "+conn.Name+": " + result.ToString(), Microsoft.Xna.Framework.Color.Yellow);
+            }
         }
         
         public override void Disconnect(NetworkConnection conn,string msg=null)

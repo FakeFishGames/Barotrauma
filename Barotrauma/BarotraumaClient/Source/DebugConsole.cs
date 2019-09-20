@@ -1359,7 +1359,7 @@ namespace Barotrauma
                     }
                     ShowQuestionPrompt("Permission to grant to client #" + id + "?", (perm) =>
                     {
-                        GameMain.Client.SendConsoleCommand("giveperm " + id + " " + perm);
+                        GameMain.Client?.SendConsoleCommand("giveperm " + id + " " + perm);
                     });
                 }
             );
@@ -1384,7 +1384,7 @@ namespace Barotrauma
 
                     ShowQuestionPrompt("Permission to revoke from client #" + id + "?", (perm) =>
                     {
-                        GameMain.Client.SendConsoleCommand("revokeperm " + id + " " + perm);
+                        GameMain.Client?.SendConsoleCommand("revokeperm " + id + " " + perm);
                     });
                 }
             );
@@ -1408,7 +1408,7 @@ namespace Barotrauma
                     }
                     ShowQuestionPrompt("Rank to grant to client #" + id + "?", (rank) =>
                     {
-                        GameMain.Client.SendConsoleCommand("giverank " + id + " " + rank);
+                        GameMain.Client?.SendConsoleCommand("giverank " + id + " " + rank);
                     });
                 }
             );
@@ -1427,7 +1427,7 @@ namespace Barotrauma
 
                     ShowQuestionPrompt("Console command permissions to grant to client #" + id + "? You may enter multiple commands separated with a space.", (commandNames) =>
                     {
-                        GameMain.Client.SendConsoleCommand("givecommandperm " + id + " " + commandNames);
+                        GameMain.Client?.SendConsoleCommand("givecommandperm " + id + " " + commandNames);
                     });
                 }
             );
@@ -1446,7 +1446,7 @@ namespace Barotrauma
 
                     ShowQuestionPrompt("Console command permissions to revoke from client #" + id + "? You may enter multiple commands separated with a space.", (commandNames) =>
                     {
-                        GameMain.Client.SendConsoleCommand("revokecommandperm " + id + " " + commandNames);
+                        GameMain.Client?.SendConsoleCommand("revokecommandperm " + id + " " + commandNames);
                     });
                 }
             );
@@ -1487,7 +1487,7 @@ namespace Barotrauma
                                 banDuration = parsedBanDuration;
                             }
 
-                            GameMain.Client.SendConsoleCommand(
+                            GameMain.Client?.SendConsoleCommand(
                                 "banendpoint " +
                                 args[0] + " " +
                                 (banDuration.HasValue ? banDuration.Value.TotalSeconds.ToString() : "0") + " " +
@@ -1538,7 +1538,7 @@ namespace Barotrauma
                                 NewMessage("Index out of bounds!", Color.Red);
                                 return;
                             }
-                            GameMain.Client.SendConsoleCommand("campaigndestination " + destinationIndex);
+                            GameMain.Client?.SendConsoleCommand("campaigndestination " + destinationIndex);
                         });
                     }
                     else

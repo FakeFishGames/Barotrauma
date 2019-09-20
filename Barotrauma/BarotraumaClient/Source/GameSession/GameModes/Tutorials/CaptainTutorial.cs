@@ -199,6 +199,7 @@ namespace Barotrauma.Tutorials
             SetHighlight(captain_navConsole.Item, true);
             SetHighlight(captain_sonar.Item, true);
             SetHighlight(captain_statusMonitor, true);
+            captain_navConsole.UseAutoDocking = false;
             do
             {
                 //captain_navConsoleCustomInterface.HighlightElement(0, uiHighlightColor, duration: 1.0f, pulsateAmount: 0.0f);
@@ -221,6 +222,7 @@ namespace Barotrauma.Tutorials
             } while (captain_sonar.CurrentMode != Sonar.Mode.Active);
             do { yield return null; } while (Vector2.Distance(Submarine.MainSub.WorldPosition, Level.Loaded.EndPosition) > 4000f);
             RemoveCompletedObjective(segments[5]);
+            captain_navConsole.UseAutoDocking = true;
             yield return new WaitForSeconds(4f, false);
             TriggerTutorialSegment(6); // Docking
             do
