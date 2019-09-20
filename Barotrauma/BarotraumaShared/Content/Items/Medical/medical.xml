@@ -600,14 +600,14 @@
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="30">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
         <ReduceAffliction identifier="damage" amount="3" />
-        <ReduceAffliction identifier="burn" amount="3" />
+        <Affliction identifier="burn" amount="0.85" />
         <ReduceAffliction identifier="oxygenlow" amount="3" />
         <ReduceAffliction identifier="bloodloss" amount="1.5" />
       </StatusEffect>
       <StatusEffect tags="medical" type="OnFailure" target="Character" duration="30">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
         <ReduceAffliction identifier="damage" amount="1.5" />
-        <ReduceAffliction identifier="burn" amount="1.5" />
+        <Affliction identifier="burn" amount="1.3" />
         <ReduceAffliction identifier="oxygenlow" amount="1.5" />
         <ReduceAffliction identifier="bloodloss" amount="1" />
       </StatusEffect>
