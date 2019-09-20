@@ -243,7 +243,12 @@ namespace Barotrauma
             }
             if (purchasedLostShuttles != this.PurchasedLostShuttles)
             {
-                if (purchasedLostShuttles && Money >= ShuttleReplaceCost)
+                if (GameMain.GameSession?.Submarine != null &&
+                    GameMain.GameSession.Submarine.LeftBehindSubDockingPortOccupied)
+                {
+                    GameMain.Server.SendDirectChatMessage(TextManager.FormatServerMessage("ReplaceShuttleDockingPortOccupied"), sender, ChatMessageType.MessageBox);
+                }
+                else if (purchasedLostShuttles && Money >= ShuttleReplaceCost)
                 {
                     this.PurchasedLostShuttles = true;
                     Money -= ShuttleReplaceCost;

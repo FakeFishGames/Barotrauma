@@ -177,10 +177,10 @@ namespace Barotrauma
             }
 
             linkedSub.filePath = element.GetAttributeString("filepath", "");
-            string[] linkedToIds = element.GetAttributeStringArray("linkedto", new string[0]); 
+            int[] linkedToIds = element.GetAttributeIntArray("linkedto", new int[0]); 
             for (int i = 0; i < linkedToIds.Length; i++)
             {
-                linkedSub.linkedToID.Add((ushort)int.Parse(linkedToIds[i]));
+                linkedSub.linkedToID.Add((ushort)linkedToIds[i]);
             }
             linkedSub.originalLinkedToID = (ushort)element.GetAttributeInt("originallinkedto", 0);
             linkedSub.originalMyPortID = (ushort)element.GetAttributeInt("originalmyport", 0);
@@ -318,7 +318,7 @@ namespace Barotrauma
                 var linkedPort = linkedTo.FirstOrDefault(lt => (lt is Item) && ((Item)lt).GetComponent<DockingPort>() != null);
                 if (linkedPort != null)
                 {
-                    if (saveElement.Attribute("linkedto") != null) { saveElement.Attribute("linkedto").Remove(); }
+                    saveElement.Attribute("linkedto")?.Remove();
                     saveElement.Add(new XAttribute("linkedto", linkedPort.ID));
                 }
             }
@@ -327,7 +327,10 @@ namespace Barotrauma
                 saveElement = new XElement("LinkedSubmarine");
                 sub.SaveToXElement(saveElement);
             }
+
+            saveElement.Attribute("originallinkedto")?.Remove();
             saveElement.Add(new XAttribute("originallinkedto", originalLinkedPort != null ? originalLinkedPort.Item.ID : originalLinkedToID));
+            saveElement.Attribute("originalmyport")?.Remove();
             saveElement.Add(new XAttribute("originalmyport", originalMyPortID));
 
             if (sub != null)
@@ -350,7 +353,6 @@ namespace Barotrauma
                 {
                     saveElement.SetAttributeValue("location", Level.Loaded.Seed);
                     saveElement.SetAttributeValue("worldpos", XMLExtensions.Vector2ToString(sub.SubBody.Position));
-                    Submarine.MainSub.SubsLeftBehind = true;
                 }
                 else
                 {

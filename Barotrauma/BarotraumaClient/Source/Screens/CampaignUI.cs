@@ -392,6 +392,13 @@ namespace Barotrauma
             {
                 OnClicked = (btn, userdata) =>
                 {
+                    if (GameMain.GameSession?.Submarine != null && 
+                        GameMain.GameSession.Submarine.LeftBehindSubDockingPortOccupied)
+                    {
+                        new GUIMessageBox("", TextManager.Get("ReplaceShuttleDockingPortOccupied"));
+                        return true;
+                    }
+
                     if (campaign.PurchasedLostShuttles)
                     {
                         campaign.Money += CampaignMode.ShuttleReplaceCost;

@@ -3539,6 +3539,7 @@
 
   <replacelostshuttles>Replace lost shuttles</replacelostshuttles>
   <replaceshuttles>Replace</replaceshuttles>
+  <replaceshuttledockingportoccupied>The lost shuttle cannot be replaced because the docking port is already in use. Clear the docking port before requisitioning a new shuttle.</replaceshuttledockingportoccupied>
   
   <!-- Changed values as of 13th of August -->
   <traitorgoaldestroyitems>Dispose of at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>
