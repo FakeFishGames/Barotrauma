@@ -29,8 +29,9 @@ namespace Barotrauma
         public override float GetPriority()
         {
             if (Character.CharacterList.Any(c => c.CurrentHull == targetHull && !HumanAIController.IsFriendly(c))) { return 0; }
-            // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
-            float dist = Math.Abs(character.WorldPosition.X - targetHull.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - targetHull.WorldPosition.Y) * 2.0f;
+            float yDist = Math.Abs(character.WorldPosition.Y - targetHull.WorldPosition.Y);
+            yDist = yDist > 100 ? yDist * 3 : 0;
+            float dist = Math.Abs(character.WorldPosition.X - targetHull.WorldPosition.X) + yDist;
             float distanceFactor = MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 5000, dist));
             if (targetHull == character.CurrentHull)
             {

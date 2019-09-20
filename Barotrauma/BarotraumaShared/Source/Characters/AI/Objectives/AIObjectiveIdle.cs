@@ -287,7 +287,9 @@ namespace Barotrauma
                     targetHulls.Add(hull);
                     float weight = hull.Volume;
                     // Prefer rooms that are closer. Avoid rooms that are not in the same level.
-                    float dist = Math.Abs(character.WorldPosition.X - hull.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - hull.WorldPosition.Y) * 5.0f;
+                    float yDist = Math.Abs(character.WorldPosition.Y - hull.WorldPosition.Y);
+                    yDist = yDist > 100 ? yDist * 5 : 0;
+                    float dist = Math.Abs(character.WorldPosition.X - hull.WorldPosition.X) + yDist;
                     float distanceFactor = MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 2500, dist));
                     weight *= distanceFactor;
                     hullWeights.Add(weight);

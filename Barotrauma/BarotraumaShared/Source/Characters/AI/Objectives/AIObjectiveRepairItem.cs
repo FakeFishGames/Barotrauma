@@ -31,8 +31,9 @@ namespace Barotrauma
             // TODO: priority list?
             // Ignore items that are being repaired by someone else.
             if (Item.Repairables.Any(r => r.CurrentFixer != null && r.CurrentFixer != character)) { return 0; }
-            // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
-            float dist = Math.Abs(character.WorldPosition.X - Item.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - Item.WorldPosition.Y) * 2.0f;
+            float yDist = Math.Abs(character.WorldPosition.Y - Item.WorldPosition.Y);
+            yDist = yDist > 100 ? yDist * 5 : 0;
+            float dist = Math.Abs(character.WorldPosition.X - Item.WorldPosition.X) + yDist;
             float distanceFactor = MathHelper.Lerp(1, 0.25f, MathUtils.InverseLerp(0, 5000, dist));
             if (Item.CurrentHull == character.CurrentHull)
             {

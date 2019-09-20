@@ -223,8 +223,9 @@ namespace Barotrauma
                 }
                 Item rootContainer = item.GetRootContainer();
                 Vector2 itemPos = (rootContainer ?? item).WorldPosition;
-                // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
-                float dist = Math.Abs(character.WorldPosition.X - itemPos.X) + Math.Abs(character.WorldPosition.Y - itemPos.Y) * 2.0f;
+                float yDist = Math.Abs(character.WorldPosition.Y - itemPos.Y);
+                yDist = yDist > 100 ? yDist * 5 : 0;
+                float dist = Math.Abs(character.WorldPosition.X - itemPos.X) + yDist;
                 float distanceFactor = MathHelper.Lerp(1, 0, MathUtils.InverseLerp(0, 10000, dist));
                 itemPriority *= distanceFactor;
                 //ignore if the item has a lower priority than the currently selected one

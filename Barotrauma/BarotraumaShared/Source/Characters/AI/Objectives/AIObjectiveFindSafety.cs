@@ -214,8 +214,9 @@ namespace Barotrauma
                     // Inside
                     if (!character.Submarine.IsConnectedTo(hull.Submarine)) { continue; }
                     hullSafety = HumanAIController.GetHullSafety(hull, character);
-                    // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
-                    float dist = Math.Abs(character.WorldPosition.X - hull.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - hull.WorldPosition.Y) * 2.0f;
+                    float yDist = Math.Abs(character.WorldPosition.Y - hull.WorldPosition.Y);
+                    yDist = yDist > 100 ? yDist * 3 : 0;
+                    float dist = Math.Abs(character.WorldPosition.X - hull.WorldPosition.X) + yDist;
                     float distanceFactor = MathHelper.Lerp(1, 0.9f, MathUtils.InverseLerp(0, 10000, dist));
                     hullSafety *= distanceFactor;
                     //skip the hull if the safety is already less than the best hull
