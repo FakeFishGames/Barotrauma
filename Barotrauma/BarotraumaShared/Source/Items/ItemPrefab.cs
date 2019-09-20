@@ -314,17 +314,7 @@ namespace Barotrauma
             get { return string.Join(",", preferredContainers); }
             set
             {
-                preferredContainers.Clear();
-                if (!string.IsNullOrWhiteSpace(value))
-                {
-                    string[] splitTags = value.Split(',');
-                    foreach (string tag in splitTags)
-                    {
-                        string[] splitTag = tag.Split(':');
-                        splitTag[0] = splitTag[0].ToLowerInvariant();
-                        preferredContainers.Add(string.Join(":", splitTag));
-                    }
-                }
+                StringFormatter.ParseCommaSeparatedStringToCollection(value, preferredContainers);
             }
         }
 

@@ -62,17 +62,7 @@ namespace Barotrauma.Items.Components
             get { return string.Join(",", containableRestrictions); }
             set
             {
-                containableRestrictions.Clear();
-                if (!string.IsNullOrWhiteSpace(value))
-                {
-                    string[] splitTags = value.Split(',');
-                    foreach (string tag in splitTags)
-                    {
-                        string[] splitTag = tag.Split(':');
-                        splitTag[0] = splitTag[0].ToLowerInvariant();
-                        containableRestrictions.Add(string.Join(":", splitTag));
-                    }
-                }
+                StringFormatter.ParseCommaSeparatedStringToCollection(value, containableRestrictions);
             }
         }
 
