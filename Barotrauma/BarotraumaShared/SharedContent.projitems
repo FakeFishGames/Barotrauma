@@ -2394,8 +2394,12 @@
     <None Include="$(MSBuildThisFileDirectory)Content\TraitorMissions.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Submarines\Kastrull.sub" />
-    <None Include="$(MSBuildThisFileDirectory)Submarines\KastrullDrone.sub" />
+    <None Include="$(MSBuildThisFileDirectory)Submarines\Kastrull.sub">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Submarines\KastrullDrone.sub">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)Content\Characters\Carrier\CARRIER_alarmLoop.ogg">
