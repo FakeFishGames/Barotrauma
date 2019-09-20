@@ -40,6 +40,8 @@ namespace Barotrauma
         private ushort originalLinkedToID;
         private DockingPort originalLinkedPort;
 
+        private bool purchasedLostShuttles;
+
         public Submarine Sub
         {
             get
@@ -146,13 +148,13 @@ namespace Barotrauma
         public static LinkedSubmarine Load(XElement element, Submarine submarine)
         {
             Vector2 pos = element.GetAttributeVector2("pos", Vector2.Zero);
-
             LinkedSubmarine linkedSub = null;
 
             if (Screen.Selected == GameMain.SubEditorScreen)
             {
                 linkedSub = CreateDummy(submarine, element, pos);
                 linkedSub.saveElement = element;
+                linkedSub.purchasedLostShuttles = false;
             }
             else
             {
@@ -161,19 +163,20 @@ namespace Barotrauma
                     saveElement = element
                 };
 
-                bool purchasedLostShuttles = GameMain.GameSession.GameMode is CampaignMode campaign && campaign.PurchasedLostShuttles;
+                linkedSub.purchasedLostShuttles = GameMain.GameSession.GameMode is CampaignMode campaign && campaign.PurchasedLostShuttles;
                 string levelSeed = element.GetAttributeString("location", "");
                 if (!string.IsNullOrWhiteSpace(levelSeed) && 
                     GameMain.GameSession.Level != null && 
                     GameMain.GameSession.Level.Seed != levelSeed &&
-                    !purchasedLostShuttles)
+                    !linkedSub.purchasedLostShuttles)
                 {
                     linkedSub.loadSub = false;
-                    return null;
                 }
-
-                linkedSub.loadSub = true;
-                linkedSub.rect.Location = MathUtils.ToPoint(pos);
+                else
+                {
+                    linkedSub.loadSub = true;
+                    linkedSub.rect.Location = MathUtils.ToPoint(pos);
+                }
             }
 
             linkedSub.filePath = element.GetAttributeString("filepath", "");
@@ -185,7 +188,7 @@ namespace Barotrauma
             linkedSub.originalLinkedToID = (ushort)element.GetAttributeInt("originallinkedto", 0);
             linkedSub.originalMyPortID = (ushort)element.GetAttributeInt("originalmyport", 0);
             
-            return linkedSub;
+            return linkedSub.loadSub ? linkedSub : null;
         }
 
         public override void OnMapLoaded()
@@ -219,7 +222,10 @@ namespace Barotrauma
 
             if (linkedPort == null)
             {
-                linkedPort = (FindEntityByID(originalLinkedToID) as Item)?.GetComponent<DockingPort>();
+                if (purchasedLostShuttles)
+                {
+                    linkedPort = (FindEntityByID(originalLinkedToID) as Item)?.GetComponent<DockingPort>();
+                }
                 if (linkedPort == null) { return; }
             }
             originalLinkedPort = linkedPort;
