@@ -20,7 +20,7 @@ namespace Barotrauma
 
         private float startCountdown = 0.0f;
         private GameServer server;
-        
+
         private readonly Dictionary<ulong, int> traitorCountsBySteamId = new Dictionary<ulong, int>();
         private readonly Dictionary<string, int> traitorCountsByEndPoint = new Dictionary<string, int>();
 
@@ -196,7 +196,7 @@ namespace Barotrauma
 #endif
             if (GameMain.Server == null || !Missions.Any()) return "";
 
-            return string.Join("\n\n", Missions.Select(mission => mission.Value.GlobalEndMessage));
+            return TextManager.JoinServerMessages("\n\n", Missions.Select(mission => mission.Value.GlobalEndMessage).ToArray());
         }
 
         public static T WeightedRandom<T>(IList<T> collection, int startIndex, int count, Func<int, int> random, Func<T, int> readSelectedWeight, Action<T, int> writeSelectedWeight, int entryWeight, int selectionWeight) where T : class
