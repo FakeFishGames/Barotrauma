@@ -541,7 +541,7 @@ namespace Barotrauma.Items.Components
                         if (fuelRod != null && fuelRod.Condition <= 0.0f)
                         {
                             if (!FindSuitableContainer(character, 
-                                priority: i =>
+                                i =>
                                 {
                                     var container = i.GetComponent<ItemContainer>();
                                     if (container == null) { return 0; }
