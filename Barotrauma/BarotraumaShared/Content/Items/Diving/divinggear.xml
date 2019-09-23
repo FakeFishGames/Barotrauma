@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Oxygen Tank" identifier="oxygentank" category="Equipment,Misc" Tags="smallitem,oxygensource" cargocontaineridentifier="metalcrate" scale="0.3" impactsoundtag="impact_metal_light">
+  <Item name="Oxygen Tank" identifier="oxygentank" category="Equipment,Misc" Tags="smallitem,oxygensource" cargocontaineridentifier="metalcrate" preferredcontainers="oxygentankcontainer" scale="0.3" impactsoundtag="impact_metal_light">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="75" />
     <Price locationtype="Military" buyprice="75" />
@@ -27,7 +27,7 @@
       <StatusEffect type="OnFire" target="This" Condition="-100.0" disabledeltatime="true" />
     </Holdable>
   </Item>
-  <Item name="Oxygenite Tank" identifier="oxygenitetank" category="Equipment,Misc" Tags="smallitem,oxygensource" description="A Tank containing liquid Oxygenite." scale="0.3" impactsoundtag="impact_metal_light">
+  <Item name="Oxygenite Tank" identifier="oxygenitetank" category="Equipment,Misc" Tags="smallitem,oxygensource" preferredcontainers="oxygentankcontainer" description="A Tank containing liquid Oxygenite." scale="0.3" impactsoundtag="impact_metal_light">
     <Deconstruct time="10">
       <Item identifier="aluminium" />
       <Item identifier="liquidoxygenite" mincondition="0.1" />
@@ -100,7 +100,7 @@
       <Containable identifiers="oxygentank,weldingfueltank,oxygeniteshard,oxygenitetank,incendiumfueltank" />
     </ItemContainer>
   </Item>
-  <Item name="Diving Suit" identifier="divingsuit" category="Equipment" tags="diving,divingsuit" scale="0.5" fireproof="true" description="An atmospheric diving suit capable of withstanding the immense pressure under Europa's crust." impactsoundtag="impact_metal_heavy">
+  <Item name="Diving Suit" identifier="divingsuit" category="Equipment" tags="diving,divingsuit" preferredcontainers="divingsuitcontainer" scale="0.5" fireproof="true" description="An atmospheric diving suit capable of withstanding the immense pressure under Europa's crust." impactsoundtag="impact_metal_heavy">
     <Price locationtype="Research" buyprice="225" />
     <Price locationtype="City" buyprice="225" />
     <Price locationtype="Military" buyprice="225" />
