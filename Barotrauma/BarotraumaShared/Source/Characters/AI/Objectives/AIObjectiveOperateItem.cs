@@ -35,7 +35,7 @@ namespace Barotrauma
             }
             if (component.Item.CurrentHull == null) { return 0; }
             if (component.Item.CurrentHull.FireSources.Count > 0) { return 0; }
-            if (Character.CharacterList.Any(c => c.CurrentHull == component.Item.CurrentHull && !HumanAIController.IsFriendly(c))) { return 0; }
+            if (Character.CharacterList.Any(c => c.CurrentHull == component.Item.CurrentHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c))) { return 0; }
             float devotion = MathHelper.Min(10, Priority);
             float value = devotion + AIObjectiveManager.OrderPriority * PriorityModifier;
             float max = MathHelper.Min((AIObjectiveManager.OrderPriority - 1), 90);
@@ -77,7 +77,7 @@ namespace Barotrauma
                 if (character.CanInteractWith(target.Item, out _, checkLinked: false))
                 {
                     // Don't allow to operate an item that someone already operates, unless this objective is an order
-                    if (objectiveManager.CurrentOrder != this && Character.CharacterList.Any(c => c.SelectedConstruction == target.Item && c != character && HumanAIController.IsFriendly(c)))
+                    if (objectiveManager.CurrentOrder != this && Character.CharacterList.Any(c => c.SelectedConstruction == target.Item && c != character && HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c)))
                     {
                         // Don't abandon
                         return;

@@ -217,7 +217,7 @@ namespace Barotrauma
                 return false;
             }
             // Don't go into rooms that have enemies
-            if (Character.CharacterList.Any(c => c.CurrentHull == targetCharacter.CurrentHull && !c.IsDead && !c.Removed && !c.IsUnconscious && !HumanAIController.IsFriendly(character, c)))
+            if (Character.CharacterList.Any(c => c.CurrentHull == targetCharacter.CurrentHull && !HumanAIController.IsFriendly(character, c) && HumanAIController.IsActive(c)))
             {
                 Abandon = true;
                 return false;

@@ -978,7 +978,7 @@ namespace Barotrauma
             float enemyFactor = 1;
             if (!ignoreEnemies)
             {
-                Func<Character, bool> isValidTarget = e => !e.IsDead && !e.IsUnconscious && !e.Removed && !IsFriendly(character, e);
+                Func<Character, bool> isValidTarget = e => IsActive(e) && !IsFriendly(character, e);
                 int enemyCount = visibleHulls == null ?
                     Character.CharacterList.Count(e => e.CurrentHull == hull && isValidTarget(e)) :
                     Character.CharacterList.Count(e => visibleHulls.Contains(e.CurrentHull) && isValidTarget(e));
@@ -992,5 +992,7 @@ namespace Barotrauma
         public bool IsFriendly(Character other) => IsFriendly(Character, other);
 
         public static bool IsFriendly(Character me, Character other) => (other.TeamID == me.TeamID || other.TeamID == Character.TeamType.FriendlyNPC || me.TeamID == Character.TeamType.FriendlyNPC) && other.SpeciesName == me.SpeciesName;
+
+        public static bool IsActive(Character other) => !other.Removed && !other.IsDead && !other.IsUnconscious;
     }
 }

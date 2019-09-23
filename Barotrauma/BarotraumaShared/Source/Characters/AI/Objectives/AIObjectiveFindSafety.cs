@@ -169,7 +169,7 @@ namespace Barotrauma
                     }
                     foreach (Character enemy in Character.CharacterList)
                     {
-                        if (enemy.IsDead || enemy.IsUnconscious || enemy.Removed || HumanAIController.IsFriendly(enemy)) { continue; }
+                        if (HumanAIController.IsFriendly(enemy) || !HumanAIController.IsActive(enemy)) { continue; }
                         if (HumanAIController.VisibleHulls.Contains(enemy.CurrentHull))
                         {
                             Vector2 dir = character.Position - enemy.Position;

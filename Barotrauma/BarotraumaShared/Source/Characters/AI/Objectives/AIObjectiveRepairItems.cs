@@ -57,7 +57,7 @@ namespace Barotrauma
             if (!IsValidTarget(item, character)) { return false; }
             if (item.CurrentHull.FireSources.Count > 0) { return false; }
             // Don't repair items in rooms that have enemies inside.
-            if (Character.CharacterList.Any(c => c.CurrentHull == item.CurrentHull && !HumanAIController.IsFriendly(c))) { return false; }
+            if (Character.CharacterList.Any(c => c.CurrentHull == item.CurrentHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c))) { return false; }
             if (!Objectives.ContainsKey(item))
             {
                 if (item.Repairables.All(r => item.ConditionPercentage > r.ShowRepairUIThreshold)) { return false; }

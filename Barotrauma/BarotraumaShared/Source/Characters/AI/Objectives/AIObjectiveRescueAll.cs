@@ -58,7 +58,7 @@ namespace Barotrauma
             if (target.CurrentHull == null) { return false; }
             if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(target.CurrentHull, true)) { return false; }
             // Don't go into rooms that have enemies
-            if (Character.CharacterList.Any(c => c.CurrentHull == target.CurrentHull && !c.IsDead && !c.Removed && !c.IsUnconscious && !HumanAIController.IsFriendly(character, c))) { return false; }
+            if (Character.CharacterList.Any(c => c.CurrentHull == target.CurrentHull && !HumanAIController.IsFriendly(character, c) && HumanAIController.IsActive(c))) { return false; }
             return true;
         }
     }
