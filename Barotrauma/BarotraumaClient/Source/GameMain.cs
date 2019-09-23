@@ -172,6 +172,9 @@ namespace Barotrauma
 
             GraphicsDeviceManager = new GraphicsDeviceManager(this);
 
+            GraphicsDeviceManager.IsFullScreen = false;
+            GraphicsDeviceManager.ApplyChanges();
+
             Window.Title = "Barotrauma";
 
             Instance = this;

@@ -1126,7 +1126,7 @@ namespace Barotrauma
             VoiceSetting = VoiceMode.Disabled;
             VoiceCaptureDevice = null;
             NoiseGateThreshold = -45;
-            windowMode = WindowMode.Fullscreen;
+            windowMode = WindowMode.BorderlessWindowed;
             losMode = LosMode.Transparent;
             useSteamMatchmaking = true;
             requireSteamAuthentication = true;
