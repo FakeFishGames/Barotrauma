@@ -2090,12 +2090,12 @@ namespace Barotrauma
                     FailedSelectedShuttle = null;
                 
                 //hashes match, all good
-                if (sub.MD5Hash?.Hash == md5Hash)
+                if (sub.MD5Hash?.Hash == md5Hash && Submarine.SavedSubmarines.Contains(sub))
                 {
                     return true;
                 }
             }
-            
+
             //-------------------------------------------------------------------------------------
             //if we get to this point, a matching sub was not found or it has an incorrect MD5 hash
             
@@ -2105,14 +2105,15 @@ namespace Barotrauma
                 FailedSelectedShuttle = new Pair<string, string>(subName, md5Hash);
 
             string errorMsg = "";
-            if (sub == null)
+            if (sub == null || !Submarine.SavedSubmarines.Contains(sub))
             {
                 errorMsg = TextManager.GetWithVariable("SubNotFoundError", "[subname]", subName) + " ";
             }
             else if (sub.MD5Hash?.Hash == null)
             {
                 errorMsg = TextManager.GetWithVariable("SubLoadError", "[subname]", subName) + " ";
-                subList.Content.GetChildByUserData(sub).GetChild<GUITextBox>().TextColor = Color.Red;
+                GUITextBlock textBlock = subList.Content.GetChildByUserData(sub)?.GetChild<GUITextBlock>();
+                if (textBlock != null) { textBlock.TextColor = Color.Red; }
             }
             else
             {
