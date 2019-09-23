@@ -1702,7 +1702,7 @@
 <sonarnosignal>Нет сигнала</sonarnosignal>
 <sonartipactive>Когда работает активный сонар, радиолокационные маяки отправляют звуковые сигналы, которые отражаются от ближайших препятствий. Эти сигналы могут услышать опасные обитатели глубин или вражеские подлодки.</sonartipactive>
 <sonartippassive>В пассивном режиме сонар только «слушает» звуки, производимые другими источниками и отражающиеся от ближайших препятствий. Сам он звуковые сигналы не отправляет.</sonartippassive>
-<powercontainercharge>Заряд: [charge] кВт/м ([percentage] %)</powercontainercharge>
+<powercontainercharge>Заряд: [charge] кВтм ([percentage] %)</powercontainercharge>
 <powercontainerrechargerate>Скорость перезарядки: [rate] %</powercontainerrechargerate>
 <uilabel.chargingdock>Зарядная станция</uilabel.chargingdock>
 <powertransferpowered>Есть питание</powertransferpowered>
@@ -2104,7 +2104,7 @@
 <jobname.assistant>Помощник</jobname.assistant>
 <jobdescription.assistant>У помощников нет определенных обязанностей, и они не обладают какими-то особыми знаниями. Эта работа - отличный выбор для новичков, которые хотят освоиться на подводной лодке, не рискуя при этом браться за задания, с которыми они могут не справиться.</jobdescription.assistant>
 <jobname.watchman>Сторож</jobname.watchman>
-<jobdescription.watchman><!-- No data --></jobdescription.watchman>
+<jobdescription.watchman></jobdescription.watchman>
 
 <!-- Locations -->
 <locationname.none>Естественное образование</locationname.none>
@@ -2230,6 +2230,7 @@
 <mechanic.weldingtext>Чтобы устранять протечки, возьмите в руки сварочный аппарат (дважды щелкните по нему левой кнопкой мыши). Чтобы использовать некоторые предметы, например этот сварочный аппарат, их нужно держать в обеих руках.\n\nКогда вы держите сварочный аппарат в руках, зажмите {0}, чтобы прицелиться. Пока вы целитесь, удерживайте {1}, чтобы варить.</mechanic.weldingtext>
 <mechanic.drain>Водяные насосы</mechanic.drain>
 <mechanic.drainobjective>Включите ближний к вам насос, чтобы откачать лишнюю воду</mechanic.drainobjective>
+<mechanic.draintext>Когда подлодка затоплена, лишнюю воду можно откачать при помощи насосов. Обычно насосы получают сигнал от датчиков воды или навигационных терминалов, но некоторые можно использовать и вручную. Чтобы включить насос, используйте {0} и переведите выключатель в положение «Вкл.»</mechanic.draintext>
 
 <!-- Room 4 -->
 <mechanic.deconstruct>Создание предметов, часть 1</mechanic.deconstruct>
@@ -2513,7 +2514,7 @@
 <entityname.equalscomponent>Компонент равно</entityname.equalscomponent>
 <entitydescription.equalscomponent>Посылает сигнал, если оба приемника получают одинаковый сигнал.</entitydescription.equalscomponent>
 <entityname.greatercomponent>Компонент больше</entityname.greatercomponent>
-<entitydescription.greatercomponent>Посылает сигнал, если входящее значение сигнал_вкл1 больше, чем входящее значение сигнал_вкл2.</entitydescription.greatercomponent>
+<entitydescription.greatercomponent>Посылает сигнал, если входящее значение сигнал_в1 больше, чем входящее значение сигнал_в2.</entitydescription.greatercomponent>
 <entityname.colorcomponent>Компонент цвет</entityname.colorcomponent>
 <entitydescription.colorcomponent>Выводит объединенный цветовой сигнал для управления светом.</entitydescription.colorcomponent>
 <entityname.subtractcomponent>Компонент вычесть</entityname.subtractcomponent>
@@ -2525,7 +2526,7 @@
 <entityname.xorcomponent>Компонент Х или</entityname.xorcomponent>
 <entitydescription.xorcomponent>Посылает сигнал, если один из приемников получает сигнал, но не оба.</entitydescription.xorcomponent>
 <entityname.memorycomponent>Компонент память</entityname.memorycomponent>
-<entitydescription.memorycomponent>Выводит записанное значение, которое можно обновлять из других источников. Используйте соединение сигнал_вкл, чтобы назначить записанное значение, и приемник сигнал_запись, чтобы выбрать, должны ли полученные сигналы записываться.</entitydescription.memorycomponent>
+<entitydescription.memorycomponent>Выводит записанное значение, которое можно обновлять из других источников. Используйте соединение сигнал_в, чтобы назначить записанное значение, и приемник сигнал_запись, чтобы выбрать, должны ли полученные сигналы записываться.</entitydescription.memorycomponent>
 <entityname.oxygentank>Кислородный баллон</entityname.oxygentank>
 <entitydescription.oxygentank>Портативный баллон кислорода.</entitydescription.oxygentank>
 <entityname.cyanideantidote>Антидот цианида</entityname.cyanideantidote>
@@ -2542,22 +2543,22 @@
 <mechanicalrepairsheader>Ремонт механики</mechanicalrepairsheader>
 
 <connection.power>энергия</connection.power>
-<connection.powerin>энергия_вкл</connection.powerin>
-<connection.powerout>энергия_выкл</connection.powerout>
+<connection.powerin>энергия_в</connection.powerin>
+<connection.powerout>энергия_из</connection.powerout>
 <connection.setstate>назначить_состояние</connection.setstate>
 <connection.togglestate>включить_состояние</connection.togglestate>
 <connection.setpumpingspeed>назначить_скорость</connection.setpumpingspeed>
 <connection.settargetwaterlevel>назначить_целевойуровень</connection.settargetwaterlevel>
-<connection.signalin>сигнал_вкл</connection.signalin>
-<connection.signalout>сигнал_выкл</connection.signalout>
-<connection.signalinx>сигнал_вкл_[num]</connection.signalinx>
-<connection.signaloutx>сигнал_выкл_[num]</connection.signaloutx>
-<connection.turretaimingin>позиция_вкл</connection.turretaimingin>
-<connection.turrettriggerin>вызвать_вкл</connection.turrettriggerin>
+<connection.signalin>сигнал_в</connection.signalin>
+<connection.signalout>сигнал_из</connection.signalout>
+<connection.signalinx>сигнал_в_[num]</connection.signalinx>
+<connection.signaloutx>сигнал_из_[num]</connection.signaloutx>
+<connection.turretaimingin>позиция_в</connection.turretaimingin>
+<connection.turrettriggerin>вызвать_в</connection.turrettriggerin>
 <connection.togglelight>включить_свет</connection.togglelight>
 <connection.setcolor>назначить_цвет</connection.setcolor>
 <connection.shutdown>выключение</connection.shutdown>
-<connection.temperatureout>температура_выкл</connection.temperatureout>
+<connection.temperatureout>температура_из</connection.temperatureout>
 <connection.meltdownwarning>плавление_предупреждение</connection.meltdownwarning>
 <connection.signalr>сингал_r</connection.signalr>
 <connection.signalg>сингал_g</connection.signalg>
@@ -2568,15 +2569,15 @@
 <connection.settargetsignal>назначить_целевойсигнал</connection.settargetsignal>
 <connection.setfrequency>назначить_частоту</connection.setfrequency>
 <connection.setoutputtype>назначить_типисходящегозначения</connection.setoutputtype>
-<connection.controlin>управление_вкл</connection.controlin>
+<connection.controlin>управление_в</connection.controlin>
 <connection.setforce>назначить_силу</connection.setforce>
-<connection.sonartransducerin>преобразователь_вкл</connection.sonartransducerin>
-<connection.steeringvelocityin>скорость_вкл</connection.steeringvelocityin>
-<connection.velocityxout>скорость_х_вкл</connection.velocityxout>
-<connection.velocityyout>скорость_у_вкл</connection.velocityyout>
+<connection.sonartransducerin>преобразователь_в</connection.sonartransducerin>
+<connection.steeringvelocityin>скорость_в</connection.steeringvelocityin>
+<connection.velocityxout>скорость_х_из</connection.velocityxout>
+<connection.velocityyout>скорость_у_из</connection.velocityyout>
 <connection.toggledocking>включить_стыковку</connection.toggledocking>
-<connection.waterdatain>данные_воды_вкл</connection.waterdatain>
-<connection.oxygendatain>данные_воздуха_вкл</connection.oxygendatain>
+<connection.waterdatain>данные_воды_в</connection.waterdatain>
+<connection.oxygendatain>данные_воздуха_в</connection.oxygendatain>
 
 <!-- *** New additions *** -->
 <itemmsgoxygenrefill>Вставьте кислородный баллон, чтобы наполнить его</itemmsgoxygenrefill>
@@ -2623,10 +2624,10 @@
 <connection.dockingproximitysensor>датчик_близости</connection.dockingproximitysensor>
 <connection.signalx>сигнал_[num]</connection.signalx>
 <connection.set_text>сигнал_[num]</connection.set_text>
-<connection.stateout>состояние_выкл</connection.stateout>
-<connection.turretaimingout>позиция_выкл</connection.turretaimingout>
-<connection.turrettriggerout>вызвать_выкл</connection.turrettriggerout>
-<connection.sonardataout>данные_выкл</connection.sonardataout>
+<connection.stateout>состояние_из</connection.stateout>
+<connection.turretaimingout>позиция_из</connection.turretaimingout>
+<connection.turrettriggerout>вызвать_из</connection.turrettriggerout>
+<connection.sonardataout>данные_из</connection.sonardataout>
 <label.outpostinfodisplay1>Добро пожаловать. Уровни кислорода: номинальные. Уровни энергии: номинальные. Уровни радиации: субоптимальные. Прогноз погоды на сегодня: холодно и мокро.</label.outpostinfodisplay1>
 <label.navterminaldock>Стыковка</label.navterminaldock>
 <label.navterminalundock>Отплытие</label.navterminalundock>
@@ -2890,9 +2891,5 @@
 <flood_2_objectivesuccessmessage3>Превосходно! Помни, товарищ! Не бывает плохой тактики — бывают неподходящие цели!</flood_2_objectivesuccessmessage3>
 <flood_2_traitorobjectivestartmessage4>Скорее! Пока есть возможность, воспользуйся замешательством и убей столько грязных свиней, сколько сможешь!\n[traitorgoalinfos]</flood_2_traitorobjectivestartmessage4>
 <flood_2_objectivesuccessmessage4>Расправляясь с заклятыми врагами, вы с горечью замечаете, что ваш передатчик вдруг умолкает. Ваши товарищи бросили вас, оставив на милость Матери Европы.</flood_2_objectivesuccessmessage4>
-
-<!-- modified values: -->
-<mechanic.draintext>Когда подлодка затоплена, лишнюю воду можно откачать при помощи насосов. Обычно насосы получают сигнал от датчиков воды или навигационных терминалов, но некоторые можно использовать и вручную. Чтобы включить насос, используйте {0} и переведите выключатель в положение «Вкл.»</mechanic.draintext>
-
 
 </infotexts>
