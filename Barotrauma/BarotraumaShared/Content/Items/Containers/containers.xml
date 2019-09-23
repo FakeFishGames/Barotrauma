@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Supplies Cabinet" identifier="suppliescabinet" tags="cabinet" linkable="true" pickdistance="150" scale="0.5">
+  <Item name="Supplies Cabinet" identifier="suppliescabinet" tags="suppliescabinet" linkable="true" pickdistance="150" scale="0.5">
     <Sprite texture="containers.png" depth="0.84" sourcerect="160,1,120,132" origin="0.5,0.5" />
     <ItemContainer capacity="6" slotsperrow="3" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.15,0.25" anchor="Center" style="ItemUI" />
@@ -37,14 +37,14 @@
       <Containable identifiers="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
-  <Item name="Railgun Shell Rack" identifier="railgunshellrack" pickdistance="120" scale="0.6">
+  <Item name="Railgun Shell Rack" identifier="railgunshellrack" tags="railgunammocontainer" pickdistance="120" scale="0.6">
     <Sprite texture="Content/Items/Weapons/TurretsAndDepthCharges.png" depth="0.84" sourcerect="210,197,182,176" origin="0.5,0.5" />
     <ItemContainer hideitems="false" drawinventory="true" capacity="3" slotsperrow="3" itempos="40,-65" iteminterval="50,0" itemrotation="90" canbeselected="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
       <Containable identifiers="railgunshell,nuclearshell,railgunammo" />
     </ItemContainer>
   </Item>
-  <Item name="Coilgun Ammunition Shelf" identifier="coilgunammoshelf" linkable="true" pickdistance="150" waterproof="true" scale="0.5">
+  <Item name="Coilgun Ammunition Shelf" identifier="coilgunammoshelf" tags="coilgunammocontainer" linkable="true" pickdistance="150" waterproof="true" scale="0.5">
     <Sprite texture="Lockers.png" depth="0.84" sourcerect="3,379,140,306" canflipx="false" origin="0.5,0.5" />
     <ItemContainer capacity="3" canbeselected="true" hideitems="false" itempos="70,-52" iteminterval="0,-96" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
@@ -156,14 +156,14 @@
       <Containable identifiers="smallitem" />
     </ItemContainer>
   </Item>
-  <Item name="Fire Extinguisher Bracket" identifier="extinguisherbracket" pickdistance="75">
+  <Item name="Fire Extinguisher Bracket" identifier="extinguisherbracket" tags="extinguisherholder" pickdistance="75">
     <Sprite texture="containers.png" depth="0.84" sourcerect="281,3,36,102" canflipx="false" origin="0.5,0.5" />
     <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="20,-60" iteminterval="0,0" itemrotation="0" canbeselected="true" autointeractwithcontained="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
       <Containable identifiers="extinguisher" />
     </ItemContainer>
   </Item>
-  <Item name="Weapon Holder" identifier="weaponholder" scale="0.5">
+  <Item name="Weapon Holder" identifier="weaponholder" tags="weaponholder" scale="0.5">
     <Sprite texture="containers.png" depth="0.85" sourcerect="109,271,88,88" canflipx="false" origin="0.5,0.5"/>
     <DecorativeSprite texture="containers.png" depth="0.5" sourcerect="109,188,124,33" canflipx="false" origin="0.5,0.5" />
     <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="46,-47" iteminterval="0,0" itemrotation="90" canbeselected="true" autointeractwithcontained="true" msg="ItemMsgInteractSelect">
