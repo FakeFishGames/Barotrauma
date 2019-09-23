@@ -339,6 +339,8 @@ namespace Barotrauma
                 this.hash = new Md5Hash(hash);
             }
 
+            IsFileCorrupted = false;
+
             if (tryLoad)
             {
                 XDocument doc = null;
