@@ -51,14 +51,14 @@
       <Containable identifiers="coilgunammobox,coilgunammo" />
     </ItemContainer>
   </Item>
-  <Item name="Medicine Cabinet" identifier="medcabinet" linkable="true" pickdistance="150" waterproof="true">
+  <Item name="Medicine Cabinet" identifier="medcabinet" tags="medcontainer" linkable="true" pickdistance="150" waterproof="true">
     <Sprite texture="containers.png" depth="0.84" sourcerect="233,172,104,173" canflipx="false" />
     <ItemContainer capacity="30" slotsperrow="6" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.3,0.5" anchor="Center" slotsperrow="6" style="ItemUI" />
       <Containable identifiers="smallitem,chem,medical" />
     </ItemContainer>
   </Item>
-  <Item name="Toxic Cabinet" identifier="toxcabinet" linkable="true" pickdistance="150" waterproof="true" scale="0.4">
+  <Item name="Toxic Cabinet" identifier="toxcabinet" tags="toxcontainer" linkable="true" pickdistance="150" waterproof="true" scale="0.4">
     <Sprite texture="containers.png" depth="0.84" sourcerect="0,0,157,185" canflipx="false" origin="0.5,0.5" />
     <ItemContainer capacity="20" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.25,0.45" anchor="Center" style="ItemUI" />
