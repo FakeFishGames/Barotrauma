@@ -37,6 +37,7 @@ namespace Barotrauma
         public AIObjective CurrentObjective { get; private set; }
 
         public bool IsCurrentObjective<T>() where T : AIObjective => CurrentObjective is T;
+        public bool IsActiveObjective<T>() where T : AIObjective => GetActiveObjective() is T;
 
         public AIObjective GetActiveObjective() => CurrentObjective?.GetActiveObjective();
 
