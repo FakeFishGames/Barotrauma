@@ -2,6 +2,7 @@
   <Item
     name="Oxygen Generator"
     identifier="oxygenerator"
+    tags="oxygengenerator"
     category="Machine"
     linkable="true"
     allowedlinks="vent">
