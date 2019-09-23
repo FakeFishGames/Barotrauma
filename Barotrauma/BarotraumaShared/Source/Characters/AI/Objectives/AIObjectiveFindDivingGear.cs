@@ -98,7 +98,7 @@ namespace Barotrauma
                         TryAddSubObjective(ref getOxygen, () =>
                         {
                             character.Speak(TextManager.Get("DialogGetOxygenTank"), null, 0, "getoxygentank", 30.0f);
-                            return new AIObjectiveContainItem(character, new string[] { "oxygentank", "oxygensource" }, item.GetComponent<ItemContainer>(), objectiveManager)
+                            return new AIObjectiveContainItem(character, new string[] { "oxygensource" }, item.GetComponent<ItemContainer>(), objectiveManager)
                             {
                                 AllowToFindDivingGear = false,
                                 ConditionLevel = lowOxygenThreshold
@@ -109,7 +109,7 @@ namespace Barotrauma
                             // Try to seek any oxygen sources
                             TryAddSubObjective(ref getOxygen, () =>
                             {
-                                return new AIObjectiveContainItem(character, new string[] { "oxygentank", "oxygensource" }, item.GetComponent<ItemContainer>(), objectiveManager)
+                                return new AIObjectiveContainItem(character, new string[] { "oxygensource" }, item.GetComponent<ItemContainer>(), objectiveManager)
                                 {
                                     AllowToFindDivingGear = false,
                                     ConditionLevel = 0

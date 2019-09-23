@@ -330,7 +330,7 @@ namespace Barotrauma
                 }
                 if (removeDivingSuit)
                 {
-                    var divingSuit = Character.Inventory.FindItem(i => i.Prefab.Identifier == "divingsuit" || i.HasTag("divingsuit"), recursive: false);
+                    var divingSuit = Character.Inventory.FindItemByTag("divingsuit");
                     if (divingSuit != null)
                     {
                         // TODO: take the item where it was taken from?
@@ -339,7 +339,7 @@ namespace Barotrauma
                 }
                 if (takeMaskOff)
                 {
-                    var mask = Character.Inventory.FindItemByIdentifier("divingmask");
+                    var mask = Character.Inventory.FindItemByTag("divingmask");
                     if (mask != null && Character.Inventory.IsInLimbSlot(mask, InvSlotType.Head))
                     {
                         // Try to put the mask in an Any slot, and drop it if that fails
@@ -352,7 +352,7 @@ namespace Barotrauma
             }
             if (!ObjectiveManager.IsCurrentObjective<AIObjectiveExtinguishFires>() && !objectiveManager.HasActiveObjective<AIObjectiveExtinguishFire>())
             {
-                var extinguisherItem = Character.Inventory.FindItem(i => i.Prefab.Identifier == "extinguisher" || i.HasTag("extinguisher"), recursive: false);
+                var extinguisherItem = Character.Inventory.FindItemByTag("extinguisher");
                 if (extinguisherItem != null && Character.HasEquippedItem(extinguisherItem))
                 {
                     // TODO: take the item where it was taken from?
