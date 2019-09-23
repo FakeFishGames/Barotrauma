@@ -137,7 +137,7 @@ namespace Barotrauma.Items.Components
 
                 var btnText = warningBtn.GetChild<GUITextBlock>();
                 btnText.Font = GUI.Font;
-                btnText.Wrap = true;
+                btnText.Wrap = false;
                 btnText.SetTextPos();
                 warningButtons.Add(warningTexts[i], warningBtn);
             }
