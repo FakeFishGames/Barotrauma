@@ -802,15 +802,17 @@ namespace Barotrauma
             return prices?.Values;
         }
 
-        public bool IsContainerPreferred(ItemContainer itemContainer)
+        public bool IsContainerPreferred(ItemContainer itemContainer, out bool isPreferencesDefined)
         {
-            if (preferredContainers.None()) { return true; }
+            isPreferencesDefined = preferredContainers.Any();
+            if (!isPreferencesDefined) { return true; }
             return preferredContainers.Any(id => itemContainer.Item.Prefab.Identifier == id || itemContainer.Item.HasTag(id));
         }
 
-        public bool IsContainerPreferred(string[] identifiersOrTags)
+        public bool IsContainerPreferred(string[] identifiersOrTags, out bool isPreferencesDefined)
         {
-            if (preferredContainers.None()) { return true; }
+            isPreferencesDefined = preferredContainers.Any();
+            if (!isPreferencesDefined) { return true; }
             return preferredContainers.Any(id => preferredContainers.Any(p => p == id));
         }
     }

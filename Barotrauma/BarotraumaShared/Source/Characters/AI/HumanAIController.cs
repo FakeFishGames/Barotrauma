@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
@@ -280,100 +281,242 @@ namespace Barotrauma
 
         private void UnequipUnnecessaryItems()
         {
-            if (!NeedsDivingGear(Character, Character.CurrentHull, out _))
+            if (ObjectiveManager.HasActiveObjective<AIObjectiveDecontainItem>()) { return; }
+            if (findItemState == FindItemState.None || findItemState == FindItemState.Extinguisher)
             {
-                bool oxygenLow = Character.OxygenAvailable < CharacterHealth.LowOxygenThreshold;
-                bool shouldKeepTheGearOn = Character.AnimController.HeadInWater || ObjectiveManager.CurrentObjective.GetSubObjectivesRecursive(true).Any(o => o.KeepDivingGearOn);
-                bool removeDivingSuit = !Character.AnimController.HeadInWater && oxygenLow;
-                AIObjectiveGoTo gotoObjective = ObjectiveManager.CurrentOrder as AIObjectiveGoTo;
-                if (!removeDivingSuit)
+                if (!ObjectiveManager.IsCurrentObjective<AIObjectiveExtinguishFires>() && !objectiveManager.HasActiveObjective<AIObjectiveExtinguishFire>())
                 {
-                    bool targetHasNoSuit = gotoObjective != null && gotoObjective.mimic && !HasDivingSuit(gotoObjective.Target as Character);
-                    bool canDropTheSuit = Character.CurrentHull.WaterPercentage < 5 && !Character.IsClimbing && steeringManager == insideSteering && !PathSteering.InStairs;
-                    if (canDropTheSuit)
+                    var extinguisher = Character.Inventory.FindItemByTag("extinguisher");
+                    if (extinguisher != null && Character.HasEquippedItem(extinguisher))
                     {
+                        if (ObjectiveManager.GetCurrentPriority() >= AIObjectiveManager.RunPriority)
+                        {
+                            extinguisher.Drop(Character);
+                        }
+                        else
+                        {
+                            findItemState = FindItemState.Extinguisher;
+                            if (FindSuitableContainer(Character, extinguisher, out Item targetContainer))
+                            {
+                                findItemState = FindItemState.None;
+                                itemIndex = 0;
+                                if (targetContainer != null)
+                                {
+                                    var decontainObjective = new AIObjectiveDecontainItem(Character, extinguisher, targetContainer.GetComponent<ItemContainer>(), ObjectiveManager, targetContainer.GetComponent<ItemContainer>());
+                                    decontainObjective.Abandoned += () => ignoredContainers.Add(targetContainer);
+                                    ObjectiveManager.CurrentObjective.AddSubObjective(decontainObjective, addFirst: true);
+                                    return;
+                                }
+                                else
+                                {
+                                    extinguisher.Drop(Character);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if (findItemState == FindItemState.None || findItemState == FindItemState.DivingSuit || findItemState == FindItemState.DivingMask)
+            {
+                if (!NeedsDivingGear(Character, Character.CurrentHull, out _))
+                {
+                    bool oxygenLow = Character.OxygenAvailable < CharacterHealth.LowOxygenThreshold;
+                    bool shouldKeepTheGearOn = Character.AnimController.HeadInWater || ObjectiveManager.CurrentObjective.GetSubObjectivesRecursive(true).Any(o => o.KeepDivingGearOn);
+                    bool removeDivingSuit = !Character.AnimController.HeadInWater && oxygenLow;
+                    AIObjectiveGoTo gotoObjective = ObjectiveManager.CurrentOrder as AIObjectiveGoTo;
+                    if (!removeDivingSuit)
+                    {
+                        bool targetHasNoSuit = gotoObjective != null && gotoObjective.mimic && !HasDivingSuit(gotoObjective.Target as Character);
                         removeDivingSuit = !shouldKeepTheGearOn && (gotoObjective == null || targetHasNoSuit);
                     }
-                }
-                bool takeMaskOff = !Character.AnimController.HeadInWater && oxygenLow;
-                if (!takeMaskOff && Character.CurrentHull.WaterPercentage < 40)
-                {
-                    bool targetHasNoMask = gotoObjective != null && gotoObjective.mimic && !HasDivingMask(gotoObjective.Target as Character);
-                    takeMaskOff = !shouldKeepTheGearOn && (gotoObjective == null || targetHasNoMask);
-                }
-                if (gotoObjective != null)
-                {
-                    if (gotoObjective.Target is Hull h)
+                    bool takeMaskOff = !Character.AnimController.HeadInWater && oxygenLow;
+                    if (!takeMaskOff && Character.CurrentHull.WaterPercentage < 40)
                     {
-                        if (NeedsDivingGear(Character, h, out _))
+                        bool targetHasNoMask = gotoObjective != null && gotoObjective.mimic && !HasDivingMask(gotoObjective.Target as Character);
+                        takeMaskOff = !shouldKeepTheGearOn && (gotoObjective == null || targetHasNoMask);
+                    }
+                    if (gotoObjective != null)
+                    {
+                        if (gotoObjective.Target is Hull h)
                         {
-                            removeDivingSuit = false;
-                            takeMaskOff = false;
+                            if (NeedsDivingGear(Character, h, out _))
+                            {
+                                removeDivingSuit = false;
+                                takeMaskOff = false;
+                            }
+                        }
+                        else if (gotoObjective.Target is Character c)
+                        {
+                            if (NeedsDivingGear(Character, c.CurrentHull, out _))
+                            {
+                                removeDivingSuit = false;
+                                takeMaskOff = false;
+                            }
+                        }
+                        else if (gotoObjective.Target is Item i)
+                        {
+                            if (NeedsDivingGear(Character, i.CurrentHull, out _))
+                            {
+                                removeDivingSuit = false;
+                                takeMaskOff = false;
+                            }
                         }
                     }
-                    else if (gotoObjective.Target is Character c)
+                    if (findItemState == FindItemState.None || findItemState == FindItemState.DivingSuit)
                     {
-                        if (NeedsDivingGear(Character, c.CurrentHull, out _))
+                        if (removeDivingSuit)
                         {
-                            removeDivingSuit = false;
-                            takeMaskOff = false;
+                            var divingSuit = Character.Inventory.FindItemByTag("divingsuit");
+                            if (divingSuit != null)
+                            {
+                                if (oxygenLow || ObjectiveManager.GetCurrentPriority() >= AIObjectiveManager.RunPriority)
+                                {
+                                    divingSuit.Drop(Character);
+                                }
+                                else
+                                {
+                                    findItemState = FindItemState.DivingSuit;
+                                    if (FindSuitableContainer(Character, divingSuit, out Item targetContainer))
+                                    {
+                                        findItemState = FindItemState.None;
+                                        itemIndex = 0;
+                                        if (targetContainer != null)
+                                        {
+                                            var decontainObjective = new AIObjectiveDecontainItem(Character, divingSuit, targetContainer.GetComponent<ItemContainer>(), ObjectiveManager, targetContainer.GetComponent<ItemContainer>());
+                                            decontainObjective.Abandoned += () => ignoredContainers.Add(targetContainer);
+                                            ObjectiveManager.CurrentObjective.AddSubObjective(decontainObjective, addFirst: true);
+                                            return;
+                                        }
+                                        else
+                                        {
+                                            divingSuit.Drop(Character);
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
-                    else if (gotoObjective.Target is Item i)
+                    if (findItemState == FindItemState.None || findItemState == FindItemState.DivingMask)
                     {
-                        if (NeedsDivingGear(Character, i.CurrentHull, out _))
+                        if (takeMaskOff)
                         {
-                            removeDivingSuit = false;
-                            takeMaskOff = false;
-                        }
-                    }
-                }
-                if (removeDivingSuit)
-                {
-                    var divingSuit = Character.Inventory.FindItemByTag("divingsuit");
-                    if (divingSuit != null)
-                    {
-                        // TODO: take the item where it was taken from?
-                        divingSuit.Drop(Character);
-                    }
-                }
-                if (takeMaskOff)
-                {
-                    var mask = Character.Inventory.FindItemByTag("divingmask");
-                    if (mask != null && Character.Inventory.IsInLimbSlot(mask, InvSlotType.Head))
-                    {
-                        // Try to put the mask in an Any slot, and drop it if that fails
-                        if (!mask.AllowedSlots.Contains(InvSlotType.Any) || !Character.Inventory.TryPutItem(mask, Character, new List<InvSlotType>() { InvSlotType.Any }))
-                        {
-                            mask.Drop(Character);
+                            var mask = Character.Inventory.FindItemByTag("divingmask");
+                            if (mask != null && Character.Inventory.IsInLimbSlot(mask, InvSlotType.Head))
+                            {
+                                if (!mask.AllowedSlots.Contains(InvSlotType.Any) || !Character.Inventory.TryPutItem(mask, Character, new List<InvSlotType>() { InvSlotType.Any }))
+                                {
+                                    if (oxygenLow || ObjectiveManager.GetCurrentPriority() >= AIObjectiveManager.RunPriority)
+                                    {
+                                        mask.Drop(Character);
+                                    }
+                                    else
+                                    {
+                                        findItemState = FindItemState.DivingMask;
+                                        if (FindSuitableContainer(Character, mask, out Item targetContainer))
+                                        {
+                                            findItemState = FindItemState.None;
+                                            itemIndex = 0;
+                                            if (targetContainer != null)
+                                            {
+                                                var decontainObjective = new AIObjectiveDecontainItem(Character, mask, targetContainer.GetComponent<ItemContainer>(), ObjectiveManager, targetContainer.GetComponent<ItemContainer>());
+                                                decontainObjective.Abandoned += () => ignoredContainers.Add(targetContainer);
+                                                ObjectiveManager.CurrentObjective.AddSubObjective(decontainObjective, addFirst: true);
+                                                return;
+                                            }
+                                            else
+                                            {
+                                                mask.Drop(Character);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
-            if (!ObjectiveManager.IsCurrentObjective<AIObjectiveExtinguishFires>() && !objectiveManager.HasActiveObjective<AIObjectiveExtinguishFire>())
+            if (ObjectiveManager.CurrentObjective is AIObjectiveIdle && (findItemState == FindItemState.None || findItemState == FindItemState.Weapon))
             {
-                var extinguisherItem = Character.Inventory.FindItemByTag("extinguisher");
-                if (extinguisherItem != null && Character.HasEquippedItem(extinguisherItem))
+                foreach (var item in Character.Inventory.Items)
                 {
-                    // TODO: take the item where it was taken from?
-                    extinguisherItem.Drop(Character);
-                }
-            }
-            foreach (var item in Character.Inventory.Items)
-            {
-                if (item == null) { continue; }
-                if (ObjectiveManager.CurrentObjective is AIObjectiveIdle)
-                {
+                    if (item == null) { continue; }
                     if (item.AllowedSlots.Contains(InvSlotType.RightHand | InvSlotType.LeftHand) && Character.HasEquippedItem(item))
                     {
-                        // Try to put the weapon in an Any slot, and drop it if that fails
                         if (!item.AllowedSlots.Contains(InvSlotType.Any) || !Character.Inventory.TryPutItem(item, Character, new List<InvSlotType>() { InvSlotType.Any }))
                         {
-                            item.Drop(Character);
+                            if (FindSuitableContainer(Character, item, out Item targetContainer))
+                            {
+                                findItemState = FindItemState.None;
+                                itemIndex = 0;
+                                if (targetContainer != null)
+                                {
+                                    var decontainObjective = new AIObjectiveDecontainItem(Character, item, targetContainer.GetComponent<ItemContainer>(), ObjectiveManager, targetContainer.GetComponent<ItemContainer>());
+                                    decontainObjective.Abandoned += () => ignoredContainers.Add(targetContainer);
+                                    ObjectiveManager.CurrentObjective.AddSubObjective(decontainObjective, addFirst: true);
+                                    return;
+                                }
+                                else
+                                {
+                                    item.Drop(Character);
+                                }
+                            }
+                            else
+                            {
+                                findItemState = FindItemState.Weapon;
+                            }
                         }
                     }
                 }
             }
+        }
+
+        private enum FindItemState
+        {
+            None,
+            DivingSuit,
+            DivingMask,
+            Extinguisher,
+            Weapon
+        }
+        private FindItemState findItemState;
+        private int itemIndex;
+        private List<Item> ignoredContainers = new List<Item>();
+        public bool FindSuitableContainer(Character character, Item containableItem, out Item suitableContainer)
+        {
+            suitableContainer = null;
+            if (character.FindItem(ref itemIndex, out Item targetContainer, ignoredItems: ignoredContainers, customPriorityFunction: i =>
+            {
+                var container = i.GetComponent<ItemContainer>();
+                if (container == null) { return 0; }
+                if (container.Inventory.IsFull()) { return 0; }
+                if (container.ShouldBeContained(containableItem, out bool isRestrictionsDefined))
+                {
+                    if (isRestrictionsDefined)
+                    {
+                        return 3;
+                    }
+                    else
+                    {
+                        if (containableItem.Prefab.IsContainerPreferred(container, out bool isPreferencesDefined))
+                        {
+                            return isPreferencesDefined ? 2 : 1;
+                        }
+                        else
+                        {
+                            return isPreferencesDefined ? 0 : 1;
+                        }
+                    }
+                }
+                else
+                {
+                    return 0;
+                }
+            }))
+            {
+                suitableContainer = targetContainer;
+                return true;
+            }
+            return false;
         }
 
         protected void ReportProblems()

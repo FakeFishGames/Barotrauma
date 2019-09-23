@@ -1609,7 +1609,7 @@ namespace Barotrauma
         /// The method is run in steps for performance reasons. So you'll have to provide the reference to the itemIndex.
         /// Returns false while running and true when done.
         /// </summary>
-        public bool FindItem(ref int itemIndex, IEnumerable<string> identifiers, out Item targetItem, bool ignoreBroken = true, 
+        public bool FindItem(ref int itemIndex, out Item targetItem, IEnumerable<string> identifiers = null, bool ignoreBroken = true, 
             IEnumerable<Item> ignoredItems = null, IEnumerable<string> ignoredContainerIdentifiers = null, 
             Func<Item, bool> customPredicate = null, Func<Item, float> customPriorityFunction = null, float maxItemDistance = 10000)
         {
@@ -1628,13 +1628,13 @@ namespace Barotrauma
                 if (Submarine != null && !Submarine.IsEntityFoundOnThisSub(item, true)) { continue; }
                 if (item.CurrentHull == null) { continue; }
                 if (ignoreBroken && item.Condition <= 0) { continue; }
-                if (identifiers.None(id => item.Prefab.Identifier == id || item.HasTag(id))) { continue; }
+                if (customPredicate != null && !customPredicate(item)) { continue; }
+                if (identifiers != null && identifiers.None(id => item.Prefab.Identifier == id || item.HasTag(id))) { continue; }
                 if (ignoredContainerIdentifiers != null && item.Container != null)
                 {
                     if (ignoredContainerIdentifiers.Contains(item.ContainerIdentifier)) { continue; }
                 }
                 if (IsItemTakenBySomeoneElse(item)) { continue; }
-                if (customPredicate != null && !customPredicate(item)) { continue; }
                 float itemPriority = customPriorityFunction != null ? customPriorityFunction(item) : 1;
                 if (itemPriority <= 0) { continue; }
                 Item rootContainer = item.GetRootContainer();

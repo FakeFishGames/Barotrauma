@@ -514,7 +514,7 @@ namespace Barotrauma.Items.Components
         private bool FindSuitableContainer(Character character, Func<Item, float> priority, out Item suitableContainer)
         {
             suitableContainer = null;
-            if (character.FindItem(ref itemIndex, new string[] { "cabinet" }, out Item targetContainer, ignoredItems: ignoredContainers, customPriorityFunction: priority))
+            if (character.FindItem(ref itemIndex, out Item targetContainer, ignoredItems: ignoredContainers, customPriorityFunction: priority))
             {
                 suitableContainer = targetContainer;
                 return true;
@@ -546,7 +546,7 @@ namespace Barotrauma.Items.Components
                                     var container = i.GetComponent<ItemContainer>();
                                     if (container == null) { return 0; }
                                     if (container.Inventory.IsFull()) { return 0; }
-                                    if (container.ShouldBeContained(fuelTags, out bool isRestrictionsDefined))
+                                    if (container.ShouldBeContained(fuelRod, out bool isRestrictionsDefined))
                                     {
                                         if (isRestrictionsDefined)
                                         {
@@ -554,7 +554,14 @@ namespace Barotrauma.Items.Components
                                         }
                                         else
                                         {
-                                            return fuelRod.Prefab.IsContainerPreferred(container) ? 2 : 1;
+                                            if (fuelRod.Prefab.IsContainerPreferred(container, out bool isPreferencesDefined))
+                                            {
+                                                return isPreferencesDefined ? 2 : 1;
+                                            }
+                                            else
+                                            {
+                                                return isPreferencesDefined ? 0 : 1;
+                                            }
                                         }
                                     }
                                     else
@@ -572,7 +579,6 @@ namespace Barotrauma.Items.Components
                                 if (targetContainer != null)
                                 {
                                     ignoredContainers.Add(targetContainer);
-                                    targetContainer = null;
                                 }
                             };
                             objective.AddSubObjectiveInQueue(decontainObjective);
