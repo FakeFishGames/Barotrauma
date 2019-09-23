@@ -41,7 +41,7 @@ namespace Barotrauma
 
         public AIObjective GetActiveObjective() => CurrentObjective?.GetActiveObjective();
 
-        public bool HasActiveObjective<T>() where T : AIObjective => CurrentObjective is T || CurrentObjective.GetSubObjectivesRecursive().Any(so => so is T);
+        public bool HasActiveObjective<T>() where T : AIObjective => CurrentObjective is T || CurrentObjective != null && CurrentObjective.GetSubObjectivesRecursive().Any(so => so is T);
 
         public AIObjectiveManager(Character character)
         {
