@@ -674,10 +674,21 @@ namespace Barotrauma.Networking
                     IWriteMessage readyToStartMsg = new WriteOnlyMessage();
                     readyToStartMsg.Write((byte)ClientPacketHeader.RESPONSE_STARTGAME);
 
+                    MultiPlayerCampaign campaign = GameMain.NetLobbyScreen.SelectedMode == GameMain.GameSession?.GameMode.Preset ?
+                                                        GameMain.GameSession?.GameMode as MultiPlayerCampaign : null;
+
                     GameMain.NetLobbyScreen.UsingShuttle = usingShuttle;
-                    bool readyToStart =
-                        GameMain.NetLobbyScreen.TrySelectSub(subName, subHash, GameMain.NetLobbyScreen.SubList) &&
-                        GameMain.NetLobbyScreen.TrySelectSub(shuttleName, shuttleHash, GameMain.NetLobbyScreen.ShuttleList.ListBox);
+                    bool readyToStart;
+                    if (campaign == null)
+                    {
+                        readyToStart = GameMain.NetLobbyScreen.TrySelectSub(subName, subHash, GameMain.NetLobbyScreen.SubList) &&
+                                       GameMain.NetLobbyScreen.TrySelectSub(shuttleName, shuttleHash, GameMain.NetLobbyScreen.ShuttleList.ListBox);
+                    }
+                    else
+                    {
+                        readyToStart = !fileReceiver.ActiveTransfers.Any(c => c.FileType == FileTransferType.CampaignSave) &&
+                                            (campaign.LastSaveID == campaign.PendingSaveID);
+                    }
                     readyToStartMsg.Write(readyToStart);
 
                     WriteCharacterInfo(readyToStartMsg);
