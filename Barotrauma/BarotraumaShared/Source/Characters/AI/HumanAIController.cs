@@ -435,34 +435,43 @@ namespace Barotrauma
                     }
                 }
             }
-            if (ObjectiveManager.CurrentObjective is AIObjectiveIdle && (findItemState == FindItemState.None || findItemState == FindItemState.Weapon))
+            if (findItemState == FindItemState.None || findItemState == FindItemState.Weapon)
             {
-                foreach (var item in Character.Inventory.Items)
+                if (ObjectiveManager.IsCurrentObjective<AIObjectiveIdle>() ||
+                    ObjectiveManager.IsCurrentObjective<AIObjectiveOperateItem>() ||
+                    ObjectiveManager.IsCurrentObjective<AIObjectivePumpWater>() ||
+                    ObjectiveManager.IsCurrentObjective<AIObjectiveChargeBatteries>())
                 {
-                    if (item == null) { continue; }
-                    if (item.AllowedSlots.Contains(InvSlotType.RightHand | InvSlotType.LeftHand) && Character.HasEquippedItem(item))
+                    foreach (var item in Character.Inventory.Items)
                     {
-                        if (!item.AllowedSlots.Contains(InvSlotType.Any) || !Character.Inventory.TryPutItem(item, Character, new List<InvSlotType>() { InvSlotType.Any }))
+                        if (item == null) { continue; }
+                        if (Character.HasEquippedItem(item) && 
+                            (Character.Inventory.IsInLimbSlot(item, InvSlotType.RightHand) || 
+                            Character.Inventory.IsInLimbSlot(item, InvSlotType.LeftHand) ||
+                            Character.Inventory.IsInLimbSlot(item, InvSlotType.RightHand | InvSlotType.LeftHand)))
                         {
-                            if (FindSuitableContainer(Character, item, out Item targetContainer))
+                            if (!item.AllowedSlots.Contains(InvSlotType.Any) || !Character.Inventory.TryPutItem(item, Character, new List<InvSlotType>() { InvSlotType.Any }))
                             {
-                                findItemState = FindItemState.None;
-                                itemIndex = 0;
-                                if (targetContainer != null)
+                                if (FindSuitableContainer(Character, item, out Item targetContainer))
                                 {
-                                    var decontainObjective = new AIObjectiveDecontainItem(Character, item, targetContainer.GetComponent<ItemContainer>(), ObjectiveManager, targetContainer.GetComponent<ItemContainer>());
-                                    decontainObjective.Abandoned += () => ignoredContainers.Add(targetContainer);
-                                    ObjectiveManager.CurrentObjective.AddSubObjective(decontainObjective, addFirst: true);
-                                    return;
+                                    findItemState = FindItemState.None;
+                                    itemIndex = 0;
+                                    if (targetContainer != null)
+                                    {
+                                        var decontainObjective = new AIObjectiveDecontainItem(Character, item, targetContainer.GetComponent<ItemContainer>(), ObjectiveManager, targetContainer.GetComponent<ItemContainer>());
+                                        decontainObjective.Abandoned += () => ignoredContainers.Add(targetContainer);
+                                        ObjectiveManager.CurrentObjective.AddSubObjective(decontainObjective, addFirst: true);
+                                        return;
+                                    }
+                                    else
+                                    {
+                                        item.Drop(Character);
+                                    }
                                 }
                                 else
                                 {
-                                    item.Drop(Character);
+                                    findItemState = FindItemState.Weapon;
                                 }
-                            }
-                            else
-                            {
-                                findItemState = FindItemState.Weapon;
                             }
                         }
                     }
