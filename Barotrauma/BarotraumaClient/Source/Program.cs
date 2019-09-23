@@ -31,13 +31,12 @@ namespace Barotrauma
         [STAThread]
         static void Main(string[] args)
         {
-            SteamManager.Initialize();
-            GameMain game = null;
 #if !DEBUG
             try
             {
 #endif
-                game = new GameMain(args);
+                SteamManager.Initialize();
+                GameMain game = new GameMain(args);
                 game.Run();
                 game.Dispose();
 #if !DEBUG
