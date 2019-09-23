@@ -38,6 +38,8 @@ namespace Barotrauma
             {
 #endif
                 game = new GameMain(args);
+                game.Run();
+                game.Dispose();
 #if !DEBUG
             }
             catch (Exception e)
@@ -47,53 +49,6 @@ namespace Barotrauma
                 return;
             }
 #endif
-
-#if DEBUG
-            game.Run();
-#else
-            bool attemptRestart = false;
-
-            do
-            {
-                try
-                {
-                    game.Run();
-                    attemptRestart = false;
-                }
-                catch (Exception e)
-                {
-                    if (restartAttempts < 5 && CheckException(game, e))
-                    {
-                        attemptRestart = true;
-                        restartAttempts++;
-                    }
-                    else
-                    {
-                        CrashDump(game, "crashreport.log", e);
-                        attemptRestart = false;
-                    }
-
-                }
-            } while (attemptRestart);
-#endif
-
-#if !DEBUG
-            try
-            {
-#endif
-                game.Dispose();
-#if !DEBUG
-            }
-            catch (Exception e)
-            {
-                CrashDump(null, "crashreport.log", e);
-            }
-#endif
-        }
-
-        private static bool CheckException(GameMain game, Exception e)
-        {
-            return false;
         }
 
         public static void CrashMessageBox(string message, string filePath)
