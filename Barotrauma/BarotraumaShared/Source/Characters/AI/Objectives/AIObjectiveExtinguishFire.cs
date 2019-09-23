@@ -28,7 +28,8 @@ namespace Barotrauma
 
         public override float GetPriority()
         {
-            if (Character.CharacterList.Any(c => c.CurrentHull == targetHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c))) { return 0; }
+            if (!objectiveManager.IsCurrentOrder<AIObjectiveExtinguishFires>() 
+                && Character.CharacterList.Any(c => c.CurrentHull == targetHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c))) { return 0; }
             float yDist = Math.Abs(character.WorldPosition.Y - targetHull.WorldPosition.Y);
             yDist = yDist > 100 ? yDist * 3 : 0;
             float dist = Math.Abs(character.WorldPosition.X - targetHull.WorldPosition.X) + yDist;
