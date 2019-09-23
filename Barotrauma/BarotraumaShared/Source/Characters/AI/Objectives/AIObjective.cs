@@ -116,11 +116,18 @@ namespace Barotrauma
         }
 
         // TODO: check turret aioperate
-        public void AddSubObjective(AIObjective objective)
+        public void AddSubObjective(AIObjective objective, bool addFirst = false)
         {
             var type = objective.GetType();
             subObjectives.RemoveAll(o => o.GetType() == type);
-            subObjectives.Add(objective);
+            if (addFirst)
+            {
+                subObjectives.Insert(0, objective);
+            }
+            else
+            {
+                subObjectives.Add(objective);
+            }
         }
 
         /// <summary>
