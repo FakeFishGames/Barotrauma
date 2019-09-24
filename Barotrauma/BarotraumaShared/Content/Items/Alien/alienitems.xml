@@ -351,7 +351,7 @@
   <Item name="Alien Hatch" identifier="alienhatch" category="Alien" Tags="alien,aliendoor">
     <Sprite texture="Content/Items/Alien/AlienHatch.png" sourcerect="0,0,208,48" depth="0.8" origin="0.5,0.5" />
     <Door canbeselected="true" horizontal="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="30.0">
-      <RequiredItem identifier="crowbar" type="Equipped" />
+      <RequiredItem items="crowbar" type="Equipped" />
       <Sprite texture="Content/Items/Alien/AlienHatch.png" sourcerect="0,56,208,19" depth="0.6" origin="0.0,0.5" />
       <sound file="Content/Items/Alien/AlienDoor.ogg" type="OnUse" range="1000.0" />
       <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0" />
@@ -366,7 +366,7 @@
   <Item name="Alien Door" identifier="aliendoor" category="Alien" Tags="alien,aliendoor">
     <Sprite texture="Content/Items/Alien/AlienDoor.png" sourcerect="0,0,48,208" depth="0.8" origin="0.5,0.5" />
     <Door canbeselected="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="30.0">
-      <RequiredItem identifier="crowbar" type="Equipped" />
+      <RequiredItem items="crowbar" type="Equipped" />
       <Sprite texture="Content/Items/Alien/AlienDoor.png" sourcerect="56,0,19,208" depth="0.6" origin="0.5,0.0" />
       <sound file="Content/Items/Alien/AlienDoor.ogg" type="OnUse" range="1000.0" />
       <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0" />
@@ -425,7 +425,7 @@
     <PowerContainer capacity="10.0" canbeselected="false" maxrechargespeed="1000.0" maxoutput="10000.0" />
     <ConnectionPanel canbeselected="true" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver" type="Equipped" />
+      <RequiredItem items="screwdriver" type="Equipped" />
       <!-- break the item when a shutdown signal is received -->
       <input name="shutdown" displayname="connection.shutdown">
         <StatusEffect type="OnUse" target="This" condition="-100" setvalue="true" />
@@ -454,7 +454,7 @@
     </Pump>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver" type="Equipped" />
+      <RequiredItem items="screwdriver" type="Equipped" />
       <input name="power_in" displayname="connection.powerin" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_active" displayname="connection.setstate" />
@@ -464,7 +464,7 @@
     <Repairable selectkey="Action" header="mechanicalrepairsheader" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="-0.1,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="40" />
-      <RequiredItem identifier="wrench" type="Equipped" />
+      <RequiredItem items="wrench" type="Equipped" />
     </Repairable>
   </Item>
   <Item name="Alien Button" identifier="alienbutton" category="Alien" tags="smallitem,alien,alienbutton">
@@ -473,7 +473,7 @@
       <sound file="Content/Items/Alien/AlienButton.ogg" type="OnUse" range="500.0" />
     </Controller>
     <ConnectionPanel canbeselected="true">
-      <RequiredItem identifier="screwdriver" type="Equipped" />
+      <RequiredItem items="screwdriver" type="Equipped" />
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
@@ -487,7 +487,7 @@
       <Containable items="alienturretammo" />
       <!-- when the turret is fired, it triggers this statuseffect and spawns new ammo -->
       <StatusEffect type="OnUse" target="Contained">
-        <SpawnItem items="alienturretammo" spawnposition="ThisInventory" />
+        <SpawnItem identifier="alienturretammo" spawnposition="ThisInventory" />
       </StatusEffect>
     </ItemContainer>
     <Turret canbeselected="false" characterusable="false" linkable="true" barrelpos="8,230" rotationlimits="0,360" powerconsumption="10000.0" showchargeindicator="true" showprojectileindicator="true" recoildistance="50" reload="3" springstiffnesslowskill="2" springstiffnesshighskill="2" springdampinglowskill="0.5" springdampinghighskill="0.5" rotationspeedlowskill="1" rotationspeedhighskill="1">
@@ -586,7 +586,7 @@
     </LightComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver" type="Equipped" />
+      <RequiredItem items="screwdriver" type="Equipped" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
       <input name="set_color" displayname="connection.setcolor" />

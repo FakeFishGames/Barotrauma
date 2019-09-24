@@ -83,7 +83,7 @@
         <RequiredItem items="weldingfueltank" type="Contained" />
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="-100.0" Oxygen="-20.0" Condition="-0.5">
-        <RequiredItem identifier="incendiumfueltank" type="Contained" />
+        <RequiredItem items="incendiumfueltank" type="Contained" />
         <Affliction identifier="burn" amount="0.1" />
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1000.0" SpeedMultiplier="1.2" Condition="-0.3" comparison="Or">
@@ -181,7 +181,7 @@
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1000.0" Condition="-0.3" comparison="Or">
         <Conditional IsDead="false" />
-        <RequiredItem identifier="oxygentank" type="Contained" />
+        <RequiredItem items="oxygentank" type="Contained" />
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" Oxygen="-20.0" Condition="-0.5">
         <Conditional IsDead="false" />
@@ -209,7 +209,7 @@
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="0,157,92,27" />
       <Containable items="oxygensource,weldingfuel" />
       <StatusEffect type="OnWearing" target="Contained">
-        <RequiredItem identifier="oxygensource" type="Contained" matchonempty="true" />
+        <RequiredItem items="oxygensource" type="Contained" matchonempty="true" />
         <Conditional condition="lt 5.0" />
         <Sound file="Content/Items/WarningBeep.ogg" range="500" />
       </StatusEffect>
@@ -233,7 +233,7 @@
     <Body width="180" height="95" density="11" />
     <Holdable slots="Any,RightHand+LeftHand" aimpos="90,0" handle1="-50,65" handle2="-54,69" msg="ItemMsgPickUpSelect" />
     <Propulsion force="150" usablein="water" particles="bubbles">
-      <RequiredItems identifier="batterycell,fulguriumbatterycell" type="Contained" msg="ItemMsgBatteryCellRequired" />
+      <RequiredItems identifier="mobilebattery" type="Contained" msg="ItemMsgBatteryCellRequired" />
       <StatusEffect type="OnUse" target="Contained" Condition="-0.25" />
       <sound file="Content/Items/Diving/ScooterLoop.ogg" type="OnUse" range="500.0" loop="true" />
       <LightComponent LightColor="1.0,1.0,1.0,0.8" range="1000">
@@ -242,7 +242,7 @@
     </Propulsion>
     <ItemContainer capacity="1" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,70,107,31" />
-      <Containable items="batterycell" />
+      <Containable items="mobilebattery" />
     </ItemContainer>
     <AiTarget soundrange="2000"/>
   </Item>

@@ -1333,7 +1333,7 @@
     <Throwable characterusable="true" canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="10">
         <ReduceAffliction identifier="oxygenlow" amount="2"/>
-        <RequiredItem identifier="medicalsyringe" type="Container"/>
+        <RequiredItem items="medicalsyringe" type="Container"/>
       </StatusEffect>
       <StatusEffect type="OnBroken" target="This">
         <Remove/>

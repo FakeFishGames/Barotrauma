@@ -14,7 +14,7 @@
     <Body radius="40" width="20" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="2" />
-      <RequiredItem identifier="plasmacutter" type="Equipped" />
+      <RequiredItem items="plasmacutter" type="Equipped" />
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
@@ -30,7 +30,7 @@
     <Body radius="40" width="20" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="2" />
-      <RequiredItem identifier="plasmacutter" type="Equipped" />
+      <RequiredItem items="plasmacutter" type="Equipped" />
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
@@ -46,7 +46,7 @@
     <Body radius="40" width="20" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="2" />
-      <RequiredItem identifier="plasmacutter" type="Equipped" />
+      <RequiredItem items="plasmacutter" type="Equipped" />
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
@@ -63,7 +63,7 @@
     <Body radius="40" width="20" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="3" />
-      <RequiredItem identifier="plasmacutter" type="Equipped" />
+      <RequiredItem items="plasmacutter" type="Equipped" />
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
@@ -80,7 +80,7 @@
     <Body radius="40" width="20" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="3" />
-      <RequiredItem identifier="plasmacutter" type="Equipped" />
+      <RequiredItem items="plasmacutter" type="Equipped" />
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
@@ -96,7 +96,7 @@
     <Body radius="40" width="20" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="5" />
-      <RequiredItem identifier="plasmacutter" type="Equipped" />
+      <RequiredItem items="plasmacutter" type="Equipped" />
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
@@ -111,7 +111,7 @@
     <Body radius="40" width="20" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="3" />
-      <RequiredItem identifier="plasmacutter" type="Equipped" />
+      <RequiredItem items="plasmacutter" type="Equipped" />
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
@@ -127,7 +127,7 @@
     <Body radius="40" width="20" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="4" />
-      <RequiredItem identifier="plasmacutter" type="Equipped" />
+      <RequiredItem items="plasmacutter" type="Equipped" />
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
@@ -144,7 +144,7 @@
     <Body radius="40" width="20" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="4" />
-      <RequiredItem identifier="plasmacutter" type="Equipped" />
+      <RequiredItem items="plasmacutter" type="Equipped" />
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
@@ -161,7 +161,7 @@
     <Body radius="40" width="20" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="4" />
-      <RequiredItem identifier="plasmacutter" type="Equipped" />
+      <RequiredItem items="plasmacutter" type="Equipped" />
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
@@ -176,7 +176,7 @@
     <Body radius="40" width="20" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="4" />
-      <RequiredItem identifier="plasmacutter" type="Equipped" />
+      <RequiredItem items="plasmacutter" type="Equipped" />
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
@@ -193,7 +193,7 @@
     <Body radius="40" width="20" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="4" />
-      <RequiredItem identifier="plasmacutter" type="Equipped" />
+      <RequiredItem items="plasmacutter" type="Equipped" />
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
@@ -208,7 +208,7 @@
     <Body radius="40" width="20" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="4" />
-      <RequiredItem identifier="plasmacutter" type="Equipped" />
+      <RequiredItem items="plasmacutter" type="Equipped" />
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
@@ -225,7 +225,7 @@
     <Body radius="40" width="20" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="4" />
-      <RequiredItem identifier="plasmacutter" type="Equipped" />
+      <RequiredItem items="plasmacutter" type="Equipped" />
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
@@ -242,7 +242,7 @@
     <Body radius="40" width="20" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="5" />
-      <RequiredItem identifier="plasmacutter" type="Equipped" />
+      <RequiredItem items="plasmacutter" type="Equipped" />
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
@@ -257,7 +257,7 @@
     <Body radius="40" width="20" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="5" />
-      <RequiredItem identifier="plasmacutter" type="Equipped" />
+      <RequiredItem items="plasmacutter" type="Equipped" />
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
@@ -274,7 +274,7 @@
     <Body radius="40" width="20" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="5" />
-      <RequiredItem identifier="plasmacutter" type="Equipped" />
+      <RequiredItem items="plasmacutter" type="Equipped" />
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
@@ -292,7 +292,7 @@
     <Body radius="40" width="20" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="5" />
-      <RequiredItem identifier="plasmacutter" type="Equipped" />
+      <RequiredItem items="plasmacutter" type="Equipped" />
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
@@ -310,7 +310,7 @@
     <Body radius="40" width="20" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="5" />
-      <RequiredItem identifier="plasmacutter" type="Equipped" />
+      <RequiredItem items="plasmacutter" type="Equipped" />
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
@@ -326,7 +326,7 @@
     <Body radius="40" width="20" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="5" />
-      <RequiredItem identifier="plasmacutter" type="Equipped" />
+      <RequiredItem items="plasmacutter" type="Equipped" />
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
@@ -342,7 +342,7 @@
     <Body radius="40" width="20" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="6" />
-      <RequiredItem identifier="plasmacutter" type="Equipped" />
+      <RequiredItem items="plasmacutter" type="Equipped" />
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
@@ -359,7 +359,7 @@
     <Body radius="40" width="20" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="7" />
-      <RequiredItem identifier="plasmacutter" type="Equipped" />
+      <RequiredItem items="plasmacutter" type="Equipped" />
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
@@ -375,7 +375,7 @@
     <Body radius="40" width="20" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="6" />
-      <RequiredItem identifier="plasmacutter" type="Equipped" />
+      <RequiredItem items="plasmacutter" type="Equipped" />
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
@@ -390,7 +390,7 @@
     <Body radius="40" width="20" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="6" />
-      <RequiredItem identifier="plasmacutter" type="Equipped" />
+      <RequiredItem items="plasmacutter" type="Equipped" />
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
@@ -407,7 +407,7 @@
     <Body radius="40" width="20" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="6" />
-      <RequiredItem identifier="plasmacutter" type="Equipped" />
+      <RequiredItem items="plasmacutter" type="Equipped" />
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
@@ -423,7 +423,7 @@
     <Body radius="40" width="20" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="6" />
-      <RequiredItem identifier="plasmacutter" type="Equipped" />
+      <RequiredItem items="plasmacutter" type="Equipped" />
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
@@ -438,7 +438,7 @@
     <Body radius="40" width="20" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="7" />
-      <RequiredItem identifier="plasmacutter" type="Equipped" />
+      <RequiredItem items="plasmacutter" type="Equipped" />
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
@@ -453,7 +453,7 @@
     <Body radius="40" width="20" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="7" />
-      <RequiredItem identifier="plasmacutter" type="Equipped" />
+      <RequiredItem items="plasmacutter" type="Equipped" />
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>

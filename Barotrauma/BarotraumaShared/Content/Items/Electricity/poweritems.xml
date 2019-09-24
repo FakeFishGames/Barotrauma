@@ -24,7 +24,7 @@
       <StatusEffect type="OnFailure" target="Character">
         <Explosion range="50.0" stun="0" force="2.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false" />
       </StatusEffect>
-      <RequiredItem identifier="screwdriver" type="Equipped" />
+      <RequiredItem items="screwdriver" type="Equipped" />
       <output name="power" displayname="connection.power" />
       <output name="signal_0" displayname="connection.signalx~[num]=0" fallbackdisplayname="connection.signalinx~[num]=0" />
       <output name="signal_1" displayname="connection.signalx~[num]=1" fallbackdisplayname="connection.signalinx~[num]=1" />
@@ -37,7 +37,7 @@
       <StatusEffect type="OnFailure" target="Character">
         <Explosion range="50.0" stun="0" force="2.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false" />
       </StatusEffect>
-      <RequiredItem identifier="screwdriver" type="Equipped" />
+      <RequiredItem items="screwdriver" type="Equipped" />
       <ParticleEmitter particle="fleshsmoke" particlespersecond="1" scalemin="0.5" scalemax="1" mincondition="15.0" maxcondition="35.0" />
       <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="2" mincondition="0.0" maxcondition="15.0" />
     </Repairable>
@@ -58,7 +58,7 @@
       <StatusEffect type="OnFailure" target="Character">
         <Explosion range="50.0" stun="0" force="2.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false" />
       </StatusEffect>
-      <RequiredItem identifier="screwdriver" type="Equipped" />
+      <RequiredItem items="screwdriver" type="Equipped" />
       <output name="power" displayname="connection.power" />
     </ConnectionPanel>
     <Repairable selectkey="Action" header="electricalrepairsheader" deteriorationspeed="0.1" mindeteriorationdelay="120" maxdeteriorationdelay="720" mindeteriorationcondition="0" ShowRepairUIThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="10" msg="ItemMsgRepairScrewdriver" hudpriority="10">
@@ -67,7 +67,7 @@
       <StatusEffect type="OnFailure" target="Character">
         <Explosion range="50.0" stun="0" force="2.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false" />
       </StatusEffect>
-      <RequiredItem identifier="screwdriver" type="Equipped" />
+      <RequiredItem items="screwdriver" type="Equipped" />
       <ParticleEmitter particle="fleshsmoke" particlespersecond="1" scalemin="0.5" scalemax="1" mincondition="15.0" maxcondition="35.0" />
       <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="2" mincondition="0.0" maxcondition="15.0" />
     </Repairable>
@@ -88,7 +88,7 @@
           <Affliction identifier="stun" strength="10" />
         </Explosion>
       </StatusEffect>
-      <requireditem identifier="Screwdriver" type="Equipped" />
+      <requireditem items="Screwdriver" type="Equipped" />
       <input name="power_out" displayname="connection.powerout" />
       <input name="power_in" displayname="connection.powerin" />
       <input name="set_rate" displayname="connection.batterysetrechargespeed" />
@@ -103,7 +103,7 @@
     <Repairable selectkey="Action" header="electricalrepairsheader" deteriorationspeed="0.125" mindeteriorationdelay="120" maxdeteriorationdelay="240" mindeteriorationcondition="0" ShowRepairUIThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="electrical" level="40" />
-      <RequiredItem identifier="screwdriver" type="Equipped" />
+      <RequiredItem items="screwdriver" type="Equipped" />
       <ParticleEmitter particle="fleshsmoke" particlespersecond="1" scalemin="0.5" scalemax="1" mincondition="15.0" maxcondition="35.0" />
       <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="2" mincondition="0.0" maxcondition="15.0" />
     </Repairable>
@@ -125,7 +125,7 @@
           <Affliction identifier="stun" strength="10" />
         </Explosion>
       </StatusEffect>
-      <RequiredItem identifier="screwdriver" type="Equipped" />
+      <RequiredItem items="screwdriver" type="Equipped" />
       <input name="power_out" displayname="connection.powerout" />
       <input name="power_in" displayname="connection.powerin" />
       <input name="set_rate" displayname="connection.batterysetrechargespeed" />
@@ -153,7 +153,7 @@
           <Affliction identifier="stun" strength="10" />
         </Explosion>
       </StatusEffect>
-      <RequiredItem identifier="screwdriver" type="Equipped" />
+      <RequiredItem items="screwdriver" type="Equipped" />
       <input name="power_out" displayname="connection.powerout" />
       <input name="power_in" displayname="connection.powerin" />
       <output name="charge" displayname="connection.batterychargestatusout" />
@@ -165,10 +165,10 @@
       <ParticleEmitter particle="fleshsmoke" particlespersecond="1" scalemin="0.5" scalemax="1" mincondition="15.0" maxcondition="35.0" />
       <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="2" mincondition="0.0" maxcondition="15.0" />
       <RequiredSkill identifier="electrical" level="40" />
-      <RequiredItem identifier="screwdriver" type="Equipped" />
+      <RequiredItem items="screwdriver" type="Equipped" />
     </Repairable>
   </Item>
-  <Item name="Battery Cell" identifier="batterycell" category="Equipment,Electrical" tags="smallitem,loadable,batterycell" scale="0.3" cargocontaineridentifier="metalcrate" description="Used as a power source for various handheld devices. Most submarines have several stationary backup batteries with recharge docks for battery cells." impactsoundtag="impact_metal_light">
+  <Item name="Battery Cell" identifier="batterycell" category="Equipment,Electrical" tags="smallitem,loadable,mobilebattery" scale="0.3" cargocontaineridentifier="metalcrate" description="Used as a power source for various handheld devices. Most submarines have several stationary backup batteries with recharge docks for battery cells." impactsoundtag="impact_metal_light">
     <Upgrade gameversion="0.9.2.0" scale="0.3"/>
     <Price locationtype="City" buyprice="125" />
     <Price locationtype="Outpost" buyprice="125" />
@@ -187,7 +187,7 @@
     <Body width="55" height="38" density="30" />
     <Pickable slots="Any,RightHand,LeftHand" msg="ItemMsgPickUpSelect" />
   </Item>
-  <Item name="Fulgurium Battery Cell" identifier="fulguriumbatterycell" category="Equipment,Electrical" tags="smallitem,loadable,batterycell" scale="0.3" cargocontaineridentifier="metalcrate" description="A battery cell constructed of the rare and poorly understood compound Fulgurium." impactsoundtag="impact_metal_light">
+  <Item name="Fulgurium Battery Cell" identifier="fulguriumbatterycell" category="Equipment,Electrical" tags="smallitem,loadable,mobilebattery" scale="0.3" cargocontaineridentifier="metalcrate" description="A battery cell constructed of the rare and poorly understood compound Fulgurium." impactsoundtag="impact_metal_light">
     <Upgrade gameversion="0.9.2.0" scale="0.3"/>
     <Deconstruct time="10">
       <Item identifier="zinc" />
@@ -218,7 +218,7 @@
           <Affliction identifier="stun" strength="10" />
         </Explosion>
       </StatusEffect>
-      <RequiredItem identifier="screwdriver" type="Equipped" />
+      <RequiredItem items="screwdriver" type="Equipped" />
       <input name="power_in" displayname="connection.powerin" />
     </ConnectionPanel>
     <ItemContainer capacity="4" canbeselected="true" hideitems="false" itempos="24,10" iteminterval="23,0" itemrotation="-90" uilabel="ChargingDock" containedspritedepth="0.81">

@@ -139,7 +139,7 @@
     <Sprite texture="weapons_new.png" depth="0.8" sourcerect="-1,385,41,21" origin="0.5,0.5" />
     <Body width="40" height="22" density="20" />
     <Holdable selectkey="Action" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
-      <RequiredItem identifier="wrench" type="Equipped" />
+      <RequiredItem items="wrench" type="Equipped" />
     </Holdable>
     <ItemContainer canbeselected="true" capacity="1" itempos="0,0" hideitems="false">
       <GuiFrame relativesize="0.13,0.18" anchor="Center" style="ItemUI" />
@@ -148,7 +148,7 @@
     </ItemContainer>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,175" maxsize="480,210" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver" type="Equipped" />
+      <RequiredItem items="screwdriver" type="Equipped" />
       <input name="activate" displayname="connection.activate">
         <StatusEffect type="OnUse" target="Contained">
           <Use />

@@ -299,7 +299,7 @@
     </Sonar>
     <ItemContainer capacity="1" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,70,107,31" />
-      <Containable items="batterycell">
+      <Containable items="mobilebattery">
         <StatusEffect type="OnContaining" targettype="This" Voltage="1.0" setvalue="true" />
       </Containable>
     </ItemContainer>
@@ -336,7 +336,7 @@
     </CustomInterface>
     <ItemContainer capacity="1" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,70,107,31" />
-      <Containable items="batterycell">
+      <Containable items="mobilebattery">
         <StatusEffect type="OnContaining" targettype="This" Voltage="1.0" setvalue="true" />
       </Containable>
     </ItemContainer>
@@ -367,7 +367,7 @@
     </Holdable>
     <ItemContainer capacity="1" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,70,107,31" />
-      <Containable items="batterycell">
+      <Containable items="mobilebattery">
         <StatusEffect type="OnContaining" targettype="This" Voltage="1.0" setvalue="true" />
       </Containable>
     </ItemContainer>
