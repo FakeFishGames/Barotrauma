@@ -30,7 +30,7 @@
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <RequiredItem items="screwdriver" type="Equipped"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
       <input name="power_in" displayname="connection.powerin"/>
       <input name="velocity_in" displayname="connection.steeringvelocityin"/>
       <output name="velocity_x_out" displayname="connection.velocityxout"/>
@@ -40,7 +40,7 @@
     <Repairable selectkey="Action" header="electricalrepairsheader" fixDurationHighSkill="10" fixDurationLowSkill="20" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
       <RequiredSkill identifier="electrical" level="40"/>
-      <RequiredItem items="screwdriver" type="equipped"/>
+      <RequiredItem identifier="screwdriver" type="equipped"/>
       <ParticleEmitter particle="spark" particleamount="10" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="50.0"/>
       <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="2" mincondition="0.0" maxcondition="0.0"/>
     </Repairable>
@@ -70,14 +70,14 @@
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <RequiredItem items="screwdriver" type="Equipped"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
       <input name="power_in" displayname="connection.powerin"/>
     </ConnectionPanel>
 
     <Repairable selectkey="Action" header="electricalrepairsheader" fixDurationHighSkill="10" fixDurationLowSkill="20" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
       <RequiredSkill identifier="electrical" level="40"/>
-      <RequiredItem items="screwdriver" type="equipped"/>
+      <RequiredItem identifier="screwdriver" type="equipped"/>
       <ParticleEmitter particle="spark" particleamount="10" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="50.0"/>
       <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="2" mincondition="0.0" maxcondition="0.0"/>
     </Repairable>
@@ -101,7 +101,7 @@
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <RequiredItem items="screwdriver" type="Equipped"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
       <input name="power_in" displayname="connection.powerin"/>
       <input name="water_data_in" displayname="connection.waterdatain"/>
       <input name="oxygen_data_in" displayname="connection.oxygendatain"/>

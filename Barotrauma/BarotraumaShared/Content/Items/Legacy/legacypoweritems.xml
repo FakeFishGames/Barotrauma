@@ -16,7 +16,7 @@
     <Repairable selectkey="Action" header="electricalrepairsheader" fixDurationHighSkill="3" fixDurationLowSkill="10" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
       <RequiredSkill identifier="electrical" level="40"/>
-      <RequiredItem items="screwdriver" type="Equipped"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
     </Repairable>
 
     <PowerTransfer canbeselected = "true">
@@ -31,7 +31,7 @@
         <Explosion range="50.0" stun="0" force="2.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false"/>
       </StatusEffect>
 
-      <RequiredItem items="screwdriver" type="Equipped"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
       <output name="power" displayname="connection.power"/>
       <output name="signal_0" displayname="connection.signalx~[num]=0" fallbackdisplayname="connection.signalinx~[num]=0"/>
       <output name="signal_1" displayname="connection.signalx~[num]=1" fallbackdisplayname="connection.signalinx~[num]=1"/>

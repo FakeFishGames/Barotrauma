@@ -8,8 +8,8 @@
     <Price locationtype="Research" buyprice="75" />
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
       <RequiredSkill identifier="weapons" level="60" />
-      <RequiredItem items="sodium" />
-      <RequiredItem items="phosphorus" />
+      <RequiredItem identifier="sodium" />
+      <RequiredItem identifier="phosphorus" />
     </Fabricate>
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="897,896,64,64" origin="0.5,0.5" />
@@ -36,8 +36,8 @@
     <Price locationtype="Research" buyprice="125" />
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
       <RequiredSkill identifier="weapons" level="70" />
-      <RequiredItem items="uex" />
-      <RequiredItem items="plastic" />
+      <RequiredItem identifier="uex" />
+      <RequiredItem identifier="plastic" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,64,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" depth="0.8" sourcerect="274,380,48,33" origin="0.5,0.5" />
@@ -59,9 +59,9 @@
     <Upgrade gameversion="0.9.3.0" scale="0.5"/>
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="20">
       <RequiredSkill identifier="medical" level="60" />
-      <RequiredItem items="aluminium" />
-      <RequiredItem items="potassium" />
-      <RequiredItem items="sulphuricacid" />
+      <RequiredItem identifier="aluminium" />
+      <RequiredItem identifier="potassium" />
+      <RequiredItem identifier="sulphuricacid" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,64,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" depth="0.8" sourcerect="339,378,49,34" origin="0.5,0.5" />
@@ -84,8 +84,8 @@
     <Upgrade gameversion="0.9.3.0" scale="0.5"/>
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="20">
       <RequiredSkill identifier="medical" level="40" />
-      <RequiredItem items="compoundn" />
-      <RequiredItem items="flashpowder" />
+      <RequiredItem identifier="compoundn" />
+      <RequiredItem identifier="flashpowder" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,64,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" depth="0.8" sourcerect="402,377,50,34" origin="0.5,0.5" />
@@ -112,8 +112,8 @@
     <Body width="50" height="30" density="20" />
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
       <RequiredSkill identifier="weapons" level="50" />
-      <RequiredItem items="c4block" />
-      <RequiredItem items="incendium" />
+      <RequiredItem identifier="c4block" />
+      <RequiredItem identifier="incendium" />
     </Fabricate>
     <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect">
       <sound file="Content/Items/Weapons/ExplosionMedium3.ogg" type="OnBroken" range="10000" selectionmode="All" />
@@ -139,7 +139,7 @@
     <Sprite texture="weapons_new.png" depth="0.8" sourcerect="-1,385,41,21" origin="0.5,0.5" />
     <Body width="40" height="22" density="20" />
     <Holdable selectkey="Action" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
-      <RequiredItem items="wrench" type="Equipped" />
+      <RequiredItem identifier="wrench" type="Equipped" />
     </Holdable>
     <ItemContainer canbeselected="true" capacity="1" itempos="0,0" hideitems="false">
       <GuiFrame relativesize="0.13,0.18" anchor="Center" style="ItemUI" />
@@ -148,7 +148,7 @@
     </ItemContainer>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,175" maxsize="480,210" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem items="screwdriver" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="activate" displayname="connection.activate">
         <StatusEffect type="OnUse" target="Contained">
           <Use />

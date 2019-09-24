@@ -5,7 +5,7 @@
     <Sprite texture="door.png" sourcerect="0,0,49,416" depth="0.51" origin="0.5,0.5" />
     <DecorativeSprite texture="door.png" sourcerect="49,0,49,416" depth="0.89" origin="0.5,0.5"/>
     <Door canbeselected="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="10.0" shadowscale="0.7,1">
-      <RequiredItem items="crowbar" type="Equipped" />
+      <RequiredItem identifier="crowbar" type="Equipped" />
       <Sprite texture="door.png" sourcerect="158,0,42,416" depth="0.05" origin="0.5,0.0" />
       <WeldedSprite texture="door.png" sourcerect="203,0,65,377" depth="0.0" origin="0.5,0.5" />
       <BrokenSprite texture="door.png" sourcerect="271,0,121,416" depth="0.051" origin="0.5,0.0" scale="true" />
@@ -21,11 +21,11 @@
     <Repairable selectkey="Action" header="mechanicalrepairsheader" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="40" />
-      <RequiredItem items="wrench" type="equipped" />
+      <RequiredItem identifier="wrench" type="equipped" />
     </Repairable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem items="screwdriver" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
       <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout"/>
@@ -35,7 +35,7 @@
     <Sprite texture="door.png" sourcerect="0,0,49,416" depth="0.51" origin="0.5,0.5" />
     <DecorativeSprite texture="door.png" sourcerect="49,0,49,416" depth="0.89" origin="0.5,0.5"/>
     <Door window="0,0,50,227" canbepicked="true" canbeselected="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="10.0" shadowscale="0.7,1">
-      <RequiredItem items="crowbar" type="Equipped" />
+      <RequiredItem identifier="crowbar" type="Equipped" />
       <Sprite texture="door.png" sourcerect="106,0,50,416" depth="0.05" origin="0.5,0.0" />
       <WeldedSprite texture="door.png" sourcerect="203,0,65,377" depth="0.0" origin="0.5,0.5" />
       <BrokenSprite texture="door.png" sourcerect="392,0,120,416" depth="0.051" origin="0.5,0.0" scale="true" />
@@ -51,11 +51,11 @@
     <Repairable selectkey="Action" header="mechanicalrepairsheader" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="40" />
-      <RequiredItem items="wrench" type="equipped" />
+      <RequiredItem identifier="wrench" type="equipped" />
     </Repairable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem items="screwdriver" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
       <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout"/>
@@ -64,7 +64,7 @@
   <Item name="Custom Hatch" identifier="hatch" allowedlinks="gap, hull" tags="door" scale="0.5" health="100">
     <Sprite texture="hatch.png" sourcerect="0,0,256,98" depth="0.51" origin="0.5,0.5" />
     <Door canbeselected="true" canbepicked="true" horizontal="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="10.0" shadowscale="1,0.8">
-      <RequiredItem items="crowbar" type="Equipped" />
+      <RequiredItem identifier="crowbar" type="Equipped" />
       <Sprite texture="hatch.png" sourcerect="256,0,256,38" depth="0.05" origin="0.0,0.5" />
       <WeldedSprite texture="hatch.png" sourcerect="0,100,227,75" depth="0.0" origin="0.5,0.5" />
       <BrokenSprite texture="hatch.png" sourcerect="256,45,256,114" depth="0.051" origin="0.0,0.5" scale="true" />
@@ -80,11 +80,11 @@
     <Repairable selectkey="Action" header="mechanicalrepairsheader" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="40" />
-      <RequiredItem items="wrench" type="equipped" />
+      <RequiredItem identifier="wrench" type="equipped" />
     </Repairable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem items="screwdriver" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
       <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout"/>
@@ -96,7 +96,7 @@
     <Sprite texture="door.png" sourcerect="0,0,49,416" depth="0.51" origin="0.5,0.5" />
     <DecorativeSprite texture="door2.png" sourcerect="0,0,170,416" depth="0.89" origin="0.5,0.5"/>
     <Door canbeselected="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="10.0" shadowscale="0.7,1" hasintegratedbuttons="true">
-      <RequiredItem items="crowbar" type="Equipped" optional="true"/>
+      <RequiredItem identifier="crowbar" type="Equipped" optional="true"/>
       <Requireditem identifiers="idcard" type="Picked" optional="true"/>
       <Sprite texture="door.png" sourcerect="158,0,42,416" depth="0.05" origin="0.5,0.0" />
       <WeldedSprite texture="door.png" sourcerect="203,0,65,377" depth="0.0" origin="0.5,0.5" />
@@ -114,11 +114,11 @@
     <Repairable selectkey="Action" header="mechanicalrepairsheader" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="40" />
-      <RequiredItem items="wrench" type="equipped" />
+      <RequiredItem identifier="wrench" type="equipped" />
     </Repairable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem items="screwdriver" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
       <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout"/>
@@ -128,7 +128,7 @@
     <Sprite texture="door.png" sourcerect="0,0,49,416" depth="0.51" origin="0.5,0.5" />
     <DecorativeSprite texture="door2.png" sourcerect="0,0,170,416" depth="0.89" origin="0.5,0.5"/>
     <Door window="0,0,50,227" canbepicked="true" canbeselected="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="10.0" shadowscale="0.7,1" hasintegratedbuttons="true">
-      <RequiredItem items="crowbar" type="Equipped" optional="true"/>
+      <RequiredItem identifier="crowbar" type="Equipped" optional="true"/>
       <Requireditem identifiers="idcard" type="Picked" optional="true"/>
       <Sprite texture="door.png" sourcerect="106,0,50,416" depth="0.05" origin="0.5,0.0" />
       <WeldedSprite texture="door.png" sourcerect="203,0,65,377" depth="0.0" origin="0.5,0.5" />
@@ -146,11 +146,11 @@
     <Repairable selectkey="Action" header="mechanicalrepairsheader" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="40" />
-      <RequiredItem items="wrench" type="equipped" />
+      <RequiredItem identifier="wrench" type="equipped" />
     </Repairable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem items="screwdriver" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
       <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout"/>
@@ -160,7 +160,7 @@
     <Sprite texture="hatch.png" sourcerect="0,0,256,98" depth="0.51" origin="0.5,0.5" />
     <DecorativeSprite texture="hatch.png" sourcerect="0,234,256,193" depth="0.89" origin="0.5,0.5"/>
     <Door canbeselected="true" canbepicked="true" horizontal="true" pickkey="Action" msg="ItemMsgOpen" PickingTime="10.0" shadowscale="1,0.8" hasintegratedbuttons="true">
-      <RequiredItem items="crowbar" type="Equipped" optional="true"/>
+      <RequiredItem identifier="crowbar" type="Equipped" optional="true"/>
       <Requireditem identifiers="idcard" type="Picked" optional="true"/>
       <Sprite texture="hatch.png" sourcerect="256,0,256,38" depth="0.05" origin="0.0,0.5" />
       <WeldedSprite texture="hatch.png" sourcerect="0,100,227,75" depth="0.0" origin="0.5,0.5" />
@@ -178,11 +178,11 @@
     <Repairable selectkey="Action" header="mechanicalrepairsheader" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="40" />
-      <RequiredItem items="wrench" type="equipped" />
+      <RequiredItem identifier="wrench" type="equipped" />
     </Repairable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem items="screwdriver" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
       <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout"/>
@@ -210,11 +210,11 @@
     <!--<Repairable selectkey="Action" header="mechanicalrepairsheader" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="40" />
-      <RequiredItem items="wrench" type="equipped" />
+      <RequiredItem identifier="wrench" type="equipped" />
     </Repairable>-->
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem items="screwdriver" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
       <input name="power" displayname="connection.power"/>
@@ -243,11 +243,11 @@
     <!--<Repairable selectkey="Action" header="mechanicalrepairsheader" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="40" />
-      <RequiredItem items="wrench" type="equipped" />
+      <RequiredItem identifier="wrench" type="equipped" />
     </Repairable>-->
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem items="screwdriver" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
       <input name="power" displayname="connection.power"/>
@@ -258,7 +258,7 @@
   <Item name="Duct Block" identifier="ductblock" tags="ductblock" scale="0.5">
     <Sprite texture="duct.png" sourcerect="0,0,64,64" depth="0.01" origin="0.5,0.5" />
     <Door canbeselected="true" horizontal="true" canbepicked="true" pickkey="Action" impassable="true" msg="ItemMsgForceOpenCrowbar" PickingTime="3.0" autoorientgap="true">
-      <RequiredItem items="crowbar" type="Equipped" />
+      <RequiredItem identifier="crowbar" type="Equipped" />
       <Sprite texture="duct.png" sourcerect="108,108,64,64" depth="0.05" origin="0.0,0.5" />
       <WeldedSprite texture="duct.png" sourcerect="65,0,65,65" depth="0.0" origin="0.5,0.5" />
       <BrokenSprite texture="duct.png" sourcerect="0,65,107,107" depth="0.051" origin="0.2,0.5" scale="true" />
@@ -271,11 +271,11 @@
     <Repairable selectkey="Action" header="mechanicalrepairsheader" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="40" />
-      <RequiredItem items="wrench" type="equipped" />
+      <RequiredItem identifier="wrench" type="equipped" />
     </Repairable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem items="screwdriver" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
       <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout"/>

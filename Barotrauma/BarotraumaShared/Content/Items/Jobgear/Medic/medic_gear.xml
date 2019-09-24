@@ -11,8 +11,8 @@
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="10">
       <RequiredSkill identifier="medical" level="50" />
-      <RequiredItem items="fpgacircuit" />
-      <RequiredItem items="plastic" />
+      <RequiredItem identifier="fpgacircuit" />
+      <RequiredItem identifier="plastic" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,256,64,64" origin="0.5,0.5" />
     <Sprite name="Health Scanner" texture="Content/Items/Jobgear/headgears.png" sourcerect="197,29,86,38" depth="0.6" origin="0.5,0.5" />

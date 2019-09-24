@@ -329,8 +329,8 @@
     <Price locationtype="Outpost" buyprice="30" />
     <Price locationtype="Mine" buyprice="17" />
     <Fabricate suitablefabricators="fabricator" requiredtime="5">
-      <RequiredItem items="carbon" />
-      <RequiredItem items="iron" />
+      <RequiredItem identifier="carbon" />
+      <RequiredItem identifier="iron" />
     </Fabricate>
     <Deconstruct time="5">
       <Item identifier="carbon" copycondition="true"/>
@@ -354,8 +354,8 @@
     <Price locationtype="Outpost" buyprice="200" />
     <Price locationtype="Mine" buyprice="122" />
     <Fabricate suitablefabricators="fabricator" requiredtime="5">
-      <RequiredItem items="titanium" />
-      <RequiredItem items="aluminium" />
+      <RequiredItem identifier="titanium" />
+      <RequiredItem identifier="aluminium" />
     </Fabricate>
     <Deconstruct time="5">
       <Item identifier="aluminium" copycondition="true"/>
@@ -378,8 +378,8 @@
     <Price locationtype="City" buyprice="40" />
     <Price locationtype="Outpost" buyprice="40" />
     <Fabricate suitablefabricators="fabricator" requiredtime="5">
-      <RequiredItem items="silicon" />
-      <RequiredItem items="carbon" />
+      <RequiredItem identifier="silicon" />
+      <RequiredItem identifier="carbon" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,128,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="405,200,85,60" depth="0.55" origin="0.5,0.5" />
@@ -398,8 +398,8 @@
     <Price locationtype="City" buyprice="125" />
     <Price locationtype="Outpost" buyprice="110" />
     <Fabricate suitablefabricators="fabricator" requiredtime="5">
-      <RequiredItem items="plastic" />
-      <RequiredItem items="titanium" />
+      <RequiredItem identifier="plastic" />
+      <RequiredItem identifier="titanium" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="706,770,62,61" origin="0.5,0.5" />
     <Sprite texture="CraftingElements2.png" sourcerect="0,140,89,134" depth="0.55" origin="0.5,0.5" />
@@ -443,8 +443,8 @@
     <Price locationtype="Research" buyprice="120" />
     <Price locationtype="Military" buyprice="120" />
     <Fabricate suitablefabricators="fabricator,medicalfabricator" requiredtime="5">
-      <RequiredItem items="magnesium" />
-      <RequiredItem items="potassium" />
+      <RequiredItem identifier="magnesium" />
+      <RequiredItem identifier="potassium" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,256,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="255,268,45,85" origin="0.5,0.5" />

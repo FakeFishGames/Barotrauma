@@ -34,8 +34,8 @@
       <Item identifier="ballisticfiber" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="30">
-      <RequiredItem items="ballisticfiber" />
-      <RequiredItem items="ballisticfiber" />
+      <RequiredItem identifier="ballisticfiber" />
+      <RequiredItem identifier="ballisticfiber" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,256,64,64" origin="0.5,0.5" />
     <Sprite texture="SecurityVest.png" sourcerect="14,45,103,158" depth="0.6" />
@@ -55,7 +55,7 @@
       <Item identifier="ballisticfiber" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
-      <RequiredItem items="ballisticfiber" />
+      <RequiredItem identifier="ballisticfiber" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,0,64,64" origin="0.5,0.5" />
     <Sprite texture="securitygear.png" sourcerect="39,22,32,31" depth="0.6" />
@@ -75,7 +75,7 @@
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="10">
       <RequiredSkill identifier="mechanical" level="20" />
-      <RequiredItem items="steel" />
+      <RequiredItem identifier="steel" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,0,64,64" origin="0.5,0.5" />
     <Sprite texture="securitygear.png" sourcerect="0,59,33,24" depth="0.6" />
@@ -96,7 +96,7 @@
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="10">
       <RequiredSkill identifier="mechanical" level="50" />
-      <RequiredItem items="titaniumaluminiumalloy" />
+      <RequiredItem identifier="titaniumaluminiumalloy" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,320,64,64" />
     <Sprite texture="riotgear.png" sourcerect="31,54,27,147" origin="0.5,0.5" depth="0.55" />

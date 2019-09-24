@@ -9,7 +9,7 @@
       <Item identifier="aluminium" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" displayname="OxygenTankEmpty" outcondition="0.0">
-      <RequiredItem items="aluminium" />
+      <RequiredItem identifier="aluminium" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,0,64,64" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Tools/tools_new.png" sourcerect="356,223,39,110" depth="0.55" origin="0.5,0.5" />
@@ -35,9 +35,9 @@
       <Item identifier="liquidoxygenite" mincondition="0.9" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" outcondition="100.0" requiredtime="5">
-      <RequiredItem items="aluminium" />
-      <RequiredItem items="liquidoxygenite" />
-      <RequiredItem items="liquidoxygenite" />
+      <RequiredItem identifier="aluminium" />
+      <RequiredItem identifier="liquidoxygenite" />
+      <RequiredItem identifier="liquidoxygenite" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,896,65,66" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Tools/tools_new.png" sourcerect="473,223,39,112" depth="0.55" />
@@ -64,9 +64,9 @@
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
       <RequiredSkill identifier="mechanical" level="25" />
-      <RequiredItem items="plastic" />
-      <RequiredItem items="rubber" />
-      <RequiredItem items="rubber" />
+      <RequiredItem identifier="plastic" />
+      <RequiredItem identifier="rubber" />
+      <RequiredItem identifier="rubber" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="515,322,57,62" origin="0.5,0.5" />
     <Sprite name="Diving Mask" texture="Content/Items/Jobgear/headgears.png" depth="0.55" sourcerect="96,0,96,96" origin="0.5,0.5" />
@@ -83,7 +83,7 @@
         <RequiredItem items="weldingfueltank" type="Contained" />
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="-100.0" Oxygen="-20.0" Condition="-0.5">
-        <RequiredItem items="incendiumfueltank" type="Contained" />
+        <RequiredItem identifier="incendiumfueltank" type="Contained" />
         <Affliction items="burn" amount="0.1" />
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1000.0" SpeedMultiplier="1.2" Condition="-0.3" comparison="Or">
@@ -112,9 +112,9 @@
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="30">
       <RequiredSkill identifier="mechanical" level="40" />
-      <RequiredItem items="titaniumaluminiumalloy" />
-      <RequiredItem items="rubber" />
-      <RequiredItem items="rubber" />
+      <RequiredItem identifier="titaniumaluminiumalloy" />
+      <RequiredItem identifier="rubber" />
+      <RequiredItem identifier="rubber" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,320,64,64" origin="0.5,0.5" />
     <!--
@@ -181,7 +181,7 @@
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1000.0" Condition="-0.3" comparison="Or">
         <Conditional IsDead="false" />
-        <RequiredItem items="oxygentank" type="Contained" />
+        <RequiredItem identifier="oxygentank" type="Contained" />
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" Oxygen="-20.0" Condition="-0.5">
         <Conditional IsDead="false" />
@@ -209,7 +209,7 @@
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="0,157,92,27" />
       <Containable items="oxygensource,weldingfuel" />
       <StatusEffect type="OnWearing" target="Contained">
-        <RequiredItem items="oxygensource" type="Contained" matchonempty="true" />
+        <RequiredItem identifier="oxygensource" type="Contained" matchonempty="true" />
         <Conditional condition="lt 5.0" />
         <Sound file="Content/Items/WarningBeep.ogg" range="500" />
       </StatusEffect>
@@ -225,8 +225,8 @@
       <Item identifier="aluminium" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="30">
-      <RequiredItem items="aluminium" />
-      <RequiredItem items="aluminium" />
+      <RequiredItem identifier="aluminium" />
+      <RequiredItem identifier="aluminium" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,128,67,62" origin="0.5,0.5" />
     <Sprite texture="Scooter.png" depth="0.55" sourcerect="0,0,219,159" />

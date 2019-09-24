@@ -250,7 +250,7 @@
     <Price locationtype="Mine" buyprice="40" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="10">
       <RequiredSkill identifier="medical" level="14" />
-      <RequiredItem items="organicfiber" />
+      <RequiredItem identifier="organicfiber" />
     </Fabricate>
     <SuitableTreatment identifier="bleeding" suitability="50" />
     <SuitableTreatment identifier="gunshotwound" suitability="50" />
@@ -289,8 +289,8 @@
     <Price locationtype="Mine" buyprice="60" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="20">
       <RequiredSkill identifier="medical" level="25" />
-      <RequiredItem items="antibleeding1" />
-      <RequiredItem items="elastin" />
+      <RequiredItem identifier="antibleeding1" />
+      <RequiredItem identifier="elastin" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="959,771,63,59" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="67,808,45,70" depth="0.6" origin="0.5,0.5" />
@@ -330,9 +330,9 @@
     <Price locationtype="Mine" buyprice="60" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="20">
       <RequiredSkill identifier="medical" level="30" />
-      <RequiredItem items="stabilozine" />
-      <RequiredItem items="antibiotics" />
-      <RequiredItem items="elastin" />
+      <RequiredItem identifier="stabilozine" />
+      <RequiredItem identifier="antibiotics" />
+      <RequiredItem identifier="elastin" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,448,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="20,765,110,40" depth="0.6" origin="0.5,0.5" />
@@ -377,8 +377,8 @@
     <SuitableTreatment identifier="oxygenlow" suitability="-10" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="10">
       <RequiredSkill identifier="medical" level="14" />
-      <RequiredItem items="opium" />
-      <RequiredItem items="opium" />
+      <RequiredItem identifier="opium" />
+      <RequiredItem identifier="opium" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,448,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="0,0,63,115" depth="0.6" origin="0.5,0.5" />
@@ -450,9 +450,9 @@
     <SuitableTreatment identifier="oxygenlow" suitability="-60" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="20">
       <RequiredSkill identifier="medical" level="80" />
-      <RequiredItem items="antidama1" />
-      <RequiredItem items="adrenaline" />
-      <RequiredItem items="ethanol" />
+      <RequiredItem identifier="antidama1" />
+      <RequiredItem identifier="adrenaline" />
+      <RequiredItem identifier="ethanol" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,448,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="62,0,62,115" depth="0.6" origin="0.5,0.5" />
@@ -518,8 +518,8 @@
     <Price locationtype="Mine" buyprice="50" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="10">
       <RequiredSkill identifier="medical" level="14" />
-      <RequiredItem items="sodium" />
-      <RequiredItem items="chlorine" />
+      <RequiredItem identifier="sodium" />
+      <RequiredItem identifier="chlorine" />
     </Fabricate>
     <SuitableTreatment identifier="bloodloss" suitability="30" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,640,64,64" origin="0.5,0.5" />
@@ -551,9 +551,9 @@
     <Price locationtype="Mine" buyprice="160" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="10">
       <RequiredSkill identifier="medical" level="14" />
-      <RequiredItem items="alienblood" />
-      <RequiredItem items="antibloodloss1" />
-      <RequiredItem items="stabilozine" />
+      <RequiredItem identifier="alienblood" />
+      <RequiredItem identifier="antibloodloss1" />
+      <RequiredItem identifier="stabilozine" />
     </Fabricate>
     <SuitableTreatment identifier="bloodloss" suitability="60" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,640,64,64" origin="0.5,0.5" />
@@ -582,9 +582,9 @@
     <Price locationtype="Military" buyprice="200" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="25">
       <RequiredSkill identifier="medical" level="30" />
-      <RequiredItem items="antibleeding3" />
-      <RequiredItem items="antidama2" />
-      <RequiredItem items="liquidoxygenite" />
+      <RequiredItem identifier="antibleeding3" />
+      <RequiredItem identifier="antidama2" />
+      <RequiredItem identifier="liquidoxygenite" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,704,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="378,515,62,115" depth="0.6" origin="0.5,0.5" />
@@ -635,9 +635,9 @@
     <Price locationtype="City" buyprice="500" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="10">
       <RequiredSkill identifier="medical" level="14" />
-      <RequiredItem items="huskeggs" mincondition="0.25" usecondition="true" />
-      <RequiredItem items="antibiotics" />
-      <RequiredItem items="stabilozine" />
+      <RequiredItem identifier="huskeggs" mincondition="0.25" usecondition="true" />
+      <RequiredItem identifier="antibiotics" />
+      <RequiredItem identifier="stabilozine" />
     </Fabricate>
     <SuitableTreatment identifier="huskinfection" suitability="100" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,448,64,64" origin="0.5,0.5" />
@@ -698,9 +698,9 @@
     <Price locationtype="Mine" buyprice="260" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="20">
       <RequiredSkill identifier="medical" level="25" />
-      <RequiredItem items="lithium" />
-      <RequiredItem items="carbon" />
-      <RequiredItem items="chlorine" />
+      <RequiredItem identifier="lithium" />
+      <RequiredItem identifier="carbon" />
+      <RequiredItem identifier="chlorine" />
     </Fabricate>
     <SuitableTreatment identifier="psychosis" suitability="100" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,640,64,64" origin="0.5,0.5" />
@@ -741,8 +741,8 @@
     <Price locationtype="Mine" buyprice="130" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="10">
       <RequiredSkill identifier="medical" level="25" />
-      <RequiredItem items="antidama1" />
-      <RequiredItem items="stabilozine" />
+      <RequiredItem identifier="antidama1" />
+      <RequiredItem identifier="stabilozine" />
     </Fabricate>
     <SuitableTreatment identifier="opiateaddiction" suitability="100" />
     <SuitableTreatment identifier="opiatewithdrawal" suitability="100" />
@@ -791,8 +791,8 @@
     <Price locationtype="City" buyprice="150" />
     <Fabricate suitablefabricators="medicalfabricator" outcondition="0.25" requiredtime="10">
       <RequiredSkill identifier="medical" level="25" />
-      <RequiredItem items="morbusine" mincondition="0.25" />
-      <RequiredItem items="stabilozine" mincondition="0.25" />
+      <RequiredItem identifier="morbusine" mincondition="0.25" />
+      <RequiredItem identifier="stabilozine" mincondition="0.25" />
     </Fabricate>
     <SuitableTreatment identifier="morbusinepoisoning" suitability="100" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,704,64,64" origin="0.5,0.5" />
@@ -827,8 +827,8 @@
     <Price locationtype="City" buyprice="150" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="30">
       <RequiredSkill identifier="medical" level="25" />
-      <RequiredItem items="cyanide" />
-      <RequiredItem items="stabilozine" />
+      <RequiredItem identifier="cyanide" />
+      <RequiredItem identifier="stabilozine" />
     </Fabricate>
     <SuitableTreatment identifier="cyanidepoisoning" suitability="100" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,704,64,64" origin="0.5,0.5" />
@@ -863,8 +863,8 @@
     <Price locationtype="City" buyprice="250" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="30">
       <RequiredSkill identifier="medical" level="25" />
-      <RequiredItem items="sufforin" />
-      <RequiredItem items="stabilozine" />
+      <RequiredItem identifier="sufforin" />
+      <RequiredItem identifier="stabilozine" />
     </Fabricate>
     <SuitableTreatment identifier="sufforinpoisoning" suitability="100" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,704,64,64" origin="0.5,0.5" />
@@ -899,8 +899,8 @@
     <Price locationtype="City" buyprice="450" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="30">
       <RequiredSkill identifier="medical" level="25" />
-      <RequiredItem items="deliriumine" />
-      <RequiredItem items="stabilozine" />
+      <RequiredItem identifier="deliriumine" />
+      <RequiredItem identifier="stabilozine" />
     </Fabricate>
     <SuitableTreatment identifier="deliriuminepoisoning" suitability="100" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,703,64,64" origin="0.5,0.5" />
@@ -940,8 +940,8 @@
     <Price locationtype="Outpost" buyprice="250" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="30">
       <RequiredSkill identifier="medical" level="25" />
-      <RequiredItem items="radiotoxin" />
-      <RequiredItem items="stabilozine" />
+      <RequiredItem identifier="radiotoxin" />
+      <RequiredItem identifier="stabilozine" />
     </Fabricate>
     <SuitableTreatment identifier="radiationsickness" suitability="100" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,704,64,64" origin="0.5,0.5" />
@@ -976,9 +976,9 @@
     <SuitableTreatment identifier="internaldamage" suitability="-30" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="10">
       <RequiredSkill identifier="medical" level="25" />
-      <RequiredItem items="tonicliquid" />
-      <RequiredItem items="stabilozine" />
-      <RequiredItem items="oxygeniteshard" />
+      <RequiredItem identifier="tonicliquid" />
+      <RequiredItem identifier="stabilozine" />
+      <RequiredItem identifier="oxygeniteshard" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,640,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="311,235,62,115" depth="0.6" origin="0.5,0.5" />
@@ -1030,9 +1030,9 @@
     <SuitableTreatment identifier="opiatewithdrawal" suitability="-10" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="5">
       <RequiredSkill identifier="medical" level="14" />
-      <RequiredItem items="calcium" />
-      <RequiredItem items="zinc" />
-      <RequiredItem items="potassium" />
+      <RequiredItem identifier="calcium" />
+      <RequiredItem identifier="zinc" />
+      <RequiredItem identifier="potassium" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,704,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="138,759,63,150" depth="0.6" origin="0.5,0.5" />
@@ -1057,9 +1057,9 @@
     <Price locationtype="Military" buyprice="50" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="20">
       <RequiredSkill identifier="medical" level="14" />
-      <RequiredItem items="phosphorus" />
-      <RequiredItem items="chlorine" />
-      <RequiredItem items="carbon" />
+      <RequiredItem identifier="phosphorus" />
+      <RequiredItem identifier="chlorine" />
+      <RequiredItem identifier="carbon" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,448,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="124,0,62,115" depth="0.6" origin="0.5,0.5" />
@@ -1112,8 +1112,8 @@
     <Price locationtype="Military" buyprice="150" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="20">
       <RequiredSkill identifier="medical" level="14" />
-      <RequiredItem items="tonicliquid" />
-      <RequiredItem items="antidama2" />
+      <RequiredItem identifier="tonicliquid" />
+      <RequiredItem identifier="antidama2" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,448,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="187,0,62,115" depth="0.6" origin="0.5,0.5" />
@@ -1156,8 +1156,8 @@
     <Price locationtype="Military" buyprice="350" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="25">
       <RequiredSkill identifier="medical" level="38" />
-      <RequiredItem items="meth" />
-      <RequiredItem items="steroids" />
+      <RequiredItem identifier="meth" />
+      <RequiredItem identifier="steroids" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,448,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="249,0,62,115" depth="0.6" origin="0.5,0.5" />
@@ -1211,8 +1211,8 @@
     <Price locationtype="Military" buyprice="1000" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="30">
       <RequiredSkill identifier="medical" level="40" />
-      <RequiredItem items="sulphuricacid" />
-      <RequiredItem items="deusizine" count="2" />
+      <RequiredItem identifier="sulphuricacid" />
+      <RequiredItem identifier="deusizine" count="2" />
     </Fabricate>
     <SuitableTreatment identifier="morbusinepoisoning" suitability="-100" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,640,64,64" origin="0.5,0.5" />
@@ -1246,8 +1246,8 @@
     <Price locationtype="Outpost" buyprice="50" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="20">
       <RequiredSkill identifier="medical" level="35" />
-      <RequiredItem items="chlorine" />
-      <RequiredItem items="ethanol" />
+      <RequiredItem identifier="chlorine" />
+      <RequiredItem identifier="ethanol" />
     </Fabricate>
     <SuitableTreatment identifier="internaldamage" suitability="-50" />
     <SuitableTreatment identifier="stun" suitability="-100" />
@@ -1282,8 +1282,8 @@
     <Price locationtype="Military" buyprice="200" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="30">
       <RequiredSkill identifier="medical" level="35" />
-      <RequiredItem items="chloralhydrate" />
-      <RequiredItem items="sodium" />
+      <RequiredItem identifier="chloralhydrate" />
+      <RequiredItem identifier="sodium" />
     </Fabricate>
     <SuitableTreatment identifier="cyanidepoisoning" suitability="-100" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,640,64,64" origin="0.5,0.5" />
@@ -1315,8 +1315,8 @@
     <Price locationtype="Military" buyprice="500" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="30">
       <RequiredSkill identifier="medical" level="40" />
-      <RequiredItem items="thorium" />
-      <RequiredItem items="uranium" />
+      <RequiredItem identifier="thorium" />
+      <RequiredItem identifier="uranium" />
     </Fabricate>
     <SuitableTreatment identifier="radiationsickness" suitability="-100" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,448,64,64" origin="0.5,0.5" />
@@ -1348,8 +1348,8 @@
     <Price locationtype="Military" buyprice="500" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="30">
       <RequiredSkill identifier="medical" level="40" />
-      <RequiredItem items="sulphuricacid" />
-      <RequiredItem items="flashpowder" />
+      <RequiredItem identifier="sulphuricacid" />
+      <RequiredItem identifier="flashpowder" />
     </Fabricate>
     <SuitableTreatment identifier="sufforinpoisoning" suitability="-100" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,640,64,64" origin="0.5,0.5" />
@@ -1381,7 +1381,7 @@
     <Price locationtype="Military" buyprice="600" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="30">
       <RequiredSkill identifier="medical" level="40" />
-      <RequiredItem items="dementonite" />
+      <RequiredItem identifier="dementonite" />
     </Fabricate>
     <SuitableTreatment identifier="deliriuminepoisoning" suitability="-100" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,704,64,64" origin="0.5,0.5" />
@@ -1443,7 +1443,7 @@
     <Throwable characterusable="true" canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="10">
         <ReduceAffliction identifier="oxygenlow" amount="2"/>
-        <RequiredItem items="medicalsyringe" type="Container"/>
+        <RequiredItem identifier="medicalsyringe" type="Container"/>
       </StatusEffect>
       <StatusEffect type="OnBroken" target="This">
         <Remove/>

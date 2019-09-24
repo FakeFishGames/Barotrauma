@@ -25,7 +25,7 @@
     </Turret>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem items="screwdriver" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="power_in" displayname="connection.powerin" />
       <input name="position_in" displayname="connection.turretaimingin" />
       <input name="trigger_in" displayname="connection.turrettriggerin" />
@@ -41,7 +41,7 @@
     </Controller>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem items="screwdriver" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <output name="position_out" displayname="connection.turretaimingout" fallbackdisplayname="inputtype.aim" />
       <output name="trigger_out" displayname="connection.turrettriggerout" fallbackdisplayname="inputtype.shoot" />
     </ConnectionPanel>
@@ -55,7 +55,7 @@
     <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="20" mindeteriorationdelay="5" maxdeteriorationdelay="15" MinDeteriorationCondition="0" ShowRepairUIThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="-0.1,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="40" />
-      <RequiredItem items="wrench" type="Equipped" />
+      <RequiredItem identifier="wrench" type="Equipped" />
       <ParticleEmitter particle="spark" particleamount="10" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="15.0" maxcondition="35.0" />
       <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="3" mincondition="0.0" maxcondition="15.0" />
       <ParticleEmitter particle="spark" particleamount="5" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="15.0" />
@@ -84,7 +84,7 @@
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
       <RequiredSkill identifier="mechanical" level="25" />
-      <RequiredItem items="steel" />
+      <RequiredItem identifier="steel" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,128,64,64" origin="0.5,0.5" />
     <Sprite texture="TurretsAndDepthCharges.png" sourcerect="2,91,215,33" depth="0.55" origin="0.5,0.5" />
@@ -117,9 +117,9 @@
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="30">
       <RequiredSkill identifier="mechanical" level="40" />
-      <RequiredItem items="steel" />
-      <RequiredItem items="uranium" />
-      <RequiredItem items="uex" />
+      <RequiredItem identifier="steel" />
+      <RequiredItem identifier="uranium" />
+      <RequiredItem identifier="uex" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,128,64,64" origin="0.5,0.5" />
     <Sprite texture="TurretsAndDepthCharges.png" sourcerect="1,131,217,33" depth="0.55" origin="0.5,0.5" />
@@ -163,7 +163,7 @@
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
       <RequiredSkill identifier="mechanical" level="30" />
-      <RequiredItem items="physicorium" />
+      <RequiredItem identifier="physicorium" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,959,61,65" origin="0.5,0.5" />
     <Sprite texture="TurretsAndDepthCharges.png" sourcerect="1,170,216,34" depth="0.55" origin="0.5,0.5" />

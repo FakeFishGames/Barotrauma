@@ -8,7 +8,7 @@
       <Item identifier="steel" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="10">
-      <RequiredItem items="steel" />
+      <RequiredItem identifier="steel" />
     </Fabricate>
     <Sprite texture="weapons_new.png" sourcerect="4,133,241,16" depth="0.55" origin="0.5,0.5" />
     <Body width="241" height="16" density="20" />
@@ -26,7 +26,7 @@
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="10">
       <RequiredSkill identifier="weapons" level="30" />
-      <RequiredItem items="physicorium" />
+      <RequiredItem identifier="physicorium" />
     </Fabricate>
     <Sprite texture="weapons_new.png" sourcerect="4,173,244,18" depth="0.55" origin="0.5,0.5" />
     <Body width="241" height="16" density="20" />
@@ -46,8 +46,8 @@
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="10">
       <RequiredSkill identifier="weapons" level="30" />
-      <RequiredItem items="spear" />
-      <RequiredItem items="c4block" />
+      <RequiredItem identifier="spear" />
+      <RequiredItem identifier="c4block" />
     </Fabricate>
     <Sprite texture="weapons_new.png" sourcerect="4,153,241,17" depth="0.55" origin="0.5,0.5" />
     <Body width="241" height="16" density="20" />
@@ -82,8 +82,8 @@
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
       <RequiredSkill identifier="weapons" level="30" />
-      <RequiredItem items="steel" />
-      <RequiredItem items="plastic" />
+      <RequiredItem identifier="steel" />
+      <RequiredItem identifier="plastic" />
     </Fabricate>
     <Sprite texture="weapons_new.png" sourcerect="0,64,282,60" depth="0.55" origin="0.5,0.5" />
     <Body width="90" height="30" density="50" />
@@ -113,8 +113,8 @@
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="10">
       <RequiredSkill identifier="medical" level="50" />
-      <RequiredItem items="aluminium" />
-      <RequiredItem items="plastic" />
+      <RequiredItem identifier="aluminium" />
+      <RequiredItem identifier="plastic" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,64,64,64" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Tools/tools_new.png" sourcerect="0,242,232,111" depth="0.55" origin="0.5,0.5" />
@@ -325,9 +325,9 @@
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
       <RequiredSkill identifier="weapons" level="30" />
-      <RequiredItem items="iron" />
-      <RequiredItem items="phosphorus" />
-      <RequiredItem items="flashpowder" />
+      <RequiredItem identifier="iron" />
+      <RequiredItem identifier="phosphorus" />
+      <RequiredItem identifier="flashpowder" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,0,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="382,31,27,54" depth="0.55" origin="0.5,0.5" />
@@ -359,9 +359,9 @@
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
       <RequiredSkill identifier="weapons" level="50" />
-      <RequiredItem items="iron" />
-      <RequiredItem items="copper" />
-      <RequiredItem items="uex" />
+      <RequiredItem identifier="iron" />
+      <RequiredItem identifier="copper" />
+      <RequiredItem identifier="uex" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="450,450,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="454,7,27,54" depth="0.55" origin="0.5,0.5185185" />
@@ -395,8 +395,8 @@
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
       <RequiredSkill identifier="weapons" level="60" />
-      <RequiredItem items="iron" />
-      <RequiredItem items="uex" />
+      <RequiredItem identifier="iron" />
+      <RequiredItem identifier="uex" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="580,770,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="413,0,40,61" depth="0.55" origin="0.5,0.5" />
@@ -434,8 +434,8 @@
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
       <RequiredSkill identifier="weapons" level="40" />
-      <RequiredItem items="iron" />
-      <RequiredItem items="incendium" />
+      <RequiredItem identifier="iron" />
+      <RequiredItem identifier="incendium" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="68,320,56,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="353,31,26,54" depth="0.55" origin="0.5,0.5" />
@@ -473,8 +473,8 @@
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="10">
       <RequiredSkill identifier="weapons" level="30" />
-      <RequiredItem items="steel" />
-      <RequiredItem items="plastic" />
+      <RequiredItem identifier="steel" />
+      <RequiredItem identifier="plastic" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="770,0,58,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="1,407,191,63" depth="0.55" origin="0.5,0.5" />
@@ -486,11 +486,11 @@
       </Attack>
       <!-- 4 usages with normal battery -->
       <StatusEffect type="OnUse" target="Contained" Condition="-25.0" disabledeltatime="true">
-        <RequiredItem items="batterycell" type="Contained" msg="ItemMsgBatteryCellRequired" />
+        <RequiredItem identifier="batterycell" type="Contained" msg="ItemMsgBatteryCellRequired" />
       </StatusEffect>
       <!-- 7 usages with a fulgurium battery -->
       <StatusEffect type="OnUse" target="Contained" Condition="-15.0" disabledeltatime="true">
-        <RequiredItem items="fulguriumcatterycell" type="Contained" msg="ItemMsgBatteryCellRequired" />
+        <RequiredItem identifier="fulguriumcatterycell" type="Contained" msg="ItemMsgBatteryCellRequired" />
       </StatusEffect>
       <!-- normal batteries cause 15 seconds of stun to anything with a mass smaller than 60 -->
       <StatusEffect type="OnUse" target="Character" stun="15.0" disabledeltatime="true">
@@ -498,7 +498,7 @@
         <sound file="Content/Items/Weapons/StunBaton2.ogg" range="500" />
         <sound file="Content/Items/Weapons/StunBaton3.ogg" range="500" />
         <sound file="Content/Items/Weapons/StunBaton4.ogg" range="500" />
-        <RequiredItem items="batterycell" type="Contained" msg="ItemMsgBatteryCellRequired" />
+        <RequiredItem identifier="batterycell" type="Contained" msg="ItemMsgBatteryCellRequired" />
         <Explosion range="100.0" force="0.1" shockwave="false" flames="false" smoke="false" underwaterbubble="false" camerashake="6.0" />
         <Conditional mass="lt 60"/>
       </StatusEffect>
@@ -508,7 +508,7 @@
         <sound file="Content/Items/Weapons/StunBaton2.ogg" range="500" />
         <sound file="Content/Items/Weapons/StunBaton3.ogg" range="500" />
         <sound file="Content/Items/Weapons/StunBaton4.ogg" range="500" />
-        <RequiredItem items="fulguriumbatterycell" type="Contained" msg="ItemMsgBatteryCellRequired" />
+        <RequiredItem identifier="fulguriumbatterycell" type="Contained" msg="ItemMsgBatteryCellRequired" />
         <Explosion range="100.0" force="0.5" shockwave="false" flames="false" smoke="true" underwaterbubble="false" camerashake="6.0" />
         <Conditional mass="lt 150"/>
       </StatusEffect>
@@ -528,7 +528,7 @@
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="10">
       <RequiredSkill identifier="weapons" level="30" />
-      <RequiredItem items="iron" />
+      <RequiredItem identifier="iron" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="835,385,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="296,3,110,28" depth="0.55" origin="0.5,0.5" />
@@ -579,8 +579,8 @@
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="10">
       <RequiredSkill identifier="weapons" level="30"/>
-      <RequiredItem items="iron"/>
-      <RequiredItem items="uex"/>
+      <RequiredItem identifier="iron"/>
+      <RequiredItem identifier="uex"/>
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,960,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="171,30,59,24" depth="0.55" origin="0.5,0.5" />
@@ -621,9 +621,9 @@
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="10">
       <RequiredSkill identifier="weapons" level="30"/>
-      <RequiredItem items="iron"/>
-      <RequiredItem items="phosphorus"/>
-      <RequiredItem items="flashpowder"/>
+      <RequiredItem identifier="iron"/>
+      <RequiredItem identifier="phosphorus"/>
+      <RequiredItem identifier="flashpowder"/>
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,960,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="171,1,60,27" depth="0.55" origin="0.5,0.5" />
@@ -715,8 +715,8 @@
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
       <RequiredSkill identifier="medical" level="40"/>
-      <RequiredItem items="steel"/>
-      <RequiredItem items="plastic"/>
+      <RequiredItem identifier="steel"/>
+      <RequiredItem identifier="plastic"/>
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,830,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="0,293,130,76" depth="0.55" origin="0.5,0.5" />
@@ -775,8 +775,8 @@
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
       <RequiredSkill identifier="mechanical" level="30"/>
-      <RequiredItem items="bikehorn"/>
-      <RequiredItem items="plastic"/>
+      <RequiredItem identifier="bikehorn"/>
+      <RequiredItem identifier="plastic"/>
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="641,960,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="242,420,121,55" depth="0.55" origin="0.5,0.5" />
