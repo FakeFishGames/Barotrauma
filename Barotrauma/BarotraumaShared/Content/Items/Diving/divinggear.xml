@@ -84,7 +84,7 @@
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="-100.0" Oxygen="-20.0" Condition="-0.5">
         <RequiredItem identifier="incendiumfueltank" type="Contained" />
-        <Affliction items="burn" amount="0.1" />
+        <Affliction identifier="burn" amount="0.1" />
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1000.0" SpeedMultiplier="1.2" Condition="-0.3" comparison="Or">
         <Conditional IsDead="false" />
