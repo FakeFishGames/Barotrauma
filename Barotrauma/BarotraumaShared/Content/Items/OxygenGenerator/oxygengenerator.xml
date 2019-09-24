@@ -2,6 +2,7 @@
   <Item
     name="Oxygen Generator"
     identifier="oxygenerator"
+    tags="oxygengenerator"
     category="Machine"
     linkable="true"
     allowedlinks="vent">
@@ -77,6 +78,7 @@
   <Item
     name="Shuttle Oxygen Generator"
     identifier="shuttleoxygenerator"
+    tags="oxygengenerator"
     category="Machine"
     linkable="true"
     allowedlinks="vent">
@@ -121,6 +123,7 @@
   <Item
     name="Vent"
     identifier="vent"
+    tags="vent"
     category="Machine"
     interactdistance="0"
     linkable="true"
@@ -139,6 +142,7 @@
   <Item
     name="Loose Vent"
     identifier="loosevent"
+    tags="vent"
     category="Machine"
     linkable="true"
     allowedlinks="oxygenerator"
