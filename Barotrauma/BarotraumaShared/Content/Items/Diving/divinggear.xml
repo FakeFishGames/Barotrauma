@@ -233,7 +233,7 @@
     <Body width="180" height="95" density="11" />
     <Holdable slots="Any,RightHand+LeftHand" aimpos="90,0" handle1="-50,65" handle2="-54,69" msg="ItemMsgPickUpSelect" />
     <Propulsion force="150" usablein="water" particles="bubbles">
-      <RequiredItems identifier="batterycell,fulguriumbatterycell" type="Contained" msg="ItemMsgBatteryCellRequired" />
+      <RequiredItems identifier="mobilebattery" type="Contained" msg="ItemMsgBatteryCellRequired" />
       <StatusEffect type="OnUse" target="Contained" Condition="-0.25" />
       <sound file="Content/Items/Diving/ScooterLoop.ogg" type="OnUse" range="500.0" loop="true" />
       <LightComponent LightColor="1.0,1.0,1.0,0.8" range="1000">
@@ -242,7 +242,7 @@
     </Propulsion>
     <ItemContainer capacity="1" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,70,107,31" />
-      <Containable items="batterycell" />
+      <Containable items="mobilebattery" />
     </ItemContainer>
     <AiTarget soundrange="2000"/>
   </Item>

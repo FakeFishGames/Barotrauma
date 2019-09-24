@@ -515,7 +515,7 @@
     </MeleeWeapon>
     <ItemContainer capacity="1" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,70,107,31" />
-      <Containable items="batterycell" />
+      <Containable items="mobilebattery" />
     </ItemContainer>
   </Item>
   <Item name="Diving Knife" identifier="divingknife" category="Equipment" Tags="smallitem,weapon" cargocontaineridentifier="metalcrate" scale="0.3" impactsoundtag="impact_metal_light">
