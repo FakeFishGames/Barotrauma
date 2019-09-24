@@ -184,7 +184,7 @@ namespace Barotrauma
             }
             else
             {
-                identifiers = element.GetAttributeStringArray("items", null, convertToLowerInvariant: true);
+                identifiers = element.GetAttributeStringArray("items", null, convertToLowerInvariant: true) ?? element.GetAttributeStringArray("item", null, convertToLowerInvariant: true);
                 if (identifiers == null)
                 {
                     identifiers = element.GetAttributeStringArray("identifiers", null, convertToLowerInvariant: true) ?? element.GetAttributeStringArray("tags", null, convertToLowerInvariant: true);
@@ -195,7 +195,7 @@ namespace Barotrauma
                 }
             }
 
-            string[] excludedIdentifiers = element.GetAttributeStringArray("excludeditems", null, convertToLowerInvariant: true);
+            string[] excludedIdentifiers = element.GetAttributeStringArray("excludeditems", null, convertToLowerInvariant: true) ?? element.GetAttributeStringArray("excludeditem", null, convertToLowerInvariant: true);
             if (excludedIdentifiers == null)
             {
                 excludedIdentifiers = element.GetAttributeStringArray("excludedidentifiers", null, convertToLowerInvariant: true) ?? element.GetAttributeStringArray("excludedtags", null, convertToLowerInvariant: true);
