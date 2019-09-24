@@ -271,6 +271,7 @@ namespace Barotrauma
         protected override void OnCompleted()
         {
             StopMovement();
+            HumanAIController.FaceTarget(Target);
             base.OnCompleted();
         }
     }

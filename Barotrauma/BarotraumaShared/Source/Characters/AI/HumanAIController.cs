@@ -998,6 +998,8 @@ namespace Barotrauma
             return MathHelper.Clamp(safety * 100, 0, 100);
         }
 
+        public void FaceTarget(ISpatialEntity target) => Character.AnimController.TargetDir = target.WorldPosition.X > Character.WorldPosition.X ? Direction.Right : Direction.Left;
+
         public bool IsFriendly(Character other) => IsFriendly(Character, other);
 
         public static bool IsFriendly(Character me, Character other) => (other.TeamID == me.TeamID || other.TeamID == Character.TeamType.FriendlyNPC || me.TeamID == Character.TeamType.FriendlyNPC) && other.SpeciesName == me.SpeciesName;

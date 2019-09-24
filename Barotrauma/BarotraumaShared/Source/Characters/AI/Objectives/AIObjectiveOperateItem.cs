@@ -76,6 +76,7 @@ namespace Barotrauma
             {
                 if (character.CanInteractWith(target.Item, out _, checkLinked: false))
                 {
+                    HumanAIController.FaceTarget(target.Item);
                     // Don't allow to operate an item that someone already operates, unless this objective is an order
                     if (objectiveManager.CurrentOrder != this && Character.CharacterList.Any(c => c.SelectedConstruction == target.Item && c != character && HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c)))
                     {

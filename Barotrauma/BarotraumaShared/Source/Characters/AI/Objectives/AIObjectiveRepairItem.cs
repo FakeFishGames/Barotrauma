@@ -119,6 +119,7 @@ namespace Barotrauma
             }
             if (character.CanInteractWith(Item, out _, checkLinked: false))
             {
+                HumanAIController.FaceTarget(Item);
                 if (repairTool != null)
                 {
                     OperateRepairTool(deltaTime);
