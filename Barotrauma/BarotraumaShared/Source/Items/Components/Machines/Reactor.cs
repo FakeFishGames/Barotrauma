@@ -167,7 +167,7 @@ namespace Barotrauma.Items.Components
         private float prevAvailableFuel;
         public float AvailableFuel { get; set; }
 
-        private readonly string[] fuelTags = new string[2] { "fuelrod", "reactorfuel"};
+        private readonly string[] fuelTags = new string[1] { "reactorfuel" };
 
 
         public Reactor(Item item, XElement element)
