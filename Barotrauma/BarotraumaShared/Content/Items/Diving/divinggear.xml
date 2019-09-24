@@ -83,7 +83,7 @@
         <RequiredItem items="weldingfueltank" type="Contained" />
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="-100.0" Oxygen="-20.0" Condition="-0.5">
-        <RequiredItem identifier="incendiumfueltank" type="Contained" />
+        <RequiredItem items="incendiumfueltank" type="Contained" />
         <Affliction identifier="burn" amount="0.1" />
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1000.0" SpeedMultiplier="1.2" Condition="-0.3" comparison="Or">
@@ -209,7 +209,7 @@
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="0,157,92,27" />
       <Containable items="oxygensource,weldingfuel" />
       <StatusEffect type="OnWearing" target="Contained">
-        <RequiredItem identifier="oxygensource" type="Contained" matchonempty="true" />
+        <RequiredItem items="oxygensource" type="Contained" matchonempty="true" />
         <Conditional condition="lt 5.0" />
         <Sound file="Content/Items/WarningBeep.ogg" range="500" />
       </StatusEffect>
