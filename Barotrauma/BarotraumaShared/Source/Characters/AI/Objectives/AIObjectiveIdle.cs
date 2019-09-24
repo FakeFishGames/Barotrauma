@@ -12,11 +12,11 @@ namespace Barotrauma
         public override string DebugTag => "idle";
 
         const float WallAvoidDistance = 150.0f;
-        private readonly float newTargetIntervalMin = 5;
-        private readonly float newTargetIntervalMax = 15;
-        private readonly float standStillMin = 1;
+        private readonly float newTargetIntervalMin = 10;
+        private readonly float newTargetIntervalMax = 20;
+        private readonly float standStillMin = 2;
         private readonly float standStillMax = 10;
-        private readonly float walkDurationMin = 3;
+        private readonly float walkDurationMin = 5;
         private readonly float walkDurationMax = 10;
 
         private Hull currentTarget;
