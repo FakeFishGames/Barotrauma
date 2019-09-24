@@ -57,12 +57,12 @@
       <ParticleEmitterHitCharacter particle="fleshsmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100" />
       <sound file="Content/Items/Tools/WeldingLoop.ogg" type="OnUse" range="500.0" loop="true" />
       <!-- when using, the contained welding fuel tank will detoriate (= lose fuel) -->
-      <StatusEffect type="OnUse" target="Contained" targetidentifiers="weldingfueltank" Condition="-1.0" />
-      <StatusEffect type="OnUse" target="Contained" targetidentifiers="incendiumfueltank" Condition="-0.6" />
+      <StatusEffect type="OnUse" targettype="Contained" targets="weldingfueltank" Condition="-1.0" />
+      <StatusEffect type="OnUse" targettype="Contained" targets="incendiumfueltank" Condition="-0.6" />
       <!-- welding a door, it will get stuck after a while -->
-      <StatusEffect type="OnUse" target="UseTarget" targetidentifiers="door,windoweddoor,hatch,ductblock" Stuck="5.0" Condition="3.0" />
+      <StatusEffect type="OnUse" targettype="UseTarget" targets="door,windoweddoor,hatch,ductblock" Stuck="5.0" Condition="3.0" />
       <!-- do burn damage to characters -->
-      <StatusEffect type="OnUse" target="UseTarget">
+      <StatusEffect type="OnUse" targettype="UseTarget">
         <Affliction identifier="burn" amount="0.25" />
       </StatusEffect>
       <!-- the tool can fix structures, i.e. walls and windows -->
@@ -70,7 +70,7 @@
       <!-- mechanic skill 20 required to use the item -->
       <RequiredSkill identifier="mechanical" level="20" />
       <!-- if the skill requirement isn't met the welding fuel will be used 3 times as fast -->
-      <StatusEffect type="OnFailure" target="Contained" targetidentifiers="weldingfueltank,oxygentank" Condition="-3.0" />
+      <StatusEffect type="OnFailure" targettype="Contained" targets="weldingfueltank,oxygentank" Condition="-3.0" />
       <LightComponent LightColor="1.0,0.9,0.7,1.0" Flicker="0.5">
         <sprite texture="Content/Items/Electricity/lightsprite.png" origin="0.5,0.5" />
       </LightComponent>
@@ -102,10 +102,10 @@
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true" aimpos="50,0" handle1="-85,-25" handle2="-10,-27" msg="ItemMsgPickUpSelect" />
     <RepairTool structurefixamount="-0.125" range="150" barrelpos="45,10" combatpriority="20">
       <RequiredItems identifier="oxygentank,oxygenitetank" type="Contained" msg="ItemMsgOxygenTankRequired" />
-      <StatusEffect type="OnUse" target="Contained" targetidentifiers="oxygentank" Condition="-1.0" />
-      <StatusEffect type="OnUse" target="Contained" targetidentifiers="oxygenitetank" Condition="-0.5" />
-      <StatusEffect type="OnUse" target="UseTarget" targetidentifiers="door,windoweddoor,hatch,ductblock,aliendoor,alienhatch" Stuck="-20.0" Condition="-3.0" />
-      <StatusEffect type="OnUse" target="UseTarget">
+      <StatusEffect type="OnUse" targettype="Contained" targets="oxygentank" Condition="-1.0" />
+      <StatusEffect type="OnUse" targettype="Contained" targets="oxygenitetank" Condition="-0.5" />
+      <StatusEffect type="OnUse" targettype="UseTarget" targets="door,windoweddoor,hatch,ductblock,aliendoor,alienhatch" Stuck="-20.0" Condition="-3.0" />
+      <StatusEffect type="OnUse" targettype="UseTarget">
         <Affliction identifier="burn" amount="0.25" />
       </StatusEffect>
       <ParticleEmitter particle="plasma" particlespersecond="50" copyentityangle="true"/>
@@ -118,8 +118,8 @@
       <sound file="Content/Items/Tools/PlasmaCutterLoop.ogg" type="OnUse" range="500.0" loop="true" />
       <Fixable identifier="structure" />
       <RequiredSkill identifier="mechanical" level="30" />
-      <StatusEffect type="OnFailure" target="Contained" targetidentifiers="weldingfueltank,oxygentank" Condition="-3.0" />
-      <StatusEffect type="OnFailure" target="Contained" targetidentifiers="oxygenitetank" Condition="-1.5" />
+      <StatusEffect type="OnFailure" targettype="Contained" targets="weldingfueltank,oxygentank" Condition="-3.0" />
+      <StatusEffect type="OnFailure" targettype="Contained" targets="oxygenitetank" Condition="-1.5" />
       <LightComponent LightColor="0.8,0.7,1.0,1.0" Flicker="0.5">
         <sprite texture="Content/Items/Electricity/lightsprite.png" origin="0.5,0.5" />
       </LightComponent>
@@ -149,7 +149,7 @@
     <Sprite texture="Content/Items/Tools/tools_new.png" sourcerect="395,223,38,109" depth="0.55" />
     <Body width="39" height="110" density="5" />
     <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5" msg="ItemMsgPickUpSelect">
-      <StatusEffect type="OnFire" target="This" Condition="-100.0" disabledeltatime="true">
+      <StatusEffect type="OnFire" targettype="This" Condition="-100.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/ExplosionSmall3.ogg" range="5000" selectionmode="All" />
         <sound file="Content/Items/Weapons/ExplosionDebris3.ogg" range="5000" />
         <Explosion range="250.0" structuredamage="15" force="3.0">
@@ -171,7 +171,7 @@
     <Sprite texture="tools_new.png" sourcerect="433,223,39,110" depth="0.55" origin="0.5,0.5" />
     <Body width="39" height="110" density="5" />
     <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5" msg="ItemMsgPickUpSelect">
-      <StatusEffect type="OnFire" target="This" Condition="-100.0" disabledeltatime="true">
+      <StatusEffect type="OnFire" targettype="This" Condition="-100.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/ExplosionSmall3.ogg" range="5000" selectionmode="All" />
         <sound file="Content/Items/Weapons/ExplosionDebris3.ogg" range="5000" />
         <Explosion range="250.0" structuredamage="15" force="3.0">
@@ -201,7 +201,7 @@
     <Holdable slots="RightHand+LeftHand" controlpose="false" aimpos="40,-20" handle1="-2,30" msg="ItemMsgPickUpSelect" />
     <RepairTool extinguishamount="60.0" range="500" barrelpos="21,25" repairthroughholes="true">
       <ParticleEmitter particle="extinguisher" velocitymin="500.0" velocitymax="650.0" particlespersecond="50" />
-      <StatusEffect type="OnUse" target="This" Condition="-2.0" />
+      <StatusEffect type="OnUse" targettype="This" Condition="-2.0" />
       <sound file="Content/Items/Tools/Extinguisher.ogg" type="OnUse" range="500.0" loop="true" />
     </RepairTool>
     <Propulsion force="-80" usablein="water" particles="bubbles" />
@@ -287,7 +287,7 @@
     <AiTarget />
     <Holdable slots="Any,RightHand,LeftHand" holdangle="30" handle1="-10,0" msg="ItemMsgPickUpSelect" />
     <Sonar range="6000.0" powerconsumption="10" drawhudwhenequipped="true" detectsubmarinewalls="true" displaybordersize="-0.1">
-      <StatusEffect type="OnUse" target="Contained" Condition="-1.0" disabledeltatime="true" />
+      <StatusEffect type="OnUse" targettype="Contained" Condition="-1.0" disabledeltatime="true" />
       <sound file="Content/Items/Command/SonarPing.ogg" type="OnUse" range="1000.0" />
       <GuiFrame relativesize="0.5,0.5" anchor="BottomLeft" absoluteoffset="20,0" />
       <PingCircle texture="Content/Items/Command/pingCircle.png" origin="0.5,0.5" />
@@ -299,7 +299,7 @@
     <ItemContainer capacity="1" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,70,107,31" />
       <Containable identifiers="batterycell,fulguriumbatterycell">
-        <StatusEffect type="OnContaining" target="This" Voltage="1.0" setvalue="true" />
+        <StatusEffect type="OnContaining" targettype="This" Voltage="1.0" setvalue="true" />
       </Containable>
     </ItemContainer>
   </Item>
@@ -322,21 +322,21 @@
     <Holdable slots="Any,RightHand,LeftHand" holdangle="30" handle1="-10,0" msg="ItemMsgPickUpSelect" />
     <AiTarget soundrange="10000" sonarlabel="Sonar Beacon" />
     <LightComponent LightColor="0.0,1.0,0.0,1.0" range="50" powerconsumption="10" blinkfrequency="2" IsOn="false" canbeselected="false">
-      <StatusEffect type="OnActive" target="Contained" Condition="-0.1" />
-      <StatusEffect type="OnActive" target="This" SoundRange="10000" setvalue="true" />
+      <StatusEffect type="OnActive" targettype="Contained" Condition="-0.1" />
+      <StatusEffect type="OnActive" targettype="This" SoundRange="10000" setvalue="true" />
       <sound file="Content/Items/WarningBeep.ogg" type="OnActive" range="500.0" loop="true" volume="0.25" />
     </LightComponent>
     <CustomInterface canbeselected="true" drawhudwhenequipped="true">
       <GuiFrame relativesize="0.15,0.1" anchor="BottomLeft" absoluteoffset="20,20" style="ItemUI" />
       <TickBox text="Beacon Active">
-        <StatusEffect type="OnUse" target="This" IsOn="true" />
-        <StatusEffect type="OnSecondaryUse" target="This" IsOn="false" />
+        <StatusEffect type="OnUse" targettype="This" IsOn="true" />
+        <StatusEffect type="OnSecondaryUse" targettype="This" IsOn="false" />
       </TickBox>
     </CustomInterface>
     <ItemContainer capacity="1" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,70,107,31" />
       <Containable identifiers="batterycell,fulguriumbatterycell">
-        <StatusEffect type="OnContaining" target="This" Voltage="1.0" setvalue="true" />
+        <StatusEffect type="OnContaining" targettype="This" Voltage="1.0" setvalue="true" />
       </Containable>
     </ItemContainer>
   </Item>
@@ -358,7 +358,7 @@
     <Sprite texture="tools_new.png" sourcerect="435,0,77,28" depth="0.55" origin="0.5,0.5" />
     <Body width="75" height="25" density="15" />
     <Holdable slots="Any,RightHand,LeftHand,Head" holdpos="30,-15" aimpos="100,0" handle1="-26,0" handle2="-26,0" msg="ItemMsgPickUpSelect">
-      <StatusEffect type="OnActive" target="Contained" Condition="-0.2" />
+      <StatusEffect type="OnActive" targettype="Contained" Condition="-0.2" />
       <!-- the child LightComponent is only active when the Holdable is active, i.e. when the item is being held -->
       <LightComponent LightColor="0.5,0.5,0.5,1.0" Flicker="0.02" range="1000" powerconsumption="10" IsOn="true">
         <LightTexture texture="Content/Lights/lightcone.png" origin="0.0, 0.5" size="1.0,1.0" />
@@ -367,7 +367,7 @@
     <ItemContainer capacity="1" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,70,107,31" />
       <Containable identifiers="batterycell,fulguriumbatterycell">
-        <StatusEffect type="OnContaining" target="This" Voltage="1.0" setvalue="true" />
+        <StatusEffect type="OnContaining" targettype="This" Voltage="1.0" setvalue="true" />
       </Containable>
     </ItemContainer>
     <AiTarget />
@@ -391,16 +391,16 @@
     <Body width="21" height="7" density="12" />
     <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect" />
     <LightComponent LightColor="255,0.0,0.0,255" Flicker="0.5" range="600" IsOn="false">
-      <StatusEffect type="OnUse" target="This" IsOn="true">
+      <StatusEffect type="OnUse" targettype="This" IsOn="true">
         <Conditional IsOn="eq False" targetitemcomponent="LightComponent" />
         <sound file="Content/Items/Tools/FlareIgnite.ogg" range="800.0" />
       </StatusEffect>
-      <StatusEffect type="OnActive" target="This" Condition="-0.25">
+      <StatusEffect type="OnActive" targettype="This" Condition="-0.25">
         <Conditional PhysicsBodyActive="eq true" />
         <ParticleEmitter particle="flare" particlespersecond="30" />
         <ParticleEmitter particle="bubbles" particlespersecond="30" />
       </StatusEffect>
-      <StatusEffect type="OnBroken" target="This" IsOn="false" />
+      <StatusEffect type="OnBroken" targettype="This" IsOn="false" />
       <sound file="Content/Items/Tools/FlareLoop.ogg" type="OnActive" range="800.0" loop="true" />
     </LightComponent>
     <AiTarget />
@@ -415,15 +415,15 @@
     <Body width="21" height="7" density="12" />
     <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect" />
     <LightComponent LightColor="0,162,232,255" Flicker="0.5" range="1000" IsOn="false">
-      <StatusEffect type="OnUse" target="This" IsOn="true">
+      <StatusEffect type="OnUse" targettype="This" IsOn="true">
         <Conditional IsOn="eq False" targetitemcomponent="LightComponent" />
         <sound file="Content/Items/Tools/FlareIgnite.ogg" range="800.0" />
       </StatusEffect>
-      <StatusEffect type="OnActive" target="This" Condition="-0.125">
+      <StatusEffect type="OnActive" targettype="This" Condition="-0.125">
         <ParticleEmitter particle="flare" particlespersecond="30" />
         <ParticleEmitter particle="bubbles" particlespersecond="30" />
       </StatusEffect>
-      <StatusEffect type="OnBroken" target="This" IsOn="false" />
+      <StatusEffect type="OnBroken" targettype="This" IsOn="false" />
       <sound file="Content/Items/Tools/FlareLoop.ogg" type="OnActive" range="800.0" loop="true" />
     </LightComponent>
     <AiTarget />

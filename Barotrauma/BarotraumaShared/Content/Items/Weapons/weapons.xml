@@ -287,8 +287,8 @@
         <Conditional OxygenPercentage="gt 10"/>
       </StatusEffect>
       <!-- when using, the contained welding fuel tank will detoriate (= lose fuel) -->
-      <StatusEffect type="OnUse" target="Contained" targetidentifiers="weldingfueltank" Condition="-6.0" />
-      <StatusEffect type="OnUse" target="Contained" targetidentifiers="incendiumfueltank" Condition="-2.5" />
+      <StatusEffect type="OnUse" targettype="Contained" targets="weldingfueltank" Condition="-6.0" />
+      <StatusEffect type="OnUse" targettype="Contained" targets="incendiumfueltank" Condition="-2.5" />
       <!-- do burn damage to characters -->
       <StatusEffect type="OnUse" target="UseTarget">
         <Affliction identifier="burn" amount="1.25" />
@@ -302,7 +302,7 @@
       <!-- weapons skill 20 required to use the item -->
       <RequiredSkill identifier="weapons" level="20" />
       <!-- if the skill requirement isn't met the welding fuel will be used 50% faster -->
-      <StatusEffect type="OnFailure" target="Contained" targetidentifiers="weldingfueltank,oxygentank,incendiumfueltank" Condition="-9.0" />
+      <StatusEffect type="OnFailure" targettype="Contained" targets="weldingfueltank,oxygentank,incendiumfueltank" Condition="-9.0" />
       <LightComponent LightColor="255,174,121,255" Flicker="0.5" Range="500">
         <sprite texture="Content/Items/Electricity/lightsprite.png" origin="0.5,0.5" />
       </LightComponent>

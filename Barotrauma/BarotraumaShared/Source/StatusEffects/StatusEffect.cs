@@ -198,6 +198,7 @@ namespace Barotrauma
                             DebugConsole.ThrowError("Invalid action type \"" + attribute.Value + "\" in StatusEffect (" + parentDebugName + ")");
                         }
                         break;
+                    case "targettype":
                     case "target":
                         string[] Flags = attribute.Value.Split(',');
                         foreach (string s in Flags)
@@ -219,9 +220,9 @@ namespace Barotrauma
                         setValue = attribute.GetAttributeBool(false);
                         break;
                     case "targetnames":
-                        DebugConsole.ThrowError("Error in StatusEffect config (" + parentDebugName + ") - use identifiers or tags to define the targets instead of names.");
-                        break;
+                    case "targets":
                     case "targetidentifiers":
+                    case "targettags":
                         string[] identifiers = attribute.Value.Split(',');
                         targetIdentifiers = new HashSet<string>();
                         for (int i = 0; i < identifiers.Length; i++)

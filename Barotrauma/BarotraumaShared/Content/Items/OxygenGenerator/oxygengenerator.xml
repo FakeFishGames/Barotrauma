@@ -44,8 +44,8 @@
       <poweronsound file="Content/Items/PowerOnLight2.ogg" range="1500" loop="false" />
       <sound file="Content/Items/OxygenGenerator/OxygenGenerator.ogg" type="OnActive" range="1000.0" volumeproperty="CurrFlow" volume="0.001f" loop="true"/>    
       <StatusEffect type="OnFire" target="This" Condition="-0.5"/>
-      <StatusEffect type="OnActive" target="Contained" targetidentifiers="oxygentank" Condition="2.0"/>
-      <StatusEffect type="OnBroken" target="This" disabledeltatime="true">
+      <StatusEffect type="OnActive" targettype="Contained" targets="oxygentank" Condition="2.0"/>
+      <StatusEffect type="OnBroken" targettype="This" disabledeltatime="true">
         <sound file="Content/Items/Weapons/ExplosionMedium3.ogg" range="8000" selectionmode="All"/>
         <sound file="Content/Items/Weapons/ExplosionDebris3.ogg" range="8000" />
         <Explosion range="50" stun="0" force="3.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false"/>
@@ -89,8 +89,8 @@
       <poweronsound file="Content/Items/PowerOnLight1.ogg" range="1000" loop="false" />
       <sound file="Content/Items/OxygenGenerator/OxygenGenerator.ogg" type="OnActive" range="1000.0" volumeproperty="CurrFlow" volume="0.001f" loop="true"/>
       <StatusEffect type="OnFire" target="This" Condition="-0.5"/>
-      <StatusEffect type="OnActive" target="Contained" targetidentifiers="oxygentank" Condition="2.0"/>
-      <StatusEffect type="OnBroken" target="This" disabledeltatime="true">
+      <StatusEffect type="OnActive" targettype="Contained" targets="oxygentank" Condition="2.0"/>
+      <StatusEffect type="OnBroken" targettype="This" disabledeltatime="true">
         <sound file="Content/Items/Weapons/ExplosionMedium3.ogg" range="8000" selectionmode="All"/>
         <sound file="Content/Items/Weapons/ExplosionDebris3.ogg" range="8000" />
         <Explosion range="50" stun="0" force="3.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false"/>

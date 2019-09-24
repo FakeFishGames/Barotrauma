@@ -78,7 +78,7 @@
     <BrokenSprite texture="battery.png" sourcerect="236,0,118,159" depth="0.8" maxcondition="0" />
     <PowerContainer capacity="2000.0" maxrechargespeed="500.0" maxoutput="1000.0" canbeselected="true" indicatorposition="65,33" indicatorsize="34,46" ishorizontal="false" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.18,0.23" minsize="350,250" maxsize="420,300" anchor="Center" relativeoffset="0,-0.1" style="ItemUI" />
-      <StatusEffect type="OnActive" target="Contained" targetidentifiers="loadable" Condition="2.0" />
+      <StatusEffect type="OnActive" targettype="Contained" targets="loadable" Condition="2.0" />
     </PowerContainer>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
@@ -115,7 +115,7 @@
     <BrokenSprite texture="ShuttleBattery.png" sourcerect="598,0,299,307" depth="0.8" maxcondition="0" />
     <PowerContainer capacity="2000.0" maxrechargespeed="500.0" maxoutput="1000.0" canbeselected="true" indicatorposition="21,12" indicatorsize="54,35" ishorizontal="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.18,0.23" minsize="350,250" maxsize="420,300" anchor="Center" relativeoffset="0,-0.1" style="ItemUI" />
-      <StatusEffect type="OnActive" target="Contained" targetidentifiers="loadable" Condition="2.0" />
+      <StatusEffect type="OnActive" targettype="Contained" targets="loadable" Condition="2.0" />
     </PowerContainer>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
@@ -208,7 +208,7 @@
     <BrokenSprite texture="battery.png" sourcerect="0,163,118,32" depth="0.8" maxcondition="0" />
     <Powered powerconsumption="200" currpowerconsumption="200" isactive="true">
       <GuiFrame relativesize="0.18,0.15" minsize="350,160" maxsize="420,192" anchor="Center" relativeoffset="0,-0.1" style="ItemUI" msg="ItemMsgInteractSelect" />
-      <StatusEffect type="OnActive" target="Contained" targetidentifiers="loadable" Condition="2.0" />
+      <StatusEffect type="OnActive" targettype="Contained" targets="loadable" Condition="2.0" />
     </Powered>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
