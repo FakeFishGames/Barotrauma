@@ -19,7 +19,7 @@
       </Attack>
     </MeleeWeapon>
     <ItemContainer capacity="12" keepopenwhenequipped="true" movableframe="true">
-      <Containable identifiers="smallitem" excludedidentifiers="toolbox" />
+      <Containable items="smallitem" excludeditems="toolbox" />
     </ItemContainer>
   </Item>
   <Item name="Welding Tool" identifier="weldingtool" category="Equipment" Tags="smallitem,weldingtool,tools" cargocontaineridentifier="metalcrate" description="One of the most crucial tools on board the submarine. Also works underwater." Scale="0.32" impactsoundtag="impact_metal_light">
@@ -48,7 +48,7 @@
 									 35" handle2="0,-27" msg="ItemMsgPickUpSelect" />
     <RepairTool structurefixamount="5.0" range="150" barrelpos="35,13" particles="weld" repairmultiple="true" repairthroughwalls="false" combatpriority="20">
       <!-- the item must contain a welding fuel tank for it to work -->
-      <RequiredItems identifier="weldingfueltank,incendiumfueltank" type="Contained" msg="ItemMsgWeldingFuelRequired" />
+      <RequiredItems identifier="weldingfuel" type="Contained" msg="ItemMsgWeldingFuelRequired" />
       <ParticleEmitter particle="weld" particlespersecond="50" copyentityangle="true"/>
       <ParticleEmitterHitStructure particle="weldspark" particlespersecond="100" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800" />
       <ParticleEmitterHitStructure particle="weldsmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="20" />
@@ -79,7 +79,7 @@
     <!-- one welding fuel or oxygen tank can be contained inside the welding tool -->
     <ItemContainer capacity="1" hideitems="false" itempos="18,-32" containedspritedepth="0.56">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="0,157,92,27" />
-      <Containable identifiers="weldingfueltank,oxygentank,oxygenitetank,incendiumfueltank" />
+      <Containable items="weldingfuel,oxygensource" />
     </ItemContainer>
   </Item>
   <Item name="Plasma Cutter" identifier="plasmacutter" category="Equipment" Tags="smallitem,plasmacutter,tools" cargocontaineridentifier="metalcrate" description="Cuts through various materials using a jet of ionized oxygen." Scale="0.32" impactsoundtag="impact_metal_light">
@@ -127,7 +127,7 @@
     </RepairTool>
     <ItemContainer capacity="1" hideitems="false" itempos="20,-30" containedspritedepth="0.56">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="0,157,92,27" />
-      <Containable identifiers="weldingfueltank,oxygentank,oxygenitetank" />
+      <Containable items="weldingfuel,oxygensource" />
     </ItemContainer>
   </Item>
   <Item name="Welding Fuel Tank" identifier="weldingfueltank" category="Equipment" Tags="smallitem,weldingfuel" cargocontaineridentifier="metalcrate" scale="0.3" impactsoundtag="impact_metal_light">
@@ -299,7 +299,7 @@
     </Sonar>
     <ItemContainer capacity="1" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,70,107,31" />
-      <Containable identifiers="batterycell,fulguriumbatterycell">
+      <Containable items="batterycell">
         <StatusEffect type="OnContaining" targettype="This" Voltage="1.0" setvalue="true" />
       </Containable>
     </ItemContainer>
@@ -336,7 +336,7 @@
     </CustomInterface>
     <ItemContainer capacity="1" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,70,107,31" />
-      <Containable identifiers="batterycell,fulguriumbatterycell">
+      <Containable items="batterycell">
         <StatusEffect type="OnContaining" targettype="This" Voltage="1.0" setvalue="true" />
       </Containable>
     </ItemContainer>
@@ -367,7 +367,7 @@
     </Holdable>
     <ItemContainer capacity="1" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,70,107,31" />
-      <Containable identifiers="batterycell,fulguriumbatterycell">
+      <Containable items="batterycell">
         <StatusEffect type="OnContaining" targettype="This" Voltage="1.0" setvalue="true" />
       </Containable>
     </ItemContainer>

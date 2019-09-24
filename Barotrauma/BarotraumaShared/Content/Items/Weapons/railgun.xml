@@ -50,7 +50,7 @@
     <Sprite texture="Loaders.png" depth="0.8" sourcerect="0,0,298,276" origin="0.5,0.5" />
     <ItemContainer hideitems="false" drawinventory="true" capacity="5" slotsperrow="6" itempos="53,-140" iteminterval="48,0" itemrotation="90" canbeselected="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.2,0.2" anchor="Center" style="ItemUI" />
-      <Containable identifiers="railgunammo" />
+      <Containable items="railgunammo" />
     </ItemContainer>
     <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="20" mindeteriorationdelay="5" maxdeteriorationdelay="15" MinDeteriorationCondition="0" ShowRepairUIThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="-0.1,0.27" style="ItemUI" />
@@ -65,14 +65,14 @@
     <Sprite texture="Loaders.png" depth="0.8" sourcerect="0,276,84,236" origin="0.5,0.5" />
     <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="43,-130" iteminterval="0,0" itemrotation="90" canbeselected="true" autointeractwithcontained="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
-      <Containable identifiers="railgunammo" />
+      <Containable items="railgunammo" />
     </ItemContainer>
   </Item>
   <Item name="Railgun Loader Single" identifier="railgunloadersinglehorizontal" tags="railgunequipment,railgunammosource" category="Machine" linkable="true" allowedlinks="railgun" scale="0.5">
     <Sprite texture="Loaders.png" depth="0.8" sourcerect="86,278,241,86" origin="0.5,0.5" />
     <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="130,-43" iteminterval="0,0" itemrotation="180" canbeselected="true" autointeractwithcontained="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
-      <Containable identifiers="railgunammo" />
+      <Containable items="railgunammo" />
     </ItemContainer>
   </Item>
   <Item name="Railgun Shell" identifier="railgunshell" tags="railgunequipment,railgunammo" category="Misc" sonarsize="5" scale="0.5" impactsoundtag="impact_metal_heavy">
@@ -105,7 +105,7 @@
     </Projectile>
     <ItemContainer hideitems="true" capacity="1" canbeselected="false">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
-      <Containable identifiers="smallitem" />
+      <Containable items="smallitem" />
     </ItemContainer>
   </Item>
   <Item name="Nuclear Shell" identifier="nuclearshell" tags="railgunequipment,railgunammo" category="Misc" sonarsize="5" scale="0.5" impactsoundtag="impact_metal_heavy">
@@ -153,7 +153,7 @@
     </Projectile>
     <ItemContainer hideitems="true" capacity="1" canbeselected="false">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
-      <Containable identifiers="smallitem" />
+      <Containable items="smallitem" />
     </ItemContainer>
   </Item>
   <Item name="Physicorium Railgun Shell" identifier="alienshell" tags="railgunequipment,railgunammo" category="Misc" sonarsize="5" scale="0.5" impactsoundtag="impact_metal_heavy">
@@ -192,7 +192,7 @@
     </Projectile>
     <ItemContainer hideitems="true" capacity="1" canbeselected="false">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
-      <Containable identifiers="smallitem" />
+      <Containable items="smallitem" />
     </ItemContainer>
   </Item>
 </Items>

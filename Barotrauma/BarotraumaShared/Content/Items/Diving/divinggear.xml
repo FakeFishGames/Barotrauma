@@ -76,28 +76,28 @@
       <StatusEffect type="OnWearing" target="Character" HideFace="true" ObstructVision="true" setvalue="true" disabledeltatime="true" />
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1000.0" Condition="-0.5" comparison="Or">
         <Conditional IsDead="false" />
-        <RequiredItem identifier="oxygentank" type="Contained" />
+        <RequiredItem items="oxygentank" type="Contained" />
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="-100.0" Oxygen="-20.0" Condition="-0.5">
         <Conditional IsDead="false" />
-        <RequiredItem identifier="weldingfueltank" type="Contained" />
+        <RequiredItem items="weldingfueltank" type="Contained" />
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="-100.0" Oxygen="-20.0" Condition="-0.5">
         <RequiredItem identifier="incendiumfueltank" type="Contained" />
-        <Affliction identifier="burn" amount="0.1" />
+        <Affliction items="burn" amount="0.1" />
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1000.0" SpeedMultiplier="1.2" Condition="-0.3" comparison="Or">
         <Conditional IsDead="false" />
-        <RequiredItem identifier="oxygeniteshard" type="Contained" />
+        <RequiredItem items="oxygeniteshard" type="Contained" />
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1500.0" SpeedMultiplier="1.3" Condition="-0.1" comparison="Or">
         <Conditional IsDead="false" />
-        <RequiredItem identifier="oxygenitetank" type="Contained" />
+        <RequiredItem items="oxygenitetank" type="Contained" />
       </StatusEffect>
     </Wearable>
     <ItemContainer capacity="1" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="0,157,92,27" />
-      <Containable identifiers="oxygentank,weldingfueltank,oxygeniteshard,oxygenitetank,incendiumfueltank" />
+      <Containable items="oxygensource,weldingfuel" />
     </ItemContainer>
   </Item>
   <Item name="Diving Suit" identifier="divingsuit" category="Equipment" tags="diving,divingsuit" scale="0.5" fireproof="true" description="An atmospheric diving suit capable of withstanding the immense pressure under Europa's crust." impactsoundtag="impact_metal_heavy">
@@ -185,20 +185,20 @@
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" Oxygen="-20.0" Condition="-0.5">
         <Conditional IsDead="false" />
-        <RequiredItem identifier="weldingfueltank" type="Contained" />
+        <RequiredItem items="weldingfueltank" type="Contained" />
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" Oxygen="-20.0" Condition="-0.5">
         <Conditional IsDead="false" />
-        <RequiredItem identifier="incendiumfueltank" type="Contained" />
+        <RequiredItem items="incendiumfueltank" type="Contained" />
         <Affliction identifier="burn" amount="0.1" />
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1000.0" SpeedMultiplier="1.2" Condition="-0.3" comparison="Or">
         <Conditional IsDead="false" />
-        <RequiredItem identifier="oxygeniteshard" type="Contained" />
+        <RequiredItem items="oxygeniteshard" type="Contained" />
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1500.0" SpeedMultiplier="1.3" Condition="-0.1" comparison="Or">
         <Conditional IsDead="false" />
-        <RequiredItem identifier="oxygenitetank" type="Contained" />
+        <RequiredItem items="oxygenitetank" type="Contained" />
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Character" OxygenAvailable="-100.0" />
       <damagemodifier armorsector="0.0,360.0" afflictiontypes="damage" damagemultiplier="0.8" damagesound="LimbArmor" deflectprojectiles="true" />
@@ -207,7 +207,7 @@
     </Wearable>
     <ItemContainer capacity="1" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="0,157,92,27" />
-      <Containable identifiers="oxygentank,weldingfueltank,oxygeniteshard,oxygenitetank,incendiumfueltank" />
+      <Containable items="oxygensource,weldingfuel" />
       <StatusEffect type="OnWearing" target="Contained">
         <RequiredItem identifier="oxygensource" type="Contained" matchonempty="true" />
         <Conditional condition="lt 5.0" />
@@ -242,7 +242,7 @@
     </Propulsion>
     <ItemContainer capacity="1" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,70,107,31" />
-      <Containable identifiers="batterycell,fulguriumbatterycell" />
+      <Containable items="batterycell" />
     </ItemContainer>
     <AiTarget soundrange="2000"/>
   </Item>

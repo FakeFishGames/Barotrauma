@@ -100,7 +100,7 @@
     </RangedWeapon>
     <ItemContainer itempos="27,10" iteminterval="0,-4" hideitems="false" capacity="6">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="0,0,121,30" />
-      <Containable items="harpponammo" />
+      <Containable items="harpoonammo" />
     </ItemContainer>
   </Item>
   <Item name="Syringe Gun" identifier="syringegun" category="Equipment" cargocontaineridentifier="metalcrate" tags="weapon,mediumitem,gun" scale="0.32" impactsoundtag="impact_metal_light">
@@ -269,7 +269,7 @@
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true" aimpos="50,0" handle1="-85,-35" handle2="0,-27" msg="ItemMsgPickUpSelect" />
     <RepairTool structurefixamount="0.0" usablein="Air" range="500" barrelpos="35,10" fireprobability="0.2" repairmultiple="true" repairthroughwalls="false"  repairthroughholes="true" combatpriority="20">
       <!-- the item must contain a welding fuel tank for it to work -->
-      <RequiredItems identifier="weldingfueltank,incendiumfueltank" type="Contained" msg="ItemMsgWeldingFuelRequired" />
+      <RequiredItems identifier="weldingfuel" type="Contained" msg="ItemMsgWeldingFuelRequired" />
       <ParticleEmitterHitCharacter particle="fleshsmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100" />
       <ParticleEmitter particle="flamethrower" particlespersecond="80" anglemin="0" anglemax="0" velocitymin="500" velocitymax="1000" highqualitycollisiondetection="true"/>
       <sound file="Content/Items/Weapons/FlameThrowerLoop.ogg" type="OnUse" range="500.0" loop="true" />
@@ -310,7 +310,7 @@
     <!-- one welding fuel or oxygen tank can be contained inside the welding tool -->
     <ItemContainer capacity="1" hideitems="false" itempos="18,-32" containedspritedepth="0.56">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="0,157,92,27" />
-      <Containable items="weldingfueltank,oxygentank" />
+      <Containable items="weldingfuel,oxygensource" />
     </ItemContainer>
   </Item>  
 

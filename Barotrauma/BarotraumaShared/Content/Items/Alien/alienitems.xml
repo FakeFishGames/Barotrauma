@@ -264,7 +264,7 @@
       <StatusEffect type="OnBroken" target="This" Condition="100" delay="1" />
     </Holdable>
     <ItemContainer capacity="1" hideitems="false" itempos="20,-20">
-      <Containable identifiers="alienpowercell" />
+      <Containable items="alienpowercell" />
     </ItemContainer>
     <!--<RangedWeapon reload="0.5" barrelpos="14,6" spread="0" unskilledspread="2">
       <StatusEffect type="OnUse">
@@ -345,7 +345,7 @@
       </StatusEffect>
     </Projectile>
     <ItemContainer capacity="1" hideitems="false" itempos="9,-15">
-      <Containable identifiers="alienpowercell" />
+      <Containable items="alienpowercell" />
     </ItemContainer>
   </Item>
   <Item name="Alien Hatch" identifier="alienhatch" category="Alien" Tags="alien,aliendoor">
@@ -394,11 +394,11 @@
     <Sprite texture="Content/Items/Alien/artifactholder.png" depth="0.8" sourcerect="0,0,256,256" />
     <ItemContainer capacity="1" canbeselected="true" hideitems="false" itempos="128,-128" autointeractwithcontained="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
-      <Containable identifiers="alien" />
-      <Containable identifiers="thermalartifact">
+      <Containable items="alien" />
+      <Containable items="thermalartifact">
         <StatusEffect type="OnContaining" target="This" Charge="1000.0" />
       </Containable>
-      <Containable identifiers="faradayartifact">
+      <Containable items="faradayartifact">
         <StatusEffect type="OnContaining" target="This" Charge="10.0" />
       </Containable>
     </ItemContainer>
@@ -418,7 +418,7 @@
     <LightComponent AllowInGameEditing="false" lightcolor="112,146,190,50" canbeselected="false" range="800.0" IsOn="true" />
     <ItemContainer capacity="1" canbeselected="true" hideitems="false" itempos="264,-321" autointeractwithcontained="true">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
-      <Containable identifiers="alienpowercell">
+      <Containable items="alienpowercell">
         <StatusEffect type="OnContaining" target="This" Charge="100.0" />
       </Containable>
     </ItemContainer>
@@ -484,10 +484,10 @@
   <Item name="Alien Turret" identifier="alienturret" Tags="turret,alien" category="alien,alienturret" scale="0.5">
     <Sprite texture="Content/Items/Alien/AlienTurret.png" depth="0.5" sourcerect="293,28,141,456" canflipy="false" />
     <ItemContainer hideitems="true" drawinventory="true" capacity="1" canbeselected="false" characterusable="true">
-      <Containable identifiers="alienturretammo" />
+      <Containable items="alienturretammo" />
       <!-- when the turret is fired, it triggers this statuseffect and spawns new ammo -->
       <StatusEffect type="OnUse" target="Contained">
-        <SpawnItem identifiers="alienturretammo" spawnposition="ThisInventory" />
+        <SpawnItem items="alienturretammo" spawnposition="ThisInventory" />
       </StatusEffect>
     </ItemContainer>
     <Turret canbeselected="false" characterusable="false" linkable="true" barrelpos="8,230" rotationlimits="0,360" powerconsumption="10000.0" showchargeindicator="true" showprojectileindicator="true" recoildistance="50" reload="3" springstiffnesslowskill="2" springstiffnesshighskill="2" springdampinglowskill="0.5" springdampinghighskill="0.5" rotationspeedlowskill="1" rotationspeedhighskill="1">
@@ -568,14 +568,14 @@
     <Sprite texture="AlienContainer.png" depth="0.84" sourcerect="100,5,153,65" origin="0.5,0.5" />
     <ItemContainer capacity="5" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.25,0.2" anchor="Center" style="ItemUI" />
-      <Containable identifiers="smallitem,mediumitem" />
+      <Containable items="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
   <Item name="Large Alien Chest" identifier="alienitemcontainerlarge" category="alien,aliencontainer" tags="cabinet" linkable="true" pickdistance="150" scale="0.5">
     <Sprite texture="AlienContainer.png" depth="0.84" sourcerect="5,127,246,125" origin="0.5,0.5" />
     <ItemContainer capacity="5" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.25,0.2" anchor="Center" style="ItemUI" />
-      <Containable identifiers="smallitem,mediumitem" />
+      <Containable items="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
   <Item name="Alien Light Component" identifier="alienlightcomponent" category="Alien" Tags="smallitem,alienlight" cargocontaineridentifier="metalcrate">

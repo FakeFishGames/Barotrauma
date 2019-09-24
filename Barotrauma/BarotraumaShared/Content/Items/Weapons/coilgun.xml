@@ -48,10 +48,10 @@
     </Repairable>
     <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="6" itempos="74,-281" iteminterval="0,0" itemrotation="0" canbeselected="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
-      <Containable identifiers="coilgunammobox,physicoriumammobox,coilgunammo" />
+      <Containable items="coilgunammo" />
       <!-- when the coilgun is fired, it triggers this statuseffect, causing contained ammunition boxes to spawn new ammo -->
       <StatusEffect type="OnUse" target="Contained">
-        <RequiredItem identifiers="coilgunammobox,physicoriumammobox,coilgunammo" type="Contained" />
+        <RequiredItem items="coilgunammo" type="Contained" />
         <Use />
       </StatusEffect>
     </ItemContainer>
@@ -83,7 +83,7 @@
       <StatusEffect type="OnUse" target="This" condition="-0.5" disabledeltatime="true">
         <SpawnItem identifiers="coilgunbolt" spawnposition="ThisInventory" />
       </StatusEffect>
-      <Containable identifiers="coilgunbolt" />
+      <Containable items="coilgunbolt" />
     </ItemContainer>
   </Item>
   
@@ -135,7 +135,7 @@
       <StatusEffect type="OnUse" target="This" condition="-0.5" disabledeltatime="true">
         <SpawnItem identifiers="physicoriumbolt" spawnposition="ThisInventory" />
       </StatusEffect>
-      <Containable identifiers="physicoriumbolt" />
+      <Containable items="physicoriumbolt" />
     </ItemContainer>
   </Item>
   
@@ -191,7 +191,7 @@
       <StatusEffect type="OnUse" target="This" condition="-0.5" disabledeltatime="true">
         <SpawnItem identifiers="coilgunboltexplosive" spawnposition="ThisInventory" />
       </StatusEffect>
-      <Containable identifiers="coilgunboltexplosive" />
+      <Containable items="coilgunboltexplosive" />
     </ItemContainer>
   </Item>
 
@@ -245,7 +245,7 @@
       <StatusEffect type="OnUse" target="This" condition="-0.5" disabledeltatime="true">
         <SpawnItem identifiers="coilgunboltpiercing" spawnposition="ThisInventory" />
       </StatusEffect>
-      <Containable identifiers="coilgunboltpiercing" />
+      <Containable items="coilgunboltpiercing" />
     </ItemContainer>
   </Item>
 

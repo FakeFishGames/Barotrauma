@@ -144,7 +144,7 @@
     <ItemContainer canbeselected="true" capacity="1" itempos="0,0" hideitems="false">
       <GuiFrame relativesize="0.13,0.18" anchor="Center" style="ItemUI" />
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,204,110,27" />
-      <Containable identifiers="explosive" />
+      <Containable items="explosive" />
     </ItemContainer>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,175" maxsize="480,210" anchor="Center" style="ConnectionPanel" />

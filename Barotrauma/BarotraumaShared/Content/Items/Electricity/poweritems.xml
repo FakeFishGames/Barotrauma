@@ -98,7 +98,7 @@
     </ConnectionPanel>
     <ItemContainer capacity="3" canbeselected="true" hideitems="true" hudpos="0.5,0.6" uilabel="ChargingDock">
       <GuiFrame relativesize="0.25,0.15" anchor="Center" relativeoffset="0,0.2" style="ItemUI" />
-      <Containable identifiers="loadable" />
+      <Containable items="loadable" />
     </ItemContainer>
     <Repairable selectkey="Action" header="electricalrepairsheader" deteriorationspeed="0.125" mindeteriorationdelay="120" maxdeteriorationdelay="240" mindeteriorationcondition="0" ShowRepairUIThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
@@ -135,7 +135,7 @@
     </ConnectionPanel>
     <ItemContainer capacity="3" canbeselected="true" hideitems="true" hudpos="0.5,0.6" uilabel="ChargingDock">
       <GuiFrame relativesize="0.25,0.15" anchor="Center" relativeoffset="0,0.2" style="ItemUI" />
-      <Containable identifiers="loadable" />
+      <Containable items="loadable" />
     </ItemContainer>
   </Item>
   <Item name="Supercapacitor" identifier="supercapacitor" tags="supercapacitor" category="Electrical" Scale="0.5" description="Can deliver charge much faster than batteries.">
@@ -223,7 +223,7 @@
     </ConnectionPanel>
     <ItemContainer capacity="4" canbeselected="true" hideitems="false" itempos="24,10" iteminterval="23,0" itemrotation="-90" uilabel="ChargingDock" containedspritedepth="0.81">
       <GuiFrame relativesize="0.25,0.15" anchor="Center" style="ItemUI" />
-      <Containable identifiers="loadable" />
+      <Containable items="loadable" />
     </ItemContainer>
   </Item>
 </Items>

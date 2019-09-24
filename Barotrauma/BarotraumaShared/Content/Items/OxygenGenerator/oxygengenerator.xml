@@ -57,7 +57,7 @@
 
     <ItemContainer capacity="5" canbeselected="true" hideitems="false" itempos="28,-125" iteminterval="22,0" msg="ItemMsgOxygenRefill">
       <GuiFrame relativesize="0.2,0.2" anchor="Center" style="ItemUI" />
-      <Containable identifiers="oxygentank"/>
+      <Containable items="oxygentank"/>
     </ItemContainer>
     
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
@@ -102,7 +102,7 @@
     <trigger/>
 
     <ItemContainer capacity="5" canbeselected = "true" msg="ItemMsgOxygenRefill">
-      <Containable identifiers="oxygentank"/>
+      <Containable items="oxygentank"/>
     </ItemContainer>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
@@ -158,7 +158,7 @@
     </Vent>    
     <ItemContainer capacity="1" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.25,0.3" anchor="Center" style="ItemUI" />
-      <Containable identifiers="smallitem,mediumitem" />
+      <Containable items="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
 </Items>

@@ -52,13 +52,13 @@
       </output>
     </ConnectionPanel>
     <ItemContainer capacity="4" canbeselected="true" hudpos="0.5,0.15" slotsperrow="2" uilabel="FuelRods">
-      <Containable identifiers="fuelrod">
+      <Containable items="fuelrod">
         <StatusEffect type="OnContaining" target="This" AvailableFuel="80.0" disabledeltatime="true" />
       </Containable>
-      <Containable identifiers="fulguriumfuelrod">
+      <Containable items="fulguriumfuelrod">
         <StatusEffect type="OnContaining" target="This" AvailableFuel="150.0" disabledeltatime="true" />
       </Containable>
-      <Containable identifiers="thoriumfuelrod">
+      <Containable items="thoriumfuelrod">
         <StatusEffect type="OnContaining" target="This" AvailableFuel="100.0" disabledeltatime="true" />
       </Containable>
     </ItemContainer>
