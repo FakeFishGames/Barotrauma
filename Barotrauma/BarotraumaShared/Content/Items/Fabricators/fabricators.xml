@@ -3,6 +3,7 @@
   <Item
 		name="Fabricator"
     identifier="fabricator"
+    tags="fabricator"
     category="Machine"
 		linkable="true"
     allowedlinks="deconstructor,cabinet"
@@ -41,6 +42,7 @@
   <Item
     name="Medical Fabricator"
     identifier="medicalfabricator"
+    tags="fabricator"
     category="Machine"
 		linkable="true"
     allowedlinks="deconstructor"
@@ -78,6 +80,7 @@
   <Item
     name="Deconstructor"
     identifier="deconstructor"
+    tags="deconstructor"
     category="Machine"
 		linkable="true"
     allowedlinks="fabricator,medicalfabricator,cabinet"
