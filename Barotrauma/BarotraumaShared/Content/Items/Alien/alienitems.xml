@@ -348,7 +348,7 @@
       <Containable identifiers="alienpowercell" />
     </ItemContainer>
   </Item>
-  <Item name="Alien Hatch" identifier="alienhatch" category="Alien" Tags="alien">
+  <Item name="Alien Hatch" identifier="alienhatch" category="Alien" Tags="alien,aliendoor">
     <Sprite texture="Content/Items/Alien/AlienHatch.png" sourcerect="0,0,208,48" depth="0.8" origin="0.5,0.5" />
     <Door canbeselected="true" horizontal="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="30.0">
       <RequiredItem identifier="crowbar" type="Equipped" />
@@ -363,7 +363,7 @@
       <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Alien Door" identifier="aliendoor" category="Alien" Tags="alien">
+  <Item name="Alien Door" identifier="aliendoor" category="Alien" Tags="alien,aliendoor">
     <Sprite texture="Content/Items/Alien/AlienDoor.png" sourcerect="0,0,48,208" depth="0.8" origin="0.5,0.5" />
     <Door canbeselected="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="30.0">
       <RequiredItem identifier="crowbar" type="Equipped" />

@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Oxygen Tank" identifier="oxygentank" category="Equipment,Misc" Tags="smallitem,oxygensource" cargocontaineridentifier="metalcrate" scale="0.3" impactsoundtag="impact_metal_light">
+  <Item name="Oxygen Tank" identifier="oxygentank" category="Equipment,Misc" Tags="oxygentank,smallitem,oxygensource" cargocontaineridentifier="metalcrate" scale="0.3" impactsoundtag="impact_metal_light">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="75" />
     <Price locationtype="Military" buyprice="75" />
@@ -53,7 +53,7 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  <Item name="Diving Mask" identifier="divingmask" scale="0.5" category="Equipment" Tags="smallitem,diving" cargocontaineridentifier="metalcrate" description="Small enough to carry around in case of need, but won't protect you from the water pressure in the event of a full-blown hull breach." impactsoundtag="impact_metal_light">
+  <Item name="Diving Mask" identifier="divingmask" scale="0.5" category="Equipment" Tags="smallitem,diving,divingmask" cargocontaineridentifier="metalcrate" description="Small enough to carry around in case of need, but won't protect you from the water pressure in the event of a full-blown hull breach." impactsoundtag="impact_metal_light">
     <Price locationtype="Research" buyprice="55" />
     <Price locationtype="City" buyprice="55" />
     <Price locationtype="Military" buyprice="55" />
