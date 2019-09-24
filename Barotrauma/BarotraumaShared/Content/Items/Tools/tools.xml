@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Toolbox" identifier="toolbox" category="Equipment" tags="smallitem" fireproof="true" description="" impactsoundtag="impact_metal_heavy">
+  <Item name="Toolbox" identifier="toolbox" category="Equipment" tags="smallitem,mobilecontainer,tools" fireproof="true" description="" impactsoundtag="impact_metal_heavy">
     <Deconstruct time="10">
       <Item identifier="steel" />
     </Deconstruct>
@@ -22,7 +22,7 @@
       <Containable identifiers="smallitem" excludedidentifiers="toolbox" />
     </ItemContainer>
   </Item>
-  <Item name="Welding Tool" identifier="weldingtool" category="Equipment" Tags="smallitem,weldingtool" cargocontaineridentifier="metalcrate" description="One of the most crucial tools on board the submarine. Also works underwater." Scale="0.32" impactsoundtag="impact_metal_light">
+  <Item name="Welding Tool" identifier="weldingtool" category="Equipment" Tags="smallitem,weldingtool,tools" cargocontaineridentifier="metalcrate" description="One of the most crucial tools on board the submarine. Also works underwater." Scale="0.32" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="75" />
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="Military" buyprice="75" />
@@ -82,7 +82,7 @@
       <Containable identifiers="weldingfueltank,oxygentank,oxygenitetank,incendiumfueltank" />
     </ItemContainer>
   </Item>
-  <Item name="Plasma Cutter" identifier="plasmacutter" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Cuts through various materials using a jet of ionized oxygen." Scale="0.32" impactsoundtag="impact_metal_light">
+  <Item name="Plasma Cutter" identifier="plasmacutter" category="Equipment" Tags="smallitem,plasmacutter,tools" cargocontaineridentifier="metalcrate" description="Cuts through various materials using a jet of ionized oxygen." Scale="0.32" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="75" />
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="Military" buyprice="75" />
@@ -207,7 +207,7 @@
     </RepairTool>
     <Propulsion force="-80" usablein="water" particles="bubbles" />
   </Item>
-  <Item name="Screwdriver" identifier="screwdriver" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
+  <Item name="Screwdriver" identifier="screwdriver" category="Equipment" Tags="smallitem,tools" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="10" />
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="10" />
@@ -224,7 +224,7 @@
     <Body width="31" height="6" density="50" />
     <Holdable slots="Any,RightHand,LeftHand" holdangle="30" handle1="-10,-5" msg="ItemMsgPickUpSelect" />
   </Item>
-  <Item name="Wrench" identifier="wrench" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
+  <Item name="Wrench" identifier="wrench" category="Equipment" Tags="smallitem,tools" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="10" />
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="10" />
@@ -246,7 +246,7 @@
       </Attack>
     </MeleeWeapon>
   </Item>
-  <Item name="Crowbar" identifier="crowbar" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
+  <Item name="Crowbar" identifier="crowbar" category="Equipment" Tags="smallitem,tools" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="10" />
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="10" />
@@ -341,7 +341,7 @@
       </Containable>
     </ItemContainer>
   </Item>
-  <Item name="Flashlight" identifier="flashlight" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate" Scale="0.32" impactsoundtag="impact_metal_light">
+  <Item name="Flashlight" identifier="flashlight" category="Equipment" Tags="smallitem,tools" cargocontaineridentifier="metalcrate" Scale="0.32" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="120" />
     <Price locationtype="Research" buyprice="120" />
     <Price locationtype="Military" buyprice="120" />
