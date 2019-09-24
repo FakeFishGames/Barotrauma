@@ -302,7 +302,7 @@
       <!-- weapons skill 20 required to use the item -->
       <RequiredSkill identifier="weapons" level="20" />
       <!-- if the skill requirement isn't met the welding fuel will be used 50% faster -->
-      <StatusEffect type="OnFailure" targettype="Contained" targets="weldingfueltank,oxygentank,incendiumfueltank" Condition="-9.0" />
+      <StatusEffect type="OnFailure" targettype="Contained" targets="weldingfueltank,incendiumfueltank" Condition="-9.0" />
       <LightComponent LightColor="255,174,121,255" Flicker="0.5" Range="500">
         <sprite texture="Content/Items/Electricity/lightsprite.png" origin="0.5,0.5" />
       </LightComponent>

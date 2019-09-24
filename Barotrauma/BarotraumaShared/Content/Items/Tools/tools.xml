@@ -60,7 +60,7 @@
       <StatusEffect type="OnUse" targettype="Contained" targets="weldingfueltank" Condition="-1.0" />
       <StatusEffect type="OnUse" targettype="Contained" targets="incendiumfueltank" Condition="-0.6" />
       <!-- welding a door, it will get stuck after a while -->
-      <StatusEffect type="OnUse" targettype="UseTarget" targets="door,windoweddoor,hatch,ductblock" Stuck="5.0" Condition="3.0" />
+      <StatusEffect type="OnUse" targettype="UseTarget" targets="door,ductblock" Stuck="5.0" Condition="3.0" />
       <!-- do burn damage to characters -->
       <StatusEffect type="OnUse" targettype="UseTarget">
         <Affliction identifier="burn" amount="0.25" />
@@ -70,7 +70,7 @@
       <!-- mechanic skill 20 required to use the item -->
       <RequiredSkill identifier="mechanical" level="20" />
       <!-- if the skill requirement isn't met the welding fuel will be used 3 times as fast -->
-      <StatusEffect type="OnFailure" targettype="Contained" targets="weldingfueltank,oxygentank" Condition="-3.0" />
+      <StatusEffect type="OnFailure" targettype="Contained" targets="weldingfueltank" Condition="-3.0" />
       <LightComponent LightColor="1.0,0.9,0.7,1.0" Flicker="0.5">
         <sprite texture="Content/Items/Electricity/lightsprite.png" origin="0.5,0.5" />
       </LightComponent>
@@ -104,7 +104,7 @@
       <RequiredItems identifier="oxygentank,oxygenitetank" type="Contained" msg="ItemMsgOxygenTankRequired" />
       <StatusEffect type="OnUse" targettype="Contained" targets="oxygentank" Condition="-1.0" />
       <StatusEffect type="OnUse" targettype="Contained" targets="oxygenitetank" Condition="-0.5" />
-      <StatusEffect type="OnUse" targettype="UseTarget" targets="door,windoweddoor,hatch,ductblock,aliendoor,alienhatch" Stuck="-20.0" Condition="-3.0" />
+      <StatusEffect type="OnUse" targettype="UseTarget" targets="door,ductblock,aliendoor" Stuck="-20.0" Condition="-3.0" />
       <StatusEffect type="OnUse" targettype="UseTarget">
         <Affliction identifier="burn" amount="0.25" />
       </StatusEffect>
@@ -118,7 +118,7 @@
       <sound file="Content/Items/Tools/PlasmaCutterLoop.ogg" type="OnUse" range="500.0" loop="true" />
       <Fixable identifier="structure" />
       <RequiredSkill identifier="mechanical" level="30" />
-      <StatusEffect type="OnFailure" targettype="Contained" targets="weldingfueltank,oxygentank" Condition="-3.0" />
+      <StatusEffect type="OnFailure" targettype="Contained" targets="oxygentank" Condition="-3.0" />
       <StatusEffect type="OnFailure" targettype="Contained" targets="oxygenitetank" Condition="-1.5" />
       <LightComponent LightColor="0.8,0.7,1.0,1.0" Flicker="0.5">
         <sprite texture="Content/Items/Electricity/lightsprite.png" origin="0.5,0.5" />
