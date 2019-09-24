@@ -2104,7 +2104,7 @@
 <jobname.assistant>助手</jobname.assistant>
 <jobdescription.assistant>助手没有特定的专业领域与工作方向，更适用于新手。</jobdescription.assistant>
 <jobname.watchman>保安</jobname.watchman>
-<jobdescription.watchman><!-- No data --></jobdescription.watchman>
+<jobdescription.watchman></jobdescription.watchman>
 
 <!-- Locations -->
 <locationname.none>自然群落</locationname.none>
@@ -2299,7 +2299,7 @@
 <engineer.repairelectricalroomtext>找到潜艇的电气舱室，装备螺丝刀与电气舱室的接线盒交互，按下“修理”按钮。</engineer.repairelectricalroomtext>
 <engineer.powerupreactor>反应堆</engineer.powerupreactor>
 <engineer.powerupreactorobjective>启动潜艇反应堆</engineer.powerupreactorobjective>
-<engineer.powerupreactortext>核反应堆可以为潜艇和前哨站提供能源。反应堆通过与燃料棒反应产生热量，需要一名船员来调节功率。\n\ n拖动一根燃料棒到左侧的物品槽。多根燃料棒会产生更多的热量，但一般情况下，一根足矣，再多一根就可能导致反应堆过热。\n\n首先设置裂变效率，使指针处于绿色区域，然后对涡轮输出进行相同的操作。你可以在右侧看到输出与负载功率。尽量使输出接近负载。输出功率较低会导致断电，输出功率过高会导致超载与火灾。当反应堆操作人员离开时，建议打开功率自动控制系统。该系统能自动响应电网负荷的波动，但与人工操作相比有一定的延迟。</engineer.powerupreactortext>
+<engineer.powerupreactortext>核反应堆可以为潜艇和前哨站提供能源。反应堆通过与燃料棒反应产生热量，需要一名船员来调节功率。\n\n拖动一根燃料棒到左侧的物品槽。多根燃料棒会产生更多的热量，但一般情况下，一根足矣，再多一根就可能导致反应堆过热。\n\n首先设置裂变效率，使指针处于绿色区域，然后对涡轮输出进行相同的操作。你可以在右侧看到输出与负载功率。尽量使输出接近负载。输出功率较低会导致断电，输出功率过高会导致超载与火灾。当反应堆操作人员离开时，建议打开功率自动控制系统。该系统能自动响应电网负荷的波动，但与人工操作相比有一定的延迟。</engineer.powerupreactortext>
 
 <!-- Security officer tutorial -->
 <!-- Radio -->
@@ -2630,7 +2630,7 @@
 <connection.sonardataout>data_out</connection.sonardataout>
 <label.outpostinfodisplay1>欢迎。氧气水平：正常。能量水平：正常。辐射水平：超量。本日天气预报：阴冷潮湿。</label.outpostinfodisplay1>
 <label.navterminaldock>停靠</label.navterminaldock>
-  <label.navterminalundock>离港</label.navterminalundock>
+<label.navterminalundock>离港</label.navterminalundock>
 <connectionerrornoresponse>服务器无响应。可能是与服务器的连接出现了问题。</connectionerrornoresponse>
 <dialognorescuetargets>目前似乎没有人需要医疗！</dialognorescuetargets>
 <dialognorescuetargets>我想现在好像没有人需要医疗！</dialognorescuetargets>
@@ -2891,6 +2891,5 @@
 <flood_2_objectivesuccessmessage3>非常好！记住同志，没有糟糕的战术，只有糟糕的目标！</flood_2_objectivesuccessmessage3>
 <flood_2_traitorobjectivestartmessage4>快，利用这场混乱，干掉那些猪猡！\n[traitorgoalinfos]</flood_2_traitorobjectivestartmessage4>
 <flood_2_objectivesuccessmessage4>你完成了杀戮之后苦涩地注意到，你的收音器完全沉默了。你的同志把你的命运交给了欧罗巴母亲。</flood_2_objectivesuccessmessage4>
-
 
 </infotexts>

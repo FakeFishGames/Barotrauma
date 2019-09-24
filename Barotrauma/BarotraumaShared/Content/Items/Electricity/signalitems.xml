@@ -129,7 +129,7 @@
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect" />
     <Wire />
   </Item>
-  <Item name="FPGA Circuit" identifier="fpgacircuit" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Field-programmable gate array - a multi-purpose circuit which can be reconfigured for use in a large variety of electrical devices." scale="0.5" impactsoundtag="impact_metal_light">
+  <Item name="FPGA Circuit" identifier="fpgacircuit" category="Electrical" Tags="smallitem,signal" cargocontaineridentifier="metalcrate" description="Field-programmable gate array - a multi-purpose circuit which can be reconfigured for use in a large variety of electrical devices." scale="0.5" impactsoundtag="impact_metal_light">
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="City" buyprice="60" />
     <Price locationtype="Outpost" buyprice="60" />
@@ -147,7 +147,7 @@
     <Body width="36" height="36" density="30" />
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgPickUpSelect" />
   </Item>
-  <Item name="And Component" identifier="andcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends a signal when both inputs receive a signal within a set period of each other." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="And Component" identifier="andcomponent" category="Electrical" Tags="smallitem,logic" cargocontaineridentifier="metalcrate" description="Sends a signal when both inputs receive a signal within a set period of each other." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -176,7 +176,7 @@
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Equals Component" identifier="equalscomponent" category="Electrical" Tags="smallitem" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="Equals Component" identifier="equalscomponent" category="Electrical" Tags="smallitem,logic" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -204,7 +204,7 @@
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Greater Component" identifier="greatercomponent" category="Electrical" Tags="smallitem" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="Greater Component" identifier="greatercomponent" category="Electrical" Tags="smallitem,logic" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -232,7 +232,7 @@
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Adder Component" identifier="addercomponent" category="Electrical" Tags="smallitem" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="Adder Component" identifier="addercomponent" category="Electrical" Tags="smallitem,logic" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -260,7 +260,7 @@
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Color Component" identifier="colorcomponent" category="Electrical" Tags="smallitem" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="Color Component" identifier="colorcomponent" category="Electrical" Tags="smallitem,logic" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -290,7 +290,7 @@
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Subtract Component" identifier="subtractcomponent" category="Electrical" Tags="smallitem" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="Subtract Component" identifier="subtractcomponent" category="Electrical" Tags="smallitem,logic" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -318,7 +318,7 @@
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Multiply Component" identifier="multiplycomponent" category="Electrical" Tags="smallitem" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="Multiply Component" identifier="multiplycomponent" category="Electrical" Tags="smallitem,logic" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -346,7 +346,7 @@
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Divide Component" identifier="dividecomponent" category="Electrical" Tags="smallitem" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="Divide Component" identifier="dividecomponent" category="Electrical" Tags="smallitem,logic" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -374,7 +374,7 @@
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Or Component" identifier="orcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends a signal if either of the inputs receive a signal." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="Or Component" identifier="orcomponent" category="Electrical" Tags="smallitem,logic" cargocontaineridentifier="metalcrate" description="Sends a signal if either of the inputs receive a signal." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -403,7 +403,7 @@
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Xor Component" identifier="xorcomponent" category="Electrical" Tags="smallitem" linkable="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="Xor Component" identifier="xorcomponent" category="Electrical" Tags="smallitem,logic" linkable="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -432,7 +432,7 @@
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Not Component" identifier="notcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends a signal when the input is NOT receiving a signal." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="Not Component" identifier="notcomponent" category="Electrical" Tags="smallitem,logic" cargocontaineridentifier="metalcrate" description="Sends a signal when the input is NOT receiving a signal." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -459,7 +459,7 @@
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Relay Component" identifier="relaycomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="When switched on, forwards all received signals from the input connections to the outputs." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="Relay Component" identifier="relaycomponent" category="Electrical" Tags="smallitem,signal,logic" cargocontaineridentifier="metalcrate" description="When switched on, forwards all received signals from the input connections to the outputs." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -495,7 +495,7 @@
       <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Delay Component" identifier="delaycomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Delays all received signals for a specific amount of time." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="Delay Component" identifier="delaycomponent" category="Electrical" Tags="smallitem,logic" cargocontaineridentifier="metalcrate" description="Delays all received signals for a specific amount of time." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -522,7 +522,7 @@
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Memory Component" identifier="memorycomponent" category="Electrical" Tags="smallitem" linkable="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="Memory Component" identifier="memorycomponent" category="Electrical" Tags="smallitem,logic" linkable="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -550,7 +550,7 @@
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Light Component" identifier="lightcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="Light Component" identifier="lightcomponent" category="Electrical" Tags="smallitem,lightcomponent" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -581,7 +581,7 @@
       <input name="set_color" displayname="connection.setcolor" />
     </ConnectionPanel>
   </Item>
-  <Item name="Light Component 90Deg" identifier="lightcomponent90" nameidentifier="lightcomponent" Aliases="Light Component 90Deg" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="Light Component 90Deg" identifier="lightcomponent90" nameidentifier="lightcomponent" Aliases="Light Component 90Deg" category="Electrical" Tags="smallitem,lightcomponent" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -612,7 +612,7 @@
       <input name="set_color" displayname="connection.setcolor" />
     </ConnectionPanel>
   </Item>
-  <Item name="Oxygen Detector" identifier="oxygendetector" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a value between 0-100 depending on the quality of the surrounding air." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="Oxygen Detector" identifier="oxygendetector" category="Electrical" Tags="smallitem,sensor" cargocontaineridentifier="metalcrate" description="Sends out a value between 0-100 depending on the quality of the surrounding air." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Upgrade gameversion="0.9.3.1" scale="0.5"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
@@ -639,7 +639,7 @@
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Water Detector" identifier="waterdetector" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a signal when the detector is submerged." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="Water Detector" identifier="waterdetector" category="Electrical" Tags="smallitem,sensor" cargocontaineridentifier="metalcrate" description="Sends out a signal when the detector is submerged." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Upgrade gameversion="0.9.3.1" scale="0.5"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
@@ -666,7 +666,7 @@
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Smoke Detector" identifier="smokedetector" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a signal when it senses smoke." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="Smoke Detector" identifier="smokedetector" category="Electrical" Tags="smallitem,sensor" cargocontaineridentifier="metalcrate" description="Sends out a signal when it senses smoke." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Upgrade gameversion="0.9.3.1" scale="0.5"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
@@ -693,7 +693,7 @@
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Motion Detector" identifier="motiondetector" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a signal when it detects movement." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="Motion Detector" identifier="motiondetector" category="Electrical" Tags="smallitem,sensor" cargocontaineridentifier="metalcrate" description="Sends out a signal when it detects movement." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Upgrade gameversion="0.9.3.1" scale="0.5"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
@@ -720,7 +720,7 @@
       <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Signal Check Component" identifier="signalcheckcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends a signal when a signal matching a specific value is received." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="Signal Check Component" identifier="signalcheckcomponent" category="Electrical" Tags="smallitem,logic" cargocontaineridentifier="metalcrate" description="Sends a signal when a signal matching a specific value is received." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -749,7 +749,7 @@
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="RegEx Find Component" identifier="regexcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends a signal if the received signal matches a specific regular expression pattern." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="RegEx Find Component" identifier="regexcomponent" category="Electrical" Tags="smallitem,logic" cargocontaineridentifier="metalcrate" description="Sends a signal if the received signal matches a specific regular expression pattern." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -776,7 +776,7 @@
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Oscillator" identifier="oscillator" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a periodic, oscillating signal." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="Oscillator" identifier="oscillator" category="Electrical" Tags="smallitem,signal" cargocontaineridentifier="metalcrate" description="Sends out a periodic, oscillating signal." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -804,7 +804,7 @@
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Wifi Component" identifier="wificomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Allows remote communication between other Wifi Components that are using the same channel." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="Wifi Component" identifier="wificomponent" category="Electrical" Tags="smallitem,signal" cargocontaineridentifier="metalcrate" description="Allows remote communication between other Wifi Components that are using the same channel." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -831,7 +831,7 @@
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Emergency Siren" identifier="emergencysiren" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="Emergency Siren" identifier="emergencysiren" category="Electrical" Tags="smallitem,sound" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="80" />
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Outpost" buyprice="100" />
@@ -860,7 +860,7 @@
       <input name="set_state" displayname="connection.setstate" />
     </ConnectionPanel>
   </Item>
-  <Item name="Alarm Buzzer" identifier="alarmbuzzer" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="Alarm Buzzer" identifier="alarmbuzzer" category="Electrical" Tags="smallitem,sound" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -889,7 +889,7 @@
       <input name="set_state" displayname="connection.setstate" />
     </ConnectionPanel>
   </Item>
-  <Item name="Camera" identifier="camera" category="Electrical" Tags="smallitem" focusonselected="true" offsetonselected="500" cargocontaineridentifier="metalcrate" description="Typically used in photonics masts to provide the crew with a high-resolution view of the area outside the sub." Scale="0.5">
+  <Item name="Camera" identifier="camera" category="Electrical" Tags="smallitem,camera" focusonselected="true" offsetonselected="500" cargocontaineridentifier="metalcrate" description="Typically used in photonics masts to provide the crew with a high-resolution view of the area outside the sub." Scale="0.5">
     <Upgrade gameversion="0.9.3.1" scale="0.5"/>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,320,64,64" origin="0.5,0.5" />
     <Sprite texture="detectors.png" depth="0.8" sourcerect="131,44,60,46" origin="0.5,0.5" />
@@ -899,7 +899,7 @@
       <input name="control_in" displayname="connection.controlin" />
     </ConnectionPanel>
   </Item>
-  <Item name="Camera" category="Legacy" nameidentifier="camera" Tags="smallitem" focusonselected="true" offsetonselected="500" cargocontaineridentifier="metalcrate" description="Typically used in photonics masts to provide the crew with a high-resolution view of the area outside the sub.">
+  <Item name="Camera" category="Legacy" nameidentifier="camera" Tags="smallitem,camera" focusonselected="true" offsetonselected="500" cargocontaineridentifier="metalcrate" description="Typically used in photonics masts to provide the crew with a high-resolution view of the area outside the sub.">
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="1,123,16,32" origin="0.5,0.5" />
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />

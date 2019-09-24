@@ -313,8 +313,8 @@ namespace Barotrauma
 
             try
             {
-                return string.Format(text, args);  
-            }   
+                return string.Format(text, args);
+            }
             catch (FormatException)
             {
                 string errorMsg = "Failed to format text \"" + text + "\", args: " + string.Join(", ", args);
@@ -392,11 +392,17 @@ namespace Barotrauma
         {
             return FormatServerMessage(message, keys.Concat(genderPronounVariables), values.Concat(gender == Gender.Male ? genderPronounMaleValues : genderPronounFemaleValues));
         }
-        
+
+        // Same as string.Join(separator, parts) but performs the operation taking into account server message string replacements.
         public static string JoinServerMessages(string separator, string[] parts, string namePrefix = "part.")
         {
+
             return string.Join("/",
-                string.Join("/", parts.Select((part, index) => $"[{namePrefix}{index}]={part}")), 
+                string.Join("/", parts.Select((part, index) =>
+                {
+                    var partStart = part.LastIndexOf('/') + 1;
+                    return partStart > 0 ? $"{part.Substring(0, partStart)}/[{namePrefix}{index}]={part.Substring(partStart)}" : $"[{namePrefix}{index}]={part.Substring(partStart)}";
+                })),
                 string.Join(separator, parts.Select((part, index) => $"[{namePrefix}{index}]")));
         }
 

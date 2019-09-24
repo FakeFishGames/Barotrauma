@@ -255,7 +255,7 @@
       <output name="proximity_sensor" displayname="connection.dockingproximitysensor" fallbackdisplayname="label.readytodock"/>
     </ConnectionPanel>
   </Item>
-  <Item name="Duct Block" identifier="ductblock" scale="0.5">
+  <Item name="Duct Block" identifier="ductblock" tags="ductblock" scale="0.5">
     <Sprite texture="duct.png" sourcerect="0,0,64,64" depth="0.01" origin="0.5,0.5" />
     <Door canbeselected="true" horizontal="true" canbepicked="true" pickkey="Action" impassable="true" msg="ItemMsgForceOpenCrowbar" PickingTime="3.0" autoorientgap="true">
       <RequiredItem identifier="crowbar" type="Equipped" />

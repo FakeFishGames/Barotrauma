@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Engine" identifier="engine" category="Machine" Scale="0.5">
+  <Item name="Engine" identifier="engine" tags="engine" category="Machine" Scale="0.5">
     <Sprite texture="Engines.png" depth="0.8" sourcerect="0,0,707,334" canflipx="true" origin="0.5,0.5" />
     <!--
     <BrokenSprite texture="BTart_EngineDiesel.png" sourcerect="0,436,590,218" depth="0.8" maxcondition="50" fadein="true" />
@@ -32,7 +32,7 @@
       <ParticleEmitter particle="smoke" particlespersecond="2" scalemin="1" scalemax="2" mincondition="0.0" maxcondition="15.0" />
     </Repairable>
   </Item>
-  <Item name="Large Engine" identifier="largeengine" category="Machine" Scale="0.8">
+  <Item name="Large Engine" identifier="largeengine" tags="engine" category="Machine" Scale="0.8">
     <Sprite texture="Engines.png" depth="0.8" sourcerect="0,335,1024,377" canflipx="true" origin="0.5,0.5" />
     <!--
     <BrokenSprite texture="BTart_EngineDiesel.png" sourcerect="0,436,590,218" depth="0.8" maxcondition="50" fadein="true" />
@@ -64,7 +64,7 @@
       <ParticleEmitter particle="smoke" particlespersecond="2" scalemin="1" scalemax="2" mincondition="0.0" maxcondition="0.0" />
     </Repairable>
   </Item>
-  <Item name="Shuttle Engine" identifier="shuttleengine" category="Machine" Scale="0.5">
+  <Item name="Shuttle Engine" identifier="shuttleengine" tags="engine" category="Machine" Scale="0.5">
     <Sprite texture="Engines.png" depth="0.8" sourcerect="0,714,422,192" canflipx="true" origin="0.5,0.5" />
     <trigger x="180" y="-30" width="200" height="146" />
     <aitarget sightrange="500" soundrange="10000"/>

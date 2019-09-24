@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Pump" identifier="pump" linkable="true" allowedlinks="hull" category="Machine">
+  <Item name="Pump" identifier="pump" tags="pump" linkable="true" allowedlinks="hull" category="Machine">
     <Sprite texture="Pumps.png" depth="0.8" sourcerect="0,0,200,126" />
     <BrokenSprite texture="Pumps.png" sourcerect="200,0,200,126" depth="0.8" maxcondition="40" fadein="true" />
     <BrokenSprite texture="Pumps.png" sourcerect="0,129,200,126" depth="0.8" maxcondition="0" />
@@ -28,7 +28,7 @@
     </Repairable>
   </Item>
   
-  <Item name="Small Pump" identifier="smallpump" linkable="true" category="Machine" scale="0.5">
+  <Item name="Small Pump" identifier="smallpump" tags="pump" linkable="true" category="Machine" scale="0.5">
     <Sprite texture="Pumps.png" depth="0.8" sourcerect="0,260,220,128" origin="0.5,0.5" />
     <Pump canbeselected="true" maxflow="100" PowerConsumption="60.0" MinVoltage="0.3" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.25,0.18" minsize="330,145" maxsize="400,175" anchor="Center" style="ItemUI" />

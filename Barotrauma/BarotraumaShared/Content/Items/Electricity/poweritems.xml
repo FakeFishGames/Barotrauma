@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Junction Box" identifier="junctionbox" category="Electrical" description="Serves as a hub for power distribution and relaying signals between devices." scale="0.75">
+  <Item name="Junction Box" identifier="junctionbox" tags="junctionbox" category="Electrical" description="Serves as a hub for power distribution and relaying signals between devices." scale="0.75">
     <Sprite texture="JunctionBox.png" sourcerect="0,0,73,121" depth="0.8" canflipx="false" origin="0.5,0.5" />
     <BrokenSprite texture="JunctionBox.png" sourcerect="73,0,73,123" depth="0.8" maxcondition="80" fadein="true" />
     <BrokenSprite texture="JunctionBox.png" sourcerect="146,0,73,123" depth="0.8" maxcondition="0" />
@@ -42,7 +42,7 @@
       <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="2" mincondition="0.0" maxcondition="15.0" />
     </Repairable>
   </Item>
-  <Item name="Junction Box" identifier="junctionbox_tutorial" nameidentifier="junctionbox" category="Electrical" description="Junction box with only a single power output." scale="0.75" hideinmenus="true">
+  <Item name="Junction Box" identifier="junctionbox_tutorial" nameidentifier="junctionbox" tags="junctionbox" category="Electrical" description="Junction box with only a single power output." scale="0.75" hideinmenus="true">
     <Sprite texture="JunctionBox.png" sourcerect="0,0,73,121" depth="0.8" canflipx="false" origin="0.5,0.5" />
     <BrokenSprite texture="JunctionBox.png" sourcerect="73,0,73,123" depth="0.8" maxcondition="80" fadein="true" />
     <BrokenSprite texture="JunctionBox.png" sourcerect="146,0,73,123" depth="0.8" maxcondition="0" />
@@ -78,7 +78,7 @@
     <BrokenSprite texture="battery.png" sourcerect="236,0,118,159" depth="0.8" maxcondition="0" />
     <PowerContainer capacity="2000.0" maxrechargespeed="500.0" maxoutput="1000.0" canbeselected="true" indicatorposition="65,33" indicatorsize="34,46" ishorizontal="false" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.18,0.23" minsize="350,250" maxsize="420,300" anchor="Center" relativeoffset="0,-0.1" style="ItemUI" />
-      <StatusEffect type="OnActive" target="Contained" targetidentifiers="loadable" Condition="2.0" />
+      <StatusEffect type="OnActive" targettype="Contained" targets="loadable" Condition="2.0" />
     </PowerContainer>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
@@ -98,7 +98,7 @@
     </ConnectionPanel>
     <ItemContainer capacity="3" canbeselected="true" hideitems="true" hudpos="0.5,0.6" uilabel="ChargingDock">
       <GuiFrame relativesize="0.25,0.15" anchor="Center" relativeoffset="0,0.2" style="ItemUI" />
-      <Containable identifiers="loadable" />
+      <Containable items="loadable" />
     </ItemContainer>
     <Repairable selectkey="Action" header="electricalrepairsheader" deteriorationspeed="0.125" mindeteriorationdelay="120" maxdeteriorationdelay="240" mindeteriorationcondition="0" ShowRepairUIThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
@@ -115,7 +115,7 @@
     <BrokenSprite texture="ShuttleBattery.png" sourcerect="598,0,299,307" depth="0.8" maxcondition="0" />
     <PowerContainer capacity="2000.0" maxrechargespeed="500.0" maxoutput="1000.0" canbeselected="true" indicatorposition="21,12" indicatorsize="54,35" ishorizontal="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.18,0.23" minsize="350,250" maxsize="420,300" anchor="Center" relativeoffset="0,-0.1" style="ItemUI" />
-      <StatusEffect type="OnActive" target="Contained" targetidentifiers="loadable" Condition="2.0" />
+      <StatusEffect type="OnActive" targettype="Contained" targets="loadable" Condition="2.0" />
     </PowerContainer>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
@@ -135,10 +135,10 @@
     </ConnectionPanel>
     <ItemContainer capacity="3" canbeselected="true" hideitems="true" hudpos="0.5,0.6" uilabel="ChargingDock">
       <GuiFrame relativesize="0.25,0.15" anchor="Center" relativeoffset="0,0.2" style="ItemUI" />
-      <Containable identifiers="loadable" />
+      <Containable items="loadable" />
     </ItemContainer>
   </Item>
-  <Item name="Supercapacitor" identifier="supercapacitor" category="Electrical" Scale="0.5" description="Can deliver charge much faster than batteries.">
+  <Item name="Supercapacitor" identifier="supercapacitor" tags="supercapacitor" category="Electrical" Scale="0.5" description="Can deliver charge much faster than batteries.">
     <Sprite texture="battery.png" depth="0.8" sourcerect="0,334,154,160" />
     <BrokenSprite texture="battery.png" sourcerect="154,334,155,161" depth="0.8" maxcondition="80" fadein="true" />
     <BrokenSprite texture="battery.png" sourcerect="309,334,155,161" depth="0.8" maxcondition="0" />
@@ -168,7 +168,7 @@
       <RequiredItem identifier="screwdriver" type="Equipped" />
     </Repairable>
   </Item>
-  <Item name="Battery Cell" identifier="batterycell" category="Equipment,Electrical" tags="smallitem,loadable" scale="0.3" cargocontaineridentifier="metalcrate" description="Used as a power source for various handheld devices. Most submarines have several stationary backup batteries with recharge docks for battery cells." impactsoundtag="impact_metal_light">
+  <Item name="Battery Cell" identifier="batterycell" category="Equipment,Electrical" tags="smallitem,loadable,batterycell" scale="0.3" cargocontaineridentifier="metalcrate" description="Used as a power source for various handheld devices. Most submarines have several stationary backup batteries with recharge docks for battery cells." impactsoundtag="impact_metal_light">
     <Upgrade gameversion="0.9.2.0" scale="0.3"/>
     <Price locationtype="City" buyprice="125" />
     <Price locationtype="Outpost" buyprice="125" />
@@ -187,7 +187,7 @@
     <Body width="55" height="38" density="30" />
     <Pickable slots="Any,RightHand,LeftHand" msg="ItemMsgPickUpSelect" />
   </Item>
-  <Item name="Fulgurium Battery Cell" identifier="fulguriumbatterycell" category="Equipment,Electrical" tags="smallitem,loadable" scale="0.3" cargocontaineridentifier="metalcrate" description="A battery cell constructed of the rare and poorly understood compound Fulgurium." impactsoundtag="impact_metal_light">
+  <Item name="Fulgurium Battery Cell" identifier="fulguriumbatterycell" category="Equipment,Electrical" tags="smallitem,loadable,batterycell" scale="0.3" cargocontaineridentifier="metalcrate" description="A battery cell constructed of the rare and poorly understood compound Fulgurium." impactsoundtag="impact_metal_light">
     <Upgrade gameversion="0.9.2.0" scale="0.3"/>
     <Deconstruct time="10">
       <Item identifier="zinc" />
@@ -202,13 +202,13 @@
     <Body width="55" height="38" density="30" />
     <Pickable slots="Any,RightHand,LeftHand" msg="ItemMsgPickUpSelect" />
   </Item>
-  <Item name="Charging Dock" identifier="chargingdock" category="Electrical" scale="0.5" description="A wall-mounted battery cell charging dock.">
+  <Item name="Charging Dock" identifier="chargingdock" tags="chargingdock" category="Electrical" scale="0.5" description="A wall-mounted battery cell charging dock.">
     <Sprite texture="battery.png" sourcerect="0,163,118,32" depth="0.8" />
     <BrokenSprite texture="battery.png" sourcerect="0,163,118,32" depth="0.8" maxcondition="40" fadein="true" />
     <BrokenSprite texture="battery.png" sourcerect="0,163,118,32" depth="0.8" maxcondition="0" />
     <Powered powerconsumption="200" currpowerconsumption="200" isactive="true">
       <GuiFrame relativesize="0.18,0.15" minsize="350,160" maxsize="420,192" anchor="Center" relativeoffset="0,-0.1" style="ItemUI" msg="ItemMsgInteractSelect" />
-      <StatusEffect type="OnActive" target="Contained" targetidentifiers="loadable" Condition="2.0" />
+      <StatusEffect type="OnActive" targettype="Contained" targets="loadable" Condition="2.0" />
     </Powered>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
@@ -223,7 +223,7 @@
     </ConnectionPanel>
     <ItemContainer capacity="4" canbeselected="true" hideitems="false" itempos="24,10" iteminterval="23,0" itemrotation="-90" uilabel="ChargingDock" containedspritedepth="0.81">
       <GuiFrame relativesize="0.25,0.15" anchor="Center" style="ItemUI" />
-      <Containable identifiers="loadable" />
+      <Containable items="loadable" />
     </ItemContainer>
   </Item>
 </Items>

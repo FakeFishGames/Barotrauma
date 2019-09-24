@@ -7,7 +7,7 @@
     <BrokenSprite texture="reactor.png" sourcerect="0,384,321,192" depth="0.8" maxcondition="0" />
     <aitarget sightrange="500" soundrange="7500"/>
     <Reactor canbeselected="true" firedelay="20" meltdowndelay="120" maxpoweroutput="10000" fuelconsumptionrate="0.2" vulnerabletoemp="false" msg="ItemMsgInteractSelect">
-      <GuiFrame relativesize="0.5,0.38" minsize="900,400" maxsize="2688,1166" anchor="Center" style="ItemUI"/>
+      <GuiFrame relativesize="0.65,0.38" minsize="900,400" maxsize="2688,1166" anchor="Center" style="ItemUI"/>
       <GraphLine texture="Content/Items/Reactor/graphLine.png"/>
       <FissionRateMeter texture="Content/Items/MachineInterface.png" sourcerect="0,335,252,177" origin="0.5,0.65"/>
       <TurbineOutputMeter texture="Content/Items/MachineInterface.png" sourcerect="252,335,252,177" origin="0.5,0.65"/>
@@ -52,13 +52,13 @@
       </output>
     </ConnectionPanel>
     <ItemContainer capacity="4" canbeselected="true" hudpos="0.5,0.15" slotsperrow="2" uilabel="FuelRods">
-      <Containable identifiers="fuelrod">
+      <Containable items="fuelrod">
         <StatusEffect type="OnContaining" target="This" AvailableFuel="80.0" disabledeltatime="true" />
       </Containable>
-      <Containable identifiers="fulguriumfuelrod">
+      <Containable items="fulguriumfuelrod">
         <StatusEffect type="OnContaining" target="This" AvailableFuel="150.0" disabledeltatime="true" />
       </Containable>
-      <Containable identifiers="thoriumfuelrod">
+      <Containable items="thoriumfuelrod">
         <StatusEffect type="OnContaining" target="This" AvailableFuel="100.0" disabledeltatime="true" />
       </Containable>
     </ItemContainer>

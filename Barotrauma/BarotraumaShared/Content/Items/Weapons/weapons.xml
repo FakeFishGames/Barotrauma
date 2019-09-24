@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Spear" identifier="spear" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem" preferredcontainers="cabinet" Scale="0.35" impactsoundtag="impact_metal_light">
+  <Item name="Spear" identifier="spear" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem,harpoonammo" preferredcontainers="cabinet" Scale="0.35" impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="30" />
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Outpost" buyprice="75" />
@@ -20,7 +20,7 @@
       </Attack>
     </Projectile>
   </Item>
-  <Item name="Physicorium Spear" identifier="alienspear" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem" preferredcontainers="cabinet" Scale="0.35" impactsoundtag="impact_metal_light">
+  <Item name="Physicorium Spear" identifier="alienspear" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem,harpoonammo" preferredcontainers="cabinet" Scale="0.35" impactsoundtag="impact_metal_light">
     <Deconstruct time="10">
       <Item identifier="physicorium" />
     </Deconstruct>
@@ -38,7 +38,7 @@
       </Attack>
     </Projectile>
   </Item>
-  <Item name="Explosive Spear" identifier="explosivespear" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem" preferredcontainers="cabinet" Scale="0.35" impactsoundtag="impact_metal_light">
+  <Item name="Explosive Spear" identifier="explosivespear" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem,harpoonammo" preferredcontainers="cabinet" Scale="0.35" impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="175" />
     <Price locationtype="City" buyprice="200" />
     <Deconstruct time="5">
@@ -73,7 +73,7 @@
       </StatusEffect>
     </Projectile>
   </Item>
-  <Item name="Harpoon Gun" identifier="harpoongun" category="Equipment" cargocontaineridentifier="metalcrate" tags="mediumitem,weapon" Scale="0.32" preferredcontainers="weaponholder,cabinet" impactsoundtag="impact_metal_light">
+  <Item name="Harpoon Gun" identifier="harpoongun" category="Equipment" cargocontaineridentifier="metalcrate" tags="mediumitem,weapon,gun" Scale="0.32" preferredcontainers="weaponholder,cabinet" impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="70" />
     <Price locationtype="City" buyprice="100" />
     <Deconstruct time="10">
@@ -100,10 +100,10 @@
     </RangedWeapon>
     <ItemContainer itempos="27,10" iteminterval="0,-4" hideitems="false" capacity="6">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="0,0,121,30" />
-      <Containable identifiers="spear,alienspear,explosivespear" />
+      <Containable items="harpoonammo" />
     </ItemContainer>
   </Item>
-  <Item name="Syringe Gun" identifier="syringegun" category="Equipment" cargocontaineridentifier="metalcrate" tags="weapon,mediumitem" preferredcontainers="cabinet" scale="0.32" impactsoundtag="impact_metal_light">
+  <Item name="Syringe Gun" identifier="syringegun" category="Equipment" cargocontaineridentifier="metalcrate" tags="weapon,mediumitem,gun" preferredcontainers="cabinet" scale="0.32" impactsoundtag="impact_metal_light">
     <Price locationtype="Research" buyprice="100" />
     <Price locationtype="Military" buyprice="120" />
     <Price locationtype="City" buyprice="120" />
@@ -129,10 +129,10 @@
     </RangedWeapon>
     <ItemContainer capacity="4" itempos="0,10" hideitems="false">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,29,120,35" />
-      <Containable identifiers="syringe" />
+      <Containable items="syringe" />
     </ItemContainer>
   </Item>
-  <Item name="Revolver Round" identifier="revolverround" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" Scale="0.32" tags="smallitem" preferredcontainers="cabinet" impactsoundtag="impact_metal_light">
+  <Item name="Revolver Round" identifier="revolverround" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" Scale="0.32" tags="smallitem,revolverammo" preferredcontainers="cabinet" impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="15" />
     <Price locationtype="City" buyprice="30" />
     <Price locationtype="Outpost" buyprice="30" />
@@ -151,7 +151,7 @@
       </StatusEffect>
     </Projectile>
   </Item>
-  <Item name="Revolver" identifier="revolver" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,weapon" preferredcontainers="weaponholder,cabinet" Scale="0.32" impactsoundtag="impact_metal_light">
+  <Item name="Revolver" identifier="revolver" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,weapon,gun" preferredcontainers="weaponholder,cabinet" Scale="0.32" impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="75" />
     <Price locationtype="City" buyprice="150" />
     <Deconstruct time="10">
@@ -174,7 +174,7 @@
     </RangedWeapon>
     <ItemContainer capacity="6" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
-      <Containable identifiers="revolverround" />
+      <Containable items="revolverammo" />
     </ItemContainer>
   </Item>  
   
@@ -194,7 +194,7 @@
       </StatusEffect>
     </Projectile>
   </Item>
-  <Item name="SMG Magazine" identifier="smgmagazine" scale="0.32" category="Equipment" cargocontaineridentifier="metalcrate" linkable="true" tags="smallitem" preferredcontainers="cabinet" impactsoundtag="impact_metal_light">
+  <Item name="SMG Magazine" identifier="smgmagazine" scale="0.32" category="Equipment" cargocontaineridentifier="metalcrate" linkable="true" tags="smallitem,smgammo" preferredcontainers="cabinet" impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="30" />
     <Price locationtype="City" buyprice="50" />
     <Deconstruct time="10">
@@ -205,7 +205,7 @@
     <Body width="50" height="65" density="50" />
     <ItemContainer hideitems="true" capacity="1" drawinventory="false" canbeselected="false" ShowConditionInContainedStateIndicator="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
-      <Containable identifiers="smground" />
+      <Containable items="smground" />
       <!--Spawn an SMG round on use. Condition -6.7 -> 15 shots per magazine.-->
       <StatusEffect type="OnUse" target="This" condition="-6.7" disabledeltatime="true">
         <SpawnItem identifiers="smground" spawnposition="ThisInventory" />
@@ -215,7 +215,7 @@
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect" />
   </Item>
   
-  <Item name="SMG" identifier="smg" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,weapon" preferredcontainers="weaponholder,cabinet" Scale="0.32" impactsoundtag="impact_metal_light">
+  <Item name="SMG" identifier="smg" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,weapon,gun" preferredcontainers="weaponholder,cabinet" Scale="0.32" impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="150" />
     <Price locationtype="City" buyprice="300" />
     <Deconstruct time="10">
@@ -245,11 +245,11 @@
     </RangedWeapon>
     <ItemContainer capacity="1" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
-      <Containable identifiers="smgmagazine" />
+      <Containable items="smgammo" />
     </ItemContainer>
   </Item>
 
-  <Item name="Flamer" identifier="flamer" category="Equipment" Tags="smallitem,weapon" preferredcontainers="weaponholder,cabinet" cargocontaineridentifier="metalcrate" description="An incendiary weapon that fires a stream of burning welding fuel." Scale="0.32" impactsoundtag="impact_metal_light">
+  <Item name="Flamer" identifier="flamer" category="Equipment" Tags="smallitem,weapon,gun" preferredcontainers="weaponholder,cabinet" cargocontaineridentifier="metalcrate" description="An incendiary weapon that fires a stream of burning welding fuel." Scale="0.32" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="75" />
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="Military" buyprice="75" />
@@ -269,7 +269,7 @@
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true" aimpos="50,0" handle1="-85,-35" handle2="0,-27" msg="ItemMsgPickUpSelect" />
     <RepairTool structurefixamount="0.0" usablein="Air" range="500" barrelpos="35,10" fireprobability="0.2" repairmultiple="true" repairthroughwalls="false"  repairthroughholes="true" combatpriority="90">
       <!-- the item must contain a welding fuel tank for it to work -->
-      <RequiredItems identifier="weldingfueltank,incendiumfueltank" type="Contained" msg="ItemMsgWeldingFuelRequired" />
+      <RequiredItems identifier="weldingfuel" type="Contained" msg="ItemMsgWeldingFuelRequired" />
       <ParticleEmitterHitCharacter particle="fleshsmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100" />
       <ParticleEmitter particle="flamethrower" particlespersecond="80" anglemin="0" anglemax="0" velocitymin="500" velocitymax="1000" highqualitycollisiondetection="true"/>
       <sound file="Content/Items/Weapons/FlameThrowerLoop.ogg" type="OnUse" range="500.0" loop="true" />
@@ -287,8 +287,8 @@
         <Conditional OxygenPercentage="gt 10"/>
       </StatusEffect>
       <!-- when using, the contained welding fuel tank will detoriate (= lose fuel) -->
-      <StatusEffect type="OnUse" target="Contained" targetidentifiers="weldingfueltank" Condition="-6.0" />
-      <StatusEffect type="OnUse" target="Contained" targetidentifiers="incendiumfueltank" Condition="-2.5" />
+      <StatusEffect type="OnUse" targettype="Contained" targets="weldingfueltank" Condition="-6.0" />
+      <StatusEffect type="OnUse" targettype="Contained" targets="incendiumfueltank" Condition="-2.5" />
       <!-- do burn damage to characters -->
       <StatusEffect type="OnUse" target="UseTarget">
         <Affliction identifier="burn" amount="1.25" />
@@ -302,7 +302,7 @@
       <!-- weapons skill 20 required to use the item -->
       <RequiredSkill identifier="weapons" level="20" />
       <!-- if the skill requirement isn't met the welding fuel will be used 50% faster -->
-      <StatusEffect type="OnFailure" target="Contained" targetidentifiers="weldingfueltank,oxygentank,incendiumfueltank" Condition="-9.0" />
+      <StatusEffect type="OnFailure" targettype="Contained" targets="weldingfueltank,incendiumfueltank" Condition="-9.0" />
       <LightComponent LightColor="255,174,121,255" Flicker="0.5" Range="500">
         <sprite texture="Content/Items/Electricity/lightsprite.png" origin="0.5,0.5" />
       </LightComponent>
@@ -310,7 +310,7 @@
     <!-- one welding fuel or oxygen tank can be contained inside the welding tool -->
     <ItemContainer capacity="1" hideitems="false" itempos="18,-32" containedspritedepth="0.56">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="0,157,92,27" />
-      <Containable identifiers="weldingfueltank,oxygentank,oxygenitetank,incendiumfueltank" />
+      <Containable items="weldingfuel,oxygensource" />
     </ItemContainer>
   </Item>  
 
@@ -515,7 +515,7 @@
     </MeleeWeapon>
     <ItemContainer capacity="1" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,70,107,31" />
-      <Containable identifiers="batterycell,fulguriumcatterycell" />
+      <Containable items="batterycell" />
     </ItemContainer>
   </Item>
   <Item name="Diving Knife" identifier="divingknife" category="Equipment" Tags="smallitem,weapon" preferredcontainers="weaponholder,cabinet" cargocontaineridentifier="metalcrate" scale="0.3" impactsoundtag="impact_metal_light">
@@ -542,7 +542,7 @@
     </MeleeWeapon>
   </Item>
   
-  <Item name="Grenade Launcher" identifier="grenadelauncher" category="Equipment" cargocontaineridentifier="metalcrate" tags="mediumitem,weapon" preferredcontainers="weaponholder,cabinet" Scale="0.32" impactsoundtag="impact_metal_light">
+  <Item name="Grenade Launcher" identifier="grenadelauncher" category="Equipment" cargocontaineridentifier="metalcrate" tags="mediumitem,weapon,gun" preferredcontainers="weaponholder,cabinet" Scale="0.32" impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="500" />
     <Price locationtype="City" buyprice="1000" />
     <Deconstruct time="10">
@@ -566,11 +566,11 @@
     <!--Holds one grenade at a time-->
     <ItemContainer capacity="1" itempos="27,10" iteminterval="0,-4" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
-      <Containable identifiers="40mmgrenade,40mmstungrenade" />
+      <Containable items="grenade" />
     </ItemContainer>
   </Item>
   
-  <Item name="40mm Grenade" identifier="40mmgrenade" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem" preferredcontainers="cabinet" Scale="0.35" impactsoundtag="impact_metal_light">
+  <Item name="40mm Grenade" identifier="40mmgrenade" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem,grenade" preferredcontainers="cabinet" Scale="0.35" impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="60" />
     <Price locationtype="City" buyprice="100" />
     <Deconstruct time="5">
@@ -610,7 +610,7 @@
     </Projectile>
   </Item>
 
-  <Item name="40mm Stun Grenade" identifier="40mmstungrenade" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem" preferredcontainers="cabinet" Scale="0.35" impactsoundtag="impact_metal_light">
+  <Item name="40mm Stun Grenade" identifier="40mmstungrenade" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem,grenade" preferredcontainers="cabinet" Scale="0.35" impactsoundtag="impact_metal_light">
     <!--TODO: adjust prices-->
     <Price locationtype="Military" buyprice="100" />
     <Price locationtype="City" buyprice="120" />
@@ -653,7 +653,7 @@
     </Projectile>
   </Item>
 
-  <Item name="Riot Shotgun" identifier="shotgun" category="Equipment" cargocontaineridentifier="metalcrate" tags="mediumitem,weapon" preferredcontainers="weaponholder,cabinet" Scale="0.32" impactsoundtag="impact_metal_light">
+  <Item name="Riot Shotgun" identifier="shotgun" category="Equipment" cargocontaineridentifier="metalcrate" tags="mediumitem,weapon,gun" preferredcontainers="weaponholder,cabinet" Scale="0.32" impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="500" />
     <Price locationtype="City" buyprice="1000" />
     <Deconstruct time="10">
@@ -683,10 +683,10 @@
     </RangedWeapon>
     <ItemContainer capacity="6" itempos="27,10" iteminterval="0,-4" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
-      <Containable identifiers="shotgunshell" />
+      <Containable items="shutgunammo" />
     </ItemContainer>
   </Item>
-  <Item name="Shotgun Shell" identifier="shotgunshell" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem" preferredcontainers="cabinet" Scale="0.32" impactsoundtag="impact_metal_light">
+  <Item name="Shotgun Shell" identifier="shotgunshell" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem,shotgunammo" preferredcontainers="cabinet" Scale="0.32" impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="10" />
     <Price locationtype="City" buyprice="15" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,960,64,64" origin="0.5,0.5" />
@@ -706,7 +706,7 @@
     </Projectile>
   </Item>
 
-  <Item name="Stun Gun" identifier="stungun" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,weapon" preferredcontainers="weaponholder,cabinet" Scale="0.32" impactsoundtag="impact_metal_light">
+  <Item name="Stun Gun" identifier="stungun" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,weapon,gun" preferredcontainers="weaponholder,cabinet" Scale="0.32" impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="75" />
     <Price locationtype="City" buyprice="150" />
     <Deconstruct time="10">
@@ -733,11 +733,11 @@
     </RangedWeapon>
     <ItemContainer capacity="1" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
-      <Containable identifiers="stungundart" />
+      <Containable items="stungunammo" />
     </ItemContainer>
   </Item>
   
-  <Item name="Stun Gun Dart" identifier="stungundart" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem" preferredcontainers="cabinet" impactsoundtag="impact_metal_light">
+  <Item name="Stun Gun Dart" identifier="stungundart" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem,stungunammo" preferredcontainers="cabinet" impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="20" />
     <Price locationtype="City" buyprice="30" />
     <Deconstruct time="10">
