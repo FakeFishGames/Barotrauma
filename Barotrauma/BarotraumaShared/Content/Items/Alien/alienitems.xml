@@ -564,14 +564,14 @@
       </StatusEffect>
     </Vent>
   </Item>
-  <Item name="Small Alien Chest" identifier="alienitemcontainersmall" category="alien,aliencontainer" tags="cabinet" linkable="true" pickdistance="150" scale="0.5">
+  <Item name="Small Alien Chest" identifier="alienitemcontainersmall" category="alien,aliencontainer" tags="aliencontainer" linkable="true" pickdistance="150" scale="0.5">
     <Sprite texture="AlienContainer.png" depth="0.84" sourcerect="100,5,153,65" origin="0.5,0.5" />
     <ItemContainer capacity="5" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.25,0.2" anchor="Center" style="ItemUI" />
       <Containable items="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
-  <Item name="Large Alien Chest" identifier="alienitemcontainerlarge" category="alien,aliencontainer" tags="cabinet" linkable="true" pickdistance="150" scale="0.5">
+  <Item name="Large Alien Chest" identifier="alienitemcontainerlarge" category="alien,aliencontainer" tags="aliencontainer" linkable="true" pickdistance="150" scale="0.5">
     <Sprite texture="AlienContainer.png" depth="0.84" sourcerect="5,127,246,125" origin="0.5,0.5" />
     <ItemContainer capacity="5" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.25,0.2" anchor="Center" style="ItemUI" />
