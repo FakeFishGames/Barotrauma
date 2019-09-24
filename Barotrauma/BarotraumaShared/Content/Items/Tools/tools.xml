@@ -130,7 +130,7 @@
       <Containable identifiers="weldingfueltank,oxygentank,oxygenitetank" />
     </ItemContainer>
   </Item>
-  <Item name="Welding Fuel Tank" identifier="weldingfueltank" category="Equipment" Tags="smallitem,weldingfueltank" cargocontaineridentifier="metalcrate" scale="0.3" impactsoundtag="impact_metal_light">
+  <Item name="Welding Fuel Tank" identifier="weldingfueltank" category="Equipment" Tags="smallitem,weldingfuel" cargocontaineridentifier="metalcrate" scale="0.3" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Research" buyprice="60" />
     <Price locationtype="Military" buyprice="75" />
@@ -160,7 +160,7 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  <Item name="Incendium Fuel Tank" identifier="incendiumfueltank" category="Equipment" Tags="smallitem,weldingfueltank" cargocontaineridentifier="metalcrate" scale="0.3" impactsoundtag="impact_metal_light">
+  <Item name="Incendium Fuel Tank" identifier="incendiumfueltank" category="Equipment" Tags="smallitem,weldingfuel" cargocontaineridentifier="metalcrate" scale="0.3" impactsoundtag="impact_metal_light">
     <Deconstruct time="10">
       <Item identifier="aluminium" />
     </Deconstruct>
