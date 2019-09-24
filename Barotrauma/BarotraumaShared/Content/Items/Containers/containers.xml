@@ -33,7 +33,7 @@
     <Sprite texture="containers.png" depth="0.84" sourcerect="197,350,105,160" origin="0.5,0.5" />
     <ItemContainer capacity="20" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.25,0.45" anchor="Center" style="ItemUI" />
-      <RequiredItem identifiers="idcard" type="Picked" msg="ItemMsgUnauthorizedAccess" ignoreineditor="true" />
+      <RequiredItem items="idcard" type="Picked" msg="ItemMsgUnauthorizedAccess" ignoreineditor="true" />
       <Containable items="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
@@ -126,7 +126,7 @@
     <Body width="150" height="85" density="50" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-30,14" handle2="30,14" aimable="false" msg="ItemMsgPickUpSelect" />
     <ItemContainer capacity="20" canbeselected="false" hideitems="true" keepopenwhenequipped="true" movableframe="true">
-      <RequiredItem identifiers="idcard" type="Picked" msg="ItemMsgUnauthorizedAccess" ignoreineditor="true" />
+      <RequiredItem items="idcard" type="Picked" msg="ItemMsgUnauthorizedAccess" ignoreineditor="true" />
       <Containable items="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
