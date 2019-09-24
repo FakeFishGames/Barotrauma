@@ -3,6 +3,7 @@
   <Item
     name="Searchlight"
     identifier="searchlight"
+    tags="searchlight"
     aliases="Searchlight"
     category="Machine"
     focusonselected="true"
