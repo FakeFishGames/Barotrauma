@@ -129,9 +129,15 @@ namespace Barotrauma
                     //choose a random available hull
                     currentTarget = ToolBox.SelectWeightedRandom(targetHulls, hullWeights, Rand.RandSync.Unsynced);
                     bool isCurrentHullAllowed = !IsForbidden(character.CurrentHull);
-                    // Check that there is no unsafe or forbidden hulls on the way to the target
-                    var path = PathSteering.PathFinder.FindPath(character.SimPosition, currentTarget.SimPosition, nodeFilter: node => node.Waypoint.CurrentHull != null);
-                    if (path.Unreachable || path.Nodes.Any(n => n.CurrentHull != character.CurrentHull && HumanAIController.UnsafeHulls.Contains(n.CurrentHull) || isCurrentHullAllowed && IsForbidden(n.CurrentHull)))
+                    var path = PathSteering.PathFinder.FindPath(character.SimPosition, currentTarget.SimPosition, nodeFilter: node =>
+                    {
+                        if (node.Waypoint.CurrentHull == null) { return false; }
+                        // Check that there is no unsafe or forbidden hulls on the way to the target
+                        if (node.Waypoint.CurrentHull != character.CurrentHull && HumanAIController.UnsafeHulls.Contains(node.Waypoint.CurrentHull)) { return false; }
+                        if (isCurrentHullAllowed && IsForbidden(node.Waypoint.CurrentHull)) { return false; }
+                        return true;
+                    });
+                    if (path.Unreachable)
                     {
                         //can't go to this room, remove it from the list and try another room next frame
                         int index = targetHulls.IndexOf(currentTarget);
