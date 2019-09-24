@@ -102,7 +102,7 @@ namespace Barotrauma
                 {
                     newTargetTimer = 0;
                 }
-                else
+                else if (Math.Abs(character.AnimController.TargetMovement.Y) > 0)
                 {
                     // Don't allow new targets when climbing.
                     newTargetTimer = Math.Max(newTargetIntervalMin, newTargetTimer);
@@ -131,7 +131,7 @@ namespace Barotrauma
                     bool isCurrentHullAllowed = !IsForbidden(character.CurrentHull);
                     // Check that there is no unsafe or forbidden hulls on the way to the target
                     var path = PathSteering.PathFinder.FindPath(character.SimPosition, currentTarget.SimPosition, nodeFilter: node => node.Waypoint.CurrentHull != null);
-                    if (path.Unreachable || path.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull) || isCurrentHullAllowed && IsForbidden(n.CurrentHull)))
+                    if (path.Unreachable || path.Nodes.Any(n => n.CurrentHull != character.CurrentHull && HumanAIController.UnsafeHulls.Contains(n.CurrentHull) || isCurrentHullAllowed && IsForbidden(n.CurrentHull)))
                     {
                         //can't go to this room, remove it from the list and try another room next frame
                         int index = targetHulls.IndexOf(currentTarget);
@@ -296,7 +296,7 @@ namespace Barotrauma
                     float yDist = Math.Abs(character.WorldPosition.Y - hull.WorldPosition.Y);
                     yDist = yDist > 100 ? yDist * 5 : 0;
                     float dist = Math.Abs(character.WorldPosition.X - hull.WorldPosition.X) + yDist;
-                    float distanceFactor = MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 2500, dist));
+                    float distanceFactor = MathHelper.Lerp(1, 0, MathUtils.InverseLerp(0, 2500, dist));
                     weight *= distanceFactor;
                     hullWeights.Add(weight);
                 }
