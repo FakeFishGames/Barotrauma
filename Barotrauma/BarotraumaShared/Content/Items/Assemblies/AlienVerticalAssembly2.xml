@@ -68,7 +68,7 @@
     <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
     <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="-69.5;372;-64;225" />
   </Item>
-  <Item name="Large Alien Chest" identifier="alienitemcontainerlarge" ID="13" rect="-128,-279,123,62" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="cabinet" displaysidebysidewhenlinked="False" spritedepth="0.84" scale="0.5">
+  <Item name="Large Alien Chest" identifier="alienitemcontainerlarge" ID="13" rect="-128,-279,123,62" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="aliencontainer,container0" displaysidebysidewhenlinked="False" spritedepth="0.84" scale="0.5">
     <ItemContainer itempos="0,0" iteminterval="0,0" pickingtime="0" canbepicked="False" allowingameediting="False" msg="" contained="0,0,0,0,0" />
   </Item>
   <Item name="Alien Power Cell" identifier="alienpowercell" ID="12" rect="6363,-581,10,23" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="alien,smallitem, smallitem" displaysidebysidewhenlinked="False" spritedepth="0.7" scale="0.3" hideinassemblypreview="true">

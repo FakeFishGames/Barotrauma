@@ -6,7 +6,7 @@
     tags="fabricator"
     category="Machine"
 		linkable="true"
-    allowedlinks="deconstructor,cabinet"
+    allowedlinks="deconstructor,locker"
     description="A machine capable of manufacturing a wide range of items out of basic raw materials."
     scale="0.5">
 
@@ -83,7 +83,7 @@
     tags="deconstructor"
     category="Machine"
 		linkable="true"
-    allowedlinks="fabricator,medicalfabricator,cabinet"
+    allowedlinks="fabricator,medicalfabricator,locker"
     description="Disassembles and breaks down items to reusable components and material bars."
     scale="0.5">
 
