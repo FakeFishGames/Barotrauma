@@ -98,7 +98,7 @@
     <Body radius="6" width="20" height="70" density="5" />
     <Holdable handle1="0,0" slots="Any,RightHand,LeftHand" msg="ItemMsgPickUpSelect" />
   </Item>
-  <Item name="Fulgurium Fuel Rod" identifier="fulguriumfuelrod" Tags="smallitem,reactorfuel" cargocontaineridentifier="metalcrate" health="150" scale="0.5" preferredcontainers="steelcabinet,mediumsteelcabinet,mediumwindowedsteelcabinet">
+  <Item name="Fulgurium Fuel Rod" identifier="fulguriumfuelrod" Tags="smallitem,reactorfuel" cargocontaineridentifier="metalcrate" health="150" scale="0.5" preferredcontainers="locker">
     <Deconstruct time="10">
       <Item identifier="steel" copycondition="true"/>
       <Item identifier="fulgurium" copycondition="true"/>
@@ -112,7 +112,7 @@
     <Body radius="6" width="20" height="70" density="5" />
     <Holdable handle1="0,0" slots="Any,RightHand,LeftHand" msg="ItemMsgPickUpSelect" />
   </Item>
-  <Item name="Thorium Fuel Rod" identifier="thoriumfuelrod" Tags="smallitem,reactorfuel" cargocontaineridentifier="metalcrate" health="200" scale="0.5" preferredcontainers="steelcabinet,mediumsteelcabinet,mediumwindowedsteelcabinet">
+  <Item name="Thorium Fuel Rod" identifier="thoriumfuelrod" Tags="smallitem,reactorfuel" cargocontaineridentifier="metalcrate" health="200" scale="0.5" preferredcontainers="locker">
     <Deconstruct time="10">
       <Item identifier="steel" copycondition="true"/>
       <Item identifier="thorium" copycondition="true"/>

@@ -269,7 +269,7 @@
       </Attack>
     </MeleeWeapon>
   </Item>
-  <Item name="Handheld Sonar" identifier="handheldsonar" category="Equipment" Tags="smallitem,sonar" preferredcontainers="cabinet" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
+  <Item name="Handheld Sonar" identifier="handheldsonar" category="Equipment" Tags="smallitem,sonar" preferredcontainers="locker" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Research" buyprice="100" />
     <Price locationtype="Military" buyprice="100" />
@@ -304,7 +304,7 @@
       </Containable>
     </ItemContainer>
   </Item>
-  <Item name="Sonar Beacon" identifier="sonarbeacon" category="Equipment" Tags="smallitem,sonar" preferredcontainers="cabinet" cargocontaineridentifier="metalcrate" Scale="0.5" impactsoundtag="impact_metal_light">
+  <Item name="Sonar Beacon" identifier="sonarbeacon" category="Equipment" Tags="smallitem,sonar" preferredcontainers="locker" cargocontaineridentifier="metalcrate" Scale="0.5" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Research" buyprice="100" />
     <Price locationtype="Military" buyprice="150" />
@@ -341,7 +341,7 @@
       </Containable>
     </ItemContainer>
   </Item>
-  <Item name="Flashlight" identifier="flashlight" category="Equipment" Tags="smallitem,tools" preferredcontainers="suppliescabinet,cabinet" cargocontaineridentifier="metalcrate" Scale="0.32" impactsoundtag="impact_metal_light">
+  <Item name="Flashlight" identifier="flashlight" category="Equipment" Tags="smallitem,tools" preferredcontainers="suppliescabinet,locker" cargocontaineridentifier="metalcrate" Scale="0.32" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="120" />
     <Price locationtype="Research" buyprice="120" />
     <Price locationtype="Military" buyprice="120" />
@@ -373,7 +373,7 @@
     </ItemContainer>
     <AiTarget />
   </Item>
-  <Item name="Flare" identifier="flare" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,light" preferredcontainers="cabinet" impactsoundtag="impact_soft" isshootable="true">
+  <Item name="Flare" identifier="flare" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,light" preferredcontainers="locker" impactsoundtag="impact_soft" isshootable="true">
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="50" />
@@ -406,7 +406,7 @@
     </LightComponent>
     <AiTarget />
   </Item>
-  <Item name="Alien Flare" identifier="alienflare" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,light" preferredcontainers="cabinet" impactsoundtag="impact_soft">
+  <Item name="Alien Flare" identifier="alienflare" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,light" preferredcontainers="locker" impactsoundtag="impact_soft">
     <Deconstruct time="10">
       <Item identifier="flashpowder" mincondition="0.9" outcondition="0.25" />
       <Item identifier="plastic" mincondition="0.9" outcondition="0.25" />
