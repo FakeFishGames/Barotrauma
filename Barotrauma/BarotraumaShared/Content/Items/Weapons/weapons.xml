@@ -100,7 +100,7 @@
     </RangedWeapon>
     <ItemContainer itempos="27,10" iteminterval="0,-4" hideitems="false" capacity="6">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="0,0,121,30" />
-      <Containable identifiers="spear,alienspear,explosivespear" />
+      <Containable items="harpponammo" />
     </ItemContainer>
   </Item>
   <Item name="Syringe Gun" identifier="syringegun" category="Equipment" cargocontaineridentifier="metalcrate" tags="weapon,mediumitem,gun" scale="0.32" impactsoundtag="impact_metal_light">
@@ -129,7 +129,7 @@
     </RangedWeapon>
     <ItemContainer capacity="4" itempos="0,10" hideitems="false">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,29,120,35" />
-      <Containable identifiers="syringe" />
+      <Containable items="syringe" />
     </ItemContainer>
   </Item>
   <Item name="Revolver Round" identifier="revolverround" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" Scale="0.32" tags="smallitem,revolverammo" impactsoundtag="impact_metal_light">
@@ -174,7 +174,7 @@
     </RangedWeapon>
     <ItemContainer capacity="6" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
-      <Containable identifiers="revolverround" />
+      <Containable items="revolverammo" />
     </ItemContainer>
   </Item>  
   
@@ -205,7 +205,7 @@
     <Body width="50" height="65" density="50" />
     <ItemContainer hideitems="true" capacity="1" drawinventory="false" canbeselected="false" ShowConditionInContainedStateIndicator="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
-      <Containable identifiers="smground" />
+      <Containable items="smground" />
       <!--Spawn an SMG round on use. Condition -6.7 -> 15 shots per magazine.-->
       <StatusEffect type="OnUse" target="This" condition="-6.7" disabledeltatime="true">
         <SpawnItem identifiers="smground" spawnposition="ThisInventory" />
@@ -245,7 +245,7 @@
     </RangedWeapon>
     <ItemContainer capacity="1" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
-      <Containable identifiers="smgmagazine" />
+      <Containable items="smgammo" />
     </ItemContainer>
   </Item>
 
@@ -310,7 +310,7 @@
     <!-- one welding fuel or oxygen tank can be contained inside the welding tool -->
     <ItemContainer capacity="1" hideitems="false" itempos="18,-32" containedspritedepth="0.56">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="0,157,92,27" />
-      <Containable identifiers="weldingfueltank,oxygentank,oxygenitetank,incendiumfueltank" />
+      <Containable items="weldingfueltank,oxygentank" />
     </ItemContainer>
   </Item>  
 
@@ -515,7 +515,7 @@
     </MeleeWeapon>
     <ItemContainer capacity="1" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,70,107,31" />
-      <Containable identifiers="batterycell,fulguriumcatterycell" />
+      <Containable items="batterycell" />
     </ItemContainer>
   </Item>
   <Item name="Diving Knife" identifier="divingknife" category="Equipment" Tags="smallitem,weapon" cargocontaineridentifier="metalcrate" scale="0.3" impactsoundtag="impact_metal_light">
@@ -566,7 +566,7 @@
     <!--Holds one grenade at a time-->
     <ItemContainer capacity="1" itempos="27,10" iteminterval="0,-4" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
-      <Containable identifiers="40mmgrenade,40mmstungrenade" />
+      <Containable items="grenade" />
     </ItemContainer>
   </Item>
   
@@ -683,7 +683,7 @@
     </RangedWeapon>
     <ItemContainer capacity="6" itempos="27,10" iteminterval="0,-4" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
-      <Containable identifiers="shotgunshell" />
+      <Containable items="shutgunammo" />
     </ItemContainer>
   </Item>
   <Item name="Shotgun Shell" identifier="shotgunshell" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem,shotgunammo" Scale="0.32" impactsoundtag="impact_metal_light">
@@ -733,7 +733,7 @@
     </RangedWeapon>
     <ItemContainer capacity="1" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
-      <Containable identifiers="stungundart" />
+      <Containable items="stungunammo" />
     </ItemContainer>
   </Item>
   
