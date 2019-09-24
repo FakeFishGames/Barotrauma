@@ -13,7 +13,7 @@
                 DeteriorationSpeed="0.05" MinDeteriorationCondition="20">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
       <RequiredSkill identifier="mechanical" level="30"/>
-      <RequiredItem identifier="wrench" type="equipped"/>
+      <RequiredItem items="wrench" type="equipped"/>
     </Repairable>
 
     <OxygenGenerator powerconsumption="1000.0" minvoltage="0.5" canbeselected = "true">
@@ -36,7 +36,7 @@
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <RequiredItem identifier="screwdriver" type="Equipped"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
       <input name="power_in" displayname="connection.powerin"/>
     </ConnectionPanel>
   </Item>

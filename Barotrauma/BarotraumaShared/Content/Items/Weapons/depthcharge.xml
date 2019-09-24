@@ -5,7 +5,7 @@
     <Turret canbeselected="false" linkable="true" characterusable="false" barrelpos="42, 149" rotationlimits="90,90" powerconsumption="0.0" />
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver" type="Equipped" />
+      <RequiredItem items="screwdriver" type="Equipped" />
       <input name="trigger_in" displayname="connection.turrettriggerin" />
     </ConnectionPanel>
   </Item>
@@ -26,8 +26,8 @@
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
       <RequiredSkill identifier="mechanical" level="25" />
-      <RequiredItem identifier="steel" />
-      <RequiredItem identifier="aluminium" />
+      <RequiredItem items="steel" />
+      <RequiredItem items="aluminium" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,128,64,64" origin="0.5,0.5" />
     <Sprite texture="TurretsAndDepthCharges.png" sourcerect="0,0,130,89" depth="0.55" origin="0.5,0.5" />
@@ -57,9 +57,9 @@
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="30">
       <RequiredSkill identifier="mechanical" level="40" />
-      <RequiredItem identifier="steel" />
-      <RequiredItem identifier="uranium" />
-      <RequiredItem identifier="uex" />
+      <RequiredItem items="steel" />
+      <RequiredItem items="uranium" />
+      <RequiredItem items="uex" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,128,64,64" origin="0.5,0.5" />
     <Sprite texture="TurretsAndDepthCharges.png" sourcerect="130,1,129,88" depth="0.55" origin="0.5,0.5" />
@@ -102,9 +102,9 @@
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
       <RequiredSkill identifier="mechanical" level="25" />
-      <RequiredItem identifier="steel" />
-      <RequiredItem identifier="aluminium" />
-      <RequiredItem identifier="sonarbeacon" />
+      <RequiredItem items="steel" />
+      <RequiredItem items="aluminium" />
+      <RequiredItem items="sonarbeacon" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="267,64,41,61" origin="0.5,0.5" />
     <Sprite texture="TurretsAndDepthCharges.png" sourcerect="138,380,129,88" depth="0.55" origin="0.5,0.5" />
@@ -135,10 +135,10 @@
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="30">
       <RequiredSkill identifier="mechanical" level="40" />
-      <RequiredItem identifier="steel" />
-      <RequiredItem identifier="uranium" />
-      <RequiredItem identifier="uex" />
-      <RequiredItem identifier="sonarbeacon" />
+      <RequiredItem items="steel" />
+      <RequiredItem items="uranium" />
+      <RequiredItem items="uex" />
+      <RequiredItem items="sonarbeacon" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="267,64,41,61" origin="0.5,0.5" />
     <Sprite texture="TurretsAndDepthCharges.png" sourcerect="138,380,129,88" depth="0.55" origin="0.5,0.5" />

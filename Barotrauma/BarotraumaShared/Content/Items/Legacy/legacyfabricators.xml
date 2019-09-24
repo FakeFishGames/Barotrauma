@@ -20,7 +20,7 @@
 		
 		<ConnectionPanel selectkey="Action" canbeselected = "true">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-			<RequiredItem identifier="screwdriver" type="Equipped"/>
+			<RequiredItem items="screwdriver" type="Equipped"/>
 			<output name="power_in" displayname="connection.powerin"/>
 		</ConnectionPanel>
 
@@ -47,7 +47,7 @@
 
     <ConnectionPanel selectkey="Action" canbeselected = "true">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <RequiredItem identifier="screwdriver" type="Equipped"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
       <output name="power_in" displayname="connection.powerin"/>
     </ConnectionPanel>
 
@@ -73,7 +73,7 @@
 
     <ConnectionPanel selectkey="Action" canbeselected = "true">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <RequiredItem identifier="screwdriver" type="Equipped"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
       <output name="power_in" displayname="connection.powerin"/>
     </ConnectionPanel>
 

@@ -37,8 +37,8 @@
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
       <RequiredSkill identifier="mechanical" level="30" />
-      <RequiredItem identifier="steel" />
-      <RequiredItem identifier="plastic" />
+      <RequiredItem items="steel" />
+      <RequiredItem items="plastic" />
     </Fabricate>
     <!-- physics body -->
     <Body width="215" height="119" density="40" />
@@ -94,8 +94,8 @@
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
       <RequiredSkill identifier="mechanical" level="30" />
-      <RequiredItem identifier="steel" />
-      <RequiredItem identifier="plastic" />
+      <RequiredItem items="steel" />
+      <RequiredItem items="plastic" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,0,64,64" origin="0.5,0.5" />
     <Sprite texture="tools_new.png" sourcerect="0,358,248,136" depth="0.55" origin="0.5,0.5" />
@@ -140,11 +140,11 @@
       <Item identifier="aluminium" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="10">
-      <RequiredItem identifier="aluminium" />
-      <RequiredItem identifier="ethanol" />
+      <RequiredItem items="aluminium" />
+      <RequiredItem items="ethanol" />
     </Fabricate>
     <Fabricate suitablefabricators="fabricator" displayname="WeldingFuelTankEmpty" outcondition="0.0" requiredtime="5">
-      <RequiredItem identifier="aluminium" />
+      <RequiredItem items="aluminium" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,0,64,64" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Tools/tools_new.png" sourcerect="395,223,38,109" depth="0.55" />
@@ -165,8 +165,8 @@
       <Item identifier="aluminium" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="10">
-      <RequiredItem identifier="aluminium"/>
-      <RequiredItem identifier="incendium"/>
+      <RequiredItem items="aluminium"/>
+      <RequiredItem items="incendium"/>
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,896,64,64" origin="0.5,0.5" />
     <Sprite texture="tools_new.png" sourcerect="433,223,39,110" depth="0.55" origin="0.5,0.5" />
@@ -193,8 +193,8 @@
       <Item identifier="sodium" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="10">
-      <RequiredItem identifier="aluminium" />
-      <RequiredItem identifier="sodium" />
+      <RequiredItem items="aluminium" />
+      <RequiredItem items="sodium" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,0,64,64" origin="0.5,0.5" />
     <Sprite texture="Content/Items/InventoryIconAtlas.png" depth="0.55" sourcerect="0,0,64,64" origin="0.5,0.5" />
@@ -217,7 +217,7 @@
       <Item identifier="iron" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="10">
-      <RequiredItem identifier="iron" />
+      <RequiredItem items="iron" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,0,64,64" origin="0.5,0.5" />
     <Sprite texture="tools.png" sourcerect="0,57,32,7" depth="0.55" origin="0.5,0.5" />
@@ -234,7 +234,7 @@
       <Item identifier="iron" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="10">
-      <RequiredItem identifier="iron" />
+      <RequiredItem items="iron" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="450,0,64,64" origin="0.5,0.5" />
     <Sprite texture="tools.png" sourcerect="0,47,32,10" depth="0.55" origin="0.5,0.5" />
@@ -257,7 +257,7 @@
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
       <RequiredSkill identifier="mechanical" level="30" />
-      <RequiredItem identifier="iron" />
+      <RequiredItem items="iron" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,0,64,64" origin="0.5,0.5" />
     <Sprite texture="tools.png" sourcerect="0,65,65,15" depth="0.55" origin="0.5,0.5" />
@@ -279,8 +279,8 @@
       <Item identifier="plastic" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
-      <RequiredItem identifier="fpgacircuit" />
-      <RequiredItem identifier="plastic" />
+      <RequiredItem items="fpgacircuit" />
+      <RequiredItem items="plastic" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,0,64,64" origin="0.5,0.5" />
     <Sprite texture="tools.png" sourcerect="41,6,24,12" depth="0.55" origin="0.5,0.5" />
@@ -314,8 +314,8 @@
       <Item identifier="plastic" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="15">
-      <RequiredItem identifier="fpgacircuit" />
-      <RequiredItem identifier="plastic" />
+      <RequiredItem items="fpgacircuit" />
+      <RequiredItem items="plastic" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,320,64,64" origin="0.5,0.5" />
     <Sprite texture="tools_new.png" sourcerect="337,6,29,65" depth="0.55" origin="0.5,0.5" />
@@ -352,8 +352,8 @@
       <Item identifier="lightcomponent" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="10">
-      <RequiredItem identifier="aluminium" />
-      <RequiredItem identifier="lightcomponent" />
+      <RequiredItem items="aluminium" />
+      <RequiredItem items="lightcomponent" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,320,64,64" origin="0.5,0.5" />
     <Sprite texture="tools_new.png" sourcerect="435,0,77,28" depth="0.55" origin="0.5,0.5" />
@@ -384,8 +384,8 @@
       <Item identifier="plastic" mincondition="0.9" outcondition="0.25" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="10">
-      <RequiredItem identifier="flashpowder" mincondition="0.25" usecondition="true" />
-      <RequiredItem identifier="plastic" mincondition="0.25" usecondition="true" />
+      <RequiredItem items="flashpowder" mincondition="0.25" usecondition="true" />
+      <RequiredItem items="plastic" mincondition="0.25" usecondition="true" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,0,64,64" origin="0.5,0.5" />
     <Sprite texture="tools.png" sourcerect="20,112,27,9" depth="0.55" origin="0.5,0.5" />

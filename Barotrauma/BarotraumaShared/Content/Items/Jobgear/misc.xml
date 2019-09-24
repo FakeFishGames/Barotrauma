@@ -14,8 +14,8 @@
       <Item identifier="fpgacircuit" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="10">
-      <RequiredItem identifier="plastic" />
-      <RequiredItem identifier="fpgacircuit" />
+      <RequiredItem items="plastic" />
+      <RequiredItem items="fpgacircuit" />
     </Fabricate>
     <WifiComponent range="35000.0" LinkToChat="true" MinChatMessageInterval="0.0">
       <RequiredItems identifier="batterycell,fulguriumbatterycell" type="Contained" />
