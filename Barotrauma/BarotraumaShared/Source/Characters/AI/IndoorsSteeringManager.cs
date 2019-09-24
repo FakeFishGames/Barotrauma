@@ -261,9 +261,10 @@ namespace Barotrauma
                     bool aboveFloor = heightFromFloor > -margin && heightFromFloor < collider.height * 1.5f;
                     if (aboveFloor || IsNextNodeLadder)
                     {
-                        if (!nextLadderSameAsCurrent)
+                        if (!nextLadderSameAsCurrent || currentPath.NextNode == null && aboveFloor)
                         {
                             character.AnimController.Anim = AnimController.Animation.None;
+                            character.SelectedConstruction = null;
                         }
                         currentPath.SkipToNextNode();
                     }

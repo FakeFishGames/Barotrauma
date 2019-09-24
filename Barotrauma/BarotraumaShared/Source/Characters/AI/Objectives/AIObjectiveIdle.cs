@@ -143,6 +143,12 @@ namespace Barotrauma
                     }
                     searchingNewHull = false;
                 }
+                else
+                {
+                    // Couldn't find a target for some reason -> reset
+                    newTargetTimer = Math.Max(newTargetIntervalMin, newTargetTimer);
+                    searchingNewHull = false;
+                }
 
                 if (currentTarget != null)
                 {
