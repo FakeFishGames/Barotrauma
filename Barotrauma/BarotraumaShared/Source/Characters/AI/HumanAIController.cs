@@ -435,7 +435,7 @@ namespace Barotrauma
                     }
                 }
             }
-            if (findItemState == FindItemState.None || findItemState == FindItemState.Weapon)
+            if (findItemState == FindItemState.None || findItemState == FindItemState.OtherItem)
             {
                 if (ObjectiveManager.IsCurrentObjective<AIObjectiveIdle>() ||
                     ObjectiveManager.IsCurrentObjective<AIObjectiveOperateItem>() ||
@@ -470,7 +470,7 @@ namespace Barotrauma
                                 }
                                 else
                                 {
-                                    findItemState = FindItemState.Weapon;
+                                    findItemState = FindItemState.OtherItem;
                                 }
                             }
                         }
@@ -485,7 +485,7 @@ namespace Barotrauma
             DivingSuit,
             DivingMask,
             Extinguisher,
-            Weapon
+            OtherItem
         }
         private FindItemState findItemState;
         private int itemIndex;
