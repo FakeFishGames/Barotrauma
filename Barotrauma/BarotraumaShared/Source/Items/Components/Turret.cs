@@ -477,7 +477,7 @@ namespace Barotrauma.Items.Components
 
             //enough shells and power
             Character closestEnemy = null;
-            float closestDist = 10000.0f * 10000.0f;
+            float closestDist = 3000 * 3000;
             foreach (Character enemy in Character.CharacterList)
             {
                 //ignore humans and characters that are inside the sub
