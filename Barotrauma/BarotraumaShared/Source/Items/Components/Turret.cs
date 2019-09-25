@@ -480,9 +480,9 @@ namespace Barotrauma.Items.Components
             float closestDist = 3000 * 3000;
             foreach (Character enemy in Character.CharacterList)
             {
-                //ignore humans and characters that are inside the sub
-                if (enemy.IsDead|| enemy.AnimController.CurrentHull != null || !enemy.Enabled) { continue; }
-                if (enemy.SpeciesName == character.SpeciesName && enemy.TeamID == character.TeamID) { continue; }
+                // Ignore friendly and those that are inside the sub
+                if (enemy.IsDead || enemy.AnimController.CurrentHull != null || !enemy.Enabled) { continue; }
+                if (HumanAIController.IsFriendly(character, enemy)) { continue; }
                 
                 float dist = Vector2.DistanceSquared(enemy.WorldPosition, item.WorldPosition);
                 if (dist > closestDist) { continue; }
