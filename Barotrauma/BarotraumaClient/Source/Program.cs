@@ -9,7 +9,6 @@ using Barotrauma.Steam;
 using System.Diagnostics;
 
 #if WINDOWS
-using System.Windows.Forms;
 using SharpDX;
 #endif
 
@@ -64,9 +63,7 @@ namespace Barotrauma
 
         public static void CrashMessageBox(string message, string filePath)
         {
-#if WINDOWS
-            MessageBox.Show(message, "Oops! Barotrauma just crashed.", MessageBoxButtons.OK, MessageBoxIcon.Error);
-#endif
+            Microsoft.Xna.Framework.MessageBox.ShowWrapped(Microsoft.Xna.Framework.MessageBox.Flags.Error, "Oops! Barotrauma just crashed.", message);
 
             // Open the crash log.
             Process.Start(filePath);
