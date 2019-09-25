@@ -3537,6 +3537,19 @@
 
   <openlinkinbrowserprompt>Do you want to open the link "[link]" in your web browser?</openlinkinbrowserprompt>
 
+  <!-- goblin traitormission package -->
+  <goblins_traitormissionstartinfotext>As you hear scratching from below, it occurs to you it's been a while since the ballast goblins have been fed.</goblins_traitormissionstartinfotext>
+  <goblins_traitorobjectivestartmessage1>As luck would have it, there's plenty of meat to go around.\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage1>
+  <goblins_goalinfotext_1>First, some seasonings. A well stocked kitchen has many options but for this purpose, only the purest cyanide will do.</goblins_goalinfotext_1>
+  <goblins_objectivesuccessmessage1>Ah yes, this will do nicely.</goblins_objectivesuccessmessage1>
+  <goblins_traitorobjectivestartmessage2>Let's start the darlings off with some water.\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage2>
+  <goblins_objectivesuccessmessage2>There we go. Hors d'oeuvres, anyone?</goblins_objectivesuccessmessage2>
+  <goblins_traitorobjectivestartmessage3>A mechanic? Excellent choice.\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage3>
+  <goblins_objectivesuccessmessage3>Look at that tender, succulent meat!</goblins_objectivesuccessmessage3>
+  <goblins_traitorobjectivestartmessage4>Now for the main course: \n[traitorgoalinfos]</goblins_traitorobjectivestartmessage4>
+  <goblins_objectivesuccessmessage4>Now the goblins are fed, but the pantry is empty. Time to pick up some more supplies at the next station.</goblins_objectivesuccessmessage4>
+
+
   <!-- Changed values as of 13th of August -->
   <traitorgoaldestroyitems>Dispose of at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>
   <karma.kickbanthreshold>Kick/Ban threshold</karma.kickbanthreshold>
@@ -3549,4 +3562,4 @@
   <editordisclaimerdiscordurl>https://discordapp.com/invite/undertow</editordisclaimerdiscordurl>
 
   <bugreportfeedbackform>Help and technical support</bugreportfeedbackform>
-</infotexts>
+ </infotexts>
