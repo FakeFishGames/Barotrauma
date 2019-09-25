@@ -510,8 +510,21 @@ namespace Barotrauma.Items.Components
 
             if (Math.Abs(MathUtils.GetShortestAngle(enemyAngle, turretAngle)) > 0.15f) { return false; }
 
-            var pickedBody = Submarine.PickBody(ConvertUnits.ToSimUnits(item.WorldPosition), closestEnemy.SimPosition, null);
-            if (pickedBody != null && !(pickedBody.UserData is Limb)) { return false; }
+            var pickedBody = Submarine.PickBody(ConvertUnits.ToSimUnits(item.WorldPosition), closestEnemy.SimPosition);
+            if (pickedBody == null) { return false; }
+            Character target = null;
+            if (pickedBody.UserData is Character c)
+            {
+                target = c;
+            }
+            else if (pickedBody.UserData is Limb limb)
+            {
+                target = limb.character;
+            }
+            if (target == null || HumanAIController.IsFriendly(character, target))
+            {
+                return false;
+            }
 
             if (objective.Option.ToLowerInvariant() == "fireatwill")
             {
