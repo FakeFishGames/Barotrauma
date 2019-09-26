@@ -988,18 +988,18 @@ namespace Barotrauma
 
         private void ShowDirectJoinPrompt()
         {
-            var msgBox = new GUIMessageBox(TextManager.Get("ServerListDirectJoin"), "", new string[] { TextManager.Get("OK"), TextManager.Get("Cancel") },
+            var msgBox = new GUIMessageBox(TextManager.Get("ServerListDirectJoin"), "", new string[] { TextManager.Get("ServerListJoin"), TextManager.Get("Cancel") },
                 relativeSize: new Vector2(0.25f, 0.2f), minSize: new Point(400, 150));
 
-            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.3f), msgBox.InnerFrame.RectTransform, Anchor.Center) { MinSize = new Point(0, 50) })
+            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.5f), msgBox.InnerFrame.RectTransform, Anchor.Center) { MinSize = new Point(0, 50) })
             {
                 IgnoreLayoutGroups = true,
                 Stretch = true,
                 RelativeSpacing = 0.05f
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), content.RectTransform), TextManager.Get("ServerIP"));
-            var ipBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.5f), content.RectTransform));
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.33f), content.RectTransform), TextManager.Get("ServerIP"));
+            var ipBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.33f), content.RectTransform));
 
             var okButton = msgBox.Buttons[0];
             okButton.Enabled = false;
@@ -1017,6 +1017,72 @@ namespace Barotrauma
             {
                 okButton.Enabled = !string.IsNullOrEmpty(text);
                 return true;
+            };
+
+            var spacingLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.33f), content.RectTransform), true);
+
+            new GUIFrame(new RectTransform(new Vector2(0.5f, 1.0f), spacingLayoutGroup.RectTransform), null);
+
+            var addToFavoritesButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), spacingLayoutGroup.RectTransform), TextManager.Get("AddToFavorites"));
+            addToFavoritesButton.OnClicked = (button, userdata) =>
+            {
+                UInt64 steamId = SteamManager.SteamIDStringToUInt64(ipBox.Text);
+                string ip = ""; int port = 0;
+                if (steamId == 0)
+                {
+                    string hostIP = ipBox.Text;
+
+                    string[] address = hostIP.Split(':');
+                    if (address.Length == 1)
+                    {
+                        ip = hostIP;
+                        port = NetConfig.DefaultPort;
+                    }
+                    else
+                    {
+                        ip = string.Join(":", address.Take(address.Length - 1));
+                        if (!int.TryParse(address[address.Length - 1], out port))
+                        {
+                            DebugConsole.ThrowError("Invalid port: " + address[address.Length - 1] + "!");
+                            port = NetConfig.DefaultPort;
+                        }
+                    }
+                }
+
+                //TODO: add a better way to get the query port, right now we're just assuming that it'll always be the default
+                ServerInfo serverInfo = new ServerInfo()
+                {
+                    ServerName = "Server",
+                    OwnerID = steamId,
+                    IP = ip,
+                    Port = port.ToString(),
+                    QueryPort = NetConfig.DefaultQueryPort.ToString(),
+                    GameVersion = GameMain.Version.ToString(),
+                    PlayStyle = PlayStyle.Serious
+                };
+
+                var serverFrame = serverList.Content.FindChild(d => (d.UserData is ServerInfo info) &&
+                                                                info.OwnerID == serverInfo.OwnerID &&
+                                                                (serverInfo.OwnerID != 0 ? true : (info.IP == serverInfo.IP && info.Port == serverInfo.Port)));
+
+                if (serverFrame != null)
+                {
+                    serverInfo = serverFrame.UserData as ServerInfo;
+                }
+                else
+                {
+                    AddToServerList(serverInfo);
+                }
+
+                AddToFavoriteServers(serverInfo);
+
+                SelectedTab = ServerListTab.Favorites;
+                FilterServers();
+
+                serverInfo.QueryLiveInfo(UpdateServerInfo);
+
+                msgBox.Close();
+                return false;
             };
         }
 
@@ -1050,7 +1116,7 @@ namespace Barotrauma
             {
                 friendPopup = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas));
                 var serverNameText = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), friendPopup.RectTransform), info.ConnectName ?? "[Unnamed]");
-                var joinButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), friendPopup.RectTransform, Anchor.TopRight), "Join")
+                var joinButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), friendPopup.RectTransform, Anchor.TopRight), TextManager.Get("ServerListJoin"))
                 {
                     UserData = info
                 };
@@ -1283,7 +1349,7 @@ namespace Barotrauma
 
                 if (friend.InServer)
                 {
-                    var joinButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.6f), friendFrame.RectTransform, Anchor.CenterRight) { RelativeOffset = new Vector2(0.05f, 0.0f) }, "Join", style: "GUIButtonJoinFriend")
+                    var joinButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.6f), friendFrame.RectTransform, Anchor.CenterRight) { RelativeOffset = new Vector2(0.05f, 0.0f) }, TextManager.Get("ServerListJoin"), style: "GUIButtonJoinFriend")
                     {
                         UserData = friend
                     };

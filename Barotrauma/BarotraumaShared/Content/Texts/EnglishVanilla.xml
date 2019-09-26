@@ -3591,4 +3591,6 @@
   <serverlisttab.all>All servers</serverlisttab.all>
   <serverlisttab.favorites>Favorites</serverlisttab.favorites>
   <serverlisttab.recent>Recent</serverlisttab.recent>
+
+  <addtofavorites>Add to favorites</addtofavorites>
 </infotexts>
