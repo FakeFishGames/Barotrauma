@@ -61,6 +61,7 @@ namespace Barotrauma.CharacterEditor
         private bool displayWearables;
         private bool displayBackgroundColor;
         private bool onlyShowSourceRectForSelectedLimbs;
+        private bool unrestrictSpritesheet;
 
         private enum JointCreationMode
         {
@@ -76,6 +77,9 @@ namespace Barotrauma.CharacterEditor
         private Limb jointStartLimb;
         private Limb jointEndLimb;
         private Vector2? anchor1Pos;
+
+        private const float holdTime = 0.1f;
+        private double holdTimer;
 
         private float spriteSheetZoom = 1;
         private float spriteSheetMinZoom = 0.25f;
@@ -189,6 +193,7 @@ namespace Barotrauma.CharacterEditor
             jointStartLimb = null;
             allFiles = null;
             onlyShowSourceRectForSelectedLimbs = false;
+            unrestrictSpritesheet = false;
             editedCharacters.Clear();
             selectedJoints.Clear();
             selectedLimbs.Clear();
@@ -570,39 +575,55 @@ namespace Barotrauma.CharacterEditor
                 UpdateLimbCreation();
                 if (PlayerInput.KeyHit(Keys.Left))
                 {
-                    foreach (var limb in selectedLimbs)
-                    {
-                        var newRect = limb.ActiveSprite.SourceRect;
-                        newRect.X--;
-                        UpdateSourceRect(limb, newRect);
-                    }
+                    Nudge(Keys.Left);
                 }
                 if (PlayerInput.KeyHit(Keys.Right))
                 {
-                    foreach (var limb in selectedLimbs)
-                    {
-                        var newRect = limb.ActiveSprite.SourceRect;
-                        newRect.X++;
-                        UpdateSourceRect(limb, newRect);
-                    }
+                    Nudge(Keys.Right);
                 }
                 if (PlayerInput.KeyHit(Keys.Down))
                 {
-                    foreach (var limb in selectedLimbs)
-                    {
-                        var newRect = limb.ActiveSprite.SourceRect;
-                        newRect.Y++;
-                        UpdateSourceRect(limb, newRect);
-                    }
+                    Nudge(Keys.Down);
                 }
                 if (PlayerInput.KeyHit(Keys.Up))
                 {
-                    foreach (var limb in selectedLimbs)
+                    Nudge(Keys.Up);
+                }
+                if (PlayerInput.KeyDown(Keys.Left))
+                {
+                    holdTimer += deltaTime;
+                    if (holdTimer > holdTime)
                     {
-                        var newRect = limb.ActiveSprite.SourceRect;
-                        newRect.Y--;
-                        UpdateSourceRect(limb, newRect);
+                        Nudge(Keys.Left);
                     }
+                }
+                else if (PlayerInput.KeyDown(Keys.Right))
+                {
+                    holdTimer += deltaTime;
+                    if (holdTimer > holdTime)
+                    {
+                        Nudge(Keys.Right);
+                    }
+                }
+                else if (PlayerInput.KeyDown(Keys.Down))
+                {
+                    holdTimer += deltaTime;
+                    if (holdTimer > holdTime)
+                    {
+                        Nudge(Keys.Down);
+                    }
+                }
+                else if (PlayerInput.KeyDown(Keys.Up))
+                {
+                    holdTimer += deltaTime;
+                    if (holdTimer > holdTime)
+                    {
+                        Nudge(Keys.Up);
+                    }
+                }
+                else
+                {
+                    holdTimer = 0;
                 }
                 if (isFrozen)
                 {
@@ -2302,6 +2323,16 @@ namespace Barotrauma.CharacterEditor
                     return true;
                 }
             };
+            new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteSheet.RectTransform), GetCharacterEditorTranslation("Unrestrict"))
+            {
+                TextColor = Color.White,
+                Selected = unrestrictSpritesheet,
+                OnSelected = (GUITickBox box) =>
+                {
+                    SetSpritesheetRestriction(box.Selected);
+                    return true;
+                }
+            };
             resetSpriteOrientationButtonParent = new GUIFrame(new RectTransform(new Vector2(0.1f, 0.025f), centerArea.RectTransform, Anchor.BottomCenter)
             {
                 AbsoluteOffset = new Point(0, -5),
@@ -3540,13 +3571,20 @@ namespace Barotrauma.CharacterEditor
             float width = texture.Width;
             float height = textures.Sum(t => t.Height);
             float margin = 20;
-            if (height > width)
+            if (unrestrictSpritesheet)
             {
-                spriteSheetMaxZoom = (centerArea.Rect.Bottom - spriteSheetOffsetY - margin) / height;
+                spriteSheetMaxZoom = (GameMain.GraphicsWidth - spriteSheetOffsetX * 2 - margin - leftArea.Rect.Width) / width;
             }
             else
             {
-                spriteSheetMaxZoom = (centerArea.Rect.Left - spriteSheetOffsetX - margin) / width;
+                if (height > width)
+                {
+                    spriteSheetMaxZoom = (centerArea.Rect.Bottom - spriteSheetOffsetY - margin) / height;
+                }
+                else
+                {
+                    spriteSheetMaxZoom = (centerArea.Rect.Left - spriteSheetOffsetX - margin) / width;
+                }
             }
             spriteSheetMinZoom = spriteSheetMinZoom > spriteSheetMaxZoom ? spriteSheetMaxZoom : 0.25f;
             spriteSheetZoom = MathHelper.Clamp(1, spriteSheetMinZoom, spriteSheetMaxZoom);
@@ -5051,6 +5089,80 @@ namespace Barotrauma.CharacterEditor
                 ShapeExtensions.DrawSector(spriteBatch, drawPos, radius, angle, 40, color, 
                     offset: -rotationOffset - joint.UpperLimit + MathHelper.PiOver2, thickness: thickness);
             }
+        }
+
+        void Nudge(Keys key)
+        {
+            switch (key)
+            {
+                case Keys.Left:
+                    foreach (var limb in selectedLimbs)
+                    {
+                        var newRect = limb.ActiveSprite.SourceRect;
+                        if (PlayerInput.KeyDown(Keys.LeftControl))
+                        {
+                            newRect.Width--;
+                        }
+                        else
+                        {
+                            newRect.X--;
+                        }
+                        UpdateSourceRect(limb, newRect);
+                    }
+                    break;
+                case Keys.Right:
+                    foreach (var limb in selectedLimbs)
+                    {
+                        var newRect = limb.ActiveSprite.SourceRect;
+                        if (PlayerInput.KeyDown(Keys.LeftControl))
+                        {
+                            newRect.Width++;
+                        }
+                        else
+                        {
+                            newRect.X++;
+                        }
+                        UpdateSourceRect(limb, newRect);
+                    }
+                    break;
+                case Keys.Down:
+                    foreach (var limb in selectedLimbs)
+                    {
+                        var newRect = limb.ActiveSprite.SourceRect;
+                        if (PlayerInput.KeyDown(Keys.LeftControl))
+                        {
+                            newRect.Height++;
+                        }
+                        else
+                        {
+                            newRect.Y++;
+                        }
+                        UpdateSourceRect(limb, newRect);
+                    }
+                    break;
+                case Keys.Up:
+                    foreach (var limb in selectedLimbs)
+                    {
+                        var newRect = limb.ActiveSprite.SourceRect;
+                        if (PlayerInput.KeyDown(Keys.LeftControl))
+                        {
+                            newRect.Height--;
+                        }
+                        else
+                        {
+                            newRect.Y--;
+                        }
+                        UpdateSourceRect(limb, newRect);
+                    }
+                    break;
+            }
+        }
+
+        private void SetSpritesheetRestriction(bool value)
+        {
+            unrestrictSpritesheet = value;
+            CalculateSpritesheetZoom();
+            spriteSheetZoomBar.BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(spriteSheetMinZoom, spriteSheetMaxZoom, spriteSheetZoom));
         }
         #endregion
 
