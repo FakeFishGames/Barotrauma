@@ -1,0 +1,42 @@
+﻿<Ragdoll type="Tigerthresher" canentersubmarine="False" spritesheetorientation="0" limbscale="1" jointscale="1" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" draggable="True">
+  <collider radius="42" width="1" name="Main Collider" height="0" />
+  <limb id="0" name="Head" type="Head" height="74.8" width="119" notes="" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" healthindex="0" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="763,2,140,88" origin="0.4297648,0.3576382" depth="0" />
+  </limb>
+  <limb id="1" name="Torso" type="Torso" height="111.35" width="96.05" notes="" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" healthindex="0" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="650,2,113,131" origin="0.5,0.5" depth="0" />
+  </limb>
+  <limb id="2" width="119" height="37.4" name="Jaw" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="763,89,140,44" origin="0.5980111,0.4003412" depth="0" />
+  </limb>
+  <limb id="3" width="74.8" height="111.35" name="Tail1" type="Tail" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="565,2,88,131" origin="0.5,0.5" depth="0" />
+  </limb>
+  <limb id="4" radius="0" width="68" height="111.35" mass="0" name="Limb 4" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="487,2,80,131" origin="0.5,0.5" depth="0" />
+  </limb>
+  <limb id="5" radius="0" width="56.95" height="112.2" mass="0" name="Limb 5" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="421,2,67,132" origin="0.4700589,0.4356519" depth="0" />
+  </limb>
+  <limb id="6" radius="0" width="54.4" height="112.2" mass="0" name="Limb 6" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="359,2,64,132" origin="0.5,0.5" depth="0" />
+  </limb>
+  <limb id="7" radius="0" width="34.85" height="112.2" mass="0" name="Limb 7" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="319,2,41,132" origin="0.5,0.5" depth="0" />
+  </limb>
+  <limb id="8" radius="0" width="50.15" height="112.2" mass="0" name="Limb 8" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="262,2,59,132" origin="0.4761358,0.4826106" depth="0" />
+  </limb>
+  <limb id="9" radius="0" width="50.15" height="112.2" mass="0" name="Limb 9" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="205,2,59,132" origin="0.4756843,0.4450437" depth="0" />
+  </limb>
+  <limb id="10" radius="0" width="51" height="111.35" mass="0" name="Limb 10" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="147,2,60,131" origin="0.5046409,0.4105872" depth="0" />
+  </limb>
+  <limb id="11" radius="0" width="42.5" height="109.65" mass="0" name="Limb 11" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="99,2,50,129" origin="0.4546247,0.3785123" depth="0" />
+  </limb>
+  <limb id="12" radius="0" width="85.85" height="111.35" mass="0" name="Limb 12" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="1,0,101,131" origin="0.7709108,0.4258544" depth="0" />
+  </limb>
+</Ragdoll>
