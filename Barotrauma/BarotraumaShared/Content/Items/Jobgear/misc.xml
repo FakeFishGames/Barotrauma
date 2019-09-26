@@ -18,11 +18,11 @@
       <RequiredItem identifier="fpgacircuit" />
     </Fabricate>
     <WifiComponent range="35000.0" LinkToChat="true" MinChatMessageInterval="0.0">
-      <RequiredItems identifier="batterycell,fulguriumbatterycell" type="Contained" />
+      <RequiredItems items="mobilebattery" type="Contained" />
     </WifiComponent>
     <ItemContainer capacity="1" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,70,107,31" />
-      <Containable identifiers="batterycell,fulguriumbatterycell" />
+      <Containable items="mobilebattery" />
     </ItemContainer>
     <Wearable limbtype="Head" slots="Any,Headset" msg="ItemMsgPickUpSelect">
       <StatusEffect type="OnWearing" target="Contained" Condition="-0.05" />

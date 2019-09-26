@@ -308,11 +308,11 @@
         <ReduceAffliction identifier="bleeding" amount="7" />
         <ReduceAffliction identifier="burn" amount="7" />
       </StatusEffect>
-      <StatusEffect tags="medical" type="OnFailure" target="This, Limb" duration="5">
+      <StatusEffect tags="medical" type="OnFailure" target="This, Limb" duration="10">
         <Sound file="Content/Items/Medical/Bandage1.ogg" range="500" />
         <Sound file="Content/Items/Medical/Bandage2.ogg" range="500" />
-        <ReduceAffliction identifier="bleeding" amount="6" />
-        <ReduceAffliction identifier="burn" amount="6" />
+        <ReduceAffliction identifier="bleeding" amount="2" />
+        <ReduceAffliction identifier="burn" amount="2" />
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -532,8 +532,8 @@
       <StatusEffect tags="medical" type="OnUse" target="Character, This" duration="5">
         <ReduceAffliction identifier="bloodloss" amount="6" />
       </StatusEffect>
-      <StatusEffect tags="medical" type="OnFailure" target="Character, This" duration="5">
-        <ReduceAffliction identifier="bloodloss" amount="3" />
+      <StatusEffect tags="medical" type="OnFailure" target="Character, This" duration="10">
+        <ReduceAffliction identifier="bloodloss" amount="1" />
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -566,8 +566,8 @@
       <StatusEffect tags="medical" type="OnUse" target="Character, This" duration="15">
         <ReduceAffliction identifier="bloodloss" amount="8" />
       </StatusEffect>
-      <StatusEffect tags="medical" type="OnFailure" target="Character, This" duration="15">
-        <ReduceAffliction identifier="bloodloss" amount="4" />
+      <StatusEffect tags="medical" type="OnFailure" target="Character, This" duration="25">
+        <ReduceAffliction identifier="bloodloss" amount="2" />
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -600,14 +600,14 @@
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="30">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
         <ReduceAffliction identifier="damage" amount="3" />
-        <ReduceAffliction identifier="burn" amount="3" />
+        <Affliction identifier="burn" amount="0.85" />
         <ReduceAffliction identifier="oxygenlow" amount="3" />
         <ReduceAffliction identifier="bloodloss" amount="1.5" />
       </StatusEffect>
       <StatusEffect tags="medical" type="OnFailure" target="Character" duration="30">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
         <ReduceAffliction identifier="damage" amount="1.5" />
-        <ReduceAffliction identifier="burn" amount="1.5" />
+        <Affliction identifier="burn" amount="1.3" />
         <ReduceAffliction identifier="oxygenlow" amount="1.5" />
         <ReduceAffliction identifier="bloodloss" amount="1" />
       </StatusEffect>
@@ -651,13 +651,9 @@
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
       </StatusEffect>
-      <StatusEffect tags="medical" type="OnFailure" target="Character" duration="10">
+      <StatusEffect tags="medical" type="OnFailure" target="Character" duration="25">
         <Conditional HuskInfectionState="lt 100.0" />
-        <ReduceAffliction identifier="huskinfection" amount="4" />
-      </StatusEffect>
-      <StatusEffect tags="medical" type="OnFailure" target="Character" duration="20">
-        <Conditional HuskInfectionState="lt 100.0" />
-        <ReduceAffliction identifier="huskinfection" amount="1" />
+        <ReduceAffliction identifier="huskinfection" amount="0.8" />
       </StatusEffect>
       <StatusEffect tags="medical,calyxanide" type="OnUse" target="Character" duration="10.0">
         <!-- Injecting a still-conscious Husk will only piss it off and kill the "conscious" faster -->
@@ -666,7 +662,7 @@
       </StatusEffect>
       <StatusEffect tags="medical,calyxanide" type="OnUse" target="Character" duration="10.0">
         <Conditional SpeciesName="husk" />
-        <Affliction identifier="internaldamage" amount="4" />
+        <Affliction identifier="internaldamage" amount="5" />
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -688,7 +684,7 @@
       </StatusEffect>
       <StatusEffect tags="medical,calyxanide" type="OnImpact" target="Character" duration="10.0">
         <Conditional SpeciesName="husk" />
-        <Affliction identifier="internaldamage" amount="4" />
+        <Affliction identifier="internaldamage" amount="5" />
       </StatusEffect>
     </Projectile>
   </Calyxanide>
@@ -714,13 +710,13 @@
       <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
       <RequiredSkill identifier="medical" level="70"></RequiredSkill>
-      <StatusEffect tags="medical" type="OnUse" target="Limb, This" duration="1">
+      <StatusEffect tags="medical" type="OnUse" target="Character, This" duration="1">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
         <ReduceAffliction identifier="psychosis" amount="100" />
       </StatusEffect>
-      <StatusEffect tags="medical" type="OnFailure" target="Limb, This" duration="1">
+      <StatusEffect tags="medical" type="OnFailure" target="Character, This" duration="10">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
-        <ReduceAffliction identifier="psychosis" amount="25" />
+        <ReduceAffliction identifier="psychosis" amount="2.5" />
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -731,8 +727,8 @@
       <StatusEffect type="OnImpact" target="This" Condition="-100.0" disabledeltatime="true">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
       </StatusEffect>
-      <StatusEffect tags="medical" type="OnImpact" target="Limb" duration="10">
-        <ReduceAffliction identifier="psychosis" amount="25" />
+      <StatusEffect tags="medical" type="OnImpact" target="Character" duration="10">
+        <ReduceAffliction identifier="psychosis" amount="2.5" />
       </StatusEffect>
     </Projectile>
   </Haloperidol>
@@ -1447,7 +1443,7 @@
     <Throwable characterusable="true" canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="10">
         <ReduceAffliction identifier="oxygenlow" amount="2"/>
-        <RequiredItem identifier="medicalsyringe" type="Container"/>
+        <RequiredItem items="medicalsyringe" type="Container"/>
       </StatusEffect>
       <StatusEffect type="OnBroken" target="This">
         <Remove/>

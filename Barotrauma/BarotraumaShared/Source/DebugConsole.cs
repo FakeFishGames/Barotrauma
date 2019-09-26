@@ -1410,23 +1410,10 @@ namespace Barotrauma
             }
             else
             {
-                IEnumerable<string> characterFiles = GameMain.Instance.GetFilesOfType(ContentType.Character);
-                foreach (string characterFile in characterFiles)
+                if (Character.GetConfigFilePath(args[0]) != null)
                 {
-                    if (Path.GetFileNameWithoutExtension(characterFile).ToLowerInvariant() == args[0].ToLowerInvariant())
-                    {
-                        Character.Create(characterFile, spawnPosition, ToolBox.RandomSeed(8));
-                        return;
-                    }
+                    Character.Create(args[0], spawnPosition, ToolBox.RandomSeed(8));
                 }
-
-                errorMsg = "No character matching the name \"" + args[0] + "\" found in the selected content package.";
-
-                //attempt to open the config from the default path (the file may still be present even if it isn't included in the content package)
-                string configPath = "Content/Characters/"
-                    + args[0].First().ToString().ToUpper() + args[0].Substring(1)
-                    + "/" + args[0].ToLower() + ".xml";
-                Character.Create(configPath, spawnPosition, ToolBox.RandomSeed(8));
             }
         }
 

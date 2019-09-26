@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ItemAssembly name="Large Diving Gear Cabinet" description="" hideinmenus="false">
-  <Item name="Large Steel Cabinet" identifier="steelcabinet" ID="2" rect="-96,96,182,186" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="cabinet" displaysidebysidewhenlinked="False" spritedepth="0.84" scale="0.5">
+  <Item name="Large Steel Cabinet" identifier="steelcabinet" ID="2" rect="-96,96,182,186" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="locker" displaysidebysidewhenlinked="False" spritedepth="0.84" scale="0.5">
     <ItemContainer itempos="0,0" iteminterval="0,0" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgInteractSelect" contained="3,5,7,8,9,10,12,14,15,16,17,19,21,22,23,24,26,28,29,30,31,32,33,35,37,39,40,41,43,45" />
   </Item>
   <Item name="Handheld Sonar" identifier="handheldsonar" ID="45" rect="181,-139,22,11" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,sonar" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="1" hideinassemblypreview="true">
