@@ -1647,6 +1647,12 @@ namespace Barotrauma
             }
 
             serverContent.Recalculate();
+
+            if ((serverFrame.UserData as ServerInfo).Favorite)
+            {
+                AddToFavoriteServers(serverFrame.UserData as ServerInfo);
+            }
+
             SortList(sortedBy, toggle: false);
             FilterServers();
         }
