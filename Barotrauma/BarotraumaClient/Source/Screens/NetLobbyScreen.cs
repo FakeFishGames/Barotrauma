@@ -324,21 +324,18 @@ namespace Barotrauma
                 Stretch = true
             };
 
-            GUILayoutGroup socialPanel = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.9f), socialHolder.RectTransform), isHorizontal: true)
+            GUILayoutGroup socialHolderHorizontal = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.9f), socialHolder.RectTransform), isHorizontal: true)
             {
                 Stretch = true
             };
 
             //chatbox ----------------------------------------------------------------------
-            chatFrame = new GUIFrame(new RectTransform(new Vector2(0.7f, 1.0f), socialPanel.RectTransform), style: null);
 
-            chatBox = new GUIListBox(new RectTransform(new Point(chatFrame.Rect.Width, chatFrame.Rect.Height), chatFrame.RectTransform) { IsFixedSize = false }) { ScrollBarVisible = true };
+            chatBox = new GUIListBox(new RectTransform(new Vector2(0.7f, 1.0f), socialHolderHorizontal.RectTransform)) { ScrollBarVisible = true };
 
             //player list ------------------------------------------------------------------
 
-            playerListFrame = new GUIFrame(new RectTransform(new Vector2(0.3f, 1.0f), socialPanel.RectTransform), style: null);
-
-            playerList = new GUIListBox(new RectTransform(Vector2.One, playerListFrame.RectTransform))
+            playerList = new GUIListBox(new RectTransform(new Vector2(0.3f, 1.0f), socialHolderHorizontal.RectTransform))
             {
                 ScrollBarVisible = true,
                 OnSelected = (component, userdata) => { SelectPlayer(userdata as Client); return true; }
