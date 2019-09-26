@@ -1648,9 +1648,9 @@ namespace Barotrauma
 
             serverContent.Recalculate();
 
-            if ((serverFrame.UserData as ServerInfo).Favorite)
+            if (serverInfo.Favorite)
             {
-                AddToFavoriteServers(serverFrame.UserData as ServerInfo);
+                AddToFavoriteServers(serverInfo);
             }
 
             SortList(sortedBy, toggle: false);
