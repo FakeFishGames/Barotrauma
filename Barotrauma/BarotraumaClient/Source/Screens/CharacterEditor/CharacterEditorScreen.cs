@@ -318,7 +318,7 @@ namespace Barotrauma.CharacterEditor
             {
                 jointControls.AddToGUIUpdateList();
             }
-            if (editLimbs)
+            if (editLimbs && !unrestrictSpritesheet)
             {
                 limbControls.AddToGUIUpdateList();
             }
@@ -1153,7 +1153,6 @@ namespace Barotrauma.CharacterEditor
                     new XAttribute("texture", RagdollParams.Limbs.First().GetSprite().Texture),
                     new XAttribute("sourcerect", $"{sourceRect.X}, {sourceRect.Y}, {sourceRect.Width}, {sourceRect.Height}")));
             CreateLimb(newLimbElement);
-            SetToggle(paramsToggle, true);
             lockSpriteOriginToggle.Selected = false;
             recalculateColliderToggle.Selected = true;
         }
@@ -4668,6 +4667,7 @@ namespace Barotrauma.CharacterEditor
                     {
                         DrawSpritesheetJointEditor(spriteBatch, deltaTime, limb, limbScreenPos);
                     }
+                    bool isMouseOn = rect.Contains(PlayerInput.MousePosition);
                     if (editLimbs)
                     {
                         int widgetSize = 8;
@@ -4676,13 +4676,12 @@ namespace Barotrauma.CharacterEditor
                         var topLeft = rect.Location.ToVector2();
                         var topRight = new Vector2(topLeft.X + rect.Width, topLeft.Y);
                         var bottomRight = new Vector2(topRight.X, topRight.Y + rect.Height);
-                        bool isMouseOn = rect.Contains(PlayerInput.MousePosition);
                         bool isSelected = selectedLimbs.Contains(limb);
                         if (jointStartLimb != limb && jointEndLimb != limb)
                         {
                             if (isSelected || !onlyShowSourceRectForSelectedLimbs)
                             {
-                                GUI.DrawRectangle(spriteBatch, rect, isSelected ? Color.Yellow : Color.Red);
+                                GUI.DrawRectangle(spriteBatch, rect, isSelected ? Color.Yellow : (isMouseOn ? Color.White : Color.Red));
                             }
                         }
                         if (isSelected)
@@ -4870,6 +4869,15 @@ namespace Barotrauma.CharacterEditor
                             }
                         }
                         else if (isMouseOn && GUI.MouseOn == null && Widget.selectedWidgets.None())
+                        {
+                            // TODO: only one limb name should be displayed (needs to be done in a separate loop)
+                            GUI.DrawString(spriteBatch, limbScreenPos + new Vector2(10, -10), limb.Name, Color.White, Color.Black * 0.5f);
+                        }
+                    }
+                    else
+                    {
+                        GUI.DrawRectangle(spriteBatch, rect, isMouseOn ? Color.White : Color.Gray);
+                        if (isMouseOn && GUI.MouseOn == null && Widget.selectedWidgets.None())
                         {
                             // TODO: only one limb name should be displayed (needs to be done in a separate loop)
                             GUI.DrawString(spriteBatch, limbScreenPos + new Vector2(10, -10), limb.Name, Color.White, Color.Black * 0.5f);
