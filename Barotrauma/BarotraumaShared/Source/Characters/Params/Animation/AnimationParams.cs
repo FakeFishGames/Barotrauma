@@ -63,7 +63,7 @@ namespace Barotrauma
 
         protected static Dictionary<string, Dictionary<string, AnimationParams>> allAnimations = new Dictionary<string, Dictionary<string, AnimationParams>>();
 
-        [Serialize(1.0f, true), Editable(DecimalCount = 2)]
+        [Serialize(1.0f, true), Editable(DecimalCount = 2, MinValueFloat = 0, MaxValueFloat = Ragdoll.MAX_SPEED)]
         public float MovementSpeed { get; set; }
 
         [Serialize(1.0f, true, description: "The speed of the \"animation cycle\", i.e. how fast the character takes steps or moves the tail/legs/arms (the outcome depends what the clip is about)"),
