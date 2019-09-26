@@ -128,10 +128,9 @@ namespace Barotrauma.Networking
 
             if (flags.HasFlag(NetFlags.Misc))
             {
-                int missionType = GameMain.NetLobbyScreen.MissionTypeIndex + incMsg.ReadByte() - 1;
-                while (missionType < 0) missionType += Enum.GetValues(typeof(MissionType)).Length;
-                while (missionType >= Enum.GetValues(typeof(MissionType)).Length) missionType -= Enum.GetValues(typeof(MissionType)).Length;
-                GameMain.NetLobbyScreen.MissionTypeIndex = missionType;
+                int orBits = incMsg.ReadRangedInteger(0, (int)Barotrauma.MissionType.All) & (int)Barotrauma.MissionType.All;
+                int andBits = incMsg.ReadRangedInteger(0, (int)Barotrauma.MissionType.All) & (int)Barotrauma.MissionType.All;
+                GameMain.NetLobbyScreen.MissionType = (Barotrauma.MissionType)(((int)GameMain.NetLobbyScreen.MissionType | orBits) & andBits);
                 
                 int traitorSetting = (int)TraitorsEnabled + incMsg.ReadByte() - 1;
                 if (traitorSetting < 0) traitorSetting = 2;
@@ -310,6 +309,9 @@ namespace Barotrauma.Networking
             ServerMessageText = doc.Root.GetAttributeString("ServerMessage", "");
             
             GameMain.NetLobbyScreen.SelectedModeIdentifier = GameModeIdentifier;
+            //handle Random as the mission type, which is no longer a valid setting
+            //MissionType.All offers equivalent functionality
+            if (MissionType == "Random") { MissionType = "All"; }
             GameMain.NetLobbyScreen.MissionTypeName = MissionType;
 
             GameMain.NetLobbyScreen.SetBotSpawnMode(BotSpawnMode);

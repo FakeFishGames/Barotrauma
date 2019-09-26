@@ -33,6 +33,7 @@ namespace Barotrauma
 
         private List<GUIButton> tabButtons = new List<GUIButton>();
         private List<GUIButton> itemCategoryButtons = new List<GUIButton>();
+        private GUIRadioButtonGroup missionRadioButtonGroup = new GUIRadioButtonGroup();
         private List<GUITickBox> missionTickBoxes = new List<GUITickBox>();
 
         public Action StartRound;
@@ -416,10 +417,10 @@ namespace Barotrauma
             campaign.Map.OnLocationChanged += (prevLocation, newLocation) => UpdateLocationView(newLocation);
             campaign.Map.OnMissionSelected += (connection, mission) => 
             {
-                var selectedTickBox = missionTickBoxes.Find(tb => tb.UserData == mission);
-                if (selectedTickBox != null)
+                var selectedTickBox = (missionRadioButtonGroup.UserData as List<Mission>).FindIndex(m => m == mission);
+                if (selectedTickBox >= 0)
                 {
-                    selectedTickBox.Selected = true;
+                    missionRadioButtonGroup.Selected = selectedTickBox;
                 }
             };
             campaign.CargoManager.OnItemsChanged += RefreshMyItems;
@@ -586,30 +587,41 @@ namespace Barotrauma
                 Mission selectedMission = Campaign.Map.CurrentLocation.SelectedMission != null && availableMissions.Contains(Campaign.Map.CurrentLocation.SelectedMission) ?
                     Campaign.Map.CurrentLocation.SelectedMission : null;
                 missionTickBoxes.Clear();
-                foreach (Mission mission in availableMissions)
+                missionRadioButtonGroup = new GUIRadioButtonGroup();
+                missionRadioButtonGroup.UserData = availableMissions;
+
+                for (int i=0;i<availableMissions.Count;i++)
                 {
+                    var mission = availableMissions[i];
                     var tickBox = new GUITickBox(new RectTransform(new Vector2(0.1f, 0.1f), missionContent.RectTransform) { MaxSize = maxTickBoxSize },
-                       mission?.Name ?? TextManager.Get("NoMission"))
+                       mission?.Name ?? TextManager.Get("NoMission"), style: "GUIRadioButton")
                     {
-                        UserData = mission,
-                        Enabled = GameMain.Client == null || GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign),
-                        Selected = mission == selectedMission,
-                        OnSelected = (tb) => 
-                        {
-                            if (!tb.Selected) { return false; }
-                            RefreshMissionTab(tb.UserData as Mission); 
-                            Campaign.Map.OnMissionSelected?.Invoke(connection, mission);
-                            if ((Campaign is MultiPlayerCampaign multiPlayerCampaign) && !multiPlayerCampaign.SuppressStateSending &&
-                                GameMain.Client != null && GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign))
-                            {
-                                GameMain.Client?.SendCampaignState();
-                            }
-                            return true;
-                        }
+                        Enabled = GameMain.Client == null || GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign)
                     };
                     missionTickBoxes.Add(tickBox);
+                    missionRadioButtonGroup.AddRadioButton(i, tickBox);
                 }
-                
+
+                if (GameMain.Client == null || GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign))
+                {
+                    missionRadioButtonGroup.OnSelect = (rbg, missionInd) =>
+                    {
+                        int ind = missionInd ?? -1;
+                        if (ind < 0) { return; }
+                        var mission = availableMissions[ind];
+                        if (Campaign.Map.CurrentLocation.SelectedMission == mission) { return; }
+                        if (rbg.Selected == missionInd) { return; }
+                        RefreshMissionTab(mission);
+                        if ((Campaign is MultiPlayerCampaign multiPlayerCampaign) && !multiPlayerCampaign.SuppressStateSending &&
+                            GameMain.Client != null && GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign))
+                        {
+                            GameMain.Client?.SendCampaignState();
+                        }
+                    };
+                }
+
+                missionRadioButtonGroup.Selected = availableMissions.IndexOf(selectedMission);
+
                 RefreshMissionTab(selectedMission);
 
                 StartButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.7f), missionContent.RectTransform, Anchor.CenterRight),
@@ -640,9 +652,10 @@ namespace Barotrauma
             
             GameMain.GameSession.Map.CurrentLocation.SelectedMission = selectedMission;
 
-            foreach (GUITickBox missionTickBox in missionTickBoxes)
+            var selectedTickBoxIndex = (missionRadioButtonGroup.UserData as List<Mission>).FindIndex(m => m == selectedMission);
+            if (selectedTickBoxIndex >= 0)
             {
-                missionTickBox.Selected = missionTickBox.UserData == selectedMission;
+                missionRadioButtonGroup.Selected = selectedTickBoxIndex;
             }
 
             selectedMissionInfo.ClearChildren();

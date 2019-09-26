@@ -57,6 +57,8 @@ namespace Barotrauma
             }
         }
 
+        public BlendState BlendState;
+
         public GUIImage(RectTransform rectT, string style, bool scaleToFit = false)
             : this(rectT, null, null, scaleToFit, style)
         {
@@ -99,7 +101,16 @@ namespace Barotrauma
         protected override void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
+
+            if (Parent != null) { state = Parent.State; }
             Color currColor = GetCurrentColor(state);
+
+            if (BlendState != null)
+            {
+                spriteBatch.End();
+                spriteBatch.Begin(blendState: BlendState, samplerState: GUI.SamplerState);
+            }
+
             if (style != null)
             {
                 foreach (UISprite uiSprite in style.Sprites[state])
@@ -120,6 +131,12 @@ namespace Barotrauma
             {
                 spriteBatch.Draw(sprite.Texture, Rect.Center.ToVector2(), sourceRect, currColor * (currColor.A / 255.0f), Rotation, sprite.size / 2,
                     Scale, SpriteEffects, 0.0f);
+            }
+
+            if (BlendState != null)
+            {
+                spriteBatch.End();
+                spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
             }
         }
 

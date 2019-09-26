@@ -317,7 +317,7 @@ namespace Barotrauma.Networking
                 {
                     SteamManager.Instance.User.ClearRichPresence();
                     SteamManager.Instance.User.SetRichPresence("status", "Playing on " + serverName);
-                    SteamManager.Instance.User.SetRichPresence("connect", "-connect \"" + serverName.Replace("\"","\\\"") + "\" " + serverEndpoint);
+                    SteamManager.Instance.User.SetRichPresence("connect", "-connect \"" + serverName.Replace("\"", "\\\"") + "\" " + serverEndpoint);
                 }
 
                 canStart = true;
@@ -1118,6 +1118,21 @@ namespace Barotrauma.Networking
                     GameMain.NetLobbyScreen.SelectedSub.MD5Hash?.Hash != subHash)
                 {
                     string errorMsg = "Failed to select submarine \"" + subName + "\" (hash: " + subHash + ").";
+                    if (GameMain.NetLobbyScreen.SelectedSub == null)
+                    {
+                        errorMsg += "\n" + "SelectedSub is null";
+                    }
+                    else
+                    {
+                        if (GameMain.NetLobbyScreen.SelectedSub.Name != subName)
+                        {
+                            errorMsg += "\n" + "Name mismatch: " + GameMain.NetLobbyScreen.SelectedSub.Name + " != " + subName;
+                        }
+                        if (GameMain.NetLobbyScreen.SelectedSub.MD5Hash?.Hash != subHash)
+                        {
+                            errorMsg += "\n" + "Hash mismatch: " + GameMain.NetLobbyScreen.SelectedSub.MD5Hash?.Hash + " != " + subHash;
+                        }
+                    }
                     DebugConsole.ThrowError(errorMsg);
                     GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:FailedToSelectSub" + subName, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                     CoroutineManager.StartCoroutine(EndGame(""));
@@ -1396,7 +1411,7 @@ namespace Barotrauma.Networking
                             bool allowSpectating        = inc.ReadBoolean();
 
                             YesNoMaybe traitorsEnabled  = (YesNoMaybe)inc.ReadRangedInteger(0, 2);
-                            int missionTypeIndex        = inc.ReadRangedInteger(0, Enum.GetValues(typeof(MissionType)).Length - 1);
+                            MissionType missionType     = (MissionType)inc.ReadRangedInteger(0, (int)MissionType.All);
                             int modeIndex               = inc.ReadByte();
 
                             string levelSeed            = inc.ReadString();
@@ -1414,7 +1429,11 @@ namespace Barotrauma.Networking
                                 ReadWriteMessage settingsBuf = new ReadWriteMessage();
                                 settingsBuf.Write(settingsData, 0, settingsLen); settingsBuf.BitPosition = 0;
                                 serverSettings.ClientRead(settingsBuf);
-
+                                if (!IsServerOwner)
+                                {
+                                    ServerInfo info = GameMain.ServerListScreen.UpdateServerInfoWithServerSettings(serverEndpoint, serverSettings);
+                                    GameMain.ServerListScreen.AddToRecentServers(info);
+                                }
 
                                 GameMain.NetLobbyScreen.LastUpdateID = updateID;
 
@@ -1428,7 +1447,7 @@ namespace Barotrauma.Networking
                                 GameMain.NetLobbyScreen.TrySelectSub(selectShuttleName, selectShuttleHash, GameMain.NetLobbyScreen.ShuttleList.ListBox);
 
                                 GameMain.NetLobbyScreen.SetTraitorsEnabled(traitorsEnabled);
-                                GameMain.NetLobbyScreen.SetMissionType(missionTypeIndex);
+                                GameMain.NetLobbyScreen.SetMissionType(missionType);
 
                                 if (!allowModeVoting) GameMain.NetLobbyScreen.SelectMode(modeIndex);
 

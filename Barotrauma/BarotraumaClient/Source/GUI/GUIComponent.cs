@@ -315,7 +315,7 @@ namespace Barotrauma
 
             Font = GUI.Font;
 
-            CanBeFocused = true;
+            CanBeFocused = true; //TODO: change default to false?
 
             if (style != null)
                 GUI.Style.Apply(this, style);

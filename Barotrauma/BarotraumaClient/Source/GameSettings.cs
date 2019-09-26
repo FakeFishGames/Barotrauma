@@ -598,12 +598,12 @@ namespace Barotrauma
             for (int i = 0; i < 3; i++)
             {
                 string langStr = "VoiceMode." + ((VoiceMode)i).ToString();
-                var tick = new GUITickBox(new RectTransform(tickBoxScale / 0.4f, voipSettings.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get(langStr))
+                var tick = new GUITickBox(new RectTransform(tickBoxScale / 0.4f, voipSettings.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get(langStr), style: "GUIRadioButton")
                 {
                     ToolTip = TextManager.Get(langStr + "ToolTip")
                 };
 
-                voiceMode.AddRadioButton((VoiceMode)i, tick);
+                voiceMode.AddRadioButton(i, tick);
             }
 
             var micVolumeText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), voipSettings.RectTransform), TextManager.Get("MicrophoneVolume"));
@@ -667,7 +667,7 @@ namespace Barotrauma
                 return true;
             };
 
-            voiceMode.OnSelect = (GUIRadioButtonGroup rbg, Enum value) =>
+            voiceMode.OnSelect = (GUIRadioButtonGroup rbg, int? value) =>
             {
                 if (rbg.Selected != null && rbg.Selected.Equals(value)) return;
                 try
@@ -708,7 +708,7 @@ namespace Barotrauma
                     VoiceSetting = VoiceMode.Disabled;
                 }
             };
-            voiceMode.Selected = VoiceSetting;
+            voiceMode.Selected = (int)VoiceSetting;
             if (string.IsNullOrWhiteSpace(VoiceCaptureDevice))
             {
                 voiceMode.Enabled = false;

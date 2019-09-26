@@ -141,6 +141,8 @@ namespace Barotrauma
                 
         public GUIDropDown(RectTransform rectT, string text = "", int elementCount = 4, string style = "", bool selectMultiple = false) : base(style, rectT)
         {
+            CanBeFocused = true;
+
             this.selectMultiple = selectMultiple;
 
             button = new GUIButton(new RectTransform(Vector2.One, rectT), text, Alignment.CenterLeft, style: "GUIDropDown")

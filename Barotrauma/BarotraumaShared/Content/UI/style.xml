@@ -228,7 +228,7 @@
       textcolor="153,166,179,255"
       padding="10.0, 0.0, 10.0, 0.0"/>
   </GUIButtonSlicedTopAndBottom>
-  
+
   <MainMenuGUITextBlock
     textcolor="0,0,0,255"
     color="255,255,255,255"
@@ -411,6 +411,7 @@
     <Sprite texture="Content/UI/CampaignUIAtlas.png" sourcerect="225,741,200,200" tile="false" maintainaspectratio="true"/>
   </RepairItemsButton>
   
+  <!-- TODO: seems to be unused, remove? -->
   <GUIButtonServerListInfo
     color="102,150,175,255"
     hovercolor="255,255,255,255"
@@ -423,6 +424,88 @@
     <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" tile="false" maintainaspectratio="true" sourcerect="907,428,22,22"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Pressed" tile="false" maintainaspectratio="true" sourcerect="907,428,22,22"/>    
   </GUIButtonServerListInfo>
+
+  <GUIButtonServerListTabLeft
+    color="255,255,255,255"
+    hovercolor="200,200,255,255"
+    selectedcolor="255,255,255,255"
+    pressedcolor="255,255,255,255"
+    textcolor="153,166,179,255">
+    
+    <Sprite texture="Content/UI/Server/SlantedButtons.png" tile="false" state="None" sourcerect="0, 144, 221, 32"/>
+    <Sprite texture="Content/UI/Server/SlantedButtons.png" tile="false" state="Hover" sourcerect="0, 0, 221, 32"/>
+    <Sprite texture="Content/UI/Server/SlantedButtons.png" tile="false" state="Selected" sourcerect="0, 0, 221, 32"/>
+    <Sprite texture="Content/UI/Server/SlantedButtons.png" tile="false" state="Pressed" sourcerect="0, 288, 221, 32"/>
+
+    <GUITextBlock
+      textcolor="153,166,179,255"
+      padding="0.0, 0.0, 10.0, 0.0"/>
+  </GUIButtonServerListTabLeft>
+
+  <GUIButtonServerListTabMiddle
+    color="255,255,255,255"
+    hovercolor="200,200,255,255"
+    selectedcolor="255,255,255,255"
+    pressedcolor="255,255,255,255"
+    textcolor="153,166,179,255">
+    
+    <Sprite texture="Content/UI/Server/SlantedButtons.png" tile="false" state="None" sourcerect="0, 192, 221, 32"/>
+    <Sprite texture="Content/UI/Server/SlantedButtons.png" tile="false" state="Hover" sourcerect="0, 48, 221, 32"/>
+    <Sprite texture="Content/UI/Server/SlantedButtons.png" tile="false" state="Selected" sourcerect="0, 48, 221, 32"/>
+    <Sprite texture="Content/UI/Server/SlantedButtons.png" tile="false" state="Pressed" sourcerect="0, 336, 221, 32"/>
+
+    <GUITextBlock
+      textcolor="153,166,179,255"
+      padding="10.0, 0.0, 10.0, 0.0"/>
+  </GUIButtonServerListTabMiddle>
+
+  <GUIFrameServerListTabRight
+    color="255,255,255,255"
+    textcolor="153,166,179,255">
+    
+    <Sprite texture="Content/UI/Server/SlantedButtons.png" tile="false" state="None" sourcerect="0, 240, 267, 32"/>
+  </GUIFrameServerListTabRight>
+
+  <GUIButtonFriendNotPlaying
+    color="60, 60, 80, 255"
+    hovercolor="53, 72, 76, 255"
+    selectedcolor="53, 72, 76, 255"
+    pressedcolor="255, 255, 255, 255"
+    outlinecolor="0,0,0,0" />
+
+  <GUIButtonFriendPlaying
+    color="45, 125, 70, 255"
+    hovercolor="53, 72, 76, 255"
+    selectedcolor="53, 72, 76, 255"
+    pressedcolor="255, 255, 255, 255"
+    outlinecolor="0,0,0,0" />
+
+  <GUIButtonJoinFriend
+    color="43, 71, 93, 255"
+    hovercolor="90, 190, 249, 255"
+    selectedcolor="53, 88, 115, 255"
+    pressedcolor="255, 255, 255, 255"
+    textcolor="43, 71, 93, 255" />
+
+  <GUIButtonFriendsDropdown
+    color="73, 98, 103, 255"
+    hovercolor="53, 72, 76, 255"
+    selectedcolor="53, 72, 76, 255"
+    pressedcolor="255, 255, 255, 255"
+    outlinecolor="27, 36, 38, 255"
+    textcolor="255, 255, 255, 255" />
+
+  <GUIFrameFriendsDropdown
+    color="27, 36, 38, 255"
+    hovercolor="44, 59, 62, 255"
+    selectedcolor="27, 36, 38, 255"
+    pressedcolor="255, 255, 255, 255"
+    outlinecolor="0, 0, 0, 255"
+    textcolor="50, 150, 255, 255">
+
+    <GUITextBlock textcolor="50, 150, 255, 255" />
+
+  </GUIFrameFriendsDropdown>
 
   <GUIButtonRefresh
     color="204,204,204,255"
@@ -661,6 +744,15 @@
       padding="10.0, 0.0, 10.0, 0.0"/>
   </GUIRadioButton>
   
+  <GUIServerListFavoriteTickBox
+    color="160,160,160,255"
+    hovercolor="170,170,255,255"
+    selectedcolor="30,240,120,255" >
+    <Sprite texture="Content/UI/Server/FavouriteIcon.png" state="None" tile="false" maintainaspectratio="true" sourcerect ="0, 0, 38, 36"/>
+    <Sprite texture="Content/UI/Server/FavouriteIcon.png" state="Hover" tile="false" maintainaspectratio="true" sourcerect ="0, 0, 38, 36"/>
+    <Sprite texture="Content/UI/Server/FavouriteIcon.png" state="Selected" tile="false" maintainaspectratio="true" sourcerect ="0, 0, 38, 36"/>
+  </GUIServerListFavoriteTickBox>
+
   <GUIServerListPasswordTickBox
     color="51,51,51,255"
     hovercolor="255,255,255,255"

@@ -162,9 +162,9 @@ namespace Barotrauma.Items.Components
             signalWarningText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), paddedControlContainer.RectTransform), "", Color.Orange, textAlignment: Alignment.Center);
 
             GUIRadioButtonGroup sonarMode = new GUIRadioButtonGroup();
-            sonarMode.AddRadioButton(Mode.Active, activeTickBox);
-            sonarMode.AddRadioButton(Mode.Passive, passiveTickBox);
-            sonarMode.Selected = Mode.Passive;
+            sonarMode.AddRadioButton((int)Mode.Active, activeTickBox);
+            sonarMode.AddRadioButton((int)Mode.Passive, passiveTickBox);
+            sonarMode.Selected = (int)Mode.Passive;
             
             GuiFrame.CanBeFocused = false;
 

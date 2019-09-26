@@ -28,6 +28,15 @@ namespace Barotrauma.Networking
         Normal, Fill
     }
 
+    public enum PlayStyle
+    {
+        Serious = 0,
+        Casual = 1,
+        Roleplay = 2,
+        Rampage = 3,
+        SomethingDifferent = 4
+    }
+
     partial class ServerSettings : ISerializableEntity
     {
         public const string SettingsFile = "serversettings.xml";
@@ -481,6 +490,18 @@ namespace Barotrauma.Networking
             }
         }
 
+        private PlayStyle playstyleSelection;
+        [Serialize(PlayStyle.Serious, true)]
+        public PlayStyle PlayStyle
+        {
+            get { return playstyleSelection; }
+            set 
+            {
+                playstyleSelection = value;
+                ServerDetailsChanged = true;
+            }
+        }
+
         [Serialize(800, true)]
         private int LinesPerLogFile
         {
@@ -741,7 +762,7 @@ namespace Barotrauma.Networking
             set;
         }
 
-        [Serialize("Random", true)]
+        [Serialize("All", true)]
         public string MissionType
         {
             get;

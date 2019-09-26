@@ -3485,39 +3485,66 @@
   <mapentitycategory.wall>Wall</mapentitycategory.wall>
   <karma.resetkarmabetweenrounds>Reset karma between rounds</karma.resetkarmabetweenrounds>
   <enablesplashscreen>Enable splash screen</enablesplashscreen>
-  
+
   <servertag.casual>Casual</servertag.casual>
   <servertagdescription.casual>Having fun is more important than completing the objective. A good choice for new players.</servertagdescription.casual>
   <servertag.serious>Serious</servertag.serious>
   <servertagdescription.serious>The crew should focus on working together efficiently and completing their objective. No unnecessary messing around.</servertagdescription.serious>
-  <servertag.roleplaying>Roleplaying</servertag.roleplaying>
-  <servertagdescription.roleplaying>The crew should aim to act like a real submarine crew. Chain of command is important, as is taking care of your responsibilities and following orders. Speaking out-of-character should be avoided when a round is running.</servertagdescription.roleplaying>
-  <servertag.somethingelse>Something else</servertag.somethingelse>
-  <servertagdescription.somethingelse>Gameplay differs significantly from the usual Barotrauma gameplay. Modded servers, very unconventional subs, battle royale rounds, shuttle racing, deathrun maps... Anything goes!</servertagdescription.somethingelse>
+  <servertag.roleplay>Roleplay</servertag.roleplay>
+  <servertagdescription.roleplay>The crew should aim to act like a real submarine crew. Chain of command is important, as is taking care of your responsibilities and following orders. Speaking out-of-character should be avoided when a round is running.</servertagdescription.roleplay>
+  <servertag.somethingdifferent>Something different</servertag.somethingdifferent>
+  <servertagdescription.somethingdifferent>Gameplay differs significantly from the usual Barotrauma gameplay. Modded servers, very unconventional subs, battle royale rounds, shuttle racing, deathrun maps... Anything goes!</servertagdescription.somethingdifferent>
   <servertag.rampage>Rampage</servertag.rampage>
-  <servertagdescription.rampage>Get ready to fight for your life! A server heavily geared towards combat. This can mean player-versus-player combat, PvE or both — see the server description before you start wrenching your crewmates' faces.</servertagdescription.rampage>
+  <servertagdescription.rampage>Get ready to fight for your life! A server heavily geared towards combat. This can mean player-versus-player combat, PvE or both — the server description should include a guideline as to what kind of violence is allowed on the server.</servertagdescription.rampage>
 
-  <servertag.modded>Modded</servertag.modded>
-  <servertagdescription.modded>One or more mods enabled. Installing mods from the Workshop may be required to join the server.</servertagdescription.modded>
-  <servertag.247>24/7</servertag.247>
-  <servertagdescription.247>Runs around the clock.</servertagdescription.247>
-  <servertag.nofriendlyfire>Friendly fire off</servertag.nofriendlyfire>
-  <servertagdescription.nofriendlyfire>Causing damage to your crew mates is disabled.</servertagdescription.nofriendlyfire>
-  <servertag.voipdisabled>Voice chat disabled</servertag.voipdisabled>
-  <servertagdescription.voipdisabled>Voice chat is disabled.</servertagdescription.voipdisabled>
-  <servertag.karmadisabled>Karma disabled</servertag.karmadisabled>
-  <servertagdescription.karmadisabled>Karma system is disabled.</servertagdescription.karmadisabled>
+  <servertag.modded.true>Modded</servertag.modded.true>
+  <servertagdescription.modded.true>One or more mods enabled. Installing mods from the Workshop may be required to join the server.</servertagdescription.modded.true>
+  <servertag.modded.false>Vanilla</servertag.modded.false>
+  <servertagdescription.modded.false>The server is not using any mods.</servertagdescription.modded.false>
+  <servertag.247.true>24/7</servertag.247.true>
+  <servertagdescription.247.true>Runs around the clock.</servertagdescription.247.true>
+  <servertag.247.false>Occasionally up</servertag.247.false>
+  <servertagdescription.247.false>The server is not run 24/7.</servertagdescription.247.false>
+  <servertag.friendlyfire.true>Friendly fire on</servertag.friendlyfire.true>
+  <servertagdescription.friendlyfire.true>Causing damage to your crew mates is enabled.</servertagdescription.friendlyfire.true>
+  <servertag.friendlyfire.false>Friendly fire off</servertag.friendlyfire.false>
+  <servertagdescription.friendlyfire.false>Causing damage to your crew mates is disabled.</servertagdescription.friendlyfire.false>
+  <servertag.voip.true>Voice chat enabled</servertag.voip.true>
+  <servertagdescription.voip.true>Voice chat is enabled.</servertagdescription.voip.true>
+  <servertag.voip.false>Voice chat disabled</servertag.voip.false>
+  <servertagdescription.voip.false>Voice chat is disabled.</servertagdescription.voip.false>
+  <servertag.karma.true>Karma enabled</servertag.karma.true>
+  <servertagdescription.karma.true>Karma system is enabled.</servertagdescription.karma.true>
+  <servertag.karma.false>Karma disabled</servertag.karma.false>
+  <servertagdescription.karma.false>Karma system is disabled.</servertagdescription.karma.false>
+  <servertag.traitors.true>Traitors enabled</servertag.traitors.true>
+  <servertagdescription.traitors.true>Traitors are enabled on the server.</servertagdescription.traitors.true>
+  <servertag.traitor.false>Traitors disabled</servertag.traitor.false>
+  <servertagdescription.traitors.false>Traitors are disabled on the server.</servertagdescription.traitors.false>
+
   <restartrequiredgeneric>You need to restart the game for the changes to take effect.</restartrequiredgeneric>
   <invalidcontentpackage>Content package '[packagename]' cannot be loaded.</invalidcontentpackage>
   <xmlfileinvalid>File '[filepath]' is not a valid XML file ([errormessage]).</xmlfileinvalid>
 
+  <friendplayingbarotrauma>Playing Barotrauma</friendplayingbarotrauma>
+  <friendplayinganothergame>Playing another game</friendplayinganothergame>
+  <friendnotplaying>Not playing</friendnotplaying>
+
+  <serversettingsplaystyle>Play style</serversettingsplaystyle>
+
+  <serversettingsallowfriendlyfire>Allow friendly fire</serversettingsallowfriendlyfire>
+  <serversettingsallowrewiring>Allow rewiring</serversettingsallowrewiring>
+  <serversettingsallowdisguises>Allow disguises</serversettingsallowdisguises>
+
+  <filtersameversion>Same version</filtersameversion>
+  <filterwhitelistedservers>Show whitelisted</filterwhitelistedservers>
 
   <roomname.airlockaccess>Airlock Access</roomname.airlockaccess>
   <roomname.gunnerycompartment>Gunnery Compartment</roomname.gunnerycompartment>
   <roomname.dronecontrol>Drone Control</roomname.dronecontrol>
   <roomname.drone>Drone</roomname.drone>
   <roomname.droneballast>Drone Ballast</roomname.droneballast>
-  
+
 
   <subeditorlights>Lights</subeditorlights>
   <subeditorshadowcastinglights>Shadow-casting lights</subeditorshadowcastinglights>
@@ -3560,4 +3587,8 @@
   <editordisclaimerdiscordurl>https://discordapp.com/invite/undertow</editordisclaimerdiscordurl>
 
   <bugreportfeedbackform>Help and technical support</bugreportfeedbackform>
- </infotexts>
+
+  <serverlisttab.all>All servers</serverlisttab.all>
+  <serverlisttab.favorites>Favorites</serverlisttab.favorites>
+  <serverlisttab.recent>Recent</serverlisttab.recent>
+</infotexts>

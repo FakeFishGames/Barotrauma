@@ -29,6 +29,35 @@ namespace Barotrauma
     {
         public static GUICanvas Canvas => GUICanvas.Instance;
 
+        public static readonly SamplerState SamplerState = new SamplerState()
+        {
+            Filter = TextureFilter.Linear,
+            AddressU = TextureAddressMode.Wrap,
+            AddressV = TextureAddressMode.Wrap,
+            AddressW = TextureAddressMode.Wrap,
+            BorderColor = Color.White,
+            MaxAnisotropy = 4,
+            MaxMipLevel = 0,
+            MipMapLevelOfDetailBias = -0.8f,
+            ComparisonFunction = CompareFunction.Never,
+            FilterMode = TextureFilterMode.Default,
+        };
+
+        public static readonly SamplerState SamplerStateClamp = new SamplerState()
+        {
+            Filter = TextureFilter.Linear,
+            AddressU = TextureAddressMode.Clamp,
+            AddressV = TextureAddressMode.Clamp,
+            AddressW = TextureAddressMode.Clamp,
+            BorderColor = Color.White,
+            MaxAnisotropy = 4,
+            MaxMipLevel = 0,
+            MipMapLevelOfDetailBias = -0.8f,
+            ComparisonFunction = CompareFunction.Never,
+            FilterMode = TextureFilterMode.Default,
+        };
+
+
         public static readonly string[] vectorComponentLabels = { "X", "Y", "Z", "W" };
         public static readonly string[] rectComponentLabels = { "X", "Y", "W", "H" };
         public static readonly string[] colorComponentLabels = { "R", "G", "B", "A" };
@@ -455,7 +484,11 @@ namespace Barotrauma
 
             if (GameMain.WindowActive)
             {
+                spriteBatch.End();
+                spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerStateClamp, rasterizerState: GameMain.ScissorTestEnable);
                 Cursor.Draw(spriteBatch, PlayerInput.LatestMousePosition, 0, Scale / 2f);
+                spriteBatch.End();
+                spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
             }
         }
 
@@ -664,6 +697,7 @@ namespace Barotrauma
         /// </summary>
         public static GUIComponent UpdateMouseOn()
         {
+            GUIComponent prevMouseOn = MouseOn;
             MouseOn = null;
             int inventoryIndex = -1;
             if (Inventory.IsMouseOnInventory())
@@ -673,9 +707,13 @@ namespace Barotrauma
             for (int i = updateList.Count - 1; i > inventoryIndex; i--)
             {
                 GUIComponent c = updateList[i];
+                if (!c.CanBeFocused) { continue; }
                 if (c.MouseRect.Contains(PlayerInput.MousePosition))
                 {
-                    MouseOn = c;
+                    if ((!PlayerInput.LeftButtonHeld() && !PlayerInput.LeftButtonClicked()) || c == prevMouseOn)
+                    {
+                        MouseOn = c;
+                    }
                     break;
                 }
             }

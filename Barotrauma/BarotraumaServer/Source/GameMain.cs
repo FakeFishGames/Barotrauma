@@ -243,6 +243,18 @@ namespace Barotrauma
                 maxPlayers,
                 ownerKey,
                 steamId);
+
+            for (int i = 0; i < CommandLineArgs.Length; i++)
+            {
+                switch (CommandLineArgs[i].Trim())
+                {
+                    case "-playstyle":
+                        Enum.TryParse(CommandLineArgs[i + 1], out PlayStyle playStyle);
+                        Server.ServerSettings.PlayStyle = playStyle;
+                        i++;
+                        break;
+                }
+            }
         }
 
         public void CloseServer()

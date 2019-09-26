@@ -174,6 +174,8 @@ namespace Barotrauma
 
         public GUIScrollBar(RectTransform rectT, float barSize = 1, Color? color = null, string style = "", bool? isHorizontal = null) : base(style, rectT)
         {
+            CanBeFocused = true;
+
             this.isHorizontal = isHorizontal ?? (Rect.Width > Rect.Height);
             Frame = new GUIFrame(new RectTransform(Vector2.One, rectT));
             GUI.Style.Apply(Frame, IsHorizontal ? "GUIFrameHorizontal" : "GUIFrameVertical", this);
