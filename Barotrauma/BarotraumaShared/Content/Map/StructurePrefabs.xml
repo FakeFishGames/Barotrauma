@@ -1563,10 +1563,13 @@
   <SlopeBack name="Slope Backwards" identifier="SlopeBack" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/structures2.png" sourcerect="0,64,224,64" depth="0.95" />
   </SlopeBack>
-  <stairsright name="Stairs Right" identifier="stairsright" width="256" height="320" stairdirection="Right">
+  <stairsright name="Stairs Right" identifier="stairsright" width="256" height="320" stairangle="45" stairdirection="Right">
     <sprite texture="Content/Map/structures2.png" sourcerect="256,193,256,319" depth="0.1" />
   </stairsright>
-  <stairsleft name="Stairs Left" identifier="stairsleft" width="256" height="320" stairdirection="Left">
+  <!--<stairsright name="Stairs Right Steep test" identifier="stairsrightsteep" width="192" height="256" stairangle="52" stairdirection="Right">
+    <sprite texture="Content/Map/SteepStairsTest.png" sourcerect="0,0,192,256" depth="0.1" />
+  </stairsright>-->
+  <stairsleft name="Stairs Left" identifier="stairsleft" width="256" height="320" stairangle="45" stairdirection="Left">
     <sprite texture="Content/Map/structures2.png" sourcerect="256,193,256,319" fliphorizontal="true" depth="0.1" />
   </stairsleft>
   <bunk name="Bunk" identifier="bunk" width="173" height="129">

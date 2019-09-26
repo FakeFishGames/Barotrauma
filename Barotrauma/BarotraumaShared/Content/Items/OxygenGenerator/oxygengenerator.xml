@@ -2,6 +2,7 @@
   <Item
     name="Oxygen Generator"
     identifier="oxygenerator"
+    tags="oxygengenerator"
     category="Machine"
     linkable="true"
     allowedlinks="vent">
@@ -44,8 +45,8 @@
       <poweronsound file="Content/Items/PowerOnLight2.ogg" range="1500" loop="false" />
       <sound file="Content/Items/OxygenGenerator/OxygenGenerator.ogg" type="OnActive" range="1000.0" volumeproperty="CurrFlow" volume="0.001f" loop="true"/>    
       <StatusEffect type="OnFire" target="This" Condition="-0.5"/>
-      <StatusEffect type="OnActive" target="Contained" targetidentifiers="oxygentank" Condition="2.0"/>
-      <StatusEffect type="OnBroken" target="This" disabledeltatime="true">
+      <StatusEffect type="OnActive" targettype="Contained" targets="oxygentank" Condition="2.0"/>
+      <StatusEffect type="OnBroken" targettype="This" disabledeltatime="true">
         <sound file="Content/Items/Weapons/ExplosionMedium3.ogg" range="8000" selectionmode="All"/>
         <sound file="Content/Items/Weapons/ExplosionDebris3.ogg" range="8000" />
         <Explosion range="50" stun="0" force="3.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false"/>
@@ -56,19 +57,19 @@
 
     <ItemContainer capacity="5" canbeselected="true" hideitems="false" itempos="28,-125" iteminterval="22,0" msg="ItemMsgOxygenRefill">
       <GuiFrame relativesize="0.2,0.2" anchor="Center" style="ItemUI" />
-      <Containable identifiers="oxygentank,oxygenitetank"/>
+      <Containable items="oxygentank"/>
     </ItemContainer>
     
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <RequiredItem identifier="screwdriver" type="Equipped"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
       <input name="power_in" displayname="connection.powerin"/>
     </ConnectionPanel>
 
     <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="0.125" mindeteriorationdelay="120" maxdeteriorationdelay="750" mindeteriorationcondition="0" ShowRepairUIThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
       <RequiredSkill identifier="mechanical" level="30"/>
-      <RequiredItem identifier="wrench" type="equipped"/>
+      <RequiredItem items="wrench" type="equipped"/>
       <ParticleEmitter particle="spark" particleamount="10" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="25.0"/>
       <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="3" mincondition="0.0" maxcondition="0.0"/>
     </Repairable>
@@ -77,6 +78,7 @@
   <Item
     name="Shuttle Oxygen Generator"
     identifier="shuttleoxygenerator"
+    tags="oxygengenerator"
     category="Machine"
     linkable="true"
     allowedlinks="vent">
@@ -89,8 +91,8 @@
       <poweronsound file="Content/Items/PowerOnLight1.ogg" range="1000" loop="false" />
       <sound file="Content/Items/OxygenGenerator/OxygenGenerator.ogg" type="OnActive" range="1000.0" volumeproperty="CurrFlow" volume="0.001f" loop="true"/>
       <StatusEffect type="OnFire" target="This" Condition="-0.5"/>
-      <StatusEffect type="OnActive" target="Contained" targetidentifiers="oxygentank" Condition="2.0"/>
-      <StatusEffect type="OnBroken" target="This" disabledeltatime="true">
+      <StatusEffect type="OnActive" targettype="Contained" targets="oxygentank" Condition="2.0"/>
+      <StatusEffect type="OnBroken" targettype="This" disabledeltatime="true">
         <sound file="Content/Items/Weapons/ExplosionMedium3.ogg" range="8000" selectionmode="All"/>
         <sound file="Content/Items/Weapons/ExplosionDebris3.ogg" range="8000" />
         <Explosion range="50" stun="0" force="3.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false"/>
@@ -100,19 +102,19 @@
     <trigger/>
 
     <ItemContainer capacity="5" canbeselected = "true" msg="ItemMsgOxygenRefill">
-      <Containable identifiers="oxygentank,oxygenitetank"/>
+      <Containable items="oxygentank"/>
     </ItemContainer>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <RequiredItem identifier="screwdriver" type="Equipped"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
       <input name="power_in" displayname="connection.powerin"/>
     </ConnectionPanel>
 
     <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="0.125" mindeteriorationdelay="120" maxdeteriorationdelay="750" mindeteriorationcondition="0" ShowRepairUIThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
       <RequiredSkill identifier="mechanical" level="30"/>
-      <RequiredItem identifier="wrench" type="equipped"/>
+      <RequiredItem items="wrench" type="equipped"/>
       <ParticleEmitter particle="spark" particleamount="10" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="25.0"/>
       <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="3" mincondition="0.0" maxcondition="0.0"/>
     </Repairable>
@@ -121,6 +123,7 @@
   <Item
     name="Vent"
     identifier="vent"
+    tags="vent"
     category="Machine"
     interactdistance="0"
     linkable="true"
@@ -139,6 +142,7 @@
   <Item
     name="Loose Vent"
     identifier="loosevent"
+    tags="vent"
     category="Machine"
     linkable="true"
     allowedlinks="oxygenerator"
@@ -154,7 +158,7 @@
     </Vent>    
     <ItemContainer capacity="1" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.25,0.3" anchor="Center" style="ItemUI" />
-      <Containable identifiers="smallitem,mediumitem" />
+      <Containable items="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
 </Items>

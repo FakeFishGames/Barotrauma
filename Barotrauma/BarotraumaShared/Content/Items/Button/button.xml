@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Button" identifier="button" category="Electrical" tags="smallitem" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="Button" identifier="button" category="Electrical" tags="smallitem,button" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Military" buyprice="80" />
@@ -29,7 +29,7 @@
       <requireditem identifier="wrench" type="Equipped" />
     </Holdable>
   </Item>
-  <Item name="Switch" identifier="switch" category="Electrical" tags="smallitem" cargocontaineridentifier="metalcrate" scale="0.7" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="Switch" identifier="switch" category="Electrical" tags="smallitem,switch" cargocontaineridentifier="metalcrate" scale="0.7" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Military" buyprice="80" />

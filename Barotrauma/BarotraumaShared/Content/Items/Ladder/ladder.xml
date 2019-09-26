@@ -1,6 +1,7 @@
 ﻿<Item
   name="Ladder"
   identifier="ladder"
+  tags="ladder"
   resizevertical="true">
 
   <Sprite texture="ladder.png" depth="0.05" sourcerect="0,0,11,121"/>

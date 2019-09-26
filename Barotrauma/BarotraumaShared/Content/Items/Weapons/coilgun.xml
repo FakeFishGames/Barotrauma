@@ -28,7 +28,7 @@
     </Turret>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver" type="Equipped" />
+      <RequiredItem items="screwdriver" type="Equipped" />
       <input name="power_in" displayname="connection.powerin" />
       <input name="position_in" displayname="connection.turretaimingin" />
       <input name="trigger_in" displayname="connection.turrettriggerin" />
@@ -41,17 +41,17 @@
     <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="10" mindeteriorationdelay="60" maxdeteriorationdelay="300" MinDeteriorationCondition="0" ShowRepairUIThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="-0.1,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="40" />
-      <RequiredItem identifier="wrench" type="Equipped" />
+      <RequiredItem items="wrench" type="Equipped" />
       <ParticleEmitter particle="spark" particleamount="10" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="15.0" maxcondition="35.0" />
       <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="3" mincondition="0.0" maxcondition="15.0" />
       <ParticleEmitter particle="spark" particleamount="5" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="15.0" />
     </Repairable>
     <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="6" itempos="74,-281" iteminterval="0,0" itemrotation="0" canbeselected="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
-      <Containable identifiers="coilgunammobox,physicoriumammobox,coilgunammo" />
+      <Containable items="coilgunammo" />
       <!-- when the coilgun is fired, it triggers this statuseffect, causing contained ammunition boxes to spawn new ammo -->
       <StatusEffect type="OnUse" target="Contained">
-        <RequiredItem identifiers="coilgunammobox,physicoriumammobox,coilgunammo" type="Contained" />
+        <RequiredItem items="coilgunammo" type="Contained" />
         <Use />
       </StatusEffect>
     </ItemContainer>
@@ -83,7 +83,7 @@
       <StatusEffect type="OnUse" target="This" condition="-0.5" disabledeltatime="true">
         <SpawnItem identifiers="coilgunbolt" spawnposition="ThisInventory" />
       </StatusEffect>
-      <Containable identifiers="coilgunbolt" />
+      <Containable items="coilgunbolt" />
     </ItemContainer>
   </Item>
   
@@ -135,7 +135,7 @@
       <StatusEffect type="OnUse" target="This" condition="-0.5" disabledeltatime="true">
         <SpawnItem identifiers="physicoriumbolt" spawnposition="ThisInventory" />
       </StatusEffect>
-      <Containable identifiers="physicoriumbolt" />
+      <Containable items="physicoriumbolt" />
     </ItemContainer>
   </Item>
   
@@ -191,7 +191,7 @@
       <StatusEffect type="OnUse" target="This" condition="-0.5" disabledeltatime="true">
         <SpawnItem identifiers="coilgunboltexplosive" spawnposition="ThisInventory" />
       </StatusEffect>
-      <Containable identifiers="coilgunboltexplosive" />
+      <Containable items="coilgunboltexplosive" />
     </ItemContainer>
   </Item>
 
@@ -245,7 +245,7 @@
       <StatusEffect type="OnUse" target="This" condition="-0.5" disabledeltatime="true">
         <SpawnItem identifiers="coilgunboltpiercing" spawnposition="ThisInventory" />
       </StatusEffect>
-      <Containable identifiers="coilgunboltpiercing" />
+      <Containable items="coilgunboltpiercing" />
     </ItemContainer>
   </Item>
 

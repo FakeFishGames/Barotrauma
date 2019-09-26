@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Engine" identifier="engine" category="Machine" Scale="0.5">
+  <Item name="Engine" identifier="engine" tags="engine" category="Machine" Scale="0.5">
     <Sprite texture="Engines.png" depth="0.8" sourcerect="0,0,707,334" canflipx="true" origin="0.5,0.5" />
     <!--
     <BrokenSprite texture="BTart_EngineDiesel.png" sourcerect="0,436,590,218" depth="0.8" maxcondition="50" fadein="true" />
@@ -20,19 +20,19 @@
     </Engine>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver" type="Equipped" />
+      <RequiredItem items="screwdriver" type="Equipped" />
       <input name="power_in" displayname="connection.powerin" />
       <input name="set_force" displayname="connection.setforce" />
     </ConnectionPanel>
     <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="0.125" mindeteriorationdelay="120" maxdeteriorationdelay="300" mindeteriorationcondition="0" ShowRepairUIThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="30" />
-      <RequiredItem identifier="wrench" type="equipped" />
+      <RequiredItem items="wrench" type="equipped" />
       <ParticleEmitter particle="smoke" particlespersecond="1" scalemin="0.5" scalemax="1" mincondition="15.0" maxcondition="35.0" />
       <ParticleEmitter particle="smoke" particlespersecond="2" scalemin="1" scalemax="2" mincondition="0.0" maxcondition="15.0" />
     </Repairable>
   </Item>
-  <Item name="Large Engine" identifier="largeengine" category="Machine" Scale="0.8">
+  <Item name="Large Engine" identifier="largeengine" tags="engine" category="Machine" Scale="0.8">
     <Sprite texture="Engines.png" depth="0.8" sourcerect="0,335,1024,377" canflipx="true" origin="0.5,0.5" />
     <!--
     <BrokenSprite texture="BTart_EngineDiesel.png" sourcerect="0,436,590,218" depth="0.8" maxcondition="50" fadein="true" />
@@ -52,19 +52,19 @@
     </Engine>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver" type="Equipped" />
+      <RequiredItem items="screwdriver" type="Equipped" />
       <input name="power_in" displayname="connection.powerin" />
       <input name="set_force" displayname="connection.setforce" />
     </ConnectionPanel>
     <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="0.125" mindeteriorationdelay="120" maxdeteriorationdelay="300" mindeteriorationcondition="0" ShowRepairUIThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="30" />
-      <RequiredItem identifier="wrench" type="equipped" />
+      <RequiredItem items="wrench" type="equipped" />
       <ParticleEmitter particle="smoke" particlespersecond="1" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="80.0" />
       <ParticleEmitter particle="smoke" particlespersecond="2" scalemin="1" scalemax="2" mincondition="0.0" maxcondition="0.0" />
     </Repairable>
   </Item>
-  <Item name="Shuttle Engine" identifier="shuttleengine" category="Machine" Scale="0.5">
+  <Item name="Shuttle Engine" identifier="shuttleengine" tags="engine" category="Machine" Scale="0.5">
     <Sprite texture="Engines.png" depth="0.8" sourcerect="0,714,422,192" canflipx="true" origin="0.5,0.5" />
     <trigger x="180" y="-30" width="200" height="146" />
     <aitarget sightrange="500" soundrange="10000"/>
@@ -78,14 +78,14 @@
     </Engine>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver" type="Equipped" />
+      <RequiredItem items="screwdriver" type="Equipped" />
       <input name="power_in" displayname="connection.powerin" />
       <input name="set_force" displayname="connection.setforce" />
     </ConnectionPanel>
     <Repairable selectkey="Action" header="mechanicalrepairsheader" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="30" />
-      <RequiredItem identifier="wrench" type="equipped" />
+      <RequiredItem items="wrench" type="equipped" />
     </Repairable>
   </Item>
 </Items>

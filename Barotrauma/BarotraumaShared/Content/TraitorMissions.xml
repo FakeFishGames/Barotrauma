@@ -333,5 +333,50 @@
     </Objective>
 
   </TraitorMission>
-  
+
+  <TraitorMission identifier="goblins">
+
+    <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+
+    <StartInfoText id="goblins_traitormissionStartInfoText"/>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="goblins_objectiveSuccessMessage1"/>
+      <StartMessage id="goblins_traitorobjectivestartmessage1"/>
+      <Goal type="finditem" identifier="cyanide" preferNew="false" allowNew="true" allowExisting="true" allowedContainers="suppliescabinet">
+        <InfoText id="traitorgoalfinditeminfo"/>
+      </Goal>
+    </Objective>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="goblins_objectiveSuccessMessage2"/>
+      <StartMessage id="goblins_traitorobjectivestartmessage2"/>
+      <Goal type="sabotage" tag="pump" threshold="20">
+        <InfoText id="traitorgoalsabotageinfo" />
+      </Goal>
+    </Objective>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="goblins_objectiveSuccessMessage3"/>
+      <StartMessage id="goblins_traitorobjectivestartmessage3"/>
+      <Goal type="killtarget" job="mechanic">
+        <InfoText id="traitorgoalkilltargetinfo"/>
+      </Goal>
+    </Objective>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="goblins_objectiveSuccessMessage4" />
+      <StartMessage id="goblins_traitorobjectivestartmessage4"/>
+      <Goal type="killtarget">
+        <InfoText id="traitorgoalkilleveryoneinfo" />
+      </Goal>
+    </Objective>
+
+  </TraitorMission>
+
+
 </TraitorMissions>
