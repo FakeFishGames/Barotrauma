@@ -302,23 +302,9 @@ namespace Barotrauma
             infoFrame = new GUIFrame(new RectTransform(new Vector2(0.7f, 0.65f), defaultModeContainer.RectTransform));
             var infoFrameContent = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), infoFrame.RectTransform, Anchor.Center), style: null);
 
-            //chatbox ----------------------------------------------------------------------
-            chatFrame = new GUIFrame(new RectTransform(new Vector2(0.7f, 0.35f - panelSpacing), defaultModeContainer.RectTransform, Anchor.BottomLeft));
-            GUIFrame paddedChatFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.85f), chatFrame.RectTransform, Anchor.Center), style: null);
-
-            chatBox = new GUIListBox(new RectTransform(new Point(paddedChatFrame.Rect.Width, paddedChatFrame.Rect.Height - 30), paddedChatFrame.RectTransform) { IsFixedSize = false });
-            textBox = new GUITextBox(new RectTransform(new Point(paddedChatFrame.Rect.Width, 20), paddedChatFrame.RectTransform, Anchor.BottomLeft) { IsFixedSize = false })
-            {
-                MaxTextLength = ChatMessage.MaxLength,
-                Font = GUI.SmallFont
-            };
-
-            textBox.OnEnterPressed = (tb, userdata) => { GameMain.Client?.EnterChatMessage(tb, userdata); return true; };
-            textBox.OnTextChanged += (tb, userdata) => { GameMain.Client?.TypingChatMessage(tb, userdata); return true; };
-
             //player info panel ------------------------------------------------------------
 
-            myCharacterFrame = new GUIFrame(new RectTransform(new Vector2(0.3f - panelSpacing, 0.65f), defaultModeContainer.RectTransform, Anchor.TopRight));
+            myCharacterFrame = new GUIFrame(new RectTransform(new Vector2(0.3f - panelSpacing, 0.55f), defaultModeContainer.RectTransform, Anchor.TopRight));
             playerInfoContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), myCharacterFrame.RectTransform, Anchor.Center), style: null);
 
             playYourself = new GUITickBox(new RectTransform(new Vector2(0.06f, 0.06f), myCharacterFrame.RectTransform) { RelativeOffset = new Vector2(0.05f,0.05f) },
@@ -328,16 +314,49 @@ namespace Barotrauma
                 OnSelected = TogglePlayYourself,
                 UserData = "playyourself"
             };
-            
+
+            // Social area
+
+            GUIFrame socialBackground = new GUIFrame(new RectTransform(new Vector2(0.3f - panelSpacing, 0.45f), defaultModeContainer.RectTransform, Anchor.BottomRight));
+
+            GUILayoutGroup socialHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), socialBackground.RectTransform, Anchor.Center))
+            {
+                Stretch = true
+            };
+
+            GUILayoutGroup socialPanel = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.9f), socialHolder.RectTransform), isHorizontal: true)
+            {
+                Stretch = true
+            };
+
+            //chatbox ----------------------------------------------------------------------
+            chatFrame = new GUIFrame(new RectTransform(new Vector2(0.7f, 1.0f), socialPanel.RectTransform), style: null);
+
+            chatBox = new GUIListBox(new RectTransform(new Point(chatFrame.Rect.Width, chatFrame.Rect.Height), chatFrame.RectTransform) { IsFixedSize = false }) { ScrollBarVisible = true };
+
             //player list ------------------------------------------------------------------
 
-            playerListFrame = new GUIFrame(new RectTransform(new Vector2(0.3f - panelSpacing, 0.35f - panelSpacing), defaultModeContainer.RectTransform, Anchor.BottomRight));
-            GUIFrame paddedPlayerListFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.85f), playerListFrame.RectTransform, Anchor.Center), style: null);
+            playerListFrame = new GUIFrame(new RectTransform(new Vector2(0.3f, 1.0f), socialPanel.RectTransform), style: null);
 
-            playerList = new GUIListBox(new RectTransform(Vector2.One, paddedPlayerListFrame.RectTransform))
+            playerList = new GUIListBox(new RectTransform(Vector2.One, playerListFrame.RectTransform))
             {
+                ScrollBarVisible = true,
                 OnSelected = (component, userdata) => { SelectPlayer(userdata as Client); return true; }
             };
+
+            // Spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), socialHolder.RectTransform), style: null);
+
+            // Chat input
+
+            textBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.07f), socialHolder.RectTransform))
+            {
+                MaxTextLength = ChatMessage.MaxLength,
+                Font = GUI.SmallFont
+            };
+
+            textBox.OnEnterPressed = (tb, userdata) => { GameMain.Client?.EnterChatMessage(tb, userdata); return true; };
+            textBox.OnTextChanged += (tb, userdata) => { GameMain.Client?.TypingChatMessage(tb, userdata); return true; };
 
             //--------------------------------------------------------------------------------------------------------------------------------
             //infoframe contents
