@@ -344,7 +344,7 @@
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="goblins_objectiveSuccessMessage1"/>
       <StartMessage id="goblins_traitorobjectivestartmessage1"/>
-      <Goal type="finditem" identifier="cyanide" preferNew="false" allowNew="true" allowExisting="true" allowedContainers="suppliescabinet">
+      <Goal type="finditem" identifier="cyanide" preferNew="false" allowNew="true" allowExisting="true" allowedContainers="suppliescabinet,mediumsteelcabinet,steelcabinet">
         <InfoText id="traitorgoalfinditeminfo"/>
       </Goal>
     </Objective>
@@ -377,6 +377,5 @@
     </Objective>
 
   </TraitorMission>
-
 
 </TraitorMissions>
