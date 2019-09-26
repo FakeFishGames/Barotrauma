@@ -31,20 +31,32 @@ namespace Barotrauma
         [STAThread]
         static void Main(string[] args)
         {
+            GameMain game = null;
 #if !DEBUG
             try
             {
 #endif
                 SteamManager.Initialize();
-                GameMain game = new GameMain(args);
+                game = new GameMain(args);
                 game.Run();
                 game.Dispose();
 #if !DEBUG
             }
             catch (Exception e)
             {
-                if (game != null) game.Dispose();
-                CrashDump(null, "crashreport.log", e);
+                try
+                {
+                    CrashDump(game, "crashreport.log", e);
+                }
+                catch (Exception e2)
+                {
+#if WINDOWS
+                    CrashMessageBox("Barotrauma seems to have crashed, and failed to generate a crash report: "
+                        + e2.Message + "\n" + e2.StackTrace.ToString(),
+                        "Failed to generate crash report!");
+#endif
+                }
+                game?.Dispose();
                 return;
             }
 #endif
