@@ -66,12 +66,12 @@
   <Character file="Content/Characters/Legacycharybdis/Legacycharybdis.xml" />
   <Character file="Content/Characters/Legacycrawler/Legacycrawler.xml" />
   <Character file="Content/Characters/Legacymoloch/Legacymoloch.xml" />
+  <Character file="Content/Characters/Legacytigerthresher/Legacytigerthresher.xml" />
   <Character file="Content/Characters/Mudraptor/Mudraptor.xml" />
   <Character file="Content/Characters/Mantis/Mantis.xml" />
   <Character file="Content/Characters/Moloch/Moloch.xml" />
   <Character file="Content/Characters/Molochbaby/Molochbaby.xml" />
   <Character file="Content/Characters/Molochboss/Molochboss.xml" />
-  <Character file="Content/Characters/Tigerthresher/Tigerthresher.xml" />
   <Character file="Content/Characters/Watcher/Watcher.xml" />
   <Outpost file="Content/Map/Outposts/Outpost.sub" />
   <Outpost file="Content/Map/Outposts/Outpost2.sub" />

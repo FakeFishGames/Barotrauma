@@ -1,7 +1,7 @@
-﻿<TigerthresherSwimFast
-  movementspeed="9"
-  wavelength="20"
-  waveamplitude="0.5"
+﻿<LegacytigerthresherSwimSlow
+  movementspeed="4"
+  wavelength="25"
+  waveamplitude="0.3"
   steertorque="100"
   flip="True"
   mirror="False"
@@ -14,4 +14,4 @@
   cyclespeed="1"
   headangle="NaN"
   torsoangle="0"
-  animationtype="SwimFast" />
+  animationtype="SwimSlow" />
