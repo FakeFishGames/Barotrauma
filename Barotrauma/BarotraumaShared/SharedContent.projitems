@@ -85,19 +85,19 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Electricparasite\Ragdolls\ElectricparasiteDefaultRagdoll.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\HammerheadGold\Animations\HammerheadGoldSwimFast.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerheadgold\Animations\HammerheadgoldSwimFast.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\HammerheadGold\Animations\HammerheadGoldSwimSlow.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerheadgold\Animations\HammerheadgoldSwimSlow.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\HammerheadGold\HammerheadGold.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerheadgold\Hammerheadgold.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\HammerheadGold\HammerheadGold.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerheadgold\Hammerheadgold.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\HammerheadGold\Ragdolls\HammerheadGoldDefaultRagdoll.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerheadgold\Ragdolls\HammerheadgoldDefaultRagdoll.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Legacycharybdis\Legacycharybdis.xml">
@@ -798,37 +798,37 @@
     <None Include="$(MSBuildThisFileDirectory)Concentus_LICENSE">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\Characters\HammerheadGold\HAMMERHEAD_attack1.ogg">
+    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerheadgold\HAMMERHEAD_attack1.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\Characters\HammerheadGold\HAMMERHEAD_attack2.ogg">
+    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerheadgold\HAMMERHEAD_attack2.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\Characters\HammerheadGold\HAMMERHEAD_attack3.ogg">
+    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerheadgold\HAMMERHEAD_attack3.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\Characters\HammerheadGold\HAMMERHEAD_damage1.ogg">
+    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerheadgold\HAMMERHEAD_damage1.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\Characters\HammerheadGold\HAMMERHEAD_damage2.ogg">
+    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerheadgold\HAMMERHEAD_damage2.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\Characters\HammerheadGold\HAMMERHEAD_damage3.ogg">
+    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerheadgold\HAMMERHEAD_damage3.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\Characters\HammerheadGold\HAMMERHEAD_death1.ogg">
+    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerheadgold\HAMMERHEAD_death1.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\Characters\HammerheadGold\HAMMERHEAD_death2.ogg">
+    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerheadgold\HAMMERHEAD_death2.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\Characters\HammerheadGold\HAMMERHEAD_idle1.ogg">
+    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerheadgold\HAMMERHEAD_idle1.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\Characters\HammerheadGold\HAMMERHEAD_idle2.ogg">
+    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerheadgold\HAMMERHEAD_idle2.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\Characters\HammerheadGold\HAMMERHEAD_idle3.ogg">
+    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerheadgold\HAMMERHEAD_idle3.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Fonts\BebasNeue-Regular.otf">
