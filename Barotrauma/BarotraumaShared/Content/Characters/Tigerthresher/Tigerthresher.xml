@@ -1,6 +1,15 @@
 ﻿<Character speciesname="Tigerthresher" humanoid="False" husk="False" needsair="False" canspeak="False" noise="100" blooddecal="">
   <ragdolls folder="Content/Characters/Tigerthresher/Ragdolls/" />
   <animations folder="Content/Characters/Tigerthresher/Animations/" />
-  <health vitality="100" doesbleed="True" crushdepth="-Infinity" usehealthwindow="False" />
-  <ai combatstrength="1" sight="1" hearing="1" aggressionhurt="100" aggressiongreed="10" fleehealththreshold="0" attackonlywhenprovoked="False" aggressiveboarding="False" />
+  <health vitality="150" doesbleed="True" crushdepth="-Infinity" usehealthwindow="False" />
+  <ai combatstrength="400" sight="1" hearing="1" aggressionhurt="100" aggressiongreed="10" fleehealththreshold="0" attackonlywhenprovoked="False" aggressiveboarding="False">
+    <target tag="dead" state="Eat" priority="100" />
+    <target tag="human" state="Attack" priority="60" />
+    <target tag="weaker" state="Attack" priority="50" />
+    <!--<target tag="stronger" state="Avoid" priority="50" />-->
+  </ai>
+  <bloodemitter particle="blood" anglemin="1" anglemax="2" scalemin="1" scalemax="1" velocitymin="0" velocitymax="0" emitinterval="0" particlespersecond="0" particleamount="10" highqualitycollisiondetection="False" copyentityangle="False" />
+  <bloodemitter particle="waterblood" anglemin="1" anglemax="2" scalemin="1" scalemax="1" velocitymin="0" velocitymax="0" emitinterval="0" particlespersecond="0" particleamount="1" highqualitycollisiondetection="False" copyentityangle="False" />
+  <gibemitter particle="gib" anglemin="0" anglemax="360" scalemin="1" scalemax="2" velocitymin="200" velocitymax="1500" emitinterval="0" particlespersecond="0" particleamount="30" highqualitycollisiondetection="False" copyentityangle="False" />
+  <gibemitter particle="heavygib" anglemin="0" anglemax="360" scalemin="1" scalemax="2" velocitymin="50" velocitymax="1000" emitinterval="0" particlespersecond="0" particleamount="15" highqualitycollisiondetection="False" copyentityangle="False" />
 </Character>

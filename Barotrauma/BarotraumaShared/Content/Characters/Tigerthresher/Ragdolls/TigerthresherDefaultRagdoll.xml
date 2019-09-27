@@ -13,6 +13,10 @@
   </limb>
   <limb id="2" width="80" height="30" name="Jaw" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="763,85,140,48" origin="0.6043741,0.4799384" depth="0" />
+    <attack context="NotDefined" targettype="Any" hitdetectiontype="Distance" afterattack="FallBack" reverse="False" range="200" damagerange="100" duration="0.5" cooldown="0.75" secondarycooldown="0" cooldownrandomfactor="0.1" structuredamage="20" itemdamage="20" stun="0" onlyhumans="False" applyforceonlimbs="" force="80" torque="80" applyforcesonlyonce="False" targetimpulse="0" targetimpulseworld="0,0" targetforce="-50" targetforceworld="0,0" severlimbsprobability="0.8" priority="0" structuresoundtype="StructureSlash">
+      <affliction identifier="internaldamage" strength="15" probability="1" />
+      <affliction identifier="bleeding" strength="50" probability="1" />
+    </attack>
   </limb>
   <limb id="3" width="80" height="80" name="Tail1" type="Tail" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="565,0,85,131" origin="0.5,0.5" depth="0.1" subdivisions="5,5">
@@ -67,13 +71,13 @@
   <limb id="13" width="43.35" height="44.2" name="Hair" type="None" spriteorientation="0" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="902,132,51,52" origin="0.5,0.5" depth="0.1" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.1" amplitude="0.45" changespeed="2" blendmode="Add" sync="-1" typename="noise" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
-      <spritedeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="0.5,0 0.5,0 0.5,0 0.5,0 0,0" row2="0.75,0 0.75,0 1,0 0.75,0 0,0" row3="0,0 0.5,0 0.5,0 0.5,0 0.75,0" row4="0.1,0 0.1,0 0.1,0 0.1,0 0.25,0" />
+      <spritedeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="Multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="0.5,0 0.5,0 0.5,0 0.5,0 0,0" row2="0.75,0 0.75,0 1,0 0.75,0 0,0" row3="0,0 0.5,0 0.5,0 0.5,0 0.75,0" row4="0.1,0 0.1,0 0.1,0 0.1,0 0.25,0" sync="-1" typename="custom" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
     </deformablesprite>
   </limb>
   <limb id="14" radius="0" width="42.5" height="47.6" mass="0" name="Fins" type="None" spriteorientation="0" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="899,199,50,56" origin="0.4434903,0.5113276" depth="0" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.1" amplitude="0.5" changespeed="2" blendmode="Add" sync="-1" typename="noise" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
-      <spritedeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="0.5,0 0.5,0 0.5,0 0.5,0 0,0" row2="0.75,0 0.75,0 1,0 0.75,0 0,0" row3="0,0 0.5,0 0.5,0 0.5,0 0.75,0" row4="0.1,0 0.1,0 0.1,0 0.1,0 0.25,0" />
+      <spritedeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="Multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="0.5,0 0.5,0 0.5,0 0.5,0 0,0" row2="0.75,0 0.75,0 1,0 0.75,0 0,0" row3="0,0 0.5,0 0.5,0 0.5,0 0.75,0" row4="0.1,0 0.1,0 0.1,0 0.1,0 0.25,0" sync="-1" typename="custom" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
     </deformablesprite>
   </limb>
   <joint limb1="0" limb2="1" limb1anchor="-32.70639,-13.92811" limb2anchor="20.47176,18.65292" name="Joint 0 - 1" canbesevered="True" limitenabled="True" upperlimit="29.98326" lowerlimit="10.18363" stiffness="0.25" />
