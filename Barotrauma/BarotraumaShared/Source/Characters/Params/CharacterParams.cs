@@ -34,7 +34,7 @@ namespace Barotrauma
         [Serialize(100f, true, description: "How much noise the character makes when moving?"), Editable(minValue: 0f, maxValue: 1000f)]
         public float Noise { get; set; }
 
-        [Serialize("", true), Editable]
+        [Serialize("blood", true), Editable]
         public string BloodDecal { get; private set; }
 
         public readonly string File;
