@@ -476,8 +476,6 @@ namespace Barotrauma
                 LightSource.Position = body.DrawPosition;
                 LightSource.LightSpriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipVertically;
             }
-            float depthStep = 0.000001f;
-            float step = depthStep;
             if (damageOverlayStrength > 0.0f && DamagedSprite != null && !hideLimb)
             {
                 DamagedSprite.Draw(spriteBatch,
@@ -488,7 +486,6 @@ namespace Barotrauma
             }
             foreach (var decorativeSprite in DecorativeSprites)
             {
-                depthStep += step;
                 if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
                 float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState);
                 Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState) * Scale;
@@ -497,8 +494,10 @@ namespace Barotrauma
                 Vector2 transformedOffset = new Vector2(ca * offset.X + sa * offset.Y, -sa * offset.X + ca * offset.Y);
                 decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(body.DrawPosition.X + transformedOffset.X, -(body.DrawPosition.Y + transformedOffset.Y)), color,
                     -body.Rotation + rotation, Scale, spriteEffect,
-                    depth: ActiveSprite.Depth - depthStep);
+                    depth: decorativeSprite.Sprite.Depth);
             }
+            float depthStep = 0.000001f;
+            float step = depthStep;
             WearableSprite onlyDrawable = wearingItems.Find(w => w.HideOtherWearables);
             if (Params.MirrorHorizontally)
             {
