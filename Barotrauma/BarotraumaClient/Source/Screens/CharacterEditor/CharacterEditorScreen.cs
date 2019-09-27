@@ -78,7 +78,7 @@ namespace Barotrauma.CharacterEditor
         private Limb jointEndLimb;
         private Vector2? anchor1Pos;
 
-        private const float holdTime = 0.1f;
+        private const float holdTime = 0.2f;
         private double holdTimer;
 
         private float spriteSheetZoom = 1;
