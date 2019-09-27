@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
+using SpriteParams = Barotrauma.RagdollParams.SpriteParams;
 
 namespace Barotrauma
 {
@@ -169,22 +170,21 @@ namespace Barotrauma
 
         partial void InitProjSpecific(XElement element)
         {
-            // TODO: we could also parse the limb params?
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "sprite":
-                        Sprite = new Sprite(subElement, "", GetSpritePath(subElement));
+                        Sprite = new Sprite(subElement, file: GetSpritePath(subElement, Params.normalSpriteParams));
                         break;
                     case "damagedsprite":
-                        DamagedSprite = new Sprite(subElement, "", GetSpritePath(subElement));
+                        DamagedSprite = new Sprite(subElement, file: GetSpritePath(subElement, Params.damagedSpriteParams));
                         break;
                     case "conditionalsprite":
-                        ConditionalSprites.Add(new ConditionalSprite(subElement, character, file: GetSpritePath(subElement)));
+                        ConditionalSprites.Add(new ConditionalSprite(subElement, character, file: GetSpritePath(subElement, null)));
                         break;
                     case "deformablesprite":
-                        DeformSprite = new DeformableSprite(subElement, filePath: GetSpritePath(subElement));
+                        DeformSprite = new DeformableSprite(subElement, filePath: GetSpritePath(subElement, Params.deformSpriteParams));
                         foreach (XElement animationElement in subElement.Elements())
                         {
                             int sync = animationElement.GetAttributeInt("sync", -1);
@@ -224,35 +224,46 @@ namespace Barotrauma
             {
                 Sprite.Remove();
                 var source = Sprite.SourceElement;
-                Sprite = new Sprite(source, file: GetSpritePath(source));
+                Sprite = new Sprite(source, file: GetSpritePath(source, Params.normalSpriteParams));
             }
             if (DeformSprite != null)
             {
                 DeformSprite.Remove();
                 var source = DeformSprite.Sprite.SourceElement;
-                DeformSprite = new DeformableSprite(source, filePath: GetSpritePath(source));
+                DeformSprite = new DeformableSprite(source, filePath: GetSpritePath(source, Params.deformSpriteParams));
+            }
             }
             if (DamagedSprite != null)
             {
                 DamagedSprite.Remove();
                 var source = DamagedSprite.SourceElement;
-                DamagedSprite = new Sprite(source, file: GetSpritePath(source));
+                DamagedSprite = new Sprite(source, file: GetSpritePath(source, Params.damagedSpriteParams));
             }
             for (int i = 0; i < ConditionalSprites.Count; i++)
             {
                 var conditionalSprite = ConditionalSprites[i];
                 conditionalSprite.Remove();
                 var source = conditionalSprite.SourceElement;
-                ConditionalSprites[i] = new ConditionalSprite(source, character, file: GetSpritePath(source));
+                ConditionalSprites[i] = new ConditionalSprite(source, character, file: GetSpritePath(source, null));
             }
+        }
+
+        private string GetSpritePath(XElement element, SpriteParams spriteParams)
+        {
+            string texturePath = element.GetAttributeString("texture", null);
+            if (string.IsNullOrWhiteSpace(texturePath) && spriteParams != null)
+            {
+                texturePath = spriteParams.Ragdoll.Texture;
+            }
+            return GetSpritePath(texturePath);
         }
 
         /// <summary>
         /// Get the full path of a limb sprite, taking into account tags, gender and head id
         /// </summary>
-        private string GetSpritePath(XElement element)
+        private string GetSpritePath(string texturePath)
         {
-            string spritePath = element.Attribute("texture")?.Value ?? "";
+            string spritePath = texturePath;
             string spritePathWithTags = spritePath;
             if (character.Info != null && character.IsHumanoid)
             {
@@ -270,7 +281,6 @@ namespace Barotrauma
                         Path.GetFileNameWithoutExtension(spritePath) + tags + Path.GetExtension(spritePath));
                 }
             }
-
             return File.Exists(spritePathWithTags) ? spritePathWithTags : spritePath;
         }
 
@@ -398,6 +408,7 @@ namespace Barotrauma
             body.Dir = Dir;
 
             bool hideLimb = Params.Hide || wearingItems.Any(w => w != null && w.HideLimb);
+            // TODO: there's now two calls to this, because body.Draw() method calls this too -> is this an issue?
             body.UpdateDrawPosition();
 
             if (!hideLimb)

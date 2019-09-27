@@ -31,6 +31,9 @@ namespace Barotrauma
 
         public string SpeciesName { get; private set; }
 
+        [Serialize("", true, description: "Default path for the limb sprite textures. Used only if the limb specific path for the limb is not defined"), Editable]
+        public string Texture { get; set; }
+
         [Serialize(0f, true, description: "The orientation of the sprites as drawn on the sprite sheet. Can be overridden by setting a value for Limb's 'Sprite Orientation'. Used mainly for animations and widgets."), Editable(-360, 360)]
         public float SpritesheetOrientation { get; set; }
 
@@ -725,6 +728,8 @@ namespace Barotrauma
             public override string Name => "Sprite";
 
             public SpriteParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll) { }
+
+            public string GetTexturePath() => string.IsNullOrWhiteSpace(Texture) ? Ragdoll.Texture : Texture;
         }
 
         public class DeformationParams : SubParam
