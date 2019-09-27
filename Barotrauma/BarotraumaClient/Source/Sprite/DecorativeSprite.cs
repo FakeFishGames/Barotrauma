@@ -2,11 +2,15 @@
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using SpriteParams = Barotrauma.RagdollParams.SpriteParams;
 
 namespace Barotrauma
 {
-    public class DecorativeSprite
+    class DecorativeSprite : ISerializableEntity
     {
+        public string Name => $"Decorative Sprite";
+        public Dictionary<string, SerializableProperty> SerializableProperties { get; set; }
+
         public Sprite Sprite { get; private set; }
 
         public enum AnimationType
@@ -16,17 +20,17 @@ namespace Barotrauma
             Noise
         }
 
-        [Serialize("0,0", false)]
+        [Serialize("0,0", true), Editable]
         public Vector2 Offset { get; private set; }
 
-        [Serialize(AnimationType.None, false)]
+        [Serialize(AnimationType.None, false), Editable]
         public AnimationType OffsetAnim { get; private set; }
 
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, true), Editable]
         public float OffsetAnimSpeed { get; private set; }
 
         private float rotationSpeedRadians;
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, true), Editable]
         public float RotationSpeed
         {
             get
@@ -39,16 +43,16 @@ namespace Barotrauma
             }
         }
 
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, true), Editable]
         public float Rotation { get; private set; }
 
-        [Serialize(AnimationType.None, false)]
+        [Serialize(AnimationType.None, false), Editable]
         public AnimationType RotationAnim { get; private set; }
 
         /// <summary>
         /// If > 0, only one sprite of the same group is used (chosen randomly)
         /// </summary>
-        [Serialize(0, false)]
+        [Serialize(0, false, description: "If > 0, only one sprite of the same group is used (chosen randomly)"), Editable(ReadOnly = true)]
         public int RandomGroupID { get; private set; }
 
         /// <summary>
@@ -60,11 +64,10 @@ namespace Barotrauma
         /// </summary>
         internal List<PropertyConditional> AnimationConditionals { get; private set; } = new List<PropertyConditional>();
 
-        public DecorativeSprite(XElement element, string path = "", bool lazyLoad = false)
+        public DecorativeSprite(XElement element, string path = "", string file = "", bool lazyLoad = false)
         {
-            Sprite = new Sprite(element, path, lazyLoad: lazyLoad);
-            SerializableProperty.DeserializeProperties(this, element);
-
+            Sprite = new Sprite(element, path, file, lazyLoad: lazyLoad);
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
             foreach (XElement subElement in element.Elements())
             {
                 List<PropertyConditional> conditionalList = null;

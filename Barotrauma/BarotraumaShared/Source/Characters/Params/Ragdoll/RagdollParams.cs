@@ -474,7 +474,8 @@ namespace Barotrauma
         {
             public readonly SpriteParams normalSpriteParams;
             public readonly SpriteParams damagedSpriteParams;
-            public readonly SpriteParams deformSpriteParams;
+            public readonly DeformSpriteParams deformSpriteParams;
+            public readonly List<DecorativeSpriteParams> decorativeSpriteParams = new List<DecorativeSpriteParams>();
 
             public AttackParams Attack { get; private set; }
             public SoundParams Sound { get; private set; }
@@ -590,12 +591,14 @@ namespace Barotrauma
                 var deformSpriteElement = element.GetChildElement("deformablesprite");
                 if (deformSpriteElement != null)
                 {
-                    deformSpriteParams = new SpriteParams(deformSpriteElement, ragdoll)
-                    {
-                        Deformation = new DeformationParams(deformSpriteElement, ragdoll)
-                    };
-                    deformSpriteParams.SubParams.Add(deformSpriteParams.Deformation);
+                    deformSpriteParams = new DeformSpriteParams(deformSpriteElement, ragdoll);
                     SubParams.Add(deformSpriteParams);
+                }
+                foreach (var decorativeSpriteElement in element.GetChildElements("decorativesprite"))
+                {
+                    var decorativeParams = new DecorativeSpriteParams(decorativeSpriteElement, ragdoll);
+                    decorativeSpriteParams.Add(decorativeParams);
+                    SubParams.Add(decorativeParams);
                 }
                 var attackElement = element.GetChildElement("attack");
                 if (attackElement != null)
@@ -709,6 +712,51 @@ namespace Barotrauma
             }
         }
 
+        public class DecorativeSpriteParams : SpriteParams
+        {
+            public DecorativeSpriteParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
+            {
+#if CLIENT
+                DecorativeSprite = new DecorativeSprite(element);
+#endif
+            }
+
+#if CLIENT
+            public DecorativeSprite DecorativeSprite { get; private set; }
+
+            public override bool Deserialize(XElement element = null, bool recursive = true)
+            {
+                base.Deserialize(element, recursive);
+                DecorativeSprite.SerializableProperties = SerializableProperty.DeserializeProperties(DecorativeSprite, element ?? Element);
+                return SerializableProperties != null;
+            }
+
+            public override bool Serialize(XElement element = null, bool recursive = true)
+            {
+                base.Serialize(element, recursive);
+                SerializableProperty.SerializeProperties(DecorativeSprite, element ?? Element);
+                return true;
+            }
+
+            public override void Reset()
+            {
+                base.Reset();
+                DecorativeSprite.SerializableProperties = SerializableProperty.DeserializeProperties(DecorativeSprite, OriginalElement);
+            }
+#endif
+        }
+
+        public class DeformSpriteParams : SpriteParams
+        {
+            public DeformationParams Deformation { get; private set; }
+
+            public DeformSpriteParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
+            {
+                Deformation = new DeformationParams(element, ragdoll);
+                SubParams.Add(Deformation);
+            }
+        }
+
         public class SpriteParams : SubParam
         {
             [Serialize("0, 0, 0, 0", true), Editable]
@@ -722,8 +770,6 @@ namespace Barotrauma
 
             [Serialize("", true), Editable()]
             public string Texture { get; set; }
-
-            public DeformationParams Deformation { get; set; }
 
             public override string Name => "Sprite";
 
@@ -1046,9 +1092,13 @@ namespace Barotrauma
             public virtual void AddToEditor(ParamsEditor editor, bool recursive = true, int space = 0)
             {
                 SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, this, inGame: false, showName: true, titleFont: GUI.LargeFont);
-                if (this is SpriteParams spriteParams && spriteParams.Deformation != null)
+                if (this is DecorativeSpriteParams decSpriteParams)
                 {
-                    foreach (var deformation in spriteParams.Deformation.Deformations.Keys)
+                    new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, decSpriteParams.DecorativeSprite, inGame: false, showName: true, titleFont: GUI.LargeFont);
+                }
+                else if (this is DeformSpriteParams deformSpriteParams)
+                {
+                    foreach (var deformation in deformSpriteParams.Deformation.Deformations.Keys)
                     {
                         new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, deformation, inGame: false, showName: true, titleFont: GUI.LargeFont);
                     }

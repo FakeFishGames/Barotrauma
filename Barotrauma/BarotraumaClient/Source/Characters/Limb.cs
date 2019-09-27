@@ -111,6 +111,9 @@ namespace Barotrauma
 
         public Sprite Sprite { get; protected set; }
         public DeformableSprite DeformSprite { get; protected set; }
+
+        public List<DecorativeSprite> DecorativeSprites { get; private set; } = new List<DecorativeSprite>();
+
         public Sprite ActiveSprite
         {
             get
@@ -139,6 +142,15 @@ namespace Barotrauma
         public Sprite DamagedSprite { get; private set; }
 
         public List<ConditionalSprite> ConditionalSprites { get; private set; } = new List<ConditionalSprite>();
+        private Dictionary<DecorativeSprite, SpriteState> spriteAnimState = new Dictionary<DecorativeSprite, SpriteState>();
+        private Dictionary<int, List<DecorativeSprite>> DecorativeSpriteGroups = new Dictionary<int, List<DecorativeSprite>>();
+
+        class SpriteState
+        {
+            public float RotationState;
+            public float OffsetState;
+            public bool IsActive = true;
+        }
 
         public Color InitialLightSourceColor
         {
@@ -170,6 +182,19 @@ namespace Barotrauma
 
         partial void InitProjSpecific(XElement element)
         {
+            for (int i = 0; i < Params.decorativeSpriteParams.Count; i++)
+            {
+                var param = Params.decorativeSpriteParams[i];
+                var decorativeSprite = new DecorativeSprite(param.Element, file: GetSpritePath(param.Element, param));
+                DecorativeSprites.Add(decorativeSprite);
+                int groupID = decorativeSprite.RandomGroupID;
+                if (!DecorativeSpriteGroups.ContainsKey(groupID))
+                {
+                    DecorativeSpriteGroups.Add(groupID, new List<DecorativeSprite>());
+                }
+                DecorativeSpriteGroups[groupID].Add(decorativeSprite);
+                spriteAnimState.Add(decorativeSprite, new SpriteState());
+            }
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -232,7 +257,6 @@ namespace Barotrauma
                 var source = DeformSprite.Sprite.SourceElement;
                 DeformSprite = new DeformableSprite(source, filePath: GetSpritePath(source, Params.deformSpriteParams));
             }
-            }
             if (DamagedSprite != null)
             {
                 DamagedSprite.Remove();
@@ -244,7 +268,15 @@ namespace Barotrauma
                 var conditionalSprite = ConditionalSprites[i];
                 conditionalSprite.Remove();
                 var source = conditionalSprite.SourceElement;
+                // TODO: lazy load?
                 ConditionalSprites[i] = new ConditionalSprite(source, character, file: GetSpritePath(source, null));
+            }
+            for (int i = 0; i < DecorativeSprites.Count; i++)
+            {
+                var decorativeSprite = DecorativeSprites[i];
+                decorativeSprite.Remove();
+                var source = decorativeSprite.Sprite.SourceElement;
+                DecorativeSprites[i] = new DecorativeSprite(source, file: GetSpritePath(source, Params.decorativeSpriteParams[i]));
             }
         }
 
@@ -290,6 +322,10 @@ namespace Barotrauma
             Sprite?.LoadParams(Params.normalSpriteParams, isFlipped);
             DamagedSprite?.LoadParams(Params.damagedSpriteParams, isFlipped);
             DeformSprite?.Sprite.LoadParams(Params.deformSpriteParams, isFlipped);
+            for (int i = 0; i < DecorativeSprites.Count; i++)
+            {
+                DecorativeSprites[i].Sprite?.LoadParams(Params.decorativeSpriteParams[i], isFlipped);
+            }
         }
 
         partial void AddDamageProjSpecific(Vector2 simPosition, List<Affliction> afflictions, bool playSound, List<DamageModifier> appliedDamageModifiers)
@@ -384,6 +420,8 @@ namespace Barotrauma
                 LightSource.ParentSub = body.Submarine;
                 LightSource.Rotation = (dir == Direction.Right) ? body.Rotation : body.Rotation - MathHelper.Pi;
             }
+
+            UpdateSpriteStates(deltaTime);
         }
 
         public void Draw(SpriteBatch spriteBatch, Camera cam, Color? overrideColor = null)
@@ -432,15 +470,36 @@ namespace Barotrauma
                     body.Draw(spriteBatch, activeSprite, color, null, Scale * TextureScale, Params.MirrorHorizontally, Params.MirrorVertically);
                 }
             }
-
+            SpriteEffects spriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
             if (LightSource != null)
             {
                 LightSource.Position = body.DrawPosition;
                 LightSource.LightSpriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipVertically;
             }
             float depthStep = 0.000001f;
+            float step = depthStep;
+            if (damageOverlayStrength > 0.0f && DamagedSprite != null && !hideLimb)
+            {
+                DamagedSprite.Draw(spriteBatch,
+                    new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
+                    color * Math.Min(damageOverlayStrength, 1.0f), ActiveSprite.Origin,
+                    -body.DrawRotation,
+                    Scale, spriteEffect, ActiveSprite.Depth - 0.0000015f);
+            }
+            foreach (var decorativeSprite in DecorativeSprites)
+            {
+                depthStep += step;
+                if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
+                float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState);
+                Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState) * Scale;
+                var ca = (float)Math.Cos(-body.Rotation);
+                var sa = (float)Math.Sin(-body.Rotation);
+                Vector2 transformedOffset = new Vector2(ca * offset.X + sa * offset.Y, -sa * offset.X + ca * offset.Y);
+                decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(body.DrawPosition.X + transformedOffset.X, -(body.DrawPosition.Y + transformedOffset.Y)), color,
+                    -body.Rotation + rotation, Scale, spriteEffect,
+                    depth: ActiveSprite.Depth - depthStep);
+            }
             WearableSprite onlyDrawable = wearingItems.Find(w => w.HideOtherWearables);
-            SpriteEffects spriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
             if (Params.MirrorHorizontally)
             {
                 spriteEffect = spriteEffect == SpriteEffects.None ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
@@ -457,19 +516,19 @@ namespace Barotrauma
                     if (herpesStrength > 0.0f)
                     {
                         DrawWearable(HerpesSprite, depthStep, spriteBatch, color * Math.Min(herpesStrength / 10.0f, 1.0f), spriteEffect);
-                        depthStep += 0.000001f;
+                        depthStep += step;
                     }
                 }
                 if (HuskSprite != null && (character.IsHusk || character.CharacterHealth.GetAffliction<AfflictionHusk>("huskinfection")?.State == AfflictionHusk.InfectionState.Active))
                 {
                     DrawWearable(HuskSprite, depthStep, spriteBatch, color, spriteEffect);
-                    depthStep += 0.000001f;
+                    depthStep += step;
                 }
                 foreach (WearableSprite wearable in OtherWearables)
                 {
                     DrawWearable(wearable, depthStep, spriteBatch, color, spriteEffect);
                     //if there are multiple sprites on this limb, make the successive ones be drawn in front
-                    depthStep += 0.000001f;
+                    depthStep += step;
                 }
             }
             foreach (WearableSprite wearable in WearingItems)
@@ -477,18 +536,7 @@ namespace Barotrauma
                 if (onlyDrawable != null && onlyDrawable != wearable) continue;
                 DrawWearable(wearable, depthStep, spriteBatch, color, spriteEffect);
                 //if there are multiple sprites on this limb, make the successive ones be drawn in front
-                depthStep += 0.000001f;
-            }
-
-            if (damageOverlayStrength > 0.0f && DamagedSprite != null && !hideLimb)
-            {
-                float depth = ActiveSprite.Depth - 0.0000015f;
-
-                DamagedSprite.Draw(spriteBatch,
-                    new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
-                    color * Math.Min(damageOverlayStrength, 1.0f), ActiveSprite.Origin,
-                    -body.DrawRotation,
-                    1.0f, spriteEffect, depth);
+                depthStep += step;
             }
 
             if (GameMain.DebugDraw)
@@ -525,6 +573,51 @@ namespace Barotrauma
                     //GUI.DrawRectangle(spriteBatch, new Rectangle((int)mainLimbFront.X, (int)mainLimbFront.Y, 10, 10), Color.Yellow, true);
                 }
                 DrawDamageModifiers(spriteBatch, cam, bodyDrawPos, isScreenSpace: false);
+            }
+        }
+
+        private void UpdateSpriteStates(float deltaTime)
+        {
+            foreach (int spriteGroup in DecorativeSpriteGroups.Keys)
+            {
+                for (int i = 0; i < DecorativeSpriteGroups[spriteGroup].Count; i++)
+                {
+                    var decorativeSprite = DecorativeSpriteGroups[spriteGroup][i];
+                    if (decorativeSprite == null) { continue; }
+                    if (spriteGroup > 0)
+                    {
+                        // TODO
+                        //int activeSpriteIndex = ID % DecorativeSpriteGroups[spriteGroup].Count;
+                        //if (i != activeSpriteIndex)
+                        //{
+                        //    spriteAnimState[decorativeSprite].IsActive = false;
+                        //    continue;
+                        //}
+                    }
+
+                    //check if the sprite is active (whether it should be drawn or not)
+                    var spriteState = spriteAnimState[decorativeSprite];
+                    spriteState.IsActive = true;
+                    foreach (PropertyConditional conditional in decorativeSprite.IsActiveConditionals)
+                    {
+                        if (!conditional.Matches(this))
+                        {
+                            spriteState.IsActive = false;
+                            break;
+                        }
+                    }
+                    if (!spriteState.IsActive) { continue; }
+
+                    //check if the sprite should be animated
+                    bool animate = true;
+                    foreach (PropertyConditional conditional in decorativeSprite.AnimationConditionals)
+                    {
+                        if (!conditional.Matches(this)) { animate = false; break; }
+                    }
+                    if (!animate) { continue; }
+                    spriteState.OffsetState += deltaTime;
+                    spriteState.RotationState += deltaTime;
+                }
             }
         }
 
@@ -647,6 +740,9 @@ namespace Barotrauma
 
             DeformSprite?.Sprite?.Remove();
             DeformSprite = null;
+
+            DecorativeSprites.ForEach(s => s.Remove());
+            ConditionalSprites.Clear();
 
             ConditionalSprites.ForEach(s => s.Remove());
             ConditionalSprites.Clear();
