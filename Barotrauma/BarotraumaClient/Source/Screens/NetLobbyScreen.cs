@@ -295,16 +295,23 @@ namespace Barotrauma
                 Visible = false
             };
 
-            float panelSpacing = 0.02f;
+            float panelSpacing = 0.005f;
 
             //server info panel ------------------------------------------------------------
 
             infoFrame = new GUIFrame(new RectTransform(new Vector2(0.7f, 0.65f), defaultModeContainer.RectTransform));
             var infoFrameContent = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), infoFrame.RectTransform, Anchor.Center), style: null);
 
+            // Sidebar area (Character customization/Chat)
+
+            GUILayoutGroup sideBar = new GUILayoutGroup(new RectTransform(new Vector2(0.3f- panelSpacing, 1.0f), defaultModeContainer.RectTransform, Anchor.TopRight))
+            {
+                Stretch = true
+            };
+
             //player info panel ------------------------------------------------------------
 
-            myCharacterFrame = new GUIFrame(new RectTransform(new Vector2(0.3f - panelSpacing, 0.55f), defaultModeContainer.RectTransform, Anchor.TopRight));
+            myCharacterFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.5f), sideBar.RectTransform));
             playerInfoContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), myCharacterFrame.RectTransform, Anchor.Center), style: null);
 
             playYourself = new GUITickBox(new RectTransform(new Vector2(0.06f, 0.06f), myCharacterFrame.RectTransform) { RelativeOffset = new Vector2(0.05f,0.05f) },
@@ -317,7 +324,7 @@ namespace Barotrauma
 
             // Social area
 
-            GUIFrame socialBackground = new GUIFrame(new RectTransform(new Vector2(0.3f - panelSpacing, 0.45f), defaultModeContainer.RectTransform, Anchor.BottomRight));
+            GUIFrame socialBackground = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.45f), sideBar.RectTransform));
 
             GUILayoutGroup socialHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), socialBackground.RectTransform, Anchor.Center))
             {
@@ -354,6 +361,31 @@ namespace Barotrauma
 
             textBox.OnEnterPressed = (tb, userdata) => { GameMain.Client?.EnterChatMessage(tb, userdata); return true; };
             textBox.OnTextChanged += (tb, userdata) => { GameMain.Client?.TypingChatMessage(tb, userdata); return true; };
+
+            GUILayoutGroup socialControlsHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), sideBar.RectTransform), isHorizontal: true)
+            {
+                Stretch = true
+            };
+
+            // Ready to start tickbox
+            ReadyToStartBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 1.0f), socialControlsHolder.RectTransform),
+                TextManager.Get("ReadyToStartTickBox"))
+            {
+                Visible = false
+            };
+
+            // Start button
+            StartButton = new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), socialControlsHolder.RectTransform),
+                TextManager.Get("StartGameButton"), style: "GUIButtonLarge")
+            {
+                OnClicked = (btn, obj) =>
+                {
+                    GameMain.Client.RequestStartRound();
+                    CoroutineManager.StartCoroutine(WaitForStartRound(StartButton, allowCancel: true), "WaitForStartRound");
+                    return true;
+                }
+            };
+            clientHiddenElements.Add(StartButton);
 
             //--------------------------------------------------------------------------------------------------------------------------------
             //infoframe contents
@@ -672,11 +704,11 @@ namespace Barotrauma
                 TextGetter = AutoRestartText
             };
             
-            ReadyToStartBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.06f), rightInfoColumn.RectTransform),
+            /*ReadyToStartBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.06f), rightInfoColumn.RectTransform),
                 TextManager.Get("ReadyToStartTickBox"))
             {
                 Visible = false
-            };
+            };*/
 
             campaignViewButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), rightInfoColumn.RectTransform),
                 TextManager.Get("CampaignView"), style: "GUIButtonLarge")
@@ -685,7 +717,7 @@ namespace Barotrauma
                 Visible = false
             };
 
-            StartButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.1f), infoFrameContent.RectTransform, Anchor.BottomRight),
+            /*StartButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.1f), infoFrameContent.RectTransform, Anchor.BottomRight),
                 TextManager.Get("StartGameButton"), style: "GUIButtonLarge")
             {
                 OnClicked = (btn, obj) => 
@@ -696,6 +728,7 @@ namespace Barotrauma
                 }
             };
             clientHiddenElements.Add(StartButton);
+            */
 
             spectateButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.1f), infoFrameContent.RectTransform, Anchor.BottomRight),
                 TextManager.Get("SpectateButton"), style: "GUIButtonLarge");
