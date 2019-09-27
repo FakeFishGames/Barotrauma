@@ -7,10 +7,8 @@ namespace Barotrauma
 {
     partial class Attack
     {
-        public string StructureSoundType
-        {
-            get; private set;
-        }
+        [Serialize("StructureBlunt", true), Editable()]
+        public string StructureSoundType { get; private set; }
 
         private RoundSound sound;
 
@@ -23,8 +21,6 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Error in attack ("+element+") - sounds should be defined as child elements, not as attributes.");
                 return;
             }
-            
-            StructureSoundType = element.GetAttributeString("structuresoundtype", "StructureBlunt");
 
             foreach (XElement subElement in element.Elements())
             {
