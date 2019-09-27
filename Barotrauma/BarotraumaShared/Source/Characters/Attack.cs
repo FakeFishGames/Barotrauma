@@ -113,7 +113,7 @@ namespace Barotrauma
         [Serialize(0.0f, false)]
         public float Stun { get; private set; }
 
-        [Serialize(false, true), Editable]
+        [Serialize(false, true, description: "Can damage only Humans."), Editable]
         public bool OnlyHumans { get; private set; }
 
         [Serialize("", true), Editable]
