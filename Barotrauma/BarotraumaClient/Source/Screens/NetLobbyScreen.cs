@@ -374,6 +374,10 @@ namespace Barotrauma
                 Visible = false
             };
 
+            // Spectate button
+            spectateButton = new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), socialControlsHolder.RectTransform),
+                TextManager.Get("SpectateButton"), style: "GUIButtonLarge");
+
             // Start button
             StartButton = new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), socialControlsHolder.RectTransform),
                 TextManager.Get("StartGameButton"), style: "GUIButtonLarge")
@@ -730,8 +734,8 @@ namespace Barotrauma
             clientHiddenElements.Add(StartButton);
             */
 
-            spectateButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.1f), infoFrameContent.RectTransform, Anchor.BottomRight),
-                TextManager.Get("SpectateButton"), style: "GUIButtonLarge");
+            /*spectateButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.1f), infoFrameContent.RectTransform, Anchor.BottomRight),
+                TextManager.Get("SpectateButton"), style: "GUIButtonLarge");*/
         }
         
         public IEnumerable<object> WaitForStartRound(GUIButton startButton, bool allowCancel)
