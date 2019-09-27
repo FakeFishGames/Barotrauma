@@ -162,7 +162,7 @@
       </Objective>
     </TraitorMission> -->
 
-  <TraitorMission identifier="SabotageReactor_Assassinate">
+  <!--<TraitorMission identifier="SabotageReactor_Assassinate">
 
     <Icon texture="Content/UI/MissionIcons.png" sourcerect="512,0,256,256" color="200,0,0,255"/>
     
@@ -332,7 +332,7 @@
       </Goal>
     </Objective>
 
-  </TraitorMission>
+  </TraitorMission>-->
 
   <TraitorMission identifier="goblins">
 
@@ -353,8 +353,8 @@
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="goblins_objectiveSuccessMessage2"/>
       <StartMessage id="goblins_traitorobjectivestartmessage2"/>
-      <Goal type="sabotage" tag="pump" threshold="20">
-        <InfoText id="traitorgoalsabotageinfo" />
+      <Goal type="floodsub" percentage="15">
+        <InfoText id="traitorgoalfloodpercentofsub" />
       </Goal>
     </Objective>
 
@@ -362,7 +362,7 @@
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="goblins_objectiveSuccessMessage3"/>
       <StartMessage id="goblins_traitorobjectivestartmessage3"/>
-      <Goal type="killtarget" job="mechanic">
+      <Goal type="killtarget">
         <InfoText id="traitorgoalkilltargetinfo"/>
       </Goal>
     </Objective>
@@ -377,5 +377,48 @@
     </Objective>
 
   </TraitorMission>
+
+  <!--<TraitorMission identifier="oxygen_sabotage">
+
+    <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+
+    <StartInfoText id="oxygen_sabotage_traitormissionstartinfotext"/>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="oxygen_sabotage_objectivesuccessmessage1"/>
+      <StartMessage id="oxygen_sabotage_traitorobjectivestartmessage1"/>
+      <Goal type="sabotage" tag="oxygengenerator" threshold="10">
+        <InfoText id="traitorgoalsabotageinfo" />
+        <Modifier type="duration" duration="120" cumulative="true" />
+      </Goal>
+    </Objective>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="oxygen_sabotage_objectivesuccessmessage2"/>
+      <StartMessage id="oxygen_sabotage_traitorobjectivestartmessage2"/>
+      <Goal type="killtarget" job="mechanic">
+        <InfoText id="traitorgoalkilltargetinfo" />
+      </Goal>
+      <Goal type="killtarget" job="engineer">
+        <InfoText id="traitorgoalkilltargetinfo" />
+      </Goal>
+      <Goal type="killtarget" job="captain">
+        <InfoText id="traitorgoalkilltargetinfo" />
+      </Goal>
+      <Goal type="killtarget" job="securityofficer">
+        <InfoText id="traitorgoalkilltargetinfo" />
+      </Goal>
+      <Goal type="killtarget" job="medicaldoctor">
+        <InfoText id="traitorgoalkilltargetinfo" />
+      </Goal>
+      <Goal type="killtarget" job="assistant">
+        <InfoText id="traitorgoalkilltargetinfo" />
+      </Goal>
+    </Objective>
+
+  </TraitorMission>-->
+
 
 </TraitorMissions>

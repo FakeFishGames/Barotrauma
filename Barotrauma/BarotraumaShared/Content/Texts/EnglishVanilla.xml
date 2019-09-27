@@ -3542,11 +3542,18 @@
   <goblins_traitorobjectivestartmessage1>First, some seasonings. A well stocked kitchen has many options but for this purpose, only the purest cyanide will do.\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage1>
   <goblins_objectivesuccessmessage1>Ah yes, this will do nicely.</goblins_objectivesuccessmessage1>
   <goblins_traitorobjectivestartmessage2>Let's start the darlings off with some water.\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage2>
-  <goblins_objectivesuccessmessage2>There we go. Hors d'oeuvres, anyone?</goblins_objectivesuccessmessage2>
-  <goblins_traitorobjectivestartmessage3>A mechanic? Excellent choice.\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage3>
+  <goblins_objectivesuccessmessage2>There we go.</goblins_objectivesuccessmessage2>
+  <goblins_traitorobjectivestartmessage3>Hors d'oeuvres, anyone?\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage3>
   <goblins_objectivesuccessmessage3>Look at that tender, succulent meat!</goblins_objectivesuccessmessage3>
   <goblins_traitorobjectivestartmessage4>Now for the main course: \n[traitorgoalinfos]</goblins_traitorobjectivestartmessage4>
   <goblins_objectivesuccessmessage4>Now the goblins are fed, but the pantry is empty. Time to pick up some more supplies at the next station.</goblins_objectivesuccessmessage4>
+  
+    <!-- oxygen_sabotage mission text package -->
+  <oxygen_sabotage_traitormissionstartinfotext>Time for another experiment. This time we're testing how the human body reacts to being deprived of oxygen.</oxygen_sabotage_traitormissionstartinfotext>
+  <oxygen_sabotage_traitorobjectivestartmessage1>Subjects have been gathered and we are ready to start.\n[traitorgoalinfos]</oxygen_sabotage_traitorobjectivestartmessage1>
+  <oxygen_sabotage_objectivesuccessmessage1>Subjects should start feeling the effects shortly. Symptoms for oxygen deprivation include, but aren't limited to: extremities turning blue, seizures and fainting.</oxygen_sabotage_objectivesuccessmessage1>
+  <oxygen_sabotage_traitorobjectivestartmessage2>When you're happy with the data you've gathered, dispose of the test subjects.\n[traitorgoalinfos]</oxygen_sabotage_traitorobjectivestartmessage2>
+  <oxygen_sabotage_objectivesuccessmessage2>Another successful test. Report back to nearest coalition outpost.</oxygen_sabotage_objectivesuccessmessage2>
 
   <!-- Changed values as of 13th of August -->
   <traitorgoaldestroyitems>Dispose of at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>
