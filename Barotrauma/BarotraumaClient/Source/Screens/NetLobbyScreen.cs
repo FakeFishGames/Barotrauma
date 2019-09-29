@@ -83,17 +83,6 @@ namespace Barotrauma
         private GUILayoutGroup jobPreferencesLayout;
         private GUIButton jobInfoFrame;
 
-        private enum FaceSelectionStep
-        {
-            None,
-            Category,
-            Face,
-            Wearables
-        };
-
-        private FaceSelectionStep faceSelectionStep;
-        private WearableType wearableSelectionStep;
-
         private float autoRestartTimer;
 
         //persistent characterinfo provided by the server
