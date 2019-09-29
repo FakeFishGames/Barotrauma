@@ -162,6 +162,18 @@ namespace Barotrauma
             }
         }
 
+        public float StepValue
+        {
+            get
+            {
+                return step * (Range.Y - Range.X);
+            }
+            set
+            {
+                Step = value / (Range.Y - Range.X);
+            }
+        }
+
         public float BarSize
         {
             get { return barSize; }

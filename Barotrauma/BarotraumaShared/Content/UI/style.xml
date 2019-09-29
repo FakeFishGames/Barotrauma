@@ -626,6 +626,14 @@
     </GUIFrame>
   </GUIListBox>
 
+  <GUIFrameListBox
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255"    
+    textcolor="255,255,255,255">
+    <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="466, 660, 275, 166" slice="472,666,737,820"/>
+  </GUIFrameListBox>
+
   <ListBoxElement
     textcolor="127,140,153,255"    
     color="255,255,255,51"

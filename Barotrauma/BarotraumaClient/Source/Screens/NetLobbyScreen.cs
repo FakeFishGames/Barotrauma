@@ -82,7 +82,7 @@ namespace Barotrauma
         private GUIButton faceSelectionButton;
 
         private GUIFrame characterInfoFrame;
-        private GUIListBox faceSelectionList;
+        private GUIFrame appearanceFrame;
         private GUILayoutGroup jobPreferencesLayout;
         private GUIFrame draggedJobFrame;
 
@@ -1076,11 +1076,11 @@ namespace Barotrauma
                 new GUIFrame(new RectTransform(new Vector2(0.1f, 1.0f), characterInfoTabs.RectTransform), null); //spacing
 
                 faceSelectionButton = new GUIButton(new RectTransform(new Vector2(0.45f, 1.33f), characterInfoTabs.RectTransform),
-                    "Character", style: "GUITabButton");
+                    "Appearance", style: "GUITabButton");
 
                 jobPreferencesButton.OnClicked = SelectJobPreferencesTab;
 
-                faceSelectionButton.OnClicked = SelectFaceSelectionTabGender;
+                faceSelectionButton.OnClicked = SelectFaceSelectionTabMain;
 
                 characterInfoFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.5f), infoContainer.RectTransform), style: null);
 
@@ -1157,8 +1157,9 @@ namespace Barotrauma
 
                 UpdateJobPreferences(jobList);
 
-                faceSelectionList = new GUIListBox(new RectTransform(Vector2.One, characterInfoFrame.RectTransform));
-                faceSelectionList.Visible = false;
+                appearanceFrame = new GUIFrame(new RectTransform(Vector2.One, characterInfoFrame.RectTransform), style: "GUIFrameListBox");
+                appearanceFrame.Visible = false;
+                appearanceFrame.Color = Color.White;
             }
             else
             {
@@ -1935,45 +1936,158 @@ namespace Barotrauma
             faceSelectionButton.Selected = false;
 
             jobPreferencesLayout.Visible = true;
-            faceSelectionList.Visible = false;
+            appearanceFrame.Visible = false;
 
             return false;
         }
 
-        private bool SelectFaceSelectionTabGender(GUIButton button, object userData)
+        private bool SelectFaceSelectionTabMain(GUIButton button, object userData)
         {
             jobPreferencesButton.Selected = false;
             faceSelectionButton.Selected = true;
 
             jobPreferencesLayout.Visible = false;
-            faceSelectionList.Visible = true;
+            appearanceFrame.Visible = true;
 
-            faceSelectionList.Content.ClearChildren();
+            appearanceFrame.ClearChildren();
 
-            GUIButton maleButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.2f), faceSelectionList.Content.RectTransform),
+            var info = GameMain.Client.CharacterInfo;
+
+            GUILayoutGroup columnLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), appearanceFrame.RectTransform), true);
+
+            new GUIFrame(new RectTransform(new Vector2(0.05f, 1.0f), columnLayout.RectTransform), null);
+
+            //left column
+            GUILayoutGroup leftColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.425f, 1.0f), columnLayout.RectTransform));
+
+            new GUIFrame(new RectTransform(new Vector2(0.05f, 1.0f), columnLayout.RectTransform), null);
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), leftColumn.RectTransform), TextManager.Get("Gender"));
+
+            GUIButton maleButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.2f), leftColumn.RectTransform),
                 TextManager.Get("Male"), style: "ListBoxElement")
             {
                 UserData = Gender.Male,
-                OnClicked = SwitchGender
+                OnClicked = SelectFaceSelectionTabHead,
+                Selected = info.Gender == Gender.Male
             };
 
-            GUIButton femaleButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.2f), faceSelectionList.Content.RectTransform),
+            var hairCount = info.Wearables.Where(w =>
+                    Enum.TryParse(w.GetAttributeString("gender", "None"), true, out Gender g) && g == info.Gender &&
+                    Enum.TryParse(w.GetAttributeString("race", "None"), true, out Race r) && r == info.Race &&
+                    w.GetAttributeInt("headid", -1) == info.HeadSpriteId &&
+                    Enum.TryParse(w.GetAttributeString("type", "None"), true, out WearableType t) && t == WearableType.Hair).ToList().Count;
+
+            if (hairCount > 0)
+            {
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), leftColumn.RectTransform), "Hair");
+
+                var hairSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.15f), leftColumn.RectTransform));
+
+                hairSlider.Range = new Vector2(0, hairCount);
+                hairSlider.StepValue = 1;
+                hairSlider.BarScrollValue = info.HairIndex;
+                hairSlider.OnMoved = SwitchHair;
+                hairSlider.BarSize = 1.0f / (float)(hairCount + 1);
+            }
+
+            var beardCount = info.Wearables.Where(w =>
+                    Enum.TryParse(w.GetAttributeString("gender", "None"), true, out Gender g) && g == info.Gender &&
+                    Enum.TryParse(w.GetAttributeString("race", "None"), true, out Race r) && r == info.Race &&
+                    w.GetAttributeInt("headid", -1) == info.HeadSpriteId &&
+                    Enum.TryParse(w.GetAttributeString("type", "None"), true, out WearableType t) && t == WearableType.Beard).ToList().Count;
+
+            if (beardCount > 0)
+            {
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), leftColumn.RectTransform), "Beard");
+
+                var beardSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.15f), leftColumn.RectTransform));
+
+                beardSlider.Range = new Vector2(0, beardCount);
+                beardSlider.StepValue = 1;
+                beardSlider.BarScrollValue = info.BeardIndex;
+                beardSlider.OnMoved = SwitchBeard;
+                beardSlider.BarSize = 1.0f / (float)(beardCount + 1);
+            }
+
+            //right column
+            GUILayoutGroup rightColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.425f, 1.0f), columnLayout.RectTransform));
+
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.15f), rightColumn.RectTransform), null);
+
+            GUIButton femaleButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.2f), rightColumn.RectTransform),
                 TextManager.Get("Female"), style: "ListBoxElement")
             {
                 UserData = Gender.Female,
-                OnClicked = SwitchGender
+                OnClicked = SelectFaceSelectionTabHead,
+                Selected = info.Gender == Gender.Female
             };
+
+            var moustacheCount = info.Wearables.Where(w =>
+                    Enum.TryParse(w.GetAttributeString("gender", "None"), true, out Gender g) && g == info.Gender &&
+                    Enum.TryParse(w.GetAttributeString("race", "None"), true, out Race r) && r == info.Race &&
+                    w.GetAttributeInt("headid", -1) == info.HeadSpriteId &&
+                    Enum.TryParse(w.GetAttributeString("type", "None"), true, out WearableType t) && t == WearableType.Moustache).ToList().Count;
+
+            if (moustacheCount > 0)
+            {
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), rightColumn.RectTransform), "Moustache");
+
+                var moustacheSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.15f), rightColumn.RectTransform));
+
+                moustacheSlider.Range = new Vector2(0, moustacheCount);
+                moustacheSlider.StepValue = 1;
+                moustacheSlider.BarScrollValue = info.MoustacheIndex;
+                moustacheSlider.OnMoved = SwitchMoustache;
+                moustacheSlider.BarSize = 1.0f / (float)(moustacheCount + 1);
+            }
+
+            var faceAttachmentCount = info.Wearables.Where(w =>
+                    Enum.TryParse(w.GetAttributeString("gender", "None"), true, out Gender g) && g == info.Gender &&
+                    Enum.TryParse(w.GetAttributeString("race", "None"), true, out Race r) && r == info.Race &&
+                    w.GetAttributeInt("headid", -1) == info.HeadSpriteId &&
+                    Enum.TryParse(w.GetAttributeString("type", "None"), true, out WearableType t) && t == WearableType.FaceAttachment).ToList().Count;
+
+            if (faceAttachmentCount > 0)
+            {
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), rightColumn.RectTransform), "Accessories");
+
+                var faceAttachmentSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.15f), rightColumn.RectTransform));
+
+                faceAttachmentSlider.Range = new Vector2(0, faceAttachmentCount);
+                faceAttachmentSlider.StepValue = 1;
+                faceAttachmentSlider.BarScrollValue = info.FaceAttachmentIndex;
+                faceAttachmentSlider.OnMoved = SwitchFaceAttachment;
+                faceAttachmentSlider.BarSize = 1.0f / (float)(faceAttachmentCount+1);
+            }
+
+            //-----
+
+            new GUIFrame(new RectTransform(new Vector2(0.05f, 1.0f), columnLayout.RectTransform), null);
 
             return false;
         }
 
         private bool SelectFaceSelectionTabHead(GUIButton button, object userData)
         {
-            faceSelectionList.Content.ClearChildren();
-            faceSelectionList.ScrollBarEnabled = true;
-            faceSelectionList.ScrollBarVisible = true;
+            appearanceFrame.ClearChildren();
+
+            Gender gender = (Gender)userData;
 
             var info = GameMain.Client.CharacterInfo;
+
+            GUILayoutGroup layout = new GUILayoutGroup(new RectTransform(Vector2.One, appearanceFrame.RectTransform));
+
+            new GUIButton(new RectTransform(new Vector2(0.3f, 0.15f), layout.RectTransform), TextManager.Get("Back"))
+            {
+                OnClicked = SelectFaceSelectionTabMain
+            };
+
+            var listBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.85f), layout.RectTransform))
+            {
+                ScrollBarEnabled = true,
+                ScrollBarVisible = true
+            };
 
             GUILayoutGroup row = null;
             int itemsInRow = 0;
@@ -1982,7 +2096,7 @@ namespace Barotrauma
             foreach (Race race in Enum.GetValues(typeof(Race)))
             {
                 var wearables = info.Wearables.Where(w =>
-                    Enum.TryParse(w.GetAttributeString("gender", "None"), true, out Gender g) && g == info.Gender &&
+                    Enum.TryParse(w.GetAttributeString("gender", "None"), true, out Gender g) && g == gender &&
                     Enum.TryParse(w.GetAttributeString("race", "None"), true, out Race r) && r == race).ToList();
 
                 if (!wearables.Any()) { continue; }
@@ -2003,7 +2117,7 @@ namespace Barotrauma
 
                         string spritePath = spriteElement.Attribute("texture").Value;
 
-                        spritePath = spritePath.Replace("[GENDER]", (info.Gender == Gender.Female) ? "female" : "male");
+                        spritePath = spritePath.Replace("[GENDER]", (gender == Gender.Female) ? "female" : "male");
                         spritePath = spritePath.Replace("[RACE]", race.ToString().ToLowerInvariant());
                         spritePath = spritePath.Replace("[HEADID]", i.ToString());
 
@@ -2024,14 +2138,15 @@ namespace Barotrauma
 
                             if (row == null || itemsInRow >= 4)
                             {
-                                row = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.3f), faceSelectionList.Content.RectTransform), true);
+                                row = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.333f), listBox.Content.RectTransform), true);
                                 itemsInRow = 0;
                             }
 
                             var btn = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), row.RectTransform), style: "ListBoxElement")
                             {
-                                UserData = new Pair<Race, int>(race, i),
+                                UserData = new Tuple<Gender, Race, int>(gender, race, i),
                                 OnClicked = SwitchHead,
+                                Selected = gender == info.Gender && race == info.Race && i == info.HeadSpriteId
                             };
 
                             new GUIImage(new RectTransform(Vector2.One, btn.RectTransform), headSprite, scaleToFit: true);
@@ -2048,483 +2163,86 @@ namespace Barotrauma
             return false;
         }
 
-        private bool SelectFaceSelectionTabHair(GUIButton button, object userData)
-        {
-            faceSelectionList.Content.ClearChildren();
-            faceSelectionList.ScrollBarEnabled = true;
-            faceSelectionList.ScrollBarVisible = true;
-
-            var info = GameMain.Client.CharacterInfo;
-
-            GUILayoutGroup row = null;
-            int itemsInRow = 0;
-
-            Sprite headSprite = info.HeadSprite;
-
-            var wearables = info.Wearables.Where(w =>
-                    Enum.TryParse(w.GetAttributeString("type", "None"), true, out WearableType t) && t == WearableType.Hair &&
-                    w.GetAttributeInt("headid", -1) == info.Head.HeadSpriteId &&
-                    Enum.TryParse(w.GetAttributeString("gender", "None"), true, out Gender g) && g == info.Gender &&
-                    Enum.TryParse(w.GetAttributeString("race", "None"), true, out Race r) && r == info.Race).ToList();
-
-            bool skip = true;
-
-            for (int i = -1; i < wearables.Count; i++)
-            {
-                Sprite hairSprite = null;
-                if (i >= 0)
-                {
-                    var wearable = wearables[i];
-
-                    XElement hairElement = wearable.Element("sprite");
-                    hairSprite = new Sprite(hairElement);
-
-                    Point hairLocation = (headSprite.SourceRect.Location + headSprite.SourceRect.Size) * hairElement.GetAttributePoint("sheetindex", Point.Zero);
-
-                    hairSprite.SourceRect = new Rectangle(hairLocation, headSprite.SourceRect.Size);
-                    hairSprite.size = headSprite.size;
-
-                    skip = false;
-                }
-
-                if (row == null || itemsInRow >= 4)
-                {
-                    row = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.3f), faceSelectionList.Content.RectTransform), true);
-                    itemsInRow = 0;
-                }
-
-                var btn = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), row.RectTransform), style: "ListBoxElement")
-                {
-                    UserData = i + 1,
-                    OnClicked = SwitchHair
-                };
-
-                new GUIImage(new RectTransform(Vector2.One, btn.RectTransform), headSprite, scaleToFit: true);
-                if (hairSprite != null) { new GUIImage(new RectTransform(Vector2.One, btn.RectTransform), hairSprite, scaleToFit: true); }
-                itemsInRow++;
-            }
-
-            if (skip)
-            {
-                return SelectFaceSelectionTabMoustache(button, userData);
-            }
-
-            return false;
-        }
-
-        private bool SelectFaceSelectionTabMoustache(GUIButton button, object userData)
-        {
-            faceSelectionList.Content.ClearChildren();
-            faceSelectionList.ScrollBarEnabled = true;
-            faceSelectionList.ScrollBarVisible = true;
-
-            var info = GameMain.Client.CharacterInfo;
-
-            GUILayoutGroup row = null;
-            int itemsInRow = 0;
-
-            Sprite headSprite = info.HeadSprite;
-            Sprite hairSprite = null;
-            List<string> disallowed = new List<string>();
-            if (info.HairIndex > 0)
-            {
-                XElement hairElement = info.HairElement.Element("sprite");
-                hairSprite = new Sprite(hairElement);
-
-                Point hairLocation = (headSprite.SourceRect.Location + headSprite.SourceRect.Size) * hairElement.GetAttributePoint("sheetindex", Point.Zero);
-
-                hairSprite.SourceRect = new Rectangle(hairLocation, headSprite.SourceRect.Size);
-                hairSprite.size = headSprite.size;
-
-                disallowed.AddRange(info.HairElement.GetAttributeStringArray("disallow", new string[0]));
-            }
-
-            var wearables = info.Wearables.Where(w =>
-                    Enum.TryParse(w.GetAttributeString("type", "None"), true, out WearableType t) && t == WearableType.Moustache &&
-                    w.GetAttributeInt("headid", -1) == info.Head.HeadSpriteId &&
-                    Enum.TryParse(w.GetAttributeString("gender", "None"), true, out Gender g) && g == info.Gender &&
-                    Enum.TryParse(w.GetAttributeString("race", "None"), true, out Race r) && r == info.Race).ToList();
-
-            bool skip = true;
-
-            for (int i = -1; i < wearables.Count; i++)
-            {
-                Sprite moustacheSprite = null;
-                if (i >= 0)
-                {
-                    var wearable = wearables[i];
-
-                    if (wearable.GetAttributeStringArray("disallow", new string[0]).Contains("Hair" + info.HairIndex.ToString()) ||
-                        disallowed.Contains("Moustache" + i.ToString())) { continue; }
-
-                    XElement moustacheElement = wearable.Element("sprite");
-                    moustacheSprite = new Sprite(moustacheElement);
-
-                    Point moustacheLocation = (headSprite.SourceRect.Location + headSprite.SourceRect.Size) * moustacheElement.GetAttributePoint("sheetindex", Point.Zero);
-
-                    moustacheSprite.SourceRect = new Rectangle(moustacheLocation, headSprite.SourceRect.Size);
-                    moustacheSprite.size = headSprite.size;
-
-                    skip = false;
-                }
-
-                if (row == null || itemsInRow >= 4)
-                {
-                    row = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.3f), faceSelectionList.Content.RectTransform), true);
-                    itemsInRow = 0;
-                }
-
-                var btn = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), row.RectTransform), style: "ListBoxElement")
-                {
-                    UserData = i + 1,
-                    OnClicked = SwitchMoustache
-                };
-
-                new GUIImage(new RectTransform(Vector2.One, btn.RectTransform), headSprite, scaleToFit: true);
-                if (hairSprite != null) { new GUIImage(new RectTransform(Vector2.One, btn.RectTransform), hairSprite, scaleToFit: true); }
-                if (moustacheSprite != null) { new GUIImage(new RectTransform(Vector2.One, btn.RectTransform), moustacheSprite, scaleToFit: true); }
-                itemsInRow++;
-            }
-
-            if (skip)
-            {
-                return SelectFaceSelectionTabBeard(button, userData);
-            }
-
-            return false;
-        }
-
-        private bool SelectFaceSelectionTabBeard(GUIButton button, object userData)
-        {
-            faceSelectionList.Content.ClearChildren();
-            faceSelectionList.ScrollBarEnabled = true;
-            faceSelectionList.ScrollBarVisible = true;
-
-            var info = GameMain.Client.CharacterInfo;
-
-            GUILayoutGroup row = null;
-            int itemsInRow = 0;
-
-            Sprite headSprite = info.HeadSprite;
-            Sprite hairSprite = null;
-            Sprite moustacheSprite = null;
-            List<string> disallowed = new List<string>();
-            if (info.HairIndex > 0)
-            {
-                XElement hairElement = info.HairElement.Element("sprite");
-                hairSprite = new Sprite(hairElement);
-
-                Point hairLocation = (headSprite.SourceRect.Location + headSprite.SourceRect.Size) * hairElement.GetAttributePoint("sheetindex", Point.Zero);
-
-                hairSprite.SourceRect = new Rectangle(hairLocation, headSprite.SourceRect.Size);
-                hairSprite.size = headSprite.size;
-
-                disallowed.AddRange(info.HairElement.GetAttributeStringArray("disallow", new string[0]));
-            }
-
-            if (info.MoustacheIndex > 0)
-            {
-                XElement moustacheElement = info.MoustacheElement.Element("sprite");
-                moustacheSprite = new Sprite(moustacheElement);
-
-                Point moustacheLocation = (headSprite.SourceRect.Location + headSprite.SourceRect.Size) * moustacheElement.GetAttributePoint("sheetindex", Point.Zero);
-
-                moustacheSprite.SourceRect = new Rectangle(moustacheLocation, headSprite.SourceRect.Size);
-                moustacheSprite.size = headSprite.size;
-
-                disallowed.AddRange(info.MoustacheElement.GetAttributeStringArray("disallow", new string[0]));
-            }
-
-            var wearables = info.Wearables.Where(w =>
-                    Enum.TryParse(w.GetAttributeString("type", "None"), true, out WearableType t) && t == WearableType.Beard &&
-                    w.GetAttributeInt("headid", -1) == info.Head.HeadSpriteId &&
-                    Enum.TryParse(w.GetAttributeString("gender", "None"), true, out Gender g) && g == info.Gender &&
-                    Enum.TryParse(w.GetAttributeString("race", "None"), true, out Race r) && r == info.Race).ToList();
-
-            bool skip = true;
-
-            for (int i = -1; i < wearables.Count; i++)
-            {
-                Sprite beardSprite = null;
-                if (i >= 0)
-                {
-                    var wearable = wearables[i];
-
-                    if (wearable.GetAttributeStringArray("disallow", new string[0]).Contains("Hair" + info.HairIndex.ToString()) ||
-                        wearable.GetAttributeStringArray("disallow", new string[0]).Contains("Moustache" + info.MoustacheIndex.ToString()) ||
-                        disallowed.Contains("Beard" + i.ToString())) { continue; }
-
-                    XElement beardElement = wearable.Element("sprite");
-                    beardSprite = new Sprite(beardElement);
-
-                    Point beardLocation = (headSprite.SourceRect.Location + headSprite.SourceRect.Size) * beardElement.GetAttributePoint("sheetindex", Point.Zero);
-
-                    beardSprite.SourceRect = new Rectangle(beardLocation, headSprite.SourceRect.Size);
-                    beardSprite.size = headSprite.size;
-
-                    skip = false;
-                }
-
-                if (row == null || itemsInRow >= 4)
-                {
-                    row = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.3f), faceSelectionList.Content.RectTransform), true);
-                    itemsInRow = 0;
-                }
-
-                var btn = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), row.RectTransform), style: "ListBoxElement")
-                {
-                    UserData = i + 1,
-                    OnClicked = SwitchBeard
-                };
-
-                new GUIImage(new RectTransform(Vector2.One, btn.RectTransform), headSprite, scaleToFit: true);
-                if (hairSprite != null) { new GUIImage(new RectTransform(Vector2.One, btn.RectTransform), hairSprite, scaleToFit: true); }
-                if (moustacheSprite != null) { new GUIImage(new RectTransform(Vector2.One, btn.RectTransform), moustacheSprite, scaleToFit: true); }
-                if (beardSprite != null) { new GUIImage(new RectTransform(Vector2.One, btn.RectTransform), beardSprite, scaleToFit: true); }
-                itemsInRow++;
-            }
-
-            if (skip)
-            {
-                return SelectFaceSelectionTabFaceAttachment(button, userData);
-            }
-
-            return false;
-        }
-
-        private bool SelectFaceSelectionTabFaceAttachment(GUIButton button, object userData)
-        {
-            faceSelectionList.Content.ClearChildren();
-            faceSelectionList.ScrollBarEnabled = true;
-            faceSelectionList.ScrollBarVisible = true;
-
-            var info = GameMain.Client.CharacterInfo;
-
-            GUILayoutGroup row = null;
-            int itemsInRow = 0;
-
-            Sprite headSprite = info.HeadSprite;
-            Sprite hairSprite = null;
-            Sprite moustacheSprite = null;
-            Sprite beardSprite = null;
-            List<string> disallowed = new List<string>();
-            if (info.HairIndex > 0)
-            {
-                XElement hairElement = info.HairElement.Element("sprite");
-                hairSprite = new Sprite(hairElement);
-
-                Point hairLocation = (headSprite.SourceRect.Location + headSprite.SourceRect.Size) * hairElement.GetAttributePoint("sheetindex", Point.Zero);
-
-                hairSprite.SourceRect = new Rectangle(hairLocation, headSprite.SourceRect.Size);
-                hairSprite.size = headSprite.size;
-
-                disallowed.AddRange(info.HairElement.GetAttributeStringArray("disallow", new string[0]));
-            }
-
-            if (info.MoustacheIndex > 0)
-            {
-                XElement moustacheElement = info.MoustacheElement.Element("sprite");
-                moustacheSprite = new Sprite(moustacheElement);
-
-                Point moustacheLocation = (headSprite.SourceRect.Location + headSprite.SourceRect.Size) * moustacheElement.GetAttributePoint("sheetindex", Point.Zero);
-
-                moustacheSprite.SourceRect = new Rectangle(moustacheLocation, headSprite.SourceRect.Size);
-                moustacheSprite.size = headSprite.size;
-
-                disallowed.AddRange(info.MoustacheElement.GetAttributeStringArray("disallow", new string[0]));
-            }
-
-            if (info.BeardIndex > 0)
-            {
-                XElement beardElement = info.BeardElement.Element("sprite");
-                beardSprite = new Sprite(beardElement);
-
-                Point beardLocation = (headSprite.SourceRect.Location + headSprite.SourceRect.Size) * beardElement.GetAttributePoint("sheetindex", Point.Zero);
-
-                beardSprite.SourceRect = new Rectangle(beardLocation, headSprite.SourceRect.Size);
-                beardSprite.size = headSprite.size;
-
-                disallowed.AddRange(info.BeardElement.GetAttributeStringArray("disallow", new string[0]));
-            }
-
-            var wearables = info.Wearables.Where(w =>
-                    Enum.TryParse(w.GetAttributeString("type", "None"), true, out WearableType t) && t == WearableType.FaceAttachment &&
-                    w.GetAttributeInt("headid", -1) == info.Head.HeadSpriteId &&
-                    Enum.TryParse(w.GetAttributeString("gender", "None"), true, out Gender g) && g == info.Gender &&
-                    Enum.TryParse(w.GetAttributeString("race", "None"), true, out Race r) && r == info.Race).ToList();
-
-            bool skip = true;
-
-            for (int i = -1; i < wearables.Count; i++)
-            {
-                Sprite faceAttachmentSprite = null;
-                if (i >= 0)
-                {
-                    var wearable = wearables[i];
-
-                    if (wearable.GetAttributeStringArray("disallow", new string[0]).Contains("Hair" + info.HairIndex.ToString()) ||
-                        wearable.GetAttributeStringArray("disallow", new string[0]).Contains("Moustache" + info.MoustacheIndex.ToString()) ||
-                        wearable.GetAttributeStringArray("disallow", new string[0]).Contains("Beard" + info.BeardIndex.ToString()) ||
-                        disallowed.Contains("FaceAttachment" + i.ToString())) { continue; }
-
-                    XElement faceAttachmentElement = wearable.Element("sprite");
-                    faceAttachmentSprite = new Sprite(faceAttachmentElement);
-
-                    Point faceAttachmentLocation = (headSprite.SourceRect.Location + headSprite.SourceRect.Size) * faceAttachmentElement.GetAttributePoint("sheetindex", Point.Zero);
-
-                    faceAttachmentSprite.SourceRect = new Rectangle(faceAttachmentLocation, headSprite.SourceRect.Size);
-                    faceAttachmentSprite.size = headSprite.size;
-
-                    skip = false;
-                }
-
-                if (row == null || itemsInRow >= 4)
-                {
-                    row = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.3f), faceSelectionList.Content.RectTransform), true);
-                    itemsInRow = 0;
-                }
-
-                var btn = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), row.RectTransform), style: "ListBoxElement")
-                {
-                    UserData = i + 1,
-                    OnClicked = SwitchFaceAttachment
-                };
-
-                new GUIImage(new RectTransform(Vector2.One, btn.RectTransform), headSprite, scaleToFit: true);
-                if (hairSprite != null) { new GUIImage(new RectTransform(Vector2.One, btn.RectTransform), hairSprite, scaleToFit: true); }
-                if (moustacheSprite != null) { new GUIImage(new RectTransform(Vector2.One, btn.RectTransform), moustacheSprite, scaleToFit: true); }
-                if (beardSprite != null) { new GUIImage(new RectTransform(Vector2.One, btn.RectTransform), beardSprite, scaleToFit: true); }
-                if (faceAttachmentSprite != null) { new GUIImage(new RectTransform(Vector2.One, btn.RectTransform), faceAttachmentSprite, scaleToFit: true); }
-                itemsInRow++;
-            }
-
-            if (skip)
-            {
-                return SelectJobPreferencesTab(button, userData);
-            }
-
-            return false;
-        }
-
-        private bool SwitchGender(GUIButton button, object obj)
-        {
-            generatedHeads.Clear();
-            Gender gender = (Gender)obj;
-
-            var info = GameMain.Client.CharacterInfo;
-
-            var characterConfigElement = info.CharacterConfigElement;
-            var wearables = info.Wearables.Where(w =>
-                Enum.TryParse(w.GetAttributeString("gender", "None"), true, out Gender g) && g == gender &&
-                Enum.TryParse(w.GetAttributeString("race", "None"), true, out Race r) && r == info.Race).ToList();
-
-            var ids = wearables.Select(w => w.GetAttributeInt("headid", -1)).Where(id => id > 0);
-            ids = ids.OrderBy(id => id);
-            int firstId = ids.First();
-
-            if (gender != info.Gender)
-            {
-                info.Head = new CharacterInfo.HeadInfo(firstId)
-                {
-                    gender = gender,
-                    race = info.Race,
-                    BeardIndex = 0,
-                    HairIndex = 0,
-                    FaceAttachmentIndex = 0,
-                    MoustacheIndex = 0
-                };
-                info.ReloadHeadAttachments();
-
-                StoreHead();
-
-                GameMain.Config.SaveNewPlayerConfig();
-            }
-
-            SelectFaceSelectionTabHead(button, obj);
-
-            return true;
-        }
-
         private bool SwitchHead(GUIButton button, object obj)
         {
             generatedHeads.Clear();
 
             var info = GameMain.Client.CharacterInfo;
 
-            Race race = ((Pair<Race, int>)obj).First;
-            int id = ((Pair<Race, int>)obj).Second;
+            Gender gender = ((Tuple<Gender, Race, int>)obj).Item1;
+            Race race = ((Tuple<Gender, Race, int>)obj).Item2;
+            int id = ((Tuple<Gender, Race, int>)obj).Item3;
 
-            info.Head = new CharacterInfo.HeadInfo(id)
+            if (gender != info.Gender || race != info.Race || id != info.HeadSpriteId)
             {
-                gender = info.Gender,
-                race = race,
-                BeardIndex = 0,
-                HairIndex = 0,
-                FaceAttachmentIndex = 0,
-                MoustacheIndex = 0
-            };
-            info.ReloadHeadAttachments();
+                info.Head = new CharacterInfo.HeadInfo(id)
+                {
+                    gender = gender,
+                    race = race,
+                    BeardIndex = 0,
+                    HairIndex = 0,
+                    FaceAttachmentIndex = 0,
+                    MoustacheIndex = 0
+                };
+                info.ReloadHeadAttachments();
+            }
 
-            SelectFaceSelectionTabHair(button, obj);
+            SelectFaceSelectionTabMain(button, obj);
 
             return true;
         }
 
-        private bool SwitchHair(GUIButton button, object obj)
+        private bool SwitchHair(GUIScrollBar scrollBar, float barScroll)
         {
             generatedHeads.Clear();
 
             var info = GameMain.Client.CharacterInfo;
 
-            int index = (int)obj;
+            int index = (int)scrollBar.BarScrollValue;
 
             info.Head = new CharacterInfo.HeadInfo(info.HeadSpriteId)
             {
                 gender = info.Gender,
                 race = info.Race,
-                BeardIndex = 0,
+                BeardIndex = info.BeardIndex,
                 HairIndex = index,
-                FaceAttachmentIndex = 0,
-                MoustacheIndex = 0
+                FaceAttachmentIndex = info.FaceAttachmentIndex,
+                MoustacheIndex = info.MoustacheIndex
             };
             info.ReloadHeadAttachments();
-
-            SelectFaceSelectionTabMoustache(button, obj);
 
             return true;
         }
 
-        private bool SwitchMoustache(GUIButton button, object obj)
+        private bool SwitchMoustache(GUIScrollBar scrollBar, float barScroll)
         {
             generatedHeads.Clear();
 
             var info = GameMain.Client.CharacterInfo;
 
-            int index = (int)obj;
+            int index = (int)scrollBar.BarScrollValue;
 
             info.Head = new CharacterInfo.HeadInfo(info.HeadSpriteId)
             {
                 gender = info.Gender,
                 race = info.Race,
-                BeardIndex = 0,
+                BeardIndex = info.BeardIndex,
                 HairIndex = info.HairIndex,
-                FaceAttachmentIndex = 0,
+                FaceAttachmentIndex = info.FaceAttachmentIndex,
                 MoustacheIndex = index
             };
             info.ReloadHeadAttachments();
 
-            SelectFaceSelectionTabBeard(button, obj);
-
             return true;
         }
 
-        private bool SwitchBeard(GUIButton button, object obj)
+        private bool SwitchBeard(GUIScrollBar scrollBar, float barScroll)
         {
             generatedHeads.Clear();
 
             var info = GameMain.Client.CharacterInfo;
 
-            int index = (int)obj;
+            int index = (int)scrollBar.BarScrollValue;
 
             info.Head = new CharacterInfo.HeadInfo(info.HeadSpriteId)
             {
@@ -2532,23 +2250,21 @@ namespace Barotrauma
                 race = info.Race,
                 BeardIndex = index,
                 HairIndex = info.HairIndex,
-                FaceAttachmentIndex = 0,
+                FaceAttachmentIndex = info.FaceAttachmentIndex,
                 MoustacheIndex = info.MoustacheIndex
             };
             info.ReloadHeadAttachments();
 
-            SelectFaceSelectionTabFaceAttachment(button, obj);
-
             return true;
         }
 
-        private bool SwitchFaceAttachment(GUIButton button, object obj)
+        private bool SwitchFaceAttachment(GUIScrollBar scrollBar, float barScroll)
         {
             generatedHeads.Clear();
 
             var info = GameMain.Client.CharacterInfo;
 
-            int index = (int)obj;
+            int index = (int)scrollBar.BarScrollValue;
 
             info.Head = new CharacterInfo.HeadInfo(info.HeadSpriteId)
             {
@@ -2560,8 +2276,6 @@ namespace Barotrauma
                 MoustacheIndex = info.MoustacheIndex
             };
             info.ReloadHeadAttachments();
-
-            SelectJobPreferencesTab(button, obj);
 
             return true;
         }
