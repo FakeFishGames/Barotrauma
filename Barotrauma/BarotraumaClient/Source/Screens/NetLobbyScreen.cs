@@ -4,7 +4,9 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -63,7 +65,6 @@ namespace Barotrauma
         private GUITickBox playYourself;
         
         private GUIFrame playerInfoContainer;
-        private GUIButton jobInfoFrame;
         private GUIButton playerFrame;
 
         private GUITickBox autoRestartBox;
@@ -76,8 +77,22 @@ namespace Barotrauma
 
         private Sprite backgroundSprite;
 
-        private GUIButton faceSelectionLeft;
-        private GUIButton faceSelectionRight;
+        private GUIFrame characterInfoFrame;
+        private GUIButton faceSelectionButton;
+        private GUIListBox faceSelectionList;
+        private GUILayoutGroup jobPreferencesLayout;
+        private GUIButton jobInfoFrame;
+
+        private enum FaceSelectionStep
+        {
+            None,
+            Category,
+            Face,
+            Wearables
+        };
+
+        private FaceSelectionStep faceSelectionStep;
+        private WearableType wearableSelectionStep;
 
         private float autoRestartTimer;
 
@@ -1016,7 +1031,7 @@ namespace Barotrauma
 
             parent.ClearChildren();
 
-            GUIComponent infoContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.9f), parent.RectTransform, Anchor.BottomCenter), childAnchor: Anchor.TopCenter)
+            GUILayoutGroup infoContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.9f), parent.RectTransform, Anchor.BottomCenter), childAnchor: Anchor.TopCenter)
             {
                 RelativeSpacing = 0.02f,
                 Stretch = true,
@@ -1044,59 +1059,48 @@ namespace Barotrauma
                 };
             };
 
-            GUIComponent headContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.6f, 0.2f), infoContainer.RectTransform, Anchor.TopCenter), isHorizontal: true)
+            GUILayoutGroup headContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.6f, 0.2f), infoContainer.RectTransform, Anchor.TopCenter), isHorizontal: true)
             {
                 Stretch = true
             };
 
-            if (allowEditing)
-            {
-                faceSelectionLeft = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), headContainer.RectTransform), "", style: "GUIButtonHorizontalArrow")
-                {
-                    Enabled = generatedHeads.UndoCount > 1,
-                    UserData = -1,
-                    OnClicked = SwitchHead
-                };
-                faceSelectionLeft.Children.ForEach(c => c.SpriteEffects = SpriteEffects.FlipHorizontally);
-            }
+            new GUIFrame(new RectTransform(new Vector2(0.3f, 1.0f), headContainer.RectTransform), null); //spacing
 
-            new GUICustomComponent(new RectTransform(new Vector2(0.3f, 1.0f), headContainer.RectTransform), 
+            faceSelectionButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), headContainer.RectTransform), style: "ListBoxElement")
+            {
+                OnClicked = (button, userdata) =>
+                {
+                    jobPreferencesLayout.Visible = faceSelectionList.Visible;
+                    faceSelectionList.Visible = !faceSelectionList.Visible;
+                    button.Selected = faceSelectionList.Visible;
+
+                    return false;
+                }
+            };
+
+            new GUIFrame(new RectTransform(new Vector2(0.3f, 1.0f), headContainer.RectTransform), null); //spacing
+
+            new GUICustomComponent(new RectTransform(Vector2.One, faceSelectionButton.RectTransform), 
                 onDraw: (sb, component) => characterInfo.DrawIcon(sb, component.Rect.Center.ToVector2(), targetAreaSize: component.Rect.Size.ToVector2()));
 
             if (allowEditing)
             {
-                faceSelectionRight = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), headContainer.RectTransform), style: "GUIButtonHorizontalArrow")
+                characterInfoFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.6f), infoContainer.RectTransform), style: null);
+
+                faceSelectionList = new GUIListBox(new RectTransform(Vector2.One, characterInfoFrame.RectTransform));
+                faceSelectionList.Visible = false;
+
+                FaceSelectionMain(null, null);
+
+                jobPreferencesLayout = new GUILayoutGroup(new RectTransform(Vector2.One, characterInfoFrame.RectTransform))
                 {
-                    UserData = 1,
-                    OnClicked = SwitchHead
+                    Stretch = true
                 };
 
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), infoContainer.RectTransform),
-                    TextManager.Get("Gender"), textAlignment: Alignment.Center);
-                GUIComponent genderContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 0.06f), infoContainer.RectTransform), isHorizontal: true)
-                {
-                    Stretch = true,
-                    RelativeSpacing = 0.05f
-                };
-
-                GUIButton maleButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), genderContainer.RectTransform),
-                    TextManager.Get("Male"))
-                {
-                    UserData = Gender.Male,
-                    OnClicked = SwitchGender
-                };
-
-                GUIButton femaleButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), genderContainer.RectTransform),
-                    TextManager.Get("Female"))
-                {
-                    UserData = Gender.Female,
-                    OnClicked = SwitchGender
-                };
-
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), infoContainer.RectTransform), 
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), jobPreferencesLayout.RectTransform), 
                     TextManager.Get("JobPreferences"));
 
-                jobList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), infoContainer.RectTransform))
+                jobList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), jobPreferencesLayout.RectTransform))
                 {
                     Enabled = false
                 };
@@ -1146,7 +1150,7 @@ namespace Barotrauma
                 }
 
                 GUITickBox randPrefTickBox = new GUITickBox(
-                       new RectTransform(new Vector2(0.5f, 0.08f), infoContainer.RectTransform)
+                       new RectTransform(new Vector2(0.5f, 0.08f), jobPreferencesLayout.RectTransform)
                        { RelativeOffset = new Vector2(-0.0f, 0.0f) },
                        TextManager.Get("RandomPreferences"))
                 {
@@ -1888,62 +1892,164 @@ namespace Barotrauma
 
         private Memento<CharacterInfo.HeadInfo> generatedHeads = new Memento<CharacterInfo.HeadInfo>();
 
-        private bool SwitchHead(GUIButton button, object userData)
+        private bool FaceSelectionMain(GUIButton button, object userData)
         {
-            if (GameMain.Client.CharacterInfo == null) return true;
-            int dir = (int)userData;
+            faceSelectionList.Content.ClearChildren();
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.15f), faceSelectionList.Content.RectTransform),
+                TextManager.Get("Gender"), textAlignment: Alignment.Center)
+            {
+                OnClicked = FaceSelectionGender
+            };
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.15f), faceSelectionList.Content.RectTransform),
+                "Head", textAlignment: Alignment.Center)
+            {
+                OnClicked = FaceSelectionHead
+            };
+
+            return false;
+        }
+
+        private bool FaceSelectionGender(GUIButton button, object userData)
+        {
+            faceSelectionList.Content.ClearChildren();
+
+            GUILayoutGroup backButtonLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), faceSelectionList.Content.RectTransform), isHorizontal: true);
+
+            var backButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), backButtonLayout.RectTransform), TextManager.Get("Back"))
+            {
+                OnClicked = FaceSelectionMain
+            };
+
+            GUILayoutGroup genderContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), faceSelectionList.Content.RectTransform), isHorizontal: true)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.05f
+            };
+
+            GUIButton maleButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), genderContainer.RectTransform),
+                TextManager.Get("Male"))
+            {
+                UserData = Gender.Male,
+                OnClicked = SwitchGender
+            };
+
+            GUIButton femaleButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), genderContainer.RectTransform),
+                TextManager.Get("Female"))
+            {
+                UserData = Gender.Female,
+                OnClicked = SwitchGender
+            };
+
+            return false;
+        }
+
+
+        private bool FaceSelectionHead(GUIButton button, object userData)
+        {
+            faceSelectionList.Content.ClearChildren();
+            faceSelectionList.ScrollBarEnabled = true;
+            faceSelectionList.ScrollBarVisible = true;
+
+            GUILayoutGroup backButtonLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), faceSelectionList.Content.RectTransform), isHorizontal: true);
+
+            var backButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), backButtonLayout.RectTransform), TextManager.Get("Back"))
+            {
+                OnClicked = FaceSelectionMain
+            };
+
             var info = GameMain.Client.CharacterInfo;
-            if (!info.HasGenders)
+            int rangeStart = (int)info.Head.headSpriteRange.X;
+            int rangeEnd = (int)info.Head.headSpriteRange.Y;
+
+            GUILayoutGroup row = null;
+            int itemsInRow = 0;
+            List<GUIButton> faceButtons = new List<GUIButton>();
+
+            var characterConfigElement = info.CharacterConfigElement;
+            foreach (Race race in Enum.GetValues(typeof(Race)))
             {
-                GameMain.Config.CharacterGender = Gender.None;
-            }
-            else if (GameMain.Config.CharacterGender == Gender.None)
-            {
-                GameMain.Config.CharacterGender = info.Gender;
-            }
-            if (generatedHeads.Current == null)
-            {
-                // Add the current head in the memory
-                generatedHeads.Store(info.Head);
-            }
-            if (dir == 1)
-            {
-                // Try redo, if not possible, generate new
-                var previousHead = generatedHeads.Redo();
-                if (previousHead == info.Head || previousHead == null)
+                var wearables = info.Wearables.Where(w =>
+                    Enum.TryParse(w.GetAttributeString("gender", "None"), true, out Gender g) && g == info.Gender &&
+                    Enum.TryParse(w.GetAttributeString("race", "None"), true, out Race r) && r == race).ToList();
+
+                if (!wearables.Any()) { continue; }
+
+                var ids = wearables.Select(w => w.GetAttributeInt("headid", -1)).Where(id => id > 0);
+                ids = ids.OrderBy(id => id);
+                int startRange = ids.First();
+                int endRange = ids.Last();
+
+                for (int i=startRange;i<=endRange;i++)
                 {
-                    // Generate new and add to the list
-                    // If the head id is the same, regenerate until it's not
-                    // The counter is there to prevent stack overflow if we for some reason cannot get unique ids (e.g. an issue with the head id range or simply if there is no heads defined).
-                    int newHeadId = previousHead.HeadSpriteId;
-                    int counter = 0;
-                    while (newHeadId == previousHead.HeadSpriteId && counter < 10)
+                    foreach (XElement limbElement in info.Ragdoll.MainElement.Elements())
                     {
-                        newHeadId = info.GetRandomHeadID();
-                        counter++;
+                        if (limbElement.GetAttributeString("type", "").ToLowerInvariant() != "head") { continue; }
+
+                        XElement spriteElement = limbElement.Element("sprite");
+                        if (spriteElement == null) { continue; }
+
+                        string spritePath = spriteElement.Attribute("texture").Value;
+
+                        spritePath = spritePath.Replace("[GENDER]", (info.Gender == Gender.Female) ? "female" : "male");
+                        spritePath = spritePath.Replace("[RACE]", race.ToString().ToLowerInvariant());
+                        spritePath = spritePath.Replace("[HEADID]", i.ToString());
+
+                        string fileName = Path.GetFileNameWithoutExtension(spritePath);
+
+                        //go through the files in the directory to find a matching sprite
+                        foreach (string file in Directory.GetFiles(Path.GetDirectoryName(spritePath)))
+                        {
+                            if (!file.EndsWith(".png", StringComparison.InvariantCultureIgnoreCase))
+                            {
+                                continue;
+                            }
+                            string fileWithoutTags = Path.GetFileNameWithoutExtension(file);
+                            fileWithoutTags = fileWithoutTags.Split('[', ']').First();
+                            if (fileWithoutTags != fileName) { continue; }
+
+                            Sprite headSprite = new Sprite(spriteElement, "", file);
+
+                            if (row == null || itemsInRow >= 4)
+                            {
+                                row = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.3f), faceSelectionList.Content.RectTransform), true);
+                                itemsInRow = 0;
+                            }
+
+                            var btn = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), row.RectTransform), style: "ListBoxElement")
+                            {
+                                UserData = new Pair<Race, int>(race, i),
+                                OnClicked = (b, d) =>
+                                {
+                                    Pair<Race, int> raceAndId = (Pair<Race, int>)d;
+
+                                    SwitchHead(raceAndId.First, raceAndId.Second);
+
+                                    foreach (var b2 in faceButtons)
+                                    {
+                                        b2.Selected = false;
+                                    }
+                                    b.Selected = true;
+
+                                    return false;
+                                },
+                                Selected = info.Race == race && i == info.HeadSpriteId
+                            };
+                            faceButtons.Add(btn);
+
+                            new GUIImage(new RectTransform(Vector2.One, btn.RectTransform), headSprite, scaleToFit: true);
+                            itemsInRow++;
+
+                            break;
+                        }
+
+                        break;
                     }
-                    info.Head = new CharacterInfo.HeadInfo(newHeadId) { gender = GameMain.Config.CharacterGender };
-                    generatedHeads.Store(info.Head);
-                }
-                else
-                {
-                    info.Head = previousHead;
                 }
             }
-            else
-            {
-                // Undo, if not possible, the button should be disabled
-                var previousHead = generatedHeads.Undo();
-                if (previousHead != info.Head && previousHead != null)
-                {
-                    info.Head = previousHead;
-                }
-            }
-            info.ReloadHeadAttachments();
-            StoreHead();
-            GameMain.Config.SaveNewPlayerConfig();
-            faceSelectionLeft.Enabled = generatedHeads.UndoCount > 0;
-            return true;
+
+            return false;
         }
 
         private bool SwitchGender(GUIButton button, object obj)
@@ -1952,12 +2058,52 @@ namespace Barotrauma
             Gender gender = (Gender)obj;
 
             var info = GameMain.Client.CharacterInfo;
-            info.Gender = gender;
-            info.SetRandomHead();
-            info.LoadHeadAttachments();
+
+            var characterConfigElement = info.CharacterConfigElement;
+            var wearables = info.Wearables.Where(w =>
+                Enum.TryParse(w.GetAttributeString("gender", "None"), true, out Gender g) && g == gender &&
+                Enum.TryParse(w.GetAttributeString("race", "None"), true, out Race r) && r == info.Race).ToList();
+
+            var ids = wearables.Select(w => w.GetAttributeInt("headid", -1)).Where(id => id > 0);
+            ids = ids.OrderBy(id => id);
+            int firstId = ids.First();
+
+            info.Head = new CharacterInfo.HeadInfo(firstId)
+            {
+                gender = gender,
+                race = info.Race,
+                BeardIndex = 0,
+                HairIndex = 0,
+                FaceAttachmentIndex = 0,
+                MoustacheIndex = 0
+            };
+            info.ReloadHeadAttachments();
 
             StoreHead();
             GameMain.Config.SaveNewPlayerConfig();
+
+            FaceSelectionMain(button, obj);
+
+            return true;
+        }
+
+        private bool SwitchHead(Race race, int id)
+        {
+            generatedHeads.Clear();
+
+            var info = GameMain.Client.CharacterInfo;
+
+            info.Head = new CharacterInfo.HeadInfo(id)
+            {
+                gender = info.Gender,
+                race = race,
+                BeardIndex = 0,
+                HairIndex = 0,
+                FaceAttachmentIndex = 0,
+                MoustacheIndex = 0
+            };
+            info.ReloadHeadAttachments();
+
             return true;
         }
 
