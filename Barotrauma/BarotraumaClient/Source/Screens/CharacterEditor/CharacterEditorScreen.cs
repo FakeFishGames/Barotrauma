@@ -5099,7 +5099,7 @@ namespace Barotrauma.CharacterEditor
             }
         }
 
-        void Nudge(Keys key)
+        private void Nudge(Keys key)
         {
             switch (key)
             {
@@ -5164,6 +5164,7 @@ namespace Barotrauma.CharacterEditor
                     }
                     break;
             }
+            RagdollParams.StoreSnapshot();
         }
 
         private void SetSpritesheetRestriction(bool value)
