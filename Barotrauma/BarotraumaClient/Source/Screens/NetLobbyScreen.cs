@@ -1805,6 +1805,7 @@ namespace Barotrauma
             {
                 if (PlayerInput.LeftButtonDown() && !GUI.IsMouseOn(jobAdditionList))
                 {
+                    jobList.Deselect();
                     jobAdditionList = null;
                 }
             }
@@ -2094,14 +2095,17 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), jobFrame.RectTransform, Anchor.BottomCenter), "None", textAlignment: Alignment.Center);
 
-            foreach (var jobPrefab in JobPrefab.List.Values)
-            {
-                if (jobPrefab.MaxNumber <= 0) { continue; }
-                if (jobList.Content.Children.Any(c => jobList.Content.GetChildIndex(c) < jobList.Content.GetChildIndex(child) && (c.UserData is JobPrefab prefab) && prefab.Identifier == jobPrefab.Identifier))
-                {
-                    continue;
-                }
+            var availableJobs = JobPrefab.List.Values.Where(jobPrefab =>
+                    jobPrefab.MaxNumber > 0 && jobList.Content.Children.All(c => !(c.UserData is JobPrefab prefab) || prefab != jobPrefab)
+            );
+            availableJobs = availableJobs.Concat(
+                JobPrefab.List.Values.Where(jobPrefab =>
+                    jobPrefab.MaxNumber > 0 && jobList.Content.Children.Any(c => (c.UserData is JobPrefab prefab) && prefab == jobPrefab)
+            ));
+            availableJobs = availableJobs.ToList();
 
+            foreach (var jobPrefab in availableJobs)
+            {
                 jobFrame = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f), jobAdditionList.Content.RectTransform), "ListBoxElement")
                 {
                     OutlineColor = Color.White * 0.5f,
@@ -2118,30 +2122,33 @@ namespace Barotrauma
                 int childIndex = jobList.Content.GetChildIndex(child);
 
                 bool moveToNext = obj != null;
-                if (obj == null)
+
+                var prevObj = child.UserData;
+
+                var existingChild = jobList.Content.GetChildByUserData(obj);
+                if (existingChild != null && obj != null)
                 {
-                    obj = jobList.Content.GetChild(childIndex + 1)?.UserData;
+                    existingChild.UserData = prevObj;
+                }
+                child.UserData = obj;
+
+                for (int i=0;i<2;i++)
+                {
+                    if (i < 2 && jobList.Content.GetChild(i).UserData == null)
+                    {
+                        jobList.Content.GetChild(i).UserData = jobList.Content.GetChild(i + 1).UserData;
+                        jobList.Content.GetChild(i + 1).UserData = null;
+                    }
                 }
 
-                for (int i=0;i<3;i++)
-                {
-                    if (i == childIndex)
-                    {
-                        jobList.Content.GetChild(i).UserData = obj;
-                    }
-                    else if (jobList.Content.GetChild(i).UserData == obj)
-                    {
-                        obj = jobList.Content.GetChild(i+1)?.UserData;
-                        jobList.Content.GetChild(i).UserData = obj;
-                    }
-                }
                 UpdateJobPreferences(jobList);
 
                 if (moveToNext)
                 {
-                    if (childIndex < 2)
+                    var emptyChild = jobList.Content.FindChild(c => c.UserData == null && c.CanBeFocused);
+                    if (emptyChild != null)
                     {
-                        jobList.Select(childIndex + 1);
+                        jobList.Select(jobList.Content.GetChildIndex(emptyChild));
                     }
                     else
                     {
@@ -2150,7 +2157,7 @@ namespace Barotrauma
                     }
                 }
 
-                return true;
+                return false;
             };
 
             return true;
