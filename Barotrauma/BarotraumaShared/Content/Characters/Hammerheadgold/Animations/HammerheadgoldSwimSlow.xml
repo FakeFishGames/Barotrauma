@@ -2,8 +2,8 @@
   animationtype="SwimSlow"
   flip="False"
   mirror="False"
-  waveamplitude="0.1192467"
-  wavelength="94.63583"
+  waveamplitude="0.146121"
+  wavelength="150"
   rotatetowardsmovement="True"
   torsotorque="160"
   headtorque="100"
@@ -15,5 +15,5 @@
   cyclespeed="1"
   headangle="90"
   torsoangle="91.81254"
-  tailangle="270"
+  tailangle="90"
   usesinemovement="False" />
