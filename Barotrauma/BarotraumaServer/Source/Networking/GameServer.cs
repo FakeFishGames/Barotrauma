@@ -1818,10 +1818,18 @@ namespace Barotrauma.Networking
                 Log("Level seed: " + GameMain.NetLobbyScreen.LevelSeed, ServerLog.MessageType.ServerMessage);
             }
 
+            if (GameMain.GameSession.Submarine.IsFileCorrupted)
+            {
+                CoroutineManager.StopCoroutines(startGameCoroutine);
+                initiatedStartGame = false;
+                SendChatMessage(TextManager.FormatServerMessage($"SubLoadError~[subname]={GameMain.GameSession.Submarine.Name}"), ChatMessageType.Error);
+                yield return CoroutineStatus.Failure;
+            }
+
             MissionMode missionMode = GameMain.GameSession.GameMode as MissionMode;
             bool missionAllowRespawn = campaign == null && (missionMode?.Mission == null || missionMode.Mission.AllowRespawn);
 
-            if (serverSettings.AllowRespawn && missionAllowRespawn) respawnManager = new RespawnManager(this, usingShuttle ? selectedShuttle : null);
+            if (serverSettings.AllowRespawn && missionAllowRespawn) { respawnManager = new RespawnManager(this, usingShuttle ? selectedShuttle : null); }
 
             entityEventManager.RefreshEntityIDs();
 
