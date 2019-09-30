@@ -178,7 +178,7 @@ namespace Barotrauma
 
         private void UpdateDimensions()
         {
-            if (!ScrollBarEnabled)
+            if (!ScrollBar.Visible)
             {
                 Content.RectTransform.NonScaledSize = Rect.Size;
             }
@@ -408,11 +408,15 @@ namespace Barotrauma
                 scrollBarNeedsRecalculation = false;
             }
 
+            bool prevScrollBarVisible = ScrollBar.Visible;
+
             ScrollBar.Enabled = ScrollBarEnabled && ScrollBar.BarSize < 1.0f;
             if (AutoHideScrollBar)
             {
                 ScrollBar.Visible = ScrollBar.BarSize < 1.0f;
             }
+
+            if (ScrollBar.Visible != prevScrollBarVisible) { UpdateDimensions(); }
 
             if ((GUI.IsMouseOn(this) || GUI.IsMouseOn(ScrollBar)) && PlayerInput.ScrollWheelSpeed != 0)
             {

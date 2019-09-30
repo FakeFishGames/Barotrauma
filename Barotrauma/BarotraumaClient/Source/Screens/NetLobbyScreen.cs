@@ -389,13 +389,12 @@ namespace Barotrauma
 
             //chatbox ----------------------------------------------------------------------
 
-            chatBox = new GUIListBox(new RectTransform(new Vector2(0.7f, 1.0f), socialHolderHorizontal.RectTransform)) { ScrollBarVisible = true };
+            chatBox = new GUIListBox(new RectTransform(new Vector2(0.7f, 1.0f), socialHolderHorizontal.RectTransform));
 
             //player list ------------------------------------------------------------------
 
             playerList = new GUIListBox(new RectTransform(new Vector2(0.3f, 1.0f), socialHolderHorizontal.RectTransform))
             {
-                ScrollBarVisible = true,
                 OnSelected = (component, userdata) => { SelectPlayer(userdata as Client); return true; }
             };
 
