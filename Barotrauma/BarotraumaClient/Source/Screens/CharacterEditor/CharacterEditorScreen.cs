@@ -3794,7 +3794,7 @@ namespace Barotrauma.CharacterEditor
             {
                 // Head angle
                 DrawRadialWidget(spriteBatch, SimToScreen(head.SimPosition), animParams.HeadAngle, GetCharacterEditorTranslation("HeadAngle"), Color.White,
-                    angle => TryUpdateAnimParam("headangle", angle), circleRadius: 25, rotationOffset: collider.Rotation + MathHelper.Pi, clockWise: dir < 0, wrapAnglePi: true);
+                    angle => TryUpdateAnimParam("headangle", angle), circleRadius: 25, rotationOffset: collider.Rotation + MathHelper.Pi, clockWise: dir < 0, wrapAnglePi: true, holdPosition: true);
                 // Head position and leaning
                 Color color = Color.Red;
                 if (animParams.IsGroundedAnimation)
@@ -3903,7 +3903,7 @@ namespace Barotrauma.CharacterEditor
                 }
                 // Torso angle
                 DrawRadialWidget(spriteBatch, SimToScreen(referencePoint), animParams.TorsoAngle, GetCharacterEditorTranslation("TorsoAngle"), Color.White,
-                    angle => TryUpdateAnimParam("torsoangle", angle), rotationOffset: collider.Rotation + MathHelper.Pi, clockWise: dir < 0, wrapAnglePi: true);
+                    angle => TryUpdateAnimParam("torsoangle", angle), rotationOffset: collider.Rotation + MathHelper.Pi, clockWise: dir < 0, wrapAnglePi: true, holdPosition: true);
                 Color color = Color.DodgerBlue;
                 if (animParams.IsGroundedAnimation)
                 {
@@ -4006,7 +4006,7 @@ namespace Barotrauma.CharacterEditor
             if (tail != null && fishParams != null)
             {
                 DrawRadialWidget(spriteBatch, SimToScreen(tail.SimPosition), fishParams.TailAngle, GetCharacterEditorTranslation("TailAngle"), Color.White,
-                    angle => TryUpdateAnimParam("tailangle", angle), circleRadius: 25, rotationOffset: collider.Rotation + MathHelper.Pi, clockWise: dir < 0, wrapAnglePi: true);
+                    angle => TryUpdateAnimParam("tailangle", angle), circleRadius: 25, rotationOffset: collider.Rotation + MathHelper.Pi, clockWise: dir < 0, wrapAnglePi: true, holdPosition: true);
             }
             // Foot angle
             if (foot != null)
@@ -4032,7 +4032,7 @@ namespace Barotrauma.CharacterEditor
                                 fishParams.FootAnglesInRadians[limb.Params.ID] = MathHelper.ToRadians(angle);
                                 TryUpdateAnimParam("footangles", fishParams.FootAngles);
                             },
-                            circleRadius: 25, rotationOffset: collider.Rotation, clockWise: dir < 0, wrapAnglePi: true);
+                            circleRadius: 25, rotationOffset: collider.Rotation, clockWise: dir < 0, wrapAnglePi: true, autoFreeze: true);
                     }
                 }
                 else if (humanParams != null)
@@ -4405,7 +4405,7 @@ namespace Barotrauma.CharacterEditor
                         {
                             if (joint.LimitEnabled && jointCreationMode == JointCreationMode.None)
                             {
-                                DrawJointLimitWidgets(spriteBatch, limb, joint, tformedJointPos, autoFreeze: true, allowPairEditing: true, rotationOffset: limb.Rotation);
+                                DrawJointLimitWidgets(spriteBatch, limb, joint, tformedJointPos, autoFreeze: true, allowPairEditing: true, rotationOffset: limb.Rotation, holdPosition: true);
                             }
                             // Is the direction inversed incorrectly?
                             Vector2 to = tformedJointPos + VectorExtensions.ForwardFlipped(joint.LimbB.Rotation + MathHelper.ToRadians(-joint.LimbB.Params.GetSpriteOrientation()), 20);
@@ -4950,7 +4950,7 @@ namespace Barotrauma.CharacterEditor
                 {
                     if (joint.LimitEnabled && jointCreationMode == JointCreationMode.None)
                     {
-                        DrawJointLimitWidgets(spriteBatch, limb, joint, tformedJointPos, autoFreeze: false, allowPairEditing: true);
+                        DrawJointLimitWidgets(spriteBatch, limb, joint, tformedJointPos, autoFreeze: false, allowPairEditing: true, holdPosition: false);
                     }
                     if (jointSelectionWidget.IsControlled)
                     {
@@ -5009,7 +5009,7 @@ namespace Barotrauma.CharacterEditor
             }
         }
 
-        private void DrawJointLimitWidgets(SpriteBatch spriteBatch, Limb limb, LimbJoint joint, Vector2 drawPos, bool autoFreeze, bool allowPairEditing, float rotationOffset = 0)
+        private void DrawJointLimitWidgets(SpriteBatch spriteBatch, Limb limb, LimbJoint joint, Vector2 drawPos, bool autoFreeze, bool allowPairEditing, bool holdPosition, float rotationOffset = 0)
         {
             rotationOffset += limb.Params.GetSpriteOrientation();
             Color angleColor = joint.UpperLimit - joint.LowerLimit > 0 ? Color.LightGreen * 0.5f : Color.Red;
@@ -5051,7 +5051,7 @@ namespace Barotrauma.CharacterEditor
                 DrawAngle(20, angleColor, 4);
                 DrawAngle(40, Color.Cyan);
                 GUI.DrawString(spriteBatch, drawPos, angle.FormatZeroDecimal(), Color.Black, backgroundColor: Color.Cyan, font: GUI.SmallFont);
-            }, circleRadius: 40, rotationOffset: rotationOffset, displayAngle: false, clockWise: false);
+            }, circleRadius: 40, rotationOffset: rotationOffset, displayAngle: false, clockWise: false, holdPosition: holdPosition);
             DrawRadialWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.LowerLimit), $"{joint.Params.Name}: {GetCharacterEditorTranslation("LowerLimit")}", Color.Yellow, angle =>
             {
                 joint.LowerLimit = MathHelper.ToRadians(angle);
@@ -5090,7 +5090,7 @@ namespace Barotrauma.CharacterEditor
                 DrawAngle(20, angleColor, 4);
                 DrawAngle(25, Color.Yellow);
                 GUI.DrawString(spriteBatch, drawPos, angle.FormatZeroDecimal(), Color.Black, backgroundColor: Color.Yellow, font: GUI.SmallFont);
-            }, circleRadius: 25, rotationOffset: rotationOffset, displayAngle: false, clockWise: false);
+            }, circleRadius: 25, rotationOffset: rotationOffset, displayAngle: false, clockWise: false, holdPosition: holdPosition);
             void DrawAngle(float radius, Color color, float thickness = 5)
             {
                 float angle = joint.UpperLimit - joint.LowerLimit;
@@ -5177,7 +5177,7 @@ namespace Barotrauma.CharacterEditor
 
         #region Widgets as methods
         private void DrawRadialWidget(SpriteBatch spriteBatch, Vector2 drawPos, float value, string toolTip, Color color, Action<float> onClick,
-            float circleRadius = 30, int widgetSize = 10, float rotationOffset = 0, bool clockWise = true, bool displayAngle = true, bool? autoFreeze = null, bool wrapAnglePi = false)
+            float circleRadius = 30, int widgetSize = 10, float rotationOffset = 0, bool clockWise = true, bool displayAngle = true, bool? autoFreeze = null, bool wrapAnglePi = false, bool holdPosition = false)
         {
             var angle = value;
             if (!MathUtils.IsValid(angle))
@@ -5203,7 +5203,7 @@ namespace Barotrauma.CharacterEditor
                 onClick(angle);
                 var zeroPos = drawPos + VectorExtensions.ForwardFlipped(rotationOffset, circleRadius);
                 GUI.DrawLine(spriteBatch, drawPos, zeroPos, Color.Red, width: 3);
-            }, autoFreeze, onHovered: () =>
+            }, autoFreeze, holdPosition, onHovered: () =>
             {
                 if (!PlayerInput.LeftButtonHeld())
                 {
@@ -5214,7 +5214,7 @@ namespace Barotrauma.CharacterEditor
         }
 
         private enum WidgetType { Rectangle, Circle }
-        private void DrawWidget(SpriteBatch spriteBatch, Vector2 drawPos, WidgetType widgetType, int size, Color color, string toolTip, Action onPressed, bool ? autoFreeze = null, Action onHovered = null)
+        private void DrawWidget(SpriteBatch spriteBatch, Vector2 drawPos, WidgetType widgetType, int size, Color color, string toolTip, Action onPressed, bool? autoFreeze = null, bool holdPosition = false, Action onHovered = null)
         {
             var drawRect = new Rectangle((int)drawPos.X - size / 2, (int)drawPos.Y - size / 2, size, size);
             var inputRect = drawRect;
@@ -5264,7 +5264,7 @@ namespace Barotrauma.CharacterEditor
                     {
                         isFrozen = true;
                     }
-                    else
+                    if (holdPosition == true)
                     {
                         character.AnimController.Collider.PhysEnabled = false;
                     }
