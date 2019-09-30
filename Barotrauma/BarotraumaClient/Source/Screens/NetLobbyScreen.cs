@@ -83,7 +83,7 @@ namespace Barotrauma
         private GUIFrame appearanceFrame;
 
         private GUIListBox headSelectionList;
-        private GUIListBox jobAdditionList;
+        private GUIFrame jobSelectionFrame;
         private GUIListBox jobList;
 
         private float autoRestartTimer;
@@ -1091,10 +1091,23 @@ namespace Barotrauma
 
                 for (int i=0;i<3;i++)
                 {
+                    JobPrefab jobPrefab = null;
+                    while (i < GameMain.Config.JobPreferences.Count)
+                    {
+                        var jobIdent = GameMain.Config.JobPreferences[i];
+                        if (!JobPrefab.List.ContainsKey(jobIdent))
+                        {
+                            GameMain.Config.JobPreferences.RemoveAt(i);
+                            continue;
+                        }
+                        jobPrefab = JobPrefab.List[jobIdent];
+                        break;
+                    }
+
                     var slot = new GUIFrame(new RectTransform(new Vector2(0.333f, 1.0f), jobList.Content.RectTransform), style: "ListBoxElement")
                     {
                         CanBeFocused = true,
-                        UserData = null
+                        UserData = jobPrefab
                     };
                 }
 
@@ -1768,7 +1781,9 @@ namespace Barotrauma
             playerFrame?.AddToGUIUpdateList();  
             CampaignSetupUI?.AddToGUIUpdateList();
             jobInfoFrame?.AddToGUIUpdateList();
-            jobAdditionList?.AddToGUIUpdateList();
+
+            headSelectionList?.AddToGUIUpdateList();
+            jobSelectionFrame?.AddToGUIUpdateList();
         }
         
 
@@ -1796,17 +1811,16 @@ namespace Barotrauma
             {
                 if (PlayerInput.LeftButtonDown() && !GUI.IsMouseOn(headSelectionList))
                 {
-                    appearanceFrame.RemoveChild(headSelectionList);
                     headSelectionList = null;
                 }
             }
 
-            if (jobAdditionList != null)
+            if (jobSelectionFrame != null)
             {
-                if (PlayerInput.LeftButtonDown() && !GUI.IsMouseOn(jobAdditionList))
+                if (PlayerInput.LeftButtonDown() && !GUI.IsMouseOn(jobSelectionFrame))
                 {
                     jobList.Deselect();
-                    jobAdditionList = null;
+                    jobSelectionFrame = null;
                 }
             }
         }
@@ -1846,8 +1860,6 @@ namespace Barotrauma
 
             if ((prevSize == 1.0f && chatBox.BarScroll == 0.0f) || (prevSize < 1.0f && chatBox.BarScroll == 1.0f)) chatBox.BarScroll = 1.0f;
         }
-
-        private Memento<CharacterInfo.HeadInfo> generatedHeads = new Memento<CharacterInfo.HeadInfo>();
 
         private bool SelectJobPreferencesTab(GUIButton button, object userData)
         {
@@ -1997,12 +2009,11 @@ namespace Barotrauma
 
             var info = GameMain.Client.CharacterInfo;
 
-            if (headSelectionList != null) { appearanceFrame.RemoveChild(headSelectionList); }
-            headSelectionList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.65f), appearanceFrame.RectTransform) { RelativeOffset = new Vector2(0.0f,0.35f) })
-            {
-                ScrollBarEnabled = true,
-                ScrollBarVisible = true
-            };
+            headSelectionList = new GUIListBox(
+                new RectTransform(new Point((characterInfoFrame.Rect.Width * 4) / 3, characterInfoFrame.Rect.Height * 2), GUI.Canvas)
+                {
+                    AbsoluteOffset = new Point(characterInfoFrame.Rect.Right - (characterInfoFrame.Rect.Width * 4) / 3, button.Rect.Bottom)
+                });
 
             GUILayoutGroup row = null;
             int itemsInRow = 0;
@@ -2078,22 +2089,71 @@ namespace Barotrauma
             return false;
         }
 
+        private bool SwitchJob(GUIButton button, object obj)
+        {
+            int childIndex = jobList.SelectedIndex;
+            var child = jobList.SelectedComponent;
+
+            bool moveToNext = obj != null;
+
+            var prevObj = child.UserData;
+
+            var existingChild = jobList.Content.GetChildByUserData(obj);
+            if (existingChild != null && obj != null)
+            {
+                existingChild.UserData = prevObj;
+            }
+            child.UserData = obj;
+
+            for (int i = 0; i < 2; i++)
+            {
+                if (i < 2 && jobList.Content.GetChild(i).UserData == null)
+                {
+                    jobList.Content.GetChild(i).UserData = jobList.Content.GetChild(i + 1).UserData;
+                    jobList.Content.GetChild(i + 1).UserData = null;
+                }
+            }
+
+            UpdateJobPreferences(jobList);
+
+            if (moveToNext)
+            {
+                var emptyChild = jobList.Content.FindChild(c => c.UserData == null && c.CanBeFocused);
+                if (emptyChild != null)
+                {
+                    jobList.Select(jobList.Content.GetChildIndex(emptyChild));
+                }
+                else
+                {
+                    jobList.Deselect();
+                    jobSelectionFrame = null;
+                }
+            }
+            else
+            {
+                OpenJobSelection(child, child.UserData);
+            }
+
+            return false;
+        }
+
         private bool OpenJobSelection(GUIComponent child, object userData)
         {
-            jobAdditionList = new GUIListBox(new RectTransform(new Point((characterInfoFrame.Rect.Width * 4) / 3, characterInfoFrame.Rect.Height), GUI.Canvas, Anchor.TopLeft)
-            { AbsoluteOffset = new Point(characterInfoFrame.Rect.Left - characterInfoFrame.Rect.Width / 3, characterInfoFrame.Rect.Bottom) }, true)
-            {
-                ScrollBarEnabled = true,
-                ScrollBarVisible = true
-            };
+            jobSelectionFrame = new GUIFrame(new RectTransform(new Point((characterInfoFrame.Rect.Width * 4) / 3, characterInfoFrame.Rect.Height * 2), GUI.Canvas, Anchor.TopLeft)
+            { AbsoluteOffset = new Point(characterInfoFrame.Rect.Left - characterInfoFrame.Rect.Width / 3, characterInfoFrame.Rect.Bottom) }, style: "GUIFrameListBox");
 
-            var jobFrame = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f), jobAdditionList.Content.RectTransform), "ListBoxElement")
+            var rows = new GUILayoutGroup(new RectTransform(Vector2.One, jobSelectionFrame.RectTransform)) { Stretch = true };
+
+            var row = new GUILayoutGroup(new RectTransform(Vector2.One, rows.RectTransform), true);
+
+            var jobButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), row.RectTransform), style: "ListBoxElement")
             {
                 OutlineColor = Color.White * 0.5f,
-                UserData = null
+                UserData = null,
+                OnClicked = SwitchJob
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), jobFrame.RectTransform, Anchor.BottomCenter), "None", textAlignment: Alignment.Center);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), jobButton.RectTransform, Anchor.BottomCenter), "None", textAlignment: Alignment.Center);
 
             var availableJobs = JobPrefab.List.Values.Where(jobPrefab =>
                     jobPrefab.MaxNumber > 0 && jobList.Content.Children.All(c => !(c.UserData is JobPrefab prefab) || prefab != jobPrefab)
@@ -2104,61 +2164,28 @@ namespace Barotrauma
             ));
             availableJobs = availableJobs.ToList();
 
+            int itemsInRow = 1;
+
             foreach (var jobPrefab in availableJobs)
             {
-                jobFrame = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f), jobAdditionList.Content.RectTransform), "ListBoxElement")
+                if (itemsInRow>=4)
+                {
+                    row = new GUILayoutGroup(new RectTransform(Vector2.One, rows.RectTransform), true);
+                    itemsInRow = 0;
+                }
+
+                jobButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), row.RectTransform), style: "ListBoxElement")
                 {
                     OutlineColor = Color.White * 0.5f,
-                    UserData = jobPrefab
+                    UserData = jobPrefab,
+                    OnClicked = SwitchJob
                 };
+                itemsInRow++;
 
-                new GUIImage(new RectTransform(Vector2.One * 0.8f, jobFrame.RectTransform, Anchor.Center), GetJobOutfitSprite(jobPrefab), scaleToFit: true);
+                new GUIImage(new RectTransform(Vector2.One * 0.8f, jobButton.RectTransform, Anchor.Center), GetJobOutfitSprite(jobPrefab), scaleToFit: true);
 
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), jobFrame.RectTransform, Anchor.BottomCenter), jobPrefab.Name, textAlignment: Alignment.Center);
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), jobButton.RectTransform, Anchor.BottomCenter), jobPrefab.Name, textAlignment: Alignment.Center);
             }
-
-            jobAdditionList.OnSelected = (chld, obj) =>
-            {
-                int childIndex = jobList.Content.GetChildIndex(child);
-
-                bool moveToNext = obj != null;
-
-                var prevObj = child.UserData;
-
-                var existingChild = jobList.Content.GetChildByUserData(obj);
-                if (existingChild != null && obj != null)
-                {
-                    existingChild.UserData = prevObj;
-                }
-                child.UserData = obj;
-
-                for (int i=0;i<2;i++)
-                {
-                    if (i < 2 && jobList.Content.GetChild(i).UserData == null)
-                    {
-                        jobList.Content.GetChild(i).UserData = jobList.Content.GetChild(i + 1).UserData;
-                        jobList.Content.GetChild(i + 1).UserData = null;
-                    }
-                }
-
-                UpdateJobPreferences(jobList);
-
-                if (moveToNext)
-                {
-                    var emptyChild = jobList.Content.FindChild(c => c.UserData == null && c.CanBeFocused);
-                    if (emptyChild != null)
-                    {
-                        jobList.Select(jobList.Content.GetChildIndex(emptyChild));
-                    }
-                    else
-                    {
-                        jobList.Deselect();
-                        jobAdditionList = null;
-                    }
-                }
-
-                return false;
-            };
 
             return true;
         }
@@ -2207,8 +2234,6 @@ namespace Barotrauma
 
         private bool SwitchHead(GUIButton button, object obj)
         {
-            generatedHeads.Clear();
-
             var info = GameMain.Client.CharacterInfo;
 
             Gender gender = ((Tuple<Gender, Race, int>)obj).Item1;
@@ -2228,6 +2253,7 @@ namespace Barotrauma
                 };
                 info.ReloadHeadAttachments();
             }
+            StoreHead();
 
             SelectAppearanceTab(button, obj);
 
@@ -2236,8 +2262,6 @@ namespace Barotrauma
 
         private bool SwitchHair(GUIScrollBar scrollBar, float barScroll)
         {
-            generatedHeads.Clear();
-
             var info = GameMain.Client.CharacterInfo;
 
             int index = (int)scrollBar.BarScrollValue;
@@ -2252,14 +2276,13 @@ namespace Barotrauma
                 MoustacheIndex = info.MoustacheIndex
             };
             info.ReloadHeadAttachments();
+            StoreHead();
 
             return true;
         }
 
         private bool SwitchMoustache(GUIScrollBar scrollBar, float barScroll)
         {
-            generatedHeads.Clear();
-
             var info = GameMain.Client.CharacterInfo;
 
             int index = (int)scrollBar.BarScrollValue;
@@ -2274,14 +2297,13 @@ namespace Barotrauma
                 MoustacheIndex = index
             };
             info.ReloadHeadAttachments();
+            StoreHead();
 
             return true;
         }
 
         private bool SwitchBeard(GUIScrollBar scrollBar, float barScroll)
         {
-            generatedHeads.Clear();
-
             var info = GameMain.Client.CharacterInfo;
 
             int index = (int)scrollBar.BarScrollValue;
@@ -2296,14 +2318,13 @@ namespace Barotrauma
                 MoustacheIndex = info.MoustacheIndex
             };
             info.ReloadHeadAttachments();
+            StoreHead();
 
             return true;
         }
 
         private bool SwitchFaceAttachment(GUIScrollBar scrollBar, float barScroll)
         {
-            generatedHeads.Clear();
-
             var info = GameMain.Client.CharacterInfo;
 
             int index = (int)scrollBar.BarScrollValue;
@@ -2318,6 +2339,7 @@ namespace Barotrauma
                 MoustacheIndex = info.MoustacheIndex
             };
             info.ReloadHeadAttachments();
+            StoreHead();
 
             return true;
         }
