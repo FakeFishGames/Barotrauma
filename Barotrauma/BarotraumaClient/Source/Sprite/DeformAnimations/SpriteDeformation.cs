@@ -37,6 +37,12 @@ namespace Barotrauma.SpriteDeformations
 
         public string Name => $"Deformation ({TypeName})";
 
+        [Serialize(1.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 10, ValueStep = 0.1f)]
+        public float Strength { get; private set; }
+
+        [Serialize(90f, true), Editable(MinValueFloat = 0, MaxValueFloat = 90)]
+        public float MaxRotation { get; private set; }
+
         [Serialize(false, true), Editable]
         public bool UseMovementSine { get; set; }
 
@@ -97,7 +103,7 @@ namespace Barotrauma.SpriteDeformations
 
         protected Vector2[,] Deformation { get; private set; }
 
-        protected SpriteDeformationParams deformationParams;
+        public SpriteDeformationParams Params { get; set; }
 
         private static readonly string[] deformationTypes = new string[] { "Inflate", "Custom", "Noise", "BendJoint", "ReactToTriggerers" };
         public static IEnumerable<string> DeformationTypes
@@ -107,19 +113,13 @@ namespace Barotrauma.SpriteDeformations
 
         public Point Resolution
         {
-            get { return deformationParams.Resolution; }
+            get { return Params.Resolution; }
             set { SetResolution(value); }
         }
 
-        public SpriteDeformationParams DeformationParams
-        {
-            get { return deformationParams; }
-            set { deformationParams = value; }
-        }
+        public string TypeName => Params.TypeName;
 
-        public string TypeName => deformationParams.TypeName;
-
-        public int Sync => deformationParams.Sync;
+        public int Sync => Params.Sync;
 
         public static SpriteDeformation Load(string deformationType, string parentDebugName)
         {
@@ -174,22 +174,22 @@ namespace Barotrauma.SpriteDeformations
 
             if (newDeformation != null)
             {
-                newDeformation.deformationParams.TypeName = typeName;
+                newDeformation.Params.TypeName = typeName;
             }
             return newDeformation;
         }
 
         protected SpriteDeformation(XElement element, SpriteDeformationParams deformationParams)
         {
-            this.deformationParams = deformationParams;
+            this.Params = deformationParams;
             SerializableProperty.DeserializeProperties(deformationParams, element);
             Deformation = new Vector2[deformationParams.Resolution.X, deformationParams.Resolution.Y];
         }
 
         public void SetResolution(Point resolution)
         {
-            deformationParams.Resolution = resolution;
-            Deformation = new Vector2[deformationParams.Resolution.X, deformationParams.Resolution.Y];
+            Params.Resolution = resolution;
+            Deformation = new Vector2[Params.Resolution.X, Params.Resolution.Y];
         }
 
         protected abstract void GetDeformation(out Vector2[,] deformation, out float multiplier);
@@ -200,10 +200,10 @@ namespace Barotrauma.SpriteDeformations
         {
             foreach (SpriteDeformation animation in animations)
             {
-                if (animation.deformationParams.Resolution.X != animation.Deformation.GetLength(0) ||
-                    animation.deformationParams.Resolution.Y != animation.Deformation.GetLength(1))
+                if (animation.Params.Resolution.X != animation.Deformation.GetLength(0) ||
+                    animation.Params.Resolution.Y != animation.Deformation.GetLength(1))
                 {
-                    animation.Deformation = new Vector2[animation.deformationParams.Resolution.X, animation.deformationParams.Resolution.Y];
+                    animation.Deformation = new Vector2[animation.Params.Resolution.X, animation.Params.Resolution.Y];
                 }
             }
 
@@ -224,7 +224,7 @@ namespace Barotrauma.SpriteDeformations
                 {
                     for (int y = 0; y < resolution.Y; y++)
                     {
-                        switch (animation.deformationParams.BlendMode)
+                        switch (animation.Params.BlendMode)
                         {
                             case DeformationBlendMode.Override:
                                 deformation[x,y] = animDeformation[x,y] * scale * multiplier;
@@ -244,7 +244,7 @@ namespace Barotrauma.SpriteDeformations
 
         public virtual void Save(XElement element)
         {
-            SerializableProperty.SerializeProperties(deformationParams, element);
+            SerializableProperty.SerializeProperties(Params, element);
         }
     }
 }

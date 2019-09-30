@@ -31,7 +31,7 @@ namespace Barotrauma.SpriteDeformations
 
         private Vector2[,] deformation;
 
-        private InflateParams InflateParams => deformationParams as InflateParams;
+        private InflateParams InflateParams => Params as InflateParams;
 
         public Inflate(XElement element) : base(element, new InflateParams(element))
         {
@@ -62,7 +62,7 @@ namespace Barotrauma.SpriteDeformations
 
         public override void Update(float deltaTime)
         {
-            if (!deformationParams.UseMovementSine)
+            if (!Params.UseMovementSine)
             {
                 phase += deltaTime * InflateParams.Frequency;
                 phase %= MathHelper.TwoPi;

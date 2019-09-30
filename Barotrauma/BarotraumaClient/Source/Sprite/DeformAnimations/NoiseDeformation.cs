@@ -21,7 +21,7 @@ namespace Barotrauma.SpriteDeformations
 
     class NoiseDeformation : SpriteDeformation
     {
-        private NoiseDeformationParams NoiseDeformationParams => deformationParams as NoiseDeformationParams;
+        private NoiseDeformationParams NoiseDeformationParams => Params as NoiseDeformationParams;
 
         private float phase;
 
