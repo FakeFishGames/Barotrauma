@@ -400,7 +400,7 @@
     hovercolor="136,153,150,240"
     selectedcolor="117,157,153,255"
     pressedcolor="80,90,88,255">
-    <Sprite texture="Content/UI/CampaignUIAtlas.png" sourcerect="16,741,200,200" tile="false" maintainaspectratio="true"/>
+    <Sprite texture="Content/UI/CampaignUIAtlas.png" sourcerect="2,738,204,204" tile="false" maintainaspectratio="true"/>
   </RepairHullButton>
   
   <RepairItemsButton
@@ -408,7 +408,7 @@
     hovercolor="136,153,150,240"
     selectedcolor="117,157,153,255"
     pressedcolor="80,90,88,255">
-    <Sprite texture="Content/UI/CampaignUIAtlas.png" sourcerect="225,741,200,200" tile="false" maintainaspectratio="true"/>
+    <Sprite texture="Content/UI/CampaignUIAtlas.png" sourcerect="220,738,204,204" tile="false" maintainaspectratio="true"/>
   </RepairItemsButton>
   
   <ReplaceShuttlesButton
