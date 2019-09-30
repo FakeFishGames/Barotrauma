@@ -2505,7 +2505,7 @@ namespace Barotrauma.Networking
                     break;
             }
 
-            if (type == ChatMessageType.Server)
+            if (type == ChatMessageType.Server || type == ChatMessageType.Error)
             {
                 senderName = null;
                 senderCharacter = null;
