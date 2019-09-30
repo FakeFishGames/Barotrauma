@@ -144,6 +144,7 @@ namespace Barotrauma
             private set;
         }
 
+        public XElement Element { get; private set; }
         public XElement ClothingElement { get; private set; }
 
         public JobPrefab(XElement element)
@@ -152,6 +153,8 @@ namespace Barotrauma
             Name = TextManager.Get("JobName." + Identifier);
             Description = TextManager.Get("JobDescription." + Identifier);
             Identifier = Identifier.ToLowerInvariant();
+
+            Element = element;
 
             foreach (XElement subElement in element.Elements())
             {

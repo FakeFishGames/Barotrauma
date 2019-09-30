@@ -40,8 +40,6 @@ namespace Barotrauma
         private GUITextBlock missionTypeLabel;
         private GUIListBox missionTypeList;
 
-        private GUIListBox jobList;
-
         private GUITextBox textBox, seedBox;
         public GUITextBox TextBox
         {
@@ -79,12 +77,14 @@ namespace Barotrauma
         private Sprite backgroundSprite;
 
         private GUIButton jobPreferencesButton;
-        private GUIButton faceSelectionButton;
+        private GUIButton appearanceButton;
 
         private GUIFrame characterInfoFrame;
         private GUIFrame appearanceFrame;
-        private GUILayoutGroup jobPreferencesLayout;
-        private GUIFrame draggedJobFrame;
+
+        private GUIListBox headSelectionList;
+        private GUIListBox jobAdditionList;
+        private GUIListBox jobList;
 
         private float autoRestartTimer;
 
@@ -1075,85 +1075,29 @@ namespace Barotrauma
 
                 new GUIFrame(new RectTransform(new Vector2(0.1f, 1.0f), characterInfoTabs.RectTransform), null); //spacing
 
-                faceSelectionButton = new GUIButton(new RectTransform(new Vector2(0.45f, 1.33f), characterInfoTabs.RectTransform),
+                appearanceButton = new GUIButton(new RectTransform(new Vector2(0.45f, 1.33f), characterInfoTabs.RectTransform),
                     "Appearance", style: "GUITabButton");
 
                 jobPreferencesButton.OnClicked = SelectJobPreferencesTab;
 
-                faceSelectionButton.OnClicked = SelectFaceSelectionTabMain;
+                appearanceButton.OnClicked = SelectAppearanceTab;
 
                 characterInfoFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.5f), infoContainer.RectTransform), style: null);
 
-                jobPreferencesLayout = new GUILayoutGroup(new RectTransform(Vector2.One, characterInfoFrame.RectTransform))
-                {
-                    Stretch = true
-                };
-
-                jobList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), jobPreferencesLayout.RectTransform))
+                jobList = new GUIListBox(new RectTransform(Vector2.One, characterInfoFrame.RectTransform), true)
                 {
                     Enabled = true,
-                    OnSelected = (child, obj) => false
+                    OnSelected = OpenJobSelection
                 };
 
-                int i = 1;
-                foreach (string jobIdentifier in GameMain.Config.JobPreferences)
+                for (int i=0;i<3;i++)
                 {
-                    if (!JobPrefab.List.TryGetValue(jobIdentifier, out JobPrefab job)) { continue; }
-                    if (job == null || job.MaxNumber <= 0) continue;
-
-                    var jobFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), jobList.Content.RectTransform) { MinSize = new Point(0, 20) }, style: "ListBoxElement")
+                    var slot = new GUIFrame(new RectTransform(new Vector2(0.333f, 1.0f), jobList.Content.RectTransform), style: "ListBoxElement")
                     {
-                        UserData = job,
-                        CanBeFocused = true
-                    };
-                    GUITextBlock jobText = new GUITextBlock(new RectTransform(new Vector2(0.66f, 1.0f), jobFrame.RectTransform, Anchor.CenterRight),
-                        i + ". " + job.Name + "    ", textAlignment: Alignment.CenterLeft);
-
-                    var jobButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 0.8f), jobFrame.RectTransform, Anchor.CenterLeft) { RelativeOffset = new Vector2(0.02f, 0.0f) },
-                        isHorizontal: true, childAnchor: Anchor.CenterLeft)
-                    {
-                        RelativeSpacing = 0.03f
-                    };
-
-                    int buttonSize = jobButtonContainer.Rect.Height;
-                    GUIButton infoButton = new GUIButton(new RectTransform(new Point(buttonSize, buttonSize), jobButtonContainer.RectTransform), "?")
-                    {
-                        UserData = job,
-                        OnClicked = ViewJobInfo
-                    };
-
-                    GUIButton upButton = new GUIButton(new RectTransform(new Point(buttonSize, buttonSize), jobButtonContainer.RectTransform), "")
-                    {
-                        UserData = -1,
-                        OnClicked = ChangeJobPreference
-                    };
-                    new GUIImage(new RectTransform(new Vector2(0.8f, 0.8f), upButton.RectTransform, Anchor.Center), GUI.Arrow, scaleToFit: true);
-
-                    GUIButton downButton = new GUIButton(new RectTransform(new Point(buttonSize, buttonSize), jobButtonContainer.RectTransform), "")
-                    {
-                        UserData = 1,
-                        OnClicked = ChangeJobPreference
-                    };
-                    new GUIImage(new RectTransform(new Vector2(0.8f, 0.8f), downButton.RectTransform, Anchor.Center), GUI.Arrow, scaleToFit: true)
-                    {
-                        Rotation = MathHelper.Pi
+                        CanBeFocused = true,
+                        UserData = null
                     };
                 }
-
-                GUITickBox randPrefTickBox = new GUITickBox(
-                       new RectTransform(new Vector2(0.5f, 0.08f), jobPreferencesLayout.RectTransform)
-                       { RelativeOffset = new Vector2(-0.0f, 0.0f) },
-                       TextManager.Get("RandomPreferences"))
-                {
-                    OnSelected = (tickBox) =>
-                    {
-                        if (tickBox.Selected)
-                        {
-                            GameMain.Config.JobPreferences = (new List<string>(GameMain.Config.JobPreferences.Randomize()));
-                        }
-                        return true;
-                    }
-                };
 
                 UpdateJobPreferences(jobList);
 
@@ -1825,6 +1769,7 @@ namespace Barotrauma
             playerFrame?.AddToGUIUpdateList();  
             CampaignSetupUI?.AddToGUIUpdateList();
             jobInfoFrame?.AddToGUIUpdateList();
+            jobAdditionList?.AddToGUIUpdateList();
         }
         
 
@@ -1848,46 +1793,20 @@ namespace Barotrauma
                 autoRestartTimer = Math.Max(autoRestartTimer - (float)deltaTime, 0.0f);
             }
 
-            if (draggedJobFrame != null)
+            if (headSelectionList != null)
             {
-                if (PlayerInput.LeftButtonHeld())
+                if (PlayerInput.LeftButtonDown() && !GUI.IsMouseOn(headSelectionList))
                 {
-                    int index = jobList.Content.GetChildIndex(draggedJobFrame);
-                    jobList.Select(index, true);
-                    draggedJobFrame.PressedColor = Color.White;
-                    draggedJobFrame.SelectedColor = Color.White;
-                    int offset = 0;
-                    if ((int)PlayerInput.MousePosition.Y > draggedJobFrame.Rect.Bottom + 5)
-                    {
-                        offset = 1;
-                    }
-                    else if ((int)PlayerInput.MousePosition.Y < draggedJobFrame.Rect.Top - 5)
-                    {
-                        offset = -1;
-                    }
-
-                    if (offset != 0)
-                    {
-                        int newIndex = index + offset;
-                        if (newIndex >= 0 && newIndex <= jobList.Content.CountChildren - 1)
-                        {
-                            draggedJobFrame.RectTransform.RepositionChildInHierarchy(newIndex);
-
-                            UpdateJobPreferences(jobList);
-                        }
-                    }
-                }
-                else
-                {
-                    jobList.Deselect();
-                    draggedJobFrame = null;
+                    appearanceFrame.RemoveChild(headSelectionList);
+                    headSelectionList = null;
                 }
             }
-            else
+
+            if (jobAdditionList != null)
             {
-                if (PlayerInput.LeftButtonHeld())
+                if (PlayerInput.LeftButtonDown() && !GUI.IsMouseOn(jobAdditionList))
                 {
-                    draggedJobFrame = (GUIFrame)jobList.Content.FindChild(f => f is GUIFrame && GUI.IsMouseOn(f));
+                    jobAdditionList = null;
                 }
             }
         }
@@ -1933,23 +1852,27 @@ namespace Barotrauma
         private bool SelectJobPreferencesTab(GUIButton button, object userData)
         {
             jobPreferencesButton.Selected = true;
-            faceSelectionButton.Selected = false;
+            appearanceButton.Selected = false;
 
-            jobPreferencesLayout.Visible = true;
+            jobList.Visible = true;
             appearanceFrame.Visible = false;
 
             return false;
         }
 
-        private bool SelectFaceSelectionTabMain(GUIButton button, object userData)
+        private bool SelectAppearanceTab(GUIButton button, object userData)
         {
             jobPreferencesButton.Selected = false;
-            faceSelectionButton.Selected = true;
+            appearanceButton.Selected = true;
 
-            jobPreferencesLayout.Visible = false;
+            jobList.Visible = false;
             appearanceFrame.Visible = true;
 
             appearanceFrame.ClearChildren();
+            headSelectionList = null;
+
+            GUIButton maleButton = null;
+            GUIButton femaleButton = null;
 
             var info = GameMain.Client.CharacterInfo;
 
@@ -1964,11 +1887,11 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), leftColumn.RectTransform), TextManager.Get("Gender"));
 
-            GUIButton maleButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.2f), leftColumn.RectTransform),
+            maleButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.2f), leftColumn.RectTransform),
                 TextManager.Get("Male"), style: "ListBoxElement")
             {
                 UserData = Gender.Male,
-                OnClicked = SelectFaceSelectionTabHead,
+                OnClicked = OpenHeadSelection,
                 Selected = info.Gender == Gender.Male
             };
 
@@ -2015,11 +1938,11 @@ namespace Barotrauma
 
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.15f), rightColumn.RectTransform), null);
 
-            GUIButton femaleButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.2f), rightColumn.RectTransform),
+            femaleButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.2f), rightColumn.RectTransform),
                 TextManager.Get("Female"), style: "ListBoxElement")
             {
                 UserData = Gender.Female,
-                OnClicked = SelectFaceSelectionTabHead,
+                OnClicked = OpenHeadSelection,
                 Selected = info.Gender == Gender.Female
             };
 
@@ -2068,22 +1991,14 @@ namespace Barotrauma
             return false;
         }
 
-        private bool SelectFaceSelectionTabHead(GUIButton button, object userData)
+        private bool OpenHeadSelection(GUIButton button, object userData)
         {
-            appearanceFrame.ClearChildren();
-
             Gender gender = (Gender)userData;
 
             var info = GameMain.Client.CharacterInfo;
 
-            GUILayoutGroup layout = new GUILayoutGroup(new RectTransform(Vector2.One, appearanceFrame.RectTransform));
-
-            new GUIButton(new RectTransform(new Vector2(0.3f, 0.15f), layout.RectTransform), TextManager.Get("Back"))
-            {
-                OnClicked = SelectFaceSelectionTabMain
-            };
-
-            var listBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.85f), layout.RectTransform))
+            if (headSelectionList != null) { appearanceFrame.RemoveChild(headSelectionList); }
+            headSelectionList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.65f), appearanceFrame.RectTransform) { RelativeOffset = new Vector2(0.0f,0.35f) })
             {
                 ScrollBarEnabled = true,
                 ScrollBarVisible = true
@@ -2138,7 +2053,7 @@ namespace Barotrauma
 
                             if (row == null || itemsInRow >= 4)
                             {
-                                row = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.333f), listBox.Content.RectTransform), true);
+                                row = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.333f), headSelectionList.Content.RectTransform), true);
                                 itemsInRow = 0;
                             }
 
@@ -2161,6 +2076,127 @@ namespace Barotrauma
             }
 
             return false;
+        }
+
+        private bool OpenJobSelection(GUIComponent child, object userData)
+        {
+            jobAdditionList = new GUIListBox(new RectTransform(new Point((characterInfoFrame.Rect.Width * 4) / 3, characterInfoFrame.Rect.Height), GUI.Canvas, Anchor.TopLeft)
+            { AbsoluteOffset = new Point(characterInfoFrame.Rect.Left - characterInfoFrame.Rect.Width / 3, characterInfoFrame.Rect.Bottom) }, true)
+            {
+                ScrollBarEnabled = true,
+                ScrollBarVisible = true
+            };
+
+            var jobFrame = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f), jobAdditionList.Content.RectTransform), "ListBoxElement")
+            {
+                OutlineColor = Color.White * 0.5f,
+                UserData = null
+            };
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), jobFrame.RectTransform, Anchor.BottomCenter), "None", textAlignment: Alignment.Center);
+
+            foreach (var jobPrefab in JobPrefab.List.Values)
+            {
+                if (jobPrefab.MaxNumber <= 0) { continue; }
+                if (jobList.Content.Children.Any(c => jobList.Content.GetChildIndex(c) < jobList.Content.GetChildIndex(child) && (c.UserData is JobPrefab prefab) && prefab.Identifier == jobPrefab.Identifier))
+                {
+                    continue;
+                }
+
+                jobFrame = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f), jobAdditionList.Content.RectTransform), "ListBoxElement")
+                {
+                    OutlineColor = Color.White * 0.5f,
+                    UserData = jobPrefab
+                };
+
+                new GUIImage(new RectTransform(Vector2.One * 0.8f, jobFrame.RectTransform, Anchor.Center), GetJobOutfitSprite(jobPrefab), scaleToFit: true);
+
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), jobFrame.RectTransform, Anchor.BottomCenter), jobPrefab.Name, textAlignment: Alignment.Center);
+            }
+
+            jobAdditionList.OnSelected = (chld, obj) =>
+            {
+                int childIndex = jobList.Content.GetChildIndex(child);
+
+                bool moveToNext = obj != null;
+                if (obj == null)
+                {
+                    obj = jobList.Content.GetChild(childIndex + 1)?.UserData;
+                }
+
+                for (int i=0;i<3;i++)
+                {
+                    if (i == childIndex)
+                    {
+                        jobList.Content.GetChild(i).UserData = obj;
+                    }
+                    else if (jobList.Content.GetChild(i).UserData == obj)
+                    {
+                        obj = jobList.Content.GetChild(i+1)?.UserData;
+                        jobList.Content.GetChild(i).UserData = obj;
+                    }
+                }
+                UpdateJobPreferences(jobList);
+
+                if (moveToNext)
+                {
+                    if (childIndex < 2)
+                    {
+                        jobList.Select(childIndex + 1);
+                    }
+                    else
+                    {
+                        jobList.Deselect();
+                        jobAdditionList = null;
+                    }
+                }
+
+                return true;
+            };
+
+            return true;
+        }
+
+        private Sprite GetJobOutfitSprite(JobPrefab jobPrefab)
+        {
+            var info = GameMain.Client.CharacterInfo;
+
+            var equipIdentifiers = jobPrefab.Element.Elements("Items").Elements().Where(e => e.GetAttributeBool("equip", false)).Select(e => e.GetAttributeString("identifier", ""));
+
+            foreach (string s in equipIdentifiers)
+            {
+                DebugConsole.NewMessage(s);
+            }
+
+            Rectangle sourceRect = info.Ragdoll.Limbs.Find(l => l.Type == LimbType.Torso).GetSprite().SourceRect;
+
+            var wearables = MapEntityPrefab.List
+                    .Where(pf => pf is ItemPrefab).Select(pf => pf as ItemPrefab)
+                    .Where(ipf => equipIdentifiers.Contains(ipf.Identifier))
+                    .Where(ipf => ipf.ConfigElement.Elements("Wearable").Any());
+            var spriteElements = wearables
+                    .SelectMany(ipf => ipf.ConfigElement.Elements("Wearable"))
+                    .SelectMany(
+                        e => e.Elements("sprite")?.Where(
+                            s => Enum.TryParse(s.GetAttributeString("limb", "None"), out LimbType limbType) && limbType == LimbType.Torso
+                        )
+                    );
+            if (spriteElements?.Any() ?? false)
+            {
+                string path = Path.GetDirectoryName(wearables.First().ConfigFile);
+                XElement spriteElement = spriteElements.First();
+                string spriteTexture = spriteElement.GetAttributeString("texture", "").Replace("[GENDER]", (info.Gender == Gender.Female) ? "female" : "male");
+
+                var sprite = new Sprite(spriteElement, path: path, file: spriteTexture.Replace("[VARIANT]", "1"));
+                var head = GameMain.Client.CharacterInfo.HeadSprite;
+
+                sprite.SourceRect = new Rectangle(sourceRect.Location, new Point(sourceRect.Width, (sourceRect.Height * 2) / 3));
+                sprite.size = new Vector2((float)sprite.SourceRect.Width, (float)sprite.SourceRect.Height);
+
+                return sprite;
+            }
+
+            return null;
         }
 
         private bool SwitchHead(GUIButton button, object obj)
@@ -2187,7 +2223,7 @@ namespace Barotrauma
                 info.ReloadHeadAttachments();
             }
 
-            SelectFaceSelectionTabMain(button, obj);
+            SelectAppearanceTab(button, obj);
 
             return true;
         }
@@ -2435,24 +2471,42 @@ namespace Barotrauma
 
         private void UpdateJobPreferences(GUIListBox listBox)
         {
-            listBox.Deselect();
+            //listBox.Deselect();
             List<string> jobNamePreferences = new List<string>();
 
+            bool disableNext = false;
             for (int i = 0; i < listBox.Content.CountChildren; i++)
             {
                 float a = (float)(i - 1) / 3.0f;
                 a = Math.Min(a, 3);
-                Color color = new Color(1.0f - a, (1.0f - a) * 0.6f, 0.0f, 0.3f);
+                //Color color = new Color(1.0f - a, (1.0f - a) * 0.6f, 0.0f, 0.3f);
 
-                GUIComponent child = listBox.Content.GetChild(i);
+                GUIComponent slot = listBox.Content.GetChild(i);
 
-                child.Color = color;
-                child.HoverColor = Color.White;
-                child.SelectedColor = color;
+                slot.OutlineColor = Color.White * 0.4f;
+                slot.Color = Color.Gray;
+                slot.HoverColor = Color.White;
+                slot.SelectedColor = Color.White;
 
-                (child.GetChild<GUITextBlock>()).Text = (i + 1) + ". " + (child.UserData as JobPrefab).Name;
+                //(child.GetChild<GUITextBlock>())?.Text = (i + 1) + ". " + (child.UserData as JobPrefab).Name;
 
-                jobNamePreferences.Add((child.UserData as JobPrefab).Identifier);
+                slot.ClearChildren();
+
+                slot.CanBeFocused = !disableNext;
+                if (slot.UserData is JobPrefab jobPrefab)
+                {
+                    new GUIImage(new RectTransform(Vector2.One * 0.8f, slot.RectTransform, Anchor.Center), GetJobOutfitSprite(jobPrefab), scaleToFit: true);
+
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), slot.RectTransform, Anchor.BottomCenter), jobPrefab.Name, textAlignment: Alignment.Center);
+
+                    jobNamePreferences.Add(jobPrefab.Identifier);
+                }
+                else
+                {
+                    new GUITextBlock(new RectTransform(Vector2.One, slot.RectTransform), (i + 1).ToString(), textColor: Color.White * (disableNext ? 0.25f : 0.5f), textAlignment: Alignment.Center, font: GUI.LargeFont);
+
+                    disableNext = true;
+                }
             }
 
             if (!GameMain.Config.JobPreferences.SequenceEqual(jobNamePreferences))
