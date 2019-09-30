@@ -12,6 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using SpriteParams = Barotrauma.RagdollParams.SpriteParams;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -19,8 +20,9 @@ namespace Barotrauma
     {
         public void UpdateDeformations(float deltaTime)
         {
-            float jointMidAngle = (LowerLimit + UpperLimit) / 2.0f;
-            float jointAngle = this.JointAngle - jointMidAngle;
+            float diff = Math.Abs(UpperLimit - LowerLimit);
+            float strength = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(0, MathHelper.Pi, diff));
+            float jointAngle = this.JointAngle * strength;
 
             JointBendDeformation limbADeformation = LimbA.Deformations.Find(d => d is JointBendDeformation) as JointBendDeformation;
             JointBendDeformation limbBDeformation = LimbB.Deformations.Find(d => d is JointBendDeformation) as JointBendDeformation;
@@ -29,7 +31,6 @@ namespace Barotrauma
             {
                 UpdateBend(LimbA, limbADeformation, this.LocalAnchorA, -jointAngle);
                 UpdateBend(LimbB, limbBDeformation, this.LocalAnchorB, jointAngle);
-
             }
             
             void UpdateBend(Limb limb, JointBendDeformation deformation, Vector2 localAnchor, float angle)
