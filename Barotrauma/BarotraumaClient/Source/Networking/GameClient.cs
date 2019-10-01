@@ -1804,6 +1804,7 @@ namespace Barotrauma.Networking
                     }
 
                     SaveUtil.LoadGame(GameMain.GameSession.SavePath, GameMain.GameSession);
+                    GameMain.GameSession?.Submarine?.CheckSubsLeftBehind();
                     campaign.LastSaveID = campaign.PendingSaveID;
 
                     DebugConsole.Log("Campaign save received, save ID " + campaign.LastSaveID);

@@ -189,9 +189,7 @@ namespace Barotrauma.Items.Components
                 GameMain.GameScreen.Cam.Shake = Vector2.Distance(DockingTarget.item.Submarine.Velocity, item.Submarine.Velocity);
             }
 
-            DockingDir = IsHorizontal ? 
-                Math.Sign(DockingTarget.item.WorldPosition.X - item.WorldPosition.X) :
-                Math.Sign(DockingTarget.item.WorldPosition.Y - item.WorldPosition.Y);
+            DockingDir = GetDir(DockingTarget);
             DockingTarget.DockingDir = -DockingDir;
            
             if (door != null && DockingTarget.door != null)
@@ -230,9 +228,7 @@ namespace Barotrauma.Items.Components
 
             if (!(joint is WeldJoint))
             {
-                DockingDir = IsHorizontal ?
-                    Math.Sign(DockingTarget.item.WorldPosition.X - item.WorldPosition.X) :
-                    Math.Sign(DockingTarget.item.WorldPosition.Y - item.WorldPosition.Y);
+                DockingDir = GetDir(DockingTarget);
                 DockingTarget.DockingDir = -DockingDir;
 
                 ApplyStatusEffects(ActionType.OnUse, 1.0f);
@@ -312,7 +308,7 @@ namespace Barotrauma.Items.Components
             joint.CollideConnected = true;
         }
 
-        public int GetDir()
+        public int GetDir(DockingPort dockingTarget = null)
         {
             if (DockingDir != 0) { return DockingDir; }
 
@@ -325,7 +321,12 @@ namespace Barotrauma.Items.Components
                         Math.Sign(door.Item.WorldPosition.Y - door.LinkedGap.linkedTo[0].WorldPosition.Y);
                 }
             }
-
+            if (dockingTarget != null)
+            {
+                return IsHorizontal ?
+                    Math.Sign(dockingTarget.item.WorldPosition.X - item.WorldPosition.X) :
+                    Math.Sign(dockingTarget.item.WorldPosition.Y - item.WorldPosition.Y);
+            }
             if (item.Submarine != null)
             {
                 return IsHorizontal ?
