@@ -309,7 +309,7 @@ namespace Barotrauma
 
             float panelSpacing = 0.005f;
 
-            GUILayoutGroup panelHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 1.0f), defaultModeContainer.RectTransform))
+            GUILayoutGroup panelHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 0.95f), defaultModeContainer.RectTransform))
             {
                 Stretch = true
             };
@@ -319,7 +319,8 @@ namespace Barotrauma
             infoFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.5f), panelHolder.RectTransform));
             var infoFrameContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), infoFrame.RectTransform, Anchor.Center))
             {
-                Stretch = true
+                Stretch = true,
+                RelativeSpacing = 0.025f
             };
 
             //server game panel ------------------------------------------------------------
@@ -327,7 +328,8 @@ namespace Barotrauma
             modeFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.5f), panelHolder.RectTransform));
             var modeFrameContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), modeFrame.RectTransform, Anchor.Center))
             {
-                Stretch = true
+                Stretch = true,
+                RelativeSpacing = 0.025f
             };
 
             // Sidebar area (Character customization/Chat)
@@ -470,7 +472,8 @@ namespace Barotrauma
 
             GUILayoutGroup lobbyContent = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), infoFrameContent.RectTransform), isHorizontal: true)
             {
-                Stretch = true
+                Stretch = true,
+                RelativeSpacing = 0.025f
             };
 
             var serverMessageContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), lobbyContent.RectTransform));
@@ -538,15 +541,80 @@ namespace Barotrauma
                 }
             };
 
+            GUILayoutGroup miscSettingsHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), modeFrameContent.RectTransform), isHorizontal: true)
+            {
+                Stretch = true
+            };
+
+            //seed ------------------------------------------------------------------
+
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), miscSettingsHolder.RectTransform), TextManager.Get("LevelSeed"));
+            seedBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), miscSettingsHolder.RectTransform));
+            seedBox.OnDeselected += (textBox, key) =>
+            {
+                GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.LevelSeed);
+            };
+            clientDisabledElements.Add(seedBox);
+            LevelSeed = ToolBox.RandomSeed(8);
+
+            //level difficulty ------------------------------------------------------------------
+
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), miscSettingsHolder.RectTransform), TextManager.Get("LevelDifficulty"));
+            levelDifficultyScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 1.0f), miscSettingsHolder.RectTransform), barSize: 0.1f)
+            {
+                Range = new Vector2(0.0f, 100.0f),
+                OnReleased = (scrollbar, value) =>
+                {
+                    GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, levelDifficulty: scrollbar.BarScrollValue);
+
+                    return true;
+                }
+            };
+
+            clientDisabledElements.Add(levelDifficultyScrollBar);
+
+            //misc buttons ------------------------------------------------------------------
+
+            campaignViewButton = new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), miscSettingsHolder.RectTransform),
+                TextManager.Get("CampaignView"), style: "GUIButtonLarge")
+            {
+                OnClicked = (btn, obj) => { ToggleCampaignView(true); return true; },
+                Visible = false
+            };
+
+            var restartText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), miscSettingsHolder.RectTransform, Anchor.TopRight), "", font: GUI.SmallFont)
+            {
+                TextGetter = AutoRestartText
+            };
+
+            autoRestartBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 1.0f), miscSettingsHolder.RectTransform, Anchor.TopRight), TextManager.Get("AutoRestart"))
+            {
+                OnSelected = (tickBox) =>
+                {
+                    GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, autoRestart: tickBox.Selected);
+                    return true;
+                }
+            };
+
+            clientDisabledElements.Add(autoRestartBox);
+
+            GUILayoutGroup gameModeBackground = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), modeFrameContent.RectTransform), isHorizontal: true)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.025f
+            };
+
             //gamemode ------------------------------------------------------------------
 
-            var modeLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), modeFrameContent.RectTransform), TextManager.Get("GameMode"));
-            modeList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.2f), modeFrameContent.RectTransform))
+            GUILayoutGroup gameModeHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.333f, 1.0f), gameModeBackground.RectTransform));
+
+            var modeLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), gameModeHolder.RectTransform), TextManager.Get("GameMode"));
+            modeList = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), gameModeHolder.RectTransform))
             {
                 OnSelected = VotableClicked
             };
             
-            voteText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), modeLabel.RectTransform, Anchor.TopRight),
+            voteText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), gameModeHolder.RectTransform, Anchor.TopRight),
                 TextManager.Get("Votes"), textAlignment: Alignment.CenterRight)
             {
                 UserData = "modevotes",
@@ -557,7 +625,7 @@ namespace Barotrauma
             {
                 if (mode.IsSinglePlayer) continue;
 
-                GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.333f), modeList.Content.RectTransform),
+                GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0333f), modeList.Content.RectTransform),
                     mode.Name, style: "ListBoxElement", textAlignment: Alignment.CenterLeft)
                 {
                     UserData = mode,
@@ -570,9 +638,11 @@ namespace Barotrauma
             }
 
             //mission type ------------------------------------------------------------------
-            missionTypeLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), modeFrameContent.RectTransform), TextManager.Get("MissionType"));
+            GUILayoutGroup missionHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.333f, 1.0f), gameModeBackground.RectTransform));
 
-            missionTypeList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.15f), modeFrameContent.RectTransform))
+            missionTypeLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), missionHolder.RectTransform), TextManager.Get("MissionType"));
+
+            missionTypeList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.15f), missionHolder.RectTransform))
             {
                 OnSelected = (component, obj) =>
                 {
@@ -586,7 +656,7 @@ namespace Barotrauma
             {
                 if (missionType == MissionType.None || missionType == MissionType.All) { continue; }
 
-                GUIFrame frame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.25f), missionTypeList.Content.RectTransform), style: "ListBoxElement")
+                GUIFrame frame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.33f), missionTypeList.Content.RectTransform), style: "ListBoxElement")
                 {
                     UserData = index,
                 };
@@ -609,40 +679,16 @@ namespace Barotrauma
 
             clientDisabledElements.AddRange(missionTypeTickBoxes);
 
-            //seed ------------------------------------------------------------------
-
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), modeFrameContent.RectTransform), TextManager.Get("LevelSeed"));
-            seedBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.05f), modeFrameContent.RectTransform));
-            seedBox.OnDeselected += (textBox, key) =>
-            {
-                GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.LevelSeed);
-            };
-            clientDisabledElements.Add(seedBox);
-            LevelSeed = ToolBox.RandomSeed(8);
-
-            //level difficulty ------------------------------------------------------------------
-
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), modeFrameContent.RectTransform), TextManager.Get("LevelDifficulty"));
-            levelDifficultyScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), modeFrameContent.RectTransform), barSize: 0.1f)
-            {
-                Range = new Vector2(0.0f, 100.0f),
-                OnReleased = (scrollbar, value) =>
-                {
-                    GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, levelDifficulty: scrollbar.BarScrollValue);
-
-                    return true;
-                }
-            };
-
-            clientDisabledElements.Add(levelDifficultyScrollBar);
-
             //traitor probability ------------------------------------------------------------------
-            
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.03f), modeFrameContent.RectTransform), style: null); //spacing
+            GUILayoutGroup settingsHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.333f, 1.0f), gameModeBackground.RectTransform))
+            {
+                Stretch = true,
+                RelativeSpacing = 0.025f
+            };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), modeFrameContent.RectTransform), TextManager.Get("Traitors"));
+            new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.05f), settingsHolder.RectTransform), TextManager.Get("Traitors"));
 
-            var traitorProbContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), modeFrameContent.RectTransform), isHorizontal: true);
+            var traitorProbContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), settingsHolder.RectTransform), isHorizontal: true);
             traitorProbabilityButtons = new GUIButton[2];
             traitorProbabilityButtons[0] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), traitorProbContainer.RectTransform), "<")
             {
@@ -654,7 +700,7 @@ namespace Barotrauma
                 }
             };
 
-            traitorProbabilityText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), traitorProbContainer.RectTransform), TextManager.Get("No"), textAlignment: Alignment.Center);
+            traitorProbabilityText = new GUITextBlock(new RectTransform(new Vector2(0.75f, 1.0f), traitorProbContainer.RectTransform), TextManager.Get("No"), textAlignment: Alignment.Center);
             traitorProbabilityButtons[1] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), traitorProbContainer.RectTransform), ">")
             {
                 OnClicked = (button, obj) =>
@@ -668,9 +714,9 @@ namespace Barotrauma
             clientDisabledElements.AddRange(traitorProbabilityButtons);
 
             //bot count ------------------------------------------------------------------
-            
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), modeFrameContent.RectTransform), TextManager.Get("BotCount"));
-            var botCountContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), modeFrameContent.RectTransform), isHorizontal: true);
+
+            new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.05f), settingsHolder.RectTransform), TextManager.Get("BotCount"));
+            var botCountContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), settingsHolder.RectTransform), isHorizontal: true);
             botCountButtons = new GUIButton[2];
             botCountButtons[0] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), botCountContainer.RectTransform), "<")
             {
@@ -682,7 +728,7 @@ namespace Barotrauma
                 }
             };
 
-            botCountText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), botCountContainer.RectTransform), "0", textAlignment: Alignment.Center);
+            botCountText = new GUITextBlock(new RectTransform(new Vector2(0.75f, 1.0f), botCountContainer.RectTransform), "0", textAlignment: Alignment.Center);
             botCountButtons[1] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), botCountContainer.RectTransform), ">")
             {
                 OnClicked = (button, obj) =>
@@ -695,8 +741,8 @@ namespace Barotrauma
 
             clientDisabledElements.AddRange(botCountButtons);
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), modeFrameContent.RectTransform), TextManager.Get("BotSpawnMode"));
-            var botSpawnModeContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), modeFrameContent.RectTransform), isHorizontal: true);
+            new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.05f), settingsHolder.RectTransform), TextManager.Get("BotSpawnMode"));
+            var botSpawnModeContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), settingsHolder.RectTransform), isHorizontal: true);
             botSpawnModeButtons = new GUIButton[2];
             botSpawnModeButtons[0] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), botSpawnModeContainer.RectTransform), "<")
             {
@@ -708,7 +754,7 @@ namespace Barotrauma
                 }
             };
 
-            botSpawnModeText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), botSpawnModeContainer.RectTransform), "", textAlignment: Alignment.Center);
+            botSpawnModeText = new GUITextBlock(new RectTransform(new Vector2(0.75f, 1.0f), botSpawnModeContainer.RectTransform), "", textAlignment: Alignment.Center);
             botSpawnModeButtons[1] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), botSpawnModeContainer.RectTransform), ">")
             {
                 OnClicked = (button, obj) =>
@@ -720,32 +766,6 @@ namespace Barotrauma
             };
 
             clientDisabledElements.AddRange(botSpawnModeButtons);
-
-            //misc buttons ------------------------------------------------------------------
-            
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.03f), modeFrameContent.RectTransform), style: null); //spacing
-
-            autoRestartBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), modeFrameContent.RectTransform), TextManager.Get("AutoRestart"))
-            {
-                OnSelected = (tickBox) =>
-                {
-                    GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, autoRestart: tickBox.Selected);
-                    return true;
-                }
-            };
-
-            clientDisabledElements.Add(autoRestartBox);
-            var restartText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), modeFrameContent.RectTransform), "", font: GUI.SmallFont)
-            {
-                TextGetter = AutoRestartText
-            };
-
-            campaignViewButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), modeFrameContent.RectTransform),
-                TextManager.Get("CampaignView"), style: "GUIButtonLarge")
-            {
-                OnClicked = (btn, obj) => { ToggleCampaignView(true); return true; },
-                Visible = false
-            };
         }
         
         public IEnumerable<object> WaitForStartRound(GUIButton startButton, bool allowCancel)
