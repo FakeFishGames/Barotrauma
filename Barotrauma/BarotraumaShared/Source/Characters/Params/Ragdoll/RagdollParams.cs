@@ -560,6 +560,9 @@ namespace Barotrauma
             [Serialize("", true), Editable]
             public string Notes { get; set; }
 
+            [Serialize(7f, true), Editable]
+            public float AngularDamping { get; set; }
+
             // Non-editable ->
             [Serialize(0, true)]
             public int HealthIndex { get; set; }

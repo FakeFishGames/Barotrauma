@@ -76,10 +76,6 @@ namespace Barotrauma
     
     partial class Limb : ISerializableEntity, ISpatialEntity
     {
-        // Note: not used
-        private const float LimbDensity = 15;
-        private const float LimbAngularDamping = 7;
-
         //how long it takes for severed limbs to fade out
         private const float SeveredFadeOutTime = 10.0f;
 
@@ -316,7 +312,6 @@ namespace Barotrauma
             }
 
             body.BodyType = BodyType.Dynamic;
-            body.FarseerBody.AngularDamping = LimbAngularDamping;
 
             damageModifiers = new List<DamageModifier>();
 
