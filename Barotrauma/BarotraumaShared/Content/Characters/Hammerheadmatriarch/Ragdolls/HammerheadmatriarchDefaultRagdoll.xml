@@ -1,0 +1,36 @@
+﻿<Ragdoll type="Hammerheadmatriarch" texture="Content/Characters/Hammerheadmatriarch/Hammerheadmatriarch.png" canentersubmarine="False" spritesheetorientation="0" limbscale="1" jointscale="1" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" draggable="True">
+  <collider radius="42" width="1" name="Main Collider" height="0" />
+  <limb id="0" name="Limb 0" type="Torso" height="482.8" width="396.1" notes="" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" healthindex="0" friction="0.3" restitution="0.05">
+    <sprite texture="" sourcerect="988,1,486,478" origin="0.5,0.5" depth="0" />
+  </limb>
+  <limb id="1" name="Limb 1" type="Head" height="482.8" width="491.3" notes="" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" healthindex="0" friction="0.3" restitution="0.05">
+    <sprite texture="" sourcerect="1472,0,575,559" origin="0.5466793,0.5380377" depth="0" />
+  </limb>
+  <limb id="2" radius="0" width="396.1" height="482.8" mass="0" name="Limb 2" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
+    <sprite texture="" sourcerect="473,1,490,482" origin="0.5,0.5" depth="0" />
+  </limb>
+  <limb id="3" width="442" height="305" name="Limb 3" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
+    <sprite texture="" sourcerect="1,1,442,303" origin="0.5,0.5" depth="0" />
+  </limb>
+  <limb id="4" width="204" height="224" name="Limb 4" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
+    <sprite texture="" sourcerect="0,303,202,224" origin="0.5,0.5" depth="0" />
+  </limb>
+  <limb id="5" radius="0" width="204" height="224" mass="0" name="Limb 5" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
+    <sprite texture="" sourcerect="203,303,198,239" origin="0.5,0.5" depth="0" />
+  </limb>
+  <limb id="6" width="326" height="216" name="Limb 6" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
+    <sprite texture="" sourcerect="2,533,325,210" origin="0.5,0.5" depth="0" />
+  </limb>
+  <limb id="7" radius="0" width="326" height="216" mass="0" name="Limb 7" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
+    <sprite texture="" sourcerect="2,740,325,233" origin="0.5,0.5" depth="0" />
+  </limb>
+  <limb id="8" width="1025" height="513" name="Limb 8" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
+    <sprite texture="" sourcerect="328,536,1137,509" origin="0.5,0.5" depth="0" />
+  </limb>
+  <limb id="9" width="1376" height="325" name="Limb 9" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
+    <sprite texture="" sourcerect="8,1055,1375,355" origin="0.5,0.5" depth="0" />
+  </limb>
+  <limb id="10" width="1052" height="524" name="Limb 10" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
+    <sprite texture="" sourcerect="4,1405,1076,597" origin="0.5,0.5" depth="0" />
+  </limb>
+</Ragdoll>
