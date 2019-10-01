@@ -2139,8 +2139,9 @@ namespace Barotrauma
 
         private bool OpenJobSelection(GUIComponent child, object userData)
         {
-            jobSelectionFrame = new GUIFrame(new RectTransform(new Point((characterInfoFrame.Rect.Width * 4) / 3, characterInfoFrame.Rect.Height * 2), GUI.Canvas, Anchor.TopLeft)
-            { AbsoluteOffset = new Point(characterInfoFrame.Rect.Left - characterInfoFrame.Rect.Width / 3, characterInfoFrame.Rect.Bottom) }, style: "GUIFrameListBox");
+            Point frameSize = new Point((characterInfoFrame.Rect.Width * 4) / 3, ((characterInfoFrame.Rect.Height * 3) / 2));
+            jobSelectionFrame = new GUIFrame(new RectTransform(frameSize, GUI.Canvas, Anchor.TopLeft)
+            { AbsoluteOffset = new Point(characterInfoFrame.Rect.Right - frameSize.X, characterInfoFrame.Rect.Bottom) }, "GUIFrameListBox");
 
             var rows = new GUILayoutGroup(new RectTransform(Vector2.One, jobSelectionFrame.RectTransform)) { Stretch = true };
 
@@ -2182,51 +2183,137 @@ namespace Barotrauma
                 };
                 itemsInRow++;
 
-                new GUIImage(new RectTransform(Vector2.One * 0.8f, jobButton.RectTransform, Anchor.Center), GetJobOutfitSprite(jobPrefab), scaleToFit: true);
-
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), jobButton.RectTransform, Anchor.BottomCenter), jobPrefab.Name, textAlignment: Alignment.Center);
+                AddJobSpritesToGUIComponent(jobButton, jobPrefab);
             }
 
             return true;
         }
 
-        private Sprite GetJobOutfitSprite(JobPrefab jobPrefab)
+        private void AddJobSpritesToGUIComponent(GUIComponent parent, JobPrefab jobPrefab)
+        {
+            GUIFrame innerFrame = null;
+            GUIImage firstImage = null;
+            Pair<Sprite, Vector2>[] sprites = GetJobOutfitSprites(jobPrefab, out Vector2 torsoSize);
+
+            innerFrame = new GUIFrame(new RectTransform(Vector2.One * 0.8f, parent.RectTransform, Anchor.Center), style: null);
+
+            Action recalculateInnerFrame = () =>
+            {
+                float buttonWidth = parent.Rect.Width;
+                float buttonHeight = parent.Rect.Height;
+
+                Vector2 innerFrameSize;
+                if (buttonWidth / torsoSize.X > buttonHeight / torsoSize.Y)
+                {
+                    innerFrameSize = new Vector2((torsoSize.X / torsoSize.Y) * (buttonHeight / buttonWidth), 1.0f);
+                }
+                else
+                {
+                    innerFrameSize = new Vector2(1.0f, (torsoSize.Y / torsoSize.X) * (buttonWidth / buttonHeight));
+                }
+
+                innerFrame.RectTransform.RelativeSize = innerFrameSize * 0.6f;
+            };
+
+            parent.RectTransform.SizeChanged += recalculateInnerFrame;
+
+            foreach (Pair<Sprite, Vector2> sprite in sprites)
+            {
+                Vector2 sourceRectDims = sprite.First.SourceRect.Size.ToVector2();
+
+                new GUIImage(new RectTransform((sourceRectDims / torsoSize), innerFrame.RectTransform, Anchor.Center) { RelativeOffset = sprite.Second }, sprite.First, scaleToFit: true);
+            }
+
+            recalculateInnerFrame();
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), parent.RectTransform, Anchor.BottomCenter), jobPrefab.Name, textAlignment: Alignment.Center);
+        }
+
+        private Pair<Sprite, Vector2>[] GetJobOutfitSprites(JobPrefab jobPrefab, out Vector2 torsoSize)
         {
             var info = GameMain.Client.CharacterInfo;
 
             var equipIdentifiers = jobPrefab.Element.Elements("Items").Elements().Where(e => e.GetAttributeBool("equip", false)).Select(e => e.GetAttributeString("identifier", ""));
 
-            foreach (string s in equipIdentifiers)
-            {
-                DebugConsole.NewMessage(s);
-            }
+            var head = GameMain.Client.CharacterInfo.HeadSprite;
 
-            Rectangle sourceRect = info.Ragdoll.Limbs.Find(l => l.Type == LimbType.Torso).GetSprite().SourceRect;
+            var torso = info.Ragdoll.Limbs.Find(l => l.Type == LimbType.Torso);
+            var arm = info.Ragdoll.Limbs.Find(l => l.Type == LimbType.RightArm);
 
-            var wearables = MapEntityPrefab.List
+            Rectangle originalTorsoSourceRect = torso.GetSprite().SourceRect;
+            Rectangle torsoSourceRect = originalTorsoSourceRect;
+            torsoSourceRect.Y += head.SourceRect.Height / 3;
+            torsoSourceRect.Height -= head.SourceRect.Height / 3;
+            torsoSourceRect.Height *= 3;
+            torsoSourceRect.Height /= 5;
+            Rectangle armSourceRect = arm.GetSprite().SourceRect;
+            armSourceRect.Height -= 36;
+
+            float yOffset = torsoSourceRect.Center.Y - originalTorsoSourceRect.Center.Y;
+            yOffset /= (float)torsoSourceRect.Height;
+            yOffset += 0.1f;
+
+            float torsoWidth = 0.333f * (torso.Radius*2.0f) * (float)torsoSourceRect.Width / (float)originalTorsoSourceRect.Width;
+            float torsoHeight = torso.Height * (float)torsoSourceRect.Height / (float)originalTorsoSourceRect.Height;
+
+            Vector2 armOrigin = arm.GetSprite().Origin;
+
+            var joint = info.Ragdoll.Joints.Find(j => (j.Limb1 == info.Ragdoll.Limbs.IndexOf(torso)
+                                                    && j.Limb2 == info.Ragdoll.Limbs.IndexOf(arm)) ||
+                                                      (j.Limb2 == info.Ragdoll.Limbs.IndexOf(torso)
+                                                    && j.Limb1 == info.Ragdoll.Limbs.IndexOf(arm)));
+
+            Vector2 torsoAnchor = joint.Limb1 == info.Ragdoll.Limbs.IndexOf(arm) ? joint.Limb2Anchor : joint.Limb1Anchor;
+            torsoAnchor *= info.Ragdoll.TextureScale * 0.75f;
+            Vector2 armAnchor = joint.Limb1 == info.Ragdoll.Limbs.IndexOf(arm) ? joint.Limb1Anchor : joint.Limb2Anchor;
+            armAnchor *= info.Ragdoll.TextureScale * 0.75f;
+
+            //armPosition.X *= torsoHeight / torsoWidth;
+
+            torsoSize = new Vector2(torsoWidth / torsoHeight * (float)torsoSourceRect.Height, torsoSourceRect.Height);
+
+            var prefabs = MapEntityPrefab.List
                     .Where(pf => pf is ItemPrefab).Select(pf => pf as ItemPrefab)
                     .Where(ipf => equipIdentifiers.Contains(ipf.Identifier))
-                    .Where(ipf => ipf.ConfigElement.Elements("Wearable").Any());
-            var spriteElements = wearables
-                    .SelectMany(ipf => ipf.ConfigElement.Elements("Wearable"))
-                    .SelectMany(
-                        e => e.Elements("sprite")?.Where(
+                    .Where(ipf => ipf.ConfigElement.Elements("Wearable").Any())
+                    .Where(ipf => ipf.ConfigElement.Element("Wearable").Elements("sprite")?.Where(
                             s => Enum.TryParse(s.GetAttributeString("limb", "None"), out LimbType limbType) && limbType == LimbType.Torso
-                        )
-                    );
-            if (spriteElements?.Any() ?? false)
+                        ).Any() ?? false);
+            var wearables = prefabs
+                    .Select(ipf => ipf.ConfigElement.Element("Wearable"));
+            if (wearables?.Any() ?? false)
             {
-                string path = Path.GetDirectoryName(wearables.First().ConfigFile);
-                XElement spriteElement = spriteElements.First();
-                string spriteTexture = spriteElement.GetAttributeString("texture", "").Replace("[GENDER]", (info.Gender == Gender.Female) ? "female" : "male");
+                string path = Path.GetDirectoryName(prefabs.First().ConfigFile);
+                var spriteElements = wearables.First().Elements("sprite").ToList();
+                XElement torsoSpriteElement = spriteElements.Find(s => Enum.TryParse(s.GetAttributeString("limb", "None"), out LimbType limbType) && limbType == LimbType.Torso);
+                XElement armSpriteElement = spriteElements.Find(s => Enum.TryParse(s.GetAttributeString("limb", "None"), out LimbType limbType) && limbType == LimbType.RightArm);
+                string torsoTexture = torsoSpriteElement.GetAttributeString("texture", "").Replace("[GENDER]", (info.Gender == Gender.Female) ? "female" : "male");
+                string armTexture = armSpriteElement.GetAttributeString("texture", "").Replace("[GENDER]", (info.Gender == Gender.Female) ? "female" : "male");
 
-                var sprite = new Sprite(spriteElement, path: path, file: spriteTexture.Replace("[VARIANT]", "1"));
-                var head = GameMain.Client.CharacterInfo.HeadSprite;
+                var torsoSprite = new Sprite(torsoSpriteElement, path: path, file: torsoTexture.Replace("[VARIANT]", "1"));
+                var armSprite = new Sprite(armSpriteElement, path: path, file: armTexture.Replace("[VARIANT]", "1"));
 
-                sprite.SourceRect = new Rectangle(sourceRect.Location, new Point(sourceRect.Width, (sourceRect.Height * 2) / 3));
-                sprite.size = new Vector2((float)sprite.SourceRect.Width, (float)sprite.SourceRect.Height);
+                torsoSprite.SourceRect = torsoSourceRect;//new Rectangle(new Point(torsoSourceRect.Location.X, torsoSourceRect.Location.Y + (int)(head.SourceRect.Height * 0.3f)), new Point(torsoSourceRect.Width, (torsoSourceRect.Height * 1) / 2));
+                torsoSprite.size = new Vector2((float)torsoSprite.SourceRect.Width, (float)torsoSprite.SourceRect.Height) / info.Ragdoll.LimbScale;
 
-                return sprite;
+                armSprite.SourceRect = armSourceRect;
+                armSprite.size = new Vector2((float)armSprite.SourceRect.Width, (float)armSprite.SourceRect.Height) / info.Ragdoll.LimbScale;
+
+                Vector2 armPosition = torsoAnchor - armAnchor;
+
+                armPosition.Y = -armPosition.Y;
+
+                armPosition /= new Vector2(torsoWidth, torsoHeight);
+
+                armOrigin = new Vector2(0.5f - armOrigin.X, 0.5f - armOrigin.Y) * armSourceRect.Size.ToVector2();
+
+                armOrigin /= torsoSize;
+
+                return new Pair<Sprite, Vector2>[2]
+                {
+                    new Pair<Sprite, Vector2>(torsoSprite, Vector2.Zero),
+                    new Pair<Sprite, Vector2>(armSprite, armPosition + armOrigin + new Vector2(0.0f, -yOffset))
+                };
             }
 
             return null;
@@ -2523,9 +2610,7 @@ namespace Barotrauma
                 slot.CanBeFocused = !disableNext;
                 if (slot.UserData is JobPrefab jobPrefab)
                 {
-                    new GUIImage(new RectTransform(Vector2.One * 0.8f, slot.RectTransform, Anchor.Center), GetJobOutfitSprite(jobPrefab), scaleToFit: true);
-
-                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), slot.RectTransform, Anchor.BottomCenter), jobPrefab.Name, textAlignment: Alignment.Center);
+                    AddJobSpritesToGUIComponent(slot, jobPrefab);
 
                     jobNamePreferences.Add(jobPrefab.Identifier);
                 }
