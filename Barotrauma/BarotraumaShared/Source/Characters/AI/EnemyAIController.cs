@@ -1111,7 +1111,7 @@ namespace Barotrauma
                     }
                     else if (targetCharacter.AIController is EnemyAIController enemy)
                     {
-                        if (targetCharacter.Params.Group == character.Params.Group)
+                        if (targetCharacter.Params.CompareGroup(Character.Params.Group))
                         {
                             // Ignore targets that are in the same group (treat them like they were of the same species)
                             continue;

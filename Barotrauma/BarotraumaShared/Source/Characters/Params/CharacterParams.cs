@@ -94,6 +94,8 @@ namespace Barotrauma
             return true;
         }
 
+        public bool CompareGroup(string group) => !string.IsNullOrWhiteSpace(group) && !string.IsNullOrWhiteSpace(Group) && group.Equals(Group, StringComparison.OrdinalIgnoreCase);
+
         protected void CreateSubParams()
         {
             SubParams.Clear();
