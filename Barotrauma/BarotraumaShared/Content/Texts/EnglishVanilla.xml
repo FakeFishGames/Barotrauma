@@ -466,6 +466,7 @@
   <!-- Links -->
   <editordisclaimerwikiurl>https://barotrauma.gamepedia.com/Barotrauma_Wiki</editordisclaimerwikiurl>
   <editordisclaimerforumurl>https://undertowgames.com/forum/viewforum.php?f=17</editordisclaimerforumurl>
+  <editordisclaimerdiscordurl>https://discordapp.com/invite/undertow</editordisclaimerdiscordurl>
 
   <!-- Structure -->
   <entityname.hull>Hull</entityname.hull>
@@ -3450,7 +3451,7 @@
   <waterdetector.falseoutput>False output</waterdetector.falseoutput>
   <wificomponent.channel>Channel</wificomponent.channel>
 
-  <!-- Values temporarily in use -->
+  <!-- Values temporarily in use until plural monster names are added -->
   <missiondescription.killcrawlerswarm1>A small swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew that can neutralize it.</missiondescription.killcrawlerswarm1>
   <missiondescription.killcrawlerswarm2>A large swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew that can neutralize it.</missiondescription.killcrawlerswarm2>
 
@@ -3521,6 +3522,11 @@
   <replacelostshuttles>Replace lost shuttles</replacelostshuttles>
   <replaceshuttles>Replace</replaceshuttles>
   <replaceshuttledockingportoccupied>The lost shuttle cannot be replaced because the docking port is already in use. Clear the docking port before requisitioning a new shuttle.</replaceshuttledockingportoccupied>
+
+  <character.blackmoloch>Black Moloch</character.blackmoloch>
+  <character.goldenhammerhead>Golden Hammerhead</character.goldenhammerhead>
+  <character.hammerheadmatriarch>Hammerhead Matriarch</character.hammerheadmatriarch>
+  <character.bonetigerthresher>Bone Tiger Thresher</character.bonetigerthresher>
   
   <!-- Changed values as of 13th of August for the minor update in October -->
   <traitorgoaldestroyitems>Dispose of at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>
@@ -3528,8 +3534,6 @@
   <karma.kickbanthresholdtooltip>The players whose karma decrease below this threshold get automatically kicked and/or banned from the server (depending on the kick/ban settings below).</karma.kickbanthresholdtooltip>
   <mechanic.weldingtext>Equip the welding tool and diving mask you just retrieved from the locker by double-clicking on them. \n\nWith the welding tool you are able to repair leaks in hulls, and the diving mask will provide you with a steady supply of oxygen while underwater. \n\nSome items, like the welding tool, require two free hands to use. Unequip or drop an item by double-clicking it while it is in use.\n\nWhen welding tool is equipped, hold {0} to aim. While aiming, hold {1} to weld.</mechanic.weldingtext>
   <mechanic.fabricatetext>Now that we have all of the required materials, we can fabricate a fire extinguisher. Find it in the list, load the fabricator with materials and press the button to start fabricating.\n\nWhen done, the fabricated item can be found in the fabricator’s output slot. As the fire extinguisher is an item that requires the use of both hands, equip the item by double-clicking on it.</mechanic.fabricatetext>
-
-  <editordisclaimerdiscordurl>https://discordapp.com/invite/undertow</editordisclaimerdiscordurl>
 
   <bugreportfeedbackform>Help and technical support</bugreportfeedbackform>
   
