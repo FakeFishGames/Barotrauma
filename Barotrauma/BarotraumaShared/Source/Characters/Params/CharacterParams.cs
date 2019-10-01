@@ -391,10 +391,10 @@ namespace Barotrauma
             [Serialize(1.0f, true, description: "How strong other characters think this character is? Only affects AI."), Editable()]
             public float CombatStrength { get; private set; }
 
-            [Serialize(1.0f, true, description: "Affects how far the character can see the targets. Used as a multiplier."), Editable(minValue: 0f, maxValue: 2f)]
+            [Serialize(1.0f, true, description: "Affects how far the character can see the targets. Used as a multiplier."), Editable(minValue: 0f, maxValue: 10f)]
             public float Sight { get; private set; }
 
-            [Serialize(1.0f, true, description: "Affects how far the character can hear the targets. Used as a multiplier."), Editable(minValue: 0f, maxValue: 2f)]
+            [Serialize(1.0f, true, description: "Affects how far the character can hear the targets. Used as a multiplier."), Editable(minValue: 0f, maxValue: 10f)]
             public float Hearing { get; private set; }
 
             [Serialize(100f, true, description: "How much the target priority increase when the character takes damage? Additive."), Editable(minValue: -1000f, maxValue: 1000f)]
