@@ -311,6 +311,7 @@ namespace Barotrauma.Networking
                 translatedEndpoint = endpoint;
             }
             clientPeer.OnDisconnect = OnDisconnect;
+            clientPeer.OnDisconnectMessageReceived = HandleDisconnectMessage;
             clientPeer.OnInitializationComplete = () =>
             {
                 if (SteamManager.IsInitialized)
@@ -755,18 +756,16 @@ namespace Barotrauma.Networking
             }
         }
         
-        private void OnDisconnect(string disconnectMsg)
-        {
-            HandleDisconnectMessage(disconnectMsg);
-        }
-
-        private void HandleDisconnectMessage(string disconnectMsg)
+        private void OnDisconnect()
         {
             if (SteamManager.IsInitialized)
             {
                 SteamManager.Instance.User.ClearRichPresence();
             }
+        }
 
+        private void HandleDisconnectMessage(string disconnectMsg)
+        {
             disconnectMsg = disconnectMsg ?? "";
 
             string[] splitMsg = disconnectMsg.Split('/');
