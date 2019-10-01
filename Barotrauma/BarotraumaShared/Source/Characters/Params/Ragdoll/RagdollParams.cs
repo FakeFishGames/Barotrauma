@@ -545,9 +545,6 @@ namespace Barotrauma
             [Serialize(0f, true, description: "Width of the collider."), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
             public float Width { get; set; }
 
-            [Serialize(0f, true, description: "How heavy the limb is? If 0, the mass is automatically calculated based on the sprite dimensions."), Editable(MinValueFloat = 0, MaxValueFloat = 10000)]
-            public float Mass { get; set; }
-
             [Serialize(10f, true), Editable(MinValueFloat = 0, MaxValueFloat = 100)]
             public float Density { get; set; }
 

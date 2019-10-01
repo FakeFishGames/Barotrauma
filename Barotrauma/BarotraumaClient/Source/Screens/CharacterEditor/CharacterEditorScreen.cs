@@ -1136,7 +1136,6 @@ namespace Barotrauma.CharacterEditor
                 new XAttribute("radius", limb.Params.Radius),
                 new XAttribute("width", limb.Params.Width),
                 new XAttribute("height", limb.Params.Height),
-                new XAttribute("mass", limb.Params.Mass),
                 new XElement("sprite",
                     new XAttribute("texture", spriteParams.Texture),
                     new XAttribute("sourcerect", $"{rect.X}, {rect.Y}, {rect.Size.X}, {rect.Size.Y}")));
