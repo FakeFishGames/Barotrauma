@@ -3516,7 +3516,9 @@
   <label.pumps2>Pumps 2</label.pumps2>
   <label.dronecharge>Drone Charge</label.dronecharge>
   <label.meltdown>Meltdown</label.meltdown>
-
+  
+  <campaignfiletransferinprogress>Please wait for the campaign save file to finish downloading.</campaignfiletransferinprogress>
+  
   <openlinkinbrowserprompt>Do you want to open the link "[link]" in your web browser?</openlinkinbrowserprompt>
 
   <replacelostshuttles>Replace lost shuttles</replacelostshuttles>
@@ -3535,6 +3537,8 @@
   <mechanic.weldingtext>Equip the welding tool and diving mask you just retrieved from the locker by double-clicking on them. \n\nWith the welding tool you are able to repair leaks in hulls, and the diving mask will provide you with a steady supply of oxygen while underwater. \n\nSome items, like the welding tool, require two free hands to use. Unequip or drop an item by double-clicking it while it is in use.\n\nWhen a welding tool is equipped, hold {0} to aim. While aiming, hold {1} to weld.</mechanic.weldingtext>
   <mechanic.fabricatetext>Now that we have all of the required materials, we can fabricate a fire extinguisher. Find it in the list, load the fabricator with the required materials and press the button to start fabricating.\n\nWhen done, the fabricated item can be found in the fabricator’s output slot. As the fire extinguisher is an item that requires the use of both hands, equip the extinguisher by double-clicking on it.</mechanic.fabricatetext>
 
+  <connection.set_text>set_text</connection.set_text>
+  
   <bugreportfeedbackform>Help and technical support</bugreportfeedbackform>
   
   <!-- New additions for the major update coming in November -->
