@@ -3450,7 +3450,11 @@
   <waterdetector.falseoutput>False output</waterdetector.falseoutput>
   <wificomponent.channel>Channel</wificomponent.channel>
 
-  <!-- New Additions as of 13th of August -->
+  <!-- Values temporarily in use -->
+  <missiondescription.killcrawlerswarm1>A small swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew that can neutralize it.</missiondescription.killcrawlerswarm1>
+  <missiondescription.killcrawlerswarm2>A large swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew that can neutralize it.</missiondescription.killcrawlerswarm2>
+
+  <!-- New Additions as of 13th of August for the minor update in October -->
   <connection.batterychargestatusout>charge_out</connection.batterychargestatusout>
   <connection.batterychargepercentage>charge_%</connection.batterychargepercentage>
   <connection.batterysetrechargespeed>set_charge_rate</connection.batterysetrechargespeed>
@@ -3484,40 +3488,17 @@
   <mapentitycategory.decorative>Decorative</mapentitycategory.decorative>
   <mapentitycategory.wall>Wall</mapentitycategory.wall>
   <karma.resetkarmabetweenrounds>Reset karma between rounds</karma.resetkarmabetweenrounds>
-  <enablesplashscreen>Enable splash screen</enablesplashscreen>
+  <enablesplashscreen>Enable splash screen</enablesplashscreen>  
   
-  <servertag.casual>Casual</servertag.casual>
-  <servertagdescription.casual>Having fun is more important than completing the objective. A good choice for new players.</servertagdescription.casual>
-  <servertag.serious>Serious</servertag.serious>
-  <servertagdescription.serious>The crew should focus on working together efficiently and completing their objective. No unnecessary messing around.</servertagdescription.serious>
-  <servertag.roleplaying>Roleplaying</servertag.roleplaying>
-  <servertagdescription.roleplaying>The crew should aim to act like a real submarine crew. Chain of command is important, as is taking care of your responsibilities and following orders. Speaking out-of-character should be avoided when a round is running.</servertagdescription.roleplaying>
-  <servertag.somethingelse>Something else</servertag.somethingelse>
-  <servertagdescription.somethingelse>Gameplay differs significantly from the usual Barotrauma gameplay. Modded servers, very unconventional subs, battle royale rounds, shuttle racing, deathrun maps... Anything goes!</servertagdescription.somethingelse>
-  <servertag.rampage>Rampage</servertag.rampage>
-  <servertagdescription.rampage>Get ready to fight for your life! A server heavily geared towards combat. This can mean player-versus-player combat, PvE or both — see the server description before you start wrenching your crewmates' faces.</servertagdescription.rampage>
-
-  <servertag.modded>Modded</servertag.modded>
-  <servertagdescription.modded>One or more mods enabled. Installing mods from the Workshop may be required to join the server.</servertagdescription.modded>
-  <servertag.247>24/7</servertag.247>
-  <servertagdescription.247>Runs around the clock.</servertagdescription.247>
-  <servertag.nofriendlyfire>Friendly fire off</servertag.nofriendlyfire>
-  <servertagdescription.nofriendlyfire>Causing damage to your crew mates is disabled.</servertagdescription.nofriendlyfire>
-  <servertag.voipdisabled>Voice chat disabled</servertag.voipdisabled>
-  <servertagdescription.voipdisabled>Voice chat is disabled.</servertagdescription.voipdisabled>
-  <servertag.karmadisabled>Karma disabled</servertag.karmadisabled>
-  <servertagdescription.karmadisabled>Karma system is disabled.</servertagdescription.karmadisabled>
   <restartrequiredgeneric>You need to restart the game for the changes to take effect.</restartrequiredgeneric>
   <invalidcontentpackage>Content package '[packagename]' cannot be loaded.</invalidcontentpackage>
   <xmlfileinvalid>File '[filepath]' is not a valid XML file ([errormessage]).</xmlfileinvalid>
-
 
   <roomname.airlockaccess>Airlock Access</roomname.airlockaccess>
   <roomname.gunnerycompartment>Gunnery Compartment</roomname.gunnerycompartment>
   <roomname.dronecontrol>Drone Control</roomname.dronecontrol>
   <roomname.drone>Drone</roomname.drone>
-  <roomname.droneballast>Drone Ballast</roomname.droneballast>
-  
+  <roomname.droneballast>Drone Ballast</roomname.droneballast>  
 
   <subeditorlights>Lights</subeditorlights>
   <subeditorshadowcastinglights>Shadow-casting lights</subeditorshadowcastinglights>
@@ -3541,16 +3522,40 @@
   <replaceshuttles>Replace</replaceshuttles>
   <replaceshuttledockingportoccupied>The lost shuttle cannot be replaced because the docking port is already in use. Clear the docking port before requisitioning a new shuttle.</replaceshuttledockingportoccupied>
   
-  <!-- Changed values as of 13th of August -->
+  <!-- Changed values as of 13th of August for the minor update in October -->
   <traitorgoaldestroyitems>Dispose of at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>
   <karma.kickbanthreshold>Kick/Ban threshold</karma.kickbanthreshold>
   <karma.kickbanthresholdtooltip>The players whose karma decrease below this threshold get automatically kicked and/or banned from the server (depending on the kick/ban settings below).</karma.kickbanthresholdtooltip>
-  <missiondescription.killcrawlerswarm1>A small swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew that can neutralize it.</missiondescription.killcrawlerswarm1>
-  <missiondescription.killcrawlerswarm2>A large swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew that can neutralize it.</missiondescription.killcrawlerswarm2>
   <mechanic.weldingtext>Equip the welding tool and diving mask you just retrieved from the locker by double-clicking on them. \n\nWith the welding tool you are able to repair leaks in hulls, and the diving mask will provide you with a steady supply of oxygen while underwater. \n\nSome items, like the welding tool, require two free hands to use. Unequip or drop an item by double-clicking it while it is in use.\n\nWhen welding tool is equipped, hold {0} to aim. While aiming, hold {1} to weld.</mechanic.weldingtext>
   <mechanic.fabricatetext>Now that we have all of the required materials, we can fabricate a fire extinguisher. Find it in the list, load the fabricator with materials and press the button to start fabricating.\n\nWhen done, the fabricated item can be found in the fabricator’s output slot. As the fire extinguisher is an item that requires the use of both hands, equip the item by double-clicking on it.</mechanic.fabricatetext>
 
   <editordisclaimerdiscordurl>https://discordapp.com/invite/undertow</editordisclaimerdiscordurl>
 
   <bugreportfeedbackform>Help and technical support</bugreportfeedbackform>
+  
+  <!-- New additions for the major update coming in November -->
+  
+  <!-- Server lobby 2.0 -->
+  <servertag.casual>Casual</servertag.casual>
+  <servertagdescription.casual>Having fun is more important than completing the objective. A good choice for new players.</servertagdescription.casual>
+  <servertag.serious>Serious</servertag.serious>
+  <servertagdescription.serious>The crew should focus on working together efficiently and completing their objective. No unnecessary messing around.</servertagdescription.serious>
+  <servertag.roleplaying>Roleplaying</servertag.roleplaying>
+  <servertagdescription.roleplaying>The crew should aim to act like a real submarine crew. Chain of command is important, as is taking care of your responsibilities and following orders. Speaking out-of-character should be avoided when a round is running.</servertagdescription.roleplaying>
+  <servertag.somethingelse>Something else</servertag.somethingelse>
+  <servertagdescription.somethingelse>Gameplay differs significantly from the usual Barotrauma gameplay. Modded servers, very unconventional subs, battle royale rounds, shuttle racing, deathrun maps... Anything goes!</servertagdescription.somethingelse>
+  <servertag.rampage>Rampage</servertag.rampage>
+  <servertagdescription.rampage>Get ready to fight for your life! A server heavily geared towards combat. This can mean player-versus-player combat, PvE or both — see the server description before you start wrenching your crewmates' faces.</servertagdescription.rampage>
+
+  <servertag.modded>Modded</servertag.modded>
+  <servertagdescription.modded>One or more mods enabled. Installing mods from the Workshop may be required to join the server.</servertagdescription.modded>
+  <servertag.247>24/7</servertag.247>
+  <servertagdescription.247>Runs around the clock.</servertagdescription.247>
+  <servertag.nofriendlyfire>Friendly fire off</servertag.nofriendlyfire>
+  <servertagdescription.nofriendlyfire>Causing damage to your crew mates is disabled.</servertagdescription.nofriendlyfire>
+  <servertag.voipdisabled>Voice chat disabled</servertag.voipdisabled>
+  <servertagdescription.voipdisabled>Voice chat is disabled.</servertagdescription.voipdisabled>
+  <servertag.karmadisabled>Karma disabled</servertag.karmadisabled>
+  <servertagdescription.karmadisabled>Karma system is disabled.</servertagdescription.karmadisabled>
+  
  </infotexts>
