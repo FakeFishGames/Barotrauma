@@ -235,8 +235,7 @@ namespace Barotrauma
             }
         }
 
-        // Currently the camera cannot handle greater speeds. It starts to lag behind.
-        public const float MAX_SPEED = 9;
+        public const float MAX_SPEED = 15;
 
         public Vector2 TargetMovement
         {
