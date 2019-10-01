@@ -2215,7 +2215,7 @@ namespace Barotrauma
             GUIImage firstImage = null;
             Pair<Sprite, Vector2>[] sprites = GetJobOutfitSprites(jobPrefab, out Vector2 torsoSize);
 
-            innerFrame = new GUIFrame(new RectTransform(Vector2.One * 0.8f, parent.RectTransform, Anchor.Center), style: null);
+            innerFrame = new GUIFrame(new RectTransform(Vector2.One * 0.8f, parent.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, -0.05f) }, style: null);
 
             Action recalculateInnerFrame = () =>
             {
@@ -2262,16 +2262,16 @@ namespace Barotrauma
 
             Rectangle originalTorsoSourceRect = torso.GetSprite().SourceRect;
             Rectangle torsoSourceRect = originalTorsoSourceRect;
-            torsoSourceRect.Y += head.SourceRect.Height / 3;
-            torsoSourceRect.Height -= head.SourceRect.Height / 3;
-            torsoSourceRect.Height *= 3;
-            torsoSourceRect.Height /= 5;
+            torsoSourceRect.Y += head.SourceRect.Height * 2 / 5;
+            torsoSourceRect.Height -= head.SourceRect.Height * 2 / 5;
+            torsoSourceRect.Height *= 1;
+            torsoSourceRect.Height /= 2;
             Rectangle armSourceRect = arm.GetSprite().SourceRect;
-            armSourceRect.Height -= 36;
+            armSourceRect.Height -= 48;
 
             float yOffset = torsoSourceRect.Center.Y - originalTorsoSourceRect.Center.Y;
             yOffset /= (float)torsoSourceRect.Height;
-            yOffset += 0.1f;
+            yOffset += 0.15f;
 
             float torsoWidth = 0.333f * (torso.Radius*2.0f) * (float)torsoSourceRect.Width / (float)originalTorsoSourceRect.Width;
             float torsoHeight = torso.Height * (float)torsoSourceRect.Height / (float)originalTorsoSourceRect.Height;
@@ -2325,7 +2325,7 @@ namespace Barotrauma
 
                 armPosition /= new Vector2(torsoWidth, torsoHeight);
 
-                armOrigin = new Vector2(0.5f - armOrigin.X, 0.5f - armOrigin.Y) * armSourceRect.Size.ToVector2();
+                armOrigin = new Vector2(0.535f - armOrigin.X, 0.4f - armOrigin.Y) * armSourceRect.Size.ToVector2();
 
                 armOrigin /= torsoSize;
 
