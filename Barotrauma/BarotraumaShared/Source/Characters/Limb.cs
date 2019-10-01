@@ -300,7 +300,9 @@ namespace Barotrauma
             pullJoint = new FixedMouseJoint(body.FarseerBody, ConvertUnits.ToSimUnits(limbParams.PullPos * Scale))
             {
                 Enabled = false,
-                MaxForce = ((type == LimbType.LeftHand || type == LimbType.RightHand) ? 400.0f : 150.0f) * body.Mass
+                //MaxForce = ((type == LimbType.LeftHand || type == LimbType.RightHand) ? 400.0f : 150.0f) * body.Mass
+                // 150 or even 400 is too low if the joint is used for moving the character position from the mainlimb towards the collider position
+                MaxForce = 1000 * Mass
             };
 
             GameMain.World.AddJoint(pullJoint);
