@@ -2159,7 +2159,7 @@ namespace Barotrauma
 
         private bool OpenJobSelection(GUIComponent child, object userData)
         {
-            Point frameSize = new Point((characterInfoFrame.Rect.Width * 4) / 3, ((characterInfoFrame.Rect.Height * 3) / 2));
+            Point frameSize = new Point(characterInfoFrame.Rect.Width, characterInfoFrame.Rect.Height);
             jobSelectionFrame = new GUIFrame(new RectTransform(frameSize, GUI.Canvas, Anchor.TopLeft)
             { AbsoluteOffset = new Point(characterInfoFrame.Rect.Right - frameSize.X, characterInfoFrame.Rect.Bottom) }, "GUIFrameListBox");
 
@@ -2215,7 +2215,7 @@ namespace Barotrauma
             GUIImage firstImage = null;
             Pair<Sprite, Vector2>[] sprites = GetJobOutfitSprites(jobPrefab, out Vector2 torsoSize);
 
-            innerFrame = new GUIFrame(new RectTransform(Vector2.One * 0.8f, parent.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, -0.05f) }, style: null);
+            innerFrame = new GUIFrame(new RectTransform(Vector2.One * 0.8f, parent.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(-0.07f, -0.06f) }, style: null);
 
             Action recalculateInnerFrame = () =>
             {
@@ -2232,7 +2232,7 @@ namespace Barotrauma
                     innerFrameSize = new Vector2(1.0f, (torsoSize.Y / torsoSize.X) * (buttonWidth / buttonHeight));
                 }
 
-                innerFrame.RectTransform.RelativeSize = innerFrameSize * 0.6f;
+                innerFrame.RectTransform.RelativeSize = innerFrameSize * 0.8f;
             };
 
             parent.RectTransform.SizeChanged += recalculateInnerFrame;
@@ -2246,7 +2246,7 @@ namespace Barotrauma
 
             recalculateInnerFrame();
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), parent.RectTransform, Anchor.BottomCenter), jobPrefab.Name, textAlignment: Alignment.Center);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), parent.RectTransform, Anchor.BottomCenter), jobPrefab.Name, textAlignment: Alignment.Center);
         }
 
         private Pair<Sprite, Vector2>[] GetJobOutfitSprites(JobPrefab jobPrefab, out Vector2 torsoSize)
