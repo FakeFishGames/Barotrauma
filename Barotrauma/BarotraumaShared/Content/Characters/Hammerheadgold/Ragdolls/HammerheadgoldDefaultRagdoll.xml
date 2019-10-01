@@ -1,28 +1,30 @@
 ﻿<Ragdoll type="Hammerheadgold" limbscale="1" jointscale="1" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" canentersubmarine="False" draggable="True" spritesheetorientation="270" texture="">
   <collider radius="80" name="Main Collider" width="0" height="300" />
-  <limb id="0" name="Head" type="Head" radius="0" width="170" notes="0_Torso" flip="True" healthindex="0" attackpriority="0" steerforce="2" stepoffset="0,0" height="120" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False">
+  <limb id="0" name="Head" type="Head" radius="0" width="170" notes="0_Torso" flip="True" healthindex="0" attackpriority="0" steerforce="10" stepoffset="0,0" height="120" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False">
     <deformablesprite texture="Content/Characters/Hammerheadgold/Hammerheadgold.png" sourcerect="803,1,221,236" origin="0.4532103,0.5010581" subdivisions="5,5" depth="0">
       <spritedeformation type="bendjoint" resolution="5,5" multiplier="1.0" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="20" strength="5" />
     </deformablesprite>
+    <attack targettype="Structure" priority="1" range="280" damagerange="250" cooldown="10" secondarycooldown="1" afterattack="FallBack" structuredamage="50" force="1000" targetimpulse="500" structuresoundtype="StructureBlunt" applyforceonlimbs="0, 3" context="NotDefined" hitdetectiontype="Distance" itemdamage="0" stun="0" onlyhumans="False" torque="0" applyforcesonlyonce="True" targetimpulseworld="0,0" targetforce="0" targetforceworld="0,0" severlimbsprobability="0" stickchance="0" duration="0.2" cooldownrandomfactor="0.1" reverse="False">
+    </attack>
   </limb>
   <limb id="1" name="Tail1" type="Tail" radius="0" width="100" notes="21cl_Tail2" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="120" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False">
-    <deformablesprite texture="Content/Characters/Hammerheadgold/Hammerheadgold.png" sourcerect="545,0,117,236" origin="0.5272418,0.4978859" subdivisions="5,5" depth="0.1">
-      <spritedeformation type="bendjoint" resolution="5,5" multiplier="1.0" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="30" strength="1" />
+    <deformablesprite texture="Content/Characters/Hammerheadgold/Hammerheadgold.png" sourcerect="545,0,122,236" origin="0.5272418,0.4978859" subdivisions="5,5" depth="0.1">
+      <spritedeformation type="bendjoint" resolution="5,5" multiplier="1.0" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="30" strength="2" />
     </deformablesprite>
   </limb>
   <limb id="2" name="Tail2" type="Tail" radius="0" width="200" notes="2111cl_Tail4" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="80" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False">
-    <deformablesprite texture="Content/Characters/Hammerheadgold/Hammerheadgold.png" sourcerect="355,0,195,236" origin="0.5088665,0.5209361" subdivisions="5,5" depth="0">
+    <deformablesprite texture="Content/Characters/Hammerheadgold/Hammerheadgold.png" sourcerect="355,0,195,236" origin="0.512684,0.5253006" subdivisions="5,5" depth="0">
       <spritedeformation type="bendjoint" resolution="5,5" multiplier="1.0" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="30" strength="2" />
     </deformablesprite>
   </limb>
-  <limb id="3" radius="0" width="150" height="150" mass="0" name="Torso" type="Torso" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="1" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
-    <deformablesprite texture="Content/Characters/Hammerheadgold/Hammerheadgold.png" sourcerect="661,0,148,236" origin="0.5175177,0.4794456" subdivisions="5,5" depth="0">
-      <spritedeformation type="bendjoint" resolution="5,5" multiplier="1.0" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="30" strength="2" />
+  <limb id="3" radius="0" width="150" height="150" mass="0" name="Torso" type="Torso" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="10" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
+    <deformablesprite texture="Content/Characters/Hammerheadgold/Hammerheadgold.png" sourcerect="659,0,152,236" origin="0.5175177,0.4794456" subdivisions="5,5" depth="0">
+      <spritedeformation type="bendjoint" resolution="5,5" multiplier="1.0" sync="1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="30" strength="2" />
     </deformablesprite>
   </limb>
   <limb id="4" radius="0" width="290" height="40" mass="0" name="Tail3" type="Tail" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Hammerheadgold/Hammerheadgold.png" sourcerect="0,1,360,238" origin="0.5878074,0.4895002" subdivisions="5,5" depth="0">
-      <spritedeformation type="bendjoint" resolution="5,5" multiplier="1.0" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="20" strength="1" />
+      <spritedeformation type="bendjoint" resolution="5,5" multiplier="1.0" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="20" strength="0.5" />
     </deformablesprite>
   </limb>
   <limb id="5" width="200" height="100" name="LeftArm1" type="None" spriteorientation="180" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
@@ -33,9 +35,19 @@
   </limb>
   <limb id="7" radius="0" width="270" height="50" mass="0" name="LeftClaw1" type="None" spriteorientation="0" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Hammerheadgold/Hammerheadgold.png" sourcerect="407,276,308,63" origin="0.5002822,0.5105198" depth="0" />
+    <attack targettype="Character" priority="0.9" range="250" damagerange="200" duration="0.2" cooldown="3" secondarycooldown="1" afterattack="PursueIfCanAttack" structuredamage="10" itemdamage="10" force="125" torque="0" targetimpulse="20" targetforce="0" structuresoundtype="StructureSlash" context="NotDefined" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforceonlimbs="" targetimpulseworld="0,0" targetforceworld="0,0" severlimbsprobability="0.5" stickchance="0" applyforcesonlyonce="True" cooldownrandomfactor="0.25" reverse="False">
+      <Affliction identifier="bleeding" strength="50" probability="1" />
+      <Affliction identifier="stun" strength="0.1" probability="1" />
+      <Affliction identifier="internaldamage" strength="20" probability="1" />
+    </attack>
   </limb>
   <limb id="8" radius="0" width="270" height="50" mass="0" name="LeftClaw2" type="None" spriteorientation="0" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Hammerheadgold/Hammerheadgold.png" sourcerect="716,267,307,65" origin="0.4527762,0.4468614" depth="0" />
+    <attack targettype="Character" priority="0.9" range="250" damagerange="200" duration="0.2" cooldown="3" secondarycooldown="1" afterattack="PursueIfCanAttack" structuredamage="10" itemdamage="10" force="125" torque="0" targetimpulse="20" targetforce="0" structuresoundtype="StructureSlash" context="NotDefined" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforceonlimbs="" targetimpulseworld="0,0" targetforceworld="0,0" severlimbsprobability="0.5" stickchance="0" applyforcesonlyonce="True" cooldownrandomfactor="0.25" reverse="False">
+      <Affliction identifier="bleeding" strength="50" probability="1" />
+      <Affliction identifier="stun" strength="0.1" probability="1" />
+      <Affliction identifier="internaldamage" strength="20" probability="1" />
+    </attack>
   </limb>
   <limb id="9" width="0" height="0" name="SmallFin" type="None" spriteorientation="179.5454" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" radius="60" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="True" notes="" healthindex="0" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Hammerheadgold/Hammerheadgold.png" sourcerect="530,391,190,133" origin="0.607293,0.5330999" subdivisions="5,5" depth="0">
@@ -57,14 +69,24 @@
   </limb>
   <limb id="13" radius="0" width="270" height="50" mass="0" name="RightClaw1" type="None" spriteorientation="180" flip="True" mirrorvertically="True" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Hammerheadgold/Hammerheadgold.png" sourcerect="407,276,308,63" origin="0.5,0.5" depth="0" />
+    <attack targettype="Character" priority="0.9" range="250" damagerange="200" duration="0.2" cooldown="3" secondarycooldown="1" afterattack="PursueIfCanAttack" structuredamage="10" itemdamage="10" force="125" torque="0" targetimpulse="20" targetforce="0" structuresoundtype="StructureSlash" context="NotDefined" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforceonlimbs="" targetimpulseworld="0,0" targetforceworld="0,0" severlimbsprobability="0.5" stickchance="0" applyforcesonlyonce="True" cooldownrandomfactor="0.25" reverse="False">
+      <Affliction identifier="bleeding" strength="50" probability="1" />
+      <Affliction identifier="stun" strength="0.1" probability="1" />
+      <Affliction identifier="internaldamage" strength="20" probability="1" />
+    </attack>
   </limb>
   <limb id="14" radius="0" width="270" height="50" mass="0" name="RightClaw2" type="None" spriteorientation="180" flip="True" mirrorvertically="True" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Hammerheadgold/Hammerheadgold.png" sourcerect="716,266,307,65" origin="0.5104665,0.5920025" depth="0" />
+    <attack targettype="Character" priority="0.9" range="250" damagerange="200" duration="0.2" cooldown="3" secondarycooldown="1" afterattack="PursueIfCanAttack" structuredamage="10" itemdamage="10" force="125" torque="0" targetimpulse="20" targetforce="0" structuresoundtype="StructureSlash" context="NotDefined" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforceonlimbs="" targetimpulseworld="0,0" targetforceworld="0,0" severlimbsprobability="0.5" stickchance="0" applyforcesonlyonce="True" cooldownrandomfactor="0.25" reverse="False">
+      <Affliction identifier="bleeding" strength="50" probability="1" />
+      <Affliction identifier="stun" strength="0.1" probability="1" />
+      <Affliction identifier="internaldamage" strength="20" probability="1" />
+    </attack>
   </limb>
   <joint limb1="3" limb2="0" limb1anchor="71.79385,-8.249415" limb2anchor="-97.41309,-1.674939" name="Joint 3 - 0" canbesevered="True" limitenabled="True" upperlimit="10" lowerlimit="-10" stiffness="0.25" />
-  <joint limb1="3" limb2="1" limb1anchor="-75.5201,-2.335546" limb2anchor="53.08021,1.979258" name="Joint 3 - 1" canbesevered="True" limitenabled="True" upperlimit="20" lowerlimit="-30" stiffness="0.25" />
-  <joint limb1="1" limb2="2" limb1anchor="-59.16335,-1.901198" limb2anchor="92.35233,3.951959" name="Joint 1 - 2" canbesevered="True" limitenabled="True" upperlimit="20" lowerlimit="-30" stiffness="0.25" />
-  <joint limb1="2" limb2="4" limb1anchor="-97.71362,-9.197186" limb2anchor="146.4743,-13.72629" name="Joint 2 - 4" canbesevered="True" limitenabled="True" upperlimit="30" lowerlimit="-45" stiffness="0.25" />
+  <joint limb1="3" limb2="1" limb1anchor="-74.66603,-3.830754" limb2anchor="49.96994,0.36584" name="Joint 3 - 1" canbesevered="True" limitenabled="True" upperlimit="30" lowerlimit="-30" stiffness="0.25" />
+  <joint limb1="1" limb2="2" limb1anchor="-59.16335,-1.901198" limb2anchor="92.35233,3.951959" name="Joint 1 - 2" canbesevered="True" limitenabled="True" upperlimit="30" lowerlimit="-30" stiffness="0.25" />
+  <joint limb1="2" limb2="4" limb1anchor="-97.9998,-7.098717" limb2anchor="145.9344,-12.02077" name="Joint 2 - 4" canbesevered="True" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />
   <joint limb1="3" limb2="5" limb1anchor="-14.08463,42.66981" limb2anchor="-80.36808,10.21258" name="Joint 3 - 5" canbesevered="True" limitenabled="True" upperlimit="170.0266" lowerlimit="107.394" stiffness="0.25" />
   <joint limb1="5" limb2="7" limb1anchor="94.34476,19.33259" limb2anchor="-129.1997,-12.34505" name="Joint 5 - 7" canbesevered="True" limitenabled="True" upperlimit="-10.95617" lowerlimit="-90.58186" stiffness="0.25" />
   <joint limb1="3" limb2="6" limb1anchor="67.6094,49.38639" limb2anchor="-83.90382,12.28926" name="Joint 3 - 6" canbesevered="True" limitenabled="True" upperlimit="167.5689" lowerlimit="90.66715" stiffness="0.25" />

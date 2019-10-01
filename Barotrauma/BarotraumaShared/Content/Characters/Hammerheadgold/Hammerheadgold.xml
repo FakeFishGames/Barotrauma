@@ -1,23 +1,25 @@
-﻿<Character speciesname="Hammerheadgold" humanoid="False" husk="False" needsair="False" canspeak="False" noise="100" blooddecal="blood">
+﻿<Character speciesname="Hammerheadgold" humanoid="False" husk="False" needsair="False" canspeak="False" noise="100" blooddecal="blood" group="hammerhead">
   <ragdolls />
   <animations />
   <bloodemitter particle="blood" particleamount="10" scalemin="1" scalemax="2" anglemin="0" anglemax="0" velocitymin="0" velocitymax="0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
   <bloodemitter particle="waterblood" particleamount="1" scalemin="1" scalemax="2" anglemin="0" anglemax="0" velocitymin="0" velocitymax="0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
   <gibemitter particle="gib" particleamount="30" velocitymin="200" velocitymax="1500" anglemin="0" anglemax="360" scalemin="1" scalemax="2" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
   <gibemitter particle="heavygib" particleamount="15" velocitymin="50" velocitymax="1000" anglemin="0" anglemax="360" scalemin="1" scalemax="2" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
-  <health vitality="250" doesbleed="True" crushdepth="-Infinity" usehealthwindow="False" />
+  <health vitality="200" doesbleed="True" crushdepth="-Infinity" usehealthwindow="False" />
   <Inventory slots="Any, Any" accessiblewhenalive="False" commonness="1">
     <Item identifier="swimbladder" />
     <Item identifier="alienblood" />
   </Inventory>
-  <ai combatstrength="500" sight="1" hearing="0" aggressionhurt="100" aggressiongreed="10" fleehealththreshold="0" attackonlywhenprovoked="False" aggressiveboarding="False">
+  <ai combatstrength="400" sight="3" hearing="2" aggressionhurt="100" aggressiongreed="10" fleehealththreshold="0" attackonlywhenprovoked="False" aggressiveboarding="False">
     <targetpriority tag="decoy" state="Attack" priority="600" />
     <targetpriority tag="provocative" state="Attack" priority="300" />
     <targetpriority tag="light" state="Attack" priority="200" />
-    <targetpriority tag="human" state="Attack" priority="90" />
+    <targetpriority tag="nasonov" state="Attack" priority="100" />
     <targetpriority tag="room" state="Attack" priority="60" />
-    <targetpriority tag="nasonov" state="Attack" priority="50" />
-    <targetpriority tag="stronger" state="Escape" priority="50" />
-    <targetpriority tag="weaker" state="Attack" priority="40" />
+    <targetpriority tag="human" state="Attack" priority="50" />
+    <!--TODO
+    <targetpriority tag="stronger" state="Avoid" priority="50" />
+    -->
+    <targetpriority tag="weaker" state="Attack" priority="10" />
   </ai>
 </Character>
