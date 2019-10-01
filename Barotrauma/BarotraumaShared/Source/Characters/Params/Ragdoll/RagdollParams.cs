@@ -527,7 +527,7 @@ namespace Barotrauma
             [Serialize(false, true, description: "Disable drawing for this limb."), Editable()]
             public bool Hide { get; set; }
 
-            [Serialize(0f, true, description: "Higher values make AI characters prefer attacking this limb."), Editable()]
+            [Serialize(1f, true, description: "Higher values make AI characters prefer attacking this limb."), Editable()]
             public float AttackPriority { get; set; }
 
             [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 500)]
