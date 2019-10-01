@@ -788,13 +788,21 @@
 <missionheader0.killhammerhead>Hedef sonlandırıldı.</missionheader0.killhammerhead>
 <missionmessage0.killhammerhead>Çekiçkafa öldü. Ödülü almak için denizaltıyı mağaradan çıkarın.</missionmessage0.killhammerhead>
 <missionname.killcrawlerswarm1>Bir Sürüyü Yok Et</missionname.killcrawlerswarm1>
-<missiondescription.killcrawlerswarm1>Küçük bir [monster] sürüsü [location1] ve [location2] arasında seyahat eden gemilere korku saçıyor. Sürüyü etkisiz hâle getiren mürettebata [reward] kredisi değerinde ödül sözü verildi.</missiondescription.killcrawlerswarm1>
+
+<!--<missiondescription.killcrawlerswarm1>Küçük bir [monster] sürüsü [location1] ve [location2] arasında seyahat eden gemilere korku saçıyor. Sürüyü etkisiz hâle getiren mürettebata [reward] kredisi değerinde ödül sözü verildi.</missiondescription.killcrawlerswarm1>-->
+<!-- Temporary until plural monster names -->
+<missiondescription.killcrawlerswarm1>Küçük bir sürünenler sürüsü [location1] ve [location2] arasında seyahat eden gemilere korku saçıyor. Sürüyü etkisiz hâle getiren mürettebata [reward] kredisi değerinde ödül sözü verildi.</missiondescription.killcrawlerswarm1>
+
 <missionsonarlabel.killcrawlerswarm1>Sürü</missionsonarlabel.killcrawlerswarm1>
 <missionsuccess.killcrawlerswarm1>Sürü yok edildi.</missionsuccess.killcrawlerswarm1>
 <missionheader0.killcrawlerswarm1>Hedef sonlandırıldı.</missionheader0.killcrawlerswarm1>
 <missionmessage0.killcrawlerswarm1>Sürü yok edildi. Ödülü almak için denizaltıyı mağaradan çıkarın.</missionmessage0.killcrawlerswarm1>
 <missionname.killcrawlerswarm2>Bir Sürüyü Yok Et</missionname.killcrawlerswarm2>
-<missiondescription.killcrawlerswarm2>Geniş bir [monster] sürüsü [location1] ve [location2] arasında seyahat eden gemilere korku saçıyor. Sürüyü etkisiz hâle getiren mürettebata [reward] kredisi değerinde ödül sözü verildi.</missiondescription.killcrawlerswarm2>
+
+<!--<missiondescription.killcrawlerswarm2>Geniş bir [monster] sürüsü [location1] ve [location2] arasında seyahat eden gemilere korku saçıyor. Sürüyü etkisiz hâle getiren mürettebata [reward] kredisi değerinde ödül sözü verildi.</missiondescription.killcrawlerswarm2>-->
+<!-- Temporary until plural monster names -->
+<missiondescription.killcrawlerswarm2>Geniş bir sürünenler sürüsü [location1] ve [location2] arasında seyahat eden gemilere korku saçıyor. Sürüyü etkisiz hâle getiren mürettebata [reward] kredisi değerinde ödül sözü verildi.</missiondescription.killcrawlerswarm2>
+
 <missionsonarlabel.killcrawlerswarm2>Sürü</missionsonarlabel.killcrawlerswarm2>
 <missionsuccess.killcrawlerswarm2>Sürü yok edildi.</missionsuccess.killcrawlerswarm2>
 <missionheader0.killcrawlerswarm2>Hedef sonlandırıldı.</missionheader0.killcrawlerswarm2>

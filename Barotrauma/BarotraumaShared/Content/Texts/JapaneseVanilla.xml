@@ -788,13 +788,21 @@
 <missionheader0.killhammerhead>ターゲットを抹殺されました</missionheader0.killhammerhead>
 <missionmessage0.killhammerhead>シュモクザメは死んでいます。報酬を請求するために、潜水艦を操縦して洞窟から出てください。</missionmessage0.killhammerhead>
 <missionname.killcrawlerswarm1>クローラー個体群を抹殺</missionname.killcrawlerswarm1>
-<missiondescription.killcrawlerswarm1>[monster]の小さな大群は[location1]と[location2]間で移動している船にテロを仕掛けています。[reward]クレジットの報酬は、それを中立化することができるどのようなクルーにでも約束されています。</missiondescription.killcrawlerswarm1>
+
+<!--<missiondescription.killcrawlerswarm1>[monster]の小さな大群は[location1]と[location2]間で移動している船にテロを仕掛けています。[reward]クレジットの報酬は、それを中立化することができるどのようなクルーにでも約束されています。</missiondescription.killcrawlerswarm1>-->
+<!-- Temporary until plural monster names -->
+<missiondescription.killcrawlerswarm1>クローラの小さな大群は[location1]と[location2]間で移動している船にテロを仕掛けています。[reward]クレジットの報酬は、それを中立化することができるどのようなクルーにでも約束されています。</missiondescription.killcrawlerswarm1>
+
 <missionsonarlabel.killcrawlerswarm1>クローラー個体群</missionsonarlabel.killcrawlerswarm1>
 <missionsuccess.killcrawlerswarm1>クローラー個体群は抹殺されました。</missionsuccess.killcrawlerswarm1>
 <missionheader0.killcrawlerswarm1>ターゲットを抹殺されました</missionheader0.killcrawlerswarm1>
 <missionmessage0.killcrawlerswarm1>クローラー個体群は抹殺されました。報酬を請求するために、潜水艦を操縦して洞窟から出てください。</missionmessage0.killcrawlerswarm1>
 <missionname.killcrawlerswarm2>クローラー種族の大群を抹殺してください。</missionname.killcrawlerswarm2>
-<missiondescription.killcrawlerswarm2>[monster]の大きな大群は[location1]と[location2]間で移動している船にテロを仕掛けています。[reward]クレジットの報酬は、それを中立化することができるどのようなクルーにでも約束されています。</missiondescription.killcrawlerswarm2>
+
+<!--<missiondescription.killcrawlerswarm2>[monster]の大きな大群は[location1]と[location2]間で移動している船にテロを仕掛けています。[reward]クレジットの報酬は、それを中立化することができるどのようなクルーにでも約束されています。</missiondescription.killcrawlerswarm2>-->
+<!-- Temporary until plural monster names -->
+<missiondescription.killcrawlerswarm2>クローラの大きな大群は[location1]と[location2]間で移動している船にテロを仕掛けています。[reward]クレジットの報酬は、それを中立化することができるどのようなクルーにでも約束されています。</missiondescription.killcrawlerswarm2>
+
 <missionsonarlabel.killcrawlerswarm2>クローラー種族の大群</missionsonarlabel.killcrawlerswarm2>
 <missionsuccess.killcrawlerswarm2>クローラー種族の大群は抹殺されました。</missionsuccess.killcrawlerswarm2>
 <missionheader0.killcrawlerswarm2>ターゲットを抹殺されました</missionheader0.killcrawlerswarm2>
