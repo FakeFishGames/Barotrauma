@@ -769,6 +769,9 @@ namespace Barotrauma
 
         public bool IsFriendly(Character other) => IsFriendly(Character, other);
 
-        public static bool IsFriendly(Character me, Character other) => (other.TeamID == me.TeamID || other.TeamID == Character.TeamType.FriendlyNPC || me.TeamID == Character.TeamType.FriendlyNPC) && other.SpeciesName == me.SpeciesName;
+        public static bool IsFriendly(Character me, Character other) => 
+            (other.TeamID == me.TeamID || 
+            other.TeamID == Character.TeamType.FriendlyNPC || 
+            me.TeamID == Character.TeamType.FriendlyNPC) && (other.SpeciesName == me.SpeciesName || other.Params.Group == me.Params.Group);
     }
 }

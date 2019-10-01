@@ -131,12 +131,12 @@ namespace Barotrauma
         {
             if (c.IsHuman)
             {
-                throw new System.Exception($"Tried to create an enemy ai controller for human!");
+                throw new Exception($"Tried to create an enemy ai controller for human!");
             }
             string file = Character.GetConfigFilePath(c.SpeciesName);
             if (!Character.TryGetConfigFile(file, out XDocument doc))
             {
-                throw new System.Exception($"Failed to load the config file for {c.SpeciesName} from {file}!");
+                throw new Exception($"Failed to load the config file for {c.SpeciesName} from {file}!");
             }
             var mainElement = doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;
             targetMemories = new Dictionary<AITarget, AITargetMemory>();
@@ -1111,6 +1111,11 @@ namespace Barotrauma
                     }
                     else if (targetCharacter.AIController is EnemyAIController enemy)
                     {
+                        if (targetCharacter.Params.Group == character.Params.Group)
+                        {
+                            // Ignore targets that are in the same group (treat them like they were of the same species)
+                            continue;
+                        }
                         if (enemy.CombatStrength > CombatStrength)
                         {
                             targetingTag = "stronger";
