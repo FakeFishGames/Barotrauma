@@ -4,10 +4,12 @@ using Barotrauma.Tutorials;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using RestSharp;
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Xml.Linq;
 
@@ -67,6 +69,16 @@ namespace Barotrauma
                 Stretch = true,
                 RelativeSpacing = 0.02f
             };
+
+            //FetchRemoteContent(Frame.RectTransform);
+            var doc = XMLExtensions.TryLoadXml("Content/UI/MenuTextTest.xml");
+            if (doc?.Root != null)
+            {
+                foreach (XElement subElement in doc?.Root.Elements())
+                {
+                    GUIComponent.FromXML(subElement, Frame.RectTransform);
+                }
+            }            
 
             // === CAMPAIGN
             var campaignHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 1.0f), parent: buttonsParent.RectTransform) { RelativeOffset = new Vector2(0.1f, 0.0f) }, isHorizontal: true);
@@ -360,6 +372,7 @@ namespace Barotrauma
             {
                 OnClicked = SelectTab
             };
+
         }
         #endregion
 
@@ -1052,5 +1065,36 @@ namespace Barotrauma
         }
 #endregion
 
+        private void FetchRemoteContent(RectTransform parent)
+        {
+            if (string.IsNullOrEmpty(GameMain.Config.MenuContentUrl)) { return; }
+
+            var client = new RestClient(GameMain.Config.MenuContentUrl);
+            var request = new RestRequest("MenuContent.xml", Method.GET);
+
+            IRestResponse response = client.Execute(request);
+            if (response.ResponseStatus != ResponseStatus.Completed)
+            {
+                return;
+            }
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                return;
+            }
+
+            string xml = response.Content;
+            try
+            {
+                XElement element = XDocument.Parse(xml)?.Root;
+                foreach (XElement subElement in element.Elements())
+                {
+                    GUIComponent.FromXML(subElement, parent);
+                }
+            }
+            catch
+            {
+                return;
+            }
+        }
     }
 }
