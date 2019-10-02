@@ -37,7 +37,7 @@ namespace Barotrauma.SpriteDeformations
 
         public string Name => $"Deformation ({TypeName})";
 
-        [Serialize(1.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 10, ValueStep = 0.1f)]
+        [Serialize(1.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2, ValueStep = 0.01f)]
         public float Strength { get; private set; }
 
         [Serialize(90f, true), Editable(MinValueFloat = 0, MaxValueFloat = 90)]

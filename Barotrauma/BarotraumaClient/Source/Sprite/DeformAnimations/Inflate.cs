@@ -58,6 +58,7 @@ namespace Barotrauma.SpriteDeformations
         {
             deformation = this.deformation;
             multiplier = InflateParams.Frequency <= 0.0f ? InflateParams.Scale : (float)(Math.Sin(phase) + 1.0f) / 2.0f * InflateParams.Scale;
+            multiplier *= Params.Strength;
         }
 
         public override void Update(float deltaTime)

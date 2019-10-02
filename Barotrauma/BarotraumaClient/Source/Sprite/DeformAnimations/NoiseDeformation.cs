@@ -8,10 +8,10 @@ namespace Barotrauma.SpriteDeformations
         [Serialize(0.0f, true, description: "The frequency of the noise."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f)]
         public override float Frequency { get; set; }
 
-        [Serialize(1.0f, true, description: "How much the noise distorts the sprite."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f)]
+        [Serialize(1.0f, true, description: "How much the noise distorts the sprite."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, DecimalCount = 2, ValueStep = 0.01f)]
         public float Amplitude { get; set; }
 
-        [Serialize(0.0f, true, description: "How fast the noise changes."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f)]
+        [Serialize(0.0f, true, description: "How fast the noise changes."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, DecimalCount = 2, ValueStep = 0.01f)]
         public float ChangeSpeed { get; set; }
 
         public NoiseDeformationParams(XElement element) : base(element)
@@ -50,7 +50,7 @@ namespace Barotrauma.SpriteDeformations
         protected override void GetDeformation(out Vector2[,] deformation, out float multiplier)
         {
             deformation = Deformation;
-            multiplier = NoiseDeformationParams.Amplitude;
+            multiplier = NoiseDeformationParams.Amplitude * Params.Strength;
         }
 
         public override void Update(float deltaTime)

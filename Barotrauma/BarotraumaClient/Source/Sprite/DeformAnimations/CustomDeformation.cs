@@ -115,6 +115,7 @@ namespace Barotrauma.SpriteDeformations
             multiplier = CustomDeformationParams.Frequency <= 0.0f ? 
                 CustomDeformationParams.Amplitude : 
                 (float)Math.Sin(phase) * CustomDeformationParams.Amplitude;
+            multiplier *= Params.Strength;
         }
 
         public override void Update(float deltaTime)
