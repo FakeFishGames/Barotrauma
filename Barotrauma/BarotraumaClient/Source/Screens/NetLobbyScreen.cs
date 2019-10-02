@@ -1101,7 +1101,7 @@ namespace Barotrauma
 
                 appearanceButton.OnClicked = SelectAppearanceTab;
 
-                characterInfoFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.5f), infoContainer.RectTransform), style: null);
+                characterInfoFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), infoContainer.RectTransform), style: null);
 
                 jobList = new GUIListBox(new RectTransform(Vector2.One, characterInfoFrame.RectTransform), true)
                 {
@@ -2161,7 +2161,7 @@ namespace Barotrauma
 
         private bool OpenJobSelection(GUIComponent child, object userData)
         {
-            Point frameSize = new Point(characterInfoFrame.Rect.Width, characterInfoFrame.Rect.Height);
+            Point frameSize = new Point(characterInfoFrame.Rect.Width, characterInfoFrame.Rect.Height * 2);
             jobSelectionFrame = new GUIFrame(new RectTransform(frameSize, GUI.Canvas, Anchor.TopLeft)
             { AbsoluteOffset = new Point(characterInfoFrame.Rect.Right - frameSize.X, characterInfoFrame.Rect.Bottom) }, "GUIFrameListBox");
 
