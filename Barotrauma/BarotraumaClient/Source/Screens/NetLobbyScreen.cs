@@ -2380,8 +2380,19 @@ namespace Barotrauma
 
                 for (int i=0;i<variantCount;i++)
                 {
-                    var torsoSprite = new Sprite(torsoSpriteElement, path: path, file: torsoTexture.Replace("[VARIANT]", (i + 1).ToString()));
-                    var armSprite = new Sprite(armSpriteElement, path: path, file: armTexture.Replace("[VARIANT]", (i + 1).ToString()));
+                    string torsoVariant = torsoTexture.Replace("[VARIANT]", (i + 1).ToString());
+                    if (!File.Exists(torsoTexture))
+                    {
+                        torsoVariant = torsoTexture.Replace("[VARIANT]", "1");
+                    }
+                    string armVariant = armTexture.Replace("[VARIANT]", (i + 1).ToString());
+                    if (!File.Exists(armTexture))
+                    {
+                        armVariant = armTexture.Replace("[VARIANT]", "1");
+                    }
+
+                    var torsoSprite = new Sprite(torsoSpriteElement, path: path, file: torsoVariant);
+                    var armSprite = new Sprite(armSpriteElement, path: path, file: armVariant);
 
                     retVal[0].First[i] = torsoSprite;
                     retVal[1].First[i] = armSprite;
