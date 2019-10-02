@@ -601,9 +601,7 @@ namespace Barotrauma
             }
 
 #if CLIENT
-            Vector2 n;
-            FixedArray2<Vector2> particlePos;
-            contact.GetWorldManifold(out n, out particlePos);
+            contact.GetWorldManifold(out _, out FixedArray2<Vector2> particlePos);
             
             int particleAmount = (int)Math.Min(wallImpact * 10.0f, 50);
             for (int i = 0; i < particleAmount; i++)
@@ -739,13 +737,17 @@ namespace Barotrauma
             foreach (Character c in Character.CharacterList)
             {
                 if (c.Submarine != submarine) { continue; }
-                c.SetStun(impulse.Length() * 0.1f);
                 
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
                     limb.body.ApplyLinearImpulse(limb.Mass * impulse, 10.0f);
                 }
                 c.AnimController.Collider.ApplyLinearImpulse(c.AnimController.Collider.Mass * impulse, 10.0f);
+                //stun for up to 1 second if the impact is 50% or more of the maximum impact
+                if (impact > (MinCollisionImpact + MaxCollisionImpact) / 2.0f)
+                {
+                    c.SetStun(impulse.Length() * 0.2f);
+                }
             }
 
             foreach (Item item in Item.ItemList)
