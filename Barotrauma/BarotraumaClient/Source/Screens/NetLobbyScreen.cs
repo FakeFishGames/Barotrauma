@@ -2354,6 +2354,7 @@ namespace Barotrauma
             if (wearables?.Any() ?? false)
             {
                 string path = Path.GetDirectoryName(prefabs.First().ConfigFile);
+                if (!path.EndsWith("/")) path += "/";
                 var spriteElements = wearables.First().Elements("sprite").ToList();
 
                 int variantCount = wearables.First().GetAttributeInt("variants", 1);
@@ -2381,12 +2382,12 @@ namespace Barotrauma
                 for (int i=0;i<variantCount;i++)
                 {
                     string torsoVariant = torsoTexture.Replace("[VARIANT]", (i + 1).ToString());
-                    if (!File.Exists(torsoVariant))
+                    if (!File.Exists(path+torsoVariant))
                     {
                         torsoVariant = torsoTexture.Replace("[VARIANT]", "1");
                     }
                     string armVariant = armTexture.Replace("[VARIANT]", (i + 1).ToString());
-                    if (!File.Exists(armVariant))
+                    if (!File.Exists(path+armVariant))
                     {
                         armVariant = armTexture.Replace("[VARIANT]", "1");
                     }
@@ -2432,6 +2433,8 @@ namespace Barotrauma
                 info.ReloadHeadAttachments();
             }
             StoreHead();
+
+            UpdateJobPreferences(jobList);
 
             SelectAppearanceTab(button, obj);
 
