@@ -600,23 +600,36 @@ namespace Barotrauma
 
         public static GUIComponent FromXML(XElement element, RectTransform parent)
         {
+            GUIComponent component = null;
             switch (element.Name.ToString().ToLowerInvariant())
             {
                 case "text":
                 case "guitextblock":
-                    return LoadGUITextBlock(element, parent);
+                    component = LoadGUITextBlock(element, parent);
+                    break;
                 case "gridtext":
                     LoadGridText(element, parent);
                     return null;
                 case "guiframe":
                 case "spacing":
-                    return LoadGUIFrameElement(element, parent);
+                    component = LoadGUIFrameElement(element, parent);
+                    break;
                 case "image":
                 case "guiimage":
-                    return LoadImageElement(element, parent);
+                    component = LoadImageElement(element, parent);
+                    break;
                 default:
                     throw new NotImplementedException("Loading GUI component \""+element.Name+"\" from XML is not implemented.");
             }
+
+            if (component != null)
+            {
+                foreach (XElement subElement in element.Elements())
+                {
+                    FromXML(subElement, component.RectTransform);
+                }
+            }
+            return component;
         }
 
         private static GUITextBlock LoadGUITextBlock(XElement element, RectTransform parent, string overrideText = null, Anchor? anchor = null)
