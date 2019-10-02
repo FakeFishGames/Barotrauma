@@ -235,9 +235,12 @@ namespace Barotrauma.Items.Components
                 {
                     sprite.Variant = value;
 
-                    sprite.RefreshPath();
-                    sprite.Sprite.ReloadXML();
-                    sprite.Sprite.ReloadTexture();
+                    if (sprite.Gender != Gender.None)
+                    {
+                        sprite.RefreshPath();
+                        sprite.Sprite.ReloadXML();
+                        sprite.Sprite.ReloadTexture();
+                    }
                 }
 #endif
                 variant = value;
@@ -252,7 +255,7 @@ namespace Barotrauma.Items.Components
             
             int spriteCount = element.Elements().Count(x => x.Name.ToString() == "sprite");
             Variants = element.GetAttributeInt("variants", 0);
-            variant = 1;
+            variant = Rand.Range(1, Variants + 1, Rand.RandSync.Server);
             wearableSprites = new WearableSprite[spriteCount];
             limbType    = new LimbType[spriteCount];
             limb        = new Limb[spriteCount];

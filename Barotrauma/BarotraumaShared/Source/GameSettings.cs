@@ -69,7 +69,7 @@ namespace Barotrauma
 
         private LosMode losMode;
 
-        public List<string> jobPreferences;
+        public List<Pair<string, int>> jobPreferences;
 
         private bool useSteamMatchmaking;
         private bool requireSteamAuthentication;
@@ -119,7 +119,7 @@ namespace Barotrauma
             }
         }
 
-        public List<string> JobPreferences
+        public List<Pair<string, int>> JobPreferences
         {
             get { return jobPreferences; }
             set { jobPreferences = value; }
@@ -441,10 +441,10 @@ namespace Barotrauma
                 GraphicsHeight = 768;
                 MasterServerUrl = "";
                 SelectContentPackage(ContentPackage.List.Any() ? ContentPackage.List[0] : new ContentPackage(""));
-                jobPreferences = new List<string>();
+                jobPreferences = new List<Pair<string, int>>();
                 foreach (string job in JobPrefab.List.Keys)
                 {
-                    jobPreferences.Add(job);
+                    jobPreferences.Add(new Pair<string, int>(job, 1));
                 }
                 return;
             }
@@ -567,9 +567,12 @@ namespace Barotrauma
 
             var gameplay = new XElement("gameplay");
             var jobPreferences = new XElement("jobpreferences");
-            foreach (string jobName in JobPreferences)
+            foreach (Pair<string, int> job in JobPreferences)
             {
-                jobPreferences.Add(new XElement("job", new XAttribute("identifier", jobName)));
+                XElement jobElement = new XElement("job");
+                jobElement.Add(new XAttribute("identifier", job.First));
+                jobElement.Add(new XAttribute("variant", job.Second));
+                jobPreferences.Add(jobElement);
             }
             gameplay.Add(jobPreferences);
             doc.Root.Add(gameplay);
@@ -875,9 +878,12 @@ namespace Barotrauma
 
             var gameplay = new XElement("gameplay");
             var jobPreferences = new XElement("jobpreferences");
-            foreach (string jobName in JobPreferences)
+            foreach (Pair<string, int> job in JobPreferences)
             {
-                jobPreferences.Add(new XElement("job", new XAttribute("identifier", jobName)));
+                XElement jobElement = new XElement("job");
+                jobElement.Add(new XAttribute("identifier", job.First));
+                jobElement.Add(new XAttribute("variant", job.Second));
+                jobPreferences.Add(jobElement);
             }
             gameplay.Add(jobPreferences);
             doc.Root.Add(gameplay);
@@ -959,12 +965,13 @@ namespace Barotrauma
             XElement gameplayElement = doc.Root.Element("gameplay");
             if (gameplayElement != null)
             {
-                jobPreferences = new List<string>();
+                jobPreferences = new List<Pair<string, int>>();
                 foreach (XElement ele in gameplayElement.Element("jobpreferences").Elements("job"))
                 {
                     string jobIdentifier = ele.GetAttributeString("identifier", "");
+                    int outfitVariant = ele.GetAttributeInt("variant", 1);
                     if (string.IsNullOrEmpty(jobIdentifier)) continue;
-                    jobPreferences.Add(jobIdentifier);
+                    jobPreferences.Add(new Pair<string, int>(jobIdentifier, outfitVariant));
                 }
             }
 

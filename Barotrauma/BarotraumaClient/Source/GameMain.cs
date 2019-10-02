@@ -477,7 +477,7 @@ namespace Barotrauma
             // Add any missing jobs from the prefab into Config.JobNamePreferences.
             foreach (string job in JobPrefab.List.Keys)
             {
-                if (!Config.JobPreferences.Contains(job)) { Config.JobPreferences.Add(job); }
+                if (!Config.JobPreferences.Any(p => p.First == job)) { Config.JobPreferences.Add(new Pair<string, int>(job, 1)); }
             }
 
             NPCConversation.LoadAll(GetFilesOfType(ContentType.NPCConversations));

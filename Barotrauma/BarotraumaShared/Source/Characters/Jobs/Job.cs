@@ -150,16 +150,9 @@ namespace Barotrauma
             Wearable wearable = ((List<ItemComponent>)item.Components)?.Find(c => c is Wearable) as Wearable;
             if (wearable != null)
             {
-                if (wearable.Variants > 0)
+                if (Variant > 0 && Variant <= wearable.Variants)
                 {
-                    if (Variant > 0 && Variant <= wearable.Variants)
-                    {
-                        wearable.Variant = Variant;
-                    }
-                    else
-                    {
-                        wearable.Variant = Rand.Range(1, wearable.Variants + 1, Rand.RandSync.Server);
-                    }
+                    wearable.Variant = Variant;
                 }
             }
 
