@@ -607,17 +607,32 @@ namespace Barotrauma
                 case "guitextblock":
                     component = LoadGUITextBlock(element, parent);
                     break;
-                case "gridtext":
-                    LoadGridText(element, parent);
-                    return null;
+                case "frame":
                 case "guiframe":
                 case "spacing":
-                    component = LoadGUIFrameElement(element, parent);
+                    component = LoadGUIFrame(element, parent);
+                    break;
+                case "button":
+                case "guibutton":
+                    component = LoadGUIButton(element, parent);
+                    break;
+                case "listbox":
+                case "guilistbox":
+                    component = LoadGUIListBox(element, parent);
+                    break;
+                case "guilayoutgroup":
+                case "layoutgroup":
+                    component = LoadGUILayoutGroup(element, parent);
                     break;
                 case "image":
                 case "guiimage":
-                    component = LoadImageElement(element, parent);
+                    component = LoadGUIImage(element, parent);
                     break;
+                case "accordion":
+                    return LoadAccordion(element, parent);
+                case "gridtext":
+                    LoadGridText(element, parent);
+                    return null;
                 default:
                     throw new NotImplementedException("Loading GUI component \""+element.Name+"\" from XML is not implemented.");
             }
@@ -627,6 +642,34 @@ namespace Barotrauma
                 foreach (XElement subElement in element.Elements())
                 {
                     FromXML(subElement, component.RectTransform);
+                }
+
+                if (element.GetAttributeBool("resizetofitchildren", false))
+                {
+                    Vector2 relativeResizeScale = element.GetAttributeVector2("relativeresizescale", Vector2.One);
+                    if (component is GUILayoutGroup layoutGroup)
+                    {
+                        layoutGroup.RectTransform.NonScaledSize =
+                            layoutGroup.IsHorizontal ?
+                            new Point(layoutGroup.Children.Sum(c => c.Rect.Width), 0) :
+                            component.RectTransform.MinSize = new Point(0, layoutGroup.Children.Sum(c => c.Rect.Height));
+                    }
+                    else if (component is GUIListBox listBox)
+                    {
+                        listBox.RectTransform.NonScaledSize =
+                            listBox.ScrollBar.IsHorizontal ?
+                            new Point(listBox.Children.Sum(c => c.Rect.Width + listBox.Spacing), 0) :
+                            component.RectTransform.MinSize = new Point(0, listBox.Children.Sum(c => c.Rect.Height + listBox.Spacing));
+                    }
+                    else
+                    {
+                        component.RectTransform.NonScaledSize =
+                            new Point(
+                                component.Children.Max(c => c.Rect.Right) - component.Children.Min(c => c.Rect.X),
+                                component.Children.Max(c => c.Rect.Bottom) - component.Children.Min(c => c.Rect.Y));
+                    }
+                    component.RectTransform.NonScaledSize =
+                        component.RectTransform.NonScaledSize.Multiply(relativeResizeScale);
                 }
             }
             return component;
@@ -698,17 +741,72 @@ namespace Barotrauma
             }
         }
 
-        private static GUIFrame LoadGUIFrameElement(XElement element, RectTransform parent)
+        private static GUIFrame LoadGUIFrame(XElement element, RectTransform parent)
         {
-            string style = element.GetAttributeString("style", null);
+            string style = element.GetAttributeString("style", element.Name.ToString().ToLowerInvariant() == "spacing" ? null : "");
             if (style == "null") { style = null; }
-            return new GUIFrame(RectTransform.Load(element, parent), style: style);            
+            return new GUIFrame(RectTransform.Load(element, parent), style: style);
         }
 
-        private static GUIImage LoadImageElement(XElement element, RectTransform parent)
+        private static GUIButton LoadGUIButton(XElement element, RectTransform parent)
+        {
+            string style = element.GetAttributeString("style", "");
+            if (style == "null") { style = null; }
+
+            Alignment textAlignment = Alignment.Center;
+            Enum.TryParse(element.GetAttributeString("textalignment", "Center"), out textAlignment);
+
+            return new GUIButton(RectTransform.Load(element, parent),
+                text: element.GetAttributeString("text", ""),
+                textAlignment: textAlignment,
+                style: style);
+        }
+
+        private static GUIListBox LoadGUIListBox(XElement element, RectTransform parent)
+        {
+            string style = element.GetAttributeString("style", "");
+            if (style == "null") { style = null; }
+            bool isHorizontal = element.GetAttributeBool("ishorizontal", !element.GetAttributeBool("isvertical", true));
+            return new GUIListBox(RectTransform.Load(element, parent), isHorizontal, style: style);
+        }
+
+        private static GUILayoutGroup LoadGUILayoutGroup(XElement element, RectTransform parent)
+        {
+            bool isHorizontal = element.GetAttributeBool("ishorizontal", !element.GetAttributeBool("isvertical", true));
+
+            return new GUILayoutGroup(RectTransform.Load(element, parent), isHorizontal: isHorizontal)
+            {
+                Stretch = element.GetAttributeBool("stretch", false),
+                RelativeSpacing = element.GetAttributeFloat("relativespacing", 0.0f),
+                AbsoluteSpacing = element.GetAttributeInt("absolutespacing", 0),
+            };
+        }
+
+        private static GUIImage LoadGUIImage(XElement element, RectTransform parent)
         {
             Sprite sprite = new Sprite(element);
-            return new GUIImage(RectTransform.Load(element, parent), sprite, scaleToFit: true);            
+            return new GUIImage(RectTransform.Load(element, parent), sprite, scaleToFit: true);
+        }
+
+        private static GUIButton LoadAccordion(XElement element, RectTransform parent)
+        {
+            var button = LoadGUIButton(element, parent);
+            List<GUIComponent> content = new List<GUIComponent>();
+            foreach (XElement subElement in element.Elements())
+            {
+                var contentElement = FromXML(subElement, parent);
+                if (contentElement != null) { content.Add(contentElement); }
+            }
+            button.OnClicked = (btn, userdata) =>
+            {
+                bool visible = content.FirstOrDefault()?.Visible ?? true;
+                foreach (GUIComponent contentElement in content)
+                {
+                    contentElement.Visible = !visible;
+                }
+                return true;
+            };
+            return button;
         }
     }
 }
