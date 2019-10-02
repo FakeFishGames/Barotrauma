@@ -2510,12 +2510,13 @@ namespace Barotrauma
 
         public void SetStun(float newStun, bool allowStunDecrease = false, bool isNetworkMessage = false)
         {
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && !isNetworkMessage) return;
-
-            if ((newStun <= Stun && !allowStunDecrease) || !MathUtils.IsValid(newStun)) return;
-
-            if (Math.Sign(newStun) != Math.Sign(Stun)) AnimController.ResetPullJoints();
-
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && !isNetworkMessage) { return; }
+            if (Screen.Selected != GameMain.GameScreen) { return; }
+            if ((newStun <= Stun && !allowStunDecrease) || !MathUtils.IsValid(newStun)) { return; }
+            if (Math.Sign(newStun) != Math.Sign(Stun))
+            {
+                AnimController.ResetPullJoints();
+            }
             CharacterHealth.StunTimer = newStun;
             if (newStun > 0.0f)
             {
