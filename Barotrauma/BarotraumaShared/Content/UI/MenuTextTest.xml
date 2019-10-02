@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Menu>
-  <GUILayoutGroup anchor="TopRight" ishorizontal="false" relativeoffset="0.02,0.1" relativesize="0.2,0.8" childanchor="TopRight">
+  <GUIListBox anchor="TopRight" ishorizontal="false" relativeoffset="0.02,0.1" relativesize="0.2,0.8" childanchor="TopRight" style="null">
     <Image url="https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png" relativesize="1.0,0.08"/>
     <Accordion text="Official Halloween pack out now!" relativesize="1.0,0.08" style="GUISlopedHeader">
-      <GUIFrame resizetofitchildren="true" relativeresizescale="1.05,1.2" relativesize="1.0,1.0" style="InnerFrame">
+      <GUIFrame resizetofitchildren="true" relativeresizescale="1.05,1.2" relativesize="1.0,1.0" style="TextFrame" anchor="TopRight">
         <GUILayoutGroup ishorizontal="false" resizetofitchildren="true" relativesize="0.9,0.9" anchor="Center" relativespacing="0.02">
           <Text relativesize="1.0,0.0">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</Text>
           <Link relativesize="1.0,0.0" url="https://www.google.com/" style="MainMenuGUIButton">Download now</Link>
@@ -11,10 +11,37 @@
       </GUIFrame>
     </Accordion>
     <spacing relativesize="1.0f, 0.01"/>
-    <Accordion text="News and stuff" relativesize="1.0,0.08" style="GUISlopedHeader">
-      <GUIFrame resizetofitchildren="true" relativeresizescale="1.05,1.2" relativesize="1.0,1.0" style="InnerFrame">
-        <Text relativesize="0.9,0.0" anchor="Center">Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.</Text>
+    <Accordion text="Here's a changelog!" relativesize="1.0,0.08" style="GUISlopedHeader">
+      <GUIFrame resizetofitchildren="true" relativeresizescale="1.05,1.0" relativesize="1.0,1.0" style="TextFrame" anchor="TopRight">
+        <GUILayoutGroup resizetofitchildren="true" relativesize="0.9,1.0" anchor="Center" childanchor="TopCenter">
+          <Text relativesize="0.95,0.0" color="255,255,255,255">\nTraitor improvements:</Text>
+          <Text relativesize="0.95,0.0" font="smallfont">
+- Players who haven't been a traitor yet are more likely to get selected as a traitor.
+- If both teams have a traitor during a combat mission, traitor win will result in the opposite team's victory.
+- Fixed the order of the traitor objective chat messages.
+- Fixed flooding the respawn shuttle counting as flooding a part of the submarine when doing the "flood the submarine" traitor task.
+          </Text>
+          <Text relativesize="0.95,0.0" color="255,255,255,255">Multiplayer fixes:</Text>
+          <Text relativesize="0.95,0.0" font="smallfont">
+- Fixed server not sending a condition update for an item that gets removed when its condition drops to zero. Caused potassium and magnesium to explode continuously client-side when immersed in water.
+- Fixed server list only displaying servers that are located close to the client.
+- Fixed server list displaying the selected game mode incorrectly.
+- Fixed Chinese server names and descriptions showing up as "?????" in the server list when not playing in Chinese.
+- Fixed server list only displaying servers that are located close to the client.
+- Fixed server list displaying the selected game mode incorrectly.
+- Fixed Chinese server names and descriptions showing up as "?????" in the server list when not playing in Chinese.
+- Fixed server not sending a condition update for an item that gets removed when its condition drops to zero. Caused potassium and magnesium to explode continuously client-side when immersed in water.
+- Fixed server list only displaying servers that are located close to the client.
+- Fixed server list displaying the selected game mode incorrectly.
+- Fixed server not sending a condition update for an item that gets removed when its condition drops to zero. Caused potassium and magnesium to explode continuously client-side when immersed in water.
+- Fixed server list only displaying servers that are located close to the client.
+- Fixed server list displaying the selected game mode incorrectly.
+- Fixed server not sending a condition update for an item that gets removed when its condition drops to zero. Caused potassium and magnesium to explode continuously client-side when immersed in water.
+- Fixed server list only displaying servers that are located close to the client.
+- Fixed server list displaying the selected game mode incorrectly.
+          </Text>
+        </GUILayoutGroup>
       </GUIFrame>
     </Accordion>
-  </GUILayoutGroup>
+  </GUIListBox>
 </Menu>

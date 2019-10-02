@@ -658,7 +658,7 @@ namespace Barotrauma
                 foreach (XElement subElement in element.Elements())
                 {
                     if (subElement.Name.ToString().ToLowerInvariant() == "conditional") { continue; }
-                    FromXML(subElement, component.RectTransform);
+                    FromXML(subElement, component is GUIListBox listBox ? listBox.Content.RectTransform : component.RectTransform);
                 }
 
                 if (element.GetAttributeBool("resizetofitchildren", false))
@@ -912,7 +912,12 @@ namespace Barotrauma
             foreach (XElement subElement in element.Elements())
             {
                 var contentElement = FromXML(subElement, parent);
-                if (contentElement != null) { content.Add(contentElement); }
+                if (contentElement != null)
+                {
+                    contentElement.Visible = false;
+                    contentElement.IgnoreLayoutGroups = true;
+                    content.Add(contentElement);
+                }
             }
             button.OnClicked = (btn, userdata) =>
             {

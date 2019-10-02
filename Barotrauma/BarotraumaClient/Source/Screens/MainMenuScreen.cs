@@ -1093,8 +1093,11 @@ namespace Barotrauma
                     GUIComponent.FromXML(subElement, parent);
                 }
             }
-            catch
+            catch (Exception e)
             {
+#if DEBUG
+                DebugConsole.ThrowError("Fetching remote content to the main menu failed.", e);
+#endif
                 return;
             }
         }
