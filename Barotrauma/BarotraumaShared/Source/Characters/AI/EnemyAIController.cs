@@ -702,28 +702,31 @@ namespace Barotrauma
                     _attackingLimb = null;
                 }
             }
-
-            // If the attacking limb is a hand or claw, for example, using it as the steering limb can end in the result where the character circles around the target. For example the Hammerhead steering with the claws when it should use the torso.
-            // If we always use the main limb, this causes the character to seek the target with it's torso/head, when it should not. For example Mudraptor steering with it's belly, when it should use it's head.
-            // So let's use the one that's closer to the attacking limb.
-            Limb steeringLimb;
-            var torso = Character.AnimController.GetLimb(LimbType.Torso);
-            var head = Character.AnimController.GetLimb(LimbType.Head);
-            if (AttackingLimb == null)
+            Limb steeringLimb = canAttack ? AttackingLimb : null;
+            if (steeringLimb == null)
             {
-                steeringLimb = head ?? torso;
-            }
-            else
-            {
-                if (head != null && torso != null)
-                {
-                    steeringLimb = Vector2.DistanceSquared(AttackingLimb.SimPosition, head.SimPosition) < Vector2.DistanceSquared(AttackingLimb.SimPosition, torso.SimPosition) ? head : torso;
-                }
-                else
+                // If the attacking limb is a hand or claw, for example, using it as the steering limb can end in the result where the character circles around the target. For example the Hammerhead steering with the claws when it should use the torso.
+                // If we always use the main limb, this causes the character to seek the target with it's torso/head, when it should not. For example Mudraptor steering with it's belly, when it should use it's head.
+                // So let's use the one that's closer to the attacking limb.
+                var torso = Character.AnimController.GetLimb(LimbType.Torso);
+                var head = Character.AnimController.GetLimb(LimbType.Head);
+                if (AttackingLimb == null)
                 {
                     steeringLimb = head ?? torso;
                 }
+                else
+                {
+                    if (head != null && torso != null)
+                    {
+                        steeringLimb = Vector2.DistanceSquared(AttackingLimb.SimPosition, head.SimPosition) < Vector2.DistanceSquared(AttackingLimb.SimPosition, torso.SimPosition) ? head : torso;
+                    }
+                    else
+                    {
+                        steeringLimb = head ?? torso;
+                    }
+                }
             }
+
             if (steeringLimb != null)
             {
                 Vector2 offset = Character.SimPosition - steeringLimb.SimPosition;
