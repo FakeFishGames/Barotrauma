@@ -2381,12 +2381,12 @@ namespace Barotrauma
                 for (int i=0;i<variantCount;i++)
                 {
                     string torsoVariant = torsoTexture.Replace("[VARIANT]", (i + 1).ToString());
-                    if (!File.Exists(torsoTexture))
+                    if (!File.Exists(torsoVariant))
                     {
                         torsoVariant = torsoTexture.Replace("[VARIANT]", "1");
                     }
                     string armVariant = armTexture.Replace("[VARIANT]", (i + 1).ToString());
-                    if (!File.Exists(armTexture))
+                    if (!File.Exists(armVariant))
                     {
                         armVariant = armTexture.Replace("[VARIANT]", "1");
                     }
