@@ -751,6 +751,16 @@
       selectedcolor="255,153,0,76"
       padding="10.0, 0.0, 10.0, 0.0"/>
   </GUIRadioButton>
+
+  <GUICancelButton
+    color="200,200,200,255"
+    hovercolor="255,255,255,255"
+    pressedcolor="150,150,150,255">
+    <Sprite texture="Content/UI/UI_MiscIcons.png" state="None" sourcerect="0,0,36,36" tile="false" maintainaspectratio="true"/>
+    <Sprite texture="Content/UI/UI_MiscIcons.png" state="Hover" sourcerect="0,0,36,36" tile="false" maintainaspectratio="true"/>
+    <Sprite texture="Content/UI/UI_MiscIcons.png" state="Selected" sourcerect="0,0,36,36" tile="false" maintainaspectratio="true"/>
+    <Sprite texture="Content/UI/UI_MiscIcons.png" state="Pressed" sourcerect="0,0,36,36" tile="false" maintainaspectratio="true"/>
+  </GUICancelButton>
   
   <GUIServerListFavoriteTickBox
     color="160,160,160,255"

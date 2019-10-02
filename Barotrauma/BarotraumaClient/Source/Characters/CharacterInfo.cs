@@ -234,6 +234,7 @@ namespace Barotrauma
             string ragdollFile = inc.ReadString();
 
             string jobIdentifier = inc.ReadString();
+            int variant = inc.ReadByte();
             JobPrefab jobPrefab = null;
             Dictionary<string, float> skillLevels = new Dictionary<string, float>();
             if (!string.IsNullOrEmpty(jobIdentifier))
@@ -249,7 +250,7 @@ namespace Barotrauma
             }
 
             // TODO: animations
-            CharacterInfo ch = new CharacterInfo(speciesName, newName, jobPrefab, ragdollFile)
+            CharacterInfo ch = new CharacterInfo(speciesName, newName, jobPrefab, ragdollFile, variant)
             {
                 ID = infoID,
             };

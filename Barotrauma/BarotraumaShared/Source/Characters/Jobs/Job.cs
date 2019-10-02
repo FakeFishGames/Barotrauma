@@ -36,9 +36,12 @@ namespace Barotrauma
             get { return skills.Values.ToList(); }
         }
 
-        public Job(JobPrefab jobPrefab)
+        public int Variant;
+
+        public Job(JobPrefab jobPrefab, int variant = 0)
         {
             prefab = jobPrefab;
+            Variant = variant;
 
             skills = new Dictionary<string, Skill>();
             foreach (SkillPrefab skillPrefab in prefab.Skills)
@@ -143,6 +146,22 @@ namespace Barotrauma
                 Entity.Spawner.CreateNetworkEvent(item, false);
             }
 #endif
+
+            Wearable wearable = ((List<ItemComponent>)item.Components)?.Find(c => c is Wearable) as Wearable;
+            if (wearable != null)
+            {
+                if (wearable.Variants > 0)
+                {
+                    if (Variant > 0 && Variant <= wearable.Variants)
+                    {
+                        wearable.Variant = Variant;
+                    }
+                    else
+                    {
+                        wearable.Variant = Rand.Range(1, wearable.Variants + 1, Rand.RandSync.Server);
+                    }
+                }
+            }
 
             if (itemElement.GetAttributeBool("equip", false))
             {

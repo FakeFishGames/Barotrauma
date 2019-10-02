@@ -239,7 +239,7 @@ namespace Barotrauma
             }
         }
 
-        public List<JobPrefab> JobPreferences
+        public List<Pair<JobPrefab, int>> JobPreferences
         {
             get
             {
@@ -247,13 +247,13 @@ namespace Barotrauma
                 //(e.g. the player has a pre-existing campaign character)
                 if (jobList?.Content == null)
                 {
-                    return new List<JobPrefab>();
+                    return new List<Pair<JobPrefab, int>>();
                 }
 
-                List<JobPrefab> jobPreferences = new List<JobPrefab>();
+                List<Pair<JobPrefab, int>> jobPreferences = new List<Pair<JobPrefab, int>>();
                 foreach (GUIComponent child in jobList.Content.Children)
                 {
-                    JobPrefab jobPrefab = child.UserData as JobPrefab;
+                    var jobPrefab = child.UserData as Pair<JobPrefab, int>;
                     if (jobPrefab == null) continue;
                     jobPreferences.Add(jobPrefab);
                 }
@@ -1127,7 +1127,7 @@ namespace Barotrauma
                     var slot = new GUIFrame(new RectTransform(new Vector2(0.333f, 1.0f), jobList.Content.RectTransform), style: "ListBoxElement")
                     {
                         CanBeFocused = true,
-                        UserData = jobPrefab
+                        UserData = new Pair<JobPrefab, int>(jobPrefab, 1)
                     };
                 }
 
@@ -2116,9 +2116,11 @@ namespace Barotrauma
 
             bool moveToNext = obj != null;
 
+            var jobPrefab = (obj as Pair<JobPrefab, int>)?.First;
+
             var prevObj = child.UserData;
 
-            var existingChild = jobList.Content.GetChildByUserData(obj);
+            var existingChild = jobList.Content.FindChild(d => (d.UserData is Pair<JobPrefab, int> prefab) && (prefab.First == jobPrefab));
             if (existingChild != null && obj != null)
             {
                 existingChild.UserData = prevObj;
@@ -2167,22 +2169,15 @@ namespace Barotrauma
 
             var row = new GUILayoutGroup(new RectTransform(Vector2.One, rows.RectTransform), true);
 
-            var jobButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), row.RectTransform), style: "ListBoxElement")
-            {
-                OutlineColor = Color.White * 0.5f,
-                UserData = null,
-                OnClicked = SwitchJob
-            };
-
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), jobButton.RectTransform, Anchor.BottomCenter), "None", textAlignment: Alignment.Center);
+            GUIButton jobButton = null;
 
             var availableJobs = JobPrefab.List.Values.Where(jobPrefab =>
-                    jobPrefab.MaxNumber > 0 && jobList.Content.Children.All(c => !(c.UserData is JobPrefab prefab) || prefab != jobPrefab)
-            );
+                    jobPrefab.MaxNumber > 0 && jobList.Content.Children.All(c => !(c.UserData is Pair<JobPrefab, int> prefab) || prefab.First != jobPrefab)
+            ).Select(j => new Pair<JobPrefab, int>(j, 1));
             availableJobs = availableJobs.Concat(
                 JobPrefab.List.Values.Where(jobPrefab =>
-                    jobPrefab.MaxNumber > 0 && jobList.Content.Children.Any(c => (c.UserData is JobPrefab prefab) && prefab == jobPrefab)
-            ));
+                    jobPrefab.MaxNumber > 0 && jobList.Content.Children.Any(c => (c.UserData is Pair<JobPrefab, int> prefab) && prefab.First == jobPrefab)
+            ).Select(j => jobList.Content.FindChild(c => (c.UserData is Pair<JobPrefab, int> prefab) && prefab.First == j).UserData as Pair<JobPrefab, int>));
             availableJobs = availableJobs.ToList();
 
             int itemsInRow = 1;
@@ -2195,27 +2190,61 @@ namespace Barotrauma
                     itemsInRow = 0;
                 }
 
-                jobButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), row.RectTransform), style: "ListBoxElement")
+                jobButton = new GUIButton(new RectTransform(new Vector2(1.0f / 3.0f, 1.0f), row.RectTransform), style: "ListBoxElement")
                 {
                     OutlineColor = Color.White * 0.5f,
                     UserData = jobPrefab,
-                    OnClicked = SwitchJob
+                    OnClicked = (btn, usdt) =>
+                    {
+                        if (btn.IsParentOf(GUI.MouseOn)) return false;
+                        return SwitchJob(btn, usdt);
+                    }
                 };
                 itemsInRow++;
 
-                AddJobSpritesToGUIComponent(jobButton, jobPrefab);
+                var sprites = AddJobSpritesToGUIComponent(jobButton, jobPrefab.First);
+                if (sprites.Length > 1)
+                {
+                    for (int i = 0; i < sprites.Length; i++)
+                    {
+                        sprites[i][0].Visible = jobPrefab.Second == (i+1);
+                        sprites[i][1].Visible = jobPrefab.Second == (i+1);
+                        var variantButton = new GUIButton(new RectTransform(new Vector2(0.15f), jobButton.RectTransform) { RelativeOffset = new Vector2(0.05f + 0.2f * i, 0.05f) }, (i + 1).ToString(), style: null)
+                        {
+                            Color = Color.White * 0.25f,
+                            HoverColor = Color.White * 0.5f,
+                            PressedColor = Color.Black * 0.5f,
+                            UserData = new Pair<JobPrefab, int>(jobPrefab.First, i+1),
+                            OnClicked = (btn, obj) =>
+                            {
+                                int k = ((Pair<JobPrefab, int>)obj).Second;
+                                btn.Parent.UserData = obj;
+                                for (int j = 0; j < sprites.Length; j++)
+                                {
+                                    sprites[j][0].Visible = k == (j+1);
+                                    sprites[j][1].Visible = k == (j+1);
+                                }
+
+                                return false;
+                            }
+                        };
+                    }
+                }
             }
 
             return true;
         }
 
-        private void AddJobSpritesToGUIComponent(GUIComponent parent, JobPrefab jobPrefab)
+        private GUIImage[][] AddJobSpritesToGUIComponent(GUIComponent parent, JobPrefab jobPrefab)
         {
             GUIFrame innerFrame = null;
             GUIImage firstImage = null;
-            Pair<Sprite, Vector2>[] sprites = GetJobOutfitSprites(jobPrefab, out Vector2 torsoSize);
+            Pair<Sprite[], Vector2>[] sprites = GetJobOutfitSprites(jobPrefab, out Vector2 torsoSize);
 
-            innerFrame = new GUIFrame(new RectTransform(Vector2.One * 0.8f, parent.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(-0.07f, -0.06f) }, style: null);
+            innerFrame = new GUIFrame(new RectTransform(Vector2.One * 0.8f, parent.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(-0.07f, -0.06f) }, style: null)
+            {
+                CanBeFocused = false
+            };
 
             Action recalculateInnerFrame = () =>
             {
@@ -2237,19 +2266,36 @@ namespace Barotrauma
 
             parent.RectTransform.SizeChanged += recalculateInnerFrame;
 
-            foreach (Pair<Sprite, Vector2> sprite in sprites)
-            {
-                Vector2 sourceRectDims = sprite.First.SourceRect.Size.ToVector2();
+            var retVal = new GUIImage[sprites[0].First.Length][];
 
-                new GUIImage(new RectTransform((sourceRectDims / torsoSize), innerFrame.RectTransform, Anchor.Center) { RelativeOffset = sprite.Second }, sprite.First, scaleToFit: true);
+            Vector2 torsoSrcRectDims = sprites[0].First[0].SourceRect.Size.ToVector2();
+            Vector2 armSrcRectDims = sprites[1].First[0].SourceRect.Size.ToVector2();
+
+            for (int i = 0; i < sprites[0].First.Length; i++)
+            {
+                retVal[i] = new GUIImage[2];
+
+                retVal[i][0] = new GUIImage(new RectTransform((torsoSrcRectDims / torsoSize), innerFrame.RectTransform, Anchor.Center) { RelativeOffset = sprites[0].Second }, sprites[0].First[i], scaleToFit: true)
+                {
+                    CanBeFocused = false
+                };
+                retVal[i][1] = new GUIImage(new RectTransform((armSrcRectDims / torsoSize), innerFrame.RectTransform, Anchor.Center) { RelativeOffset = sprites[1].Second }, sprites[1].First[i], scaleToFit: true)
+                {
+                    CanBeFocused = false
+                };
             }
 
             recalculateInnerFrame();
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), parent.RectTransform, Anchor.BottomCenter), jobPrefab.Name, textAlignment: Alignment.Center);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), parent.RectTransform, Anchor.BottomCenter), jobPrefab.Name, textAlignment: Alignment.Center)
+            {
+                CanBeFocused = false
+            };
+
+            return retVal;
         }
 
-        private Pair<Sprite, Vector2>[] GetJobOutfitSprites(JobPrefab jobPrefab, out Vector2 torsoSize)
+        private Pair<Sprite[], Vector2>[] GetJobOutfitSprites(JobPrefab jobPrefab, out Vector2 torsoSize)
         {
             var info = GameMain.Client.CharacterInfo;
 
@@ -2305,19 +2351,15 @@ namespace Barotrauma
             {
                 string path = Path.GetDirectoryName(prefabs.First().ConfigFile);
                 var spriteElements = wearables.First().Elements("sprite").ToList();
+
+                int variantCount = wearables.First().GetAttributeInt("variants", 1);
+
+                var retVal = new Pair<Sprite[], Vector2>[2];
+
                 XElement torsoSpriteElement = spriteElements.Find(s => Enum.TryParse(s.GetAttributeString("limb", "None"), out LimbType limbType) && limbType == LimbType.Torso);
                 XElement armSpriteElement = spriteElements.Find(s => Enum.TryParse(s.GetAttributeString("limb", "None"), out LimbType limbType) && limbType == LimbType.RightArm);
                 string torsoTexture = torsoSpriteElement.GetAttributeString("texture", "").Replace("[GENDER]", (info.Gender == Gender.Female) ? "female" : "male");
                 string armTexture = armSpriteElement.GetAttributeString("texture", "").Replace("[GENDER]", (info.Gender == Gender.Female) ? "female" : "male");
-
-                var torsoSprite = new Sprite(torsoSpriteElement, path: path, file: torsoTexture.Replace("[VARIANT]", "1"));
-                var armSprite = new Sprite(armSpriteElement, path: path, file: armTexture.Replace("[VARIANT]", "1"));
-
-                torsoSprite.SourceRect = torsoSourceRect;//new Rectangle(new Point(torsoSourceRect.Location.X, torsoSourceRect.Location.Y + (int)(head.SourceRect.Height * 0.3f)), new Point(torsoSourceRect.Width, (torsoSourceRect.Height * 1) / 2));
-                torsoSprite.size = new Vector2((float)torsoSprite.SourceRect.Width, (float)torsoSprite.SourceRect.Height) / info.Ragdoll.LimbScale;
-
-                armSprite.SourceRect = armSourceRect;
-                armSprite.size = new Vector2((float)armSprite.SourceRect.Width, (float)armSprite.SourceRect.Height) / info.Ragdoll.LimbScale;
 
                 Vector2 armPosition = torsoAnchor - armAnchor;
 
@@ -2329,11 +2371,25 @@ namespace Barotrauma
 
                 armOrigin /= torsoSize;
 
-                return new Pair<Sprite, Vector2>[2]
+                retVal[0] = new Pair<Sprite[], Vector2>(new Sprite[variantCount], Vector2.Zero);
+                retVal[1] = new Pair<Sprite[], Vector2>(new Sprite[variantCount], armPosition + armOrigin + new Vector2(0.0f, -yOffset));
+
+                for (int i=0;i<variantCount;i++)
                 {
-                    new Pair<Sprite, Vector2>(torsoSprite, Vector2.Zero),
-                    new Pair<Sprite, Vector2>(armSprite, armPosition + armOrigin + new Vector2(0.0f, -yOffset))
-                };
+                    var torsoSprite = new Sprite(torsoSpriteElement, path: path, file: torsoTexture.Replace("[VARIANT]", (i + 1).ToString()));
+                    var armSprite = new Sprite(armSpriteElement, path: path, file: armTexture.Replace("[VARIANT]", (i + 1).ToString()));
+
+                    retVal[0].First[i] = torsoSprite;
+                    retVal[1].First[i] = armSprite;
+
+                    torsoSprite.SourceRect = torsoSourceRect;//new Rectangle(new Point(torsoSourceRect.Location.X, torsoSourceRect.Location.Y + (int)(head.SourceRect.Height * 0.3f)), new Point(torsoSourceRect.Width, (torsoSourceRect.Height * 1) / 2));
+                    torsoSprite.size = new Vector2((float)torsoSprite.SourceRect.Width, (float)torsoSprite.SourceRect.Height) / info.Ragdoll.LimbScale;
+
+                    armSprite.SourceRect = armSourceRect;
+                    armSprite.size = new Vector2((float)armSprite.SourceRect.Width, (float)armSprite.SourceRect.Height) / info.Ragdoll.LimbScale;
+                }
+
+                return retVal;
             }
 
             return null;
@@ -2628,15 +2684,38 @@ namespace Barotrauma
                 slot.ClearChildren();
 
                 slot.CanBeFocused = !disableNext;
-                if (slot.UserData is JobPrefab jobPrefab)
+                if (slot.UserData is Pair<JobPrefab, int> jobPrefab)
                 {
-                    AddJobSpritesToGUIComponent(slot, jobPrefab);
+                    var sprites = AddJobSpritesToGUIComponent(slot, jobPrefab.First);
 
-                    jobNamePreferences.Add(jobPrefab.Identifier);
+                    for (int j = 0; j < sprites.Length; j++)
+                    {
+                        sprites[j][0].Visible = jobPrefab.Second == (j+1);
+                        sprites[j][1].Visible = jobPrefab.Second == (j+1);
+                    }
+
+                    var removeButton = new GUIButton(new RectTransform(new Vector2(0.15f), slot.RectTransform, Anchor.TopRight, scaleBasis: ScaleBasis.BothWidth) { RelativeOffset = new Vector2(0.05f) }, style: "GUICancelButton");
+                    removeButton.UserData = null;
+                    removeButton.OnClicked = (btn, obj) =>
+                    {
+                        jobList.Select(i, true);
+                        SwitchJob(btn, obj);
+                        jobSelectionFrame = null;
+                        jobList.Deselect();
+
+                        return false;
+                    };
+
+                    jobNamePreferences.Add(jobPrefab.First.Identifier);
                 }
                 else
                 {
-                    new GUITextBlock(new RectTransform(Vector2.One, slot.RectTransform), (i + 1).ToString(), textColor: Color.White * (disableNext ? 0.25f : 0.5f), textAlignment: Alignment.Center, font: GUI.LargeFont);
+                    new GUITextBlock(new RectTransform(Vector2.One, slot.RectTransform), (i + 1).ToString(), textColor: Color.White * (disableNext ? 0.15f : 0.5f), textAlignment: Alignment.Center, font: GUI.LargeFont);
+
+                    if (!disableNext)
+                    {
+                        new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), slot.RectTransform, Anchor.BottomCenter), "Click to select job");
+                    }
 
                     disableNext = true;
                 }

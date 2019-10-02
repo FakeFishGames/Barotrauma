@@ -350,7 +350,7 @@ namespace Barotrauma
         public bool IsAttachmentsLoaded => HairIndex > -1 && BeardIndex > -1 && MoustacheIndex > -1 && FaceAttachmentIndex > -1;
 
         // Used for creating the data
-        public CharacterInfo(string speciesName, string name = "", JobPrefab jobPrefab = null, string ragdollFileName = null)
+        public CharacterInfo(string speciesName, string name = "", JobPrefab jobPrefab = null, string ragdollFileName = null, int variant = 0)
         {
             if (speciesName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
             {
@@ -372,7 +372,8 @@ namespace Barotrauma
             Head.race = GetRandomRace();
             CalculateHeadSpriteRange();
             Head.HeadSpriteId = GetRandomHeadID();
-            Job = (jobPrefab == null) ? Job.Random(Rand.RandSync.Server) : new Job(jobPrefab);
+            DebugConsole.NewMessage("variant: "+variant.ToString());
+            Job = (jobPrefab == null) ? Job.Random(Rand.RandSync.Server) : new Job(jobPrefab, variant);
             if (!string.IsNullOrEmpty(name))
             {
                 Name = name;

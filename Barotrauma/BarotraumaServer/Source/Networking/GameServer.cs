@@ -1860,9 +1860,9 @@ namespace Barotrauma.Networking
                         client.CharacterInfo = new CharacterInfo(Character.HumanSpeciesName, client.Name);
                     }
                     characterInfos.Add(client.CharacterInfo);
-                    if (client.CharacterInfo.Job == null || client.CharacterInfo.Job.Prefab != client.AssignedJob)
+                    if (client.CharacterInfo.Job == null || client.CharacterInfo.Job.Prefab != client.AssignedJob.First)
                     {
-                        client.CharacterInfo.Job = new Job(client.AssignedJob);
+                        client.CharacterInfo.Job = new Job(client.AssignedJob.First, client.AssignedJob.Second);
                     }
                 }
 
@@ -2852,15 +2852,16 @@ namespace Barotrauma.Networking
             int moustacheIndex = message.ReadByte();
             int faceAttachmentIndex = message.ReadByte();
 
-            List<JobPrefab> jobPreferences = new List<JobPrefab>();
+            List<Pair<JobPrefab, int>> jobPreferences = new List<Pair<JobPrefab, int>>();
             int count = message.ReadByte();
             // TODO: modding support?
             for (int i = 0; i < Math.Min(count, 3); i++)
             {
                 string jobIdentifier = message.ReadString();
+                int variant = message.ReadByte();
                 if (JobPrefab.List.TryGetValue(jobIdentifier, out JobPrefab jobPrefab))
                 {
-                    jobPreferences.Add(jobPrefab);
+                    jobPreferences.Add(new Pair<JobPrefab, int>(jobPrefab, variant));
                 }
             }
 
@@ -2900,7 +2901,7 @@ namespace Barotrauma.Networking
                 foreach (KeyValuePair<Client, Job> clientJob in campaignAssigned)
                 {
                     assignedClientCount[clientJob.Value.Prefab]++;
-                    clientJob.Key.AssignedJob = clientJob.Value.Prefab;
+                    clientJob.Key.AssignedJob = new Pair<JobPrefab, int>(clientJob.Value.Prefab, clientJob.Value.Variant);
                 }
             }
 
@@ -2918,7 +2919,7 @@ namespace Barotrauma.Networking
             for (int i = unassigned.Count - 1; i >= 0; i--)
             {
                 if (unassigned[i].JobPreferences.Count == 0) continue;
-                if (!unassigned[i].JobPreferences[0].AllowAlways) continue;
+                if (!unassigned[i].JobPreferences[0].First.AllowAlways) continue;
                 unassigned[i].AssignedJob = unassigned[i].JobPreferences[0];
                 unassigned.RemoveAt(i);
             }
@@ -2937,7 +2938,7 @@ namespace Barotrauma.Networking
                     //find the client that wants the job the most, or force it to random client if none of them want it
                     Client assignedClient = FindClientWithJobPreference(unassigned, jobPrefab, true);
 
-                    assignedClient.AssignedJob = jobPrefab;
+                    assignedClient.AssignedJob = new Pair<JobPrefab, int>(jobPrefab, 0);
                     assignedClientCount[jobPrefab]++;
                     unassigned.Remove(assignedClient);
 
@@ -2949,14 +2950,14 @@ namespace Barotrauma.Networking
             //attempt to give the clients a job they have in their job preferences
             for (int i = unassigned.Count - 1; i >= 0; i--)
             {
-                foreach (JobPrefab preferredJob in unassigned[i].JobPreferences)
+                foreach (Pair<JobPrefab, int> preferredJob in unassigned[i].JobPreferences)
                 {
                     //the maximum number of players that can have this job hasn't been reached yet
                     // -> assign it to the client
-                    if (assignedClientCount[preferredJob] < preferredJob.MaxNumber && unassigned[i].Karma >= preferredJob.MinKarma)
+                    if (assignedClientCount[preferredJob.First] < preferredJob.First.MaxNumber && unassigned[i].Karma >= preferredJob.First.MinKarma)
                     {
                         unassigned[i].AssignedJob = preferredJob;
-                        assignedClientCount[preferredJob]++;
+                        assignedClientCount[preferredJob.First]++;
                         unassigned.RemoveAt(i);
                         break;
                     }
@@ -2982,13 +2983,13 @@ namespace Barotrauma.Networking
                         if (jobIndex >= jobList.Count) jobIndex -= jobList.Count;
                         if (skips >= jobList.Count) break;
                     }
-                    c.AssignedJob = jobList[jobIndex];
-                    assignedClientCount[c.AssignedJob]++;
+                    c.AssignedJob = new Pair<JobPrefab, int>(jobList[jobIndex], 0);
+                    assignedClientCount[c.AssignedJob.First]++;
                 }
                 else //some jobs still left, choose one of them by random
                 {
-                    c.AssignedJob = remainingJobs[Rand.Range(0, remainingJobs.Count)];
-                    assignedClientCount[c.AssignedJob]++;
+                    c.AssignedJob = new Pair<JobPrefab, int>(remainingJobs[Rand.Range(0, remainingJobs.Count)], 0);
+                    assignedClientCount[c.AssignedJob.First]++;
                 }
             }
         }
@@ -3056,7 +3057,7 @@ namespace Barotrauma.Networking
             foreach (Client c in clients)
             {
                 if (c.Karma < job.MinKarma) continue;
-                int index = c.JobPreferences.IndexOf(job);
+                int index = c.JobPreferences.IndexOf(c.JobPreferences.Find(j => j.First == job));
                 if (index == -1) index = 1000;
 
                 if (preferredClient == null || index < bestPreference)

@@ -1933,7 +1933,8 @@ namespace Barotrauma.Networking
             msg.Write((byte)count);
             for (int i = 0; i < count; i++)
             {
-                msg.Write(jobPreferences[i].Identifier);
+                msg.Write(jobPreferences[i].First.Identifier);
+                msg.Write((byte)jobPreferences[i].Second);
             }
         }
 

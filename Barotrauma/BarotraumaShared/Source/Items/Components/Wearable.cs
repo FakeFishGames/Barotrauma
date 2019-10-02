@@ -6,6 +6,7 @@ using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Items.Components;
 using Barotrauma.Extensions;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -197,7 +198,7 @@ namespace Barotrauma
 
 namespace Barotrauma.Items.Components
 {
-    class Wearable : Pickable
+    class Wearable : Pickable, IServerSerializable
     {
         private WearableSprite[] wearableSprites;
         private LimbType[] limbType;
@@ -214,8 +215,35 @@ namespace Barotrauma.Items.Components
         public bool AutoEquipWhenFull
         {
             get { return autoEquipWhenFull; }
-        }               
-        
+        }
+
+        public readonly int Variants;
+
+        private int variant;
+        public int Variant
+        {
+            get { return variant; }
+            set
+            {
+                if (variant == value) { return; }
+#if SERVER
+                item.CreateServerEvent(this);
+#endif
+
+#if CLIENT
+                foreach (var sprite in wearableSprites)
+                {
+                    sprite.Variant = value;
+
+                    sprite.RefreshPath();
+                    sprite.Sprite.ReloadXML();
+                    sprite.Sprite.ReloadTexture();
+                }
+#endif
+                variant = value;
+            }
+        }
+
         public Wearable(Item item, XElement element) : base(item, element)
         {
             this.item = item;
@@ -223,8 +251,8 @@ namespace Barotrauma.Items.Components
             damageModifiers = new List<DamageModifier>();
             
             int spriteCount = element.Elements().Count(x => x.Name.ToString() == "sprite");
-            int variants = element.GetAttributeInt("variants", 0);
-            int variant = variants > 0 ? Rand.Range(1, variants + 1, Rand.RandSync.Server) : 1;
+            Variants = element.GetAttributeInt("variants", 0);
+            variant = 1;
             wearableSprites = new WearableSprite[spriteCount];
             limbType    = new LimbType[spriteCount];
             limb        = new Limb[spriteCount];
@@ -378,6 +406,20 @@ namespace Barotrauma.Items.Components
             {
                 if (wearableSprite != null && wearableSprite.Sprite != null) wearableSprite.Sprite.Remove();
             }
+        }
+
+        public override void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        {
+            msg.Write((byte)Variant);
+
+            base.ServerWrite(msg, c, extraData);
+        }
+
+        public override void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        {
+            Variant = msg.ReadByte();
+
+            base.ClientRead(type, msg, sendingTime);
         }
 
     }
