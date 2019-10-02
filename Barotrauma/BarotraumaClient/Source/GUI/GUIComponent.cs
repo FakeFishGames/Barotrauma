@@ -601,6 +601,16 @@ namespace Barotrauma
         public static GUIComponent FromXML(XElement element, RectTransform parent)
         {
             GUIComponent component = null;
+
+            foreach (XElement subElement in element.Elements())
+            {
+                if (subElement.Name.ToString().ToLowerInvariant() == "conditional" &&
+                    !CheckConditional(subElement))
+                {
+                    return null;
+                }
+            }
+
             switch (element.Name.ToString().ToLowerInvariant())
             {
                 case "text":
@@ -644,6 +654,7 @@ namespace Barotrauma
             {
                 foreach (XElement subElement in element.Elements())
                 {
+                    if (subElement.Name.ToString().ToLowerInvariant() == "conditional") { continue; }
                     FromXML(subElement, component.RectTransform);
                 }
 
@@ -683,6 +694,34 @@ namespace Barotrauma
                 }
             }
             return component;
+        }
+
+        private static bool CheckConditional(XElement element)
+        {
+            foreach (XAttribute attribute in element.Attributes())
+            {
+                switch (attribute.Name.ToString().ToLowerInvariant())
+                {
+                    case "language":
+                        string[] languages = element.GetAttributeStringArray(attribute.Name.ToString(), new string[0]);
+                        if (!languages.Any(l => GameMain.Config.Language.ToLower() == l.ToLower())) { return false; }
+                        break;
+                    case "gameversion":
+                        var version = new Version(attribute.Value);
+                        if (GameMain.Version != version) { return false; }
+                        break;
+                    case "mingameversion":
+                        var minVersion = new Version(attribute.Value);
+                        if (GameMain.Version < minVersion) { return false; }
+                        break;
+                    case "maxgameversion":
+                        var maxVersion = new Version(attribute.Value);
+                        if (GameMain.Version > maxVersion) { return false; }
+                        break;
+                }
+            }
+
+            return true;
         }
 
         private static GUITextBlock LoadGUITextBlock(XElement element, RectTransform parent, string overrideText = null, Anchor? anchor = null)

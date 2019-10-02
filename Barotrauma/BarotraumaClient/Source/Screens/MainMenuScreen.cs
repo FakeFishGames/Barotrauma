@@ -70,15 +70,15 @@ namespace Barotrauma
                 RelativeSpacing = 0.02f
             };
 
-            //FetchRemoteContent(Frame.RectTransform);
-            var doc = XMLExtensions.TryLoadXml("Content/UI/MenuTextTest.xml");
+            FetchRemoteContent(Frame.RectTransform);
+            /*var doc = XMLExtensions.TryLoadXml("Content/UI/MenuTextTest.xml");
             if (doc?.Root != null)
             {
                 foreach (XElement subElement in doc?.Root.Elements())
                 {
                     GUIComponent.FromXML(subElement, Frame.RectTransform);
                 }
-            }            
+            }*/       
 
             // === CAMPAIGN
             var campaignHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 1.0f), parent: buttonsParent.RectTransform) { RelativeOffset = new Vector2(0.1f, 0.0f) }, isHorizontal: true);
@@ -1067,9 +1067,9 @@ namespace Barotrauma
 
         private void FetchRemoteContent(RectTransform parent)
         {
-            if (string.IsNullOrEmpty(GameMain.Config.MenuContentUrl)) { return; }
+            if (string.IsNullOrEmpty(GameMain.Config.RemoteContentUrl)) { return; }
 
-            var client = new RestClient(GameMain.Config.MenuContentUrl);
+            var client = new RestClient(GameMain.Config.RemoteContentUrl);
             var request = new RestRequest("MenuContent.xml", Method.GET);
 
             IRestResponse response = client.Execute(request);
@@ -1083,6 +1083,8 @@ namespace Barotrauma
             }
 
             string xml = response.Content;
+            int index = xml.IndexOf('<');
+            if (index > 0) { xml = xml.Substring(index, xml.Length - index); }
             try
             {
                 XElement element = XDocument.Parse(xml)?.Root;

@@ -2,7 +2,7 @@
 <config
   language="English"
   masterserverurl="http://www.undertowgames.com/baromaster"
-  menucontenturl="http://www.barotraumagame.com/gamedata/MenuContent.xml"
+  remotecontenturl="http://www.barotraumagame.com/gamedata/"
   autocheckupdates="true"
   musicvolume="0.5"
   soundvolume="0.5"
