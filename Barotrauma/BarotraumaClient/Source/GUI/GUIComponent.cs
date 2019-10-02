@@ -5,6 +5,9 @@ using System.Linq;
 using Barotrauma.Extensions;
 using System;
 using System.Xml.Linq;
+using System.IO;
+using RestSharp;
+using System.Net;
 
 namespace Barotrauma
 {
@@ -870,7 +873,35 @@ namespace Barotrauma
 
         private static GUIImage LoadGUIImage(XElement element, RectTransform parent)
         {
-            Sprite sprite = new Sprite(element);
+            Sprite sprite = null;
+
+            string url = element.GetAttributeString("url", "");
+            if (!string.IsNullOrEmpty(url))
+            {
+                string localFileName = Path.GetFileNameWithoutExtension(url.Replace("/", "").Replace(":", "").Replace("https", "").Replace("http", ""))
+                    .Replace(".", "");
+                localFileName += Path.GetExtension(url);
+                string localFilePath = Path.Combine("Downloads", localFileName);
+                if (!File.Exists(localFilePath))
+                {
+                    Uri baseAddress = new Uri(url);
+                    Uri remoteDirectory = new Uri(baseAddress, ".");
+                    string remoteFileName = Path.GetFileName(baseAddress.LocalPath);
+                    IRestClient client = new RestClient(remoteDirectory);
+                    var response = client.Execute(new RestRequest(remoteFileName, Method.GET));
+                    if (response.ResponseStatus != ResponseStatus.Completed) { return null; }
+                    if (response.StatusCode != HttpStatusCode.OK) { return null; }
+
+                    if (!Directory.Exists("Downloads")) { Directory.CreateDirectory("Downloads"); }
+                    File.WriteAllBytes(localFilePath, response.RawBytes);
+                }
+                sprite = new Sprite(element, "Downloads", localFileName);
+            }
+            else
+            {
+                sprite = new Sprite(element);
+            }
+
             return new GUIImage(RectTransform.Load(element, parent), sprite, scaleToFit: true);
         }
 
