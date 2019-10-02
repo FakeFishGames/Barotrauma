@@ -3542,6 +3542,8 @@
   <bugreportfeedbackform>Help and technical support</bugreportfeedbackform>
   
   <!-- New additions for the major update coming in November -->
+  <submarine.name.kastrull>Kastrull</submarine.name.kastrull>
+  <submarine.description.kastrull>The Kastrull is a dependable attack sub class bringing plenty of firepower to any fight, and although not very nimble, they do sport a drone gunship as standard. Keep in mind that with its experimental open ballast tanks, low tolerance to flooding, and numerous crew stations, a large experienced crew will get the most out of these subs.</submarine.description.kastrull>
   
   <!-- Server lobby 2.0 -->
   <servertag.casual>Casual</servertag.casual>
