@@ -608,8 +608,9 @@ namespace Barotrauma
                 case "gridtext":
                     LoadGridText(element, parent);
                     return null;
+                case "guiframe":
                 case "spacing":
-                    return LoadSpacingElement(element, parent);
+                    return LoadGUIFrameElement(element, parent);
                 case "image":
                 case "guiimage":
                     return LoadImageElement(element, parent);
@@ -618,7 +619,7 @@ namespace Barotrauma
             }
         }
 
-        private static GUIComponent LoadGUITextBlock(XElement element, RectTransform parent, string overrideText = null, Anchor anchor = Anchor.Center)
+        private static GUITextBlock LoadGUITextBlock(XElement element, RectTransform parent, string overrideText = null, Anchor? anchor = null)
         {
             var text = overrideText ?? element.ElementInnerText().Replace(@"\n", "\n");
             Color color = element.GetAttributeColor("color", Color.White);
@@ -647,19 +648,16 @@ namespace Barotrauma
                     font = GUI.ObjectiveNameFont;
                     break;
             }
-
-            float relativeWidth = element.GetAttributeFloat("relativewidth", 1.0f);
-
-            var textHolder = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), parent), style: null);
-            var textBlock = new GUITextBlock(new RectTransform(new Vector2(relativeWidth, 0.0f), textHolder.RectTransform, anchor),
+            
+            var textBlock = new GUITextBlock(RectTransform.Load(element, parent),
                 text, color, font, alignment, wrap: true)
             {
                 TextScale = scale
             };
-            textBlock.RectTransform.IsFixedSize = textHolder.RectTransform.IsFixedSize = true;
+            if (anchor.HasValue) { textBlock.RectTransform.SetPosition(anchor.Value); }
+            textBlock.RectTransform.IsFixedSize = true;
             textBlock.RectTransform.NonScaledSize = new Point(textBlock.Rect.Width, textBlock.Rect.Height);
-            textHolder.RectTransform.NonScaledSize = new Point(textHolder.Rect.Width, textBlock.Rect.Height);
-            return textHolder;
+            return textBlock;
         }
 
         private static void LoadGridText(XElement element, RectTransform parent)
@@ -678,42 +676,26 @@ namespace Barotrauma
                         lineContainer.NonScaledSize = new Point((int)(parent.NonScaledSize.X * 0.7f), lineContainer.NonScaledSize.Y);
                         break;
                     case 1:
-                        LoadGUITextBlock(element, lineContainer, elements[i], Anchor.Center).GetChild<GUITextBlock>().TextAlignment = Alignment.Center;
+                        LoadGUITextBlock(element, lineContainer, elements[i], Anchor.Center).TextAlignment = Alignment.Center;
                         break;
                     case 2:
-                        LoadGUITextBlock(element, lineContainer, elements[i], Anchor.CenterRight).GetChild<GUITextBlock>().TextAlignment = Alignment.CenterRight;
+                        LoadGUITextBlock(element, lineContainer, elements[i], Anchor.CenterRight).TextAlignment = Alignment.CenterRight;
                         break;
                 }
             }
         }
 
-        private static GUIFrame LoadSpacingElement(XElement element, RectTransform parent)
+        private static GUIFrame LoadGUIFrameElement(XElement element, RectTransform parent)
         {
-            if (element.Attribute("absoluteheight") != null)
-            {
-                int absoluteHeight = element.GetAttributeInt("absoluteheight", 10);
-                return new GUIFrame(new RectTransform(new Point(parent.NonScaledSize.X, absoluteHeight), parent), style: null);
-            }
-            else
-            {
-                float relativeHeight = element.GetAttributeFloat("relativeheight", 0.0f);
-                return new GUIFrame(new RectTransform(new Vector2(1.0f, relativeHeight), parent), style: null);
-            }
+            string style = element.GetAttributeString("style", null);
+            if (style == "null") { style = null; }
+            return new GUIFrame(RectTransform.Load(element, parent), style: style);            
         }
 
         private static GUIImage LoadImageElement(XElement element, RectTransform parent)
         {
             Sprite sprite = new Sprite(element);
-            if (element.Attribute("absoluteheight") != null)
-            {
-                int absoluteHeight = element.GetAttributeInt("absoluteheight", 10);
-                return new GUIImage(new RectTransform(new Point(parent.NonScaledSize.X, absoluteHeight), parent), sprite, scaleToFit: true);
-            }
-            else
-            {
-                float relativeHeight = element.GetAttributeFloat("relativeheight", 0.0f);
-                return new GUIImage(new RectTransform(new Vector2(1.0f, relativeHeight), parent), sprite, scaleToFit: true);
-            }
+            return new GUIImage(RectTransform.Load(element, parent), sprite, scaleToFit: true);            
         }
     }
 }

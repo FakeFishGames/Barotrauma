@@ -358,9 +358,9 @@ namespace Barotrauma
             parent?.ChildrenChanged?.Invoke(this);
         }
 
-        public static RectTransform Load(XElement element, RectTransform parent)
+        public static RectTransform Load(XElement element, RectTransform parent, Anchor defaultAnchor = Anchor.TopLeft)
         {
-            Enum.TryParse(element.GetAttributeString("anchor", "Center"), out Anchor anchor);
+            Enum.TryParse(element.GetAttributeString("anchor", defaultAnchor.ToString()), out Anchor anchor);
             Enum.TryParse(element.GetAttributeString("pivot", anchor.ToString()), out Pivot pivot);
 
             Point? minSize = null, maxSize = null;

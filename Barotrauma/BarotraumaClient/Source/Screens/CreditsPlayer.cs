@@ -36,6 +36,7 @@ namespace Barotrauma
             {
                 GUIComponent.FromXML(subElement, listBox.Content.RectTransform);
             }
+            listBox.RecalculateChildren();
             listBox.UpdateScrollBarSize();
         }
         

@@ -1,307 +1,307 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Credits scrollspeed="50.0" spacing="10">
-  <spacing relativeheight="0.85"/>
+  <spacing relativesize="1.0,0.85"/>
 
-  <Image texture="Content/UI/titleText.png" sourcerect="0,520,1024,328" relativeheight="0.1"/>
+  <Image texture="Content/UI/titleText.png" sourcerect="0,520,1024,328" relativesize="1.0,0.1"/>
   
-  <spacing relativeheight="0.1"/>
+  <spacing relativesize="1.0,0.1"/>
   
   <!-- ******************************************************* -->
   
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255" scale="1.3">Development</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255" scale="1.3">Development</Text>
   
-  <spacing relativeheight="0.05"/>
+  <spacing relativesize="1.0,0.05"/>
   
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255">Programming</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Joonas Rikkonen ("Regalis")</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Eetu Pitkänen</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Lauri Härkänen</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Juan Pablo Arce</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Roni Kovaniemi</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255">Programming</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Joonas Rikkonen ("Regalis")</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Eetu Pitkänen</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Lauri Härkänen</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Juan Pablo Arce</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Roni Kovaniemi</Text>
   
-  <spacing relativeheight="0.1"/>
+  <spacing relativesize="1.0,0.1"/>
 
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255">Game Design</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Ez Jämsen</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Daniel Asteljoki</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Joonas Rikkonen</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255">Game Design</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Ez Jämsen</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Daniel Asteljoki</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Joonas Rikkonen</Text>
 
-  <spacing relativeheight="0.1"/>
+  <spacing relativesize="1.0,0.1"/>
 
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255">Art</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Pekka Saari</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Iiro Enges</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Dinh Tuan Anh</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Nam-Anh Lê</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Oskari Lemmetyinen</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">James Bear</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255">Art</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Pekka Saari</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Iiro Enges</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Dinh Tuan Anh</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Nam-Anh Lê</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Oskari Lemmetyinen</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">James Bear</Text>
 
-  <spacing relativeheight="0.1"/>
+  <spacing relativesize="1.0,0.1"/>
 
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255">Producing</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Aku Jauhiainen</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Kimmo Kari</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255">Producing</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Aku Jauhiainen</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Kimmo Kari</Text>
 
-  <spacing relativeheight="0.1"/>
+  <spacing relativesize="1.0,0.1"/>
 
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255">Audio</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Jussi Elsilä</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Tomi Reunanen (Guitars)</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Audire Sound (audiresound.com)</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255">Audio</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Jussi Elsilä</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Tomi Reunanen (Guitars)</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Audire Sound (audiresound.com)</Text>
 
-  <spacing relativeheight="0.1"/>
+  <spacing relativesize="1.0,0.1"/>
 
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255">Community Management</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Vilma Savolainen</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255">Community Management</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Vilma Savolainen</Text>
 
-  <spacing relativeheight="0.2"/>
+  <spacing relativesize="1.0,0.2"/>
 
   <!-- ******************************************************* -->
 
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255" scale="1.3">DAEDALIC ENTERTAINMENT</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255" scale="1.3">DAEDALIC ENTERTAINMENT</Text>
 
-  <spacing relativeheight="0.05"/>
+  <spacing relativesize="1.0,0.05"/>
 
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255">CEO</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Carsten Fichtelmann</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255">CEO</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Carsten Fichtelmann</Text>
 
-  <spacing relativeheight="0.05"/>
+  <spacing relativesize="1.0,0.05"/>
   
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255">COO</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Stephan Harms</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255">COO</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Stephan Harms</Text>
 
-  <spacing relativeheight="0.05"/>
+  <spacing relativesize="1.0,0.05"/>
   
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255">Creative Director</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Jan Müller-Michaelis</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255">Creative Director</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Jan Müller-Michaelis</Text>
 
-  <spacing relativeheight="0.05"/>
+  <spacing relativesize="1.0,0.05"/>
   
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255">Technical Director</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Nick Prühs</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255">Technical Director</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Nick Prühs</Text>
 
-  <spacing relativeheight="0.05"/>
+  <spacing relativesize="1.0,0.05"/>
   
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255">Head of Production</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Kai Fiebig</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255">Head of Production</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Kai Fiebig</Text>
 
-  <spacing relativeheight="0.05"/>
+  <spacing relativesize="1.0,0.05"/>
   
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255">Head of Communications</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Sandra Hübner</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255">Head of Communications</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Sandra Hübner</Text>
 
-  <spacing relativeheight="0.05"/>
+  <spacing relativesize="1.0,0.05"/>
   
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255">Marketing</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Marie Müller</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Mounir Aouina</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255">Marketing</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Marie Müller</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Mounir Aouina</Text>
 
-  <spacing relativeheight="0.05"/>
+  <spacing relativesize="1.0,0.05"/>
   
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255">Community Management</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Lisa Mallory</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Steffen Slacki</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255">Community Management</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Lisa Mallory</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Steffen Slacki</Text>
 
-  <spacing relativeheight="0.05"/>
+  <spacing relativesize="1.0,0.05"/>
   
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255">Sales and Product Management</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Matthias Zorn</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Stefan Hiller</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Justus Jeromin</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Maximilian Bernardi</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255">Sales and Product Management</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Matthias Zorn</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Stefan Hiller</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Justus Jeromin</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Maximilian Bernardi</Text>
 
-  <spacing relativeheight="0.05"/>
+  <spacing relativesize="1.0,0.05"/>
   
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255">Business Development</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Jonas Hüsges</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255">Business Development</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Jonas Hüsges</Text>
 
-  <spacing relativeheight="0.05"/>
+  <spacing relativesize="1.0,0.05"/>
   
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255">Lead Motion Designer</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Alexander Junghans</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255">Lead Motion Designer</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Alexander Junghans</Text>
 
-  <spacing relativeheight="0.05"/>
+  <spacing relativesize="1.0,0.05"/>
   
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255">Support</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Maria Lesk</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255">Support</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Maria Lesk</Text>
 
-  <spacing relativeheight="0.05"/>
+  <spacing relativesize="1.0,0.05"/>
 
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255">Human Resources</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Iris Wolfer</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255">Human Resources</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Iris Wolfer</Text>
 
-  <spacing relativeheight="0.05"/>
+  <spacing relativesize="1.0,0.05"/>
 
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255">Accounting</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Nils Ball</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Jessica Paulat</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255">Accounting</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Nils Ball</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Jessica Paulat</Text>
 
-  <spacing relativeheight="0.05"/>
+  <spacing relativesize="1.0,0.05"/>
 
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255">IT Administration</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Nils-Peter Brodersen</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Filipe Alves</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255">IT Administration</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Nils-Peter Brodersen</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Filipe Alves</Text>
 
-  <spacing relativeheight="0.05"/>
+  <spacing relativesize="1.0,0.05"/>
 
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255">Mastering</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Eduard Wolf</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Robert Zillmer</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255">Mastering</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Eduard Wolf</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Robert Zillmer</Text>
 
-  <spacing relativeheight="0.05"/>
+  <spacing relativesize="1.0,0.05"/>
 
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255">Head of QA</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Maik Hildebrandt</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255">Head of QA</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Maik Hildebrandt</Text>
 
-  <spacing relativeheight="0.05"/>
+  <spacing relativesize="1.0,0.05"/>
 
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255">Quality Assurance</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Sven Sauerhammer</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Gunnar Götzfried</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Saide Haberstroh</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255">Sven Eimuth</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255">Quality Assurance</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Sven Sauerhammer</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Gunnar Götzfried</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Saide Haberstroh</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255">Sven Eimuth</Text>
 
-  <spacing relativeheight="0.07"/>
+  <spacing relativesize="1.0,0.07"/>
   
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255" scale="1.2">Localization</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255" scale="1.2">Localization</Text>
 
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255" alignment="CenterLeft">Localization Director</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">Maria Lesk</Text>  
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255" alignment="CenterLeft">English proofreading</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">Paul Franzen</Text>
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255" alignment="CenterLeft">German translation, proofreading</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">Synthesis</Text>
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255" alignment="CenterLeft">French translation, proofreading, LQA</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">Synthesis</Text>
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255" alignment="CenterLeft">Castilian Spanish translation, proofreading, LQA</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">Synthesis</Text>
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255" alignment="CenterLeft">Latin Spanish translation, proofreading, LQA</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">Synthesis</Text>
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255" alignment="CenterLeft">Polish translation, proofreading, LQA</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">Synthesis</Text>  
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255" alignment="CenterLeft">Russian translation, proofreading, LQA</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">Uliana Erofeeva</Text>
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255" alignment="CenterLeft">Brazilian Portuguese translation, proofreading, LQA</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">Synthesis</Text>
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255" alignment="CenterLeft">Chinese translation, proofreading, LQA</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">WhisperGames</Text>
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255" alignment="CenterLeft">Turkish translation, proofreading, LQA</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">AiBell Localization</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255" alignment="CenterLeft">Localization Director</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">Maria Lesk</Text>  
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255" alignment="CenterLeft">English proofreading</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">Paul Franzen</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255" alignment="CenterLeft">German translation, proofreading</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">Synthesis</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255" alignment="CenterLeft">French translation, proofreading, LQA</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">Synthesis</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255" alignment="CenterLeft">Castilian Spanish translation, proofreading, LQA</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">Synthesis</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255" alignment="CenterLeft">Latin Spanish translation, proofreading, LQA</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">Synthesis</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255" alignment="CenterLeft">Polish translation, proofreading, LQA</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">Synthesis</Text>  
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255" alignment="CenterLeft">Russian translation, proofreading, LQA</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">Uliana Erofeeva</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255" alignment="CenterLeft">Brazilian Portuguese translation, proofreading, LQA</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">Synthesis</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255" alignment="CenterLeft">Chinese translation, proofreading, LQA</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">WhisperGames</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255" alignment="CenterLeft">Turkish translation, proofreading, LQA</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">AiBell Localization</Text>
     
-  <spacing relativeheight="0.2"/>
+  <spacing relativesize="1.0,0.2"/>
   
   <!-- ******************************************************* -->
   
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255" scale="1.3">GitHub contributors and community actives</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255" scale="1.3">GitHub contributors and community actives</Text>
 
-  <spacing relativeheight="0.05"/>
+  <spacing relativesize="1.0,0.05"/>
   
-  <GridText font="Font" relativewidth="0.5" alignment="CenterLeft" color="150,150,150,255">Aleksandr Varnavskii,Alfred_Donovan,Armadillo Sloth,"Bill Combs",BillSoFat,Borna "Blue" Aberle,boynedmaster “boratboy12”,Caleb Yu,chesse20,Database,DataCrusader,David "Ol Stinky" Hockenbury,Eduardo "Chiko" Valenzuela,etet2,Fabevil,Faerdan,Garrett Brown,Glitch,Gramstaal,hubismal,Irontaco,JJRcop,Just James,Landon Strik,Mark Jarjour,Nathan "MR. NAIL BRAIN" S.,Nilanth Animosus,Pugie,Redeloper “rico6822”,Robert Sloan,Samuel Hammersberg,Sebastian Broberg,shoter,Sputnik,Trialtrex21,ursinewalrus,Weebyxanide Vendor,Zealan</GridText>
+  <GridText font="Font" anchor="TopCenter" relativesize="0.5,0.0" alignment="CenterLeft" color="150,150,150,255">Aleksandr Varnavskii,Alfred_Donovan,Armadillo Sloth,"Bill Combs",BillSoFat,Borna "Blue" Aberle,boynedmaster “boratboy12”,Caleb Yu,chesse20,Database,DataCrusader,David "Ol Stinky" Hockenbury,Eduardo "Chiko" Valenzuela,etet2,Fabevil,Faerdan,Garrett Brown,Glitch,Gramstaal,hubismal,Irontaco,JJRcop,Just James,Landon Strik,Mark Jarjour,Nathan "MR. NAIL BRAIN" S.,Nilanth Animosus,Pugie,Redeloper “rico6822”,Robert Sloan,Samuel Hammersberg,Sebastian Broberg,shoter,Sputnik,Trialtrex21,ursinewalrus,Weebyxanide Vendor,Zealan</GridText>
 
-  <spacing relativeheight="0.2"/>
+  <spacing relativesize="1.0,0.2"/>
 
   <!-- ******************************************************* -->
   
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255" scale="1.3">External libraries and content</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255" scale="1.3">External libraries and content</Text>
   
-  <spacing relativeheight="0.05"/>
+  <spacing relativesize="1.0,0.05"/>
 
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255" alignment="CenterLeft">MonoGame</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">Copyright (c) 2009-2019 The MonoGame Team. Released under ﻿Microsoft Public License (Ms-PL).</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255" alignment="CenterLeft">MonoGame</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">Copyright (c) 2009-2019 The MonoGame Team. Released under ﻿Microsoft Public License (Ms-PL).</Text>
 
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255" alignment="CenterLeft">Lidgren.Network networking library</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">Copyright (c) 2015 Michael Lidgren. Released under the MIT license.</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255" alignment="CenterLeft">Lidgren.Network networking library</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">Copyright (c) 2015 Michael Lidgren. Released under the MIT license.</Text>
 
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255" alignment="CenterLeft">Farseer Physics Engine</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">Copyright (c) 2017 Ian Qvist. Released under the MIT license.</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255" alignment="CenterLeft">Farseer Physics Engine</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">Copyright (c) 2017 Ian Qvist. Released under the MIT license.</Text>
 
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255" alignment="CenterLeft">Facepunch.Steamworks</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">Copyright (c) 2016 Facepunch Studios LTD. Released under the MIT license.</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255" alignment="CenterLeft">Facepunch.Steamworks</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">Copyright (c) 2016 Facepunch Studios LTD. Released under the MIT license.</Text>
 
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255" alignment="CenterLeft">MonoKickstart</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">Copyright (c) 2012 Edward Rudd. Released under the zlib license.</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255" alignment="CenterLeft">MonoKickstart</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">Copyright (c) 2012 Edward Rudd. Released under the zlib license.</Text>
 
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255" alignment="CenterLeft">SharpDX</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">Copyright (c) 2010-2014 SharpDX - Alexandre Mutel. Released under the MIT license.</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255" alignment="CenterLeft">SharpDX</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">Copyright (c) 2010-2014 SharpDX - Alexandre Mutel. Released under the MIT license.</Text>
 
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255" alignment="CenterLeft">NVorbis</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">Copyright (c) 2015 Andrew Ward. Released under ﻿Microsoft Public License (Ms-PL).</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255" alignment="CenterLeft">NVorbis</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">Copyright (c) 2015 Andrew Ward. Released under ﻿Microsoft Public License (Ms-PL).</Text>
 
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255" alignment="CenterLeft">Concentus</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">See Concentus_LICENSE for the full license.</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255" alignment="CenterLeft">Concentus</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">See Concentus_LICENSE for the full license.</Text>
   
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255" alignment="CenterLeft">HyperDescriptor</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">Copyright (c) 2014 Pavel Nosovich. Released under the MIT license.</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255" alignment="CenterLeft">HyperDescriptor</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">Copyright (c) 2014 Pavel Nosovich. Released under the MIT license.</Text>
 
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255" alignment="CenterLeft">OpenAL Soft</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">Released under the GNU Library General Public License, version 2. See OpenALSoft_LICENSE for the full license.</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255" alignment="CenterLeft">OpenAL Soft</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">Released under the GNU Library General Public License, version 2. See OpenALSoft_LICENSE for the full license.</Text>
 
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255" alignment="CenterLeft">PK01, PK02 and Ancient Collection Texture packages</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">Textures by Philip Klevestav are used in some of the sprites in the game.\nLicensed under Creative Commons Attribution 3.0 Unported \nhttps://creativecommons.org/licenses/by/3.0/</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255" alignment="CenterLeft">PK01, PK02 and Ancient Collection Texture packages</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">Textures by Philip Klevestav are used in some of the sprites in the game.\nLicensed under Creative Commons Attribution 3.0 Unported \nhttps://creativecommons.org/licenses/by/3.0/</Text>
 
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255" alignment="CenterLeft">"Road to Hell"</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">Kevin MacLeod (incompetech.com)\nLicensed under Creative Commons: By Attribution 3.0\nhttp://creativecommons.org/licenses/by/3.0/</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255" alignment="CenterLeft">"Road to Hell"</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">Kevin MacLeod (incompetech.com)\nLicensed under Creative Commons: By Attribution 3.0\nhttp://creativecommons.org/licenses/by/3.0/</Text>
 
-  <spacing relativeheight="0.2"/>
+  <spacing relativesize="1.0,0.2"/>
 
 
   <!-- ******************************************************* -->
 
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255" scale="1.3">Special thanks</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255" scale="1.3">Special thanks</Text>
 
-  <spacing relativeheight="0.05"/>
+  <spacing relativesize="1.0,0.05"/>
   
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255" alignment="CenterLeft">To all our community members!</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">All of you who have been following and supporting the development through all these years, playing the old versions of the game, giving us feedback and ideas, reporting bugs, and being awesome in general. We wouldn't have got this far if it wasn't for you!</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255" alignment="CenterLeft">To all our community members!</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">All of you who have been following and supporting the development through all these years, playing the old versions of the game, giving us feedback and ideas, reporting bugs, and being awesome in general. We wouldn't have got this far if it wasn't for you!</Text>
 
-  <spacing relativeheight="0.05"/>
+  <spacing relativesize="1.0,0.05"/>
 
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255" alignment="CenterLeft">Joonas would like to thank</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">Exadv1 and everyone else who's worked on Space Station 13. Barotrauma would have never come to exist if it wasn't for SS13.</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">/v/ for coming up with Pressure, and all the wonderful anons who took part in those play sessions back in the early years of Subsurface.</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">Celia for being so understanding and supportive when I've been busy with baro. The inventors of caffeine and nicotine for helping me get through this. Aku and everyone at FF for helping me take my hobby (and this particular hobby project) to the next level.</Text> 
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">And of course, all of the Barotrauma/SCP/UTG fans who've been following and supporting the development through all these years!</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255" alignment="CenterLeft">Joonas would like to thank</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">Exadv1 and everyone else who's worked on Space Station 13. Barotrauma would have never come to exist if it wasn't for SS13.</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">/v/ for coming up with Pressure, and all the wonderful anons who took part in those play sessions back in the early years of Subsurface.</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">Celia for being so understanding and supportive when I've been busy with baro. The inventors of caffeine and nicotine for helping me get through this. Aku and everyone at FF for helping me take my hobby (and this particular hobby project) to the next level.</Text> 
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">And of course, all of the Barotrauma/SCP/UTG fans who've been following and supporting the development through all these years!</Text>
  
-  <spacing relativeheight="0.05"/>
+  <spacing relativesize="1.0,0.05"/>
   
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255" alignment="CenterLeft">Ez is particularly thankful to</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">Marianna Jämsen, for putting up with the long hours and the frequently absent husband during this production, the hard times were easier because you were there.</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">The Pegasus team @ Next Games for the hospitality and inspiration.</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">The fantastic people from Daedalic, AtomicTorch Studio, Caligari Games, Indoor Astronaut, Kong Orange, and Unfrozen for the company and companionship during our American adventure.</Text>  
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">Mikko Tyni for the rather good advice regarding certain beer related things.</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255" alignment="CenterLeft">Ez is particularly thankful to</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">Marianna Jämsen, for putting up with the long hours and the frequently absent husband during this production, the hard times were easier because you were there.</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">The Pegasus team @ Next Games for the hospitality and inspiration.</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">The fantastic people from Daedalic, AtomicTorch Studio, Caligari Games, Indoor Astronaut, Kong Orange, and Unfrozen for the company and companionship during our American adventure.</Text>  
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">Mikko Tyni for the rather good advice regarding certain beer related things.</Text>
 
-  <spacing relativeheight="0.05"/>
+  <spacing relativesize="1.0,0.05"/>
 
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255" alignment="CenterLeft">Nam-Anh would like to thank</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">Frankie Truong who has always been supportive and willing to share professional advices.</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">GD15S and the teachers of the Game Design department of South-Eastern Finland University of Applied Sciences.</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255" alignment="CenterLeft">Nam-Anh would like to thank</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">Frankie Truong who has always been supportive and willing to share professional advices.</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">GD15S and the teachers of the Game Design department of South-Eastern Finland University of Applied Sciences.</Text>
 
-  <spacing relativeheight="0.05"/>
+  <spacing relativesize="1.0,0.05"/>
 
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255" alignment="CenterLeft">Dinh Tuan Anh would like to thank</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">His supportive family who has always been there for him throughout this project.</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">The Game Design department of South-Eastern Finland University of Applied Sciences for their guidance and inspiration.</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">The amazing people of Jukonese for their support during the production time. </Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255" alignment="CenterLeft">Dinh Tuan Anh would like to thank</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">His supportive family who has always been there for him throughout this project.</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">The Game Design department of South-Eastern Finland University of Applied Sciences for their guidance and inspiration.</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">The amazing people of Jukonese for their support during the production time. </Text>
 
-  <spacing relativeheight="0.05"/>
+  <spacing relativesize="1.0,0.05"/>
 
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255" alignment="CenterLeft">Jussi would to thank</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">Discord community, especially Hubismal for great notices and suggestions about the audio in Barotrauma.</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">Incredible Game Audio community around the world.</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">Natasha Trygg for making a lot of things possible.</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">Also, thanks to Sean Connery.</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255" alignment="CenterLeft">Jussi would to thank</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">Discord community, especially Hubismal for great notices and suggestions about the audio in Barotrauma.</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">Incredible Game Audio community around the world.</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">Natasha Trygg for making a lot of things possible.</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">Also, thanks to Sean Connery.</Text>
 
-  <spacing relativeheight="0.05"/>
+  <spacing relativesize="1.0,0.05"/>
 
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255" alignment="CenterLeft">Vilma tips her hat to</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">The local game developer and startup community, for its openness and willingness to take in new names and faces, teach and inspire them and point them to amazing new possibilities.</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255" alignment="CenterLeft">Vilma tips her hat to</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">The local game developer and startup community, for its openness and willingness to take in new names and faces, teach and inspire them and point them to amazing new possibilities.</Text>
 
-  <spacing relativeheight="0.05"/>
+  <spacing relativesize="1.0,0.05"/>
 
-  <Text font="VideoTitleFont" relativewidth="0.5" color="255,255,255,255" alignment="CenterLeft">Daniel would like to thank</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">Anyone who has ever spent time in our small game studio making games and everyone still doing so.</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">Friends and family who keep asking me about when the game's going to be out.</Text>
-  <Text font="Font" relativewidth="0.5" color="150,150,150,255" alignment="CenterLeft">Community content creators for making awesome things that I'm constantly inspired by.</Text>
+  <Text font="VideoTitleFont" anchor="TopCenter" relativesize="0.5,0.0" color="255,255,255,255" alignment="CenterLeft">Daniel would like to thank</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">Anyone who has ever spent time in our small game studio making games and everyone still doing so.</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">Friends and family who keep asking me about when the game's going to be out.</Text>
+  <Text font="Font" anchor="TopCenter" relativesize="0.5,0.0" color="150,150,150,255" alignment="CenterLeft">Community content creators for making awesome things that I'm constantly inspired by.</Text>
 
-  <spacing relativeheight="1.0"/>
+  <spacing relativesize="1.0,1.0"/>
 </Credits>
