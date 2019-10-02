@@ -607,6 +607,9 @@ namespace Barotrauma
                 case "guitextblock":
                     component = LoadGUITextBlock(element, parent);
                     break;
+                case "link":
+                    component = LoadLink(element, parent);
+                    break;
                 case "frame":
                 case "guiframe":
                 case "spacing":
@@ -651,15 +654,22 @@ namespace Barotrauma
                     {
                         layoutGroup.RectTransform.NonScaledSize =
                             layoutGroup.IsHorizontal ?
-                            new Point(layoutGroup.Children.Sum(c => c.Rect.Width), 0) :
-                            component.RectTransform.MinSize = new Point(0, layoutGroup.Children.Sum(c => c.Rect.Height));
+                            new Point(layoutGroup.Children.Sum(c => c.Rect.Width), layoutGroup.Rect.Height) :
+                            component.RectTransform.MinSize = new Point(layoutGroup.Rect.Width, layoutGroup.Children.Sum(c => c.Rect.Height));
+                        if (layoutGroup.CountChildren > 0)
+                        {
+                            layoutGroup.RectTransform.NonScaledSize +=
+                                layoutGroup.IsHorizontal ?
+                                new Point((int)((layoutGroup.CountChildren - 1) * (layoutGroup.AbsoluteSpacing + layoutGroup.Rect.Width * layoutGroup.RelativeSpacing)), 0) :
+                                new Point(0, (int)((layoutGroup.CountChildren - 1) * (layoutGroup.AbsoluteSpacing + layoutGroup.Rect.Height * layoutGroup.RelativeSpacing)));
+                        }
                     }
                     else if (component is GUIListBox listBox)
                     {
                         listBox.RectTransform.NonScaledSize =
                             listBox.ScrollBar.IsHorizontal ?
-                            new Point(listBox.Children.Sum(c => c.Rect.Width + listBox.Spacing), 0) :
-                            component.RectTransform.MinSize = new Point(0, listBox.Children.Sum(c => c.Rect.Height + listBox.Spacing));
+                            new Point(listBox.Children.Sum(c => c.Rect.Width + listBox.Spacing), listBox.Rect.Height) :
+                            component.RectTransform.MinSize = new Point(listBox.Rect.Width, listBox.Children.Sum(c => c.Rect.Height + listBox.Spacing));
                     }
                     else
                     {
@@ -677,9 +687,17 @@ namespace Barotrauma
 
         private static GUITextBlock LoadGUITextBlock(XElement element, RectTransform parent, string overrideText = null, Anchor? anchor = null)
         {
-            var text = overrideText ?? element.ElementInnerText().Replace(@"\n", "\n");
-            Color color = element.GetAttributeColor("color", Color.White);
+            string text = element.Attribute("text") == null ?
+                element.ElementInnerText() :
+                element.GetAttributeString("text", "");
+            text = text.Replace(@"\n", "\n");
+
+            string style = element.GetAttributeString("style", "");
+            if (style == "null") { style = null; }
+            Color? color = null;
+            if (element.Attribute("color") != null) { color = element.GetAttributeColor("color", Color.White); }           
             float scale = element.GetAttributeFloat("scale", 1.0f);
+            bool wrap = element.GetAttributeBool("wrap", true);
             Alignment alignment = Alignment.Center;
             Enum.TryParse(element.GetAttributeString("alignment", "Center"), out alignment);
             ScalableFont font = GUI.Font;
@@ -704,9 +722,9 @@ namespace Barotrauma
                     font = GUI.ObjectiveNameFont;
                     break;
             }
-            
+
             var textBlock = new GUITextBlock(RectTransform.Load(element, parent),
-                text, color, font, alignment, wrap: true)
+                text, color, font, alignment, wrap: wrap, style: style)
             {
                 TextScale = scale
             };
@@ -716,9 +734,32 @@ namespace Barotrauma
             return textBlock;
         }
 
+        private static GUIButton LoadLink(XElement element, RectTransform parent)
+        {
+            var button = LoadGUIButton(element, parent);
+            string url = element.GetAttributeString("url", "");
+            button.OnClicked = (btn, userdata) =>
+            {
+                try
+                {
+                    System.Diagnostics.Process.Start(url);
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Failed to open url \""+url+"\".", e);
+                }
+                return true;
+            };
+            return button;
+        }
+
         private static void LoadGridText(XElement element, RectTransform parent)
         {
-            var text = element.ElementInnerText().Replace(@"\n", "\n");
+            string text = element.Attribute("text") == null ?
+                element.ElementInnerText() :
+                element.GetAttributeString("text", "");
+            text = text.Replace(@"\n", "\n");
+
             string[] elements = text.Split(',');
             RectTransform lineContainer = null;
             for (int i = 0; i < elements.Length; i++)
@@ -756,8 +797,13 @@ namespace Barotrauma
             Alignment textAlignment = Alignment.Center;
             Enum.TryParse(element.GetAttributeString("textalignment", "Center"), out textAlignment);
 
+            string text = element.Attribute("text") == null ?
+                element.ElementInnerText() :
+                element.GetAttributeString("text", "");
+            text = text.Replace(@"\n", "\n");
+
             return new GUIButton(RectTransform.Load(element, parent),
-                text: element.GetAttributeString("text", ""),
+                text: text,
                 textAlignment: textAlignment,
                 style: style);
         }
@@ -774,7 +820,8 @@ namespace Barotrauma
         {
             bool isHorizontal = element.GetAttributeBool("ishorizontal", !element.GetAttributeBool("isvertical", true));
 
-            return new GUILayoutGroup(RectTransform.Load(element, parent), isHorizontal: isHorizontal)
+            Enum.TryParse(element.GetAttributeString("childanchor", "TopLeft"), out Anchor childAnchor);
+            return new GUILayoutGroup(RectTransform.Load(element, parent), isHorizontal, childAnchor)
             {
                 Stretch = element.GetAttributeBool("stretch", false),
                 RelativeSpacing = element.GetAttributeFloat("relativespacing", 0.0f),
@@ -803,6 +850,11 @@ namespace Barotrauma
                 foreach (GUIComponent contentElement in content)
                 {
                     contentElement.Visible = !visible;
+                    contentElement.IgnoreLayoutGroups = !contentElement.Visible;
+                }
+                if (button.Parent is GUILayoutGroup layoutGroup)
+                {
+                    layoutGroup.Recalculate();
                 }
                 return true;
             };
