@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Extensions;
 using System;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -595,6 +596,124 @@ namespace Barotrauma
             OutlineColor = style.OutlineColor;
 
             this.style = style;
+        }
+
+        public static GUIComponent FromXML(XElement element, RectTransform parent)
+        {
+            switch (element.Name.ToString().ToLowerInvariant())
+            {
+                case "text":
+                case "guitextblock":
+                    return LoadGUITextBlock(element, parent);
+                case "gridtext":
+                    LoadGridText(element, parent);
+                    return null;
+                case "spacing":
+                    return LoadSpacingElement(element, parent);
+                case "image":
+                case "guiimage":
+                    return LoadImageElement(element, parent);
+                default:
+                    throw new NotImplementedException("Loading GUI component \""+element.Name+"\" from XML is not implemented.");
+            }
+        }
+
+        private static GUIComponent LoadGUITextBlock(XElement element, RectTransform parent, string overrideText = null, Anchor anchor = Anchor.Center)
+        {
+            var text = overrideText ?? element.ElementInnerText().Replace(@"\n", "\n");
+            Color color = element.GetAttributeColor("color", Color.White);
+            float scale = element.GetAttributeFloat("scale", 1.0f);
+            Alignment alignment = Alignment.Center;
+            Enum.TryParse(element.GetAttributeString("alignment", "Center"), out alignment);
+            ScalableFont font = GUI.Font;
+            switch (element.GetAttributeString("font", "Font").ToLowerInvariant())
+            {
+                case "font":
+                    font = GUI.Font;
+                    break;
+                case "smallfont":
+                    font = GUI.SmallFont;
+                    break;
+                case "largefont":
+                    font = GUI.LargeFont;
+                    break;
+                case "videotitlefont":
+                    font = GUI.VideoTitleFont;
+                    break;
+                case "objectivetitlefont":
+                    font = GUI.ObjectiveTitleFont;
+                    break;
+                case "objectivenamefont":
+                    font = GUI.ObjectiveNameFont;
+                    break;
+            }
+
+            float relativeWidth = element.GetAttributeFloat("relativewidth", 1.0f);
+
+            var textHolder = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), parent), style: null);
+            var textBlock = new GUITextBlock(new RectTransform(new Vector2(relativeWidth, 0.0f), textHolder.RectTransform, anchor),
+                text, color, font, alignment, wrap: true)
+            {
+                TextScale = scale
+            };
+            textBlock.RectTransform.IsFixedSize = textHolder.RectTransform.IsFixedSize = true;
+            textBlock.RectTransform.NonScaledSize = new Point(textBlock.Rect.Width, textBlock.Rect.Height);
+            textHolder.RectTransform.NonScaledSize = new Point(textHolder.Rect.Width, textBlock.Rect.Height);
+            return textHolder;
+        }
+
+        private static void LoadGridText(XElement element, RectTransform parent)
+        {
+            var text = element.ElementInnerText().Replace(@"\n", "\n");
+            string[] elements = text.Split(',');
+            RectTransform lineContainer = null;
+            for (int i = 0; i < elements.Length; i++)
+            {
+                switch (i % 3)
+                {
+                    case 0:
+                        lineContainer = LoadGUITextBlock(element, parent, elements[i], Anchor.CenterLeft).RectTransform;
+                        lineContainer.Anchor = Anchor.TopCenter;
+                        lineContainer.Pivot = Pivot.TopCenter;
+                        lineContainer.NonScaledSize = new Point((int)(parent.NonScaledSize.X * 0.7f), lineContainer.NonScaledSize.Y);
+                        break;
+                    case 1:
+                        LoadGUITextBlock(element, lineContainer, elements[i], Anchor.Center).GetChild<GUITextBlock>().TextAlignment = Alignment.Center;
+                        break;
+                    case 2:
+                        LoadGUITextBlock(element, lineContainer, elements[i], Anchor.CenterRight).GetChild<GUITextBlock>().TextAlignment = Alignment.CenterRight;
+                        break;
+                }
+            }
+        }
+
+        private static GUIFrame LoadSpacingElement(XElement element, RectTransform parent)
+        {
+            if (element.Attribute("absoluteheight") != null)
+            {
+                int absoluteHeight = element.GetAttributeInt("absoluteheight", 10);
+                return new GUIFrame(new RectTransform(new Point(parent.NonScaledSize.X, absoluteHeight), parent), style: null);
+            }
+            else
+            {
+                float relativeHeight = element.GetAttributeFloat("relativeheight", 0.0f);
+                return new GUIFrame(new RectTransform(new Vector2(1.0f, relativeHeight), parent), style: null);
+            }
+        }
+
+        private static GUIImage LoadImageElement(XElement element, RectTransform parent)
+        {
+            Sprite sprite = new Sprite(element);
+            if (element.Attribute("absoluteheight") != null)
+            {
+                int absoluteHeight = element.GetAttributeInt("absoluteheight", 10);
+                return new GUIImage(new RectTransform(new Point(parent.NonScaledSize.X, absoluteHeight), parent), sprite, scaleToFit: true);
+            }
+            else
+            {
+                float relativeHeight = element.GetAttributeFloat("relativeheight", 0.0f);
+                return new GUIImage(new RectTransform(new Vector2(1.0f, relativeHeight), parent), sprite, scaleToFit: true);
+            }
         }
     }
 }
