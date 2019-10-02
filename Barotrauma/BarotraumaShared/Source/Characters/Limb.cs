@@ -475,7 +475,7 @@ namespace Barotrauma
         /// <summary>
         /// Returns true if the attack successfully hit something. If the distance is not given, it will be calculated.
         /// </summary>
-        public bool UpdateAttack(float deltaTime, Vector2 attackSimPos, IDamageable damageTarget, out AttackResult attackResult, float distance = -1)
+        public bool UpdateAttack(float deltaTime, Vector2 attackSimPos, IDamageable damageTarget, out AttackResult attackResult, float distance = -1, Limb targetLimb = null)
         {
             attackResult = default(AttackResult);
             float dist = distance > -1 ? distance : ConvertUnits.ToDisplayUnits(Vector2.Distance(SimPosition, attackSimPos));
@@ -491,6 +491,7 @@ namespace Barotrauma
                     case HitDetection.Distance:
                         if (dist < attack.DamageRange)
                         {
+                            // TODO: cache
                             List<Body> ignoredBodies = character.AnimController.Limbs.Select(l => l.body.FarseerBody).ToList();
                             ignoredBodies.Add(character.AnimController.Collider.FarseerBody);
 
@@ -518,6 +519,7 @@ namespace Barotrauma
                         }
                         break;
                     case HitDetection.Contact:
+                        // TODO: ensure that this works
                         var targetBodies = new List<Body>();
                         if (damageTarget is Character targetCharacter)
                         {
@@ -578,7 +580,14 @@ namespace Barotrauma
                     LastAttackSoundTime = SoundInterval;
                 }
 #endif
-                attackResult = attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, playSound);
+                if (damageTarget is Character targetCharacter && targetLimb != null)
+                {
+                    attackResult = attack.DoDamageToLimb(character, targetLimb, WorldPosition, 1.0f, playSound);
+                }
+                else
+                {
+                    attackResult = attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, playSound);
+                }
                 if (structureBody != null && attack.StickChance > Rand.Range(0.0f, 1.0f, Rand.RandSync.Server))
                 {
                     // TODO: use the hit pos?

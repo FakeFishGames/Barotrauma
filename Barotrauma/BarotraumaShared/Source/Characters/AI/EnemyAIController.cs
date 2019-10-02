@@ -679,8 +679,19 @@ namespace Barotrauma
                 canAttack = AttackingLimb != null && AttackingLimb.attack.CoolDownTimer <= 0;
             }
             float distance = 0;
+            Limb attackTargetLimb = null;
             if (canAttack)
             {
+                if (SelectedAiTarget.Entity is Character targetCharacter)
+                {
+                    var targetLimbType = AttackingLimb.Params.Attack.Attack.TargetLimbType;
+                    if (targetLimbType != LimbType.None)
+                    {
+                        attackTargetLimb = GetTargetLimb(AttackingLimb, targetLimbType, targetCharacter);
+                        attackWorldPos = attackTargetLimb.WorldPosition;
+                    }
+                }
+
                 // Check that we can reach the target
                 distance = Vector2.Distance(AttackingLimb.WorldPosition, attackWorldPos);
                 canAttack = distance < AttackingLimb.attack.Range;
@@ -757,7 +768,7 @@ namespace Barotrauma
 
             if (canAttack)
             {
-                UpdateLimbAttack(deltaTime, AttackingLimb, attackSimPos, distance);
+                UpdateLimbAttack(deltaTime, AttackingLimb, attackSimPos, distance, attackTargetLimb);
             }
         }
 
@@ -944,7 +955,7 @@ namespace Barotrauma
         // 10 dmg, 100 health -> 0.1
         private float GetRelativeDamage(float dmg, float vitality) => dmg / Math.Max(vitality, 1.0f);
 
-        private void UpdateLimbAttack(float deltaTime, Limb limb, Vector2 attackSimPos, float distance = -1)
+        private void UpdateLimbAttack(float deltaTime, Limb attackingLimb, Vector2 attackSimPos, float distance = -1, Limb targetLimb = null)
         {
             if (SelectedAiTarget == null) { return; }
             if (wallTarget != null)
@@ -959,7 +970,7 @@ namespace Barotrauma
             if (SelectedAiTarget.Entity is IDamageable damageTarget)
             {
                 float prevHealth = damageTarget.Health;
-                if (limb.UpdateAttack(deltaTime, attackSimPos, damageTarget, out AttackResult attackResult, distance))
+                if (attackingLimb.UpdateAttack(deltaTime, attackSimPos, damageTarget, out AttackResult attackResult, distance, targetLimb))
                 {
                     if (damageTarget.Health > 0)
                     {
@@ -1416,6 +1427,22 @@ namespace Barotrauma
             }
 
             return holeCount >= requiredHoleCount;
+        }
+
+        private List<Limb> targetLimbs = new List<Limb>();
+        public Limb GetTargetLimb(Limb attackLimb, LimbType targetLimbType, Character target)
+        {
+            targetLimbs.Clear();
+            foreach (var limb in target.AnimController.Limbs)
+            {
+                if (limb.type == targetLimbType || targetLimbType == LimbType.None)
+                {
+                    targetLimbs.Add(limb);
+                }
+            }
+            targetLimbs.Sort((limb1, limb2) => Vector2.DistanceSquared(limb2.WorldPosition, attackLimb.WorldPosition)
+                .CompareTo(Vector2.DistanceSquared(limb1.WorldPosition, attackLimb.WorldPosition)));
+            return targetLimbs.FirstOrDefault();
         }
     }
 
