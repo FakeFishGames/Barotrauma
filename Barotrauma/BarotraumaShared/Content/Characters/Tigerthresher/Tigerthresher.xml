@@ -1,8 +1,8 @@
-﻿<Character speciesname="Tigerthresher" humanoid="False" husk="False" needsair="False" canspeak="False" noise="100" blooddecal="">
+﻿<Character speciesname="Tigerthresher" humanoid="False" husk="False" needsair="False" canspeak="False" noise="100" blooddecal="" group="">
   <ragdolls folder="Content/Characters/Tigerthresher/Ragdolls/" />
   <animations folder="Content/Characters/Tigerthresher/Animations/" />
   <health vitality="150" doesbleed="True" crushdepth="-Infinity" usehealthwindow="False" />
-  <ai combatstrength="400" sight="1" hearing="1" aggressionhurt="100" aggressiongreed="10" fleehealththreshold="0" attackonlywhenprovoked="False" aggressiveboarding="False">
+  <ai combatstrength="400" sight="1" hearing="1" aggressionhurt="100" aggressiongreed="10" fleehealththreshold="0" attackonlywhenprovoked="False" aggressiveboarding="True">
     <target tag="dead" state="Eat" priority="100" />
     <target tag="human" state="Attack" priority="60" />
     <target tag="weaker" state="Attack" priority="50" />
