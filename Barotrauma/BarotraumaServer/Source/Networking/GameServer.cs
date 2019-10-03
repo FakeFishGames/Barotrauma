@@ -1825,7 +1825,10 @@ namespace Barotrauma.Networking
                 int botsToSpawn = serverSettings.BotSpawnMode == BotSpawnMode.Fill ? serverSettings.BotCount - characterInfos.Count : serverSettings.BotCount;
                 for (int i = 0; i < botsToSpawn; i++)
                 {
-                    var botInfo = new CharacterInfo(Character.HumanConfigFile);
+                    var botInfo = new CharacterInfo(Character.HumanConfigFile)
+                    {
+                        TeamID = teamID
+                    };
                     characterInfos.Add(botInfo);
                     bots.Add(botInfo);
                 }
