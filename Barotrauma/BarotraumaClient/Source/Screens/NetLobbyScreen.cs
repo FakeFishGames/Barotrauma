@@ -449,11 +449,7 @@ namespace Barotrauma
                 {
                     UserData = mode
                 };
-                //TODO: translate mission descriptions
-                if (TextManager.Language == "English")
-                {
-                    textBlock.ToolTip = mode.Description;
-                }
+                textBlock.ToolTip = mode.Description;                
             }
 
             //mission type ------------------------------------------------------------------

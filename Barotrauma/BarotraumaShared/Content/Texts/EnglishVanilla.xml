@@ -3544,6 +3544,10 @@
   <!-- New additions for the major update coming in November -->
   <submarine.name.kastrull>Kastrull</submarine.name.kastrull>
   <submarine.description.kastrull>The Kastrull is a dependable attack sub class bringing plenty of firepower to any fight, and although not very nimble, they do sport a drone gunship as standard. Keep in mind that with its experimental open ballast tanks, low tolerance to flooding, and numerous crew stations, a large experienced crew will get the most out of these subs.</submarine.description.kastrull>
+  <gamemodedescription.singleplayercampaign>Embark on a journey through the depths of Europa. Travel from location to another, complete missions to earn money for supplies, discover new biomes — and perhaps eventually uncover the secrets of Europa.</gamemodedescription.singleplayercampaign>
+  <gamemodedescription.sandbox>A game mode with no specific objectives.</gamemodedescription.sandbox>
+  <gamemodedescription.mission>The crew must work together to complete a specific task, such as retrieving an alien artifact or killing a creature that's terrorizing nearby outposts. The game ends when the task is completed or everyone in the crew has died.</gamemodedescription.mission>
+  <gamemodedescription.multiplayercampaign>Embark on a journey through the depths of Europa. Travel from location to another, complete missions to earn money for supplies, discover new biomes — and perhaps eventually uncover the secrets of Europa.</gamemodedescription.multiplayercampaign>
   
   <!-- Server lobby 2.0 -->
   <servertag.casual>Casual</servertag.casual>
