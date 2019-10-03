@@ -55,6 +55,8 @@ namespace Barotrauma.Items.Components
 
         public bool Hidden;
 
+        private float removeNodeDelay;
+
         private bool locked;
         public bool Locked
         {
@@ -255,17 +257,18 @@ namespace Barotrauma.Items.Components
 
         public override void Drop(Character dropper)
         {
-            ClearConnections(dropper);            
+            ClearConnections(dropper);
             IsActive = false;
         }
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (nodes.Count == 0) return;
+            removeNodeDelay -= deltaTime;
+            if (nodes.Count == 0) { return; }
 
             Submarine sub = null;
-            if (connections[0] != null && connections[0].Item.Submarine != null) sub = connections[0].Item.Submarine;
-            if (connections[1] != null && connections[1].Item.Submarine != null) sub = connections[1].Item.Submarine;
+            if (connections[0] != null && connections[0].Item.Submarine != null) { sub = connections[0].Item.Submarine; }
+            if (connections[1] != null && connections[1].Item.Submarine != null) { sub = connections[1].Item.Submarine; }
 
             if (Screen.Selected != GameMain.SubEditorScreen)
             {
@@ -384,11 +387,12 @@ namespace Barotrauma.Items.Components
 
         public override bool SecondaryUse(float deltaTime, Character character = null)
         {
-            if (nodes.Count > 1)
+            if (nodes.Count > 1 && removeNodeDelay <= 0.0f)
             {
                 nodes.RemoveAt(nodes.Count - 1);
                 UpdateSections();
             }
+            removeNodeDelay = 0.1f;
 
             Drawable = IsActive || sections.Count > 0;
             return true;
