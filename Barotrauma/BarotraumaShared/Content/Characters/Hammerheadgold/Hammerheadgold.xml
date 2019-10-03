@@ -12,11 +12,11 @@
   </Inventory>
   <ai combatstrength="400" sight="3" hearing="2" aggressionhurt="100" aggressiongreed="10" fleehealththreshold="0" attackonlywhenprovoked="False" aggressiveboarding="False">
     <targetpriority tag="decoy" state="Attack" priority="600" />
-    <targetpriority tag="provocative" state="Attack" priority="300" />
-    <targetpriority tag="light" state="Attack" priority="200" />
-    <targetpriority tag="nasonov" state="Attack" priority="100" />
-    <targetpriority tag="room" state="Attack" priority="60" />
+    <targetpriority tag="nasonov" state="Attack" priority="300" />
+    <targetpriority tag="wall" state="Attack" priority="100" />
+    <targetpriority tag="door" state="Attack" priority="100" />
     <targetpriority tag="human" state="Attack" priority="50" />
+    <targetpriority tag="room" state="Attack" priority="40" />
     <!--TODO
     <targetpriority tag="stronger" state="Avoid" priority="50" />
     -->
