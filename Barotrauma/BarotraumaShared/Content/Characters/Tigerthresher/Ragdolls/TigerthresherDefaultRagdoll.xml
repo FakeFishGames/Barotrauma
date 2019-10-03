@@ -1,97 +1,79 @@
-﻿<Ragdoll type="Tigerthresher" canentersubmarine="True" canwalk="False" spritesheetorientation="270" limbscale="1" jointscale="1" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" draggable="True" texture="">
+﻿<Ragdoll type="Tigerthresher" canentersubmarine="True" canwalk="False" spritesheetorientation="270" limbscale="0.8961" jointscale="0.8961" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" draggable="True" texture="">
   <collider radius="42" width="0" name="Main Collider" height="200" />
-  <limb id="0" name="Head" type="Head" height="0" width="50" notes="" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="15" stepoffset="0,0" radius="30" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7">
+  <limb id="0" name="Head" type="Head" height="0" width="50" notes="" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" radius="30" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7">
     <sprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="763,0,140,86" origin="0.455141,0.4293179" depth="0" />
     <lightsource color="152,168,255,110" range="50">
       <lighttexture texture="Content/Lights/pointlight_falloff.png" origin="0.25,0.3" size="1,1" />
     </lightsource>
+    <attack context="Water" targettype="Character" hitdetectiontype="Distance" afterattack="FollowThroughUntilCanAttack" reverse="False" range="100" damagerange="100" duration="0.25" cooldown="5" secondarycooldown="3" cooldownrandomfactor="0.1" structuredamage="20" itemdamage="20" stun="0" onlyhumans="False" applyforceonlimbs="2" force="80" torque="80" applyforcesonlyonce="False" targetimpulse="0" targetimpulseworld="0,0" targetforce="-200" targetforceworld="0,0" severlimbsprobability="0" priority="1" structuresoundtype="StructureSlash" targetlimbtype="LeftFoot">
+      <affliction identifier="internaldamage" strength="15" probability="1" />
+      <affliction identifier="bleeding" strength="100" probability="1" />
+      <affliction identifier="stun" strength="0.5" probability="1" />
+    </attack>
   </limb>
-  <limb id="1" name="Torso" type="Torso" height="70" width="100" notes="" spriteorientation="90" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="5" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="1" ignorecollisions="False" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7">
-    <deformablesprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="649,0,114,131" origin="0.4605785,0.5060561" depth="0.05" subdivisions="5,5">
-      <spritedeformation type="bendjoint" resolution="5,5" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="10" strength="1" />
+  <limb id="1" name="Torso" type="Torso" height="70" width="90" notes="" spriteorientation="90" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="1" ignorecollisions="False" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7">
+    <deformablesprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="655,0,105,131" origin="0.4171119,0.5004655" depth="0.05" subdivisions="5,5">
+      <spritedeformation type="bendjoint" resolution="5,5" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="20" strength="1" />
     </deformablesprite>
   </limb>
   <limb id="2" width="80" height="30" name="Jaw" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7">
     <sprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="763,85,140,48" origin="0.6043741,0.4799384" depth="0" />
-    <attack context="Water" targettype="Character" hitdetectiontype="Distance" afterattack="Pursue" reverse="False" range="200" damagerange="100" duration="0.5" cooldown="0.75" secondarycooldown="0" cooldownrandomfactor="0.1" structuredamage="20" itemdamage="20" stun="0" onlyhumans="False" applyforceonlimbs="" force="80" torque="80" applyforcesonlyonce="False" targetimpulse="0" targetimpulseworld="0,0" targetforce="-50" targetforceworld="0,0" severlimbsprobability="0.8" priority="0" structuresoundtype="StructureSlash" targetlimbtype="None">
-      <affliction identifier="internaldamage" strength="15" probability="1" />
-      <affliction identifier="bleeding" strength="50" probability="1" />
+    <attack context="Water" targettype="Character" hitdetectiontype="Distance" afterattack="Pursue" reverse="False" range="50" damagerange="100" duration="0.5" cooldown="2" secondarycooldown="0" cooldownrandomfactor="0.1" structuredamage="20" itemdamage="20" stun="0" onlyhumans="False" applyforceonlimbs="" force="40" torque="80" applyforcesonlyonce="False" targetimpulse="0" targetimpulseworld="0,0" targetforce="-100" targetforceworld="0,0" severlimbsprobability="0.8" priority="0" structuresoundtype="StructureSlash" targetlimbtype="None">
+      <affliction identifier="internaldamage" strength="10" probability="1" />
+      <affliction identifier="bleeding" strength="25" probability="1" />
+      <affliction identifier="stun" strength="0.1" probability="1" />
     </attack>
   </limb>
-  <limb id="3" width="80" height="80" name="Tail1" type="Tail" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7">
-    <deformablesprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="565,0,85,131" origin="0.5,0.5" depth="0.1" subdivisions="5,5">
-      <spritedeformation type="bendjoint" resolution="5,5" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="20" strength="1" />
+  <limb id="3" width="110" height="80" name="Tail1" type="Tail" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7">
+    <deformablesprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="559,0,99,131" origin="0.4975774,0.4925216" depth="0.1" subdivisions="5,5">
+      <spritedeformation type="bendjoint" resolution="5,5" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="30" strength="1" />
     </deformablesprite>
   </limb>
-  <limb id="4" radius="0" width="68" height="70" mass="0" name="Tail2" type="Tail" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7">
-    <deformablesprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="488,0,78,131" origin="0.5,0.5" depth="0.2" subdivisions="5,5">
-      <spritedeformation type="bendjoint" resolution="5,5" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="20" strength="1" />
+  <limb id="4" radius="0" width="70" height="70" mass="0" name="Tail2" type="Tail" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7">
+    <deformablesprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="481,0,80,131" origin="0.5,0.5" depth="0.2" subdivisions="5,5">
+      <spritedeformation type="bendjoint" resolution="5,5" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="30" strength="1" />
     </deformablesprite>
   </limb>
-  <limb id="5" radius="0" width="56.95" height="65" mass="0" name="Tail3" type="Tail" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7">
-    <deformablesprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="421,0,67,131" origin="0.522388,0.44" depth="0.3" subdivisions="5,5">
-      <spritedeformation type="bendjoint" resolution="5,5" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="20" strength="1" />
+  <limb id="5" radius="0" width="130" height="65" mass="0" name="Tail3" type="Tail" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7">
+    <deformablesprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="352,0,131,131" origin="0.5223112,0.4369143" depth="0.3" subdivisions="5,5">
+      <spritedeformation type="bendjoint" resolution="5,5" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="30" strength="1" />
     </deformablesprite>
   </limb>
-  <limb id="6" radius="0" width="60" height="55" mass="0" name="Tail4" type="Tail" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7">
-    <deformablesprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="361,0,61,131" origin="0.5001954,0.4580303" depth="0.4" subdivisions="5,5">
-      <spritedeformation type="bendjoint" resolution="5,5" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="20" strength="1" />
+  <limb id="6" radius="0" width="130" height="45" mass="0" name="Tail4" type="Tail" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7">
+    <deformablesprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="226,0,129,131" origin="0.559274,0.4766338" depth="0.4" subdivisions="5,5">
+      <spritedeformation type="bendjoint" resolution="5,5" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="30" strength="1" />
     </deformablesprite>
   </limb>
-  <limb id="7" radius="0" width="45" height="40" mass="0" name="Tail5" type="Tail" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7">
-    <deformablesprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="320,0,41,131" origin="0.5491503,0.4835436" depth="0.5" subdivisions="5,5">
-      <spritedeformation type="bendjoint" resolution="5,5" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="20" strength="1" />
+  <limb id="7" radius="0" width="100" height="20" mass="0" name="Tail5" type="Tail" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7">
+    <deformablesprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="132,0,97,131" origin="0.4683597,0.4369143" depth="0.5" subdivisions="5,5">
+      <spritedeformation type="bendjoint" resolution="5,5" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="30" strength="1" />
     </deformablesprite>
   </limb>
-  <limb id="8" radius="0" width="50.15" height="40" mass="0" name="Tail6" type="Tail" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7">
-    <deformablesprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="263,0,59,131" origin="0.440678,0.4580153" depth="0.6" subdivisions="5,5">
-      <spritedeformation type="bendjoint" resolution="5,5" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="20" strength="1" />
+  <limb id="8" radius="0" width="100" height="20" mass="0" name="Tail6" type="Tail" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7">
+    <deformablesprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="1,0,134,131" origin="0.6487684,0.4091106" depth="0.6" subdivisions="5,5">
+      <spritedeformation type="bendjoint" resolution="5,5" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="30" strength="1" />
     </deformablesprite>
   </limb>
-  <limb id="9" radius="0" width="50.15" height="25" mass="0" name="Tail7" type="Tail" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7">
-    <deformablesprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="205,0,59,131" origin="0.4756843,0.4450437" depth="0.7" subdivisions="5,5">
-      <spritedeformation type="bendjoint" resolution="5,5" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="20" strength="1" />
-    </deformablesprite>
-  </limb>
-  <limb id="10" radius="0" width="51" height="22" mass="0" name="Tail8" type="Tail" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7">
-    <deformablesprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="146,0,60,131" origin="0.5166667,0.4274809" depth="0.8" subdivisions="5,5">
-      <spritedeformation type="bendjoint" resolution="5,5" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="20" strength="1" />
-    </deformablesprite>
-  </limb>
-  <limb id="11" radius="0" width="42.5" height="20" mass="0" name="Tail9" type="Tail" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7">
-    <deformablesprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="101,0,46,131" origin="0.5,0.4" depth="0.9" subdivisions="5,5">
-      <spritedeformation type="bendjoint" resolution="5,5" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="20" strength="1" />
-    </deformablesprite>
-  </limb>
-  <limb id="12" radius="0" width="85.85" height="20" mass="0" name="Tail10" type="Tail" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7">
-    <deformablesprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="1,0,101,131" origin="0.7128713,0.4122137" depth="1" subdivisions="5,5">
-      <spritedeformation type="bendjoint" resolution="5,5" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="20" strength="1" />
-    </deformablesprite>
-  </limb>
-  <limb id="13" width="43.35" height="44.2" name="Hair" type="None" spriteorientation="0" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7">
+  <limb id="9" width="43.35" height="44.2" name="Limb 9" type="None" spriteorientation="0" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7">
     <deformablesprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="902,132,51,52" origin="0.5,0.5" depth="0.1" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.1" amplitude="0.45" changespeed="2" blendmode="Add" sync="-1" typename="noise" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" strength="1" maxrotation="90" />
       <spritedeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="Multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="0.5,0 0.5,0 0.5,0 0.5,0 0,0" row2="0.75,0 0.75,0 1,0 0.75,0 0,0" row3="0,0 0.5,0 0.5,0 0.5,0 0.75,0" row4="0.1,0 0.1,0 0.1,0 0.1,0 0.25,0" sync="-1" typename="custom" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" strength="1" maxrotation="90" />
     </deformablesprite>
   </limb>
-  <limb id="14" radius="0" width="42.5" height="47.6" mass="0" name="Fins" type="None" spriteorientation="0" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7">
+  <limb id="10" radius="0" width="42.5" height="47.6" mass="0" name="Limb 10" type="None" spriteorientation="0" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7">
     <deformablesprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="899,199,50,56" origin="0.4434903,0.5113276" depth="0" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.1" amplitude="0.5" changespeed="2" blendmode="Add" sync="-1" typename="noise" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" strength="1" maxrotation="90" />
       <spritedeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="Multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="0.5,0 0.5,0 0.5,0 0.5,0 0,0" row2="0.75,0 0.75,0 1,0 0.75,0 0,0" row3="0,0 0.5,0 0.5,0 0.5,0 0.75,0" row4="0.1,0 0.1,0 0.1,0 0.1,0 0.25,0" sync="-1" typename="custom" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" strength="1" maxrotation="90" />
     </deformablesprite>
   </limb>
   <joint limb1="0" limb2="1" limb1anchor="-32.70639,-13.92811" limb2anchor="20.47176,18.65292" name="Joint 0 - 1" canbesevered="True" limitenabled="True" upperlimit="29.98326" lowerlimit="10.18363" stiffness="0.25" />
-  <joint limb1="1" limb2="3" limb1anchor="-47.94709,4.985771" limb2anchor="39.10335,5.796771" name="Joint 1 - 3" canbesevered="True" limitenabled="True" upperlimit="40" lowerlimit="-30" stiffness="0.25" />
-  <joint limb1="3" limb2="4" limb1anchor="-38.52626,3.5" limb2anchor="35.43563,3.547113" name="Joint 3 - 4" canbesevered="True" limitenabled="True" upperlimit="39.95972" lowerlimit="-39.80916" stiffness="0.25" />
-  <joint limb1="4" limb2="5" limb1anchor="-39.62633,5.484358" limb2anchor="26.38732,-2.594461" name="Joint 4 - 5" canbesevered="True" limitenabled="True" upperlimit="39.95972" lowerlimit="-39.80916" stiffness="0.25" />
-  <joint limb1="5" limb2="6" limb1anchor="-31.72615,0.6634558" limb2anchor="25.38513,2.772104" name="Joint 5 - 6" canbesevered="True" limitenabled="True" upperlimit="39.95972" lowerlimit="-39.80916" stiffness="0.25" />
-  <joint limb1="6" limb2="7" limb1anchor="-27.00908,-0.9275286" limb2anchor="16.4422,1.747548" name="Joint 6 - 7" canbesevered="True" limitenabled="True" upperlimit="39.95972" lowerlimit="-39.80916" stiffness="0.25" />
-  <joint limb1="7" limb2="8" limb1anchor="-19.35219,1.607105" limb2anchor="32.58439,-0.6260047" name="Joint 7 - 8" canbesevered="True" limitenabled="True" upperlimit="39.95972" lowerlimit="-39.80916" stiffness="0.25" />
-  <joint limb1="8" limb2="9" limb1anchor="-23.62217,3.474207" limb2anchor="28.35104,1.131995" name="Joint 8 - 9" canbesevered="True" limitenabled="True" upperlimit="39.95972" lowerlimit="-39.80916" stiffness="0.25" />
-  <joint limb1="9" limb2="10" limb1anchor="-27.1074,-0.2478926" limb2anchor="25.77096,-3.226113" name="Joint 9 - 10" canbesevered="True" limitenabled="True" upperlimit="39.95972" lowerlimit="-39.80916" stiffness="0.25" />
-  <joint limb1="10" limb2="11" limb1anchor="-26.1735,-0.006996839" limb2anchor="20.86019,-3.148615" name="Joint 10 - 11" canbesevered="True" limitenabled="True" upperlimit="39.95972" lowerlimit="-39.80916" stiffness="0.25" />
-  <joint limb1="11" limb2="12" limb1anchor="-19.0322,-1.702324" limb2anchor="26.04302,-0.1367218" name="Joint 11 - 12" canbesevered="True" limitenabled="True" upperlimit="39.95972" lowerlimit="-39.80916" stiffness="0.25" />
+  <joint limb1="1" limb2="3" limb1anchor="-40.47342,-0.008001959" limb2anchor="51.03936,-0.4045685" name="Joint 1 - 3" canbesevered="True" limitenabled="True" upperlimit="40" lowerlimit="-40" stiffness="0.25" />
+  <joint limb1="3" limb2="4" limb1anchor="-47.86543,5.567174" limb2anchor="40.27424,5.397914" name="Joint 3 - 4" canbesevered="True" limitenabled="True" upperlimit="39.95972" lowerlimit="-39.80916" stiffness="0.25" />
+  <joint limb1="4" limb2="5" limb1anchor="-39.10581,6.820272" limb2anchor="60.91164,-1.29879" name="Joint 4 - 5" canbesevered="True" limitenabled="True" upperlimit="39.95972" lowerlimit="-39.80916" stiffness="0.25" />
+  <joint limb1="5" limb2="6" limb1anchor="-68.79895,-4.843943" limb2anchor="54.93156,0.772907" name="Joint 5 - 6" canbesevered="True" limitenabled="True" upperlimit="39.95972" lowerlimit="-39.80916" stiffness="0.25" />
+  <joint limb1="6" limb2="7" limb1anchor="-69.5307,3.508062" limb2anchor="49.68465,-1.568497" name="Joint 6 - 7" canbesevered="True" limitenabled="True" upperlimit="39.95972" lowerlimit="-39.80916" stiffness="0.25" />
+  <joint limb1="7" limb2="8" limb1anchor="-43.18816,4.012879" limb2anchor="43.90269,0.5970243" name="Joint 7 - 8" canbesevered="True" limitenabled="True" upperlimit="39.95972" lowerlimit="-39.80916" stiffness="0.25" />
   <joint limb1="1" limb2="2" limb1anchor="26.51008,-12.90655" limb2anchor="-29.2091,-4.121207" name="Joint 1 - 2" canbesevered="True" limitenabled="True" upperlimit="-18.25742" lowerlimit="-33.39247" stiffness="0.25" />
-  <joint limb1="1" limb2="14" limb1anchor="-40.70325,-39.77501" limb2anchor="8.495511,18.03033" name="Joint 1 - 14" canbesevered="True" limitenabled="True" upperlimit="34.4841" lowerlimit="-36.70172" stiffness="0.25" />
-  <joint limb1="1" limb2="13" limb1anchor="-6.536165,-38.31912" limb2anchor="3.307009,18.05545" name="Joint 1 - 13" canbesevered="True" limitenabled="True" upperlimit="7.110166" lowerlimit="-19.75739" stiffness="0.25" />
+  <joint limb1="1" limb2="10" limb1anchor="-40.70325,-39.77501" limb2anchor="8.495511,18.03033" name="Joint 1 - 10" canbesevered="True" limitenabled="True" upperlimit="34.4841" lowerlimit="-36.70172" stiffness="0.25" />
+  <joint limb1="1" limb2="9" limb1anchor="-6.536165,-38.31912" limb2anchor="3.307009,18.05545" name="Joint 1 - 9" canbesevered="True" limitenabled="True" upperlimit="7.110166" lowerlimit="-19.75739" stiffness="0.25" />
 </Ragdoll>
