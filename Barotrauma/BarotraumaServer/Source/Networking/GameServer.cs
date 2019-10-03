@@ -435,9 +435,9 @@ namespace Barotrauma.Networking
         public override void Update(float deltaTime)
         {
 #if CLIENT
-            if (ShowNetStats) netStats.Update(deltaTime);
+            if (ShowNetStats) { netStats.Update(deltaTime); }
 #endif
-            if (!started) return;
+            if (!started) { return; }
 
             base.Update(deltaTime);
 
@@ -648,6 +648,9 @@ namespace Barotrauma.Networking
             }
 
             serverPeer.Update(deltaTime);
+
+            //don't run the rest of the method if something in serverPeer.Update causes the server to shutdown
+            if (!started) { return; }
 
             // if update interval has passed
             if (updateTimer < DateTime.Now)
