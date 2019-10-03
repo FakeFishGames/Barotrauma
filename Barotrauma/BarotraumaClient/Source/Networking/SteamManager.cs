@@ -736,14 +736,14 @@ namespace Barotrauma.Steam
         /// <summary>
         /// Creates a copy of the specified workshop item in the staging folder and an editor that can be used to edit and update the item
         /// </summary>
-        public static void CreateWorkshopItemStaging(Workshop.Item existingItem, out Workshop.Editor itemEditor, out ContentPackage contentPackage)
+        public static bool CreateWorkshopItemStaging(Workshop.Item existingItem, out Workshop.Editor itemEditor, out ContentPackage contentPackage)
         {
             if (!existingItem.Installed)
             {
                 itemEditor = null;
                 contentPackage = null;
                 DebugConsole.ThrowError("Cannot edit the workshop item \"" + existingItem.Title + "\" because it has not been installed.");
-                return;
+                return false;
             }
 
             itemEditor = instance.client.Workshop.EditItem(existingItem.Id);
@@ -763,7 +763,7 @@ namespace Barotrauma.Steam
                         TextManager.GetWithVariables("WorkshopItemUpdateFailed", new string[2] { "[itemname]", "[errormessage]" }, new string[2] { existingItem.Title, errorMsg }));
                     itemEditor = null;
                     contentPackage = null;
-                    return;
+                    return false;
                 }
             }
 
@@ -773,7 +773,7 @@ namespace Barotrauma.Steam
 
             if (contentPackage == null && tempContentPackage.GameVersion <= new Version(0, 9, 1, 0))
             {
-                //try finding the content package in the lega
+                //try finding the content package from the non-legacy path
                 installedContentPackagePath = Path.GetFullPath(GetWorkshopItemContentPackagePath(tempContentPackage, legacy: false));
                 contentPackage = ContentPackage.List.Find(cp => Path.GetFullPath(cp.Path) == installedContentPackagePath);
             }
@@ -792,8 +792,11 @@ namespace Barotrauma.Steam
                     contentPackage.Path = newPath;
                     itemEditor.Folder = newDir;
                     if (!Directory.Exists(newDir)) { Directory.CreateDirectory(newDir); }
-                    if (File.Exists(newPath)) { File.Delete(newPath); }
-                    File.Move(installedContentPackagePath, newPath);
+                    if (Path.GetFullPath(newPath) != installedContentPackagePath)
+                    {
+                        if (File.Exists(newPath)) { File.Delete(newPath); }
+                        File.Move(installedContentPackagePath, newPath);
+                    }
                     //move all files inside the Mods folder
                     foreach (ContentFile cf in contentPackage.Files)
                     {
@@ -815,7 +818,7 @@ namespace Barotrauma.Steam
                     string errorMsg = TextManager.GetWithVariable("WorkshopErrorOnEnable", "[itemname]", TextManager.EnsureUTF8(existingItem.Title));
                     new GUIMessageBox(TextManager.Get("Error"), errorMsg);
                     DebugConsole.ThrowError(errorMsg, e);
-                    return;
+                    return false;
                 }
             }
 
@@ -846,6 +849,7 @@ namespace Barotrauma.Steam
                 GameAnalyticsManager.AddErrorEventOnce("SteamManager.CreateWorkshopItemStaging:WriteAllBytesFailed" + previewImagePath,
                     GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg + "\n" + e.Message);
             }
+            return true;
         }
 
         public static void StartPublishItem(ContentPackage contentPackage, Workshop.Editor item)
@@ -865,11 +869,9 @@ namespace Barotrauma.Steam
             
             contentPackage.GameVersion = GameMain.Version;
             contentPackage.Save(contentPackage.Path);
-
-            if (File.Exists(PreviewImageName)) { File.Delete(PreviewImageName); }
-            //move the preview image out of the staging folder, it does not need to be included in the folder sent to Workshop
-            File.Move(Path.GetFullPath(Path.Combine(item.Folder, PreviewImageName)), PreviewImageName);
-            item.PreviewImage = Path.GetFullPath(PreviewImageName);
+            
+            string previewImagePath =  Path.GetFullPath(Path.Combine(item.Folder, PreviewImageName));
+            item.PreviewImage = File.Exists(previewImagePath) ? previewImagePath : null;
 
             CoroutineManager.StartCoroutine(PublishItem(item));
         }
@@ -967,11 +969,14 @@ namespace Barotrauma.Steam
             GameMain.Config.SelectContentPackage(newPackage);
             GameMain.Config.SaveNewPlayerConfig();
 
-            if (newPackage.Files.Any(f => f.Type == ContentType.Submarine))
+            foreach (ContentFile cf in newPackage.Files)
             {
-                Submarine.RefreshSavedSubs();
+                if (cf.Type == ContentType.Submarine)
+                {
+                    Submarine.RefreshSavedSub(cf.Path);
+                }
             }
-
+            
             errorMsg = "";
             return true;
         }
