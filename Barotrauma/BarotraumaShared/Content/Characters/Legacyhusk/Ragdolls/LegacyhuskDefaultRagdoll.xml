@@ -1,4 +1,4 @@
-﻿<Ragdoll type="Legacyhusk" draggable="True" spritesheetorientation="0" limbscale="1" jointscale="1" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" canentersubmarine="True">
+﻿<Ragdoll type="Legacyhusk" draggable="True" spritesheetorientation="0" limbscale="1" jointscale="1" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" canentersubmarine="True" canwalk="True">
   <collider height="80" radius="15" name="Main Collider" width="0" />
   <collider height="40" radius="15" name="Secondary Collider" width="0" />
   <!-- head -->

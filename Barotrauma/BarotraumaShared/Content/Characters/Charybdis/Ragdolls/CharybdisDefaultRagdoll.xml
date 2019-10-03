@@ -1,4 +1,4 @@
-﻿<Ragdoll type="Charybdis" canentersubmarine="False" spritesheetorientation="90" limbscale="1" jointscale="1" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" draggable="True">
+﻿<Ragdoll type="Charybdis" canentersubmarine="False" canwalk="False" spritesheetorientation="90" limbscale="1" jointscale="1" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" draggable="True">
   <collider radius="210" width="0" name="Main Collider" height="700" />
   <limb id="0" name="Jaw" type="None" radius="60" width="152" notes="" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Charybdis/Charybdis.png" sourcerect="936,51,305,153" origin="0.5,0.5" depth="0" subdivisions="5,5">

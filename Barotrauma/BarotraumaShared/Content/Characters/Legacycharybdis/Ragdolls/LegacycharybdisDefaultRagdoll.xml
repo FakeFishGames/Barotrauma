@@ -2,7 +2,8 @@
 <Ragdoll type="legacyharybdis"
   limbscale="1.5"
   jointscale="1.5"
-  canentersubmarine="false">
+  canentersubmarine="false"
+  canwalk="False">
 
   <collider radius="80" height="440"/>
 

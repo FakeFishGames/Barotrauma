@@ -1,4 +1,4 @@
-﻿<Ragdoll type="Hammerhead" limbscale="1" jointscale="1" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" canentersubmarine="False" draggable="True" spritesheetorientation="90" texture="">
+﻿<Ragdoll type="Hammerhead" limbscale="1" jointscale="1" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" canentersubmarine="False" canwalk="False" draggable="True" spritesheetorientation="90" texture="">
   <collider radius="80" name="Main Collider" width="0" height="300" />
   <limb id="0" name="Torso" type="Torso" radius="0" width="200" notes="0_Torso" flip="True" healthindex="0" attackpriority="0" steerforce="2" stepoffset="0,0" height="150" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False">
     <deformablesprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="0,0,263,191" origin="0.5,0.5" subdivisions="10,5" depth="0">

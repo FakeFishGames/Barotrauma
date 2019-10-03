@@ -940,7 +940,7 @@
   <charactereditor.lowerlimit>Lower Limit</charactereditor.lowerlimit>
   <charactereditor.defaultname>Character X</charactereditor.defaultname>
   <charactereditor.ishumanoid>Is Humanoid?</charactereditor.ishumanoid>
-  <charactereditor.canentersubmarines>Can Enter Submarines and Walk?</charactereditor.canentersubmarines>
+  <charactereditor.canentersubmarines>Can Enter Submarines?</charactereditor.canentersubmarines>
   <charactereditor.configfileoutput>Config File Output</charactereditor.configfileoutput>
   <charactereditor.texturepath>Texture Path</charactereditor.texturepath>
   <charactereditor.selecttexture>Select Texture</charactereditor.selecttexture>

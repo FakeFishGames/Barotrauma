@@ -1,4 +1,4 @@
-﻿<Ragdoll type="Molochbaby" limbscale="0.5" jointscale="0.5" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" canentersubmarine="False" draggable="True" spritesheetorientation="0">
+﻿<Ragdoll type="Molochbaby" limbscale="0.5" jointscale="0.5" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" canentersubmarine="False" canwalk="False" draggable="True" spritesheetorientation="0">
   <collider radius="309" width="635" name="Main Collider" height="0" />
   <limb id="3" name="Torso" type="Torso" radius="309" width="635" notes="0_Torso" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Molochbaby/Molochbaby.png" sourcerect="36,0,1588,669" origin="0.4949142,0.4817872" depth="0.1" subdivisions="15,15"></deformablesprite>

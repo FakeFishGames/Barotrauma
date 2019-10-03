@@ -1,4 +1,4 @@
-﻿<Ragdoll type="Electricparasite" canentersubmarine="True" spritesheetorientation="90" limbscale="0.1969" jointscale="0.1969" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" draggable="True">
+﻿<Ragdoll type="Electricparasite" canentersubmarine="True" canwalk="True" spritesheetorientation="90" limbscale="0.1969" jointscale="0.1969" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" draggable="True">
   <collider radius="42" width="1" name="Main Collider" height="0" />
   <limb id="0" name="Pelvis" type="Torso" height="0" width="20" notes="" spriteorientation="90" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" radius="40" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" healthindex="0" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Electricparasite/Electricparasites.png" sourcerect="0,319,160,95" origin="0.5,0.5" depth="0.003" />

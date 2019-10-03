@@ -55,8 +55,11 @@ namespace Barotrauma
         [Serialize(50f, true, description: "How much impact is required before the character takes impact damage?"), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
         public float ImpactTolerance { get; set; }
 
-        [Serialize(true, true, description: "Can the creature enter submarine and walk when there is no water? Creatures that cannot enter submarines, always collide with it, even when there is a gap."), Editable()]
+        [Serialize(true, true, description: "Can the creature enter submarine. Creatures that cannot enter submarines, always collide with it, even when there is a gap."), Editable()]
         public bool CanEnterSubmarine { get; set; }
+
+        [Serialize(true, true), Editable]
+        public bool CanWalk { get; set; }
 
         [Serialize(true, true, description: "Can the character be dragged around by other creatures?"), Editable()]
         public bool Draggable { get; set; }
