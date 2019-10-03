@@ -472,6 +472,9 @@ namespace Barotrauma
 
         partial void UpdateProjSpecific(float deltaTime);
 
+
+        private readonly List<Body> contactBodies = new List<Body>();
+        private List<Body> ignoredBodies;
         /// <summary>
         /// Returns true if the attack successfully hit something. If the distance is not given, it will be calculated.
         /// </summary>
@@ -491,9 +494,11 @@ namespace Barotrauma
                     case HitDetection.Distance:
                         if (dist < attack.DamageRange)
                         {
-                            // TODO: cache
-                            List<Body> ignoredBodies = character.AnimController.Limbs.Select(l => l.body.FarseerBody).ToList();
-                            ignoredBodies.Add(character.AnimController.Collider.FarseerBody);
+                            if (ignoredBodies == null)
+                            {
+                                ignoredBodies = character.AnimController.Limbs.Select(l => l.body.FarseerBody).ToList();
+                                ignoredBodies.Add(character.AnimController.Collider.FarseerBody);
+                            }
 
                             structureBody = Submarine.PickBody(
                                 SimPosition, attackSimPos,
@@ -519,47 +524,42 @@ namespace Barotrauma
                         }
                         break;
                     case HitDetection.Contact:
-                        // TODO: ensure that this works
-                        var targetBodies = new List<Body>();
+                        contactBodies.Clear();
                         if (damageTarget is Character targetCharacter)
                         {
                             foreach (Limb limb in targetCharacter.AnimController.Limbs)
                             {
-                                if (!limb.IsSevered && limb.body?.FarseerBody != null) targetBodies.Add(limb.body.FarseerBody);
+                                if (!limb.IsSevered && limb.body?.FarseerBody != null) contactBodies.Add(limb.body.FarseerBody);
                             }
                         }
                         else if (damageTarget is Structure targetStructure)
                         {
                             if (character.Submarine == null && targetStructure.Submarine != null)
                             {
-                                targetBodies.Add(targetStructure.Submarine.PhysicsBody.FarseerBody);
+                                contactBodies.Add(targetStructure.Submarine.PhysicsBody.FarseerBody);
                             }
                             else
                             {
-                                targetBodies.AddRange(targetStructure.Bodies);
+                                contactBodies.AddRange(targetStructure.Bodies);
                             }
                         }
                         else if (damageTarget is Item)
                         {
                             Item targetItem = damageTarget as Item;
-                            if (targetItem.body?.FarseerBody != null) targetBodies.Add(targetItem.body.FarseerBody);
+                            if (targetItem.body?.FarseerBody != null) contactBodies.Add(targetItem.body.FarseerBody);
                         }
-
-                        if (targetBodies != null)
+                        ContactEdge contactEdge = body.FarseerBody.ContactList;
+                        while (contactEdge != null)
                         {
-                            ContactEdge contactEdge = body.FarseerBody.ContactList;
-                            while (contactEdge != null)
+                            if (contactEdge.Contact != null &&
+                                contactEdge.Contact.IsTouching &&
+                                contactBodies.Any(b => b == contactEdge.Contact.FixtureA?.Body || b == contactEdge.Contact.FixtureB?.Body))
                             {
-                                if (contactEdge.Contact != null &&
-                                    contactEdge.Contact.IsTouching &&
-                                    targetBodies.Any(b => b == contactEdge.Contact.FixtureA?.Body || b == contactEdge.Contact.FixtureB?.Body))
-                                {
-                                    structureBody = targetBodies.LastOrDefault();
-                                    wasHit = true;
-                                    break;
-                                }
-                                contactEdge = contactEdge.Next;
+                                structureBody = contactBodies.LastOrDefault();
+                                wasHit = true;
+                                break;
                             }
+                            contactEdge = contactEdge.Next;
                         }
                         break;
                 }
