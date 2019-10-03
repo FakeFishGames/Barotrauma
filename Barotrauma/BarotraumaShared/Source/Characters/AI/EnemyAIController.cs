@@ -690,7 +690,25 @@ namespace Barotrauma
                 {
                     AttackingLimb = GetAttackLimb(attackWorldPos);
                 }
-                canAttack = AttackingLimb != null && AttackingLimb.attack.CoolDownTimer <= 0;
+                if (AttackingLimb == null)
+                {
+                    if (wallTarget != null)
+                    {
+                        float d = ConvertUnits.ToDisplayUnits(Character.AnimController.Collider.GetSize().Combine());
+                        if (Vector2.DistanceSquared(Character.AnimController.MainLimb.WorldPosition, attackWorldPos) < d * d)
+                        {
+                            // No valid attack limb -> let's turn away
+                            State = AIState.Idle;
+                            IgnoreTarget(SelectedAiTarget);
+                            return;
+                        }
+                    }
+                    canAttack = false;
+                }
+                else
+                {
+                    canAttack = AttackingLimb.attack.CoolDownTimer <= 0;
+                }
             }
             float distance = 0;
             Limb attackTargetLimb = null;
@@ -745,18 +763,6 @@ namespace Barotrauma
             {
                 State = AIState.Idle;
                 return;
-            }
-
-            if (AttackingLimb == null)
-            {
-                float d = 200 + ConvertUnits.ToDisplayUnits(Character.AnimController.Collider.GetSize().Combine());
-                if (Vector2.DistanceSquared(steeringLimb.WorldPosition, attackWorldPos) < d * d)
-                {
-                    // No valid attack limb -> let's turn away
-                    State = AIState.Idle;
-                    IgnoreTarget(SelectedAiTarget);
-                    return;
-                }
             }
 
             Vector2 offset = Character.SimPosition - steeringLimb.SimPosition;
