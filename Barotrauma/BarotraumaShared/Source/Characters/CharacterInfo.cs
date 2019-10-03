@@ -170,6 +170,8 @@ namespace Barotrauma
             }
         }
 
+        public bool OmitJobInPortraitClothing;
+
         private Sprite portrait;
         public Sprite Portrait
         {
@@ -223,7 +225,7 @@ namespace Barotrauma
             {
                 if (attachmentSprites == null)
                 {
-                    LoadAttachmentSprites();
+                    LoadAttachmentSprites(OmitJobInPortraitClothing);
                 }
                 return attachmentSprites;
             }
@@ -744,7 +746,7 @@ namespace Barotrauma
             }
         }
 
-        partial void LoadAttachmentSprites();
+        partial void LoadAttachmentSprites(bool omitJob);
         
         // TODO: change the formula so that it's not linear and so that it takes into account the usefulness of the skill 
         // -> give a weight to each skill, because some are much more valuable than others?

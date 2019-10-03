@@ -442,10 +442,6 @@ namespace Barotrauma
                 MasterServerUrl = "";
                 SelectContentPackage(ContentPackage.List.Any() ? ContentPackage.List[0] : new ContentPackage(""));
                 jobPreferences = new List<Pair<string, int>>();
-                foreach (string job in JobPrefab.List.Keys)
-                {
-                    jobPreferences.Add(new Pair<string, int>(job, 1));
-                }
                 return;
             }
 
@@ -963,15 +959,19 @@ namespace Barotrauma
             CampaignDisclaimerShown = doc.Root.GetAttributeBool("campaigndisclaimershown", CampaignDisclaimerShown);
             EditorDisclaimerShown = doc.Root.GetAttributeBool("editordisclaimershown", EditorDisclaimerShown);
             XElement gameplayElement = doc.Root.Element("gameplay");
+            jobPreferences = new List<Pair<string, int>>();
             if (gameplayElement != null)
             {
-                jobPreferences = new List<Pair<string, int>>();
-                foreach (XElement ele in gameplayElement.Element("jobpreferences").Elements("job"))
+                var preferencesElement = gameplayElement.Element("jobpreferences");
+                if (preferencesElement != null)
                 {
-                    string jobIdentifier = ele.GetAttributeString("identifier", "");
-                    int outfitVariant = ele.GetAttributeInt("variant", 1);
-                    if (string.IsNullOrEmpty(jobIdentifier)) continue;
-                    jobPreferences.Add(new Pair<string, int>(jobIdentifier, outfitVariant));
+                    foreach (XElement ele in preferencesElement.Elements("job"))
+                    {
+                        string jobIdentifier = ele.GetAttributeString("identifier", "");
+                        int outfitVariant = ele.GetAttributeInt("variant", 1);
+                        if (string.IsNullOrEmpty(jobIdentifier)) continue;
+                        jobPreferences.Add(new Pair<string, int>(jobIdentifier, outfitVariant));
+                    }
                 }
             }
 

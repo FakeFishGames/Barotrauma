@@ -31,6 +31,8 @@ namespace Barotrauma
     partial class JobPrefab
     {
         public static Dictionary<string, JobPrefab> List;
+
+        public static XElement NoJobElement;
         public static JobPrefab Get(string identifier)
         {
             if (List == null)
@@ -236,7 +238,9 @@ namespace Barotrauma
                 {
                     DebugConsole.ThrowError($"Error in '{filePath}': Cannot override all job prefabs, because many of them are required by the main game! Please try overriding jobs one by one.");
                 }
-                foreach (XElement element in mainElement.Elements())
+                var elements = mainElement.Elements("Job");
+                if (elements == null) elements = mainElement.Elements("job");
+                foreach (XElement element in elements)
                 {
                     if (element.IsOverride())
                     {
@@ -261,6 +265,8 @@ namespace Barotrauma
                         }
                     }
                 }
+                NoJobElement = NoJobElement ?? mainElement.Element("NoJob");
+                NoJobElement = NoJobElement ?? mainElement.Element("nojob");
             }
         }
     }

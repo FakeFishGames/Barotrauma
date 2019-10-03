@@ -1038,6 +1038,7 @@ namespace Barotrauma
                     GameMain.Config.CharacterMoustacheIndex,
                     GameMain.Config.CharacterFaceAttachmentIndex);
                 GameMain.Client.CharacterInfo = characterInfo;
+                characterInfo.OmitJobInPortraitClothing = true;
             }
 
             parent.ClearChildren();
@@ -2034,9 +2035,9 @@ namespace Barotrauma
             var info = GameMain.Client.CharacterInfo;
 
             headSelectionList = new GUIListBox(
-                new RectTransform(new Point((characterInfoFrame.Rect.Width * 4) / 3, characterInfoFrame.Rect.Height * 2), GUI.Canvas)
+                new RectTransform(new Point(characterInfoFrame.Rect.Width, (characterInfoFrame.Rect.Bottom - button.Rect.Bottom) + characterInfoFrame.Rect.Height * 2), GUI.Canvas)
                 {
-                    AbsoluteOffset = new Point(characterInfoFrame.Rect.Right - (characterInfoFrame.Rect.Width * 4) / 3, button.Rect.Bottom)
+                    AbsoluteOffset = new Point(characterInfoFrame.Rect.Right - characterInfoFrame.Rect.Width, button.Rect.Bottom)
                 });
 
             GUILayoutGroup row = null;
@@ -2094,6 +2095,7 @@ namespace Barotrauma
 
                             var btn = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), row.RectTransform), style: "ListBoxElement")
                             {
+                                OutlineColor = Color.White * 0.5f,
                                 UserData = new Tuple<Gender, Race, int>(gender, race, i),
                                 OnClicked = SwitchHead,
                                 Selected = gender == info.Gender && race == info.Race && i == info.HeadSpriteId
