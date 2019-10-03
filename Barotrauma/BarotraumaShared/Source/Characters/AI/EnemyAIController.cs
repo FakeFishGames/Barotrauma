@@ -806,7 +806,10 @@ namespace Barotrauma
 
             if (canAttack)
             {
-                UpdateLimbAttack(deltaTime, AttackingLimb, attackSimPos, distance, attackTargetLimb);
+                if (!UpdateLimbAttack(deltaTime, AttackingLimb, attackSimPos, distance, attackTargetLimb))
+                {
+                    IgnoreTarget(SelectedAiTarget);
+                }
             }
         }
 
@@ -993,9 +996,9 @@ namespace Barotrauma
         // 10 dmg, 100 health -> 0.1
         private float GetRelativeDamage(float dmg, float vitality) => dmg / Math.Max(vitality, 1.0f);
 
-        private void UpdateLimbAttack(float deltaTime, Limb attackingLimb, Vector2 attackSimPos, float distance = -1, Limb targetLimb = null)
+        private bool UpdateLimbAttack(float deltaTime, Limb attackingLimb, Vector2 attackSimPos, float distance = -1, Limb targetLimb = null)
         {
-            if (SelectedAiTarget == null) { return; }
+            if (SelectedAiTarget == null) { return false; }
             if (wallTarget != null)
             {
                 // If the selected target is not the wall target, make the wall target the selected target.
@@ -1019,8 +1022,10 @@ namespace Barotrauma
                     {
                         selectedTargetMemory.Priority = 0;
                     }
+                    return true;
                 }
             }
+            return false;
         }
 
         private void UpdateFallBack(Vector2 attackWorldPos, float deltaTime)
@@ -1319,17 +1324,19 @@ namespace Barotrauma
                             // Ignore doors that are not open if cannot attack items/structures. Open doors should be targeted, so that we can get in if we are aggressive boarders
                             valueModifier = 0;
                         }
+                        if (character.CurrentHull == null)
+                        {
+                            valueModifier = isOutdoor ? 1 : 0;
+                        }
                         else if (AggressiveBoarding)
                         {
                             // Increase priority if the character is outside and an aggressive boarder, and the door is from outside to inside
                             if (character.CurrentHull == null)
                             {
-                                valueModifier = isOutdoor ? 1 : 0;
                                 valueModifier *= isOpen ? 5 : 1;
                             }
                             else
                             {
-                                valueModifier = isOutdoor ? 0 : 1;
                                 valueModifier *= isOpen ? 0 : 1;
                             }
                         }
