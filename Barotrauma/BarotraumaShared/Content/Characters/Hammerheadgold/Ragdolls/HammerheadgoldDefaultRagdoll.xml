@@ -86,7 +86,7 @@
     <deformablesprite texture="Content/Characters/Hammerheadgold/Hammerheadgold.png" sourcerect="955,39,70,157" origin="0.5,0.5" depth="0">
       <spritedeformation type="bendjoint" resolution="2,2" multiplier="0.0" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="20" strength="0" />
     </deformablesprite>
-    <attack targettype="Character" priority="1" range="100" damagerange="100" cooldown="10" secondarycooldown="1" afterattack="PursueIfCanAttack" structuredamage="75" force="10" targetimpulse="500" structuresoundtype="StructureBlunt" applyforceonlimbs="0, 3" context="NotDefined" hitdetectiontype="Distance" itemdamage="0" stun="0" onlyhumans="False" torque="0" applyforcesonlyonce="False" targetimpulseworld="0,0" targetforce="0" targetforceworld="0,0" severlimbsprobability="0" stickchance="0" duration="0.1" cooldownrandomfactor="0.1" reverse="False" targetlimbtype="Torso">
+    <attack targettype="Character" priority="1" range="100" damagerange="100" cooldown="10" secondarycooldown="2" afterattack="FollowThroughUntilCanAttack" structuredamage="75" force="10" targetimpulse="500" structuresoundtype="StructureBlunt" applyforceonlimbs="0, 3" context="NotDefined" hitdetectiontype="Distance" itemdamage="0" stun="0" onlyhumans="False" torque="0" applyforcesonlyonce="False" targetimpulseworld="0,0" targetforce="0" targetforceworld="0,0" severlimbsprobability="0" stickchance="0" duration="0.1" cooldownrandomfactor="0.1" reverse="False" targetlimbtype="Torso">
       <affliction identifier="stun" strength="5" probability="1" />
       <Conditional stun="lte 0"></Conditional>
     </attack>
