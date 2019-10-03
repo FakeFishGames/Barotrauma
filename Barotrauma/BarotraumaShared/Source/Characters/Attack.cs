@@ -30,7 +30,9 @@ namespace Barotrauma
         FallBack,
         FallBackUntilCanAttack,
         PursueIfCanAttack,
-        Pursue
+        Pursue,
+        FollowThrough,
+        FollowThroughUntilCanAttack
     }
 
     struct AttackResult

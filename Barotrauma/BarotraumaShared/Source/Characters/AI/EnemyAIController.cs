@@ -67,6 +67,7 @@ namespace Barotrauma
             private set
             {
                 _attackingLimb = value;
+                attackVector = null;
                 Reverse = _attackingLimb != null && _attackingLimb.attack.Reverse;
                 if (Character.AnimController is FishAnimController fishController)
                 {
@@ -584,7 +585,7 @@ namespace Barotrauma
                             }
                             else
                             {
-                                UpdateFallBack(attackWorldPos, deltaTime);
+                                UpdateFallBack(attackWorldPos, deltaTime, true);
                                 return;
                             }
                         }
@@ -599,7 +600,7 @@ namespace Barotrauma
                                     if (AttackingLimb.attack.AfterAttack == AIBehaviorAfterAttack.PursueIfCanAttack)
                                     {
                                         // Fall back if cannot attack.
-                                        UpdateFallBack(attackWorldPos, deltaTime);
+                                        UpdateFallBack(attackWorldPos, deltaTime, true);
                                         return;
                                     }
                                     AttackingLimb = null;
@@ -622,7 +623,7 @@ namespace Barotrauma
                                         }
                                         else
                                         {
-                                            UpdateFallBack(attackWorldPos, deltaTime);
+                                            UpdateFallBack(attackWorldPos, deltaTime, true);
                                             return;
                                         }
                                     }
@@ -636,10 +637,11 @@ namespace Barotrauma
                         }
                         break;
                     case AIBehaviorAfterAttack.FallBackUntilCanAttack:
+                    case AIBehaviorAfterAttack.FollowThroughUntilCanAttack:
                         if (AttackingLimb.attack.SecondaryCoolDown <= 0)
                         {
                             // No (valid) secondary cooldown defined.
-                            UpdateFallBack(attackWorldPos, deltaTime);
+                            UpdateFallBack(attackWorldPos, deltaTime, AttackingLimb.attack.AfterAttack == AIBehaviorAfterAttack.FollowThroughUntilCanAttack);
                             return;
                         }
                         else
@@ -649,7 +651,7 @@ namespace Barotrauma
                                 // Don't allow attacking when the attack target has just changed.
                                 if (_previousAiTarget != null && SelectedAiTarget != _previousAiTarget)
                                 {
-                                    UpdateFallBack(attackWorldPos, deltaTime);
+                                    UpdateFallBack(attackWorldPos, deltaTime, AttackingLimb.attack.AfterAttack == AIBehaviorAfterAttack.FollowThroughUntilCanAttack);
                                     return;
                                 }
                                 else
@@ -664,7 +666,7 @@ namespace Barotrauma
                                     else
                                     {
                                         // No new limb was found.
-                                        UpdateFallBack(attackWorldPos, deltaTime);
+                                        UpdateFallBack(attackWorldPos, deltaTime, AttackingLimb.attack.AfterAttack == AIBehaviorAfterAttack.FollowThroughUntilCanAttack);
                                         return;
                                     }
                                 }
@@ -672,16 +674,23 @@ namespace Barotrauma
                             else
                             {
                                 // Cooldown not yet expired -> steer away from the target
-                                UpdateFallBack(attackWorldPos, deltaTime);
+                                UpdateFallBack(attackWorldPos, deltaTime, AttackingLimb.attack.AfterAttack == AIBehaviorAfterAttack.FollowThroughUntilCanAttack);
                                 return;
                             }
                         }
                         break;
+                    case AIBehaviorAfterAttack.FollowThrough:
+                        UpdateFallBack(attackWorldPos, deltaTime, followThrough: true);
+                        return;
                     case AIBehaviorAfterAttack.FallBack:
                     default:
-                        UpdateFallBack(attackWorldPos, deltaTime);
+                        UpdateFallBack(attackWorldPos, deltaTime, followThrough: false);
                         return;
                 }
+            }
+            else
+            {
+                attackVector = null;
             }
 
             if (canAttack)
@@ -694,7 +703,7 @@ namespace Barotrauma
                 {
                     if (wallTarget != null)
                     {
-                        float d = ConvertUnits.ToDisplayUnits(Character.AnimController.Collider.GetSize().Combine());
+                        float d = ConvertUnits.ToDisplayUnits(colliderSize) * 5;
                         if (Vector2.DistanceSquared(Character.AnimController.MainLimb.WorldPosition, attackWorldPos) < d * d)
                         {
                             // No valid attack limb -> let's turn away
@@ -1028,17 +1037,20 @@ namespace Barotrauma
             return false;
         }
 
-        private void UpdateFallBack(Vector2 attackWorldPos, float deltaTime)
+        private Vector2? attackVector = null;
+        private void UpdateFallBack(Vector2 attackWorldPos, float deltaTime, bool followThrough)
         {
-            Vector2 attackVector = attackWorldPos - WorldPosition;
-            float dist = attackVector.Length();
-            float desiredDist = colliderSize * 2.0f;
-            if (dist < desiredDist)
+            if (attackVector == null)
             {
-                Vector2 attackDir = Vector2.Normalize(-attackVector);
-                if (!MathUtils.IsValid(attackDir)) attackDir = Vector2.UnitY;
-                steeringManager.SteeringManual(deltaTime, attackDir * (1.0f - (dist / 500.0f)));
+                attackVector = attackWorldPos - WorldPosition;
             }
+            Vector2 attackDir = Vector2.Normalize(followThrough ? attackVector.Value : -attackVector.Value);
+            if (!MathUtils.IsValid(attackDir))
+            {
+                attackDir = Vector2.UnitY;
+            }
+            steeringManager.SteeringManual(deltaTime, attackDir);
+            // TODO: avoiding does not work in all cases
             steeringManager.SteeringAvoid(deltaTime, colliderSize * 3.0f);
         }
 
