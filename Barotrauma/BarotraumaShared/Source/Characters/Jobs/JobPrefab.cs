@@ -147,6 +147,8 @@ namespace Barotrauma
         public XElement Element { get; private set; }
         public XElement ClothingElement { get; private set; }
 
+        public XElement PreviewElement { get; private set; }
+
         public JobPrefab(XElement element)
         {
             SerializableProperty.DeserializeProperties(this, element);
@@ -210,6 +212,12 @@ namespace Barotrauma
             if (ClothingElement == null)
             {
                 ClothingElement = element.Element("portraitclothing");
+            }
+
+            PreviewElement = element.Element("PreviewSprites");
+            if (PreviewElement == null)
+            {
+                PreviewElement = element.Element("previewsprites");
             }
         }
 

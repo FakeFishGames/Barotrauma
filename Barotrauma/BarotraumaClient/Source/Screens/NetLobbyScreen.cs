@@ -2209,18 +2209,23 @@ namespace Barotrauma
                 var sprites = AddJobSpritesToGUIComponent(jobButton, jobPrefab.First);
                 if (sprites.Length > 1)
                 {
+                    int currVisible = jobPrefab.Second;
+                    GUIButton currSelected = null;
                     for (int i = 0; i < sprites.Length; i++)
                     {
-                        sprites[i][0].Visible = jobPrefab.Second == (i+1);
-                        sprites[i][1].Visible = jobPrefab.Second == (i+1);
-                        var variantButton = new GUIButton(new RectTransform(new Vector2(0.15f), jobButton.RectTransform) { RelativeOffset = new Vector2(0.05f + 0.2f * i, 0.05f) }, (i + 1).ToString(), style: null)
+                        sprites[i][0].Visible = currVisible == (i+1);
+                        sprites[i][1].Visible = currVisible == (i+1);
+
+                        var variantButton = new GUIButton(new RectTransform(new Vector2(0.15f), jobButton.RectTransform, scaleBasis: ScaleBasis.BothWidth) { RelativeOffset = new Vector2(0.05f + 0.2f * i, 0.05f) }, (i + 1).ToString(), style: null)
                         {
-                            Color = Color.White * 0.25f,
-                            HoverColor = Color.White * 0.5f,
-                            PressedColor = Color.Black * 0.5f,
+                            Color = new Color(50, 50, 50, 200),
+                            HoverColor = Color.Gray * 0.75f,
+                            PressedColor = Color.Black * 0.75f,
+                            SelectedColor = new Color(45, 70, 100, 200),
                             UserData = new Pair<JobPrefab, int>(jobPrefab.First, i+1),
                             OnClicked = (btn, obj) =>
                             {
+                                currSelected.Selected = false;
                                 int k = ((Pair<JobPrefab, int>)obj).Second;
                                 btn.Parent.UserData = obj;
                                 for (int j = 0; j < sprites.Length; j++)
@@ -2228,11 +2233,19 @@ namespace Barotrauma
                                     sprites[j][0].Visible = k == (j+1);
                                     sprites[j][1].Visible = k == (j+1);
                                 }
+                                currSelected = btn;
+                                currSelected.Selected = true;
 
                                 return false;
                             }
                         };
+
+                        if (currVisible == (i + 1))
+                        {
+                            currSelected = variantButton;
+                        }
                     }
+                    currSelected.Selected = true;
                 }
             }
 
@@ -2279,11 +2292,11 @@ namespace Barotrauma
             {
                 retVal[i] = new GUIImage[2];
 
-                retVal[i][0] = new GUIImage(new RectTransform((torsoSrcRectDims / torsoSize), innerFrame.RectTransform, Anchor.Center) { RelativeOffset = sprites[0].Second }, sprites[0].First[i], scaleToFit: true)
+                retVal[i][0] = new GUIImage(new RectTransform((torsoSrcRectDims / torsoSize), innerFrame.RectTransform, Anchor.Center) { RelativeOffset = sprites[0].Second / torsoSize }, sprites[0].First[i], scaleToFit: true)
                 {
                     CanBeFocused = false
                 };
-                retVal[i][1] = new GUIImage(new RectTransform((armSrcRectDims / torsoSize), innerFrame.RectTransform, Anchor.Center) { RelativeOffset = sprites[1].Second }, sprites[1].First[i], scaleToFit: true)
+                retVal[i][1] = new GUIImage(new RectTransform((armSrcRectDims / torsoSize), innerFrame.RectTransform, Anchor.Center) { RelativeOffset = sprites[1].Second / torsoSize }, sprites[1].First[i], scaleToFit: true)
                 {
                     CanBeFocused = false
                 };
@@ -2303,106 +2316,47 @@ namespace Barotrauma
         {
             var info = GameMain.Client.CharacterInfo;
 
-            var equipIdentifiers = jobPrefab.Element.Elements("Items").Elements().Where(e => e.GetAttributeBool("equip", false)).Select(e => e.GetAttributeString("identifier", ""));
+            var equipIdentifiers = jobPrefab.Element.Elements("Items").Elements().Where(e => e.GetAttributeBool("outfit", false)).Select(e => e.GetAttributeString("identifier", ""));
 
-            var head = GameMain.Client.CharacterInfo.HeadSprite;
+            var element = jobPrefab.PreviewElement;
 
-            var torso = info.Ragdoll.Limbs.Find(l => l.Type == LimbType.Torso);
-            var arm = info.Ragdoll.Limbs.Find(l => l.Type == LimbType.RightArm);
+            var children = element.Elements().ToList();
 
-            Rectangle originalTorsoSourceRect = torso.GetSprite().SourceRect;
-            Rectangle torsoSourceRect = originalTorsoSourceRect;
-            torsoSourceRect.Y += head.SourceRect.Height * 2 / 5;
-            torsoSourceRect.Height -= head.SourceRect.Height * 2 / 5;
-            torsoSourceRect.Height *= 1;
-            torsoSourceRect.Height /= 2;
-            Rectangle armSourceRect = arm.GetSprite().SourceRect;
-            armSourceRect.Height -= 48;
-
-            float yOffset = torsoSourceRect.Center.Y - originalTorsoSourceRect.Center.Y;
-            yOffset /= (float)torsoSourceRect.Height;
-            yOffset += 0.15f;
-
-            float torsoWidth = 0.333f * (torso.Radius*2.0f) * (float)torsoSourceRect.Width / (float)originalTorsoSourceRect.Width;
-            float torsoHeight = torso.Height * (float)torsoSourceRect.Height / (float)originalTorsoSourceRect.Height;
-
-            Vector2 armOrigin = arm.GetSprite().Origin;
-
-            var joint = info.Ragdoll.Joints.Find(j => (j.Limb1 == info.Ragdoll.Limbs.IndexOf(torso)
-                                                    && j.Limb2 == info.Ragdoll.Limbs.IndexOf(arm)) ||
-                                                      (j.Limb2 == info.Ragdoll.Limbs.IndexOf(torso)
-                                                    && j.Limb1 == info.Ragdoll.Limbs.IndexOf(arm)));
-
-            Vector2 torsoAnchor = joint.Limb1 == info.Ragdoll.Limbs.IndexOf(arm) ? joint.Limb2Anchor : joint.Limb1Anchor;
-            torsoAnchor *= info.Ragdoll.TextureScale * 0.75f;
-            Vector2 armAnchor = joint.Limb1 == info.Ragdoll.Limbs.IndexOf(arm) ? joint.Limb1Anchor : joint.Limb2Anchor;
-            armAnchor *= info.Ragdoll.TextureScale * 0.75f;
-
-            //armPosition.X *= torsoHeight / torsoWidth;
-
-            torsoSize = new Vector2(torsoWidth / torsoHeight * (float)torsoSourceRect.Height, torsoSourceRect.Height);
+            torsoSize = element.GetAttributeVector2("dims", Vector2.One);
 
             var prefabs = MapEntityPrefab.List
                     .Where(pf => pf is ItemPrefab).Select(pf => pf as ItemPrefab)
-                    .Where(ipf => equipIdentifiers.Contains(ipf.Identifier))
-                    .Where(ipf => ipf.ConfigElement.Elements("Wearable").Any())
-                    .Where(ipf => ipf.ConfigElement.Element("Wearable").Elements("sprite")?.Where(
-                            s => Enum.TryParse(s.GetAttributeString("limb", "None"), out LimbType limbType) && limbType == LimbType.Torso
-                        ).Any() ?? false);
+                    .Where(ipf => equipIdentifiers.Contains(ipf.Identifier));
             var wearables = prefabs
                     .Select(ipf => ipf.ConfigElement.Element("Wearable"));
             if (wearables?.Any() ?? false)
             {
-                string path = Path.GetDirectoryName(prefabs.First().ConfigFile);
-                if (!path.EndsWith("/")) path += "/";
-                var spriteElements = wearables.First().Elements("sprite").ToList();
-
                 int variantCount = wearables.First().GetAttributeInt("variants", 1);
 
-                var retVal = new Pair<Sprite[], Vector2>[2];
+                var retVal = new Pair<Sprite[], Vector2>[children.Count];
 
-                XElement torsoSpriteElement = spriteElements.Find(s => Enum.TryParse(s.GetAttributeString("limb", "None"), out LimbType limbType) && limbType == LimbType.Torso);
-                XElement armSpriteElement = spriteElements.Find(s => Enum.TryParse(s.GetAttributeString("limb", "None"), out LimbType limbType) && limbType == LimbType.RightArm);
-                string torsoTexture = torsoSpriteElement.GetAttributeString("texture", "").Replace("[GENDER]", (info.Gender == Gender.Female) ? "female" : "male");
-                string armTexture = armSpriteElement.GetAttributeString("texture", "").Replace("[GENDER]", (info.Gender == Gender.Female) ? "female" : "male");
-
-                Vector2 armPosition = torsoAnchor - armAnchor;
-
-                armPosition.Y = -armPosition.Y;
-
-                armPosition /= new Vector2(torsoWidth, torsoHeight);
-
-                armOrigin = new Vector2(0.535f - armOrigin.X, 0.4f - armOrigin.Y) * armSourceRect.Size.ToVector2();
-
-                armOrigin /= torsoSize;
-
-                retVal[0] = new Pair<Sprite[], Vector2>(new Sprite[variantCount], Vector2.Zero);
-                retVal[1] = new Pair<Sprite[], Vector2>(new Sprite[variantCount], armPosition + armOrigin + new Vector2(0.0f, -yOffset));
-
-                for (int i=0;i<variantCount;i++)
+                for (int n=0;n<children.Count;n++)
                 {
-                    string torsoVariant = torsoTexture.Replace("[VARIANT]", (i + 1).ToString());
-                    if (!File.Exists(path+torsoVariant))
+                    XElement spriteElement = children[n];
+                    string spriteTexture = spriteElement.GetAttributeString("texture", "").Replace("[GENDER]", (info.Gender == Gender.Female) ? "female" : "male");
+
+                    retVal[n] = new Pair<Sprite[], Vector2>(new Sprite[variantCount], children[n].GetAttributeVector2("offset", Vector2.Zero));
+
+                    for (int i = 0; i < variantCount; i++)
                     {
-                        torsoVariant = torsoTexture.Replace("[VARIANT]", "1");
+                        string textureVariant = spriteTexture.Replace("[VARIANT]", (i + 1).ToString());
+                        if (!File.Exists(textureVariant))
+                        {
+                            textureVariant = spriteTexture.Replace("[VARIANT]", "1");
+                        }
+
+                        var torsoSprite = new Sprite(spriteElement, path: "", file: textureVariant);
+                        retVal[n].First[i] = torsoSprite;
+
+                        torsoSprite.size = new Vector2((float)torsoSprite.SourceRect.Width, (float)torsoSprite.SourceRect.Height);
+
+                        DebugConsole.NewMessage(torsoSprite.size.ToString());
                     }
-                    string armVariant = armTexture.Replace("[VARIANT]", (i + 1).ToString());
-                    if (!File.Exists(path+armVariant))
-                    {
-                        armVariant = armTexture.Replace("[VARIANT]", "1");
-                    }
-
-                    var torsoSprite = new Sprite(torsoSpriteElement, path: path, file: torsoVariant);
-                    var armSprite = new Sprite(armSpriteElement, path: path, file: armVariant);
-
-                    retVal[0].First[i] = torsoSprite;
-                    retVal[1].First[i] = armSprite;
-
-                    torsoSprite.SourceRect = torsoSourceRect;//new Rectangle(new Point(torsoSourceRect.Location.X, torsoSourceRect.Location.Y + (int)(head.SourceRect.Height * 0.3f)), new Point(torsoSourceRect.Width, (torsoSourceRect.Height * 1) / 2));
-                    torsoSprite.size = new Vector2((float)torsoSprite.SourceRect.Width, (float)torsoSprite.SourceRect.Height) / info.Ragdoll.LimbScale;
-
-                    armSprite.SourceRect = armSourceRect;
-                    armSprite.size = new Vector2((float)armSprite.SourceRect.Width, (float)armSprite.SourceRect.Height) / info.Ragdoll.LimbScale;
                 }
 
                 return retVal;
@@ -2718,11 +2672,13 @@ namespace Barotrauma
                         {
                             sprites[j][0].Visible = jobPrefab.Second == (j + 1);
                             sprites[j][1].Visible = jobPrefab.Second == (j + 1);
-                            var variantButton = new GUIButton(new RectTransform(new Vector2(0.15f), slot.RectTransform) { RelativeOffset = new Vector2(0.05f + 0.2f * j, 0.05f) }, (j + 1).ToString(), style: null)
+                            var variantButton = new GUIButton(new RectTransform(new Vector2(0.15f), slot.RectTransform, scaleBasis: ScaleBasis.BothWidth) { RelativeOffset = new Vector2(0.05f + 0.2f * j, 0.05f) }, (j + 1).ToString(), style: null)
                             {
-                                Color = Color.White * 0.25f,
-                                HoverColor = Color.White * 0.5f,
-                                PressedColor = Color.Black * 0.5f,
+                                Color = new Color(50, 50, 50, 200),
+                                HoverColor = Color.Gray * 0.75f,
+                                PressedColor = Color.Black * 0.75f,
+                                SelectedColor = new Color(45, 70, 100, 200),
+                                Selected = jobPrefab.Second == (j + 1),
                                 UserData = new Pair<JobPrefab, int>(jobPrefab.First, j + 1),
                                 OnClicked = (btn, obj) =>
                                 {
