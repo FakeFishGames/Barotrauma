@@ -324,6 +324,8 @@ namespace Barotrauma.Networking
                 canStart = true;
                 connected = true;
 
+                VoipClient = new VoipClient(this, clientPeer);
+
                 if (Screen.Selected != GameMain.GameScreen)
                 {
                     GameMain.NetLobbyScreen.Select();
@@ -1242,7 +1244,6 @@ namespace Barotrauma.Networking
         private void ReadInitialUpdate(IReadMessage inc)
         {
             myID = inc.ReadByte();
-            VoipClient = new VoipClient(this, clientPeer);
 
             UInt16 subListCount = inc.ReadUInt16();
             serverSubmarines.Clear();
