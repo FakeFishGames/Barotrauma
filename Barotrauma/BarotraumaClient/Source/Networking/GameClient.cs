@@ -1361,8 +1361,11 @@ namespace Barotrauma.Networking
                     if (existingClient.ID == myID)
                     {
                         existingClient.SetPermissions(permissions, permittedConsoleCommands);
-                        name = tc.Name;
-                        nameId = tc.NameID;
+                        if (!NetIdUtils.IdMoreRecent(nameId, tc.NameID))
+                        {
+                            name = tc.Name;
+                            nameId = tc.NameID;
+                        }
                         if (GameMain.NetLobbyScreen.CharacterNameBox != null &&
                             !GameMain.NetLobbyScreen.CharacterNameBox.Selected)
                         {
