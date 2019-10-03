@@ -654,7 +654,7 @@ namespace Barotrauma
             if (!(tickBox.UserData is Facepunch.Steamworks.Workshop.Item item)) { return false; }
 
             //currently editing the item, don't allow enabling/disabling it
-            if (itemEditor.Id == item.Id) { tickBox.Selected = true; return false; }
+            if (itemEditor?.Id == item.Id) { tickBox.Selected = true; return false; }
 
             var updateButton = tickBox.Parent.FindChild("updatebutton");
 
