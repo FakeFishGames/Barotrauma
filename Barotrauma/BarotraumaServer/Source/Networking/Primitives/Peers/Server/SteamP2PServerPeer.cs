@@ -617,7 +617,7 @@ namespace Barotrauma.Networking
             netPeerConfiguration.SimulatedLoss = GameMain.Server.SimulatedLoss;
 #endif
             NetOutgoingMessage lidgrenMsg = netServer.CreateMessage();
-            byte[] msgData = new byte[1500];
+            byte[] msgData = new byte[msg.LengthBytes];
             msg.PrepareForSending(ref msgData, out bool isCompressed, out int length);
             lidgrenMsg.Write(conn.SteamID);
             lidgrenMsg.Write((byte)((isCompressed ? PacketHeader.IsCompressed : PacketHeader.None) | PacketHeader.IsServerMessage));

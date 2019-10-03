@@ -1526,7 +1526,9 @@ namespace Barotrauma.Networking
             outmsg.Write((byte)ServerNetObject.SYNC_IDS);
 
             int settingsBytes = outmsg.LengthBytes;
+            int initialUpdateBytes = 0;
 
+            IWriteMessage settingsBuf = null;
             if (NetIdUtils.IdMoreRecent(GameMain.NetLobbyScreen.LastUpdateID, c.LastRecvLobbyUpdate))
             {
                 outmsg.Write(true);
@@ -1534,17 +1536,18 @@ namespace Barotrauma.Networking
 
                 outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
 
-                IWriteMessage settingsBuf = new ReadWriteMessage();
+                settingsBuf = new ReadWriteMessage();
                 serverSettings.ServerWrite(settingsBuf, c);
-
                 outmsg.Write((UInt16)settingsBuf.LengthBytes);
-                outmsg.Write(settingsBuf.Buffer,0,settingsBuf.LengthBytes);
+                outmsg.Write(settingsBuf.Buffer, 0, settingsBuf.LengthBytes);
 
                 outmsg.Write(c.LastRecvLobbyUpdate < 1);
                 if (c.LastRecvLobbyUpdate < 1)
                 {
                     isInitialUpdate = true;
+                    initialUpdateBytes = outmsg.LengthBytes;
                     ClientWriteInitial(c, outmsg);
+                    initialUpdateBytes = outmsg.LengthBytes - initialUpdateBytes;
                 }
                 outmsg.Write(GameMain.NetLobbyScreen.SelectedSub.Name);
                 outmsg.Write(GameMain.NetLobbyScreen.SelectedSub.MD5Hash.ToString());
@@ -1633,13 +1636,23 @@ namespace Barotrauma.Networking
             {
                 if (outmsg.LengthBytes > MsgConstants.MTU)
                 {
-                    string errorMsg = "Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + MsgConstants.MTU + ")";
+                    string errorMsg = "Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + MsgConstants.MTU + ")\n";
                     errorMsg +=
                         "  Client list size: " + clientListBytes + " bytes\n" +
                         "  Chat message size: " + chatMessageBytes + " bytes\n" +
                         "  Campaign size: " + campaignBytes + " bytes\n" +
-                        "  Settings size: " + settingsBytes + " bytes\n\n";
-                        DebugConsole.ThrowError(errorMsg);
+                        "  Settings size: " + settingsBytes + " bytes\n";
+                    if (initialUpdateBytes > 0)
+                    {
+                        errorMsg +=
+                            "    Initial update size: " + settingsBuf.LengthBytes + " bytes\n";
+                    }
+                    if (settingsBuf != null)
+                    {
+                        errorMsg +=
+                            "    Settings buffer size: " + settingsBuf.LengthBytes + " bytes\n";
+                    }
+                    DebugConsole.ThrowError(errorMsg);
                     GameAnalyticsManager.AddErrorEventOnce("GameServer.ClientWriteIngame1:ClientWriteLobby" + outmsg.LengthBytes, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 }
 
