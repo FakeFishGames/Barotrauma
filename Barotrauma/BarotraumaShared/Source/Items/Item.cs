@@ -1157,11 +1157,9 @@ namespace Barotrauma
         public override void Update(float deltaTime, Camera cam)
         {
             base.Update(deltaTime, cam);
-            //aitarget goes silent/invisible if the components don't keep it active
             if (aiTarget != null)
             {
-                aiTarget.SightRange -= deltaTime * (aiTarget.MaxSightRange / aiTarget.FadeOutTime);
-                aiTarget.SoundRange -= deltaTime * (aiTarget.MaxSoundRange / aiTarget.FadeOutTime);
+                aiTarget.Update(deltaTime);
             }
 
             bool broken = condition <= 0.0f;
