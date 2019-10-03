@@ -23,6 +23,19 @@ namespace Barotrauma.Networking
             get { return true; }
         }
 
+        private string serverName;
+
+        public string ServerName
+        {
+            get { return serverName; }
+            set
+            {
+                if (string.IsNullOrEmpty(value)) { return; }
+                serverName = value.Replace(":", "").Replace(";", "");
+            }
+        }
+
+
         private List<Client> connectedClients = new List<Client>();
 
         //for keeping track of disconnected clients in case the reconnect shortly after
@@ -114,7 +127,7 @@ namespace Barotrauma.Networking
                 name = name.Substring(0, NetConfig.ServerNameMaxLength);
             }
 
-            this.name = name;
+            this.serverName = name;
 
             LastClientListUpdateID = 0;
 
@@ -318,7 +331,7 @@ namespace Barotrauma.Networking
 
             var request = new RestRequest("masterserver3.php", Method.GET);
             request.AddParameter("action", "addserver");
-            request.AddParameter("servername", name);
+            request.AddParameter("servername", serverName);
             request.AddParameter("serverport", Port);
             request.AddParameter("currplayers", connectedClients.Count);
             request.AddParameter("maxplayers", serverSettings.MaxPlayers);
@@ -904,7 +917,7 @@ namespace Barotrauma.Networking
                         c.LastRecvChatMsgID = NetIdUtils.Clamp(inc.ReadUInt16(), c.LastRecvChatMsgID, c.LastChatMsgQueueID);
                         c.LastRecvClientListUpdate = NetIdUtils.Clamp(inc.ReadUInt16(), c.LastRecvClientListUpdate, LastClientListUpdateID);
 
-                        TryChangeClientName(c, inc.ReadString());
+                        TryChangeClientName(c, inc);
 
                         c.LastRecvCampaignSave = inc.ReadUInt16();
                         if (c.LastRecvCampaignSave > 0)
@@ -1508,6 +1521,7 @@ namespace Barotrauma.Networking
             {
                 outmsg.Write(client.ID);
                 outmsg.Write(client.SteamID);
+                outmsg.Write(client.NameID);
                 outmsg.Write(client.Name);
                 outmsg.Write(client.Character == null || !gameStarted ? (ushort)0 : client.Character.ID);
                 outmsg.Write(client.Muted);
@@ -2128,9 +2142,14 @@ namespace Barotrauma.Networking
             base.AddChatMessage(message);
         }
 
-        private bool TryChangeClientName(Client c, string newName)
+        private bool TryChangeClientName(Client c, IReadMessage inc)
         {
-            if (c == null || string.IsNullOrEmpty(newName)) { return false; }
+            UInt16 nameId = inc.ReadUInt16();
+            string newName = inc.ReadString();
+
+            if (c == null || string.IsNullOrEmpty(newName) || !NetIdUtils.IdMoreRecent(nameId, c.NameID)) { return false; }
+
+            c.NameID = nameId;
 
             newName = Client.SanitizeName(newName);
             if (newName == c.Name) { return false; }
@@ -2146,7 +2165,7 @@ namespace Barotrauma.Networking
                     SendDirectChatMessage("Could not change your name to \"" + newName + "\" (the name contains disallowed symbols).", c, ChatMessageType.MessageBox);
                     return false;
                 }
-                if (Homoglyphs.Compare(newName.ToLower(), Name.ToLower()))
+                if (Homoglyphs.Compare(newName.ToLower(), ServerName.ToLower()))
                 {
                     SendDirectChatMessage("Could not change your name to \"" + newName + "\" (too similar to the server's name).", c, ChatMessageType.MessageBox);
                     return false;
@@ -2399,7 +2418,7 @@ namespace Barotrauma.Networking
                     default:
                         if (command != "")
                         {
-                            if (command.ToLower() == name.ToLower())
+                            if (command.ToLower() == serverName.ToLower())
                             {
                                 //a private message to the host
                                 if (OwnerConnection != null)
@@ -2450,7 +2469,7 @@ namespace Barotrauma.Networking
                     //msg sent by the server
                     if (senderCharacter == null)
                     {
-                        senderName = name;
+                        senderName = serverName;
                     }
                     else //msg sent by an AI character
                     {
@@ -2482,7 +2501,7 @@ namespace Barotrauma.Networking
                     //msg sent by the server
                     if (senderCharacter == null)
                     {
-                        senderName = name;
+                        senderName = serverName;
                     }
                     else //sent by an AI character, not allowed when the game is not running
                     {

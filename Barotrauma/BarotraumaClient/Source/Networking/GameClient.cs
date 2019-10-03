@@ -18,6 +18,22 @@ namespace Barotrauma.Networking
             get { return true; }
         }
 
+        private string name;
+
+        private UInt16 nameId = 0;
+
+        public string Name
+        {
+            get { return name; }
+        }
+
+        public void SetName(string value)
+        {
+            if (string.IsNullOrEmpty(value)) { return; }
+            name = value.Replace(":", "").Replace(";", "");
+            nameId++;
+        }
+
         private ClientPeer clientPeer;
         public ClientPeer ClientPeer { get { return clientPeer; } }
 
@@ -213,7 +229,7 @@ namespace Barotrauma.Networking
             Hull.EditFire = false;
             Hull.EditWater = false;
 
-            Name = newName;
+            SetName(newName);
 
             entityEventManager = new ClientEntityEventManager(this);
 
@@ -594,13 +610,17 @@ namespace Barotrauma.Networking
                     respawnManager.Update(deltaTime);
                 }
 
-                if (updateTimer > DateTime.Now) { return; }
-                SendIngameUpdate();
+                if (updateTimer <= DateTime.Now)
+                {
+                    SendIngameUpdate();
+                }
             }
             else
             {
-                if (updateTimer > DateTime.Now) { return; }
-                SendLobbyUpdate();
+                if (updateTimer <= DateTime.Now)
+                {
+                    SendLobbyUpdate();
+                }
             }
 
             if (serverSettings.VoiceChatEnabled)
@@ -618,8 +638,11 @@ namespace Barotrauma.Networking
                 }
             }
 
-            // Update current time
-            updateTimer = DateTime.Now + updateInterval;
+            if (updateTimer <= DateTime.Now)
+            {
+                // Update current time
+                updateTimer = DateTime.Now + updateInterval;
+            }
         }
 
         private CoroutineHandle startGameCoroutine;
@@ -1285,6 +1308,7 @@ namespace Barotrauma.Networking
             {
                 byte id             = inc.ReadByte();
                 UInt64 steamId      = inc.ReadUInt64();
+                UInt16 nameId       = inc.ReadUInt16();
                 string name         = inc.ReadString();
                 UInt16 characterID  = inc.ReadUInt16();
                 bool muted          = inc.ReadBoolean();
@@ -1294,6 +1318,7 @@ namespace Barotrauma.Networking
                 tempClients.Add(new TempClient
                 {
                     ID = id,
+                    NameID = nameId,
                     SteamID = steamId,
                     Name = name,
                     CharacterID = characterID,
@@ -1321,6 +1346,7 @@ namespace Barotrauma.Networking
                         ConnectedClients.Add(existingClient);
                         GameMain.NetLobbyScreen.AddPlayer(existingClient);
                     }
+                    existingClient.NameID = tc.NameID;
                     existingClient.Character = null;
                     existingClient.Muted = tc.Muted;
                     existingClient.AllowKicking = tc.AllowKicking;
@@ -1336,6 +1362,7 @@ namespace Barotrauma.Networking
                     {
                         existingClient.SetPermissions(permissions, permittedConsoleCommands);
                         name = tc.Name;
+                        nameId = tc.NameID;
                         if (GameMain.NetLobbyScreen.CharacterNameBox != null &&
                             !GameMain.NetLobbyScreen.CharacterNameBox.Selected)
                         {
@@ -1611,6 +1638,7 @@ namespace Barotrauma.Networking
             outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
             outmsg.Write(ChatMessage.LastID);
             outmsg.Write(LastClientListUpdateID);
+            outmsg.Write(nameId);
             outmsg.Write(name);
 
             var campaign = GameMain.GameSession?.GameMode as MultiPlayerCampaign;

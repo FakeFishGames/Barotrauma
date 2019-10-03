@@ -909,7 +909,7 @@ namespace Barotrauma
         {
             if (characterInfo == null)
             {
-                characterInfo = new CharacterInfo(Character.HumanSpeciesName, GameMain.NetworkMember.Name, null);
+                characterInfo = new CharacterInfo(Character.HumanSpeciesName, GameMain.Client.Name, null);
                 characterInfo.RecreateHead(
                     GameMain.Config.CharacterHeadIndex,
                     GameMain.Config.CharacterRace,
@@ -947,7 +947,7 @@ namespace Barotrauma
                 else
                 {
                     ReadyToStartBox.Selected = false;
-                    GameMain.Client.Name = tb.Text;
+                    GameMain.Client.SetName(tb.Text);
                 };
             };
 

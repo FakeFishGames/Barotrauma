@@ -1065,7 +1065,7 @@ namespace Barotrauma
 
             commands.Add(new Command("servername", "servername [name]: Change the name of the server.", (string[] args) =>
             {
-                GameMain.Server.Name = string.Join(" ", args);
+                GameMain.Server.ServerName = string.Join(" ", args);
                 GameMain.NetLobbyScreen.ChangeServerName(string.Join(" ", args));
             }));
 
