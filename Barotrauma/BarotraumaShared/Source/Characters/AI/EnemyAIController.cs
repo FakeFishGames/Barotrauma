@@ -1260,18 +1260,35 @@ namespace Barotrauma
                         float wallMaxHealth = 400;  // Anything more than this is ignored -> 200 = 1
                         // Prefer weaker targets.
                         valueModifier *= MathHelper.Lerp(1.5f, 0.5f, MathUtils.InverseLerp(0, 1, s.Health / wallMaxHealth));
-                        if (AggressiveBoarding)
+                        bool canAttackSub = Character.AnimController.CanAttackSubmarine;
+                        if (!AggressiveBoarding)
                         {
-                            bool canAttackSub = Character.AnimController.CanAttackSubmarine;
-                            var hulls = s.Submarine.GetHulls(false);
+                            // Ignore disabled walls
+                            bool isDisabled = true;
                             for (int i = 0; i < s.Sections.Length; i++)
                             {
-                                var section = s.Sections[i];
-                                if (section.gap != null)
+                                if (!s.SectionBodyDisabled(i))
+                                {
+                                    isDisabled = false;
+                                    break;
+                                }
+                            }
+                            if (isDisabled)
+                            {
+                                continue;
+                            }
+                        }
+                        //var hulls = s.Submarine.GetHulls(false);
+                        for (int i = 0; i < s.Sections.Length; i++)
+                        {
+                            var section = s.Sections[i];
+                            if (section.gap != null)
+                            {
+                                if (AggressiveBoarding)
                                 {
                                     if (CanPassThroughHole(s, i))
                                     {
-                                        bool leadsInside = !section.gap.IsRoomToRoom && section.gap.FlowTargetHull != null && hulls.Any(h => h.Rect.Intersects(section.rect));
+                                        bool leadsInside = !section.gap.IsRoomToRoom && section.gap.FlowTargetHull != null;    // hulls.Any(h => h.Rect.Intersects(section.rect)
                                         valueModifier *= leadsInside ? 5 : 0;
                                     }
                                     else
@@ -1286,23 +1303,11 @@ namespace Barotrauma
                                         valueModifier *= 1 + section.gap.Open;
                                     }
                                 }
-                            }
-                        }
-                        else
-                        {
-                            // Ignore disabled walls
-                            bool isDisabled = true;
-                            for (int i = 0; i < s.Sections.Length; i++)
-                            {
-                                if (!s.SectionBodyDisabled(i))
+                                else
                                 {
-                                    isDisabled = false;
-                                    break;
+                                    bool leadsInside = !section.gap.IsRoomToRoom && section.gap.FlowTargetHull != null;
+                                    valueModifier *= leadsInside ? 1 : 0;
                                 }
-                            }
-                            if (isDisabled)
-                            {
-                                valueModifier = 0;
                             }
                         }
                     }
