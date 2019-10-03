@@ -357,10 +357,12 @@ namespace Barotrauma.Items.Components
         
         public override bool Use(float deltaTime, Character character = null)
         {
-            if (character == null) return false;
-#if CLIENT
-            if (character == Character.Controlled && character.SelectedConstruction != null) return false;
-#endif
+            if (character == null) { return false; }
+            if (character == Character.Controlled && character.SelectedConstruction != null) { return false; }
+            if (Screen.Selected == GameMain.SubEditorScreen && !PlayerInput.LeftButtonClicked())
+            {
+                return false;
+            }
 
             if (newNodePos != Vector2.Zero && canPlaceNode && nodes.Count > 0 && Vector2.Distance(newNodePos, nodes[nodes.Count - 1]) > nodeDistance)
             {
