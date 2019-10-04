@@ -146,7 +146,7 @@
       <Item identifier="physicorium" />
       <Item identifier="physicorium" />
     </Deconstruct>
-    <AiTarget sightrange="10000.0" soundrange="10000" />
+    <AiTarget sightrange="10000.0" soundrange="10000" static="True"/>
     <Body radius="45" density="50" friction="0.95" />
     <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10" msg="ItemMsgPickUpSelect" />
   </Item>

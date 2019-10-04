@@ -611,8 +611,6 @@ namespace Barotrauma
                         break;
                     case "aitarget":
                         aiTarget = new AITarget(this, subElement);
-                        aiTarget.SoundRange = aiTarget.MinSoundRange;
-                        aiTarget.SightRange = aiTarget.MinSightRange;
                         break;
                     default:
                         ItemComponent ic = ItemComponent.Load(subElement, this, itemPrefab.ConfigFile);
