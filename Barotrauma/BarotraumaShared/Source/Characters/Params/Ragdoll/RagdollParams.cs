@@ -536,9 +536,6 @@ namespace Barotrauma
             [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 500)]
             public float SteerForce { get; set; }
 
-            [Serialize("0, 0", true, description: "Only applicable if this limb is a foot. Determines the \"neutral position\" of the foot relative to a joint determined by the \"RefJoint\" parameter. For example, a value of {-100, 0} would mean that the foot is positioned on the floor, 100 units behind the reference joint."), Editable()]
-            public Vector2 StepOffset { get; set; }
-
             [Serialize(0f, true, description: "Radius of the collider."), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
             public float Radius { get; set; }
 
@@ -551,20 +548,26 @@ namespace Barotrauma
             [Serialize(10f, true), Editable(MinValueFloat = 0, MaxValueFloat = 100)]
             public float Density { get; set; }
 
+            [Serialize(false, true), Editable]
+            public bool IgnoreCollisions { get; set; }
+
+            [Serialize(7f, true), Editable]
+            public float AngularDamping { get; set; }
+
             [Serialize("0, 0", true, description: "The position which is used to lead the IK chain to the IK goal. Only applicable if the limb is hand or foot."), Editable()]
             public Vector2 PullPos { get; set; }
+
+            [Serialize("0, 0", true, description: "Only applicable if this limb is a foot. Determines the \"neutral position\" of the foot relative to a joint determined by the \"RefJoint\" parameter. For example, a value of {-100, 0} would mean that the foot is positioned on the floor, 100 units behind the reference joint."), Editable()]
+            public Vector2 StepOffset { get; set; }
 
             [Serialize(-1, true, description: "The id of the refecence joint. Determines which joint is used as the \"neutral x-position\" for the foot movement. For example in the case of a humanoid-shaped characters this would usually be the waist. The position can be offset using the StepOffset parameter. Only applicable if this limb is a foot."), Editable()]
             public int RefJoint { get; set; }
 
-            [Serialize(false, true), Editable]
-            public bool IgnoreCollisions { get; set; }
+            [Serialize("0, 0", true, description: "Relative offset for the mouth position (starting from the center). Only applicable for LimbType.Head. Used for eating."), Editable(DecimalCount = 2, MinValueFloat = -10f, MaxValueFloat = 10f)]
+            public Vector2 MouthPos { get; set; }
 
             [Serialize("", true), Editable]
             public string Notes { get; set; }
-
-            [Serialize(7f, true), Editable]
-            public float AngularDamping { get; set; }
 
             // Non-editable ->
             [Serialize(0, true)]
@@ -575,9 +578,6 @@ namespace Barotrauma
 
             [Serialize(0.05f, true)]
             public float Restitution { get; set; }
-
-            [Serialize("0, 0", true, description: "Relative offset for the mouth position (starting from the center). Only applicable for LimbType.Head. Used for eating."), Editable(DecimalCount = 2, MinValueFloat = -2f, MaxValueFloat = 2f)]
-            public Vector2 MouthPos { get; set; }
 
             public LimbParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
             {
