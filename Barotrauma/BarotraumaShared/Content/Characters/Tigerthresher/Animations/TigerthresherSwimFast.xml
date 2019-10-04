@@ -7,7 +7,7 @@
   wavelength="42.52522"
   rotatetowardsmovement="True"
   torsotorque="50"
-  headtorque="100"
+  headtorque="80"
   tailtorque="25"
   foottorque="25"
   footangles=""
