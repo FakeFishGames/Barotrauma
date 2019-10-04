@@ -287,16 +287,9 @@ namespace Barotrauma
 
         public override void DragCharacter(Character target, float deltaTime)
         {
-            if (target == null) return;
-            
-            Limb mouthLimb = Array.Find(Limbs, l => l != null && l.MouthPos.HasValue);
-            if (mouthLimb == null) mouthLimb = GetLimb(LimbType.Head);
-
-            if (mouthLimb == null)
-            {
-                DebugConsole.ThrowError("Character \"" + character.SpeciesName + "\" failed to eat a target (a head or a limb with a mouthpos required)");
-                return;
-            }
+            if (target == null) { return; }     
+            Limb mouthLimb = GetLimb(LimbType.Head);
+            if (mouthLimb == null) { return; }
 
             if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
             {

@@ -76,6 +76,14 @@ namespace Barotrauma
 
         public void Draw(SpriteBatch spriteBatch)
         {
+            // TODO: move this in character editor
+            var mouthPos = ragdoll.GetMouthPosition();
+            if (mouthPos != null)
+            {
+                var pos = ConvertUnits.ToDisplayUnits(mouthPos.Value);
+                pos.Y = -pos.Y;
+                ShapeExtensions.DrawPoint(spriteBatch, pos, Color.Red, size: 5);
+            }
             return;
             // A debug visualisation on the bezier curve between limbs.
             var start = LimbA.WorldPosition;

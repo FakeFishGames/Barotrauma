@@ -576,6 +576,9 @@ namespace Barotrauma
             [Serialize(0.05f, true)]
             public float Restitution { get; set; }
 
+            [Serialize("0, 0", true, description: "Relative offset for the mouth position (starting from the center). Only applicable for LimbType.Head. Used for eating."), Editable(DecimalCount = 2, MinValueFloat = -2f, MaxValueFloat = 2f)]
+            public Vector2 MouthPos { get; set; }
+
             public LimbParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
             {
                 var spriteElement = element.GetChildElement("sprite");

@@ -101,8 +101,23 @@ namespace Barotrauma
         
         private bool isSevered;
         private float severedFadeOutTimer;
-                
-        public Vector2? MouthPos;
+
+        private Vector2? mouthPos;
+        public Vector2 MouthPos
+        {
+            get
+            {
+                if (!mouthPos.HasValue)
+                {
+                    mouthPos = Params.MouthPos;
+                }
+                return mouthPos.Value;
+            }
+            set
+            {
+                mouthPos = value;
+            }
+        }
         
         public readonly Attack attack;
         private List<DamageModifier> damageModifiers;
@@ -308,10 +323,6 @@ namespace Barotrauma
             GameMain.World.AddJoint(pullJoint);
 
             var element = limbParams.Element;
-            if (element.Attribute("mouthpos") != null)
-            {
-                MouthPos = ConvertUnits.ToSimUnits(element.GetAttributeVector2("mouthpos", Vector2.Zero));
-            }
 
             body.BodyType = BodyType.Dynamic;
 

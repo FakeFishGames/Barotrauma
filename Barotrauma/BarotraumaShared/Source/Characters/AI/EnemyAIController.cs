@@ -1060,30 +1060,29 @@ namespace Barotrauma
 
         private void UpdateEating(float deltaTime)
         {
-            if (SelectedAiTarget == null)   //SelectedAiTarget.Entity is Character c && !c.IsDead
+            if (SelectedAiTarget == null)
             {
                 State = AIState.Idle;
                 return;
             }
-            Character targetChar = SelectedAiTarget.Entity as Character;
-
-            Limb mouthLimb = Array.Find(Character.AnimController.Limbs, l => l != null && l.MouthPos.HasValue);
-            if (mouthLimb == null) mouthLimb = Character.AnimController.GetLimb(LimbType.Head);
+            Limb mouthLimb = Character.AnimController.GetLimb(LimbType.Head);
             if (mouthLimb == null)
             {
-                DebugConsole.ThrowError("Character \"" + Character.SpeciesName + "\" failed to eat a target (a head or a limb with a mouthpos required)");
+                DebugConsole.ThrowError("Character \"" + Character.SpeciesName + "\" failed to eat a target (No head limb defined)");
                 State = AIState.Idle;
                 return;
             }
-
             Vector2 mouthPos = Character.AnimController.GetMouthPosition().Value;
             Vector2 attackSimPosition = Character.Submarine == null ? ConvertUnits.ToSimUnits(SelectedAiTarget.WorldPosition) : SelectedAiTarget.SimPosition;
-
             Vector2 limbDiff = attackSimPosition - mouthPos;
             float limbDist = limbDiff.Length();
             if (limbDist < 2.0f)
             {
-                Character.SelectCharacter(SelectedAiTarget.Entity as Character);
+                if (SelectedAiTarget.Entity is Character c)
+                {
+                    Character.SelectCharacter(c);
+                }
+                // TODO: what if we use this for eating something else than characters?
                 steeringManager.SteeringManual(deltaTime, Vector2.Normalize(limbDiff));
                 Character.AnimController.Collider.ApplyForce(limbDiff * mouthLimb.Mass * 50.0f, mouthPos);
             }
