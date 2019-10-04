@@ -57,6 +57,11 @@ namespace Barotrauma
                 else
                 {
                     var saveFiles = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Multiplayer).ToArray();
+                    if (saveFiles.Length == 0)
+                    {
+                        DebugConsole.ThrowError("No save files found.");
+                        return;
+                    }
                     DebugConsole.NewMessage("Saved campaigns:", Color.White);
                     for (int i = 0; i < saveFiles.Length; i++)
                     {
@@ -65,9 +70,16 @@ namespace Barotrauma
                     DebugConsole.ShowQuestionPrompt("Select a save file to load (0 - " + (saveFiles.Length - 1) + "):", (string selectedSave) =>
                     {
                         int saveIndex = -1;
-                        if (!int.TryParse(selectedSave, out saveIndex)) return;
+                        if (!int.TryParse(selectedSave, out saveIndex)) { return; }
 
-                        LoadCampaign(saveFiles[saveIndex]);
+                        if (saveIndex < 0 || saveIndex >= saveFiles.Length)
+                        {
+                            DebugConsole.ThrowError("Invalid save file index.");
+                        }
+                        else
+                        {
+                            LoadCampaign(saveFiles[saveIndex]);
+                        }
                     });
                 }
             });

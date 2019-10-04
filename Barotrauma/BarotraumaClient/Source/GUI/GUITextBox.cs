@@ -162,10 +162,11 @@ namespace Barotrauma
 
         public override ScalableFont Font
         {
+            get { return textBlock?.Font ?? base.Font; }
             set
             {
                 base.Font = value;
-                if (textBlock == null) return;
+                if (textBlock == null) { return; }
                 textBlock.Font = value;
             }
         }

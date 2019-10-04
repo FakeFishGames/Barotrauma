@@ -202,7 +202,7 @@ namespace Barotrauma.Items.Components
             TextBlock.Text = sb.ToString();            
         }
                 
-        public void Draw(SpriteBatch spriteBatch, bool editing = false)
+        public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
         {
             var drawPos = new Vector2(
                 item.DrawPosition.X - item.Rect.Width / 2.0f,

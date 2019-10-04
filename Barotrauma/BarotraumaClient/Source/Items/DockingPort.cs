@@ -14,7 +14,7 @@ namespace Barotrauma.Items.Components
             get { return Vector2.Zero; }
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool editing)
+        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
         {
             if (dockingState == 0.0f) return;
 
@@ -105,5 +105,56 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        {
+            bool isDocked = msg.ReadBoolean();
+
+            for (int i = 0; i < 2; i++)
+            {
+                if (hulls[i] == null) continue;
+                item.linkedTo.Remove(hulls[i]);
+                hulls[i].Remove();
+                hulls[i] = null;
+            }
+
+            if (gap != null)
+            {
+                item.linkedTo.Remove(gap);
+                gap.Remove();
+                gap = null;
+            }
+
+            if (isDocked)
+            {
+                ushort dockingTargetID = msg.ReadUInt16();
+
+                bool isLocked = msg.ReadBoolean();
+
+                Entity targetEntity = Entity.FindEntityByID(dockingTargetID);
+                if (targetEntity == null || !(targetEntity is Item))
+                {
+                    DebugConsole.ThrowError("Invalid docking port network event (can't dock to " + targetEntity.ToString() + ")");
+                    return;
+                }
+
+                DockingTarget = (targetEntity as Item).GetComponent<DockingPort>();
+                if (DockingTarget == null)
+                {
+                    DebugConsole.ThrowError("Invalid docking port network event (" + targetEntity + " doesn't have a docking port component)");
+                    return;
+                }
+
+                Dock(DockingTarget);
+
+                if (isLocked)
+                {
+                    Lock(isNetworkMessage: true, forcePosition: true);
+                }
+            }
+            else
+            {
+                Undock();
+            }
+        }
     }
 }

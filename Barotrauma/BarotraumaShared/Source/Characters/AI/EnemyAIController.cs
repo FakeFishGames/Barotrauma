@@ -669,6 +669,13 @@ namespace Barotrauma
                         return;
                 }
             }
+            
+            if (!CanAttack())
+            {
+                // Invalid target
+                UpdateFallBack(attackWorldPos, deltaTime);
+                return;
+            }
 
             if (canAttack)
             {
@@ -792,10 +799,27 @@ namespace Barotrauma
             return false;
         }
 
+
+        private bool CanAttack() => CanAttack(wallTarget != null ? wallTarget.Structure : SelectedAiTarget?.Entity);
+
+        private bool CanAttack(Entity target)
+        {
+            if (target == null) { return false; }
+            if (target is Character ch)
+            {
+                if (Character.CurrentHull == null && ch.CurrentHull != null || Character.CurrentHull != null && ch.CurrentHull == null)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
         private Limb GetAttackLimb(Vector2 attackWorldPos, Limb ignoredLimb = null)
         {
             AttackContext currentContext = Character.GetAttackContext();
-            var target = wallTarget != null ? wallTarget.Structure : SelectedAiTarget?.Entity;
+            Entity target = wallTarget != null ? wallTarget.Structure : SelectedAiTarget?.Entity;
+            if (!CanAttack(target)) { return null; }
             Limb selectedLimb = null;
             float currentPriority = 0;
             foreach (Limb limb in Character.AnimController.Limbs)

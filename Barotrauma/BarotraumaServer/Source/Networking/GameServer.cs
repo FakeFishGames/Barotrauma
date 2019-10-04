@@ -23,6 +23,19 @@ namespace Barotrauma.Networking
             get { return true; }
         }
 
+        private string serverName;
+
+        public string ServerName
+        {
+            get { return serverName; }
+            set
+            {
+                if (string.IsNullOrEmpty(value)) { return; }
+                serverName = value.Replace(":", "").Replace(";", "");
+            }
+        }
+
+
         private List<Client> connectedClients = new List<Client>();
 
         //for keeping track of disconnected clients in case the reconnect shortly after
@@ -114,11 +127,12 @@ namespace Barotrauma.Networking
                 name = name.Substring(0, NetConfig.ServerNameMaxLength);
             }
 
-            this.name = name;
+            this.serverName = name;
 
             LastClientListUpdateID = 0;
 
             serverSettings = new ServerSettings(this, name, port, queryPort, maxPlayers, isPublic, attemptUPnP);
+            KarmaManager.SelectPreset(serverSettings.KarmaPreset);
             if (!string.IsNullOrEmpty(password))
             {
                 serverSettings.SetPassword(password);
@@ -317,7 +331,7 @@ namespace Barotrauma.Networking
 
             var request = new RestRequest("masterserver3.php", Method.GET);
             request.AddParameter("action", "addserver");
-            request.AddParameter("servername", name);
+            request.AddParameter("servername", serverName);
             request.AddParameter("serverport", Port);
             request.AddParameter("currplayers", connectedClients.Count);
             request.AddParameter("maxplayers", serverSettings.MaxPlayers);
@@ -434,9 +448,9 @@ namespace Barotrauma.Networking
         public override void Update(float deltaTime)
         {
 #if CLIENT
-            if (ShowNetStats) netStats.Update(deltaTime);
+            if (ShowNetStats) { netStats.Update(deltaTime); }
 #endif
-            if (!started) return;
+            if (!started) { return; }
 
             base.Update(deltaTime);
 
@@ -647,6 +661,9 @@ namespace Barotrauma.Networking
             }
 
             serverPeer.Update(deltaTime);
+
+            //don't run the rest of the method if something in serverPeer.Update causes the server to shutdown
+            if (!started) { return; }
 
             // if update interval has passed
             if (updateTimer < DateTime.Now)
@@ -900,7 +917,7 @@ namespace Barotrauma.Networking
                         c.LastRecvChatMsgID = NetIdUtils.Clamp(inc.ReadUInt16(), c.LastRecvChatMsgID, c.LastChatMsgQueueID);
                         c.LastRecvClientListUpdate = NetIdUtils.Clamp(inc.ReadUInt16(), c.LastRecvClientListUpdate, LastClientListUpdateID);
 
-                        TryChangeClientName(c, inc.ReadString());
+                        TryChangeClientName(c, inc);
 
                         c.LastRecvCampaignSave = inc.ReadUInt16();
                         if (c.LastRecvCampaignSave > 0)
@@ -1504,6 +1521,7 @@ namespace Barotrauma.Networking
             {
                 outmsg.Write(client.ID);
                 outmsg.Write(client.SteamID);
+                outmsg.Write(client.NameID);
                 outmsg.Write(client.Name);
                 outmsg.Write(client.Character == null || !gameStarted ? (ushort)0 : client.Character.ID);
                 outmsg.Write(client.Muted);
@@ -1522,7 +1540,9 @@ namespace Barotrauma.Networking
             outmsg.Write((byte)ServerNetObject.SYNC_IDS);
 
             int settingsBytes = outmsg.LengthBytes;
+            int initialUpdateBytes = 0;
 
+            IWriteMessage settingsBuf = null;
             if (NetIdUtils.IdMoreRecent(GameMain.NetLobbyScreen.LastUpdateID, c.LastRecvLobbyUpdate))
             {
                 outmsg.Write(true);
@@ -1530,17 +1550,18 @@ namespace Barotrauma.Networking
 
                 outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
 
-                IWriteMessage settingsBuf = new ReadWriteMessage();
+                settingsBuf = new ReadWriteMessage();
                 serverSettings.ServerWrite(settingsBuf, c);
-
                 outmsg.Write((UInt16)settingsBuf.LengthBytes);
-                outmsg.Write(settingsBuf.Buffer,0,settingsBuf.LengthBytes);
+                outmsg.Write(settingsBuf.Buffer, 0, settingsBuf.LengthBytes);
 
                 outmsg.Write(c.LastRecvLobbyUpdate < 1);
                 if (c.LastRecvLobbyUpdate < 1)
                 {
                     isInitialUpdate = true;
+                    initialUpdateBytes = outmsg.LengthBytes;
                     ClientWriteInitial(c, outmsg);
+                    initialUpdateBytes = outmsg.LengthBytes - initialUpdateBytes;
                 }
                 outmsg.Write(GameMain.NetLobbyScreen.SelectedSub.Name);
                 outmsg.Write(GameMain.NetLobbyScreen.SelectedSub.MD5Hash.ToString());
@@ -1629,13 +1650,23 @@ namespace Barotrauma.Networking
             {
                 if (outmsg.LengthBytes > MsgConstants.MTU)
                 {
-                    string errorMsg = "Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + MsgConstants.MTU + ")";
+                    string errorMsg = "Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + MsgConstants.MTU + ")\n";
                     errorMsg +=
                         "  Client list size: " + clientListBytes + " bytes\n" +
                         "  Chat message size: " + chatMessageBytes + " bytes\n" +
                         "  Campaign size: " + campaignBytes + " bytes\n" +
-                        "  Settings size: " + settingsBytes + " bytes\n\n";
-                        DebugConsole.ThrowError(errorMsg);
+                        "  Settings size: " + settingsBytes + " bytes\n";
+                    if (initialUpdateBytes > 0)
+                    {
+                        errorMsg +=
+                            "    Initial update size: " + settingsBuf.LengthBytes + " bytes\n";
+                    }
+                    if (settingsBuf != null)
+                    {
+                        errorMsg +=
+                            "    Settings buffer size: " + settingsBuf.LengthBytes + " bytes\n";
+                    }
+                    DebugConsole.ThrowError(errorMsg);
                     GameAnalyticsManager.AddErrorEventOnce("GameServer.ClientWriteIngame1:ClientWriteLobby" + outmsg.LengthBytes, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 }
 
@@ -1817,10 +1848,18 @@ namespace Barotrauma.Networking
                 Log("Level seed: " + GameMain.NetLobbyScreen.LevelSeed, ServerLog.MessageType.ServerMessage);
             }
 
+            if (GameMain.GameSession.Submarine.IsFileCorrupted)
+            {
+                CoroutineManager.StopCoroutines(startGameCoroutine);
+                initiatedStartGame = false;
+                SendChatMessage(TextManager.FormatServerMessage($"SubLoadError~[subname]={GameMain.GameSession.Submarine.Name}"), ChatMessageType.Error);
+                yield return CoroutineStatus.Failure;
+            }
+
             MissionMode missionMode = GameMain.GameSession.GameMode as MissionMode;
             bool missionAllowRespawn = campaign == null && (missionMode?.Mission == null || missionMode.Mission.AllowRespawn);
 
-            if (serverSettings.AllowRespawn && missionAllowRespawn) respawnManager = new RespawnManager(this, usingShuttle ? selectedShuttle : null);
+            if (serverSettings.AllowRespawn && missionAllowRespawn) { respawnManager = new RespawnManager(this, usingShuttle ? selectedShuttle : null); }
 
             entityEventManager.RefreshEntityIDs();
 
@@ -2103,9 +2142,14 @@ namespace Barotrauma.Networking
             base.AddChatMessage(message);
         }
 
-        private bool TryChangeClientName(Client c, string newName)
+        private bool TryChangeClientName(Client c, IReadMessage inc)
         {
-            if (c == null || string.IsNullOrEmpty(newName)) { return false; }
+            UInt16 nameId = inc.ReadUInt16();
+            string newName = inc.ReadString();
+
+            if (c == null || string.IsNullOrEmpty(newName) || !NetIdUtils.IdMoreRecent(nameId, c.NameID)) { return false; }
+
+            c.NameID = nameId;
 
             newName = Client.SanitizeName(newName);
             if (newName == c.Name) { return false; }
@@ -2121,7 +2165,7 @@ namespace Barotrauma.Networking
                     SendDirectChatMessage("Could not change your name to \"" + newName + "\" (the name contains disallowed symbols).", c, ChatMessageType.MessageBox);
                     return false;
                 }
-                if (Homoglyphs.Compare(newName.ToLower(), Name.ToLower()))
+                if (Homoglyphs.Compare(newName.ToLower(), ServerName.ToLower()))
                 {
                     SendDirectChatMessage("Could not change your name to \"" + newName + "\" (too similar to the server's name).", c, ChatMessageType.MessageBox);
                     return false;
@@ -2374,7 +2418,7 @@ namespace Barotrauma.Networking
                     default:
                         if (command != "")
                         {
-                            if (command.ToLower() == name.ToLower())
+                            if (command.ToLower() == serverName.ToLower())
                             {
                                 //a private message to the host
                                 if (OwnerConnection != null)
@@ -2425,7 +2469,7 @@ namespace Barotrauma.Networking
                     //msg sent by the server
                     if (senderCharacter == null)
                     {
-                        senderName = name;
+                        senderName = serverName;
                     }
                     else //msg sent by an AI character
                     {
@@ -2457,7 +2501,7 @@ namespace Barotrauma.Networking
                     //msg sent by the server
                     if (senderCharacter == null)
                     {
-                        senderName = name;
+                        senderName = serverName;
                     }
                     else //sent by an AI character, not allowed when the game is not running
                     {
@@ -2496,7 +2540,7 @@ namespace Barotrauma.Networking
                     break;
             }
 
-            if (type == ChatMessageType.Server)
+            if (type == ChatMessageType.Server || type == ChatMessageType.Error)
             {
                 senderName = null;
                 senderCharacter = null;

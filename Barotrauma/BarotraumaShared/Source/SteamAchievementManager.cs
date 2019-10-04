@@ -229,6 +229,14 @@ namespace Barotrauma
             {
                 UnlockAchievement(causeOfDeath.Killer, "kill" + character.SpeciesName + "indoors");
             }
+            if (character.SpeciesName.EndsWith("boss"))
+            {
+                UnlockAchievement(causeOfDeath.Killer, "kill" + character.SpeciesName.Replace("boss", ""));
+                if (character.CurrentHull != null)
+                {
+                    UnlockAchievement(causeOfDeath.Killer, "kill" + character.SpeciesName.Replace("boss", "") + "indoors");
+                }
+            }
 
             if (character.HasEquippedItem("clownmask") && 
                 character.HasEquippedItem("clowncostume") &&

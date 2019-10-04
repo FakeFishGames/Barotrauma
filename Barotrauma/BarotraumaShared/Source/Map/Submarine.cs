@@ -1387,6 +1387,12 @@ namespace Barotrauma
                 {
                     stream = SaveUtil.DecompressFiletoStream(file);
                 }
+                catch (FileNotFoundException e)
+                {
+                    exception = e;
+                    DebugConsole.ThrowError("Loading submarine \"" + file + "\" failed! (File not found)");
+                    return null;
+                }
                 catch (Exception e) 
                 {
                     exception = e;
@@ -1450,7 +1456,11 @@ namespace Barotrauma
                     DebugConsole.NewMessage("Loading the submarine \"" + Name + "\" failed, retrying in 250 ms...");
                     Thread.Sleep(250);
                 }
-                if (doc == null || doc.Root == null) { return; }
+                if (doc == null || doc.Root == null)
+                {
+                    IsFileCorrupted = true;
+                    return;
+                }
                 submarineElement = doc.Root;
             }
 

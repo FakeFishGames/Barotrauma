@@ -115,7 +115,7 @@ namespace Barotrauma
                     TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(container.Item, character, objectiveManager));
                     return;
                 }
-                container.Combine(itemToContain);
+                container.Combine(itemToContain, character);
             }
         }
 

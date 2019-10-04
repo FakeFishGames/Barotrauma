@@ -173,7 +173,7 @@ namespace Barotrauma.Items.Components
 
             if (i == ropeBodies.Length - 2)
             {
-                item.Combine(projectile);
+                item.Combine(projectile, user: null);
                 ropeBodies[ropeBodies.Length - 1].Enabled = false;
                 IsActive = false;
             }
@@ -221,7 +221,7 @@ namespace Barotrauma.Items.Components
             {
                 //attempt to recontain the projectile in the launcher
                 //eq automatically reload a spear into a speargun when picking the spear up
-                if (!projectile.body.Enabled) item.Combine(projectile);
+                if (!projectile.body.Enabled) item.Combine(projectile, user: null);
 
                 foreach (PhysicsBody b in ropeBodies)
                 {

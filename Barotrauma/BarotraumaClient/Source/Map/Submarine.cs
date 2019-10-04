@@ -235,7 +235,7 @@ namespace Barotrauma
             foreach (MapEntity e in entitiesToRender)
             {
                 if (e.DrawDamageEffect)
-                    e.DrawDamage(spriteBatch, damageEffect);
+                    e.DrawDamage(spriteBatch, damageEffect, editing);
             }
             if (damageEffect != null)
             {

@@ -40,6 +40,8 @@ namespace Barotrauma
 
         private float textDepth;
 
+        private ScalableFont originalFont;
+
         public Vector2 TextOffset { get; set; }
 
         private Vector4 padding;
@@ -62,7 +64,7 @@ namespace Barotrauma
             set
             {
                 if (base.Font == value) return;
-                base.Font = value;
+                base.Font = originalFont = value;
                 SetTextPos();
             }
         }
@@ -74,13 +76,23 @@ namespace Barotrauma
             {
                 string newText = forceUpperCase ? value?.ToUpper() : value;
 
-                if (Text == newText) return;
+                if (Text == newText) { return; }
+
 
                 //reset scale, it gets recalculated in SetTextPos
-                if (autoScale) textScale = 1.0f;                
+                if (autoScale) { textScale = 1.0f; }
 
                 text = newText;
                 wrappedText = newText;
+                if (TextManager.IsCJK(text))
+                {
+                    //switch to fallback CJK font
+                    if (!Font.IsCJK) { base.Font = GUI.CJKFont; }
+                }
+                else
+                {
+                    if (Font == GUI.CJKFont) { base.Font = originalFont; }
+                }
                 SetTextPos();
             }
         }
@@ -208,8 +220,11 @@ namespace Barotrauma
 
             //if the text is in chinese/korean/japanese and we're not using a CJK-compatible font,
             //use the default CJK font as a fallback
-            var selectedFont = font ?? GUI.Font;
-            if (TextManager.IsCJK(text) && !selectedFont.IsCJK) { selectedFont = GUI.CJKFont; }
+            var selectedFont = originalFont = font ?? GUI.Font;
+            if (TextManager.IsCJK(text) && !selectedFont.IsCJK)
+            {                
+                selectedFont = GUI.CJKFont;
+            }
             this.Font = selectedFont;
             this.textAlignment = textAlignment;
             this.Wrap = wrap;

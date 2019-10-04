@@ -267,11 +267,12 @@
     <Body width="215" height="119" density="40" />
     <!-- the character will hold the item 50 pixels in front of him, with his hands at the handle1 and handle2 positions -->
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true" aimpos="50,0" handle1="-85,-35" handle2="0,-27" msg="ItemMsgPickUpSelect" />
-    <RepairTool structurefixamount="0.0" usablein="Air" range="500" barrelpos="35,10" fireprobability="0.2" repairmultiple="true" repairthroughwalls="false"  repairthroughholes="true" combatpriority="20">
+    <RepairTool structurefixamount="0.0" usablein="Air" range="500" barrelpos="35,10" fireprobability="0.2" repairmultiple="true" repairthroughwalls="false" repairthroughholes="true" combatpriority="20" spread="25" unskilledspread="25">
       <!-- the item must contain a welding fuel tank for it to work -->
       <RequiredItems items="weldingfuel" type="Contained" msg="ItemMsgWeldingFuelRequired" />
       <ParticleEmitterHitCharacter particle="fleshsmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100" />
-      <ParticleEmitter particle="flamethrower" particlespersecond="80" anglemin="0" anglemax="0" velocitymin="500" velocitymax="1000" highqualitycollisiondetection="true"/>
+      <ParticleEmitter particle="flamethrower" particlespersecond="80" anglemin="0" anglemax="0" velocitymin="500" velocitymax="700" highqualitycollisiondetection="true"/>
+      <ParticleEmitter particle="flamethrowersmoke" particlespersecond="80" anglemin="0" anglemax="0" velocitymin="200" velocitymax="500"/>
       <sound file="Content/Items/Weapons/FlameThrowerLoop.ogg" type="OnUse" range="500.0" loop="true" />
       <!-- bubbles when usage fails (e.g. in water) -->
       <StatusEffect type="OnFailure" target="UseTarget">

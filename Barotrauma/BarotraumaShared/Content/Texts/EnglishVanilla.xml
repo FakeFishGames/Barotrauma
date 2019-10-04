@@ -3337,7 +3337,6 @@
   <connection.activate>activate</connection.activate>
   <connection.dockingproximitysensor>proximity_sensor</connection.dockingproximitysensor>
   <connection.signalx>signal_[num]</connection.signalx>
-  <connection.set_text>signal_[num]</connection.set_text>
   <connection.stateout>state_out</connection.stateout>
   <connection.turretaimingout>position_out</connection.turretaimingout>
   <connection.turrettriggerout>trigger_out</connection.turrettriggerout>
@@ -3524,6 +3523,7 @@
   <replacelostshuttles>Replace lost shuttles</replacelostshuttles>
   <replaceshuttles>Replace</replaceshuttles>
   <replaceshuttledockingportoccupied>The lost shuttle cannot be replaced because the docking port is already in use. Clear the docking port before requisitioning a new shuttle.</replaceshuttledockingportoccupied>
+  <campaignfiletransferinprogress>Please wait for the campaign save file to finish downloading.</campaignfiletransferinprogress>
 
   <character.blackmoloch>Black Moloch</character.blackmoloch>
   <character.goldenhammerhead>Golden Hammerhead</character.goldenhammerhead>
@@ -3571,5 +3571,4 @@
   <servertagdescription.voipdisabled>Voice chat is disabled.</servertagdescription.voipdisabled>
   <servertag.karmadisabled>Karma disabled</servertag.karmadisabled>
   <servertagdescription.karmadisabled>Karma system is disabled.</servertagdescription.karmadisabled>
-  
- </infotexts>
+</infotexts>

@@ -905,7 +905,7 @@ namespace Barotrauma
         {
             if (characterInfo == null)
             {
-                characterInfo = new CharacterInfo(Character.HumanSpeciesName, GameMain.NetworkMember.Name, null);
+                characterInfo = new CharacterInfo(Character.HumanSpeciesName, GameMain.Client.Name, null);
                 characterInfo.RecreateHead(
                     GameMain.Config.CharacterHeadIndex,
                     GameMain.Config.CharacterRace,
@@ -926,7 +926,7 @@ namespace Barotrauma
                 UserData = characterInfo
             };
 
-            CharacterNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.1f), infoContainer.RectTransform), characterInfo.Name, font: GUI.LargeFont, textAlignment: Alignment.Center)
+            CharacterNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.1f), infoContainer.RectTransform), characterInfo.Name, textAlignment: Alignment.Center)
             {
                 MaxTextLength = Client.MaxNameLength,
                 OverflowClip = true
@@ -943,7 +943,7 @@ namespace Barotrauma
                 else
                 {
                     ReadyToStartBox.Selected = false;
-                    GameMain.Client.Name = tb.Text;
+                    GameMain.Client.SetName(tb.Text);
                 };
             };
 
@@ -2105,7 +2105,7 @@ namespace Barotrauma
                     return true;
                 }
             }
-            
+
             //-------------------------------------------------------------------------------------
             //if we get to this point, a matching sub was not found or it has an incorrect MD5 hash
             

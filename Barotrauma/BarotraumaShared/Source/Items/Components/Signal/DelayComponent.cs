@@ -9,9 +9,12 @@ namespace Barotrauma.Items.Components
         {
             public readonly string Signal;
             public readonly float SignalStrength;
-            public float SendTimer;
+            //in number of frames
+            public int SendTimer;
+            //in number of frames
+            public int SendDuration;
 
-            public DelayedSignal(string signal, float signalStrength, float sendTimer)
+            public DelayedSignal(string signal, float signalStrength, int sendTimer)
             {
                 Signal = signal;
                 SignalStrength = signalStrength;
@@ -19,15 +22,25 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        const int SignalQueueSize = 500;
+        private int signalQueueSize;
+        private int delayTicks;
 
         private Queue<DelayedSignal> signalQueue;
+
+        private DelayedSignal prevQueuedSignal;
         
+        private float delay;
         [InGameEditable(MinValueFloat = 0.0f, MaxValueFloat = 60.0f, DecimalCount = 2), Serialize(1.0f, true, description: "How long the item delays the signals (in seconds).")]
         public float Delay
         {
-            get;
-            set;
+            get { return delay; }
+            set
+            {
+                if (value == delay) { return; }
+                delay = value;
+                int delayTicks = (int)(delay / Timing.Step);
+                signalQueueSize = delayTicks * 2;
+            }
         }
 
         [InGameEditable, Serialize(false, true, description: "Should the component discard previously received signals when a new one is received.")]
@@ -55,13 +68,15 @@ namespace Barotrauma.Items.Components
         {
             foreach (var val in signalQueue)
             {
-                val.SendTimer -= deltaTime;
+                val.SendTimer -= 1;
             }
 
-            while (signalQueue.Count > 0 && signalQueue.Peek().SendTimer <= 0.0f)
+            while (signalQueue.Count > 0 && signalQueue.Peek().SendTimer <= 0)
             {
-                var signalOut = signalQueue.Dequeue();
+                var signalOut = signalQueue.Peek();
+                signalOut.SendDuration -= 1;
                 item.SendSignal(0, signalOut.Signal, "signal_out", null, signalStrength: signalOut.SignalStrength);
+                if (signalOut.SendDuration <= 0) { signalQueue.Dequeue(); } else { break; }
             }
         }
 
@@ -70,13 +85,25 @@ namespace Barotrauma.Items.Components
             switch (connection.Name)
             {
                 case "signal_in":
-                    if (signalQueue.Count >= SignalQueueSize) return;
-                    if (ResetWhenSignalReceived) signalQueue.Clear();
+                    if (signalQueue.Count >= signalQueueSize) { return; }
+                    if (ResetWhenSignalReceived) { prevQueuedSignal = null; signalQueue.Clear(); }
                     if (ResetWhenDifferentSignalReceived && signalQueue.Count > 0 && signalQueue.Peek().Signal != signal)
                     {
+                        prevQueuedSignal = null;
                         signalQueue.Clear();
                     }
-                    signalQueue.Enqueue(new DelayedSignal(signal, signalStrength, Delay));
+
+                    if (prevQueuedSignal != null && 
+                        prevQueuedSignal.Signal == signal && 
+                        MathUtils.NearlyEqual(prevQueuedSignal.SignalStrength, signalStrength) &&
+                        prevQueuedSignal.SendTimer + prevQueuedSignal.SendDuration + 1 == delayTicks)
+                    {
+                        prevQueuedSignal.SendDuration += 1;
+                        return;
+                    }
+
+                    prevQueuedSignal = new DelayedSignal(signal, signalStrength, delayTicks);
+                    signalQueue.Enqueue(prevQueuedSignal);
                     break;
             }
         }

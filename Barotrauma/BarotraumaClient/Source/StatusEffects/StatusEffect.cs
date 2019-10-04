@@ -64,8 +64,14 @@ namespace Barotrauma
                     {
                         foreach (RoundSound sound in sounds)
                         {
+                            if (sound.Sound == null)
+                            {
+                                string errorMsg = $"Error in StatusEffect.ApplyProjSpecific1 (sound \"{sound.Filename ?? "unknown"}\" was null)\n" + Environment.StackTrace;
+                                GameAnalyticsManager.AddErrorEventOnce("StatusEffect.ApplyProjSpecific:SoundNull1" + Environment.StackTrace, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                                return;
+                            }
                             soundChannel = SoundPlayer.PlaySound(sound.Sound, entity.WorldPosition, sound.Volume, sound.Range, hull);
-                            if (soundChannel != null) soundChannel.Looping = loopSound;
+                            if (soundChannel != null) { soundChannel.Looping = loopSound; }
                         }
                     }
                     else
@@ -84,8 +90,14 @@ namespace Barotrauma
                             selectedSoundIndex = Rand.Int(sounds.Count);
                         }
                         var selectedSound = sounds[selectedSoundIndex];
+                        if (selectedSound.Sound == null)
+                        {
+                            string errorMsg = $"Error in StatusEffect.ApplyProjSpecific2 (sound \"{selectedSound.Filename ?? "unknown"}\" was null)\n" + Environment.StackTrace;
+                            GameAnalyticsManager.AddErrorEventOnce("StatusEffect.ApplyProjSpecific:SoundNull2" + Environment.StackTrace, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                            return;
+                        }
                         soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, entity.WorldPosition, selectedSound.Volume, selectedSound.Range, hull);
-                        if (soundChannel != null) soundChannel.Looping = loopSound;
+                        if (soundChannel != null) { soundChannel.Looping = loopSound; }
                     }
                 }
 

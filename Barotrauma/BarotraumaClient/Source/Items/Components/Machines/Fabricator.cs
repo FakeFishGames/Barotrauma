@@ -271,11 +271,14 @@ namespace Barotrauma.Items.Components
 
                 Rectangle slotRect = outputContainer.Inventory.slots[0].Rect;
 
-                GUI.DrawRectangle(spriteBatch,
-                new Rectangle(
-                    slotRect.X, slotRect.Y + (int)(slotRect.Height * (1.0f - progressState)),
-                    slotRect.Width, (int)(slotRect.Height * progressState)),
-                Color.Green * 0.5f, isFilled: true);
+                if (fabricatedItem != null)
+                {
+                    GUI.DrawRectangle(spriteBatch,
+                        new Rectangle(
+                            slotRect.X, slotRect.Y + (int)(slotRect.Height * (1.0f - progressState)),
+                            slotRect.Width, (int)(slotRect.Height * progressState)),
+                        Color.Green * 0.5f, isFilled: true);
+                }
 
                 itemIcon.Draw(
                     spriteBatch,

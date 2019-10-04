@@ -1794,13 +1794,13 @@ namespace Barotrauma
             if (remove) { Spawner?.AddToRemoveQueue(this); }
         }
 
-        public bool Combine(Item item)
+        public bool Combine(Item item, Character user)
         {
             if (item == this) { return false; }
             bool isCombined = false;
             foreach (ItemComponent ic in components)
             {
-                if (ic.Combine(item)) { isCombined = true; }
+                if (ic.Combine(item, user)) { isCombined = true; }
             }
 #if CLIENT
             if (isCombined) { GameMain.Client?.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Combine, item.ID }); }
