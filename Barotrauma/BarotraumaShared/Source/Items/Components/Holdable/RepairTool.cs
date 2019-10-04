@@ -341,7 +341,19 @@ namespace Barotrauma.Items.Components
             {
                 if (targetCharacter.Removed) { return false; }
                 targetCharacter.LastDamageSource = item;
-                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, new List<ISerializableEntity>() { targetCharacter });
+                Limb closestLimb = null;
+                float closestDist = float.MaxValue;
+                foreach (Limb limb in targetCharacter.AnimController.Limbs)
+                {
+                    float dist = Vector2.DistanceSquared(item.SimPosition, limb.SimPosition);
+                    if (dist < closestDist)
+                    {
+                        closestLimb = limb;
+                        closestDist = dist;
+                    }
+                }
+                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse,
+                    closestLimb == null ? new List<ISerializableEntity>() { targetCharacter } : new List<ISerializableEntity>() { targetCharacter, closestLimb });
                 FixCharacterProjSpecific(user, deltaTime, targetCharacter);
                 return true;
             }
@@ -509,6 +521,15 @@ namespace Barotrauma.Items.Components
                 {
                     effect.Apply(actionType, deltaTime, item, targets);
                 }
+                else if (effect.HasTargetType(StatusEffect.TargetType.Character))
+                {
+                    effect.Apply(actionType, deltaTime, item, targets.Where(t => t is Character));
+                }
+                else if (effect.HasTargetType(StatusEffect.TargetType.Limb))
+                {
+                    effect.Apply(actionType, deltaTime, item, targets.Where(t => t is Limb));
+                }
+
 #if CLIENT
                 // Hard-coded progress bars for welding doors stuck.
                 // A general purpose system could be better, but it would most likely require changes in the way we define the status effects in xml.
