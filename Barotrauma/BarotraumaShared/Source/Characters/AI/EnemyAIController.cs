@@ -737,9 +737,27 @@ namespace Barotrauma
                         attackWorldPos = attackTargetLimb.WorldPosition;
                     }
                 }
-
                 // Check that we can reach the target
-                distance = Vector2.Distance(AttackingLimb.WorldPosition, attackWorldPos);
+                Vector2 toTarget = attackWorldPos - AttackingLimb.WorldPosition;
+                if (SelectedAiTarget.Entity is Character targetC)
+                {
+                    // Add a margin when the target is moving away, because otherwise it might be difficult to reach it (the attack takes some time to perform)
+                    Vector2 margin = CalculateMargin(targetC.AnimController.Collider.LinearVelocity);
+                    toTarget += margin;
+                }
+                else if (SelectedAiTarget.Entity is MapEntity e)
+                {
+                    Vector2 margin = CalculateMargin(e.Submarine.Velocity);
+                    toTarget += margin;
+                }
+
+                Vector2 CalculateMargin(Vector2 targetVelocity)
+                {
+                    float dot = Vector2.Dot(Vector2.Normalize(targetVelocity), Vector2.Normalize(Character.AnimController.Collider.LinearVelocity));
+                    return ConvertUnits.ToDisplayUnits(targetVelocity) * AttackingLimb.attack.Duration * dot;
+                }
+
+                distance = toTarget.Length();
                 canAttack = distance < AttackingLimb.attack.Range;
                 if (!canAttack && !IsCoolDownRunning)
                 {
