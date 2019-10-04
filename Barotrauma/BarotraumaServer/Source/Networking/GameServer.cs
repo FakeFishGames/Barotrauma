@@ -1876,7 +1876,7 @@ namespace Barotrauma.Networking
 
                 //find the clients in this team
                 List<Client> teamClients = teamCount == 1 ?
-                    new List<Client>(connectedClients) : 
+                    new List<Client>(playingClients) : 
                     playingClients.FindAll(c => c.TeamID == teamID);
 
                 if (!teamClients.Any() && n > 0) { continue; }
