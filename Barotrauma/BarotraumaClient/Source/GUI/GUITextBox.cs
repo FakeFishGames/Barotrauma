@@ -476,7 +476,7 @@ namespace Barotrauma
             }
             else
             {
-                if (PlayerInput.LeftButtonClicked() && selected) Deselect();
+                if ((PlayerInput.LeftButtonClicked() || PlayerInput.RightButtonClicked()) && selected) Deselect();
                 isSelecting = false;
                 state = ComponentState.None;
             }
@@ -655,7 +655,12 @@ namespace Barotrauma
             switch (command)
             {
                 case '\b': //backspace
-                    if (selectedCharacters > 0)
+                    if (PlayerInput.KeyDown(Keys.LeftControl) || PlayerInput.KeyDown(Keys.RightControl))
+                    {
+                        SetText(string.Empty, false);
+                        CaretIndex = Text.Length;
+                    }
+                    else if (selectedCharacters > 0)
                     {
                         RemoveSelectedText();
                     }

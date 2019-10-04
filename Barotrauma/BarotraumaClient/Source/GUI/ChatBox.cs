@@ -52,6 +52,8 @@ namespace Barotrauma
 
         public GUIButton ToggleButton { get; private set; }
 
+        private GUIButton jumpToRecentButton;
+
         public ChatBox(GUIComponent parent, bool isSinglePlayer)
         {
             this.IsSinglePlayer = isSinglePlayer;
@@ -65,8 +67,9 @@ namespace Barotrauma
 
             int toggleButtonWidth = (int)(30 * GUI.Scale);
             GUIFrame = new GUIFrame(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ChatBoxArea, parent.RectTransform), style: null);
-            var chatBoxHolder = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.9f), GUIFrame.RectTransform), style: "ChatBox");
+            var chatBoxHolder = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.875f), GUIFrame.RectTransform), style: "ChatBox");
             chatBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.95f), chatBoxHolder.RectTransform, Anchor.CenterRight), style: null);
+
             ToggleButton = new GUIButton(new RectTransform(new Point(toggleButtonWidth, HUDLayoutSettings.ChatBoxArea.Height), parent.RectTransform),
                 style: "UIToggleButton");
 
@@ -76,7 +79,7 @@ namespace Barotrauma
                 return true;
             };
 
-            InputBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.1f), GUIFrame.RectTransform, Anchor.BottomCenter),
+            InputBox = new GUITextBox(new RectTransform(new Vector2(0.925f, 0.125f), GUIFrame.RectTransform, Anchor.BottomLeft),
                 style: "ChatTextBox")
             {
                 Font = GUI.SmallFont,
@@ -84,9 +87,25 @@ namespace Barotrauma
             };
             InputBox.OnDeselected += (gui, Keys) =>
             {
-                gui.Text = "";
+                //gui.Text = "";
             };
-            
+
+            var chatSendButton = new GUIButton(new RectTransform(new Vector2(0.075f, 0.125f), GUIFrame.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.0f, -0.01f) }, ">");
+            chatSendButton.OnClicked += (GUIButton btn, object userdata) =>
+            {
+                InputBox.OnEnterPressed(InputBox, InputBox.Text);
+                return true;
+            };
+
+            jumpToRecentButton = new GUIButton(new RectTransform(new Vector2(1f, 0.1f), GUIFrame.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0.0f, -0.1f) }, "Jump to recent");
+            jumpToRecentButton.OnClicked += (GUIButton btn, object userdata) =>
+            {
+                chatBox.ScrollBar.ScrollToValue(chatBox.ScrollBar, 1f);
+                jumpToRecentButton.Enabled = false;
+                return true;
+            };
+
+            jumpToRecentButton.Enabled = false;
             ToggleOpen = GameMain.Config.ChatOpen;
         }
 
@@ -191,6 +210,11 @@ namespace Barotrauma
             CoroutineManager.StartCoroutine(UpdateMessageAnimation(msgHolder, 0.5f));
 
             chatBox.UpdateScrollBarSize();
+                       
+            if (chatBox.ScrollBar.Visible && chatBox.ScrollBar.BarScroll < 1f)
+            {
+                jumpToRecentButton.Enabled = true;
+            }
 
             if (!ToggleOpen)
             {
