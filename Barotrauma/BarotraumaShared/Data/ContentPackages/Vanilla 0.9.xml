@@ -75,6 +75,7 @@
   <Character file="Content/Characters/Molochboss/Molochboss.xml" />
   <Character file="Content/Characters/Watcher/Watcher.xml" />
   <Character file="Content/Characters/Tigerthresher/Tigerthresher.xml" />
+  <Character file="Content/Characters/Bonethresher/Bonethresher.xml" />
   <Outpost file="Content/Map/Outposts/Outpost.sub" />
   <Outpost file="Content/Map/Outposts/Outpost2.sub" />
   <Outpost file="Content/Map/Outposts/Outpost3.sub" />
