@@ -729,6 +729,11 @@ namespace Barotrauma
                     if (targetLimbType != LimbType.None)
                     {
                         attackTargetLimb = GetTargetLimb(AttackingLimb, targetLimbType, targetCharacter);
+                        if (attackTargetLimb == null)
+                        {
+                            State = AIState.Idle;
+                            return;
+                        }
                         attackWorldPos = attackTargetLimb.WorldPosition;
                     }
                 }
@@ -1080,9 +1085,9 @@ namespace Barotrauma
             {
                 if (SelectedAiTarget.Entity is Character c)
                 {
+                    // TODO: what if we use this for eating something else than characters?
                     Character.SelectCharacter(c);
                 }
-                // TODO: what if we use this for eating something else than characters?
                 steeringManager.SteeringManual(deltaTime, Vector2.Normalize(limbDiff));
                 Character.AnimController.Collider.ApplyForce(limbDiff * mouthLimb.Mass * 50.0f, mouthPos);
             }
@@ -1524,8 +1529,13 @@ namespace Barotrauma
                     targetLimbs.Add(limb);
                 }
             }
-            targetLimbs.Sort((limb1, limb2) => Vector2.DistanceSquared(limb2.WorldPosition, attackLimb.WorldPosition)
-                .CompareTo(Vector2.DistanceSquared(limb1.WorldPosition, attackLimb.WorldPosition)));
+            if (targetLimbs.None())
+            {
+                // If no limbs of given type was found, accept any limb
+                targetLimbs.AddRange(target.AnimController.Limbs);
+            }
+            targetLimbs.Sort((limb1, limb2) => Vector2.DistanceSquared(limb1.WorldPosition, attackLimb.WorldPosition)
+                .CompareTo(Vector2.DistanceSquared(limb2.WorldPosition, attackLimb.WorldPosition)));
             return targetLimbs.FirstOrDefault();
         }
     }
