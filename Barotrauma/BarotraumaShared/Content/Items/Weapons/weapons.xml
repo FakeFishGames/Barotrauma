@@ -491,7 +491,7 @@
       </StatusEffect>
       <!-- 7 usages with a fulgurium battery -->
       <StatusEffect type="OnUse" target="Contained" Condition="-15.0" disabledeltatime="true">
-        <RequiredItem items="fulguriumcatterycell" type="Contained" msg="ItemMsgBatteryCellRequired" />
+        <RequiredItem items="fulguriumbatterycell" type="Contained" msg="ItemMsgBatteryCellRequired" />
       </StatusEffect>
       <!-- normal batteries cause 15 seconds of stun to anything with a mass smaller than 60 -->
       <StatusEffect type="OnUse" target="Character" stun="15.0" disabledeltatime="true">
