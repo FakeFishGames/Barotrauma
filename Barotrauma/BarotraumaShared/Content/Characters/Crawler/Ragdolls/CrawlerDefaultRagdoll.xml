@@ -1,103 +1,103 @@
-﻿<Ragdoll type="crawler" colliderheightfromfloor="40" impacttolerance="15" draggable="True" limbscale="0.7" jointscale="0.7" canentersubmarine="True" canwalk="True" texturescale="1" spritesheetorientation="270">
+﻿<Ragdoll type="crawler" colliderheightfromfloor="40" impacttolerance="15" draggable="True" limbscale="0.7" jointscale="0.7" canentersubmarine="True" canwalk="True" texturescale="1" spritesheetorientation="270" texture="">
   <collider height="80" radius="40" name="Main Collider" width="0" />
   <!-- Head -->
-  <limb id="0" radius="50" type="Head" flip="True" steerforce="15" healthindex="0" attackpriority="0" stepoffset="0,0" bodytype="Dynamic" height="0" width="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 0" notes="" spriteorientation="90" mirrorvertically="False" mirrorhorizontally="False" hide="False">
+  <limb id="0" radius="50" type="Head" flip="True" steerforce="15" healthindex="0" attackpriority="0" stepoffset="0,0" bodytype="Dynamic" height="0" width="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 0" notes="" spriteorientation="90" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0.8,-1">
     <deformablesprite texture="Content/Characters/Crawler/crawler.png" sourcerect="153,2,102,82" depth="0.1" origin="0.5238374,0.4827269" subdivisions="3,3">
-      <spritedeformation type="noise" resolution="3,3" frequency="2" amplitude="0.05" changespeed="2" blendmode="Add" stopwhenhostisdead="True" sync="-1" typename="noise" usemovementsine="False" sineoffset="0" />
-      <SpriteDeformation type="custom" resolution="3,3" frequency="0" blendmode="Multiply" row0="0,0 0,0 0,0" row1="0,0 0,0 1,1" row2="0,0 1,2 1,2" amplitude="1" sync="-1" typename="custom" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
+      <spritedeformation type="noise" resolution="3,3" frequency="2" amplitude="0.05" changespeed="2" blendmode="Add" stopwhenhostisdead="True" sync="-1" typename="noise" usemovementsine="False" sineoffset="0" strength="1" maxrotation="90" />
+      <SpriteDeformation type="custom" resolution="3,3" frequency="0" blendmode="Multiply" row0="0,0 0,0 0,0" row1="0,0 0,0 1,1" row2="0,0 1,2 1,2" amplitude="1" sync="-1" typename="custom" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" strength="1" maxrotation="90" />
     </deformablesprite>
-    <attack context="Water" cooldown="5" range="80" damagerange="70" duration="0.25" stun="0.3" structuredamage="3" itemdamage="10" structuresoundtype="StructureSlash" targetimpulse="20" targetimpulseworld="0,-20" severlimbsprobability="0.5" force="5" applyforceonlimbs="0, 9" torque="50" hitdetectiontype="Distance" onlyhumans="False" targetforce="0" targetforceworld="0,0" priority="0" targettype="Any" secondarycooldown="0" applyforcesonlyonce="False" stickchance="0" cooldownrandomfactor="0.25" afterattack="FallBack" reverse="False">
+    <attack context="Water" cooldown="5" range="80" damagerange="70" duration="0.25" stun="0.3" structuredamage="3" itemdamage="10" structuresoundtype="StructureSlash" targetimpulse="20" targetimpulseworld="0,-20" severlimbsprobability="0.5" force="5" applyforceonlimbs="0, 9" torque="50" hitdetectiontype="Distance" onlyhumans="False" targetforce="0" targetforceworld="0,0" priority="0" targettype="Any" secondarycooldown="0" applyforcesonlyonce="False" stickchance="0" cooldownrandomfactor="0.25" afterattack="FallBack" reverse="False" targetlimbtype="None">
       <Affliction identifier="bleeding" strength="30" probability="1" />
       <Affliction identifier="stun" strength="0.25" probability="1" />
       <Affliction identifier="internaldamage" strength="10" probability="1" />
     </attack>
   </limb>
   <!-- BodyUpper (main torso) -->
-  <limb id="1" width="50" height="0" type="Torso" flip="True" steerforce="0.1" healthindex="0" attackpriority="0" stepoffset="0,0" bodytype="Dynamic" radius="35" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 1" notes="" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False">
+  <limb id="1" width="50" height="0" type="Torso" flip="True" steerforce="0.1" healthindex="0" attackpriority="0" stepoffset="0,0" bodytype="Dynamic" radius="35" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 1" notes="" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <deformablesprite texture="Content/Characters/Crawler/crawler.png" sourcerect="36,0,115,113" depth="0.2" origin="0.4606622,0.4951695" subdivisions="5,5">
-      <SpriteDeformation type="inflate" resolution="5,5" frequency="2" scale="0.2" sync="1" stopwhenhostisdead="True" typename="inflate" blendmode="Add" usemovementsine="False" sineoffset="0" />
-      <SpriteDeformation type="custom" resolution="5,5" frequency="0" blendmode="Multiply" row0="0,0 0.5,1 1,1 0.5,1 0,0" row1="0,0 0.5,1 1,1 0.5,1 0,0" row2="0,0 0.5,1 1,1 0.5,1 0,0" row3="0,0 0.5,1 1,1 0.5,1 0,0" row4="0,0 0.5,1 1,1 0.5,1 0,0" amplitude="1" sync="-1" typename="custom" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
-      <spritedeformation type="bendjoint" resolution="5,5" blendmode="Add" sync="-1" typename="bendjoint" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
+      <SpriteDeformation type="inflate" resolution="5,5" frequency="2" scale="0.2" sync="1" stopwhenhostisdead="True" typename="inflate" blendmode="Add" usemovementsine="False" sineoffset="0" strength="1" maxrotation="90" />
+      <SpriteDeformation type="custom" resolution="5,5" frequency="0" blendmode="Multiply" row0="0,0 0.5,1 1,1 0.5,1 0,0" row1="0,0 0.5,1 1,1 0.5,1 0,0" row2="0,0 0.5,1 1,1 0.5,1 0,0" row3="0,0 0.5,1 1,1 0.5,1 0,0" row4="0,0 0.5,1 1,1 0.5,1 0,0" amplitude="1" sync="-1" typename="custom" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" strength="1" maxrotation="90" />
+      <spritedeformation type="bendjoint" resolution="5,5" blendmode="Add" sync="-1" typename="bendjoint" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" strength="1" maxrotation="90" />
     </deformablesprite>
   </limb>
   <!-- BodyLower1 -->
-  <limb id="2" width="80" height="70" type="Tail" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 2" notes="" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False">
+  <limb id="2" width="80" height="70" type="Tail" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 2" notes="" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <deformablesprite texture="Content/Characters/Crawler/crawler.png" sourcerect="167,173,89,83" depth="0.21" origin="0.5135868,0.5523771" subdivisions="5,5">
-      <SpriteDeformation type="inflate" resolution="5,5" frequency="2" scale="0.2" sync="1" stopwhenhostisdead="True" typename="inflate" blendmode="Add" usemovementsine="False" sineoffset="0" />
-      <SpriteDeformation type="custom" resolution="5,5" frequency="0" blendmode="Multiply" row0="0,0 0.5,1 1,1 0.5,1 0,0" row1="0,0 0.5,1 1,1 0.5,1 0,0" row2="0,0 0.5,1 1,1 0.5,1 0,0" row3="0,0 0.5,1 1,1 0.5,1 0,0" row4="0,0 0.5,1 1,1 0.5,1 0,0" amplitude="1" sync="-1" typename="custom" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
-      <spritedeformation type="bendjoint" resolution="5,5" blendmode="Add" sync="-1" typename="bendjoint" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
+      <SpriteDeformation type="inflate" resolution="5,5" frequency="2" scale="0.2" sync="1" stopwhenhostisdead="True" typename="inflate" blendmode="Add" usemovementsine="False" sineoffset="0" strength="1" maxrotation="90" />
+      <SpriteDeformation type="custom" resolution="5,5" frequency="0" blendmode="Multiply" row0="0,0 0.5,1 1,1 0.5,1 0,0" row1="0,0 0.5,1 1,1 0.5,1 0,0" row2="0,0 0.5,1 1,1 0.5,1 0,0" row3="0,0 0.5,1 1,1 0.5,1 0,0" row4="0,0 0.5,1 1,1 0.5,1 0,0" amplitude="1" sync="-1" typename="custom" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" strength="1" maxrotation="90" />
+      <spritedeformation type="bendjoint" resolution="5,5" blendmode="Add" sync="-1" typename="bendjoint" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" strength="1" maxrotation="90" />
     </deformablesprite>
   </limb>
   <!-- BodyLower2 -->
-  <limb id="3" width="62" height="52" type="Tail" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 3" notes="" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False">
+  <limb id="3" width="62" height="52" type="Tail" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 3" notes="" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <deformablesprite texture="Content/Characters/Crawler/crawler.png" sourcerect="71,179,84,78" depth="0.22" origin="0.5427743,0.5" subdivisions="5,5">
-      <spritedeformation type="bendjoint" resolution="5,5" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
+      <spritedeformation type="bendjoint" resolution="5,5" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" strength="1" maxrotation="90" />
     </deformablesprite>
   </limb>
   <!-- BodyLower3 -->
-  <limb id="4" width="45" height="33" type="Tail" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 4" notes="" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False">
+  <limb id="4" width="45" height="33" type="Tail" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 4" notes="" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <deformablesprite texture="Content/Characters/Crawler/crawler.png" sourcerect="97,113,63,57" depth="0.023" origin="0.5571429,0.4577771" subdivisions="5,5">
-      <spritedeformation type="bendjoint" resolution="5,5" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
+      <spritedeformation type="bendjoint" resolution="5,5" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" strength="1" maxrotation="90" />
     </deformablesprite>
   </limb>
   <!-- BodyLower4 -->
-  <limb id="5" width="30" height="0" type="Tail" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="12" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 5" notes="" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False">
+  <limb id="5" width="30" height="0" type="Tail" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="12" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 5" notes="" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <deformablesprite texture="Content/Characters/Crawler/crawler.png" sourcerect="0,135,48,36" depth="0.24" origin="0.524421,0.5587717" subdivisions="5,5">
-      <spritedeformation type="bendjoint" resolution="5,5" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
+      <spritedeformation type="bendjoint" resolution="5,5" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" strength="1" maxrotation="90" />
     </deformablesprite>
   </limb>
   <!-- BodyLower5 -->
-  <limb id="6" width="30" height="0" type="Tail" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="8" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 6" notes="" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False">
+  <limb id="6" width="30" height="0" type="Tail" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="8" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 6" notes="" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <deformablesprite texture="Content/Characters/Crawler/crawler.png" sourcerect="50,114,44,28" depth="0.025" origin="0.5984064,0.5294023" subdivisions="5,5">
-      <spritedeformation type="bendjoint" resolution="5,5" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
+      <spritedeformation type="bendjoint" resolution="5,5" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" strength="1" maxrotation="90" />
     </deformablesprite>
   </limb>
   <!-- BodyLower6 -->
-  <limb id="7" width="53" height="10" type="Tail" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 7" notes="" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False">
+  <limb id="7" width="53" height="10" type="Tail" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 7" notes="" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <deformablesprite texture="Content/Characters/Crawler/crawler.png" sourcerect="47,142,48,26" depth="0.26" origin="0.5339575,0.464236" subdivisions="5,5">
-      <spritedeformation type="bendjoint" resolution="5,5" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
+      <spritedeformation type="bendjoint" resolution="5,5" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" strength="1" maxrotation="90" />
     </deformablesprite>
   </limb>
   <!-- Jaw -->
-  <limb id="8" width="42" height="44" ignorecollisions="True" flip="True" type="None" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" name="Limb 8" notes="" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False">
+  <limb id="8" width="42" height="44" ignorecollisions="True" flip="True" type="None" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" name="Limb 8" notes="" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="161,83,44,47" depth="0.06" origin="0.3677241,0.5077608" />
-    <attack context="Ground" cooldown="3" range="120" damagerange="70" duration="0.25" stun="0.3" structuredamage="3" itemdamage="10" structuresoundtype="StructureSlash" targetimpulse="20" targetimpulseworld="-20,0" severlimbsprobability="0.5" force="25" applyforceonlimbs="0, 1, 9" torque="50" hitdetectiontype="Distance" onlyhumans="False" targetforce="0" targetforceworld="0,-10" priority="0" targettype="Any" secondarycooldown="0" applyforcesonlyonce="False" stickchance="0" cooldownrandomfactor="0.25" afterattack="FallBack" reverse="False">
+    <attack context="Ground" cooldown="3" range="120" damagerange="70" duration="0.25" stun="0.3" structuredamage="3" itemdamage="10" structuresoundtype="StructureSlash" targetimpulse="20" targetimpulseworld="-20,0" severlimbsprobability="0.5" force="25" applyforceonlimbs="0, 1, 9" torque="50" hitdetectiontype="Distance" onlyhumans="False" targetforce="0" targetforceworld="0,-10" priority="0" targettype="Any" secondarycooldown="0" applyforcesonlyonce="False" stickchance="0" cooldownrandomfactor="0.25" afterattack="FallBack" reverse="False" targetlimbtype="None">
       <Affliction identifier="bleeding" strength="30" probability="1" />
       <Affliction identifier="stun" strength="0.25" probability="1" />
       <Affliction identifier="internaldamage" strength="10" probability="1" />
     </attack>
   </limb>
   <!-- RightLeg -->
-  <limb id="9" width="0" height="0" type="RightLeg" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="30" mass="0" friction="0.3" restitution="0.05" density="5" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 9" notes="" spriteorientation="0" mirrorvertically="False" mirrorhorizontally="False" hide="False">
+  <limb id="9" width="0" height="0" type="RightLeg" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="30" mass="0" friction="0.3" restitution="0.05" density="5" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 9" notes="" spriteorientation="0" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="0,170,70,87" depth="0.11" origin="0.4472283,0.4274753" />
   </limb>
   <!-- RightFoot -->
-  <limb id="10" width="60" height="0" type="RightFoot" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="10" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="21.6116,-9.738574" refjoint="8" ignorecollisions="False" name="Limb 10" notes="" spriteorientation="90" mirrorvertically="False" mirrorhorizontally="False" hide="False">
+  <limb id="10" width="60" height="0" type="RightFoot" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="10" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="21.6116,-9.738574" refjoint="8" ignorecollisions="False" name="Limb 10" notes="" spriteorientation="90" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <deformablesprite texture="Content/Characters/Crawler/crawler.png" sourcerect="160,130,95,43" depth="0.1" origin="0.5264239,0.3615547" />
     <sound tag="footstep_crawler" />
   </limb>
   <!-- FakeFoot1 -->
-  <limb id="11" width="38" height="50" ignorecollisions="True" flip="True" mass="0.5" type="None" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" name="Limb 11" notes="" spriteorientation="0" mirrorvertically="False" mirrorhorizontally="False" hide="False">
+  <limb id="11" width="38" height="50" ignorecollisions="True" flip="True" mass="0.5" type="None" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" name="Limb 11" notes="" spriteorientation="0" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <deformablesprite texture="Content/Characters/Crawler/crawler.png" sourcerect="0,0,36,50" depth="0.5" origin="0.4447618,0.4988151" />
   </limb>
   <!-- FakeFoot2 -->
-  <limb id="12" width="30" height="51" ignorecollisions="True" flip="True" mass="0.5" type="None" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" name="Limb 12" notes="" spriteorientation="0" mirrorvertically="False" mirrorhorizontally="False" hide="False">
+  <limb id="12" width="30" height="51" ignorecollisions="True" flip="True" mass="0.5" type="None" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" name="Limb 12" notes="" spriteorientation="0" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <deformablesprite texture="Content/Characters/Crawler/crawler.png" sourcerect="0,50,35,51" depth="0.5" origin="0.3939222,0.4675192" />
   </limb>
   <!-- FakeFoot3 -->
-  <limb id="13" width="21" height="22" ignorecollisions="True" flip="True" mass="0.5" type="None" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" name="Limb 13" notes="" spriteorientation="0" mirrorvertically="False" mirrorhorizontally="False" hide="False">
+  <limb id="13" width="21" height="22" ignorecollisions="True" flip="True" mass="0.5" type="None" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" name="Limb 13" notes="" spriteorientation="0" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <deformablesprite texture="Content/Characters/Crawler/crawler.png" sourcerect="0,101,21,22" depth="0.5" origin="0.4972225,0.4925883" />
   </limb>
   <!-- NeckFur -->
-  <limb id="14" width="45" height="45" ignorecollisions="True" flip="True" mass="0" type="None" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" name="NeckFur" notes="" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False">
+  <limb id="14" width="45" height="45" ignorecollisions="True" flip="True" mass="0" type="None" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" name="NeckFur" notes="" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <deformablesprite texture="Content/Characters/Crawler/crawler.png" sourcerect="205,87,48,43" depth="0.11" origin="0.5741225,0.4759069" />
   </limb>
   <!--LeftLeg-->
-  <limb id="15" radius="10" width="60" height="0" mass="0" name="Limb 15" type="RightFoot" spriteorientation="90" flip="True" mirrorvertically="False" mirrorhorizontally="False" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" density="10" pullpos="27.3626,-6.016137" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05" hide="False">
+  <limb id="15" radius="10" width="60" height="0" mass="0" name="Limb 15" type="RightFoot" spriteorientation="90" flip="True" mirrorvertically="False" mirrorhorizontally="False" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" density="10" pullpos="27.3626,-6.016137" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05" hide="False" angulardamping="7" mouthpos="0,0">
     <deformablesprite texture="Content/Characters/Crawler/crawler.png" sourcerect="160,130,95,43" origin="0.5,0.5" depth="0.5" />
   </limb>
   <!--LeftFoot-->
-  <limb id="16" radius="30" width="0" height="0" mass="0" name="Limb 16" type="RightLeg" spriteorientation="0" flip="True" mirrorvertically="False" mirrorhorizontally="False" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05" hide="False">
+  <limb id="16" radius="30" width="0" height="0" mass="0" name="Limb 16" type="RightLeg" spriteorientation="0" flip="True" mirrorvertically="False" mirrorhorizontally="False" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05" hide="False" angulardamping="7" mouthpos="0,0">
     <deformablesprite texture="Content/Characters/Crawler/crawler.png" sourcerect="0,170,70,87" origin="0.5,0.5" depth="0.5" />
     <sound tag="footstep_crawler" />
   </limb>
