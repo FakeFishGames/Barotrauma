@@ -3572,4 +3572,7 @@
   <servertag.karmadisabled>Karma disabled</servertag.karmadisabled>
   <servertagdescription.karmadisabled>Karma system is disabled.</servertagdescription.karmadisabled>
   
+  <!-- Misc -->
+  <chat.shownewmessages>Show new messages</chat.shownewmessages>
+  
  </infotexts>

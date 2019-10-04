@@ -52,7 +52,7 @@ namespace Barotrauma
 
         public GUIButton ToggleButton { get; private set; }
 
-        private GUIButton jumpToRecentButton;
+        private GUIButton showNewMessagesButton;
 
         public ChatBox(GUIComponent parent, bool isSinglePlayer)
         {
@@ -97,15 +97,15 @@ namespace Barotrauma
                 return true;
             };
 
-            jumpToRecentButton = new GUIButton(new RectTransform(new Vector2(1f, 0.1f), GUIFrame.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0.0f, -0.1f) }, "Jump to recent");
-            jumpToRecentButton.OnClicked += (GUIButton btn, object userdata) =>
+            showNewMessagesButton = new GUIButton(new RectTransform(new Vector2(1f, 0.125f), GUIFrame.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0.0f, -0.125f) }, TextManager.Get("chat.shownewmessages"));
+            showNewMessagesButton.OnClicked += (GUIButton btn, object userdata) =>
             {
-                chatBox.ScrollBar.ScrollToValue(chatBox.ScrollBar, 1f);
-                jumpToRecentButton.Enabled = false;
+                chatBox.ScrollBar.BarScrollValue = 1f;
+                showNewMessagesButton.Visible = false;
                 return true;
             };
 
-            jumpToRecentButton.Enabled = false;
+            showNewMessagesButton.Visible = false;
             ToggleOpen = GameMain.Config.ChatOpen;
         }
 
@@ -213,7 +213,7 @@ namespace Barotrauma
                        
             if (chatBox.ScrollBar.Visible && chatBox.ScrollBar.BarScroll < 1f)
             {
-                jumpToRecentButton.Enabled = true;
+                showNewMessagesButton.Visible = true;
             }
 
             if (!ToggleOpen)
@@ -299,6 +299,11 @@ namespace Barotrauma
                 SetUILayout();
                 screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
                 prevUIScale = GUI.Scale;
+            }
+
+            if (showNewMessagesButton.Visible && chatBox.ScrollBar.BarScroll == 1f)
+            {
+                showNewMessagesButton.Visible = false;
             }
 
             if (ToggleOpen || (InputBox != null && InputBox.Selected))
