@@ -906,7 +906,7 @@ namespace Barotrauma.Steam
         /// <summary>
         /// Enables a workshop item by moving it to the game folder.
         /// </summary>
-        public static bool EnableWorkShopItem(Workshop.Item item, bool allowFileOverwrite, out string errorMsg)
+        public static bool EnableWorkShopItem(Workshop.Item item, bool allowFileOverwrite, out string errorMsg, bool selectContentPackage = true)
         {
             if (!item.Installed)
             {
@@ -961,22 +961,24 @@ namespace Barotrauma.Steam
             }
             newPackage.Save(newContentPackagePath);
             ContentPackage.List.Add(newPackage);
-            if (newPackage.CorePackage)
+            
+            if (selectContentPackage)
             {
-                //if enabling a core package, disable all other core packages
-                GameMain.Config.SelectedContentPackages.RemoveAll(cp => cp.CorePackage);
-            }
-            GameMain.Config.SelectContentPackage(newPackage);
-            GameMain.Config.SaveNewPlayerConfig();
-
-            foreach (ContentFile cf in newPackage.Files)
-            {
-                if (cf.Type == ContentType.Submarine)
+                if (newPackage.CorePackage)
                 {
-                    Submarine.RefreshSavedSub(cf.Path);
+                    //if enabling a core package, disable all other core packages
+                    GameMain.Config.SelectedContentPackages.RemoveAll(cp => cp.CorePackage);
+                }
+                GameMain.Config.SelectContentPackage(newPackage);
+                GameMain.Config.SaveNewPlayerConfig();
+                foreach (ContentFile cf in newPackage.Files)
+                {
+                    if (cf.Type == ContentType.Submarine)
+                    {
+                        Submarine.RefreshSavedSub(cf.Path);
+                    }
                 }
             }
-            
             errorMsg = "";
             return true;
         }
@@ -1224,7 +1226,7 @@ namespace Barotrauma.Steam
             {
                 metaDataPath = Path.Combine(item.Directory.FullName, MetadataFileName);
             }
-            catch (ArgumentException e)
+            catch (ArgumentException)
             {
                 string errorMessage = "Metadata file for the Workshop item \"" + item.Title +
                     "\" not found. Could not combine path (" + (item.Directory.FullName ?? "directory name empty") + ").";
@@ -1261,7 +1263,7 @@ namespace Barotrauma.Steam
 
         public static bool CheckWorkshopItemUpToDate(Workshop.Item item)
         {
-            if (!item.Installed) return false;
+            if (!item.Installed) { return false; }
 
             string metaDataPath = Path.Combine(item.Directory.FullName, MetadataFileName);
             if (!File.Exists(metaDataPath))
@@ -1278,6 +1280,22 @@ namespace Barotrauma.Steam
                 return false;
             }
             return item.Modified <= myPackage.InstallTime.Value;
+        }
+
+
+        public static bool CheckWorkshopItemSelected(Workshop.Item item)
+        {
+            if (!item.Installed) { return false; }
+
+            string metaDataPath = Path.Combine(item.Directory.FullName, MetadataFileName);
+            if (!File.Exists(metaDataPath))
+            {
+                DebugConsole.ThrowError("Metadata file for the Workshop item \"" + item.Title + "\" not found. The file may be corrupted.");
+                return false;
+            }
+
+            ContentPackage steamPackage = new ContentPackage(metaDataPath);
+            return GameMain.Config.SelectedContentPackages.Any(cp => cp.Name == steamPackage.Name);
         }
 
         public static bool AutoUpdateWorkshopItems()
@@ -1345,8 +1363,9 @@ namespace Barotrauma.Steam
         {
             errorMsg = "";
             if (!item.Installed) { return false; }
+            bool wasSelected = CheckWorkshopItemSelected(item);
             if (!DisableWorkShopItem(item, out errorMsg)) { return false; }
-            if (!EnableWorkShopItem(item, allowFileOverwrite: false, errorMsg: out errorMsg)) { return false; }
+            if (!EnableWorkShopItem(item, allowFileOverwrite: false, errorMsg: out errorMsg, selectContentPackage: wasSelected)) { return false; }
 
             return true;
         }
