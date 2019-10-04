@@ -1,4 +1,4 @@
-﻿<Character speciesname="Hammerhead" humanoid="False" husk="False" needsair="False" canspeak="False" noise="100" blooddecal="blood" group="hammerhead">
+﻿<Character speciesname="Hammerhead" humanoid="False" group="hammerhead" husk="False" needsair="False" canspeak="False" noise="100" blooddecal="blood">
   <ragdolls />
   <animations />
   <bloodemitter particle="blood" particleamount="10" scalemin="1" scalemax="2" anglemin="0" anglemax="0" velocitymin="0" velocitymax="0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
@@ -21,16 +21,14 @@
     <Item identifier="swimbladder" />
     <Item identifier="alienblood" />
   </Inventory>
-  <ai combatstrength="500" sight="3" hearing="2" aggressionhurt="100" aggressiongreed="10" fleehealththreshold="0" attackonlywhenprovoked="False" aggressiveboarding="False">
-    <targetpriority tag="decoy" state="Attack" priority="300" />
-    <targetpriority tag="nasonov" state="Attack" priority="200" />
-    <targetpriority tag="provocative" state="Attack" priority="150" />
-    <targetpriority tag="light" state="Attack" priority="150" />
-    <targetpriority tag="room" state="Attack" priority="80" />
-    <targetpriority tag="human" state="Attack" priority="60" />
-    <targetpriority tag="weaker" state="Attack" priority="40" />    
-    <!--TODO
-    <targetpriority tag="stronger" state="Avoid" priority="50" />
-    -->
+  <ai combatstrength="500" sight="1" hearing="0" aggressionhurt="100" aggressiongreed="10" fleehealththreshold="0" attackonlywhenprovoked="False" aggressiveboarding="False">
+    <targetpriority tag="decoy" state="Attack" priority="600" />
+    <targetpriority tag="provocative" state="Attack" priority="300" />
+    <targetpriority tag="light" state="Attack" priority="200" />
+    <targetpriority tag="human" state="Attack" priority="90" />
+    <targetpriority tag="room" state="Attack" priority="60" />
+    <targetpriority tag="nasonov" state="Attack" priority="50" />
+    <targetpriority tag="stronger" state="Escape" priority="50" />
+    <targetpriority tag="weaker" state="Attack" priority="40" />
   </ai>
 </Character>
