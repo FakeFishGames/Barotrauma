@@ -333,16 +333,16 @@ namespace Barotrauma
             [Serialize(false, true)]
             public bool UseHealthWindow { get; set; }
 
-            [Serialize(0f, true, description: "How easily the character heals from the bleeding wounds. Default 0 (no extra healing)."), Editable(MinValueFloat = 0, MaxValueFloat = 10)]
+            [Serialize(0f, true, description: "How easily the character heals from the bleeding wounds. Default 0 (no extra healing)."), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2)]
             public float BleedingReduction { get; private set; }
 
-            [Serialize(0f, true, description: "How easily the character heals from the burn wounds. Default 0 (no extra healing)."), Editable(MinValueFloat = 0, MaxValueFloat = 10)]
+            [Serialize(0f, true, description: "How easily the character heals from the burn wounds. Default 0 (no extra healing)."), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2)]
             public float BurnReduction { get; private set; }
 
-            [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 10)]
+            [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2)]
             public float ConstantHealthRegeneration { get; private set; }
 
-            [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 10)]
+            [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2)]
             public float HealthRegenerationWhenEating { get; private set; }
 
             // TODO: limbhealths, sprite?
