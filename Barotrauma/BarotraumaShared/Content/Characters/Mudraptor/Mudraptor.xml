@@ -1,7 +1,7 @@
 ﻿<Character speciesname="Mudraptor" humanoid="False" group="" husk="False" needsair="False" canspeak="False" noise="100" blooddecal="blood">
   <ragdolls />
   <animations />
-  <health vitality="120" doesbleed="True" crushdepth="-Infinity" usehealthwindow="False" />
+  <health vitality="120" doesbleed="True" crushdepth="-Infinity" usehealthwindow="False" bleedingreduction="1" burnreduction="0" constanthealthregeneration="0" healthregenerationwheneating="1" />
   <bloodemitter particle="blood" particleamount="1" anglemin="0" anglemax="0" scalemin="1" scalemax="1" velocitymin="0" velocitymax="0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
   <bloodemitter particle="waterblood" particleamount="1" anglemin="0" anglemax="0" scalemin="1" scalemax="1" velocitymin="0" velocitymax="0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
   <damageemitter particle="brownchunks" particleamount="10" velocitymin="50" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.1" scalemax="0.3" />
@@ -25,7 +25,7 @@
     <Item identifier="hydroxyapatite" />
     <Item identifier="mudraptorshell" />
   </Inventory>
-  <ai combatstrength="250" sight="0.75" hearing="1" aggressiveboarding="True" fleehealththreshold="20" aggressiongreed="30" aggressionhurt="100" attackonlywhenprovoked="False">
+  <ai combatstrength="250" sight="0.75" hearing="1" aggressiveboarding="True" fleehealththreshold="20" aggressiongreed="30" aggressionhurt="100" attackonlywhenprovoked="False" retaliatewhentakingdamage="True">
     <latchonto attachtowalls="true" attachtosub="false" />
     <targetpriority tag="decoy" state="Attack" priority="600" />
     <targetpriority tag="provocative" state="Attack" priority="200" />

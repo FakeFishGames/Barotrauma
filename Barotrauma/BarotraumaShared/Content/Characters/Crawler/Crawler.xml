@@ -5,7 +5,7 @@
   <bloodemitter particle="waterblood" particleamount="1" anglemin="0" anglemax="0" scalemin="1" scalemax="1" velocitymin="0" velocitymax="0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
   <gibemitter particle="gib" particleamount="20" velocitymin="200" velocitymax="700" anglemin="0" anglemax="360" scalemin="1" scalemax="1" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
   <gibemitter particle="heavygib" particleamount="10" velocitymin="50" velocitymax="500" anglemin="0" anglemax="360" scalemin="1" scalemax="1" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
-  <health vitality="50" doesbleed="True" crushdepth="-Infinity" usehealthwindow="False" />
+  <health vitality="50" doesbleed="True" crushdepth="-Infinity" usehealthwindow="False" bleedingreduction="0.2" burnreduction="0" constanthealthregeneration="0" healthregenerationwheneating="1" />
   <sound file="Content/Characters/Crawler/CRAWLER_attack1.ogg" state="Attack" range="1000" volume="1" gender="None" />
   <sound file="Content/Characters/Crawler/CRAWLER_attack2.ogg" state="Attack" range="1000" volume="1" gender="None" />
   <sound file="Content/Characters/Crawler/CRAWLER_attack3.ogg" state="Attack" range="1000" volume="1" gender="None" />
@@ -25,7 +25,7 @@
   <Inventory slots="Any, Any" accessiblewhenalive="False" commonness="50">
     <Item identifier="alienblood" />
   </Inventory>
-  <ai combatstrength="100" sight="0.75" hearing="1" fleehealththreshold="10" aggressiveboarding="True" aggressiongreed="10" aggressionhurt="100" attackonlywhenprovoked="False">
+  <ai combatstrength="100" sight="0.75" hearing="1" fleehealththreshold="10" aggressiveboarding="True" aggressiongreed="10" aggressionhurt="100" attackonlywhenprovoked="False" retaliatewhentakingdamage="True">
     <target tag="decoy" state="Attack" priority="150" />
     <target tag="stronger" state="Escape" priority="200" />
     <target tag="provocative" state="Attack" priority="90" />
