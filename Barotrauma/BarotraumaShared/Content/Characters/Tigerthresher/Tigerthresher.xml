@@ -1,15 +1,15 @@
-﻿<Character speciesname="Tigerthresher" humanoid="False" husk="False" needsair="False" canspeak="False" noise="100" blooddecal="" group="">
+﻿<Character speciesname="Tigerthresher" humanoid="False" husk="False" needsair="False" canspeak="False" noise="100" blooddecal="" group="thresher">
   <ragdolls folder="Content/Characters/Tigerthresher/Ragdolls/" />
   <animations folder="Content/Characters/Tigerthresher/Animations/" />
   <health vitality="150" doesbleed="True" crushdepth="-Infinity" usehealthwindow="False" />
-  <ai combatstrength="400" sight="1" hearing="1" aggressionhurt="200" aggressiongreed="10" fleehealththreshold="0" attackonlywhenprovoked="False" aggressiveboarding="True">
+  <ai combatstrength="350" sight="1" hearing="1" aggressionhurt="200" aggressiongreed="10" fleehealththreshold="0" attackonlywhenprovoked="False" aggressiveboarding="True">
     <target tag="decoy" state="Attack" priority="200" />
-    <target tag="provocative" state="Attack" priority="100"/>
-    <target tag="light" state="Attack" priority="100"/>
+    <target tag="provocative" state="Attack" priority="100" />
+    <target tag="light" state="Attack" priority="50" />
     <target tag="dead" state="Eat" priority="100" />
     <target tag="human" state="Attack" priority="60" />
     <target tag="weaker" state="Attack" priority="50" />
-    <!--<target tag="stronger" state="Avoid" priority="50" />-->
+    <target tag="stronger" state="Attack" priority="50" />
   </ai>
   <bloodemitter particle="blood" anglemin="1" anglemax="2" scalemin="1" scalemax="1" velocitymin="0" velocitymax="0" emitinterval="0" particlespersecond="0" particleamount="10" highqualitycollisiondetection="False" copyentityangle="False" />
   <bloodemitter particle="waterblood" anglemin="1" anglemax="2" scalemin="1" scalemax="1" velocitymin="0" velocitymax="0" emitinterval="0" particlespersecond="0" particleamount="1" highqualitycollisiondetection="False" copyentityangle="False" />
