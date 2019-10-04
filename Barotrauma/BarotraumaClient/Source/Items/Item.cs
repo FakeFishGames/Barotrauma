@@ -216,6 +216,7 @@ namespace Barotrauma
                 }
             }
 
+            float depth = GetDrawDepth();
             if (activeSprite != null)
             {
                 SpriteEffects oldEffects = activeSprite.effects;
@@ -227,7 +228,6 @@ namespace Barotrauma
                     fadeInBrokenSprite.Sprite.effects ^= SpriteEffects;
                 }
 
-                float depth = GetDrawDepth();
                 if (body == null)
                 {
                     bool flipHorizontal = (SpriteEffects & SpriteEffects.FlipHorizontally) != 0;
@@ -319,7 +319,7 @@ namespace Barotrauma
             //causing them to be removed from the list
             for (int i = drawableComponents.Count - 1; i >= 0; i--)
             {
-                drawableComponents[i].Draw(spriteBatch, editing);
+                drawableComponents[i].Draw(spriteBatch, editing, depth);
             }
 
             if (GameMain.DebugDraw)

@@ -48,7 +48,7 @@ namespace Barotrauma.Items.Components
             get { return sectionExtents; }
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool editing)
+        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
         {
             if (sections.Count == 0 && !IsActive || Hidden)
             {

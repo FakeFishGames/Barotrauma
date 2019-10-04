@@ -19,7 +19,7 @@ namespace Barotrauma.Items.Components
         /// </summary>
         Vector2 DrawSize { get; }
 
-        void Draw(SpriteBatch spriteBatch, bool editing);
+        void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1);
 #endif
     }
     

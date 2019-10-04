@@ -10,7 +10,7 @@ namespace Barotrauma.Items.Components
             get { return new Vector2(rangeX, rangeY) * 2.0f; }
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool editing)
+        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
         {
             if (!editing || !MapEntity.SelectedList.Contains(item)) return;
 

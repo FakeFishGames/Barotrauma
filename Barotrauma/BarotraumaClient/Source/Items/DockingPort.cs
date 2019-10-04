@@ -14,7 +14,7 @@ namespace Barotrauma.Items.Components
             get { return Vector2.Zero; }
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool editing)
+        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
         {
             if (dockingState == 0.0f) return;
 
