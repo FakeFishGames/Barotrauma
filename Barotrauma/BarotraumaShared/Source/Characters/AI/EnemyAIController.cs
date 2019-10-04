@@ -982,7 +982,8 @@ namespace Barotrauma
 
         public override void OnAttacked(Character attacker, AttackResult attackResult)
         {
-            updateTargetsTimer = Math.Min(updateTargetsTimer, 0.1f);
+            float reactionTime = Rand.Range(0.1f, 0.3f);
+            updateTargetsTimer = Math.Min(updateTargetsTimer, reactionTime);
 
             if (attackResult.Damage > 0.0f && Character.Params.AI.AttackOnlyWhenProvoked)
             {
@@ -1010,19 +1011,19 @@ namespace Barotrauma
             LatchOntoAI?.DeattachFromBody();
             Character.AnimController.ReleaseStuckLimbs();
 
-            if (attacker == null || attacker.AiTarget == null) return;
+            if (attacker == null || attacker.AiTarget == null) { return; }
             AITargetMemory targetMemory = GetTargetMemory(attacker.AiTarget);
             targetMemory.Priority += GetRelativeDamage(attackResult.Damage, Character.Vitality) * AggressionHurt;
 
             // Reduce the cooldown so that the character can react
             // Only allow to react once. Otherwise would attack the target with only a fraction of cooldown
-            if (SelectedAiTarget != attacker.AiTarget)
+            if (SelectedAiTarget != attacker.AiTarget && Character.Params.AI.RetaliateWhenTakingDamage)
             {
                 foreach (var limb in Character.AnimController.Limbs)
                 {
                     if (limb.attack != null)
                     {
-                        limb.attack.CoolDownTimer *= 0.1f;
+                        limb.attack.CoolDownTimer *= reactionTime;
                     }
                 }
             }
