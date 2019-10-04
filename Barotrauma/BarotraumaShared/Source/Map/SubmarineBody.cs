@@ -727,10 +727,13 @@ namespace Barotrauma
             if (Character.Controlled != null && Character.Controlled.Submarine == submarine)
             {
                 GameMain.GameScreen.Cam.Shake = impact * 2.0f;
-                float angularVelocity = 
-                    (lastContactPoint.X - Body.SimPosition.X) / ConvertUnits.ToSimUnits(submarine.Borders.Width / 2) * impulse.Y 
-                    - (lastContactPoint.Y - Body.SimPosition.Y) / ConvertUnits.ToSimUnits(submarine.Borders.Height / 2) * impulse.X;
-                GameMain.GameScreen.Cam.AngularVelocity = MathHelper.Clamp(angularVelocity * 0.1f, -1.0f, 1.0f);
+                if (!submarine.IsOutpost && !submarine.DockedTo.Any(s => s.IsOutpost))
+                {
+                    float angularVelocity = 
+                        (lastContactPoint.X - Body.SimPosition.X) / ConvertUnits.ToSimUnits(submarine.Borders.Width / 2) * impulse.Y 
+                        - (lastContactPoint.Y - Body.SimPosition.Y) / ConvertUnits.ToSimUnits(submarine.Borders.Height / 2) * impulse.X;
+                    GameMain.GameScreen.Cam.AngularVelocity = MathHelper.Clamp(angularVelocity * 0.1f, -1.0f, 1.0f);
+                }
             }
 #endif
 
