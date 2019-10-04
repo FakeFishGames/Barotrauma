@@ -941,7 +941,7 @@
   <charactereditor.lowerlimit>Lower Limit</charactereditor.lowerlimit>
   <charactereditor.defaultname>Character X</charactereditor.defaultname>
   <charactereditor.ishumanoid>Is Humanoid?</charactereditor.ishumanoid>
-  <charactereditor.canentersubmarines>Can Enter Submarines and Walk?</charactereditor.canentersubmarines>
+  <charactereditor.canentersubmarines>Can Enter Submarines?</charactereditor.canentersubmarines>
   <charactereditor.configfileoutput>Config File Output</charactereditor.configfileoutput>
   <charactereditor.texturepath>Texture Path</charactereditor.texturepath>
   <charactereditor.selecttexture>Select Texture</charactereditor.selecttexture>
@@ -997,6 +997,7 @@
   <charactereditor.onlyshowselectedlimbs>Show Only Selected Limbs</charactereditor.onlyshowselectedlimbs>
   <charactereditor.newcontentpackage>New Content Package</charactereditor.newcontentpackage>
   <charactereditor.existingjointfound>A joint between limb [limbid1] and [limbid2] already found!</charactereditor.existingjointfound>
+  <charactereditor.unrestrict>Unrestrict</charactereditor.unrestrict>
 
   <!-- Submarine editor -->
   <items>Items</items>

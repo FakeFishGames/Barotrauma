@@ -48,7 +48,7 @@ namespace Barotrauma.SpriteDeformations
 
         public ReactionType Type;
 
-        private PositionalDeformationParams positionalDeformationParams => DeformationParams as PositionalDeformationParams;
+        private PositionalDeformationParams positionalDeformationParams => Params as PositionalDeformationParams;
 
         public PositionalDeformation(XElement element) : base(element, new PositionalDeformationParams(element))
         {

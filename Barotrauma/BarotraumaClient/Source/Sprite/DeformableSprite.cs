@@ -372,7 +372,7 @@ namespace Barotrauma
 
             foreach (SpriteDeformation deformation in deformations)
             {
-                var deformEditor = new SerializableEntityEditor(container.RectTransform, deformation.DeformationParams, false, true);
+                var deformEditor = new SerializableEntityEditor(container.RectTransform, deformation.Params, false, true);
                 deformEditor.RectTransform.MinSize = new Point(deformEditor.Rect.Width, deformEditor.Rect.Height);
             }
 

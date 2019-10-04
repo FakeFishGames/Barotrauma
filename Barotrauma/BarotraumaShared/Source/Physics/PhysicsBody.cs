@@ -360,6 +360,7 @@ namespace Barotrauma
             body.CollisionCategories = Physics.CollisionItem;
             body.Friction = limbParams.Friction;
             body.Restitution = limbParams.Restitution;
+            body.AngularDamping = limbParams.AngularDamping;
             body.UserData = this;
             SetTransformIgnoreContacts(position, 0.0f);
             LastSentPosition = position;

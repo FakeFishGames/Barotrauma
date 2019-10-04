@@ -21,7 +21,9 @@ namespace Barotrauma
         /// <summary>
         /// How long does it take for the ai target to fade out if not kept alive.
         /// </summary>
-        public float FadeOutTime { get; private set; } = 3;
+        public float FadeOutTime { get; private set; }
+
+        public bool Static { get; private set; }
         
         public float SoundRange
         {
@@ -128,6 +130,19 @@ namespace Barotrauma
             MaxSightRange = element.GetAttributeFloat("maxsightrange", SightRange);
             MaxSoundRange = element.GetAttributeFloat("maxsoundrange", SoundRange);
             FadeOutTime = element.GetAttributeFloat("fadeouttime", FadeOutTime);
+            Static = element.GetAttributeBool("static", Static);
+            if (Static)
+            {
+                SightRange = MaxSightRange;
+                SoundRange = MaxSoundRange;
+            }
+            else
+            {
+                // Non-static ai targets must be kept alive by a custom logic (e.g. item components)
+                SightRange = MinSightRange;
+                SoundRange = MinSoundRange;
+            }
+
             SonarDisruption = element.GetAttributeFloat("sonardisruption", 0.0f);
             SonarLabel = element.GetAttributeString("sonarlabel", "");
             string typeString = element.GetAttributeString("type", "Any");
@@ -141,6 +156,16 @@ namespace Barotrauma
         {
             Entity = e;
             List.Add(this);
+        }
+
+        public void Update(float deltaTime)
+        {
+            if (!Static && FadeOutTime > 0)
+            {
+                // The aitarget goes silent/invisible if the components don't keep it active
+                SightRange -= deltaTime * (MaxSightRange / FadeOutTime);
+                SoundRange -= deltaTime * (MaxSoundRange / FadeOutTime);
+            }
         }
 
         public bool IsWithinSector(Vector2 worldPosition)

@@ -1,0 +1,6 @@
+﻿<Character speciesname="Hammerheadmatriarch" humanoid="False" group="" husk="False" needsair="False" canspeak="False" noise="100" blooddecal="blood">
+  <ragdolls folder="Content/Characters/Hammerheadmatriarch/Ragdolls/" />
+  <animations folder="Content/Characters/Hammerheadmatriarch/Animations/" />
+  <health vitality="100" doesbleed="True" crushdepth="-Infinity" usehealthwindow="False" />
+  <ai combatstrength="1" sight="1" hearing="1" aggressionhurt="100" aggressiongreed="10" fleehealththreshold="0" attackonlywhenprovoked="False" aggressiveboarding="False" />
+</Character>

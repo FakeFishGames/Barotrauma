@@ -25,7 +25,7 @@ namespace Barotrauma.SpriteDeformations
     {
         private List<Vector2[]> deformRows = new List<Vector2[]>();
 
-        private CustomDeformationParams CustomDeformationParams => deformationParams as CustomDeformationParams;
+        private CustomDeformationParams CustomDeformationParams => Params as CustomDeformationParams;
 
         public override float Phase
         {
@@ -115,11 +115,12 @@ namespace Barotrauma.SpriteDeformations
             multiplier = CustomDeformationParams.Frequency <= 0.0f ? 
                 CustomDeformationParams.Amplitude : 
                 (float)Math.Sin(phase) * CustomDeformationParams.Amplitude;
+            multiplier *= Params.Strength;
         }
 
         public override void Update(float deltaTime)
         {
-            if (!deformationParams.UseMovementSine)
+            if (!Params.UseMovementSine)
             {
                 phase += deltaTime * CustomDeformationParams.Frequency;
                 phase %= MathHelper.TwoPi;

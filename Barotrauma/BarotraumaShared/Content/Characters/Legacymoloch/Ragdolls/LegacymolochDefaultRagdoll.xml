@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Ragdoll type="legacymoloch" canentersubmarine="false">
+<Ragdoll type="legacymoloch" canentersubmarine="false" canwalk="False">
 
   <collider radius ="230"/>
     

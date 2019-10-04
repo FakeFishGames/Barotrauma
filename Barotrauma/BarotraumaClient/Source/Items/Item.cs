@@ -36,7 +36,7 @@ namespace Barotrauma
             public bool IsActive = true;
         }
 
-        private Dictionary<ItemPrefab.DecorativeSprite, SpriteState> spriteAnimState = new Dictionary<ItemPrefab.DecorativeSprite, SpriteState>();
+        private Dictionary<DecorativeSprite, SpriteState> spriteAnimState = new Dictionary<DecorativeSprite, SpriteState>();
 
         private Sprite activeSprite;
         public override Sprite Sprite

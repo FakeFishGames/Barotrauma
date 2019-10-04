@@ -625,6 +625,34 @@ namespace Barotrauma
                 newCharacter = new Character(speciesName, position, seed, characterInfo, isRemotePlayer, ragdoll);
             }
 
+            float healthRegen = newCharacter.Params.Health.ConstantHealthRegeneration;
+            if (healthRegen > 0)
+            {
+                AddDamageReduction("damage", healthRegen);
+            }
+            float eatingRegen = newCharacter.Params.Health.HealthRegenerationWhenEating;
+            if (eatingRegen > 0)
+            {
+                AddDamageReduction("damage", eatingRegen, ActionType.OnEating);
+            }
+            float burnReduction = newCharacter.Params.Health.BurnReduction;
+            if (burnReduction > 0)
+            {
+                AddDamageReduction("burn", burnReduction);
+            }
+            float bleedReduction = newCharacter.Params.Health.BleedingReduction;
+            if (bleedReduction > 0)
+            {
+                AddDamageReduction("bleeding", bleedReduction);
+            }
+
+            void AddDamageReduction(string affliction, float amount, ActionType actionType = ActionType.Always)
+            {
+                newCharacter.statusEffects.Add(StatusEffect.Load(
+                new XElement("StatusEffect", new XAttribute("type", actionType), new XAttribute("target", "Character"),
+                new XElement("ReduceAffliction", new XAttribute("identifier", affliction), new XAttribute("amount", amount))), $"automatic damage reduction ({affliction})"));
+            }
+
 #if SERVER
             if (GameMain.Server != null && Spawner != null && createNetworkEvent)
             {
@@ -2388,9 +2416,15 @@ namespace Barotrauma
                 AddDamage(worldPosition, attack.Afflictions.Keys, attack.Stun, playSound, attackImpulse, out limbHit, attacker) :
                 DamageLimb(worldPosition, targetLimb, attack.Afflictions.Keys, attack.Stun, playSound, attackImpulse, attacker);
 
-            if (limbHit == null) return new AttackResult();
+            if (limbHit == null) { return new AttackResult(); }
 
             limbHit.body?.ApplyLinearImpulse(attack.TargetImpulseWorld + attack.TargetForceWorld * deltaTime, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+            var mainLimb = limbHit.character.AnimController.MainLimb;
+            if (limbHit != mainLimb)
+            {
+                // Always add force to mainlimb
+                mainLimb.body?.ApplyLinearImpulse(attack.TargetImpulseWorld + attack.TargetForceWorld * deltaTime, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+            }
 #if SERVER
             if (attacker is Character attackingCharacter && attackingCharacter.AIController == null)
             {
@@ -2499,9 +2533,16 @@ namespace Barotrauma
             if (Math.Abs(attackImpulse) > 0.0f)
             {
                 Vector2 diff = dir;
-                if (diff == Vector2.Zero) diff = Rand.Vector(1.0f);
-                hitLimb.body.ApplyLinearImpulse(Vector2.Normalize(diff) * attackImpulse, hitLimb.SimPosition + ConvertUnits.ToSimUnits(diff),
-                        maxVelocity: NetConfig.MaxPhysicsBodyVelocity * 0.5f);
+                if (diff == Vector2.Zero) { diff = Rand.Vector(1.0f); }
+                Vector2 impulse = Vector2.Normalize(diff) * attackImpulse;
+                Vector2 hitPos = hitLimb.SimPosition + ConvertUnits.ToSimUnits(diff);
+                hitLimb.body.ApplyLinearImpulse(impulse, hitPos, maxVelocity: NetConfig.MaxPhysicsBodyVelocity * 0.5f);
+                var mainLimb = hitLimb.character.AnimController.MainLimb;
+                if (hitLimb != mainLimb)
+                {
+                    // Always add force to mainlimb
+                    mainLimb.body.ApplyLinearImpulse(impulse, hitPos, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                }
             }
             Vector2 simPos = hitLimb.SimPosition + ConvertUnits.ToSimUnits(dir);
             AttackResult attackResult = hitLimb.AddDamage(simPos, afflictions, playSound);
@@ -2524,12 +2565,13 @@ namespace Barotrauma
 
         public void SetStun(float newStun, bool allowStunDecrease = false, bool isNetworkMessage = false)
         {
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && !isNetworkMessage) return;
-
-            if ((newStun <= Stun && !allowStunDecrease) || !MathUtils.IsValid(newStun)) return;
-
-            if (Math.Sign(newStun) != Math.Sign(Stun)) AnimController.ResetPullJoints();
-
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && !isNetworkMessage) { return; }
+            if (Screen.Selected != GameMain.GameScreen) { return; }
+            if ((newStun <= Stun && !allowStunDecrease) || !MathUtils.IsValid(newStun)) { return; }
+            if (Math.Sign(newStun) != Math.Sign(Stun))
+            {
+                AnimController.ResetPullJoints();
+            }
             CharacterHealth.StunTimer = newStun;
             if (newStun > 0.0f)
             {

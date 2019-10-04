@@ -31,6 +31,9 @@ namespace Barotrauma
 
         public string SpeciesName { get; private set; }
 
+        [Serialize("", true, description: "Default path for the limb sprite textures. Used only if the limb specific path for the limb is not defined"), Editable]
+        public string Texture { get; set; }
+
         [Serialize(0f, true, description: "The orientation of the sprites as drawn on the sprite sheet. Can be overridden by setting a value for Limb's 'Sprite Orientation'. Used mainly for animations and widgets."), Editable(-360, 360)]
         public float SpritesheetOrientation { get; set; }
 
@@ -52,8 +55,11 @@ namespace Barotrauma
         [Serialize(50f, true, description: "How much impact is required before the character takes impact damage?"), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
         public float ImpactTolerance { get; set; }
 
-        [Serialize(true, true, description: "Can the creature enter submarine and walk when there is no water? Creatures that cannot enter submarines, always collide with it, even when there is a gap."), Editable()]
+        [Serialize(true, true, description: "Can the creature enter submarine. Creatures that cannot enter submarines, always collide with it, even when there is a gap."), Editable()]
         public bool CanEnterSubmarine { get; set; }
+
+        [Serialize(true, true), Editable]
+        public bool CanWalk { get; set; }
 
         [Serialize(true, true, description: "Can the character be dragged around by other creatures?"), Editable()]
         public bool Draggable { get; set; }
@@ -471,7 +477,8 @@ namespace Barotrauma
         {
             public readonly SpriteParams normalSpriteParams;
             public readonly SpriteParams damagedSpriteParams;
-            public readonly SpriteParams deformSpriteParams;
+            public readonly DeformSpriteParams deformSpriteParams;
+            public readonly List<DecorativeSpriteParams> decorativeSpriteParams = new List<DecorativeSpriteParams>();
 
             public AttackParams Attack { get; private set; }
             public SoundParams Sound { get; private set; }
@@ -523,14 +530,11 @@ namespace Barotrauma
             [Serialize(false, true, description: "Disable drawing for this limb."), Editable()]
             public bool Hide { get; set; }
 
-            [Serialize(0f, true, description: "Higher values make AI characters prefer attacking this limb."), Editable()]
+            [Serialize(1f, true, description: "Higher values make AI characters prefer attacking this limb."), Editable()]
             public float AttackPriority { get; set; }
 
             [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 500)]
             public float SteerForce { get; set; }
-
-            [Serialize("0, 0", true, description: "Only applicable if this limb is a foot. Determines the \"neutral position\" of the foot relative to a joint determined by the \"RefJoint\" parameter. For example, a value of {-100, 0} would mean that the foot is positioned on the floor, 100 units behind the reference joint."), Editable()]
-            public Vector2 StepOffset { get; set; }
 
             [Serialize(0f, true, description: "Radius of the collider."), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
             public float Radius { get; set; }
@@ -541,20 +545,26 @@ namespace Barotrauma
             [Serialize(0f, true, description: "Width of the collider."), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
             public float Width { get; set; }
 
-            [Serialize(0f, true, description: "How heavy the limb is? If 0, the mass is automatically calculated based on the sprite dimensions."), Editable(MinValueFloat = 0, MaxValueFloat = 10000)]
-            public float Mass { get; set; }
-
             [Serialize(10f, true), Editable(MinValueFloat = 0, MaxValueFloat = 100)]
             public float Density { get; set; }
+
+            [Serialize(false, true), Editable]
+            public bool IgnoreCollisions { get; set; }
+
+            [Serialize(7f, true), Editable]
+            public float AngularDamping { get; set; }
 
             [Serialize("0, 0", true, description: "The position which is used to lead the IK chain to the IK goal. Only applicable if the limb is hand or foot."), Editable()]
             public Vector2 PullPos { get; set; }
 
+            [Serialize("0, 0", true, description: "Only applicable if this limb is a foot. Determines the \"neutral position\" of the foot relative to a joint determined by the \"RefJoint\" parameter. For example, a value of {-100, 0} would mean that the foot is positioned on the floor, 100 units behind the reference joint."), Editable()]
+            public Vector2 StepOffset { get; set; }
+
             [Serialize(-1, true, description: "The id of the refecence joint. Determines which joint is used as the \"neutral x-position\" for the foot movement. For example in the case of a humanoid-shaped characters this would usually be the waist. The position can be offset using the StepOffset parameter. Only applicable if this limb is a foot."), Editable()]
             public int RefJoint { get; set; }
 
-            [Serialize(false, true), Editable]
-            public bool IgnoreCollisions { get; set; }
+            [Serialize("0, 0", true, description: "Relative offset for the mouth position (starting from the center). Only applicable for LimbType.Head. Used for eating."), Editable(DecimalCount = 2, MinValueFloat = -10f, MaxValueFloat = 10f)]
+            public Vector2 MouthPos { get; set; }
 
             [Serialize("", true), Editable]
             public string Notes { get; set; }
@@ -587,12 +597,14 @@ namespace Barotrauma
                 var deformSpriteElement = element.GetChildElement("deformablesprite");
                 if (deformSpriteElement != null)
                 {
-                    deformSpriteParams = new SpriteParams(deformSpriteElement, ragdoll)
-                    {
-                        Deformation = new DeformationParams(deformSpriteElement, ragdoll)
-                    };
-                    deformSpriteParams.SubParams.Add(deformSpriteParams.Deformation);
+                    deformSpriteParams = new DeformSpriteParams(deformSpriteElement, ragdoll);
                     SubParams.Add(deformSpriteParams);
+                }
+                foreach (var decorativeSpriteElement in element.GetChildElements("decorativesprite"))
+                {
+                    var decorativeParams = new DecorativeSpriteParams(decorativeSpriteElement, ragdoll);
+                    decorativeSpriteParams.Add(decorativeParams);
+                    SubParams.Add(decorativeParams);
                 }
                 var attackElement = element.GetChildElement("attack");
                 if (attackElement != null)
@@ -706,12 +718,57 @@ namespace Barotrauma
             }
         }
 
+        public class DecorativeSpriteParams : SpriteParams
+        {
+            public DecorativeSpriteParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
+            {
+#if CLIENT
+                DecorativeSprite = new DecorativeSprite(element);
+#endif
+            }
+
+#if CLIENT
+            public DecorativeSprite DecorativeSprite { get; private set; }
+
+            public override bool Deserialize(XElement element = null, bool recursive = true)
+            {
+                base.Deserialize(element, recursive);
+                DecorativeSprite.SerializableProperties = SerializableProperty.DeserializeProperties(DecorativeSprite, element ?? Element);
+                return SerializableProperties != null;
+            }
+
+            public override bool Serialize(XElement element = null, bool recursive = true)
+            {
+                base.Serialize(element, recursive);
+                SerializableProperty.SerializeProperties(DecorativeSprite, element ?? Element);
+                return true;
+            }
+
+            public override void Reset()
+            {
+                base.Reset();
+                DecorativeSprite.SerializableProperties = SerializableProperty.DeserializeProperties(DecorativeSprite, OriginalElement);
+            }
+#endif
+        }
+
+        public class DeformSpriteParams : SpriteParams
+        {
+            public DeformationParams Deformation { get; private set; }
+
+            public DeformSpriteParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
+            {
+                Deformation = new DeformationParams(element, ragdoll);
+                SubParams.Add(Deformation);
+            }
+        }
+
         public class SpriteParams : SubParam
         {
             [Serialize("0, 0, 0, 0", true), Editable]
             public Rectangle SourceRect { get; set; }
 
-            [Serialize("0.5, 0.5", true, description: "The origin of the sprite relative to the collider."), Editable(DecimalCount = 2)]
+            [Serialize("0.5, 0.5", true, description: "The origin of the sprite relative to the collider."), Editable(DecimalCount = 3)]
             public Vector2 Origin { get; set; }
 
             [Serialize(0f, true, description: "The Z-depth of the limb relative to other limbs of the same character. 1 is front, 0 is behind."), Editable(MinValueFloat = 0, MaxValueFloat = 1, DecimalCount = 3)]
@@ -720,11 +777,11 @@ namespace Barotrauma
             [Serialize("", true), Editable()]
             public string Texture { get; set; }
 
-            public DeformationParams Deformation { get; set; }
-
             public override string Name => "Sprite";
 
             public SpriteParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll) { }
+
+            public string GetTexturePath() => string.IsNullOrWhiteSpace(Texture) ? Ragdoll.Texture : Texture;
         }
 
         public class DeformationParams : SubParam
@@ -1041,9 +1098,13 @@ namespace Barotrauma
             public virtual void AddToEditor(ParamsEditor editor, bool recursive = true, int space = 0)
             {
                 SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, this, inGame: false, showName: true, titleFont: GUI.LargeFont);
-                if (this is SpriteParams spriteParams && spriteParams.Deformation != null)
+                if (this is DecorativeSpriteParams decSpriteParams)
                 {
-                    foreach (var deformation in spriteParams.Deformation.Deformations.Keys)
+                    new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, decSpriteParams.DecorativeSprite, inGame: false, showName: true, titleFont: GUI.LargeFont);
+                }
+                else if (this is DeformSpriteParams deformSpriteParams)
+                {
+                    foreach (var deformation in deformSpriteParams.Deformation.Deformations.Keys)
                     {
                         new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, deformation, inGame: false, showName: true, titleFont: GUI.LargeFont);
                     }
