@@ -684,7 +684,7 @@
     </RangedWeapon>
     <ItemContainer capacity="6" itempos="27,10" iteminterval="0,-4" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
-      <Containable items="shutgunammo" />
+      <Containable items="shotgunammo" />
     </ItemContainer>
   </Item>
   <Item name="Shotgun Shell" identifier="shotgunshell" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem,shotgunammo" Scale="0.32" impactsoundtag="impact_metal_light">
