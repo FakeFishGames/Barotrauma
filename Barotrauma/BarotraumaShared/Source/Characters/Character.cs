@@ -2388,9 +2388,15 @@ namespace Barotrauma
                 AddDamage(worldPosition, attack.Afflictions.Keys, attack.Stun, playSound, attackImpulse, out limbHit, attacker) :
                 DamageLimb(worldPosition, targetLimb, attack.Afflictions.Keys, attack.Stun, playSound, attackImpulse, attacker);
 
-            if (limbHit == null) return new AttackResult();
+            if (limbHit == null) { return new AttackResult(); }
 
             limbHit.body?.ApplyLinearImpulse(attack.TargetImpulseWorld + attack.TargetForceWorld * deltaTime, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+            var mainLimb = limbHit.character.AnimController.MainLimb;
+            if (limbHit != mainLimb)
+            {
+                // Always add force to mainlimb
+                mainLimb.body?.ApplyLinearImpulse(attack.TargetImpulseWorld + attack.TargetForceWorld * deltaTime, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+            }
 #if SERVER
             if (attacker is Character attackingCharacter && attackingCharacter.AIController == null)
             {
@@ -2485,9 +2491,16 @@ namespace Barotrauma
             if (Math.Abs(attackImpulse) > 0.0f)
             {
                 Vector2 diff = dir;
-                if (diff == Vector2.Zero) diff = Rand.Vector(1.0f);
-                hitLimb.body.ApplyLinearImpulse(Vector2.Normalize(diff) * attackImpulse, hitLimb.SimPosition + ConvertUnits.ToSimUnits(diff),
-                        maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                if (diff == Vector2.Zero) { diff = Rand.Vector(1.0f); }
+                Vector2 impulse = Vector2.Normalize(diff) * attackImpulse;
+                Vector2 hitPos = hitLimb.SimPosition + ConvertUnits.ToSimUnits(diff);
+                hitLimb.body.ApplyLinearImpulse(impulse, hitPos, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                var mainLimb = hitLimb.character.AnimController.MainLimb;
+                if (hitLimb != mainLimb)
+                {
+                    // Always add force to mainlimb
+                    mainLimb.body.ApplyLinearImpulse(impulse, hitPos, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                }
             }
             Vector2 simPos = hitLimb.SimPosition + ConvertUnits.ToSimUnits(dir);
             AttackResult attackResult = hitLimb.AddDamage(simPos, afflictions, playSound);
