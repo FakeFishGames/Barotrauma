@@ -1,10 +1,9 @@
 ﻿<Ragdoll type="Hammerhead" limbscale="1" jointscale="1" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" canentersubmarine="False" canwalk="False" draggable="True" spritesheetorientation="270" texture="">
   <collider radius="80" name="Main Collider" width="0" height="300" />
-  <limb id="0" name="Head" type="Head" radius="0" width="170" notes="0_Torso" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="120" mass="0" density="50" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" lineardamping="0" mouthpos="0,0">
+  <limb id="0" name="Head" type="Head" radius="0" width="170" notes="0_Torso" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="140" mass="0" density="50" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" lineardamping="0" mouthpos="0,0">
     <deformablesprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="803,1,221,236" origin="0.4502646,0.5158103" subdivisions="5,5" depth="0.1">
       <spritedeformation type="bendjoint" resolution="5,5" multiplier="1.0" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="20" strength="5" />
     </deformablesprite>
-    <damagemodifier armorsector="0,360" afflictiontypes="damage,bleeding" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="False" afflictionidentifiers="" />
   </limb>
   <limb id="1" name="Tail1" type="Tail" radius="0" width="100" notes="21cl_Tail2" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="120" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" lineardamping="0" mouthpos="0,0">
     <deformablesprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="545,0,122,236" origin="0.5272418,0.4978859" subdivisions="5,5" depth="0.1">
@@ -41,7 +40,7 @@
     </attack>
   </limb>
   <limb id="8" radius="0" width="270" height="50" mass="0" name="LeftClaw2" type="None" spriteorientation="90" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" density="5" pullpos="0,0" refjoint="1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7" lineardamping="0" mouthpos="0,0">
-    <deformablesprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="716,267,307,65" origin="0.4527762,0.4468614" depth="0" />
+    <deformablesprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="716,267,307,66" origin="0.4527762,0.4468614" depth="0" />
     <attack targettype="Character" priority="0.9" range="250" damagerange="200" duration="0.2" cooldown="3" secondarycooldown="1" afterattack="PursueIfCanAttack" structuredamage="10" itemdamage="10" force="60" torque="0" targetimpulse="50" targetforce="0" structuresoundtype="StructureSlash" context="NotDefined" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforceonlimbs="" targetimpulseworld="0,0" targetforceworld="0,0" severlimbsprobability="0.5" stickchance="0" applyforcesonlyonce="True" cooldownrandomfactor="0.25" reverse="False" targetlimbtype="None">
       <Affliction identifier="bleeding" strength="50" probability="1" />
       <Affliction identifier="stun" strength="0.1" probability="1" />
@@ -75,7 +74,7 @@
     </attack>
   </limb>
   <limb id="14" radius="0" width="270" height="50" mass="0" name="RightClaw2" type="None" spriteorientation="270" flip="True" mirrorvertically="True" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" density="5" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7" lineardamping="0" mouthpos="0,0">
-    <sprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="716,266,307,65" origin="0.5104665,0.5920025" depth="0.1" />
+    <sprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="716,266,307,67" origin="0.5104665,0.5920025" depth="0.1" />
     <attack targettype="Character" priority="0.9" range="250" damagerange="200" duration="0.2" cooldown="3" secondarycooldown="1" afterattack="PursueIfCanAttack" structuredamage="10" itemdamage="10" force="60" torque="0" targetimpulse="50" targetforce="0" structuresoundtype="StructureSlash" context="NotDefined" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforceonlimbs="" targetimpulseworld="0,0" targetforceworld="0,0" severlimbsprobability="0.5" stickchance="0" applyforcesonlyonce="True" cooldownrandomfactor="0.25" reverse="False" targetlimbtype="None">
       <Affliction identifier="bleeding" strength="50" probability="1" />
       <Affliction identifier="stun" strength="0.1" probability="1" />
@@ -91,15 +90,16 @@
       <Conditional stun="lte 0"></Conditional>
     </attack>
   </limb>
-  <limb id="16" radius="0" width="59.5" height="133.45" name="NoseAttack2" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="True" attackpriority="1" steerforce="0" stepoffset="0,0" density="0.1" pullpos="0,0" refjoint="-1" ignorecollisions="True" notes="" angulardamping="7" healthindex="0" friction="0.3" restitution="0.05" mouthpos="0,0">
+  <limb id="16" radius="0" width="59.5" height="133.45" name="NoseAttack2" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="True" attackpriority="1" steerforce="0" stepoffset="0,0" density="0.1" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" angulardamping="7" healthindex="0" friction="0.3" restitution="0.05" mouthpos="0,0">
     <deformablesprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="955,39,70,157" origin="0.5,0.5" depth="0">
       <spritedeformation type="bendjoint" resolution="2,2" multiplier="0.0" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="20" strength="0" />
     </deformablesprite>
-    <attack targettype="Structure" priority="1" range="150" damagerange="150" cooldown="10" secondarycooldown="1" afterattack="FallBack" structuredamage="75" force="10" targetimpulse="500" structuresoundtype="StructureBlunt" applyforceonlimbs="0, 3" context="NotDefined" hitdetectiontype="Distance" itemdamage="75" stun="0" onlyhumans="False" torque="0" applyforcesonlyonce="False" targetimpulseworld="0,0" targetforce="0" targetforceworld="0,0" severlimbsprobability="0" stickchance="0" duration="0.1" cooldownrandomfactor="0.1" reverse="False" targetlimbtype="None"></attack>
+    <attack targettype="Structure" priority="1" range="150" damagerange="150" cooldown="10" secondarycooldown="1" afterattack="FallBack" structuredamage="45" force="10" targetimpulse="500" structuresoundtype="StructureBlunt" applyforceonlimbs="0, 3" context="NotDefined" hitdetectiontype="Distance" itemdamage="45" stun="0" onlyhumans="False" torque="0" applyforcesonlyonce="False" targetimpulseworld="0,0" targetforce="0" targetforceworld="0,0" severlimbsprobability="0" stickchance="0" duration="0.1" cooldownrandomfactor="0.1" reverse="False" targetlimbtype="None"></attack>
+    <damagemodifier damagemultiplier="0.1" armorsector="-90,-270" deflectprojectiles="True" afflictionidentifiers="" afflictiontypes="damage,bleeding" />
   </limb>
   <joint limb1="3" limb2="0" limb1anchor="68.27786,-11.39096" limb2anchor="-97.41309,-1.674939" name="Joint 3 - 0" canbesevered="True" limitenabled="True" upperlimit="10" lowerlimit="-10" stiffness="0.25" />
   <joint limb1="3" limb2="1" limb1anchor="-74.66603,-3.830754" limb2anchor="49.96994,0.36584" name="Joint 3 - 1" canbesevered="True" limitenabled="True" upperlimit="30" lowerlimit="-30" stiffness="0.25" />
-  <joint limb1="1" limb2="2" limb1anchor="-59.16335,-1.901198" limb2anchor="92.35233,3.951959" name="Joint 1 - 2" canbesevered="True" limitenabled="True" upperlimit="30" lowerlimit="-30" stiffness="0.25" />
+  <joint limb1="1" limb2="2" limb1anchor="-59.16335,-1.901198" limb2anchor="89.82687,4.450167" name="Joint 1 - 2" canbesevered="True" limitenabled="True" upperlimit="30" lowerlimit="-30" stiffness="0.25" />
   <joint limb1="2" limb2="4" limb1anchor="-97.9998,-7.098717" limb2anchor="145.9344,-12.02077" name="Joint 2 - 4" canbesevered="True" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />
   <joint limb1="3" limb2="5" limb1anchor="100.5414,37.53042" limb2anchor="-80.36808,10.21258" name="Joint 3 - 5" canbesevered="True" limitenabled="True" upperlimit="170.0266" lowerlimit="107.394" stiffness="0.25" />
   <joint limb1="5" limb2="7" limb1anchor="94.34475,19.33259" limb2anchor="-129.1997,-12.34505" name="Joint 5 - 7" canbesevered="True" limitenabled="True" upperlimit="0.4777034" lowerlimit="-90.58186" stiffness="0.25" />
