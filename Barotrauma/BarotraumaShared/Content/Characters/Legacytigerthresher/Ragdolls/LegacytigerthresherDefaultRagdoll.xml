@@ -8,7 +8,7 @@
   <collider radius="50" height="185"/>
 
   <!-- head -->
-  <limb id = "0" radius="12" height="100" type="Head" steerforce="1.0" mouthpos="20,50">
+  <limb id = "0" radius="12" height="100" type="Head" steerforce="1.0">
     <sprite texture="Content/Characters/Legacytigerthresher/tigerthresher.png" sourcerect="371,15,66,136" depth="0.02" origin ="0.5,0.5"/>
     <!--
     <deformablesprite texture="Content/Characters/Legacytigerthresher/tigerthresher.png" sourcerect="371,15,66,136" depth="0.02" origin ="0.5,0.5" subdivisions="15,15">

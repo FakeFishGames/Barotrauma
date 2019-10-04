@@ -1,7 +1,7 @@
-﻿<Ragdoll type="redcrawler" colliderheightfromfloor="40" impacttolerance="15" draggable="True" limbscale="0.7" jointscale="0.7" canentersubmarine="True" texturescale="1" spritesheetorientation="90">
+﻿<Ragdoll type="redcrawler" colliderheightfromfloor="40" impacttolerance="15" draggable="True" limbscale="0.7" jointscale="0.7" canentersubmarine="True" canwalk="True" texturescale="1" spritesheetorientation="90">
   <collider height="80" radius="40" name="Main Collider" width="0" />
   <!-- Head -->
-  <limb id="0" radius="50" type="Head" flip="True" steerforce="15" mouthpos="50,0" healthindex="0" attackpriority="0" stepoffset="0,0" bodytype="Dynamic" height="0" width="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 0" notes="">
+  <limb id="0" radius="50" type="Head" flip="True" steerforce="15"  healthindex="0" attackpriority="0" stepoffset="0,0" bodytype="Dynamic" height="0" width="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 0" notes="">
     <deformablesprite texture="Mods/ExampleMod/Redcrawler/crawler.png" sourcerect="153,2,102,82" depth="0.1" origin="0.5238374,0.4827269" subdivisions="3,3">
       <spritedeformation type="noise" resolution="3,3" frequency="2" amplitude="0.05" changespeed="2" blendmode="add" stopwhenhostisdead="true"/>
       <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply" row0="0,0 0,0 0,0" row1="0,0 0,0 1,1" row2="0,0 1,2 1,2" />

@@ -1,7 +1,7 @@
 ﻿<Ragdoll type="legacycrawler" colliderheightfromfloor="35" minscale="0.8" maxscale="1.2" impacttolerance="6" draggable="True" limbscale="1" jointscale="1" canentersubmarine="True" canwalk="True" spritesheetorientation="0" texturescale="1">
   <collider height="60" radius="22" name="Main Collider" width="0" />
   <!-- head -->
-  <limb id="0" radius="22" height="45" type="Head" flip="True" steerforce="15" mouthpos="17,35" healthindex="0" attackpriority="0" stepoffset="0,0" width="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 0" notes="">
+  <limb id="0" radius="22" height="45" type="Head" flip="True" steerforce="15" healthindex="0" attackpriority="0" stepoffset="0,0" width="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 0" notes="">
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true" />
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
     <sprite texture="Content/Characters/Legacycrawler/legacycrawler.png" sourcerect="0,0,51,121" depth="0.02" origin="0.45,0.63" />

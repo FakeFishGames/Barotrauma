@@ -1,7 +1,7 @@
 ﻿<Ragdoll type="mantis" minscale="0.8" maxscale="1.2" impacttolerance="10" draggable="True" limbscale="1" jointscale="1" colliderheightfromfloor="45" canentersubmarine="True" canwalk="True" spritesheetorientation="0" texturescale="1">
   <collider radius="60" name="Main Collider" height="0" width="0" />
   <!-- head -->
-  <limb id="0" radius="30" height="86" mass="6" type="Head" flip="True" steerforce="1" mouthpos="30,65" bodytype="Dynamic" healthindex="0" attackpriority="0" stepoffset="0,0" width="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 0" notes="">
+  <limb id="0" radius="30" height="86" mass="6" type="Head" flip="True" steerforce="1" bodytype="Dynamic" healthindex="0" attackpriority="0" stepoffset="0,0" width="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 0" notes="">
     <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="0,0,101,168" depth="0.02" origin="0.4,0.53" />
     <!--
     <deformablesprite texture="Content/Characters/Mantis/mantis.png" sourcerect="0,0,101,168" depth="0.02" origin="0.4,0.53" subdivisions="15,15">
