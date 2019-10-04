@@ -703,7 +703,7 @@ namespace Barotrauma
                 {
                     if (wallTarget != null)
                     {
-                        float d = ConvertUnits.ToDisplayUnits(colliderSize) * 5;
+                        float d = ConvertUnits.ToDisplayUnits(colliderSize) * 10;
                         if (Vector2.DistanceSquared(Character.AnimController.MainLimb.WorldPosition, attackWorldPos) < d * d)
                         {
                             // No valid attack limb -> let's turn away
@@ -747,8 +747,11 @@ namespace Barotrauma
                 }
                 else if (SelectedAiTarget.Entity is MapEntity e)
                 {
-                    Vector2 margin = CalculateMargin(e.Submarine.Velocity);
-                    toTarget += margin;
+                    if (e.Submarine != null)
+                    {
+                        Vector2 margin = CalculateMargin(e.Submarine.Velocity);
+                        toTarget += margin;
+                    }
                 }
 
                 Vector2 CalculateMargin(Vector2 targetVelocity)
@@ -1042,7 +1045,6 @@ namespace Barotrauma
             }
             if (SelectedAiTarget.Entity is IDamageable damageTarget)
             {
-                float prevHealth = damageTarget.Health;
                 if (attackingLimb.UpdateAttack(deltaTime, attackSimPos, damageTarget, out AttackResult attackResult, distance, targetLimb))
                 {
                     if (damageTarget.Health > 0)
@@ -1073,7 +1075,6 @@ namespace Barotrauma
                 attackDir = Vector2.UnitY;
             }
             steeringManager.SteeringManual(deltaTime, attackDir);
-            // TODO: avoiding does not work in all cases
             steeringManager.SteeringAvoid(deltaTime, colliderSize * 3.0f);
         }
 
