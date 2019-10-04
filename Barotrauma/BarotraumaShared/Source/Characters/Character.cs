@@ -625,6 +625,34 @@ namespace Barotrauma
                 newCharacter = new Character(speciesName, position, seed, characterInfo, isRemotePlayer, ragdoll);
             }
 
+            float healthRegen = newCharacter.Params.Health.ConstantHealthRegeneration;
+            if (healthRegen > 0)
+            {
+                AddDamageReduction("damage", healthRegen);
+            }
+            float eatingRegen = newCharacter.Params.Health.HealthRegenerationWhenEating;
+            if (eatingRegen > 0)
+            {
+                AddDamageReduction("damage", eatingRegen, ActionType.OnEating);
+            }
+            float burnReduction = newCharacter.Params.Health.BurnReduction;
+            if (burnReduction > 0)
+            {
+                AddDamageReduction("burn", burnReduction);
+            }
+            float bleedReduction = newCharacter.Params.Health.BleedingReduction;
+            if (bleedReduction > 0)
+            {
+                AddDamageReduction("bleeding", bleedReduction);
+            }
+
+            void AddDamageReduction(string affliction, float amount, ActionType actionType = ActionType.Always)
+            {
+                newCharacter.statusEffects.Add(StatusEffect.Load(
+                new XElement("StatusEffect", new XAttribute("type", actionType), new XAttribute("target", "Character"),
+                new XElement("ReduceAffliction", new XAttribute("identifier", affliction), new XAttribute("amount", amount))), $"automatic damage reduction ({affliction})"));
+            }
+
 #if SERVER
             if (GameMain.Server != null && Spawner != null && createNetworkEvent)
             {
