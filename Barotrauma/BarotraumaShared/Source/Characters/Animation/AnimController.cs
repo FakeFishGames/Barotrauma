@@ -61,7 +61,7 @@ namespace Barotrauma
             }
         }
 
-        public bool CanWalk => RagdollParams.CanWalk;
+        public bool CanWalk => CanEnterSubmarine;
         public bool IsMovingBackwards => !InWater && Math.Sign(targetMovement.X) == -Math.Sign(Dir);
         
         // TODO: define death anim duration in XML
