@@ -3527,9 +3527,7 @@
   <campaignfiletransferinprogress>Please wait for the campaign save file to finish downloading.</campaignfiletransferinprogress>
 
   <character.blackmoloch>Black Moloch</character.blackmoloch>
-  <character.goldenhammerhead>Golden Hammerhead</character.goldenhammerhead>
   <character.hammerheadmatriarch>Hammerhead Matriarch</character.hammerheadmatriarch>
-  <character.bonetigerthresher>Bone Tiger Thresher</character.bonetigerthresher>
   
   <!-- Changed values as of 13th of August for the minor update in October -->
   <traitorgoaldestroyitems>Dispose of at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>
@@ -3541,6 +3539,9 @@
   <connection.set_text>set_text</connection.set_text>
   
   <bugreportfeedbackform>Help and technical support</bugreportfeedbackform>
+
+  <character.hammerheadgold>Golden Hammerhead</character.hammerheadgold>
+  <character.bonethresher>Bone Tiger Thresher</character.bonethresher>
   
   <!-- New additions for the major update coming in November -->
   <submarine.name.kastrull>Kastrull</submarine.name.kastrull>
