@@ -266,4 +266,10 @@
       </Item>
     </Items>
   </Job>
+
+  <NoJob>
+    <PortraitClothing>
+      <sprite name="Portrait Clothing None" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="2,2"/>
+    </PortraitClothing>
+  </NoJob>
 </Jobs>
