@@ -184,22 +184,20 @@ namespace Barotrauma
                 Collider.FarseerBody.FixedRotation = false;
                 UpdateSineAnim(deltaTime);
             }
-            else if (CanEnterSubmarine && (currentHull != null || forceStanding))
+            else if (CanEnterSubmarine && (currentHull != null || forceStanding) && CurrentGroundedParams != null)
             {
-                if (CurrentGroundedParams != null)
+                //rotate collider back upright
+                float standAngle = dir == Direction.Right ? CurrentGroundedParams.ColliderStandAngleInRadians : -CurrentGroundedParams.ColliderStandAngleInRadians;
+                if (Math.Abs(MathUtils.GetShortestAngle(Collider.Rotation, standAngle)) > 0.001f)
                 {
-                    //rotate collider back upright
-                    float standAngle = dir == Direction.Right ? CurrentGroundedParams.ColliderStandAngleInRadians : -CurrentGroundedParams.ColliderStandAngleInRadians;
-                    if (Math.Abs(MathUtils.GetShortestAngle(Collider.Rotation, standAngle)) > 0.001f)
-                    {
-                        Collider.AngularVelocity = MathUtils.GetShortestAngle(Collider.Rotation, standAngle) * 60.0f;
-                        Collider.FarseerBody.FixedRotation = false;
-                    }
-                    else
-                    {
-                        Collider.FarseerBody.FixedRotation = true;
-                    }
+                    Collider.AngularVelocity = MathUtils.GetShortestAngle(Collider.Rotation, standAngle) * 60.0f;
+                    Collider.FarseerBody.FixedRotation = false;
                 }
+                else
+                {
+                    Collider.FarseerBody.FixedRotation = true;
+                }
+
                 UpdateWalkAnim(deltaTime);
             }
 
@@ -529,11 +527,7 @@ namespace Barotrauma
             
         void UpdateWalkAnim(float deltaTime)
         {
-            if (CurrentGroundedParams == null)
-            {
-                // TODO: fidget?
-                return;
-            }
+            if (CurrentGroundedParams == null) { return; }
             movement = MathUtils.SmoothStep(movement, TargetMovement, 0.2f);
 
             Collider.LinearVelocity = new Vector2(

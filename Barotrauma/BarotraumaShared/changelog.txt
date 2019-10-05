@@ -1,47 +1,27 @@
 ---------------------------------------------------------------------------------------------------------
-v0.9.4.1 (monster update)
----------------------------------------------------------------------------------------------------------
-Additions:
-- New character: Bone Tigerthresher
-- New character: Golden Hammerhead
-- New husk faces
-- Added configurable health regeneration, which is applied when the character is eating a corpse
-- Added configurable affliction reductions (bleeding, burn, damage)
-- Added an option for the monsters to ignore retaliation when it's attacked
-- Added an option to target the attack on specific limb types
-- Added an option to follow through after the attack
-
-Improvements:
-- Better bend deformations on limbs
-- Better hit impacts on limbs
-- AI monsters should hit moving targets more easily
-
-Changes:
-- Completely remade the Tigerthresher (new skin, ragdoll, behavior and attacks)
-- Reworked chararacter: Hammerhead (new ragdoll, adjusted behavior and attacks)
-- Medium sized monsters can now more easily trigger the camera shake effect
-- Adjusted the behavior of most characters
-- Characters are now allowed to move faster than previously (9 -> 15)
-- Monsters can now enter the submarine even if they cannot walk (decoupled CanWalk and CanEnterSubmarines parameters)
-- Changed the mouth position calculations and redefined the values for all monsters that have the eating behavior
-- Removed Moloch Baby (which was just a test. Molochs will be revisited in the next update)
-
-Bug fixes:
-- Fixed issues with AI targets
-- Fixed a rare case where characters were stunned in the character editor
-
-Character editor improvements:
-- Exposed structure sound types in the editor
-- Exposed the mouth position in the editor
-- Expose the angular damping and density for limbs in the editor (remove mass, which was not used)
-- Added a default texture path for ragdolls so that we can define the texture only once. Limb specific texture definitions override this.
-- Allow to define a group for different species. The chararacters in the same group are friendly to each other
-- DecorativeSprites can now be used on character limbs (like on items)
-- Made it easier to adjust the source rect's position with the arrows. Hold CTRL to change the size.
-
----------------------------------------------------------------------------------------------------------
 v0.9.4.0
 ---------------------------------------------------------------------------------------------------------
+
+Monster additions and changes:
+- New character: Bone Tigerthresher.
+- New character: Golden Hammerhead.
+- Completely remade the Tigerthresher (new skin, ragdoll, behavior and attacks).
+- Reworked Hammerhead (new ragdoll, adjusted behavior and attacks).
+- Adjusted the behavior of most characters.
+- Medium sized monsters can now more easily trigger impact effects when ramming the submarine.
+- Characters are now allowed to move faster than previously (9 -> 15).
+- Monsters can now enter the submarine even if they cannot walk (decoupled CanWalk and CanEnterSubmarines 
+parameters).
+- Changed the mouth position calculations and redefined the values for all monsters that have the eating behavior.
+- Removed Moloch Baby (Which was just a test. Molochs will be revisited in the next update).
+- Better bend deformations on limbs.
+- Better hit impacts on limbs.
+- AI monsters should hit moving targets more easily.
+- Added configurable health regeneration, which is applied when the character is eating a corpse.
+- Added configurable affliction reductions (bleeding, burn, damage).
+- Added an option for the monsters to ignore retaliation when it's attacked.
+- Added an option to target the attack on specific limb types.
+- Added an option to follow through after the attack.
 
 Modding improvements:
 - Mods can override specific content without having to create a completely new content package. This can
@@ -78,8 +58,18 @@ Character editor improvements:
 - Option for hiding the limb sprite (invisible limbs).
 - Multiple minor additions and changes, like an option to enable lights or to display the damage modifiers
 drawn on the character.
+- Exposed structure sound types.
+- Exposed the mouth position.
+- Exposed the angular damping and density for limbs (removed mass, which was not used).
+- Added a default texture path for ragdolls so that the texture can only be defined once. Limb specific 
+texture definitions override this.
+- Allow to define a group for different species. The chararacters in the same group are friendly to each other.
+- DecorativeSprites can now be used on character limbs (like on items).
+- Made it easier to adjust the source rect's position with the arrows. Hold CTRL to change the size.
+- Fixed a rare case where characters got stunned in the character editor.
 
 Misc improvements:
+- New husk faces.
 - Increased default VOIP and microphone volume and the maximum values.
 - Force a restart when switching the language.
 - More detailed "x is not a valid XML file" error messages.
@@ -134,6 +124,7 @@ the value change in the editing hud).
 - Clients don't display client-side vitality changes in healthbars until the actual vitality is received 
 from the server. Fixes health occasionally dropping and then jumping back up if the client predicts damage 
 incorrectly (e.g. if a melee attack hits client-side but doesn't server-side).
+- Fixed issues with AI targets.
 
 ---------------------------------------------------------------------------------------------------------
 v0.9.3.3
