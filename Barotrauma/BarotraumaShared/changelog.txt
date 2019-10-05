@@ -17,25 +17,27 @@ Improvements:
 - AI monsters should hit moving targets more easily
 
 Changes:
-- Remade character: Tigerthresher
-- Remade chararacter: Hammerhead
+- Completely remade the Tigerthresher (new skin, ragdoll, behavior and attacks)
+- Reworked chararacter: Hammerhead (new ragdoll, adjusted behavior and attacks)
+- Medium sized monsters can now more easily trigger the camera shake effect
 - Adjusted the behavior of most characters
 - Characters are now allowed to move faster than previously (9 -> 15)
-- Monsters can now enter the submarine even if they cannot walk (decouple CanWalk and CanEnterSubmarines parameters)
-- Changed the mouth position calculation redefine the values for all monsters that have the eating behavior
-- Removed Moloch Boss and Moloch Baby
+- Monsters can now enter the submarine even if they cannot walk (decoupled CanWalk and CanEnterSubmarines parameters)
+- Changed the mouth position calculations and redefined the values for all monsters that have the eating behavior
+- Removed Moloch Baby (which was just a test. Molochs will be revisited in the next update)
 
 Bug fixes:
 - Fixed issues with AI targets
 - Fixed a rare case where characters were stunned in the character editor
 
 Character editor improvements:
-- Expose structure sound types in the character editor
+- Exposed structure sound types in the editor
+- Exposed the mouth position in the editor
+- Expose the angular damping and density for limbs in the editor (remove mass, which was not used)
 - Added a default texture path for ragdolls so that we can define the texture only once. Limb specific texture definitions override this.
 - Allow to define a group for different species. The chararacters in the same group are friendly to each other
-- Expose the angular damping and density for limbs in the character editor (remove mass, which was not used)
 - DecorativeSprites can now be used on character limbs (like on items)
-
+- Made it easier to adjust the source rect's position with the arrows. Hold CTRL to change the size.
 
 ---------------------------------------------------------------------------------------------------------
 v0.9.4.0
