@@ -108,7 +108,7 @@ namespace Barotrauma
             }
         }
 
-        public static void Update(GameMain game, float deltaTime)
+        public static void Update(float deltaTime)
         {
             lock (queuedMessages)
             {
@@ -161,6 +161,16 @@ namespace Barotrauma
                      textBox.Text = AutoComplete(textBox.Text, increment: string.IsNullOrEmpty(currentAutoCompletedCommand) ? 0 : 1 );
                 }
 
+                if (PlayerInput.KeyDown(Keys.LeftControl) || PlayerInput.KeyDown(Keys.RightControl))
+                {
+                    if ((PlayerInput.KeyDown(Keys.C) || PlayerInput.KeyDown(Keys.D) || PlayerInput.KeyDown(Keys.Z)) && activeQuestionCallback != null)
+                    {
+                        activeQuestionCallback = null;
+                        activeQuestionText = null;
+                        NewMessage(PlayerInput.KeyDown(Keys.C) ? "^C" : PlayerInput.KeyDown(Keys.D) ? "^D" : "^Z", Color.White, true);
+                    }
+                }
+
                 if (PlayerInput.KeyHit(Keys.Enter))
                 {
                     ExecuteCommand(textBox.Text);
@@ -181,41 +191,6 @@ namespace Barotrauma
             {
                 GUI.ForceMouseOn(null);
                 textBox.Deselect();
-            }
-        }
-
-        public static void Draw(SpriteBatch spriteBatch)
-        {
-            if (!isOpen) return;
-
-            frame.DrawManually(spriteBatch);
-        }
-
-        private static bool IsCommandPermitted(string command, GameClient client)
-        {
-            switch (command)
-            {
-                case "kick":
-                    return client.HasPermission(ClientPermissions.Kick);
-                case "ban":
-                case "banip":
-                case "banendpoint":
-                    return client.HasPermission(ClientPermissions.Ban);
-                case "unban":
-                case "unbanip":
-                    return client.HasPermission(ClientPermissions.Unban);
-                case "netstats":
-                case "help":
-                case "dumpids":
-                case "admin":
-                case "entitylist":
-                case "togglehud":
-                case "toggleupperhud":
-                case "togglecharacternames":
-                case "fpscounter":
-                    return true;
-                default:
-                    return client.HasConsoleCommandPermission(command);
             }
         }
 
@@ -293,7 +268,7 @@ namespace Barotrauma
             };
             textContainer.RectTransform.NonScaledSize = new Point(textContainer.RectTransform.NonScaledSize.X, textBlock.RectTransform.NonScaledSize.Y + 5);
             textBlock.SetTextPos();
-            var nameBlock = new GUITextBlock(new RectTransform(new Point(150, textContainer.Rect.Height), textContainer.RectTransform),
+            new GUITextBlock(new RectTransform(new Point(150, textContainer.Rect.Height), textContainer.RectTransform),
                 command.names[0], textAlignment: Alignment.TopLeft);
 
             listBox.UpdateScrollBarSize();
@@ -1545,10 +1520,12 @@ namespace Barotrauma
                 (string[] args) =>
                 {
                     if (GameMain.Client == null || args.Length == 0) return;
-                    ShowQuestionPrompt("Reason for banning the endpoint \"" + args[0] + "\"?", (reason) =>
+                    ShowQuestionPrompt("Reason for banning the endpoint \"" + args[0] + "\"? (Enter c to cancel)", (reason) =>
                     {
-                        ShowQuestionPrompt("Enter the duration of the ban (leave empty to ban permanently, or use the format \"[days] d [hours] h\")", (duration) =>
+                        if (reason == "c" || reason == "C") { return; }
+                        ShowQuestionPrompt("Enter the duration of the ban (leave empty to ban permanently, or use the format \"[days] d [hours] h\") (Enter c to cancel)", (duration) =>
                         {
+                            if (duration == "c" || duration == "C") { return; }
                             TimeSpan? banDuration = null;
                             if (!string.IsNullOrWhiteSpace(duration))
                             {
