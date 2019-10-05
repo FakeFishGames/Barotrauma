@@ -1183,6 +1183,12 @@ namespace Barotrauma.Networking
                     mirrorLevel: campaign.Map.CurrentLocation != campaign.Map.SelectedConnection.Locations[0]);
             }
 
+            if (GameMain.GameSession.Submarine.IsFileCorrupted)
+            {
+                DebugConsole.ThrowError($"Failed to start a round. Could not load the submarine \"{GameMain.GameSession.Submarine.Name}\".");
+                yield return CoroutineStatus.Failure;
+            }
+
             for (int i = 0; i < Submarine.MainSubs.Length; i++)
             {
                 if (!loadSecondSub && i > 0) { break; }

@@ -2071,7 +2071,7 @@ namespace Barotrauma
                 .UserData as Submarine;
 
             //matching sub found and already selected, all good
-            if (sub != null && subList.SelectedData is Submarine selectedSub && selectedSub.MD5Hash?.Hash == md5Hash)
+            if (sub != null && subList.SelectedData is Submarine selectedSub && selectedSub.MD5Hash?.Hash == md5Hash && System.IO.File.Exists(sub.FilePath))
             {
                 return true;
             }
