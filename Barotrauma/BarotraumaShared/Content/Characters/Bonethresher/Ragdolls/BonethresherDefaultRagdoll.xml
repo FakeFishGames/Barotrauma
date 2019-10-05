@@ -71,12 +71,12 @@
     </deformablesprite>
   </limb>
   <joint limb1="0" limb2="1" limb1anchor="-32.70639,-13.92811" limb2anchor="15.99061,25.94849" name="Joint 0 - 1" canbesevered="True" limitenabled="True" upperlimit="29.98326" lowerlimit="10.18363" stiffness="0.25" />
-  <joint limb1="1" limb2="3" limb1anchor="-40.87811,2.024587" limb2anchor="47.61121,4.618834" name="Joint 1 - 3" canbesevered="True" limitenabled="True" upperlimit="40" lowerlimit="-40" stiffness="0.25" />
-  <joint limb1="3" limb2="4" limb1anchor="-46.30445,10.23892" limb2anchor="42.61075,3.83488" name="Joint 3 - 4" canbesevered="True" limitenabled="True" upperlimit="39.95972" lowerlimit="-39.80916" stiffness="0.25" />
-  <joint limb1="4" limb2="5" limb1anchor="-35.48426,5.544082" limb2anchor="61.67012,0.2775942" name="Joint 4 - 5" canbesevered="True" limitenabled="True" upperlimit="39.95972" lowerlimit="-39.80916" stiffness="0.25" />
-  <joint limb1="5" limb2="6" limb1anchor="-66.02003,-8.692857" limb2anchor="60.66912,1.314504" name="Joint 5 - 6" canbesevered="True" limitenabled="True" upperlimit="39.95972" lowerlimit="-39.80916" stiffness="0.25" />
-  <joint limb1="6" limb2="7" limb1anchor="-66.1244,3.508062" limb2anchor="47.50251,-6.355651" name="Joint 6 - 7" canbesevered="True" limitenabled="True" upperlimit="39.95972" lowerlimit="-39.80916" stiffness="0.25" />
-  <joint limb1="7" limb2="8" limb1anchor="-46.70847,0.1661554" limb2anchor="50.57946,-1.583979" name="Joint 7 - 8" canbesevered="True" limitenabled="True" upperlimit="39.95972" lowerlimit="-39.80916" stiffness="0.25" />
+  <joint limb1="1" limb2="3" limb1anchor="-40.87811,2.024587" limb2anchor="47.61121,4.618834" name="Joint 1 - 3" canbesevered="False" limitenabled="True" upperlimit="40" lowerlimit="-40" stiffness="0.25" />
+  <joint limb1="3" limb2="4" limb1anchor="-46.30445,11.06013" limb2anchor="42.61075,3.83488" name="Joint 3 - 4" canbesevered="False" limitenabled="True" upperlimit="39.95972" lowerlimit="-39.80916" stiffness="0.25" />
+  <joint limb1="4" limb2="5" limb1anchor="-35.48426,5.544082" limb2anchor="61.67012,0.2775942" name="Joint 4 - 5" canbesevered="False" limitenabled="True" upperlimit="39.95972" lowerlimit="-39.80916" stiffness="0.25" />
+  <joint limb1="5" limb2="6" limb1anchor="-66.02003,-8.692857" limb2anchor="60.66912,1.314504" name="Joint 5 - 6" canbesevered="False" limitenabled="True" upperlimit="39.95972" lowerlimit="-39.80916" stiffness="0.25" />
+  <joint limb1="6" limb2="7" limb1anchor="-66.1244,3.508062" limb2anchor="47.50251,-6.355651" name="Joint 6 - 7" canbesevered="False" limitenabled="True" upperlimit="39.95972" lowerlimit="-39.80916" stiffness="0.25" />
+  <joint limb1="7" limb2="8" limb1anchor="-46.70847,0.1661554" limb2anchor="50.57946,-1.583979" name="Joint 7 - 8" canbesevered="False" limitenabled="True" upperlimit="39.95972" lowerlimit="-39.80916" stiffness="0.25" />
   <joint limb1="1" limb2="2" limb1anchor="26.51008,-12.90655" limb2anchor="-20.00271,2.013826" name="Joint 1 - 2" canbesevered="True" limitenabled="True" upperlimit="-18.25742" lowerlimit="-33.39247" stiffness="0.25" />
   <joint limb1="1" limb2="10" limb1anchor="-10.92559,-35.25846" limb2anchor="3.86585,18.03033" name="Joint 1 - 10" canbesevered="True" limitenabled="True" upperlimit="10.66339" lowerlimit="-15.96447" stiffness="0.25" />
   <joint limb1="1" limb2="9" limb1anchor="-38.40155,-40.57999" limb2anchor="3.307009,18.05545" name="Joint 1 - 9" canbesevered="True" limitenabled="True" upperlimit="7.110166" lowerlimit="-19.75739" stiffness="0.25" />
