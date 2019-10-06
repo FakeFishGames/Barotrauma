@@ -1086,6 +1086,7 @@ namespace Barotrauma
             string xml = response.Content;
             int index = xml.IndexOf('<');
             if (index > 0) { xml = xml.Substring(index, xml.Length - index); }
+            if (string.IsNullOrWhiteSpace(xml)) { return; }
             try
             {
                 XElement element = XDocument.Parse(xml)?.Root;
