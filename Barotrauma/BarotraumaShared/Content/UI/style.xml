@@ -1175,27 +1175,27 @@
   </ScanLines>
 
   <TextFrame
-  padding="40.0, 40.0, 40.0, 40.0"
-  color="255,255,255,205"
-  hovercolor="255,255,255,205"
-  selectedcolor="255,255,255,205"
-  textcolor="0,0,0,255">
+    padding="40.0, 40.0, 40.0, 40.0"
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255"
+    textcolor="0,0,0,255">
     <Sprite texture="Content/UI/UI_Atlas2.png" size="0.0, 0.0" sourcerect="96,199,273,166" slice="136,219,326,350"/>
   </TextFrame>
 
   <CheckMark
-  color="255,255,255,255"
-  hovercolor="255,255,255,255"
-  selectedcolor="255,255,255,255"
-  textcolor="0,0,0,255">
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255"
+    textcolor="0,0,0,255">
     <Sprite texture="Content/UI/tutorialAtlas.png" sourcerect="17,173,93,96" tile="false"/>
   </CheckMark>
 
   <Stroke
-  color="255,255,255,255"
-  hovercolor="255,255,255,255"
-  selectedcolor="255,255,255,255"
-  textcolor="0,0,0,255">
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255"
+    textcolor="0,0,0,255">
     <Sprite texture="Content/UI/tutorialAtlas.png" sourcerect="111,214,209,22" tile="false"/>
   </Stroke>
 </style>
