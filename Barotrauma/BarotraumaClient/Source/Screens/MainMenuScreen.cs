@@ -1064,42 +1064,45 @@ namespace Barotrauma
                 OnClicked = HostServerClicked
             };
         }
-#endregion
+        #endregion
 
         private void FetchRemoteContent(RectTransform parent)
         {
             if (string.IsNullOrEmpty(GameMain.Config.RemoteContentUrl)) { return; }
-
-            var client = new RestClient(GameMain.Config.RemoteContentUrl);
-            var request = new RestRequest("MenuContent.xml", Method.GET);
-
-            IRestResponse response = client.Execute(request);
-            if (response.ResponseStatus != ResponseStatus.Completed)
-            {
-                return;
-            }
-            if (response.StatusCode != HttpStatusCode.OK)
-            {
-                return;
-            }
-
-            string xml = response.Content;
-            int index = xml.IndexOf('<');
-            if (index > 0) { xml = xml.Substring(index, xml.Length - index); }
-            if (string.IsNullOrWhiteSpace(xml)) { return; }
             try
             {
+                var client = new RestClient(GameMain.Config.RemoteContentUrl);
+                var request = new RestRequest("MenuContent.xml", Method.GET);
+
+                IRestResponse response = client.Execute(request);
+                if (response.ResponseStatus != ResponseStatus.Completed)
+                {
+                    return;
+                }
+                if (response.StatusCode != HttpStatusCode.OK)
+                {
+                    return;
+                }
+
+                string xml = response.Content;
+                int index = xml.IndexOf('<');
+                if (index > 0) { xml = xml.Substring(index, xml.Length - index); }
+                if (string.IsNullOrWhiteSpace(xml)) { return; }
+
                 XElement element = XDocument.Parse(xml)?.Root;
                 foreach (XElement subElement in element.Elements())
                 {
                     GUIComponent.FromXML(subElement, parent);
                 }
             }
+
             catch (Exception e)
             {
 #if DEBUG
                 DebugConsole.ThrowError("Fetching remote content to the main menu failed.", e);
 #endif
+                GameAnalyticsManager.AddErrorEventOnce("MainMenuScreen.FetchRemoteContent:Exception", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    "Fetching remote content to the main menu failed. " + e.Message);
                 return;
             }
         }
