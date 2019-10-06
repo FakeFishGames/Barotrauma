@@ -8,7 +8,7 @@ namespace Barotrauma
     {
         const float IntensityUpdateInterval = 5.0f;
 
-        private List<ScriptedEvent> events;
+        private readonly List<ScriptedEvent> events;
 
         private Level level;
 
@@ -33,7 +33,7 @@ namespace Barotrauma
 
         private float roundDuration;
 
-        private List<ScriptedEventSet> selectedEventSets;
+        private readonly List<ScriptedEventSet> selectedEventSets;
 
         private EventManagerSettings settings;
 
@@ -168,14 +168,17 @@ namespace Barotrauma
                     if (eventSet.EventPrefabs.Count > 0)
                     {
                         MTRandom rand = new MTRandom(ToolBox.StringToInt(level.Seed));
-                        var newEvent = eventSet.EventPrefabs[rand.NextInt32() % eventSet.EventPrefabs.Count].CreateInstance();
-                        newEvent.Init(true);
-                        DebugConsole.Log("Initialized event " + newEvent.ToString());
-                        events.Add(newEvent);
+                        var eventPrefab = ToolBox.SelectWeightedRandom(eventSet.EventPrefabs, eventSet.EventPrefabs.Select(e => e.Commonness).ToList(), rand);
+                        if (eventPrefab != null)
+                        {
+                            var newEvent = eventPrefab.CreateInstance();
+                            newEvent.Init(true);
+                            DebugConsole.Log("Initialized event " + newEvent.ToString());
+                            events.Add(newEvent);
+                        }
                     }
                     if (eventSet.ChildSets.Count > 0)
                     {
-                        MTRandom rand = new MTRandom(ToolBox.StringToInt(level.Seed));
                         var newEventSet = SelectRandomEvents(eventSet.ChildSets);
                         if (newEventSet != null) selectedEventSets.Add(newEventSet);
                     }
