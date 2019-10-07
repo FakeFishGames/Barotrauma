@@ -3,7 +3,7 @@ v0.9.4.0
 ---------------------------------------------------------------------------------------------------------
 
 Monster additions and changes:
-- New character: Bone Tigerthresher.
+- New character: Bonethresher.
 - New character: Golden Hammerhead.
 - Completely remade the Tigerthresher (new skin, ragdoll, behavior and attacks).
 - Reworked Hammerhead (new ragdoll, adjusted behavior and attacks).
@@ -13,13 +13,13 @@ Monster additions and changes:
 - Changed the mouth position calculations and redefined the values for all monsters that have the eating behavior.
 - Removed Moloch Baby (Which was just a test. Molochs will be revisited in the next update).
 - Better bend deformations on limbs.
-- Better hit impacts on limbs.
+- Better feedback about hit impacts on limbs when the character takes damage.
 - AI monsters should hit moving targets more easily.
 - Added configurable health regeneration, which is applied when the character is eating a corpse.
 - Added configurable affliction reductions (bleeding, burn, damage).
-- Added an option for the monsters to ignore retaliation when it's attacked.
+- Added an option for the monsters to ignore retaliation when they are attacked.
 - Added an option to target the attack on specific limb types.
-- Added an option to follow through after the attack.
+- Added an option to continue the movement, "following through" the target after the attack.
 
 Modding improvements:
 - Mods can override specific content without having to create a completely new content package. This can
@@ -127,7 +127,6 @@ the value change in the editing hud).
 - Clients don't display client-side vitality changes in healthbars until the actual vitality is received 
 from the server. Fixes health occasionally dropping and then jumping back up if the client predicts damage 
 incorrectly (e.g. if a melee attack hits client-side but doesn't server-side).
-- Fixed issues with AI targets.
 - Fixed oxygen/fuel tanks attached to a tool being rendered behind the character's legs.
 
 ---------------------------------------------------------------------------------------------------------
