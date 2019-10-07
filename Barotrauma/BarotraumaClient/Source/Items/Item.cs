@@ -446,6 +446,7 @@ namespace Barotrauma
                 (editingHUDRefreshPending && editingHUDRefreshTimer <= 0.0f))
             {
                 editingHUD = CreateEditingHUD(Screen.Selected != GameMain.SubEditorScreen);
+                editingHUDRefreshTimer = 1.0f;
             }
 
             if (Screen.Selected != GameMain.SubEditorScreen) { return; }
@@ -680,7 +681,12 @@ namespace Barotrauma
                 editingHUDCreated = editingHUD != null && editingHUD != prevEditingHUD;
             }
 
-            editingHUDRefreshTimer -= deltaTime;
+            if (editingHUD == null ||
+                !(GUI.KeyboardDispatcher.Subscriber is GUITextBox textBox) ||
+                !editingHUD.IsParentOf(textBox))
+            {
+                editingHUDRefreshTimer -= deltaTime;
+            }
 
             List<ItemComponent> prevActiveHUDs = new List<ItemComponent>(activeHUDs);
             List<ItemComponent> activeComponents = new List<ItemComponent>(components);
