@@ -49,11 +49,9 @@ namespace Barotrauma
                 }
                 catch (Exception e2)
                 {
-#if WINDOWS
                     CrashMessageBox("Barotrauma seems to have crashed, and failed to generate a crash report: "
                         + e2.Message + "\n" + e2.StackTrace.ToString(),
-                        "Failed to generate crash report!");
-#endif
+                        null);
                 }
                 game?.Dispose();
                 return;
@@ -66,7 +64,7 @@ namespace Barotrauma
             Microsoft.Xna.Framework.MessageBox.ShowWrapped(Microsoft.Xna.Framework.MessageBox.Flags.Error, "Oops! Barotrauma just crashed.", message);
 
             // Open the crash log.
-            Process.Start(filePath);
+            if (!string.IsNullOrWhiteSpace(filePath)) { Process.Start(filePath); }
         }
 
         static void CrashDump(GameMain game, string filePath, Exception exception)
