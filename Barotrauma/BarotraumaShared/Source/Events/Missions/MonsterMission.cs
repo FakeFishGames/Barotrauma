@@ -76,6 +76,7 @@ namespace Barotrauma
             completed = true;
         }
 
-        public bool IsEliminated(Character enemy) => enemy.Removed || enemy.IsDead;
+        // TODO: escaping might not be good enough end condition for all cases (a Crawler swarm may start escaping from a Hammerhead) -> should this be solved in the ai or here?
+        public bool IsEliminated(Character enemy) => enemy.Removed || enemy.IsDead || enemy.AIController is EnemyAIController ai && ai.State == AIState.Escape;
     }
 }

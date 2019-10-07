@@ -278,9 +278,8 @@ namespace Barotrauma
                 {
                     State = AIState.Idle;
                 }
-                else if (Character.HealthPercentage < FleeHealthThreshold && SwarmBehavior == null)
+                else if (Character.HealthPercentage < FleeHealthThreshold)
                 {
-                    // Don't flee from damage if in a swarm.
                     State = AIState.Escape;
                 }
                 else if (targetingPriority != null)
