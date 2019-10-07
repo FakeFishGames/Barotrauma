@@ -489,6 +489,7 @@ namespace Barotrauma
             if (LightSource != null)
             {
                 LightSource.Position = body.DrawPosition;
+                if (LightSource.ParentSub != null) { LightSource.Position -= LightSource.ParentSub.DrawPosition; }
                 LightSource.LightSpriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipVertically;
             }
             if (damageOverlayStrength > 0.0f && DamagedSprite != null && !hideLimb)
