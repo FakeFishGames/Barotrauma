@@ -981,6 +981,7 @@ namespace Barotrauma
 
             if (parentInventory != null || body == null || !body.Enabled || Removed)
             {
+                positionBuffer.Clear();
                 return;
             }
 
