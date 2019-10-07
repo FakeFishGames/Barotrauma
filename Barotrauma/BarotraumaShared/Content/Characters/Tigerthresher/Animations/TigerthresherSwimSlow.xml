@@ -7,7 +7,7 @@
   wavelength="46.15984"
   rotatetowardsmovement="True"
   torsotorque="45"
-  headtorque="60"
+  headtorque="120"
   tailtorque="20"
   foottorque="20"
   footangles=""
@@ -15,5 +15,5 @@
   steertorque="30"
   movementspeed="4"
   cyclespeed="1"
-  headangle="90"
+  headangle="81.26849"
   torsoangle="90" />
