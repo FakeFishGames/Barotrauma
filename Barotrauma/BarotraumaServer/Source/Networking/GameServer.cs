@@ -1523,6 +1523,7 @@ namespace Barotrauma.Networking
                 outmsg.Write(client.SteamID);
                 outmsg.Write(client.NameID);
                 outmsg.Write(client.Name);
+                outmsg.Write(client.Character == null || !gameStarted ? (client.PreferredJob ?? "") : "");
                 outmsg.Write(client.Character == null || !gameStarted ? (ushort)0 : client.Character.ID);
                 outmsg.Write(client.Muted);
                 outmsg.Write(client.Connection != OwnerConnection); //is kicking the player allowed
@@ -2146,10 +2147,12 @@ namespace Barotrauma.Networking
         {
             UInt16 nameId = inc.ReadUInt16();
             string newName = inc.ReadString();
+            string newJob = inc.ReadString();
 
             if (c == null || string.IsNullOrEmpty(newName) || !NetIdUtils.IdMoreRecent(nameId, c.NameID)) { return false; }
 
             c.NameID = nameId;
+            c.PreferredJob = newJob;
 
             newName = Client.SanitizeName(newName);
             if (newName == c.Name) { return false; }

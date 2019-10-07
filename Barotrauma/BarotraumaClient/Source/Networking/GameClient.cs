@@ -1331,6 +1331,7 @@ namespace Barotrauma.Networking
                 UInt64 steamId      = inc.ReadUInt64();
                 UInt16 nameId       = inc.ReadUInt16();
                 string name         = inc.ReadString();
+                string preferredJob = inc.ReadString();
                 UInt16 characterID  = inc.ReadUInt16();
                 bool muted          = inc.ReadBoolean();
                 bool allowKicking   = inc.ReadBoolean();
@@ -1342,6 +1343,7 @@ namespace Barotrauma.Networking
                     NameID = nameId,
                     SteamID = steamId,
                     Name = name,
+                    PreferredJob = preferredJob,
                     CharacterID = characterID,
                     Muted = muted,
                     AllowKicking = allowKicking
@@ -1368,6 +1370,7 @@ namespace Barotrauma.Networking
                         GameMain.NetLobbyScreen.AddPlayer(existingClient);
                     }
                     existingClient.NameID = tc.NameID;
+                    existingClient.PreferredJob = tc.PreferredJob;
                     existingClient.Character = null;
                     existingClient.Muted = tc.Muted;
                     existingClient.AllowKicking = tc.AllowKicking;
@@ -1668,6 +1671,15 @@ namespace Barotrauma.Networking
             outmsg.Write(LastClientListUpdateID);
             outmsg.Write(nameId);
             outmsg.Write(name);
+            var jobPreferences = GameMain.NetLobbyScreen.JobPreferences;
+            if (jobPreferences.Count > 0)
+            {
+                outmsg.Write(jobPreferences[0].First.Identifier);
+            }
+            else
+            {
+                outmsg.Write("");
+            }
 
             var campaign = GameMain.GameSession?.GameMode as MultiPlayerCampaign;
             if (campaign == null || campaign.LastSaveID == 0)

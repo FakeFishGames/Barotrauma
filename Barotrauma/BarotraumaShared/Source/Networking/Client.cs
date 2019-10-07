@@ -14,6 +14,8 @@ namespace Barotrauma.Networking
         public byte ID;
         public UInt64 SteamID;
 
+        public string PreferredJob;
+
         public Character.TeamType TeamID;
 
         private Character character;
