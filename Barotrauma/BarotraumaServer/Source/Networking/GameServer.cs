@@ -3119,6 +3119,17 @@ namespace Barotrauma.Networking
             return preferredClient;
         }
 
+        public void UpdateMissionState(int state)
+        {
+            foreach (var client in connectedClients)
+            {
+                IWriteMessage msg = new WriteOnlyMessage();
+                msg.Write((byte)ServerPacketHeader.MISSION);
+                msg.Write((ushort)state);
+                serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
+            }
+        }
+
         public static void Log(string line, ServerLog.MessageType messageType)
         {
             if (GameMain.Server == null || !GameMain.Server.ServerSettings.SaveServerLogs) return;
