@@ -454,7 +454,13 @@ namespace Barotrauma
             
             body.Dir = Dir;
 
-            bool hideLimb = Params.Hide || wearingItems.Any(w => w != null && w.HideLimb);
+            bool enableHuskSprite = character.IsHusk || character.CharacterHealth.GetAffliction<AfflictionHusk>("huskinfection")?.State == AfflictionHusk.InfectionState.Active;
+            float herpesStrength = character.CharacterHealth.GetAfflictionStrength("spaceherpes");
+
+            bool hideLimb = Params.Hide ||
+                enableHuskSprite && HuskSprite != null && HuskSprite.HideLimb || 
+                OtherWearables.Any(w => w.HideLimb) || 
+                wearingItems.Any(w => w != null && w.HideLimb);
             // TODO: there's now two calls to this, because body.Draw() method calls this too -> is this an issue?
             body.UpdateDrawPosition();
 
@@ -520,20 +526,17 @@ namespace Barotrauma
             {
                 if (HerpesSprite != null)
                 {
-                    float herpesStrength = character.CharacterHealth.GetAfflictionStrength("spaceherpes");
-                    if (herpesStrength > 0.0f)
-                    {
-                        DrawWearable(HerpesSprite, depthStep, spriteBatch, color * Math.Min(herpesStrength / 10.0f, 1.0f), spriteEffect);
-                        depthStep += step;
-                    }
+                    DrawWearable(HerpesSprite, depthStep, spriteBatch, color * Math.Min(herpesStrength / 10.0f, 1.0f), spriteEffect);
+                    depthStep += step;
                 }
-                if (HuskSprite != null && (character.IsHusk || character.CharacterHealth.GetAffliction<AfflictionHusk>("huskinfection")?.State == AfflictionHusk.InfectionState.Active))
+                if (HuskSprite != null && enableHuskSprite)
                 {
                     DrawWearable(HuskSprite, depthStep, spriteBatch, color, spriteEffect);
                     depthStep += step;
                 }
                 foreach (WearableSprite wearable in OtherWearables)
                 {
+                    if (wearable.Type == WearableType.Beard && enableHuskSprite && HuskSprite != null) { continue; }
                     DrawWearable(wearable, depthStep, spriteBatch, color, spriteEffect);
                     //if there are multiple sprites on this limb, make the successive ones be drawn in front
                     depthStep += step;
