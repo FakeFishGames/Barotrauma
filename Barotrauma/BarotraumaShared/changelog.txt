@@ -10,8 +10,6 @@ Monster additions and changes:
 - Adjusted the behavior of most characters.
 - Medium sized monsters can now more easily trigger impact effects when ramming the submarine.
 - Characters are now allowed to move faster than previously (9 -> 15).
-- Monsters can now enter the submarine even if they cannot walk (decoupled CanWalk and CanEnterSubmarines 
-parameters).
 - Changed the mouth position calculations and redefined the values for all monsters that have the eating behavior.
 - Removed Moloch Baby (Which was just a test. Molochs will be revisited in the next update).
 - Better bend deformations on limbs.
@@ -41,6 +39,7 @@ be loaded, and disable the package if they can't. Fixes tons of console errors o
 invalid XML files is enabled.
 - Don't allow publishing workshop items that contain invalid XML files.
 - Don't allow selecting invalid content packages in the settings menu.
+- Fixed disabled content packages becoming active when they're autoupdated.
 
 Character editor improvements:
 - Improved layout, hotkeys, general UI/UX improvements.
@@ -63,7 +62,7 @@ drawn on the character.
 - Exposed the angular damping and density for limbs (removed mass, which was not used).
 - Added a default texture path for ragdolls so that the texture can only be defined once. Limb specific 
 texture definitions override this.
-- Allow to define a group for different species. The chararacters in the same group are friendly to each other.
+- Allow to define a group for different species. The characters in the same group are friendly to each other.
 - DecorativeSprites can now be used on character limbs (like on items).
 - Made it easier to adjust the source rect's position with the arrows. Hold CTRL to change the size.
 - Fixed a rare case where characters got stunned in the character editor.
@@ -75,11 +74,15 @@ Misc improvements:
 - More detailed "x is not a valid XML file" error messages.
 - Improved mission and traitor info popups.
 - Show the number of lights (total and shadow-casting) in the sub editor.
+- When rewiring, clicking the right mouse button only removes one node from the wire.
+- Wire nodes are added by left clicking in the sub editor, and can be laid out horizontally/vertically
+by holding shift.
 
 Bugfixes:
 - Fixed crashing when the recharge speed of a PowerContainer with no interface (e.g. Alien Generator) is 
 adjusted by a signal or a bot.
 - Fixed an occasional crash when a bot starts retreating away from an enemy immediately after spawning.
+- Fixed clients not creating a download prompt when a sub they don't have is selected by vote.
 - Fixed traitor missions almost always placing the mission-related items inside the same containers.
 - Fixed traitor goal durations being displayed as "duration(xx) seconds" instead of "xx seconds".
 - Fixed Traitor's "find an item" objectives not being considered complete if the target item is inside 
@@ -125,6 +128,7 @@ the value change in the editing hud).
 from the server. Fixes health occasionally dropping and then jumping back up if the client predicts damage 
 incorrectly (e.g. if a melee attack hits client-side but doesn't server-side).
 - Fixed issues with AI targets.
+- Fixed oxygen/fuel tanks attached to a tool being rendered behind the character's legs.
 
 ---------------------------------------------------------------------------------------------------------
 v0.9.3.3
