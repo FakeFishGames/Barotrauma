@@ -18,7 +18,9 @@ namespace Barotrauma.Networking
         public const int MaxMessagesPerPacket = 10;
 
         public const float SpeakRange = 2000.0f;
-        
+
+        private static string dateTimeFormatLongTimePattern = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.LongTimePattern;
+
         public static Color[] MessageColor = 
         {
             new Color(190, 198, 205),   //default
@@ -64,6 +66,11 @@ namespace Barotrauma.Networking
         public Color Color
         {
             get { return MessageColor[(int)Type]; }
+        }
+
+        public static string GetTimeStamp()
+        {
+            return $"[{DateTime.Now.ToString(dateTimeFormatLongTimePattern)}] ";
         }
 
         public string TextWithSender
