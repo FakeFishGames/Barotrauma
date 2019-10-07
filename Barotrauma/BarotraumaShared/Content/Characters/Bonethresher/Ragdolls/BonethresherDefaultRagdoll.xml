@@ -1,7 +1,7 @@
 ﻿<Ragdoll type="Bonethresher" canentersubmarine="False" canwalk="False" spritesheetorientation="270" limbscale="1" jointscale="1" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" draggable="True" texture="Content/Characters/Tigerthresher/Tigerthresher.png">
   <collider radius="42" width="0" name="Main Collider" height="200" />
   <limb id="0" name="Head" type="Head" height="0" width="50" notes="" spriteorientation="90" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" radius="30" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7" mouthpos="1.2,-0.5">
-    <sprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="763,251,140,80" origin="0.4386199,0.3646792" depth="0" />
+    <sprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="762,236,146,95" origin="0.5451591,0.4649931" depth="0" />
     <attack context="Water" targettype="Structure" hitdetectiontype="Distance" afterattack="FallBack" reverse="False" range="125" damagerange="125" duration="0.25" cooldown="7" secondarycooldown="3" cooldownrandomfactor="0.1" structuredamage="30" itemdamage="30" stun="0" onlyhumans="False" applyforceonlimbs="" force="100" torque="0" applyforcesonlyonce="False" targetimpulse="200" targetimpulseworld="0,0" targetforce="0" targetforceworld="0,0" severlimbsprobability="0" priority="1" structuresoundtype="StructureBlunt" targetlimbtype="None">
       <affliction identifier="internaldamage" strength="20" probability="1" />
       <affliction identifier="stun" strength="2" probability="1" />
@@ -15,7 +15,7 @@
     <damagemodifier damagemultiplier="0.25" armorsector="0,180" deflectprojectiles="True" afflictionidentifiers="" afflictiontypes="damage,bleeding" />
   </limb>
   <limb id="2" width="80" height="30" name="Jaw" type="None" spriteorientation="90" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7" mouthpos="0,0">
-    <sprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="763,331,140,58" origin="0.5006053,0.4916507" depth="0" />
+    <sprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="763,331,145,58" origin="0.483343,0.4916507" depth="0" />
     <attack context="Water" targettype="Character" hitdetectiontype="Distance" afterattack="Pursue" reverse="False" range="50" damagerange="100" duration="0.5" cooldown="2" secondarycooldown="0" cooldownrandomfactor="0.1" structuredamage="20" itemdamage="20" stun="0" onlyhumans="False" applyforceonlimbs="" force="40" torque="80" applyforcesonlyonce="False" targetimpulse="0" targetimpulseworld="0,0" targetforce="-100" targetforceworld="0,0" severlimbsprobability="0.8" priority="0" structuresoundtype="StructureSlash" targetlimbtype="None">
       <affliction identifier="internaldamage" strength="10" probability="1" />
       <affliction identifier="bleeding" strength="25" probability="1" />
