@@ -133,7 +133,7 @@ namespace Barotrauma.Items.Components
                 Entity targetEntity = Entity.FindEntityByID(dockingTargetID);
                 if (targetEntity == null || !(targetEntity is Item))
                 {
-                    DebugConsole.ThrowError("Invalid docking port network event (can't dock to " + targetEntity.ToString() + ")");
+                    DebugConsole.ThrowError("Invalid docking port network event (can't dock to " + targetEntity?.ToString() ?? "null" + ")");
                     return;
                 }
 
