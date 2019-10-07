@@ -2,8 +2,8 @@
   <collider radius="42" width="0" name="Main Collider" height="200" />
   <limb id="0" name="Head" type="Head" height="0" width="50" notes="" spriteorientation="90" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" radius="30" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7" mouthpos="1.2,-0.5">
     <sprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="763,0,140,86" origin="0.455141,0.4293179" depth="0" />
-    <lightsource color="152,168,255,110" range="50">
-      <lighttexture texture="Content/Lights/pointlight_falloff.png" origin="0.25,0.3" size="1,1" />
+    <lightsource color="215,255,220,110" range="300">
+      <lighttexture texture="Content/Lights/pointlight_falloff.png" origin="0.5,0.5" size="1,1" />
     </lightsource>
     <attack context="Water" targettype="Character" hitdetectiontype="Distance" afterattack="FollowThroughUntilCanAttack" reverse="False" range="150" damagerange="150" duration="0.25" cooldown="5" secondarycooldown="3" cooldownrandomfactor="0.1" structuredamage="20" itemdamage="20" stun="0" onlyhumans="False" applyforceonlimbs="2" force="80" torque="80" applyforcesonlyonce="False" targetimpulse="0" targetimpulseworld="0,0" targetforce="-200" targetforceworld="0,-100" severlimbsprobability="0" priority="1" structuresoundtype="StructureSlash" targetlimbtype="None">
       <affliction identifier="internaldamage" strength="15" probability="1" />
@@ -53,6 +53,9 @@
     <deformablesprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="1,0,134,131" origin="0.6487684,0.4091106" depth="0.6" subdivisions="5,5">
       <spritedeformation type="bendjoint" resolution="5,5" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="30" strength="1" />
     </deformablesprite>
+    <lightsource color="100,100,80,255" range="50">
+      <lighttexture texture="Content/Lights/pointlight_bright.png" origin="0.5,0.5" size="1,1" />
+    </lightsource>
   </limb>
   <limb id="9" width="43.35" height="44.2" name="Limb 9" type="None" spriteorientation="0" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="5" pullpos="0,0" refjoint="-1" ignorecollisions="True" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="15" mouthpos="0,0">
     <deformablesprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="902,132,51,52" origin="0.5,0.5" depth="0.1" subdivisions="5,5">
