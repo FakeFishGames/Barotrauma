@@ -485,7 +485,7 @@ namespace Barotrauma
             List<SlotReference> hideSubInventories = new List<SlotReference>();
             highlightedSubInventorySlots.RemoveWhere(s => 
                 s.ParentInventory == this &&
-                ((s.SlotIndex < 0 || s.SlotIndex >= Items.Length || Items[s.SlotIndex] == null) || !character.CanAccessInventory(s.Inventory)));
+                ((s.SlotIndex < 0 || s.SlotIndex >= Items.Length || Items[s.SlotIndex] == null) || (Character.Controlled != null && !Character.Controlled.CanAccessInventory(s.Inventory))));
             foreach (var highlightedSubInventorySlot in highlightedSubInventorySlots)
             {
                 if (highlightedSubInventorySlot.ParentInventory == this)
@@ -532,6 +532,9 @@ namespace Barotrauma
 
             if (character.SelectedCharacter == null) // Permanently open subinventories only available when the default UI layout is in use -> not when grabbing characters
             {
+                //remove the highlighted slots of other characters' inventories when not grabbing anyone
+                highlightedSubInventorySlots.RemoveWhere(s => s.ParentInventory != this && s.ParentInventory?.Owner is Character);
+
                 for (int i = 0; i < capacity; i++)
                 {
                     var item = Items[i];

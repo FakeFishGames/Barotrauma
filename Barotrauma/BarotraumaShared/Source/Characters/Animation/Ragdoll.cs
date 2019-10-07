@@ -225,7 +225,7 @@ namespace Barotrauma
                 {
                     foreach (Limb limb in Limbs)
                     {
-                        if (limb.IsSevered) continue;
+                        if (limb.IsSevered || !limb.body.PhysEnabled) { continue; }
                         limb.body.SetTransform(Collider.SimPosition, Collider.Rotation);
                         //reset pull joints (they may be somewhere far away if the character has moved from the position where animations were last updated)
                         limb.PullJointEnabled = false;
