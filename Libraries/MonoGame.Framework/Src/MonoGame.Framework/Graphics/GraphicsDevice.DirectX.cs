@@ -601,24 +601,6 @@ namespace Microsoft.Xna.Framework.Graphics
             _swapChain.SetFullscreenState(false, null);
         }
 
-        internal void ResizeTargets()
-        {
-            var format = SharpDXHelper.ToFormat(PresentationParameters.BackBufferFormat);
-            var descr = new ModeDescription
-            {
-                Format = format,
-#if WINRT
-                Scaling = DisplayModeScaling.Stretched,
-#else
-                Scaling = DisplayModeScaling.Unspecified,
-#endif
-                Width = PresentationParameters.BackBufferWidth,
-                Height = PresentationParameters.BackBufferHeight,
-            };
-
-            _swapChain.ResizeTarget(ref descr);
-        }
-
         internal void GetModeSwitchedSize(out int width, out int height)
         {
             Output output = null;
@@ -718,76 +700,59 @@ namespace Microsoft.Xna.Framework.Graphics
                 format, 
                 PresentationParameters.MultiSampleCount);
 
-            // If the swap chain already exists... update it.
-            if (false && _swapChain != null
-                // check if multisampling hasn't changed
-                && _swapChain.Description.SampleDescription.Count == multisampleDesc.Count
-                && _swapChain.Description.SampleDescription.Quality == multisampleDesc.Quality)
+            // Create a new swap chain.
+            var wasFullScreen = false;
+            // Dispose of old swap chain if exists
+            if (_swapChain != null)
             {
-                _swapChain.ResizeBuffers(2,
-                                        PresentationParameters.BackBufferWidth,
-                                        PresentationParameters.BackBufferHeight,
-                                        format,
-                                        SwapChainFlags.AllowModeSwitch);
+                wasFullScreen = _swapChain.IsFullScreen;
+                // Before releasing a swap chain, first switch to windowed mode
+                _swapChain.SetFullscreenState(false, null);
+                _swapChain.Dispose();
             }
 
-            // Otherwise, create a new swap chain.
-            else
+            // SwapChain description
+            var desc = new SharpDX.DXGI.SwapChainDescription()
             {
-                var wasFullScreen = false;
-                // Dispose of old swap chain if exists
-                if (_swapChain != null)
+                ModeDescription =
                 {
-                    wasFullScreen = _swapChain.IsFullScreen;
-                    // Before releasing a swap chain, first switch to windowed mode
-                    _swapChain.SetFullscreenState(false, null);
-                    _swapChain.Dispose();
-                }
-
-                // SwapChain description
-                var desc = new SharpDX.DXGI.SwapChainDescription()
-                {
-                    ModeDescription =
-                    {
-                        Format = format,
+                    Format = format,
 #if WINDOWS_UAP
-                        Scaling = DisplayModeScaling.Stretched,
+                    Scaling = DisplayModeScaling.Stretched,
 #else
-                        Scaling = DisplayModeScaling.Unspecified,
+                    Scaling = DisplayModeScaling.Unspecified,
 #endif
-                        Width = PresentationParameters.BackBufferWidth,
-                        Height = PresentationParameters.BackBufferHeight,
-                    },
+                    Width = PresentationParameters.BackBufferWidth,
+                    Height = PresentationParameters.BackBufferHeight,
+                },
 
-                    OutputHandle = PresentationParameters.DeviceWindowHandle,
-                    SampleDescription = multisampleDesc,
-                    Usage = SharpDX.DXGI.Usage.RenderTargetOutput,
-                    BufferCount = 2,
-                    SwapEffect = SharpDXHelper.ToSwapEffect(PresentationParameters.PresentationInterval),
-                    IsWindowed = true,
-                    Flags = SwapChainFlags.AllowModeSwitch
-                };
+                OutputHandle = PresentationParameters.DeviceWindowHandle,
+                SampleDescription = multisampleDesc,
+                Usage = SharpDX.DXGI.Usage.RenderTargetOutput,
+                BufferCount = 2,
+                SwapEffect = SharpDXHelper.ToSwapEffect(PresentationParameters.PresentationInterval),
+                IsWindowed = true
+            };
 
-                // Once the desired swap chain description is configured, it must be created on the same adapter as our D3D Device
+            // Once the desired swap chain description is configured, it must be created on the same adapter as our D3D Device
 
-                // First, retrieve the underlying DXGI Device from the D3D Device.
-                // Creates the swap chain 
-                using (var dxgiDevice = _d3dDevice.QueryInterface<SharpDX.DXGI.Device1>())
-                using (var dxgiAdapter = dxgiDevice.Adapter)
-                using (var dxgiFactory = dxgiAdapter.GetParent<SharpDX.DXGI.Factory1>())
-                {
-                    _swapChain = new SwapChain(dxgiFactory, dxgiDevice, desc);
-                    RefreshAdapter();
-                    dxgiFactory.MakeWindowAssociation(PresentationParameters.DeviceWindowHandle, WindowAssociationFlags.IgnoreAll);
-                    // To reduce latency, ensure that DXGI does not queue more than one frame at a time.
-                    // Docs: https://msdn.microsoft.com/en-us/library/windows/desktop/ff471334(v=vs.85).aspx
-                    dxgiDevice.MaximumFrameLatency = 1;
-                }
-                // Preserve full screen state, after swap chain is re-created 
-                if (PresentationParameters.HardwareModeSwitch
-                    && wasFullScreen)
-                    SetHardwareFullscreen();
+            // First, retrieve the underlying DXGI Device from the D3D Device.
+            // Creates the swap chain 
+            using (var dxgiDevice = _d3dDevice.QueryInterface<SharpDX.DXGI.Device1>())
+            using (var dxgiAdapter = dxgiDevice.Adapter)
+            using (var dxgiFactory = dxgiAdapter.GetParent<SharpDX.DXGI.Factory1>())
+            {
+                _swapChain = new SwapChain(dxgiFactory, dxgiDevice, desc);
+                RefreshAdapter();
+                dxgiFactory.MakeWindowAssociation(PresentationParameters.DeviceWindowHandle, WindowAssociationFlags.IgnoreAll);
+                // To reduce latency, ensure that DXGI does not queue more than one frame at a time.
+                // Docs: https://msdn.microsoft.com/en-us/library/windows/desktop/ff471334(v=vs.85).aspx
+                dxgiDevice.MaximumFrameLatency = 1;
             }
+            // Preserve full screen state, after swap chain is re-created 
+            if (PresentationParameters.HardwareModeSwitch
+                && wasFullScreen)
+                SetHardwareFullscreen();
 
             // Obtain the backbuffer for this window which will be the final 3D rendertarget.
             Point targetSize;
