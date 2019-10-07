@@ -10,7 +10,7 @@ using System.Diagnostics;
 
 #if WINDOWS
 using System.Windows.Forms;
-using Microsoft.Xna.Framework.Graphics;
+using SharpDX;
 #endif
 
 #endregion
@@ -169,10 +169,18 @@ namespace Barotrauma
 
             sb.AppendLine("\n");
             sb.AppendLine("Exception: " + exception.Message);
+#if WINDOWS
+            if (exception is SharpDXException sharpDxException && ((uint)sharpDxException.HResult) == 0x887A0005)
+            {
+                var dxDevice = (SharpDX.Direct3D11.Device)game.GraphicsDevice.Handle;
+                sb.AppendLine("Device removed reason: " + dxDevice.DeviceRemovedReason.ToString());
+            }
+#endif
             if (exception.TargetSite != null)
             {
                 sb.AppendLine("Target site: " + exception.TargetSite.ToString());
             }
+
             sb.AppendLine("Stack trace: ");
             sb.AppendLine(exception.StackTrace);
             sb.AppendLine("\n");

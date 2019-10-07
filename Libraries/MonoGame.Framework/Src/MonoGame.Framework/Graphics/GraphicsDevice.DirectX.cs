@@ -520,8 +520,9 @@ namespace Microsoft.Xna.Framework.Graphics
             if (_d3dContext != null)
                 _d3dContext.Dispose();
 
-            // Windows requires BGRA support out of DX.
-            var creationFlags = SharpDX.Direct3D11.DeviceCreationFlags.BgraSupport;
+            // Windows requires BGRA support out of DX. (...what)
+            // Barotrauma doesn't tho
+            var creationFlags = SharpDX.Direct3D11.DeviceCreationFlags.None;//.BgraSupport;
 
             if (GraphicsAdapter.UseDebugLayers)
             {
@@ -545,14 +546,14 @@ namespace Microsoft.Xna.Framework.Graphics
             {
                 featureLevels = new[]
                     {
-                        // For the Reach profile, first try use the highest supported 9_X feature level
-                        FeatureLevel.Level_9_3,
-                        FeatureLevel.Level_9_2,
-                        FeatureLevel.Level_9_1,
-                        // If level 9 is not supported, then just use the highest supported level
+                        // Try using the highest supported level
                         FeatureLevel.Level_11_0,
                         FeatureLevel.Level_10_1,
                         FeatureLevel.Level_10_0,
+                        // Then try using the highest supported 9_X feature level
+                        FeatureLevel.Level_9_3,
+                        FeatureLevel.Level_9_2,
+                        FeatureLevel.Level_9_1,
                     };
             }
 
@@ -583,7 +584,7 @@ namespace Microsoft.Xna.Framework.Graphics
                     _d3dDevice = defaultDevice.QueryInterface<SharpDX.Direct3D11.Device>();
             }
 
-            // Get Direct3D 11.1 context
+            // Get Direct3D 11 context
             _d3dContext = _d3dDevice.ImmediateContext.QueryInterface<SharpDX.Direct3D11.DeviceContext>();
             
             // Create a new instance of GraphicsDebug because we support it on Windows platforms.
