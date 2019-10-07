@@ -658,7 +658,7 @@ namespace Barotrauma
             noiseGateSlider.Frame.Visible = false;
             noiseGateSlider.Step = 0.01f;
             noiseGateSlider.Range = new Vector2(-100.0f, 0.0f);
-            noiseGateSlider.BarScroll = MathUtils.InverseLerp(-1.0f, 0.0f, NoiseGateThreshold);
+            noiseGateSlider.BarScroll = MathUtils.InverseLerp(-100.0f, 0.0f, NoiseGateThreshold);
             noiseGateSlider.BarScroll *= noiseGateSlider.BarScroll;
             noiseGateSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {

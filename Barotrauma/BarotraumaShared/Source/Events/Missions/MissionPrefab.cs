@@ -37,6 +37,8 @@ namespace Barotrauma
 
         public readonly string Identifier;
 
+        public readonly string TextIdentifier;
+
         public readonly string Name;
         public readonly string Description;
         public readonly string SuccessMessage;
@@ -101,15 +103,16 @@ namespace Barotrauma
             ConfigElement = element;
 
             Identifier = element.GetAttributeString("identifier", "");
+            TextIdentifier = element.GetAttributeString("textidentifier", null) ?? Identifier;
 
-            Name        = TextManager.Get("MissionName." + Identifier, true) ?? element.GetAttributeString("name", "");
-            Description = TextManager.Get("MissionDescription." + Identifier, true) ?? element.GetAttributeString("description", "");
+            Name        = TextManager.Get("MissionName." + TextIdentifier, true) ?? element.GetAttributeString("name", "");
+            Description = TextManager.Get("MissionDescription." + TextIdentifier, true) ?? element.GetAttributeString("description", "");
             Reward      = element.GetAttributeInt("reward", 1);
 
             Commonness  = element.GetAttributeInt("commonness", 1);
 
-            SuccessMessage  = TextManager.Get("MissionSuccess." + Identifier, true) ?? element.GetAttributeString("successmessage", "Mission completed successfully");
-            FailureMessage  = TextManager.Get("MissionFailure." + Identifier, true) ?? "";
+            SuccessMessage  = TextManager.Get("MissionSuccess." + TextIdentifier, true) ?? element.GetAttributeString("successmessage", "Mission completed successfully");
+            FailureMessage  = TextManager.Get("MissionFailure." + TextIdentifier, true) ?? "";
             if (string.IsNullOrEmpty(FailureMessage) && TextManager.ContainsTag("missionfailed"))
             {
                 FailureMessage = TextManager.Get("missionfailed", returnNull: true) ?? "";
@@ -119,7 +122,7 @@ namespace Barotrauma
                 FailureMessage = element.GetAttributeString("failuremessage", "");
             }
 
-            SonarLabel      = TextManager.Get("MissionSonarLabel." + Identifier, true) ?? element.GetAttributeString("sonarlabel", "");
+            SonarLabel      = TextManager.Get("MissionSonarLabel." + TextIdentifier, true) ?? element.GetAttributeString("sonarlabel", "");
 
             MultiplayerOnly     = element.GetAttributeBool("multiplayeronly", false);
             SingleplayerOnly    = element.GetAttributeBool("singleplayeronly", false);
@@ -136,8 +139,8 @@ namespace Barotrauma
                     case "message":
                         int index = Messages.Count;
 
-                        Headers.Add(TextManager.Get("MissionHeader" + index + "." + Identifier, true) ?? subElement.GetAttributeString("header", ""));
-                        Messages.Add(TextManager.Get("MissionMessage" + index + "." + Identifier, true) ?? subElement.GetAttributeString("text", ""));
+                        Headers.Add(TextManager.Get("MissionHeader" + index + "." + TextIdentifier, true) ?? subElement.GetAttributeString("header", ""));
+                        Messages.Add(TextManager.Get("MissionMessage" + index + "." + TextIdentifier, true) ?? subElement.GetAttributeString("text", ""));
                         break;
                     case "locationtype":
                         AllowedLocationTypes.Add(new Pair<string, string>(

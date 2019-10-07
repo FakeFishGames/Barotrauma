@@ -522,11 +522,7 @@ namespace Barotrauma
                 }
                 else if (ObjectiveManager.CurrentOrder is AIObjectiveRescueAll rescueAll && rescueAll.Targets.None())
                 {
-                    //TODO: re-enable on all languages after DialogNoRescueTargets has been translated
-                    if (TextManager.Language == "English")
-                    {
-                        Character.Speak(TextManager.Get("DialogNoRescueTargets"), null, 3.0f, "norescuetargets");
-                    }
+                    Character.Speak(TextManager.Get("DialogNoRescueTargets"), null, 3.0f, "norescuetargets");                    
                 }
                 else if (ObjectiveManager.CurrentOrder is AIObjectivePumpWater pumpWater && pumpWater.Targets.None())
                 {
@@ -769,6 +765,9 @@ namespace Barotrauma
 
         public bool IsFriendly(Character other) => IsFriendly(Character, other);
 
-        public static bool IsFriendly(Character me, Character other) => (other.TeamID == me.TeamID || other.TeamID == Character.TeamType.FriendlyNPC || me.TeamID == Character.TeamType.FriendlyNPC) && other.SpeciesName == me.SpeciesName;
+        public static bool IsFriendly(Character me, Character other) => 
+            (other.TeamID == me.TeamID || 
+            other.TeamID == Character.TeamType.FriendlyNPC || 
+            me.TeamID == Character.TeamType.FriendlyNPC) && (other.SpeciesName == me.SpeciesName || other.Params.CompareGroup(me.Params.Group));
     }
 }

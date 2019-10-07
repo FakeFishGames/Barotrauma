@@ -19,7 +19,7 @@ namespace Barotrauma.Items.Components
         /// </summary>
         Vector2 DrawSize { get; }
 
-        void Draw(SpriteBatch spriteBatch, bool editing);
+        void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1);
 #endif
     }
     
@@ -397,7 +397,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public virtual bool Combine(Item item) 
+        public virtual bool Combine(Item item, Character user) 
         {
             if (canBeCombined && this.item.Prefab == item.Prefab && item.Condition > 0.0f && this.item.Condition > 0.0f)
             {

@@ -503,7 +503,7 @@ namespace Barotrauma
             switch (contentFile.Type)
             {
                 case ContentType.Submarine:
-                    return path == "Submarines";
+                    return path == "Submarines" || path == "Mods";
                 default:
                     return path == "Mods";
             }

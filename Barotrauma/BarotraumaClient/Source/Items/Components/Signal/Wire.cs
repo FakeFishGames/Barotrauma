@@ -48,7 +48,7 @@ namespace Barotrauma.Items.Components
             get { return sectionExtents; }
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool editing)
+        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
         {
             if (sections.Count == 0 && !IsActive || Hidden)
             {
@@ -154,6 +154,18 @@ namespace Barotrauma.Items.Components
 
         public static void UpdateEditing(List<Wire> wires)
         {
+            Wire equippedWire =
+                Character.Controlled?.SelectedItems[0]?.GetComponent<Wire>() ??
+                Character.Controlled?.SelectedItems[1]?.GetComponent<Wire>();
+            if (equippedWire != null)
+            {
+                if (PlayerInput.LeftButtonClicked() && Character.Controlled.SelectedConstruction == null)
+                {
+                    equippedWire.Use(1.0f, Character.Controlled);
+                }
+                return;
+            }
+
             //dragging a node of some wire
             if (draggingWire != null)
             {

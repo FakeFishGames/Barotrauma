@@ -146,7 +146,7 @@
       <Item identifier="physicorium" />
       <Item identifier="physicorium" />
     </Deconstruct>
-    <AiTarget sightrange="10000.0" soundrange="10000" />
+    <AiTarget sightrange="10000.0" soundrange="10000" static="True"/>
     <Body radius="45" density="50" friction="0.95" />
     <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10" msg="ItemMsgPickUpSelect" />
   </Item>
@@ -394,7 +394,9 @@
     <Sprite texture="Content/Items/Alien/artifactholder.png" depth="0.8" sourcerect="0,0,256,256" />
     <ItemContainer capacity="1" canbeselected="true" hideitems="false" itempos="128,-128" autointeractwithcontained="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
-      <Containable items="alien" />
+      <Containable items="alien">
+        <StatusEffect type="OnContaining" target="This" Voltage="1.0" setvalue="true"/>
+      </Containable>
       <Containable items="thermalartifact">
         <StatusEffect type="OnContaining" target="This" Charge="1000.0" />
       </Containable>
@@ -402,8 +404,8 @@
         <StatusEffect type="OnContaining" target="This" Charge="10.0" />
       </Containable>
     </ItemContainer>
-    <LightComponent AllowInGameEditing="false" lightcolor="153,204,255,200" canbeselected="false" range="800.0" IsOn="true" castshadows="false">
-      <sprite texture="Content/Items/Alien/artifactholder_glow.png" depth="0.025" origin="0.5,0.5" alpha="1.0" />
+    <LightComponent AllowInGameEditing="false" lightcolor="153,204,255,200" powerconsumption="1" canbeselected="false" range="800.0" IsOn="true" castshadows="false">
+      <sprite texture="Content/Items/Alien/artifactholder_glow.png" depth="0.025" origin="0.5,0.5" alpha="0.4" />
     </LightComponent>
     <PowerContainer capacity="20000.0" canbeselected="false" maxrechargespeed="10000.0" maxoutput="10000.0" />
     <ConnectionPanel canbeselected="false" hudpriority="10">

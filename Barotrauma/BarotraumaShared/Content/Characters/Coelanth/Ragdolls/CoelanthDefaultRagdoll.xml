@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Ragdoll type="coelanth" canentersubmarine="false">
+<Ragdoll type="coelanth" canentersubmarine="false" canwalk="False">
 
   <collider radius="50" height="250"/>
     
   <!-- head -->
-  <limb id = "0" radius="50" height="270" type="Head" steerforce="1.0" mouthpos="50,75">
+  <limb id = "0" radius="50" height="270" type="Head" steerforce="1.0">
     <sprite texture="Content/Characters/Coelanth/coelanth.png" sourcerect="267,171,162,392" depth="0.02" origin ="0.5,0.5"/>
   </limb>
 

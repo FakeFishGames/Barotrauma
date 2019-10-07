@@ -118,6 +118,9 @@
     <Wearable type="Moustache" headid="2" gender="male" race="white" disallow="Hair1, Beard1">
       <sprite name="White Male 2 Moustache2" texture="Content/Characters/Human/head_male_white2.png" sheetindex="2,2"/>
     </Wearable>
+    <Wearable type="Husk" headid="2" gender="male" race="white">
+      <sprite name="White Male 2 Husk" texture="Content/Characters/Human/head_male_white2.png" sheetindex="2,0"/>
+    </Wearable>
     <Wearable type="Herpes" headid="2" gender="male" race="white">
       <sprite name="White Male 2 Herpes" texture="Content/Characters/Human/head_male_white2.png" sheetindex="1,0"/>
     </Wearable>
@@ -139,6 +142,9 @@
     </Wearable>
     <Wearable type="FaceAttachment" headid="3" gender="male" race="white" commonness="0.2">
       <sprite name="White Male 3 Tattoo1" texture="Content/Characters/Human/head_male_white3.png" sheetindex="2,2"/>
+    </Wearable>
+    <Wearable type="Husk" headid="3" gender="male" race="white">
+      <sprite name="White Male 3 Husk" texture="Content/Characters/Human/head_male_white3.png" sheetindex="2,0"/>
     </Wearable>
     <Wearable type="Herpes" headid="3" gender="male" race="white">
       <sprite name="White Male 3 Herpes" texture="Content/Characters/Human/head_male_white3.png" sheetindex="1,0"/>
@@ -162,6 +168,9 @@
     <Wearable type="FaceAttachment" headid="4" gender="male" race="white" commonness="0.2">
       <sprite name="White Male 4 Jewelry1" texture="Content/Characters/Human/head_male_white4.png" sheetindex="2,2"/>
     </Wearable>
+    <Wearable type="Husk" headid="4" gender="male" race="white">
+      <sprite name="White Male 4 Husk" texture="Content/Characters/Human/head_male_white4.png" sheetindex="2,0"/>
+    </Wearable>
     <Wearable type="Herpes" headid="4" gender="male" race="white">
       <sprite name="White Male 4 Herpes" texture="Content/Characters/Human/head_male_white4.png" sheetindex="1,0"/>
     </Wearable>
@@ -179,6 +188,9 @@
     </Wearable>
     <Wearable type="Beard" headid="1" gender="male" race="black">
       <sprite name="Black Male 1 Beard1" texture="Content/Characters/Human/head_male_black1.png" sheetindex="0,2"/>
+    </Wearable>
+    <Wearable type="Husk" headid="1" gender="male" race="black">
+      <sprite name="Black Male 1 Husk" texture="Content/Characters/Human/head_male_black1.png" sheetindex="2,0"/>
     </Wearable>
     <Wearable type="Herpes" headid="1" gender="male" race="black">
       <sprite name="Black Male 1 Herpes" texture="Content/Characters/Human/head_male_black1.png" sheetindex="1,0"/>
@@ -202,6 +214,9 @@
     <Wearable type="FaceAttachment" headid="2" gender="male" race="black" commonness="0.2">
       <sprite name="Black Male 2 Eyewear1" texture="Content/Characters/Human/head_male_black2.png" sheetindex="2,2"/>
     </Wearable>
+    <Wearable type="Husk" headid="2" gender="male" race="black">
+      <sprite name="Black Male 2 Husk" texture="Content/Characters/Human/head_male_black2.png" sheetindex="2,0"/>
+    </Wearable>
     <Wearable type="Herpes" headid="2" gender="male" race="black">
       <sprite name="Black Male 2 Herpes" texture="Content/Characters/Human/head_male_black2.png" sheetindex="1,0"/>
     </Wearable>
@@ -217,6 +232,9 @@
     </Wearable>
     <Wearable type="Beard" headid="3" gender="male" race="black">
       <sprite name="Black Male 3 Beard1" texture="Content/Characters/Human/head_male_black3.png" sheetindex="0,2"/>
+    </Wearable>
+    <Wearable type="Husk" headid="3" gender="male" race="black">
+      <sprite name="Black Male 3 Husk" texture="Content/Characters/Human/head_male_black3.png" sheetindex="2,0"/>
     </Wearable>
     <Wearable type="Herpes" headid="3" gender="male" race="black">
       <sprite name="Black Male 3 Herpes" texture="Content/Characters/Human/head_male_black3.png" sheetindex="1,0"/>
@@ -240,6 +258,9 @@
     <Wearable type="Moustache" headid="4" gender="male" race="black">
       <sprite name="Black Male 4 Moustache2" texture="Content/Characters/Human/head_male_black4.png" sheetindex="2,2"/>
     </Wearable>
+    <Wearable type="Husk" headid="4" gender="male" race="black">
+      <sprite name="Black Male 4 Husk" texture="Content/Characters/Human/head_male_black4.png" sheetindex="2,0"/>
+    </Wearable>
     <Wearable type="Herpes" headid="4" gender="male" race="black">
       <sprite name="Black Male 4 Herpes" texture="Content/Characters/Human/head_male_black4.png" sheetindex="1,0"/>
     </Wearable>
@@ -254,6 +275,9 @@
     </Wearable>
     <Wearable type="Hair" headid="1" gender="male" race="asian">
       <sprite name="Asian Male 1 Hair3" texture="Content/Characters/Human/head_male_asian1.png" sheetindex="2,1"/>
+    </Wearable>
+    <Wearable type="Husk" headid="1" gender="male" race="asian">
+      <sprite name="Asian Male 1 Husk" texture="Content/Characters/Human/head_male_asian1.png" sheetindex="2,0"/>
     </Wearable>
     <Wearable type="Herpes" headid="1" gender="male" race="asian">
       <sprite name="Asian Male 1 Herpes" texture="Content/Characters/Human/head_male_asian1.png" sheetindex="1,0"/>
@@ -273,6 +297,9 @@
     </Wearable>
     <Wearable type="Moustache" headid="2" gender="male" race="asian">
       <sprite name="Asian Male 2 Moustache1" texture="Content/Characters/Human/head_male_asian2.png" sheetindex="1,2" />
+    </Wearable>
+    <Wearable type="Husk" headid="2" gender="male" race="asian">
+      <sprite name="Asian Male 2 Husk" texture="Content/Characters/Human/head_male_asian2.png" sheetindex="2,0"/>
     </Wearable>
     <Wearable type="Herpes" headid="2" gender="male" race="asian">
       <sprite name="Asian Male 2 Herpes" texture="Content/Characters/Human/head_male_asian2.png" sheetindex="1,0"/>
@@ -296,6 +323,9 @@
     <Wearable type="FaceAttachment" headid="3" gender="male" race="asian" disallow="Hair1, Hair2, Hair3" commonness="0.2">
       <sprite name="Asian Male 3 Scarf1" texture="Content/Characters/Human/head_male_asian3.png" sheetindex="2,2"/>
     </Wearable>
+    <Wearable type="Husk" headid="3" gender="male" race="asian">
+      <sprite name="Asian Male 3 Husk" texture="Content/Characters/Human/head_male_asian3.png" sheetindex="2,0"/>
+    </Wearable>
     <Wearable type="Herpes" headid="3" gender="male" race="asian">
       <sprite name="Asian Male 3 Herpes" texture="Content/Characters/Human/head_male_asian3.png" sheetindex="1,0"/>
     </Wearable>
@@ -311,6 +341,9 @@
     <Wearable type="Hair" headid="1" gender="female" race="white" commonness="5">
       <sprite name="White Female 1 Hair3" texture="Content/Characters/Human/head_female_white1.png" sheetindex="2,1"/>
     </Wearable>
+    <Wearable type="Husk" headid="1" gender="female" race="white">
+      <sprite name="White Female 1 Husk" texture="Content/Characters/Human/head_female_white1.png" sheetindex="2,0"/>
+    </Wearable>
     <Wearable type="Herpes" headid="1" gender="female" race="white">
       <sprite name="White Female 1 Herpes" texture="Content/Characters/Human/head_female_white1.png" sheetindex="1,0"/>
     </Wearable>
@@ -323,6 +356,9 @@
     </Wearable>
     <Wearable type="Hair" headid="2" gender="female" race="white" commonness="5">
       <sprite name="White Female 2 Hair3" texture="Content/Characters/Human/head_female_white2.png" sheetindex="2,1"/>
+    </Wearable>
+    <Wearable type="Husk" headid="2" gender="female" race="white">
+      <sprite name="White Female 2 Husk" texture="Content/Characters/Human/head_female_white2.png" sheetindex="2,0"/>
     </Wearable>
     <Wearable type="Herpes" headid="2" gender="female" race="white">
       <sprite name="White Female 2 Herpes" texture="Content/Characters/Human/head_female_white2.png" sheetindex="1,0"/>
@@ -340,6 +376,9 @@
     <Wearable type="FaceAttachment" headid="3" gender="female" race="white" commonness="0.2">
       <sprite name="White Female 3 Tattoo1" texture="Content/Characters/Human/head_female_white3.png" sheetindex="2,2"/>
     </Wearable>
+    <Wearable type="Husk" headid="3" gender="female" race="white">
+      <sprite name="White Female 3 Husk" texture="Content/Characters/Human/head_female_white3.png" sheetindex="2,0"/>
+    </Wearable>
     <Wearable type="Herpes" headid="3" gender="female" race="white">
       <sprite name="White Female 3 Herpes" texture="Content/Characters/Human/head_female_white3.png" sheetindex="1,0"/>
     </Wearable>
@@ -349,6 +388,9 @@
     </Wearable>
     <Wearable type="Hair" headid="4" gender="female" race="white" commonness="5">
       <sprite name="White Female 4 Hair2" texture="Content/Characters/Human/head_female_white4.png" sheetindex="1,1"/>
+    </Wearable>
+    <Wearable type="Husk" headid="4" gender="female" race="white">
+      <sprite name="White Female 4 Husk" texture="Content/Characters/Human/head_female_white4.png" sheetindex="2,0"/>
     </Wearable>
     <Wearable type="Herpes" headid="4" gender="female" race="white">
       <sprite name="White Female 4 Herpes" texture="Content/Characters/Human/head_female_white4.png" sheetindex="1,0"/>
@@ -365,6 +407,9 @@
     <Wearable type="Hair" headid="1" gender="female" race="black" commonness="5">
       <sprite name="Black Female 1 Hair3" texture="Content/Characters/Human/head_female_black1.png" sheetindex="2,1"/>
     </Wearable>
+    <Wearable type="Husk" headid="1" gender="female" race="black">
+      <sprite name="Black Female 1 Husk" texture="Content/Characters/Human/head_female_black1.png" sheetindex="2,0"/>
+    </Wearable>
     <Wearable type="Herpes" headid="1" gender="female" race="black">
       <sprite name="Black Female 1 Herpes" texture="Content/Characters/Human/head_female_black1.png" sheetindex="1,0"/>
     </Wearable>
@@ -378,6 +423,9 @@
     <Wearable type="Hair" headid="2" gender="female" race="black" commonness="5">
       <sprite name="Black Female 2 Hair3" texture="Content/Characters/Human/head_female_black2.png" sheetindex="2,1"/>
     </Wearable>
+    <Wearable type="Husk" headid="2" gender="female" race="black">
+      <sprite name="Black Female 2 Husk" texture="Content/Characters/Human/head_female_black2.png" sheetindex="2,0"/>
+    </Wearable>
     <Wearable type="Herpes" headid="2" gender="female" race="black">
       <sprite name="Black Female 2 Herpes" texture="Content/Characters/Human/head_female_black2.png" sheetindex="1,0"/>
     </Wearable>
@@ -390,6 +438,9 @@
     </Wearable>
     <Wearable type="Hair" headid="3" gender="female" race="black" commonness="5">
       <sprite name="Black Female 3 Hair3" texture="Content/Characters/Human/head_female_black3.png" sheetindex="2,1"/>
+    </Wearable>
+    <Wearable type="Husk" headid="3" gender="female" race="black">
+      <sprite name="Black Female 3 Husk" texture="Content/Characters/Human/head_female_black3.png" sheetindex="2,0"/>
     </Wearable>
     <Wearable type="Herpes" headid="3" gender="female" race="black">
       <sprite name="Black Female 3 Herpes" texture="Content/Characters/Human/head_female_black3.png" sheetindex="1,0"/>
@@ -406,6 +457,9 @@
     <Wearable type="FaceAttachment" headid="1" gender="female" race="asian" commonness="0.2">
       <sprite name="Asian Female 1 Scarf1" texture="Content/Characters/Human/head_female_asian1.png" sheetindex="2,1"/>
     </Wearable>
+    <Wearable type="Husk" headid="1" gender="female" race="asian">
+      <sprite name="Asian Female 1 Husk" texture="Content/Characters/Human/head_female_asian1.png" sheetindex="2,0"/>
+    </Wearable>
     <Wearable type="Herpes" headid="1" gender="female" race="asian">
       <sprite name="Asian Female 1 Herpes" texture="Content/Characters/Human/head_female_asian1.png" sheetindex="1,0"/>
     </Wearable>
@@ -419,6 +473,9 @@
     <Wearable type="Hair" headid="2" gender="female" race="asian" commonness="5">
       <sprite name="Asian Female 2 Hair3" texture="Content/Characters/Human/head_female_asian2.png" sheetindex="2,1"/>
     </Wearable>
+    <Wearable type="Husk" headid="2" gender="female" race="asian">
+      <sprite name="Asian Female 2 Husk" texture="Content/Characters/Human/head_female_asian2.png" sheetindex="2,0"/>
+    </Wearable>
     <Wearable type="Herpes" headid="2" gender="female" race="asian">
       <sprite name="Asian Female 2 Herpes" texture="Content/Characters/Human/head_female_asian2.png" sheetindex="1,0"/>
     </Wearable>
@@ -428,6 +485,9 @@
     </Wearable>
     <Wearable type="Hair" headid="3" gender="female" race="asian" commonness="5">
       <sprite name="Asian Female 3 Hair2" texture="Content/Characters/Human/head_female_asian3.png" sheetindex="1,1"/>
+    </Wearable>
+    <Wearable type="Husk" headid="3" gender="female" race="asian">
+      <sprite name="Asian Female 3 Husk" texture="Content/Characters/Human/head_female_asian3.png" sheetindex="2,0"/>
     </Wearable>
     <Wearable type="Herpes" headid="3" gender="female" race="asian">
       <sprite name="Asian Female 3 Herpes" texture="Content/Characters/Human/head_female_asian3.png" sheetindex="1,0"/>

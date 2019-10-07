@@ -611,8 +611,6 @@ namespace Barotrauma
                         break;
                     case "aitarget":
                         aiTarget = new AITarget(this, subElement);
-                        aiTarget.SoundRange = aiTarget.MinSoundRange;
-                        aiTarget.SightRange = aiTarget.MinSightRange;
                         break;
                     default:
                         ItemComponent ic = ItemComponent.Load(subElement, this, itemPrefab.ConfigFile);
@@ -1157,11 +1155,9 @@ namespace Barotrauma
         public override void Update(float deltaTime, Camera cam)
         {
             base.Update(deltaTime, cam);
-            //aitarget goes silent/invisible if the components don't keep it active
             if (aiTarget != null)
             {
-                aiTarget.SightRange -= deltaTime * (aiTarget.MaxSightRange / aiTarget.FadeOutTime);
-                aiTarget.SoundRange -= deltaTime * (aiTarget.MaxSoundRange / aiTarget.FadeOutTime);
+                aiTarget.Update(deltaTime);
             }
 
             bool broken = condition <= 0.0f;
@@ -1794,13 +1790,13 @@ namespace Barotrauma
             if (remove) { Spawner?.AddToRemoveQueue(this); }
         }
 
-        public bool Combine(Item item)
+        public bool Combine(Item item, Character user)
         {
             if (item == this) { return false; }
             bool isCombined = false;
             foreach (ItemComponent ic in components)
             {
-                if (ic.Combine(item)) { isCombined = true; }
+                if (ic.Combine(item, user)) { isCombined = true; }
             }
 #if CLIENT
             if (isCombined) { GameMain.Client?.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Combine, item.ID }); }

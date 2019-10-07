@@ -1338,9 +1338,12 @@ namespace Barotrauma
             WayPoint spawnPoint = null;
 
             string characterLowerCase = args[0].ToLowerInvariant();
-            JobPrefab.List.TryGetValue(characterLowerCase, out JobPrefab job);
+            if (!JobPrefab.List.TryGetValue(characterLowerCase, out JobPrefab job))
+            {
+                job = JobPrefab.List.Values.FirstOrDefault(jp => jp.Name?.ToLowerInvariant() == characterLowerCase);
+            }
             bool human = job != null || characterLowerCase == Character.HumanSpeciesName;
-
+            
             if (args.Length > 1)
             {
                 switch (args[1].ToLowerInvariant())

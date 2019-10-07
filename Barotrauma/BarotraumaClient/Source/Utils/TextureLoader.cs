@@ -80,16 +80,7 @@ namespace Barotrauma
             {
                 int width = 0; int height = 0; int channels = 0;
                 byte[] textureData = null;
-                Task loadTask = Task.Run(() =>
-                {
-                    textureData = Texture2D.TextureDataFromStream(fileStream, out width, out height, out channels);
-                });
-                bool success = loadTask.Wait(10000);
-                if (!success)
-                {
-                    DebugConsole.ThrowError("Failed to load texture data from " + (path ?? "stream") + ": timed out");
-                    return null;
-                }
+                textureData = Texture2D.TextureDataFromStream(fileStream, out width, out height, out channels);
                 if (preMultiplyAlpha)
                 {
                     PreMultiplyAlpha(ref textureData);

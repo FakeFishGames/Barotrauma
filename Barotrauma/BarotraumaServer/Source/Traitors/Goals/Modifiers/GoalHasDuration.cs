@@ -19,7 +19,7 @@ namespace Barotrauma
             protected internal override string GetInfoText(Traitor traitor, string textId, IEnumerable<string> keys, IEnumerable<string> values)
             {
                 var infoText = base.GetInfoText(traitor, textId, keys, values);
-                return !string.IsNullOrEmpty(durationInfoTextId) ? TextManager.FormatServerMessage(durationInfoTextId, new[] { "[infotext]", "[duration]" }, new[] { infoText, requiredDuration.ToString() }) : infoText;
+                return !string.IsNullOrEmpty(durationInfoTextId) && !infoText.Contains("[duration]") ? TextManager.FormatServerMessage(durationInfoTextId, new[] { "[infotext]", "[duration]" }, new[] { infoText, requiredDuration.ToString() }) : infoText;
             }
 
             private bool isCompleted = false;

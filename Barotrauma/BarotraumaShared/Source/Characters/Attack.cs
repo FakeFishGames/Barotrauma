@@ -30,7 +30,9 @@ namespace Barotrauma
         FallBack,
         FallBackUntilCanAttack,
         PursueIfCanAttack,
-        Pursue
+        Pursue,
+        FollowThrough,
+        FollowThroughUntilCanAttack
     }
 
     struct AttackResult
@@ -74,6 +76,9 @@ namespace Barotrauma
         [Serialize(AttackTarget.Any, true, description: "Does the attack target only specific targets?"), Editable]
         public AttackTarget TargetType { get; private set; }
 
+        [Serialize(LimbType.None, true, description: "If not defined or set to none, the closest limb is used (default)."), Editable]
+        public LimbType TargetLimbType { get; private set; }
+
         [Serialize(HitDetection.Distance, true, description: "Collision detection is more accurate, but it only affects targets that are in contact with the limb."), Editable]
         public HitDetection HitDetectionType { get; private set; }
 
@@ -113,7 +118,7 @@ namespace Barotrauma
         [Serialize(0.0f, false)]
         public float Stun { get; private set; }
 
-        [Serialize(false, true), Editable]
+        [Serialize(false, true, description: "Can damage only Humans."), Editable]
         public bool OnlyHumans { get; private set; }
 
         [Serialize("", true), Editable]
@@ -449,7 +454,6 @@ namespace Barotrauma
                 {
                     effect.Apply(effectType, deltaTime, targetLimb.character, targetLimb.character.AnimController.Limbs.Cast<ISerializableEntity>().ToList());
                 }
-
             }
 
             return attackResult;

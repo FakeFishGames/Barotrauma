@@ -42,10 +42,10 @@ namespace Barotrauma
 
             public abstract bool IsCompleted { get; }
             public virtual bool IsStarted(Traitor traitor) => Traitors.Contains(traitor);
-            public virtual bool CanBeCompleted => !Traitors.Any(traitor => traitor.Character?.IsDead ?? true);
-             public virtual bool IsEnemy(Character character) => false;
+            public virtual bool CanBeCompleted(ICollection<Traitor> traitors) => !Traitors.Any(traitor => traitor.Character?.IsDead ?? true);
+            public virtual bool IsEnemy(Character character) => false;
             public virtual bool IsAllowedToDamage(Structure structure) => false;
-             public virtual bool Start(Traitor traitor)
+            public virtual bool Start(Traitor traitor)
             {
                 Traitors.Add(traitor);
                 return true;

@@ -164,8 +164,7 @@ namespace Barotrauma
                     if (userdata is Facepunch.Steamworks.Workshop.Item item)
                     {
                         if (!item.Installed) { return false; }
-                        CreateWorkshopItem(item);
-                        ShowCreateItemFrame();
+                        if (CreateWorkshopItem(item)) { ShowCreateItemFrame(); }
                     }
                     return true;
                 }
@@ -654,6 +653,9 @@ namespace Barotrauma
         {
             if (!(tickBox.UserData is Facepunch.Steamworks.Workshop.Item item)) { return false; }
 
+            //currently editing the item, don't allow enabling/disabling it
+            if (itemEditor?.Id == item.Id) { tickBox.Selected = true; return false; }
+
             var updateButton = tickBox.Parent.FindChild("updatebutton");
 
             string errorMsg = "";
@@ -908,15 +910,21 @@ namespace Barotrauma
             }*/
 
         }
-        private void CreateWorkshopItem(Facepunch.Steamworks.Workshop.Item item)
+        private bool CreateWorkshopItem(Facepunch.Steamworks.Workshop.Item item)
         {
             if (!item.Installed)
             {
-                new GUIMessageBox(TextManager.Get("Error"), 
+                new GUIMessageBox(TextManager.Get("Error"),
                     TextManager.GetWithVariable("WorkshopErrorInstallRequiredToEdit", "[itemname]", TextManager.EnsureUTF8(item.Title)));
-                return;
+                return false;
             }
-            SteamManager.CreateWorkshopItemStaging(item, out itemEditor, out itemContentPackage);
+            if (!SteamManager.CreateWorkshopItemStaging(item, out itemEditor, out itemContentPackage))
+            {
+                return false;
+            }
+            var tickBox = publishedItemList.Content.GetChildByUserData(item)?.GetAnyChild<GUITickBox>();
+            if (tickBox != null) { tickBox.Selected = true; }
+            return true;
         }
 
         private void ShowCreateItemFrame()

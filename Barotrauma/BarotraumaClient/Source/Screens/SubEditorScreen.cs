@@ -1067,8 +1067,6 @@ namespace Barotrauma
                 ChangeSubDescription(textBox, text);
                 return true;
             };
-            descriptionBox.Text = Submarine.MainSub == null ? "" : Submarine.MainSub.Description;
-            submarineDescriptionCharacterCount.Text = descriptionBox.Text.Length + " / " + submarineDescriptionLimit;
 
             var crewSizeArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.03f), leftColumn.RectTransform), isHorizontal: true) { AbsoluteSpacing = 5 };
 
@@ -1286,7 +1284,10 @@ namespace Barotrauma
             {
                 OnClicked = SaveSub
             };
-
+            paddedSaveFrame.Recalculate();
+            leftColumn.Recalculate();
+            descriptionBox.Text = Submarine.MainSub == null ? "" : Submarine.MainSub.Description;
+            submarineDescriptionCharacterCount.Text = descriptionBox.Text.Length + " / " + submarineDescriptionLimit;
         }
 
 
@@ -2288,7 +2289,7 @@ namespace Barotrauma
                         me.IsHighlighted = false;
                     }
 
-                    if (WiringMode && dummyCharacter.SelectedConstruction==null)
+                    if (WiringMode && dummyCharacter.SelectedConstruction == null)
                     {
                         List<Wire> wires = new List<Wire>();
                         foreach (Item item in Item.ItemList)
@@ -2299,8 +2300,29 @@ namespace Barotrauma
                         Wire.UpdateEditing(wires);
                     }
 
-                    if (dummyCharacter.SelectedConstruction==null || dummyCharacter.SelectedConstruction.GetComponent<Pickable>() != null)
+                    if (dummyCharacter.SelectedConstruction == null || 
+                        dummyCharacter.SelectedConstruction.GetComponent<Pickable>() != null)
                     {
+                        if (WiringMode && (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift) || PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.Right)))
+                        {
+                            Wire equippedWire =
+                                Character.Controlled?.SelectedItems[0]?.GetComponent<Wire>() ??
+                                Character.Controlled?.SelectedItems[1]?.GetComponent<Wire>();
+                            if (equippedWire != null && equippedWire.GetNodes().Count > 0)
+                            {
+                                Vector2 lastNode = equippedWire.GetNodes().Last();
+                                if (equippedWire.Item.Submarine != null)
+                                {
+                                    lastNode += equippedWire.Item.Submarine.HiddenSubPosition + equippedWire.Item.Submarine.Position;
+                                }
+
+                                dummyCharacter.CursorPosition =
+                                    Math.Abs(dummyCharacter.CursorPosition.X - lastNode.X) < Math.Abs(dummyCharacter.CursorPosition.Y - lastNode.Y) ?
+                                        new Vector2(lastNode.X, dummyCharacter.CursorPosition.Y) :
+                                        dummyCharacter.CursorPosition = new Vector2(dummyCharacter.CursorPosition.X, lastNode.Y);
+                            }
+                        }
+
                         Vector2 mouseSimPos = FarseerPhysics.ConvertUnits.ToSimUnits(dummyCharacter.CursorPosition);
                         foreach (Limb limb in dummyCharacter.AnimController.Limbs)
                         {
@@ -2433,10 +2455,13 @@ namespace Barotrauma
             Submarine.DrawBack(spriteBatch, editing: true);
 
             spriteBatch.End();
+
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: cam.Transform);
+            Submarine.DrawDamageable(spriteBatch, null, editing: true);
+            spriteBatch.End();
 
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: cam.Transform);
             Submarine.DrawFront(spriteBatch, editing: true);
-
             if (!CharacterMode && !WiringMode && GUI.MouseOn == null)
             {
                 MapEntityPrefab.Selected?.DrawPlacing(spriteBatch, cam);                

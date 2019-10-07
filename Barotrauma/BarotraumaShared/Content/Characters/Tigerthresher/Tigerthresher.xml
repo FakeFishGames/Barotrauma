@@ -1,34 +1,20 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character speciesname="Tigerthresher" humanoid="false">
-
-  <ragdolls folder="default"/>
-  <animations folder="default"/>
-
-  <bloodemitter particle="blood" particleamount="10" scalemin="1" scalemax="2"/>
-  <bloodemitter particle="waterblood" particleamount="1" scalemin="1" scalemax="2"/>
-  <gibemitter particle="gib" particleamount="30" velocitymin="200" velocitymax="1500" anglemin="0" anglemax="360" scalemin="1" scalemax="2"/>
-  <gibemitter particle="heavygib" particleamount="15" velocitymin="50" velocitymax="1000" anglemin="0" anglemax="360" scalemin="1" scalemax="2"/>
-
-  <health
-    vitality="150"
-    doesbleed="true"/>
-
-  <sound file="Content/Characters/Tigerthresher/thresherattack1.ogg" state="Attack" />
-  <sound file="Content/Characters/Tigerthresher/thresheridle1.ogg" state="Idle" />
-  <sound file="Content/Characters/Tigerthresher/thresheridle2.ogg" state="Idle" />
-
-  <ai
-    combatstrength="400"
-    sight="1.0"
-    hearing="1.0">
-    <targetpriority tag="decoy" state="Attack" priority="600" />
-    <targetpriority tag="stronger" state="Escape" priority="100"/>
-    <targetpriority tag="human" state="Attack" priority="90"/>
-    <targetpriority tag="dead" state="Eat" priority="60"/>
-    <targetpriority tag="weaker" state="Attack" priority="50"/>
-    <targetpriority tag="nasonov" state="Attack" priority="50"/>
-    <targetpriority tag="sonar" state="Attack" priority="45"/>
-    <targetpriority tag="room" state="Attack" priority="40"/>
+﻿<Character speciesname="Tigerthresher" humanoid="False" husk="False" needsair="False" canspeak="False" noise="100" blooddecal="" group="thresher">
+  <ragdolls folder="Content/Characters/Tigerthresher/Ragdolls/" />
+  <animations folder="Content/Characters/Tigerthresher/Animations/" />
+  <health vitality="150" doesbleed="True" crushdepth="-Infinity" usehealthwindow="False" bleedingreduction="1" burnreduction="0" constanthealthregeneration="0" healthregenerationwheneating="3" />
+  <ai combatstrength="350" sight="1" hearing="1" aggressionhurt="200" aggressiongreed="10" fleehealththreshold="0" attackonlywhenprovoked="False" aggressiveboarding="True" retaliatewhentakingdamage="True">
+    <target tag="decoy" state="Attack" priority="200" />
+    <target tag="provocative" state="Attack" priority="100" />
+    <target tag="light" state="Attack" priority="50" />
+    <target tag="dead" state="Eat" priority="100" />
+    <target tag="human" state="Attack" priority="60" />
+    <target tag="weaker" state="Attack" priority="50" />
+    <target tag="stronger" state="Attack" priority="50" />
+    <target tag="wall" state="Attack" priority="10" />
+    <target tag="door" state="Attack" priority="10" />
   </ai>
-
+  <bloodemitter particle="blood" anglemin="1" anglemax="2" scalemin="1" scalemax="1" velocitymin="0" velocitymax="0" emitinterval="0" particlespersecond="0" particleamount="10" highqualitycollisiondetection="False" copyentityangle="False" />
+  <bloodemitter particle="waterblood" anglemin="1" anglemax="2" scalemin="1" scalemax="1" velocitymin="0" velocitymax="0" emitinterval="0" particlespersecond="0" particleamount="1" highqualitycollisiondetection="False" copyentityangle="False" />
+  <gibemitter particle="gib" anglemin="0" anglemax="360" scalemin="1" scalemax="2" velocitymin="200" velocitymax="1500" emitinterval="0" particlespersecond="0" particleamount="30" highqualitycollisiondetection="False" copyentityangle="False" />
+  <gibemitter particle="heavygib" anglemin="0" anglemax="360" scalemin="1" scalemax="2" velocitymin="50" velocitymax="1000" emitinterval="0" particlespersecond="0" particleamount="15" highqualitycollisiondetection="False" copyentityangle="False" />
 </Character>

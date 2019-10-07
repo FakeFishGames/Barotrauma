@@ -788,13 +788,21 @@
 <missionheader0.killhammerhead>Ziel eliminiert</missionheader0.killhammerhead>
 <missionmessage0.killhammerhead>Der Hammerkopf ist tot. Navigiere das U-Boot aus der Höhle, um die Belohnung zu erhalten.</missionmessage0.killhammerhead>
 <missionname.killcrawlerswarm1>Vernichte einen Schwarm</missionname.killcrawlerswarm1>
-<missiondescription.killcrawlerswarm1>Ein kleiner Schwarm von Monstern der Gattung [monster] terrorisiert Fahrzeuge, die zwischen [location1] und [location2] verkehren. Eine Belohnung von [reward] Credits wurde denen versprochen, die ihn vernichten.</missiondescription.killcrawlerswarm1>
+
+<!--<missiondescription.killcrawlerswarm1>Ein kleiner Schwarm von Monstern der Gattung [monster] terrorisiert Fahrzeuge, die zwischen [location1] und [location2] verkehren. Eine Belohnung von [reward] Credits wurde denen versprochen, die ihn vernichten.</missiondescription.killcrawlerswarm1>-->
+<!-- Temporary until plural monster names -->
+<missiondescription.killcrawlerswarm1>Ein kleiner Schwarm von Kriechern terrorisiert Fahrzeuge, die zwischen [location1] und [location2] verkehren. Eine Belohnung von [reward] Credits wurde denen versprochen, die ihn vernichten.</missiondescription.killcrawlerswarm1>
+
 <missionsonarlabel.killcrawlerswarm1>Schwarm</missionsonarlabel.killcrawlerswarm1>
 <missionsuccess.killcrawlerswarm1>Der Schwarm wurde vernichtet.</missionsuccess.killcrawlerswarm1>
 <missionheader0.killcrawlerswarm1>Ziel eliminiert</missionheader0.killcrawlerswarm1>
 <missionmessage0.killcrawlerswarm1>Der Schwarm wurde vernichtet. Navigiere das U-Boot aus der Höhle, um die Belohnung zu erhalten.</missionmessage0.killcrawlerswarm1>
 <missionname.killcrawlerswarm2>Vernichte einen Schwarm</missionname.killcrawlerswarm2>
-<missiondescription.killcrawlerswarm2>Ein großer Schwarm von Monstern der Gattung [monster] terrorisiert Fahrzeuge, die zwischen [location1] und [location2] verkehren. Eine Belohnung von [reward] Credits wurde denen versprochen, die ihn vernichten.</missiondescription.killcrawlerswarm2>
+
+<!--<missiondescription.killcrawlerswarm2>Ein großer Schwarm von Monstern der Gattung [monster] terrorisiert Fahrzeuge, die zwischen [location1] und [location2] verkehren. Eine Belohnung von [reward] Credits wurde denen versprochen, die ihn vernichten.</missiondescription.killcrawlerswarm2>-->
+<!-- Temporary until plural monster names -->
+<missiondescription.killcrawlerswarm2>Ein großer Schwarm von Kriechern terrorisiert Fahrzeuge, die zwischen [location1] und [location2] verkehren. Eine Belohnung von [reward] Credits wurde denen versprochen, die ihn vernichten.</missiondescription.killcrawlerswarm2>
+
 <missionsonarlabel.killcrawlerswarm2>Schwarm</missionsonarlabel.killcrawlerswarm2>
 <missionsuccess.killcrawlerswarm2>Der Schwarm wurde vernichtet.</missionsuccess.killcrawlerswarm2>
 <missionheader0.killcrawlerswarm2>Ziel eliminiert</missionheader0.killcrawlerswarm2>

@@ -175,13 +175,17 @@ namespace Barotrauma
 
         protected override void WatchmanInteract(Character watchman, Character interactor)
         {
+            if (interactor != null)
+            {
+                interactor.FocusedCharacter = null;
+            }
+
             Submarine leavingSub = GetLeavingSub();
             if (leavingSub == null)
             {
                 CreateDialog(new List<Character> { watchman }, "WatchmanInteractNoLeavingSub", 5.0f);
                 return;
             }
-
 
             CreateDialog(new List<Character> { watchman }, "WatchmanInteract", 1.0f);
 

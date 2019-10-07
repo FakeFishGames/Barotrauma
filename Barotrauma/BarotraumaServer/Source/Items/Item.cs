@@ -192,7 +192,7 @@ namespace Barotrauma
                     {
                         return;
                     }
-                    Combine(combineTarget);
+                    Combine(combineTarget, c.Character);
                     break;
             }
         }

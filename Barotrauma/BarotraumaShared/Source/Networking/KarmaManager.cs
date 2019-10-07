@@ -145,7 +145,7 @@ namespace Barotrauma
         {
             if (Presets.ContainsKey("custom"))
             {
-                SerializableProperty.SerializeProperties(this, Presets["custom"]);
+                SerializableProperty.SerializeProperties(this, Presets["custom"], saveIfDefault: true);
             }
         }
 

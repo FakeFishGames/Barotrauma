@@ -94,7 +94,7 @@ namespace Barotrauma
 
             items.Add(item);
             
-            if (parent != null) parent.Combine(item);
+            if (parent != null) parent.Combine(item, user: null);
             
             foreach (XElement subElement in element.Elements())
             {

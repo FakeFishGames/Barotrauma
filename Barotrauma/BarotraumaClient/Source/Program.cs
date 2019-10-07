@@ -31,125 +31,35 @@ namespace Barotrauma
         [STAThread]
         static void Main(string[] args)
         {
-            SteamManager.Initialize();
             GameMain game = null;
 #if !DEBUG
             try
             {
 #endif
+                SteamManager.Initialize();
                 game = new GameMain(args);
-#if !DEBUG
-            }
-            catch (Exception e)
-            {
-                if (game != null) game.Dispose();
-                CrashDump(null, "crashreport.log", e);
-                return;
-            }
-#endif
-
-#if DEBUG
-            game.Run();
-#else
-            bool attemptRestart = false;
-
-            do
-            {
-                try
-                {
-                    game.Run();
-                    attemptRestart = false;
-                }
-                catch (Exception e)
-                {
-                    if (restartAttempts < 5 && CheckException(game, e))
-                    {
-                        attemptRestart = true;
-                        restartAttempts++;
-                    }
-                    else
-                    {
-                        CrashDump(game, "crashreport.log", e);
-                        attemptRestart = false;
-                    }
-
-                }
-            } while (attemptRestart);
-#endif
-
-#if !DEBUG
-            try
-            {
-#endif
+                game.Run();
                 game.Dispose();
 #if !DEBUG
             }
             catch (Exception e)
             {
-                CrashDump(null, "crashreport.log", e);
-            }
-#endif
-        }
-
-        private static bool CheckException(GameMain game, Exception e)
-        {
-#if WINDOWS
-
-            if (e is SharpDX.SharpDXException sharpDxException)
-            {
-                DebugConsole.NewMessage("SharpDX exception caught. ("
-                    + e.Message + ", " + sharpDxException.ResultCode.Code.ToString("X") + "). Attempting to fix...", Microsoft.Xna.Framework.Color.Red);
-
-                switch ((UInt32)sharpDxException.ResultCode.Code)
+                try
                 {
-                    case 0x887A0022: //DXGI_ERROR_NOT_CURRENTLY_AVAILABLE
-                        switch (restartAttempts)
-                        {
-                            case 0:
-                                //just wait and try again
-                                DebugConsole.NewMessage("Retrying after 100 ms...", Microsoft.Xna.Framework.Color.Red);
-                                System.Threading.Thread.Sleep(100);
-                                return true;
-                            case 1:
-                                //force focus to this window
-                                DebugConsole.NewMessage("Forcing focus to the window and retrying...", Microsoft.Xna.Framework.Color.Red);
-                                var myForm = (Form)Control.FromHandle(game.Window.Handle);
-                                myForm.Focus();
-                                return true;
-                            case 2:
-                                //try disabling hardware mode switch
-                                if (GameMain.Config.WindowMode == WindowMode.Fullscreen)
-                                {
-                                    DebugConsole.NewMessage("Failed to set fullscreen mode, switching configuration to borderless windowed.", Microsoft.Xna.Framework.Color.Red);
-                                    GameMain.Config.WindowMode = WindowMode.BorderlessWindowed;
-                                    GameMain.Config.SaveNewPlayerConfig();
-                                }
-                                return false;
-                            default:
-                                DebugConsole.NewMessage("Failed to resolve the DXGI_ERROR_NOT_CURRENTLY_AVAILABLE exception. Give up and let it crash :(", Microsoft.Xna.Framework.Color.Red);
-                                return false;
-
-                        }
-                    case 0x80070057: //E_INVALIDARG/Invalid Arguments
-                        DebugConsole.NewMessage("Invalid graphics settings, attempting to fix...", Microsoft.Xna.Framework.Color.Red);
-
-                        GameMain.Config.GraphicsWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
-                        GameMain.Config.GraphicsHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
-
-                        DebugConsole.NewMessage("Display size set to " + GameMain.Config.GraphicsWidth + "x" + GameMain.Config.GraphicsHeight, Microsoft.Xna.Framework.Color.Red);
-
-                        game.ApplyGraphicsSettings();
-
-                        return true;
-                    default:
-                        DebugConsole.NewMessage("Unknown SharpDX exception code (" + sharpDxException.ResultCode.Code.ToString("X") + ")", Microsoft.Xna.Framework.Color.Red);
-                        return false;
+                    CrashDump(game, "crashreport.log", e);
                 }
-            }
-
+                catch (Exception e2)
+                {
+#if WINDOWS
+                    CrashMessageBox("Barotrauma seems to have crashed, and failed to generate a crash report: "
+                        + e2.Message + "\n" + e2.StackTrace.ToString(),
+                        "Failed to generate crash report!");
 #endif
-
-            return false;
+                }
+                game?.Dispose();
+                return;
+            }
+#endif
         }
 
         public static void CrashMessageBox(string message, string filePath)

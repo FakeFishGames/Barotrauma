@@ -132,7 +132,7 @@ namespace Barotrauma
             //there's already an item in the slot
             if (Items[i] != null && allowCombine)
             {
-                if (Items[i].Combine(item))
+                if (Items[i].Combine(item, user))
                 {
                     System.Diagnostics.Debug.Assert(Items[i] != null);
                     return true;

@@ -788,13 +788,21 @@
 <missionheader0.killhammerhead>Alvo eliminado</missionheader0.killhammerhead>
 <missionmessage0.killhammerhead>O Predador-Martelo foi abatido. Conduza o submarino para fora caverna para resgatar a recompensa.</missionmessage0.killhammerhead>
 <missionname.killcrawlerswarm1>Eliminação de Bando</missionname.killcrawlerswarm1>
-<missiondescription.killcrawlerswarm1>Um pequeno bando de [monster] está aterrorizando as embarcações que viajam entre [location1] e [location2]. Foi prometida uma recompensa de [reward] créditos para a tripulação que eliminar o bando.</missiondescription.killcrawlerswarm1>
+
+<!--<missiondescription.killcrawlerswarm1>Um pequeno bando de [monster] está aterrorizando as embarcações que viajam entre [location1] e [location2]. Foi prometida uma recompensa de [reward] créditos para a tripulação que eliminar o bando.</missiondescription.killcrawlerswarm1>-->
+<!-- Temporary until plural monster names -->
+<missiondescription.killcrawlerswarm1>Um pequeno bando de reptantes está aterrorizando as embarcações que viajam entre [location1] e [location2]. Foi prometida uma recompensa de [reward] créditos para a tripulação que eliminar o bando.</missiondescription.killcrawlerswarm1>
+
 <missionsonarlabel.killcrawlerswarm1>Bando</missionsonarlabel.killcrawlerswarm1>
 <missionsuccess.killcrawlerswarm1>O bando foi eliminado.</missionsuccess.killcrawlerswarm1>
 <missionheader0.killcrawlerswarm1>Alvo eliminado</missionheader0.killcrawlerswarm1>
 <missionmessage0.killcrawlerswarm1>O bando foi eliminado. Conduza o submarino para fora caverna para resgatar a recompensa.</missionmessage0.killcrawlerswarm1>
 <missionname.killcrawlerswarm2>Eliminação de Bando</missionname.killcrawlerswarm2>
-<missiondescription.killcrawlerswarm2>Um grande bando de [monster] está aterrorizando as embarcações que viajam entre [location1] e [location2]. Foi prometida uma recompensa de [reward] créditos para a tripulação que eliminar o bando.</missiondescription.killcrawlerswarm2>
+
+<!--<missiondescription.killcrawlerswarm2>Um grande bando de [monster] está aterrorizando as embarcações que viajam entre [location1] e [location2]. Foi prometida uma recompensa de [reward] créditos para a tripulação que eliminar o bando.</missiondescription.killcrawlerswarm2>-->
+<!-- Temporary until plural monster names -->
+<missiondescription.killcrawlerswarm2>Um grande bando de reptantes está aterrorizando as embarcações que viajam entre [location1] e [location2]. Foi prometida uma recompensa de [reward] créditos para a tripulação que eliminar o bando.</missiondescription.killcrawlerswarm2>
+
 <missionsonarlabel.killcrawlerswarm2>Bando</missionsonarlabel.killcrawlerswarm2>
 <missionsuccess.killcrawlerswarm2>O bando foi eliminado.</missionsuccess.killcrawlerswarm2>
 <missionheader0.killcrawlerswarm2>Alvo eliminado</missionheader0.killcrawlerswarm2>

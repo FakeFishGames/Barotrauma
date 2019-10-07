@@ -426,6 +426,7 @@ namespace Barotrauma
             {
                 ToolTip = toolTip
             };
+            
             GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform,
                 Anchor.TopRight), GUINumberInput.NumberType.Float)
             {
@@ -465,6 +466,7 @@ namespace Barotrauma
             {
                 enumDropDown.AddItem(enumValue.ToString(), enumValue);
             }
+            enumDropDown.SelectItem(value);
             enumDropDown.OnSelected += (selected, val) =>
             {
                 if (property.TrySetValue(entity, val))
@@ -473,7 +475,6 @@ namespace Barotrauma
                 }
                 return true;
             };
-            enumDropDown.SelectItem(value);
             if (!Fields.ContainsKey(property.Name)) { Fields.Add(property.Name, new GUIComponent[] { enumDropDown }); }
             return frame;
         }

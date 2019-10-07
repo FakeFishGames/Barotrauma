@@ -2,12 +2,13 @@
 <Ragdoll type="legacyharybdis"
   limbscale="1.5"
   jointscale="1.5"
-  canentersubmarine="false">
+  canentersubmarine="false"
+  canwalk="False">
 
   <collider radius="80" height="440"/>
 
   <!-- body -->
-  <limb id = "0" radius="100" height="470" type="Torso" steerforce="1.0" mouthpos="0,260">
+  <limb id = "0" radius="100" height="470" type="Torso" steerforce="1.0">
     <sprite texture="Content/Characters/Legacycharybdis/charybdis.png" sourcerect="160,0,242,688" depth="0.015" origin="0.5,0.5"/>
   </limb>
 

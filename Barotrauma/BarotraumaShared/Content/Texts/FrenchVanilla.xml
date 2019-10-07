@@ -788,13 +788,21 @@
 <missionheader0.killhammerhead>Cible éliminée</missionheader0.killhammerhead>
 <missionmessage0.killhammerhead>Le squale-marteau est mort. Quittez la grotte pour obtenir votre récompense.</missionmessage0.killhammerhead>
 <missionname.killcrawlerswarm1>Élimination de nuée</missionname.killcrawlerswarm1>
-<missiondescription.killcrawlerswarm1>Une petite nuée de [monster] terrorise les sous-marins entre les secteurs [location1] et [location2]. On offre une récompense de [reward] crédits à ceux qui parviendront à les neutraliser.</missiondescription.killcrawlerswarm1>
+  
+<!--<missiondescription.killcrawlerswarm1>Une petite nuée de [monster] terrorise les sous-marins entre les secteurs [location1] et [location2]. On offre une récompense de [reward] crédits à ceux qui parviendront à les neutraliser.</missiondescription.killcrawlerswarm1>-->
+<!-- Temporary until plural monster names -->
+<missiondescription.killcrawlerswarm1>Une petite nuée de rampeurs terrorise les sous-marins entre les secteurs [location1] et [location2]. On offre une récompense de [reward] crédits à ceux qui parviendront à les neutraliser.</missiondescription.killcrawlerswarm1>
+
 <missionsonarlabel.killcrawlerswarm1>Nuée</missionsonarlabel.killcrawlerswarm1>
 <missionsuccess.killcrawlerswarm1>La nuée a été éliminée.</missionsuccess.killcrawlerswarm1>
 <missionheader0.killcrawlerswarm1>Cible éliminée</missionheader0.killcrawlerswarm1>
 <missionmessage0.killcrawlerswarm1>La nuée a été éliminée. Quittez la grotte pour obtenir votre récompense.</missionmessage0.killcrawlerswarm1>
 <missionname.killcrawlerswarm2>Élimination de nuée</missionname.killcrawlerswarm2>
-<missiondescription.killcrawlerswarm2>Une importante nuée de [monster] terrorise les sous-marins entre les secteurs [location1] et [location2]. On offre une récompense de [reward] crédits à ceux qui parviendront à les neutraliser.</missiondescription.killcrawlerswarm2>
+  
+<!--<missiondescription.killcrawlerswarm2>Une importante nuée de [monster] terrorise les sous-marins entre les secteurs [location1] et [location2]. On offre une récompense de [reward] crédits à ceux qui parviendront à les neutraliser.</missiondescription.killcrawlerswarm2>-->
+<!-- Temporary until plural monster names -->
+<missiondescription.killcrawlerswarm2>Une importante nuée de rampeurs terrorise les sous-marins entre les secteurs [location1] et [location2]. On offre une récompense de [reward] crédits à ceux qui parviendront à les neutraliser.</missiondescription.killcrawlerswarm2>
+
 <missionsonarlabel.killcrawlerswarm2>Nuée</missionsonarlabel.killcrawlerswarm2>
 <missionsuccess.killcrawlerswarm2>La nuée a été éliminée.</missionsuccess.killcrawlerswarm2>
 <missionheader0.killcrawlerswarm2>Cible éliminée</missionheader0.killcrawlerswarm2>

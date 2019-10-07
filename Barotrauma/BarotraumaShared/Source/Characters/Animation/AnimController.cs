@@ -37,7 +37,7 @@ namespace Barotrauma
                 }
                 if (!CanWalk)
                 {
-                    DebugConsole.ThrowError($"{character.SpeciesName} cannot walk!");
+                    //DebugConsole.ThrowError($"{character.SpeciesName} cannot walk!");
                     return null;
                 }
                 else

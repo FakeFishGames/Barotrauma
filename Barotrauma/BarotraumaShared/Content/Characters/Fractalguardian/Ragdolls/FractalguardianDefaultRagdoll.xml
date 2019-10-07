@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Ragdoll type="fractalguardian" canentersubmarine="false" limbscale="0.5" jointscale="0.5">
+<Ragdoll type="fractalguardian" canentersubmarine="false" canwalk="False" limbscale="0.5" jointscale="0.5">
 
   <collider radius="50"/>
   <!-- head -->
