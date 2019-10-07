@@ -47,6 +47,10 @@ namespace Barotrauma.Items.Components
         private Sprite maintainPosIndicator, maintainPosOriginIndicator;
         private Sprite steeringIndicator;
 
+        private List<DockingPort> connectedPorts = new List<DockingPort>();
+        private float checkConnectedPortsTimer;
+        private const float CheckConnectedPortsInterval = 1.0f;
+
         private Vector2 keyboardInput = Vector2.Zero;
         private float inputCumulation;
 
@@ -750,10 +754,21 @@ namespace Barotrauma.Items.Components
             }
 
             if (!UseAutoDocking) { return; }
+
+            if (checkConnectedPortsTimer <= 0.0f)
+            {
+                Connection dockingConnection = item.Connections?.FirstOrDefault(c => c.Name == "toggle_docking");
+                if (dockingConnection != null)
+                {
+                    connectedPorts = item.GetConnectedComponentsRecursive<DockingPort>(dockingConnection);
+                }
+                checkConnectedPortsTimer = CheckConnectedPortsInterval;
+            }
             
             float closestDist = DockingAssistThreshold * DockingAssistThreshold;
             DockingModeEnabled = false;
-            foreach (DockingPort sourcePort in DockingPort.List)
+            
+            foreach (DockingPort sourcePort in connectedPorts)
             {
                 if (sourcePort.Docked || sourcePort.Item.Submarine == null) { continue; }
                 if (sourcePort.Item.Submarine != controlledSub) { continue; }
