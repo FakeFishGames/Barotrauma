@@ -19,16 +19,25 @@ namespace Microsoft.Xna.Framework
             Sdl.ShowSimpleMessageBox((uint)flags, title, message, window?.Handle ?? IntPtr.Zero);
         }
 
-        public static void ShowWrapped(Flags flags, string title, string message, int wordsPerLine = 15, GameWindow window = null)
+        public static void ShowWrapped(Flags flags, string title, string message, int charsPerLine = 60, GameWindow window = null)
         {
             string[] split = message.Split(' ');
             if (split.Length > 0)
             {
                 message = split[0];
+                string currLine = message;
                 for (int i = 1; i < split.Length; i++)
                 {
-                    message += ((i % wordsPerLine) == 0) ? "\n" : " ";
-                    message += split[i];
+                    currLine += " " + split[i];
+                    if (currLine.Length > charsPerLine)
+                    {
+                        currLine = split[i];
+                        message += "\n" + split[i];
+                    }
+                    else
+                    {
+                        message += " " + split[i];
+                    }
                 }
             }
 
