@@ -262,6 +262,16 @@ namespace Barotrauma
             get { return !IsUnconscious && Stun <= 0.0f && !IsDead; }
         }
 
+        public bool CanMove
+        {
+            get
+            {
+                if (!AllowInput) { return false; }
+                if (AnimController.CanEnterSubmarine && CurrentHull != null && AnimController.CurrentGroundedParams == null) { return false; }
+                return true;
+            }
+        }
+
         public bool CanInteract
         {
             get { return AllowInput && IsHumanoid && !LockHands && !Removed; }
@@ -1237,7 +1247,7 @@ namespace Barotrauma
         public void Control(float deltaTime, Camera cam)
         {
             ViewTarget = null;
-            if (!AllowInput) return;
+            if (!AllowInput) { return; }
 
             if (Controlled == this || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer))
             {

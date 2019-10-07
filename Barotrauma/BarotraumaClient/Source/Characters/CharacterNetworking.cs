@@ -249,7 +249,7 @@ namespace Barotrauma
                     msg.ReadPadBits();
 
                     int index = 0;
-                    if (GameMain.Client.Character == this && AllowInput)
+                    if (GameMain.Client.Character == this && CanMove)
                     {
                         var posInfo = new CharacterStateInfo(
                             pos, rotation,

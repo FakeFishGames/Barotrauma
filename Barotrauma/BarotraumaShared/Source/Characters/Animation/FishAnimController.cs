@@ -135,7 +135,7 @@ namespace Barotrauma
 
             levitatingCollider = true;
 
-            if (!character.AllowInput)
+            if (!character.CanMove)
             {
                 levitatingCollider = false;
                 Collider.FarseerBody.FixedRotation = false;
@@ -149,8 +149,12 @@ namespace Barotrauma
                 if (character.IsDead && deathAnimTimer < deathAnimDuration)
                 {
                     deathAnimTimer += deltaTime;
-                    UpdateDying(deltaTime);                    
-                }                
+                    UpdateDying(deltaTime);
+                }
+                if (CanEnterSubmarine && currentHull != null && CurrentGroundedParams == null)
+                {
+                    UpdateDying(deltaTime);
+                }
                 return;
             }
             else
@@ -529,11 +533,6 @@ namespace Barotrauma
             
         void UpdateWalkAnim(float deltaTime)
         {
-            if (CurrentGroundedParams == null)
-            {
-                // TODO: fidget?
-                return;
-            }
             movement = MathUtils.SmoothStep(movement, TargetMovement, 0.2f);
 
             Collider.LinearVelocity = new Vector2(

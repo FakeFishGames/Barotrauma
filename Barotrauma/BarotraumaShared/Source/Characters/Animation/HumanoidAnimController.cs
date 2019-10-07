@@ -343,7 +343,7 @@ namespace Barotrauma
                 deathAnimTimer = 0.0f;
             } 
 
-            if (!character.AllowInput)
+            if (!character.CanMove)
             {
                 levitatingCollider = false;
                 Collider.FarseerBody.FixedRotation = false;
