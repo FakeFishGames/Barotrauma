@@ -1247,7 +1247,7 @@ namespace Barotrauma
                 List<string> lines = new List<string>();
                 foreach (Type t in itemComponentTypes)
                 {
-                    lines.Add($"[n]{t.Name}[/b]");
+                    lines.Add($"[b]{t.Name}[/b]");
                     lines.Add("");
 
                     var properties = t.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.DeclaredOnly);//.Cast<System.ComponentModel.PropertyDescriptor>();
@@ -1330,7 +1330,7 @@ namespace Barotrauma
 
                 GameMain.Config.GraphicsWidth = 0;
                 GameMain.Config.GraphicsHeight = 0;
-                GameMain.Config.WindowMode = WindowMode.Fullscreen;
+                GameMain.Config.WindowMode = WindowMode.BorderlessWindowed;
                 NewMessage("Resolution set to 0 x 0 (screen resolution will be used)", Color.Green);
                 NewMessage("Fullscreen enabled", Color.Green);
 

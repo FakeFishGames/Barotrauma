@@ -54,7 +54,6 @@
   <Character file="Content/Characters/Coelanth/Coelanth.xml" />
   <Character file="Content/Characters/Crawler/Crawler.xml" />
   <Character file="Content/Characters/Endworm/Endworm.xml" />
-  <Character file="Content/Characters/Electricparasite/Electricparasite.xml" />
   <Character file="Content/Characters/Fractalguardian/Fractalguardian.xml" />
   <Character file="Content/Characters/Fractalguardian2/Fractalguardian2.xml" />
   <Character file="Content/Characters/Hammerhead/Hammerhead.xml" />
@@ -70,6 +69,7 @@
   <Character file="Content/Characters/Mudraptor/Mudraptor.xml" />
   <Character file="Content/Characters/Mantis/Mantis.xml" />
   <Character file="Content/Characters/Moloch/Moloch.xml" />
+  <Character file="Content/Characters/Molochboss/Molochboss.xml" />
   <Character file="Content/Characters/Watcher/Watcher.xml" />
   <Character file="Content/Characters/Tigerthresher/Tigerthresher.xml" />
   <Character file="Content/Characters/Bonethresher/Bonethresher.xml" />

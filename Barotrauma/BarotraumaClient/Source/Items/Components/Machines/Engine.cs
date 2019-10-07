@@ -113,7 +113,7 @@ namespace Barotrauma.Items.Components
             if (spriteIndex >= propellerSprite.FrameCount) spriteIndex = 0.0f;
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool editing)
+        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
         {
             if (propellerSprite != null)
             {

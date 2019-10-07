@@ -1583,12 +1583,12 @@ namespace Barotrauma
             bool leftHand = Inventory.IsInLimbSlot(item, InvSlotType.LeftHand);
 
             bool selected = false;
-            if (rightHand && SelectedItems[0] == null)
+            if (rightHand && (selectedItems[0] == null || selectedItems[0] == item))
             {
                 selectedItems[0] = item;
                 selected = true;
             }
-            if (leftHand && SelectedItems[1] == null)
+            if (leftHand && (selectedItems[1] == null || selectedItems[1] == item))
             {
                 selectedItems[1] = item;
                 selected = true;
@@ -2509,6 +2509,20 @@ namespace Barotrauma
         {
             if (Removed) { return new AttackResult(); }
 
+            //character inside the sub received damage from a monster outside the sub
+            //can happen during normal gameplay if someone for example fires a ranged weapon from outside, 
+            //the intention of this error message is to diagnose an issue with monsters being able to damage characters from outside
+            if (attacker?.AIController is EnemyAIController && Submarine != null && attacker.Submarine == null)
+            {
+                string errorMsg = $"Character {Name} received damage from outside the sub while inside (attacker: {attacker.Name})";
+                GameAnalyticsManager.AddErrorEventOnce("Character.DamageLimb:DamageFromOutside" + Name + attacker.Name,
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Warning,
+                    errorMsg + "\n" + Environment.StackTrace);
+#if DEBUG
+                DebugConsole.ThrowError(errorMsg);
+#endif
+            }
+
             if (attacker != null && attacker != this && GameMain.NetworkMember != null && !GameMain.NetworkMember.ServerSettings.AllowFriendlyFire)
             {
                 if (attacker.TeamID == TeamID) { return new AttackResult(); }
@@ -2522,7 +2536,7 @@ namespace Barotrauma
                 if (diff == Vector2.Zero) { diff = Rand.Vector(1.0f); }
                 Vector2 impulse = Vector2.Normalize(diff) * attackImpulse;
                 Vector2 hitPos = hitLimb.SimPosition + ConvertUnits.ToSimUnits(diff);
-                hitLimb.body.ApplyLinearImpulse(impulse, hitPos, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                hitLimb.body.ApplyLinearImpulse(impulse, hitPos, maxVelocity: NetConfig.MaxPhysicsBodyVelocity * 0.5f);
                 var mainLimb = hitLimb.character.AnimController.MainLimb;
                 if (hitLimb != mainLimb)
                 {

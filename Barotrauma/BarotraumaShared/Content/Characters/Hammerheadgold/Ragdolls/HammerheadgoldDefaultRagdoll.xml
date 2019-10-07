@@ -94,13 +94,13 @@
     <deformablesprite texture="Content/Characters/Hammerheadgold/Hammerheadgold.png" sourcerect="955,39,70,157" origin="0.5,0.5" depth="0">
       <spritedeformation type="bendjoint" resolution="2,2" multiplier="0.0" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="20" strength="0" />
     </deformablesprite>
-    <attack targettype="Structure" priority="1" range="150" damagerange="150" cooldown="10" secondarycooldown="1" afterattack="FallBack" structuredamage="75" force="10" targetimpulse="500" structuresoundtype="StructureBlunt" applyforceonlimbs="0, 3" context="NotDefined" hitdetectiontype="Distance" itemdamage="75" stun="0" onlyhumans="False" torque="0" applyforcesonlyonce="False" targetimpulseworld="0,0" targetforce="0" targetforceworld="0,0" severlimbsprobability="0" stickchance="0" duration="0.1" cooldownrandomfactor="0.1" reverse="False" targetlimbtype="None"></attack>
+    <attack targettype="Structure" priority="1" range="150" damagerange="150" cooldown="15" secondarycooldown="1" afterattack="FallBack" structuredamage="75" force="10" targetimpulse="500" structuresoundtype="StructureBlunt" applyforceonlimbs="0, 3" context="NotDefined" hitdetectiontype="Distance" itemdamage="75" stun="0" onlyhumans="False" torque="0" applyforcesonlyonce="False" targetimpulseworld="0,0" targetforce="0" targetforceworld="0,0" severlimbsprobability="0" stickchance="0" duration="0.1" cooldownrandomfactor="0.1" reverse="False" targetlimbtype="None"></attack>
     <damagemodifier damagemultiplier="0.1" armorsector="-90,-270" deflectprojectiles="True" afflictionidentifiers="" afflictiontypes="" />
   </limb>
-  <joint limb1="3" limb2="0" limb1anchor="68.27786,-11.39096" limb2anchor="-97.41309,-1.674939" name="Joint 3 - 0" canbesevered="True" limitenabled="True" upperlimit="10" lowerlimit="-10" stiffness="0.25" />
-  <joint limb1="3" limb2="1" limb1anchor="-74.66603,-3.830754" limb2anchor="49.96994,0.36584" name="Joint 3 - 1" canbesevered="True" limitenabled="True" upperlimit="30" lowerlimit="-30" stiffness="0.25" />
-  <joint limb1="1" limb2="2" limb1anchor="-59.16335,-1.901198" limb2anchor="92.35233,3.951959" name="Joint 1 - 2" canbesevered="True" limitenabled="True" upperlimit="30" lowerlimit="-30" stiffness="0.25" />
-  <joint limb1="2" limb2="4" limb1anchor="-97.9998,-7.098717" limb2anchor="145.9344,-12.02077" name="Joint 2 - 4" canbesevered="True" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />
+  <joint limb1="3" limb2="0" limb1anchor="68.27786,-11.39096" limb2anchor="-97.41309,-1.674939" name="Joint 3 - 0" canbesevered="False" limitenabled="True" upperlimit="10" lowerlimit="-10" stiffness="0.25" />
+  <joint limb1="3" limb2="1" limb1anchor="-74.66603,-3.830754" limb2anchor="49.96994,0.36584" name="Joint 3 - 1" canbesevered="False" limitenabled="True" upperlimit="30" lowerlimit="-30" stiffness="0.25" />
+  <joint limb1="1" limb2="2" limb1anchor="-59.16335,-1.901198" limb2anchor="92.35233,3.951959" name="Joint 1 - 2" canbesevered="False" limitenabled="True" upperlimit="30" lowerlimit="-30" stiffness="0.25" />
+  <joint limb1="2" limb2="4" limb1anchor="-97.9998,-7.098717" limb2anchor="145.9344,-12.02077" name="Joint 2 - 4" canbesevered="False" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />
   <joint limb1="3" limb2="5" limb1anchor="100.5414,37.53042" limb2anchor="-80.36808,10.21258" name="Joint 3 - 5" canbesevered="True" limitenabled="True" upperlimit="170.0266" lowerlimit="107.394" stiffness="0.25" />
   <joint limb1="5" limb2="7" limb1anchor="94.34475,19.33259" limb2anchor="-129.1997,-12.34505" name="Joint 5 - 7" canbesevered="True" limitenabled="True" upperlimit="0.4777034" lowerlimit="-90.58186" stiffness="0.25" />
   <joint limb1="3" limb2="6" limb1anchor="50.05676,36.71946" limb2anchor="-83.90382,12.28926" name="Joint 3 - 6" canbesevered="True" limitenabled="True" upperlimit="167.5689" lowerlimit="90.66715" stiffness="0.25" />
@@ -111,6 +111,6 @@
   <joint limb1="11" limb2="13" limb1anchor="-76.5207,8.757726" limb2anchor="-136.8331,12.11883" name="Joint 11 - 13" canbesevered="True" limitenabled="True" upperlimit="-45.06269" lowerlimit="-170.0939" stiffness="0.25" />
   <joint limb1="3" limb2="10" limb1anchor="-67.89462,-33.80014" limb2anchor="85.05,5.1" name="Joint 3 - 10" canbesevered="True" limitenabled="True" upperlimit="76.02953" lowerlimit="12.98217" stiffness="0.3" />
   <joint limb1="1" limb2="9" limb1anchor="-30.78856,-45.94465" limb2anchor="64.58987,-5.1" name="Joint 1 - 9" canbesevered="True" limitenabled="True" upperlimit="60" lowerlimit="15" stiffness="0.25" />
-  <joint limb1="0" limb2="15" limb1anchor="82.52718,3.470483" limb2anchor="10.77566,3.398551" name="Joint 0 - 15" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" stiffness="0.25" />
-  <joint limb1="0" limb2="16" limb1anchor="82.52718,3.470483" limb2anchor="10.77566,3.398551" name="Joint 0 - 16" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" stiffness="0.25" />
+  <joint limb1="0" limb2="15" limb1anchor="82.52718,3.470483" limb2anchor="10.77566,3.398551" name="Joint 0 - 15" canbesevered="False" limitenabled="True" upperlimit="0" lowerlimit="0" stiffness="0.25" />
+  <joint limb1="0" limb2="16" limb1anchor="82.52718,3.470483" limb2anchor="10.77566,3.398551" name="Joint 0 - 16" canbesevered="False" limitenabled="True" upperlimit="0" lowerlimit="0" stiffness="0.25" />
 </Ragdoll>

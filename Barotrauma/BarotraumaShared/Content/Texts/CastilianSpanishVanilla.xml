@@ -788,13 +788,21 @@
 <missionheader0.killhammerhead>Objetivo eliminado</missionheader0.killhammerhead>
 <missionmessage0.killhammerhead>El pez ariete ha muerto. Pilota el submarino hasta el exterior de la caverna para cobrar la recompensa.</missionmessage0.killhammerhead>
 <missionname.killcrawlerswarm1>Eliminar una horda</missionname.killcrawlerswarm1>
-<missiondescription.killcrawlerswarm1>Una pequeña horda de [monster] ha estado aterrorizando a las naves que viajan entre [location1] y [location2]. Han prometido una recompensa de [reward] créditos a la tripulación que consiga neutralizarla.</missiondescription.killcrawlerswarm1>
+
+<!--<missiondescription.killcrawlerswarm1>Una pequeña horda de [monster] ha estado aterrorizando a las naves que viajan entre [location1] y [location2]. Han prometido una recompensa de [reward] créditos a la tripulación que consiga neutralizarla.</missiondescription.killcrawlerswarm1>-->
+<!-- Temporary until plural monster names -->
+<missiondescription.killcrawlerswarm1>Una pequeña horda de reptadores ha estado aterrorizando a las naves que viajan entre [location1] y [location2]. Han prometido una recompensa de [reward] créditos a la tripulación que consiga neutralizarla.</missiondescription.killcrawlerswarm1>
+
 <missionsonarlabel.killcrawlerswarm1>Horda</missionsonarlabel.killcrawlerswarm1>
 <missionsuccess.killcrawlerswarm1>La horda ha sido eliminada.</missionsuccess.killcrawlerswarm1>
 <missionheader0.killcrawlerswarm1>Objetivo eliminado</missionheader0.killcrawlerswarm1>
 <missionmessage0.killcrawlerswarm1>Se ha eliminado la horda. Pilota el submarino hasta el exterior de la caverna para cobrar la recompensa.</missionmessage0.killcrawlerswarm1>
 <missionname.killcrawlerswarm2>Eliminar una horda</missionname.killcrawlerswarm2>
-<missiondescription.killcrawlerswarm2>Una gran horda de [monster] ha estado aterrorizando a las naves que viajan entre [location1] y [location2]. Han prometido una recompensa de [reward] créditos a la tripulación que consiga neutralizarla.</missiondescription.killcrawlerswarm2>
+
+<!--<missiondescription.killcrawlerswarm2>Una gran horda de [monster] ha estado aterrorizando a las naves que viajan entre [location1] y [location2]. Han prometido una recompensa de [reward] créditos a la tripulación que consiga neutralizarla.</missiondescription.killcrawlerswarm2>-->
+<!-- Temporary until plural monster names -->
+<missiondescription.killcrawlerswarm2>Una gran horda de reptadores ha estado aterrorizando a las naves que viajan entre [location1] y [location2]. Han prometido una recompensa de [reward] créditos a la tripulación que consiga neutralizarla.</missiondescription.killcrawlerswarm2>
+
 <missionsonarlabel.killcrawlerswarm2>Horda</missionsonarlabel.killcrawlerswarm2>
 <missionsuccess.killcrawlerswarm2>La horda ha sido eliminada.</missionsuccess.killcrawlerswarm2>
 <missionheader0.killcrawlerswarm2>Objetivo eliminado</missionheader0.killcrawlerswarm2>

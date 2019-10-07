@@ -746,10 +746,18 @@ namespace Barotrauma
                     limb.body.ApplyLinearImpulse(limb.Mass * impulse, 10.0f);
                 }
                 c.AnimController.Collider.ApplyLinearImpulse(c.AnimController.Collider.Mass * impulse, 10.0f);
-                //stun for up to 1 second if the impact is 50% or more of the maximum impact
-                if (impact > (MinCollisionImpact + MaxCollisionImpact) / 2.0f)
+
+                bool holdingOntoSomething = false;
+                if (c.SelectedConstruction != null)
                 {
-                    c.SetStun(impulse.Length() * 0.2f);
+                    var controller = c.SelectedConstruction.GetComponent<Items.Components.Controller>();
+                    holdingOntoSomething = controller != null && controller.LimbPositions.Any();
+                }
+
+                //stun for up to 1 second if the impact equal or higher to the maximum impact
+                if (impact >= MaxCollisionImpact && !holdingOntoSomething)
+                {
+                    c.SetStun(Math.Min(impulse.Length() * 0.2f, 1.0f));
                 }
             }
 

@@ -788,13 +788,21 @@
 <missionheader0.killhammerhead>Cel wyeliminowany</missionheader0.killhammerhead>
 <missionmessage0.killhammerhead>Ryba młot nie żyje. Wypłyń okrętem z jaskini, aby odebrać nagrodę.</missionmessage0.killhammerhead>
 <missionname.killcrawlerswarm1>Wybij rój</missionname.killcrawlerswarm1>
-<missiondescription.killcrawlerswarm1>Niewielki rój stworzeń ([monster]) terroryzuje łodzie podróżujące na trasie [location1] – [location2]. Na śmiałków, którzy go wybiją, czeka nagroda w postaci [reward] kredytów.</missiondescription.killcrawlerswarm1>
+
+<!--<missiondescription.killcrawlerswarm1>Niewielki rój stworzeń ([monster]) terroryzuje łodzie podróżujące na trasie [location1] – [location2]. Na śmiałków, którzy go wybiją, czeka nagroda w postaci [reward] kredytów.</missiondescription.killcrawlerswarm1>-->
+<!-- Temporary until plural monster names -->
+<missiondescription.killcrawlerswarm1>Niewielki rój pełzacze terroryzuje łodzie podróżujące na trasie [location1] – [location2]. Na śmiałków, którzy go wybiją, czeka nagroda w postaci [reward] kredytów.</missiondescription.killcrawlerswarm1>
+
 <missionsonarlabel.killcrawlerswarm1>Rój</missionsonarlabel.killcrawlerswarm1>
 <missionsuccess.killcrawlerswarm1>Wybito rój.</missionsuccess.killcrawlerswarm1>
 <missionheader0.killcrawlerswarm1>Cel wyeliminowany</missionheader0.killcrawlerswarm1>
 <missionmessage0.killcrawlerswarm1>Wybito rój. Wypłyń okrętem z jaskini, aby odebrać nagrodę.</missionmessage0.killcrawlerswarm1>
 <missionname.killcrawlerswarm2>Wybij rój</missionname.killcrawlerswarm2>
-<missiondescription.killcrawlerswarm2>Duży rój stworzeń ([monster]) terroryzuje łodzie podróżujące na trasie [location1] – [location2]. Na śmiałków, którzy go wybiją, czeka nagroda w postaci [reward] kredytów.</missiondescription.killcrawlerswarm2>
+
+<!--<missiondescription.killcrawlerswarm2>Duży rój stworzeń ([monster]) terroryzuje łodzie podróżujące na trasie [location1] – [location2]. Na śmiałków, którzy go wybiją, czeka nagroda w postaci [reward] kredytów.</missiondescription.killcrawlerswarm2>-->
+<!-- Temporary until plural monster names -->
+<missiondescription.killcrawlerswarm2>Duży rój pełzacze terroryzuje łodzie podróżujące na trasie [location1] – [location2]. Na śmiałków, którzy go wybiją, czeka nagroda w postaci [reward] kredytów.</missiondescription.killcrawlerswarm2>
+
 <missionsonarlabel.killcrawlerswarm2>Rój</missionsonarlabel.killcrawlerswarm2>
 <missionsuccess.killcrawlerswarm2>Wybito rój.</missionsuccess.killcrawlerswarm2>
 <missionheader0.killcrawlerswarm2>Cel wyeliminowany</missionheader0.killcrawlerswarm2>

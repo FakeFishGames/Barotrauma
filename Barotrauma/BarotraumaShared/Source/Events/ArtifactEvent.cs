@@ -71,7 +71,7 @@ namespace Barotrauma
 
                 var itemContainer = it.GetComponent<Items.Components.ItemContainer>();
                 if (itemContainer == null) continue;
-                if (itemContainer.Combine(item)) break; // Placement successful
+                if (itemContainer.Combine(item, user: null)) break; // Placement successful
             }
 
             if (GameSettings.VerboseLogging)

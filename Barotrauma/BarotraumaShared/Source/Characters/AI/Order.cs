@@ -50,6 +50,7 @@ namespace Barotrauma
 
         public Character OrderGiver;
         
+        //legacy support
         public readonly string[] AppropriateJobs;
         public readonly string[] Options;
         public readonly string[] OptionNames;
@@ -195,8 +196,14 @@ namespace Barotrauma
         
         public bool HasAppropriateJob(Character character)
         {
-            if (AppropriateJobs == null || AppropriateJobs.Length == 0) return true;
-            if (character.Info == null || character.Info.Job == null) return false;
+            if (character.Info == null || character.Info.Job == null) { return false; }
+            if (character.Info.Job.Prefab.AppropriateOrders.Any(appropriateOrderId => Identifier == appropriateOrderId)) { return true; }
+
+            if (!JobPrefab.List.Values.Any(jp => jp.AppropriateOrders.Contains(Identifier)) &&
+                (AppropriateJobs == null || AppropriateJobs.Length == 0))
+            {
+                return true;
+            }
             for (int i = 0; i < AppropriateJobs.Length; i++)
             {
                 if (character.Info.Job.Prefab.Identifier.ToLowerInvariant() == AppropriateJobs[i].ToLowerInvariant()) return true;

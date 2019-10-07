@@ -248,6 +248,7 @@ namespace Barotrauma
         private HashSet<string> selectedContentPackagePaths = new HashSet<string>();
 
         public string MasterServerUrl { get; set; }
+        public string RemoteContentUrl { get; set; }
         public bool AutoCheckUpdates { get; set; }
         public bool WasGameUpdated { get; set; }
 
@@ -454,6 +455,7 @@ namespace Barotrauma
             SetDefaultBindings(doc, legacy: false);
 
             MasterServerUrl = doc.Root.GetAttributeString("masterserverurl", MasterServerUrl);
+            RemoteContentUrl = doc.Root.GetAttributeString("remotecontenturl", RemoteContentUrl);
             WasGameUpdated = doc.Root.GetAttributeBool("wasgameupdated", WasGameUpdated);
             VerboseLogging = doc.Root.GetAttributeBool("verboselogging", VerboseLogging);
             SaveDebugConsoleLogs = doc.Root.GetAttributeBool("savedebugconsolelogs", SaveDebugConsoleLogs);
@@ -484,6 +486,7 @@ namespace Barotrauma
             doc.Root.Add(
                 new XAttribute("language", TextManager.Language),
                 new XAttribute("masterserverurl", MasterServerUrl),
+                new XAttribute("remotecontenturl", RemoteContentUrl),
                 new XAttribute("autocheckupdates", AutoCheckUpdates),
                 new XAttribute("musicvolume", musicVolume),
                 new XAttribute("soundvolume", soundVolume),
@@ -1128,7 +1131,7 @@ namespace Barotrauma
             VoiceSetting = VoiceMode.Disabled;
             VoiceCaptureDevice = null;
             NoiseGateThreshold = -45;
-            windowMode = WindowMode.Fullscreen;
+            windowMode = WindowMode.BorderlessWindowed;
             losMode = LosMode.Transparent;
             useSteamMatchmaking = true;
             requireSteamAuthentication = true;

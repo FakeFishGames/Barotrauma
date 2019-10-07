@@ -400,7 +400,7 @@
     hovercolor="136,153,150,240"
     selectedcolor="117,157,153,255"
     pressedcolor="80,90,88,255">
-    <Sprite texture="Content/UI/CampaignUIAtlas.png" sourcerect="16,741,200,200" tile="false" maintainaspectratio="true"/>
+    <Sprite texture="Content/UI/CampaignUIAtlas.png" sourcerect="2,738,204,204" tile="false" maintainaspectratio="true"/>
   </RepairHullButton>
   
   <RepairItemsButton
@@ -408,8 +408,16 @@
     hovercolor="136,153,150,240"
     selectedcolor="117,157,153,255"
     pressedcolor="80,90,88,255">
-    <Sprite texture="Content/UI/CampaignUIAtlas.png" sourcerect="225,741,200,200" tile="false" maintainaspectratio="true"/>
+    <Sprite texture="Content/UI/CampaignUIAtlas.png" sourcerect="220,738,204,204" tile="false" maintainaspectratio="true"/>
   </RepairItemsButton>
+  
+  <ReplaceShuttlesButton
+    color="105,118,116,240"
+    hovercolor="136,153,150,240"
+    selectedcolor="117,157,153,255"
+    pressedcolor="80,90,88,255">
+    <Sprite texture="Content/UI/CampaignUIAtlas.png" sourcerect="612,738,204,204" tile="false" maintainaspectratio="true"/>
+  </ReplaceShuttlesButton>
   
   <GUIButtonServerListInfo
     color="102,150,175,255"
@@ -1167,27 +1175,27 @@
   </ScanLines>
 
   <TextFrame
-  padding="40.0, 40.0, 40.0, 40.0"
-  color="255,255,255,205"
-  hovercolor="255,255,255,205"
-  selectedcolor="255,255,255,205"
-  textcolor="0,0,0,255">
+    padding="40.0, 40.0, 40.0, 40.0"
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255"
+    textcolor="0,0,0,255">
     <Sprite texture="Content/UI/UI_Atlas2.png" size="0.0, 0.0" sourcerect="96,199,273,166" slice="136,219,326,350"/>
   </TextFrame>
 
   <CheckMark
-  color="255,255,255,255"
-  hovercolor="255,255,255,255"
-  selectedcolor="255,255,255,255"
-  textcolor="0,0,0,255">
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255"
+    textcolor="0,0,0,255">
     <Sprite texture="Content/UI/tutorialAtlas.png" sourcerect="17,173,93,96" tile="false"/>
   </CheckMark>
 
   <Stroke
-  color="255,255,255,255"
-  hovercolor="255,255,255,255"
-  selectedcolor="255,255,255,255"
-  textcolor="0,0,0,255">
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255"
+    textcolor="0,0,0,255">
     <Sprite texture="Content/UI/tutorialAtlas.png" sourcerect="111,214,209,22" tile="false"/>
   </Stroke>
 </style>

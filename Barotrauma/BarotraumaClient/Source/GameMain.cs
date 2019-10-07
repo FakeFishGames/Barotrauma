@@ -172,6 +172,9 @@ namespace Barotrauma
 
             GraphicsDeviceManager = new GraphicsDeviceManager(this);
 
+            GraphicsDeviceManager.IsFullScreen = false;
+            GraphicsDeviceManager.ApplyChanges();
+
             Window.Title = "Barotrauma";
 
             Instance = this;
@@ -926,7 +929,6 @@ namespace Barotrauma
             Config.SaveNewPlayerConfig();
         }
 
-        // ToDo: Move texts/links to localization, when possible.
         public void ShowBugReporter()
         {
             var msgBox = new GUIMessageBox(TextManager.Get("bugreportbutton"), "");

@@ -788,13 +788,21 @@
 <missionheader0.killhammerhead>Цель уничтожена</missionheader0.killhammerhead>
 <missionmessage0.killhammerhead>Молотоглав убит. Выведите подлодку из пещеры, чтобы получить награду.</missionmessage0.killhammerhead>
 <missionname.killcrawlerswarm1>Уничтожение роя</missionname.killcrawlerswarm1>
-<missiondescription.killcrawlerswarm1>Небольшой рой монстров ([monster]) терроризирует суда, следующие по маршруту [location1] - [location2]. Команде, способной нейтрализовать его, полагается достойная награда в размере [reward] кред.</missiondescription.killcrawlerswarm1>
+
+<!--<missiondescription.killcrawlerswarm1>Небольшой рой монстров ([monster]) терроризирует суда, следующие по маршруту [location1] - [location2]. Команде, способной нейтрализовать его, полагается достойная награда в размере [reward] кред.</missiondescription.killcrawlerswarm1>-->
+<!-- Temporary until plural monster names -->
+<missiondescription.killcrawlerswarm1>Небольшой рой ползунов терроризирует суда, следующие по маршруту [location1] - [location2]. Команде, способной нейтрализовать его, полагается достойная награда в размере [reward] кред.</missiondescription.killcrawlerswarm1>
+
 <missionsonarlabel.killcrawlerswarm1>Рой</missionsonarlabel.killcrawlerswarm1>
 <missionsuccess.killcrawlerswarm1>Рой уничтожен</missionsuccess.killcrawlerswarm1>
 <missionheader0.killcrawlerswarm1>Цель уничтожена</missionheader0.killcrawlerswarm1>
 <missionmessage0.killcrawlerswarm1>Рой уничтожен. Выведите подлодку из пещеры, чтобы получить награду.</missionmessage0.killcrawlerswarm1>
 <missionname.killcrawlerswarm2>Уничтожение роя</missionname.killcrawlerswarm2>
-<missiondescription.killcrawlerswarm2>Большой рой монстров ([monster]) терроризирует суда, следующие по маршруту [location1] - [location2]. Команде, способной нейтрализовать его, полагается достойная награда в размере [reward] кред.</missiondescription.killcrawlerswarm2>
+
+<!--<missiondescription.killcrawlerswarm2>Большой рой монстров ([monster]) терроризирует суда, следующие по маршруту [location1] - [location2]. Команде, способной нейтрализовать его, полагается достойная награда в размере [reward] кред.</missiondescription.killcrawlerswarm2>-->
+<!-- Temporary until plural monster names -->
+<missiondescription.killcrawlerswarm2>Большой рой ползунов терроризирует суда, следующие по маршруту [location1] - [location2]. Команде, способной нейтрализовать его, полагается достойная награда в размере [reward] кред.</missiondescription.killcrawlerswarm2>
+
 <missionsonarlabel.killcrawlerswarm2>Рой</missionsonarlabel.killcrawlerswarm2>
 <missionsuccess.killcrawlerswarm2>Рой уничтожен.</missionsuccess.killcrawlerswarm2>
 <missionheader0.killcrawlerswarm2>Цель уничтожена</missionheader0.killcrawlerswarm2>

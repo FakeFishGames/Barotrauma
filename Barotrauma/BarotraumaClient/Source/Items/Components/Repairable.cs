@@ -187,7 +187,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool editing)
+        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
         {
             if (GameMain.DebugDraw && Character.Controlled?.FocusedItem == item)
             {

@@ -113,7 +113,13 @@ namespace Barotrauma
             if (item == null) return null;
 
             var container = item.GetComponent<ItemContainer>();
-            if (container == null || !container.KeepOpenWhenEquipped || !character.HasEquippedItem(container.Item)) return null;
+            if (container == null || 
+                !character.CanAccessInventory(container.Inventory) ||
+                !container.KeepOpenWhenEquipped || 
+                !character.HasEquippedItem(container.Item))
+            {
+                return null;
+            }
 
             return container.Inventory;
         }
@@ -479,7 +485,7 @@ namespace Barotrauma
             List<SlotReference> hideSubInventories = new List<SlotReference>();
             highlightedSubInventorySlots.RemoveWhere(s => 
                 s.ParentInventory == this &&
-                (s.SlotIndex < 0 || s.SlotIndex >= Items.Length || Items[s.SlotIndex] == null));
+                ((s.SlotIndex < 0 || s.SlotIndex >= Items.Length || Items[s.SlotIndex] == null) || !character.CanAccessInventory(s.Inventory)));
             foreach (var highlightedSubInventorySlot in highlightedSubInventorySlots)
             {
                 if (highlightedSubInventorySlot.ParentInventory == this)
@@ -535,7 +541,10 @@ namespace Barotrauma
                         if (character.HasEquippedItem(item)) // Keep a subinventory display open permanently when the container is equipped
                         {
                             var itemContainer = item.GetComponent<ItemContainer>();
-                            if (itemContainer != null && itemContainer.KeepOpenWhenEquipped && !highlightedSubInventorySlots.Any(s => s.Inventory == itemContainer.Inventory))
+                            if (itemContainer != null && 
+                                itemContainer.KeepOpenWhenEquipped && 
+                                character.CanAccessInventory(itemContainer.Inventory) &&
+                                !highlightedSubInventorySlots.Any(s => s.Inventory == itemContainer.Inventory))
                             {
                                 ShowSubInventory(new SlotReference(this, slots[i], i, false, itemContainer.Inventory), deltaTime, cam, hideSubInventories, true);
                             }

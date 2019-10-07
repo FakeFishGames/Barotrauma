@@ -305,12 +305,6 @@ namespace Barotrauma
 
         public static Stream DecompressFiletoStream(string fileName)
         {
-            if (!File.Exists(fileName))
-            {
-                DebugConsole.ThrowError("File \"" + fileName + " doesn't exist!");
-                return null;
-            }
-
             using (FileStream originalFileStream = new FileStream(fileName, FileMode.Open))
             {
                 MemoryStream decompressedFileStream = new MemoryStream();
