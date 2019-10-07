@@ -281,7 +281,8 @@ namespace Barotrauma
             textBox = new GUITextBox(new RectTransform(new Point(paddedChatFrame.Rect.Width, 20), paddedChatFrame.RectTransform, Anchor.BottomLeft) { IsFixedSize = false })
             {
                 MaxTextLength = ChatMessage.MaxLength,
-                Font = GUI.SmallFont
+                Font = GUI.SmallFont,
+                DeselectAfterMessage = false
             };
 
             textBox.OnEnterPressed = (tb, userdata) => { GameMain.Client?.EnterChatMessage(tb, userdata); return true; };

@@ -2222,7 +2222,11 @@ namespace Barotrauma.Networking
 
             SendChatMessage(message);
 
-            textBox.Deselect();
+            if (textBox.DeselectAfterMessage)
+            {
+                textBox.Deselect();
+            }
+
             textBox.Text = "";
 
             return true;

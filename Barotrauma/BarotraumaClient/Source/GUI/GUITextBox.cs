@@ -38,6 +38,7 @@ namespace Barotrauma
 
         public bool CaretEnabled { get; set; }
         public Color? CaretColor { get; set; }
+        public bool DeselectAfterMessage = true;
 
         private int? maxTextLength;
 
