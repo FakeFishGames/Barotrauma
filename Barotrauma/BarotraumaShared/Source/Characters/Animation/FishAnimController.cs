@@ -151,8 +151,9 @@ namespace Barotrauma
                     deathAnimTimer += deltaTime;
                     UpdateDying(deltaTime);
                 }
-                if (CanEnterSubmarine && currentHull != null && CurrentGroundedParams == null)
+                else if (CanEnterSubmarine && !InWater && CurrentGroundedParams == null && character.AllowInput)
                 {
+                    //cannot walk but on dry land -> wiggle around
                     UpdateDying(deltaTime);
                 }
                 return;
@@ -691,15 +692,16 @@ namespace Barotrauma
 
         void UpdateDying(float deltaTime)
         {
-            if (deathAnimDuration <= 0.0f) return;
+            if (deathAnimDuration <= 0.0f) { return; }
 
+            float noise = (PerlinNoise.GetPerlin(WalkPos * 0.002f, WalkPos * 0.003f) - 0.5f) * 5.0f;
             float animStrength = (1.0f - deathAnimTimer / deathAnimDuration);
 
             Limb head = GetLimb(LimbType.Head);
             Limb tail = GetLimb(LimbType.Tail);
 
-            if (head != null && !head.IsSevered) head.body.ApplyTorque((float)(Math.Sqrt(head.Mass) * Dir * Math.Sin(WalkPos)) * 30.0f * animStrength);
-            if (tail != null && !tail.IsSevered) tail.body.ApplyTorque((float)(Math.Sqrt(tail.Mass) * -Dir * Math.Sin(WalkPos)) * 30.0f * animStrength);
+            if (head != null && !head.IsSevered) head.body.ApplyTorque((float)(Math.Sqrt(head.Mass) * Dir * (Math.Sin(WalkPos) + noise)) * 30.0f * animStrength);
+            if (tail != null && !tail.IsSevered) tail.body.ApplyTorque((float)(Math.Sqrt(tail.Mass) * -Dir * (Math.Sin(WalkPos) + noise)) * 30.0f * animStrength);
 
             WalkPos += deltaTime * 10.0f * animStrength;
 

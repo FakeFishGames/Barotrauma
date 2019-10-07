@@ -267,7 +267,7 @@ namespace Barotrauma
             get
             {
                 if (!AllowInput) { return false; }
-                if (AnimController.CanEnterSubmarine && CurrentHull != null && AnimController.CurrentGroundedParams == null) { return false; }
+                if (AnimController.CanEnterSubmarine && !AnimController.InWater && AnimController.CurrentGroundedParams == null) { return false; }
                 return true;
             }
         }

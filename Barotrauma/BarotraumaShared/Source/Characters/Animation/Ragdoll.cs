@@ -1090,8 +1090,11 @@ namespace Barotrauma
                             if (lowerHull != null) floorY = ConvertUnits.ToSimUnits(lowerHull.Rect.Y - lowerHull.Rect.Height);
                         }
                     }
-                    if (HeadPosition.HasValue &&
-                        Collider.SimPosition.Y < waterSurface && waterSurface - floorY > HeadPosition * 0.95f)
+                    float standHeight = 
+                        HeadPosition.HasValue ? HeadPosition.Value :
+                        TorsoPosition.HasValue ? TorsoPosition.Value :
+                        Collider.GetMaxExtent() * 0.5f;
+                    if (Collider.SimPosition.Y < waterSurface && waterSurface - floorY > standHeight * 0.95f)
                     {
                         inWater = true;
                     }
