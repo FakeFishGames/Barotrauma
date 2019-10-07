@@ -145,6 +145,7 @@ namespace Barotrauma
                     Collider.FarseerBody.FixedRotation = false;
                     Collider.LinearVelocity = MainLimb.LinearVelocity;
                     Collider.SetTransformIgnoreContacts(MainLimb.SimPosition, MainLimb.Rotation);
+                    ResetPullJoints();
                 }
                 if (character.IsDead && deathAnimTimer < deathAnimDuration)
                 {

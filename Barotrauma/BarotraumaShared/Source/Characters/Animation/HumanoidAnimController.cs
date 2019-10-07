@@ -352,6 +352,7 @@ namespace Barotrauma
                     Collider.Enabled = false;
                     Collider.LinearVelocity = MainLimb.LinearVelocity;
                     Collider.SetTransformIgnoreContacts(MainLimb.SimPosition, MainLimb.Rotation);
+                    ResetPullJoints();
                 }
                 return;
             }
