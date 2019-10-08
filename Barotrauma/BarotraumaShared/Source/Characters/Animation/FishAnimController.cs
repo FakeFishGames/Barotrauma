@@ -781,7 +781,7 @@ namespace Barotrauma
             foreach (Limb l in Limbs)
             {
                 if (!l.DoesFlip) continue;
-                l.body.SetTransform(l.SimPosition, -l.body.Rotation);                
+                l.body.SetTransform(l.SimPosition, -l.body.Rotation + MathHelper.ToRadians(l.Params.GetSpriteOrientation()));                
             }
         }
 
