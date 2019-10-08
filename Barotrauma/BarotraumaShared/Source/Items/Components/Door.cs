@@ -279,7 +279,7 @@ namespace Barotrauma.Items.Components
 #endif
                 }
             }
-            return item.Condition <= RepairThreshold;
+            return false;
         }
 
         public override void Update(float deltaTime, Camera cam)
