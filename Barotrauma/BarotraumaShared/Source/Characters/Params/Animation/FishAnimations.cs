@@ -167,6 +167,9 @@ namespace Barotrauma
         [Serialize(50.0f, true, description: "How much torque is used to rotate the tail to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 500)]
         public float TailTorque { get; set; }
 
+        [Serialize(1f, true, description: "Multiplier applied based on the angle difference between the tail and the main limb. Increasing the value prevents snake-like characters from getting tangled on themselves. Default = 1 (no boost)"), Editable(MinValueFloat = 1, MaxValueFloat = 100)]
+        public float TailTorqueMultiplier { get; set; }
+
         [Serialize(25.0f, true, description: "How much torque is used to rotate the feet to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 500)]
         public float FootTorque { get; set; }
 

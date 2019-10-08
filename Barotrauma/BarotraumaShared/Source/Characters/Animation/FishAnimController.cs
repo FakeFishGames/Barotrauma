@@ -451,11 +451,12 @@ namespace Barotrauma
                             mainLimbTargetAngle = HeadAngle;
                         }
                         float torque = TailTorque;
-                        if (mainLimbTargetAngle.HasValue)
+                        float maxMultiplier = CurrentSwimParams.TailTorqueMultiplier;
+                        if (mainLimbTargetAngle.HasValue && maxMultiplier > 1)
                         {
                             float diff = Math.Abs(mainLimb.Rotation - tail.Rotation);
                             float offset = Math.Abs(mainLimbTargetAngle.Value - TailAngle.Value);
-                            torque *= MathHelper.Lerp(1, 10, MathUtils.InverseLerp(0, MathHelper.PiOver2, diff - offset));
+                            torque *= MathHelper.Lerp(1, maxMultiplier, MathUtils.InverseLerp(0, MathHelper.PiOver2, diff - offset));
                         }
                         SmoothRotateWithoutWrapping(tail, movementAngle + TailAngle.Value * Dir, mainLimb, torque);
                     }
