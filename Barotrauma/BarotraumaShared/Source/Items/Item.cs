@@ -2134,18 +2134,30 @@ namespace Barotrauma
                 }
             }
 
-            List<ItemComponent> unloadedComponents = new List<ItemComponent>(item.components);
-            foreach (XElement subElement in element.Elements())
-            {
-                ItemComponent component = unloadedComponents.Find(x => x.Name == subElement.Name.ToString());
-                if (component == null) { continue; }
+            bool thisIsOverride = element.GetAttributeBool("isoverride", false);
 
-                component.Load(subElement);
-                unloadedComponents.Remove(component);
+            //if we're overriding a non-overridden item in a sub/assembly xml or vice versa, 
+            //use the values from the prefab instead of loading them from the sub/assembly xml
+            if (thisIsOverride == prefab.IsOverride)
+            {
+                List<ItemComponent> unloadedComponents = new List<ItemComponent>(item.components);
+                foreach (XElement subElement in element.Elements())
+                {
+                    ItemComponent component = unloadedComponents.Find(x => x.Name == subElement.Name.ToString());
+                    if (component == null) { continue; }
+
+                    component.Load(subElement);
+                    unloadedComponents.Remove(component);
+                }
+            }
+            else
+            {
+                //use prefab scale when overriding a non-overridden item or vice versa
+                item.Scale = prefab.ConfigElement.GetAttributeFloat(item.scale, "scale", "Scale");
             }
 
-            if (element.GetAttributeBool("flippedx", false)) item.FlipX(false);
-            if (element.GetAttributeBool("flippedy", false)) item.FlipY(false);
+            if (element.GetAttributeBool("flippedx", false)) { item.FlipX(false); }
+            if (element.GetAttributeBool("flippedy", false)) { item.FlipY(false); }
 
             float condition = element.GetAttributeFloat("condition", item.MaxCondition);
             item.condition = MathHelper.Clamp(condition, 0, item.MaxCondition);
@@ -2175,8 +2187,9 @@ namespace Barotrauma
                 new XAttribute("identifier", Prefab.Identifier),
                 new XAttribute("ID", ID));
 
-            if (FlippedX) element.Add(new XAttribute("flippedx", true));
-            if (FlippedY) element.Add(new XAttribute("flippedy", true));
+            if (Prefab.IsOverride) { element.Add(new XAttribute("isoverride", "true")); }
+            if (FlippedX) { element.Add(new XAttribute("flippedx", true)); }
+            if (FlippedY) { element.Add(new XAttribute("flippedy", true)); }
 
             if (condition < Prefab.Health)
             {
