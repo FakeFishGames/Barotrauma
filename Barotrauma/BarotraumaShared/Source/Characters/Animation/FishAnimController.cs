@@ -493,7 +493,7 @@ namespace Barotrauma
             }
 
             var waveLength = Math.Abs(CurrentSwimParams.WaveLength * RagdollParams.JointScale);
-            var waveAmplitude = Math.Abs(CurrentSwimParams.WaveAmplitude);
+            var waveAmplitude = Math.Abs(CurrentSwimParams.WaveAmplitude * 100);
             if (waveLength > 0 && waveAmplitude > 0)
             {
                 WalkPos -= transformedMovement.Length() / Math.Abs(waveLength);
@@ -515,7 +515,7 @@ namespace Barotrauma
                         if (waveLength > 0 && waveAmplitude > 0)
                         {
                             float waveRotation = (float)Math.Sin(WalkPos);
-                            limb.body.ApplyTorque(waveRotation * limb.Mass * CurrentSwimParams.TailTorque * waveAmplitude);
+                            limb.body.ApplyTorque(waveRotation * limb.Mass * waveAmplitude);
                         }
                         break;
                 }
