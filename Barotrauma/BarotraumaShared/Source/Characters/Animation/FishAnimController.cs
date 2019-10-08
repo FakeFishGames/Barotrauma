@@ -495,7 +495,7 @@ namespace Barotrauma
             }
 
             var waveLength = Math.Abs(CurrentSwimParams.WaveLength * RagdollParams.JointScale);
-            var waveAmplitude = Math.Abs(CurrentSwimParams.WaveAmplitude * 100);
+            var waveAmplitude = Math.Abs(CurrentSwimParams.WaveAmplitude);
             if (waveLength > 0 && waveAmplitude > 0)
             {
                 WalkPos -= transformedMovement.Length() / Math.Abs(waveLength);

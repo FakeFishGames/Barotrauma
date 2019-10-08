@@ -149,7 +149,7 @@ namespace Barotrauma
         [Editable, Serialize(true, true, description: "If enabled, the character will simply be mirrored horizontally when it wants to turn around. If disabled, it will rotate itself to face the other direction.")]
         public bool Mirror { get; set; }
 
-        [Serialize(1f, true), Editable]
+        [Serialize(5f, true), Editable]
         public float WaveAmplitude { get; set; }
 
         [Serialize(10.0f, true), Editable]

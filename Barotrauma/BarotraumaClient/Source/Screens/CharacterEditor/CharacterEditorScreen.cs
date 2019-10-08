@@ -4103,7 +4103,7 @@ namespace Barotrauma.CharacterEditor
             // Fish swim only -->
             else if (tail != null && fishSwimParams != null)
             {
-                float amplitudeMultiplier = 0.5f;
+                float amplitudeMultiplier = 20;
                 float lengthMultiplier = 20;
                 int points = 1000;
                 float GetAmplitude() => ConvertUnits.ToDisplayUnits(fishSwimParams.WaveAmplitude) * Cam.Zoom / amplitudeMultiplier;
@@ -4120,7 +4120,7 @@ namespace Barotrauma.CharacterEditor
                     w.MouseHeld += dTime =>
                     {
                         float input = Vector2.Multiply(ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed), GetScreenSpaceForward()).Combine() / Cam.Zoom * lengthMultiplier;
-                        TryUpdateAnimParam("wavelength", MathHelper.Clamp(fishSwimParams.WaveLength - input, 0, 150));
+                        TryUpdateAnimParam("wavelength", MathHelper.Clamp(fishSwimParams.WaveLength - input, 0, 200));
                     };
                     // Additional
                     w.PreDraw += (sp, dTime) =>
@@ -4138,7 +4138,7 @@ namespace Barotrauma.CharacterEditor
                     w.MouseHeld += dTime =>
                     {
                         float input = Vector2.Multiply(ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed), GetScreenSpaceForward().Right()).Combine() * character.AnimController.Dir / Cam.Zoom * amplitudeMultiplier;
-                        TryUpdateAnimParam("waveamplitude", MathHelper.Clamp(fishSwimParams.WaveAmplitude + input, -4, 4));
+                        TryUpdateAnimParam("waveamplitude", MathHelper.Clamp(fishSwimParams.WaveAmplitude + input, -100, 100));
                     };
                     // Additional
                     w.PreDraw += (sp, dTime) =>

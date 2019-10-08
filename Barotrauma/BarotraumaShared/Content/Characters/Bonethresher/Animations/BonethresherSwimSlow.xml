@@ -3,8 +3,8 @@
   usesinemovement="False"
   flip="True"
   mirror="True"
-  waveamplitude="0.2445261"
-  wavelength="46.15984"
+  waveamplitude="8.838274"
+  wavelength="95.45869"
   rotatetowardsmovement="True"
   torsotorque="50"
   headtorque="70"
@@ -17,4 +17,5 @@
   cyclespeed="1"
   headangle="90"
   torsoangle="90"
-  type="Tigerthresherbone" />
+  type="Tigerthresherbone"
+  tailtorquemultiplier="1" />
