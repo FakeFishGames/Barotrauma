@@ -1,6 +1,6 @@
 ﻿<Ragdoll type="Tigerthresher" canentersubmarine="True" canwalk="False" spritesheetorientation="270" limbscale="0.7004001" jointscale="0.7004001" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" draggable="True" texture="">
   <collider radius="50" width="0" name="Main Collider" height="100" />
-  <limb id="0" name="Head" type="Head" height="0" width="50" notes="" spriteorientation="90" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="3" stepoffset="0,0" radius="30" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7" mouthpos="1.2,-0.5">
+  <limb id="0" name="Head" type="Head" height="0" width="50" notes="" spriteorientation="90" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="20" stepoffset="0,0" radius="30" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7" mouthpos="1.2,-0.5">
     <deformablesprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="763,0,140,86" origin="0.455141,0.4293179" depth="0" />
     <lightsource color="215,255,220,110" range="300">
       <lighttexture texture="Content/Lights/pointlight_falloff.png" origin="0.5,0.5" size="1,1" />
@@ -11,7 +11,7 @@
       <affliction identifier="stun" strength="0.5" probability="1" />
     </attack>
   </limb>
-  <limb id="1" name="Neck" type="None" height="70" width="90" notes="" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="1" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="1" ignorecollisions="False" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7" mouthpos="0,0">
+  <limb id="1" name="Neck" type="None" height="70" width="90" notes="" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="1" ignorecollisions="False" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7" mouthpos="0,0">
     <deformablesprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="655,0,105,131" origin="0.4171119,0.5004655" depth="0.05" subdivisions="5,5">
       <spritedeformation type="bendjoint" resolution="5,5" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="20" strength="1" />
     </deformablesprite>
