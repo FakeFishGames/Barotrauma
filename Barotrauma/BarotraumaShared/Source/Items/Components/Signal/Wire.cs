@@ -674,9 +674,9 @@ namespace Barotrauma.Items.Components
             UpdateSections();
         }
 
-        public override void Load(XElement componentElement)
+        public override void Load(XElement componentElement, bool usePrefabValues)
         {
-            base.Load(componentElement);
+            base.Load(componentElement, usePrefabValues);
 
             string nodeString = componentElement.GetAttributeString("nodes", "");
             if (nodeString == "") return;

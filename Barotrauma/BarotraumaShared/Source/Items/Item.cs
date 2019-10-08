@@ -2138,19 +2138,16 @@ namespace Barotrauma
 
             //if we're overriding a non-overridden item in a sub/assembly xml or vice versa, 
             //use the values from the prefab instead of loading them from the sub/assembly xml
-            if (thisIsOverride == prefab.IsOverride)
+            bool usePrefabValues = thisIsOverride == prefab.IsOverride;
+            List<ItemComponent> unloadedComponents = new List<ItemComponent>(item.components);
+            foreach (XElement subElement in element.Elements())
             {
-                List<ItemComponent> unloadedComponents = new List<ItemComponent>(item.components);
-                foreach (XElement subElement in element.Elements())
-                {
-                    ItemComponent component = unloadedComponents.Find(x => x.Name == subElement.Name.ToString());
-                    if (component == null) { continue; }
-
-                    component.Load(subElement);
-                    unloadedComponents.Remove(component);
-                }
-            }
-            else
+                ItemComponent component = unloadedComponents.Find(x => x.Name == subElement.Name.ToString());
+                if (component == null) { continue; }
+                component.Load(subElement, usePrefabValues);
+                unloadedComponents.Remove(component);
+            }            
+            if (!usePrefabValues)
             {
                 //use prefab scale when overriding a non-overridden item or vice versa
                 item.Scale = prefab.ConfigElement.GetAttributeFloat(item.scale, "scale", "Scale");
