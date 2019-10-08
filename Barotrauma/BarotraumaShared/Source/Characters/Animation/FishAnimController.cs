@@ -440,7 +440,23 @@ namespace Barotrauma
                     Limb tail = GetLimb(LimbType.Tail);
                     if (tail != null)
                     {
-                        SmoothRotateWithoutWrapping(tail, movementAngle + TailAngle.Value * Dir, MainLimb, TailTorque);
+                        float? mainLimbTargetAngle = null;
+                        if (MainLimb.type == LimbType.Torso)
+                        {
+                            mainLimbTargetAngle = TorsoAngle;
+                        }
+                        else if (MainLimb.type == LimbType.Head)
+                        {
+                            mainLimbTargetAngle = HeadAngle;
+                        }
+                        float torque = TailTorque;
+                        if (mainLimbTargetAngle.HasValue)
+                        {
+                            float diff = Math.Abs(MainLimb.Rotation - tail.Rotation);
+                            float offset = Math.Abs(mainLimbTargetAngle.Value - TailAngle.Value);
+                            torque *= MathHelper.Lerp(1, 10, MathUtils.InverseLerp(0, MathHelper.PiOver2, diff - offset));
+                        }
+                        SmoothRotateWithoutWrapping(tail, movementAngle + TailAngle.Value * Dir, MainLimb, torque);
                     }
                 }
             }
