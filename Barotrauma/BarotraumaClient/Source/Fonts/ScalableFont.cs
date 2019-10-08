@@ -63,6 +63,46 @@ namespace Barotrauma
             public Rectangle texCoords;
         }
 
+        public class ColorData
+        {
+            public int StartIndex, EndIndex;
+            public Color Color;
+
+            public static List<ColorData> GetColorData(string text, out string sanitizedText)
+            {
+                List<ColorData> textColors = null;
+                if (text.IndexOf('{') != -1 && text.Contains("{color:"))
+                {
+                    string colorDefinitionStartString = "{color:";
+                    char colorDefinitionEndChar = '}';
+                    string coloringEndDefinition = "{color:end}";
+
+                    textColors = new List<ColorData>();
+
+                    while (text.IndexOf(colorDefinitionStartString) != -1)
+                    {
+                        ColorData colorData = new ColorData();
+
+                        int colorDefinitionStartIndex = text.IndexOf(colorDefinitionStartString);
+                        int colorDefinitionEndIndex = text.IndexOf(colorDefinitionEndChar, colorDefinitionStartIndex);
+
+                        string[] colorDefinition = text.Substring(colorDefinitionStartIndex + colorDefinitionStartString.Length, colorDefinitionEndIndex - colorDefinitionStartIndex - colorDefinitionStartString.Length).Split(',');
+
+                        colorData.StartIndex = colorDefinitionStartIndex;
+                        colorData.Color = new Color(int.Parse(colorDefinition[0]), int.Parse(colorDefinition[1]), int.Parse(colorDefinition[2]));
+                        text = text.Remove(colorDefinitionStartIndex, colorDefinitionEndIndex - colorDefinitionStartIndex + 1);
+                        colorData.EndIndex = text.IndexOf(coloringEndDefinition);
+                        text = text.Remove(colorData.EndIndex, coloringEndDefinition.Length);
+
+                        textColors.Add(colorData);
+                    }
+                }
+
+                sanitizedText = text;
+                return textColors;
+            }
+        }
+
         public ScalableFont(XElement element, GraphicsDevice gd = null)
             : this(
                 element.GetAttributeString("file", ""),
@@ -416,7 +456,76 @@ namespace Barotrauma
                 }
             }
         }
-    
+
+        public void DrawStringWithColors(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, SpriteEffects se, float layerDepth, List<ColorData> colorData)
+        {
+            DrawStringWithColors(sb, text, position, color, rotation, origin, new Vector2(scale), se, layerDepth, colorData);
+        }
+
+        public void DrawStringWithColors(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects se, float layerDepth, List<ColorData> colorData)
+        {
+            if (textures.Count == 0 && !DynamicLoading) { return; }
+
+            for (int i = 0; i < colorData.Count; i++)
+            {
+                DebugConsole.NewMessage("Color: " + colorData[i].Color);
+                DebugConsole.NewMessage("start: " + colorData[i].StartIndex);
+                DebugConsole.NewMessage("end: " + colorData[i].EndIndex);
+            }
+
+            int lineNum = 0;
+            Vector2 currentPos = position;
+            Vector2 advanceUnit = rotation == 0.0f ? Vector2.UnitX : new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation));
+
+            int colorDataIndex = 0;
+            ColorData currentColorData = colorData[colorDataIndex];
+
+            for (int i = 0; i < text.Length; i++)
+            {
+                if (text[i] == '\n')
+                {
+                    lineNum++;
+                    currentPos = position;
+                    currentPos.X -= baseHeight * 1.8f * lineNum * advanceUnit.Y * scale.Y;
+                    currentPos.Y += baseHeight * 1.8f * lineNum * advanceUnit.X * scale.Y;
+                    continue;
+                }
+
+                uint charIndex = text[i];
+                if (DynamicLoading && !texCoords.ContainsKey(charIndex))
+                {
+                    DynamicRenderAtlas(graphicsDevice, charIndex);
+                }
+
+                Color currentTextColor;
+
+                if (i >= currentColorData.EndIndex)
+                {
+                    colorDataIndex++;
+                    currentColorData = colorDataIndex < colorData.Count ? colorData[colorDataIndex] : null;
+                }
+
+                if (currentColorData != null && currentColorData.StartIndex <= i && i < currentColorData.EndIndex)
+                {
+                    currentTextColor = currentColorData.Color;
+                }
+                else
+                {
+                    currentTextColor = color;
+                }
+
+                if (texCoords.TryGetValue(charIndex, out GlyphData gd) || texCoords.TryGetValue(9633, out gd)) //9633 = white square
+                {
+                    if (gd.texIndex >= 0)
+                    {
+                        Texture2D tex = textures[gd.texIndex];
+                        sb.Draw(tex, currentPos + gd.drawOffset, gd.texCoords, currentTextColor);
+                    }
+                    currentPos.X += gd.advance;
+                }
+            }
+        }
+
         public Vector2 MeasureString(string text)
         {
             if (text == null)
