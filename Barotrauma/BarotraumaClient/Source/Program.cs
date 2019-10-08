@@ -9,8 +9,7 @@ using Barotrauma.Steam;
 using System.Diagnostics;
 
 #if WINDOWS
-using System.Windows.Forms;
-using Microsoft.Xna.Framework.Graphics;
+using SharpDX;
 #endif
 
 #endregion
@@ -50,11 +49,9 @@ namespace Barotrauma
                 }
                 catch (Exception e2)
                 {
-#if WINDOWS
                     CrashMessageBox("Barotrauma seems to have crashed, and failed to generate a crash report: "
                         + e2.Message + "\n" + e2.StackTrace.ToString(),
-                        "Failed to generate crash report!");
-#endif
+                        null);
                 }
                 game?.Dispose();
                 return;
@@ -64,12 +61,10 @@ namespace Barotrauma
 
         public static void CrashMessageBox(string message, string filePath)
         {
-#if WINDOWS
-            MessageBox.Show(message, "Oops! Barotrauma just crashed.", MessageBoxButtons.OK, MessageBoxIcon.Error);
-#endif
+            Microsoft.Xna.Framework.MessageBox.ShowWrapped(Microsoft.Xna.Framework.MessageBox.Flags.Error, "Oops! Barotrauma just crashed.", message);
 
             // Open the crash log.
-            Process.Start(filePath);
+            if (!string.IsNullOrWhiteSpace(filePath)) { Process.Start(filePath); }
         }
 
         static void CrashDump(GameMain game, string filePath, Exception exception)
@@ -169,10 +164,18 @@ namespace Barotrauma
 
             sb.AppendLine("\n");
             sb.AppendLine("Exception: " + exception.Message);
+#if WINDOWS
+            if (exception is SharpDXException sharpDxException && ((uint)sharpDxException.HResult) == 0x887A0005)
+            {
+                var dxDevice = (SharpDX.Direct3D11.Device)game.GraphicsDevice.Handle;
+                sb.AppendLine("Device removed reason: " + dxDevice.DeviceRemovedReason.ToString());
+            }
+#endif
             if (exception.TargetSite != null)
             {
                 sb.AppendLine("Target site: " + exception.TargetSite.ToString());
             }
+
             sb.AppendLine("Stack trace: ");
             sb.AppendLine(exception.StackTrace);
             sb.AppendLine("\n");
