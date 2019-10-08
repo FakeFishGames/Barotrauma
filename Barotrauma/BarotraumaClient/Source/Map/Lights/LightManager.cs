@@ -315,8 +315,7 @@ namespace Barotrauma.Lights
                 }
             }
             spriteBatch.End();
-            graphics.BlendState = BlendState.Additive;
-			
+            
             DeformableSprite.Effect.CurrentTechnique = DeformableSprite.Effect.Techniques["DeformShaderSolidColor"];
             DeformableSprite.Effect.Parameters["solidColor"].SetValue(Color.Black.ToVector4());
             DeformableSprite.Effect.CurrentTechnique.Passes[0].Apply();
@@ -333,7 +332,8 @@ namespace Barotrauma.Lights
             }
             spriteBatch.End();
             DeformableSprite.Effect.CurrentTechnique = DeformableSprite.Effect.Techniques["DeformShader"];
-            
+            graphics.BlendState = BlendState.Additive;
+
             //draw the actual light volumes, additive particles, hull ambient lights and the halo around the player
             //---------------------------------------------------------------------------------------------------
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, transformMatrix: spriteBatchTransform);
