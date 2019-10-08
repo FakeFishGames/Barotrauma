@@ -1923,10 +1923,14 @@ namespace Barotrauma
 
             commands.Add(new Command("pause", "Toggles the pause state when playing offline", (string[] args) =>
             {
-                if (GameMain.NetworkMember == null || GameMain.NetworkMember.GameStarted)
+                if (GameMain.NetworkMember == null)
                 {
                     Paused = !Paused;
                     DebugConsole.NewMessage("Game paused: " + Paused);
+                }
+                else
+                {
+                    DebugConsole.NewMessage("Cannot pause when a multiplayer session is active.");
                 }
             }));
         }
