@@ -926,14 +926,14 @@ namespace Barotrauma.CharacterEditor
                             {
                                 UpdateOtherLimbs(lastLimb, l => TryUpdateSubParam(l.Params, "spriteorientation", angle));
                             }
-                        }, circleRadius: 40, widgetSize: 15, rotationOffset: MathHelper.Pi, autoFreeze: false);
+                        }, circleRadius: 40, widgetSize: 15, rotationOffset: MathHelper.Pi, autoFreeze: false, rounding: 10);
                 }
                 else
                 {
                     var topLeft = spriteSheetControls.RectTransform.TopLeft;
                     GUI.DrawString(spriteBatch, new Vector2(topLeft.X + 350 * GUI.xScale, GameMain.GraphicsHeight - 95 * GUI.yScale), GetCharacterEditorTranslation("SpriteSheetOrientation") + ":", Color.White, Color.Gray * 0.5f, 10, GUI.Font);
                     DrawRadialWidget(spriteBatch, new Vector2(topLeft.X + 560 * GUI.xScale, GameMain.GraphicsHeight - 75 * GUI.yScale), RagdollParams.SpritesheetOrientation, string.Empty, Color.White,
-                        angle => TryUpdateRagdollParam("spritesheetorientation", angle), circleRadius: 40, widgetSize: 15, rotationOffset: MathHelper.Pi, autoFreeze: false);
+                        angle => TryUpdateRagdollParam("spritesheetorientation", angle), circleRadius: 40, widgetSize: 15, rotationOffset: MathHelper.Pi, autoFreeze: false, rounding: 10);
                 }
             }
             // Debug
@@ -5176,7 +5176,7 @@ namespace Barotrauma.CharacterEditor
 
         #region Widgets as methods
         private void DrawRadialWidget(SpriteBatch spriteBatch, Vector2 drawPos, float value, string toolTip, Color color, Action<float> onClick,
-            float circleRadius = 30, int widgetSize = 10, float rotationOffset = 0, bool clockWise = true, bool displayAngle = true, bool? autoFreeze = null, bool wrapAnglePi = false, bool holdPosition = false)
+            float circleRadius = 30, int widgetSize = 10, float rotationOffset = 0, bool clockWise = true, bool displayAngle = true, bool? autoFreeze = null, bool wrapAnglePi = false, bool holdPosition = false, int rounding = 1)
         {
             var angle = value;
             if (!MathUtils.IsValid(angle))
@@ -5195,6 +5195,8 @@ namespace Barotrauma.CharacterEditor
                     ? MathUtils.VectorToAngle(d) - MathHelper.PiOver2 + rotationOffset
                     : -MathUtils.VectorToAngle(d) + MathHelper.PiOver2 - rotationOffset;
                 angle = MathHelper.ToDegrees(wrapAnglePi ? MathUtils.WrapAnglePi(newAngle) : MathUtils.WrapAngleTwoPi(newAngle));
+                angle = (float)Math.Round(angle / rounding) * rounding;
+                if (angle >= 360 || angle <= -360) { angle = 0; }
                 if (displayAngle)
                 {
                     GUI.DrawString(spriteBatch, drawPos, angle.FormatZeroDecimal(), Color.Black, backgroundColor: color, font: GUI.SmallFont);
