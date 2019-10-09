@@ -5,7 +5,7 @@ v0.9.402.0 (test build)
 TODO: merge this with the 0.9.4.0 changelog for the actual release, many of these are fixes for issues
 that were introduced in v0.9.4.0.
 
-- Potential fix to DXGI_ERROR crashes on startup.
+- Improved logging for DXGI_ERROR crashes on startup.
 - Fixed docking interface becoming active on navigation terminals when any of the submarine's docking
 ports are close to another docking port, even if the terminal in question is not wired to that port.
 - Decreased karma regeneration speed.
