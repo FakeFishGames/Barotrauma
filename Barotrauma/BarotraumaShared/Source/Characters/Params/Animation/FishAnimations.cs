@@ -140,7 +140,7 @@ namespace Barotrauma
 
     abstract class FishSwimParams : SwimParams, IFishAnimation
     {
-        [Serialize(false, true, description: "TODO"), Editable]
+        [Serialize(false, true, description: "Instead of linear movement (default), use a wave-like movement. Note: WaveAmplitude and WaveLength don't have any effect on this. It's synced with the movement speed."), Editable]
         public bool UseSineMovement { get; set; }
 
         [Editable, Serialize(true, true, description: "Should the character be flipped depending on which direction it faces. Should usually be enabled on all characters that have distinctive upper and lower sides.")]
