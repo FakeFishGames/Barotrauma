@@ -57,7 +57,17 @@ namespace Barotrauma.Networking
 
         public float DeleteDisconnectedTimer;
 
-        public CharacterInfo CharacterInfo;
+        private CharacterInfo characterInfo;
+        public CharacterInfo CharacterInfo
+        {
+            get { return characterInfo; }
+            set
+            {
+                if (characterInfo == value) { return; }
+                characterInfo?.Remove();
+                characterInfo = value;
+            }
+        }
         public NetworkConnection Connection { get; set; }
 
         public bool SpectateOnly;
@@ -94,6 +104,8 @@ namespace Barotrauma.Networking
         {
             GameMain.Server.VoipServer.UnregisterQueue(VoipQueue);
             VoipQueue.Dispose();
+            characterInfo?.Remove();
+            characterInfo = null;
         }
 
         public void InitClientSync()
