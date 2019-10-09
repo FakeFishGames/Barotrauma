@@ -1,15 +1,15 @@
 ﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 namespace Barotrauma
 {
     class MonsterMission : Mission
     {
-        private string monsterFile;
-
-        private int monsterCount;
-
+        private readonly string monsterFile;
+        private readonly int monsterCount;
+        private readonly HashSet<Tuple<string, int>> monsterFiles = new HashSet<Tuple<string, int>>();
         private readonly List<Character> monsters = new List<Character>();
         private readonly List<Vector2> sonarPositions = new List<Vector2>();
 
@@ -24,9 +24,20 @@ namespace Barotrauma
         public MonsterMission(MissionPrefab prefab, Location[] locations)
             : base(prefab, locations)
         {
-            monsterFile = prefab.ConfigElement.GetAttributeString("monsterfile", "");
-            monsterCount = prefab.ConfigElement.GetAttributeInt("monstercount", 1);
-
+            monsterFile = prefab.ConfigElement.GetAttributeString("monsterfile", null);
+            monsterCount = prefab.ConfigElement.GetAttributeInt("monstercount", 0);
+            foreach (var monsterElement in prefab.ConfigElement.GetChildElements("monster"))
+            {
+                string monster = monsterElement.GetAttributeString("character", string.Empty);
+                if (monsterFile == null)
+                {
+                    monsterFile = monster;
+                }
+                int defaultCount = monsterElement.GetAttributeInt("count", 1);
+                int min = monsterElement.GetAttributeInt("min", defaultCount);
+                int max = Math.Max(min, monsterElement.GetAttributeInt("max", defaultCount));
+                monsterFiles.Add(new Tuple<string, int>(monster, Rand.Range(min, max + 1, Rand.RandSync.Server)));
+            }
             description = description.Replace("[monster]",
                 TextManager.Get("character." + System.IO.Path.GetFileNameWithoutExtension(monsterFile)));
         }
@@ -40,6 +51,14 @@ namespace Barotrauma
             {
                 monsters.Add(Character.Create(monsterFile, spawnPos, ToolBox.RandomSeed(8), null, isClient, true, false));
             }
+            foreach (var monster in monsterFiles)
+            {
+                for (int i = 0; i < monster.Item2; i++)
+                {
+                    monsters.Add(Character.Create(monster.Item1, spawnPos, ToolBox.RandomSeed(8), null, isClient, true, false));
+                }
+            }
+
             monsters.ForEach(m => m.Enabled = false);
             SwarmBehavior.CreateSwarm(monsters.Cast<AICharacter>());
             sonarPositions.Add(spawnPos);
