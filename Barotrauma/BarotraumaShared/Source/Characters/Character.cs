@@ -1262,10 +1262,10 @@ namespace Barotrauma
                 SmoothedCursorPosition = cursorPosition - smoothedCursorDiff;
             }
 
-            if (!(this is AICharacter) || Controlled == this || IsRemotePlayer)
+            bool playerControlled = !(this is AICharacter) || Controlled == this || IsRemotePlayer;
+            if (playerControlled)
             {
                 Vector2 targetMovement = GetTargetMovement();
-
                 AnimController.TargetMovement = targetMovement;
                 AnimController.IgnorePlatforms = AnimController.TargetMovement.Y < -0.1f;
             }
@@ -1275,7 +1275,8 @@ namespace Barotrauma
                 ((HumanoidAnimController)AnimController).Crouching = IsKeyDown(InputType.Crouch);
             }
 
-            if (AnimController.onGround &&
+            if (playerControlled &&
+                AnimController.onGround &&
                 !AnimController.InWater &&
                 AnimController.Anim != AnimController.Animation.UsingConstruction &&
                 AnimController.Anim != AnimController.Animation.CPR &&
