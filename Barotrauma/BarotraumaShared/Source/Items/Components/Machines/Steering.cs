@@ -275,7 +275,8 @@ namespace Barotrauma.Items.Components
             if (controlledSub == null) return;
             if (posToMaintain != null)
             {
-                SteerTowardsPosition((Vector2)posToMaintain);
+                Vector2 steeringVel = GetSteeringVelocity((Vector2)posToMaintain);
+                TargetVelocity = Vector2.Lerp(TargetVelocity, steeringVel, AutoPilotSteeringLerp);               
                 return;
             }
 
@@ -315,7 +316,7 @@ namespace Barotrauma.Items.Components
 
                             float dist = Vector2.Distance(cornerPos, steeringPath.NextNode.SimPosition);
 
-                            if (Submarine.PickBody(cornerPos, cornerPos + diff * dist, null, Physics.CollisionLevel) == null) continue;
+                            if (Submarine.PickBody(cornerPos, cornerPos + diff * dist, null, Physics.CollisionLevel) == null) { continue; }
 
                             nextVisible = false;
                             x = 2;
@@ -329,14 +330,15 @@ namespace Barotrauma.Items.Components
                 autopilotRayCastTimer = AutopilotRayCastInterval;
             }
 
+            Vector2 newVelocity = Vector2.Zero;
             if (steeringPath.CurrentNode != null)
             {
-                SteerTowardsPosition(steeringPath.CurrentNode.WorldPosition);
+                newVelocity = GetSteeringVelocity(steeringPath.CurrentNode.WorldPosition);
             }
 
             Vector2 avoidDist = new Vector2(
-                Math.Max(1000.0f * Math.Abs(controlledSub.Velocity.X), controlledSub.Borders.Width * 1.5f),
-                Math.Max(1000.0f * Math.Abs(controlledSub.Velocity.Y), controlledSub.Borders.Height * 1.5f));
+                Math.Max(1000.0f * Math.Abs(controlledSub.Velocity.X), controlledSub.Borders.Width * 0.75f),
+                Math.Max(1000.0f * Math.Abs(controlledSub.Velocity.Y), controlledSub.Borders.Height * 0.75f));
 
             float avoidRadius = avoidDist.Length();
 
@@ -373,7 +375,8 @@ namespace Barotrauma.Items.Components
                             continue;
                         }
                         
-                        Vector2 change = (normalizedDiff * Math.Max((avoidRadius - diff.Length()), 0.0f)) / avoidRadius;                        
+                        Vector2 change = (normalizedDiff * Math.Max((avoidRadius - diff.Length()), 0.0f)) / avoidRadius;
+                        if (change.LengthSquared() < 0.001f) { continue; }
                         newAvoidStrength += change * (dot - 1.0f);
                         debugDrawObstacles.Add(new ObstacleDebugInfo(edge, intersection, dot - 1.0f, change * (dot - 1.0f), cell.Translation));
                     }
@@ -381,8 +384,7 @@ namespace Barotrauma.Items.Components
             }
 
             avoidStrength = Vector2.Lerp(avoidStrength, newAvoidStrength, deltaTime * 10.0f);
-
-            targetVelocity += avoidStrength * 100.0f;
+            TargetVelocity = Vector2.Lerp(TargetVelocity, newVelocity + avoidStrength * 100.0f, AutoPilotSteeringLerp);
 
             //steer away from other subs
             foreach (Submarine sub in Submarine.Loaded)
@@ -458,21 +460,21 @@ namespace Barotrauma.Items.Components
                 UpdatePath();
             }
         }
-        private void SteerTowardsPosition(Vector2 worldPosition)
+        private Vector2 GetSteeringVelocity(Vector2 worldPosition)
         {
             float prediction = 2.0f;
 
             Vector2 futurePosition = ConvertUnits.ToDisplayUnits(controlledSub.Velocity) * prediction;
             Vector2 targetSpeed = ((worldPosition - controlledSub.WorldPosition) - futurePosition);
 
-            if (targetSpeed.Length() > 500.0f)
+            if (targetSpeed.LengthSquared() > 500.0f * 500.0f)
             {
-                targetSpeed = Vector2.Normalize(targetSpeed);
-                TargetVelocity = Vector2.Lerp(TargetVelocity, targetSpeed * 100.0f, AutoPilotSteeringLerp);
+                
+                return Vector2.Normalize(targetSpeed) * 100.0f;
             }
             else
             {
-                TargetVelocity = Vector2.Lerp(TargetVelocity, targetSpeed / 5.0f, AutoPilotSteeringLerp);
+                return targetSpeed / 5.0f;
             }
         }
 
