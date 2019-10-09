@@ -594,16 +594,17 @@ namespace Barotrauma
         {
             adjacentHulls.Clear();
             int startStep = 0;
-            return GetAdjacentHulls(includingThis, adjacentHulls, ref startStep, searchDepth);
+            searchDepth = searchDepth ?? 100;
+            return GetAdjacentHulls(includingThis, adjacentHulls, ref startStep, searchDepth.Value);
         }
 
-        private HashSet<Hull> GetAdjacentHulls(bool includingThis, HashSet<Hull> connectedHulls, ref int step, int? searchDepth)
+        private HashSet<Hull> GetAdjacentHulls(bool includingThis, HashSet<Hull> connectedHulls, ref int step, int searchDepth)
         {
             if (includingThis)
             {
                 connectedHulls.Add(this);
             }
-            if (step > searchDepth.Value)
+            if (step > searchDepth)
             {
                 return connectedHulls;
             }

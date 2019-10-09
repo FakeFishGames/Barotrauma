@@ -19,17 +19,28 @@ namespace Barotrauma
         //can either be a tag or an identifier
         public readonly string[] itemIdentifiers;
         public readonly ItemContainer container;
+        public readonly Item item;
 
         private AIObjectiveGetItem getItemObjective;
         private AIObjectiveGoTo goToObjective;
 
         private readonly HashSet<Item> containedItems = new HashSet<Item>();
 
+        public bool AllowToFindDivingGear { get; set; } = true;
+        public float ConditionLevel { get; set; }
+
+        public AIObjectiveContainItem(Character character, Item item, ItemContainer container, AIObjectiveManager objectiveManager, float priorityModifier = 1)
+            : base(character, objectiveManager, priorityModifier)
+        {
+            this.container = container;
+            this.item = item;
+        }
+
         public AIObjectiveContainItem(Character character, string itemIdentifier, ItemContainer container, AIObjectiveManager objectiveManager, float priorityModifier = 1)
             : this(character, new string[] { itemIdentifier }, container, objectiveManager, priorityModifier) { }
 
         public AIObjectiveContainItem(Character character, string[] itemIdentifiers, ItemContainer container, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
-            : base (character, objectiveManager, priorityModifier)
+            : base(character, objectiveManager, priorityModifier)
         {
             this.itemIdentifiers = itemIdentifiers;
             for (int i = 0; i < itemIdentifiers.Length; i++)
@@ -40,17 +51,25 @@ namespace Barotrauma
             this.container = container;
         }
 
-        public override bool IsCompleted()
+        protected override bool Check()
         {
-            int containedItemCount = 0;
-            foreach (Item item in container.Inventory.Items)
+            if (IsCompleted) { return true; }
+            if (item != null)
             {
-                if (item != null && itemIdentifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id)))
-                {
-                    containedItemCount++;
-                }
+                return container.Inventory.Items.Contains(item);
             }
-            return containedItemCount >= targetItemCount;
+            else
+            {
+                int containedItemCount = 0;
+                foreach (Item i in container.Inventory.Items)
+                {
+                    if (i != null && itemIdentifiers.Any(id => i.Prefab.Identifier == id || i.HasTag(id)))
+                    {
+                        containedItemCount++;
+                    }
+                }
+                return containedItemCount >= targetItemCount;
+            }
         }
 
         public override float GetPriority()
@@ -62,20 +81,58 @@ namespace Barotrauma
             return 1.0f;
         }
 
+        private bool CheckItem(Item i) => itemIdentifiers.Any(id => i.Prefab.Identifier == id || i.HasTag(id)) && i.ConditionPercentage > ConditionLevel;
+
         protected override void Act(float deltaTime)
         {
-            //get the item that should be contained
-            Item itemToContain = null;
-            foreach (string identifier in itemIdentifiers)
+            Item itemToContain = item ?? character.Inventory.FindItem(i => CheckItem(i) && i.Container != container.Item, recursive: true);
+            if (itemToContain != null)
             {
-                itemToContain = character.Inventory.FindItemByIdentifier(identifier) ?? character.Inventory.FindItemByTag(identifier);
-                if (itemToContain != null && itemToContain.Condition > 0.0f) { break; }
-            }            
-            if (itemToContain == null)
-            {
-                if (getItemObjective != null)
+                // Contain the item
+                if (itemToContain.ParentInventory == character.Inventory)
                 {
-                    if (getItemObjective.IsCompleted())
+                    character.Inventory.RemoveItem(itemToContain);
+                    if (!container.Inventory.TryPutItem(itemToContain, null))
+                    {
+                        itemToContain.Drop(character);
+                        Abandon = true;
+                    }
+                }
+                else
+                {
+                    if (character.CanInteractWith(container.Item, out _, checkLinked: false))
+                    {
+                        if (container.Combine(itemToContain, character))
+                        {
+                            IsCompleted = true;
+                        }
+                        else
+                        {
+                            Abandon = true;
+                        }
+                    }
+                    else
+                    {
+                        TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(container.Item, character, objectiveManager, getDivingGearIfNeeded: AllowToFindDivingGear),
+                            onAbandon: () => Abandon = true,
+                            onCompleted: () => RemoveSubObjective(ref goToObjective));
+                    }
+                }
+            }
+            else
+            {
+                // No matching items in the inventory, try to get an item
+                TryAddSubObjective(ref getItemObjective, () =>
+                    new AIObjectiveGetItem(character, itemIdentifiers, objectiveManager, equip: false, checkInventory: checkInventory)
+                    {
+                        GetItemPriority = GetItemPriority,
+                        ignoredContainerIdentifiers = ignoredContainerIdentifiers,
+                        ignoredItems = containedItems,
+                        AllowToFindDivingGear = this.AllowToFindDivingGear
+                    }, onAbandon: () =>
+                    {
+                        Abandon = true;
+                    }, onCompleted: () =>
                     {
                         if (getItemObjective.TargetItem != null)
                         {
@@ -83,55 +140,18 @@ namespace Barotrauma
                         }
                         else
                         {
-                            // Reduce the target item count to prevent getting stuck here, if the target item for some reason is null, which shouldn't happen.
-                            targetItemCount--;
+                            if (container.Inventory.FindItem(i => CheckItem(i), recursive: false) != null)
+                            {
+                                IsCompleted = true;
+                            }
+                            else
+                            {
+                                Abandon = true;
+                            }
                         }
-                        getItemObjective = null;
-                    }
-                    else if (!getItemObjective.CanBeCompleted)
-                    {
-                        getItemObjective = null;
-                        targetItemCount--;
-                    }
-                }
-                TryAddSubObjective(ref getItemObjective, () =>
-                    new AIObjectiveGetItem(character, itemIdentifiers, objectiveManager, checkInventory: checkInventory)
-                    {
-                        GetItemPriority = GetItemPriority,
-                        ignoredContainerIdentifiers = ignoredContainerIdentifiers,
-                        ignoredItems = containedItems
+                        RemoveSubObjective(ref getItemObjective);
                     });
-                return;
             }
-            if (container.Item.ParentInventory == character.Inventory)
-            {           
-                character.Inventory.RemoveItem(itemToContain);
-                container.Inventory.TryPutItem(itemToContain, null);
-            }
-            else
-            {
-                if (!character.CanInteractWith(container.Item, out _, checkLinked: false))
-                {
-                    TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(container.Item, character, objectiveManager));
-                    return;
-                }
-                container.Combine(itemToContain, character);
-            }
-        }
-
-        public override bool IsDuplicate(AIObjective otherObjective)
-        {
-            if (!(otherObjective is AIObjectiveContainItem objective)) { return false; }
-            if (objective.container != container) { return false; }
-            if (objective.itemIdentifiers.Length != itemIdentifiers.Length) { return false; }
-            for (int i = 0; i < itemIdentifiers.Length; i++)
-            {
-                if (objective.itemIdentifiers[i] != itemIdentifiers[i])
-                {
-                    return false;
-                }
-            }
-            return true;
-        }    
+        }  
     }
 }

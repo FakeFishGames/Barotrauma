@@ -57,7 +57,7 @@
     </ItemContainer>
   </Item>
   
-  <Item name="Coilgun Ammunition Box" identifier="coilgunammobox" scale="0.5" tags="coilgunequipment,coilgunammo" category="Equipment" linkable="true" impactsoundtag="impact_metal_heavy">
+  <Item name="Coilgun Ammunition Box" identifier="coilgunammobox" scale="0.5" tags="coilgunequipment,coilgunammo" preferredcontainers="coilgunammocontainer" category="Equipment" linkable="true" impactsoundtag="impact_metal_heavy">
     <Price locationtype="Outpost" buyprice="200" />
     <Price locationtype="Military" buyprice="150" />
     <Price locationtype="City" buyprice="200" />

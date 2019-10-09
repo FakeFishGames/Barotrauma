@@ -142,64 +142,50 @@ namespace Barotrauma
             IsPathDirty = false;
         }
 
-        public Func<PathNode, bool> startNodeFilter;
-        public Func<PathNode, bool> endNodeFilter;
-
-        protected override Vector2 DoSteeringSeek(Vector2 target, float weight)
+        public void SteeringSeek(Vector2 target, float weight, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null)
         {
-            bool needsNewPath = currentPath != null && currentPath.Unreachable || Vector2.DistanceSquared(target, currentTarget) > 1;
+            steering += CalculateSteeringSeek(target, weight, startNodeFilter, endNodeFilter, nodeFilter);
+        }
+
+        private Vector2 CalculateSteeringSeek(Vector2 target, float weight, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null)
+        {
+            bool needsNewPath = currentPath == null || (currentPath.Unreachable || currentPath.NextNode == null) || Vector2.DistanceSquared(target, currentTarget) > 1;
             //find a new path if one hasn't been found yet or the target is different from the current target
-            if (currentPath == null || needsNewPath || findPathTimer < -1.0f)
+            if (needsNewPath || findPathTimer < -1.0f)
             {
                 IsPathDirty = true;
-
-                if (findPathTimer > 0.0f) return Vector2.Zero;
-                
+                if (findPathTimer > 0.0f) { return Vector2.Zero; }
                 currentTarget = target;
-                Vector2 pos = host.SimPosition;
-                // TODO: remove this and handle differently?
-                if (character != null && character.Submarine == null)
-                {
-                    var targetHull = Hull.FindHull(FarseerPhysics.ConvertUnits.ToDisplayUnits(target), null, false);
-                    if (targetHull != null && targetHull.Submarine != null)
-                    {
-                        pos -= targetHull.Submarine.SimPosition;
-                    }
-                }
-
-                var newPath = pathFinder.FindPath(pos, target, character.Submarine, "(Character: " + character.Name + ")", startNodeFilter, endNodeFilter);
-                bool useNewPath = currentPath == null || needsNewPath;
+                var newPath = pathFinder.FindPath(host.SimPosition, target, character.Submarine, "(Character: " + character.Name + ")", startNodeFilter, endNodeFilter, nodeFilter);
+                bool useNewPath = currentPath == null || needsNewPath || currentPath.Finished;
                 if (!useNewPath && currentPath != null && currentPath.CurrentNode != null && newPath.Nodes.Any() && !newPath.Unreachable)
                 {
                     // It's possible that the current path was calculated from a start point that is no longer valid.
                     // Therefore, let's accept also paths with a greater cost than the current, if the current node is much farther than the new start node.
-                    useNewPath = newPath.Cost < currentPath.Cost || 
-                        Vector2.DistanceSquared(character.WorldPosition, currentPath.CurrentNode.WorldPosition) > Math.Pow(Vector2.Distance(character.WorldPosition, newPath.Nodes.First().WorldPosition) * 2, 2);
+                    useNewPath = newPath.Cost < currentPath.Cost ||
+                        Vector2.DistanceSquared(character.WorldPosition, currentPath.CurrentNode.WorldPosition) > Math.Pow(Vector2.Distance(character.WorldPosition, newPath.Nodes.First().WorldPosition) * 3, 2);
                 }
                 if (useNewPath)
                 {
                     currentPath = newPath;
                 }
-
                 findPathTimer = Rand.Range(1.0f, 1.2f);
-
                 IsPathDirty = false;
-                return DiffToCurrentNode();                
+                return DiffToCurrentNode();
             }
 
             Vector2 diff = DiffToCurrentNode();
-
             var collider = character.AnimController.Collider;
             //if not in water and the waypoint is between the top and bottom of the collider, no need to move vertically
             if (!character.AnimController.InWater && !character.IsClimbing && diff.Y < collider.height / 2 + collider.radius)
             {
                 diff.Y = 0.0f;
             }
-
-            if (diff.LengthSquared() < 0.001f) return -host.Steering;
-
-            return Vector2.Normalize(diff) * weight;          
+            if (diff.LengthSquared() < 0.001f) { return -host.Steering; }
+            return Vector2.Normalize(diff) * weight;
         }
+
+        protected override Vector2 DoSteeringSeek(Vector2 target, float weight) => CalculateSteeringSeek(target, weight, null, null, null);
 
         private Vector2 DiffToCurrentNode()
         {
@@ -270,13 +256,15 @@ namespace Barotrauma
                     {
                         diff.Y = Math.Max(diff.Y, 1.0f);
                     }
-
-                    bool aboveFloor = heightFromFloor > 0 && heightFromFloor < collider.height * 1.5f;
+                    // We need some margin, because if a hatch has closed, it's possible that the height from floor is slightly negative.
+                    float margin = 0.1f;
+                    bool aboveFloor = heightFromFloor > -margin && heightFromFloor < collider.height * 1.5f;
                     if (aboveFloor || IsNextNodeLadder)
                     {
-                        if (!nextLadderSameAsCurrent)
+                        if (!nextLadderSameAsCurrent || currentPath.NextNode == null && aboveFloor)
                         {
                             character.AnimController.Anim = AnimController.Animation.None;
+                            character.SelectedConstruction = null;
                         }
                         currentPath.SkipToNextNode();
                     }
@@ -387,13 +375,13 @@ namespace Barotrauma
                         door = currentWaypoint.ConnectedGap.ConnectedDoor;
                         if (door.LinkedGap.IsHorizontal)
                         {
-                            int currentDir = Math.Sign(nextWaypoint.WorldPosition.X - door.Item.WorldPosition.X);
-                            shouldBeOpen = (door.Item.WorldPosition.X - character.WorldPosition.X) * currentDir > -50.0f;
+                            int dir = Math.Sign(nextWaypoint.WorldPosition.X - door.Item.WorldPosition.X);
+                            shouldBeOpen = (door.Item.WorldPosition.X - character.WorldPosition.X) * dir > -50.0f;
                         }
                         else
                         {
-                            int currentDir = Math.Sign(nextWaypoint.WorldPosition.Y - door.Item.WorldPosition.Y);
-                            shouldBeOpen = (door.Item.WorldPosition.Y - character.WorldPosition.Y) * currentDir > -80.0f;
+                            int dir = Math.Sign(nextWaypoint.WorldPosition.Y - door.Item.WorldPosition.Y);
+                            shouldBeOpen = (door.Item.WorldPosition.Y - character.WorldPosition.Y) * dir > -80.0f;
                         }
                     }
                 }
@@ -408,7 +396,18 @@ namespace Barotrauma
                     bool canAccess = CanAccessDoor(door, button =>
                     {
                         if (currentWaypoint == null) { return true; }
-                        float distance = Vector2.DistanceSquared(button.Item.WorldPosition, door.Item.WorldPosition);
+                        // Check that the button is on the right side of the door.
+                        if (door.LinkedGap.IsHorizontal)
+                        {
+                            int dir = Math.Sign(nextWaypoint.WorldPosition.X - door.Item.WorldPosition.X);
+                            if (button.Item.WorldPosition.X * dir > door.Item.WorldPosition.X * dir) { return false; }
+                        }
+                        else
+                        {
+                            int dir = Math.Sign(nextWaypoint.WorldPosition.Y - door.Item.WorldPosition.Y);
+                            if (button.Item.WorldPosition.Y * dir > door.Item.WorldPosition.Y * dir) { return false; }
+                        }
+                        float distance = Vector2.DistanceSquared(button.Item.WorldPosition, character.WorldPosition);
                         if (closestButton == null || distance < closestDist)
                         {
                             closestButton = button;
@@ -434,17 +433,30 @@ namespace Barotrauma
                             }
                             else
                             {
-                                // Can't reach the button closest to the door.
+                                // Can't reach the button closest to the character.
                                 // It's possible that we could reach another buttons.
                                 // If this becomes an issue, we could go through them here and check if any of them are reachable
                                 // (would have to cache a collection of buttons instead of a single reference in the CanAccess filter method above)
-                                //currentPath.Unreachable = true;
+                                var body = Submarine.PickBody(character.SimPosition, character.GetRelativeSimPosition(closestButton.Item), collisionCategory: Physics.CollisionWall | Physics.CollisionLevel);
+                                if (body != null)
+                                {
+                                    if (body.UserData is Item item)
+                                    {
+                                        var d = item.GetComponent<Door>();
+                                        if (d == null || d.IsOpen) { return; }
+                                    }
+                                    // The button is on the wrong side of the door or a wall
+                                    currentPath.Unreachable = true;
+                                }
                                 return;
                             }
                         }
                     }
                     else if (shouldBeOpen)
                     {
+#if DEBUG
+                        DebugConsole.NewMessage($"{character.Name}: Pathfinding error: Cannot access the door", Color.Yellow);
+#endif
                         currentPath.Unreachable = true;
                         return;
                     }

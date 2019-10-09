@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
 using System.Linq;
+using Barotrauma.Items.Components;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -303,6 +305,17 @@ namespace Barotrauma
         {
             get;
             private set;
+        }
+
+        private HashSet<string> preferredContainers = new HashSet<string>();
+        [Serialize("", true, description: "Define containers (by identifiers or tags) that this item should be placed in. These are preferences, which are not enforced.")]
+        public string PreferredContainers
+        {
+            get { return string.Join(",", preferredContainers); }
+            set
+            {
+                StringFormatter.ParseCommaSeparatedStringToCollection(value, preferredContainers);
+            }
         }
 
         /// <summary>
@@ -783,9 +796,24 @@ namespace Barotrauma
             }
             return prefab;
         }
+
         public IEnumerable<PriceInfo> GetPrices()
         {
             return prices?.Values;
+        }
+
+        public bool IsContainerPreferred(ItemContainer itemContainer, out bool isPreferencesDefined)
+        {
+            isPreferencesDefined = preferredContainers.Any();
+            if (!isPreferencesDefined) { return true; }
+            return preferredContainers.Any(id => itemContainer.Item.Prefab.Identifier == id || itemContainer.Item.HasTag(id));
+        }
+
+        public bool IsContainerPreferred(string[] identifiersOrTags, out bool isPreferencesDefined)
+        {
+            isPreferencesDefined = preferredContainers.Any();
+            if (!isPreferencesDefined) { return true; }
+            return preferredContainers.Any(id => preferredContainers.Any(p => p == id));
         }
     }
 }

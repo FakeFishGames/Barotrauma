@@ -261,10 +261,9 @@ namespace Barotrauma
         public bool CanEnterSubmarine => RagdollParams.CanEnterSubmarine;
         public bool CanAttackSubmarine => Limbs.Any(l => l.attack != null && l.attack.IsValidTarget(AttackTarget.Structure));
 
-        public float Dir
-        {
-            get { return ((dir == Direction.Left) ? -1.0f : 1.0f); }
-        }
+        public float Dir => dir == Direction.Left ? -1.0f : 1.0f;
+
+        public Direction Direction => dir;
 
         public bool InWater
         {

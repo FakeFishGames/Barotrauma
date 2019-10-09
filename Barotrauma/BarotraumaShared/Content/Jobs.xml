@@ -11,7 +11,7 @@
       <Skill identifier="electrical" level="10,15"/>
       <Skill identifier="medical" level="5,15"/>
       <!--<Skill identifier="resolution" level="20,100"/>-->
-      <Skill identifier="initiative" level="20,100"/>
+      <Skill identifier="initiative" level="50,100"/>
     </Skills>
     <Items>
       <Item identifier="idcard" equip="true"/>
@@ -52,7 +52,7 @@
       <Skill identifier="medical" level="5,15"/>
       <Skill identifier="helm" level="5,10"/>
       <!--<Skill identifier="resolution" level="20,100"/>-->
-      <Skill identifier="initiative" level="20,100"/>
+      <Skill identifier="initiative" level="50,100"/>
     </Skills>
     <Items>
       <Item identifier="idcard" equip="true"/>
@@ -99,7 +99,7 @@
       <Skill identifier="medical" level="5,10"/>
       <Skill identifier="helm" level="5,10"/>
       <!--<Skill identifier="resolution" level="20,100"/>-->
-      <Skill identifier="initiative" level="20,100"/>
+      <Skill identifier="initiative" level="50,100"/>
     </Skills>
     <Items>
       <Item identifier="idcard" equip="true"/>
@@ -145,7 +145,7 @@
       <Skill identifier="electrical" level="5,10"/>
       <Skill identifier="helm" level="5,10"/>
       <!--<Skill identifier="resolution" level="20,100"/>-->
-      <Skill identifier="initiative" level="20,100"/>
+      <Skill identifier="initiative" level="50,100"/>
     </Skills>
     <Items>
       <Item identifier="securityuniform" equip="true"/>
@@ -189,7 +189,7 @@
       <Skill identifier="electrical" level="5,10"/>
       <Skill identifier="helm" level="5,10"/>
       <!--<Skill identifier="resolution" level="20,100"/>-->
-      <Skill identifier="initiative" level="20,100"/>
+      <Skill identifier="initiative" level="50,100"/>
     </Skills>
     <Items>
       <Item identifier="idcard" equip="true"/>
@@ -226,7 +226,7 @@
       <Skill identifier="medical" level="5,11"/>
       <Skill identifier="helm" level="5,10"/>
       <!--<Skill identifier="resolution" level="20,100"/>-->
-      <Skill identifier="initiative" level="0,60"/>
+      <Skill identifier="initiative" level="20,60"/>
     </Skills>
     <Items>
       <Item identifier="idcard" equip="true"/>

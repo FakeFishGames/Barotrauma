@@ -12,16 +12,19 @@ namespace Barotrauma
 
         private ItemComponent component, controller;
         private Entity operateTarget;
-        private bool isCompleted;
         private bool requireEquip;
         private bool useController;
         private AIObjectiveGoTo goToObjective;
         private AIObjectiveGetItem getItemObjective;
 
+        public bool Override { get; set; } = true;
+
         public override bool CanBeCompleted => base.CanBeCompleted && (!useController || controller != null);
 
         public Entity OperateTarget => operateTarget;
         public ItemComponent Component => component;
+
+        public Func<bool> completionCondition;
 
         public override float GetPriority()
         {
@@ -32,7 +35,7 @@ namespace Barotrauma
             }
             if (component.Item.CurrentHull == null) { return 0; }
             if (component.Item.CurrentHull.FireSources.Count > 0) { return 0; }
-            if (Character.CharacterList.Any(c => c.CurrentHull == component.Item.CurrentHull && !HumanAIController.IsFriendly(c))) { return 0; }
+            if (Character.CharacterList.Any(c => c.CurrentHull == component.Item.CurrentHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c))) { return 0; }
             float devotion = MathHelper.Min(10, Priority);
             float value = devotion + AIObjectiveManager.OrderPriority * PriorityModifier;
             float max = MathHelper.Min((AIObjectiveManager.OrderPriority - 1), 90);
@@ -57,21 +60,27 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
+            if (character.LockHands)
+            {
+                Abandon = true;
+                return;
+            }
             ItemComponent target = useController ? controller : component;
             if (useController && controller == null)
             {
                 character.Speak(TextManager.GetWithVariable("DialogCantFindController", "[item]", component.Item.Name, true), null, 2.0f, "cantfindcontroller", 30.0f);
-                abandon = true;
+                Abandon = true;
                 return;
             }
             if (target.CanBeSelected)
             {
                 if (character.CanInteractWith(target.Item, out _, checkLinked: false))
                 {
+                    HumanAIController.FaceTarget(target.Item);
                     // Don't allow to operate an item that someone already operates, unless this objective is an order
-                    if (objectiveManager.CurrentOrder != this && Character.CharacterList.Any(c => c.SelectedConstruction == target.Item && c != character && HumanAIController.IsFriendly(c)))
+                    if (objectiveManager.CurrentOrder != this && Character.CharacterList.Any(c => c.SelectedConstruction == target.Item && c != character && HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c)))
                     {
-                        abandon = true;
+                        // Don't abandon
                         return;
                     }
                     if (character.SelectedConstruction != target.Item)
@@ -80,12 +89,14 @@ namespace Barotrauma
                     }
                     if (component.AIOperate(deltaTime, character, this))
                     {
-                        isCompleted = true;
+                        IsCompleted = completionCondition == null || completionCondition();
                     }
                 }
                 else
                 {
-                    TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(target.Item, character, objectiveManager));
+                    TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(target.Item, character, objectiveManager, closeEnough: 50), 
+                        onAbandon: () => Abandon = true,
+                        onCompleted: () => RemoveSubObjective(ref goToObjective));
                 }
             }
             else
@@ -93,12 +104,14 @@ namespace Barotrauma
                 if (component.Item.GetComponent<Pickable>() == null)
                 {
                     //controller/target can't be selected and the item cannot be picked -> objective can't be completed
-                    abandon = true;
+                    Abandon = true;
                     return;
                 }
                 else if (!character.Inventory.Items.Contains(component.Item))
                 {
-                    TryAddSubObjective(ref getItemObjective, () => new AIObjectiveGetItem(character, component.Item, objectiveManager, equip: true));
+                    TryAddSubObjective(ref getItemObjective, () => new AIObjectiveGetItem(character, component.Item, objectiveManager, equip: true), 
+                        onAbandon: () => Abandon = true,
+                        onCompleted: () => RemoveSubObjective(ref getItemObjective));
                 }
                 else
                 {
@@ -109,7 +122,7 @@ namespace Barotrauma
                         if (holdable == null)
                         {
 #if DEBUG
-                            DebugConsole.ThrowError("AIObjectiveOperateItem failed - equipping item " + component.Item + " is required but the item has no Holdable component");
+                            DebugConsole.ThrowError($"{character.Name}: AIObjectiveOperateItem failed - equipping item " + component.Item + " is required but the item has no Holdable component");
 #endif
                             return;
                         }
@@ -139,18 +152,12 @@ namespace Barotrauma
                     }
                     if (component.AIOperate(deltaTime, character, this))
                     {
-                        isCompleted = true;
+                        IsCompleted = completionCondition == null || completionCondition();
                     }
                 }
             }
         }
 
-        public override bool IsCompleted() => isCompleted && !IsLoop;
-
-        public override bool IsDuplicate(AIObjective otherObjective)
-        {
-            if (!(otherObjective is AIObjectiveOperateItem operateItem)) { return false; }
-            return (operateItem.component == component || otherObjective.Option == Option);
-        }
+        protected override bool Check() => IsCompleted && !IsLoop;
     }
 }
