@@ -33,12 +33,18 @@ namespace Barotrauma
 
         public static void CreateSwarm(IEnumerable<AICharacter> swarm)
         {
+            var aiControllers = new List<EnemyAIController>();
             foreach (AICharacter character in swarm)
             {
                 if (character.AIController is EnemyAIController enemyAI && enemyAI.SwarmBehavior != null)
                 {
-                    enemyAI.SwarmBehavior.Members = swarm.ToList();
+                    aiControllers.Add(enemyAI);
                 }
+            }
+            var filteredMembers = aiControllers.Select(m => m.Character as AICharacter).Where(m => m != null);
+            foreach (EnemyAIController ai in aiControllers)
+            {
+                ai.SwarmBehavior.Members = filteredMembers.ToList();
             }
         }
 
