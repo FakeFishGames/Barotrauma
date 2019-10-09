@@ -13,7 +13,7 @@ namespace Barotrauma
     {
         private static bool toggledThisFrame;
 
-        private static Sprite damageOverlay;
+        public static Sprite DamageOverlay;
 
         private static string[] strengthTexts;
 
@@ -153,12 +153,7 @@ namespace Barotrauma
             get { return healthBarPulsateTimer; }
             set { healthBarPulsateTimer = MathHelper.Clamp(value, 0.0f, 10.0f); }
         }
-
-        static CharacterHealth()
-        {
-            damageOverlay = new Sprite("Content/UI/damageOverlay.png", Vector2.Zero);
-        }
-
+        
         partial void InitProjSpecific(XElement element, Character character)
         {
             DisplayedVitality = MaxVitality;
@@ -837,8 +832,8 @@ namespace Barotrauma
 
             if (damageOverlayAlpha > 0.0f)
             {
-                damageOverlay.Draw(spriteBatch, Vector2.Zero, Color.White * damageOverlayAlpha, Vector2.Zero, 0.0f,
-                    new Vector2(GameMain.GraphicsWidth / damageOverlay.size.X, GameMain.GraphicsHeight / damageOverlay.size.Y));
+                DamageOverlay?.Draw(spriteBatch, Vector2.Zero, Color.White * damageOverlayAlpha, Vector2.Zero, 0.0f,
+                    new Vector2(GameMain.GraphicsWidth / DamageOverlay.size.X, GameMain.GraphicsHeight / DamageOverlay.size.Y));
             }
 
             if (Character.Inventory != null)

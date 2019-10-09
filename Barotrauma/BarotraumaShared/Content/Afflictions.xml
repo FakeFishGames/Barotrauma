@@ -53,6 +53,8 @@
         Skill 38: 0.0
     -->
   </CPRSettings>
+
+  <DamageOverlay texture="Content/UI/damageOverlay.png"/>
   
   <InternalDamage
     name="Internal Damage"
