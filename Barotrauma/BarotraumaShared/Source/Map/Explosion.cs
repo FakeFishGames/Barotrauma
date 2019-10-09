@@ -124,14 +124,17 @@ namespace Barotrauma
                     if (powerContainer != null)
                     {
                         powerContainer.Charge -= powerContainer.Capacity * empStrength * distFactor;
-                    }                    
+                    }
                 }
             }
 
-            if (force == 0.0f && attack.Stun == 0.0f && attack.GetTotalDamage(false) == 0.0f) return;
+            if (MathUtils.NearlyEqual(force, 0.0f) && MathUtils.NearlyEqual(attack.Stun, 0.0f) && MathUtils.NearlyEqual(attack.GetTotalDamage(false), 0.0f))
+            {
+                return;
+            }
 
             DamageCharacters(worldPosition, attack, force, damageSource, attacker);
-            
+
             if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
             {
                 if (flames)
@@ -240,7 +243,7 @@ namespace Barotrauma
                         }
                     }
                     
-                    if (limb.WorldPosition != worldPosition && force > 0.0f)
+                    if (limb.WorldPosition != worldPosition && !MathUtils.NearlyEqual(force, 0.0f))
                     {
                         Vector2 limbDiff = Vector2.Normalize(limb.WorldPosition - worldPosition);
                         if (!MathUtils.IsValid(limbDiff)) limbDiff = Rand.Vector(1.0f);
