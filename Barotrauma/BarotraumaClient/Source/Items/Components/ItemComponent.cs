@@ -177,18 +177,49 @@ namespace Barotrauma.Items.Components
             }
         }
 
+
         private bool shouldMuffleLooping;
         private float lastMuffleCheckTime;
         private ItemSound loopingSound;
         private SoundChannel loopingSoundChannel;
-        public void PlaySound(ActionType type, Vector2 position, Character user = null)
+        private List<SoundChannel> playingOneshotSoundChannels = new List<SoundChannel>();
+
+        public void UpdateSounds()
+        {
+            if (!isActive || item.Condition <= 0.0f)
+            {
+                StopSounds(ActionType.OnActive);
+            }
+
+            if (loopingSound != null && loopingSoundChannel != null && loopingSoundChannel.IsPlaying)
+            {
+                if (Timing.TotalTime > lastMuffleCheckTime + 0.2f)
+                {
+                    shouldMuffleLooping = SoundPlayer.ShouldMuffleSound(Character.Controlled, item.WorldPosition, loopingSound.Range, Character.Controlled?.CurrentHull);
+                    lastMuffleCheckTime = (float)Timing.TotalTime;
+                }
+                loopingSoundChannel.Muffled = shouldMuffleLooping;
+                float targetGain = GetSoundVolume(loopingSound);
+                float gainDiff = targetGain - loopingSoundChannel.Gain;
+                loopingSoundChannel.Gain += Math.Abs(gainDiff) < 0.1f ? gainDiff : Math.Sign(gainDiff) * 0.1f;
+                loopingSoundChannel.Position = new Vector3(item.WorldPosition, 0.0f);
+            }
+
+            playingOneshotSoundChannels.RemoveAll(ch => !ch.IsPlaying);
+            foreach (SoundChannel channel in playingOneshotSoundChannels)
+            {
+                channel.Position = new Vector3(item.WorldPosition, 0.0f);
+            }
+        }
+
+        public void PlaySound(ActionType type, Character user = null)
         {
             if (!hasSoundsOfType[(int)type]) { return; }
 
             if (loopingSound != null)
             {
                 float targetGain = 0.0f;
-                if (Vector3.DistanceSquared(GameMain.SoundManager.ListenerPosition, new Vector3(position.X, position.Y, 0.0f)) > loopingSound.Range * loopingSound.Range ||
+                if (Vector3.DistanceSquared(GameMain.SoundManager.ListenerPosition, new Vector3(item.WorldPosition, 0.0f)) > loopingSound.Range * loopingSound.Range ||
                     (targetGain = GetSoundVolume(loopingSound)) <= 0.0001f)
                 {
                     if (loopingSoundChannel != null)
@@ -205,25 +236,13 @@ namespace Barotrauma.Items.Components
                 if (loopingSoundChannel == null || !loopingSoundChannel.IsPlaying)
                 {
                     loopingSoundChannel = loopingSound.RoundSound.Sound.Play(
-                        new Vector3(position.X, position.Y, 0.0f), 
+                        new Vector3(item.WorldPosition, 0.0f), 
                         0.01f,
-                        SoundPlayer.ShouldMuffleSound(Character.Controlled, position, loopingSound.Range, Character.Controlled?.CurrentHull));
+                        SoundPlayer.ShouldMuffleSound(Character.Controlled, item.WorldPosition, loopingSound.Range, Character.Controlled?.CurrentHull));
                     loopingSoundChannel.Looping = true;
                     //TODO: tweak
                     loopingSoundChannel.Near = loopingSound.Range * 0.4f;
                     loopingSoundChannel.Far = loopingSound.Range;
-                }
-                if (loopingSoundChannel != null)
-                {
-                    if (Timing.TotalTime > lastMuffleCheckTime + 0.2f)
-                    {
-                        shouldMuffleLooping = SoundPlayer.ShouldMuffleSound(Character.Controlled, position, loopingSound.Range, Character.Controlled?.CurrentHull);
-                        lastMuffleCheckTime = (float)Timing.TotalTime;
-                    }
-                    loopingSoundChannel.Muffled = shouldMuffleLooping;
-                    float gainDiff = targetGain - loopingSoundChannel.Gain;
-                    loopingSoundChannel.Gain += Math.Abs(gainDiff) < 0.1f ? gainDiff : Math.Sign(gainDiff) * 0.1f;
-                    loopingSoundChannel.Position = new Vector3(position.X, position.Y, 0.0f);
                 }
                 return;
             }
@@ -246,7 +265,7 @@ namespace Barotrauma.Items.Components
                 {
                     foreach (ItemSound sound in matchingSounds)
                     {
-                        PlaySound(sound, position, user);
+                        PlaySound(sound, item.WorldPosition, user);
                     }
                     return;
                 }
@@ -256,7 +275,7 @@ namespace Barotrauma.Items.Components
                 }
 
                 itemSound = matchingSounds[index];
-                PlaySound(matchingSounds[index], position, user);
+                PlaySound(matchingSounds[index], item.WorldPosition, user);
             }
         }
 
@@ -293,7 +312,8 @@ namespace Barotrauma.Items.Components
             {
                 float volume = GetSoundVolume(itemSound);
                 if (volume <= 0.0001f) { return; }
-                SoundPlayer.PlaySound(itemSound.RoundSound.Sound, position, volume, itemSound.Range, item.CurrentHull);
+                var channel = SoundPlayer.PlaySound(itemSound.RoundSound.Sound, position, volume, itemSound.Range, item.CurrentHull);
+                if (channel != null) { playingOneshotSoundChannels.Add(channel); }
             }
         }
 

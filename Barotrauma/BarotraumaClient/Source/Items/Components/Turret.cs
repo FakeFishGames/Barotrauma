@@ -147,7 +147,7 @@ namespace Barotrauma.Items.Components
         partial void LaunchProjSpecific()
         {
             recoilTimer = Math.Max(Reload, 0.1f);
-            PlaySound(ActionType.OnUse, item.WorldPosition);
+            PlaySound(ActionType.OnUse);
             Vector2 particlePos = new Vector2(item.WorldRect.X + transformedBarrelPos.X, item.WorldRect.Y - transformedBarrelPos.Y);
             foreach (ParticleEmitter emitter in particleEmitters)
             {

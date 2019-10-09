@@ -349,12 +349,7 @@ namespace Barotrauma.Items.Components
         public virtual void Update(float deltaTime, Camera cam) { }
 
         //called when isActive is true and condition == 0.0f
-        public virtual void UpdateBroken(float deltaTime, Camera cam) 
-        {
-#if CLIENT
-            StopSounds(ActionType.OnActive);
-#endif
-        }
+        public virtual void UpdateBroken(float deltaTime, Camera cam) { }
 
         //called when the item is equipped and the "use" key is pressed
         //returns true if the item was used succesfully (not out of ammo, reloading, etc)
@@ -460,7 +455,13 @@ namespace Barotrauma.Items.Components
             {
                 loopingSoundChannel.Dispose();
                 loopingSoundChannel = null;
-            }                
+            }
+            foreach (SoundChannel channel in playingOneshotSoundChannels)
+            {
+                channel.Dispose();
+                loopingSoundChannel = null;
+            }
+
             if (GuiFrame != null) GUI.RemoveFromUpdateList(GuiFrame, true);
 #endif
 

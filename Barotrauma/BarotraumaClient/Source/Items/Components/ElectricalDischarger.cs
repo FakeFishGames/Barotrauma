@@ -20,7 +20,7 @@ namespace Barotrauma.Items.Components
 
         partial void DischargeProjSpecific()
         {
-            PlaySound(ActionType.OnUse, item.WorldPosition);
+            PlaySound(ActionType.OnUse);
             foreach (Node node in nodes)
             {
                 GameMain.ParticleManager.CreateParticle("swirlysmoke", node.WorldPosition, Vector2.Zero);

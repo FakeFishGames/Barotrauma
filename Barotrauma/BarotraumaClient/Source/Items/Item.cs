@@ -904,7 +904,7 @@ namespace Barotrauma
                         ApplyStatusEffects(ActionType.OnBroken, 1.0f);
                         foreach (ItemComponent ic in components)
                         {
-                            ic.PlaySound(ActionType.OnBroken, WorldPosition);
+                            ic.PlaySound(ActionType.OnBroken);
                         }
                     }
                     SetActiveSprite();

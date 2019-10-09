@@ -209,7 +209,7 @@ namespace Barotrauma
             {
                 if (!ic.HasRequiredContainedItems(user: character, addMessage: false)) { continue; }
 #if CLIENT
-                ic.PlaySound(ActionType.OnUse, character.WorldPosition, character);
+                ic.PlaySound(ActionType.OnUse, character);
 #endif
                 ic.WasUsed = true;
                 ic.ApplyStatusEffects(ActionType.OnUse, 1.0f, targetCharacter, targetLimb);
