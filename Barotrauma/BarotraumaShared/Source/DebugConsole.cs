@@ -618,7 +618,7 @@ namespace Barotrauma
             {
                 return new string[][]
                 {
-        Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
                 };
             }, isCheat: true));
 
@@ -626,6 +626,9 @@ namespace Barotrauma
             {
                 Character.Controlled = null;
                 GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
+#if CLIENT
+                GameMain.Client?.SendConsoleCommand("freecam");
+#endif
             }, isCheat: true));
 
             commands.Add(new Command("eventmanager", "eventmanager: Toggle event manager on/off. No new random events are created when the event manager is disabled.", (string[] args) =>

@@ -38,7 +38,7 @@ namespace Barotrauma.Items.Components
             {
                 if (value == delay) { return; }
                 delay = value;
-                int delayTicks = (int)(delay / Timing.Step);
+                delayTicks = (int)(delay / Timing.Step);
                 signalQueueSize = delayTicks * 2;
             }
         }

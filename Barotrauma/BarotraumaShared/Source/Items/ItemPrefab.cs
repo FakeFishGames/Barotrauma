@@ -150,6 +150,11 @@ namespace Barotrauma
         /// </summary>
         public readonly string OriginalName;
 
+        /// <summary>
+        /// Is this prefab overriding a prefab in another content package
+        /// </summary>
+        public bool IsOverride;
+
         public string ConfigFile
         {
             get { return configFile; }
@@ -428,7 +433,10 @@ namespace Barotrauma
                                 var itemElement = element.GetChildElement("item");
                                 if (itemElement != null)
                                 {
-                                    new ItemPrefab(itemElement, filePath, true);
+                                    new ItemPrefab(itemElement, filePath, true)
+                                    {
+                                        IsOverride = true
+                                    };
                                 }
                                 else
                                 {
@@ -447,7 +455,10 @@ namespace Barotrauma
                         {
                             foreach (var element in items.Elements())
                             {
-                                new ItemPrefab(element, filePath, true);
+                                new ItemPrefab(element, filePath, true)
+                                {
+                                    IsOverride = true
+                                };
                             }
                         }
                         foreach (var element in rootElement.GetChildElements("item"))

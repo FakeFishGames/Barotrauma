@@ -95,6 +95,10 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
+#if WINDOWS
+                if (e is SharpDX.SharpDXException) { throw; }
+#endif
+
                 DebugConsole.ThrowError("Loading texture from stream failed!", e);
                 return null;
             }

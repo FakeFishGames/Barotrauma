@@ -2056,9 +2056,9 @@ namespace Barotrauma
         {
             UpdateProjSpecific(deltaTime, cam);
 
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && this == Controlled && !isSynced) return;
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && this == Controlled && !isSynced) { return; }
 
-            if (!Enabled) return;
+            if (!Enabled) { return; }
 
             if (Level.Loaded != null && WorldPosition.Y < Level.MaxEntityDepth ||
                 (Submarine != null && Submarine.WorldPosition.Y < Level.MaxEntityDepth))
@@ -2081,7 +2081,7 @@ namespace Barotrauma
             {
                 foreach (Item item in Inventory.Items)
                 {
-                    if (item == null || item.body == null || item.body.Enabled) continue;
+                    if (item == null || item.body == null || item.body.Enabled) { continue; }
 
                     item.SetTransform(SimPosition, 0.0f);
                     item.Submarine = Submarine;
@@ -2090,7 +2090,11 @@ namespace Barotrauma
 
             HideFace = false;
 
-            if (IsDead) return;
+
+            UpdateSightRange();
+            UpdateSoundRange();
+
+            if (IsDead) { return; }
 
             if (GameMain.NetworkMember != null)
             {
@@ -2199,9 +2203,6 @@ namespace Barotrauma
                     if (wasRagdolled != IsRagdolled) { ragdollingLockTimer = 0.25f; }
                 }
             }
-
-            UpdateSightRange();
-            UpdateSoundRange();
 
             lowPassMultiplier = MathHelper.Lerp(lowPassMultiplier, 1.0f, 0.1f);
 
