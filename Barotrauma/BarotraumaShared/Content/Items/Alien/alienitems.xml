@@ -307,7 +307,7 @@
     <Sprite texture="alientools.png" depth="0.55" sourcerect="0,0,95,50" origin="0.5,0.4" />
     <Body width="85" height="40" density="15" />
     <Holdable slots="Any,RightHand+LeftHand" aimpos="100,0" handle1="0,11" handle2="2,11" msg="ItemMsgPickUpSelect" />
-    <RepairTool structurefixamount="-3.0" range="600" barrelpos="30,15">
+    <RepairTool structurefixamount="-0.8" range="600" barrelpos="45,0" targetforce="50">
       <RequiredItems identifier="alienpowercell" type="Contained" />
       <Fixable identifier="structure" />
       <ParticleEmitter particle="largeplasma" particlespersecond="50" copyentityangle="true"/>
@@ -319,7 +319,7 @@
       <StatusEffect type="OnUse" target="This" Condition="-0.5" />
       <StatusEffect type="OnUse" target="Contained" Condition="-5.0" />
       <StatusEffect type="OnUse" target="UseTarget">
-        <Affliction identifier="burn" amount="0.7" />
+        <Affliction identifier="burn" amount="1.0" />
       </StatusEffect>
       <sound file="Content/Items/Alien/alienweapon.ogg" type="OnUse" range="800.0" loop="true" />
       <LightComponent AllowInGameEditing="false" LightColor="0.8,0.7,1.0,1.0" Flicker="0.5" range="500">
