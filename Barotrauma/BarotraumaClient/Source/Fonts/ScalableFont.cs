@@ -78,6 +78,15 @@ namespace Barotrauma
                     string coloringEndDefinition = "{color:end}";
 
                     textColors = new List<ColorData>();
+                    List<int> lineChangeIndexes = new List<int>();
+
+                    for (int i = 0; i < text.Length; i++)
+                    {
+                        if (text[i] == '\n')
+                        {
+                            lineChangeIndexes.Add(i);
+                        }
+                    }
 
                     while (text.IndexOf(colorDefinitionStartString) != -1)
                     {
@@ -93,6 +102,15 @@ namespace Barotrauma
                         text = text.Remove(colorDefinitionStartIndex, colorDefinitionEndIndex - colorDefinitionStartIndex + 1);
                         colorData.EndIndex = text.IndexOf(coloringEndDefinition);
                         text = text.Remove(colorData.EndIndex, coloringEndDefinition.Length);
+
+                        for (int i = 0; i < lineChangeIndexes.Count; i++)
+                        {
+                            if (colorData.StartIndex > lineChangeIndexes[i])
+                            {
+                                colorData.StartIndex--;
+                                colorData.EndIndex--;
+                            }
+                        }
 
                         textColors.Add(colorData);
                     }
