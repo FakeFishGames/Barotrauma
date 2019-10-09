@@ -474,23 +474,6 @@ namespace Barotrauma
                 raycastTimer = RaycastInterval;
             }
 
-            if (SelectedAiTarget.Entity is Character c)
-            {
-                //target the closest limb if the target is a character
-                float closestDist = Vector2.DistanceSquared(SelectedAiTarget.WorldPosition, WorldPosition) * 10.0f;
-                foreach (Limb limb in c.AnimController.Limbs)
-                {
-                    if (limb == null) continue;
-                    float dist = Vector2.DistanceSquared(limb.WorldPosition, WorldPosition) / Math.Max(limb.AttackPriority, 0.1f);
-                    if (dist < closestDist)
-                    {
-                        closestDist = dist;
-                        attackWorldPos = limb.WorldPosition;
-                        attackSimPos = limb.SimPosition;
-                    }
-                }
-            }
-
             if (wallTarget != null)
             {
                 attackWorldPos = wallTarget.Position;
@@ -714,20 +697,21 @@ namespace Barotrauma
             Limb attackTargetLimb = null;
             if (canAttack)
             {
+                // Target a specific limb instead of the target center position
                 if (SelectedAiTarget.Entity is Character targetCharacter)
                 {
                     var targetLimbType = AttackingLimb.Params.Attack.Attack.TargetLimbType;
-                    if (targetLimbType != LimbType.None)
+                    attackTargetLimb = GetTargetLimb(AttackingLimb, targetLimbType, targetCharacter);
+                    if (attackTargetLimb == null)
                     {
-                        attackTargetLimb = GetTargetLimb(AttackingLimb, targetLimbType, targetCharacter);
-                        if (attackTargetLimb == null)
-                        {
-                            State = AIState.Idle;
-                            return;
-                        }
-                        attackWorldPos = attackTargetLimb.WorldPosition;
+                        State = AIState.Idle;
+                        IgnoreTarget(SelectedAiTarget);
+                        return;
                     }
+                    attackWorldPos = attackTargetLimb.WorldPosition;
+                    attackSimPos = Character.GetRelativeSimPosition(attackTargetLimb);
                 }
+
                 // Check that we can reach the target
                 Vector2 toTarget = attackWorldPos - AttackingLimb.WorldPosition;
                 if (SelectedAiTarget.Entity is Character targetC)
@@ -1559,12 +1543,21 @@ namespace Barotrauma
             }
             if (targetLimbs.None())
             {
-                // If no limbs of given type was found, accept any limb
+                // If no limbs of given type was found, accept any limb.
                 targetLimbs.AddRange(target.AnimController.Limbs);
             }
-            targetLimbs.Sort((limb1, limb2) => Vector2.DistanceSquared(limb1.WorldPosition, attackLimb.WorldPosition)
-                .CompareTo(Vector2.DistanceSquared(limb2.WorldPosition, attackLimb.WorldPosition)));
-            return targetLimbs.FirstOrDefault();
+            float closestDist = float.MaxValue;
+            Limb targetLimb = null;
+            foreach (Limb limb in targetLimbs)
+            {
+                float dist = Vector2.DistanceSquared(limb.WorldPosition, attackLimb.WorldPosition) / Math.Max(limb.AttackPriority, 0.1f);
+                if (dist < closestDist)
+                {
+                    closestDist = dist;
+                    targetLimb = limb;
+                }
+            }
+            return targetLimb;
         }
     }
 
