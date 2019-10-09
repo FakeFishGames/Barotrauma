@@ -3556,6 +3556,9 @@
   <serverlisttab.all>All servers</serverlisttab.all>
   <serverlisttab.favorites>Favorites</serverlisttab.favorites>
   <serverlisttab.recent>Recent</serverlisttab.recent>
+
+  <addtofavorites>Add to favorites</addtofavorites>
+
   <character.hammerheadgold>Golden Hammerhead</character.hammerheadgold>
   <character.bonethresher>Bone Tiger Thresher</character.bonethresher>
   
