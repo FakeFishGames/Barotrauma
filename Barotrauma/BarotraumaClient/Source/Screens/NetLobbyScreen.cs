@@ -1792,6 +1792,7 @@ namespace Barotrauma
         private bool ClosePlayerFrame(GUIButton button, object userData)
         {
             playerFrame = null;
+            playerList.Deselect();
             return true;
         }
 
