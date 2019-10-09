@@ -1,7 +1,7 @@
-﻿<Ragdoll type="crawler" colliderheightfromfloor="40" impacttolerance="15" draggable="True" limbscale="0.7" jointscale="0.7" canentersubmarine="True" canwalk="True" texturescale="1" spritesheetorientation="270" texture="">
+﻿<Ragdoll type="crawler" colliderheightfromfloor="40" impacttolerance="15" draggable="True" limbscale="0.7" jointscale="0.7" canentersubmarine="True" canwalk="True" texturescale="1" spritesheetorientation="90" texture="">
   <collider height="80" radius="40" name="Main Collider" width="0" />
   <!-- Head -->
-  <limb id="0" radius="50" type="Head" flip="True" steerforce="15" healthindex="0" attackpriority="0" stepoffset="0,0" bodytype="Dynamic" height="0" width="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 0" notes="" spriteorientation="90" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0.8,-1">
+  <limb id="0" radius="50" type="Head" flip="True" steerforce="15" healthindex="0" attackpriority="0" stepoffset="0,0" bodytype="Dynamic" height="0" width="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 0" notes="" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0.8,-1">
     <deformablesprite texture="Content/Characters/Crawler/crawler.png" sourcerect="153,2,102,82" depth="0.1" origin="0.5238374,0.4827269" subdivisions="3,3">
       <spritedeformation type="noise" resolution="3,3" frequency="2" amplitude="0.05" changespeed="2" blendmode="Add" stopwhenhostisdead="True" sync="-1" typename="noise" usemovementsine="False" sineoffset="0" strength="1" maxrotation="90" />
       <SpriteDeformation type="custom" resolution="3,3" frequency="0" blendmode="Multiply" row0="0,0 0,0 0,0" row1="0,0 0,0 1,1" row2="0,0 1,2 1,2" amplitude="1" sync="-1" typename="custom" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" strength="1" maxrotation="90" />
@@ -93,7 +93,7 @@
     <deformablesprite texture="Content/Characters/Crawler/crawler.png" sourcerect="205,87,48,43" depth="0.11" origin="0.5741225,0.4759069" />
   </limb>
   <!--LeftLeg-->
-  <limb id="15" radius="10" width="60" height="0" mass="0" name="Limb 15" type="RightFoot" spriteorientation="90" flip="True" mirrorvertically="False" mirrorhorizontally="False" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" density="10" pullpos="27.3626,-6.016137" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05" hide="False" angulardamping="7" mouthpos="0,0">
+  <limb id="15" radius="10" width="60" height="0" mass="0" name="Limb 15" type="RightFoot" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" density="10" pullpos="27.3626,-6.016137" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05" hide="False" angulardamping="7" mouthpos="0,0">
     <deformablesprite texture="Content/Characters/Crawler/crawler.png" sourcerect="160,130,95,43" origin="0.5,0.5" depth="0.5" />
   </limb>
   <!--LeftFoot-->
