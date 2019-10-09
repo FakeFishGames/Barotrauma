@@ -936,7 +936,7 @@ namespace Barotrauma
 
                 child.Visible =
                     serverInfo.ServerName.ToLowerInvariant().Contains(searchBox.Text.ToLowerInvariant()) &&
-                    (!filterSameVersion.Selected || (remoteVersion != null && remoteVersion == GameMain.Version)) &&
+                    (!filterSameVersion.Selected || (remoteVersion != null && NetworkMember.IsCompatible(remoteVersion, GameMain.Version))) &&
                     (!filterPassword.Selected || !serverInfo.HasPassword) &&
                     (!filterIncompatible.Selected || !incompatible) &&
                     (!filterFull.Selected || serverInfo.PlayerCount < serverInfo.MaxPlayers) &&
