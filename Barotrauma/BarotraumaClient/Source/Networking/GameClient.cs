@@ -29,8 +29,14 @@ namespace Barotrauma.Networking
 
         public void SetName(string value)
         {
+            value = value.Replace(":", "").Replace(";", "");
             if (string.IsNullOrEmpty(value)) { return; }
-            name = value.Replace(":", "").Replace(";", "");
+            name = value;
+            nameId++;
+        }
+
+        public void ForceNameAndJobUpdate()
+        {
             nameId++;
         }
 
@@ -1374,6 +1380,7 @@ namespace Barotrauma.Networking
                     existingClient.Character = null;
                     existingClient.Muted = tc.Muted;
                     existingClient.AllowKicking = tc.AllowKicking;
+                    GameMain.NetLobbyScreen.SetPlayerNameAndJobPreference(existingClient);
                     if (tc.CharacterID > 0)
                     {
                         existingClient.Character = Entity.FindEntityByID(tc.CharacterID) as Character;

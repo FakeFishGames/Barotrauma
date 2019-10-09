@@ -1056,6 +1056,7 @@ namespace Barotrauma
             {
                 if (GameMain.Client == null) { return; }
                 string newName = Client.SanitizeName(tb.Text);
+                newName = newName.Replace(":", "").Replace(";", "");
                 if (string.IsNullOrWhiteSpace(newName))
                 {
                     tb.Text = GameMain.Client.Name;
@@ -1405,8 +1406,13 @@ namespace Barotrauma
         public void AddPlayer(Client client)
         {
             GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), playerList.Content.RectTransform),
-                client.Name, textAlignment: Alignment.CenterLeft)
+                client.Name, textAlignment: Alignment.CenterLeft, style: null)
             {
+                Color = Color.White * 0.25f,
+                HoverColor = Color.White * 0.5f,
+                SelectedColor = Color.White * 0.85f,
+                OutlineColor = Color.White * 0.5f,
+                TextColor = Color.White,
                 UserData = client
             };
             var soundIcon = new GUIImage(new RectTransform(new Point((int)(textBlock.Rect.Height * 0.8f)), textBlock.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(5, 0) }, 
@@ -1432,6 +1438,24 @@ namespace Barotrauma
                 ToolTip = TextManager.Get("ReadyToStartTickBox"),
                 UserData = "clientready"
             };
+        }
+
+        public void SetPlayerNameAndJobPreference(Client client)
+        {
+            var playerFrame = (GUITextBlock)PlayerList.Content.FindChild(client);
+            if (playerFrame == null) { return; }
+            playerFrame.Text = client.Name;
+            
+            Color color = Color.White;
+            
+            if (JobPrefab.List.ContainsKey(client.PreferredJob))
+            {
+                color = JobPrefab.List[client.PreferredJob].UIColor;
+            }
+            playerFrame.Color = color * 0.4f;
+            playerFrame.HoverColor = color * 0.6f;
+            playerFrame.SelectedColor = color * 0.8f;
+            playerFrame.OutlineColor = color * 0.5f;
         }
 
         public void SetPlayerVoiceIconState(Client client, bool muted, bool mutedLocally)
@@ -2722,6 +2746,7 @@ namespace Barotrauma
                     disableNext = true;
                 }
             }
+            GameMain.Client.ForceNameAndJobUpdate();
 
             if (!GameMain.Config.JobPreferences.SequenceEqual(jobNamePreferences))
             {

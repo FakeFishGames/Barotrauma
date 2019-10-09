@@ -2152,14 +2152,15 @@ namespace Barotrauma.Networking
             if (c == null || string.IsNullOrEmpty(newName) || !NetIdUtils.IdMoreRecent(nameId, c.NameID)) { return false; }
 
             c.NameID = nameId;
-            c.PreferredJob = newJob;
-
             newName = Client.SanitizeName(newName);
-            if (newName == c.Name) { return false; }
+            if (newName == c.Name && newJob == c.PreferredJob) { return false; }
+            c.PreferredJob = newJob;
 
             //update client list even if the name cannot be changed to the one sent by the client,
             //so the client will be informed what their actual name is
             LastClientListUpdateID++;
+
+            if (newName == c.Name) { return false; }
 
             if (c.Connection != OwnerConnection)
             {
