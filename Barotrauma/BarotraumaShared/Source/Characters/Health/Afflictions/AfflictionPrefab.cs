@@ -243,7 +243,8 @@ namespace Barotrauma
                     XElement sourceElement = isOverride ? element.FirstElement() : element;
                     string elementName = sourceElement.Name.ToString().ToLowerInvariant();
                     string identifier = sourceElement.GetAttributeString("identifier", null);
-                    if (!elementName.Equals("cprsettings", StringComparison.OrdinalIgnoreCase))
+                    if (!elementName.Equals("cprsettings", StringComparison.OrdinalIgnoreCase) &&
+                        !elementName.Equals("damageoverlay", StringComparison.OrdinalIgnoreCase))
                     {
                         if (string.IsNullOrWhiteSpace(identifier))
                         {
@@ -265,16 +266,38 @@ namespace Barotrauma
                             }
                         }
                     }
-                    string type = sourceElement.GetAttributeString("type", null);
-                    if (sourceElement.Name.ToString().ToLowerInvariant() == "cprsettings")
+                    string type = sourceElement.GetAttributeString("type", "");
+                    switch (sourceElement.Name.ToString().ToLowerInvariant())
                     {
-                        //backwards compatibility
-                        type = "cprsettings";
+                        case "cprsettings":
+                            type = "cprsettings";
+                            break;
+                        case "damageoverlay":
+                            type = "damageoverlay";
+                            break;
                     }
 
                     AfflictionPrefab prefab = null;
                     switch (type)
                     {
+                        case "damageoverlay":
+#if CLIENT
+                            if (CharacterHealth.DamageOverlay != null)
+                            {
+                                if (isOverride)
+                                {
+                                    DebugConsole.NewMessage($"Overriding damage overlay with '{filePath}'", Color.Yellow);
+                                }
+                                else
+                                {
+                                    DebugConsole.ThrowError($"Error in '{filePath}': damage overlay already loaded. Add <override></override> tags as the parent of the custom damage overlay sprite to allow overriding the vanilla one.");
+                                    break;
+                                }
+                            }
+                            CharacterHealth.DamageOverlay?.Remove();
+                            CharacterHealth.DamageOverlay = new Sprite(element);
+#endif
+                            break;
                         case "bleeding":
                             prefab = new AfflictionPrefab(sourceElement, typeof(AfflictionBleeding));
                             break;

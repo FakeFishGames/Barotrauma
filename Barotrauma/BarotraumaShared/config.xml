@@ -41,6 +41,8 @@
     Ragdoll="Space"
     Health="H"
     Grab="G"
+    Shoot="0"
+    Deselect="1"
     SelectPreviousCharacter="Z"
     SelectNextCharacter="X" />
   <gameplay>

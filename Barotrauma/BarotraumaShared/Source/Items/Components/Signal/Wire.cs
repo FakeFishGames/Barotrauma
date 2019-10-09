@@ -83,21 +83,15 @@ namespace Barotrauma.Items.Components
         public Wire(Item item, XElement element)
             : base(item, element)
         {
-#if CLIENT
-            if (wireSprite == null)
-            {
-                wireSprite = new Sprite("Content/Items/wireHorizontal.png", new Vector2(0.5f, 0.5f))
-                {
-                    Depth = 0.85f
-                };
-            }
-#endif
-
             nodes = new List<Vector2>();
             sections = new List<WireSection>();
             connections = new Connection[2];            
             IsActive = false;
+
+            InitProjSpecific(element);
         }
+
+        partial void InitProjSpecific(XElement element);
 
         public Connection OtherConnection(Connection connection)
         {
@@ -728,6 +722,11 @@ namespace Barotrauma.Items.Components
         {
             ClearConnections();
             base.RemoveComponentSpecific();
+#if CLIENT
+            overrideSprite?.Remove();
+            overrideSprite = null;
+            wireSprite = null;
+#endif
         }
 
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)

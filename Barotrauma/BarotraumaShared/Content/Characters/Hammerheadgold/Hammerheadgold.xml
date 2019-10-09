@@ -10,6 +10,25 @@
     <Item identifier="swimbladder" />
     <Item identifier="alienblood" />
   </Inventory>
+  <sound file="Content/Characters/Hammerheadgold/HAMMERHEADg_idle1.ogg" state="Idle" range="5000" volume="1" gender="None" />
+  <sound file="Content/Characters/Hammerheadgold/HAMMERHEADg_idle2.ogg" state="Idle" range="5000" volume="1" gender="None" />
+  <sound file="Content/Characters/Hammerheadgold/HAMMERHEADg_idle3.ogg" state="Idle" range="5000" volume="1" gender="None" />
+  <sound file="Content/Characters/Hammerheadgold/HAMMERHEADg_idle4.ogg" state="Idle" range="5000" volume="1" gender="None" />
+  <sound file="Content/Characters/Hammerheadgold/HAMMERHEADg_idle5.ogg" state="Idle" range="5000" volume="1" gender="None" />
+  
+  <sound file="Content/Characters/Hammerheadgold/HAMMERHEADg_attack1.ogg" state="Attack" range="6000" volume="1" gender="None" />
+  <sound file="Content/Characters/Hammerheadgold/HAMMERHEADg_attack2.ogg" state="Attack" range="6000" volume="1" gender="None" />
+  <sound file="Content/Characters/Hammerheadgold/HAMMERHEADg_attack3.ogg" state="Attack" range="6000" volume="1" gender="None" />
+  <sound file="Content/Characters/Hammerheadgold/HAMMERHEADg_attack4.ogg" state="Attack" range="6000" volume="1" gender="None" />
+  
+  <sound file="Content/Characters/Hammerheadgold/HAMMERHEADg_damage1.ogg" state="Damage" range="4000" volume="1" gender="None" />
+  <sound file="Content/Characters/Hammerheadgold/HAMMERHEADg_damage2.ogg" state="Damage" range="4000" volume="1" gender="None" />
+  <sound file="Content/Characters/Hammerheadgold/HAMMERHEADg_damage3.ogg" state="Damage" range="4000" volume="1" gender="None" />
+  <sound file="Content/Characters/Hammerheadgold/HAMMERHEADg_damage4.ogg" state="Damage" range="4000" volume="1" gender="None" />
+  
+  <sound file="Content/Characters/Hammerheadgold/HAMMERHEADg_death1.ogg" state="Die" range="4000" volume="1" gender="None" />
+  <sound file="Content/Characters/Hammerheadgold/HAMMERHEADg_death2.ogg" state="Die" range="4000" volume="1" gender="None" />
+  <sound file="Content/Characters/Hammerheadgold/HAMMERHEADg_death3.ogg" state="Die" range="4000" volume="1" gender="None" />
   <ai combatstrength="400" sight="3" hearing="2" aggressionhurt="50" aggressiongreed="10" fleehealththreshold="0" attackonlywhenprovoked="False" aggressiveboarding="False" retaliatewhentakingdamage="False">
     <targetpriority tag="decoy" state="Attack" priority="300" />
     <targetpriority tag="nasonov" state="Attack" priority="200" />

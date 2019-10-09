@@ -71,6 +71,9 @@ namespace Barotrauma.Items.Components
         [Serialize(0.0f, false, description: "The probability of starting a fire somewhere along the ray fired from the barrel (for example, 0.1 = 10% chance to start a fire during a second of use).")]
         public float FireProbability { get; set; }
 
+        [Serialize(0.0f, false, description: "Force applied to the entity the ray hits.")]
+        public float TargetForce { get; set; }
+
         public Vector2 TransformedBarrelPos
         {
             get
@@ -332,6 +335,7 @@ namespace Barotrauma.Items.Components
 
                 if (!fixableEntities.Contains("structure") && !fixableEntities.Contains(targetStructure.Prefab.Identifier)) { return true; }
 
+                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, new ISerializableEntity[] { targetStructure });
                 FixStructureProjSpecific(user, deltaTime, targetStructure, sectionIndex);
                 targetStructure.AddDamage(sectionIndex, -StructureFixAmount * degreeOfSuccess, user);
 
@@ -365,16 +369,32 @@ namespace Barotrauma.Items.Components
                         closestDist = dist;
                     }
                 }
+
+                if (closestLimb != null && !MathUtils.NearlyEqual(TargetForce, 0.0f))
+                {
+                    Vector2 dir = closestLimb.WorldPosition - item.WorldPosition;
+                    dir = dir.LengthSquared() < 0.0001f ? Vector2.UnitY : Vector2.Normalize(dir);
+                    closestLimb.body.ApplyForce(dir * TargetForce, maxVelocity: 10.0f);
+                }
+
                 ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse,
-                    closestLimb == null ? new List<ISerializableEntity>() { targetCharacter } : new List<ISerializableEntity>() { targetCharacter, closestLimb });
+                    closestLimb == null ? new ISerializableEntity[] { targetCharacter } : new ISerializableEntity[] { targetCharacter, closestLimb });
                 FixCharacterProjSpecific(user, deltaTime, targetCharacter);
                 return true;
             }
             else if (targetBody.UserData is Limb targetLimb)
             {
                 if (targetLimb.character == null || targetLimb.character.Removed) { return false; }
+
+                if (!MathUtils.NearlyEqual(TargetForce, 0.0f))
+                {
+                    Vector2 dir = targetLimb.WorldPosition - item.WorldPosition;
+                    dir = dir.LengthSquared() < 0.0001f ? Vector2.UnitY : Vector2.Normalize(dir);
+                    targetLimb.body.ApplyForce(dir * TargetForce, maxVelocity: 10.0f);
+                }
+
                 targetLimb.character.LastDamageSource = item;
-                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, new List<ISerializableEntity>() { targetLimb.character, targetLimb });
+                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, new ISerializableEntity[] { targetLimb.character, targetLimb });
                 FixCharacterProjSpecific(user, deltaTime, targetLimb.character);
                 return true;
             }
@@ -383,6 +403,13 @@ namespace Barotrauma.Items.Components
                 targetItem.IsHighlighted = true;
                 
                 ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, targetItem.AllPropertyObjects);
+
+                if (targetItem.body != null && !MathUtils.NearlyEqual(TargetForce, 0.0f))
+                {
+                    Vector2 dir = targetItem.WorldPosition - item.WorldPosition;
+                    dir = dir.LengthSquared() < 0.0001f ? Vector2.UnitY : Vector2.Normalize(dir);
+                    targetItem.body.ApplyForce(dir * TargetForce, maxVelocity: 10.0f);
+                }
 
                 var levelResource = targetItem.GetComponent<LevelResource>();
                 if (levelResource != null && levelResource.IsActive &&
