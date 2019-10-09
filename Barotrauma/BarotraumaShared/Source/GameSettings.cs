@@ -687,11 +687,23 @@ namespace Barotrauma
                 }
                 else if (!matchingContentPackage.IsCompatible())
                 {
+                    DebugConsole.NewMessage(
+                        $"Content package \"{matchingContentPackage.Name}\" is not compatible with this version of Barotrauma (game version: {GameMain.Version}, content package version: {matchingContentPackage.GameVersion})",
+                        Color.Red);
                     incompatiblePackages.Add(matchingContentPackage);
                 }
                 else if (!matchingContentPackage.CheckValidity(out List<string> errorMessages))
                 {
+                    DebugConsole.NewMessage(
+                        $"Content package \"{matchingContentPackage.Name}\" is invalid: " + string.Join(", ", errorMessages),
+                        Color.Red);
                     invalidPackages.Add(matchingContentPackage);
+                    //never consider the vanilla content package invalid
+                    //(otherwise a player might brick the game by, for example, deleting vanilla content files)
+                    if (matchingContentPackage == GameMain.VanillaContent)
+                    {
+                        SelectedContentPackages.Add(matchingContentPackage);
+                    }
                 }
                 else
                 {
