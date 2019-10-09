@@ -335,6 +335,7 @@ namespace Barotrauma.Items.Components
 
                 if (!fixableEntities.Contains("structure") && !fixableEntities.Contains(targetStructure.Prefab.Identifier)) { return true; }
 
+                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, new ISerializableEntity[] { targetStructure });
                 FixStructureProjSpecific(user, deltaTime, targetStructure, sectionIndex);
                 targetStructure.AddDamage(sectionIndex, -StructureFixAmount * degreeOfSuccess, user);
 
@@ -377,7 +378,7 @@ namespace Barotrauma.Items.Components
                 }
 
                 ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse,
-                    closestLimb == null ? new List<ISerializableEntity>() { targetCharacter } : new List<ISerializableEntity>() { targetCharacter, closestLimb });
+                    closestLimb == null ? new ISerializableEntity[] { targetCharacter } : new ISerializableEntity[] { targetCharacter, closestLimb });
                 FixCharacterProjSpecific(user, deltaTime, targetCharacter);
                 return true;
             }
@@ -393,7 +394,7 @@ namespace Barotrauma.Items.Components
                 }
 
                 targetLimb.character.LastDamageSource = item;
-                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, new List<ISerializableEntity>() { targetLimb.character, targetLimb });
+                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, new ISerializableEntity[] { targetLimb.character, targetLimb });
                 FixCharacterProjSpecific(user, deltaTime, targetLimb.character);
                 return true;
             }

@@ -474,20 +474,24 @@ namespace Barotrauma
 
             if (entity is Item item)
             {
+                if (targetIdentifiers.Contains("item")) return true;
                 if (item.HasTag(targetIdentifiers)) return true;
                 if (targetIdentifiers.Any(id => id == item.Prefab.Identifier)) return true;
             }
             else if (entity is ItemComponent itemComponent)
             {
+                if (targetIdentifiers.Contains("itemcomponent")) return true;
                 if (itemComponent.Item.HasTag(targetIdentifiers)) return true;
                 if (targetIdentifiers.Any(id => id == itemComponent.Item.Prefab.Identifier)) return true;
             }
             else if (entity is Structure structure)
             {
+                if (targetIdentifiers.Contains("structure")) return true;
                 if (targetIdentifiers.Any(id => id == structure.Prefab.Identifier)) return true;
             }
             else if (entity is Character character)
             {
+                if (targetIdentifiers.Contains("character")) return true;
                 if (targetIdentifiers.Any(id => id == character.SpeciesName)) return true;
             }
 
