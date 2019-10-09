@@ -10,6 +10,7 @@
     <target tag="human" state="Attack" priority="60" />
     <target tag="weaker" state="Attack" priority="50" />
     <target tag="stronger" state="Attack" priority="50" />
+    <SwarmBehavior mindistfromclosest="400" maxdistfromcenter="2000" cohesion="0.5" />
   </ai>
   <sound file="Content/Characters/Tigerthresher/TIGERTRESHER_idle1.ogg" state="Idle" range="3000" volume="1" gender="None" />
   <sound file="Content/Characters/Tigerthresher/TIGERTRESHER_idle2.ogg" state="Idle" range="3000" volume="1" gender="None" />
