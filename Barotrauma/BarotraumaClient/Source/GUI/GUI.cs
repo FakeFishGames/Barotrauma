@@ -808,6 +808,18 @@ namespace Barotrauma
             font.DrawString(sb, text, pos, color);
         }
 
+        public static void DrawStringWithColors(SpriteBatch sb, Vector2 pos, string text, Color color, List<ScalableFont.ColorData> colorData, Color? backgroundColor = null, int backgroundPadding = 0, ScalableFont font = null, float depth = 0.0f)
+        {
+            if (font == null) font = Font;
+            if (backgroundColor != null)
+            {
+                Vector2 textSize = font.MeasureString(text);
+                DrawRectangle(sb, pos - Vector2.One * backgroundPadding, textSize + Vector2.One * 2.0f * backgroundPadding, (Color)backgroundColor, true, depth, 5);
+            }
+
+            font.DrawStringWithColors(sb, text, pos, color, 0.0f, Vector2.Zero, 1f, SpriteEffects.None, depth, colorData);
+        }
+
         public static void DrawRectangle(SpriteBatch sb, Vector2 start, Vector2 size, Color clr, bool isFilled = false, float depth = 0.0f, int thickness = 1)
         {
             if (size.X < 0)
