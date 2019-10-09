@@ -7,6 +7,76 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
+    public class ColorData
+    {
+        public int StartIndex, EndIndex;
+        public Color Color;
+
+        private const char colorDefinitionIndicator = '‖';
+        private const char lineChangeIndicator = '\n';
+        private const string colorDefinitionStartString = "‖color:";
+        private const string coloringEndDefinition = "‖color:end‖";
+
+        public static List<ColorData> GetColorData(string text, out string sanitizedText)
+        {
+            List<ColorData> textColors = null;
+            if (text.IndexOf(colorDefinitionIndicator) != -1 && text.Contains(colorDefinitionStartString))
+            {
+                textColors = new List<ColorData>();
+                List<int> lineChangeIndexes = null;
+
+                int currentIndex = text.IndexOf(lineChangeIndicator);
+                if (currentIndex != -1)
+                {
+                    lineChangeIndexes = new List<int>();
+                    lineChangeIndexes.Add(currentIndex);
+                    int startIndex = currentIndex + 1;
+
+                    while (true)
+                    {
+                        if (startIndex >= text.Length) break;
+                        currentIndex = text.IndexOf(lineChangeIndicator, startIndex);
+                        if (currentIndex == -1) break;
+                        lineChangeIndexes.Add(currentIndex);
+                        startIndex = currentIndex + 1;
+                    }
+                }
+
+                while (text.IndexOf(colorDefinitionStartString) != -1)
+                {
+                    ColorData colorData = new ColorData();
+
+                    int colorDefinitionStartIndex = text.IndexOf(colorDefinitionStartString);
+                    int colorDefinitionEndIndex = text.IndexOf(colorDefinitionIndicator, colorDefinitionStartIndex + 1);
+
+                    string[] colorDefinition = text.Substring(colorDefinitionStartIndex + colorDefinitionStartString.Length, colorDefinitionEndIndex - colorDefinitionStartIndex - colorDefinitionStartString.Length).Split(',');
+
+                    colorData.StartIndex = colorDefinitionStartIndex;
+                    colorData.Color = new Color(int.Parse(colorDefinition[0]), int.Parse(colorDefinition[1]), int.Parse(colorDefinition[2]));
+                    text = text.Remove(colorDefinitionStartIndex, colorDefinitionEndIndex - colorDefinitionStartIndex + 1);
+                    colorData.EndIndex = text.IndexOf(coloringEndDefinition);
+                    text = text.Remove(colorData.EndIndex, coloringEndDefinition.Length);
+
+                    if (lineChangeIndexes != null)
+                    {
+                        for (int i = 0; i < lineChangeIndexes.Count; i++)
+                        {
+                            if (colorData.StartIndex > lineChangeIndexes[i])
+                            {
+                                colorData.StartIndex--;
+                                colorData.EndIndex--;
+                            }
+                        }
+                    }
+
+                    textColors.Add(colorData);
+                }
+            }
+
+            sanitizedText = text;
+            return textColors;
+        }
+    }
     public class ScalableFont : IDisposable
     {
         private static List<ScalableFont> FontList = new List<ScalableFont>();
@@ -61,65 +131,7 @@ namespace Barotrauma
             public Vector2 drawOffset;
             public float advance;
             public Rectangle texCoords;
-        }
-
-        public class ColorData
-        {
-            public int StartIndex, EndIndex;
-            public Color Color;
-
-            public static List<ColorData> GetColorData(string text, out string sanitizedText)
-            {
-                List<ColorData> textColors = null;
-                if (text.IndexOf('{') != -1 && text.Contains("{color:"))
-                {
-                    string colorDefinitionStartString = "{color:";
-                    char colorDefinitionEndChar = '}';
-                    string coloringEndDefinition = "{color:end}";
-
-                    textColors = new List<ColorData>();
-                    List<int> lineChangeIndexes = new List<int>();
-
-                    for (int i = 0; i < text.Length; i++)
-                    {
-                        if (text[i] == '\n')
-                        {
-                            lineChangeIndexes.Add(i);
-                        }
-                    }
-
-                    while (text.IndexOf(colorDefinitionStartString) != -1)
-                    {
-                        ColorData colorData = new ColorData();
-
-                        int colorDefinitionStartIndex = text.IndexOf(colorDefinitionStartString);
-                        int colorDefinitionEndIndex = text.IndexOf(colorDefinitionEndChar, colorDefinitionStartIndex);
-
-                        string[] colorDefinition = text.Substring(colorDefinitionStartIndex + colorDefinitionStartString.Length, colorDefinitionEndIndex - colorDefinitionStartIndex - colorDefinitionStartString.Length).Split(',');
-
-                        colorData.StartIndex = colorDefinitionStartIndex;
-                        colorData.Color = new Color(int.Parse(colorDefinition[0]), int.Parse(colorDefinition[1]), int.Parse(colorDefinition[2]));
-                        text = text.Remove(colorDefinitionStartIndex, colorDefinitionEndIndex - colorDefinitionStartIndex + 1);
-                        colorData.EndIndex = text.IndexOf(coloringEndDefinition);
-                        text = text.Remove(colorData.EndIndex, coloringEndDefinition.Length);
-
-                        for (int i = 0; i < lineChangeIndexes.Count; i++)
-                        {
-                            if (colorData.StartIndex > lineChangeIndexes[i])
-                            {
-                                colorData.StartIndex--;
-                                colorData.EndIndex--;
-                            }
-                        }
-
-                        textColors.Add(colorData);
-                    }
-                }
-
-                sanitizedText = text;
-                return textColors;
-            }
-        }
+        }       
 
         public ScalableFont(XElement element, GraphicsDevice gd = null)
             : this(
@@ -484,13 +496,6 @@ namespace Barotrauma
         {
             if (textures.Count == 0 && !DynamicLoading) { return; }
 
-            for (int i = 0; i < colorData.Count; i++)
-            {
-                DebugConsole.NewMessage("Color: " + colorData[i].Color);
-                DebugConsole.NewMessage("start: " + colorData[i].StartIndex);
-                DebugConsole.NewMessage("end: " + colorData[i].EndIndex);
-            }
-
             int lineNum = 0;
             Vector2 currentPos = position;
             Vector2 advanceUnit = rotation == 0.0f ? Vector2.UnitX : new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation));
@@ -517,7 +522,7 @@ namespace Barotrauma
 
                 Color currentTextColor;
 
-                if (i >= currentColorData.EndIndex)
+                if (currentColorData != null && i >= currentColorData.EndIndex + lineNum)
                 {
                     colorDataIndex++;
                     currentColorData = colorDataIndex < colorData.Count ? colorData[colorDataIndex] : null;
@@ -537,9 +542,13 @@ namespace Barotrauma
                     if (gd.texIndex >= 0)
                     {
                         Texture2D tex = textures[gd.texIndex];
-                        sb.Draw(tex, currentPos + gd.drawOffset, gd.texCoords, currentTextColor);
+                        Vector2 drawOffset;
+                        drawOffset.X = gd.drawOffset.X * advanceUnit.X * scale.X - gd.drawOffset.Y * advanceUnit.Y * scale.Y;
+                        drawOffset.Y = gd.drawOffset.X * advanceUnit.Y * scale.Y + gd.drawOffset.Y * advanceUnit.X * scale.X;
+
+                        sb.Draw(tex, currentPos + drawOffset, gd.texCoords, currentTextColor, rotation, origin, scale, se, layerDepth);
                     }
-                    currentPos.X += gd.advance;
+                    currentPos += gd.advance * advanceUnit * scale.X;
                 }
             }
         }

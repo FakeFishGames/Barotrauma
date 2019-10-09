@@ -200,6 +200,9 @@ namespace Barotrauma
         {
             get { return censoredText; }
         }
+
+        private List<ColorData> colorData = null;
+        private bool hasColorHighlight = false;
                 
         /// <summary>
         /// This is the new constructor.
@@ -240,6 +243,12 @@ namespace Barotrauma
             RectTransform.SizeChanged += SetTextPos;
 
             Censor = false;
+        }
+        public GUITextBlock(RectTransform rectT, List<ColorData> colorData, string text, Color? textColor = null, ScalableFont font = null, Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null, bool playerInput = false)
+        : this(rectT, text, textColor, font, textAlignment, wrap, style, color, playerInput)
+        {
+            this.colorData = colorData;
+            hasColorHighlight = colorData != null;
         }
 
         public void CalculateHeightFromText()
@@ -379,12 +388,20 @@ namespace Barotrauma
                     pos.Y = (int)pos.Y;
                 }
 
-                Font.DrawString(spriteBatch,
-                    Censor ? censoredText : (Wrap ? wrappedText : text),
-                    pos,
-                    textColor * (textColor.A / 255.0f),
-                    0.0f, origin, TextScale,
-                    SpriteEffects.None, textDepth);
+                if (!hasColorHighlight)
+                {
+                    Font.DrawString(spriteBatch,
+                        Censor ? censoredText : (Wrap ? wrappedText : text),
+                        pos,
+                        textColor * (textColor.A / 255.0f),
+                        0.0f, origin, TextScale,
+                        SpriteEffects.None, textDepth);
+                }
+                else
+                {
+                    Font.DrawStringWithColors(spriteBatch, Censor ? censoredText : (Wrap ? wrappedText : text), pos, 
+                        textColor * (textColor.A / 255.0f), 0.0f, origin, TextScale, SpriteEffects.None, textDepth, colorData);
+                }
             }
 
             if (overflowClipActive)

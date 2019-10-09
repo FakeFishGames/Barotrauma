@@ -808,7 +808,7 @@ namespace Barotrauma
             font.DrawString(sb, text, pos, color);
         }
 
-        public static void DrawStringWithColors(SpriteBatch sb, Vector2 pos, string text, Color color, List<ScalableFont.ColorData> colorData, Color? backgroundColor = null, int backgroundPadding = 0, ScalableFont font = null, float depth = 0.0f)
+        public static void DrawStringWithColors(SpriteBatch sb, Vector2 pos, string text, Color color, List<ColorData> colorData, Color? backgroundColor = null, int backgroundPadding = 0, ScalableFont font = null, float depth = 0.0f)
         {
             if (font == null) font = Font;
             if (backgroundColor != null)

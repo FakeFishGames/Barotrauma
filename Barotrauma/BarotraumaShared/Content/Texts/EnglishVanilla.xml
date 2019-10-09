@@ -3027,7 +3027,7 @@
   <!-- Room 1 -->
   <mechanic.opendoor>Doors</mechanic.opendoor>
   <mechanic.opendoorobjective>Open the door by pushing the adjacent button</mechanic.opendoorobjective>
-  <mechanic.opendoortext>Move by pressing {0}, {1}, {2}, {3} buttons. Interact with items and devices with {4} button.\n\nOpen this door by pressing {5} while your cursor is over it.</mechanic.opendoortext>
+  <mechanic.opendoortext>Move by pressing {0}, {1}, {2}, {3} buttons. Interact with items and devices with {4} button.\n\nOpen this door by pressing {5} while your ‖color:255,0,0‖cursor‖color:end‖ is over it.</mechanic.opendoortext>
 
   <!-- Room 2 -->
   <mechanic.equipment>Containers</mechanic.equipment>
