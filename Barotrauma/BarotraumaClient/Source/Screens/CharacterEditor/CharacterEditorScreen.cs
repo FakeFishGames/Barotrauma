@@ -3212,6 +3212,10 @@ namespace Barotrauma.CharacterEditor
                 {
                     CreateCloseButton(emitter.SerializableEntityEditor, () => CharacterParams.RemoveGibEmitter(emitter));
                 }
+                foreach (var emitter in CharacterParams.DamageEmitters)
+                {
+                    CreateCloseButton(emitter.SerializableEntityEditor, () => CharacterParams.RemoveDamageEmitter(emitter));
+                }
                 foreach (var sound in CharacterParams.Sounds)
                 {
                     CreateCloseButton(sound.SerializableEntityEditor, () => CharacterParams.RemoveSound(sound));
@@ -3228,6 +3232,7 @@ namespace Barotrauma.CharacterEditor
                 }
                 CreateAddButtonAtLast(mainEditor, () => CharacterParams.AddBloodEmitter(), GetCharacterEditorTranslation("AddBloodEmitter"));
                 CreateAddButtonAtLast(mainEditor, () => CharacterParams.AddGibEmitter(), GetCharacterEditorTranslation("AddGibEmitter"));
+                CreateAddButtonAtLast(mainEditor, () => CharacterParams.AddDamageEmitter(), GetCharacterEditorTranslation("AddDamageEmitter"));
                 CreateAddButtonAtLast(mainEditor, () => CharacterParams.AddSound(), GetCharacterEditorTranslation("AddSound"));
                 CreateAddButtonAtLast(mainEditor, () => CharacterParams.AddInventory(), GetCharacterEditorTranslation("AddInventory"));
             }

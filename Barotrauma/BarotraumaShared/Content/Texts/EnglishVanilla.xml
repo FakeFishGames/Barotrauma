@@ -981,6 +981,7 @@
   <charactereditor.addaitarget>Add Target</charactereditor.addaitarget>
   <charactereditor.addbloodemitter>Add Blood Emitter</charactereditor.addbloodemitter>
   <charactereditor.addgibemitter>Add Gib Emitter</charactereditor.addgibemitter>
+  <charactereditor.adddamageemitter>Add Damage Emitter</charactereditor.adddamageemitter>
   <charactereditor.addsound>Add Sound</charactereditor.addsound>
   <charactereditor.addlightsource>Add Light</charactereditor.addlightsource>
   <charactereditor.addattack>Add Attack</charactereditor.addattack>

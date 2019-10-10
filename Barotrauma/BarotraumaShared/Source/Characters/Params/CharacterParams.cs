@@ -46,6 +46,7 @@ namespace Barotrauma
         public readonly List<SoundParams> Sounds = new List<SoundParams>();
         public readonly List<ParticleParams> BloodEmitters = new List<ParticleParams>();
         public readonly List<ParticleParams> GibEmitters = new List<ParticleParams>();
+        public readonly List<ParticleParams> DamageEmitters = new List<ParticleParams>();
         public readonly List<InventoryParams> Inventories = new List<InventoryParams>();
         public HealthParams Health { get; private set; }
         public AIParams AI { get; private set; }
@@ -124,6 +125,12 @@ namespace Barotrauma
                 GibEmitters.Add(emitter);
                 SubParams.Add(emitter);
             }
+            foreach (var element in MainElement.GetChildElements("damageemitter"))
+            {
+                var emitter = new ParticleParams(element, this);
+                GibEmitters.Add(emitter);
+                SubParams.Add(emitter);
+            }
             foreach (var soundElement in MainElement.GetChildElements("sound"))
             {
                 var sound = new SoundParams(soundElement, this);
@@ -193,6 +200,7 @@ namespace Barotrauma
 
         public void AddBloodEmitter() => AddEmitter("bloodemitter");
         public void AddGibEmitter() => AddEmitter("gibemitter");
+        public void AddDamageEmitter() => AddEmitter("damageemitter");
 
         private void AddEmitter(string type)
         {
@@ -204,6 +212,9 @@ namespace Barotrauma
                 case "bloodemitter":
                     TryAddSubParam(new XElement(type), (e, c) => new ParticleParams(e, c), out _, BloodEmitters);
                     break;
+                case "damageemitter":
+                    TryAddSubParam(new XElement(type), (e, c) => new ParticleParams(e, c), out _, DamageEmitters);
+                    break;
                 default: throw new NotImplementedException(type);
             }
         }
@@ -211,6 +222,7 @@ namespace Barotrauma
         public bool RemoveSound(SoundParams soundParams) => RemoveSubParam(soundParams);
         public bool RemoveBloodEmitter(ParticleParams emitter) => RemoveSubParam(emitter, BloodEmitters);
         public bool RemoveGibEmitter(ParticleParams emitter) => RemoveSubParam(emitter, GibEmitters);
+        public bool RemoveDamageEmitter(ParticleParams emitter) => RemoveSubParam(emitter, DamageEmitters);
         public bool RemoveInventory(InventoryParams inventory) => RemoveSubParam(inventory, Inventories);
 
         protected bool RemoveSubParam<T>(T subParam, IList<T> collection = null) where T : SubParam
