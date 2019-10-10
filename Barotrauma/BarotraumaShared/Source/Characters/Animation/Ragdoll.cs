@@ -882,9 +882,8 @@ namespace Barotrauma
                     {
                         Collider.SetTransform(ConvertUnits.ToSimUnits(intersection), Collider.Rotation);
                     }
+                    return;
                 }
-
-                return;
             }
 
             if (setSubmarine)

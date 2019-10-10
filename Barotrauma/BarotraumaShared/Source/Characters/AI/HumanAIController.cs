@@ -780,7 +780,7 @@ namespace Barotrauma
             if (hull == null || 
                 hull.WaterPercentage > 80 || 
                 (hull.LethalPressure > 0 && character.PressureProtection <= 0) || 
-                hull.ConnectedGaps.Max(g => AIObjectiveFixLeaks.GetLeakSeverity(g)) > 60)
+                (hull.ConnectedGaps.Any() && hull.ConnectedGaps.Max(g => AIObjectiveFixLeaks.GetLeakSeverity(g)) > 60))
             {
                 needsSuit = true;
                 return true;

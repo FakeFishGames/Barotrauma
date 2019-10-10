@@ -93,8 +93,10 @@ namespace Barotrauma
 
             if (currentTargetIsInvalid || currentTarget == null && HumanAIController.VisibleHulls.Any(h => IsForbidden(h)))
             {
-                newTargetTimer = 0;
-                standStillTimer = 0;
+                //don't reset to zero, otherwise the character will keep calling FindTargetHulls 
+                //almost constantly when there's a small number of potential hulls to move to
+                newTargetTimer = Math.Min(newTargetTimer, 0.5f);
+                //standStillTimer = 0.0f;
             }
             else if (character.IsClimbing)
             {
@@ -112,7 +114,7 @@ namespace Barotrauma
             {
                 if (currentTarget == null)
                 {
-                    newTargetTimer = 0;
+                    newTargetTimer = Math.Min(newTargetTimer, 0.5f);
                 }
             }
             if (newTargetTimer <= 0.0f)
@@ -182,20 +184,6 @@ namespace Barotrauma
                 if (SteeringManager != PathSteering || (PathSteering.CurrentPath != null &&
                     (PathSteering.CurrentPath.NextNode == null || PathSteering.CurrentPath.Unreachable || PathSteering.CurrentPath.HasOutdoorsNodes)))
                 {
-                    if (!character.AnimController.InWater)
-                    {
-                        standStillTimer -= deltaTime;
-                        if (standStillTimer > 0.0f)
-                        {
-                            walkDuration = Rand.Range(walkDurationMin, walkDurationMax);
-                            PathSteering.Reset();
-                            return;
-                        }
-                        if (standStillTimer < -walkDuration)
-                        {
-                            standStillTimer = Rand.Range(standStillMin, standStillMax);
-                        }
-                    }
                     Wander(deltaTime);
                     return;
                 }
@@ -221,6 +209,22 @@ namespace Barotrauma
         public void Wander(float deltaTime)
         {
             if (character.IsClimbing) { return; }
+
+            if (!character.AnimController.InWater)
+            {
+                standStillTimer -= deltaTime;
+                if (standStillTimer > 0.0f)
+                {
+                    walkDuration = Rand.Range(walkDurationMin, walkDurationMax);
+                    PathSteering.Reset();
+                    return;
+                }
+                if (standStillTimer < -walkDuration)
+                {
+                    standStillTimer = Rand.Range(standStillMin, standStillMax);
+                }
+            }
+
             //steer away from edges of the hull
             var currentHull = character.CurrentHull;
             if (currentHull != null)

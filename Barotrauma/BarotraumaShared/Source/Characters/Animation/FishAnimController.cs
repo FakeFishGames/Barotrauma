@@ -153,7 +153,7 @@ namespace Barotrauma
                     deathAnimTimer += deltaTime;
                     UpdateDying(deltaTime);
                 }
-                else if (CanEnterSubmarine && !InWater && CurrentGroundedParams == null && character.AllowInput)
+                else if (!InWater && !CanWalk && character.AllowInput)
                 {
                     //cannot walk but on dry land -> wiggle around
                     UpdateDying(deltaTime);
