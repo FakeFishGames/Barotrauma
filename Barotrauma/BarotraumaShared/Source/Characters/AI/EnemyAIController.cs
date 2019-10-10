@@ -19,6 +19,7 @@ namespace Barotrauma
         /// </summary>
         public bool TargetOutposts;
 
+        // TODO: use a struct?
         class WallTarget
         {
             public Vector2 Position;
@@ -113,7 +114,7 @@ namespace Barotrauma
             get
             {
                 //can't enter a submarine when attached to something
-                return LatchOntoAI == null || !LatchOntoAI.IsAttached;
+                return Character.AnimController.CanEnterSubmarine && (LatchOntoAI == null || !LatchOntoAI.IsAttached);
             }
         }
 
@@ -436,6 +437,9 @@ namespace Barotrauma
 
         #region Attack
 
+        private Vector2 attackWorldPos;
+        private Vector2 attackSimPos;
+
         private void UpdateAttack(float deltaTime)
         {
             if (SelectedAiTarget == null)
@@ -444,8 +448,8 @@ namespace Barotrauma
                 return;
             }
 
-            Vector2 attackWorldPos = SelectedAiTarget.WorldPosition;
-            Vector2 attackSimPos = SelectedAiTarget.SimPosition;
+            attackWorldPos = SelectedAiTarget.WorldPosition;
+            attackSimPos = SelectedAiTarget.SimPosition;
 
             if (SelectedAiTarget.Entity is Item item)
             {
@@ -488,13 +492,7 @@ namespace Barotrauma
                 attackSimPos = Character.GetRelativeSimPosition(SelectedAiTarget.Entity);
             }
 
-            if (Math.Abs(Character.AnimController.movement.X) > 0.1f && !Character.AnimController.InWater &&
-                (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer || Character.Controlled == Character))
-            {
-                Character.AnimController.TargetDir = Character.WorldPosition.X < attackWorldPos.X ? Direction.Right : Direction.Left;
-            }
-
-            if (AggressiveBoarding)
+            if (CanEnterSubmarine && Character.CurrentHull != null)
             {
                 //targeting a wall section that can be passed through -> steer manually through the hole
                 if (wallTarget != null && wallTarget.SectionIndex > -1 && CanPassThroughHole(wallTarget.Structure, wallTarget.SectionIndex))
@@ -533,6 +531,38 @@ namespace Barotrauma
                         return;
                     }
                 }
+            }
+            else if (SelectedAiTarget.Entity is Structure w && wallTarget == null)
+            {
+                // Targeting only the outer walls
+                bool isBroken = true;
+                for (int i = 0; i < w.Sections.Length; i++)
+                {
+                    WallSection section = w.Sections[i];
+                    if (!w.SectionBodyDisabled(i))
+                    {
+                        isBroken = false;
+                        Vector2 sectionPos = w.SectionPosition(i);
+                        attackWorldPos = sectionPos;
+                        if (w.Submarine != null)
+                        {
+                            attackWorldPos += w.Submarine.Position;
+                        }
+                        attackSimPos = ConvertUnits.ToSimUnits(attackWorldPos);
+                        break;
+                    }
+                }
+                if (isBroken)
+                {
+                    IgnoreTarget(SelectedAiTarget);
+                    State = AIState.Idle;
+                }
+            }
+
+            if (Math.Abs(Character.AnimController.movement.X) > 0.1f && !Character.AnimController.InWater &&
+                (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer || Character.Controlled == Character))
+            {
+                Character.AnimController.TargetDir = Character.WorldPosition.X < attackWorldPos.X ? Direction.Right : Direction.Left;
             }
 
             bool canAttack = true;
@@ -940,9 +970,8 @@ namespace Barotrauma
                 {
                     if (wall.SectionBodyDisabled(i))
                     {
-                        if (AggressiveBoarding && CanPassThroughHole(wall, i))
+                        if (CanEnterSubmarine && CanPassThroughHole(wall, i))
                         {
-                            //aggressive boarders always target holes they can pass through
                             sectionIndex = i;
                             break;
                         }
@@ -952,7 +981,10 @@ namespace Barotrauma
                             continue;
                         }
                     }
-                    if (wall.SectionDamage(i) > sectionDamage) sectionIndex = i;
+                    if (wall.SectionDamage(i) > sectionDamage)
+                    {
+                        sectionIndex = i;
+                    }
                 }
                 
                 Vector2 sectionPos = wall.SectionPosition(sectionIndex);
@@ -1060,6 +1092,7 @@ namespace Barotrauma
         {
             if (attackVector == null)
             {
+                // TODO: test adding some random variance here?
                 attackVector = attackWorldPos - WorldPosition;
             }
             Vector2 attackDir = Vector2.Normalize(followThrough ? attackVector.Value : -attackVector.Value);
@@ -1227,7 +1260,7 @@ namespace Barotrauma
                             }
                         }
                     }
-                    else if (targetCharacter.Submarine != null && Character.Submarine == null && !AggressiveBoarding)
+                    else if (targetCharacter.Submarine != null && Character.Submarine == null && !Character.AnimController.CanEnterSubmarine)
                     {
                         //target inside, AI outside -> we'll be attacking a wall between the characters so use the priority for attacking rooms
                         targetingTag = "room";
@@ -1246,7 +1279,7 @@ namespace Barotrauma
                     if (target.Entity is Item item)
                     {
                         //item inside and we're outside -> attack the hull
-                        if (item.CurrentHull != null && character.CurrentHull == null && !AggressiveBoarding)
+                        if (item.CurrentHull != null && character.CurrentHull == null && !Character.AnimController.CanEnterSubmarine)
                         {
                             targetingTag = "room";
                         }
@@ -1285,57 +1318,58 @@ namespace Barotrauma
                             continue;
                         }
                         valueModifier = 1;
-                        float wallMaxHealth = 400;  // Anything more than this is ignored -> 200 = 1
-                        // Prefer weaker targets.
-                        valueModifier *= MathHelper.Lerp(1.5f, 0.5f, MathUtils.InverseLerp(0, 1, s.Health / wallMaxHealth));
                         bool canAttackSub = Character.AnimController.CanAttackSubmarine;
-                        if (!AggressiveBoarding)
+                        if (!Character.AnimController.CanEnterSubmarine)
                         {
                             // Ignore disabled walls
-                            bool isDisabled = true;
-                            for (int i = 0; i < s.Sections.Length; i++)
+                            bool isBroken = false;
+                            if (!isBroken)
                             {
-                                if (!s.SectionBodyDisabled(i))
+                                for (int i = 0; i < s.Sections.Length; i++)
                                 {
-                                    isDisabled = false;
-                                    break;
+                                    if (!s.SectionBodyDisabled(i))
+                                    {
+                                        isBroken = false;
+                                        break;
+                                    }
                                 }
                             }
-                            if (isDisabled)
+                            if (isBroken)
                             {
                                 continue;
                             }
                         }
-                        //var hulls = s.Submarine.GetHulls(false);
                         for (int i = 0; i < s.Sections.Length; i++)
                         {
                             var section = s.Sections[i];
-                            if (section.gap != null)
+                            if (section.gap == null) { continue; }
+                            bool leadsInside = !section.gap.IsRoomToRoom && section.gap.FlowTargetHull != null;
+                            if (Character.AnimController.CanEnterSubmarine)
                             {
-                                if (AggressiveBoarding)
+                                if (CanPassThroughHole(s, i))
                                 {
-                                    if (CanPassThroughHole(s, i))
+                                    valueModifier *= leadsInside ? (AggressiveBoarding ? 5 : 1) : 0;
+                                }
+                                else
+                                {
+                                    // Ignore holes that cannot be passed through if cannot attack items/structures. Holes that are big enough should be targeted, so that we can get in
+                                    if (!canAttackSub)
                                     {
-                                        bool leadsInside = !section.gap.IsRoomToRoom && section.gap.FlowTargetHull != null;    // hulls.Any(h => h.Rect.Intersects(section.rect)
-                                        valueModifier *= leadsInside ? 5 : 0;
+                                        valueModifier = 0;
+                                        break;
                                     }
-                                    else
+                                    if (AggressiveBoarding)
                                     {
-                                        // Ignore holes that cannot be passed through if cannot attack items/structures. Holes that are big enough should be targeted, so that we can get in if we are aggressive boarders
-                                        if (!canAttackSub)
-                                        {
-                                            valueModifier = 0;
-                                            break;
-                                        }
                                         // Up to 100% priority increase for every gap in the wall
                                         valueModifier *= 1 + section.gap.Open;
                                     }
                                 }
-                                else
-                                {
-                                    bool leadsInside = !section.gap.IsRoomToRoom && section.gap.FlowTargetHull != null;
-                                    valueModifier *= leadsInside ? 1 : 0;
-                                }
+                            }
+                            else if (!leadsInside)
+                            {
+                                // Ignore inner walls
+                                valueModifier = 0;
+                                break;
                             }
                         }
                     }
@@ -1373,7 +1407,7 @@ namespace Barotrauma
                                 valueModifier *= isOpen ? 0 : 1;
                             }
                         }
-                        else if (isOpen) //ignore broken and open doors
+                        else if (!Character.AnimController.CanEnterSubmarine && isOpen) //ignore broken and open doors
                         {
                             continue;
                         }

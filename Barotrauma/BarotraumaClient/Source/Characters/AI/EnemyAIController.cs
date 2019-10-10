@@ -16,8 +16,13 @@ namespace Barotrauma
 
             if (SelectedAiTarget?.Entity != null)
             {
-                GUI.DrawLine(spriteBatch, pos, new Vector2(SelectedAiTarget.WorldPosition.X, -SelectedAiTarget.WorldPosition.Y), Color.Red * 0.5f, 0, 4);
-
+                Vector2 targetPos = SelectedAiTarget.WorldPosition;
+                if (State == AIState.Attack)
+                {
+                    targetPos = attackWorldPos;
+                }
+                targetPos.Y = -targetPos.Y;
+                GUI.DrawLine(spriteBatch, pos, targetPos, Color.Red * 0.5f, 0, 4);
                 if (wallTarget != null)
                 {
                     Vector2 wallTargetPos = wallTarget.Position;
