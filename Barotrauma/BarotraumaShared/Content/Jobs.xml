@@ -36,6 +36,9 @@
       <Order identifier="extinguishfires" prioritymodifier ="1"/>
       <Order identifier="steer" option="maintainposition" prioritymodifier="0.5"/>
     </AutonomousObjectives>
+    <AppropriateOrders>
+      <Order identifier="steer"/>
+    </AppropriateOrders>
   </Job>
   
   <Job identifier="engineer"    
@@ -77,6 +80,12 @@
       <Order identifier="chargebatteries" option="charge" prioritymodifier="0.25"/>
       <Order identifier="pumpwater" option="pumpout" prioritymodifier="0.25"/>
     </AutonomousObjectives>
+    <AppropriateOrders>
+      <Order identifier="operatereactor"/>
+      <Order identifier="repairsystems"/>
+      <Order identifier="chargebatteries"/>
+      <Order identifier="reportbrokendevices"/>
+    </AppropriateOrders>
   </Job>
 
   <Job identifier="mechanic"
@@ -117,6 +126,12 @@
       <Order identifier="pumpwater" option="pumpout" prioritymodifier="0.5"/>
       <Order identifier="chargebatteries" option="charge" prioritymodifier="0.25"/>
     </AutonomousObjectives>
+    <AppropriateOrders>
+      <Order identifier="fixleaks"/>
+      <Order identifier="pumpwater"/>
+      <Order identifier="repairsystems"/>
+      <Order identifier="reportbrokendevices"/>
+    </AppropriateOrders>
   </Job>
 
   <Job identifier="securityofficer"
@@ -157,6 +172,10 @@
       <Order identifier="repairsystems" option="all" prioritymodifier="0.2"/>
       <Order identifier="operateweapons" option="holdfire" prioritymodifier="0.1"/>
     </AutonomousObjectives>
+    <AppropriateOrders>
+      <Order identifier="operateweapons"/>
+      <Order identifier="fightintruders"/>
+    </AppropriateOrders>
   </Job>
 
   <Job identifier="medicaldoctor"
@@ -191,6 +210,10 @@
       <Order identifier="fixleaks" prioritymodifier="0.2"/>
       <Order identifier="repairsystems" option="all" prioritymodifier="0.2"/>
     </AutonomousObjectives>
+    <AppropriateOrders>
+      <Order identifier="rescue"/>
+      <Order identifier="requestfirstaid"/>
+    </AppropriateOrders>
   </Job>
 
   <Job identifier="assistant"

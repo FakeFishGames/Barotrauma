@@ -729,7 +729,10 @@ namespace Barotrauma.Networking
             set
             {
                 if (karmaPreset == value) { return; }
-                GameMain.NetworkMember?.KarmaManager?.SelectPreset(value);
+                if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
+                {
+                    GameMain.NetworkMember?.KarmaManager?.SelectPreset(value);
+                }
                 karmaPreset = value;
             }
         }

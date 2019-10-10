@@ -33,6 +33,15 @@ namespace Barotrauma
         private bool loadSub;
         private Submarine sub;
 
+        private ushort originalMyPortID;
+
+        //the ID of the docking port the sub was docked to in the original sub file
+        //(needed when replacing a lost sub)
+        private ushort originalLinkedToID;
+        private DockingPort originalLinkedPort;
+
+        private bool purchasedLostShuttles;
+
         public Submarine Sub
         {
             get
@@ -139,13 +148,13 @@ namespace Barotrauma
         public static LinkedSubmarine Load(XElement element, Submarine submarine)
         {
             Vector2 pos = element.GetAttributeVector2("pos", Vector2.Zero);
-
             LinkedSubmarine linkedSub = null;
 
             if (Screen.Selected == GameMain.SubEditorScreen)
             {
                 linkedSub = CreateDummy(submarine, element, pos);
                 linkedSub.saveElement = element;
+                linkedSub.purchasedLostShuttles = false;
             }
             else
             {
@@ -154,35 +163,37 @@ namespace Barotrauma
                     saveElement = element
                 };
 
+                linkedSub.purchasedLostShuttles = GameMain.GameSession.GameMode is CampaignMode campaign && campaign.PurchasedLostShuttles;
                 string levelSeed = element.GetAttributeString("location", "");
-                if (!string.IsNullOrWhiteSpace(levelSeed) && GameMain.GameSession.Level != null && GameMain.GameSession.Level.Seed != levelSeed)
+                if (!string.IsNullOrWhiteSpace(levelSeed) && 
+                    GameMain.GameSession.Level != null && 
+                    GameMain.GameSession.Level.Seed != levelSeed &&
+                    !linkedSub.purchasedLostShuttles)
                 {
                     linkedSub.loadSub = false;
-                    return null;
                 }
-
-                linkedSub.loadSub = true;
-
-                linkedSub.rect.Location = MathUtils.ToPoint(pos);
+                else
+                {
+                    linkedSub.loadSub = true;
+                    linkedSub.rect.Location = MathUtils.ToPoint(pos);
+                }
             }
 
             linkedSub.filePath = element.GetAttributeString("filepath", "");
-
-            string linkedToString = element.GetAttributeString("linkedto", "");
-            if (linkedToString != "")
+            int[] linkedToIds = element.GetAttributeIntArray("linkedto", new int[0]); 
+            for (int i = 0; i < linkedToIds.Length; i++)
             {
-                string[] linkedToIds = linkedToString.Split(',');
-                for (int i = 0; i < linkedToIds.Length; i++)
-                {
-                    linkedSub.linkedToID.Add((ushort)int.Parse(linkedToIds[i]));
-                }
+                linkedSub.linkedToID.Add((ushort)linkedToIds[i]);
             }
-            return linkedSub;
+            linkedSub.originalLinkedToID = (ushort)element.GetAttributeInt("originallinkedto", 0);
+            linkedSub.originalMyPortID = (ushort)element.GetAttributeInt("originalmyport", 0);
+            
+            return linkedSub.loadSub ? linkedSub : null;
         }
 
         public override void OnMapLoaded()
         {
-            if (!loadSub) return;
+            if (!loadSub) { return; }
 
             sub = Submarine.Load(saveElement, false);
             
@@ -195,7 +206,6 @@ namespace Barotrauma
             {
                 sub.SetPosition(WorldPosition);                
             }
-
 
             DockingPort linkedPort = null;
             DockingPort myPort = null;
@@ -212,36 +222,78 @@ namespace Barotrauma
 
             if (linkedPort == null)
             {
-                return;
-            }
-
-            float closestDistance = 0.0f;
-            foreach (DockingPort port in DockingPort.List)
-            {
-                if (port.Item.Submarine != sub || port.IsHorizontal != linkedPort.IsHorizontal) continue;
-
-                float dist = Vector2.Distance(port.Item.WorldPosition, linkedPort.Item.WorldPosition);
-                if (myPort == null || dist < closestDistance)
+                if (purchasedLostShuttles)
                 {
-                    myPort = port;
-                    closestDistance = dist;
+                    linkedPort = (FindEntityByID(originalLinkedToID) as Item)?.GetComponent<DockingPort>();
+                }
+                if (linkedPort == null) { return; }
+            }
+            originalLinkedPort = linkedPort;
+
+            myPort = (FindEntityByID(originalMyPortID) as Item)?.GetComponent<DockingPort>();
+            if (myPort == null)
+            {
+                float closestDistance = 0.0f;
+                foreach (DockingPort port in DockingPort.List)
+                {
+                    if (port.Item.Submarine != sub || port.IsHorizontal != linkedPort.IsHorizontal) { continue; }
+                    float dist = Vector2.Distance(port.Item.WorldPosition, linkedPort.Item.WorldPosition);
+                    if (myPort == null || dist < closestDistance)
+                    {
+                        myPort = port;
+                        closestDistance = dist;
+                    }
                 }
             }
 
             if (myPort != null)
             {
+                originalMyPortID = myPort.Item.ID;
+
                 myPort.Undock();
 
-                Vector2 portDiff = myPort.Item.WorldPosition - sub.WorldPosition;
-                Vector2 offset = (myPort.IsHorizontal ?
-                    Vector2.UnitX * Math.Sign(linkedPort.Item.WorldPosition.X - myPort.Item.WorldPosition.X) :
-                    Vector2.UnitY * Math.Sign(linkedPort.Item.WorldPosition.Y - myPort.Item.WorldPosition.Y));
-                offset *= myPort.DockedDistance;
+                //something else is already docked to the port this sub should be docked to
+                //may happen if a shuttle is lost, another vehicle docked to where the shuttle used to be,
+                //and the shuttle is then restored in the campaign mode
+                //or if the user connects multiple subs to the same docking ports in the sub editor
+                if (linkedPort.Docked && linkedPort.DockingTarget != null && linkedPort.DockingTarget != myPort)
+                {
+                    //just spawn below the main sub
+                    sub.SetPosition(
+                        linkedPort.Item.Submarine.WorldPosition - 
+                        new Vector2(0, linkedPort.Item.Submarine.GetDockedBorders().Height / 2 + sub.GetDockedBorders().Height / 2));
+                }
+                else
+                {
+                    Vector2 portDiff = myPort.Item.WorldPosition - sub.WorldPosition;
+                    Vector2 offset = (myPort.IsHorizontal ?
+                        Vector2.UnitX * Math.Sign(linkedPort.Item.WorldPosition.X - myPort.Item.WorldPosition.X) :
+                        Vector2.UnitY * Math.Sign(linkedPort.Item.WorldPosition.Y - myPort.Item.WorldPosition.Y));
+                    offset *= myPort.DockedDistance;
 
-                sub.SetPosition((linkedPort.Item.WorldPosition - portDiff) - offset);
+                    sub.SetPosition((linkedPort.Item.WorldPosition - portDiff) - offset);
 
-                myPort.Dock(linkedPort);   
-                myPort.Lock(true);
+                    myPort.Dock(linkedPort);   
+                    myPort.Lock(true);
+                }
+            }
+
+            if (GameMain.GameSession?.GameMode is CampaignMode campaign && campaign.PurchasedLostShuttles)
+            {
+                foreach (Structure wall in Structure.WallList)
+                {
+                    if (wall.Submarine != sub) { continue; }
+                    for (int i = 0; i < wall.SectionCount; i++)
+                    {
+                        wall.AddDamage(i, -wall.Prefab.Health);
+                    }                    
+                }
+                foreach (Hull hull in Hull.hullList)
+                {
+                    if (hull.Submarine != sub) { continue; }
+                    hull.WaterVolume = 0.0f;
+                    hull.OxygenPercentage = 100.0f;
+                }
             }
 
             sub.SetPosition(sub.WorldPosition - Submarine.WorldPosition);
@@ -258,9 +310,7 @@ namespace Barotrauma
                 {
                     var doc = Submarine.OpenFile(filePath);
                     saveElement = doc.Root;
-
                     saveElement.Name = "LinkedSubmarine";
-
                     saveElement.Add(new XAttribute("filepath", filePath));
                 }
                 else
@@ -274,7 +324,7 @@ namespace Barotrauma
                 var linkedPort = linkedTo.FirstOrDefault(lt => (lt is Item) && ((Item)lt).GetComponent<DockingPort>() != null);
                 if (linkedPort != null)
                 {
-                    if (saveElement.Attribute("linkedto") != null) saveElement.Attribute("linkedto").Remove();
+                    saveElement.Attribute("linkedto")?.Remove();
                     saveElement.Add(new XAttribute("linkedto", linkedPort.ID));
                 }
             }
@@ -283,6 +333,11 @@ namespace Barotrauma
                 saveElement = new XElement("LinkedSubmarine");
                 sub.SaveToXElement(saveElement);
             }
+
+            saveElement.Attribute("originallinkedto")?.Remove();
+            saveElement.Add(new XAttribute("originallinkedto", originalLinkedPort != null ? originalLinkedPort.Item.ID : originalLinkedToID));
+            saveElement.Attribute("originalmyport")?.Remove();
+            saveElement.Add(new XAttribute("originalmyport", originalMyPortID));
 
             if (sub != null)
             {
@@ -300,23 +355,18 @@ namespace Barotrauma
                     }
                 }
 
-
                 if (leaveBehind)
                 {
                     saveElement.SetAttributeValue("location", Level.Loaded.Seed);
                     saveElement.SetAttributeValue("worldpos", XMLExtensions.Vector2ToString(sub.SubBody.Position));
-
                 }
                 else
                 {
                     if (saveElement.Attribute("location") != null) saveElement.Attribute("location").Remove();
                     if (saveElement.Attribute("worldpos") != null) saveElement.Attribute("worldpos").Remove();
                 }
-
                 saveElement.SetAttributeValue("pos", XMLExtensions.Vector2ToString(Position - Submarine.HiddenSubPosition));
             }
-
-
 
             parentElement.Add(saveElement);
 

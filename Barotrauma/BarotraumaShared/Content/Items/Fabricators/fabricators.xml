@@ -42,7 +42,7 @@
   <Item
     name="Medical Fabricator"
     identifier="medicalfabricator"
-    tags="fabricator"
+    tags="medicalfabricator"
     category="Machine"
 		linkable="true"
     allowedlinks="deconstructor"

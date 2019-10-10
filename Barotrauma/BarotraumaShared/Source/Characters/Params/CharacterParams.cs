@@ -19,6 +19,9 @@ namespace Barotrauma
         [Serialize("", true), Editable]
         public string SpeciesName { get; private set; }
 
+        [Serialize("", true, description: "If defined, different species of the same group are considered like the characters of the same species by the AI."), Editable]
+        public string Group { get; private set; }
+
         [Serialize(false, true), Editable]
         public bool Humanoid { get; private set; }
 
@@ -34,7 +37,7 @@ namespace Barotrauma
         [Serialize(100f, true, description: "How much noise the character makes when moving?"), Editable(minValue: 0f, maxValue: 1000f)]
         public float Noise { get; set; }
 
-        [Serialize("", true), Editable]
+        [Serialize("blood", true), Editable]
         public string BloodDecal { get; private set; }
 
         public readonly string File;
@@ -90,6 +93,8 @@ namespace Barotrauma
             SubParams.ForEach(sp => sp.Reset());
             return true;
         }
+
+        public bool CompareGroup(string group) => !string.IsNullOrWhiteSpace(group) && !string.IsNullOrWhiteSpace(Group) && group.Equals(Group, StringComparison.OrdinalIgnoreCase);
 
         protected void CreateSubParams()
         {
@@ -328,6 +333,18 @@ namespace Barotrauma
             [Serialize(false, true)]
             public bool UseHealthWindow { get; set; }
 
+            [Serialize(0f, true, description: "How easily the character heals from the bleeding wounds. Default 0 (no extra healing)."), Editable(MinValueFloat = 0, MaxValueFloat = 10)]
+            public float BleedingReduction { get; private set; }
+
+            [Serialize(0f, true, description: "How easily the character heals from the burn wounds. Default 0 (no extra healing)."), Editable(MinValueFloat = 0, MaxValueFloat = 10)]
+            public float BurnReduction { get; private set; }
+
+            [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 10)]
+            public float ConstantHealthRegeneration { get; private set; }
+
+            [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 10)]
+            public float HealthRegenerationWhenEating { get; private set; }
+
             // TODO: limbhealths, sprite?
 
             public HealthParams(XElement element, CharacterParams character) : base(element, character) { }
@@ -388,10 +405,10 @@ namespace Barotrauma
             [Serialize(1.0f, true, description: "How strong other characters think this character is? Only affects AI."), Editable()]
             public float CombatStrength { get; private set; }
 
-            [Serialize(1.0f, true, description: "Affects how far the character can see the targets. Used as a multiplier."), Editable(minValue: 0f, maxValue: 2f)]
+            [Serialize(1.0f, true, description: "Affects how far the character can see the targets. Used as a multiplier."), Editable(minValue: 0f, maxValue: 10f)]
             public float Sight { get; private set; }
 
-            [Serialize(1.0f, true, description: "Affects how far the character can hear the targets. Used as a multiplier."), Editable(minValue: 0f, maxValue: 2f)]
+            [Serialize(1.0f, true, description: "Affects how far the character can hear the targets. Used as a multiplier."), Editable(minValue: 0f, maxValue: 10f)]
             public float Hearing { get; private set; }
 
             [Serialize(100f, true, description: "How much the target priority increase when the character takes damage? Additive."), Editable(minValue: -1000f, maxValue: 1000f)]
@@ -405,6 +422,9 @@ namespace Barotrauma
 
             [Serialize(false, true, description: "Does the character attack ONLY when provoked?"), Editable()]
             public bool AttackOnlyWhenProvoked { get; private set; }
+
+            [Serialize(true, true, description: "When true, the character retaliates quickly when it's taking damage. Enabled by default."), Editable]
+            public bool RetaliateWhenTakingDamage { get; private set; }
 
             [Serialize(false, true, description: "Does the character try to break inside the sub?"), Editable()]
             public bool AggressiveBoarding { get; private set; }

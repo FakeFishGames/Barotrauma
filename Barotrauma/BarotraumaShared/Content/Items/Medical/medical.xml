@@ -43,22 +43,16 @@
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
         <ReduceAffliction identifier="damage" amount="4" />
         <ReduceAffliction identifier="burn" amount="4" />
-      </StatusEffect>
-      
-      <StatusEffect tags="medical" type="OnUse" target="Limb" duration="5">
         <Affliction identifier="opiateaddiction" amount="2" />
         <Affliction identifier="opiateoverdose" amount="3.5" />
         <Affliction identifier="oxygenlow" amount="3" />
         <ReduceAffliction identifier="opiatewithdrawal" amount="3" />
       </StatusEffect>
-      
+            
       <StatusEffect tags="medical" type="OnFailure" target="Character" duration="5">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
         <ReduceAffliction identifier="burn" amount="2" />
         <ReduceAffliction identifier="damage" amount="2" />
-      </StatusEffect>
-      
-      <StatusEffect tags="medical" type="OnFailure" target="Limb" duration="5">
         <ReduceAffliction identifier="opiatewithdrawal" amount="3" />
         <Affliction identifier="oxygenlow" amount="6" />
         <Affliction identifier="opiateoverdose" amount="7" />
@@ -392,25 +386,19 @@
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
         <ReduceAffliction identifier="damage" amount="5" />
         <ReduceAffliction identifier="burn" amount="5" />
-      </StatusEffect>
-      
-      <StatusEffect tags="medical" type="OnUse" target="Limb" duration="10">
         <Affliction identifier="oxygenlow" amount="3" />
         <Affliction identifier="opiateaddiction" amount="1.5" />
         <Affliction identifier="opiateoverdose" amount="3" />
         <ReduceAffliction identifier="opiatewithdrawal" amount="3.0" />
       </StatusEffect>
-      
+           
       <StatusEffect tags="medical" type="OnFailure" target="Character" duration="10">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
-        <ReduceAffliction identifier="burn" amount="2.5" />
-        <ReduceAffliction identifier="damage" amount="2.5" />
-      </StatusEffect>
-      
-      <StatusEffect tags="medical" type="OnFailure" target="Limb" duration="10">
+        <ReduceAffliction identifier="burn" amount="2" />
+        <ReduceAffliction identifier="damage" amount="2" />
         <Affliction identifier="oxygenlow" amount="6" />
         <Affliction identifier="opiateaddiction" amount="3" />
-        <Affliction identifier="opiateoverdose" amount="6" />
+        <Affliction identifier="opiateoverdose" amount="4.75" />
         <ReduceAffliction identifier="opiatewithdrawal" amount="3.0" />
       </StatusEffect>
       
@@ -424,13 +412,11 @@
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
       </StatusEffect>
       <StatusEffect tags="medical" type="OnImpact" target="Character" duration="10">
-        <ReduceAffliction identifier="burn" amount="2.5" />
-        <ReduceAffliction identifier="damage" amount="2.5" />
-      </StatusEffect>
-      <StatusEffect tags="medical" type="OnImpact" target="Limb" duration="10">
-        <Affliction identifier="oxygenlow" amount="3" />
-        <Affliction identifier="opiateaddiction" amount="1.5" />
-        <Affliction identifier="opiateoverdose" amount="3" />
+        <ReduceAffliction identifier="burn" amount="2" />
+        <ReduceAffliction identifier="damage" amount="2" />
+        <Affliction identifier="oxygenlow" amount="6" />
+        <Affliction identifier="opiateaddiction" amount="3" />
+        <Affliction identifier="opiateoverdose" amount="4.75" />
         <ReduceAffliction identifier="opiatewithdrawal" amount="3.0" />
       </StatusEffect>
     </Projectile>
@@ -466,27 +452,21 @@
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
         <ReduceAffliction identifier="damage" amount="15" />
         <ReduceAffliction identifier="burn" amount="15" />
-      </StatusEffect>
-      
-      <StatusEffect tags="medical" type="OnUse" target="Limb" duration="5">
         <Affliction identifier="oxygenlow" amount="8" />
         <Affliction identifier="opiateaddiction" amount="3" />
-        <Affliction identifier="opiateoverdose" amount="10" />
+        <Affliction identifier="opiateoverdose" amount="8" />
         <ReduceAffliction identifier="opiatewithdrawal" amount="20" />
-      </StatusEffect>
+      </StatusEffect>     
       
       <StatusEffect tags="medical" type="OnFailure" target="Character" duration="5">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
-        <ReduceAffliction identifier="damage" amount="7.5" />
-        <ReduceAffliction identifier="burn" amount="7.5" />
-      </StatusEffect>
-      
-      <StatusEffect tags="medical" type="OnFailure" target="Limb" duration="5">
+        <ReduceAffliction identifier="damage" amount="5.75" />
+        <ReduceAffliction identifier="burn" amount="5.75" />
         <Affliction identifier="oxygenlow" amount="12" />
         <Affliction identifier="opiateaddiction" amount="14" />
-        <Affliction identifier="opiateoverdose" amount="15" />
+        <Affliction identifier="opiateoverdose" amount="11" />
         <ReduceAffliction identifier="opiatewithdrawal" amount="20" />
-      </StatusEffect>
+      </StatusEffect>   
       
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -497,13 +477,11 @@
       <StatusEffect type="OnImpact" target="This" Condition="-100.0" disabledeltatime="true" />
       <StatusEffect tags="medical" type="OnImpact" target="Character" duration="5">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
-        <ReduceAffliction identifier="damage" amount="7.5" />
-        <ReduceAffliction identifier="burn" amount="7.5" />
-      </StatusEffect>
-      <StatusEffect tags="medical" type="OnImpact" target="Limb" duration="5">
-        <Affliction identifier="oxygenlow" amount="8" />
-        <Affliction identifier="opiateaddiction" amount="3" />
-        <Affliction identifier="opiateoverdose" amount="10" />
+        <ReduceAffliction identifier="damage" amount="5.75" />
+        <ReduceAffliction identifier="burn" amount="5.75" />
+        <Affliction identifier="oxygenlow" amount="12" />
+        <Affliction identifier="opiateaddiction" amount="14" />
+        <Affliction identifier="opiateoverdose" amount="11" />
         <ReduceAffliction identifier="opiatewithdrawal" amount="20" />
       </StatusEffect>
     </Projectile>

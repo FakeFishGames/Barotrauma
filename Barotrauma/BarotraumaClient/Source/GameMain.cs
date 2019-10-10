@@ -172,6 +172,9 @@ namespace Barotrauma
 
             GraphicsDeviceManager = new GraphicsDeviceManager(this);
 
+            GraphicsDeviceManager.IsFullScreen = false;
+            GraphicsDeviceManager.ApplyChanges();
+
             Window.Title = "Barotrauma";
 
             Instance = this;
@@ -777,7 +780,7 @@ namespace Barotrauma
                     }
 
                     GUI.ClearUpdateList();
-                    paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen || Tutorial.ContentRunning) &&
+                    paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen || Tutorial.ContentRunning || DebugConsole.Paused) &&
                              (NetworkMember == null || !NetworkMember.GameStarted);
 
 #if !DEBUG
@@ -807,6 +810,17 @@ namespace Barotrauma
                     else if (Tutorial.Initialized && Tutorial.ContentRunning)
                     {
                         (GameSession.GameMode as TutorialMode).Update((float)Timing.Step);
+                    }
+                    else if (DebugConsole.Paused)
+                    {
+                        if (Screen.Selected.Cam == null)
+                        {
+                            DebugConsole.Paused = false;
+                        }
+                        else
+                        {
+                            Screen.Selected.Cam.MoveCamera((float)Timing.Step);
+                        }
                     }
 
                     if (NetworkMember != null)
@@ -926,7 +940,6 @@ namespace Barotrauma
             Config.SaveNewPlayerConfig();
         }
 
-        // ToDo: Move texts/links to localization, when possible.
         public void ShowBugReporter()
         {
             var msgBox = new GUIMessageBox(TextManager.Get("bugreportbutton"), "");

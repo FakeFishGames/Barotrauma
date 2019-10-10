@@ -55,7 +55,9 @@
   <Character file="Content/Characters/Crawler/Crawler.xml" />
   <Character file="Content/Characters/Endworm/Endworm.xml" />
   <Character file="Content/Characters/Fractalguardian/Fractalguardian.xml" />
-  <Character file="Content/Characters/Fractalguardian2/Fractalguardian2.xml" /> 
+  <Character file="Content/Characters/Fractalguardian2/Fractalguardian2.xml" />
+  <Character file="Content/Characters/Hammerhead/Hammerhead.xml" />
+  <Character file="Content/Characters/Hammerheadgold/Hammerheadgold.xml" />
   <Character file="Content/Characters/Human/Human.xml" />
   <Character file="Content/Characters/Husk/Husk.xml" />
   <Character file="Content/Characters/Humanhusk/Humanhusk.xml" />
@@ -63,15 +65,14 @@
   <Character file="Content/Characters/Legacycharybdis/Legacycharybdis.xml" />
   <Character file="Content/Characters/Legacycrawler/Legacycrawler.xml" />
   <Character file="Content/Characters/Legacymoloch/Legacymoloch.xml" />
+  <Character file="Content/Characters/Legacytigerthresher/Legacytigerthresher.xml" />
   <Character file="Content/Characters/Mudraptor/Mudraptor.xml" />
   <Character file="Content/Characters/Mantis/Mantis.xml" />
   <Character file="Content/Characters/Moloch/Moloch.xml" />
-  <Character file="Content/Characters/Molochbaby/Molochbaby.xml" />
   <Character file="Content/Characters/Molochboss/Molochboss.xml" />
-  <Character file="Content/Characters/Tigerthresher/Tigerthresher.xml" />
-  <Character file="Content/Characters/Tigerthresherboss/Tigerthresherboss.xml" />
   <Character file="Content/Characters/Watcher/Watcher.xml" />
-  <Character file="Content/Characters/Hammerhead/Hammerhead.xml" />
+  <Character file="Content/Characters/Tigerthresher/Tigerthresher.xml" />
+  <Character file="Content/Characters/Bonethresher/Bonethresher.xml" />
   <Outpost file="Content/Map/Outposts/Outpost.sub" />
   <Outpost file="Content/Map/Outposts/Outpost2.sub" />
   <Outpost file="Content/Map/Outposts/Outpost3.sub" />
@@ -82,7 +83,6 @@
   <Submarine file="Submarines/Humpback.sub" />
   <Submarine file="Submarines/Dugong.sub" />
   <Submarine file="Submarines/Venture.sub" />
-  <Submarine file="Submarines/Berilia.sub" />
   <Submarine file="Submarines/Remora.sub" />
   <Submarine file="Submarines/RemoraDrone.sub" />
   <Text file="Content/Texts/EnglishVanilla.xml" />

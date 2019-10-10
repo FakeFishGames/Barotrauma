@@ -53,7 +53,7 @@ namespace Barotrauma
             {
                 if (target.Bleeding < 1 && target.Vitality / target.MaxVitality > vitalityThreshold) { return false; }
             }
-            if (target.Submarine == null) { return false; }
+            if (target.Submarine == null || character.Submarine == null) { return false; }
             if (target.Submarine.TeamID != character.Submarine.TeamID) { return false; }
             if (target.CurrentHull == null) { return false; }
             if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(target.CurrentHull, true)) { return false; }

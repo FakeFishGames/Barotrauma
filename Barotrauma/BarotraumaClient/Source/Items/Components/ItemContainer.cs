@@ -132,13 +132,13 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool editing = false)
+        public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
         {
             if (hideItems || (item.body != null && !item.body.Enabled)) { return; }
-            DrawContainedItems(spriteBatch);
+            DrawContainedItems(spriteBatch, itemDepth);
         }
 
-        public void DrawContainedItems(SpriteBatch spriteBatch)
+        public void DrawContainedItems(SpriteBatch spriteBatch, float itemDepth)
         {
             Vector2 transformedItemPos = ItemPos * item.Scale;
             Vector2 transformedItemInterval = ItemInterval * item.Scale;
@@ -199,10 +199,13 @@ namespace Barotrauma.Items.Components
                 {
                     containedItem.body.SetTransformIgnoreContacts(containedItem.body.SimPosition, currentRotation);
                 }
-
+                
                 Vector2 origin = containedItem.Sprite.Origin;
                 if (item.FlippedX) { origin.X = containedItem.Sprite.SourceRect.Width - origin.X; }
                 if (item.FlippedY) { origin.Y = containedItem.Sprite.SourceRect.Height - origin.Y; }
+
+                float containedSpriteDepth = ContainedSpriteDepth < 0.0f ? containedItem.Sprite.Depth : ContainedSpriteDepth;
+                containedSpriteDepth = itemDepth + (containedSpriteDepth - item.SpriteDepth) / 10000.0f;
 
                 containedItem.Sprite.Draw(
                     spriteBatch,
@@ -212,12 +215,12 @@ namespace Barotrauma.Items.Components
                     - currentRotation,
                     containedItem.Scale,
                     spriteEffects,
-                    depth: ContainedSpriteDepth < 0.0f ? containedItem.Sprite.Depth : ContainedSpriteDepth);
+                    depth: containedSpriteDepth);
 
                 foreach (ItemContainer ic in containedItem.GetComponents<ItemContainer>())
                 {
                     if (ic.hideItems) continue;
-                    ic.DrawContainedItems(spriteBatch);
+                    ic.DrawContainedItems(spriteBatch, containedSpriteDepth);
                 }
 
                 i++;

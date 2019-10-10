@@ -20,7 +20,7 @@ namespace Barotrauma
                 return !string.IsNullOrEmpty(timeLimitInfoTextId) ? TextManager.FormatServerMessage(timeLimitInfoTextId, new[] { "[infotext]", "[timelimit]" }, new[] { infoText, $"{TimeSpan.FromSeconds(timeLimit):g}" }) : infoText;
             }
 
-            public override bool CanBeCompleted => base.CanBeCompleted && (!Traitors.Any(IsStarted) || timeRemaining > 0.0f);
+            public override bool CanBeCompleted(ICollection<Traitor> traitors) => base.CanBeCompleted(traitors) && (!Traitors.Any(IsStarted) || timeRemaining > 0.0f);
 
             private float timeRemaining;
 

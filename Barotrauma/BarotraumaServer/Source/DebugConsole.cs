@@ -856,6 +856,7 @@ namespace Barotrauma
 
                 var character = FindMatchingCharacter(args.Skip(1).ToArray(), false);
                 GameMain.Server.SetClientCharacter(client, character);
+                client.SpectateOnly = false;
             });
 
             AssignOnExecute("difficulty|leveldifficulty", (string[] args) =>
@@ -1065,7 +1066,7 @@ namespace Barotrauma
 
             commands.Add(new Command("servername", "servername [name]: Change the name of the server.", (string[] args) =>
             {
-                GameMain.Server.Name = string.Join(" ", args);
+                GameMain.Server.ServerName = string.Join(" ", args);
                 GameMain.NetLobbyScreen.ChangeServerName(string.Join(" ", args));
             }));
 
@@ -1553,7 +1554,17 @@ namespace Barotrauma
                     if (character != null)
                     {
                         GameMain.Server.SetClientCharacter(client, character);
+                        client.SpectateOnly = false;
                     }
+                }
+            );
+
+            AssignOnClientRequestExecute(
+                "freecam",
+                (Client client, Vector2 cursorWorldPos, string[] args) =>
+                {
+                    GameMain.Server.SetClientCharacter(client, null);
+                    client.SpectateOnly = true;
                 }
             );
 
@@ -1812,6 +1823,7 @@ namespace Barotrauma
 
                     var character = FindMatchingCharacter(args.Skip(1).ToArray(), false);
                     GameMain.Server.SetClientCharacter(client, character);
+                    client.SpectateOnly = false;
                 }
             );
 

@@ -19,7 +19,7 @@ namespace Barotrauma.Items.Components
         /// </summary>
         Vector2 DrawSize { get; }
 
-        void Draw(SpriteBatch spriteBatch, bool editing);
+        void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1);
 #endif
     }
     
@@ -397,7 +397,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public virtual bool Combine(Item item) 
+        public virtual bool Combine(Item item, Character user) 
         {
             if (canBeCombined && this.item.Prefab == item.Prefab && item.Condition > 0.0f && this.item.Condition > 0.0f)
             {
@@ -667,9 +667,9 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        public virtual void Load(XElement componentElement)
+        public virtual void Load(XElement componentElement, bool usePrefabValues)
         {
-            if (componentElement == null) return;
+            if (componentElement == null || usePrefabValues) { return; }
             foreach (XAttribute attribute in componentElement.Attributes())
             {
                 if (!SerializableProperties.TryGetValue(attribute.Name.ToString().ToLowerInvariant(), out SerializableProperty property)) continue;

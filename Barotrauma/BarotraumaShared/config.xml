@@ -2,6 +2,7 @@
 <config
   language="English"
   masterserverurl="http://www.undertowgames.com/baromaster"
+  remotecontenturl="http://www.barotraumagame.com/gamedata/"
   autocheckupdates="true"
   musicvolume="0.5"
   soundvolume="0.5"
@@ -40,6 +41,8 @@
     Ragdoll="Space"
     Health="H"
     Grab="G"
+    Shoot="0"
+    Deselect="1"
     SelectPreviousCharacter="Z"
     SelectNextCharacter="X" />
   <gameplay>

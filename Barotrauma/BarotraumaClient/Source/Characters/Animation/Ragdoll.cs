@@ -369,12 +369,12 @@ namespace Barotrauma
             LimbJoints.ForEach(j => j.UpdateDeformations(deltaTime));
             foreach (var deformation in SpriteDeformations)
             {
-                if (character.IsDead && deformation.DeformationParams.StopWhenHostIsDead) { continue; }
-                if (deformation.DeformationParams.UseMovementSine)
+                if (character.IsDead && deformation.Params.StopWhenHostIsDead) { continue; }
+                if (deformation.Params.UseMovementSine)
                 {
                     if (this is AnimController animator)
                     {
-                        deformation.Phase = MathUtils.WrapAngleTwoPi(animator.WalkPos * deformation.DeformationParams.Frequency + MathHelper.Pi * deformation.DeformationParams.SineOffset);
+                        deformation.Phase = MathUtils.WrapAngleTwoPi(animator.WalkPos * deformation.Params.Frequency + MathHelper.Pi * deformation.Params.SineOffset);
                     }
                 }
                 else

@@ -92,7 +92,7 @@ namespace Barotrauma.Items.Components
             chargeIndicator.Color = ToolBox.GradientLerp(chargeRatio, Color.Red, Color.Orange, Color.Green);
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool editing = false)
+        public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
         {
             if (indicatorSize.X <= 1.0f || indicatorSize.Y <= 1.0f) return;
 

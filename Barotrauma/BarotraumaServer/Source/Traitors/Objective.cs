@@ -21,7 +21,8 @@ namespace Barotrauma
             public bool IsCompleted => pendingGoals.Count <= 0;
             public bool IsPartiallyCompleted => completedGoals.Count > 0;
             public bool IsStarted { get; private set; } = false;
-            public bool CanBeCompleted => !IsStarted || pendingGoals.All(goal => goal.CanBeCompleted);
+            public bool CanBeStarted(ICollection<Traitor> traitors) => !IsStarted && allGoals.Any(goal => goal.CanBeCompleted(traitors));
+            public bool CanBeCompleted => !IsStarted || pendingGoals.All(goal => goal.CanBeCompleted(goal.Traitors));
 
             public bool IsEnemy(Character character) => pendingGoals.Any(goal => goal.IsEnemy(character));
             public bool IsAllowedToDamage(Structure structure) => pendingGoals.Any(goal => goal.IsAllowedToDamage(structure));
@@ -140,7 +141,7 @@ namespace Barotrauma
             {
                 Traitor.SendChatMessage(StartMessageText, Traitor.Mission?.Identifier);
             }
-            
+
             public void EndMessage()
             {
                 Traitor.SendChatMessageBox(EndMessageText, Traitor.Mission?.Identifier);

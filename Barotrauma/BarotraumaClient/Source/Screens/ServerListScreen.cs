@@ -822,11 +822,20 @@ namespace Barotrauma
 
         private void ServerQueryFinished()
         {
-            if (serverList.Content.Children.All(c => !c.Visible))
+            if (!serverList.Content.Children.Any())
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), serverList.Content.RectTransform),
-                    TextManager.Get("NoMatchingServers"))
+                new GUITextBlock(new RectTransform(Vector2.One, serverList.Content.RectTransform),
+                    TextManager.Get("NoServers"), textAlignment: Alignment.Center)
                 {
+                    CanBeFocused = false
+                };
+            }
+            else if (serverList.Content.Children.All(c => !c.Visible))
+            {
+                new GUITextBlock(new RectTransform(Vector2.One, serverList.Content.RectTransform),
+                    TextManager.Get("NoMatchingServers"), textAlignment: Alignment.Center)
+                {
+                    CanBeFocused = false,
                     UserData = "noresults"
                 };
             }

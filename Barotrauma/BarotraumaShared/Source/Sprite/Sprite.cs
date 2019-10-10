@@ -37,7 +37,7 @@ namespace Barotrauma
 
         //the size of the drawn sprite, if larger than the source,
         //the sprite is tiled to fill the target size
-        public Vector2 size;
+        public Vector2 size = Vector2.One;
 
         public float rotation;
 
@@ -101,6 +101,7 @@ namespace Barotrauma
         public string Name { get; set; }
 
         partial void LoadTexture(ref Vector4 sourceVector, ref bool shouldReturn, bool premultiplyAlpha = true);
+
         partial void CalculateSourceRect();
 
         private static void AddToList(Sprite elem)
@@ -129,7 +130,7 @@ namespace Barotrauma
             {
                 LoadTexture(ref sourceVector, ref shouldReturn, preMultipliedAlpha);
             }
-            if (shouldReturn) return;
+            if (shouldReturn) { return; }
             sourceRect = new Rectangle((int)sourceVector.X, (int)sourceVector.Y, (int)sourceVector.Z, (int)sourceVector.W);
             size = SourceElement.GetAttributeVector2("size", Vector2.One);
             size.X *= sourceRect.Width;
@@ -150,7 +151,6 @@ namespace Barotrauma
                 Origin = new Vector2(sourceRect.Width - origin.X, origin.Y);
             }
             depth = spriteParams.Depth;
-            // TODO: size?
         }
 
         public Sprite(string newFile, Vector2 newOrigin, bool preMultiplyAlpha = true)

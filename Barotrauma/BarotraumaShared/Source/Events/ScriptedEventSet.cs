@@ -85,8 +85,9 @@ namespace Barotrauma
 
         public float GetCommonness(Level level)
         {
-            return Commonness.ContainsKey(level.GenerationParams.Name) ?
-                    Commonness[level.GenerationParams.Name] : Commonness[""];
+            string key = level.GenerationParams?.Name ?? "";
+            return Commonness.ContainsKey(key) ?
+                    Commonness[key] : Commonness[""];
         }
 
         public static void LoadPrefabs()

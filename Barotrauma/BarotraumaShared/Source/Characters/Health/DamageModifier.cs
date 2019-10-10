@@ -12,7 +12,7 @@ namespace Barotrauma
 
         public Dictionary<string, SerializableProperty> SerializableProperties { get; private set; }
 
-        [Serialize(1.0f, false), Editable]
+        [Serialize(1.0f, false), Editable(DecimalCount = 2)]
         public float DamageMultiplier
         {
             get;

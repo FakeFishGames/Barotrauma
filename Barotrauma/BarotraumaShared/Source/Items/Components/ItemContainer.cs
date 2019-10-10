@@ -184,9 +184,10 @@ namespace Barotrauma.Items.Components
             return (picker != null);
         }
 
-        public override bool Combine(Item item)
+        public override bool Combine(Item item, Character user)
         {
-            if (!ContainableItems.Any(x => x.MatchesItem(item))) return false;
+            if (!ContainableItems.Any(x => x.MatchesItem(item))) { return false; }
+            if (user != null && !user.CanAccessInventory(Inventory)) { return false; }
             
             if (Inventory.TryPutItem(item, null))
             {            
@@ -281,20 +282,16 @@ namespace Barotrauma.Items.Components
             }               
         }        
 
-        public override void Load(XElement componentElement)
+        public override void Load(XElement componentElement, bool usePrefabValues)
         {
-            base.Load(componentElement);
+            base.Load(componentElement, usePrefabValues);
 
             string containedString = componentElement.GetAttributeString("contained", "");
-
             string[] itemIdStrings = containedString.Split(',');
-
             itemIds = new ushort[itemIdStrings.Length];
             for (int i = 0; i < itemIdStrings.Length; i++)
             {
-                ushort id = 0;
-                if (!ushort.TryParse(itemIdStrings[i], out id)) continue;
-
+                if (!ushort.TryParse(itemIdStrings[i], out ushort id)) { continue; }
                 itemIds[i] = id;
             }
         }

@@ -414,6 +414,7 @@ namespace Barotrauma.Networking
                 case NetConnectionStatus.Disconnected:
                     string disconnectMsg = inc.ReadString();
                     Close(disconnectMsg);
+                    OnDisconnectMessageReceived?.Invoke(disconnectMsg);
                     break;
             }
         }
@@ -444,7 +445,7 @@ namespace Barotrauma.Networking
             netClient.Shutdown(msg ?? TextManager.Get("Disconnecting"));
             netClient = null;
 
-            OnDisconnect?.Invoke(msg);
+            OnDisconnect?.Invoke();
 
             Steam.SteamManager.Instance.Networking.OnIncomingConnection = null;
             Steam.SteamManager.Instance.Networking.OnP2PData = null;

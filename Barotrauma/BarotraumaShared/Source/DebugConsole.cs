@@ -618,7 +618,7 @@ namespace Barotrauma
             {
                 return new string[][]
                 {
-        Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
                 };
             }, isCheat: true));
 
@@ -626,6 +626,9 @@ namespace Barotrauma
             {
                 Character.Controlled = null;
                 GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
+#if CLIENT
+                GameMain.Client?.SendConsoleCommand("freecam");
+#endif
             }, isCheat: true));
 
             commands.Add(new Command("eventmanager", "eventmanager: Toggle event manager on/off. No new random events are created when the event manager is disabled.", (string[] args) =>
@@ -1338,9 +1341,12 @@ namespace Barotrauma
             WayPoint spawnPoint = null;
 
             string characterLowerCase = args[0].ToLowerInvariant();
-            JobPrefab.List.TryGetValue(characterLowerCase, out JobPrefab job);
+            if (!JobPrefab.List.TryGetValue(characterLowerCase, out JobPrefab job))
+            {
+                job = JobPrefab.List.Values.FirstOrDefault(jp => jp.Name?.ToLowerInvariant() == characterLowerCase);
+            }
             bool human = job != null || characterLowerCase == Character.HumanSpeciesName;
-
+            
             if (args.Length > 1)
             {
                 switch (args[1].ToLowerInvariant())

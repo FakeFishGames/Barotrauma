@@ -23,7 +23,7 @@ namespace Barotrauma.Networking
         {
             if (IdMoreRecent(min, max))
             {
-                throw new ArgumentException("Min cannot be larger than max");
+                throw new ArgumentException($"Min cannot be larger than max ({min}, {max})");
             }
 
             if (!IdMoreRecent(id, min))

@@ -47,6 +47,10 @@ namespace Barotrauma.Items.Components
         private Sprite maintainPosIndicator, maintainPosOriginIndicator;
         private Sprite steeringIndicator;
 
+        private List<DockingPort> connectedPorts = new List<DockingPort>();
+        private float checkConnectedPortsTimer;
+        private const float CheckConnectedPortsInterval = 1.0f;
+
         private Vector2 keyboardInput = Vector2.Zero;
         private float inputCumulation;
 
@@ -330,7 +334,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (GameMain.Client == null)
                     {
-                        item.SendSignal(0, "1", "toggle_docking", sender: Character.Controlled);
+                        item.SendSignal(0, "1", "toggle_docking", sender: null);
                     }
                     else
                     {
@@ -750,10 +754,21 @@ namespace Barotrauma.Items.Components
             }
 
             if (!UseAutoDocking) { return; }
+
+            if (checkConnectedPortsTimer <= 0.0f)
+            {
+                Connection dockingConnection = item.Connections?.FirstOrDefault(c => c.Name == "toggle_docking");
+                if (dockingConnection != null)
+                {
+                    connectedPorts = item.GetConnectedComponentsRecursive<DockingPort>(dockingConnection);
+                }
+                checkConnectedPortsTimer = CheckConnectedPortsInterval;
+            }
             
             float closestDist = DockingAssistThreshold * DockingAssistThreshold;
             DockingModeEnabled = false;
-            foreach (DockingPort sourcePort in DockingPort.List)
+            
+            foreach (DockingPort sourcePort in connectedPorts)
             {
                 if (sourcePort.Docked || sourcePort.Item.Submarine == null) { continue; }
                 if (sourcePort.Item.Submarine != controlledSub) { continue; }
@@ -841,12 +856,18 @@ namespace Barotrauma.Items.Components
             int msgStartPos = msg.BitPosition;
 
             bool autoPilot                  = msg.ReadBoolean();
+            bool dockingButtonClicked       = msg.ReadBoolean();
             Vector2 newSteeringInput        = steeringInput;
             Vector2 newTargetVelocity       = targetVelocity;
             float newSteeringAdjustSpeed    = steeringAdjustSpeed;
             bool maintainPos                = false;
             Vector2? newPosToMaintain       = null;
             bool headingToStart             = false;
+
+            if (dockingButtonClicked)
+            {
+                item.SendSignal(0, "1", "toggle_docking", sender: null);
+            }
 
             if (autoPilot)
             {

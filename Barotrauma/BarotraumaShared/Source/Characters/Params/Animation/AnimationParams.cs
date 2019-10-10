@@ -51,7 +51,7 @@ namespace Barotrauma
 
     abstract class SwimParams : AnimationParams
     {
-        [Serialize(25.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 500)]
+        [Serialize(25.0f, true, description: "Turning speed (or rather a force applied on the main collider to make it turn). Note that you can set a limb-specific steering forces too (additional)."), Editable(MinValueFloat = 0, MaxValueFloat = 500)]
         public float SteerTorque { get; set; }
     }
 
@@ -63,7 +63,7 @@ namespace Barotrauma
 
         protected static Dictionary<string, Dictionary<string, AnimationParams>> allAnimations = new Dictionary<string, Dictionary<string, AnimationParams>>();
 
-        [Serialize(1.0f, true), Editable(DecimalCount = 2)]
+        [Serialize(1.0f, true), Editable(DecimalCount = 2, MinValueFloat = 0, MaxValueFloat = Ragdoll.MAX_SPEED)]
         public float MovementSpeed { get; set; }
 
         [Serialize(1.0f, true, description: "The speed of the \"animation cycle\", i.e. how fast the character takes steps or moves the tail/legs/arms (the outcome depends what the clip is about)"),

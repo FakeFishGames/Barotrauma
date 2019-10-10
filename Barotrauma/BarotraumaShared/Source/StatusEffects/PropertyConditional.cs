@@ -234,6 +234,9 @@ namespace Barotrauma
                         case "character":
                         case "Character":
                             return (Operator == OperatorType.Equals) == target is Character;
+                        case "limb":
+                        case "Limb":
+                            return (Operator == OperatorType.Equals) == target is Limb;
                         case "item":
                         case "Item":
                             return (Operator == OperatorType.Equals) == target is Item;

@@ -104,7 +104,7 @@ namespace Barotrauma
                 case WearableType.Husk:
                 case WearableType.Herpes:
                     Limb = LimbType.Head;
-                    HideLimb = false;
+                    HideLimb = type == WearableType.Husk || type == WearableType.Herpes;
                     HideOtherWearables = false;
                     InheritLimbDepth = true;
                     InheritTextureScale = true;

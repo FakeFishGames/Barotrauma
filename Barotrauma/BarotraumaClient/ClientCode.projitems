@@ -219,6 +219,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sounds\SoundPlayer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sounds\VideoSound.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sounds\VoipSound.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Sprite\DecorativeSprite.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sprite\DeformableSprite.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sprite\DeformAnimations\CustomDeformation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sprite\DeformAnimations\Inflate.cs" />
