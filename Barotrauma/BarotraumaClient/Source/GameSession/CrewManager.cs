@@ -443,6 +443,13 @@ namespace Barotrauma
                 ToolTip = characterToolTip
             };
 
+
+            if (GameMain.GameSession?.GameMode?.Mission is CombatMission combatMission)
+            {
+                new GUIFrame(new RectTransform(Vector2.One, characterArea.RectTransform), style: "InnerGlow",
+                    color: character.TeamID == Character.TeamType.Team1 ? Color.SteelBlue : Color.OrangeRed);
+            }
+
             var characterName = new GUITextBlock(new RectTransform(new Point(characterArea.Rect.Width - characterImage.Rect.Width - soundIcon.Rect.Width - 10, characterArea.Rect.Height),
                 characterArea.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(soundIcon.Rect.Width + 10, 0) },
                 character.Name, textColor: frame.Color, font: GUI.SmallFont, wrap: true)
