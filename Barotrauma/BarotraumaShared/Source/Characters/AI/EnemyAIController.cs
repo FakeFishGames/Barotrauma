@@ -1009,7 +1009,7 @@ namespace Barotrauma
 
             // Reduce the cooldown so that the character can react
             // Only allow to react once. Otherwise would attack the target with only a fraction of cooldown
-            if (SelectedAiTarget != attacker.AiTarget && Character.Params.AI.RetaliateWhenTakingDamage)
+            if (SelectedAiTarget != attacker.AiTarget && Character.Params.AI.RetaliateWhenTakingDamage && attacker.Submarine == Character.Submarine)
             {
                 foreach (var limb in Character.AnimController.Limbs)
                 {
