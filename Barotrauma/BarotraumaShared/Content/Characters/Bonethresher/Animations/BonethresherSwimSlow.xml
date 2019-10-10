@@ -7,7 +7,7 @@
   wavelength="95.45869"
   rotatetowardsmovement="True"
   torsotorque="50"
-  headtorque="70"
+  headtorque="40"
   tailtorque="25"
   foottorque="25"
   footangles=""
@@ -18,4 +18,4 @@
   headangle="90"
   torsoangle="90"
   type="Tigerthresherbone"
-  tailtorquemultiplier="1" />
+  tailtorquemultiplier="5" />

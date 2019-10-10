@@ -26,4 +26,5 @@
   <bloodemitter particle="waterblood" anglemin="1" anglemax="2" scalemin="1" scalemax="1" velocitymin="0" velocitymax="0" emitinterval="0" particlespersecond="0" particleamount="1" highqualitycollisiondetection="False" copyentityangle="False" />
   <gibemitter particle="gib" anglemin="0" anglemax="360" scalemin="1" scalemax="2" velocitymin="200" velocitymax="1500" emitinterval="0" particlespersecond="0" particleamount="30" highqualitycollisiondetection="False" copyentityangle="False" />
   <gibemitter particle="heavygib" anglemin="0" anglemax="360" scalemin="1" scalemax="2" velocitymin="50" velocitymax="1000" emitinterval="0" particlespersecond="0" particleamount="15" highqualitycollisiondetection="False" copyentityangle="False" />
+  <damageemitter particle="brownchunks" particleamount="10" velocitymin="50" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.1" scalemax="0.3" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
 </Character>
