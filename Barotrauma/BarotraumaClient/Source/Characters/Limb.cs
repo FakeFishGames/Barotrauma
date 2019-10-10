@@ -637,26 +637,32 @@ namespace Barotrauma
         {
             foreach (var modifier in damageModifiers)
             {
-                float rotation = -body.TransformedRotation + GetArmorSectorRotationOffset(modifier.ArmorSectorInRadians) * Dir;
-                Vector2 forward = VectorExtensions.Forward(rotation);
+                //Vector2 up = VectorExtensions.Backward(-body.TransformedRotation + Params.GetSpriteOrientation() * Dir);
+                //int width = 4;
+                //if (!isScreenSpace)
+                //{
+                //    width = (int)Math.Round(width / cam.Zoom);
+                //}
+                //GUI.DrawLine(spriteBatch, startPos, startPos + Vector2.Normalize(up) * size, Color.Red, width: width);
+                Color color = modifier.DamageMultiplier > 1 ? Color.Red : Color.GreenYellow;
                 float size = ConvertUnits.ToDisplayUnits(body.GetSize().Length() / 2);
                 if (isScreenSpace)
                 {
                     size *= cam.Zoom;
                 }
-                Color color = modifier.DamageMultiplier > 1 ? Color.Red : Color.GreenYellow;
-                int width = 4;
-                if (!isScreenSpace)
-                {
-                    width = (int)Math.Round(width / cam.Zoom);
-                }
-                GUI.DrawLine(spriteBatch, startPos, startPos + Vector2.Normalize(forward) * size, color, width: width);
                 int thickness = 2;
                 if (!isScreenSpace)
                 {
                     thickness = (int)Math.Round(thickness / cam.Zoom);
                 }
-                ShapeExtensions.DrawSector(spriteBatch, startPos, size, GetArmorSectorSize(modifier.ArmorSectorInRadians) * Dir, 40, color, rotation + MathHelper.Pi, thickness);
+                float bodyRotation = -body.Rotation;
+                float constantOffset = -MathHelper.PiOver2;
+                Vector2 armorSector = modifier.ArmorSectorInRadians;
+                float armorSectorSize = Math.Abs(armorSector.X - armorSector.Y);
+                float radians = armorSectorSize * Dir;
+                float armorSectorOffset = armorSector.X * Dir;
+                float finalOffset = bodyRotation + constantOffset + armorSectorOffset;
+                ShapeExtensions.DrawSector(spriteBatch, startPos, size, radians, 40, color, finalOffset, thickness);
             }
         }
 
