@@ -1107,16 +1107,17 @@ namespace Barotrauma
                             {
                                 if (!structure.ResizeHorizontal)
                                 {
-                                    structure.Rect = new Rectangle(structure.Rect.X, structure.Rect.Y,
+                                    structure.Rect = structure.DefaultRect = new Rectangle(structure.Rect.X, structure.Rect.Y,
                                         (int)structure.Prefab.ScaledSize.X,
                                         structure.Rect.Height);
                                 }
                                 if (!structure.ResizeVertical)
                                 {
-                                    structure.Rect = new Rectangle(structure.Rect.X, structure.Rect.Y,
+                                    structure.Rect = structure.DefaultRect = new Rectangle(structure.Rect.X, structure.Rect.Y,
                                         structure.Rect.Width,
                                         (int)structure.Prefab.ScaledSize.Y);
                                 }
+                               
                             }
                         }
                     }
