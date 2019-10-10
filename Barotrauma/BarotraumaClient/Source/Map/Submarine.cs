@@ -228,20 +228,37 @@ namespace Barotrauma
         public static float DamageEffectCutoff;
         public static Color DamageEffectColor;
 
+        private static List<Structure> depthSortedDamageable = new List<Structure>();
         public static void DrawDamageable(SpriteBatch spriteBatch, Effect damageEffect, bool editing = false)
         {
             var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.mapEntityList;
 
+            depthSortedDamageable.Clear();
+
+            //insertion sort according to draw depth
             foreach (MapEntity e in entitiesToRender)
             {
-                if (e.DrawDamageEffect)
-                    e.DrawDamage(spriteBatch, damageEffect, editing);
+                if (e is Structure structure && structure.DrawDamageEffect)
+                {
+                    float drawDepth = structure.GetDrawDepth();
+                    int i = 0;
+                    while (i < depthSortedDamageable.Count)
+                    {
+                        i++;
+                        if (depthSortedDamageable[i - 1].GetDrawDepth() < drawDepth) { break; }
+                    }
+                    depthSortedDamageable.Insert(i, structure);
+                }
+            }
+            
+            foreach (Structure s in depthSortedDamageable)
+            {
+                s.DrawDamage(spriteBatch, damageEffect, editing);
             }
             if (damageEffect != null)
             {
                 damageEffect.Parameters["aCutoff"].SetValue(0.0f);
                 damageEffect.Parameters["cCutoff"].SetValue(0.0f);
-
                 DamageEffectCutoff = 0.0f;
             }
         }

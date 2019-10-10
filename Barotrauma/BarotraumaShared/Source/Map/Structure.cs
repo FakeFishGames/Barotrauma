@@ -121,7 +121,7 @@ namespace Barotrauma
             }
         }
 
-        public override bool DrawDamageEffect
+        public bool DrawDamageEffect
         {
             get
             {

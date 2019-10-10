@@ -73,15 +73,7 @@ namespace Barotrauma
                 return !DrawBelowWater;
             }
         }
-
-        public virtual bool DrawDamageEffect
-        {
-            get
-            {
-                return false;
-            }
-        }
-
+        
         public virtual bool Linkable
         {
             get { return false; }
