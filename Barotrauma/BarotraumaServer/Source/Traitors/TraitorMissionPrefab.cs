@@ -113,15 +113,20 @@ namespace Barotrauma
                         case "killtarget":
                         {
                             checker.Optional(targetFilters.Keys.ToArray());
-                            List<Traitor.TraitorMission.CharacterFilter> filters = new List<Traitor.TraitorMission.CharacterFilter>();
+                            checker.Optional("deathtype");
+                            checker.Optional("affliction");
+                            checker.Optional("roomname");
+                            List<Traitor.TraitorMission.CharacterFilter> killFilters = new List<Traitor.TraitorMission.CharacterFilter>();
                             foreach (var attribute in Config.Attributes())
                             {
                                 if (targetFilters.TryGetValue(attribute.Name.ToString().ToLower(System.Globalization.CultureInfo.InvariantCulture), out var filter))
                                 {
-                                    filters.Add((character) => filter(attribute.Value, character));
+                                    killFilters.Add((character) => filter(attribute.Value, character));
                                 }
                             }
-                            goal = new Traitor.GoalKillTarget((character) => filters.All(f => f(character)));
+                            goal = new Traitor.GoalKillTarget((character) => killFilters.All(f => f(character)), 
+                                (CauseOfDeathType)Enum.Parse(typeof(CauseOfDeathType), Config.GetAttributeString("deathtype", "Unknown")),
+                                Config.GetAttributeString("affliction", string.Empty), Config.GetAttributeString("roomname", string.Empty));
                             break;
                         }
                         case "destroyitems":
@@ -168,6 +173,20 @@ namespace Barotrauma
                         case "reachdistancefromsub":
                             checker.Optional("distance");
                             goal = new Traitor.GoalReachDistanceFromSub(Config.GetAttributeFloat("distance", 10000.0f));
+                            break;
+
+                        case "injectpoison":
+                            checker.Required("poison");
+                            checker.Optional(targetFilters.Keys.ToArray());
+                            List<Traitor.TraitorMission.CharacterFilter> poisonFilters = new List<Traitor.TraitorMission.CharacterFilter>();
+                            foreach (var attribute in Config.Attributes())
+                            {
+                                if (targetFilters.TryGetValue(attribute.Name.ToString().ToLower(System.Globalization.CultureInfo.InvariantCulture), out var filter))
+                                {
+                                    poisonFilters.Add((character) => filter(attribute.Value, character));
+                                }
+                            }
+                            goal = new Traitor.GoalInjectTarget((character) => poisonFilters.All(f => f(character)), Config.GetAttributeString("poison", string.Empty));
                             break;
                         default:
                             GameServer.Log($"Unrecognized goal type \"{goalType}\".", ServerLog.MessageType.Error);
