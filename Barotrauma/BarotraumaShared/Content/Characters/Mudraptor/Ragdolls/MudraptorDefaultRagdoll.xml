@@ -7,6 +7,7 @@
       <Affliction identifier="bleeding" strength="10" probability="1" />
       <Affliction identifier="stun" strength="0.1" probability="1" />
     </attack>
+    <damagemodifier damagesound="LimbSlash" damagemultiplier="2" armorsector="90,270" deflectprojectiles="False" afflictionidentifiers="" afflictiontypes="damage,bleeding" />
   </limb>
   <limb id="1" name="Jaw" type="None" width="90" height="100" notes="1112br_Jaw" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="168,0,114,124" origin="0.4761672,0.4675852" depth="0.1" />
@@ -18,8 +19,8 @@
   </limb>
   <limb id="2" name="HeadArmor" type="None" width="168" height="75" notes="1111tr_HeadArmor" flip="True" healthindex="0" attackpriority="1" steerforce="10" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="279,0,209,132" origin="0.5009799,0.5003958" depth="0.08" />
-    <damagemodifier armorsector="-180,20" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" />
-    <damagemodifier armorsector="-180,20" afflictiontypes="bleeding" damagemultiplier="0" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" />
+    <damagemodifier armorsector="-90,120" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" />
+    <damagemodifier armorsector="-90,120" afflictiontypes="bleeding" damagemultiplier="0" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" />
   </limb>
   <limb id="3" name="TentacleMouthTop1" type="None" width="38" height="21" notes="1113tr_TentacleMouthTop1" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="4" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="504,16,50,28" origin="0.5015433,0.4664803" depth="0.1" />
@@ -53,14 +54,14 @@
   </limb>
   <limb id="13" name="Spine" type="Torso" width="118" height="134" notes="1cr_Spine" flip="True" healthindex="0" attackpriority="1" steerforce="1" stepoffset="0,0" radius="0" mass="0" density="12" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="1,120,151,169" origin="0.5032243,0.5113754" depth="0.4" />
-    <damagemodifier armorsector="-180,0" afflictiontypes="bleeding" damagemultiplier="0" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" />
-    <damagemodifier armorsector="-180,0" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" />
+    <damagemodifier armorsector="-90,90" afflictiontypes="bleeding" damagemultiplier="0" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" />
+    <damagemodifier armorsector="-90,90" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" />
   </limb>
   <limb id="14" name="Chest" type="None" width="0" height="0" notes="11cr_Chest" flip="True" healthindex="0" attackpriority="1" steerforce="5" stepoffset="0,0" radius="65" mass="0" density="12" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="167,121,154,148" origin="0.4924224,0.5230629" depth="0.1" />
-    <damagemodifier armorsector="0,-180" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" />
-    <damagemodifier armorsector="0,-180" afflictiontypes="bleeding" damagemultiplier="0" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" />
-    <damagemodifier armorsector="0,180" afflictiontypes="damage, bleeding" damagemultiplier="1.5" damagesound="LimbSlash" deflectprojectiles="False" afflictionidentifiers="" />
+    <damagemodifier armorsector="-90,90" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" />
+    <damagemodifier armorsector="-90,90" afflictiontypes="bleeding" damagemultiplier="0" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" />
+    <damagemodifier armorsector="90,-90" afflictiontypes="damage, bleeding" damagemultiplier="1.5" damagesound="LimbSlash" deflectprojectiles="False" afflictionidentifiers="" />
   </limb>
   <limb id="15" name="FrontUpperLeg" type="None" width="40" height="0" notes="3bc_FrontUpperLeg" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" radius="50" mass="0" density="5" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="16,288,185,134" origin="0.5,0.5" depth="0.09" />
@@ -90,23 +91,23 @@
   </limb>
   <limb id="23" name="Tail1" type="Tail" width="162" height="102" notes="5cl_Tail1" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="0,449,199,130" origin="0.5147893,0.5160481" depth="0.5" />
-    <damagemodifier armorsector="0,180" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" />
-    <damagemodifier armorsector="0,180" afflictiontypes="bleeding" damagemultiplier="0" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" />
+    <damagemodifier armorsector="90,270" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" />
+    <damagemodifier armorsector="90,270" afflictiontypes="bleeding" damagemultiplier="0" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" />
   </limb>
   <limb id="24" name="Tail2" type="None" width="90" height="67" notes="51cl_Tail2" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="203,492,113,84" origin="0.5,0.5" depth="0.1" />
-    <damagemodifier armorsector="0,180" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" />
-    <damagemodifier armorsector="0,180" afflictiontypes="bleeding" damagemultiplier="0" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" />
+    <damagemodifier armorsector="90,270" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" />
+    <damagemodifier armorsector="90,270" afflictiontypes="bleeding" damagemultiplier="0" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" />
   </limb>
   <limb id="25" name="Tail3" type="Tail" width="83" height="50" notes="511cl_Tail3" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="315,492,107,82" origin="0.5262811,0.6016204" depth="0.1" />
-    <damagemodifier armorsector="0,180" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" />
-    <damagemodifier armorsector="0,180" afflictiontypes="bleeding" damagemultiplier="0" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" />
+    <damagemodifier armorsector="90,270" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" />
+    <damagemodifier armorsector="90,270" afflictiontypes="bleeding" damagemultiplier="0" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" />
   </limb>
   <limb id="26" name="Tail4" type="Tail" width="64" height="32" notes="5111cl_Tail4" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="435,521,86,42" origin="0.5042107,0.3883522" depth="0.1" />
-    <damagemodifier armorsector="0,180" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" />
-    <damagemodifier armorsector="0,180" afflictiontypes="bleeding" damagemultiplier="0" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" />
+    <damagemodifier armorsector="90,270" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" />
+    <damagemodifier armorsector="90,250" afflictiontypes="bleeding" damagemultiplier="0" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" />
   </limb>
   <joint name="Joint Chest - Head" limb1="14" limb2="0" limb1anchor="138.932,-0.8007008" limb2anchor="-87.97721,56.0832" canbesevered="True" limitenabled="True" upperlimit="10.42033" lowerlimit="-39.29678" stiffness="0.25" />
   <joint name="Joint Head - Jaw" limb1="0" limb2="1" limb1anchor="-1.624528,-60.53897" limb2anchor="-27.54456,59.59686" canbesevered="True" limitenabled="True" upperlimit="68.22211" lowerlimit="0.8267807" stiffness="0.25" />
