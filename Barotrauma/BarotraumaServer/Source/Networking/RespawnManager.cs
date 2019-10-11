@@ -222,10 +222,13 @@ namespace Barotrauma.Networking
             var clients = GetClientsToRespawn();
             foreach (Client c in clients)
             {
+                //get rid of the existing character
+                c.Character?.DespawnNow();
+
                 //all characters are in Team 1 in game modes/missions with only one team.
                 //if at some point we add a game mode with multiple teams where respawning is possible, this needs to be reworked
                 c.TeamID = Character.TeamType.Team1;
-                if (c.CharacterInfo == null) c.CharacterInfo = new CharacterInfo(Character.HumanSpeciesName, c.Name);
+                if (c.CharacterInfo == null) { c.CharacterInfo = new CharacterInfo(Character.HumanSpeciesName, c.Name); }
             }
             List<CharacterInfo> characterInfos = clients.Select(c => c.CharacterInfo).ToList();
 
