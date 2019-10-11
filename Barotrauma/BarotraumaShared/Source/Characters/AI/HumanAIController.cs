@@ -27,6 +27,9 @@ namespace Barotrauma
         const float sortObjectiveInterval = 1;
         const float clearUnreachableInterval = 30;
 
+        private float flipTimer;
+        private const float FlipInterval = 0.5f;
+
         public static float HULL_SAFETY_THRESHOLD = 50;
 
         public HashSet<Hull> UnreachableHulls { get; private set; } = new HashSet<Hull>();
@@ -258,24 +261,32 @@ namespace Barotrauma
                 UnequipUnnecessaryItems();
             }
 
-            if (Character.IsKeyDown(InputType.Aim))
+            flipTimer -= deltaTime;
+            if (flipTimer <= 0.0f)
             {
-                var cursorDiffX = Character.CursorPosition.X - Character.Position.X;
-                if (cursorDiffX > 10.0f)
+                Direction newDir = Character.AnimController.TargetDir;
+                if (Character.IsKeyDown(InputType.Aim))
                 {
-                    Character.AnimController.TargetDir = Direction.Right;
+                    var cursorDiffX = Character.CursorPosition.X - Character.Position.X;
+                    if (cursorDiffX > 10.0f)
+                    {
+                        newDir = Direction.Right;
+                    }
+                    else if (cursorDiffX < -10.0f)
+                    {
+                        newDir = Direction.Left;
+                    }
+                    if (Character.SelectedConstruction != null) Character.SelectedConstruction.SecondaryUse(deltaTime, Character);
                 }
-                else if (cursorDiffX < -10.0f)
+                else if (Math.Abs(Character.AnimController.TargetMovement.X) > 0.1f && !Character.AnimController.InWater)
                 {
-                    Character.AnimController.TargetDir = Direction.Left;
+                    newDir = Character.AnimController.TargetMovement.X > 0.0f ? Direction.Right : Direction.Left;
                 }
-
-                if (Character.SelectedConstruction != null) Character.SelectedConstruction.SecondaryUse(deltaTime, Character);
-
-            }
-            else if (Math.Abs(Character.AnimController.TargetMovement.X) > 0.1f && !Character.AnimController.InWater)
-            {
-                Character.AnimController.TargetDir = Character.AnimController.TargetMovement.X > 0.0f ? Direction.Right : Direction.Left;
+                if (newDir != Character.AnimController.TargetDir)
+                {
+                    Character.AnimController.TargetDir = newDir;
+                    flipTimer = FlipInterval;
+                }
             }
         }
 
