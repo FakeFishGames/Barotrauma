@@ -91,6 +91,46 @@ namespace Barotrauma.Networking
             msgFilter = "";
         }
 
+        public void AssignLogFrame(GUIListBox inListBox, GUIComponent tickBoxContainer, GUITextBox searchBox)
+        {
+            searchBox.OnTextChanged += (textBox, text) =>
+            {
+                msgFilter = text;
+                FilterMessages();
+                return true;
+            };
+
+            tickBoxContainer.ClearChildren();
+
+            foreach (MessageType msgType in Enum.GetValues(typeof(MessageType)))
+            {
+                var tickBox = new GUITickBox(new RectTransform(new Point(tickBoxContainer.Rect.Width, 30), tickBoxContainer.RectTransform), TextManager.Get("ServerLog." + messageTypeName[(int)msgType]), font: GUI.SmallFont)
+                {
+                    Selected = true,
+                    TextColor = messageColor[(int)msgType],
+                    OnSelected = (GUITickBox tb) =>
+                    {
+                        msgTypeHidden[(int)msgType] = !tb.Selected;
+                        FilterMessages();
+                        return true;
+                    }
+                };
+                tickBox.Selected = !msgTypeHidden[(int)msgType];
+            }
+
+            inListBox.ClearChildren();
+            listBox = inListBox;
+
+            var currLines = lines.ToList();
+            foreach (LogMessage line in currLines)
+            {
+                AddLine(line);
+            }
+            FilterMessages();
+
+            listBox.UpdateScrollBarSize();
+        }
+
         private void AddLine(LogMessage line)
         {
             float prevSize = listBox.BarSize;

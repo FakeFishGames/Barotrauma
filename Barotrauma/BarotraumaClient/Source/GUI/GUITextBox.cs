@@ -9,9 +9,9 @@ using System.Linq;
 namespace Barotrauma
 {
 
-    delegate void TextBoxEvent(GUITextBox sender, Keys key);
+    public delegate void TextBoxEvent(GUITextBox sender, Keys key);
 
-    class GUITextBox : GUIComponent, IKeyboardSubscriber
+    public class GUITextBox : GUIComponent, IKeyboardSubscriber
     {        
         public event TextBoxEvent OnSelected;
         public event TextBoxEvent OnDeselected;

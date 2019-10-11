@@ -101,7 +101,7 @@ namespace Barotrauma.Networking
             lines.Enqueue(newText);
 
 #if CLIENT
-            if (LogFrame != null)
+            if (listBox != null)
             {
                 AddLine(newText);
 

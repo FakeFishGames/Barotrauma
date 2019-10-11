@@ -271,9 +271,9 @@ namespace Barotrauma.Networking
         private void ConnectToServer(object endpoint, string hostName)
         {
             chatBox.InputBox.Enabled = false;
-            if (GameMain.NetLobbyScreen?.TextBox != null)
+            if (GameMain.NetLobbyScreen?.ChatInput != null)
             {
-                GameMain.NetLobbyScreen.TextBox.Enabled = false;
+                GameMain.NetLobbyScreen.ChatInput.Enabled = false;
             }
 
             serverName = hostName;
@@ -354,9 +354,9 @@ namespace Barotrauma.Networking
                 }
 
                 chatBox.InputBox.Enabled = true;
-                if (GameMain.NetLobbyScreen?.TextBox != null)
+                if (GameMain.NetLobbyScreen?.ChatInput != null)
                 {
-                    GameMain.NetLobbyScreen.TextBox.Enabled = true;
+                    GameMain.NetLobbyScreen.ChatInput.Enabled = true;
                 }
             };
             clientPeer.OnRequestPassword = (int salt, int retries) =>
@@ -376,9 +376,9 @@ namespace Barotrauma.Networking
                 DebugConsole.ThrowError("Couldn't connect to " + endpoint.ToString() + ". Error message: " + e.Message);
                 Disconnect();
                 chatBox.InputBox.Enabled = true;
-                if (GameMain.NetLobbyScreen?.TextBox != null)
+                if (GameMain.NetLobbyScreen?.ChatInput != null)
                 {
-                    GameMain.NetLobbyScreen.TextBox.Enabled = true;
+                    GameMain.NetLobbyScreen.ChatInput.Enabled = true;
                 }
                 GameMain.ServerListScreen.Select();
                 return;
@@ -2344,7 +2344,7 @@ namespace Barotrauma.Networking
             }
             else if (Screen.Selected == GameMain.NetLobbyScreen)
             {
-                msgBox = GameMain.NetLobbyScreen.TextBox;
+                msgBox = GameMain.NetLobbyScreen.ChatInput;
             }
 
             if (gameStarted && Screen.Selected == GameMain.GameScreen)

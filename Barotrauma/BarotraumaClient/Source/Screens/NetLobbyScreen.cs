@@ -14,14 +14,26 @@ namespace Barotrauma
     {
         private GUIFrame infoFrame, modeFrame, chatFrame, playerListFrame;
         private GUIFrame myCharacterFrame;
-        private GUIListBox playerList;
 
-        private GUIListBox subList, modeList, chatBox;
+        private GUIListBox subList, modeList;
+
+        private GUIListBox chatBox, playerList;
+        private GUIListBox serverLogBox, serverLogFilterTicks;
         public GUIListBox ChatBox
         {
             get
             {
                 return chatBox;
+            }
+        }
+
+        private GUITextBox chatInput;
+        private GUITextBox serverLogFilter;
+        public GUITextBox ChatInput
+        {
+            get
+            {
+                return chatInput;
             }
         }
 
@@ -40,14 +52,8 @@ namespace Barotrauma
         private GUITextBlock missionTypeLabel;
         private GUIListBox missionTypeList;
 
-        private GUITextBox textBox, seedBox;
-        public GUITextBox TextBox
-        {
-            get
-            {
-                return textBox;
-            }
-        }
+        private GUITextBox seedBox;
+        
         public GUITextBox SeedBox
         {
             get
@@ -123,12 +129,15 @@ namespace Barotrauma
             get;
             private set;
         }
-        
-        public GUIButton ShowLogButton
+
+        public GUILayoutGroup LogButtons
         {
             get;
             private set;
         }
+
+        private GUIButton showChatButton;
+        private GUIButton showLogButton;
 
         public GUIListBox SubList
         {
@@ -354,32 +363,63 @@ namespace Barotrauma
 
             // Social area
 
-            GUIFrame socialBackground = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.45f), sideBar.RectTransform));
+            GUIFrame logBackground = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.45f), sideBar.RectTransform));
 
-            GUILayoutGroup socialHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), socialBackground.RectTransform, Anchor.Center))
+            GUILayoutGroup logHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), logBackground.RectTransform));
+
+            GUILayoutGroup socialHolder = null; GUILayoutGroup serverLogHolder = null;
+
+            LogButtons = new GUILayoutGroup(new RectTransform(new Vector2(0.55f, 0.05f), logHolder.RectTransform), true)
             {
-                Stretch = true
+                Stretch = true,
+                RelativeSpacing = 0.05f
             };
 
-            // Server log button
-            ShowLogButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), socialHolder.RectTransform),
-                TextManager.Get("ServerLog"))
+            clientHiddenElements.Add(LogButtons);
+
+            // Show chat button
+            showChatButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), LogButtons.RectTransform),
+                "Chat")
             {
                 OnClicked = (GUIButton button, object userData) =>
                 {
-                    if (GameMain.NetworkMember.ServerSettings.ServerLog.LogFrame == null)
+                    if (socialHolder != null)
                     {
-                        GameMain.NetworkMember.ServerSettings.ServerLog.CreateLogFrame();
+                        socialHolder.Visible = true;
                     }
-                    else
+                    if (serverLogHolder != null)
                     {
-                        GameMain.NetworkMember.ServerSettings.ServerLog.LogFrame = null;
-                        GUI.KeyboardDispatcher.Subscriber = null;
+                        serverLogHolder.Visible = false;
                     }
                     return true;
                 }
             };
-            clientHiddenElements.Add(ShowLogButton);
+
+            // Server log button
+            showLogButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), LogButtons.RectTransform),
+                TextManager.Get("ServerLog"))
+            {
+                OnClicked = (GUIButton button, object userData) =>
+                {
+                    if (socialHolder != null)
+                    {
+                        socialHolder.Visible = false;
+                    }
+                    if (!(serverLogHolder?.Visible ?? true))
+                    {
+                        serverLogHolder.Visible = true;
+                        GameMain.Client.ServerSettings.ServerLog.AssignLogFrame(serverLogBox, serverLogFilterTicks.Content, serverLogFilter);
+                    }
+                    return true;
+                }
+            };
+
+            GUIFrame logHolderBottom = new GUIFrame(new RectTransform(Vector2.One, logHolder.RectTransform), style: null);
+
+            socialHolder = new GUILayoutGroup(new RectTransform(Vector2.One, logHolderBottom.RectTransform, Anchor.Center))
+            {
+                Stretch = true
+            };
 
             // Spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), socialHolder.RectTransform), style: null);
@@ -405,14 +445,47 @@ namespace Barotrauma
 
             // Chat input
 
-            textBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.07f), socialHolder.RectTransform))
+            chatInput = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.07f), socialHolder.RectTransform))
             {
                 MaxTextLength = ChatMessage.MaxLength,
                 Font = GUI.SmallFont
             };
 
-            textBox.OnEnterPressed = (tb, userdata) => { GameMain.Client?.EnterChatMessage(tb, userdata); return true; };
-            textBox.OnTextChanged += (tb, userdata) => { GameMain.Client?.TypingChatMessage(tb, userdata); return true; };
+            serverLogHolder = new GUILayoutGroup(new RectTransform(Vector2.One, logHolderBottom.RectTransform, Anchor.Center))
+            {
+                Stretch = true,
+                Visible = false
+            };
+
+            // Spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), serverLogHolder.RectTransform), style: null);
+
+            GUILayoutGroup serverLogHolderHorizontal = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.9f), serverLogHolder.RectTransform), isHorizontal: true)
+            {
+                Stretch = true
+            };
+
+            //server log ----------------------------------------------------------------------
+
+            serverLogBox = new GUIListBox(new RectTransform(new Vector2(0.7f, 1.0f), serverLogHolderHorizontal.RectTransform));
+
+            //filter tickbox list ------------------------------------------------------------------
+
+            serverLogFilterTicks = new GUIListBox(new RectTransform(new Vector2(0.3f, 1.0f), serverLogHolderHorizontal.RectTransform))
+            {
+                OnSelected = (component, userdata) => { return false; }
+            };
+
+            // Spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), serverLogHolder.RectTransform), style: null);
+
+            // Filter text input
+
+            serverLogFilter = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.07f), serverLogHolder.RectTransform))
+            {
+                MaxTextLength = ChatMessage.MaxLength,
+                Font = GUI.SmallFont
+            };
 
             GUILayoutGroup socialControlsHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), sideBar.RectTransform), isHorizontal: true)
             {
@@ -805,7 +878,7 @@ namespace Barotrauma
 
         public override void Deselect()
         {
-            textBox.Deselect();
+            chatInput.Deselect();
             CampaignCharacterDiscarded = false;
         }
 
@@ -817,10 +890,10 @@ namespace Barotrauma
 
             CampaignCharacterDiscarded = false;
 
-            textBox.Select();
-            textBox.OnEnterPressed = GameMain.Client.EnterChatMessage;
-            textBox.OnTextChanged += GameMain.Client.TypingChatMessage;
-            
+            chatInput.Select();
+            chatInput.OnEnterPressed = GameMain.Client.EnterChatMessage;
+            chatInput.OnTextChanged += GameMain.Client.TypingChatMessage;
+
             subList.Enabled = AllowSubSelection;// || GameMain.Server != null;
             shuttleList.Enabled = AllowSubSelection;// || GameMain.Server != null;
 
@@ -968,7 +1041,7 @@ namespace Barotrauma
             shuttleTickBox.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             SubList.Enabled = GameMain.Client.ServerSettings.Voting.AllowSubVoting || GameMain.Client.HasPermission(ClientPermissions.SelectSub);
             ModeList.Enabled = GameMain.Client.ServerSettings.Voting.AllowModeVoting || GameMain.Client.HasPermission(ClientPermissions.SelectMode);
-            ShowLogButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ServerLog);
+            LogButtons.Visible = GameMain.Client.HasPermission(ClientPermissions.ServerLog);
             GameMain.Client.ShowLogButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ServerLog);
 
             GameMain.Client.EndRoundButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageRound);
