@@ -56,6 +56,7 @@ namespace Barotrauma
         private static GUIFrame frame;
         private static GUIListBox listBox;
         private static GUITextBox textBox;
+        private const int maxLength = 1000;
 
         public static GUITextBox TextBox => textBox;
 
@@ -92,6 +93,7 @@ namespace Barotrauma
             {
                 IsFixedSize = false
             });
+            textBox.MaxTextLength = maxLength;
             textBox.OnKeyHit += (sender, key) =>
             {
                 if (key != Keys.Tab)

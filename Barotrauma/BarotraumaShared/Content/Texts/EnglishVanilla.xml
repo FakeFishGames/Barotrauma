@@ -3606,4 +3606,8 @@
   <servertagdescription.traitors.true>Traitors are enabled on the server.</servertagdescription.traitors.true>
   <servertag.traitor.false>Traitors disabled</servertag.traitor.false>
   <servertagdescription.traitors.false>Traitors are disabled on the server.</servertagdescription.traitors.false>
+  
+  <!-- Misc -->
+  <chat.shownewmessages>Show new messages</chat.shownewmessages>
+  
 </infotexts>

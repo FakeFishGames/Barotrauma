@@ -774,7 +774,12 @@ namespace Barotrauma.Networking
                         SteamAchievementManager.CheatsEnabled = cheatsEnabled;
                         if (cheatsEnabled)
                         {
-                            new GUIMessageBox(TextManager.Get("CheatsEnabledTitle"), TextManager.Get("CheatsEnabledDescription"));
+                            var cheatMessageBox = new GUIMessageBox(TextManager.Get("CheatsEnabledTitle"), TextManager.Get("CheatsEnabledDescription"));
+                            cheatMessageBox.Buttons[0].OnClicked += (btn, userdata) =>
+                            {
+                                DebugConsole.TextBox.Select();
+                                return true;
+                            };
                         }
                     }
                     break;
@@ -2317,7 +2322,11 @@ namespace Barotrauma.Networking
 
             SendChatMessage(message);
 
-            textBox.Deselect();
+            if (textBox.DeselectAfterMessage)
+            {
+                textBox.Deselect();
+            }
+
             textBox.Text = "";
 
             return true;
