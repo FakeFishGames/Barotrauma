@@ -535,7 +535,7 @@
     <Sprite texture="weapons_new.png" sourcerect="296,3,110,28" depth="0.55" origin="0.5,0.5" />
     <Body width="110" height="25" density="50" />
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="50,0" handle1="-5,-5" holdangle="30" reload="0.75" range="50" combatPriority="40" msg="ItemMsgPickUpSelect">
-      <Attack stun="0.2" targetimpulse="10">
+      <Attack stun="0.2" targetimpulse="10" severlimbsprobability="0.1">
         <Affliction identifier="internaldamage" strength="10" />
         <Affliction identifier="bleeding" strength="10" />
         <Sound file="Content/Sounds/Damage/LimbSlash1.ogg" range="500" />
