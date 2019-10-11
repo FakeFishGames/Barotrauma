@@ -15,7 +15,9 @@ namespace Barotrauma
     {
         NotDefined,
         Water,
-        Ground
+        Ground,
+        Inside,
+        Outside
     }
 
     public enum AttackTarget
@@ -70,7 +72,7 @@ namespace Barotrauma
 
     partial class Attack : ISerializableEntity
     {
-        [Serialize(AttackContext.NotDefined, true, description: "Is the attack used only in a specific condition?"), Editable]
+        [Serialize(AttackContext.NotDefined, true, description: "The attack will be used only in this context."), Editable]
         public AttackContext Context { get; private set; }
 
         [Serialize(AttackTarget.Any, true, description: "Does the attack target only specific targets?"), Editable]
@@ -506,6 +508,43 @@ namespace Barotrauma
         partial void DamageParticles(float deltaTime, Vector2 worldPosition);
 
         public bool IsValidContext(AttackContext context) => Context == context || Context == AttackContext.NotDefined;
+
+        public bool IsValidContext(IEnumerable<AttackContext> contexts)
+        {
+            foreach (var context in contexts)
+            {
+                switch (context)
+                {
+                    case AttackContext.Ground:
+                        if (Context == AttackContext.Water)
+                        {
+                            return false;
+                        }
+                        break;
+                    case AttackContext.Water:
+                        if (Context == AttackContext.Ground)
+                        {
+                            return false;
+                        }
+                        break;
+                    case AttackContext.Inside:
+                        if (Context == AttackContext.Outside)
+                        {
+                            return false;
+                        }
+                        break;
+                    case AttackContext.Outside:
+                        if (Context == AttackContext.Inside)
+                        {
+                            return false;
+                        }
+                        break;
+                    default:
+                        continue;
+                }
+            }
+            return true;
+        }
 
         public bool IsValidTarget(AttackTarget targetType) => TargetType == AttackTarget.Any || TargetType == targetType;
 

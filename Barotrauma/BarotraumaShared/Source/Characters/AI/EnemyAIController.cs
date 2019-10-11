@@ -181,12 +181,12 @@ namespace Barotrauma
             bool canBreakDoors = false;
             if (GetTargetingPriority("room")?.Priority > 0.0f)
             {
-                AttackContext currentContext = Character.GetAttackContext();
+                var currentContexts = Character.GetAttackContexts();
                 foreach (Limb limb in Character.AnimController.Limbs)
                 {
                     if (limb.attack == null) { continue; }
                     if (!limb.attack.IsValidTarget(AttackTarget.Structure)) { continue; }
-                    if (limb.attack.IsValidContext(currentContext) && limb.attack.StructureDamage > 0.0f)
+                    if (limb.attack.IsValidContext(currentContexts) && limb.attack.StructureDamage > 0.0f)
                     {
                         canBreakDoors = true;
                         break;

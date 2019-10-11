@@ -1338,8 +1338,8 @@ namespace Barotrauma
             }
             else if (IsKeyDown(InputType.Attack))
             {
-                AttackContext currentContext = GetAttackContext();
-                var validLimbs = AnimController.Limbs.Where(l => !l.IsSevered && !l.IsStuck && l.attack != null && l.attack.IsValidContext(currentContext));
+                var currentContexts = GetAttackContexts();
+                var validLimbs = AnimController.Limbs.Where(l => !l.IsSevered && !l.IsStuck && l.attack != null && l.attack.IsValidContext(currentContexts));
                 var sortedLimbs = validLimbs.OrderBy(l => Vector2.DistanceSquared(ConvertUnits.ToDisplayUnits(l.SimPosition), cursorPosition));
                 // Select closest
                 var attackLimb = sortedLimbs.FirstOrDefault();
@@ -2897,7 +2897,29 @@ namespace Barotrauma
             }
         }
 
-        public AttackContext GetAttackContext() => AnimController.CurrentAnimationParams.IsGroundedAnimation ? AttackContext.Ground : AttackContext.Water;
+        private HashSet<AttackContext> currentContexts = new HashSet<AttackContext>();
+
+        public IEnumerable<AttackContext> GetAttackContexts()
+        {
+            currentContexts.Clear();
+            if (AnimController.CurrentAnimationParams.IsGroundedAnimation)
+            {
+                currentContexts.Add(AttackContext.Ground);
+            }
+            else
+            {
+                currentContexts.Add(AttackContext.Water);
+            }
+            if (CurrentHull == null)
+            {
+                currentContexts.Add(AttackContext.Outside);
+            }
+            else
+            {
+                currentContexts.Add(AttackContext.Inside);
+            }
+            return currentContexts;
+        }
 
         private readonly List<Hull> visibleHulls = new List<Hull>();
         private readonly HashSet<Hull> tempList = new HashSet<Hull>();
