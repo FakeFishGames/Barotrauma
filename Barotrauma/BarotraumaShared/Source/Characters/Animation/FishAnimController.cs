@@ -525,8 +525,8 @@ namespace Barotrauma
 
             for (int i = 0; i < Limbs.Length; i++)
             {
-                if (Limbs[i].SteerForce <= 0.0f) continue;
-
+                if (Limbs[i].SteerForce <= 0.0f) { continue; }
+                if (!Collider.PhysEnabled) { continue; }
                 Vector2 pullPos = Limbs[i].PullJointWorldAnchorA;
                 Limbs[i].body.ApplyForce(movement * Limbs[i].SteerForce * Limbs[i].Mass, pullPos);
             }
