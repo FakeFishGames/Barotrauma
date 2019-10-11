@@ -1303,13 +1303,16 @@ namespace Barotrauma
             {
                 if (GameMain.NetworkMember.IsServer)
                 {
-                    if (dequeuedInput.HasFlag(InputNetFlags.FacingLeft))
+                    if (playerControlled)
                     {
-                        AnimController.TargetDir = Direction.Left;
-                    }
-                    else
-                    {
-                        AnimController.TargetDir = Direction.Right;
+                        if (dequeuedInput.HasFlag(InputNetFlags.FacingLeft))
+                        {
+                            AnimController.TargetDir = Direction.Left;
+                        }
+                        else
+                        {
+                            AnimController.TargetDir = Direction.Right;
+                        }
                     }
                 }
                 else if (GameMain.NetworkMember.IsClient && Controlled != this)
