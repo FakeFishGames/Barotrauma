@@ -13,7 +13,7 @@
   footangles=""
   tailangle="90"
   steertorque="20"
-  movementspeed="8.011291"
+  movementspeed="8"
   cyclespeed="1"
   headangle="90"
   torsoangle="90"

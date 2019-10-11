@@ -13,6 +13,7 @@
     <target tag="wall" state="Attack" priority="40" />
     <target tag="door" state="Attack" priority="50" />
     <SwarmBehavior mindistfromclosest="400" maxdistfromcenter="2000" cohesion="0.25" />
+    <target tag="room" state="Attack" priority="40" />
   </ai>
   <sound file="Content/Characters/Bonethresher/TIGERTRESHERb_idle1.ogg" state="Idle" range="4000" volume="1" gender="None" />
   <sound file="Content/Characters/Bonethresher/TIGERTRESHERb_idle2.ogg" state="Idle" range="4000" volume="1" gender="None" />
