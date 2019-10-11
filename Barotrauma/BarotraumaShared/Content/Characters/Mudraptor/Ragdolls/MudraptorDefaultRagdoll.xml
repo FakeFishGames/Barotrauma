@@ -11,16 +11,16 @@
   </limb>
   <limb id="1" name="Jaw" type="None" width="90" height="100" notes="1112br_Jaw" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="168,0,114,124" origin="0.4761672,0.4675852" depth="0.1" />
-    <attack context="Water" cooldown="1" afterattack="Pursue" range="100" damagerange="100" duration="0.25" structuredamage="5" itemdamage="12" structuresoundtype="StructureSlash" targetforce="0" severlimbsprobability="0.8" torque="0" force="20" applyforceonlimbs="0, 1, 2, 13" targettype="Any" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforcesonlyonce="True" targetimpulse="50" targetimpulseworld="0,0" targetforceworld="0,0" stickchance="0" priority="0" secondarycooldown="0" cooldownrandomfactor="0.5" reverse="False" targetlimbtype="None">
-      <Affliction identifier="internaldamage" strength="20" probability="1" />
-      <Affliction identifier="bleeding" strength="10" probability="1" />
-      <Affliction identifier="stun" strength="0.1" probability="1" />
-    </attack>
   </limb>
   <limb id="2" name="HeadArmor" type="None" width="168" height="75" notes="1111tr_HeadArmor" flip="True" healthindex="0" attackpriority="1" steerforce="10" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="279,0,209,132" origin="0.5009799,0.5003958" depth="0.08" />
     <damagemodifier armorsector="-90,120" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" />
     <damagemodifier armorsector="-90,120" afflictiontypes="bleeding" damagemultiplier="0" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" />
+    <attack context="Water" cooldown="1" afterattack="Pursue" range="100" damagerange="100" duration="0.25" structuredamage="5" itemdamage="12" structuresoundtype="StructureSlash" targetforce="0" severlimbsprobability="0.8" torque="0" force="20" applyforceonlimbs="0, 1, 2, 13" targettype="Any" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforcesonlyonce="True" targetimpulse="50" targetimpulseworld="0,0" targetforceworld="0,0" stickchance="0" priority="0" secondarycooldown="0" cooldownrandomfactor="0.5" reverse="False" targetlimbtype="None">
+      <Affliction identifier="internaldamage" strength="20" probability="1" />
+      <Affliction identifier="bleeding" strength="10" probability="1" />
+      <Affliction identifier="stun" strength="0.1" probability="1" />
+    </attack>
   </limb>
   <limb id="3" name="TentacleMouthTop1" type="None" width="38" height="21" notes="1113tr_TentacleMouthTop1" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="4" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="504,16,50,28" origin="0.5015433,0.4664803" depth="0.1" />
