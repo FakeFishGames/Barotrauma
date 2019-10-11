@@ -28,7 +28,6 @@
     <targetpriority tag="nasonov" state="Attack" priority="200" />
     <targetpriority tag="provocative" state="Attack" priority="100" />
     <targetpriority tag="light" state="Attack" priority="100" />
-    <targetpriority tag="room" state="Attack" priority="80" />
     <targetpriority tag="human" state="Attack" priority="60" />
     <targetpriority tag="weaker" state="Attack" priority="40" />
     <!--TODO
