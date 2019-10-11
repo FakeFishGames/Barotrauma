@@ -174,13 +174,16 @@ namespace Barotrauma
         {
             get
             {
-                Limb torso = GetLimb(LimbType.Torso);
-                Limb head = GetLimb(LimbType.Head);
-                var mainLimb = torso ?? head;
+                Limb mainLimb = GetLimb(RagdollParams.MainLimb);
                 if (mainLimb == null)
                 {
-                    //DebugConsole.ThrowError("No head or torso found. Using the first limb as the main limb.");
-                    mainLimb = Limbs.FirstOrDefault();
+                    Limb torso = GetLimb(LimbType.Torso);
+                    Limb head = GetLimb(LimbType.Head);
+                    mainLimb = torso ?? head;
+                    if (mainLimb == null)
+                    {
+                        mainLimb = Limbs.FirstOrDefault();
+                    }
                 }
                 return mainLimb;
             }

@@ -64,6 +64,9 @@ namespace Barotrauma
         [Serialize(true, true, description: "Can the character be dragged around by other creatures?"), Editable()]
         public bool Draggable { get; set; }
 
+        [Serialize(LimbType.Torso, true), Editable]
+        public LimbType MainLimb { get; set; }
+
         private static Dictionary<string, Dictionary<string, RagdollParams>> allRagdolls = new Dictionary<string, Dictionary<string, RagdollParams>>();
 
         public List<ColliderParams> Colliders { get; private set; } = new List<ColliderParams>();
