@@ -537,14 +537,21 @@ namespace Barotrauma
                 else if (SelectedAiTarget.Entity is Item i)
                 {
                     var door = i.GetComponent<Door>();
-                    //steer through the door manually if it's open or broken
+                    // Steer through the door manually if it's open or broken
+                    // Don't try to enter dry hulls if cannot walk or if the gap is too narrow
                     if (door?.LinkedGap?.FlowTargetHull != null && !door.LinkedGap.IsRoomToRoom && (door.IsOpen || door.Item.Condition <= 0.0f))
                     {
-                        LatchOntoAI?.DeattachFromBody();
-                        Character.AnimController.ReleaseStuckLimbs();
-                        var velocity = Vector2.Normalize(door.LinkedGap.FlowTargetHull.WorldPosition - Character.WorldPosition);
-                        steeringManager.SteeringManual(deltaTime, velocity);
-                        return;
+                        if (Character.AnimController.CanWalk || door.LinkedGap.FlowTargetHull.WaterPercentage > 25)
+                        {
+                            if (door.LinkedGap.Size > ConvertUnits.ToDisplayUnits(colliderSize))
+                            {
+                                LatchOntoAI?.DeattachFromBody();
+                                Character.AnimController.ReleaseStuckLimbs();
+                                var velocity = Vector2.Normalize(door.LinkedGap.FlowTargetHull.WorldPosition - Character.WorldPosition);
+                                steeringManager.SteeringManual(deltaTime, velocity);
+                                return;
+                            }
+                        }
                     }
                 }
             }
@@ -705,14 +712,6 @@ namespace Barotrauma
                 attackVector = null;
             }
 
-            if (!CanAttack())
-            {
-                // Invalid target
-                State = AIState.Idle;
-                IgnoreTarget(SelectedAiTarget);
-                return;
-            }
-
             if (canAttack)
             {
                 if (AttackingLimb == null || _previousAiTarget != SelectedAiTarget)
@@ -721,14 +720,13 @@ namespace Barotrauma
                 }
                 if (AttackingLimb == null)
                 {
-                    if (wallTarget != null)
+                    if (wallTarget != null && (SelectedAiTarget.Entity is Character c && c.CurrentHull != Character.CurrentHull || SelectedAiTarget.Entity is Item i && i.CurrentHull != Character.CurrentHull))
                     {
+                        // Steer towards the target, but turn away if a wall is blocking the way
                         float d = ConvertUnits.ToDisplayUnits(colliderSize) * 10;
                         if (Vector2.DistanceSquared(Character.AnimController.MainLimb.WorldPosition, attackWorldPos) < d * d)
                         {
-                            // No valid attack limb -> let's turn away
-                            State = AIState.Idle;
-                            IgnoreTarget(SelectedAiTarget);
+                            WanderAround(deltaTime);
                             return;
                         }
                     }
@@ -744,7 +742,7 @@ namespace Barotrauma
             if (canAttack)
             {
                 // Target a specific limb instead of the target center position
-                if (SelectedAiTarget.Entity is Character targetCharacter)
+                if (wallTarget == null && SelectedAiTarget.Entity is Character targetCharacter)
                 {
                     var targetLimbType = AttackingLimb.Params.Attack.Attack.TargetLimbType;
                     attackTargetLimb = GetTargetLimb(AttackingLimb, targetLimbType, targetCharacter);
@@ -757,10 +755,17 @@ namespace Barotrauma
                     attackWorldPos = attackTargetLimb.WorldPosition;
                     attackSimPos = Character.GetRelativeSimPosition(attackTargetLimb);
                 }
-
                 // Check that we can reach the target
                 Vector2 toTarget = attackWorldPos - AttackingLimb.WorldPosition;
-                if (SelectedAiTarget.Entity is Character targetC)
+                if (wallTarget != null)
+                {
+                    if (wallTarget.Structure.Submarine != null)
+                    {
+                        Vector2 margin = CalculateMargin(wallTarget.Structure.Submarine.Velocity);
+                        toTarget += margin;
+                    }
+                }
+                else if (SelectedAiTarget.Entity is Character targetC)
                 {
                     // Add a margin when the target is moving away, because otherwise it might be difficult to reach it (the attack takes some time to perform)
                     Vector2 margin = CalculateMargin(targetC.AnimController.Collider.LinearVelocity);
@@ -825,7 +830,7 @@ namespace Barotrauma
             // Offset so that we don't overshoot the movement
             Vector2 steerPos = attackSimPos + offset;
 
-            if (SteeringManager is IndoorsSteeringManager pathSteering)
+            if (SteeringManager is IndoorsSteeringManager pathSteering && wallTarget == null)
             {
                 if (pathSteering.CurrentPath != null && !pathSteering.IsPathDirty)
                 {
@@ -926,9 +931,6 @@ namespace Barotrauma
             }
             return false;
         }
-
-
-        private bool CanAttack() => CanAttack(wallTarget != null ? wallTarget.Structure : SelectedAiTarget?.Entity);
 
         private bool CanAttack(Entity target)
         {
