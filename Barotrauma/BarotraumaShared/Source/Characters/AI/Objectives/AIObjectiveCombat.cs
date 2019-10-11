@@ -170,7 +170,7 @@ namespace Barotrauma
 
         private bool TryArm()
         {
-            if (character.LockHands)
+            if (character.LockHands || Enemy == null)
             {
                 Weapon = null;
                 return false;
