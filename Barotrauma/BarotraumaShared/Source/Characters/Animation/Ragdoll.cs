@@ -1031,6 +1031,21 @@ namespace Barotrauma
         /// </summary>
         private float bodyInRestTimer;
 
+        private float BodyInRestDelay = 1.0f;
+
+        public bool BodyInRest
+        {
+            get { return bodyInRestTimer > BodyInRestDelay; }
+            set
+            {
+                foreach (Limb limb in Limbs)
+                {
+                    limb.body.PhysEnabled = !value;
+                }
+                bodyInRestTimer = value ? BodyInRestDelay : 0.0f;
+            }
+        }
+
         public bool forceStanding;
 
         public void Update(float deltaTime, Camera cam)
@@ -1314,7 +1329,7 @@ namespace Barotrauma
             else if (Limbs.All(l => l != null && !l.body.Enabled || l.LinearVelocity.LengthSquared() < 0.001f))
             {
                 bodyInRestTimer += deltaTime;
-                if (bodyInRestTimer > 1.0f)
+                if (bodyInRestTimer > BodyInRestDelay)
                 {
                     foreach (Limb limb in Limbs)
                     {
