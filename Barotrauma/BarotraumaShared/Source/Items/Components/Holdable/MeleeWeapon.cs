@@ -79,6 +79,7 @@ namespace Barotrauma.Items.Components
 
             if (hitPos < MathHelper.PiOver4) { return false; }
 
+            ActivateNearbySleepingCharacters();
             reloadTimer = reload;
 
             item.body.FarseerBody.CollisionCategories = Physics.CollisionProjectile;
@@ -156,12 +157,36 @@ namespace Barotrauma.Items.Components
             {
                 hitPos = MathUtils.WrapAnglePi(hitPos - deltaTime * 15f);
                 ac.HoldItem(deltaTime, item, handlePos, new Vector2(2, 0), Vector2.Zero, false, hitPos, holdAngle + hitPos); // aimPos not used -> zero (new Vector2(-0.3f, 0.2f)), holdPos new Vector2(0.6f, -0.1f)
-                if (hitPos < -MathHelper.PiOver4 * 1.2f)
+                if (hitPos < -MathHelper.PiOver2)
                 {
                     RestoreCollision();
                     hitting = false;
                     hitTargets.Clear();
                     hitPos = 0;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Activate sleeping ragdolls that are close enough to hit with the weapon (otherwise the collision will not be registered)
+        /// </summary>
+        private void ActivateNearbySleepingCharacters()
+        {
+            foreach (Character c in Character.CharacterList)
+            {
+                if (!c.Enabled || !c.AnimController.BodyInRest) { continue; }
+                //do a broad check first
+                if (Math.Abs(c.WorldPosition.X - item.WorldPosition.X) > 1000.0f) { continue; }
+                if (Math.Abs(c.WorldPosition.Y - item.WorldPosition.Y) > 1000.0f) { continue; }
+
+                foreach (Limb limb in c.AnimController.Limbs)
+                {
+                    float hitRange = 2.0f;
+                    if (Vector2.DistanceSquared(limb.SimPosition, item.SimPosition) < hitRange * hitRange)
+                    {
+                        c.AnimController.BodyInRest = false;
+                        break;
+                    }
                 }
             }
         }
