@@ -532,6 +532,94 @@ namespace Barotrauma
 
             return penalty;
         }
-    }
-    
+
+        public void Wander(float deltaTime, float wallAvoidDistance = 150, bool stayStillInTightSpace = true)
+        {
+            //steer away from edges of the hull
+            var currentHull = character.CurrentHull;
+            if (currentHull != null)
+            {
+                float roomWidth = currentHull.Rect.Width;
+                if (stayStillInTightSpace && roomWidth < wallAvoidDistance * 4)
+                {
+                    Reset();
+                }
+                else
+                {
+                    float leftDist = character.Position.X - currentHull.Rect.X;
+                    float rightDist = currentHull.Rect.Right - character.Position.X;
+                    if (leftDist < wallAvoidDistance && rightDist < wallAvoidDistance)
+                    {
+                        if (Math.Abs(rightDist - leftDist) > wallAvoidDistance / 2)
+                        {
+                            SteeringManual(deltaTime, Vector2.UnitX * Math.Sign(rightDist - leftDist));
+                            return;
+                        }
+                        else if (stayStillInTightSpace)
+                        {
+                            Reset();
+                            return;
+                        }
+                    }
+                    if (leftDist < wallAvoidDistance)
+                    {
+                        float speed = (wallAvoidDistance - leftDist) / wallAvoidDistance;
+                        SteeringManual(deltaTime, Vector2.UnitX * MathHelper.Clamp(speed, 0.25f, 1));
+                        WanderAngle = 0.0f;
+                    }
+                    else if (rightDist < wallAvoidDistance)
+                    {
+                        float speed = (wallAvoidDistance - rightDist) / wallAvoidDistance;
+                        SteeringManual(deltaTime, -Vector2.UnitX * MathHelper.Clamp(speed, 0.25f, 1));
+                        WanderAngle = MathHelper.Pi;
+                    }
+                    else if (character.AnimController.InWater)
+                    {
+                        float topDist = currentHull.Rect.Y - character.Position.Y;
+                        float bottomDist = character.Position.Y - (currentHull.Rect.Y - currentHull.Rect.Height);
+                        if (topDist < wallAvoidDistance && bottomDist < wallAvoidDistance)
+                        {
+                            if (Math.Abs(topDist - bottomDist) > wallAvoidDistance / 2)
+                            {
+                                SteeringManual(deltaTime, Vector2.UnitY * Math.Sign(topDist - bottomDist) + Vector2.UnitX * Rand.Range(-1f, 1f));
+                                return;
+                            }
+                            else if (stayStillInTightSpace)
+                            {
+                                Reset();
+                                return;
+                            }
+                        }
+                        if (topDist < wallAvoidDistance)
+                        {
+                            float speed = (wallAvoidDistance - topDist) / wallAvoidDistance;
+                            SteeringManual(deltaTime, -Vector2.UnitY * MathHelper.Clamp(speed, 0.25f, 1) + Vector2.UnitX * Rand.Range(-1f, 1f));
+                        }
+                        else if (bottomDist < wallAvoidDistance)
+                        {
+                            float speed = (wallAvoidDistance - bottomDist) / wallAvoidDistance;
+                            SteeringManual(deltaTime, Vector2.UnitY * MathHelper.Clamp(speed, 0.25f, 1) + Vector2.UnitX * Rand.Range(-1f, 1f));
+                        }
+                        else
+                        {
+                            SteeringWander();
+                        }
+                    }
+                    else
+                    {
+                        SteeringWander();
+                    }
+                }
+            }
+            else
+            {
+                SteeringWander();
+            }
+            if (!character.AnimController.InWater)
+            {
+                //reset vertical steering to prevent dropping down from platforms etc
+                ResetY();
+            }
+        }
+    }  
 }

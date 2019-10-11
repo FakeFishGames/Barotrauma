@@ -348,17 +348,18 @@ namespace Barotrauma
 
         private void UpdateIdle(float deltaTime)
         {
-            if (Character.Submarine == null && 
-                SimPosition.Y < ConvertUnits.ToSimUnits(Character.CharacterHealth.CrushDepth * 0.75f))
+            var pathSteering = SteeringManager as IndoorsSteeringManager;
+            if (pathSteering == null)
             {
-                //steer straight up if very deep
-                steeringManager.SteeringManual(deltaTime, Vector2.UnitY);
-                return;
+                if (SimPosition.Y < ConvertUnits.ToSimUnits(Character.CharacterHealth.CrushDepth * 0.75f))
+                {
+                    //steer straight up if very deep
+                    steeringManager.SteeringManual(deltaTime, Vector2.UnitY);
+                    return;
+                }
+                SteerInsideLevel(deltaTime);
             }
-
-            SteerInsideLevel(deltaTime);
-
-            if (SelectedAiTarget != null && SelectedAiTarget.Entity.Submarine == Character.Submarine)
+            if (pathSteering == null && SelectedAiTarget != null && SelectedAiTarget.Entity.Submarine == Character.Submarine)
             {
                 // Steer towards the target
                 Vector2 targetSimPos = Character.Submarine == null ? ConvertUnits.ToSimUnits(SelectedAiTarget.WorldPosition) : SelectedAiTarget.SimPosition;
@@ -368,11 +369,26 @@ namespace Barotrauma
             else
             {
                 // Wander around randomly
-                if (Character.Submarine == null)
+                if (pathSteering != null && CanEnterSubmarine)
+                {
+                    pathSteering.Wander(deltaTime, 200, stayStillInTightSpace: false);
+                    if (Character.AnimController.InWater)
+                    {
+                        float maxSpeed = 1;
+                        var targetMovement = Character.AnimController.TargetMovement;
+                        float speed = targetMovement.Length();
+                        if (speed > maxSpeed)
+                        {
+                            targetMovement = targetMovement / speed * maxSpeed;
+                        }
+                        Character.AnimController.TargetMovement = targetMovement;
+                    }
+                }
+                else
                 {
                     steeringManager.SteeringAvoid(deltaTime, colliderSize * 5.0f);
+                    steeringManager.SteeringWander(0.5f);
                 }
-                steeringManager.SteeringWander(0.5f);
             }
         }
 
@@ -413,7 +429,7 @@ namespace Barotrauma
                     }
                 }
             }
-            else
+            else if (Character.Submarine == null)
             {
                 SteerInsideLevel(deltaTime);
             }
