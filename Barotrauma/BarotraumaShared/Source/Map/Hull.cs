@@ -228,13 +228,16 @@ namespace Barotrauma
 
             surface = rect.Y - rect.Height;
 
-            aiTarget = new AITarget(this)
+            if (submarine != null)
             {
-                MinSightRange = 2000,
-                MaxSightRange = 5000,
-                MaxSoundRange = 5000,
-                SoundRange = 0
-            };
+                aiTarget = new AITarget(this)
+                {
+                    MinSightRange = 2000,
+                    MaxSightRange = 5000,
+                    MaxSoundRange = 5000,
+                    SoundRange = 0
+                };
+            }
 
             hullList.Add(this);
 
@@ -430,8 +433,11 @@ namespace Barotrauma
 
             FireSource.UpdateAll(FireSources, deltaTime);
 
-            aiTarget.SightRange = Submarine == null ? aiTarget.MinSightRange : Submarine.Velocity.Length() / 2 * aiTarget.MaxSightRange;
-            aiTarget.SoundRange -= deltaTime * 1000.0f;
+            if (aiTarget != null)
+            {
+                aiTarget.SightRange = Submarine == null ? aiTarget.MinSightRange : Submarine.Velocity.Length() / 2 * aiTarget.MaxSightRange;
+                aiTarget.SoundRange -= deltaTime * 1000.0f;
+            }
          
             if (!update)
             {

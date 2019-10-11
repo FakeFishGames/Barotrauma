@@ -1557,7 +1557,7 @@ namespace Barotrauma
 
         protected void CheckDistFromCollider()
         {
-            float allowedDist = Math.Max(Math.Max(Collider.radius, Collider.width), Collider.height) * 2.0f;                        
+            float allowedDist = Math.Max(Math.Max(Collider.radius, Collider.width), Collider.height) * 2.0f;     
             float resetDist = allowedDist * 5.0f;
 
             Vector2 diff = Collider.SimPosition - MainLimb.SimPosition;
