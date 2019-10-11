@@ -126,6 +126,8 @@ namespace Barotrauma
 
         public readonly float FireSize;
         
+        public readonly float SeverLimbsProbability;
+
         public HashSet<string> TargetIdentifiers
         {
             get { return targetIdentifiers; }
@@ -219,6 +221,10 @@ namespace Barotrauma
                     case "setvalue":
                         setValue = attribute.GetAttributeBool(false);
                         break;
+                    case "severlimbs":
+                    case "severlimbsprobability":
+                        SeverLimbsProbability = MathHelper.Clamp(attribute.GetAttributeFloat(0.0f), 0.0f, 1.0f);
+                        break;
                     case "targetnames":
                     case "targets":
                     case "targetidentifiers":
@@ -276,7 +282,7 @@ namespace Barotrauma
                         explosion = new Explosion(subElement, parentDebugName);
                         break;
                     case "fire":
-                        FireSize = subElement.GetAttributeFloat("size",10.0f);
+                        FireSize = subElement.GetAttributeFloat("size", 10.0f);
                         break;
                     case "use":
                     case "useitem":
@@ -653,6 +659,7 @@ namespace Barotrauma
                         foreach (Limb limb in character.AnimController.Limbs)
                         {
                             limb.character.DamageLimb(entity.WorldPosition, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source);
+                            limb.character.TrySeverLimbJoints(limb, SeverLimbsProbability);
                             //only apply non-limb-specific afflictions to the first limb
                             if (!affliction.Prefab.LimbSpecific) { break; }
                         }
@@ -661,6 +668,7 @@ namespace Barotrauma
                     {
                         if (limb.character.Removed) { continue; }
                         limb.character.DamageLimb(entity.WorldPosition, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source);
+                        limb.character.TrySeverLimbJoints(limb, SeverLimbsProbability);
                     }
                 }
 
