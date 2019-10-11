@@ -824,39 +824,52 @@ namespace Barotrauma
             Vector2 offset = Character.SimPosition - steeringLimb.SimPosition;
             // Offset so that we don't overshoot the movement
             Vector2 steerPos = attackSimPos + offset;
-            SteeringManager.SteeringSeek(steerPos, 10);
 
-            if (SteeringManager is IndoorsSteeringManager indoorsSteering)
+            if (SteeringManager is IndoorsSteeringManager pathSteering)
             {
-                if (indoorsSteering.CurrentPath != null && !indoorsSteering.IsPathDirty)
+                if (pathSteering.CurrentPath != null && !pathSteering.IsPathDirty)
                 {
-                    if (indoorsSteering.CurrentPath.Unreachable)
+                    if (pathSteering.CurrentPath.Unreachable)
                     {
-                        if (selectedTargetMemory != null)
-                        {
-                            //wander around randomly and decrease the priority faster if no path is found
-                            selectedTargetMemory.Priority -= deltaTime * memoryFadeTime * 10;
-                        }
-                        SteeringManager.SteeringWander();
+                        WanderAround(deltaTime);
+                        return;
                     }
-                    else if (indoorsSteering.CurrentPath.Finished)
+                    else if (pathSteering.CurrentPath.Finished)
                     {
                         SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(attackSimPos - steeringLimb.SimPosition));
                     }
-                    else if (indoorsSteering.CurrentPath.CurrentNode?.ConnectedDoor != null)
+                    else if (pathSteering.CurrentPath.CurrentNode?.ConnectedDoor != null)
                     {
                         wallTarget = null;
-                        SelectedAiTarget = indoorsSteering.CurrentPath.CurrentNode.ConnectedDoor.Item.AiTarget;
+                        SelectedAiTarget = pathSteering.CurrentPath.CurrentNode.ConnectedDoor.Item.AiTarget;
                     }
-                    else if (indoorsSteering.CurrentPath.NextNode?.ConnectedDoor != null)
+                    else if (pathSteering.CurrentPath.NextNode?.ConnectedDoor != null)
                     {
                         wallTarget = null;
-                        SelectedAiTarget = indoorsSteering.CurrentPath.NextNode.ConnectedDoor.Item.AiTarget;
+                        SelectedAiTarget = pathSteering.CurrentPath.NextNode.ConnectedDoor.Item.AiTarget;
+                    }
+                    else
+                    {
+                        SteeringManager.SteeringSeek(steerPos);
+                    }
+                }
+                else
+                {
+                    if (Character.CurrentHull != null && (SelectedAiTarget.Entity is Character c && (Character.CurrentHull == c.CurrentHull || Character.GetVisibleHulls().Contains(c.CurrentHull))
+                        || SelectedAiTarget.Entity is Item i && (Character.CurrentHull == i.CurrentHull || Character.GetVisibleHulls().Contains(i.CurrentHull))))
+                    {
+                        steeringManager.SteeringManual(deltaTime, Vector2.Normalize(attackSimPos - steeringLimb.SimPosition));
+                    }
+                    else
+                    {
+                        WanderAround(deltaTime);
+                        return;
                     }
                 }
             }
             else if (Character.CurrentHull == null)
             {
+                SteeringManager.SteeringSeek(steerPos, 10);
                 SteeringManager.SteeringAvoid(deltaTime, colliderSize * 1.5f);
             }
 
@@ -866,6 +879,20 @@ namespace Barotrauma
                 {
                     IgnoreTarget(SelectedAiTarget);
                 }
+            }
+        }
+
+        private void WanderAround(float deltaTime)
+        {
+            State = AIState.Idle;
+            if (selectedTargetMemory != null)
+            {
+                //wander around randomly and decrease the priority faster if no path is found
+                selectedTargetMemory.Priority -= deltaTime * memoryFadeTime * 10;
+            }
+            else
+            {
+                IgnoreTarget(SelectedAiTarget);
             }
         }
 
@@ -918,7 +945,7 @@ namespace Barotrauma
 
         private Limb GetAttackLimb(Vector2 attackWorldPos, Limb ignoredLimb = null)
         {
-            AttackContext currentContext = Character.GetAttackContext();
+            var currentContexts = Character.GetAttackContexts();
             Entity target = wallTarget != null ? wallTarget.Structure : SelectedAiTarget?.Entity;
             if (!CanAttack(target)) { return null; }
             Limb selectedLimb = null;
@@ -930,7 +957,7 @@ namespace Barotrauma
                 var attack = limb.attack;
                 if (attack == null) { continue; }
                 if (attack.CoolDownTimer > 0) { continue; }
-                if (!attack.IsValidContext(currentContext)) { continue; }
+                if (!attack.IsValidContext(currentContexts)) { continue; }
                 if (!attack.IsValidTarget(target)) { continue; }
                 if (target is ISerializableEntity se && target is Character)
                 {
@@ -1131,30 +1158,34 @@ namespace Barotrauma
                 State = AIState.Idle;
                 return;
             }
-            Limb mouthLimb = Character.AnimController.GetLimb(LimbType.Head);
-            if (mouthLimb == null)
+            if (SelectedAiTarget.Entity is Character target)
             {
-                DebugConsole.ThrowError("Character \"" + Character.SpeciesName + "\" failed to eat a target (No head limb defined)");
-                State = AIState.Idle;
-                return;
-            }
-            Vector2 mouthPos = Character.AnimController.GetMouthPosition().Value;
-            Vector2 attackSimPosition = Character.GetRelativeSimPosition(SelectedAiTarget.Entity);
-            Vector2 limbDiff = attackSimPosition - mouthPos;
-            float limbDist = limbDiff.Length();
-            if (limbDist < 2.0f)
-            {
-                if (SelectedAiTarget.Entity is Character c)
+                Limb mouthLimb = Character.AnimController.GetLimb(LimbType.Head);
+                if (mouthLimb == null)
                 {
-                    // TODO: what if we use this for eating something else than characters?
-                    Character.SelectCharacter(c);
+                    DebugConsole.ThrowError("Character \"" + Character.SpeciesName + "\" failed to eat a target (No head limb defined)");
+                    State = AIState.Idle;
+                    return;
                 }
-                steeringManager.SteeringManual(deltaTime, Vector2.Normalize(limbDiff));
-                Character.AnimController.Collider.ApplyForce(limbDiff * mouthLimb.Mass * 50.0f, mouthPos);
+                Vector2 mouthPos = Character.AnimController.GetMouthPosition().Value;
+                Vector2 attackSimPosition = Character.GetRelativeSimPosition(SelectedAiTarget.Entity);
+                Vector2 limbDiff = attackSimPosition - mouthPos;
+                float limbDist = limbDiff.Length();
+                if (limbDist < 2.0f)
+                {
+                    Character.SelectCharacter(target);
+                    steeringManager.SteeringManual(deltaTime, Vector2.Normalize(limbDiff));
+                    Character.AnimController.Collider.ApplyForce(limbDiff * mouthLimb.Mass * 50.0f, mouthPos);
+                }
+                else
+                {
+                    steeringManager.SteeringSeek(attackSimPosition - (mouthPos - SimPosition), 2);
+                }
             }
             else
             {
-                steeringManager.SteeringSeek(attackSimPosition - (mouthPos - SimPosition), 2);
+                IgnoreTarget(SelectedAiTarget);
+                State = AIState.Idle;
             }
         }
 
@@ -1513,6 +1544,7 @@ namespace Barotrauma
         private readonly HashSet<AITarget> ignoredTargets = new HashSet<AITarget>();
         public void IgnoreTarget(AITarget target)
         {
+            if (target == null) { return; }
             ignoredTargets.Add(target);
             targetIgnoreTimer = targetIgnoreTime;
         }
