@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
 using Barotrauma.Extensions;
+using FarseerPhysics;
 
 namespace Barotrauma
 {
@@ -536,8 +537,10 @@ namespace Barotrauma
         public void Wander(float deltaTime, float wallAvoidDistance = 150, bool stayStillInTightSpace = true)
         {
             //steer away from edges of the hull
+            bool wander = false;
+            bool inWater = character.AnimController.InWater;
             var currentHull = character.CurrentHull;
-            if (currentHull != null)
+            if (currentHull != null && !inWater)
             {
                 float roomWidth = currentHull.Rect.Width;
                 if (stayStillInTightSpace && roomWidth < wallAvoidDistance * 4)
@@ -573,49 +576,22 @@ namespace Barotrauma
                         SteeringManual(deltaTime, -Vector2.UnitX * MathHelper.Clamp(speed, 0.25f, 1));
                         WanderAngle = MathHelper.Pi;
                     }
-                    else if (character.AnimController.InWater)
-                    {
-                        float topDist = currentHull.Rect.Y - character.Position.Y;
-                        float bottomDist = character.Position.Y - (currentHull.Rect.Y - currentHull.Rect.Height);
-                        if (topDist < wallAvoidDistance && bottomDist < wallAvoidDistance)
-                        {
-                            if (Math.Abs(topDist - bottomDist) > wallAvoidDistance / 2)
-                            {
-                                SteeringManual(deltaTime, Vector2.UnitY * Math.Sign(topDist - bottomDist) + Vector2.UnitX * Rand.Range(-1f, 1f));
-                                return;
-                            }
-                            else if (stayStillInTightSpace)
-                            {
-                                Reset();
-                                return;
-                            }
-                        }
-                        if (topDist < wallAvoidDistance)
-                        {
-                            float speed = (wallAvoidDistance - topDist) / wallAvoidDistance;
-                            SteeringManual(deltaTime, -Vector2.UnitY * MathHelper.Clamp(speed, 0.25f, 1) + Vector2.UnitX * Rand.Range(-1f, 1f));
-                        }
-                        else if (bottomDist < wallAvoidDistance)
-                        {
-                            float speed = (wallAvoidDistance - bottomDist) / wallAvoidDistance;
-                            SteeringManual(deltaTime, Vector2.UnitY * MathHelper.Clamp(speed, 0.25f, 1) + Vector2.UnitX * Rand.Range(-1f, 1f));
-                        }
-                        else
-                        {
-                            SteeringWander();
-                        }
-                    }
                     else
                     {
-                        SteeringWander();
+                        wander = true;
                     }
                 }
             }
             else
             {
-                SteeringWander();
+                wander = true;
             }
-            if (!character.AnimController.InWater)
+            if (wander)
+            {
+                SteeringWander();
+                SteeringAvoid(deltaTime, lookAheadDistance: ConvertUnits.ToSimUnits(wallAvoidDistance), heading: VectorExtensions.Forward(character.AnimController.Collider.Rotation));
+            }
+            if (!inWater)
             {
                 //reset vertical steering to prevent dropping down from platforms etc
                 ResetY();

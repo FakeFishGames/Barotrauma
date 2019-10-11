@@ -82,7 +82,9 @@ namespace Barotrauma
                 
         private Dictionary<AITarget, AITargetMemory> targetMemories;
         
-        private float colliderSize;
+        private float colliderWidth;
+        private float colliderLength;
+        private bool canAttackSub;
 
         // TODO: expose?
         private readonly float priorityFearIncreasement = 2;
@@ -122,8 +124,11 @@ namespace Barotrauma
         {
             get
             {
-                //can't flip when attached to something or when reversing
-                return !Reverse && (LatchOntoAI == null || !LatchOntoAI.IsAttached);
+                //can't flip when attached to something or when reversing or when in a (relatively) small room
+                return !Reverse && 
+                    (LatchOntoAI == null || !LatchOntoAI.IsAttached) && 
+                    (Character.CurrentHull == null || !Character.AnimController.InWater || Math.Min(Character.CurrentHull.Size.X, Character.CurrentHull.Size.Y) > ConvertUnits.ToDisplayUnits(Math.Max(colliderLength, colliderWidth)));
+
             }
         }
 
@@ -199,18 +204,10 @@ namespace Barotrauma
             steeringManager = outsideSteering;
             State = AIState.Idle;
 
-            colliderSize = 0.1f;
-            switch (Character.AnimController.Collider.BodyShape)
-            {
-                case PhysicsBody.Shape.Capsule:
-                case PhysicsBody.Shape.HorizontalCapsule:
-                case PhysicsBody.Shape.Circle:
-                    colliderSize = Character.AnimController.Collider.radius * 2;
-                    break;
-                case PhysicsBody.Shape.Rectangle:
-                    colliderSize = Math.Min(Character.AnimController.Collider.width, Character.AnimController.Collider.height);
-                    break;
-            }
+            var size = Character.AnimController.Collider.GetSize();
+            colliderWidth = size.X;
+            colliderLength = size.Y;
+            canAttackSub = Character.AnimController.CanAttackSubmarine;
         }
 
         private CharacterParams.AIParams AIParams => Character.Params.AI;
@@ -355,6 +352,7 @@ namespace Barotrauma
                 {
                     //steer straight up if very deep
                     steeringManager.SteeringManual(deltaTime, Vector2.UnitY);
+                    SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: colliderWidth * 5, weight: 1, heading: VectorExtensions.Forward(Character.AnimController.Collider.Rotation));
                     return;
                 }
                 SteerInsideLevel(deltaTime);
@@ -363,31 +361,19 @@ namespace Barotrauma
             {
                 // Steer towards the target
                 Vector2 targetSimPos = Character.Submarine == null ? ConvertUnits.ToSimUnits(SelectedAiTarget.WorldPosition) : SelectedAiTarget.SimPosition;
-                steeringManager.SteeringAvoid(deltaTime, colliderSize * 3.0f);
                 steeringManager.SteeringSeek(targetSimPos);
+                SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: colliderWidth * 3, weight: 1, heading: VectorExtensions.Forward(Character.AnimController.Collider.Rotation));
             }
             else
             {
-                // Wander around randomly
-                if (pathSteering != null && CanEnterSubmarine)
+                if (pathSteering != null)
                 {
-                    pathSteering.Wander(deltaTime, 200, stayStillInTightSpace: false);
-                    if (Character.AnimController.InWater)
-                    {
-                        float maxSpeed = 1;
-                        var targetMovement = Character.AnimController.TargetMovement;
-                        float speed = targetMovement.Length();
-                        if (speed > maxSpeed)
-                        {
-                            targetMovement = targetMovement / speed * maxSpeed;
-                        }
-                        Character.AnimController.TargetMovement = targetMovement;
-                    }
+                    pathSteering.Wander(deltaTime, ConvertUnits.ToDisplayUnits(colliderLength), stayStillInTightSpace: false);
                 }
                 else
                 {
-                    steeringManager.SteeringAvoid(deltaTime, colliderSize * 5.0f);
                     steeringManager.SteeringWander(0.5f);
+                    SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: colliderWidth * 5, weight: 1, heading: VectorExtensions.Forward(Character.AnimController.Collider.Rotation));
                 }
             }
         }
@@ -445,7 +431,7 @@ namespace Barotrauma
                 if (!MathUtils.IsValid(escapeDir)) escapeDir = Vector2.UnitY;
                 SteeringManager.SteeringManual(deltaTime, escapeDir);
                 SteeringManager.SteeringWander();
-                SteeringManager.SteeringAvoid(deltaTime, colliderSize * 3.0f);
+                SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: colliderWidth * 3, weight: 1, heading: VectorExtensions.Forward(Character.AnimController.Collider.Rotation));
             }
         }
 
@@ -543,7 +529,7 @@ namespace Barotrauma
                     {
                         if (Character.AnimController.CanWalk || door.LinkedGap.FlowTargetHull.WaterPercentage > 25)
                         {
-                            if (door.LinkedGap.Size > ConvertUnits.ToDisplayUnits(colliderSize))
+                            if (door.LinkedGap.Size > ConvertUnits.ToDisplayUnits(colliderWidth))
                             {
                                 LatchOntoAI?.DeattachFromBody();
                                 Character.AnimController.ReleaseStuckLimbs();
@@ -718,23 +704,17 @@ namespace Barotrauma
                 {
                     AttackingLimb = GetAttackLimb(attackWorldPos);
                 }
-                if (AttackingLimb == null)
+                canAttack = AttackingLimb != null && AttackingLimb.attack.CoolDownTimer <= 0;
+            }
+            if (!canAttack && wallTarget != null && SelectedAiTarget.Entity.Submarine != null && !canAttackSub)
+            {
+                // Steer towards the target, but turn away if a wall is blocking the way
+                float d = ConvertUnits.ToDisplayUnits(colliderLength) * 3;
+                if (Vector2.DistanceSquared(Character.AnimController.MainLimb.WorldPosition, attackWorldPos) < d * d)
                 {
-                    if (wallTarget != null && (SelectedAiTarget.Entity is Character c && c.CurrentHull != Character.CurrentHull || SelectedAiTarget.Entity is Item i && i.CurrentHull != Character.CurrentHull))
-                    {
-                        // Steer towards the target, but turn away if a wall is blocking the way
-                        float d = ConvertUnits.ToDisplayUnits(colliderSize) * 10;
-                        if (Vector2.DistanceSquared(Character.AnimController.MainLimb.WorldPosition, attackWorldPos) < d * d)
-                        {
-                            WanderAround(deltaTime);
-                            return;
-                        }
-                    }
-                    canAttack = false;
-                }
-                else
-                {
-                    canAttack = AttackingLimb.attack.CoolDownTimer <= 0;
+                    State = AIState.Idle;
+                    IgnoreTarget(SelectedAiTarget);
+                    return;
                 }
             }
             float distance = 0;
@@ -782,6 +762,7 @@ namespace Barotrauma
 
                 Vector2 CalculateMargin(Vector2 targetVelocity)
                 {
+                    if (targetVelocity == Vector2.Zero) { return targetVelocity; }
                     float dot = Vector2.Dot(Vector2.Normalize(targetVelocity), Vector2.Normalize(Character.AnimController.Collider.LinearVelocity));
                     return ConvertUnits.ToDisplayUnits(targetVelocity) * AttackingLimb.attack.Duration * dot;
                 }
@@ -832,26 +813,21 @@ namespace Barotrauma
 
             if (SteeringManager is IndoorsSteeringManager pathSteering && wallTarget == null)
             {
-                if (pathSteering.CurrentPath != null && !pathSteering.IsPathDirty)
+                if (pathSteering.CurrentPath != null && !pathSteering.IsPathDirty && !pathSteering.CurrentPath.Unreachable)
                 {
-                    if (pathSteering.CurrentPath.Unreachable)
-                    {
-                        WanderAround(deltaTime);
-                        return;
-                    }
-                    else if (pathSteering.CurrentPath.Finished)
+                    if (pathSteering.CurrentPath.Finished)
                     {
                         SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(attackSimPos - steeringLimb.SimPosition));
                     }
-                    else if (pathSteering.CurrentPath.CurrentNode?.ConnectedDoor != null)
+                    else if (canAttackSub && pathSteering.CurrentPath.CurrentNode?.ConnectedDoor != null && SelectedAiTarget != pathSteering.CurrentPath.CurrentNode.ConnectedDoor.Item.AiTarget)
                     {
-                        wallTarget = null;
-                        SelectedAiTarget = pathSteering.CurrentPath.CurrentNode.ConnectedDoor.Item.AiTarget;
+                        SelectTarget(pathSteering.CurrentPath.CurrentNode.ConnectedDoor.Item.AiTarget);
+                        return;
                     }
-                    else if (pathSteering.CurrentPath.NextNode?.ConnectedDoor != null)
+                    else if (canAttackSub && pathSteering.CurrentPath.NextNode?.ConnectedDoor != null && SelectedAiTarget != pathSteering.CurrentPath.NextNode.ConnectedDoor.Item.AiTarget)
                     {
-                        wallTarget = null;
-                        SelectedAiTarget = pathSteering.CurrentPath.NextNode.ConnectedDoor.Item.AiTarget;
+                        SelectTarget(pathSteering.CurrentPath.NextNode.ConnectedDoor.Item.AiTarget);
+                        return;
                     }
                     else
                     {
@@ -860,22 +836,25 @@ namespace Barotrauma
                 }
                 else
                 {
-                    if (Character.CurrentHull != null && (SelectedAiTarget.Entity is Character c && (Character.CurrentHull == c.CurrentHull || Character.GetVisibleHulls().Contains(c.CurrentHull))
-                        || SelectedAiTarget.Entity is Item i && (Character.CurrentHull == i.CurrentHull || Character.GetVisibleHulls().Contains(i.CurrentHull))))
-                    {
-                        steeringManager.SteeringManual(deltaTime, Vector2.Normalize(attackSimPos - steeringLimb.SimPosition));
-                    }
-                    else
-                    {
-                        WanderAround(deltaTime);
-                        return;
-                    }
+                    SteeringManager.SteeringSeek(steerPos, 10);
+                    SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: colliderWidth * 3, weight: 1, heading: VectorExtensions.Forward(Character.AnimController.Collider.Rotation));
+
+                    //if (Character.CurrentHull != null && (SelectedAiTarget.Entity is Character c && (Character.CurrentHull == c.CurrentHull || Character.GetVisibleHulls().Contains(c.CurrentHull))
+                    //    || SelectedAiTarget.Entity is Item i && (Character.CurrentHull == i.CurrentHull || Character.GetVisibleHulls().Contains(i.CurrentHull))))
+                    //{
+                    //    steeringManager.SteeringManual(deltaTime, Vector2.Normalize(attackSimPos - steeringLimb.SimPosition));
+                    //}
+                    //else
+                    //{
+                    //    SteeringManager.SteeringSeek(steerPos, 10);
+                    //    SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: colliderWidth * 3, weight: 1, heading: VectorExtensions.Forward(Character.AnimController.Collider.Rotation));
+                    //}
                 }
             }
-            else if (Character.CurrentHull == null)
+            else
             {
                 SteeringManager.SteeringSeek(steerPos, 10);
-                SteeringManager.SteeringAvoid(deltaTime, colliderSize * 1.5f);
+                SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: colliderWidth * 3, weight: 1, heading: VectorExtensions.Forward(Character.AnimController.Collider.Rotation));
             }
 
             if (canAttack)
@@ -893,7 +872,7 @@ namespace Barotrauma
             if (selectedTargetMemory != null)
             {
                 //wander around randomly and decrease the priority faster if no path is found
-                selectedTargetMemory.Priority -= deltaTime * memoryFadeTime * 10;
+                selectedTargetMemory.Priority -= deltaTime * memoryFadeTime * 30;
             }
             else
             {
@@ -1146,7 +1125,7 @@ namespace Barotrauma
                 attackDir = Vector2.UnitY;
             }
             steeringManager.SteeringManual(deltaTime, attackDir);
-            steeringManager.SteeringAvoid(deltaTime, colliderSize * 3.0f);
+            SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: colliderWidth * 3, weight: 1, heading: VectorExtensions.Forward(Character.AnimController.Collider.Rotation));
         }
 
         #endregion
@@ -1183,6 +1162,7 @@ namespace Barotrauma
                 {
                     steeringManager.SteeringSeek(attackSimPosition - (mouthPos - SimPosition), 2);
                 }
+                SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: colliderWidth * 3, weight: 1, heading: VectorExtensions.Forward(Character.AnimController.Collider.Rotation));
             }
             else
             {
@@ -1241,9 +1221,8 @@ namespace Barotrauma
 
             foreach (AITarget target in AITarget.List)
             {
-                if (!target.Enabled) {continue; }
-                // Only ignore targets that are not in the same sub.
-                if (ignoredTargets.Contains(target) && target.Entity.Submarine != character.Submarine) { continue; }
+                if (!target.Enabled) { continue; }
+                if (ignoredTargets.Contains(target)) { continue; }
                 if (Level.Loaded != null && target.WorldPosition.Y > Level.Loaded.Size.Y)
                 {
                     continue;
@@ -1255,25 +1234,25 @@ namespace Barotrauma
                 }
                 Character targetCharacter = target.Entity as Character;
                 //ignore the aitarget if it is the Character itself
-                if (targetCharacter == character) continue;
+                if (targetCharacter == character) { continue; }
 
                 float valueModifier = 1;
                 string targetingTag = null;
                 if (targetCharacter != null)
                 {
+                    if (targetCharacter.Submarine != Character.Submarine)
+                    {
+                        // In a different sub or the target is outside when we are inside or vice versa.
+                        continue;
+                    }
+                    else if (targetCharacter.CurrentHull != Character.CurrentHull)
+                    {
+                        // In the same sub, but in a different hull.
+                        valueModifier = 0.5f;
+                    }
                     if (targetCharacter.IsDead)
                     {
                         targetingTag = "dead";
-                        if (targetCharacter.Submarine != Character.Submarine)
-                        {
-                            // In a different sub or the target is outside when we are inside or vice versa -> Ignore the target
-                            continue;
-                        }
-                        else if (targetCharacter.CurrentHull != Character.CurrentHull)
-                        {
-                            // In the same sub, halve the priority, if not in the same hull.
-                            valueModifier = 0.5f;
-                        }
                     }
                     else if (targetCharacter.AIController is EnemyAIController enemy)
                     {
@@ -1295,23 +1274,10 @@ namespace Barotrauma
                             // Frightened
                             valueModifier = 2;
                         }
-                        else
-                        {
-                            if (targetCharacter.Submarine != Character.Submarine)
-                            {
-                                // In a different sub or the target is outside when we are inside or vice versa -> Ignore the target
-                                continue;
-                            }
-                            else if (targetCharacter.CurrentHull != Character.CurrentHull)
-                            {
-                                // In the same sub, halve the priority, if not in the same hull.
-                                valueModifier = 0.5f;
-                            }
-                        }
                     }
-                    else if (targetCharacter.Submarine != null && Character.Submarine == null && !Character.AnimController.CanEnterSubmarine)
+                    else if (targetCharacter.CurrentHull != null && character.CurrentHull == null)
                     {
-                        //target inside, AI outside -> we'll be attacking a wall between the characters so use the priority for attacking rooms
+                        // the character is inside and we're outside.
                         targetingTag = "room";
                     }
                     else if (AIParams.Targets.Any(t => t.Tag.Equals(targetCharacter.SpeciesName, StringComparison.OrdinalIgnoreCase)))
@@ -1328,7 +1294,7 @@ namespace Barotrauma
                     if (target.Entity is Item item)
                     {
                         //item inside and we're outside -> attack the hull
-                        if (item.CurrentHull != null && character.CurrentHull == null && !Character.AnimController.CanEnterSubmarine)
+                        if (item.CurrentHull != null && character.CurrentHull == null)
                         {
                             targetingTag = "room";
                         }
@@ -1367,7 +1333,6 @@ namespace Barotrauma
                             continue;
                         }
                         valueModifier = 1;
-                        bool canAttackSub = Character.AnimController.CanAttackSubmarine;
                         if (!Character.AnimController.CanEnterSubmarine)
                         {
                             // Ignore disabled walls
@@ -1433,9 +1398,10 @@ namespace Barotrauma
                         {
                             targetingTag = "door";
                         }
+                        if (door.Item.Submarine == null) { continue;}
                         bool isOutdoor = door.LinkedGap?.FlowTargetHull != null && !door.LinkedGap.IsRoomToRoom;
                         bool isOpen = door.IsOpen || door.Item.Condition <= 0.0f;
-                        if (!isOpen && (!Character.AnimController.CanAttackSubmarine))
+                        if (!isOpen && (!canAttackSub))
                         {
                             // Ignore doors that are not open if cannot attack items/structures. Open doors should be targeted, so that we can get in if we are aggressive boarders
                             valueModifier = 0;
@@ -1588,7 +1554,7 @@ namespace Barotrauma
 
         private int GetMinimumPassableHoleCount()
         {
-            return (int)Math.Ceiling(ConvertUnits.ToDisplayUnits(colliderSize) / Structure.WallSectionSize);
+            return (int)Math.Ceiling(ConvertUnits.ToDisplayUnits(colliderWidth) / Structure.WallSectionSize);
         }
 
         private bool CanPassThroughHole(Structure wall, int sectionIndex)
