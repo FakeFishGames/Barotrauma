@@ -416,14 +416,14 @@ namespace Barotrauma
                     {
                         if (gap.Submarine != Character.Submarine) { continue; }
                         if (gap.Open < 1 || gap.IsRoomToRoom) { continue; }
+                        if (escapePoint != Vector2.Zero)
+                        {
+                            // Ignore the gap if it's further away than the previously assigned escape point
+                            if (Vector2.DistanceSquared(Character.SimPosition, gap.SimPosition) > Vector2.DistanceSquared(Character.SimPosition, escapePoint)) { continue; }
+                        }
                         var path = indoorSteering.PathFinder.FindPath(Character.SimPosition, gap.SimPosition, Character.Submarine);
                         if (!path.Unreachable)
                         {
-                            if (escapePoint != Vector2.Zero)
-                            {
-                                // Ignore the gap if it's further away than the previously assigned escape point
-                                if (Vector2.DistanceSquared(Character.SimPosition, gap.SimPosition) > Vector2.DistanceSquared(Character.SimPosition, escapePoint)) { continue; }
-                            }
                             escapePoint = gap.SimPosition;
                         }
                     }
