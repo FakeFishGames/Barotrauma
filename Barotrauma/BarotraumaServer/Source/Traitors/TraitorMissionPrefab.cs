@@ -186,7 +186,13 @@ namespace Barotrauma
                                     poisonFilters.Add((character) => filter(attribute.Value, character));
                                 }
                             }
-                            goal = new Traitor.GoalInjectTarget((character) => poisonFilters.All(f => f(character)), Config.GetAttributeString("poison", string.Empty));
+                            goal = new Traitor.GoalInjectTarget((character) => poisonFilters.All(f => f(character)), Config.GetAttributeString("poison", null));
+                            break;
+
+                        case "unwire":
+                            checker.Required("tag");
+                            checker.Optional("connectionname");
+                            goal = new Traitor.GoalUnwiring(Config.GetAttributeString("tag", null), Config.GetAttributeString("connectionname", null));
                             break;
                         default:
                             GameServer.Log($"Unrecognized goal type \"{goalType}\".", ServerLog.MessageType.Error);
