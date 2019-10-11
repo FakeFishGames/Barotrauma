@@ -1,6 +1,6 @@
-﻿<Ragdoll type="Tigerthresher" canentersubmarine="True" canwalk="False" spritesheetorientation="90" limbscale="0.5009" jointscale="0.5009" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" draggable="True" texture="">
+﻿<Ragdoll type="Tigerthresher" canentersubmarine="True" canwalk="False" spritesheetorientation="90" limbscale="0.6" jointscale="0.6" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" draggable="True" texture="" mainlimb="Torso">
   <collider radius="50" width="0" name="Main Collider" height="100" />
-  <limb id="0" name="Head" type="Head" height="0" width="50" notes="" spriteorientation="90" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="20" stepoffset="0,0" radius="30" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7" mouthpos="1.2,-0.5">
+  <limb id="0" name="Head" type="Head" height="0" width="50" notes="" spriteorientation="90" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="30" stepoffset="0,0" radius="30" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7" mouthpos="1.2,-0.5">
     <deformablesprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="763,0,140,86" origin="0.455141,0.4293179" depth="0" />
     <lightsource color="215,255,220,110" range="300">
       <lighttexture texture="Content/Lights/pointlight_falloff.png" origin="0.5,0.5" size="1,1" />
