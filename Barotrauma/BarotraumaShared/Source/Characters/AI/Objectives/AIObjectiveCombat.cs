@@ -429,7 +429,7 @@ namespace Barotrauma
 
         private void Engage()
         {
-            if (character.LockHands)
+            if (character.LockHands || Enemy == null)
             {
                 Mode = CombatMode.Retreat;
                 SteeringManager.Reset();
