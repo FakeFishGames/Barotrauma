@@ -140,7 +140,7 @@ namespace Barotrauma.Networking
             {
                 if (lidgrenConn.IPEndPoint?.Address == null) { return false; }
                 if ((lidgrenConn.IPEndPoint?.Address.IsIPv4MappedToIPv6 ?? false) &&
-                    lidgrenConn.IPEndPoint?.Address.MapToIPv4().ToString() == endpoint)
+                    lidgrenConn.IPEndPoint?.Address.MapToIPv4NoThrow().ToString() == endpoint)
                 {
                     return true;
                 }

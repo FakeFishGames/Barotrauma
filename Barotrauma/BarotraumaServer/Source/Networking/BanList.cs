@@ -52,7 +52,7 @@ namespace Barotrauma.Networking
         public bool CompareTo(IPAddress ipCompare)
         {
             if (string.IsNullOrEmpty(IP) || ipCompare == null) { return false; }
-            if (ipCompare.IsIPv4MappedToIPv6 && CompareTo(ipCompare.MapToIPv4().ToString()))
+            if (ipCompare.IsIPv4MappedToIPv6 && CompareTo(ipCompare.MapToIPv4NoThrow().ToString()))
             {
                 return true;
             }
@@ -138,7 +138,7 @@ namespace Barotrauma.Networking
 
         public void BanPlayer(string name, IPAddress ip, string reason, TimeSpan? duration)
         {
-            string ipStr = ip.IsIPv4MappedToIPv6 ? ip.MapToIPv4().ToString() : ip.ToString();
+            string ipStr = ip.IsIPv4MappedToIPv6 ? ip.MapToIPv4NoThrow().ToString() : ip.ToString();
             BanPlayer(name, ipStr, 0, reason, duration);
         }
 

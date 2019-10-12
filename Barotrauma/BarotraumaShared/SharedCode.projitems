@@ -275,6 +275,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\TextPack.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Timing.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\Homoglyphs.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\IPExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\MathUtils.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\MTRandom.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\Rand.cs" />
