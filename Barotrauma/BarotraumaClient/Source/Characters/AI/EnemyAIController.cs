@@ -47,6 +47,9 @@ namespace Barotrauma
                 case AIState.Escape:
                     stateColor = Color.LightBlue;
                     break;
+                case AIState.Flee:
+                    stateColor = Color.White;
+                    break;
                 case AIState.Eat:
                     stateColor = Color.Brown;
                     break;

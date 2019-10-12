@@ -13,13 +13,7 @@ namespace Barotrauma
         private readonly List<Character> monsters = new List<Character>();
         private readonly List<Vector2> sonarPositions = new List<Vector2>();
 
-        public override IEnumerable<Vector2> SonarPositions
-        {
-            get
-            {
-                return sonarPositions;
-            }
-        }
+        public override IEnumerable<Vector2> SonarPositions => sonarPositions;
 
         public MonsterMission(MissionPrefab prefab, Location[] locations)
             : base(prefab, locations)
@@ -33,7 +27,11 @@ namespace Barotrauma
                 {
                     monsterFile = monster;
                 }
-                int defaultCount = monsterElement.GetAttributeInt("count", 1);
+                int defaultCount = monsterElement.GetAttributeInt("count", -1);
+                if (defaultCount < 0)
+                {
+                    defaultCount = monsterElement.GetAttributeInt("amount", 1);
+                }
                 int min = monsterElement.GetAttributeInt("min", defaultCount);
                 int max = Math.Max(min, monsterElement.GetAttributeInt("max", defaultCount));
                 monsterFiles.Add(new Tuple<string, int>(monster, Rand.Range(min, max + 1, Rand.RandSync.Server)));
@@ -95,7 +93,6 @@ namespace Barotrauma
             completed = true;
         }
 
-        // TODO: escaping might not be good enough end condition for all cases (a Crawler swarm may start escaping from a Hammerhead) -> should this be solved in the ai or here?
-        public bool IsEliminated(Character enemy) => enemy.Removed || enemy.IsDead || enemy.AIController is EnemyAIController ai && ai.State == AIState.Escape;
+        public bool IsEliminated(Character enemy) => enemy.Removed || enemy.IsDead || enemy.AIController is EnemyAIController ai && ai.State == AIState.Flee;
     }
 }

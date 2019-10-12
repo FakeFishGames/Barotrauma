@@ -435,8 +435,8 @@ namespace Barotrauma
             [Serialize(false, true, description: "Does the character attack ONLY when provoked?"), Editable()]
             public bool AttackOnlyWhenProvoked { get; private set; }
 
-            [Serialize(true, true, description: "When true, the character retaliates quickly when it's taking damage. Enabled by default."), Editable]
-            public bool RetaliateWhenTakingDamage { get; private set; }
+            [Serialize(true, true, description: "The character will flee for a brief moment when being shot at if not performing an attack."), Editable]
+            public bool AvoidGunfire { get; private set; }
 
             [Serialize(false, true, description: "Does the character try to break inside the sub?"), Editable()]
             public bool AggressiveBoarding { get; private set; }

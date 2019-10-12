@@ -50,7 +50,7 @@ namespace Barotrauma
 
         public void Refresh()
         {
-            Members.RemoveAll(m => m.IsDead || m.Removed || m.AIController is EnemyAIController ai && ai.State == AIState.Escape);
+            Members.RemoveAll(m => m.IsDead || m.Removed || m.AIController is EnemyAIController ai && ai.State == AIState.Flee);
             foreach (var member in Members)
             {
                 if (!member.AIController.Enabled && member.IsRemotePlayer || Character.Controlled == member || !((EnemyAIController)member.AIController).SwarmBehavior.IsActive)

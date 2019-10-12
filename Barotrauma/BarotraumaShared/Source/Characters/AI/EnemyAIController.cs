@@ -89,6 +89,9 @@ namespace Barotrauma
         // TODO: expose?
         private readonly float priorityFearIncreasement = 2;
         private readonly float memoryFadeTime = 0.5f;
+        private readonly float avoidTime = 3;
+
+        private float avoidTimer;
 
         public LatchOntoAI LatchOntoAI { get; private set; }
         public SwarmBehavior SwarmBehavior { get; private set; }
@@ -261,7 +264,11 @@ namespace Barotrauma
                 ignoredTargets.Clear();
                 targetIgnoreTimer = targetIgnoreTime;
             }
-
+            avoidTimer -= deltaTime;
+            if (avoidTimer < 0)
+            {
+                avoidTimer = 0;
+            }
             UpdateTargetMemories(deltaTime);
             if (updateTargetsTimer > 0.0)
             {
@@ -272,13 +279,13 @@ namespace Barotrauma
                 UpdateTargets(Character, out CharacterParams.TargetParams targetingPriority);
                 updateTargetsTimer = UpdateTargetsInterval * Rand.Range(0.75f, 1.25f);
 
-                if (SelectedAiTarget == null)
-                {
-                    State = AIState.Idle;
-                }
-                else if (Character.HealthPercentage < FleeHealthThreshold)
+                if (avoidTimer > 0)
                 {
                     State = AIState.Escape;
+                }
+                else if (SelectedAiTarget == null)
+                {
+                    State = AIState.Idle;
                 }
                 else if (targetingPriority != null)
                 {
@@ -323,6 +330,7 @@ namespace Barotrauma
                     UpdateEating(deltaTime);
                     break;
                 case AIState.Escape:
+                case AIState.Flee:
                     run = true;
                     UpdateEscape(deltaTime);
                     break;
@@ -1059,14 +1067,30 @@ namespace Barotrauma
             LatchOntoAI?.DeattachFromBody();
             Character.AnimController.ReleaseStuckLimbs();
 
+            if (Character.HealthPercentage <= FleeHealthThreshold)
+            {
+                State = AIState.Flee;
+                SelectedAiTarget = null;
+                wallTarget = null;
+                return;
+            }
+
             if (attacker == null || attacker.AiTarget == null) { return; }
             AITargetMemory targetMemory = GetTargetMemory(attacker.AiTarget);
             targetMemory.Priority += GetRelativeDamage(attackResult.Damage, Character.Vitality) * AggressionHurt;
 
-            // Reduce the cooldown so that the character can react
             // Only allow to react once. Otherwise would attack the target with only a fraction of cooldown
-            if (SelectedAiTarget != attacker.AiTarget && Character.Params.AI.RetaliateWhenTakingDamage && attacker.Submarine == Character.Submarine)
+            bool retaliate = attacker.Submarine == Character.Submarine && SelectedAiTarget != attacker.AiTarget;
+            bool avoidGunFire = attacker.Submarine != Character.Submarine && Character.Params.AI.AvoidGunfire;
+            if (State == AIState.Attack && !IsCoolDownRunning)
             {
+                // Don't retaliate or escape while performing an attack
+                retaliate = false;
+                avoidGunFire = false;
+            }
+            if (retaliate)
+            {
+                // Reduce the cooldown so that the character can react
                 foreach (var limb in Character.AnimController.Limbs)
                 {
                     if (limb.attack != null)
@@ -1074,6 +1098,10 @@ namespace Barotrauma
                         limb.attack.CoolDownTimer *= reactionTime;
                     }
                 }
+            }
+            else if (avoidGunFire)
+            {
+                avoidTimer = avoidTime * Rand.Range(0.75f, 1.25f);
             }
         }
 
@@ -1245,11 +1273,6 @@ namespace Barotrauma
                         // In a different sub or the target is outside when we are inside or vice versa.
                         continue;
                     }
-                    else if (targetCharacter.CurrentHull != Character.CurrentHull)
-                    {
-                        // In the same sub, but in a different hull.
-                        valueModifier = 0.5f;
-                    }
                     if (targetCharacter.IsDead)
                     {
                         targetingTag = "dead";
@@ -1269,7 +1292,7 @@ namespace Barotrauma
                         {
                             targetingTag = "weaker";
                         }
-                        if (State == AIState.Escape && targetingTag == "stronger")
+                        if (targetingTag == "stronger" && State == AIState.Escape && SelectedAiTarget.Entity is Character c && c.AIController is EnemyAIController)
                         {
                             // Frightened
                             valueModifier = 2;
@@ -1329,7 +1352,7 @@ namespace Barotrauma
                         }
                         if (character.CurrentHull != null)
                         {
-                            // Ignore walls when inside.
+                            // Ignore walls when inside (walltargets still work)
                             continue;
                         }
                         valueModifier = 1;
@@ -1538,7 +1561,7 @@ namespace Barotrauma
 
             float margin = 10.0f;
 
-            if (SimPosition.Y < 0.0f)
+            if (SimPosition.Y < 0.0)
             {
                 steeringManager.SteeringManual(deltaTime, Vector2.UnitY * MathUtils.InverseLerp(0.0f, -margin, SimPosition.Y));
             }
