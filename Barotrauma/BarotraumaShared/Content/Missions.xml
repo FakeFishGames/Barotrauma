@@ -176,6 +176,7 @@
     <message header="Artifact collected" text="The artifact is now on board. Navigate the submarine out of the cavern to claim the reward."/>
   </SalvageMission>
 
+  <!--
   <MonsterMission
     name="Killing a Moloch"
     identifier="killmoloch"
@@ -185,7 +186,7 @@
     reward="5000"
     sonarlabel="Moloch"
     successmessage="The Moloch has been killed."
-    monsterfile="Content/Characters/Molochboss/Molochboss.xml">
+    monsterfile="Molochboss">
 
     <Icon texture="Content/UI/MissionIcons2.png" sourcerect="768,512,256,256" color="214,50,48"/>
     
@@ -227,26 +228,27 @@
     <LocationType from="Mine" to="Military"/>
     <LocationType from="Mine" to="Research"/>
     <LocationType from="Mine" to="Mine"/>
-    <LocationType from="Mine" to="Lair"/>
-    
+    <LocationType from="Mine" to="Lair"/>    
     
     <message header="Target terminated" text="The moloch is dead. Navigate the submarine out of the cavern to claim the reward."/>
   </MonsterMission>
+  -->
 
   <MonsterMission
-    name="Killing a Tiger Thresher"
-    identifier="killtigerthresher"
+    name="Terminate a Swarm"
+    identifier="killthresherswarm1"
     type="Monster"
-    description="A particularly aggressive Tiger Thresher has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to those who kill the creature."
+    description="A swarm of threshers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew who can neutralize it."
     commonness="45"
-    reward="1000"
-    sonarlabel="Tiger Thresher"
-    successmessage="The Tiger Thresher has been killed."
-    monsterfile="Content/Characters/Tigerthresher/Tigerthresher.xml">
-    <message header="Target terminated" text="The thresher is dead. Navigate the submarine out of the cavern to claim the reward."/>
+    reward="3000"
+    sonarlabel="Thresher Swarm"
+    successmessage="The swarm has been terminated.">
+    <monster character="tigerthresher" min="5" max="10"/>
+    <monster character="bonethresher" count="2"/>
+    <message header="Target terminated" text="The swarm is terminated. Navigate the submarine out of the cavern to claim the reward."/>
 
-    <Icon texture="Content/UI/MissionIcons2.png" sourcerect="256,768,256,256" color="214,50,48"/>
-    
+    <Icon texture="Content/UI/MissionIcons2.png" sourcerect="768,768,256,256" color="214,50,48"/>
+
     <LocationType from="City" to="None"/>
     <LocationType from="City" to="City"/>
     <LocationType from="City" to="Outpost"/>
@@ -254,7 +256,7 @@
     <LocationType from="City" to="Research"/>
     <LocationType from="City" to="Mine"/>
     <LocationType from="City" to="Lair"/>
-        
+
     <LocationType from="Outpost" to="None"/>
     <LocationType from="Outpost" to="City"/>
     <LocationType from="Outpost" to="Outpost"/>
@@ -262,7 +264,7 @@
     <LocationType from="Outpost" to="Research"/>
     <LocationType from="Outpost" to="Mine"/>
     <LocationType from="Outpost" to="Lair"/>
-    
+
     <LocationType from="Military" to="None"/>
     <LocationType from="Military" to="City"/>
     <LocationType from="Military" to="Outpost"/>
@@ -270,7 +272,7 @@
     <LocationType from="Military" to="Research"/>
     <LocationType from="Military" to="Mine"/>
     <LocationType from="Military" to="Lair"/>
-    
+
     <LocationType from="Research" to="None"/>
     <LocationType from="Research" to="City"/>
     <LocationType from="Research" to="Outpost"/>
@@ -278,19 +280,17 @@
     <LocationType from="Research" to="Research"/>
     <LocationType from="Research" to="Mine"/>
     <LocationType from="Research" to="Lair"/>
-    
+
     <LocationType from="Mine" to="None"/>
     <LocationType from="Mine" to="City"/>
     <LocationType from="Mine" to="Outpost"/>
     <LocationType from="Mine" to="Military"/>
     <LocationType from="Mine" to="Research"/>
     <LocationType from="Mine" to="Mine"/>
-    <LocationType from="Mine" to="Lair"/> 
+    <LocationType from="Mine" to="Lair"/>
     
-    <message header="Target terminated" text="The thresher is dead. Navigate the submarine out of the cavern to claim the reward."/>
-    
+    <message header="Target terminated" text="The swarm is terminated. Navigate the submarine out of the cavern to claim the reward."/>
   </MonsterMission>
-
 
   <MonsterMission
     name="Killing a Hammerhead"
@@ -301,7 +301,7 @@
     reward="2000"
     sonarlabel="Hammerhead"
     successmessage="The Hammerhead has been killed."
-    monsterfile="Content/Characters/Hammerhead/Hammerhead.xml">
+    monsterfile="Hammerhead">
     <message header="Target terminated" text="The Hammerhead is dead. Navigate the submarine out of the cavern to claim the reward."/>
 
     <Icon texture="Content/UI/MissionIcons2.png" sourcerect="512,768,256,256" color="214,50,48"/>
@@ -360,7 +360,7 @@
     reward="2500"
     sonarlabel="Hammerhead"
     successmessage="The Hammerhead has been killed."
-    monsterfile="Content/Characters/Hammerheadgold/Hammerheadgold.xml">
+    monsterfile="Hammerheadgold">
     <message header="Target terminated" text="The Hammerhead is dead. Navigate the submarine out of the cavern to claim the reward."/>
 
     <Icon texture="Content/UI/MissionIcons2.png" sourcerect="512,768,256,256" color="214,50,48"/>
@@ -418,7 +418,7 @@
     reward="1000"
     sonarlabel="Swarm"
     successmessage="The swarm has been terminated."
-    monsterfile="Content/Characters/Crawler/Crawler.xml"
+    monsterfile="Crawler"
     monstercount="10" >   
     <message header="Target terminated" text="The swarm is terminated. Navigate the submarine out of the cavern to claim the reward."/>
 
@@ -477,7 +477,7 @@
     reward="2000"
     sonarlabel="Swarm"
     successmessage="The swarm has been terminated."
-    monsterfile="Content/Characters/Crawler/Crawler.xml"
+    monsterfile="Crawler"
     monstercount="18" >
     <message header="Target terminated" text="The swarm is terminated. Navigate the submarine out of the cavern to claim the reward."/>
 
@@ -537,7 +537,7 @@
     reward="10000"
     sonarlabel="Target"
     successmessage="The End Worm is dead and the passageway is open for transport again."
-    monsterfile="Content/Characters/Endworm/Endworm.xml">
+    monsterfile="Endworm">
     
     <LocationType from="City" to="Lair"/>
     <LocationType from="Military" to="Lair"/>
@@ -548,6 +548,7 @@
     
   </MonsterMission> -->
 
+  <!--
   <MonsterMission
     name="Salvaging an artifact"
     identifier="salvagekillmoloch"
@@ -557,7 +558,7 @@
     reward="2000"
     sonarlabel="Infrasonic signal"
     successmessage="It turns out the signal was emitted by a Moloch. The researchers of [location1] have agreed to pay you the reward nevertheless for getting rid of the Moloch."
-    monsterfile="Content/Characters/Moloch/Moloch.xml">
+    monsterfile="Moloch">
 
     <Icon texture="Content/UI/MissionIcons2.png" sourcerect="512,0,256,256" color="49,93,233"/>
 
@@ -578,7 +579,9 @@
     <LocationType from="Research" to="Lair"/>
   
   </MonsterMission>
+    -->
 
+  <!--
   <MonsterMission
     name="Salvaging a Derelict"
     identifier="salvagekillcarrier"
@@ -588,7 +591,7 @@
     reward="2000"
     sonarlabel="Emergency Signal"
     successmessage="The researchers of [location2] are eager to know all the details of the encounter, but seem hesitant to answer any questions regarding the vessel. They do however offer you 2000 credits as &quot;reimbursement for your troubles&quot;."
-    monsterfile="Content/Characters/Carrier/Carrier.xml">
+    monsterfile="Carrier">
 
     <Icon texture="Content/UI/MissionIcons2.png" sourcerect="256,512,256,256" color="64,188,216"/>
     
@@ -611,6 +614,7 @@
     <message header="Target destroyed" text="The missing vessel appears to have been taken over by some sort of parasitic growth, but it seems to be incapacitated now. You should report the incident to [location2]."/>
 
   </MonsterMission>
+    -->
   
   <CargoMission
     name="Explosive cargo"
