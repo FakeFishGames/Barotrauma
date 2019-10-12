@@ -23,7 +23,7 @@
     <Item identifier="swimbladder" />
     <Item identifier="alienblood" />
   </Inventory>
-  <ai combatstrength="500" sight="3" hearing="2" aggressionhurt="100" aggressiongreed="10" fleehealththreshold="0" attackonlywhenprovoked="False" aggressiveboarding="False" retaliatewhentakingdamage="True">
+  <ai combatstrength="500" sight="3" hearing="2" aggressionhurt="100" aggressiongreed="10" fleehealththreshold="0" attackonlywhenprovoked="False" aggressiveboarding="False">
     <targetpriority tag="decoy" state="Attack" priority="300" />
     <targetpriority tag="nasonov" state="Attack" priority="200" />
     <targetpriority tag="provocative" state="Attack" priority="100" />
