@@ -3,8 +3,6 @@
   <limb id="0" name="Head" type="Head" height="0" width="70" notes="" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="10" stepoffset="0,0" radius="30" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7" mouthpos="1.2,-0.5">
     <deformablesprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="762,236,146,95" origin="0.5451591,0.4649931" depth="0" />
     <attack context="Water" targettype="Structure" hitdetectiontype="Distance" afterattack="FallBack" reverse="False" range="125" damagerange="150" duration="0.25" cooldown="7" secondarycooldown="3" cooldownrandomfactor="0.1" structuredamage="30" itemdamage="30" stun="0" onlyhumans="False" applyforceonlimbs="" force="100" torque="0" applyforcesonlyonce="False" targetimpulse="200" targetimpulseworld="0,0" targetforce="0" targetforceworld="0,0" severlimbsprobability="0" priority="1" structuresoundtype="StructureBlunt" targetlimbtype="None">
-      <affliction identifier="internaldamage" strength="20" probability="1" />
-      <affliction identifier="stun" strength="2" probability="1" />
     </attack>
     <damagemodifier damagemultiplier="0.2" armorsector="0,360" deflectprojectiles="True" afflictionidentifiers="" afflictiontypes="damage,bleeding" damagesound="LimbArmor" />
   </limb>
@@ -17,7 +15,7 @@
   <limb id="2" width="110" height="30" name="Jaw" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7" mouthpos="0,0">
     <deformablesprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="763,331,145,58" origin="0.5103448,0.4827586" depth="0.025" />
     <attack context="Water" targettype="Character" hitdetectiontype="Distance" afterattack="Pursue" reverse="False" range="50" damagerange="100" duration="0.5" cooldown="2" secondarycooldown="0" cooldownrandomfactor="0.1" structuredamage="20" itemdamage="20" stun="0" onlyhumans="False" applyforceonlimbs="" force="40" torque="80" applyforcesonlyonce="False" targetimpulse="0" targetimpulseworld="0,0" targetforce="-100" targetforceworld="0,0" severlimbsprobability="0.8" priority="0" structuresoundtype="StructureSlash" targetlimbtype="None">
-      <affliction identifier="internaldamage" strength="10" probability="1" />
+      <affliction identifier="internaldamage" strength="25" probability="1" />
       <affliction identifier="bleeding" strength="25" probability="1" />
       <affliction identifier="stun" strength="0.1" probability="1" />
     </attack>

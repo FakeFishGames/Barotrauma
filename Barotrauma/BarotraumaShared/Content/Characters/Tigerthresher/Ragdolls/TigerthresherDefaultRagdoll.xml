@@ -6,7 +6,7 @@
       <lighttexture texture="Content/Lights/pointlight_falloff.png" origin="0.5,0.5" size="1,1" />
     </lightsource>
     <attack context="Outside" targettype="Character" hitdetectiontype="Distance" afterattack="FollowThroughUntilCanAttack" reverse="False" range="150" damagerange="150" duration="0.25" cooldown="5" secondarycooldown="3" cooldownrandomfactor="0.1" structuredamage="20" itemdamage="20" stun="0" onlyhumans="False" applyforceonlimbs="2" force="80" torque="80" applyforcesonlyonce="False" targetimpulse="0" targetimpulseworld="0,0" targetforce="-200" targetforceworld="0,-100" severlimbsprobability="0" priority="1" structuresoundtype="StructureSlash" targetlimbtype="None">
-      <affliction identifier="internaldamage" strength="15" probability="1" />
+      <affliction identifier="internaldamage" strength="10" probability="1" />
       <affliction identifier="bleeding" strength="50" probability="1" />
       <affliction identifier="stun" strength="0.5" probability="1" />
     </attack>
