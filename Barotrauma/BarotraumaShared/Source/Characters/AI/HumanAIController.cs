@@ -332,7 +332,10 @@ namespace Barotrauma
                 if (!NeedsDivingGear(Character, Character.CurrentHull, out _))
                 {
                     bool oxygenLow = Character.OxygenAvailable < CharacterHealth.LowOxygenThreshold;
-                    bool shouldKeepTheGearOn = Character.AnimController.HeadInWater || ObjectiveManager.CurrentObjective.GetSubObjectivesRecursive(true).Any(o => o.KeepDivingGearOn);
+                    bool shouldKeepTheGearOn = Character.AnimController.HeadInWater
+                        || Character.CurrentHull.WaterPercentage > 50
+                        || ObjectiveManager.IsCurrentObjective<AIObjectiveFindSafety>() 
+                        || ObjectiveManager.CurrentObjective.GetSubObjectivesRecursive(true).Any(o => o.KeepDivingGearOn);
                     bool removeDivingSuit = !Character.AnimController.HeadInWater && oxygenLow;
                     AIObjectiveGoTo gotoObjective = ObjectiveManager.CurrentOrder as AIObjectiveGoTo;
                     if (!removeDivingSuit)
