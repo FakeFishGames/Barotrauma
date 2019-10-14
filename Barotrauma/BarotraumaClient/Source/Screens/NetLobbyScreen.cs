@@ -329,7 +329,7 @@ namespace Barotrauma
                 RelativeSpacing = panelSpacing
             };
 
-            var panelContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.95f), innerFrame.RectTransform, Anchor.Center), isHorizontal: true)
+            var panelContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), innerFrame.RectTransform, Anchor.Center), isHorizontal: true)
             {
                 Stretch = true,
                 RelativeSpacing = panelSpacing
@@ -381,6 +381,8 @@ namespace Barotrauma
             {
                 Visible = false
             };
+
+            GUIButton DisconnectButton = new GUIButton(new RectTransform(new Vector2(0.15f, 0.0518f), panelHolder.RectTransform), TextManager.Get("disconnect"), style: "GUIButtonLarge");
 
             // Sidebar area (Character customization/Chat)
 
@@ -538,17 +540,16 @@ namespace Barotrauma
                 Font = GUI.SmallFont
             };
 
-            GUILayoutGroup roundControlsHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), innerFrame.RectTransform), 
+            GUILayoutGroup roundControlsHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), sideBar.RectTransform), 
                 isHorizontal: true)
             {
                 Stretch = true
             };
 
-            //spacing
-            new GUIFrame(new RectTransform(Vector2.One, roundControlsHolder.RectTransform) { MinSize = new Point(panelHolder.Rect.Width, 0) }, style: null);
+            GUIFrame readyToStartContainer = new GUIFrame(new RectTransform(Vector2.One, roundControlsHolder.RectTransform), style: "GUIFrameFriendsDropdown");
 
             // Ready to start tickbox
-            ReadyToStartBox = new GUITickBox(new RectTransform(Vector2.One, roundControlsHolder.RectTransform),
+            ReadyToStartBox = new GUITickBox(new RectTransform(new Vector2(0.85f, 0.75f), readyToStartContainer.RectTransform, anchor: Anchor.Center),
                 TextManager.Get("ReadyToStartTickBox"))
             {
                 Visible = false
