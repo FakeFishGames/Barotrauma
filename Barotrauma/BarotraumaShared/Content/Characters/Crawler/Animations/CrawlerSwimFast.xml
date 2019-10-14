@@ -6,7 +6,7 @@
   flip="True"
   headangle="77.22551"
   torsoangle="80.92885"
-  mirror="True"
+  mirror="False"
   rotatetowardsmovement="True"
   torsotorque="25"
   headtorque="25"

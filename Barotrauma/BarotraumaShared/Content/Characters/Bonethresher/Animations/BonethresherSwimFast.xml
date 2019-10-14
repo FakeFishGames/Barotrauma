@@ -2,7 +2,7 @@
   animationtype="SwimFast"
   usesinemovement="False"
   flip="True"
-  mirror="True"
+  mirror="False"
   waveamplitude="31.33537"
   wavelength="48.14565"
   rotatetowardsmovement="True"
