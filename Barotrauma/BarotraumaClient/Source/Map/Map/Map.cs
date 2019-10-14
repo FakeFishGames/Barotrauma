@@ -430,7 +430,7 @@ namespace Barotrauma
             Rectangle prevScissorRect = GameMain.Instance.GraphicsDevice.ScissorRectangle;
             spriteBatch.End();
             spriteBatch.GraphicsDevice.ScissorRectangle = Rectangle.Intersect(prevScissorRect, rect);
-            spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
+            spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
 
             for (int x = 0; x < mapTiles.GetLength(0); x++)
             {
@@ -662,15 +662,15 @@ namespace Barotrauma
                 Vector2 size = GUI.LargeFont.MeasureString(location.Name);
                 GUI.Style.GetComponentStyle("OuterGlow").Sprites[GUIComponent.ComponentState.None][0].Draw(
                     spriteBatch, new Rectangle((int)pos.X - 30, (int)pos.Y, (int)size.X + 60, (int)(size.Y + 25 * GUI.Scale)), Color.Black * hudOpenState * 0.7f);
-                GUI.DrawString(spriteBatch, pos, 
+                GUI.DrawString(spriteBatch, pos,
                     location.Name, Color.White * hudOpenState * 1.5f, font: GUI.LargeFont);
-                GUI.DrawString(spriteBatch, pos + Vector2.UnitY * 25 * GUI.Scale, 
+                GUI.DrawString(spriteBatch, pos + Vector2.UnitY * 25 * GUI.Scale,
                     location.Type.Name, Color.White * hudOpenState * 1.5f);
             }
-                        
-            GameMain.Instance.GraphicsDevice.ScissorRectangle = prevScissorRect;
+
             spriteBatch.End();
-            spriteBatch.Begin(SpriteSortMode.Deferred);
+            GameMain.Instance.GraphicsDevice.ScissorRectangle = prevScissorRect;
+            spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
         }
 
         private IEnumerable<object> WaitForMessageBoxClosed(GUIMessageBox box)
@@ -687,8 +687,8 @@ namespace Barotrauma
         private void DrawDecorativeHUD(SpriteBatch spriteBatch, Rectangle rect)
         {
             spriteBatch.End();
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, null, null, GameMain.ScissorTestEnable);
-            
+            spriteBatch.Begin(SpriteSortMode.Deferred, blendState: BlendState.Additive, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
+
             if (generationParams.ShowOverlay)
             {
                 Vector2 mapCenter = rect.Center.ToVector2() + (new Vector2(size, size) / 2 + drawOffset + drawOffsetNoise) * zoom;
@@ -768,7 +768,7 @@ namespace Barotrauma
             }
 
             spriteBatch.End();
-            spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, GameMain.ScissorTestEnable);
+            spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
         }
 
         private void UpdateMapAnim(MapAnim anim, float deltaTime)

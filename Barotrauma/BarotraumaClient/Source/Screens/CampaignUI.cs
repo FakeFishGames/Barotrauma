@@ -47,7 +47,7 @@ namespace Barotrauma
 
         public CampaignMode Campaign { get; }
 
-        public CampaignUI(CampaignMode campaign, GUIFrame container)
+        public CampaignUI(CampaignMode campaign, GUIComponent container)
         {
             this.Campaign = campaign;
 
