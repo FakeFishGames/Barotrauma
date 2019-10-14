@@ -51,6 +51,8 @@ namespace Barotrauma
         public bool VoipAttenuationEnabled { get; set; }
         public bool UseDirectionalVoiceChat { get; set; }
 
+        public IList<string> CaptureDeviceNames;
+
         public enum VoiceMode
         {
             Disabled,

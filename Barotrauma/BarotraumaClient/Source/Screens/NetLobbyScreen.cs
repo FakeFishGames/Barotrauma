@@ -37,6 +37,15 @@ namespace Barotrauma
             }
         }
 
+        private GUIImage micIcon;
+        public GUIImage MicIcon
+        {
+            get
+            {
+                return micIcon;
+            }
+        }
+
         private GUIScrollBar levelDifficultyScrollBar;
 
         private GUIButton[] traitorProbabilityButtons;
@@ -475,12 +484,19 @@ namespace Barotrauma
 
             // Chat input
 
-            chatInput = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.07f), socialHolder.RectTransform))
+            var chatRow = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.07f), socialHolder.RectTransform), true)
+            {
+                Stretch = true
+            };
+
+            chatInput = new GUITextBox(new RectTransform(new Vector2(0.95f, 1.0f), chatRow.RectTransform))
             {
                 MaxTextLength = ChatMessage.MaxLength,
                 Font = GUI.SmallFont,
                 DeselectAfterMessage = false
             };
+
+            micIcon = new GUIImage(new RectTransform(new Vector2(0.05f, 1.0f), chatRow.RectTransform), style: "GUIMicrophoneUnavailable");
 
             serverLogHolder = new GUILayoutGroup(new RectTransform(Vector2.One, logHolderBottom.RectTransform, Anchor.Center))
             {
@@ -1531,7 +1547,7 @@ namespace Barotrauma
         public void AddPlayer(Client client)
         {
             GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), playerList.Content.RectTransform) { MinSize = new Point(0, (int)(30 * GUI.Scale)) },
-                client.Name, textAlignment: Alignment.CenterLeft, style: null)
+                client.Name, textAlignment: Alignment.CenterLeft, font: GUI.SmallFont, style: null)
             {
                 Padding = Vector4.One * 10.0f * GUI.Scale,
                 Color = Color.White * 0.25f,
@@ -1546,7 +1562,9 @@ namespace Barotrauma
             {
                 UserData = new Pair<string, float>("soundicon", 0.0f),
                 CanBeFocused = false,
-                Visible = true
+                Visible = true,
+                OverrideState = GUIComponent.ComponentState.None,
+                HoverColor = Color.White
             };
 
             if (voipSheetRects == null)
@@ -1566,13 +1584,14 @@ namespace Barotrauma
             {
                 UserData = "soundicondisabled",
                 CanBeFocused = true,
-                Visible = false
-            };
-            new GUITickBox(new RectTransform(new Vector2(0.05f, 0.6f), textBlock.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(10 + soundIcon.Rect.Width, 0) }, "")
-            {
-                Selected = true,
-                Enabled = false,
                 Visible = false,
+                OverrideState = GUIComponent.ComponentState.None,
+                HoverColor = Color.White
+            };
+            new GUIFrame(new RectTransform(new Vector2(0.6f, 0.6f), textBlock.RectTransform, Anchor.CenterRight, scaleBasis: ScaleBasis.BothHeight) { AbsoluteOffset = new Point(10 + soundIcon.Rect.Width, 0) }, style: "GUIReadyToStart")
+            {
+                Visible = false,
+                CanBeFocused = false,
                 ToolTip = TextManager.Get("ReadyToStartTickBox"),
                 UserData = "clientready"
             };
@@ -1976,6 +1995,28 @@ namespace Barotrauma
             if (CampaignSetupUI != null)
             {
                 if (!CampaignSetupUI.Visible) CampaignSetupUI = null;                
+            }
+
+            string currMicStyle = micIcon.Style.Element.Name.LocalName;
+
+            string targetMicStyle = "GUIMicrophoneEnabled";
+            if (GameMain.Config.CaptureDeviceNames == null)
+            {
+                GameMain.Config.CaptureDeviceNames = OpenAL.Alc.GetStringList(IntPtr.Zero, OpenAL.Alc.CaptureDeviceSpecifier);
+            }
+
+            if (GameMain.Config.CaptureDeviceNames.Count == 0)
+            {
+                targetMicStyle = "GUIMicrophoneUnavailable";
+            }
+            else if (GameMain.Config.VoiceSetting == GameSettings.VoiceMode.Disabled)
+            {
+                targetMicStyle = "GUIMicrophoneDisabled";
+            }
+
+            if (targetMicStyle.ToLowerInvariant() != currMicStyle.ToLowerInvariant())
+            {
+                GUI.Style.Apply(micIcon, targetMicStyle);
             }
             
             foreach (GUIComponent child in playerList.Content.Children)

@@ -814,15 +814,43 @@
     hovercolor="255,255,255,255"
     selectedcolor="255,255,255,255"
     sheetindices="0,1; 1,1; 0,2; 1,2">
-    <Sprite texture="Content/UI/VoipIcons.png" state="None" tile="false" maintainaspectratio="true" sourcerect="0,0,36,38"/>
+    <Sprite texture="Content/UI/LobbyCrewIcons.png" state="None" tile="false" maintainaspectratio="true" sourcerect="0,0,36,38"/>
   </GUISoundIcon>
   
   <GUISoundIconDisabled
     color="255,255,255,255"
     hovercolor="255,255,255,255"
     selectedcolor="255,255,255,255">
-    <Sprite texture="Content/UI/VoipIcons.png" state="None" tile="false" maintainaspectratio="true" sourcerect="36,0,36,38"/>
+    <Sprite texture="Content/UI/LobbyCrewIcons.png" state="None" tile="false" maintainaspectratio="true" sourcerect="36,0,36,38"/>
   </GUISoundIconDisabled>
+
+  <GUIReadyToStart
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255">
+    <Sprite texture="Content/UI/LobbyCrewIcons.png" state="None" tile="false" maintainaspectratio="true" sourcerect="104,104,24,24"/>
+  </GUIReadyToStart>
+
+  <GUIMicrophoneEnabled
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255">
+    <Sprite texture="Content/UI/LobbyCrewIcons.png" state="None" tile="false" maintainaspectratio="true" sourcerect="98,31,30,31"/>
+  </GUIMicrophoneEnabled>
+
+  <GUIMicrophoneDisabled
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255">
+    <Sprite texture="Content/UI/LobbyCrewIcons.png" state="None" tile="false" maintainaspectratio="true" sourcerect="98,0,30,31"/>
+  </GUIMicrophoneDisabled>
+  
+  <GUIMicrophoneUnavailable
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255">
+    <Sprite texture="Content/UI/LobbyCrewIcons.png" state="None" tile="false" maintainaspectratio="true" sourcerect="98,62,30,31"/>
+  </GUIMicrophoneUnavailable>
 
   <GUINotificationButton
     color="152,177,197,255"

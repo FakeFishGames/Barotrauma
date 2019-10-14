@@ -508,8 +508,8 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), voipSettings.RectTransform), TextManager.Get("VoiceChat"));
 
-            IList<string> deviceNames = Alc.GetStringList((IntPtr)null, Alc.CaptureDeviceSpecifier);
-            foreach (string name in deviceNames)
+            CaptureDeviceNames = Alc.GetStringList((IntPtr)null, Alc.CaptureDeviceSpecifier);
+            foreach (string name in CaptureDeviceNames)
             {
                 DebugConsole.NewMessage(name + " " + name.Length.ToString(), Color.Lime);
             }
@@ -524,19 +524,19 @@ namespace Barotrauma
                 return true;
             };
 
-            if (string.IsNullOrWhiteSpace(VoiceCaptureDevice) || !(deviceNames?.Contains(VoiceCaptureDevice) ?? false))
+            if (string.IsNullOrWhiteSpace(VoiceCaptureDevice) || !(CaptureDeviceNames?.Contains(VoiceCaptureDevice) ?? false))
             {
-                VoiceCaptureDevice = deviceNames?.Count > 0 ? deviceNames[0] : null;
+                VoiceCaptureDevice = CaptureDeviceNames?.Count > 0 ? CaptureDeviceNames[0] : null;
             }
             if (string.IsNullOrWhiteSpace(VoiceCaptureDevice))
             {
                 VoiceSetting = VoiceMode.Disabled;
             }
 #if (!OSX)
-            var deviceList = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.15f), voipSettings.RectTransform), TrimAudioDeviceName(VoiceCaptureDevice), deviceNames.Count);
-            if (deviceNames?.Count > 0)
+            var deviceList = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.15f), voipSettings.RectTransform), TrimAudioDeviceName(VoiceCaptureDevice), CaptureDeviceNames.Count);
+            if (CaptureDeviceNames?.Count > 0)
             {
-                foreach (string name in deviceNames)
+                foreach (string name in CaptureDeviceNames)
                 {
                     deviceList.AddItem(TrimAudioDeviceName(name), name);
                 }
