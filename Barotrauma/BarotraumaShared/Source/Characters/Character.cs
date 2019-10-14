@@ -2979,9 +2979,18 @@ namespace Barotrauma
             return visibleHulls;
         }
 
-        public Vector2 GetRelativeSimPosition(ISpatialEntity target)
+        public Vector2 GetRelativeSimPosition(ISpatialEntity target, Vector2? worldPos = null)
         {
             Vector2 targetPos = target.SimPosition;
+            if (worldPos.HasValue)
+            {
+                Vector2 wp = worldPos.Value;
+                if (target.Submarine != null)
+                {
+                    wp -= target.Submarine.Position;
+                }
+                targetPos = ConvertUnits.ToSimUnits(wp);
+            }
             if (Submarine == null && target.Submarine != null)
             {
                 // outside and targeting inside

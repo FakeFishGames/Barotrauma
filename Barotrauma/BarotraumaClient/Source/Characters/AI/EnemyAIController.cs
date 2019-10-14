@@ -14,7 +14,19 @@ namespace Barotrauma
             Vector2 pos = Character.WorldPosition;
             pos.Y = -pos.Y;
 
-            if (SelectedAiTarget?.Entity != null)
+            if (State == AIState.Idle && PreviousState == AIState.Attack)
+            {
+                var target = _selectedAiTarget ?? _lastAiTarget;
+                if (target != null)
+                {
+                    var memory = GetTargetMemory(target);
+                    Vector2 targetPos = memory.Location;
+                    targetPos.Y = -targetPos.Y;
+                    GUI.DrawLine(spriteBatch, pos, targetPos, Color.White * 0.5f, 0, 4);
+                    GUI.DrawString(spriteBatch, pos - Vector2.UnitY * 60.0f, $"{target.Entity.ToString()} ({memory.Priority.FormatZeroDecimal()})", Color.White, Color.Black);
+                }
+            }
+            else if (SelectedAiTarget?.Entity != null)
             {
                 Vector2 targetPos = SelectedAiTarget.WorldPosition;
                 if (State == AIState.Attack)
@@ -31,7 +43,8 @@ namespace Barotrauma
                     GUI.DrawRectangle(spriteBatch, wallTargetPos - new Vector2(10.0f, 10.0f), new Vector2(20.0f, 20.0f), Color.Orange, false);
                     GUI.DrawLine(spriteBatch, pos, wallTargetPos, Color.Orange * 0.5f, 0, 5);
                 }
-                GUI.DrawString(spriteBatch, pos - Vector2.UnitY * 60.0f, $"{SelectedAiTarget.Entity.ToString()} ({targetValue.FormatZeroDecimal()})", Color.Red, Color.Black);
+                GUI.DrawString(spriteBatch, pos - Vector2.UnitY * 60.0f, $"{SelectedAiTarget.Entity.ToString()} ({GetTargetMemory(SelectedAiTarget).Priority.FormatZeroDecimal()})", Color.Red, Color.Black);
+                GUI.DrawString(spriteBatch, pos - Vector2.UnitY * 40.0f, $"({targetValue.FormatZeroDecimal()})", Color.Red, Color.Black);
             }
 
             /*GUI.Font.DrawString(spriteBatch, targetValue.ToString(), pos - Vector2.UnitY * 80.0f, Color.Red);
@@ -67,8 +80,8 @@ namespace Barotrauma
 
                 if (LatchOntoAI.WallAttachPos.HasValue)
                 {
-                    GUI.DrawLine(spriteBatch, pos,
-                        ConvertUnits.ToDisplayUnits(new Vector2(LatchOntoAI.WallAttachPos.Value.X, -LatchOntoAI.WallAttachPos.Value.Y)), Color.Green, 0, 3);
+                    //GUI.DrawLine(spriteBatch, pos,
+                    //    ConvertUnits.ToDisplayUnits(new Vector2(LatchOntoAI.WallAttachPos.Value.X, -LatchOntoAI.WallAttachPos.Value.Y)), Color.Green, 0, 3);
                 }
             }
 
