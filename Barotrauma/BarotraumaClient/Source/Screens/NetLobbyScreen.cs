@@ -329,7 +329,11 @@ namespace Barotrauma
                 RelativeSpacing = panelSpacing
             };
 
-            var panelContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.95f), innerFrame.RectTransform, Anchor.Center), style: null);
+            var panelContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.95f), innerFrame.RectTransform, Anchor.Center), isHorizontal: true)
+            {
+                Stretch = true,
+                RelativeSpacing = panelSpacing
+            };
             
             GUILayoutGroup panelHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.6f, 1.0f), panelContainer.RectTransform))
             {
@@ -338,7 +342,7 @@ namespace Barotrauma
 
             //server info panel ------------------------------------------------------------
 
-            infoFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.45f), panelHolder.RectTransform));
+            infoFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.5f), panelHolder.RectTransform));
             var infoFrameContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), infoFrame.RectTransform, Anchor.Center))
             {
                 Stretch = true,
@@ -380,7 +384,7 @@ namespace Barotrauma
 
             // Sidebar area (Character customization/Chat)
 
-            GUILayoutGroup sideBar = new GUILayoutGroup(new RectTransform(new Vector2(0.4f - panelSpacing, 1.0f), panelContainer.RectTransform, Anchor.TopRight))
+            GUILayoutGroup sideBar = new GUILayoutGroup(new RectTransform(new Vector2(0.4f, 1.0f), panelContainer.RectTransform, maxSize: new Point(650, panelContainer.RectTransform.Rect.Height)))
             {
                 Stretch = true
             };
