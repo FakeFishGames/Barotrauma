@@ -72,6 +72,8 @@ namespace Barotrauma
         private GUIButton playerFrame;
         private GUIButton jobInfoFrame;
 
+        private GUIComponent subPreviewContainer;
+
         private GUITickBox autoRestartBox;
                 
         private GUIDropDown shuttleList;
@@ -619,9 +621,15 @@ namespace Barotrauma
                 Visible = false
             };
 
-            //respawn shuttle ------------------------------------------------------------------
+            //respawn shuttle / submarine preview ------------------------------------------------------------------
 
-            GUILayoutGroup shuttleHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), lobbyContent.RectTransform), isHorizontal: true)
+            GUILayoutGroup rightColumn = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), lobbyContent.RectTransform))
+            {
+                RelativeSpacing = panelSpacing,
+                Stretch = true
+            };
+
+            GUILayoutGroup shuttleHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), rightColumn.RectTransform), isHorizontal: true)
             {
                 Stretch = true
             };
@@ -645,10 +653,17 @@ namespace Barotrauma
                 }
             };
 
+            subPreviewContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.9f), rightColumn.RectTransform), style: null);
+
+            //------------------------------------------------------------------------------------------------------------------
+            //   Gamemode panel
+            //------------------------------------------------------------------------------------------------------------------
+
             GUILayoutGroup miscSettingsHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), gameModeContainer.RectTransform), isHorizontal: true)
             {
                 Stretch = true
             };
+
 
             //seed ------------------------------------------------------------------
 
@@ -2893,9 +2908,17 @@ namespace Barotrauma
                 .UserData as Submarine;
 
             //matching sub found and already selected, all good
-            if (sub != null && subList.SelectedData is Submarine selectedSub && selectedSub.MD5Hash?.Hash == md5Hash && System.IO.File.Exists(sub.FilePath))
+            if (sub != null)   
             {
-                return true;
+                if (subList == this.subList)
+                {
+                    subPreviewContainer.ClearChildren();
+                    sub.CreatePreviewWindow(subPreviewContainer);
+                }
+                if (subList.SelectedData is Submarine selectedSub && selectedSub.MD5Hash?.Hash == md5Hash && System.IO.File.Exists(sub.FilePath))
+                {
+                    return true;
+                }
             }
 
             //sub not found, see if we have a sub with the same name
