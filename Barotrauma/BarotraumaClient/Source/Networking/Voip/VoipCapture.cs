@@ -26,7 +26,13 @@ namespace Barotrauma.Networking
             get;
             private set;
         }
-        
+
+        public double LastAmplitude
+        {
+            get;
+            private set;
+        }
+
         public float Gain
         {
             get { return GameMain.Config?.MicrophoneVolume ?? 1.0f; }
@@ -191,6 +197,7 @@ namespace Barotrauma.Networking
                 double dB = Math.Min(20 * Math.Log10(maxAmplitude), 0.0);
 
                 LastdB = dB;
+                LastAmplitude = maxAmplitude;
 
                 bool allowEnqueue = false;
                 if (GameMain.WindowActive)

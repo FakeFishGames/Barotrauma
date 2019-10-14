@@ -694,8 +694,8 @@ namespace Barotrauma
             }
 
             bool isInfoNew = false;
-            ServerInfo info = serverList.Content.FindChild(d => (d.UserData is ServerInfo serverInfo) &&
-                                                        (steamId != 0 ? steamId == serverInfo.OwnerID : (ip == serverInfo.IP && port == serverInfo.Port))).UserData as ServerInfo;
+            ServerInfo info = serverList.Content.FindChild(d => (d.UserData is ServerInfo serverInfo) && serverInfo != null &&
+                                                        (steamId != 0 ? steamId == serverInfo.OwnerID : (ip == serverInfo.IP && port == serverInfo.Port)))?.UserData as ServerInfo;
             if (info == null)
             {
                 isInfoNew = true;

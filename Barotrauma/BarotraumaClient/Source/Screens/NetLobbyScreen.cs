@@ -92,6 +92,8 @@ namespace Barotrauma
         private GUIFrame jobSelectionFrame;
         private GUIListBox jobList;
 
+        private Rectangle[] voipSheetRects;
+
         private float autoRestartTimer;
 
         //persistent characterinfo provided by the server
@@ -1523,11 +1525,23 @@ namespace Barotrauma
             var soundIcon = new GUIImage(new RectTransform(new Point((int)(textBlock.Rect.Height * 0.8f)), textBlock.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(5, 0) }, 
                 "GUISoundIcon")
             {
-                UserData = "soundicon",
+                UserData = new Pair<string, float>("soundicon", 0.0f),
                 CanBeFocused = false,
                 Visible = true
             };
-            soundIcon.Color = new Color(soundIcon.Color, 0.0f);
+
+            if (voipSheetRects == null)
+            {
+                Point sourceRectSize = soundIcon.Style.Sprites.First().Value.First().Sprite.SourceRect.Size;
+                var indexPieces = soundIcon.Style.Element.Attribute("sheetindices").Value.Split(';');
+                voipSheetRects = new Rectangle[indexPieces.Length];
+                for (int i=0;i<indexPieces.Length;i++)
+                {
+                    Point location = XMLExtensions.ParsePoint(indexPieces[i].Trim()) * sourceRectSize;
+                    voipSheetRects[i] = new Rectangle(location, sourceRectSize);
+                }
+            }
+
             new GUIImage(new RectTransform(new Point((int)(textBlock.Rect.Height * 0.8f)), textBlock.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(5, 0) }, 
                 "GUISoundIconDisabled")
             {
@@ -1567,12 +1581,14 @@ namespace Barotrauma
         {
             var playerFrame = PlayerList.Content.FindChild(client);
             if (playerFrame == null) { return; }
-            var soundIcon = playerFrame.FindChild("soundicon");
+            var soundIcon = playerFrame.FindChild(c => c.UserData is Pair<string, float> pair && pair.First == "soundicon");
             var soundIconDisabled = playerFrame.FindChild("soundicondisabled");
+
+            Pair<string, float> userdata = soundIcon.UserData as Pair<string, float>;
 
             if (!soundIcon.Visible)
             {
-                soundIcon.Color = new Color(soundIcon.Color, 0.0f);
+                userdata.Second = 0.0f;
             }
             soundIcon.Visible = !muted && !mutedLocally;
             soundIconDisabled.Visible = muted || mutedLocally;
@@ -1583,8 +1599,10 @@ namespace Barotrauma
         {
             var playerFrame = PlayerList.Content.FindChild(client);
             if (playerFrame == null) { return; }
-            var soundIcon = playerFrame.FindChild("soundicon");
-            soundIcon.Color = new Color(soundIcon.Color, 1.0f);
+            var soundIcon = playerFrame.FindChild(c => c.UserData is Pair<string, float> pair && pair.First == "soundicon");
+            Pair<string, float> userdata = soundIcon.UserData as Pair<string, float>;
+            userdata.Second = 0.18f;
+            soundIcon.Visible = true;
         }
 
         public void RemovePlayer(Client client)
@@ -1943,8 +1961,39 @@ namespace Barotrauma
             
             foreach (GUIComponent child in playerList.Content.Children)
             {
-                var soundIcon = child.FindChild("soundicon");
-                soundIcon.Color = new Color(soundIcon.Color, (soundIcon.Color.A / 255.0f) - (float)deltaTime);
+                if (child.UserData is Client client)
+                {
+                    var soundIcon = child.FindChild(c => c.UserData is Pair<string, float> pair && pair.First == "soundicon");
+                    if (soundIcon != null)
+                    {
+                        Pair<string, float> userdata = soundIcon.UserData as Pair<string, float>;
+                        if (userdata.Second >= 0.0f)
+                        {
+                            userdata.Second = userdata.Second - (float)deltaTime;
+
+                            if (userdata.Second < 0.0f)
+                            {
+                                soundIcon.Visible = false;
+                            }
+                            else
+                            {
+                                int sheetIndex = 0;
+                                if (client.ID != GameMain.Client.ID)
+                                {
+                                    sheetIndex = (int)Math.Floor((client.VoipSound?.CurrentAmplitude ?? 0.0f) * (voipSheetRects.Length - 0.99f));
+                                }
+                                else
+                                {
+                                    sheetIndex = (int)Math.Floor((VoipCapture.Instance?.LastAmplitude ?? 0.0) * (voipSheetRects.Length - 0.99f));
+                                    DebugConsole.NewMessage(sheetIndex.ToString(), Color.Yellow);
+                                }
+                                if (sheetIndex < 0) { sheetIndex = 0; }
+                                if (sheetIndex > voipSheetRects.Length-1) { sheetIndex = voipSheetRects.Length-1; }
+                                soundIcon.sprites.First().Value.First().Sprite.SourceRect = voipSheetRects[sheetIndex];
+                            }
+                        }
+                    }
+                }
             }
 
             if (autoRestartTimer != 0.0f && autoRestartBox.Selected)

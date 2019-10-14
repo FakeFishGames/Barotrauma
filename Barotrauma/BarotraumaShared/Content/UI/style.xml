@@ -812,15 +812,16 @@
   <GUISoundIcon
     color="255,255,255,255"
     hovercolor="255,255,255,255"
-    selectedcolor="255,255,255,255">
-    <Sprite texture="Content/UI/UI_Atlas.png" state="None" tile="false" maintainaspectratio="true" sourcerect="973,1,50,46"/>
+    selectedcolor="255,255,255,255"
+    sheetindices="0,1; 1,1; 0,2; 1,2">
+    <Sprite texture="Content/UI/VoipIcons.png" state="None" tile="false" maintainaspectratio="true" sourcerect="0,0,36,38"/>
   </GUISoundIcon>
   
   <GUISoundIconDisabled
-    color="150,150,150,255"
-    hovercolor="150,150,150,255"
-    selectedcolor="150,150,150,255">
-    <Sprite texture="Content/UI/UI_Atlas.png" state="None" tile="false" maintainaspectratio="true" sourcerect="918,1,53,46"/>
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255">
+    <Sprite texture="Content/UI/VoipIcons.png" state="None" tile="false" maintainaspectratio="true" sourcerect="36,0,36,38"/>
   </GUISoundIconDisabled>
 
   <GUINotificationButton
