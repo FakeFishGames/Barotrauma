@@ -1134,6 +1134,16 @@ namespace Barotrauma
                     }
                 }
             }, isCheat: false));
+
+            commands.Add(new Command("flip", "Flip the currently controlled character.", (string[] args) =>
+            {
+                Character.Controlled?.AnimController.Flip();
+            }, isCheat: false));
+            commands.Add(new Command("mirror", "Mirror the currently controlled character.", (string[] args) =>
+            {
+                (Character.Controlled?.AnimController as FishAnimController)?.Mirror(lerp: false);
+            }, isCheat: false));
+
 #endif
 
             commands.Add(new Command("dumptexts", "dumptexts [filepath]: Extracts all the texts from the given text xml and writes them into a file (using the same filename, but with the .txt extension). If the filepath is omitted, the EnglishVanilla.xml file is used.", (string[] args) =>

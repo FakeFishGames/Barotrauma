@@ -780,12 +780,18 @@ namespace Barotrauma
             base.Flip();
             foreach (Limb l in Limbs)
             {
-                if (!l.DoesFlip) continue;
-                l.body.SetTransform(l.SimPosition, -l.body.Rotation + MathHelper.ToRadians(l.Params.GetSpriteOrientation()));                
+                if (!l.DoesFlip) { continue; }         
+                if (RagdollParams.IsSpritesheetOrientationHorizontal)
+                {
+                    //horizontally aligned limbs need to be flipped 180 degrees
+                    l.body.SetTransform(l.SimPosition, l.body.Rotation + MathHelper.Pi * Dir);
+				}
+                //no need to do anything when flipping vertically oriented limbs
+                //the sprite gets flipped horizontally, which does the job
             }
         }
 
-        private void Mirror()
+        public void Mirror(bool lerp = true)
         {
             Vector2 centerOfMass = GetCenterOfMass();
 
@@ -794,8 +800,20 @@ namespace Barotrauma
                 TrySetLimbPosition(l,
                     centerOfMass,
                     new Vector2(centerOfMass.X - (l.SimPosition.X - centerOfMass.X), l.SimPosition.Y),
-                    true);
+                    lerp);
                 l.body.PositionSmoothingFactor = 0.8f;
+
+                if (!l.DoesFlip) { continue; }
+                if (RagdollParams.IsSpritesheetOrientationHorizontal)
+				{
+                    //horizontally oriented sprites can be mirrored by rotating 180 deg and inverting the angle
+                    l.body.SetTransform(l.SimPosition, -(l.body.Rotation + MathHelper.Pi));
+				}    
+                else
+				{
+                    //vertically oriented limbs can be mirrored by inverting the angle (neutral angle is straight upwards)
+                    l.body.SetTransform(l.SimPosition, -l.body.Rotation);
+				}        
             }
             if (character.SelectedCharacter != null && CanDrag(character.SelectedCharacter))
             {

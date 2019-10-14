@@ -34,8 +34,18 @@ namespace Barotrauma
         [Serialize("", true, description: "Default path for the limb sprite textures. Used only if the limb specific path for the limb is not defined"), Editable]
         public string Texture { get; set; }
 
-        [Serialize(0f, true, description: "The orientation of the sprites as drawn on the sprite sheet. Can be overridden by setting a value for Limb's 'Sprite Orientation'. Used mainly for animations and widgets."), Editable(-360, 360)]
+        [Serialize(0.0f, true, description: "The orientation of the sprites as drawn on the sprite sheet. Can be overridden by setting a value for Limb's 'Sprite Orientation'. Used mainly for animations and widgets."), Editable(-360, 360)]
         public float SpritesheetOrientation { get; set; }
+
+        public bool IsSpritesheetOrientationHorizontal
+        {
+            get
+            {
+                return 
+                    (SpritesheetOrientation > 45.0f && SpritesheetOrientation < 135.0f) ||
+                    (SpritesheetOrientation > 255.0f && SpritesheetOrientation < 315.0f);
+            }
+        }
 
         private float limbScale;
         [Serialize(1.0f, true), Editable(MIN_SCALE, MAX_SCALE, DecimalCount = 3)]
@@ -519,6 +529,9 @@ namespace Barotrauma
             [Serialize(float.NaN, true, description: "The orientation of the sprite as drawn on the sprite sheet. Overrides the value defined in the Ragdoll settings. Used mainly for animations and widgets."), Editable(-360, 360)]
             public float SpriteOrientation { get; set; }
 
+            /// <summary>
+            /// The orientation of the sprite as drawn on the sprite sheet (in radians).
+            /// </summary>
             public float GetSpriteOrientation() => MathHelper.ToRadians(float.IsNaN(SpriteOrientation) ? Ragdoll.SpritesheetOrientation : SpriteOrientation);
 
             [Serialize(true, true, description: "Does the limb flip when the character flips?"), Editable()]
