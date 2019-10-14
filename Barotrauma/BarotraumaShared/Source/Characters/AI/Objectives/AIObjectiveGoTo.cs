@@ -193,7 +193,7 @@ namespace Barotrauma
                 if (insideSteering)
                 {
                     Func<PathNode, bool> nodeFilter = null;
-                    if (!AllowGoingOutside)
+                    if (isInside && !AllowGoingOutside)
                     {
                         nodeFilter = node => node.Waypoint.CurrentHull != null;
                     }
