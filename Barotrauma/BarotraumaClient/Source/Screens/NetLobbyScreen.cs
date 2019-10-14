@@ -1215,7 +1215,7 @@ namespace Barotrauma
                     }
                 };
 
-                for (int i=0;i<3;i++)
+                for (int i = 0; i < 3; i++)
                 {
                     Pair<JobPrefab, int> jobPrefab = null;
                     while (i < GameMain.Config.JobPreferences.Count)
@@ -1239,9 +1239,11 @@ namespace Barotrauma
 
                 UpdateJobPreferences(jobList);
 
-                appearanceFrame = new GUIFrame(new RectTransform(Vector2.One, characterInfoFrame.RectTransform), style: "GUIFrameListBox");
-                appearanceFrame.Visible = false;
-                appearanceFrame.Color = Color.White;
+                appearanceFrame = new GUIFrame(new RectTransform(Vector2.One, characterInfoFrame.RectTransform), style: "GUIFrameListBox")
+                {
+                    Visible = false,
+                    Color = Color.White
+                };
             }
             else
             {
@@ -2056,18 +2058,17 @@ namespace Barotrauma
                     Enum.TryParse(w.GetAttributeString("race", "None"), true, out Race r) && r == info.Race &&
                     w.GetAttributeInt("headid", -1) == info.HeadSpriteId &&
                     Enum.TryParse(w.GetAttributeString("type", "None"), true, out WearableType t) && t == WearableType.Hair).ToList().Count;
-
             if (hairCount > 0)
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), leftColumn.RectTransform), "Hair");
-
-                var hairSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.15f), leftColumn.RectTransform));
-
-                hairSlider.Range = new Vector2(0, hairCount);
-                hairSlider.StepValue = 1;
-                hairSlider.BarScrollValue = info.HairIndex;
-                hairSlider.OnMoved = SwitchHair;
-                hairSlider.BarSize = 1.0f / (float)(hairCount + 1);
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), leftColumn.RectTransform), TextManager.Get("FaceAttachment.Hair"));
+                var hairSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.15f), leftColumn.RectTransform))
+                {
+                    Range = new Vector2(0, hairCount),
+                    StepValue = 1,
+                    BarScrollValue = info.HairIndex,
+                    OnMoved = SwitchHair,
+                    BarSize = 1.0f / (float)(hairCount + 1)
+                };
             }
 
             var beardCount = info.Wearables.Where(w =>
@@ -2075,18 +2076,17 @@ namespace Barotrauma
                     Enum.TryParse(w.GetAttributeString("race", "None"), true, out Race r) && r == info.Race &&
                     w.GetAttributeInt("headid", -1) == info.HeadSpriteId &&
                     Enum.TryParse(w.GetAttributeString("type", "None"), true, out WearableType t) && t == WearableType.Beard).ToList().Count;
-
             if (beardCount > 0)
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), leftColumn.RectTransform), "Beard");
-
-                var beardSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.15f), leftColumn.RectTransform));
-
-                beardSlider.Range = new Vector2(0, beardCount);
-                beardSlider.StepValue = 1;
-                beardSlider.BarScrollValue = info.BeardIndex;
-                beardSlider.OnMoved = SwitchBeard;
-                beardSlider.BarSize = 1.0f / (float)(beardCount + 1);
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), leftColumn.RectTransform), TextManager.Get("FaceAttachment.Beard"));
+                var beardSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.15f), leftColumn.RectTransform))
+                {
+                    Range = new Vector2(0, beardCount),
+                    StepValue = 1,
+                    BarScrollValue = info.BeardIndex,
+                    OnMoved = SwitchBeard,
+                    BarSize = 1.0f / (float)(beardCount + 1)
+                };
             }
 
             //right column
@@ -2107,18 +2107,17 @@ namespace Barotrauma
                     Enum.TryParse(w.GetAttributeString("race", "None"), true, out Race r) && r == info.Race &&
                     w.GetAttributeInt("headid", -1) == info.HeadSpriteId &&
                     Enum.TryParse(w.GetAttributeString("type", "None"), true, out WearableType t) && t == WearableType.Moustache).ToList().Count;
-
             if (moustacheCount > 0)
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), rightColumn.RectTransform), "Moustache");
-
-                var moustacheSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.15f), rightColumn.RectTransform));
-
-                moustacheSlider.Range = new Vector2(0, moustacheCount);
-                moustacheSlider.StepValue = 1;
-                moustacheSlider.BarScrollValue = info.MoustacheIndex;
-                moustacheSlider.OnMoved = SwitchMoustache;
-                moustacheSlider.BarSize = 1.0f / (float)(moustacheCount + 1);
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), rightColumn.RectTransform), TextManager.Get("FaceAttachment.Moustache"));
+                var moustacheSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.15f), rightColumn.RectTransform))
+                {
+                    Range = new Vector2(0, moustacheCount),
+                    StepValue = 1,
+                    BarScrollValue = info.MoustacheIndex,
+                    OnMoved = SwitchMoustache,
+                    BarSize = 1.0f / (float)(moustacheCount + 1)
+                };
             }
 
             var faceAttachmentCount = info.Wearables.Where(w =>
@@ -2126,18 +2125,17 @@ namespace Barotrauma
                     Enum.TryParse(w.GetAttributeString("race", "None"), true, out Race r) && r == info.Race &&
                     w.GetAttributeInt("headid", -1) == info.HeadSpriteId &&
                     Enum.TryParse(w.GetAttributeString("type", "None"), true, out WearableType t) && t == WearableType.FaceAttachment).ToList().Count;
-
             if (faceAttachmentCount > 0)
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), rightColumn.RectTransform), "Accessories");
-
-                var faceAttachmentSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.15f), rightColumn.RectTransform));
-
-                faceAttachmentSlider.Range = new Vector2(0, faceAttachmentCount);
-                faceAttachmentSlider.StepValue = 1;
-                faceAttachmentSlider.BarScrollValue = info.FaceAttachmentIndex;
-                faceAttachmentSlider.OnMoved = SwitchFaceAttachment;
-                faceAttachmentSlider.BarSize = 1.0f / (float)(faceAttachmentCount+1);
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), rightColumn.RectTransform), TextManager.Get("FaceAttachment.Accessories"));
+                var faceAttachmentSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.15f), rightColumn.RectTransform))
+                {
+                    Range = new Vector2(0, faceAttachmentCount),
+                    StepValue = 1,
+                    BarScrollValue = info.FaceAttachmentIndex,
+                    OnMoved = SwitchFaceAttachment,
+                    BarSize = 1.0f / (float)(faceAttachmentCount + 1)
+                };
             }
 
             //-----
@@ -2176,7 +2174,7 @@ namespace Barotrauma
                 int startRange = ids.First();
                 int endRange = ids.Last();
 
-                for (int i=startRange;i<=endRange;i++)
+                for (int i = startRange; i <= endRange; i++)
                 {
                     foreach (XElement limbElement in info.Ragdoll.MainElement.Elements())
                     {
@@ -2288,10 +2286,15 @@ namespace Barotrauma
         {
             Point frameSize = new Point(characterInfoFrame.Rect.Width, characterInfoFrame.Rect.Height * 2);
             jobSelectionFrame = new GUIFrame(new RectTransform(frameSize, GUI.Canvas, Anchor.TopLeft)
-            { AbsoluteOffset = new Point(characterInfoFrame.Rect.Right - frameSize.X, characterInfoFrame.Rect.Bottom) }, "GUIFrameListBox");
+                { AbsoluteOffset = new Point(characterInfoFrame.Rect.Right - frameSize.X, characterInfoFrame.Rect.Bottom) }, "GUIFrameListBox");
+
+            new GUIFrame(new RectTransform(new Vector2(1.25f, 1.25f), jobSelectionFrame.RectTransform, Anchor.Center), style: "OuterGlow", color: Color.Black)
+            {
+                UserData = "outerglow",
+                CanBeFocused = false
+            };
 
             var rows = new GUILayoutGroup(new RectTransform(Vector2.One, jobSelectionFrame.RectTransform)) { Stretch = true };
-
             var row = new GUILayoutGroup(new RectTransform(Vector2.One, rows.RectTransform), true);
 
             GUIButton jobButton = null;
@@ -2309,7 +2312,7 @@ namespace Barotrauma
 
             foreach (var jobPrefab in availableJobs)
             {
-                if (itemsInRow>=4)
+                if (itemsInRow >= 4)
                 {
                     row = new GUILayoutGroup(new RectTransform(Vector2.One, rows.RectTransform), true);
                     itemsInRow = 0;
@@ -2317,6 +2320,7 @@ namespace Barotrauma
 
                 jobButton = new GUIButton(new RectTransform(new Vector2(1.0f / 3.0f, 1.0f), row.RectTransform), style: "ListBoxElement")
                 {
+                    PressedColor = Color.White,
                     OutlineColor = Color.White * 0.5f,
                     UserData = jobPrefab,
                     OnClicked = (btn, usdt) =>
@@ -2383,7 +2387,7 @@ namespace Barotrauma
                 CanBeFocused = false
             };
 
-            Action recalculateInnerFrame = () =>
+            void recalculateInnerFrame()
             {
                 float buttonWidth = parent.Rect.Width;
                 float buttonHeight = parent.Rect.Height;
@@ -2399,7 +2403,7 @@ namespace Barotrauma
                 }
 
                 innerFrame.RectTransform.RelativeSize = innerFrameSize * 0.8f;
-            };
+            }
 
             parent.RectTransform.SizeChanged += recalculateInnerFrame;
 
@@ -2455,7 +2459,7 @@ namespace Barotrauma
 
                 var retVal = new Pair<Sprite[], Vector2>[children.Count];
 
-                for (int n=0;n<children.Count;n++)
+                for (int n = 0; n < children.Count; n++)
                 {
                     XElement spriteElement = children[n];
                     string spriteTexture = spriteElement.GetAttributeString("texture", "").Replace("[GENDER]", (info.Gender == Gender.Female) ? "female" : "male");
@@ -2695,9 +2699,13 @@ namespace Barotrauma
                         }
                     };
 
-                    var campaignMenuContainer = new GUIFrame(new RectTransform(new Vector2(0.4f, 1.0f), campaignContainer.RectTransform, Anchor.TopRight), style: null);
+                    var campaignMenuContainer = new GUIFrame(new RectTransform(new Vector2(0.4f, 1.0f), campaignContainer.RectTransform, Anchor.TopRight), style: null)
+                    {
+                        Color = Color.Black
+                    };
                     CampaignUI.SetMenuPanelParent(campaignMenuContainer.RectTransform);
                     CampaignUI.SetMissionPanelParent(campaignMenuContainer.RectTransform);
+                    GameMain.GameSession.Map.CenterOffset = new Vector2(-campaignContainer.Rect.Width / 5, 0);
 
                     var restartText = new GUITextBlock(new RectTransform(new Vector2(0.25f, 0.1f), campaignContainer.RectTransform, Anchor.BottomRight), "", font: GUI.SmallFont)
                     {
@@ -2814,30 +2822,32 @@ namespace Barotrauma
                         }
                     }
 
-                    var removeButton = new GUIButton(new RectTransform(new Vector2(0.15f), slot.RectTransform, Anchor.TopRight, scaleBasis: ScaleBasis.BothWidth) { RelativeOffset = new Vector2(0.05f) }, style: "GUICancelButton");
-                    removeButton.UserData = i;
-                    removeButton.OnClicked = (btn, obj) =>
+                    var removeButton = new GUIButton(new RectTransform(new Vector2(0.15f), slot.RectTransform, Anchor.TopRight, scaleBasis: ScaleBasis.BothWidth) { RelativeOffset = new Vector2(0.05f) }, style: "GUICancelButton")
                     {
-                        jobList.Select((int)obj, true);
-                        SwitchJob(btn, null);
-                        jobSelectionFrame = null;
-                        jobList.Deselect();
+                        UserData = i,
+                        OnClicked = (btn, obj) =>
+                        {
+                            jobList.Select((int)obj, true);
+                            SwitchJob(btn, null);
+                            jobSelectionFrame = null;
+                            jobList.Deselect();
 
-                        return false;
+                            return false;
+                        }
                     };
 
                     jobNamePreferences.Add(new Pair<string, int>(jobPrefab.First.Identifier, jobPrefab.Second));
                 }
                 else
                 {
-                    new GUITextBlock(new RectTransform(Vector2.One, slot.RectTransform), (i + 1).ToString(), textColor: Color.White * (disableNext ? 0.15f : 0.5f), textAlignment: Alignment.Center, font: GUI.LargeFont)
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.6f), slot.RectTransform), (i + 1).ToString(), textColor: Color.White * (disableNext ? 0.15f : 0.5f), textAlignment: Alignment.Center, font: GUI.LargeFont)
                     {
                         CanBeFocused = false
                     };
 
                     if (!disableNext)
                     {
-                        new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), slot.RectTransform, Anchor.BottomCenter), "Click to select job")
+                        new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), slot.RectTransform, Anchor.BottomCenter), TextManager.Get("clicktoselectjob"), font: GUI.SmallFont, wrap: true)
                         {
                             CanBeFocused = false
                         };

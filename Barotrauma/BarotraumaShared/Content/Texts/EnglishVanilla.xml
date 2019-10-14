@@ -3610,5 +3610,10 @@
   <!-- Misc -->
   <chat.shownewmessages>Show new messages</chat.shownewmessages>
   <chat>Chat</chat>
+  <clicktoselectjob>Click to select a job</clicktoselectjob>
+  <faceattachment.hair>Hair</faceattachment.hair>
+  <faceattachment.beard>Beard</faceattachment.beard>
+  <faceattachment.moustache>Moustache</faceattachment.moustache>
+  <faceattachment.accessories>Accessories</faceattachment.accessories>
   
 </infotexts>
