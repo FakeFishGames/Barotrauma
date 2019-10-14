@@ -297,7 +297,7 @@ namespace Barotrauma
                 IgnoreLayoutGroups = true,
                 CanBeFocused = false
             };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), repairHullsHolder.RectTransform), TextManager.Get("RepairAllWalls"), textAlignment: Alignment.Right, font: GUI.LargeFont)
+            var repairHullsLabel = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.3f), repairHullsHolder.RectTransform), TextManager.Get("RepairAllWalls"), textAlignment: Alignment.Right, font: GUI.LargeFont)
             {
                 ForceUpperCase = true
             };
@@ -342,7 +342,7 @@ namespace Barotrauma
                 IgnoreLayoutGroups = true,
                 CanBeFocused = false
             };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), repairItemsHolder.RectTransform), TextManager.Get("RepairAllItems"), textAlignment: Alignment.Right, font: GUI.LargeFont)
+            var repairItemsLabel = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.3f), repairItemsHolder.RectTransform), TextManager.Get("RepairAllItems"), textAlignment: Alignment.Right, font: GUI.LargeFont)
             {
                 ForceUpperCase = true
             };
@@ -387,7 +387,7 @@ namespace Barotrauma
                 IgnoreLayoutGroups = true,
                 CanBeFocused = false
             };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), replaceShuttlesHolder.RectTransform), TextManager.Get("ReplaceLostShuttles"), textAlignment: Alignment.Right, font: GUI.LargeFont)
+            var replaceShuttlesLabel = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.3f), replaceShuttlesHolder.RectTransform), TextManager.Get("ReplaceLostShuttles"), textAlignment: Alignment.Right, font: GUI.LargeFont)
             {
                 ForceUpperCase = true
             };
@@ -426,6 +426,7 @@ namespace Barotrauma
             {
                 CanBeFocused = false
             };
+            GUITextBlock.AutoScaleAndNormalize(repairHullsLabel, repairItemsLabel, replaceShuttlesLabel);
 
 
             // mission info -------------------------------------------------------------------------
@@ -448,6 +449,7 @@ namespace Barotrauma
             { RelativeOffset = new Vector2(0.1f, -0.05f) }, TextManager.Get("Mission"),
                 textAlignment: Alignment.Center, font: GUI.LargeFont, style: "GUISlopedHeader")
             {
+                UserData = "missionlabel",
                 AutoScale = true
             };
             var missionPanelContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), missionPanel.RectTransform, Anchor.Center))
@@ -494,6 +496,8 @@ namespace Barotrauma
             missionPanel.RectTransform.RelativeSize = Vector2.One;
             var outerGlow = missionPanel.GetChildByUserData("outerglow");
             if (outerGlow != null) { outerGlow.Visible = false; }
+            var label = missionPanel.GetChildByUserData("missionlabel");
+            if (label != null) { label.Visible = false; }
         }
         public void SetMenuPanelParent(RectTransform parent)
         {
@@ -632,6 +636,7 @@ namespace Barotrauma
         public void SelectLocation(Location location, LocationConnection connection)
         {
             selectedLocationInfo.ClearChildren();
+            SelectTab(Tab.Map);
             missionPanel.Visible = location != null;
             
             if (location == null) { return; }
