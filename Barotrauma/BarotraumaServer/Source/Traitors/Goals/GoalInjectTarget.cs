@@ -11,14 +11,15 @@ namespace Barotrauma
             public TraitorMission.CharacterFilter Filter { get; private set; }
             public Character Target { get; private set; }
 
-            public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[targetname]" });
-            public override IEnumerable<string> InfoTextValues(Traitor traitor) => base.InfoTextValues(traitor).Concat(new string[] { Target?.Name ?? "(unknown)" });
+            public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[targetname]", "[poison]" });
+            public override IEnumerable<string> InfoTextValues(Traitor traitor) => base.InfoTextValues(traitor).Concat(new string[] { Target?.Name ?? "(unknown)", TextManager.Get(poisonId) });
 
             private bool isCompleted = false;
             public override bool IsCompleted => isCompleted;
 
             public override bool IsEnemy(Character character) => base.IsEnemy(character) || (!isCompleted && character == Target);
 
+            private string poisonId;
             private string afflictionId;
 
             public override void Update(float deltaTime)
@@ -37,10 +38,11 @@ namespace Barotrauma
                 return Target != null && !Target.IsDead;
             }
 
-            public GoalInjectTarget(TraitorMission.CharacterFilter filter, string afflictionId) : base()
+            public GoalInjectTarget(TraitorMission.CharacterFilter filter, string poisonId, string afflictionId) : base()
             {
                 InfoTextId = "TraitorGoalPoisonInfo";
                 Filter = filter;
+                this.poisonId = poisonId;
                 this.afflictionId = afflictionId;
             }
         }

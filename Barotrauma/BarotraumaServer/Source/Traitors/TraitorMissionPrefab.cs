@@ -177,6 +177,7 @@ namespace Barotrauma
 
                         case "injectpoison":
                             checker.Required("poison");
+                            checker.Required("affliction");
                             checker.Optional(targetFilters.Keys.ToArray());
                             List<Traitor.TraitorMission.CharacterFilter> poisonFilters = new List<Traitor.TraitorMission.CharacterFilter>();
                             foreach (var attribute in Config.Attributes())
@@ -186,7 +187,7 @@ namespace Barotrauma
                                     poisonFilters.Add((character) => filter(attribute.Value, character));
                                 }
                             }
-                            goal = new Traitor.GoalInjectTarget((character) => poisonFilters.All(f => f(character)), Config.GetAttributeString("poison", null));
+                            goal = new Traitor.GoalInjectTarget((character) => poisonFilters.All(f => f(character)), Config.GetAttributeString("poison", null), Config.GetAttributeString("affliction", null));
                             break;
 
                         case "unwire":
