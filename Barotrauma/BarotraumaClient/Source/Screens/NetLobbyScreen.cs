@@ -605,7 +605,8 @@ namespace Barotrauma
 
             GUILayoutGroup subHolder = new GUILayoutGroup(new RectTransform(Vector2.One, lobbyContent.RectTransform))
             {
-                Stretch = true
+                Stretch = true,
+                RelativeSpacing = 0.05f
             };
 
             var subLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), subHolder.RectTransform), TextManager.Get("Submarine"));
@@ -654,6 +655,14 @@ namespace Barotrauma
             };
 
             subPreviewContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.9f), rightColumn.RectTransform), style: null);
+            subPreviewContainer.RectTransform.SizeChanged += () =>
+            {
+                if (SelectedSub != null)
+                {
+                    subPreviewContainer.ClearChildren();
+                    SelectedSub.CreatePreviewWindow(subPreviewContainer);
+                }
+            };
 
             //------------------------------------------------------------------------------------------------------------------
             //   Gamemode panel
