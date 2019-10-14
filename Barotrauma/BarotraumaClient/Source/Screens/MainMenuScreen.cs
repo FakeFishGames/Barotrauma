@@ -1038,7 +1038,7 @@ namespace Barotrauma
                 if (playStyleStr.Length > longestPlayStyleStr.Length) { longestPlayStyleStr = playStyleStr; }
             }
 
-            playstyleDescription = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), playstyleBanner.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0.0f, 0.1f) },
+            playstyleDescription = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), playstyleBanner.RectTransform, Anchor.BottomCenter),
                 "playstyle description goes here", style: null, wrap: true)
             {
                 Color = Color.Black * 0.8f,
@@ -1136,6 +1136,7 @@ namespace Barotrauma
             nameText.RectTransform.NonScaledSize = (nameText.Font.MeasureString(nameText.Text) + new Vector2(25, 10) * GUI.Scale).ToPoint();
 
             playstyleDescription.Text = TextManager.Get("servertagdescription." + playStyle);
+            playstyleDescription.CalculateHeightFromText(padding: (int)(15 * GUI.Scale));
         }
 #endregion
 

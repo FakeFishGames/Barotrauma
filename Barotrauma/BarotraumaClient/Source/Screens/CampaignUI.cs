@@ -42,7 +42,7 @@ namespace Barotrauma
         public Level SelectedLevel { get; private set; }
 
         public GUIComponent MapContainer { get; private set; }
-
+        
         public GUIButton StartButton { get; private set; }
 
         public CampaignMode Campaign { get; }
@@ -130,6 +130,7 @@ namespace Barotrauma
             }, color: Color.Black * 0.9f);
             new GUIFrame(new RectTransform(new Vector2(1.25f, 1.25f), tabs[(int)Tab.Crew].RectTransform, Anchor.Center), style: "OuterGlow", color: Color.Black * 0.7f)
             {
+                UserData = "outerglow",
                 CanBeFocused = false
             };
 
@@ -175,6 +176,7 @@ namespace Barotrauma
             }, color: Color.Black * 0.9f);
             new GUIFrame(new RectTransform(new Vector2(1.25f, 1.25f), tabs[(int)Tab.Store].RectTransform, Anchor.Center), style: "OuterGlow", color: Color.Black * 0.7f)
             {
+                UserData = "outerglow",
                 CanBeFocused = false
             };
 
@@ -269,6 +271,7 @@ namespace Barotrauma
             }, color: Color.Black * 0.9f);
             new GUIFrame(new RectTransform(new Vector2(1.25f, 1.25f), tabs[(int)Tab.Repair].RectTransform, Anchor.Center), style: "OuterGlow", color: Color.Black * 0.7f)
             {
+                UserData = "outerglow",
                 CanBeFocused = false
             };
 
@@ -437,6 +440,7 @@ namespace Barotrauma
             
             new GUIFrame(new RectTransform(new Vector2(1.25f, 1.25f), missionPanel.RectTransform, Anchor.Center), style: "OuterGlow", color: Color.Black * 0.7f)
             {
+                UserData = "outerglow",
                 CanBeFocused = false
             };
 
@@ -481,6 +485,27 @@ namespace Barotrauma
                 }
             };
             campaign.CargoManager.OnItemsChanged += RefreshMyItems;
+        }
+
+        public void SetMissionPanelParent(RectTransform parent)
+        {
+            missionPanel.RectTransform.Parent = parent;
+            missionPanel.RectTransform.RelativeOffset = Vector2.Zero;
+            missionPanel.RectTransform.RelativeSize = Vector2.One;
+            var outerGlow = missionPanel.GetChildByUserData("outerglow");
+            if (outerGlow != null) { outerGlow.Visible = false; }
+        }
+        public void SetMenuPanelParent(RectTransform parent)
+        {
+            foreach (GUIFrame panel in tabs)
+            {
+                if (panel == null) { continue; }
+                panel.RectTransform.Parent = parent;
+                panel.RectTransform.RelativeOffset = Vector2.Zero;
+                panel.RectTransform.RelativeSize = Vector2.One;
+                var outerGlow = panel.GetChildByUserData("outerglow");
+                if (outerGlow != null) { outerGlow.Visible = false; }
+            }
         }
 
         private void UpdateLocationView(Location location)
@@ -907,6 +932,12 @@ namespace Barotrauma
                     tabs[i].Visible = (int)selectedTab == i;
                 }
             }
+
+            if (tabs[(int)Tab.Crew].Parent == missionPanel.Parent)
+            {
+                missionPanel.Visible = tab == Tab.Map;
+            }
+
             foreach (GUIButton button in tabButtons)
             {
                 button.Selected = (Tab)button.UserData == tab;

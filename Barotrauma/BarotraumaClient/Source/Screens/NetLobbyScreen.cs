@@ -310,15 +310,14 @@ namespace Barotrauma
 
         public NetLobbyScreen()
         {
-            var innerFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), Frame.RectTransform, Anchor.Center) { MaxSize = new Point(int.MaxValue, GameMain.GraphicsHeight - 100) }, isHorizontal: false)
+            float panelSpacing = 0.005f;
+            var innerFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), Frame.RectTransform, Anchor.Center) { MaxSize = new Point(int.MaxValue, GameMain.GraphicsHeight - 50) }, isHorizontal: false)
             {
-                RelativeSpacing = 0.02f
+                RelativeSpacing = panelSpacing
             };
 
             var panelContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.95f), innerFrame.RectTransform, Anchor.Center), style: null);
-
-            float panelSpacing = 0.005f;
-
+            
             GUILayoutGroup panelHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 1.0f), panelContainer.RectTransform))
             {
                 Stretch = true
@@ -337,16 +336,20 @@ namespace Barotrauma
 
             var gameModeTabButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.03f), panelHolder.RectTransform), isHorizontal: true)
             {
-                RelativeSpacing = 0.025f
+                RelativeSpacing = 0.01f
             };
             gameModeViewButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.4f), gameModeTabButtonContainer.RectTransform),
                 TextManager.Get("GameMode"), style: "GUITabButton")
             {
                 Selected = true,
-                OnClicked = (bt, userData) => { ToggleCampaignView(false); campaignViewButton.Selected = false; return true; }
+                OnClicked = (bt, userData) => { ToggleCampaignView(false); return true; }
             };
             campaignViewButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.4f), gameModeTabButtonContainer.RectTransform),
-                TextManager.Get("Campaign"), style: "GUITabButton");
+                TextManager.Get("CampaignLabel"), style: "GUITabButton")
+            {
+                Visible = false,
+                OnClicked = (bt, userData) => { ToggleCampaignView(true); return true; }
+            };
 
             //server game panel ------------------------------------------------------------
 
@@ -2691,6 +2694,11 @@ namespace Barotrauma
                             CoroutineManager.StartCoroutine(WaitForStartRound(campaignUI.StartButton, allowCancel: true), "WaitForStartRound");
                         }
                     };
+
+                    var campaignMenuContainer = new GUIFrame(new RectTransform(new Vector2(0.4f, 1.0f), campaignContainer.RectTransform, Anchor.TopRight), style: null);
+                    CampaignUI.SetMenuPanelParent(campaignMenuContainer.RectTransform);
+                    CampaignUI.SetMissionPanelParent(campaignMenuContainer.RectTransform);
+
                     var restartText = new GUITextBlock(new RectTransform(new Vector2(0.25f, 0.1f), campaignContainer.RectTransform, Anchor.BottomRight), "", font: GUI.SmallFont)
                     {
                         TextGetter = AutoRestartText
