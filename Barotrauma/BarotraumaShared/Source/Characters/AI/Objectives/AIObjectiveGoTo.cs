@@ -132,10 +132,6 @@ namespace Barotrauma
                     else
                     {
                         Abandon = true;
-                        if (targetHull != null)
-                        {
-                            HumanAIController.UnreachableHulls.Add(targetHull);
-                        }
                     }
                 }
             }
@@ -190,7 +186,7 @@ namespace Barotrauma
                     OnCompleted();
                     return;
                 }
-                if (insideSteering)
+                if (SteeringManager == PathSteering)
                 {
                     Func<PathNode, bool> nodeFilter = null;
                     if (isInside && !AllowGoingOutside)
@@ -201,7 +197,10 @@ namespace Barotrauma
                 }
                 else
                 {
-                    SteeringManager.SteeringSeek(character.GetRelativeSimPosition(Target));
+                    SteeringManager.SteeringSeek(character.GetRelativeSimPosition(Target), 10);
+                }
+                if(!insideSteering)
+                {
                     SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: 5, weight: 1, heading: VectorExtensions.Forward(character.AnimController.Collider.Rotation));
                 }
             }
