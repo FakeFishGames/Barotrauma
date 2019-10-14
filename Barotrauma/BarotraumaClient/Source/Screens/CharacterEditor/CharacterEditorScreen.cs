@@ -121,6 +121,7 @@ namespace Barotrauma.CharacterEditor
                 ResetVariables();
                 Submarine.MainSub = new Submarine("Content/AnimEditor.sub");
                 Submarine.MainSub.Load(unloadPrevious: false, showWarningMessages: false);
+                Submarine.MainSub.PhysicsBody.Enabled = false;
                 originalWall = new WallGroup(new List<Structure>(Structure.WallList));
                 CloneWalls();
                 CalculateMovementLimits();
