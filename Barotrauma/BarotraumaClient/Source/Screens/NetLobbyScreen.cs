@@ -331,7 +331,7 @@ namespace Barotrauma
 
             var panelContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.95f), innerFrame.RectTransform, Anchor.Center), style: null);
             
-            GUILayoutGroup panelHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 1.0f), panelContainer.RectTransform))
+            GUILayoutGroup panelHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.65f, 1.0f), panelContainer.RectTransform))
             {
                 Stretch = true
             };
@@ -380,7 +380,7 @@ namespace Barotrauma
 
             // Sidebar area (Character customization/Chat)
 
-            GUILayoutGroup sideBar = new GUILayoutGroup(new RectTransform(new Vector2(0.3f - panelSpacing, 1.0f), panelContainer.RectTransform, Anchor.TopRight))
+            GUILayoutGroup sideBar = new GUILayoutGroup(new RectTransform(new Vector2(0.35f - panelSpacing, 1.0f), panelContainer.RectTransform, Anchor.TopRight))
             {
                 Stretch = true
             };
@@ -470,11 +470,11 @@ namespace Barotrauma
 
             //chatbox ----------------------------------------------------------------------
 
-            chatBox = new GUIListBox(new RectTransform(new Vector2(0.7f, 1.0f), socialHolderHorizontal.RectTransform));
+            chatBox = new GUIListBox(new RectTransform(new Vector2(0.55f, 1.0f), socialHolderHorizontal.RectTransform));
 
             //player list ------------------------------------------------------------------
 
-            playerList = new GUIListBox(new RectTransform(new Vector2(0.3f, 1.0f), socialHolderHorizontal.RectTransform))
+            playerList = new GUIListBox(new RectTransform(new Vector2(0.45f, 1.0f), socialHolderHorizontal.RectTransform))
             {
                 OnSelected = (component, userdata) => { SelectPlayer(userdata as Client); return true; }
             };
