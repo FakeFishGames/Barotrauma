@@ -38,6 +38,8 @@ namespace Barotrauma
 
         private const float RaycastInterval = 1.0f;
 
+        private float avoidLookAheadDistance;
+
         private SteeringManager outsideSteering, insideSteering;
 
         private float updateTargetsTimer;
@@ -210,6 +212,9 @@ namespace Barotrauma
             var size = Character.AnimController.Collider.GetSize();
             colliderWidth = size.X;
             colliderLength = size.Y;
+
+            avoidLookAheadDistance = Math.Max(colliderWidth * 3, 1.5f);
+
             canAttackSub = Character.AnimController.CanAttackSubmarine;
         }
 
@@ -359,7 +364,7 @@ namespace Barotrauma
                 {
                     //steer straight up if very deep
                     steeringManager.SteeringManual(deltaTime, Vector2.UnitY);
-                    SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: colliderWidth * 5, weight: 1, heading: VectorExtensions.Forward(Character.AnimController.Collider.Rotation));
+                    SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 1);
                     return;
                 }
                 SteerInsideLevel(deltaTime);
@@ -369,7 +374,7 @@ namespace Barotrauma
                 // Steer towards the target
                 Vector2 targetSimPos = Character.Submarine == null ? ConvertUnits.ToSimUnits(SelectedAiTarget.WorldPosition) : SelectedAiTarget.SimPosition;
                 steeringManager.SteeringSeek(targetSimPos, 5);
-                SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: colliderWidth * 3, weight: 1, heading: VectorExtensions.Forward(Character.AnimController.Collider.Rotation));
+                SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 5);
             }
             else
             {
@@ -397,13 +402,13 @@ namespace Barotrauma
                             else
                             {
                                 steeringManager.SteeringSeek(Character.GetRelativeSimPosition(target.Entity, location), 5);
-                                SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: colliderWidth * 3, weight: 1, heading: VectorExtensions.Forward(Character.AnimController.Collider.Rotation));
+                                SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 5);
                                 return;
                             }
                         }
                     }
                     steeringManager.SteeringWander();
-                    SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: colliderWidth * 5, weight: 1, heading: VectorExtensions.Forward(Character.AnimController.Collider.Rotation));
+                    SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 5);
                 }
             }
         }
@@ -461,7 +466,7 @@ namespace Barotrauma
                 if (!MathUtils.IsValid(escapeDir)) escapeDir = Vector2.UnitY;
                 SteeringManager.SteeringManual(deltaTime, escapeDir);
                 SteeringManager.SteeringWander();
-                SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: colliderWidth * 3, weight: 1, heading: VectorExtensions.Forward(Character.AnimController.Collider.Rotation));
+                SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 5);
             }
         }
 
@@ -866,13 +871,13 @@ namespace Barotrauma
                 else
                 {
                     SteeringManager.SteeringSeek(steerPos, 10);
-                    SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: colliderWidth * 3, weight: 1, heading: VectorExtensions.Forward(Character.AnimController.Collider.Rotation));
+                    SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 5);
                 }
             }
             else
             {
                 SteeringManager.SteeringSeek(steerPos, 10);
-                SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: colliderWidth * 3, weight: 1, heading: VectorExtensions.Forward(Character.AnimController.Collider.Rotation));
+                SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 5);
             }
 
             if (canAttack)
@@ -1149,7 +1154,7 @@ namespace Barotrauma
                 attackDir = Vector2.UnitY;
             }
             steeringManager.SteeringManual(deltaTime, attackDir);
-            SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: colliderWidth * 3, weight: 1, heading: VectorExtensions.Forward(Character.AnimController.Collider.Rotation));
+            SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 1);
         }
 
         #endregion
@@ -1186,7 +1191,7 @@ namespace Barotrauma
                 {
                     steeringManager.SteeringSeek(attackSimPosition - (mouthPos - SimPosition), 2);
                 }
-                SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: colliderWidth * 3, weight: 1, heading: VectorExtensions.Forward(Character.AnimController.Collider.Rotation));
+                SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 1);
             }
             else
             {

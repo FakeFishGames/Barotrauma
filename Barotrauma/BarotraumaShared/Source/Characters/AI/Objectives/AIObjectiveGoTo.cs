@@ -199,9 +199,9 @@ namespace Barotrauma
                 {
                     SteeringManager.SteeringSeek(character.GetRelativeSimPosition(Target), 10);
                 }
-                if(!insideSteering)
+                if (!insideSteering)
                 {
-                    SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: 5, weight: 1, heading: VectorExtensions.Forward(character.AnimController.Collider.Rotation));
+                    SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: 5, weight: 1);
                 }
             }
         }
