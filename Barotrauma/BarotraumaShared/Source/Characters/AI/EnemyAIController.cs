@@ -1518,10 +1518,20 @@ namespace Barotrauma
         private readonly List<AITarget> removals = new List<AITarget>();
         private void UpdateTargetMemories(float deltaTime)
         {
-            if (_selectedAiTarget != null && CanPerceive(_selectedAiTarget, distSquared: Vector2.DistanceSquared(Character.WorldPosition, _selectedAiTarget.WorldPosition)))
+            if (_selectedAiTarget != null)
             {
-                var memory = GetTargetMemory(_selectedAiTarget);
-                memory.Location = _selectedAiTarget.WorldPosition;
+                if (_selectedAiTarget.Entity == null || _selectedAiTarget.Entity.Removed)
+                {
+                    _selectedAiTarget = null;
+                }
+                else
+                {
+                    if (CanPerceive(_selectedAiTarget, distSquared: Vector2.DistanceSquared(Character.WorldPosition, _selectedAiTarget.WorldPosition)))
+                    {
+                        var memory = GetTargetMemory(_selectedAiTarget);
+                        memory.Location = _selectedAiTarget.WorldPosition;
+                    }
+                }
             }
             removals.Clear();
             foreach (var kvp in targetMemories)
@@ -1542,7 +1552,7 @@ namespace Barotrauma
                 }
                 memory.Priority -= fadeTime * deltaTime;
                 // Remove targets that have no priority or have been removed
-                if (memory.Priority <= 1 || !AITarget.List.Contains(target))
+                if (memory.Priority <= 1 || target.Entity == null || target.Entity.Removed || !AITarget.List.Contains(target))
                 {
                     removals.Add(target);
                 }
