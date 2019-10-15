@@ -1407,7 +1407,7 @@
 <entitydescription.windoweddoor>Una puerta corrediza con ventana integrada.</entitydescription.windoweddoor>
 <entityname.hatch>Escotilla</entityname.hatch>
 <entitydescription.hatch>Una puerta, pero en el eje horizontal.</entitydescription.hatch>
-<entityname.dockingport>Dependencias de la tripulación</entityname.dockingport>
+<entityname.dockingport>Puerto de atraque</entityname.dockingport>
 <entitydescription.dockingport>Una interfaz de atraque alineada verticalmente. Se fija a otro puerto de atraque para formar un cierre estanco y permitir el paso entre submarinos, batiscafos y destinos.</entitydescription.dockingport>
 <entityname.dockinghatch>Escotilla de atraque</entityname.dockinghatch>
 <entitydescription.dockinghatch>Una interfaz de atraque alineada horizontalmente. Se fija a otra escotilla de atraque para formar un cierre estanco y permitir el paso entre submarinos, batiscafos y destinos.</entitydescription.dockinghatch>
