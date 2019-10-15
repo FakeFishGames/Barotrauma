@@ -591,7 +591,7 @@ namespace Barotrauma
                 SteeringWander();
                 if (currentHull == null)
                 {
-                    SteeringAvoid(deltaTime, lookAheadDistance: ConvertUnits.ToSimUnits(wallAvoidDistance), heading: VectorExtensions.Forward(character.AnimController.Collider.Rotation));
+                    SteeringAvoid(deltaTime, lookAheadDistance: ConvertUnits.ToSimUnits(wallAvoidDistance));
                 }
             }
             if (!inWater)

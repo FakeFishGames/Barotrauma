@@ -114,6 +114,17 @@ namespace Barotrauma
                     }
                 }
             }
+            else
+            {
+                if (steeringManager.AvoidDir.LengthSquared() > 0.0001f)
+                {
+                    Vector2 hitPos = ConvertUnits.ToDisplayUnits(steeringManager.AvoidRayCastHit);
+                    hitPos.Y = -hitPos.Y;
+
+                    GUI.DrawLine(spriteBatch, hitPos, hitPos + new Vector2(steeringManager.AvoidDir.X, -steeringManager.AvoidDir.Y) * 100, Color.Red, width: 5);
+                    //GUI.DrawLine(spriteBatch, pos, ConvertUnits.ToDisplayUnits(steeringManager.AvoidLookAheadPos.X, -steeringManager.AvoidLookAheadPos.Y), Color.Orange, width: 4);
+                }
+            }
             GUI.DrawLine(spriteBatch, pos, pos + ConvertUnits.ToDisplayUnits(new Vector2(Character.AnimController.TargetMovement.X, -Character.AnimController.TargetMovement.Y)), Color.SteelBlue, width: 2);
             GUI.DrawLine(spriteBatch, pos, pos + ConvertUnits.ToDisplayUnits(new Vector2(Steering.X, -Steering.Y)), Color.Blue, width: 3);
         }
