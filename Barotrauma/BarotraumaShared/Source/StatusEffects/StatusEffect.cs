@@ -87,6 +87,23 @@ namespace Barotrauma
             }
         }
 
+        class CharacterSpawnInfo
+        {
+            public readonly string SpeciesName;
+
+            public CharacterSpawnInfo(XElement element, string parentDebugName)
+            {
+                string speciesName = 
+                    element.GetAttributeString("species", null) ?? 
+                    element.GetAttributeString("speciesname", "") ?? 
+                    element.GetAttributeString("identifier", "");
+
+                if (string.IsNullOrEmpty(speciesName))
+                {
+                    DebugConsole.ThrowError("Invalid character spawn in StatusEffect \"" + parentDebugName + "\" - identifier not found in the element \"" + element.ToString() + "\"");
+                }
+            }
+        }
 
         private TargetType targetTypes;
         protected HashSet<string> targetIdentifiers;
@@ -114,13 +131,14 @@ namespace Barotrauma
 
         private readonly int useItemCount;
         
-        private readonly bool removeItem;
+        private readonly bool removeItem, removeCharacter;
 
         public readonly ActionType type = ActionType.OnActive;
 
-        private Explosion explosion;
+        private readonly Explosion explosion;
 
         private List<ItemSpawnInfo> spawnItems;
+        private List<CharacterSpawnInfo> spawnCharacters;
 
         private Character user;
 
@@ -180,6 +198,7 @@ namespace Barotrauma
         {
             requiredItems = new List<RelatedItem>();
             spawnItems = new List<ItemSpawnInfo>();
+            spawnCharacters = new List<CharacterSpawnInfo>();
             Afflictions = new List<Affliction>();
             ReduceAffliction = new List<Pair<string, float>>();
             tags = new HashSet<string>(element.GetAttributeString("tags", "").Split(','));
@@ -292,6 +311,9 @@ namespace Barotrauma
                     case "removeitem":
                         removeItem = true;
                         break;
+                    case "removecharacter":
+                        removeCharacter = true;
+                        break;
                     case "requireditem":
                     case "requireditems":
                         RelatedItem newRequiredItem = RelatedItem.Load(subElement, parentDebugName);
@@ -365,7 +387,11 @@ namespace Barotrauma
                         break;
                     case "spawnitem":
                         var newSpawnItem = new ItemSpawnInfo(subElement, parentDebugName);
-                        if (newSpawnItem.ItemPrefab != null) spawnItems.Add(newSpawnItem);
+                        if (newSpawnItem.ItemPrefab != null) { spawnItems.Add(newSpawnItem); }
+                        break;
+                    case "spawncharacter":
+                        var newSpawnCharacter = new CharacterSpawnInfo(subElement, parentDebugName);
+                        if (!string.IsNullOrWhiteSpace(newSpawnCharacter.SpeciesName)) { spawnCharacters.Add(newSpawnCharacter); }
                         break;
                 }
             }
@@ -606,9 +632,16 @@ namespace Barotrauma
 
             if (removeItem)
             {
-                foreach (Item item in targets.Where(t => t is Item).Cast<Item>())
+                foreach (var target in targets)
                 {
-                    Entity.Spawner?.AddToRemoveQueue(item);
+                    if (target is Item item) { Entity.Spawner?.AddToRemoveQueue(item); } 
+                }
+            }
+            if (removeCharacter)
+            {
+                foreach (var target in targets)
+                {
+                    if (target is Character character) { Entity.Spawner?.AddToRemoveQueue(character); }
                 }
             }
 
@@ -705,8 +738,12 @@ namespace Barotrauma
             }
             
             bool isNotClient = GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient;
-            if (isNotClient && entity != null && Entity.Spawner != null) //clients are not allowed to spawn items
+            if (isNotClient && entity != null && Entity.Spawner != null) //clients are not allowed to spawn entities
             {
+                foreach (CharacterSpawnInfo characterSpawnInfo in spawnCharacters)
+                {
+                    Entity.Spawner.AddToSpawnQueue(characterSpawnInfo.SpeciesName, entity.WorldPosition);
+                }
                 foreach (ItemSpawnInfo itemSpawnInfo in spawnItems)
                 {
                     switch (itemSpawnInfo.SpawnPosition)
