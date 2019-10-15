@@ -1,8 +1,8 @@
 ﻿<HammerheadmatriarchSwimFast
   animationtype="SwimFast"
   usesinemovement="False"
-  flip="True"
-  mirror="True"
+  flip="False"
+  mirror="False"
   waveamplitude="1"
   wavelength="10"
   rotatetowardsmovement="True"
@@ -13,7 +13,8 @@
   footangles=""
   tailangle="NaN"
   steertorque="25"
-  movementspeed="1"
+  movementspeed="3.982607"
   cyclespeed="1"
   headangle="NaN"
-  torsoangle="NaN" />
+  torsoangle="NaN"
+  tailtorquemultiplier="1" />

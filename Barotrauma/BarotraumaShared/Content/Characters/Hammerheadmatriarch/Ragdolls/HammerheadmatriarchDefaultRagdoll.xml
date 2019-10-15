@@ -1,36 +1,82 @@
-﻿<Ragdoll type="Hammerheadmatriarch" texture="Content/Characters/Hammerheadmatriarch/Hammerheadmatriarch.png" canentersubmarine="False" canwalk="False" spritesheetorientation="0" limbscale="1" jointscale="1" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" draggable="True">
-  <collider radius="42" width="1" name="Main Collider" height="0" />
-  <limb id="0" name="Limb 0" type="Torso" height="482.8" width="396.1" notes="" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" healthindex="0" friction="0.3" restitution="0.05">
-    <sprite texture="" sourcerect="988,1,486,478" origin="0.5,0.5" depth="0" />
+﻿<Ragdoll type="Hammerheadmatriarch" texture="Content/Characters/Hammerheadmatriarch/Hammerheadmatriarch.png" canentersubmarine="False" canwalk="False" spritesheetorientation="90" limbscale="1" jointscale="1" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" draggable="True" mainlimb="Torso">
+  <collider radius="200" width="0" name="Main Collider" height="500" />
+  <limb id="0" name="Torso" type="Torso" height="482.8" width="396.1" notes="" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7" mouthpos="0,0">
+    <sprite texture="" sourcerect="988,1,486,478" origin="0.5053136,0.5717275" depth="0.4" />
   </limb>
-  <limb id="1" name="Limb 1" type="Head" height="482.8" width="491.3" notes="" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" healthindex="0" friction="0.3" restitution="0.05">
-    <sprite texture="" sourcerect="1472,0,575,559" origin="0.5466793,0.5380377" depth="0" />
+  <limb id="1" name="Head" type="Head" height="482.8" width="491.3" notes="" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="50" pullpos="0,0" refjoint="-1" ignorecollisions="False" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7" mouthpos="0,0">
+    <sprite texture="" sourcerect="1472,0,575,559" origin="0.558968,0.5762252" depth="0.5" />
   </limb>
-  <limb id="2" radius="0" width="396.1" height="482.8" mass="0" name="Limb 2" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
-    <sprite texture="" sourcerect="473,1,490,482" origin="0.5,0.5" depth="0" />
+  <limb id="2" radius="0" width="396.1" height="482.8" mass="0" name="Tail1" type="Tail" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7" mouthpos="0,0">
+    <sprite texture="" sourcerect="473,1,490,482" origin="0.5302759,0.5815741" depth="0.5" />
   </limb>
-  <limb id="3" width="442" height="305" name="Limb 3" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
-    <sprite texture="" sourcerect="1,1,442,303" origin="0.5,0.5" depth="0" />
+  <limb id="3" width="442" height="305" name="Tail2" type="Tail" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7" mouthpos="0,0">
+    <sprite texture="" sourcerect="1,1,442,303" origin="0.5260057,0.4377108" depth="1" />
   </limb>
-  <limb id="4" width="204" height="224" name="Limb 4" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
-    <sprite texture="" sourcerect="0,303,202,224" origin="0.5,0.5" depth="0" />
+  <limb id="4" width="204" height="224" name="Fin1" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="2" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="35" mouthpos="0,0">
+    <sprite texture="" sourcerect="0,303,202,224" origin="0.43869,0.4306809" depth="0.1" />
   </limb>
-  <limb id="5" radius="0" width="204" height="224" mass="0" name="Limb 5" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
-    <sprite texture="" sourcerect="203,303,198,239" origin="0.5,0.5" depth="0" />
+  <limb id="5" radius="100" width="0" height="0" mass="0" name="Fin2" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" density="2" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="35" mouthpos="0,0">
+    <sprite texture="" sourcerect="203,303,203,239" origin="0.5105289,0.4919307" depth="0.1" />
   </limb>
-  <limb id="6" width="326" height="216" name="Limb 6" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
-    <sprite texture="" sourcerect="2,533,325,210" origin="0.5,0.5" depth="0" />
+  <limb id="6" width="0" height="0" name="FinRound1" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="True" attackpriority="1" steerforce="0" stepoffset="0,0" radius="150" mass="0" density="2" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="35" mouthpos="0,0">
+    <sprite texture="" sourcerect="2,533,325,210" origin="0.4948558,0.5242501" depth="0" />
   </limb>
-  <limb id="7" radius="0" width="326" height="216" mass="0" name="Limb 7" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
-    <sprite texture="" sourcerect="2,740,325,233" origin="0.5,0.5" depth="0" />
+  <limb id="7" radius="150" width="0" height="0" mass="0" name="FinRound2" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="True" attackpriority="1" steerforce="0" stepoffset="0,0" density="2" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="35" mouthpos="0,0">
+    <sprite texture="" sourcerect="2,740,325,233" origin="0.4711748,0.5063239" depth="0" />
   </limb>
-  <limb id="8" width="1025" height="513" name="Limb 8" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
-    <sprite texture="" sourcerect="328,536,1137,509" origin="0.5,0.5" depth="0" />
+  <limb id="8" width="1025" height="513" name="SkirtA1" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="True" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="1" pullpos="0,0" refjoint="-1" ignorecollisions="True" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="70" mouthpos="0,0">
+    <sprite texture="" sourcerect="328,536,1137,509" origin="0.5408445,0.4228145" depth="0" />
   </limb>
-  <limb id="9" width="1376" height="325" name="Limb 9" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
-    <sprite texture="" sourcerect="8,1055,1375,355" origin="0.5,0.5" depth="0" />
+  <limb id="9" width="1000" height="325" name="SkirtA2" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="True" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="1" pullpos="0,0" refjoint="-1" ignorecollisions="True" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="70" mouthpos="0,0">
+    <sprite texture="" sourcerect="8,1055,1375,355" origin="0.5141718,0.6016437" depth="0" />
   </limb>
-  <limb id="10" width="1052" height="524" name="Limb 10" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
-    <sprite texture="" sourcerect="4,1405,1076,597" origin="0.5,0.5" depth="0" />
+  <limb id="10" width="0" height="0" name="SkirtA3" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="True" attackpriority="1" steerforce="0" stepoffset="0,0" radius="300" mass="0" density="1" pullpos="0,0" refjoint="-1" ignorecollisions="True" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="70" mouthpos="0,0">
+    <sprite texture="" sourcerect="4,1405,1076,597" origin="0.5743497,0.4558372" depth="0" />
   </limb>
+  <limb id="11" width="361.25" height="846.6" name="SkirtB" type="None" spriteorientation="270" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="True" attackpriority="1" steerforce="0" radius="0" density="1" ignorecollisions="True" angulardamping="70" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
+    <sprite texture="" sourcerect="1551,557,425,996" origin="0.4900721,0.4390244" depth="0" />
+  </limb>
+  <limb id="12" width="286" height="100" name="UpperArmL1" type="LeftArm" spriteorientation="270" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" radius="0" density="2" ignorecollisions="False" angulardamping="7" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
+    <sprite texture="" sourcerect="1079,1532,286,158" origin="0.5,0.5" depth="0.6" />
+  </limb>
+  <limb id="13" radius="0" width="286" height="100" name="UpperArmL2" type="LeftArm" spriteorientation="0" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" density="2" ignorecollisions="False" angulardamping="7" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
+    <sprite texture="" sourcerect="1076,1809,286,143" origin="0.5,0.5" depth="0.6" />
+  </limb>
+  <limb id="14" radius="0" width="286" height="100" name="UpperArmR2" type="RightArm" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" density="2" ignorecollisions="False" angulardamping="7" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
+    <sprite texture="" sourcerect="1406,1809,286,143" origin="0.4881344,0.4860579" depth="0" />
+  </limb>
+  <limb id="15" radius="0" width="286" height="100" name="UpperArmR1" type="RightArm" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" density="2" ignorecollisions="False" angulardamping="7" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
+    <sprite texture="" sourcerect="1421,1532,286,158" origin="0.5,0.5" depth="0" />
+  </limb>
+  <limb id="16" radius="0" width="400" height="70" name="ClawL1" type="LeftHand" spriteorientation="180" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" density="2" ignorecollisions="False" angulardamping="7" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
+    <sprite texture="" sourcerect="1078,1723,426,90" origin="0.5,0.5" depth="0.6" />
+  </limb>
+  <limb id="17" radius="0" width="400" height="70" name="ClawR1" type="RightHand" spriteorientation="180" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" density="2" ignorecollisions="False" angulardamping="7" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
+    <sprite texture="" sourcerect="1532,1720,426,92" origin="0.5,0.6" depth="0" />
+  </limb>
+  <limb id="18" radius="0" width="400" height="70" name="Limb 18" type="LeftHand" spriteorientation="0" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" density="2" ignorecollisions="False" angulardamping="7" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
+    <sprite texture="" sourcerect="1078,1955,426,90" origin="0.5,0.6" depth="0.6" />
+  </limb>
+  <limb id="19" radius="0" width="400" height="70" name="Limb 19" type="RightHand" spriteorientation="0" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" density="2" ignorecollisions="False" angulardamping="7" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
+    <sprite texture="" sourcerect="1532,1954,426,92" origin="0.5,0.6" depth="0" />
+  </limb>
+  <joint limb1="1" limb2="0" limb1anchor="-150.4551,-13.27821" limb2anchor="201.936,-9.241213" name="Joint 1 - 0" canbesevered="True" limitenabled="True" upperlimit="5" lowerlimit="-5" stiffness="0.25" />
+  <joint limb1="0" limb2="2" limb1anchor="-120.1812,7.230964" limb2anchor="62.88776,-0.08742125" name="Joint 0 - 2" canbesevered="True" limitenabled="True" upperlimit="10" lowerlimit="-10" stiffness="0.25" />
+  <joint limb1="2" limb2="3" limb1anchor="-121.9271,-4.103638" limb2anchor="151.2316,-13.3022" name="Joint 2 - 3" canbesevered="True" limitenabled="True" upperlimit="10" lowerlimit="-10" stiffness="0.25" />
+  <joint limb1="0" limb2="5" limb1anchor="104.5512,-59.73631" limb2anchor="72.92999,94.81" name="Joint 0 - 5" canbesevered="True" limitenabled="True" upperlimit="24" lowerlimit="6" stiffness="0.25" />
+  <joint limb1="2" limb2="6" limb1anchor="-67.49837,126.4912" limb2anchor="51.21969,-43.80705" name="Joint 2 - 6" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" stiffness="0.25" />
+  <joint limb1="2" limb2="7" limb1anchor="-34.02051,-134.2288" limb2anchor="17.02,46.19" name="Joint 2 - 7" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" stiffness="0.25" />
+  <joint limb1="2" limb2="8" limb1anchor="-36.47,92.38" limb2anchor="697.7811,-250.2836" name="Joint 2 - 8" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" stiffness="0.25" />
+  <joint limb1="2" limb2="10" limb1anchor="21.92964,-177.6798" limb2anchor="517.3049,356.8385" name="Joint 2 - 10" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" stiffness="0.25" />
+  <joint limb1="0" limb2="15" limb1anchor="156.0458,57.94046" limb2anchor="-114.26,44.64662" name="Joint 0 - 15" canbesevered="True" limitenabled="True" upperlimit="167" lowerlimit="140" stiffness="0.25" />
+  <joint limb1="0" limb2="14" limb1anchor="172.49,-50.07521" limb2anchor="-96.07294,-31.17442" name="Joint 0 - 14" canbesevered="True" limitenabled="True" upperlimit="231" lowerlimit="213" stiffness="0.25" />
+  <joint limb1="0" limb2="12" limb1anchor="200.0693,-106.0273" limb2anchor="-106.97,26.74" name="Joint 0 - 12" canbesevered="True" limitenabled="True" upperlimit="-37.00001" lowerlimit="-53" stiffness="0.25" />
+  <joint limb1="0" limb2="13" limb1anchor="267.2223,108.3609" limb2anchor="-109.4,-17.02" name="Joint 0 - 13" canbesevered="True" limitenabled="True" upperlimit="117" lowerlimit="91" stiffness="0.25" />
+  <joint limb1="2" limb2="9" limb1anchor="-142.0005,6.980426" limb2anchor="728.8105,164.4927" name="Joint 2 - 9" canbesevered="True" limitenabled="True" upperlimit="10" lowerlimit="-10" stiffness="0.25" />
+  <joint limb1="3" limb2="11" limb1anchor="-202.8785,-23.41509" limb2anchor="-46.05407,349.5394" name="Joint 3 - 11" canbesevered="True" limitenabled="True" upperlimit="-73.00002" lowerlimit="-106" stiffness="0.25" />
+  <joint limb1="0" limb2="4" limb1anchor="7.733025,-53.11203" limb2anchor="68.32966,56.52687" name="Joint 0 - 4" canbesevered="True" limitenabled="True" upperlimit="18" lowerlimit="1" stiffness="0.25" />
+  <joint limb1="14" limb2="19" limb1anchor="115.67,-34.02" limb2anchor="-203.8319,13.33085" name="Joint 14 - 19" canbesevered="True" limitenabled="True" upperlimit="137" lowerlimit="109" stiffness="0.25" />
+  <joint limb1="15" limb2="17" limb1anchor="102.06,34.02" limb2anchor="-182.8098,-6.989933" name="Joint 15 - 17" canbesevered="True" limitenabled="True" upperlimit="-98.00002" lowerlimit="-122" stiffness="0.25" />
+  <joint limb1="12" limb2="18" limb1anchor="117.6313,35.09177" limb2anchor="-186.9918,10.47017" name="Joint 12 - 18" canbesevered="True" limitenabled="True" upperlimit="66" lowerlimit="53" stiffness="0.25" />
+  <joint limb1="13" limb2="16" limb1anchor="115.67,-34.12953" limb2anchor="-184.0301,-16.89171" name="Joint 13 - 16" canbesevered="True" limitenabled="True" upperlimit="267" lowerlimit="250" stiffness="0.25" />
 </Ragdoll>
