@@ -154,6 +154,10 @@ namespace Barotrauma
                 {
                     wearable.Variant = Variant;
                 }
+                else
+                {
+                    wearable.Variant = wearable.Variant; //force server event
+                }
             }
 
             if (itemElement.GetAttributeBool("equip", false))

@@ -225,10 +225,11 @@ namespace Barotrauma.Items.Components
             get { return variant; }
             set
             {
-                if (variant == value) { return; }
 #if SERVER
                 item.CreateServerEvent(this);
 #endif
+
+                if (variant == value) { return; }
 
 #if CLIENT
                 foreach (var sprite in wearableSprites)

@@ -374,7 +374,6 @@ namespace Barotrauma
             Head.race = GetRandomRace();
             CalculateHeadSpriteRange();
             Head.HeadSpriteId = GetRandomHeadID();
-            DebugConsole.NewMessage("variant: "+variant.ToString());
             Job = (jobPrefab == null) ? Job.Random(Rand.RandSync.Server) : new Job(jobPrefab, variant);
             if (!string.IsNullOrEmpty(name))
             {

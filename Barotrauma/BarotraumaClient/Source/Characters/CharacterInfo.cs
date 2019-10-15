@@ -242,6 +242,7 @@ namespace Barotrauma
 
             string jobIdentifier = inc.ReadString();
             int variant = inc.ReadByte();
+
             JobPrefab jobPrefab = null;
             Dictionary<string, float> skillLevels = new Dictionary<string, float>();
             if (!string.IsNullOrEmpty(jobIdentifier))
