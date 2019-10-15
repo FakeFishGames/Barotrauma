@@ -422,7 +422,7 @@ namespace Barotrauma.Items.Components
 
         public override void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
-            Variant = msg.ReadByte();
+            Variant = (int)msg.ReadByte();
 
             base.ClientRead(type, msg, sendingTime);
         }

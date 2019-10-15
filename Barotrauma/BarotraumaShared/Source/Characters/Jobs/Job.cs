@@ -147,6 +147,18 @@ namespace Barotrauma
             }
 #endif
 
+            if (itemElement.GetAttributeBool("equip", false))
+            {
+                List<InvSlotType> allowedSlots = new List<InvSlotType>(item.AllowedSlots);
+                allowedSlots.Remove(InvSlotType.Any);
+
+                character.Inventory.TryPutItem(item, null, allowedSlots);
+            }
+            else
+            {
+                character.Inventory.TryPutItem(item, null, item.AllowedSlots);
+            }
+
             Wearable wearable = ((List<ItemComponent>)item.Components)?.Find(c => c is Wearable) as Wearable;
             if (wearable != null)
             {
@@ -158,18 +170,6 @@ namespace Barotrauma
                 {
                     wearable.Variant = wearable.Variant; //force server event
                 }
-            }
-
-            if (itemElement.GetAttributeBool("equip", false))
-            {
-                List<InvSlotType> allowedSlots = new List<InvSlotType>(item.AllowedSlots);
-                allowedSlots.Remove(InvSlotType.Any);
-
-                character.Inventory.TryPutItem(item, null, allowedSlots);
-            }
-            else
-            {
-                character.Inventory.TryPutItem(item, null, item.AllowedSlots);
             }
 
             if (item.Prefab.Identifier == "idcard" && spawnPoint != null)
