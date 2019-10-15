@@ -3593,4 +3593,13 @@
   <oxygen_sabotage_objectivesuccessmessage1>Subjects should start feeling the effects shortly. Symptoms for oxygen deprivation include, but aren't limited to: extremities turning blue, seizures and fainting.</oxygen_sabotage_objectivesuccessmessage1>
   <oxygen_sabotage_traitorobjectivestartmessage2>When you're happy with the data you've gathered, dispose of the test subjects.\n[traitorgoalinfos]</oxygen_sabotage_traitorobjectivestartmessage2>
   <oxygen_sabotage_objectivesuccessmessage2>Another successful test. Report back to nearest coalition outpost.</oxygen_sabotage_objectivesuccessmessage2>
+
+  <signaltrouble_traitormissionstartinfotext>Missions have been a bit too straightforward lately, haven't they? Let's do the crew a favor and add some challenge.</signaltrouble_traitormissionstartinfotext>
+  <signaltrouble_traitorobjectivestartmessage1>Get yourself a sonar beacon. You'll see why in a minute.</signaltrouble_traitorobjectivestartmessage1>
+  <signaltrouble_objectivesuccessmessage1>Now turn it on and hide it somewhere.</signaltrouble_objectivesuccessmessage1>
+  <signaltrouble_traitorobjectivestartmessage2>Find a good spot or someone will find it too soon.</signaltrouble_traitorobjectivestartmessage2>
+  <signaltrouble_objectivesuccessmessage2>Leave the beacon there. Hopefully it'll be a while before others suspect any foul play. Go cut the signals to ballast pumps and engines.</signaltrouble_objectivesuccessmessage2>
+  <signaltrouble_traitorobjectivestartmessage3>You'll need a screwdriver. Signals are labeled 'force_in' and 'set_targetlevel' on engines and pumps respectively.</signaltrouble_traitorobjectivestartmessage3>
+  <signaltrouble_objectivesuccessmessage3>Let's see how long it takes before anyone finds the issue.</signaltrouble_objectivesuccessmessage3>
+
 </infotexts>
