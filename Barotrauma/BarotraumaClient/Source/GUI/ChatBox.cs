@@ -152,7 +152,7 @@ namespace Barotrauma
 
         public void AddMessage(ChatMessage message)
         {
-            while (chatBox.Content.CountChildren > 20)
+            while (chatBox.Content.CountChildren > 60)
             {
                 chatBox.RemoveChild(chatBox.Content.Children.First());
             }

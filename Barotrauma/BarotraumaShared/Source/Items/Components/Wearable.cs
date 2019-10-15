@@ -226,12 +226,12 @@ namespace Barotrauma.Items.Components
             set
             {
 #if SERVER
-                item.CreateServerEvent(this);
-#endif
+                variant = value;
 
+                item.CreateServerEvent(this);
+#elif CLIENT
                 if (variant == value) { return; }
 
-#if CLIENT
                 foreach (var sprite in wearableSprites)
                 {
                     sprite.Variant = value;
@@ -243,8 +243,9 @@ namespace Barotrauma.Items.Components
                         sprite.Sprite.ReloadTexture();
                     }
                 }
-#endif
+
                 variant = value;
+#endif
             }
         }
 
