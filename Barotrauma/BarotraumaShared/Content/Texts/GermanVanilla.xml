@@ -336,7 +336,6 @@
 <banreason>Grund:</banreason>
 
 <!-- Round summary -->
-
 <roundsummaryprogress>[sub] hat es hierhin geschafft: [location]</roundsummaryprogress>
 <roundsummaryprogress>[sub] ist hier angekommen: [location]</roundsummaryprogress>
 <roundsummaryreturn>[sub] kehrte hierhin zurück: [location]</roundsummaryreturn>
@@ -802,7 +801,6 @@
 <!--<missiondescription.killcrawlerswarm2>Ein großer Schwarm von Monstern der Gattung [monster] terrorisiert Fahrzeuge, die zwischen [location1] und [location2] verkehren. Eine Belohnung von [reward] Credits wurde denen versprochen, die ihn vernichten.</missiondescription.killcrawlerswarm2>-->
 <!-- Temporary until plural monster names -->
 <missiondescription.killcrawlerswarm2>Ein großer Schwarm von Kriechern terrorisiert Fahrzeuge, die zwischen [location1] und [location2] verkehren. Eine Belohnung von [reward] Credits wurde denen versprochen, die ihn vernichten.</missiondescription.killcrawlerswarm2>
-
 <missionsonarlabel.killcrawlerswarm2>Schwarm</missionsonarlabel.killcrawlerswarm2>
 <missionsuccess.killcrawlerswarm2>Der Schwarm wurde vernichtet.</missionsuccess.killcrawlerswarm2>
 <missionheader0.killcrawlerswarm2>Ziel eliminiert</missionheader0.killcrawlerswarm2>
@@ -2235,7 +2233,7 @@
 <!-- Room 3 -->
 <mechanic.welding>Lecks</mechanic.welding>
 <mechanic.weldingobjective>Leck reparieren</mechanic.weldingobjective>
-<mechanic.weldingtext>Rüste das Schweißgerät aus, indem du darauf doppelklickst, um Lecks im Rumpf zu reparieren. Für den Gebrauch einiger Objekte brauchst du beide Hände frei. Dazu zählt auch das Schweißgerät. Du kannst ein Objekt ablegen, indem du doppelklickst, während es in Verwendung ist.\n\nWenn du das Schweißgerät ausgerüstet hast, halte zum Zielen {0}. Halte während des Zielens {1}, um zu schweißen.</mechanic.weldingtext>
+<mechanic.weldingtext>Rüste das Schweißgerät und die Tauchmaske aus, die du aus dem Spind geholt hast, indem du darauf doppelklickst. \n\nMit dem Schweißgerät kannst du Lecks in der Hülle reparieren und dank der Tauchmaske geht dir im Wasser nicht die Luft aus. \n\nFür den Gebrauch einiger Objekte brauchst du beide Hände frei. Dazu zählt auch das Schweißgerät. Du kannst ein Objekt ablegen, indem du doppelklickst, während es in Verwendung ist.\n\nWenn du ein Schweißgerät ausgerüstet hast, halte zum Zielen {0}. Halte während des Zielens {1}, um zu schweißen.</mechanic.weldingtext>
 <mechanic.drain>Wasserpumpen</mechanic.drain>
 <mechanic.drainobjective>Schalte die Pumpe in der Nähe an, um das Wasser abzupumpen</mechanic.drainobjective>
 <mechanic.draintext>Wenn das U-Boot geflutet wurde, musst du das Wasser abpumpen. Normalerweise erhalten Pumpen Signale von Wassersensoren oder Navigationsterminals in der Nähe, einige Pumpen lassen sich aber auch manuell bedienen. Diese Pumpe ist so programmiert, dass sie Wasser nur hinauspumpt. Schalte sie an, indem du mit ihr interagierst ({0}) und den Schalter auf die Position Ein stellst.</mechanic.draintext>
@@ -2246,7 +2244,7 @@
 <mechanic.deconstructtext>Der Fabrikator ist ein Gerät, das aus unterschiedlichen Materialien nützliche Objekte herstellen kann. Wenn du nicht genügend Ausgangsmaterialien besitzt, kannst du im Dekonstruktor Objekte in ihre Bestandteile zerlegen. Ziehe das Objekt einfach in einen der oberen Slots und drücke auf Dekonstruieren.\n\nIn diesem Fall benötigst du für das Fabrizieren eines Feuerlöschers Aluminium und Natrium. Natrium ist allgegenwärtig, aber Aluminium musst du durch das Dekonstruieren von Sauerstoffflaschen gewinnen.</mechanic.deconstructtext>
 <mechanic.fabricate>Fertigung, Teil 2</mechanic.fabricate>
 <mechanic.fabricateobjective>Fabriziere einen Feuerlöscher</mechanic.fabricateobjective>
-<mechanic.fabricatetext>Nachdem wir jetzt die benötigten Materialien besitzen, können wir einen Feuerlöscher fabrizieren. Finde ihn in der Liste, belade den Fabrikator mit den Materialien und drücke die Taste, um mit der Herstellung zu beginnen.\n\nDas fabrizierte Objekt findest du nach der Fertigstellung im Ausgabeslot des Fabrikators.</mechanic.fabricatetext>
+<mechanic.fabricatetext>Nachdem wir jetzt die benötigten Materialien besitzen, können wir einen Feuerlöscher fabrizieren. Finde ihn in der Liste, belade den Fabrikator mit den benötigten Materialien und drücke die Taste, um mit der Herstellung zu beginnen.\n\nDas fabrizierte Objekt findest du nach der Fertigstellung im Ausgabeslot des Fabrikators. Da es sich beim Feuerlöscher um ein Objekt handelt, für das du zwei freie Hände brauchst, kannst du ihn ausrüsten, indem du auf ihn doppelklickst.</mechanic.fabricatetext>
 
 <!-- Room 5 -->
 <mechanic.extinguisher>Brände</mechanic.extinguisher>
@@ -2505,7 +2503,7 @@
 <dialognoleaks>Welche Lecks?</dialognoleaks>
 
 <bugreportgithubform>GitHub-Formular</bugreportgithubform>
-<bugreportfeedbackform>Barotrauma-Feedbackformular</bugreportfeedbackform>
+<bugreportfeedbackform>Hilfe und technischer Support</bugreportfeedbackform>
 <bugreportbutton>Fehler melden</bugreportbutton>
 
 <voipcapturedevicenotfound>Sprachaufnahme konnte nicht gestartet werden – kein geeignetes Aufnahmegerät gefunden.</voipcapturedevicenotfound>
@@ -2587,7 +2585,7 @@
 <connection.waterdatain>wasserdaten_ein</connection.waterdatain>
 <connection.oxygendatain>sauerstoffdaten_ein</connection.oxygendatain>
 
-<!-- *** New additions *** -->
+
 <itemmsgoxygenrefill>Sauerstoffflasche einsetzen, um sie zu befüllen</itemmsgoxygenrefill>
 <missionfailed>Mission gescheitert</missionfailed>
 <label.highpressurewarning>WARNUNG: Hoher Druck</label.highpressurewarning>
@@ -2687,7 +2685,7 @@
 <traitorgoalkilleveryoneinfo>Töte alle Besatzungsmitglieder.</traitorgoalkilleveryoneinfo>
 <traitorgoalfinditeminfo>Finde folgendes Objekt: [identifier]. Suchgebiet: [targethullname].</traitorgoalfinditeminfo>
 <traitorgoalcausereactormeltdown>Führe eine Kernschmelze des Reaktors herbei.</traitorgoalcausereactormeltdown>
-<traitorgoaldestroyitems>Zerstöre mindestens [percentage] Prozent der Gesamtmenge an Nicht-Inventar-[tag] im U-Boot.</traitorgoaldestroyitems>
+<traitorgoaldestroyitems>Entsorge mindestens [percentage] Prozent der Gesamtmenge an Nicht-Inventar-[tag] im U-Boot.</traitorgoaldestroyitems>
 <traitorgoalfloodpercentofsub>Überflute mindestens [percentage] Prozent des U-Boots.</traitorgoalfloodpercentofsub>
 <traitorgoaljamsonarinfo>Verstecke einen Sender, der das aktive Sonar stört, an einem Ort, an dem er [duration] Sekunden lang nicht gefunden wird.</traitorgoaljamsonarinfo>
 <traitorgoaljamsonarinfoalt>Störe das Sonar des U-Boots [duration] Sekunden lang.</traitorgoaljamsonarinfoalt>
@@ -2804,8 +2802,8 @@
 <label.engine>Maschinenraum</label.engine>
 
 <!-- Karma system -->
-<karma.kickbanthreshold>Bann-Schwelle</karma.kickbanthreshold>
-<karma.kickbanthresholdtooltip>Die Spieler, deren Karma unter diese Schwelle sinkt, werden automatisch vom Server gebannt.</karma.kickbanthresholdtooltip>
+<karma.kickbanthreshold>Kick-/Bann-Schwelle</karma.kickbanthreshold>
+<karma.kickbanthresholdtooltip>Die Spieler, deren Karma unter diese Schwelle sinkt, werden automatisch vom Server gekickt und/oder gebannt (abhängig von den unten zu findenden Kick- und Bann-Einstellungen).</karma.kickbanthresholdtooltip>
 <karma.karmadecay>Karma-Verbrauchsrate</karma.karmadecay>
 <karma.karmadecaytooltip>Wie sehr das Karma pro Sekunde sinkt, wenn es über der Verbrauchsschwelle liegt.</karma.karmadecaytooltip>
 <karma.karmadecaythreshold>Karma-Verbrauchsschwelle</karma.karmadecaythreshold>
@@ -2899,6 +2897,79 @@
 <flood_2_objectivesuccessmessage3>Hervorragend! Denk daran, Genosse, es gibt keine schlechte Taktik, nur schlechte Ziele!</flood_2_objectivesuccessmessage3>
 <flood_2_traitorobjectivestartmessage4>Schnell, nutze die Verwirrung aus und schalte die schlimmsten dieser Schweine aus, so lange du kannst!\n[traitorgoalinfos]</flood_2_traitorobjectivestartmessage4>
 <flood_2_objectivesuccessmessage4>Während du ihnen das Leben nimmst, bemerkst du, vielleicht ein wenig verbittert, dass dein Funkempfänger plötzlich verstummt ist. Deine Genossen haben dich der Gnade von Mutter Europa ausgeliefert.</flood_2_objectivesuccessmessage4>
+
+
+<!-- New Additions as of 13th of August -->
+<connection.batterychargestatusout>ladung_aus</connection.batterychargestatusout>
+<connection.batterychargepercentage>ladung_%</connection.batterychargepercentage>
+<connection.batterysetrechargespeed>ladung_rate_festlegen</connection.batterysetrechargespeed>
+<connection.batteryrechargespeedout>ladung_rate_aus</connection.batteryrechargespeedout>
+<personalitytrait.professional>Professionell</personalitytrait.professional>
+<personalitytrait.laid-back>Gelassen</personalitytrait.laid-back>
+<personalitytrait.rude>Rüpelhaft</personalitytrait.rude>
+<personalitytrait.tough>Hart</personalitytrait.tough>
+<personalitytrait.joker>Spaßvogel</personalitytrait.joker>
+<personalitytrait.brokenenglish>Nonsens-Deutsch</personalitytrait.brokenenglish>
+<personalitytrait.fearful>Ängstlich</personalitytrait.fearful>
+<personalitytrait.crazy>Verrückt</personalitytrait.crazy>
+<sabotagebutton>Sabotieren</sabotagebutton>
+<sabotaging>Sabotage läuft</sabotaging>
+<voipattenuation>Sprachchat-Dämpfung</voipattenuation>
+<voipattenuationtooltip>Dämpft die Lautstärke des Spiels, wenn Spieler sprechen.</voipattenuationtooltip>
+<roundsummaryroundhasended>Die Runde ist zu Ende.</roundsummaryroundhasended>
+<clientpermission.karmaimmunity>Karma-Immunität</clientpermission.karmaimmunity>
+<karmakicked>Du wurdest vom Server gekickt, weil dein Karma unter [banthreshold] gefallen ist.</karmakicked>
+<karma.kicksbeforeban>Anzahl der Kicks vor dem Bann</karma.kicksbeforeban>
+<karma.kicksbeforebantooltip>Hat der Spieler eine bestimmte Anzahl von Kicks vom Server überschritten, weil sein Karma zu niedrig war, wird dieser Spieler gebannt, wenn er erneut unter die Kick-/Bann-Schwelle fällt. Sollte der Wert dieser Anzahl 0 sein, bedeutet dies, dass der Spieler beim nächsten Fallen unter die Kick-/Bann-Schwelle gebannt wird.</karma.kicksbeforebantooltip>
+<traitorgoalreachdistancefromsub>Erreiche vom U-Boot aus eine Distanz von [distance].</traitorgoalreachdistancefromsub>
+<traitorgoalisoptionalinfotext>Optional: [infotext]</traitorgoalisoptionalinfotext>
+<traitorgoalwithtimelimitinfotext>[infotext] Schließe dieses Ziel innerhalb von [timelimit] ab.</traitorgoalwithtimelimitinfotext>
+<traitorgoalwithdurationinfotext>[infotext] Dieses Ziel muss für [duration] Sekunden abgeschlossen sein.</traitorgoalwithdurationinfotext>
+<traitorgoalwithcumulativedurationinfotext>[infotext] Dieses Ziel muss für insgesamt [duration] Sekunden abgeschlossen sein.</traitorgoalwithcumulativedurationinfotext>
+<traitorgoalwaitfortraitorsinfotext>Warte darauf, dass [remaining] von [count] Verrätern ihre Aufgaben abschließen.</traitorgoalwaitfortraitorsinfotext>
+<failed>Gescheitert</failed>
+<pausemenuquitverificationeditor>Bist du dir sicher, dass du zum Hauptmenü zurückkehren will willst? Dein nicht gespeicherter Fortschritt geht verloren.</pausemenuquitverificationeditor>
+<mapentitycategory.decorative>Dekorativ</mapentitycategory.decorative>
+<mapentitycategory.wall>Wand</mapentitycategory.wall>
+<karma.resetkarmabetweenrounds>Karma zwischen den Runden zurücksetzen</karma.resetkarmabetweenrounds>
+<enablesplashscreen>Splash-Screen einschalten</enablesplashscreen>
+<restartrequiredgeneric>Du musst das Spiel neu starten, damit die Änderungen wirksam werden.</restartrequiredgeneric>
+<invalidcontentpackage>Inhaltspaket [packagename] kann nicht geladen werden.</invalidcontentpackage>
+<xmlfileinvalid>Datei [filepath] ist keine gültige XML-Datei ([errormessage]).</xmlfileinvalid>
+<roomname.airlockaccess>Luftschleusen-Zugang</roomname.airlockaccess>
+<roomname.gunnerycompartment>Gefechtsraum</roomname.gunnerycompartment>
+<roomname.dronecontrol>Drohnensteuerung</roomname.dronecontrol>
+<roomname.drone>Drohne</roomname.drone>
+<roomname.droneballast>Drohnen-Ballast</roomname.droneballast>
+<subeditorlights>Lichter</subeditorlights>
+<subeditorshadowcastinglights>Schattenerzeugende Lichtquelle</subeditorshadowcastinglights>
+<contentpackagemismatchwarninggeneric>Dieses U-Boot ist möglicherweise nicht mit den aktuell ausgewählten Inhaltspaketen kompatibel. Bist du sicher, dass du dieses U-Boot auswählen willst?</contentpackagemismatchwarninggeneric>
+<label.activatedischargecoils>Elektroentladungsspulen</label.activatedischargecoils>
+<label.lights1>Licht 1</label.lights1>
+<label.lights2>Licht 2</label.lights2>
+<label.lights3>Licht 3</label.lights3>
+<label.lights4>Licht 4</label.lights4>
+<label.lights5>Licht 5</label.lights5>
+<label.pumps1>Pumpe 1</label.pumps1>
+<label.pumps2>Pumpe 2</label.pumps2>
+<label.dronecharge>Drohnenladung</label.dronecharge>
+<label.meltdown>Kernschmelze</label.meltdown>
+<campaignfiletransferinprogress>Bitte warte darauf, dass die gespeicherte Datei der Kampagne heruntergeladen wurde.</campaignfiletransferinprogress>
+<openlinkinbrowserprompt>Willst du den Link [link] im Webbrowser öffnen?</openlinkinbrowserprompt>
+<replacelostshuttles>Ersetze die verlorenen Shuttle.</replacelostshuttles>
+<replaceshuttles>Ersetzen</replaceshuttles>
+<replaceshuttledockingportoccupied>Die verlorenen Shuttle können nicht ersetzt werden, da die Andockschleuse bereits verwendet wird. Mach die Andockschleuse frei, bevor du ein neues Shuttle anforderst.</replaceshuttledockingportoccupied>
+<character.blackmoloch>Schwarzer Moloch</character.blackmoloch>
+<character.goldenhammerhead>Goldener Hammerkopf</character.goldenhammerhead>
+<character.hammerheadmatriarch>Hammerkopf-Matriarchin</character.hammerheadmatriarch>
+<character.bonetigerthresher>Knochen-Tigerflosser</character.bonetigerthresher>
+
+<!-- Updated values as of 13th of August -->
+
+
+
+
+
 
 
 </infotexts>
