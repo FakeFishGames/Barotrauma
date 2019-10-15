@@ -2579,7 +2579,7 @@
 <connection.waterdatain>水接觸資訊輸入</connection.waterdatain>
 <connection.oxygendatain>氧含量資訊輸入</connection.oxygendatain>
 
-<!-- *** New additions *** -->
+
 <itemmsgoxygenrefill>插入氧氣罐來進行補給</itemmsgoxygenrefill>
 <missionfailed>任務失敗</missionfailed>
 <label.highpressurewarning>警告：高壓</label.highpressurewarning>
@@ -2630,7 +2630,7 @@
 <connection.sonardataout>data_out</connection.sonardataout>
 <label.outpostinfodisplay1>歡迎。氧氣水準：正常。能量水準：正常。輻射水準：超量。本日天氣預報：陰冷潮濕。</label.outpostinfodisplay1>
 <label.navterminaldock>停靠</label.navterminaldock>
-  <label.navterminalundock>離港</label.navterminalundock>
+<label.navterminalundock>離港</label.navterminalundock>
 <connectionerrornoresponse>伺服器無回應。可能是與伺服器的連接出現了問題。</connectionerrornoresponse>
 <dialognorescuetargets>目前似乎沒有人需要醫療！</dialognorescuetargets>
 <dialognorescuetargets>我想現在好像沒有人需要醫療！</dialognorescuetargets>
@@ -2891,6 +2891,79 @@
 <flood_2_objectivesuccessmessage3>非常好！記住同志，沒有糟糕的戰術，只有糟糕的目標！</flood_2_objectivesuccessmessage3>
 <flood_2_traitorobjectivestartmessage4>快，利用這場混亂，幹掉那些豬玀！\n[traitorgoalinfos]</flood_2_traitorobjectivestartmessage4>
 <flood_2_objectivesuccessmessage4>你完成了殺戮之後苦澀地注意到，你的收音器完全沉默了。你的同志把你的命運交給了歐羅巴母親。</flood_2_objectivesuccessmessage4>
+
+
+<!-- New Additions as of 13th of August -->
+<connection.batterychargestatusout>charge_out</connection.batterychargestatusout>
+<connection.batterychargepercentage>charge_%</connection.batterychargepercentage>
+<connection.batterysetrechargespeed>set_charge_rate</connection.batterysetrechargespeed>
+<connection.batteryrechargespeedout>charge_rate_out</connection.batteryrechargespeedout>
+<personalitytrait.professional>專業</personalitytrait.professional>
+<personalitytrait.laid-back>安詳</personalitytrait.laid-back>
+<personalitytrait.rude>粗魯</personalitytrait.rude>
+<personalitytrait.tough>強硬</personalitytrait.tough>
+<personalitytrait.joker>小丑</personalitytrait.joker>
+<personalitytrait.brokenenglish>蹩腳英語</personalitytrait.brokenenglish>
+<personalitytrait.fearful>可怕</personalitytrait.fearful>
+<personalitytrait.crazy>瘋狂</personalitytrait.crazy>
+<sabotagebutton>破壞</sabotagebutton>
+<sabotaging>破壞中</sabotaging>
+<voipattenuation>語音聊天衰減</voipattenuation>
+<voipattenuationtooltip>降低玩家說話時的音量。</voipattenuationtooltip>
+<roundsummaryroundhasended>本輪已結束。</roundsummaryroundhasended>
+<clientpermission.karmaimmunity>道德值免疫</clientpermission.karmaimmunity>
+<karmakicked>由於你的道德值降低至[banthreshold]以下，你已被從伺服器踢出。</karmakicked>
+<karma.kicksbeforeban>被禁止前的踢出次數</karma.kicksbeforeban>
+<karma.kicksbeforebantooltip>如果玩家多次由於道德值過低而被踢出伺服器，他們將永久被伺服器禁止加入。如果該值為0，意味著一旦玩家的道德值過低，他將永遠被伺服器禁止加入。</karma.kicksbeforebantooltip>
+<traitorgoalreachdistancefromsub>在本艘潛艇中行駛至[distance]的距離。</traitorgoalreachdistancefromsub>
+<traitorgoalisoptionalinfotext>可選：[infotext]</traitorgoalisoptionalinfotext>
+<traitorgoalwithtimelimitinfotext>[infotext] 在[timelimit]內完成本目標。</traitorgoalwithtimelimitinfotext>
+<traitorgoalwithdurationinfotext>[infotext] 本目標必須以[duration]秒內完成。</traitorgoalwithdurationinfotext>
+<traitorgoalwithcumulativedurationinfotext>[infotext] 本目標必須以總計[duration]秒完成。</traitorgoalwithcumulativedurationinfotext>
+<traitorgoalwaitfortraitorsinfotext>等待 [remaining]/[count] 叛徒完成他們的任務。</traitorgoalwaitfortraitorsinfotext>
+<failed>失敗</failed>
+<pausemenuquitverificationeditor>你確定要返回至主菜單嗎？你所有未保存的進度將丟失。</pausemenuquitverificationeditor>
+<mapentitycategory.decorative>裝飾性</mapentitycategory.decorative>
+<mapentitycategory.wall>牆</mapentitycategory.wall>
+<karma.resetkarmabetweenrounds>重置道德值的輪次間隔</karma.resetkarmabetweenrounds>
+<enablesplashscreen>啟用開頭畫面</enablesplashscreen>
+<restartrequiredgeneric>你需要重啟遊戲才能使這些改動生效。</restartrequiredgeneric>
+<invalidcontentpackage>內容包 '[packagename]' 無法載入。</invalidcontentpackage>
+<xmlfileinvalid>文件 '[filepath]' 並非合法XML文件 ([errormessage])。</xmlfileinvalid>
+<roomname.airlockaccess>氣閘接入</roomname.airlockaccess>
+<roomname.gunnerycompartment>槍炮庫</roomname.gunnerycompartment>
+<roomname.dronecontrol>無人機操控</roomname.dronecontrol>
+<roomname.drone>無人機操控</roomname.drone>
+<roomname.droneballast>無人機配重</roomname.droneballast>
+<subeditorlights>燈光</subeditorlights>
+<subeditorshadowcastinglights>投影燈</subeditorshadowcastinglights>
+<contentpackagemismatchwarninggeneric>本潛艇可能與當前所選的內容包不相容。你確定要選擇這艘潛艇嗎？</contentpackagemismatchwarninggeneric>
+<label.activatedischargecoils>放電線圈</label.activatedischargecoils>
+<label.lights1>燈光 1</label.lights1>
+<label.lights2>燈光 2</label.lights2>
+<label.lights3>燈光 3</label.lights3>
+<label.lights4>燈光 4</label.lights4>
+<label.lights5>燈光 5</label.lights5>
+<label.pumps1>抽水泵 1</label.pumps1>
+<label.pumps2>抽水泵 2</label.pumps2>
+<label.dronecharge>無人機充電</label.dronecharge>
+<label.meltdown>熔毀</label.meltdown>
+<campaignfiletransferinprogress>請等待戰役存儲檔下載完畢。</campaignfiletransferinprogress>
+<openlinkinbrowserprompt>你要用網頁流覽器打開 [link] 連結嗎？</openlinkinbrowserprompt>
+<replacelostshuttles>替換丟失的飛船</replacelostshuttles>
+<replaceshuttles>替換</replaceshuttles>
+<replaceshuttledockingportoccupied>這首丟失的飛船無法被替換，因為當前對接艙口已被佔用。你需要騰出對接艙口才可替換新的飛船。</replaceshuttledockingportoccupied>
+<character.blackmoloch>黑色摩洛克</character.blackmoloch>
+<character.goldenhammerhead>金色錘頭鯊</character.goldenhammerhead>
+<character.hammerheadmatriarch>錘頭鯊女族長</character.hammerheadmatriarch>
+<character.bonetigerthresher>骨虎長尾鯊</character.bonetigerthresher>
+
+<!-- Updated values as of 13th of August -->
+
+
+
+
+
 
 
 </infotexts>
