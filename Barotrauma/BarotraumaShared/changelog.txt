@@ -1,27 +1,4 @@
 ---------------------------------------------------------------------------------------------------------
-v0.9.402.0 (test build)
----------------------------------------------------------------------------------------------------------
-
-TODO: merge this with the 0.9.4.0 changelog for the actual release, many of these are fixes for issues
-that were introduced in v0.9.4.0.
-
-- Improved logging for DXGI_ERROR crashes on startup.
-- Fixed docking interface becoming active on navigation terminals when any of the submarine's docking
-ports are close to another docking port, even if the terminal in question is not wired to that port.
-- Decreased karma regeneration speed.
-- Fixed item properties not being overridden in items pre-placed in submarines when an item is overridden 
-by a mod.
-- More frequent notifications about karma changes.
-- Fixed character syncing being very inaccurate when switching to freecam and spectating a character
-far away from other players.
-- Fixed delay components always having a delay of 0.
-- Removed unnecessary platform that was creating problems in Berilia's electrical room.
-- Fixed AI targets not being updated when the character is dead, causing the characters to be too 
-perceivable/not perceivable enough by monsters.
-- Made level ambient lighting darker.
-- Added "pause" console command (only usable in single player).
-
----------------------------------------------------------------------------------------------------------
 v0.9.4.0
 ---------------------------------------------------------------------------------------------------------
 
@@ -100,10 +77,15 @@ Misc improvements:
 - When rewiring, clicking the right mouse button only removes one node from the wire.
 - Wire nodes are added by left clicking in the sub editor, and can be laid out horizontally/vertically
 by holding shift.
+- Improved logging for DXGI_ERROR crashes on startup.
+- Made level ambient lighting darker.
+- Added "pause" console command (only usable in single player).
 
 Bugfixes:
 - Fixed crashing when the recharge speed of a PowerContainer with no interface (e.g. Alien Generator) is 
 adjusted by a signal or a bot.
+- Fixed docking interface becoming active on navigation terminals when any of the submarine's docking
+ports are close to another docking port, even if the terminal in question is not wired to that port.
 - Fixed an occasional crash when a bot starts retreating away from an enemy immediately after spawning.
 - Fixed clients not creating a download prompt when a sub they don't have is selected by vote.
 - Fixed traitor missions almost always placing the mission-related items inside the same containers.
@@ -150,6 +132,8 @@ the value change in the editing hud).
 - Clients don't display client-side vitality changes in healthbars until the actual vitality is received 
 from the server. Fixes health occasionally dropping and then jumping back up if the client predicts damage 
 incorrectly (e.g. if a melee attack hits client-side but doesn't server-side).
+- Fixed character syncing being very inaccurate when switching to freecam and spectating a character
+far away from other players.
 - Fixed oxygen/fuel tanks attached to a tool being rendered behind the character's legs.
 
 ---------------------------------------------------------------------------------------------------------
