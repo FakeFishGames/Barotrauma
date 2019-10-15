@@ -12,7 +12,7 @@ namespace Barotrauma
             public Character Target { get; private set; }
 
             public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[targetname]", "[poison]" });
-            public override IEnumerable<string> InfoTextValues(Traitor traitor) => base.InfoTextValues(traitor).Concat(new string[] { Target?.Name ?? "(unknown)", TextManager.Get(poisonId) });
+            public override IEnumerable<string> InfoTextValues(Traitor traitor) => base.InfoTextValues(traitor).Concat(new string[] { Target?.Name ?? "(unknown)", poisonName });
 
             private bool isCompleted = false;
             public override bool IsCompleted => isCompleted;
@@ -21,6 +21,7 @@ namespace Barotrauma
 
             private string poisonId;
             private string afflictionId;
+            private string poisonName;
 
             public override void Update(float deltaTime)
             {
@@ -34,6 +35,7 @@ namespace Barotrauma
                 {
                     return false;
                 }
+                poisonName = TextManager.FormatServerMessage(poisonId) ?? poisonId;
                 Target = traitor.Mission.FindKillTarget(traitor.Character, Filter);
                 return Target != null && !Target.IsDead;
             }
