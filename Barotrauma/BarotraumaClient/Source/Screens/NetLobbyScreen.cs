@@ -2643,7 +2643,8 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), parent.RectTransform, Anchor.BottomCenter), jobPrefab.Name, textAlignment: Alignment.Center)
             {
-                CanBeFocused = false
+                CanBeFocused = false,
+                TextColor = jobPrefab.UIColor
             };
 
             return retVal;
