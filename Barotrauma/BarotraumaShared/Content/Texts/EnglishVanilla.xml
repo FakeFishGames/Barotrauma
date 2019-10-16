@@ -3550,6 +3550,8 @@
   <gamemodedescription.sandbox>A game mode with no specific objectives.</gamemodedescription.sandbox>
   <gamemodedescription.mission>The crew must work together to complete a specific task, such as retrieving an alien artifact or killing a creature that's terrorizing nearby outposts. The game ends when the task is completed or everyone in the crew has died.</gamemodedescription.mission>
   <gamemodedescription.multiplayercampaign>Embark on a journey through the depths of Europa. Travel from location to another, complete missions to earn money for supplies, discover new biomes — and perhaps eventually uncover the secrets of Europa.</gamemodedescription.multiplayercampaign>
+  <entityname.mudraptoregg>Mudraptor Egg</entityname.mudraptoregg>
+  <entitydescription.mudraptoregg>A slimy, pulsating mudraptor egg. The gaping maw on top of the egg seems to be grasping for something to eat.</entitydescription.mudraptoregg>
   
   <!-- Server lobby 2.0 -->
   <servertag.casual>Casual</servertag.casual>
