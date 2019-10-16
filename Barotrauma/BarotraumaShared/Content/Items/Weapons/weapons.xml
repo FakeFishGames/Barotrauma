@@ -141,7 +141,7 @@
     <Body width="29" height="10" density="40" />
     <Pickable slots="Any" msg="ItemMsgPickUpSelect" />
     <Projectile characterusable="false" hitscan="true" removeonhit="true">
-      <Attack structuredamage="5" stun="0.5" targetforce="10">
+      <Attack structuredamage="5" stun="0.5" targetforce="10" itemdamage="10">
         <Affliction identifier="gunshotwound" strength="40" />
         <Affliction identifier="internaldamage" strength="30" />
       </Attack>
@@ -184,7 +184,7 @@
     <Body width="40" height="14" density="40" />
     <Pickable slots="Any" msg="ItemMsgPickUpSelect"/>
     <Projectile characterusable="false" hitscan="true" removeonhit="true" spread="8" unskilledspread="15">
-      <Attack structuredamage="2.5" stun="0.125" targetforce="5">
+      <Attack structuredamage="2.5" stun="0.125" targetforce="5" itemdamage="10">
         <Affliction identifier="gunshotwound" strength="15" />
         <Affliction identifier="internaldamage" strength="10" />
       </Attack>
@@ -481,7 +481,7 @@
     <Sprite texture="weapons_new.png" sourcerect="1,407,191,63" depth="0.55" origin="0.4954025,0.7936202" />
     <Body width="170" height="30" density="30" />
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="45,10" handle1="-35,-5" holdangle="45" reload="0.75" range="100" combatPriority="50" msg="ItemMsgPickUpSelect">
-      <Attack stun="0.2" targetimpulse="20">
+      <Attack stun="0.2" targetimpulse="20" itemdamage="1">
         <Sound file="Content/Items/Weapons/Smack1.ogg" range="800" />
         <Affliction identifier="internaldamage" strength="4" />
       </Attack>
@@ -535,7 +535,7 @@
     <Sprite texture="weapons_new.png" sourcerect="296,3,110,28" depth="0.55" origin="0.5,0.5" />
     <Body width="110" height="25" density="50" />
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="50,0" handle1="-5,-5" holdangle="30" reload="0.75" range="50" combatPriority="40" msg="ItemMsgPickUpSelect">
-      <Attack stun="0.2" targetimpulse="10" severlimbsprobability="0.1">
+      <Attack stun="0.2" targetimpulse="10" severlimbsprobability="0.1" itemdamage="10">
         <Affliction identifier="internaldamage" strength="10" />
         <Affliction identifier="bleeding" strength="10" />
         <Sound file="Content/Sounds/Damage/LimbSlash1.ogg" range="500" />
@@ -696,7 +696,7 @@
     <Pickable slots="Any" msg="ItemMsgPickUpSelect"/>
     <!--When fired, spawns 8 projectiles simultaneously.-->
     <Projectile characterusable="false" hitscan="true" hitscancount="8" removeonhit="true" spread="15">
-      <Attack structuredamage="0.5" stun="0.125" targetforce="5">
+      <Attack structuredamage="0.5" stun="0.125" targetforce="5" itemdamage="10">
         <Affliction identifier="gunshotwound" strength="6" />
         <Affliction identifier="internaldamage" strength="5" />
       </Attack>

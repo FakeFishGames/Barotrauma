@@ -1849,7 +1849,7 @@
     growtime="0"
     startcolor="116,59,33,255"
     endcolor="116,59,33,0"
-    drawtarget="Water"
+    drawtarget="Both"
     blendstate="AlphaBlend"
     animduration="1"
     loopanim="True"

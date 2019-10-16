@@ -66,6 +66,7 @@
       <StatusEffect type="OnUse" targettype="UseTarget">
         <Affliction identifier="burn" amount="0.25" />
       </StatusEffect>
+      <StatusEffect type="OnUse" targettype="UseTarget" targettags="damageableitem" Condition="-3.0" />
       <StatusEffect type="OnUse" targettype="Contained" targets="oxygentank" delay="1.0" stackable="false" Condition="-100.0">
         <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" range="5000" />
         <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" range="5000" />
@@ -124,6 +125,7 @@
       <StatusEffect type="OnUse" targettype="Contained" targets="oxygentank" Condition="-1.0" />
       <StatusEffect type="OnUse" targettype="Contained" targets="oxygenitetank" Condition="-0.5" />
       <StatusEffect type="OnUse" targettype="UseTarget" targets="door,ductblock,aliendoor" Stuck="-20.0" Condition="-3.0" />
+      <StatusEffect type="OnUse" targettype="UseTarget" targettags="damageableitem" Condition="-3.0" />
       <StatusEffect type="OnUse" targettype="UseTarget" severlimbsprobability="0.005">        
         <Affliction identifier="burn" amount="0.25" />
       </StatusEffect>
