@@ -3616,6 +3616,7 @@
   <faceattachment.accessories>Accessories</faceattachment.accessories>
   <characterappearance>Appearance</characterappearance>
   <disconnect>Disconnect</disconnect>
+  <endcampaignverification>Are you sure you want to quit the campaign? All your unsaved progress will be lost.</endcampaignverification>
   
   <!-- Modified values -->
   <pausemenuquitverification>Are you sure you want to return to the main menu? All your unsaved progress will be lost.</pausemenuquitverification>

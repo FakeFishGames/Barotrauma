@@ -1534,13 +1534,31 @@ namespace Barotrauma
                 {
                     if (GameMain.Client.HasPermission(ClientPermissions.SelectMode))
                     {
-                        GameMain.Client.RequestSelectMode(component.Parent.GetChildIndex(component));
                         string presetName = ((GameModePreset)(component.UserData)).Identifier;
+
+                        //display a verification prompt when switching away from the campaign
+                        if ((GameMain.NetLobbyScreen.ModeList.SelectedData as GameModePreset)?.Identifier == "multiplayercampaign" &&
+                            presetName != "multiplayercampaign")
+                        {
+                            var verificationBox = new GUIMessageBox("", TextManager.Get("endcampaignverification"), new string[] { TextManager.Get("yes"), TextManager.Get("no") });
+                            verificationBox.Buttons[0].OnClicked += (btn, userdata) =>
+                            {
+                                GameMain.Client.RequestSelectMode(component.Parent.GetChildIndex(component));
+                                verificationBox.Close(btn, userdata);
+                                return true;
+                            };
+                            verificationBox.Buttons[1].OnClicked = verificationBox.Close;
+                            return false;
+                        }
+                        GameMain.Client.RequestSelectMode(component.Parent.GetChildIndex(component));
                         return (presetName.ToLowerInvariant() != "multiplayercampaign");
                     }
                     return false;
                 }
-                else if (!((GameModePreset)userData).Votable) return false;
+                else if (!((GameModePreset)userData).Votable)
+                {
+                    return false;
+                }
 
                 voteType = VoteType.Mode;
             }
