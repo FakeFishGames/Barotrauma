@@ -87,20 +87,24 @@ namespace Barotrauma
             }
         }
 
-        class CharacterSpawnInfo
+        class CharacterSpawnInfo : ISerializableEntity
         {
-            public readonly string SpeciesName;
+            public string Name => $"Character Spawn Info ({SpeciesName})";
+            public Dictionary<string, SerializableProperty> SerializableProperties { get; set; }
+
+            [Serialize("", false)]
+            public string SpeciesName { get; private set; }
+            [Serialize(1, false)]
+            public int Count { get; private set; }
+            [Serialize(0f, false)]
+            public float Spread { get; private set; }
 
             public CharacterSpawnInfo(XElement element, string parentDebugName)
             {
-                string speciesName = 
-                    element.GetAttributeString("species", null) ?? 
-                    element.GetAttributeString("speciesname", "") ?? 
-                    element.GetAttributeString("identifier", "");
-
-                if (string.IsNullOrEmpty(speciesName))
+                SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+                if (string.IsNullOrEmpty(SpeciesName))
                 {
-                    DebugConsole.ThrowError("Invalid character spawn in StatusEffect \"" + parentDebugName + "\" - identifier not found in the element \"" + element.ToString() + "\"");
+                    DebugConsole.ThrowError($"Invalid character spawn ({Name}) in StatusEffect \"{parentDebugName}\" - identifier not found in the element \"{element.ToString()}\"");
                 }
             }
         }
@@ -720,7 +724,6 @@ namespace Barotrauma
                         GameMain.Server.KarmaManager.OnCharacterHealthChanged(targetCharacter, user, prevVitality - targetCharacter.Vitality);
 #endif
                     }
-
                 }
             }
 
@@ -735,7 +738,10 @@ namespace Barotrauma
             {
                 foreach (CharacterSpawnInfo characterSpawnInfo in spawnCharacters)
                 {
-                    Entity.Spawner.AddToSpawnQueue(characterSpawnInfo.SpeciesName, entity.WorldPosition);
+                    for (int i = 0; i < characterSpawnInfo.Count; i++)
+                    {
+                        Entity.Spawner.AddToSpawnQueue(characterSpawnInfo.SpeciesName, position + Rand.Vector(characterSpawnInfo.Spread, Rand.RandSync.Server));
+                    }
                 }
                 foreach (ItemSpawnInfo itemSpawnInfo in spawnItems)
                 {
