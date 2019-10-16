@@ -136,8 +136,7 @@ namespace Barotrauma
             get;
             private set;
         }
-
-
+        
         public GUITextBox ServerMessage
         {
             get;
@@ -604,7 +603,18 @@ namespace Barotrauma
                 RelativeSpacing = 0.025f
             };
 
-            var serverMessageContainer = new GUIListBox(new RectTransform(Vector2.One, lobbyContent.RectTransform));
+            GUILayoutGroup serverInfoHolder = new GUILayoutGroup(new RectTransform(Vector2.One, lobbyContent.RectTransform))
+            {
+                Stretch = true,
+                RelativeSpacing = 0.025f
+            };
+
+            new GUICustomComponent(new RectTransform(new Vector2(1.0f, 0.25f), serverInfoHolder.RectTransform), DrawServerBanner)
+            {
+                HideElementsOutsideFrame = true
+            };
+
+            var serverMessageContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.75f), serverInfoHolder.RectTransform));
             ServerMessage = new GUITextBox(new RectTransform(Vector2.One, serverMessageContainer.Content.RectTransform))
             {
                 Wrap = true
@@ -2113,11 +2123,24 @@ namespace Barotrauma
             GUI.DrawBackgroundSprite(spriteBatch, backgroundSprite);
 
             spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
-
-            //campaignUI?.MapContainer.draw(spriteBatch);
             
             GUI.Draw(Cam, spriteBatch);
             spriteBatch.End();
+        }
+
+
+        private void DrawServerBanner(SpriteBatch spriteBatch, GUICustomComponent component)
+        {
+            if (GameMain.NetworkMember?.ServerSettings == null) { return; }
+            if ((int)GameMain.NetworkMember.ServerSettings.PlayStyle < 0 || 
+                (int)GameMain.NetworkMember.ServerSettings.PlayStyle >= GameMain.ServerListScreen.PlayStyleBanners.Length)
+            {
+                return;
+            }
+
+            Sprite sprite = GameMain.ServerListScreen.PlayStyleBanners[(int)GameMain.NetworkMember.ServerSettings.PlayStyle];
+            float scale = component.Rect.Width / sprite.size.X;
+            sprite.Draw(spriteBatch, component.Center, scale: scale);
         }
 
         public void NewChatMessage(ChatMessage message)
