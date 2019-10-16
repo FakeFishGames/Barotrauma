@@ -1835,7 +1835,7 @@
     rotatetodirection="False"
     drag="0"
     waterdrag="0.3"
-    velocitychange="0,-1"
+    velocitychange="0,-9.8"
     velocitychangewater="0,-1"
     collisionradius="10"
     usecollision="True"
