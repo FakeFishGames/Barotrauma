@@ -128,13 +128,14 @@
     <attack targettype="Structure" priority="1" range="150" damagerange="150" cooldown="15" secondarycooldown="1" afterattack="FallBack" structuredamage="45" force="10" targetimpulse="500" structuresoundtype="StructureBlunt" applyforceonlimbs="0, 3" context="NotDefined" hitdetectiontype="Distance" itemdamage="45" stun="0" onlyhumans="False" torque="0" applyforcesonlyonce="False" targetimpulseworld="0,0" targetforce="0" targetforceworld="0,0" severlimbsprobability="0" stickchance="0" duration="0.1" cooldownrandomfactor="0.1" reverse="False" targetlimbtype="None">
       <Affliction identifier="internaldamage" strength="25" probability="1" />
       <Affliction identifier="stun" strength="2" probability="1" />
-      <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true">
+      <StatusEffect type="OnUse" target="This" disabledeltatime="true">
         <!--TODO: die-->
         <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" range="1000" selectionmode="All" />
         <sound file="Content/Items/Weapons/Emp.ogg" range="1000" />
         <Explosion range="500" force="10" smoke="false" sparks="false" shockwave="true" underwaterbubble="true" camerashake="12">
           <Affliction identifier="stun" strength="1" />
         </Explosion>
+        <SpawnCharacter speciesname="crawler" count="3" spread="5" />
       </StatusEffect>
     </attack>
   </limb>
