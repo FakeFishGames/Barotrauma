@@ -3602,4 +3602,14 @@
   <signaltrouble_traitorobjectivestartmessage3>You'll need a screwdriver. Signals are labeled 'force_in' and 'set_targetlevel' on engines and pumps respectively.</signaltrouble_traitorobjectivestartmessage3>
   <signaltrouble_objectivesuccessmessage3>Let's see how long it takes before anyone finds the issue.</signaltrouble_objectivesuccessmessage3>
 
+  <!--Placeholder text for acidparty traitor mission-->
+  <acidparty_traitormissionstartinfotext>Lorem ipsum</acidparty_traitormissionstartinfotext>
+  <acidparty_traitorobjectivestartmessage1>Lorem ipsum</acidparty_traitorobjectivestartmessage1>
+  <acidparty_objectivesuccessmessage1>Lorem ipsum</acidparty_objectivesuccessmessage1>
+  <acidparty_traitorobjectivestartmessage2>Lorem ipsum</acidparty_traitorobjectivestartmessage2>
+  <acidparty_objectivesuccessmessage2>Lorem ipsum</acidparty_objectivesuccessmessage2>
+  <acidparty_traitorobjectivestartmessage3>Lorem ipsum</acidparty_traitorobjectivestartmessage3>
+  <acidparty_objectivesuccessmessage3>Lorem ipsum</acidparty_objectivesuccessmessage3>
+
+
 </infotexts>
