@@ -426,16 +426,13 @@ namespace Barotrauma
             showChatButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.25f), LogButtons.RectTransform),
                TextManager.Get("Chat"), style: "GUITabButton")
             {
+                Selected = true,
                 OnClicked = (GUIButton button, object userData) =>
                 {
-                    if (socialHolder != null)
-                    {
-                        socialHolder.Visible = true;
-                    }
-                    if (serverLogHolder != null)
-                    {
-                        serverLogHolder.Visible = false;
-                    }
+                    if (socialHolder != null) { socialHolder.Visible = true; }
+                    if (serverLogHolder != null) { serverLogHolder.Visible = false; }
+                    showChatButton.Selected = true;
+                    showLogButton.Selected = false;
                     return true;
                 }
             };
@@ -446,15 +443,14 @@ namespace Barotrauma
             {
                 OnClicked = (GUIButton button, object userData) =>
                 {
-                    if (socialHolder != null)
-                    {
-                        socialHolder.Visible = false;
-                    }
+                    if (socialHolder != null) { socialHolder.Visible = false; }
                     if (!(serverLogHolder?.Visible ?? true))
                     {
                         serverLogHolder.Visible = true;
                         GameMain.Client.ServerSettings.ServerLog.AssignLogFrame(serverLogBox, serverLogFilterTicks.Content, serverLogFilter);
                     }
+                    showChatButton.Selected = false;
+                    showLogButton.Selected = true;
                     return true;
                 }
             };
