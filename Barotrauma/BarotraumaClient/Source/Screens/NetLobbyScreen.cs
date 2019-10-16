@@ -2913,7 +2913,28 @@ namespace Barotrauma
                 lastUpdateID++;
             }*/
         }
-                
+
+        public void TryDisplayCampaignSubmarine(string name)
+        {
+            subList.OnSelected -= VotableClicked;
+            subList.Deselect();
+            subPreviewContainer.ClearChildren();
+            foreach (GUIComponent child in subList.Content.Children)
+            {
+                Submarine sub = child.UserData as Submarine;
+                if (sub == null) { continue; }
+                //just check the name, even though the campaign sub may not be the exact same version
+                //we're selecting the sub just for show, the selection is not actually used for anything
+                if (sub.Name == name)
+                {
+                    subList.Select(sub);
+                    sub.CreatePreviewWindow(subPreviewContainer);
+                    break;
+                }
+            }
+            subList.OnSelected += VotableClicked;
+        }
+
         private bool ViewJobInfo(GUIButton button, object obj)
         {
             JobPrefab jobPrefab = button.UserData as JobPrefab;

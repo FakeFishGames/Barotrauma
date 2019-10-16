@@ -1893,9 +1893,12 @@ namespace Barotrauma.Networking
                         string subPath = Path.Combine(SaveUtil.TempPath, gameSessionDoc.Root.GetAttributeString("submarine", "")) + ".sub";
                         GameMain.GameSession.Submarine = new Submarine(subPath, "");
                     }
-
                     SaveUtil.LoadGame(GameMain.GameSession.SavePath, GameMain.GameSession);
                     GameMain.GameSession?.Submarine?.CheckSubsLeftBehind();
+                    if (GameMain.GameSession?.Submarine?.Name != null)
+                    {
+                        GameMain.NetLobbyScreen.TryDisplayCampaignSubmarine(GameMain.GameSession.Submarine.Name);
+                    }
                     campaign.LastSaveID = campaign.PendingSaveID;
 
                     DebugConsole.Log("Campaign save received, save ID " + campaign.LastSaveID);
