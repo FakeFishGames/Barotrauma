@@ -111,6 +111,11 @@ namespace Barotrauma
             RectTransform.ClearChildren();
         }
 
+        public void SetAsFirstChild()
+        {
+            RectTransform.SetAsFirstChild();
+        }
+
         public void SetAsLastChild()
         {
             RectTransform.SetAsLastChild();

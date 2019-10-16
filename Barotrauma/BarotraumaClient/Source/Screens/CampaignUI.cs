@@ -179,19 +179,15 @@ namespace Barotrauma
                 UserData = "outerglow",
                 CanBeFocused = false
             };
-
-            List<MapEntityCategory> itemCategories = Enum.GetValues(typeof(MapEntityCategory)).Cast<MapEntityCategory>().ToList();
-            //don't show categories with no buyable items
-            itemCategories.RemoveAll(c =>
-                !MapEntityPrefab.List.Any(ep => ep.Category.HasFlag(c) && (ep is ItemPrefab) && ((ItemPrefab)ep).CanBeBought));
-
+            
             var storeContent = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), tabs[(int)Tab.Store].RectTransform, Anchor.Center))
             {
+                UserData = "content",
                 Stretch = true,
-                RelativeSpacing = 0.02f
+                RelativeSpacing = 0.015f
             };
 
-            var storeContentTop = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), storeContent.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
+            var storeContentTop = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), storeContent.RectTransform) { MinSize = new Point(0, (int)(30 * GUI.Scale)) }, isHorizontal: true, childAnchor: Anchor.CenterLeft)
             {
                 Stretch = true
             };
@@ -200,7 +196,7 @@ namespace Barotrauma
             {
                 TextGetter = GetMoney
             };
-            var filterContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 0.4f), storeContentTop.RectTransform), isHorizontal: true)
+            var filterContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 0.4f), storeContentTop.RectTransform) { MinSize = new Point(0, (int)(25 * GUI.Scale)) }, isHorizontal: true)
             {
                 Stretch = true
             };
@@ -217,6 +213,7 @@ namespace Barotrauma
 
             var storeItemLists = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.8f), storeContent.RectTransform), isHorizontal: true)
             {
+                RelativeSpacing = 0.03f,
                 Stretch = true
             };
             myItemList = new GUIListBox(new RectTransform(new Vector2(0.5f, 1.0f), storeItemLists.RectTransform));
@@ -229,6 +226,11 @@ namespace Barotrauma
             {
                 RelativeSpacing = 0.02f
             };
+
+            List<MapEntityCategory> itemCategories = Enum.GetValues(typeof(MapEntityCategory)).Cast<MapEntityCategory>().ToList();
+            //don't show categories with no buyable items
+            itemCategories.RemoveAll(c =>
+                !MapEntityPrefab.List.Any(ep => ep.Category.HasFlag(c) && (ep is ItemPrefab) && ((ItemPrefab)ep).CanBeBought));
             foreach (MapEntityCategory category in itemCategories)
             {
                 var categoryButton = new GUIButton(new RectTransform(new Point(categoryButtonContainer.Rect.Width), categoryButtonContainer.RectTransform),
@@ -501,14 +503,28 @@ namespace Barotrauma
         }
         public void SetMenuPanelParent(RectTransform parent)
         {
-            foreach (GUIFrame panel in tabs)
+            for (int i = 0; i < tabs.Length; i++)
             {
+                var panel = tabs[i];
                 if (panel == null) { continue; }
                 panel.RectTransform.Parent = parent;
                 panel.RectTransform.RelativeOffset = Vector2.Zero;
                 panel.RectTransform.RelativeSize = Vector2.One;
                 var outerGlow = panel.GetChildByUserData("outerglow");
                 if (outerGlow != null) { outerGlow.Visible = false; }
+
+                if (i == (int)Tab.Store)
+                {
+                    panel.RectTransform.RelativeSize *= new Vector2(1.5f, 1.0f);
+                    panel.RectTransform.SetPosition(Anchor.TopRight);
+                    var content = panel.GetChildByUserData("content");
+                    if (content != null) { content.RectTransform.RelativeSize = Vector2.One; }
+                    new GUIFrame(new RectTransform(new Vector2(1.107f, 1.0f), panel.RectTransform, Anchor.TopRight), style: null)
+                    {
+                        Color = Color.Black,
+                        CanBeFocused = false
+                    }.SetAsFirstChild();
+                }
             }
         }
 
@@ -636,8 +652,12 @@ namespace Barotrauma
         public void SelectLocation(Location location, LocationConnection connection)
         {
             selectedLocationInfo.ClearChildren();
-            SelectTab(Tab.Map);
-            missionPanel.Visible = location != null;
+            //don't select the map panel if the tabs are displayed in the same place as the map, and we're looking at some other tab
+            if (missionPanel.RectTransform.Parent != tabs[(int)Tab.Crew].RectTransform.Parent || selectedTab == Tab.Map)
+            {
+                SelectTab(Tab.Map);
+                missionPanel.Visible = location != null;
+            }
             
             if (location == null) { return; }
             

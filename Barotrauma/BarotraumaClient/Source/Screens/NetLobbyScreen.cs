@@ -336,7 +336,7 @@ namespace Barotrauma
                 RelativeSpacing = panelSpacing
             };
             
-            GUILayoutGroup panelHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.6f, 1.0f), panelContainer.RectTransform))
+            GUILayoutGroup panelHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 1.0f), panelContainer.RectTransform))
             {
                 Stretch = true
             };
@@ -386,7 +386,7 @@ namespace Barotrauma
 
             // Sidebar area (Character customization/Chat)
 
-            GUILayoutGroup sideBar = new GUILayoutGroup(new RectTransform(new Vector2(0.4f, 1.0f), panelContainer.RectTransform, maxSize: new Point(650, panelContainer.RectTransform.Rect.Height)))
+            GUILayoutGroup sideBar = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 1.0f), panelContainer.RectTransform, maxSize: new Point(650, panelContainer.RectTransform.Rect.Height)))
             {
                 Stretch = true
             };
@@ -2841,11 +2841,6 @@ namespace Barotrauma
                     CampaignUI.SetMenuPanelParent(campaignMenuContainer.RectTransform);
                     CampaignUI.SetMissionPanelParent(campaignMenuContainer.RectTransform);
                     GameMain.GameSession.Map.CenterOffset = new Vector2(-campaignContainer.Rect.Width / 5, 0);
-
-                    var restartText = new GUITextBlock(new RectTransform(new Vector2(0.25f, 0.1f), campaignContainer.RectTransform, Anchor.BottomRight), "", font: GUI.SmallFont)
-                    {
-                        TextGetter = AutoRestartText
-                    };
                 }
                 modeList.Select(2, true);
             }

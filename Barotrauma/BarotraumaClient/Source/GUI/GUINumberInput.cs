@@ -147,11 +147,11 @@ namespace Barotrauma
             };
             TextBox.OnTextChanged += TextChanged;
             var buttonArea = new GUIFrame(new RectTransform(new Vector2(_relativeButtonAreaWidth, 1.0f), LayoutGroup.RectTransform, Anchor.CenterRight), style: null);
-            if (!relativeButtonAreaWidth.HasValue)
+            /*if (!relativeButtonAreaWidth.HasValue)
             {
                 // Not sure what's the point of this
                 buttonArea.RectTransform.MinSize = new Point(Rect.Height, 0);
-            }
+            }*/
             PlusButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.5f), buttonArea.RectTransform), "+");
             PlusButton.OnButtonDown += () =>
             {
