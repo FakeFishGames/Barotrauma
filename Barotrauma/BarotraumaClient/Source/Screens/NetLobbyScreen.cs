@@ -609,9 +609,14 @@ namespace Barotrauma
                 RelativeSpacing = 0.025f
             };
 
-            new GUICustomComponent(new RectTransform(new Vector2(1.0f, 0.25f), serverInfoHolder.RectTransform), DrawServerBanner)
+            var serverBanner = new GUICustomComponent(new RectTransform(new Vector2(1.0f, 0.25f), serverInfoHolder.RectTransform), DrawServerBanner)
             {
                 HideElementsOutsideFrame = true
+            };
+            new GUITextBlock(new RectTransform(new Vector2(0.15f, 0.05f), serverBanner.RectTransform) { RelativeOffset = new Vector2(0.01f, 0.04f) },
+                "", font: GUI.SmallFont, textAlignment: Alignment.Center, textColor: Color.White, style: "GUISlopedHeader")
+            {
+                CanBeFocused = false
             };
 
             var serverMessageContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.75f), serverInfoHolder.RectTransform));
@@ -2129,18 +2134,32 @@ namespace Barotrauma
         }
 
 
+        private PlayStyle prevPlayStyle;
         private void DrawServerBanner(SpriteBatch spriteBatch, GUICustomComponent component)
         {
             if (GameMain.NetworkMember?.ServerSettings == null) { return; }
-            if ((int)GameMain.NetworkMember.ServerSettings.PlayStyle < 0 || 
-                (int)GameMain.NetworkMember.ServerSettings.PlayStyle >= GameMain.ServerListScreen.PlayStyleBanners.Length)
+
+            PlayStyle playStyle = GameMain.NetworkMember.ServerSettings.PlayStyle;
+            if ((int)playStyle < 0 || 
+                (int)playStyle >= GameMain.ServerListScreen.PlayStyleBanners.Length)
             {
                 return;
             }
 
-            Sprite sprite = GameMain.ServerListScreen.PlayStyleBanners[(int)GameMain.NetworkMember.ServerSettings.PlayStyle];
+            Sprite sprite = GameMain.ServerListScreen.PlayStyleBanners[(int)playStyle];
             float scale = component.Rect.Width / sprite.size.X;
             sprite.Draw(spriteBatch, component.Center, scale: scale);
+
+            if (playStyle != prevPlayStyle)
+            {
+                var nameText = component.GetChild<GUITextBlock>();
+                nameText.Text = TextManager.AddPunctuation(':', TextManager.Get("serverplaystyle"), TextManager.Get("servertag." + playStyle));
+                nameText.Color = GameMain.ServerListScreen.PlayStyleColors[(int)playStyle];
+                nameText.RectTransform.NonScaledSize = (nameText.Font.MeasureString(nameText.Text) + new Vector2(25, 10) * GUI.Scale).ToPoint();
+                prevPlayStyle = playStyle;
+
+                component.ToolTip = TextManager.Get("servertagdescription." + playStyle);
+            }
         }
 
         public void NewChatMessage(ChatMessage message)
