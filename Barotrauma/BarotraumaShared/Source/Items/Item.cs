@@ -588,8 +588,14 @@ namespace Barotrauma
                 {
                     case "body":
                         body = new PhysicsBody(subElement, ConvertUnits.ToSimUnits(Position), Scale);
+                        string collisionCategory = subElement.GetAttributeString("collisioncategory", null);
+                        if (Physics.TryParseCollisionCategory(collisionCategory, out Category cat))
+                        {
+                            body.CollisionCategories = cat;
+                        }
                         body.FarseerBody.AngularDamping = 0.2f;
-                        body.FarseerBody.LinearDamping  = 0.1f;
+                        body.FarseerBody.LinearDamping = 0.1f;
+                        body.UserData = this;
                         break;
                     case "trigger":
                     case "inventoryicon":
