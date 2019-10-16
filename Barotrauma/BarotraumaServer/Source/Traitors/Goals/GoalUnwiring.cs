@@ -65,7 +65,7 @@ namespace Barotrauma
                     for (int j = 0; j < targetConnectionPanels[i].Connections.Count; j++)
                     {
                         if (targetConnectionPanels[i].Connections[j] == null || targetConnectionPanels[i].Connections[j].Wires == null) continue;
-                        if (targetConnectionName != null)
+                        if (targetConnectionName != string.Empty)
                         {
                             if (targetConnectionPanels[i].Connections[j].Name != targetConnectionName) continue;
                         }
@@ -80,8 +80,16 @@ namespace Barotrauma
             {
                 this.tag = tag;
                 this.targetConnectionName = targetConnectionName;
-                targetConnectionDisplayName = TextManager.FormatServerMessage(targetConnectionDisplayTag);
-                InfoTextId = "TraitorGoalUnwireInfo";
+
+                if (targetConnectionDisplayTag != string.Empty)
+                {
+                    targetConnectionDisplayName = TextManager.FormatServerMessage(targetConnectionDisplayTag);
+                    InfoTextId = "TraitorGoalUnwireInfo";
+                }
+                else
+                {
+                    InfoTextId = "TraitorGoalUnwireAllInfo";
+                }
             }
         }
     }
