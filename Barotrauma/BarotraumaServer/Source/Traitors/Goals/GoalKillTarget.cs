@@ -11,8 +11,9 @@ namespace Barotrauma
             public TraitorMission.CharacterFilter Filter { get; private set; }
             public Character Target { get; private set; }
 
-            public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[targetname]" });
-            public override IEnumerable<string> InfoTextValues(Traitor traitor) => base.InfoTextValues(traitor).Concat(new string[] { Target?.Name ?? "(unknown)" });
+            public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[targetname]", "[causeofdeath]", "[roomname]" });
+            public override IEnumerable<string> InfoTextValues(Traitor traitor) => base.InfoTextValues(traitor).Concat(new string[] 
+            { Target?.Name ?? "(unknown)", GetCauseOfDeath(), TextManager.Get($"roomname.{requiredRoom}") });
 
             private bool isCompleted = false;
             public override bool IsCompleted => isCompleted;
@@ -20,8 +21,8 @@ namespace Barotrauma
             public override bool IsEnemy(Character character) => base.IsEnemy(character) || (!isCompleted && character == Target);
 
             private CauseOfDeathType requiredCauseOfDeath;
-            private string afflictionId = string.Empty;
-            private string requiredRoom = string.Empty;
+            private string afflictionId;
+            private string requiredRoom;
 
             public override void Update(float deltaTime)
             {
@@ -34,31 +35,61 @@ namespace Barotrauma
                 if (Target == null || !Target.IsDead || Target.CauseOfDeath == null) return false;
 
                 bool typeMatch = false;
-                switch (Target.CauseOfDeath.Type)
+
+                // No specified cause of death required
+                if (requiredCauseOfDeath == CauseOfDeathType.Unknown)
                 {
-                    case CauseOfDeathType.Unknown:
-                        typeMatch = requiredCauseOfDeath == CauseOfDeathType.Unknown;
-                        break;
-                    case CauseOfDeathType.Pressure:
-                    case CauseOfDeathType.Suffocation:
-                    case CauseOfDeathType.Drowning:
-                        typeMatch = requiredCauseOfDeath == Target.CauseOfDeath.Type || requiredCauseOfDeath == CauseOfDeathType.Unknown;
-                        break;
-                    case CauseOfDeathType.Affliction:
-                        typeMatch = Target.CauseOfDeath.Type == requiredCauseOfDeath && Target.CauseOfDeath.Affliction.Identifier == afflictionId || requiredCauseOfDeath == CauseOfDeathType.Unknown;
-                        break;
-                    case CauseOfDeathType.Disconnected:
-                        typeMatch = false;
-                        break;
+                    typeMatch = true;
+                }
+                else
+                {
+                    switch (Target.CauseOfDeath.Type)
+                    {
+                        // If a cause of death is labeled as unknown, side with the traitor and accept this regardless of the required type
+                        case CauseOfDeathType.Unknown:
+                            typeMatch = true;
+                            break;
+                        case CauseOfDeathType.Pressure:
+                        case CauseOfDeathType.Suffocation:
+                        case CauseOfDeathType.Drowning:
+                            typeMatch = requiredCauseOfDeath == Target.CauseOfDeath.Type;
+                            break;
+                        case CauseOfDeathType.Affliction:
+                            typeMatch = Target.CauseOfDeath.Type == requiredCauseOfDeath && Target.CauseOfDeath.Affliction.Identifier == afflictionId;
+                            break;
+                        case CauseOfDeathType.Disconnected:
+                            typeMatch = false;
+                            break;
+                    }
                 }
 
                 if (requiredRoom != string.Empty)
                 {
-                    return typeMatch && Target.CurrentHull.RoomName == requiredRoom;
+                    if (Target.CurrentHull != null)
+                    {
+                        return typeMatch && Target.CurrentHull.RoomName == requiredRoom || Target.CurrentHull.RoomName.Contains(requiredRoom);
+                    }
+                    else
+                    {
+                        // Outside the submarine, not supported for now
+                        return false;
+                    }
                 }
                 else
                 {
                     return typeMatch;
+                }
+            }
+
+            private string GetCauseOfDeath()
+            {
+                if (requiredCauseOfDeath != CauseOfDeathType.Affliction || afflictionId == string.Empty)
+                {
+                    return requiredCauseOfDeath.ToString().ToLower();
+                }
+                else
+                {
+                    return TextManager.Get($"afflictionname.{afflictionId}").ToLower();
                 }
             }
 
@@ -74,11 +105,27 @@ namespace Barotrauma
 
             public GoalKillTarget(TraitorMission.CharacterFilter filter, CauseOfDeathType requiredCauseOfDeath, string afflictionId, string requiredRoom) : base()
             {
-                InfoTextId = "TraitorGoalKillTargetInfo";
+                Filter = filter;
                 this.requiredCauseOfDeath = requiredCauseOfDeath;
                 this.afflictionId = afflictionId;
                 this.requiredRoom = requiredRoom;
-                Filter = filter;
+
+                if (this.requiredCauseOfDeath == CauseOfDeathType.Unknown && this.requiredRoom == string.Empty)
+                {
+                    InfoTextId = "TraitorGoalKillTargetInfo";
+                }
+                else if (this.requiredCauseOfDeath != CauseOfDeathType.Unknown && this.requiredRoom == string.Empty)
+                {
+                    InfoTextId = "TraitorGoalKillTargetInfoWithCause";
+                }
+                else if (this.requiredCauseOfDeath == CauseOfDeathType.Unknown && this.requiredRoom != string.Empty)
+                {
+                    InfoTextId = "TraitorGoalKillTargetInfoWithRoom";
+                }
+                else if (this.requiredCauseOfDeath != CauseOfDeathType.Unknown && this.requiredRoom != string.Empty)
+                {
+                    InfoTextId = "TraitorGoalKillTargetInfoWithCauseAndRoom";
+                }
             }
         }
     }

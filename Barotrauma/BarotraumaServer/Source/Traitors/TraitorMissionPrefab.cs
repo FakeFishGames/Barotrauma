@@ -113,7 +113,7 @@ namespace Barotrauma
                         case "killtarget":
                         {
                             checker.Optional(targetFilters.Keys.ToArray());
-                            checker.Optional("deathtype");
+                            checker.Optional("causeofdeath");
                             checker.Optional("affliction");
                             checker.Optional("roomname");
                             List<Traitor.TraitorMission.CharacterFilter> killFilters = new List<Traitor.TraitorMission.CharacterFilter>();
@@ -125,8 +125,8 @@ namespace Barotrauma
                                 }
                             }
                             goal = new Traitor.GoalKillTarget((character) => killFilters.All(f => f(character)), 
-                                (CauseOfDeathType)Enum.Parse(typeof(CauseOfDeathType), Config.GetAttributeString("deathtype", "Unknown")),
-                                Config.GetAttributeString("affliction", string.Empty), Config.GetAttributeString("roomname", string.Empty));
+                                (CauseOfDeathType)Enum.Parse(typeof(CauseOfDeathType), Config.GetAttributeString("causeofdeath", "Unknown"), true),
+                                Config.GetAttributeString("affliction", null), Config.GetAttributeString("roomname", null));
                             break;
                         }
                         case "destroyitems":
