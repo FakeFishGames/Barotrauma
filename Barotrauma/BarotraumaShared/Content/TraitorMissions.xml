@@ -419,4 +419,50 @@
     </Objective>
 
   </TraitorMission>-->
+  <TraitorMission identifier="acidparty">
+
+    <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+
+    <StartInfoText id="acidparty_traitormissionStartInfoText"/>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="acidparty_objectiveSuccessMessage1"/>
+      <StartMessage id="acidparty_traitorobjectivestartmessage1"/>
+      <Goal type="finditem" identifier="deliriumine" preferNew="false" allowNew="true" allowExisting="true" allowedContainers="suppliescabinet,mediumsteelcabinet,steelcabinet">
+        <InfoText id="traitorgoalfinditeminfo"/>
+      </Goal>
+    </Objective>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="acidparty_objectiveSuccessMessage2"/>
+      <StartMessage id="acidparty_traitorobjectivestartmessage2"/>
+      <Goal type="destroyitems" percentage="100" tag="antipsychosis">
+        <InfoText id="traitorgoaldestroyitems" />
+      </Goal>
+      <Goal type="destroyitems" percentage="100" tag="deliriumineantidote">
+        <InfoText id="traitorgoaldestroyitems" />
+      </Goal>
+    </Objective>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="acidparty_objectiveSuccessMessage3"/>
+      <StartMessage id="acidparty_traitorobjectivestartmessage3"/>
+      <Goal type="injectpoison" poison="deliriumine" affliction="psychosis">        
+        <InfoText id="traitorgoalkilltargetinfo"/>
+      </Goal>
+    </Objective>
+
+    <!--<Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="acidparty_objectiveSuccessMessage4" />
+      <StartMessage id="acidparty_traitorobjectivestartmessage4"/>
+      <Goal type="killtarget">
+        <InfoText id="traitorgoalkilleveryoneinfo" />
+      </Goal>
+    </Objective>-->
+
+  </TraitorMission>
 </TraitorMissions>

@@ -193,7 +193,8 @@ namespace Barotrauma
                         case "unwire":
                             checker.Required("tag");
                             checker.Optional("connectionname");
-                            goal = new Traitor.GoalUnwiring(Config.GetAttributeString("tag", null), Config.GetAttributeString("connectionname", null));
+                            checker.Optional("connectiondisplayname");
+                            goal = new Traitor.GoalUnwiring(Config.GetAttributeString("tag", null), Config.GetAttributeString("connectionname", null), Config.GetAttributeString("connectiondisplayname)", null));
                             break;
                         default:
                             GameServer.Log($"Unrecognized goal type \"{goalType}\".", ServerLog.MessageType.Error);

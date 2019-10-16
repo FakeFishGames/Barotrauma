@@ -11,15 +11,16 @@ namespace Barotrauma
         {
             private readonly string tag;
 
-            public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[tag]", "[connection]" });
-            public override IEnumerable<string> InfoTextValues(Traitor traitor) => base.InfoTextValues(traitor).Concat(new string[] { tag ?? "", targetItemPrefabName ?? "", targetConnectionName });
+            public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[targetname]", "[connectionname]" });
+            public override IEnumerable<string> InfoTextValues(Traitor traitor) => base.InfoTextValues(traitor).Concat(new string[] { targetItemPrefabName ?? "", targetConnectionDisplayName ?? targetConnectionName });
 
             private bool isCompleted = false;
             public override bool IsCompleted => isCompleted;
 
             private readonly List<ConnectionPanel> targetConnectionPanels = new List<ConnectionPanel>();
-            private string targetItemPrefabName = null;
-            private string targetConnectionName = null;
+            private string targetItemPrefabName;
+            private string targetConnectionName;
+            private string targetConnectionDisplayName;
 
             public override bool Start(Traitor traitor)
             {
@@ -48,7 +49,6 @@ namespace Barotrauma
                     targetItemPrefabName = TextManager.FormatServerMessage(textId) ?? targetConnectionPanels[0].Item.Prefab.Name;
                 }
 
-
                 return targetConnectionPanels.Count > 0;
             }
 
@@ -62,24 +62,34 @@ namespace Barotrauma
             {
                 for (int i = 0; i < targetConnectionPanels.Count; i++)
                 {
-                    for (int j = 0; j < targetConnectionPanels[i].Connections.Count; i++)
+                    for (int j = 0; j < targetConnectionPanels[i].Connections.Count; j++)
                     {
-                        if (targetConnectionName != null)
+                        if (targetConnectionPanels[i].Connections[j] == null || targetConnectionPanels[i].Connections[j].Wires == null) continue;
+                        if (targetConnectionName != string.Empty)
                         {
                             if (targetConnectionPanels[i].Connections[j].Name != targetConnectionName) continue;
                         }
-                        if (targetConnectionPanels[i].Connections[j].Wires.Count() > 0) return false;
+                        if (!targetConnectionPanels[i].Connections[j].Wires.All(w => w == null)) return false;
                     }
                 }
 
                 return true;
             }
 
-            public GoalUnwiring(string tag, string targetConnectionName) : base()
+            public GoalUnwiring(string tag, string targetConnectionName, string targetConnectionDisplayTag) : base()
             {
                 this.tag = tag;
                 this.targetConnectionName = targetConnectionName;
-                InfoTextId = "TraitorGoalUnwireInfo";
+
+                if (targetConnectionDisplayTag != string.Empty)
+                {
+                    targetConnectionDisplayName = TextManager.FormatServerMessage(targetConnectionDisplayTag);
+                    InfoTextId = "TraitorGoalUnwireInfo";
+                }
+                else
+                {
+                    InfoTextId = "TraitorGoalUnwireAllInfo";
+                }
             }
         }
     }
