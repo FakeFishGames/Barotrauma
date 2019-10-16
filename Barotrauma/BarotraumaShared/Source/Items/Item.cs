@@ -59,6 +59,8 @@ namespace Barotrauma
 
         public readonly XElement StaticBodyConfig;
 
+        private bool transformDirty = true;
+
         private float lastSentCondition;
         private float sendConditionUpdateTimer;
         private bool conditionUpdatePending;
@@ -578,7 +580,7 @@ namespace Barotrauma
 
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
 
-            if (submarine == null || !submarine.Loading) FindHull();
+            if (submarine == null || !submarine.Loading) { FindHull(); }
 
             SetActiveSprite();
 
@@ -1224,7 +1226,7 @@ namespace Barotrauma
             {
                 System.Diagnostics.Debug.Assert(body.FarseerBody.FixtureList != null);
 
-                if (Math.Abs(body.LinearVelocity.X) > 0.01f || Math.Abs(body.LinearVelocity.Y) > 0.01f)
+                if (Math.Abs(body.LinearVelocity.X) > 0.01f || Math.Abs(body.LinearVelocity.Y) > 0.01f || transformDirty)
                 {
                     UpdateTransform();
                     if (CurrentHull == null && body.SimPosition.Y < ConvertUnits.ToSimUnits(Level.MaxEntityDepth))
@@ -1261,6 +1263,8 @@ namespace Barotrauma
                 
         public void UpdateTransform()
         {
+            if (body == null) { return; }
+
             Submarine prevSub = Submarine;
 
             FindHull();
@@ -1289,6 +1293,8 @@ namespace Barotrauma
                     MathHelper.Clamp(body.LinearVelocity.X, -NetConfig.MaxPhysicsBodyVelocity, NetConfig.MaxPhysicsBodyVelocity),
                     MathHelper.Clamp(body.LinearVelocity.Y, -NetConfig.MaxPhysicsBodyVelocity, NetConfig.MaxPhysicsBodyVelocity));
             }
+
+            transformDirty = false;
         }
 
         /// <summary>
