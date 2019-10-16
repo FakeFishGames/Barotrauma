@@ -883,6 +883,61 @@ namespace Barotrauma
             PerformanceCounter.DrawTimeGraph.Update(sw.ElapsedTicks / (float)TimeSpan.TicksPerMillisecond);
         }
 
+
+        public static void QuitToMainMenu(bool save, bool showVerificationPrompt)
+        {
+            if (showVerificationPrompt)
+            {
+                string text = (Screen.Selected is CharacterEditor.CharacterEditorScreen || Screen.Selected is SubEditorScreen) ? "PauseMenuQuitVerificationEditor" : "PauseMenuQuitVerification";
+                var msgBox = new GUIMessageBox("", TextManager.Get(text), new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") })
+                {
+                    UserData = "verificationprompt"
+                };
+                msgBox.Buttons[0].OnClicked = (yesBtn, userdata) =>
+                {
+                    QuitToMainMenu(save);
+                    return true;
+                };
+                msgBox.Buttons[0].OnClicked += msgBox.Close;
+                msgBox.Buttons[1].OnClicked += msgBox.Close;
+            }
+
+        }
+
+        public static void QuitToMainMenu(bool save)
+        {
+            if (save)
+            {
+                SaveUtil.SaveGame(GameMain.GameSession.SavePath);
+            }
+
+            if (GameMain.Client != null)
+            {
+                GameMain.Client.Disconnect();
+                GameMain.Client = null;
+            }
+
+            CoroutineManager.StopCoroutines("EndCinematic");
+
+            if (GameMain.GameSession != null)
+            {
+                if (Tutorial.Initialized)
+                {
+                    ((TutorialMode)GameMain.GameSession.GameMode).Tutorial?.Stop();
+                }
+
+                if (GameSettings.SendUserStatistics)
+                {
+                    Mission mission = GameMain.GameSession.Mission;
+                    GameAnalyticsManager.AddDesignEvent("QuitRound:" + (save ? "Save" : "NoSave"));
+                    GameAnalyticsManager.AddDesignEvent("EndRound:" + (mission == null ? "NoMission" : (mission.Completed ? "MissionCompleted" : "MissionFailed")));
+                }
+                GameMain.GameSession = null;
+            }
+            GUIMessageBox.CloseAll();
+            GameMain.MainMenuScreen.Select();
+        }
+
         public void ShowCampaignDisclaimer(Action onContinue = null)
         {
             var msgBox = new GUIMessageBox(TextManager.Get("CampaignDisclaimerTitle"), TextManager.Get("CampaignDisclaimerText"),

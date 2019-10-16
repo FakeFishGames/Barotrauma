@@ -382,7 +382,10 @@ namespace Barotrauma
                 Visible = false
             };
 
-            GUIButton DisconnectButton = new GUIButton(new RectTransform(new Vector2(0.15f, 0.0518f), panelHolder.RectTransform), TextManager.Get("disconnect"), style: "GUIButtonLarge");
+            new GUIButton(new RectTransform(new Vector2(0.15f, 0.0518f), panelHolder.RectTransform), TextManager.Get("disconnect"), style: "GUIButtonLarge")
+            {
+                OnClicked = (bt, userdata) => { GameMain.QuitToMainMenu(save: false, showVerificationPrompt: true); return true; }
+            };
 
             // Sidebar area (Character customization/Chat)
 

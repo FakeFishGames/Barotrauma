@@ -89,7 +89,6 @@
   <pausemenuretry>Retry</pausemenuretry>
   <pausemenusavequit>Save and Quit</pausemenusavequit>
   <pausemenuquit>Main Menu</pausemenuquit>
-  <pausemenuquitverification>Are you sure you want to quit the game? All your unsaved progress will be lost.</pausemenuquitverification>
   <pausemenuretryverification>Are you sure you want to stop the mission and load the previous save file? All your unsaved progress will be lost.</pausemenuretryverification>
 
   <!-- Host server menu -->
@@ -3618,4 +3617,7 @@
   <characterappearance>Appearance</characterappearance>
   <disconnect>Disconnect</disconnect>
   
+  <!-- Modified values -->
+  <pausemenuquitverification>Are you sure you want to return to the main menu? All your unsaved progress will be lost.</pausemenuquitverification>
+
 </infotexts>

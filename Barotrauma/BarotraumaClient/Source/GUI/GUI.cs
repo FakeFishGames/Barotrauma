@@ -1667,42 +1667,9 @@ namespace Barotrauma
             return true;
         }
 
-        private static bool QuitClicked(GUIButton button, object obj)
+        public static bool QuitClicked(GUIButton button, object obj)
         {
-            bool save = button.UserData as string == "save";
-            if (save)
-            {
-                SaveUtil.SaveGame(GameMain.GameSession.SavePath);
-            }
-
-            if (GameMain.Client != null)
-            {
-                GameMain.Client.Disconnect();
-                GameMain.Client = null;
-            }
-
-            CoroutineManager.StopCoroutines("EndCinematic");
-            
-            if (GameMain.GameSession != null)
-            {
-                if (Tutorial.Initialized)
-                {
-                    ((TutorialMode)GameMain.GameSession.GameMode).Tutorial.Stop();
-                }
-
-                if (GameSettings.SendUserStatistics)
-                {
-                    Mission mission = GameMain.GameSession.Mission;
-                    GameAnalyticsManager.AddDesignEvent("QuitRound:" + (save ? "Save" : "NoSave"));
-                    GameAnalyticsManager.AddDesignEvent("EndRound:" + (mission == null ? "NoMission" : (mission.Completed ? "MissionCompleted" : "MissionFailed")));
-                }
-                GameMain.GameSession = null;
-            }
-
-            GUIMessageBox.CloseAll();
-            
-            GameMain.MainMenuScreen.Select();
-
+            GameMain.QuitToMainMenu(button.UserData as string == "save");
             return true;
         }
 
