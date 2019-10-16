@@ -31,10 +31,14 @@ namespace Barotrauma
 
         private GUIFrame characterPreviewFrame;
 
+        private bool displayMissionPanelInMapTab;
+
         private List<GUIButton> tabButtons = new List<GUIButton>();
         private List<GUIButton> itemCategoryButtons = new List<GUIButton>();
         private GUIRadioButtonGroup missionRadioButtonGroup = new GUIRadioButtonGroup();
         private List<GUITickBox> missionTickBoxes = new List<GUITickBox>();
+
+        private Location selectedLocation;
 
         public Action StartRound;
         public Action<Location, LocationConnection> OnLocationSelected;
@@ -469,6 +473,11 @@ namespace Barotrauma
             {
                 Visible = false
             };
+            new GUIFrame(new RectTransform(new Vector2(1.25f, 1.25f), selectedMissionInfo.RectTransform, Anchor.Center), style: "OuterGlow", color: Color.Black * 0.9f)
+            {
+                UserData = "outerglow",
+                CanBeFocused = false
+            };
 
             // -------------------------------------------------------------------------
 
@@ -500,6 +509,11 @@ namespace Barotrauma
             if (outerGlow != null) { outerGlow.Visible = false; }
             var label = missionPanel.GetChildByUserData("missionlabel");
             if (label != null) { label.Visible = false; }
+
+            displayMissionPanelInMapTab = true;
+
+            selectedMissionInfo.RectTransform.RelativeOffset = Vector2.Zero;
+            selectedMissionInfo.RectTransform.SetPosition(Anchor.BottomLeft, Pivot.BottomRight);
         }
         public void SetMenuPanelParent(RectTransform parent)
         {
@@ -653,12 +667,13 @@ namespace Barotrauma
         {
             selectedLocationInfo.ClearChildren();
             //don't select the map panel if the tabs are displayed in the same place as the map, and we're looking at some other tab
-            if (missionPanel.RectTransform.Parent != tabs[(int)Tab.Crew].RectTransform.Parent || selectedTab == Tab.Map)
+            if (!displayMissionPanelInMapTab || selectedTab == Tab.Map)
             {
                 SelectTab(Tab.Map);
                 missionPanel.Visible = location != null;
             }
-            
+
+            selectedLocation = location;
             if (location == null) { return; }
             
             var container = selectedLocationInfo;
@@ -957,11 +972,8 @@ namespace Barotrauma
                     tabs[i].Visible = (int)selectedTab == i;
                 }
             }
-
-            if (tabs[(int)Tab.Crew].Parent == missionPanel.Parent)
-            {
-                missionPanel.Visible = tab == Tab.Map;
-            }
+            
+            missionPanel.Visible = tab == Tab.Map && selectedLocation != null;            
 
             foreach (GUIButton button in tabButtons)
             {

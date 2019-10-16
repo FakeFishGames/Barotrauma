@@ -324,6 +324,15 @@ namespace Barotrauma
         public override void AddToGUIUpdateList(bool ignoreChildren = false, int order = 0)
         {
             if (!Visible) { return; }
+
+            if (!ignoreChildren)
+            {
+                foreach (GUIComponent child in Children)
+                {
+                    if (child == Content || child == ScrollBar) { continue; }
+                    child.AddToGUIUpdateList(ignoreChildren, order);
+                }       
+            }
             
             foreach (GUIComponent child in Content.Children)
             {
