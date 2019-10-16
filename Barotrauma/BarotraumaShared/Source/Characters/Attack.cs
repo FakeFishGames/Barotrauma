@@ -384,23 +384,24 @@ namespace Barotrauma
 
             foreach (StatusEffect effect in statusEffects)
             {
+                // TODO: do we want to apply the effect at the world position or the entity positions in each cases? -> go through also other cases where status effects are applied
                 if (effect.HasTargetType(StatusEffect.TargetType.This))
                 {
-                    effect.Apply(effectType, deltaTime, attacker, attacker);
+                    effect.Apply(effectType, deltaTime, attacker, attacker, worldPosition);
                 }
-                if (target is Character)
+                if (targetCharacter != null)
                 {
                     if (effect.HasTargetType(StatusEffect.TargetType.Character))
                     {
-                        effect.Apply(effectType, deltaTime, (Character)target, (Character)target);
+                        effect.Apply(effectType, deltaTime, targetCharacter, targetCharacter);
                     }
                     if (effect.HasTargetType(StatusEffect.TargetType.Limb))
                     {
-                        effect.Apply(effectType, deltaTime, (Character)target, attackResult.HitLimb);
+                        effect.Apply(effectType, deltaTime, targetCharacter, attackResult.HitLimb);
                     }                    
                     if (effect.HasTargetType(StatusEffect.TargetType.AllLimbs))
                     {
-                        effect.Apply(effectType, deltaTime, (Character)target, ((Character)target).AnimController.Limbs.Cast<ISerializableEntity>().ToList());
+                        effect.Apply(effectType, deltaTime, targetCharacter, targetCharacter.AnimController.Limbs.Cast<ISerializableEntity>().ToList());
                     }
                 }
                 if (target is Entity entity)

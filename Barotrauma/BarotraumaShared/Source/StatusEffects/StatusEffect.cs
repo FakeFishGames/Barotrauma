@@ -503,7 +503,7 @@ namespace Barotrauma
             }
         }
 
-        public virtual void Apply(ActionType type, float deltaTime, Entity entity, ISerializableEntity target)
+        public virtual void Apply(ActionType type, float deltaTime, Entity entity, ISerializableEntity target, Vector2? worldPosition = null)
         {
             if (this.type != type || !HasRequiredItems(entity)) return;
 
@@ -525,11 +525,11 @@ namespace Barotrauma
 
             if (!HasRequiredConditions(targets)) return;
 
-            Apply(deltaTime, entity, targets);
+            Apply(deltaTime, entity, targets, worldPosition);
         }
 
         protected readonly List<ISerializableEntity> currentTargets = new List<ISerializableEntity>();
-        public virtual void Apply(ActionType type, float deltaTime, Entity entity, IEnumerable<ISerializableEntity> targets)
+        public virtual void Apply(ActionType type, float deltaTime, Entity entity, IEnumerable<ISerializableEntity> targets, Vector2? worldPosition = null)
         {
             if (this.type != type) return;
 
@@ -560,10 +560,10 @@ namespace Barotrauma
                 }
             }
 
-            Apply(deltaTime, entity, currentTargets);
+            Apply(deltaTime, entity, currentTargets, worldPosition);
         }
 
-        protected void Apply(float deltaTime, Entity entity, List<ISerializableEntity> targets)
+        protected void Apply(float deltaTime, Entity entity, List<ISerializableEntity> targets, Vector2? worldPosition = null)
         {
             Hull hull = null;
             if (entity is Character)
@@ -575,9 +575,11 @@ namespace Barotrauma
                 hull = ((Item)entity).CurrentHull;
             }
 
+            Vector2 position = worldPosition ?? entity.WorldPosition;
+
             foreach (ISerializableEntity serializableEntity in targets)
             {
-                if (!(serializableEntity is Item item)) continue;
+                if (!(serializableEntity is Item item)) { continue; }
 
                 Character targetCharacter = targets.FirstOrDefault(t => t is Character character && !character.Removed) as Character;
                 if (targetCharacter == null)
@@ -633,7 +635,10 @@ namespace Barotrauma
                 }                
             }
 
-            if (explosion != null && entity != null) { explosion.Explode(entity.WorldPosition, damageSource: entity, attacker: user); }
+            if (explosion != null && entity != null)
+            {
+                explosion.Explode(position, damageSource: entity, attacker: user);
+            }
 
             foreach (ISerializableEntity target in targets)
             {
@@ -648,7 +653,7 @@ namespace Barotrauma
                         character.LastDamageSource = entity;
                         foreach (Limb limb in character.AnimController.Limbs)
                         {
-                            limb.character.DamageLimb(entity.WorldPosition, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source);
+                            limb.character.DamageLimb(position, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source);
                             //only apply non-limb-specific afflictions to the first limb
                             if (!affliction.Prefab.LimbSpecific) { break; }
                         }
@@ -656,7 +661,7 @@ namespace Barotrauma
                     else if (target is Limb limb)
                     {
                         if (limb.character.Removed) { continue; }
-                        limb.character.DamageLimb(entity.WorldPosition, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source);
+                        limb.character.DamageLimb(position, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source);
                     }
                 }
 
@@ -688,7 +693,7 @@ namespace Barotrauma
 
             if (FireSize > 0.0f && entity != null)
             {
-                var fire = new FireSource(entity.WorldPosition, hull);
+                var fire = new FireSource(position, hull);
                 fire.Size = new Vector2(FireSize, fire.Size.Y);
             }
             
@@ -700,7 +705,7 @@ namespace Barotrauma
                     switch (itemSpawnInfo.SpawnPosition)
                     {
                         case ItemSpawnInfo.SpawnPositionType.This:
-                            Entity.Spawner.AddToSpawnQueue(itemSpawnInfo.ItemPrefab, entity.WorldPosition);
+                            Entity.Spawner.AddToSpawnQueue(itemSpawnInfo.ItemPrefab, position);
                             break;
                         case ItemSpawnInfo.SpawnPositionType.ThisInventory:
                             { 
@@ -749,10 +754,10 @@ namespace Barotrauma
                 }
             }
 
-            ApplyProjSpecific(deltaTime, entity, targets, hull);
+            ApplyProjSpecific(deltaTime, entity, targets, hull, position);
         }
 
-        partial void ApplyProjSpecific(float deltaTime, Entity entity, List<ISerializableEntity> targets, Hull currentHull);
+        partial void ApplyProjSpecific(float deltaTime, Entity entity, List<ISerializableEntity> targets, Hull currentHull, Vector2 worldPosition);
 
         private void ApplyToProperty(ISerializableEntity target, SerializableProperty property, object value, float deltaTime)
         {
