@@ -9,20 +9,22 @@ namespace Barotrauma
         public sealed class GoalKillTarget : Goal
         {
             public TraitorMission.CharacterFilter Filter { get; private set; }
-            public Character Target { get; private set; }
+            public List<Character> Targets { get; private set; }
 
             public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[targetname]", "[causeofdeath]", "[roomname]" });
             public override IEnumerable<string> InfoTextValues(Traitor traitor) => base.InfoTextValues(traitor).Concat(new string[] 
-            { Target?.Name ?? "(unknown)", GetCauseOfDeath(), TextManager.Get($"roomname.{requiredRoom}") });
+            { traitor.Mission.GetTargetNames(Targets) ?? "(unknown)", GetCauseOfDeath(), TextManager.Get($"roomname.{requiredRoom}") });
 
             private bool isCompleted = false;
             public override bool IsCompleted => isCompleted;
 
-            public override bool IsEnemy(Character character) => base.IsEnemy(character) || (!isCompleted && character == Target);
+            public override bool IsEnemy(Character character) => base.IsEnemy(character) || (!isCompleted && Targets.Contains(character));
 
             private CauseOfDeathType requiredCauseOfDeath;
             private string afflictionId;
             private string requiredRoom;
+            private int targetCount;
+            private float targetPercentage;
 
             public override void Update(float deltaTime)
             {
@@ -32,53 +34,72 @@ namespace Barotrauma
 
             private bool DoesDeathMatchCriteria()
             {
-                if (Target == null || !Target.IsDead || Target.CauseOfDeath == null) return false;
+                if (Targets == null || Targets.Any(t => !t.IsDead) || Targets.Any(t => t.CauseOfDeath == null)) return false;
 
                 bool typeMatch = false;
 
-                // No specified cause of death required
-                if (requiredCauseOfDeath == CauseOfDeathType.Unknown)
+                for (int i = 0; i < Targets.Count; i++)
                 {
-                    typeMatch = true;
-                }
-                else
-                {
-                    switch (Target.CauseOfDeath.Type)
+                    // No specified cause of death required
+                    if (requiredCauseOfDeath == CauseOfDeathType.Unknown)
                     {
-                        // If a cause of death is labeled as unknown, side with the traitor and accept this regardless of the required type
-                        case CauseOfDeathType.Unknown:
-                            typeMatch = true;
-                            break;
-                        case CauseOfDeathType.Pressure:
-                        case CauseOfDeathType.Suffocation:
-                        case CauseOfDeathType.Drowning:
-                            typeMatch = requiredCauseOfDeath == Target.CauseOfDeath.Type;
-                            break;
-                        case CauseOfDeathType.Affliction:
-                            typeMatch = Target.CauseOfDeath.Type == requiredCauseOfDeath && Target.CauseOfDeath.Affliction.Identifier == afflictionId;
-                            break;
-                        case CauseOfDeathType.Disconnected:
-                            typeMatch = false;
-                            break;
-                    }
-                }
-
-                if (requiredRoom != string.Empty)
-                {
-                    if (Target.CurrentHull != null)
-                    {
-                        return typeMatch && Target.CurrentHull.RoomName == requiredRoom || Target.CurrentHull.RoomName.Contains(requiredRoom);
+                        typeMatch = true;
                     }
                     else
                     {
-                        // Outside the submarine, not supported for now
-                        return false;
+                        switch (Targets[i].CauseOfDeath.Type)
+                        {
+                            // If a cause of death is labeled as unknown, side with the traitor and accept this regardless of the required type
+                            case CauseOfDeathType.Unknown:
+                                typeMatch = true;
+                                break;
+                            case CauseOfDeathType.Pressure:
+                            case CauseOfDeathType.Suffocation:
+                            case CauseOfDeathType.Drowning:
+                                typeMatch = requiredCauseOfDeath == Targets[i].CauseOfDeath.Type;
+                                break;
+                            case CauseOfDeathType.Affliction:
+                                typeMatch = Targets[i].CauseOfDeath.Type == requiredCauseOfDeath && Targets[i].CauseOfDeath.Affliction.Identifier == afflictionId;
+                                break;
+                            case CauseOfDeathType.Disconnected:
+                                typeMatch = false;
+                                break;
+                        }
+                    }
+
+                    if (requiredRoom != string.Empty)
+                    {
+                        if (Targets[i].CurrentHull != null)
+                        {
+                            if (typeMatch && Targets[i].CurrentHull.RoomName == requiredRoom || Targets[i].CurrentHull.RoomName.Contains(requiredRoom))
+                            {
+                                continue;
+                            }
+                            else
+                            {
+                                return false;
+                            }
+                        }
+                        else
+                        {
+                            // Outside the submarine, not supported for now
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        if (typeMatch)
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            return false;
+                        }
                     }
                 }
-                else
-                {
-                    return typeMatch;
-                }
+
+                return true;
             }
 
             private string GetCauseOfDeath()
@@ -99,16 +120,19 @@ namespace Barotrauma
                 {
                     return false;
                 }
-                Target = traitor.Mission.FindKillTarget(traitor.Character, Filter);
-                return Target != null && !Target.IsDead;
+
+                Targets = traitor.Mission.FindKillTarget(traitor.Character, Filter, targetCount, targetPercentage);
+                return Targets != null && !Targets.All(t => t.IsDead);
             }
 
-            public GoalKillTarget(TraitorMission.CharacterFilter filter, CauseOfDeathType requiredCauseOfDeath, string afflictionId, string requiredRoom) : base()
+            public GoalKillTarget(TraitorMission.CharacterFilter filter, CauseOfDeathType requiredCauseOfDeath, string afflictionId, string requiredRoom, int targetCount, float targetPercentage) : base()
             {
                 Filter = filter;
                 this.requiredCauseOfDeath = requiredCauseOfDeath;
                 this.afflictionId = afflictionId;
                 this.requiredRoom = requiredRoom;
+                this.targetCount = targetCount;
+                this.targetPercentage = targetPercentage;
 
                 if (this.requiredCauseOfDeath == CauseOfDeathType.Unknown && this.requiredRoom == string.Empty)
                 {

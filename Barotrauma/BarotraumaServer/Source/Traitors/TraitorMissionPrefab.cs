@@ -116,6 +116,8 @@ namespace Barotrauma
                             checker.Optional("causeofdeath");
                             checker.Optional("affliction");
                             checker.Optional("roomname");
+                            checker.Optional("targetcount");
+                            checker.Optional("targetpercentage");
                             List<Traitor.TraitorMission.CharacterFilter> killFilters = new List<Traitor.TraitorMission.CharacterFilter>();
                             foreach (var attribute in Config.Attributes())
                             {
@@ -126,7 +128,8 @@ namespace Barotrauma
                             }
                             goal = new Traitor.GoalKillTarget((character) => killFilters.All(f => f(character)), 
                                 (CauseOfDeathType)Enum.Parse(typeof(CauseOfDeathType), Config.GetAttributeString("causeofdeath", "Unknown"), true),
-                                Config.GetAttributeString("affliction", null), Config.GetAttributeString("roomname", null));
+                                Config.GetAttributeString("affliction", null), Config.GetAttributeString("roomname", null), Config.GetAttributeInt("targetcount", -1), 
+                                Config.GetAttributeFloat("targetpercentage", -1f));
                             break;
                         }
                         case "destroyitems":
@@ -174,11 +177,10 @@ namespace Barotrauma
                             checker.Optional("distance");
                             goal = new Traitor.GoalReachDistanceFromSub(Config.GetAttributeFloat("distance", 10000.0f));
                             break;
-
                         case "injectpoison":
-                            checker.Required("poison");
-                            checker.Required("affliction");
                             checker.Optional(targetFilters.Keys.ToArray());
+                            checker.Required("poison");
+                            checker.Required("affliction");  
                             List<Traitor.TraitorMission.CharacterFilter> poisonFilters = new List<Traitor.TraitorMission.CharacterFilter>();
                             foreach (var attribute in Config.Attributes())
                             {
@@ -187,9 +189,9 @@ namespace Barotrauma
                                     poisonFilters.Add((character) => filter(attribute.Value, character));
                                 }
                             }
-                            goal = new Traitor.GoalInjectTarget((character) => poisonFilters.All(f => f(character)), Config.GetAttributeString("poison", null), Config.GetAttributeString("affliction", null));
+                            goal = new Traitor.GoalInjectTarget((character) => poisonFilters.All(f => f(character)), Config.GetAttributeString("poison", null), 
+                                Config.GetAttributeString("affliction", null), Config.GetAttributeInt("targetcount", -1), Config.GetAttributeFloat("targetpercentage", -1f));
                             break;
-
                         case "unwire":
                             checker.Required("tag");
                             checker.Optional("connectionname");
