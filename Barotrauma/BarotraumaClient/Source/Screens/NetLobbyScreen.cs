@@ -370,7 +370,11 @@ namespace Barotrauma
 
             //server game panel ------------------------------------------------------------
 
-            modeFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.5f), panelHolder.RectTransform));
+            modeFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.5f), panelHolder.RectTransform))
+            {
+                CanBeFocused = false
+            };
+
             gameModeContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), modeFrame.RectTransform, Anchor.Center))
             {
                 Stretch = true
@@ -457,7 +461,10 @@ namespace Barotrauma
                 }
             };
 
-            GUIFrame logHolderBottom = new GUIFrame(new RectTransform(Vector2.One, logHolder.RectTransform), style: null);
+            GUIFrame logHolderBottom = new GUIFrame(new RectTransform(Vector2.One, logHolder.RectTransform), style: null)
+            {
+                CanBeFocused = false
+            };
 
             socialHolder = new GUILayoutGroup(new RectTransform(Vector2.One, logHolderBottom.RectTransform, Anchor.Center))
             {
@@ -465,7 +472,10 @@ namespace Barotrauma
             };
 
             // Spacing
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), socialHolder.RectTransform), style: null);
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), socialHolder.RectTransform), style: null)
+            {
+                CanBeFocused = false
+            };
 
             GUILayoutGroup socialHolderHorizontal = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.9f), socialHolder.RectTransform), isHorizontal: true)
             {
@@ -484,7 +494,10 @@ namespace Barotrauma
             };
 
             // Spacing
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), socialHolder.RectTransform), style: null);
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), socialHolder.RectTransform), style: null)
+            {
+                CanBeFocused = false
+            };
 
             // Chat input
 
@@ -509,7 +522,10 @@ namespace Barotrauma
             };
 
             // Spacing
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), serverLogHolder.RectTransform), style: null);
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), serverLogHolder.RectTransform), style: null)
+            {
+                CanBeFocused = false
+            };
 
             GUILayoutGroup serverLogHolderHorizontal = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.9f), serverLogHolder.RectTransform), isHorizontal: true)
             {
@@ -528,7 +544,10 @@ namespace Barotrauma
             };
 
             // Spacing
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), serverLogHolder.RectTransform), style: null);
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), serverLogHolder.RectTransform), style: null)
+            {
+                CanBeFocused = false
+            };
 
             // Filter text input
 
