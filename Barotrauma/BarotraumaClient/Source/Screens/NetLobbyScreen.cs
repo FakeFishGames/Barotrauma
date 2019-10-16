@@ -2134,7 +2134,7 @@ namespace Barotrauma
         }
 
 
-        private PlayStyle prevPlayStyle;
+        private PlayStyle? prevPlayStyle = null;
         private void DrawServerBanner(SpriteBatch spriteBatch, GUICustomComponent component)
         {
             if (GameMain.NetworkMember?.ServerSettings == null) { return; }
@@ -2150,10 +2150,10 @@ namespace Barotrauma
             float scale = component.Rect.Width / sprite.size.X;
             sprite.Draw(spriteBatch, component.Center, scale: scale);
 
-            if (playStyle != prevPlayStyle)
+            if (!prevPlayStyle.HasValue || playStyle != prevPlayStyle.Value)
             {
                 var nameText = component.GetChild<GUITextBlock>();
-                nameText.Text = TextManager.AddPunctuation(':', TextManager.Get("serverplaystyle"), TextManager.Get("servertag." + playStyle));
+                nameText.Text = TextManager.Get("servertag." + playStyle);
                 nameText.Color = GameMain.ServerListScreen.PlayStyleColors[(int)playStyle];
                 nameText.RectTransform.NonScaledSize = (nameText.Font.MeasureString(nameText.Text) + new Vector2(25, 10) * GUI.Scale).ToPoint();
                 prevPlayStyle = playStyle;
