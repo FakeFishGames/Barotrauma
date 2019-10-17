@@ -800,7 +800,7 @@ namespace Barotrauma
 
                     DebugConsole.AddToGUIUpdateList();
 
-                    DebugConsole.Update(this, (float)Timing.Step);
+                    DebugConsole.Update((float)Timing.Step);
                     paused = paused || (DebugConsole.IsOpen && (NetworkMember == null || !NetworkMember.GameStarted));
 
                     if (!paused)

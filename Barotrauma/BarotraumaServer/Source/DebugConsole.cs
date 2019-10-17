@@ -197,7 +197,20 @@ namespace Barotrauma
                                 }
                                 break;
                             default:
-                                if (key.KeyChar != 0)
+                                if (key.Modifiers.HasFlag(ConsoleModifiers.Control))
+                                {
+                                    if (key.Key == ConsoleKey.Z)
+                                    {
+                                        activeQuestionCallback = null;
+                                        NewMessage("^Z");
+                                    }
+                                    else if (key.Key == ConsoleKey.D)
+                                    {
+                                        activeQuestionCallback = null;
+                                        NewMessage("^D");
+                                    }
+                                }
+                                else if (key.KeyChar != 0)
                                 {
                                     input += key.KeyChar;
                                     memoryIndex = -1;
@@ -759,10 +772,12 @@ namespace Barotrauma
             {
                 if (GameMain.Server == null || args.Length == 0) return;
 
-                ShowQuestionPrompt("Reason for banning the endpoint \"" + args[0] + "\"?", (reason) =>
+                ShowQuestionPrompt("Reason for banning the endpoint \"" + args[0] + "\"? (c to cancel)", (reason) =>
                 {
-                    ShowQuestionPrompt("Enter the duration of the ban (leave empty to ban permanently, or use the format \"[days] d [hours] h\")", (duration) =>
+                    if (reason == "c" || reason == "C") { return; }
+                    ShowQuestionPrompt("Enter the duration of the ban (leave empty to ban permanently, or use the format \"[days] d [hours] h\") (c to cancel)", (duration) =>
                     {
+                        if (duration == "c" || duration == "C") { return; }
                         TimeSpan? banDuration = null;
                         if (!string.IsNullOrWhiteSpace(duration))
                         {
