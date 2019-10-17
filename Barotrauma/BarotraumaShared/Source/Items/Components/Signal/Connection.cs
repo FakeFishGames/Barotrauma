@@ -245,31 +245,38 @@ namespace Barotrauma.Items.Components
         {
             for (int i = 0; i < MaxLinked; i++)
             {
-                if (wires[i] == null) continue;
+                if (wires[i] == null) { continue; }
 
                 Connection recipient = wires[i].OtherConnection(this);
-                if (recipient == null) continue;
-                if (recipient.item == this.item || recipient.item == source) continue;
+                if (recipient == null) { continue; }
+                if (recipient.item == this.item || recipient.item == source) { continue; }
 
-                if (source != null && !source.LastSentSignalRecipients.Contains(recipient.item))
-                {
-                    source.LastSentSignalRecipients.Add(recipient.item);
-                }
+                source?.LastSentSignalRecipients.Add(recipient.item);
 
                 foreach (ItemComponent ic in recipient.item.Components)
                 {
                     ic.ReceiveSignal(stepsTaken, signal, recipient, source, sender, power, signalStrength);
                 }
 
-                bool broken = recipient.Item.Condition <= 0.0f;
                 foreach (StatusEffect effect in recipient.Effects)
                 {
-                    if (broken && effect.type != ActionType.OnBroken) continue;
                     recipient.Item.ApplyStatusEffect(effect, ActionType.OnUse, (float)Timing.Step, null, null, false, false);
                 }
             }
         }
 
+        public void SendPowerProbeSignal(Item source, float power)
+        {
+            for (int i = 0; i < MaxLinked; i++)
+            {
+                if (wires[i] == null) { continue; }
+
+                Connection recipient = wires[i].OtherConnection(this);
+                if (recipient == null) { continue; }
+
+                recipient.item.GetComponent<Powered>()?.ReceivePowerProbeSignal(recipient, source, power);
+            }
+        }
         public void ClearConnections()
         {
             for (int i = 0; i < MaxLinked; i++)

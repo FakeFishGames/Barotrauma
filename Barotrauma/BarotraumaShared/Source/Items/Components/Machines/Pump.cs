@@ -76,7 +76,7 @@ namespace Barotrauma.Items.Components
             //pumps consume more power when in a bad condition
             currPowerConsumption *= MathHelper.Lerp(2.0f, 1.0f, item.Condition / item.MaxCondition);
 
-            if (voltage < minVoltage) { return; }
+            if (Voltage < minVoltage) { return; }
 
             UpdateProjSpecific(deltaTime);
 
@@ -86,7 +86,7 @@ namespace Barotrauma.Items.Components
 
             if (item.CurrentHull == null) { return; }      
 
-            float powerFactor = currPowerConsumption <= 0.0f ? 1.0f : voltage;
+            float powerFactor = currPowerConsumption <= 0.0f ? 1.0f : Voltage;
 
             currFlow = flowPercentage / 100.0f * maxFlow * powerFactor;
             //less effective when in a bad condition
@@ -94,8 +94,6 @@ namespace Barotrauma.Items.Components
 
             item.CurrentHull.WaterVolume += currFlow;
             if (item.CurrentHull.WaterVolume > item.CurrentHull.Volume) { item.CurrentHull.Pressure += 0.5f; }
-
-            voltage -= deltaTime;
         }
 
         partial void UpdateProjSpecific(float deltaTime);

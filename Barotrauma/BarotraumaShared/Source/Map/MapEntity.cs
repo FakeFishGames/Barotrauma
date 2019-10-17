@@ -344,6 +344,7 @@ namespace Barotrauma
                 structure.Update(deltaTime, cam);
             }
 
+
             //update gaps in random order, because otherwise in rooms with multiple gaps 
             //the water/air will always tend to flow through the first gap in the list,
             //which may lead to weird behavior like water draining down only through
@@ -353,6 +354,7 @@ namespace Barotrauma
                 gap.Update(deltaTime, cam);
             }
 
+            Powered.UpdatePower(deltaTime);
             foreach (Item item in Item.ItemList)
             {
                 item.Update(deltaTime, cam);

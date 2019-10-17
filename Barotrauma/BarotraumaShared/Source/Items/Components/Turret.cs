@@ -192,6 +192,7 @@ namespace Barotrauma.Items.Components
 
         public override void OnItemLoaded()
         {
+            base.OnItemLoaded();
             var lightComponents = item.GetComponents<LightComponent>();
             if (lightComponents != null && lightComponents.Count() > 0)
             {
@@ -325,20 +326,24 @@ namespace Barotrauma.Items.Components
             failedLaunchAttempts = 0;
 
             var batteries = item.GetConnectedComponents<PowerContainer>();
-            float availablePower = 0.0f;
-            foreach (PowerContainer battery in batteries)
+            float neededPower = powerConsumption;
+
+            while (neededPower > 0.0001f && batteries.Count > 0)
             {
-                float batteryPower = Math.Min(battery.Charge * 3600.0f, battery.MaxOutPut);
-                float takePower = Math.Min(powerConsumption - availablePower, batteryPower);
-
-                battery.Charge -= takePower / 3600.0f;
-
-#if SERVER
-                if (GameMain.Server != null)
+                batteries.RemoveAll(b => b.Charge <= 0.0001f || b.MaxOutPut <= 0.0001f);
+                float takePower = neededPower / batteries.Count;
+                takePower = Math.Min(takePower, batteries.Min(b => Math.Min(b.Charge * 3600.0f, b.MaxOutPut)));
+                foreach (PowerContainer battery in batteries)
                 {
-                    battery.Item.CreateServerEvent(battery);
-                }
+                    neededPower -= takePower;
+                    battery.Charge -= takePower / 3600.0f;
+#if SERVER
+                    if (GameMain.Server != null)
+                    {
+                        battery.Item.CreateServerEvent(battery);
+                    }
 #endif
+                }
             }
 
             Launch(projectiles[0].Item, character);
@@ -554,8 +559,8 @@ namespace Barotrauma.Items.Components
         {
             base.RemoveComponentSpecific();
 
-            if (barrelSprite != null) barrelSprite.Remove();
-            if (railSprite != null) railSprite.Remove();
+            barrelSprite?.Remove(); barrelSprite = null;
+            railSprite?.Remove(); railSprite = null;
 
 #if CLIENT
             moveSoundChannel?.Dispose(); moveSoundChannel = null;
