@@ -3616,6 +3616,7 @@
   <traitorgoalkilltargetinfowithhull>Assassinate [targetname] and leave the body in the [targethullname].</traitorgoalkilltargetinfowithhull>
   <traitorgoalkilltargetinfowithcauseandhull>Assassinate [targetname] by [causeofdeath] and leave the body in the [targethullname].</traitorgoalkilltargetinfowithcauseandhull>
   <traitorgoalpoisoneveryoneinfo>Inject all crew members with [poison].</traitorgoalpoisoneveryoneinfo>
+  <traitorgoalreachdistancefromsub>Swim at least [distance] meters from the submarine.</traitorgoalreachdistancefromsub>
 
   <!-- Tainted welding tools traitor mission text package -->
   <tainted_welding_traitormissionstartinfotext>Scanning furtively around, you notice nobody's looking at you — which makes this the perfect time to snap into action.</tainted_welding_traitormissionstartinfotext>

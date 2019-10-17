@@ -505,7 +505,7 @@
       <EndMessageSuccess id="tainted_welding_objectiveSuccessMessage5"/>
       <StartMessage id="tainted_welding_traitorobjectivestartmessage5"/>
       <Goal type="reachdistancefromsub" distance="50">
-        <InfoText id="traitorgoalfloodpercentofsub" />
+        <InfoText id="traitorgoalreachdistancefromsub" />
       </Goal>
     </Objective>
   </TraitorMission>
