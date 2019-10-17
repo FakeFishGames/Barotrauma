@@ -464,7 +464,7 @@ namespace Barotrauma
             {
                 Stretch = true
             };
-            FileTransferProgressBar = new GUIProgressBar(new RectTransform(new Vector2(0.6f, 1.0f), Color.LightGreen, fileTransferBottom.RectTransform), 0.0f);
+            FileTransferProgressBar = new GUIProgressBar(new RectTransform(new Vector2(0.6f, 1.0f), fileTransferBottom.RectTransform), 0.0f, Color.LightGreen);
             FileTransferProgressText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), FileTransferProgressBar.RectTransform), "", 
                 font: GUI.SmallFont, textAlignment: Alignment.CenterLeft);
             new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), fileTransferBottom.RectTransform), TextManager.Get("cancel"))
