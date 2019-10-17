@@ -571,12 +571,12 @@ namespace Barotrauma
                 ToolTip = TextManager.Get("RefreshDefaultDeviceToolTip"),
                 OnClicked = (bt, userdata) =>
                 {
-                    deviceNames = Alc.GetStringList((IntPtr)null, Alc.CaptureDeviceSpecifier);
-                    if (deviceNames?.Count > 0)
+                    CaptureDeviceNames = Alc.GetStringList((IntPtr)null, Alc.CaptureDeviceSpecifier);
+                    if (CaptureDeviceNames?.Count > 0)
                     {
-                        if (VoiceCaptureDevice == deviceNames[0]) return true;
+                        if (VoiceCaptureDevice == CaptureDeviceNames[0]) return true;
 
-                        VoipCapture.ChangeCaptureDevice(deviceNames[0]);
+                        VoipCapture.ChangeCaptureDevice(CaptureDeviceNames[0]);
                         currentDeviceTextBlock.Text = TextManager.AddPunctuation(':', TextManager.Get("CurrentDevice"), TrimAudioDeviceName(VoiceCaptureDevice));
                         currentDeviceTextBlock.Flash(Color.Blue);
                     }

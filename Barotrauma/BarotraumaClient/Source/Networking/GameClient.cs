@@ -753,7 +753,7 @@ namespace Barotrauma.Networking
                     {
                         saveFiles.Add(inc.ReadString());
                     }
-                    GameMain.NetLobbyScreen.CampaignSetupUI = MultiPlayerCampaign.StartCampaignSetup(serverSubmarines, saveFiles);
+                    MultiPlayerCampaign.StartCampaignSetup(serverSubmarines, saveFiles);
                     break;
                 case ServerPacketHeader.PERMISSIONS:
                     ReadPermissions(inc);
@@ -2184,6 +2184,8 @@ namespace Barotrauma.Networking
 
         public void SetupNewCampaign(Submarine sub, string saveName, string mapSeed)
         {
+            GameMain.NetLobbyScreen.CampaignSetupFrame.Visible = false;
+
             saveName = Path.GetFileNameWithoutExtension(saveName);
 
             IWriteMessage msg = new WriteOnlyMessage();
@@ -2196,12 +2198,12 @@ namespace Barotrauma.Networking
             msg.Write(sub.MD5Hash.Hash);
 
             clientPeer.Send(msg, DeliveryMethod.Reliable);
-
-            GameMain.NetLobbyScreen.CampaignSetupUI = null;
         }
 
         public void SetupLoadCampaign(string saveName)
         {
+            GameMain.NetLobbyScreen.CampaignSetupFrame.Visible = false;
+
             IWriteMessage msg = new WriteOnlyMessage();
             msg.Write((byte)ClientPacketHeader.CAMPAIGN_SETUP_INFO);
 
@@ -2209,8 +2211,6 @@ namespace Barotrauma.Networking
             msg.Write(saveName);
 
             clientPeer.Send(msg, DeliveryMethod.Reliable);
-
-            GameMain.NetLobbyScreen.CampaignSetupUI = null;
         }
 
         /// <summary>

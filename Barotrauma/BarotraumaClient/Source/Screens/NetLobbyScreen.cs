@@ -57,6 +57,9 @@ namespace Barotrauma
         private GUIButton[] botSpawnModeButtons;
         private GUITextBlock botSpawnModeText;
 
+        public GUIFrame MissionTypeFrame;
+        public GUIFrame CampaignSetupFrame;
+
         private GUITickBox[] missionTypeTickBoxes;
         private GUITextBlock missionTypeLabel;
         private GUIListBox missionTypeList;
@@ -89,7 +92,6 @@ namespace Barotrauma
         private GUITickBox shuttleTickBox;
 
         private CampaignUI campaignUI;
-        public GUIComponent CampaignSetupUI;
 
         private Sprite backgroundSprite;
 
@@ -815,8 +817,16 @@ namespace Barotrauma
                 textBlock.ToolTip = mode.Description;                
             }
 
+            var gameModeSpecificFrame = new GUIFrame(new RectTransform(new Vector2(0.333f, 1.0f), gameModeBackground.RectTransform), style: null);
+            CampaignSetupFrame = new GUIFrame(new RectTransform(Vector2.One, gameModeSpecificFrame.RectTransform), style: null)
+            {
+                Visible = false
+            };
+
             //mission type ------------------------------------------------------------------
-            GUILayoutGroup missionHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.333f, 1.0f), gameModeBackground.RectTransform))
+            MissionTypeFrame = new GUIFrame(new RectTransform(Vector2.One, gameModeSpecificFrame.RectTransform), style: null);
+
+            GUILayoutGroup missionHolder = new GUILayoutGroup(new RectTransform(Vector2.One, MissionTypeFrame.RectTransform))
             {
                 Stretch = true
             };
@@ -2042,7 +2052,7 @@ namespace Barotrauma
             base.AddToGUIUpdateList();
             
             playerFrame?.AddToGUIUpdateList();  
-            CampaignSetupUI?.AddToGUIUpdateList();
+            //CampaignSetupUI?.AddToGUIUpdateList();
             jobInfoFrame?.AddToGUIUpdateList();
 
             HeadSelectionList?.AddToGUIUpdateList();
@@ -2053,11 +2063,6 @@ namespace Barotrauma
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
-                        
-            if (CampaignSetupUI != null)
-            {
-                if (!CampaignSetupUI.Visible) CampaignSetupUI = null;                
-            }
 
             string currMicStyle = micIcon.Style.Element.Name.LocalName;
 
@@ -2830,11 +2835,11 @@ namespace Barotrauma
             config.CharacterFaceAttachmentIndex = info.FaceAttachmentIndex;
         }
 
-        public void SelectMode(int modeIndex)
+        public void SelectMode(int modeIndex, bool forced = false)
         {
             if (modeIndex < 0 || modeIndex >= modeList.Content.CountChildren) { return; }
             
-            if (campaignUI != null &&
+            if (!forced && campaignUI != null &&
                 ((GameModePreset)modeList.Content.GetChild(modeIndex).UserData).Identifier != "multiplayercampaign")
             {
                 ToggleCampaignMode(false);
@@ -2842,7 +2847,7 @@ namespace Barotrauma
             
             if (modeList.SelectedIndex != modeIndex) { modeList.Select(modeIndex, true); }
 
-            missionTypeLabel.Visible = missionTypeList.Visible = SelectedMode != null && SelectedMode.Identifier == "mission";
+            MissionTypeFrame.Visible = SelectedMode != null && SelectedMode.Identifier == "mission" && !CampaignSetupFrame.Visible;
         }
 
         private bool SelectMode(GUIComponent component, object obj)
@@ -2852,7 +2857,7 @@ namespace Barotrauma
             GameModePreset modePreset = obj as GameModePreset;
             if (modePreset == null) return false;
 
-            missionTypeLabel.Visible = missionTypeList.Visible = modePreset.Identifier == "mission";
+            MissionTypeFrame.Visible = missionTypeList.Visible = modePreset.Identifier == "mission" && !CampaignSetupFrame.Visible;
             if (modePreset.Identifier == "multiplayercampaign")
             {
                 //campaign selected and the campaign view has not been set up yet

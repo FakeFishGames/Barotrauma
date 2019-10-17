@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -13,25 +14,24 @@ namespace Barotrauma
 
         private UInt16 startWatchmanID, endWatchmanID;
 
-        public static GUIComponent StartCampaignSetup( IEnumerable<Submarine> submarines, IEnumerable<string> saveFiles)
+        public static void StartCampaignSetup(IEnumerable<Submarine> submarines, IEnumerable<string> saveFiles)
         {
-            GUIFrame background = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker");
+            var parent = GameMain.NetLobbyScreen.CampaignSetupFrame;
+            parent.ClearChildren();
+            parent.Visible = true;
+            GameMain.NetLobbyScreen.MissionTypeFrame.Visible = false;
 
-            GUIFrame setupBox = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.45f), background.RectTransform, Anchor.Center) { MinSize = new Point(500, 550) });
-            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), setupBox.RectTransform, Anchor.Center))
+            var layout = new GUILayoutGroup(new RectTransform(Vector2.One, parent.RectTransform, Anchor.Center))
             {
                 Stretch = true
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), paddedFrame.RectTransform,Anchor.TopCenter),
-                TextManager.Get("CampaignSetup"), font: GUI.LargeFont);
-
-            var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.07f), paddedFrame.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.1f) }, isHorizontal: true)
+            var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.07f), layout.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.1f) }, isHorizontal: true)
             {
                 RelativeSpacing = 0.02f
             };
 
-            var campaignContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.9f), paddedFrame.RectTransform, Anchor.BottomLeft), style: "InnerFrame")
+            var campaignContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.9f), layout.RectTransform, Anchor.BottomLeft), style: "InnerFrame")
             {
                 CanBeFocused = false
             };
@@ -41,7 +41,7 @@ namespace Barotrauma
 
             var campaignSetupUI = new CampaignSetupUI(true, newCampaignContainer, loadCampaignContainer, submarines, saveFiles);
 
-            var newCampaignButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonContainer.RectTransform),
+            var newCampaignButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), buttonContainer.RectTransform),
                 TextManager.Get("NewCampaign"), style: "GUITabButton")
             {
                 OnClicked = (btn, obj) =>
@@ -52,7 +52,7 @@ namespace Barotrauma
                 }
             };
 
-            var loadCampaignButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.00f), buttonContainer.RectTransform),
+            var loadCampaignButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.00f), buttonContainer.RectTransform),
                 TextManager.Get("LoadCampaign"), style: "GUITabButton")
             {
                 OnClicked = (btn, obj) =>
@@ -68,19 +68,18 @@ namespace Barotrauma
             campaignSetupUI.StartNewGame = GameMain.Client.SetupNewCampaign;
             campaignSetupUI.LoadGame = GameMain.Client.SetupLoadCampaign;
 
-            var cancelButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.1f), paddedFrame.RectTransform, Anchor.BottomLeft), 
+            var cancelButton = new GUIButton(new RectTransform(new Vector2(0.4f, 0.1f), layout.RectTransform, Anchor.BottomLeft), 
                 TextManager.Get("Cancel"), style: "GUIButtonLarge")
             {
                 IgnoreLayoutGroups = true,
                 OnClicked = (btn, obj) =>
                 {
-                    background.Visible = false;
+                    parent.Visible = false;
+                    GameMain.NetLobbyScreen.SelectMode(GameMain.NetLobbyScreen.SelectedModeIndex, true);
 
                     return true;
                 }
             };
-
-            return background;
         }
 
         public override void Update(float deltaTime)
