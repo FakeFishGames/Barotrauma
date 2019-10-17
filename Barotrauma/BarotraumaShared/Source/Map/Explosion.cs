@@ -141,18 +141,19 @@ namespace Barotrauma
                 {
                     foreach (Item item in Item.ItemList)
                     {
-                        if (item.CurrentHull != hull || item.FireProof || item.Condition <= 0.0f) continue;
+                        if (item.CurrentHull != hull || item.FireProof || item.Condition <= 0.0f) { continue; }
 
                         //don't apply OnFire effects if the item is inside a fireproof container
                         //(or if it's inside a container that's inside a fireproof container, etc)
                         Item container = item.Container;
+                        bool fireProof = false;
                         while (container != null)
                         {
-                            if (container.FireProof) return;
+                            if (container.FireProof) { fireProof = true; break; }
                             container = container.Container;
                         }
 
-                        if (Vector2.Distance(item.WorldPosition, worldPosition) > attack.Range * 0.1f) continue;
+                        if (fireProof || Vector2.Distance(item.WorldPosition, worldPosition) > attack.Range * 0.1f) { continue; }
 
                         item.ApplyStatusEffects(ActionType.OnFire, 1.0f);
                         
