@@ -34,10 +34,10 @@
     <targetpriority tag="stronger" state="Escape" priority="110" />
     <targetpriority tag="dead" state="Eat" priority="60" />
     <targetpriority tag="weaker" state="Attack" priority="60" />
-    <targetpriority tag="door" state="Attack" priority="70" />
     <targetpriority tag="nasonov" state="Attack" priority="200" />
     <targetpriority tag="sonar" state="Attack" priority="60" />
-    <targetpriority tag="wall" state="Attack" priority="30" />
+    <targetpriority tag="door" state="Attack" priority="30" />
+    <targetpriority tag="wall" state="Attack" priority="20" />
     <targetpriority tag="room" state="Attack" priority="10" />
   </ai>
 </Character>
