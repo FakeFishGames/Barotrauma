@@ -62,26 +62,30 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("MapSeed"));
             seedBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, ToolBox.RandomSeed(8));
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("SelectedSub"));
-            var filterContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), isHorizontal: true)
+            if (!isMultiplayer)
             {
-                Stretch = true
-            };
-            subList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.65f), leftColumn.RectTransform)) { ScrollBarVisible = true };
-            
-            var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), filterContainer.RectTransform), TextManager.Get("serverlog.filter"), textAlignment: Alignment.CenterLeft, font: GUI.Font);
-            var searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), filterContainer.RectTransform, Anchor.CenterRight), font: GUI.Font);
-            searchBox.OnSelected += (sender, userdata) => { searchTitle.Visible = false; };
-            searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = true; };
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("SelectedSub"));
 
-            searchBox.OnTextChanged += (textBox, text) => { FilterSubs(subList, text); return true; };
-            var clearButton = new GUIButton(new RectTransform(new Vector2(0.075f, 1.0f), filterContainer.RectTransform), "x")
-            {
-                OnClicked = (btn, userdata) => { searchBox.Text = ""; FilterSubs(subList, ""); searchBox.Flash(Color.White); return true; }
-            };
+                var filterContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), isHorizontal: true)
+                {
+                    Stretch = true
+                };
 
-            if (!isMultiplayer) { subList.OnSelected = OnSubSelected; }
+                subList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.65f), leftColumn.RectTransform)) { ScrollBarVisible = true };
 
+                var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), filterContainer.RectTransform), TextManager.Get("serverlog.filter"), textAlignment: Alignment.CenterLeft, font: GUI.Font);
+                var searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), filterContainer.RectTransform, Anchor.CenterRight), font: GUI.Font);
+                searchBox.OnSelected += (sender, userdata) => { searchTitle.Visible = false; };
+                searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = true; };
+
+                searchBox.OnTextChanged += (textBox, text) => { FilterSubs(subList, text); return true; };
+                var clearButton = new GUIButton(new RectTransform(new Vector2(0.075f, 1.0f), filterContainer.RectTransform), "x")
+                {
+                    OnClicked = (btn, userdata) => { searchBox.Text = ""; FilterSubs(subList, ""); searchBox.Flash(Color.White); return true; }
+                };
+
+                subList.OnSelected = OnSubSelected;
+            }
             // New game right side
             subPreviewContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.8f), rightColumn.RectTransform))
             {
@@ -103,7 +107,18 @@ namespace Barotrauma
                         return false;
                     }
 
-                    if (!(subList.SelectedData is Submarine selectedSub)) { return false; }
+                    Submarine selectedSub = null;
+
+                    if (!isMultiplayer)
+                    {
+                        if (!(subList.SelectedData is Submarine)) { return false; }
+                        selectedSub = subList.SelectedData as Submarine;
+                    }
+                    else
+                    {
+                        if (GameMain.NetLobbyScreen.SelectedSub == null) { return false; }
+                        selectedSub = GameMain.NetLobbyScreen.SelectedSub;
+                    }
 
                     if (string.IsNullOrEmpty(selectedSub.MD5Hash.Hash))
                     {
@@ -189,7 +204,7 @@ namespace Barotrauma
             leftColumn.Recalculate();
             rightColumn.Recalculate();
 
-            UpdateSubList(submarines);
+            if (submarines != null) { UpdateSubList(submarines); }
             UpdateLoadMenu(saveFiles);
         }
 
@@ -228,7 +243,8 @@ namespace Barotrauma
 
             msgBox.Buttons[0].OnClicked = (btn, userdata) =>
             {
-                GameMain.NetLobbyScreen.SelectMode(0);
+                GameMain.NetLobbyScreen.HighlightMode(GameMain.NetLobbyScreen.SelectedModeIndex);
+                GameMain.NetLobbyScreen.SelectMode(GameMain.NetLobbyScreen.SelectedModeIndex);
                 CoroutineManager.StopCoroutines("WaitForCampaignSetup");
                 return true;
             };

@@ -14,12 +14,12 @@ namespace Barotrauma
 
         private UInt16 startWatchmanID, endWatchmanID;
 
-        public static void StartCampaignSetup(IEnumerable<Submarine> submarines, IEnumerable<string> saveFiles)
+        public static void StartCampaignSetup(IEnumerable<string> saveFiles)
         {
             var parent = GameMain.NetLobbyScreen.CampaignSetupFrame;
             parent.ClearChildren();
             parent.Visible = true;
-            GameMain.NetLobbyScreen.MissionTypeFrame.Visible = false;
+            GameMain.NetLobbyScreen.HighlightMode(2);
 
             var layout = new GUILayoutGroup(new RectTransform(Vector2.One, parent.RectTransform, Anchor.Center))
             {
@@ -39,7 +39,7 @@ namespace Barotrauma
             var newCampaignContainer = new GUIFrame(new RectTransform(Vector2.One, campaignContainer.RectTransform, Anchor.BottomLeft), style: null);
             var loadCampaignContainer = new GUIFrame(new RectTransform(Vector2.One, campaignContainer.RectTransform, Anchor.BottomLeft), style: null);
 
-            var campaignSetupUI = new CampaignSetupUI(true, newCampaignContainer, loadCampaignContainer, submarines, saveFiles);
+            var campaignSetupUI = new CampaignSetupUI(true, newCampaignContainer, loadCampaignContainer, null, saveFiles);
 
             var newCampaignButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), buttonContainer.RectTransform),
                 TextManager.Get("NewCampaign"), style: "GUITabButton")
@@ -67,19 +67,6 @@ namespace Barotrauma
             
             campaignSetupUI.StartNewGame = GameMain.Client.SetupNewCampaign;
             campaignSetupUI.LoadGame = GameMain.Client.SetupLoadCampaign;
-
-            var cancelButton = new GUIButton(new RectTransform(new Vector2(0.4f, 0.1f), layout.RectTransform, Anchor.BottomLeft), 
-                TextManager.Get("Cancel"), style: "GUIButtonLarge")
-            {
-                IgnoreLayoutGroups = true,
-                OnClicked = (btn, obj) =>
-                {
-                    parent.Visible = false;
-                    GameMain.NetLobbyScreen.SelectMode(GameMain.NetLobbyScreen.SelectedModeIndex, true);
-
-                    return true;
-                }
-            };
         }
 
         public override void Update(float deltaTime)

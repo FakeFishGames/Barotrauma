@@ -753,7 +753,7 @@ namespace Barotrauma.Networking
                     {
                         saveFiles.Add(inc.ReadString());
                     }
-                    MultiPlayerCampaign.StartCampaignSetup(serverSubmarines, saveFiles);
+                    MultiPlayerCampaign.StartCampaignSetup(saveFiles);
                     break;
                 case ServerPacketHeader.PERMISSIONS:
                     ReadPermissions(inc);
