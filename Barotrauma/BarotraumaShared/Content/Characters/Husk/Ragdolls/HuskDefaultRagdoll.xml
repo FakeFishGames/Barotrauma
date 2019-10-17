@@ -7,45 +7,45 @@
   </limb>
   <!-- body -->
   <limb id="1" radius="14" height="26" mass="20" type="Torso" attackpriority="3" healthindex="0" name="Limb 1" flip="True" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Items/Diving/DivingSuit_Torso.png" sourcerect="2,0,119,257" depth="0.06" origin="0.5169492,0.4631148" />
+    <sprite texture="Content/Characters/Husk/DivingSuit_TorsoHusk.png" sourcerect="2,0,119,257" depth="0.06" origin="0.5169492,0.4631148" />
   </limb>
   <limb id="12" radius="13" mass="20" type="Waist" healthindex="0" name="Limb 12" flip="True" attackpriority="0" steerforce="0" stepoffset="0,0" height="0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Items/Diving/DivingSuit_Legs.png" sourcerect="0,1,98,90" depth="0.11" origin="0.4897959,0.6111111" />
+    <sprite texture="Content/Characters/Husk/DivingSuit_LegsHusk.png" sourcerect="0,1,88,90" depth="0.11" origin="0.4897959,0.6111111" />
   </limb>
   <!-- left arm -->
   <limb id="2" radius="8" height="20" mass="3" type="LeftArm" healthindex="0" name="Limb 2" flip="True" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Items/Diving/DivingSuit_Torso.png" sourcerect="121,128,76,128" depth="0.15" origin="0.4868421,0.3658537" />
+    <sprite texture="Content/Characters/Husk/DivingSuit_TorsoHusk.png" sourcerect="121,128,76,128" depth="0.15" origin="0.4868421,0.3658537" />
   </limb>
   <limb id="3" radius="6" height="26" mass="3" type="LeftHand" pullpos="0,-18" healthindex="0" name="Limb 3" flip="True" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Items/Diving/DivingSuit_Torso.png" sourcerect="197,128,59,128" depth="0.16" origin="0.4576271,0.48" />
+    <sprite texture="Content/Characters/Husk/DivingSuit_TorsoHusk.png" sourcerect="197,128,59,128" depth="0.16" origin="0.4576271,0.48" />
   </limb>
   <!-- right arm -->
   <limb id="4" radius="8" height="20" mass="3" type="RightArm" healthindex="0" name="Limb 4" flip="True" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Items/Diving/DivingSuit_Torso.png" sourcerect="121,0,76,128" depth="0.01" origin="0.4868421,0.3658537" />
+    <sprite texture="Content/Characters/Husk/DivingSuit_TorsoHusk.png" sourcerect="121,0,76,128" depth="0.01" origin="0.4868421,0.3658537" />
   </limb>
   <limb id="5" radius="6" height="26" mass="3" type="RightHand" pullpos="0,-18" healthindex="0" name="Limb 5" flip="True" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Items/Diving/DivingSuit_Torso.png" sourcerect="197,0,59,128" origin="0.4576271,0.484375" depth="0" />
+    <sprite texture="Content/Characters/Husk/DivingSuit_TorsoHusk.png" sourcerect="197,0,59,128" origin="0.4576271,0.484375" depth="0" />
   </limb>
   <!-- left leg -->
   <limb id="6" radius="10" height="30" mass="8" type="LeftThigh" healthindex="0" name="Limb 6" flip="True" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Items/Diving/DivingSuit_Legs.png" sourcerect="177,1,78,145" depth="0.15" origin="0.5316457,0.5310345" />
+    <sprite texture="Content/Characters/Husk/DivingSuit_LegsHusk.png" sourcerect="177,1,78,145" depth="0.15" origin="0.5316457,0.5310345" />
   </limb>
   <limb id="7" radius="7" height="19.032" mass="5" type="LeftLeg" healthindex="0" name="Limb 7" flip="True" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Items/Diving/DivingSuit_Legs.png" sourcerect="177,146,78,110" depth="0.16" origin="0.5384616,0.5" />
+    <sprite texture="Content/Characters/Husk/DivingSuit_LegsHusk.png" sourcerect="177,146,78,110" depth="0.16" origin="0.5384616,0.5" />
   </limb>
   <limb id="8" radius="6" height="15" mass="2" type="LeftFoot" flip="True" pullpos="-4.7,2" healthindex="0" name="Limb 8" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Items/Diving/DivingSuit_Legs.png" sourcerect="1,91,73,102" depth="0.17" origin="0.4520548,0.4117647" />
+    <sprite texture="Content/Characters/Husk/DivingSuit_LegsHusk.png" sourcerect="1,91,73,102" depth="0.17" origin="0.4520548,0.4117647" />
     <sound tag="footstep_armor_heavy" />
   </limb>
   <!-- right leg -->
   <limb id="9" radius="10" height="30" mass="8" type="RightThigh" healthindex="0" name="Limb 9" flip="True" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Items/Diving/DivingSuit_Legs.png" sourcerect="99,1,78,145" depth="0.11" origin="0.5454546,0.5310345" />
+    <sprite texture="Content/Characters/Husk/DivingSuit_LegsHusk.png" sourcerect="99,1,78,145" depth="0.11" origin="0.5454546,0.5310345" />
   </limb>
   <limb id="10" radius="7" height="19.032" mass="5" type="RightLeg" healthindex="0" name="Limb 10" flip="True" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Items/Diving/DivingSuit_Legs.png" sourcerect="99,146,78,110" depth="0.12" origin="0.5384616,0.5" />
+    <sprite texture="Content/Characters/Husk/DivingSuit_LegsHusk.png" sourcerect="99,146,78,110" depth="0.12" origin="0.5384616,0.5" />
   </limb>
   <limb id="11" radius="6" height="15" mass="2" type="RightFoot" flip="True" pullpos="-4.669737,1.984612" healthindex="0" name="Limb 11" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Items/Diving/DivingSuit_Legs.png" sourcerect="1,91,73,102" origin="0.4520548,0.4117647" depth="0.14" />
+    <sprite texture="Content/Characters/Husk/DivingSuit_LegsHusk.png" sourcerect="1,91,73,102" origin="0.4520548,0.4117647" depth="0.14" />
     <sound tag="footstep_armor_heavy" />
   </limb>
   <!-- spike/tentacle thingy -->
