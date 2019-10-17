@@ -376,7 +376,7 @@
       </Goal>
     </Objective>
 
-  </TraitorMission>
+  </TraitorMission>-->
 
   <!--<TraitorMission identifier="oxygen_sabotage">
 
@@ -451,18 +451,9 @@
       <EndMessageSuccess id="acidparty_objectiveSuccessMessage3"/>
       <StartMessage id="acidparty_traitorobjectivestartmessage3"/>
       <Goal type="injectpoison" poison="deliriumine" affliction="psychosis">        
-        <InfoText id="traitorgoalkilltargetinfo"/>
+        <InfoText id="traitorgoalpoisoninfo"/>
       </Goal>
     </Objective>
-
-    <!--<Objective>
-      <EndMessageFailure id="traitormissionfailuremessage"/>
-      <EndMessageSuccess id="acidparty_objectiveSuccessMessage4" />
-      <StartMessage id="acidparty_traitorobjectivestartmessage4"/>
-      <Goal type="killtarget">
-        <InfoText id="traitorgoalkilleveryoneinfo" />
-      </Goal>
-    </Objective>-->
 
   </TraitorMission>
 </TraitorMissions>
