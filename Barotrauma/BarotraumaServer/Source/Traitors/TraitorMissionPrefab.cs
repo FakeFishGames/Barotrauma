@@ -165,8 +165,8 @@ namespace Barotrauma
                             break;
                         case "finditem":
                             checker.Required("identifier");
-                            checker.Optional("preferNew", "allowNew", "allowExisting", "allowedContainers");
-                            goal = new Traitor.GoalFindItem(Config.GetAttributeString("identifier", null), Config.GetAttributeBool("preferNew", true), Config.GetAttributeBool("allowNew", true), Config.GetAttributeBool("allowExisting", true), Config.GetAttributeStringArray("allowedContainers", new string[] {"steelcabinet", "mediumsteelcabinet", "suppliescabinet"}));
+                            checker.Optional("preferNew", "allowNew", "allowExisting", "allowedContainers", "percentage");
+                            goal = new Traitor.GoalFindItem(Config.GetAttributeString("identifier", null), Config.GetAttributeBool("preferNew", true), Config.GetAttributeBool("allowNew", true), Config.GetAttributeBool("allowExisting", true), Config.GetAttributeFloat("percentage", -1f), Config.GetAttributeStringArray("allowedContainers", new string[] {"steelcabinet", "mediumsteelcabinet", "suppliescabinet"}));
                             break;
                         case "replaceinventory":
                             checker.Required("containers", "replacements");
@@ -175,7 +175,7 @@ namespace Barotrauma
                             break;
                         case "reachdistancefromsub":
                             checker.Optional("distance");
-                            goal = new Traitor.GoalReachDistanceFromSub(Config.GetAttributeFloat("distance", 10000.0f));
+                            goal = new Traitor.GoalReachDistanceFromSub(Config.GetAttributeFloat("distance", 125f));
                             break;
                         case "injectpoison":
                             checker.Optional(targetFilters.Keys.ToArray());

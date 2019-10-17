@@ -22,6 +22,7 @@ namespace Barotrauma
             private string targetNameText;
             private string targetContainerNameText;
             private string targetHullNameText;
+            private float percentage;
 
             public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[identifier]", "[target]", "[targethullname]" });
             public override IEnumerable<string> InfoTextValues(Traitor traitor) => base.InfoTextValues(traitor).Concat(new string[] { targetNameText ?? "", targetContainerNameText ?? "", targetHullNameText ?? "" });
@@ -178,12 +179,13 @@ namespace Barotrauma
                 }
             }
 
-            public GoalFindItem(string identifier, bool preferNew, bool allowNew, bool allowExisting, params string[] allowedContainerIdentifiers)
+            public GoalFindItem(string identifier, bool preferNew, bool allowNew, bool allowExisting, float percentage, params string[] allowedContainerIdentifiers)
             {
                 this.identifier = identifier;
                 this.preferNew = preferNew;
                 this.allowNew = allowNew;
                 this.allowExisting = allowExisting;
+                this.percentage = percentage / 100f;
                 this.allowedContainerIdentifiers.UnionWith(allowedContainerIdentifiers);
             }
         }

@@ -12,9 +12,10 @@ namespace Barotrauma
         {
             private readonly float requiredDistance;
             private readonly float requiredDistanceSqr;
+            private float requiredDistanceInMeters;
 
             public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[distance]" });
-            public override IEnumerable<string> InfoTextValues(Traitor traitor) => base.InfoTextValues(traitor).Concat(new string[] { $"{requiredDistance:0.00}" });
+            public override IEnumerable<string> InfoTextValues(Traitor traitor) => base.InfoTextValues(traitor).Concat(new string[] { $"{requiredDistanceInMeters:0.00}" });
 
             public override bool IsCompleted
             {
@@ -37,8 +38,9 @@ namespace Barotrauma
             public GoalReachDistanceFromSub(float requiredDistance) : base()
             {
                 InfoTextId = "TraitorGoalReachDistanceFromSub";
-                this.requiredDistance = requiredDistance;
-                requiredDistanceSqr = requiredDistance * requiredDistance;
+                requiredDistanceInMeters = requiredDistance;
+                this.requiredDistance = requiredDistance / Physics.DisplayToRealWorldRatio;
+                requiredDistanceSqr = this.requiredDistance * this.requiredDistance;
             }
         }
     }
