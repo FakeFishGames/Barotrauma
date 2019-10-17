@@ -87,9 +87,7 @@ namespace Barotrauma
             }
             if (style == null)
             {
-                color = Color.White;
-                hoverColor = Color.White;
-                selectedColor = Color.White;
+                color = hoverColor = selectedColor = pressedColor = Color.White;                
             }
             if (!scaleToFit)
             {

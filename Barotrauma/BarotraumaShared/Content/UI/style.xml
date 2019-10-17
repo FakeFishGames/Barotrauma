@@ -647,11 +647,13 @@
     color="255,255,255,51"
     hovercolor="255,255,255,255"
     selectedcolor="255,255,255,255"
+    pressedcolor="125,125,125,100"
     padding="5.0, 5.0, 5.0, 5.0">
 
     <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect ="493, 544, 227, 52" slice="494, 552, 718, 584"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect ="493, 544, 227, 52" slice="494, 552, 718, 584"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Selected"  sourcerect ="493, 490, 227, 52" slice="494, 497, 718, 529"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Pressed" sourcerect ="493, 544, 227, 52" slice="494, 552, 718, 584"/>
   </ListBoxElement>
 
   <GUIScrollBar>
