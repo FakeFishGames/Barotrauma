@@ -127,6 +127,7 @@
         <Sound file="Content/Sounds/Damage/Gore6.ogg" range="800" />
         <Remove />
       </StatusEffect>
+      <StatusEffect type="OnFire" target="This" Condition="-5.0"/>
     </Holdable>
     <ItemContainer capacity="1" hideitems="true">
       <Containable items="antibloodloss1">
@@ -157,6 +158,7 @@
         <Sound file="Content/Sounds/Damage/Gore6.ogg" range="800" />
         <Remove />
       </StatusEffect>
+      <StatusEffect type="OnFire" target="This" Condition="-5.0"/>
     </Holdable>
     <ItemContainer capacity="1" hideitems="true">
       <Containable items="antibloodloss1">
@@ -188,6 +190,7 @@
         <Sound file="Content/Sounds/Damage/Gore7.ogg" range="800" />
         <Remove />
       </StatusEffect>
+      <StatusEffect type="OnFire" target="This" Condition="-5.0"/>
     </Holdable>
     <ItemContainer capacity="1" hideitems="true">
       <Containable items="antibloodloss1">
