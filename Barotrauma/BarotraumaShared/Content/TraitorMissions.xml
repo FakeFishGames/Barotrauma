@@ -456,4 +456,58 @@
     </Objective>
 
   </TraitorMission>
+
+  
+  <TraitorMission identifier="tainted_welding">
+
+    <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+
+    <StartInfoText id="tainted_welding_traitormissionstartinfotext"/>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="tainted_welding_objectivesuccessmessage1"/>
+      <StartMessage id="tainted_welding_traitorobjectivestartmessage1"/>
+      <Goal type="finditem" identifier="divingmask" preferNew="false" allowNew="true" allowExisting="true" allowedContainers="suppliescabinet">
+        <InfoText id="tainted_welding_goalinfotext_1"/>
+      </Goal>
+    </Objective>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="tainted_welding_objectiveSuccessMessage2"/>
+      <StartMessage id="tainted_welding_traitorobjectivestartmessage2"/>
+      <Goal type="replaceinventory" containers="weldingtool" replacements="oxygentank" percentage="70">
+        <InfoText id="tainted_welding_goalinfotext_2" />
+      </Goal>
+    </Objective>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="tainted_welding_objectiveSuccessMessage3"/>
+      <StartMessage id="tainted_welding_traitorobjectivestartmessage3"/>
+      <Goal type="destroyitems" tag="weldingfueltank" percentage="70">
+        <InfoText id="traitorgoaldestroyitems" />
+      </Goal>
+    </Objective>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="tainted_welding_objectiveSuccessMessage4"/>
+      <StartMessage id="tainted_welding_traitorobjectivestartmessage4"/>
+      <Goal type="floodsub" percentage="30">
+        <InfoText id="traitorgoalfloodpercentofsub" />
+      </Goal>
+    </Objective>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="tainted_welding_objectiveSuccessMessage5"/>
+      <StartMessage id="tainted_welding_traitorobjectivestartmessage5"/>
+      <Goal type="reachdistancefromsub" distance="50">
+        <InfoText id="traitorgoalfloodpercentofsub" />
+      </Goal>
+    </Objective>
+  </TraitorMission>
+
 </TraitorMissions>
