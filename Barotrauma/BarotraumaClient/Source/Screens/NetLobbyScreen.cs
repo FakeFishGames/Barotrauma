@@ -88,6 +88,7 @@ namespace Barotrauma
         private GUIComponent subPreviewContainer;
 
         private GUITickBox autoRestartBox;
+        private GUITextBlock autoRestartText;
                 
         private GUIDropDown shuttleList;
         private GUITickBox shuttleTickBox;
@@ -332,9 +333,13 @@ namespace Barotrauma
                 if (!GameMain.Server.AutoRestart || GameMain.Server.ConnectedClients.Count == 0) return "";
                 return TextManager.Get("RestartingIn") + " " + ToolBox.SecondsToReadableTime(Math.Max(GameMain.Server.AutoRestartTimer, 0));
             }*/
-
-            if (autoRestartTimer == 0.0f) return "";
-            return TextManager.Get("RestartingIn") + " " + ToolBox.SecondsToReadableTime(Math.Max(autoRestartTimer, 0));
+            string text = "";
+            if (autoRestartTimer > 0.0f)
+            {
+                text = TextManager.Get("RestartingIn") + " " + ToolBox.SecondsToReadableTime(Math.Max(autoRestartTimer, 0));
+            }
+            autoRestartText.Visible = !string.IsNullOrEmpty(text);
+            return text;
         }
 
         public CampaignUI CampaignUI
@@ -347,6 +352,7 @@ namespace Barotrauma
             float panelSpacing = 0.005f;
             var innerFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), Frame.RectTransform, Anchor.Center) { MaxSize = new Point(int.MaxValue, GameMain.GraphicsHeight - 50) }, isHorizontal: false)
             {
+                Stretch = true,
                 RelativeSpacing = panelSpacing
             };
 
@@ -358,7 +364,32 @@ namespace Barotrauma
             
             GUILayoutGroup panelHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 1.0f), panelContainer.RectTransform))
             {
-                Stretch = true
+                Stretch = true,
+                RelativeSpacing = panelSpacing
+            };
+
+            GUILayoutGroup bottomBar = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), innerFrame.RectTransform))
+            {
+                IsHorizontal = true,
+                Stretch = true,
+                RelativeSpacing = panelSpacing
+            };
+            GUILayoutGroup bottomBarLeft = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 1.0f), bottomBar.RectTransform))
+            {
+                IsHorizontal = true,
+                RelativeSpacing = panelSpacing
+            };
+            GUILayoutGroup bottomBarMid = new GUILayoutGroup(new RectTransform(new Vector2(0.4f, 1.0f), bottomBar.RectTransform))
+            {
+                IsHorizontal = true,
+                Stretch = true,
+                RelativeSpacing = panelSpacing
+            };
+            GUILayoutGroup bottomBarRight = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 1.0f), bottomBar.RectTransform))
+            {
+                IsHorizontal = true,
+                Stretch = true,
+                RelativeSpacing = panelSpacing
             };
 
             //server info panel ------------------------------------------------------------
@@ -398,6 +429,7 @@ namespace Barotrauma
 
             gameModeContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), modeFrame.RectTransform, Anchor.Center))
             {
+                RelativeSpacing = panelSpacing * 2.0f,
                 Stretch = true
             };
 
@@ -406,7 +438,7 @@ namespace Barotrauma
                 Visible = false
             };
 
-            new GUIButton(new RectTransform(new Vector2(0.15f, 0.0518f), panelHolder.RectTransform), TextManager.Get("disconnect"), style: "GUIButtonLarge")
+            new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), bottomBarLeft.RectTransform), TextManager.Get("disconnect"), style: "GUIButtonLarge")
             {
                 OnClicked = (bt, userdata) => { GameMain.QuitToMainMenu(save: false, showVerificationPrompt: true); return true; }
             };
@@ -580,7 +612,7 @@ namespace Barotrauma
                 Font = GUI.SmallFont
             };
 
-            roundControlsHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), sideBar.RectTransform), 
+            roundControlsHolder = new GUILayoutGroup(new RectTransform(Vector2.One, bottomBarRight.RectTransform), 
                 isHorizontal: true)
             {
                 Stretch = true
@@ -612,6 +644,23 @@ namespace Barotrauma
             };
             clientHiddenElements.Add(StartButton);
 
+            //autorestart ------------------------------------------------------------------
+
+            autoRestartText = new GUITextBlock(new RectTransform(Vector2.One, bottomBarMid.RectTransform), "", font: GUI.SmallFont, style: "TextFrame", textAlignment: Alignment.Center)
+            {
+                TextGetter = AutoRestartText
+            };
+            GUIFrame autoRestartBoxContainer = new GUIFrame(new RectTransform(Vector2.One, bottomBarMid.RectTransform), style: "TextFrame");
+            autoRestartBox = new GUITickBox(new RectTransform(new Vector2(0.95f, 0.75f), autoRestartBoxContainer.RectTransform, Anchor.Center), TextManager.Get("AutoRestart"))
+            {
+                OnSelected = (tickBox) =>
+                {
+                    GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, autoRestart: tickBox.Selected);
+                    return true;
+                }
+            };
+            clientDisabledElements.Add(autoRestartBoxContainer);            
+
             //--------------------------------------------------------------------------------------------------------------------------------
             //infoframe contents
             //--------------------------------------------------------------------------------------------------------------------------------
@@ -636,7 +685,7 @@ namespace Barotrauma
             clientDisabledElements.Add(ServerName);
 
             SettingsButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), lobbyHeader.RectTransform, Anchor.TopRight),
-                TextManager.Get("ServerSettingsButton"));
+                TextManager.Get("ServerSettingsButton"), style: "GUIButtonLarge");
             clientHiddenElements.Add(SettingsButton);
 
             GUILayoutGroup lobbyContent = new GUILayoutGroup(new RectTransform(Vector2.One, infoFrameContent.RectTransform), isHorizontal: true)
@@ -684,10 +733,11 @@ namespace Barotrauma
 
             GUILayoutGroup subHolder = new GUILayoutGroup(new RectTransform(Vector2.One, lobbyContent.RectTransform))
             {
+                RelativeSpacing = panelSpacing,
                 Stretch = true
             };
 
-            var subLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.055f), subHolder.RectTransform), TextManager.Get("Submarine"));
+            var subLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.055f), subHolder.RectTransform) { MinSize = new Point(0, 25) }, TextManager.Get("Submarine"));
             subList = new GUIListBox(new RectTransform(Vector2.One, subHolder.RectTransform))
             {
                 OnSelected = VotableClicked
@@ -708,7 +758,7 @@ namespace Barotrauma
                 Stretch = true
             };
 
-            GUILayoutGroup shuttleHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), isHorizontal: true)
+            GUILayoutGroup shuttleHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform) { MinSize = new Point(0, 25) }, isHorizontal: true)
             {
                 Stretch = true
             };
@@ -748,16 +798,34 @@ namespace Barotrauma
 
             GUILayoutGroup miscSettingsHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.075f), gameModeContainer.RectTransform), isHorizontal: true)
             {
-                Stretch = true,
-                RelativeSpacing = 0.05f
+                RelativeSpacing = 0.01f
             };
-
+            
+            miscSettingsHolder.RectTransform.SizeChanged += () =>
+            {
+                miscSettingsHolder.Recalculate();
+                foreach (GUIComponent child in miscSettingsHolder.Children)
+                {
+                    if (child is GUITextBlock textBlock)
+                    {
+                        textBlock.TextScale = 1;
+                        textBlock.AutoScale = true;
+                        textBlock.SetTextPos();
+                    }
+                    else if (child is GUITickBox tickBox)
+                    {
+                        tickBox.TextBlock.TextScale = 1;
+                        tickBox.TextBlock.AutoScale = true;
+                        tickBox.TextBlock.SetTextPos();
+                    }
+                }
+            };
 
             //seed ------------------------------------------------------------------
 
-            var seedLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), miscSettingsHolder.RectTransform), TextManager.Get("LevelSeed"));
-            seedLabel.RectTransform.MinSize = new Point((int)seedLabel.TextSize.X + 5, 0);
-            seedBox = new GUITextBox(new RectTransform(Vector2.One, miscSettingsHolder.RectTransform));
+            var seedLabel = new GUITextBlock(new RectTransform(Vector2.One, miscSettingsHolder.RectTransform), TextManager.Get("LevelSeed"));
+            seedLabel.RectTransform.MaxSize = new Point((int)(seedLabel.TextSize.X + 30 * GUI.Scale), int.MaxValue);
+            seedBox = new GUITextBox(new RectTransform(new Vector2(0.25f, 1.0f), miscSettingsHolder.RectTransform));
             seedBox.OnDeselected += (textBox, key) =>
             {
                 GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.LevelSeed);
@@ -767,10 +835,10 @@ namespace Barotrauma
             
             //level difficulty ------------------------------------------------------------------
 
-            var difficultyLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), miscSettingsHolder.RectTransform), TextManager.Get("LevelDifficulty"));
-            difficultyLabel.RectTransform.MinSize = new Point((int)difficultyLabel.TextSize.X + 5, 0);
-            levelDifficultyScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 1.0f), miscSettingsHolder.RectTransform), barSize: 0.2f)
+            var difficultyLabel = new GUITextBlock(new RectTransform(Vector2.One, miscSettingsHolder.RectTransform), TextManager.Get("LevelDifficulty"));
+            levelDifficultyScrollBar = new GUIScrollBar(new RectTransform(new Vector2(0.25f, 1.0f), miscSettingsHolder.RectTransform), barSize: 0.2f)
             {
+                Step = 0.05f,
                 Range = new Vector2(0.0f, 100.0f),
                 OnReleased = (scrollbar, value) =>
                 {
@@ -779,29 +847,9 @@ namespace Barotrauma
                     return true;
                 }
             };
-
-            difficultyLabel.RectTransform.ScaleChanged += () => { GUITextBlock.AutoScaleAndNormalize(seedLabel, difficultyLabel); };
+            difficultyLabel.RectTransform.MaxSize = new Point((int)(difficultyLabel.TextSize.X + 30 * GUI.Scale), int.MaxValue);
             clientDisabledElements.Add(levelDifficultyScrollBar);
-
-            //misc buttons ------------------------------------------------------------------
-
-            autoRestartBox = new GUITickBox(new RectTransform(Vector2.One, miscSettingsHolder.RectTransform, Anchor.TopRight), TextManager.Get("AutoRestart"))
-            {
-                OnSelected = (tickBox) =>
-                {
-                    GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, autoRestart: tickBox.Selected);
-                    return true;
-                }
-            };
-
-            clientDisabledElements.Add(autoRestartBox);
-
-            var restartText = new GUITextBlock(new RectTransform(Vector2.One, miscSettingsHolder.RectTransform, Anchor.TopRight), "", font: GUI.SmallFont)
-            {
-                TextGetter = AutoRestartText
-            };
-
-
+            
             //gamemode ------------------------------------------------------------------
 
             GUILayoutGroup gameModeBackground = new GUILayoutGroup(new RectTransform(Vector2.One, gameModeContainer.RectTransform), isHorizontal: true)
@@ -809,13 +857,13 @@ namespace Barotrauma
                 Stretch = true,
                 RelativeSpacing = 0.015f
             };
-
+            
             GUILayoutGroup gameModeHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.333f, 1.0f), gameModeBackground.RectTransform))
             {
                 Stretch = true
             };
 
-            var modeLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.055f), gameModeHolder.RectTransform), TextManager.Get("GameMode"));
+            var modeLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.055f), gameModeHolder.RectTransform) { MinSize = new Point(0, 25) }, TextManager.Get("GameMode"));
             voteText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), modeLabel.RectTransform, Anchor.TopRight),
                 TextManager.Get("Votes"), textAlignment: Alignment.CenterRight)
             {
@@ -853,7 +901,7 @@ namespace Barotrauma
                 Stretch = true
             };
 
-            missionTypeLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.055f), missionHolder.RectTransform), TextManager.Get("MissionType"));
+            missionTypeLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.055f), missionHolder.RectTransform) { MinSize = new Point(0, 25) }, TextManager.Get("MissionType"));
             missionTypeList = new GUIListBox(new RectTransform(Vector2.One, missionHolder.RectTransform))
             {
                 OnSelected = (component, obj) =>
@@ -979,7 +1027,7 @@ namespace Barotrauma
 
             clientDisabledElements.AddRange(botSpawnModeButtons);
         }
-        
+
         public IEnumerable<object> WaitForStartRound(GUIButton startButton, bool allowCancel)
         {
             string headerText = TextManager.Get("RoundStartingPleaseWait");
