@@ -134,7 +134,7 @@ namespace Barotrauma
                 this.targetCount = targetCount;
                 this.targetPercentage = targetPercentage / 100f;
 
-                if (targetPercentage < 1f)
+                if (this.targetPercentage < 1f)
                 {
                     if (this.requiredCauseOfDeath == CauseOfDeathType.Unknown && targetHull == null)
                     {
