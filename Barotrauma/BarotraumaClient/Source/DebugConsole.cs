@@ -1043,22 +1043,38 @@ namespace Barotrauma
 
             commands.Add(new Command("checkmissingloca", "", (string[] args) =>
             {
-                foreach (MapEntityPrefab me in MapEntityPrefab.List)
+                //key = text tag, value = list of languages the tag is missing from
+                Dictionary<string, List<string>> missingTags = new Dictionary<string, List<string>>();
+                Dictionary<string, HashSet<string>> tags = new Dictionary<string, HashSet<string>>();
+                foreach (string language in TextManager.AvailableLanguages)
                 {
-                    string name = TextManager.Get("entityname." + me.Identifier, returnNull: true);
-                    if (!string.IsNullOrEmpty(name)) { continue; }
+                    TextManager.Language = language;
+                    tags.Add(language, new HashSet<string>(TextManager.GetAllTagTextPairs().Select(t => t.Key)));
+                }
 
-                    if (me is ItemPrefab itemPrefab)
+                foreach (string englishTag in tags["English"])
+                {
+                    if (englishTag == "entitydescription.reinforceddoor")
                     {
-                        string nameIdentifier = itemPrefab.ConfigElement?.GetAttributeString("nameidentifier", "");
-                        if (nameIdentifier != null)
+                        int asdfsdf = 1;
+                    }
+                    foreach (string language in TextManager.AvailableLanguages)
+                    {
+                        if (language == "English") { continue; }
+                        if (!tags[language].Contains(englishTag))
                         {
-                            name = TextManager.Get("entityname." + nameIdentifier, returnNull: true);
-                            if (!string.IsNullOrEmpty(name)) { continue; }
+                            if (!missingTags.ContainsKey(englishTag))
+                            {
+                                missingTags[englishTag] = new List<string>();
+                            }
+                            missingTags[englishTag].Add(language);
                         }
                     }
-                    NewMessage("Entity name not translated (" + me.Name + ", " + me.Identifier + ")!", me is ItemPrefab ? Color.Red : Color.Yellow);
                 }
+                string filePath = "missingloca.txt";
+                File.WriteAllLines(filePath, missingTags.Select(t => "\""+t.Key + "\"\n    missing from " + string.Join(", ", t.Value)));
+                System.Diagnostics.Process.Start(Path.GetFullPath(filePath));
+                TextManager.Language = "English";
             }));
 
             commands.Add(new Command("spamchatmessages", "", (string[] args) =>
