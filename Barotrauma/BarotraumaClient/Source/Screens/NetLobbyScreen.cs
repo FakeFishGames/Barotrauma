@@ -583,7 +583,7 @@ namespace Barotrauma
                 Stretch = true
             };
 
-            GUIFrame readyToStartContainer = new GUIFrame(new RectTransform(Vector2.One, roundControlsHolder.RectTransform), style: "GUIFrameFriendsDropdown");
+            GUIFrame readyToStartContainer = new GUIFrame(new RectTransform(Vector2.One, roundControlsHolder.RectTransform), style: "TextFrame");
 
             // Ready to start tickbox
             ReadyToStartBox = new GUITickBox(new RectTransform(new Vector2(0.85f, 0.75f), readyToStartContainer.RectTransform, anchor: Anchor.Center),
