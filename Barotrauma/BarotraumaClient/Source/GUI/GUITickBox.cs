@@ -71,7 +71,7 @@ namespace Barotrauma
             set { text.TextColor = value; }
         }
 
-        public override Rectangle MouseRect
+        /*public override Rectangle MouseRect
         {
             get
             {
@@ -83,7 +83,7 @@ namespace Barotrauma
                 union = Rectangle.Union(union, Rect);
                 return ClampMouseRectToParent ? ClampRect(union) : union;
             }
-        }
+        }*/
 
         public override ScalableFont Font
         {
@@ -145,7 +145,7 @@ namespace Barotrauma
             Vector2 textBlockScale = new Vector2((float)(Rect.Width - Rect.Height) / (float)Math.Max(Rect.Width, 1.0), 1.0f);
             text = new GUITextBlock(new RectTransform(textBlockScale, layoutGroup.RectTransform), label, font: font, textAlignment: Alignment.CenterLeft)
             {
-                CanBeFocused = false
+                CanBeFocused = true
             };
             GUI.Style.Apply(text, "GUIButtonHorizontal", this);
             Enabled = true;
@@ -163,7 +163,7 @@ namespace Barotrauma
 
         private void ResizeBox()
         {
-            Vector2 textBlockScale = new Vector2((float)(Rect.Width - Rect.Height) / (float)Math.Max(Rect.Width, 1.0), 1.0f);
+            Vector2 textBlockScale = new Vector2(Math.Max(Rect.Width - box.Rect.Width, 0.0f) / Math.Max(Rect.Width, 1.0f), 1.0f);
             text.RectTransform.RelativeSize = textBlockScale;
             text.SetTextPos();
         }
