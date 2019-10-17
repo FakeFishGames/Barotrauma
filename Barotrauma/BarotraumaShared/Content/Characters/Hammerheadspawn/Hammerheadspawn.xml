@@ -1,9 +1,10 @@
-﻿<Character speciesname="Hammerheadspawn" humanoid="False" group="" husk="False" needsair="False" canspeak="False" noise="100" blooddecal="blood">
+﻿<Character speciesname="Hammerheadspawn" humanoid="False" group="hammerhead" husk="False" needsair="False" canspeak="False" noise="100" blooddecal="blood">
   <ragdolls folder="Content/Characters/Hammerheadspawn/Ragdolls/" />
   <animations folder="Content/Characters/Hammerheadspawn/Animations/" />
-  <health vitality="100" doesbleed="True" crushdepth="-Infinity" usehealthwindow="False" bleedingreduction="0" burnreduction="0" constanthealthregeneration="0" healthregenerationwheneating="0" />
-  <ai combatstrength="1" sight="1" hearing="1" aggressionhurt="100" aggressiongreed="10" fleehealththreshold="0" attackonlywhenprovoked="False" avoidgunfire="True" aggressiveboarding="False">
-    <target tag="dead" state="Eat" priority="100" />
-    <target tag="room" state="Attack" priority="20" />
+  <health vitality="10" doesbleed="True" crushdepth="-Infinity" usehealthwindow="False" bleedingreduction="0" burnreduction="0" constanthealthregeneration="0" healthregenerationwheneating="0" />
+  <ai combatstrength="10" sight="1" hearing="1" aggressionhurt="100" aggressiongreed="10" fleehealththreshold="0" attackonlywhenprovoked="False" avoidgunfire="True" aggressiveboarding="False">
+    <target tag="stronger" state="Attack" priority="10" />
+    <target tag="weaker" state="Attack" priority="10" />
+    <target tag="human" state="Attack" priority="10" />
   </ai>
 </Character>
