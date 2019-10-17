@@ -738,9 +738,18 @@ namespace Barotrauma
             {
                 foreach (CharacterSpawnInfo characterSpawnInfo in spawnCharacters)
                 {
+                    var characters = new List<Character>();
                     for (int i = 0; i < characterSpawnInfo.Count; i++)
                     {
-                        Entity.Spawner.AddToSpawnQueue(characterSpawnInfo.SpeciesName, position + Rand.Vector(characterSpawnInfo.Spread, Rand.RandSync.Server));
+                        Entity.Spawner.AddToSpawnQueue(characterSpawnInfo.SpeciesName, position + Rand.Vector(characterSpawnInfo.Spread, Rand.RandSync.Server), 
+                            onSpawn: newCharacter =>
+                        {
+                            characters.Add(newCharacter);
+                            if (characters.Count == characterSpawnInfo.Count)
+                            {
+                                SwarmBehavior.CreateSwarm(characters.Cast<AICharacter>());
+                            }
+                        });
                     }
                 }
                 foreach (ItemSpawnInfo itemSpawnInfo in spawnItems)
