@@ -6,12 +6,9 @@
     </deformablesprite>
   </limb>
   <limb id="1" name="Head" type="Head" height="0" width="0" notes="" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="210" mass="0" density="50" pullpos="0,0" refjoint="-1" ignorecollisions="False" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7" mouthpos="0,0">
-    <conditionalsprite>
-      <conditional isDead="False" />
-      <deformablesprite texture="Content/Characters/Hammerheadmatriarch/Hammerheadmatriarch.png" sourcerect="1655,0,381,563" origin="0.4631682,0.5593005" depth="0.3" subdivisions="5,5">
-        <spritedeformation type="bendjoint" resolution="5,5" multiplier="1.0" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="20" strength="5" />
-      </deformablesprite>
-    </conditionalsprite>
+    <deformablesprite texture="" sourcerect="1655,0,381,563" origin="0.4631682,0.5593005" depth="0.3" subdivisions="5,5">
+      <spritedeformation type="bendjoint" resolution="5,5" multiplier="1.0" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="20" strength="5" />
+    </deformablesprite>
     <conditionalsprite>
       <conditional isDead="True" />
       <deformablesprite texture="Content/Characters/Hammerheadmatriarch/Hammerheadmatriarch.png" sourcerect="366,0,381,563" origin="0.4631682,0.5593005" depth="0.3" subdivisions="5,5">
