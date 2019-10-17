@@ -378,7 +378,7 @@
 
   </TraitorMission>
 
-  <!--<TraitorMission identifier="oxygen_sabotage">
+  <TraitorMission identifier="oxygen_sabotage">
 
     <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
 
@@ -398,27 +398,11 @@
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="oxygen_sabotage_objectivesuccessmessage2"/>
       <StartMessage id="oxygen_sabotage_traitorobjectivestartmessage2"/>
-      <Goal type="killtarget" job="mechanic">
-        <InfoText id="traitorgoalkilltargetinfo" />
-      </Goal>
-      <Goal type="killtarget" job="engineer">
-        <InfoText id="traitorgoalkilltargetinfo" />
-      </Goal>
-      <Goal type="killtarget" job="captain">
-        <InfoText id="traitorgoalkilltargetinfo" />
-      </Goal>
-      <Goal type="killtarget" job="securityofficer">
-        <InfoText id="traitorgoalkilltargetinfo" />
-      </Goal>
-      <Goal type="killtarget" job="medicaldoctor">
-        <InfoText id="traitorgoalkilltargetinfo" />
-      </Goal>
-      <Goal type="killtarget" job="assistant">
-        <InfoText id="traitorgoalkilltargetinfo" />
-      </Goal>
+      <Goal type="killtarget" targetpercentage="100"/>
     </Objective>
 
-  </TraitorMission>-->
+  </TraitorMission>
+  
   <TraitorMission identifier="acidparty">
 
     <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
