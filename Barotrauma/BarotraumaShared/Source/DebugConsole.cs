@@ -1248,13 +1248,6 @@ namespace Barotrauma
                     
                     return;
                 }
-#if !DEBUG
-                if (!IsCommandPermitted(splitCommand[0].ToLowerInvariant(), GameMain.Client))
-                {
-                    ThrowError("You're not permitted to use the command \"" + splitCommand[0].ToLowerInvariant() + "\"!");
-                    return;
-                }
-#endif
             }
 #endif
 
