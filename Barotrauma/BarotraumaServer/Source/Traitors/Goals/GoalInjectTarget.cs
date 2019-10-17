@@ -58,6 +58,12 @@ namespace Barotrauma
 
             public GoalInjectTarget(TraitorMission.CharacterFilter filter, string poisonId, string afflictionId, int targetCount, float targetPercentage) : base()
             {
+                Filter = filter;
+                this.poisonId = poisonId;
+                this.afflictionId = afflictionId;
+                this.targetCount = targetCount;
+                this.targetPercentage = targetPercentage / 100f;
+
                 if (targetPercentage < 1f)
                 {
                     InfoTextId = "traitorgoalpoisoninfo";
@@ -66,12 +72,6 @@ namespace Barotrauma
                 {
                     InfoTextId = "traitorgoalpoisoneveryoneinfo";
                 }
-
-                Filter = filter;
-                this.poisonId = poisonId;
-                this.afflictionId = afflictionId;
-                this.targetCount = targetCount;
-                this.targetPercentage = targetPercentage / 100f;
             }
         }
     }
