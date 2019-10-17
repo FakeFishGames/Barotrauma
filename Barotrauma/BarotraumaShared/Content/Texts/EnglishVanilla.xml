@@ -3550,7 +3550,39 @@
   <gamemodedescription.sandbox>A game mode with no specific objectives.</gamemodedescription.sandbox>
   <gamemodedescription.mission>The crew must work together to complete a specific task, such as retrieving an alien artifact or killing a creature that's terrorizing nearby outposts. The game ends when the task is completed or everyone in the crew has died.</gamemodedescription.mission>
   <gamemodedescription.multiplayercampaign>Embark on a journey through the depths of Europa. Travel from location to another, complete missions to earn money for supplies, discover new biomes — and perhaps eventually uncover the secrets of Europa.</gamemodedescription.multiplayercampaign>
-  
+
+  <entityname.sincomponent>Sin Component</entityname.sincomponent>
+  <entitydescription.sincomponent>Outputs the sine of the input.</entitydescription.sincomponent>
+  <entityname.coscomponent>Cos Component</entityname.coscomponent>
+  <entitydescription.coscomponent>Outputs the cosine of the input.</entitydescription.coscomponent>
+  <entityname.tancomponent>Tan Component</entityname.tancomponent>
+  <entitydescription.tancomponent>Outputs the tangent of the input.</entitydescription.tancomponent>
+  <entityname.asincomponent>Asin Component</entityname.asincomponent>
+  <entitydescription.asincomponent>Outputs the angle whose sine is equal to the input.</entitydescription.asincomponent>
+  <entityname.acoscomponent>Acos Component</entityname.acoscomponent>
+  <entitydescription.acoscomponent>Outputs the angle whose cosine is equal to the input.</entitydescription.acoscomponent>
+  <entityname.atancomponent>Atan Component</entityname.atancomponent>
+  <entitydescription.atancomponent>Outputs the angle whose tangent is equal to the input.</entitydescription.atancomponent>
+
+  <entityname.modulocomponent>Modulo Component</entityname.modulocomponent>
+  <entitydescription.modulocomponent>Outputs the remainder when the input is divided by a specific number.</entitydescription.modulocomponent>
+  <entityname.roundcomponent>Round Component</entityname.roundcomponent>
+  <entitydescription.roundcomponent>Rounds a numerical input to the nearest integer value.</entitydescription.roundcomponent>
+  <entityname.ceilcomponent>Ceil Component</entityname.ceilcomponent>
+  <entitydescription.ceilcomponent>Outputs the smallest integer value that is bigger than or equal to the input.</entitydescription.ceilcomponent>
+  <entityname.floorcomponent>Floor Component</entityname.floorcomponent>
+  <entitydescription.floorcomponent>Outputs the greates integer value that is less than or equal to the input.</entitydescription.floorcomponent>
+  <entityname.factorialcomponent>Factorial Component</entityname.factorialcomponent>
+  <entitydescription.factorialcomponent>Outputs the factorial of the input.</entitydescription.factorialcomponent>
+  <entityname.squarerootcomponent>Square Root Component</entityname.squarerootcomponent>
+  <entitydescription.squarerootcomponent>Outputs the square root of the input.</entitydescription.squarerootcomponent>
+  <entityname.abscomponent>Abs Component</entityname.abscomponent>
+  <entitydescription.abscomponent>Outputs the absolute value of the input.</entitydescription.abscomponent>
+  <entityname.powcomponent>Exponentiation Component</entityname.powcomponent>
+  <entitydescription.powcomponent>Outputs the input raised to a given power.</entitydescription.powcomponent>
+
+  <connection.setmodulus>set_modulus</connection.setmodulus>
+
   <!-- Server lobby 2.0 -->
   <servertag.casual>Casual</servertag.casual>
   <servertagdescription.casual>Having fun is more important than completing the objective. A good choice for new players.</servertagdescription.casual>
