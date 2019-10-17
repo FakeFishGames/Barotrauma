@@ -362,7 +362,7 @@
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="goblins_objectiveSuccessMessage3"/>
       <StartMessage id="goblins_traitorobjectivestartmessage3"/>
-      <Goal type="killtarget">
+      <Goal type="killtarget" >
         <InfoText id="traitorgoalkilltargetinfo"/>
       </Goal>
     </Objective>
@@ -371,12 +371,12 @@
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="goblins_objectiveSuccessMessage4" />
       <StartMessage id="goblins_traitorobjectivestartmessage4"/>
-      <Goal type="killtarget">
+      <Goal type="killtarget" targetpercentage="100">
         <InfoText id="traitorgoalkilleveryoneinfo" />
       </Goal>
     </Objective>
 
-  </TraitorMission>-->
+  </TraitorMission>
 
   <!--<TraitorMission identifier="oxygen_sabotage">
 
@@ -432,6 +432,12 @@
       <Goal type="finditem" identifier="deliriumine" preferNew="false" allowNew="true" allowExisting="true" allowedContainers="suppliescabinet,mediumsteelcabinet,steelcabinet">
         <InfoText id="traitorgoalfinditeminfo"/>
       </Goal>
+      <Goal type="finditem" identifier="deliriumine" preferNew="false" allowNew="true" allowExisting="true" allowedContainers="suppliescabinet,mediumsteelcabinet,steelcabinet">
+        <InfoText id="traitorgoalfinditeminfo"/>
+      </Goal>
+      <Goal type="finditem" identifier="deliriumine" preferNew="false" allowNew="true" allowExisting="true" allowedContainers="suppliescabinet,mediumsteelcabinet,steelcabinet">
+        <InfoText id="traitorgoalfinditeminfo"/>
+      </Goal>
     </Objective>
 
     <Objective>
@@ -450,14 +456,14 @@
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="acidparty_objectiveSuccessMessage3"/>
       <StartMessage id="acidparty_traitorobjectivestartmessage3"/>
-      <Goal type="injectpoison" poison="deliriumine" affliction="psychosis">        
+      <Goal type="injectpoison" poison="deliriumine" affliction="psychosis" targetpercentage="100">
         <InfoText id="traitorgoalpoisoninfo"/>
       </Goal>
     </Objective>
 
   </TraitorMission>
 
-  
+
   <TraitorMission identifier="tainted_welding">
 
     <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
