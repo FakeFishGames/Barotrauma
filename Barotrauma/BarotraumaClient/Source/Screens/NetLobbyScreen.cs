@@ -2479,45 +2479,33 @@ namespace Barotrauma
                         if (spriteElement == null) { continue; }
 
                         string spritePath = spriteElement.Attribute("texture").Value;
+                        spritePath = spritePath
+                            .Replace("[GENDER]", (gender == Gender.Female) ? "female" : "male")
+                            .Replace("[RACE]", race.ToString().ToLowerInvariant())
+                            .Replace("[HEADID]", i.ToString());
 
-                        spritePath = spritePath.Replace("[GENDER]", (gender == Gender.Female) ? "female" : "male");
-                        spritePath = spritePath.Replace("[RACE]", race.ToString().ToLowerInvariant());
-                        spritePath = spritePath.Replace("[HEADID]", i.ToString());
+                        if (!File.Exists(spritePath)) { continue; }
 
-                        string fileName = Path.GetFileNameWithoutExtension(spritePath);
+                        Sprite headSprite = new Sprite(spriteElement, "", spritePath);
 
-                        //go through the files in the directory to find a matching sprite
-                        foreach (string file in Directory.GetFiles(Path.GetDirectoryName(spritePath)))
+                        if (row == null || itemsInRow >= 4)
                         {
-                            if (!file.EndsWith(".png", StringComparison.InvariantCultureIgnoreCase))
-                            {
-                                continue;
-                            }
-                            string fileWithoutTags = Path.GetFileNameWithoutExtension(file);
-                            fileWithoutTags = fileWithoutTags.Split('[', ']').First();
-                            if (fileWithoutTags != fileName) { continue; }
-
-                            Sprite headSprite = new Sprite(spriteElement, "", file);
-
-                            if (row == null || itemsInRow >= 4)
-                            {
-                                row = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.333f), HeadSelectionList.Content.RectTransform), true);
-                                itemsInRow = 0;
-                            }
-
-                            var btn = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), row.RectTransform), style: "ListBoxElement")
-                            {
-                                OutlineColor = Color.White * 0.5f,
-                                UserData = new Tuple<Gender, Race, int>(gender, race, i),
-                                OnClicked = SwitchHead,
-                                Selected = gender == info.Gender && race == info.Race && i == info.HeadSpriteId
-                            };
-
-                            new GUIImage(new RectTransform(Vector2.One, btn.RectTransform), headSprite, scaleToFit: true);
-                            itemsInRow++;
-
-                            break;
+                            row = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.333f), HeadSelectionList.Content.RectTransform), true);
+                            itemsInRow = 0;
                         }
+
+                        var btn = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), row.RectTransform), style: "ListBoxElement")
+                        {
+                            OutlineColor = Color.White * 0.5f,
+                            UserData = new Tuple<Gender, Race, int>(gender, race, i),
+                            OnClicked = SwitchHead,
+                            Selected = gender == info.Gender && race == info.Race && i == info.HeadSpriteId
+                        };
+
+                        new GUIImage(new RectTransform(Vector2.One, btn.RectTransform), headSprite, scaleToFit: true);
+                        itemsInRow++;
+
+                        
 
                         break;
                     }
@@ -2776,7 +2764,7 @@ namespace Barotrauma
                         var torsoSprite = new Sprite(spriteElement, path: "", file: textureVariant);
                         retVal[n].First[i] = torsoSprite;
 
-                        torsoSprite.size = new Vector2((float)torsoSprite.SourceRect.Width, (float)torsoSprite.SourceRect.Height);
+                        torsoSprite.size = new Vector2(torsoSprite.SourceRect.Width, torsoSprite.SourceRect.Height);
 
                         DebugConsole.NewMessage(torsoSprite.size.ToString());
                     }
