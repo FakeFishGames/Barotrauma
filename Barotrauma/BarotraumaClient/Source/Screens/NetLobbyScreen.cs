@@ -128,6 +128,12 @@ namespace Barotrauma
         //elements that aren't shown client-side
         private List<GUIComponent> clientHiddenElements = new List<GUIComponent>();
 
+        public GUIComponent FileTransferFrame { get; private set; }
+        public GUITextBlock FileTransferTitle { get; private set; }
+        public GUIProgressBar FileTransferProgressBar { get; private set; }
+        public GUITextBlock FileTransferProgressText { get; private set; }
+
+
         private bool AllowSubSelection
         {
             get
@@ -372,25 +378,26 @@ namespace Barotrauma
 
             GUILayoutGroup bottomBar = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), innerFrame.RectTransform))
             {
-                IsHorizontal = true,
                 Stretch = true,
+                IsHorizontal = true,
                 RelativeSpacing = panelSpacing
             };
             GUILayoutGroup bottomBarLeft = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 1.0f), bottomBar.RectTransform))
             {
+                Stretch = true,
                 IsHorizontal = true,
                 RelativeSpacing = panelSpacing
             };
             GUILayoutGroup bottomBarMid = new GUILayoutGroup(new RectTransform(new Vector2(0.4f, 1.0f), bottomBar.RectTransform))
             {
-                IsHorizontal = true,
                 Stretch = true,
+                IsHorizontal = true,
                 RelativeSpacing = panelSpacing
             };
             GUILayoutGroup bottomBarRight = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 1.0f), bottomBar.RectTransform))
             {
-                IsHorizontal = true,
                 Stretch = true,
+                IsHorizontal = true,
                 RelativeSpacing = panelSpacing
             };
 
@@ -443,6 +450,32 @@ namespace Barotrauma
             new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), bottomBarLeft.RectTransform), TextManager.Get("disconnect"), style: "GUIButtonLarge")
             {
                 OnClicked = (bt, userdata) => { GameMain.QuitToMainMenu(save: false, showVerificationPrompt: true); return true; }
+            };
+
+            // file transfers  ------------------------------------------------------------
+            FileTransferFrame = new GUIFrame(new RectTransform(Vector2.One, bottomBarLeft.RectTransform), style: "TextFrame");
+            var fileTransferContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), FileTransferFrame.RectTransform, Anchor.Center))
+            {
+                Stretch = true,
+                RelativeSpacing = 0.05f
+            };
+            FileTransferTitle = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), fileTransferContent.RectTransform), "", font: GUI.SmallFont);
+            var fileTransferBottom = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), fileTransferContent.RectTransform), isHorizontal: true)
+            {
+                Stretch = true
+            };
+            FileTransferProgressBar = new GUIProgressBar(new RectTransform(new Vector2(0.6f, 1.0f), Color.LightGreen, fileTransferBottom.RectTransform), 0.0f);
+            FileTransferProgressText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), FileTransferProgressBar.RectTransform), "", 
+                font: GUI.SmallFont, textAlignment: Alignment.CenterLeft);
+            new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), fileTransferBottom.RectTransform), TextManager.Get("cancel"))
+            {
+                OnClicked = (btn, userdata) =>
+                {
+                    if (!(userdata is FileReceiver.FileTransferIn transfer)) { return false; }
+                    GameMain.Client?.CancelFileTransfer(transfer);
+                    GameMain.Client.FileReceiver.StopTransfer(transfer);
+                    return true;
+                }
             };
 
             // Sidebar area (Character customization/Chat)
@@ -645,7 +678,7 @@ namespace Barotrauma
                 }
             };
             clientHiddenElements.Add(StartButton);
-
+            
             //autorestart ------------------------------------------------------------------
 
             autoRestartText = new GUITextBlock(new RectTransform(Vector2.One, bottomBarMid.RectTransform), "", font: GUI.SmallFont, style: "TextFrame", textAlignment: Alignment.Center)

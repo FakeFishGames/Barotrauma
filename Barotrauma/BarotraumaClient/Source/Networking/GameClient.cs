@@ -2343,6 +2343,7 @@ namespace Barotrauma.Networking
                 Screen.Selected == GameMain.GameScreen)
             {
                 inGameHUD.AddToGUIUpdateList();
+                GameMain.NetLobbyScreen.FileTransferFrame?.AddToGUIUpdateList();
             }
         }
 
@@ -2409,46 +2410,26 @@ namespace Barotrauma.Networking
         public virtual void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
             if (GUI.DisableHUD || GUI.DisableUpperHUD) return;
-            
+
             if (fileReceiver != null && fileReceiver.ActiveTransfers.Count > 0)
             {
-                Vector2 downloadBarSize = new Vector2(250, 35) * GUI.Scale;
-                Vector2 pos = new Vector2(GameMain.NetLobbyScreen.InfoFrame.Rect.X, GameMain.GraphicsHeight - downloadBarSize.Y - 5);
-
-                GUI.DrawRectangle(spriteBatch, new Rectangle(
-                    (int)pos.X,
-                    (int)pos.Y,
-                    (int)(fileReceiver.ActiveTransfers.Count * (downloadBarSize.X + 10)),
-                    (int)downloadBarSize.Y),
-                    Color.Black * 0.8f, true);
-
-                for (int i = 0; i < fileReceiver.ActiveTransfers.Count; i++)
-                {
-                    var transfer = fileReceiver.ActiveTransfers[i];
-
-                    GUI.DrawString(spriteBatch,
-                        pos,
-                        ToolBox.LimitString(TextManager.GetWithVariable("DownloadingFile", "[filename]", transfer.FileName), GUI.SmallFont, (int)downloadBarSize.X),
-                        Color.White, null, 0, GUI.SmallFont);
-                    GUI.DrawProgressBar(spriteBatch, new Vector2(pos.X, -pos.Y - downloadBarSize.Y / 2), new Vector2(downloadBarSize.X * 0.7f, downloadBarSize.Y / 2), transfer.Progress, Color.Green);
-                    GUI.DrawString(spriteBatch, pos + new Vector2(5, downloadBarSize.Y / 2),
-                        MathUtils.GetBytesReadable((long)transfer.Received) + " / " + MathUtils.GetBytesReadable((long)transfer.FileSize),
-                        Color.White, null, 0, GUI.SmallFont);
-
-                    if (GUI.DrawButton(spriteBatch, new Rectangle(
-                            (int)(pos.X + downloadBarSize.X * 0.7f), (int)(pos.Y + downloadBarSize.Y / 2),
-                            (int)(downloadBarSize.X * 0.3f), (int)(downloadBarSize.Y / 2)), 
-                        TextManager.Get("Cancel"), new Color(0.47f, 0.13f, 0.15f, 0.08f)))
-                    {
-                        CancelFileTransfer(transfer);
-                        fileReceiver.StopTransfer(transfer);
-                    }
-
-                    pos.X += (downloadBarSize.X + 10);
-                }
+                var transfer = fileReceiver.ActiveTransfers.First();
+                GameMain.NetLobbyScreen.FileTransferFrame.Visible = true;
+                GameMain.NetLobbyScreen.FileTransferTitle.Text =
+                    ToolBox.LimitString(
+                        TextManager.GetWithVariable("DownloadingFile", "[filename]", transfer.FileName),
+                        GameMain.NetLobbyScreen.FileTransferTitle.Font,
+                        GameMain.NetLobbyScreen.FileTransferTitle.Rect.Width);
+                GameMain.NetLobbyScreen.FileTransferProgressBar.BarSize = transfer.Progress;
+                GameMain.NetLobbyScreen.FileTransferProgressText.Text =
+                    MathUtils.GetBytesReadable((long)transfer.Received) + " / " + MathUtils.GetBytesReadable((long)transfer.FileSize);
             }
-            
-            if (!gameStarted || Screen.Selected != GameMain.GameScreen) return;
+            else
+            {
+                GameMain.NetLobbyScreen.FileTransferFrame.Visible = false;
+            }
+
+            if (!gameStarted || Screen.Selected != GameMain.GameScreen) { return; }
 
             inGameHUD.DrawManually(spriteBatch);
 
