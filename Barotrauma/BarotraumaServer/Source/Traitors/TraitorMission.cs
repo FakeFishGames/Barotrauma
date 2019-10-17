@@ -370,7 +370,7 @@ namespace Barotrauma
 
                     if (i < targets.Count - 1)
                     {
-                        names += "\n";
+                        names += ", ";
                     }
                 }
 

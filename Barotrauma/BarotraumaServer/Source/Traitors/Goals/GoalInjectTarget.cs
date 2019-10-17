@@ -38,10 +38,9 @@ namespace Barotrauma
                 {
                     if (targetWasInfected[i]) continue;
                     targetWasInfected[i] = Targets[i].CharacterHealth.GetAffliction(afflictionId) != null;
-                    if (!targetWasInfected[i]) return false;
                 }
 
-                return true;
+                return targetWasInfected.All(t => t == true);
             }
 
             public override bool Start(Traitor traitor)
@@ -59,7 +58,15 @@ namespace Barotrauma
 
             public GoalInjectTarget(TraitorMission.CharacterFilter filter, string poisonId, string afflictionId, int targetCount, float targetPercentage) : base()
             {
-                InfoTextId = "TraitorGoalPoisonInfo";
+                if (targetPercentage < 1f)
+                {
+                    InfoTextId = "traitorgoalpoisoninfo";
+                }
+                else
+                {
+                    InfoTextId = "traitorgoalpoisoneveryoneinfo";
+                }
+
                 Filter = filter;
                 this.poisonId = poisonId;
                 this.afflictionId = afflictionId;

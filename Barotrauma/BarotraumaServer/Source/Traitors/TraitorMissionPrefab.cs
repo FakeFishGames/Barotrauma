@@ -180,7 +180,9 @@ namespace Barotrauma
                         case "injectpoison":
                             checker.Optional(targetFilters.Keys.ToArray());
                             checker.Required("poison");
-                            checker.Required("affliction");  
+                            checker.Required("affliction");
+                            checker.Optional("targetcount");
+                            checker.Optional("targetpercentage");
                             List<Traitor.TraitorMission.CharacterFilter> poisonFilters = new List<Traitor.TraitorMission.CharacterFilter>();
                             foreach (var attribute in Config.Attributes())
                             {
