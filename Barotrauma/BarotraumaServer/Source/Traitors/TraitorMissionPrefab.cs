@@ -128,7 +128,7 @@ namespace Barotrauma
                             }
                             goal = new Traitor.GoalKillTarget((character) => killFilters.All(f => f(character)), 
                                 (CauseOfDeathType)Enum.Parse(typeof(CauseOfDeathType), Config.GetAttributeString("causeofdeath", "Unknown"), true),
-                                Config.GetAttributeString("affliction", null), Config.GetAttributeString("roomname", null), Config.GetAttributeInt("targetcount", -1), 
+                                Config.GetAttributeString("affliction", null), Config.GetAttributeString("targethull", null), Config.GetAttributeInt("targetcount", -1), 
                                 Config.GetAttributeFloat("targetpercentage", -1f));
                             break;
                         }

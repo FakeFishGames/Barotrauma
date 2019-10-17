@@ -3610,6 +3610,10 @@
   <acidparty_objectivesuccessmessage2>Lorem ipsum</acidparty_objectivesuccessmessage2>
   <acidparty_traitorobjectivestartmessage3>Lorem ipsum</acidparty_traitorobjectivestartmessage3>
   <acidparty_objectivesuccessmessage3>Lorem ipsum</acidparty_objectivesuccessmessage3>
-
+  
+  <!-- Placeholder text for goals -->
+  <traitorgoalkilltargetinfowithcause>Assassinate [targetname] by [causeofdeath].</traitorgoalkilltargetinfowithcause>
+  <traitorgoalkilltargetinfowithhull>Assassinate [targetname] and leave the body in the [targethullname].</traitorgoalkilltargetinfowithhull>
+  <traitorgoalkilltargetinfowithcauseandhull>Assassinate [targetname] by [causeofdeath] and leave the body in the [targethullname].</traitorgoalkilltargetinfowithcauseandhull>
 
 </infotexts>

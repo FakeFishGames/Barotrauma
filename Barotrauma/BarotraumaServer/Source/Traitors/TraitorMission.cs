@@ -345,6 +345,7 @@ namespace Barotrauma
                 {
                     for (int i = 0; i < targetCount; i++)
                     {
+                        if (i >= validCharacters.Count) break;
                         Character character = validCharacters[Random(validCharacters.Count)];
                         targetCharacters.Add(character);
                         validCharacters.Remove(character);
