@@ -76,6 +76,7 @@ namespace Barotrauma
 
         private GUIComponent gameModeContainer, campaignContainer;
         private GUIButton gameModeViewButton, campaignViewButton, spectateButton;
+        private GUILayoutGroup roundControlsHolder;
         public GUIButton SettingsButton { get; private set; }
 
         private GUITickBox playYourself;
@@ -579,7 +580,7 @@ namespace Barotrauma
                 Font = GUI.SmallFont
             };
 
-            GUILayoutGroup roundControlsHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), sideBar.RectTransform), 
+            roundControlsHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), sideBar.RectTransform), 
                 isHorizontal: true)
             {
                 Stretch = true
@@ -588,7 +589,7 @@ namespace Barotrauma
             GUIFrame readyToStartContainer = new GUIFrame(new RectTransform(Vector2.One, roundControlsHolder.RectTransform), style: "TextFrame");
 
             // Ready to start tickbox
-            ReadyToStartBox = new GUITickBox(new RectTransform(new Vector2(0.85f, 0.75f), readyToStartContainer.RectTransform, anchor: Anchor.Center),
+            ReadyToStartBox = new GUITickBox(new RectTransform(new Vector2(0.95f, 0.75f), readyToStartContainer.RectTransform, anchor: Anchor.Center),
                 TextManager.Get("ReadyToStartTickBox"))
             {
                 Visible = false
@@ -763,7 +764,7 @@ namespace Barotrauma
             };
             clientDisabledElements.Add(seedBox);
             LevelSeed = ToolBox.RandomSeed(8);
-
+            
             //level difficulty ------------------------------------------------------------------
 
             var difficultyLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), miscSettingsHolder.RectTransform), TextManager.Get("LevelDifficulty"));
@@ -779,6 +780,7 @@ namespace Barotrauma
                 }
             };
 
+            difficultyLabel.RectTransform.ScaleChanged += () => { GUITextBlock.AutoScaleAndNormalize(seedLabel, difficultyLabel); };
             clientDisabledElements.Add(levelDifficultyScrollBar);
 
             //misc buttons ------------------------------------------------------------------
@@ -1137,6 +1139,9 @@ namespace Barotrauma
                 ReadyToStartBox.OnSelected = GameMain.Client.SetReadyToStart;
             }
 
+            roundControlsHolder.Children.ForEach(c => c.IgnoreLayoutGroups = !c.Visible);
+            roundControlsHolder.Recalculate();
+
             GameMain.NetworkMember.EndVoteCount = 0;
             GameMain.NetworkMember.EndVoteMax = 1;
 
@@ -1199,6 +1204,9 @@ namespace Barotrauma
                     (GameMain.Client.HasPermission(ClientPermissions.ManageRound) || 
                     GameMain.Client.HasPermission(ClientPermissions.ManageCampaign));
             }
+
+            roundControlsHolder.Children.ForEach(c => c.IgnoreLayoutGroups = !c.Visible);
+            roundControlsHolder.Recalculate();
         }
 
         public void ShowSpectateButton()
