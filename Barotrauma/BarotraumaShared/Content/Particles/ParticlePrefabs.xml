@@ -1895,8 +1895,8 @@
     sizechangemin="0,0"
     sizechangemax="0,0"
     growtime="0"
-    startcolor="116,59,33,255"
-    endcolor="116,59,33,0"
+    startcolor="255,255,255,255"
+    endcolor="255,255,255,0"
     drawtarget="Both"
     blendstate="AlphaBlend"
     animduration="1"
@@ -1905,49 +1905,25 @@
     startdelaymax="0.2">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="0,64,32,32" />
+      sourcerect="128,128,32,32" />
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="32,64,32,32" />
+      sourcerect="160,128,32,32" />
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="64,64,32,32" />
+      sourcerect="192,128,32,32" />
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="96,64,32,32" />
+      sourcerect="128,160,32,32" />
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="128,64,32,32" />
+      sourcerect="160,160,32,32" />
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="160,64,48,32" />
+      sourcerect="192,160,32,32" />
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="208,64,48,32" />
-    <sprite
-      texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="0,96,32,32" />
-    <sprite
-      texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="32,96,32,32" />
-    <sprite
-      texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="64,96,32,32" />
-    <sprite
-      texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="96,96,32,32" />
-    <sprite
-      texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="128,96,32,32" />
-    <sprite
-      texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="160,96,32,32" />
-    <sprite
-      texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="192,96,32,32" />
-    <sprite
-      texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="224,96,32,32" />
+      sourcerect="128,192,32,32" />
   </brownchunks>
   <aliengas
     lifetime="5"
