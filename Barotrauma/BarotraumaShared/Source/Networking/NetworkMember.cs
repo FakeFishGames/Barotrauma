@@ -152,12 +152,10 @@ namespace Barotrauma.Networking
         protected RespawnManager respawnManager;
 
         public bool ShowNetStats;
-
-#if DEBUG
+        
         public float SimulatedRandomLatency, SimulatedMinimumLatency;
         public float SimulatedLoss;
         public float SimulatedDuplicatesChance;
-#endif
 
         public int TickRate
         {
