@@ -132,7 +132,7 @@ namespace Barotrauma
                 this.afflictionId = afflictionId;
                 this.targetHull = targetHull;
                 this.targetCount = targetCount;
-                this.targetPercentage = targetPercentage;
+                this.targetPercentage = targetPercentage / 100f;
 
                 if (targetPercentage < 1f)
                 {

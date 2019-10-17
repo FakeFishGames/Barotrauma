@@ -71,7 +71,7 @@ namespace Barotrauma
                 this.poisonId = poisonId;
                 this.afflictionId = afflictionId;
                 this.targetCount = targetCount;
-                this.targetPercentage = targetPercentage;
+                this.targetPercentage = targetPercentage / 100f;
             }
         }
     }
