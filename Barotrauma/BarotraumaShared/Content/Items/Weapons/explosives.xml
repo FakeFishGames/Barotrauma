@@ -20,7 +20,7 @@
       <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" type="OnBroken" range="10000" />
       <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true"/>
       <StatusEffect type="OnBroken" target="This">
-        <Explosion range="800.0" structuredamage="150" stun="5" force="20.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5">
+        <Explosion range="800.0" structuredamage="150" itemdamage="100" stun="5" force="20.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5">
           <Affliction identifier="burn" strength="50" />
           <Affliction identifier="internaldamage" strength="25" />
         </Explosion>
@@ -47,7 +47,7 @@
       <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" type="OnBroken" range="10000" />
       <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true"/>      
       <StatusEffect type="OnBroken" target="This">
-        <Explosion range="500.0" structuredamage="250" stun="5" force="20.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5">
+        <Explosion range="500.0" structuredamage="250" itemdamage="150" stun="5" force="20.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5">
           <Affliction identifier="burn" strength="150" />
           <Affliction identifier="internaldamage" strength="50" />
         </Explosion>
@@ -72,7 +72,7 @@
       <StatusEffect type="OnFire" target="This" Condition="-50.0" />
       <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true"/>
       <StatusEffect type="OnBroken" target="This">
-        <Explosion range="600.0" structuredamage="150" stun="5" force="20.0" severlimbsprobability="0.6" decal="explosion" decalsize="0.5">
+        <Explosion range="600.0" structuredamage="150" itemdamage="100" stun="5" force="20.0" severlimbsprobability="0.6" decal="explosion" decalsize="0.5">
           <Affliction identifier="burn" strength="250" />
           <Affliction identifier="internaldamage" strength="50" />
         </Explosion>
@@ -97,7 +97,7 @@
       <StatusEffect type="OnFire" target="This" Condition="-50.0" />
       <StatusEffect type="OnUse" target="This" Condition="-100" disabledeltatime="true"/>
       <StatusEffect type="OnBroken" target="This">
-        <Explosion range="600.0" structuredamage="150" stun="5" force="20.0" severlimbsprobability="0.6" decal="explosion" decalsize="0.5">
+        <Explosion range="600.0" structuredamage="150" itemdamage="100" stun="5" force="20.0" severlimbsprobability="0.6" decal="explosion" decalsize="0.5">
           <Affliction identifier="burn" strength="250" />
           <Affliction identifier="internaldamage" strength="50" />
         </Explosion>
@@ -121,7 +121,7 @@
       <StatusEffect type="OnFire" target="This" Condition="-50.0" />
       <StatusEffect type="OnUse" target="This" Condition="-100" disabledeltatime="true"/>
       <StatusEffect type="OnBroken" target="This">
-        <Explosion range="500.0" structuredamage="50" stun="5" force="20.0" severlimbsprobability="0.6">
+        <Explosion range="500.0" structuredamage="50" itemdamage="50" stun="5" force="20.0" severlimbsprobability="0.6">
           <Affliction identifier="burn" strength="200" />
         </Explosion>
         <Fire size="500" />
@@ -166,7 +166,7 @@
       <StatusEffect type="OnBroken" target="This" Condition="-100.0">
         <sound file="Content/Items/Weapons/ExplosionMedium2.ogg" selectionmode="All" range="8000" />
         <sound file="Content/Items/Weapons/ExplosionDebris3.ogg" selectionmode="All" range="8000" />
-        <Explosion range="600.0" structuredamage="100" force="20.0" severlimbsprobability="0.4" decal="explosion" decalsize="0.5">
+        <Explosion range="600.0" structuredamage="100" itemdamage="50" force="20.0" severlimbsprobability="0.4" decal="explosion" decalsize="0.5">
           <Affliction identifier="burn" amount="100" />
           <Affliction identifier="internaldamage" amount="200" />
           <Affliction identifier="stun" amount="5" />

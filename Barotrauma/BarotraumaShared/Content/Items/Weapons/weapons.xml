@@ -14,7 +14,7 @@
     <Body width="241" height="16" density="20" />
     <Pickable slots="Any" msg="ItemMsgPickUpSelect" />
     <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true">
-      <Attack structuredamage="10" stun="0.2" targetforce="20">
+      <Attack structuredamage="10" itemdamage="10" stun="0.2" targetforce="20">
         <Affliction identifier="bleeding" strength="30" />
         <Affliction identifier="internaldamage" strength="30" />
       </Attack>
@@ -32,7 +32,7 @@
     <Body width="241" height="16" density="20" />
     <Pickable slots="Any" msg="ItemMsgPickUpSelect" />
     <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true">
-      <Attack structuredamage="5" stun="0.2" targetforce="20">
+      <Attack structuredamage="5" stun="0.2" itemdamage="10" targetforce="20">
         <Affliction identifier="bleeding" strength="30" />
         <Affliction identifier="internaldamage" strength="50" />
       </Attack>
@@ -53,13 +53,13 @@
     <Body width="241" height="16" density="20" />
     <Pickable slots="Any" msg="ItemMsgPickUpSelect" />
     <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true">
-      <Attack structuredamage="10" stun="0.2">
+      <Attack structuredamage="10" stun="0.2" itemdamage="20">
         <Affliction identifier="bleeding" strength="30" />
       </Attack>
       <sound file="Content/Items/Weapons/ExplosionMedium2.ogg" type="OnUse" range="2000" selectionmode="All" />
       <sound file="Content/Items/Weapons/ExplosionDebris2.ogg" type="OnUse" range="2000" />
       <StatusEffect type="OnUse" Condition="-100.0" stun="10.0" disabledeltatime="true">
-        <Explosion range="200.0" structuredamage="5" stun="2" force="15.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5">
+        <Explosion range="200.0" structuredamage="5" itemdamage="5" stun="2" force="15.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5">
           <Affliction identifier="burn" strength="50" />
           <Affliction identifier="internaldamage" strength="40" />
         </Explosion>
@@ -141,12 +141,12 @@
     <Body width="29" height="10" density="40" />
     <Pickable slots="Any" msg="ItemMsgPickUpSelect" />
     <Projectile characterusable="false" hitscan="true" removeonhit="true">
-      <Attack structuredamage="5" stun="0.5" targetforce="10" itemdamage="10">
+      <Attack structuredamage="5" stun="0.5" targetforce="10" itemdamage="20">
         <Affliction identifier="gunshotwound" strength="40" />
         <Affliction identifier="internaldamage" strength="30" />
       </Attack>
       <StatusEffect type="OnImpact" target="Character">
-        <Conditional entitytype="!eq Character"/>
+        <Conditional entitytype="eq Structure"/>
         <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-10" anglemax="10" particleamount="5" velocitymin="-10" velocitymax="-200" scalemin="0.5" scalemax="1" />
       </StatusEffect>
     </Projectile>
@@ -184,12 +184,12 @@
     <Body width="40" height="14" density="40" />
     <Pickable slots="Any" msg="ItemMsgPickUpSelect"/>
     <Projectile characterusable="false" hitscan="true" removeonhit="true" spread="8" unskilledspread="15">
-      <Attack structuredamage="2.5" stun="0.125" targetforce="5" itemdamage="10">
+      <Attack structuredamage="2.5" stun="0.125" targetforce="5" itemdamage="20">
         <Affliction identifier="gunshotwound" strength="15" />
         <Affliction identifier="internaldamage" strength="10" />
       </Attack>
       <StatusEffect type="OnImpact" target="Character">
-        <Conditional entitytype="!eq Character"/>
+        <Conditional entitytype="eq Structure"/>
         <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-10" anglemax="10" particleamount="5" velocitymin="-10" velocitymax="-200" scalemin="0.5" scalemax="1" />
       </StatusEffect>
     </Projectile>
@@ -407,7 +407,7 @@
       <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/ExplosionMedium1.ogg" type="OnUse" range="10000" selectionmode="All" />
         <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" type="OnUse" range="10000" />
-        <Explosion range="600.0" structuredamage="5" stun="5" force="20.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5">
+        <Explosion range="600.0" structuredamage="5" itemdamage="20" stun="5" force="20.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5">
           <Affliction identifier="bleeding" strength="80" />
           <Affliction identifier="internaldamage" strength="180" />
         </Explosion>
@@ -418,7 +418,7 @@
       <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="3.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/ExplosionMedium1.ogg" type="OnUse" range="10000" selectionmode="All" />
         <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" type="OnUse" range="10000" />
-        <Explosion range="600.0" structuredamage="5" stun="5" force="20.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5">
+        <Explosion range="600.0" structuredamage="5" itemdamage="20" stun="5" force="20.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5">
           <Affliction identifier="bleeding" strength="80" />
           <Affliction identifier="internaldamage" strength="180" />
         </Explosion>
@@ -445,7 +445,7 @@
     <ItemComponent characterusable="false">
       <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/IncendiumGrenade.ogg" />
-        <Explosion range="500" stun="25" force="0.1" smoke="false">
+        <Explosion range="500" stun="25" itemdamage="10" force="0.1" smoke="false">
           <Affliction identifier="internaldamage" strength="5" />
           <Affliction identifier="burn" strength="100" />
         </Explosion>
@@ -455,7 +455,7 @@
     <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" msg="ItemMsgPickUpSelect">
       <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="3.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/IncendiumGrenade.ogg" />
-        <Explosion range="500" stun="1" force="0.1">
+        <Explosion range="500" stun="1" itemdamage="10" force="0.1">
           <Affliction identifier="internaldamage" strength="5" />
           <Affliction identifier="burn" strength="100" />
         </Explosion>
@@ -595,7 +595,7 @@
       <sound file="Content/Items/Weapons/FragGrenade40mmShot2.ogg" type="OnImpact" range="500" />
       <!--Grenade launcher ammo explodes on impact-->
       <StatusEffect type="OnImpact" Condition="-100.0" disabledeltatime="true" delay="0.0">
-        <Explosion range="250.0" structuredamage="5" stun="5" force="10.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5">
+        <Explosion range="250.0" structuredamage="5" itemdamage="10" stun="5" force="10.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5">
           <Affliction identifier="bleeding" strength="40" />
           <Affliction identifier="internaldamage" strength="60" />
         </Explosion>
@@ -696,12 +696,12 @@
     <Pickable slots="Any" msg="ItemMsgPickUpSelect"/>
     <!--When fired, spawns 8 projectiles simultaneously.-->
     <Projectile characterusable="false" hitscan="true" hitscancount="8" removeonhit="true" spread="15">
-      <Attack structuredamage="0.5" stun="0.125" targetforce="5" itemdamage="10">
+      <Attack structuredamage="0.5" stun="0.125" targetforce="5" itemdamage="20">
         <Affliction identifier="gunshotwound" strength="6" />
         <Affliction identifier="internaldamage" strength="5" />
       </Attack>
       <StatusEffect type="OnImpact" target="Character">
-        <Conditional entitytype="!eq Character"/>
+        <Conditional entitytype="eq Structure"/>
         <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-10" anglemax="10" particleamount="5" velocitymin="-10" velocitymax="-200" scalemin="0.5" scalemax="1" />
       </StatusEffect>
     </Projectile>
@@ -764,7 +764,7 @@
         <Remove />
       </StatusEffect>
       <StatusEffect type="OnImpact" target="Character">
-        <Conditional entitytype="!eq Character"/>
+        <Conditional entitytype="eq Structure"/>
         <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-10" anglemax="10" particleamount="5" velocitymin="-10" velocitymax="-200" scalemin="0.5" scalemax="1" />
       </StatusEffect>
     </Projectile>

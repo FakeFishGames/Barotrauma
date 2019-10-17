@@ -153,13 +153,25 @@ namespace Barotrauma
                             container = container.Container;
                         }
 
-                        if (fireProof || Vector2.Distance(item.WorldPosition, worldPosition) > attack.Range * 0.1f) { continue; }
+                        if (fireProof || Vector2.Distance(item.WorldPosition, worldPosition) > attack.Range * 0.5f) { continue; }
 
                         item.ApplyStatusEffects(ActionType.OnFire, 1.0f);
-                        
                         if (item.Condition <= 0.0f && GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                         {
                             GameMain.NetworkMember.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnFire });
+                        }
+
+                        if (item.HasTag("damageableitem") && !item.Indestructible)
+                        {
+                            float limbRadius = item.body == null ? 0.0f : item.body.GetMaxExtent();
+                            float dist = Vector2.Distance(item.WorldPosition, worldPosition);
+                            dist = Math.Max(0.0f, dist - ConvertUnits.ToDisplayUnits(limbRadius));
+
+                            if (dist > attack.Range) { continue; }
+
+                            float distFactor = 1.0f - dist / attack.Range;
+                            float damageAmount = attack.GetItemDamage(1.0f);
+                            item.Condition -= damageAmount * distFactor;
                         }
                     }
                 }
@@ -201,7 +213,7 @@ namespace Barotrauma
                     //calculate distance from the "outer surface" of the physics body
                     //doesn't take the rotation of the limb into account, but should be accurate enough for this purpose
                     float limbRadius = Math.Max(Math.Max(limb.body.width * 0.5f, limb.body.height * 0.5f), limb.body.radius);
-                    dist = Math.Max(0.0f, dist - FarseerPhysics.ConvertUnits.ToDisplayUnits(limbRadius));
+                    dist = Math.Max(0.0f, dist - ConvertUnits.ToDisplayUnits(limbRadius));
 
                     if (dist > attack.Range) { continue; }
 
