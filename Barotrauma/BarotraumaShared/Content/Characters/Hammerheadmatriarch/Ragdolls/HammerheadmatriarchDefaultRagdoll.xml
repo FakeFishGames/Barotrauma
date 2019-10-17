@@ -6,23 +6,32 @@
     </deformablesprite>
   </limb>
   <limb id="1" name="Head" type="Head" height="0" width="0" notes="" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="210" mass="0" density="50" pullpos="0,0" refjoint="-1" ignorecollisions="False" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7" mouthpos="0,0">
-    <deformablesprite texture="" sourcerect="1655,0,394,559" origin="0.4534883,0.5720704" depth="0.15" subdivisions="5,5">
-      <spritedeformation type="bendjoint" resolution="5,5" multiplier="1.0" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="20" strength="3" />
-    </deformablesprite>
+    <conditionalsprite>
+      <conditional isDead="False" />
+      <deformablesprite texture="Content/Characters/Hammerheadmatriarch/Hammerheadmatriarch.png" sourcerect="1655,0,381,563" origin="0.4631682,0.5593005" depth="0.3" subdivisions="5,5">
+        <spritedeformation type="bendjoint" resolution="5,5" multiplier="1.0" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="20" strength="5" />
+      </deformablesprite>
+    </conditionalsprite>
+    <conditionalsprite>
+      <conditional isDead="True" />
+      <deformablesprite texture="Content/Characters/Hammerheadmatriarch/Hammerheadmatriarch.png" sourcerect="366,0,381,563" origin="0.4631682,0.5593005" depth="0.3" subdivisions="5,5">
+        <spritedeformation type="bendjoint" resolution="5,5" multiplier="1.0" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="20" strength="10" />
+      </deformablesprite>
+    </conditionalsprite>
   </limb>
   <limb id="2" radius="0" width="450" height="250" mass="0" name="Tail1" type="Tail" spriteorientation="270" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7" mouthpos="0,0">
-    <deformablesprite texture="" sourcerect="718,1,452,557" origin="0.5415135,0.5051444" depth="0.3" subdivisions="5,5">
+    <deformablesprite texture="" sourcerect="740,1,430,557" origin="0.5415135,0.5051444" depth="0.3" subdivisions="5,5">
       <spritedeformation type="bendjoint" resolution="5,5" multiplier="1.0" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="20" strength="2" />
     </deformablesprite>
   </limb>
   <limb id="3" width="204" height="224" name="Fin1" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="2" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="35" mouthpos="0,0">
-    <deformablesprite texture="" sourcerect="0,303,202,224" origin="0.43869,0.4306809" depth="0.1" subdivisions="5,5">
+    <deformablesprite texture="" sourcerect="8,263,202,260" origin="0.5502423,0.3959902" depth="0.1" subdivisions="5,5">
       <spritedeformation type="noise" resolution="3,3" frequency="0.1" amplitude="0.25" changespeed="0.5" blendmode="Add" sync="-1" typename="noise" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" strength="1" maxrotation="90" />
       <spritedeformation type="custom" resolution="3,3" frequency="0" amplitude="1" blendmode="Multiply" row0="1,0 0,5 0,0" row1="1,0 0,5 0,0" row2="1,0 0,5 0,0" sync="-1" typename="custom" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" strength="1" maxrotation="90" />
     </deformablesprite>
   </limb>
   <limb id="4" radius="100" width="0" height="0" mass="0" name="Fin2" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" density="2" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="35" mouthpos="0,0">
-    <deformablesprite texture="" sourcerect="203,303,203,239" origin="0.5105289,0.4919307" depth="0.1" subdivisions="5,5">
+    <deformablesprite texture="" sourcerect="12,29,203,235" origin="0.541802,0.486223" depth="0.1" subdivisions="5,5">
       <spritedeformation type="noise" resolution="3,3" frequency="0.1" amplitude="0.25" changespeed="0.5" blendmode="Add" sync="-1" typename="noise" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" strength="1" maxrotation="90" />
       <spritedeformation type="custom" resolution="3,3" frequency="0" amplitude="1" blendmode="Multiply" row0="1,0 0,5 0,0" row1="1,0 0,5 0,0" row2="1,0 0,5 0,0" sync="-1" typename="custom" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" strength="1" maxrotation="90" />
     </deformablesprite>
@@ -39,24 +48,24 @@
       <spritedeformation type="custom" resolution="3,3" frequency="0" amplitude="1" blendmode="Multiply" row0="0,0 0,0 0,0" row1="1,0 0,5 1,0" row2="1,0 1,0 1,0" sync="-1" typename="custom" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" strength="1" maxrotation="90" />
     </deformablesprite>
   </limb>
-  <limb id="7" width="1025" height="513" name="SkirtA1" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="1" pullpos="0,0" refjoint="-1" ignorecollisions="True" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="70" mouthpos="0,0">
-    <deformablesprite texture="" sourcerect="328,536,1137,509" origin="0.5408445,0.4228145" depth="0" subdivisions="5,5">
+  <limb id="7" width="1025" height="513" name="SkirtA1" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="True" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="1" pullpos="0,0" refjoint="-1" ignorecollisions="True" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="70" mouthpos="0,0">
+    <deformablesprite texture="" sourcerect="341,568,1067,464" origin="0.6157298,0.4175778" depth="0" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="Add" sync="-1" typename="noise" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="Multiply" row0="1,1 1,1 0.5,0.5 0,0 0,0" row1="1,1 1,1 1,1 0.5,0.5 0,0" row2="1,1 1,1 1,1 0.5,0.5 0,0" row3="1,1 1,1 1,1 0.5,0.5 0,0" row4="1,1 1,1 1,1 0.5,0.5 0,0" sync="-1" typename="custom" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="0.5" changespeed="0.5" blendmode="Add" sync="-1" typename="noise" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="Multiply" row0="1,1 1,1 1,1 0.5,0.5 0,0" row1="1,1 1,1 1,1 0.5,0.5 0,0" row2="1,1 1,1 1,1 0.5,0.5 0,0" row3="1,1 1,1 1,1 0.5,0.5 0,0" row4="1,1 1,1 1,1 0.5,0.5 0,0" sync="-1" typename="custom" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
     </deformablesprite>
   </limb>
-  <limb id="8" width="1000" height="325" name="SkirtB1" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="1" pullpos="0,0" refjoint="-1" ignorecollisions="True" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="70" mouthpos="0,0">
-    <deformablesprite texture="" sourcerect="8,1055,1375,355" origin="0.5141718,0.6016437" depth="0.2" subdivisions="5,5">
+  <limb id="8" width="1000" height="325" name="SkirtB1" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="True" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="1" pullpos="0,0" refjoint="-1" ignorecollisions="True" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="70" mouthpos="0,0">
+    <deformablesprite texture="" sourcerect="3,1055,1276,373" origin="0.6065544,0.5291047" depth="0.2" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="Add" sync="3" typename="noise" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="Multiply" row0="1,1 1,1 0.5,0.5 0,0 0,0" row1="1,1 1,1 1,1 0.5,0.5 0,0" row2="1,1 1,1 1,1 0.5,0.5 0,0" row3="1,1 1,1 1,1 0.5,0.5 0,0" row4="1,1 1,1 1,1 0.5,0.5 0,0" sync="-1" typename="custom" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="0.5" changespeed="0.5" blendmode="Add" sync="-1" typename="noise" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="Multiply" row0="1,1 1,1 1,1 0.5,0.5 0,0" row1="1,1 1,1 1,1 0.5,0.5 0,0" row2="1,1 1,1 1,1 0.5,0.5 0,0" row3="1,1 1,1 1,1 0.5,0.5 0,0" row4="1,1 1,1 1,1 0.5,0.5 0,0" sync="-1" typename="custom" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
     </deformablesprite>
   </limb>
-  <limb id="9" width="0" height="0" name="SkirtC1" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="300" mass="0" density="1" pullpos="0,0" refjoint="-1" ignorecollisions="True" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="70" mouthpos="0,0">
-    <deformablesprite texture="" sourcerect="4,1405,1076,597" origin="0.5743497,0.4558372" depth="0.7" subdivisions="5,5">
+  <limb id="9" width="0" height="0" name="SkirtC1" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="True" attackpriority="1" steerforce="0" stepoffset="0,0" radius="300" mass="0" density="1" pullpos="0,0" refjoint="-1" ignorecollisions="True" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="70" mouthpos="0,0">
+    <deformablesprite texture="" sourcerect="4,1439,1070,564" origin="0.6191051,0.5686811" depth="0.7" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="Add" sync="3" typename="noise" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="Multiply" row0="1,1 1,1 0.5,0.5 0,0 0,0" row1="1,1 1,1 1,1 0.5,0.5 0,0" row2="1,1 1,1 1,1 0.5,0.5 0,0" row3="1,1 1,1 1,1 0.5,0.5 0,0" row4="1,1 1,1 1,1 0.5,0.5 0,0" sync="-1" typename="custom" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="0.5" changespeed="0.5" blendmode="Add" sync="-1" typename="noise" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
@@ -64,7 +73,7 @@
     </deformablesprite>
   </limb>
   <limb id="10" width="346.8" height="164.9" name="SkirtD1" type="None" spriteorientation="0" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" radius="0" density="0.5" ignorecollisions="True" angulardamping="140" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
-    <deformablesprite texture="" sourcerect="1551,557,404,194" origin="0.4189696,0.6453495" depth="0.29" subdivisions="5,5">
+    <deformablesprite texture="" sourcerect="1613,557,437,192" origin="0.4189696,0.6453495" depth="0.29" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="Add" sync="3" typename="noise" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="Multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row2="1,1 1,1 1,1 1,1 1,1" row3="1,1 1,1 1,1 1,1 1,1" row4="0,0 0,0 0,0 0,0 0,0" sync="-1" typename="custom" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="0.5" changespeed="0.5" blendmode="Add" sync="-1" typename="noise" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
@@ -72,8 +81,8 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" sync="-1" typename="bendjoint" blendmode="Add" strength="1" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
     </deformablesprite>
   </limb>
-  <limb id="19" radius="0" width="342.55" height="168.3" name="SkirtD2" type="None" spriteorientation="0" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" density="0.5" ignorecollisions="True" angulardamping="140" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
-    <deformablesprite texture="" sourcerect="1549,747,403,198" origin="0.5,0.5" depth="0.29" subdivisions="5,5">
+  <limb id="19" radius="0" width="372.3" height="184.45" name="SkirtD2" type="None" spriteorientation="0" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" density="0.5" ignorecollisions="True" angulardamping="140" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
+    <deformablesprite texture="" sourcerect="1612,747,438,217" origin="0.5,0.5" depth="0.29" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="Add" sync="3" typename="noise" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="Multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row2="1,1 1,1 1,1 1,1 1,1" row3="1,1 1,1 1,1 1,1 1,1" row4="0,0 0,0 0,0 0,0 0,0" sync="-1" typename="custom" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="0.5" changespeed="0.5" blendmode="Add" sync="-1" typename="noise" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
@@ -81,8 +90,8 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" sync="-1" typename="bendjoint" blendmode="Add" strength="1" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
     </deformablesprite>
   </limb>
-  <limb id="20" radius="0" width="342.55" height="172.55" name="SkirtD3" type="None" spriteorientation="0" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" density="0.5" ignorecollisions="True" angulardamping="140" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
-    <deformablesprite texture="" sourcerect="1549,936,403,203" origin="0.5925068,0.4127105" depth="0.29" subdivisions="5,5">
+  <limb id="20" radius="0" width="371.45" height="187.85" name="SkirtD3" type="None" spriteorientation="0" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" density="0.5" ignorecollisions="True" angulardamping="140" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
+    <deformablesprite texture="" sourcerect="1611,959,437,221" origin="0.5367573,0.4486468" depth="0.29" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="Add" sync="3" typename="noise" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="Multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row2="1,1 1,1 1,1 1,1 1,1" row3="1,1 1,1 1,1 1,1 1,1" row4="0,0 0,0 0,0 0,0 0,0" sync="-1" typename="custom" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="0.5" changespeed="0.5" blendmode="Add" sync="-1" typename="noise" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
@@ -90,8 +99,8 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" sync="-1" typename="bendjoint" blendmode="Add" strength="1" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
     </deformablesprite>
   </limb>
-  <limb id="21" radius="0" width="342.55" height="353.6" name="SkirtD4" type="None" spriteorientation="0" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" density="0.5" ignorecollisions="True" angulardamping="140" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
-    <deformablesprite texture="" sourcerect="1549,1131,403,416" origin="0.5366619,0.3074546" depth="0.29" subdivisions="5,5">
+  <limb id="21" radius="0" width="373.15" height="313.65" name="SkirtD4" type="None" spriteorientation="0" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" density="0.5" ignorecollisions="True" angulardamping="140" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
+    <deformablesprite texture="" sourcerect="1611,1175,439,369" origin="0.5366619,0.3074546" depth="0.29" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="Add" sync="3" typename="noise" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="Multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row2="1,1 1,1 1,1 1,1 1,1" row3="1,1 1,1 1,1 1,1 1,1" row4="1,1 1,1 1,1 1,1 1,1" sync="-1" typename="custom" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="0.5" changespeed="0.5" blendmode="Add" sync="-1" typename="noise" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
@@ -109,7 +118,7 @@
     <deformablesprite texture="" sourcerect="1406,1809,286,143" origin="0.4881344,0.4860579" depth="0" subdivisions="5,5"></deformablesprite>
   </limb>
   <limb id="14" radius="0" width="286" height="100" name="RightArm1" type="RightArm" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" density="2" ignorecollisions="False" angulardamping="7" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
-    <deformablesprite texture="" sourcerect="1421,1532,286,158" origin="0.5,0.5" depth="0" subdivisions="5,5"></deformablesprite>
+    <deformablesprite texture="" sourcerect="1421,1542,286,147" origin="0.5,0.5" depth="0" subdivisions="5,5"></deformablesprite>
   </limb>
   <limb id="15" radius="0" width="400" height="70" name="LeftClaw1" type="LeftHand" spriteorientation="180" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" density="2" ignorecollisions="False" angulardamping="7" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
     <deformablesprite texture="" sourcerect="1078,1723,426,90" origin="0.5,0.5" depth="0.6" subdivisions="5,5"></deformablesprite>
@@ -129,18 +138,18 @@
       <Affliction identifier="internaldamage" strength="25" probability="1" />
       <Affliction identifier="stun" strength="2" probability="1" />
       <StatusEffect type="OnUse" target="This" disabledeltatime="true">
-        <!--TODO: die-->
         <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" range="1000" selectionmode="All" />
         <sound file="Content/Items/Weapons/Emp.ogg" range="1000" />
         <Explosion range="500" force="10" smoke="false" sparks="false" shockwave="true" underwaterbubble="true" camerashake="12">
           <Affliction identifier="stun" strength="1" />
         </Explosion>
         <SpawnCharacter speciesname="crawler" count="3" spread="5" />
+        <Affliction identifier="internaldamage" amount="1000" />
       </StatusEffect>
     </attack>
   </limb>
-  <joint limb1="1" limb2="0" limb1anchor="-171.7957,23.31494" limb2anchor="234.8983,-1.615988" name="Joint 1 - 0" canbesevered="True" limitenabled="True" upperlimit="5" lowerlimit="-5" stiffness="0.25" />
-  <joint limb1="0" limb2="2" limb1anchor="-249.9327,-6.215336" limb2anchor="199.4056,-14.94022" name="Joint 0 - 2" canbesevered="True" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />
+  <joint limb1="1" limb2="0" limb1anchor="-174.2241,12.05397" limb2anchor="230.088,-7.789665" name="Joint 1 - 0" canbesevered="False" limitenabled="True" upperlimit="10" lowerlimit="-10" stiffness="0.25" />
+  <joint limb1="0" limb2="2" limb1anchor="-249.9327,-6.215336" limb2anchor="199.4056,-14.94022" name="Joint 0 - 2" canbesevered="False" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />
   <joint limb1="0" limb2="4" limb1anchor="104.5512,-59.73631" limb2anchor="72.92999,94.81" name="Joint 0 - 4" canbesevered="True" limitenabled="True" upperlimit="24" lowerlimit="6" stiffness="0.25" />
   <joint limb1="2" limb2="9" limb1anchor="54.63956,-73.14869" limb2anchor="248.8064,135.7604" name="Joint 2 - 9" canbesevered="True" limitenabled="True" upperlimit="32" lowerlimit="7" stiffness="0.25" />
   <joint limb1="0" limb2="14" limb1anchor="189.2043,37.79153" limb2anchor="-114.26,44.64662" name="Joint 0 - 14" canbesevered="True" limitenabled="True" upperlimit="141" lowerlimit="112" stiffness="0.25" />
@@ -152,13 +161,13 @@
   <joint limb1="14" limb2="16" limb1anchor="102.06,34.02" limb2anchor="-182.8098,-6.989933" name="Joint 14 - 16" canbesevered="True" limitenabled="True" upperlimit="-98.00002" lowerlimit="-122" stiffness="0.25" />
   <joint limb1="11" limb2="17" limb1anchor="117.6313,35.09177" limb2anchor="-186.9918,10.47017" name="Joint 11 - 17" canbesevered="True" limitenabled="True" upperlimit="66" lowerlimit="53" stiffness="0.25" />
   <joint limb1="12" limb2="15" limb1anchor="115.67,-34.12953" limb2anchor="-184.0301,-16.89171" name="Joint 12 - 15" canbesevered="True" limitenabled="True" upperlimit="267" lowerlimit="250" stiffness="0.25" />
-  <joint limb1="2" limb2="10" limb1anchor="-183.704,-10.2207" limb2anchor="-21.7821,13.24674" name="Joint 2 - 10" canbesevered="True" limitenabled="True" upperlimit="270" lowerlimit="270" stiffness="0.25" />
+  <joint limb1="2" limb2="10" limb1anchor="-183.704,-18.15553" limb2anchor="4.46166,72.66729" name="Joint 2 - 10" canbesevered="False" limitenabled="True" upperlimit="270" lowerlimit="270" stiffness="0.25" />
   <joint limb1="0" limb2="5" limb1anchor="-180.5483,91.71019" limb2anchor="6.8,-61.24" name="Joint 0 - 5" canbesevered="True" limitenabled="True" upperlimit="342" lowerlimit="342" stiffness="0.25" />
   <joint limb1="0" limb2="6" limb1anchor="-230.4351,-91.60926" limb2anchor="6.982111,61.08958" name="Joint 0 - 6" canbesevered="True" limitenabled="True" upperlimit="10" lowerlimit="0" stiffness="0.25" />
   <joint limb1="0" limb2="7" limb1anchor="-125.9879,-3.99829" limb2anchor="378.3305,127.7395" name="Joint 0 - 7" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" stiffness="0.25" />
   <joint limb1="2" limb2="8" limb1anchor="176.6516,5.815456" limb2anchor="378.1423,46.39164" name="Joint 2 - 8" canbesevered="True" limitenabled="True" upperlimit="30" lowerlimit="-30" stiffness="0.25" />
-  <joint limb1="10" limb2="19" limb1anchor="-4.613901,-68.51637" limb2anchor="-32.38683,90.60229" name="Joint 10 - 19" canbesevered="True" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />
-  <joint limb1="19" limb2="20" limb1anchor="-2.882306,-106.8627" limb2anchor="-41.56515,70.62308" name="Joint 19 - 20" canbesevered="True" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />
-  <joint limb1="20" limb2="21" limb1anchor="-40.25597,-129.6767" limb2anchor="-19.50351,104.8116" name="Joint 20 - 21" canbesevered="True" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />
+  <joint limb1="10" limb2="19" limb1anchor="14.75196,-59.17786" limb2anchor="-20.87727,107.7341" name="Joint 10 - 19" canbesevered="True" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />
+  <joint limb1="19" limb2="20" limb1anchor="-14.43011,-100.491" limb2anchor="-28.69183,94.44974" name="Joint 19 - 20" canbesevered="True" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />
+  <joint limb1="20" limb2="21" limb1anchor="-16.76549,-115.494" limb2anchor="-17.98608,107.6283" name="Joint 20 - 21" canbesevered="True" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />
   <joint limb1="1" limb2="22" limb1anchor="206.7185,-28.73208" limb2anchor="11.97764,-9.081385" name="Joint 1 - 22" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" stiffness="0.25" />
 </Ragdoll>
