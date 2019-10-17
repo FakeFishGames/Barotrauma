@@ -367,7 +367,7 @@ namespace Barotrauma
             //space
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), descriptionBox.Content.RectTransform), style: null);
 
-            if (Description.Length != 0)
+            if (!string.IsNullOrEmpty(Description))
             {
                 new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform), 
                     TextManager.Get("SaveSubDialogDescription", fallBackTag: "WorkshopItemDescription"), font: GUI.Font, wrap: true) { CanBeFocused = false, ForceUpperCase = true };
