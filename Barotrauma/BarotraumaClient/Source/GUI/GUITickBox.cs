@@ -145,7 +145,7 @@ namespace Barotrauma
             Vector2 textBlockScale = new Vector2((float)(Rect.Width - Rect.Height) / (float)Math.Max(Rect.Width, 1.0), 1.0f);
             text = new GUITextBlock(new RectTransform(textBlockScale, layoutGroup.RectTransform), label, font: font, textAlignment: Alignment.CenterLeft)
             {
-                CanBeFocused = true
+                CanBeFocused = false
             };
             GUI.Style.Apply(text, "GUIButtonHorizontal", this);
             Enabled = true;
