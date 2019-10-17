@@ -867,22 +867,37 @@ namespace Barotrauma
             };
             clientDisabledElements.Add(seedBox);
             LevelSeed = ToolBox.RandomSeed(8);
-            
+
             //level difficulty ------------------------------------------------------------------
 
-            var difficultyLabel = new GUITextBlock(new RectTransform(Vector2.One, miscSettingsHolder.RectTransform), TextManager.Get("LevelDifficulty"));
+            var difficultyLabel = new GUITextBlock(new RectTransform(Vector2.One, miscSettingsHolder.RectTransform), TextManager.Get("LevelDifficulty"))
+            {
+                ToolTip = TextManager.Get("leveldifficultyexplanation")
+            };
             levelDifficultyScrollBar = new GUIScrollBar(new RectTransform(new Vector2(0.25f, 1.0f), miscSettingsHolder.RectTransform), barSize: 0.2f)
             {
                 Step = 0.05f,
                 Range = new Vector2(0.0f, 100.0f),
+                ToolTip = TextManager.Get("leveldifficultyexplanation"),
                 OnReleased = (scrollbar, value) =>
                 {
                     GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, levelDifficulty: scrollbar.BarScrollValue);
-
                     return true;
                 }
             };
             difficultyLabel.RectTransform.MaxSize = new Point((int)(difficultyLabel.TextSize.X + 30 * GUI.Scale), int.MaxValue);
+            var difficultyName = new GUITextBlock(new RectTransform(Vector2.One, miscSettingsHolder.RectTransform), "")
+            {
+                ToolTip = TextManager.Get("leveldifficultyexplanation")
+            };
+            levelDifficultyScrollBar.OnMoved = (scrollbar, value) =>
+            {
+                if (EventManagerSettings.List.Count == 0) { return true; }
+                difficultyName.Text = EventManagerSettings.List[Math.Min((int)Math.Floor(value * EventManagerSettings.List.Count), EventManagerSettings.List.Count - 1)].Name;
+                difficultyName.TextColor = Color.Lerp(ToolBox.GradientLerp(scrollbar.BarScroll, Color.LightGreen, Color.Orange, Color.Red), difficultyLabel.TextColor, 0.5f);
+                return true;
+            };
+
             clientDisabledElements.Add(levelDifficultyScrollBar);
             
             //gamemode ------------------------------------------------------------------

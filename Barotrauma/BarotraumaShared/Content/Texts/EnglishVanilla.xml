@@ -1276,7 +1276,6 @@
   <missiontype>Mission type</missiontype>
   <random>Random</random>
   <levelseed>Level seed</levelseed>
-  <leveldifficulty>Level difficulty</leveldifficulty>
   <traitors>Traitors</traitors>
   <botcount>Bot count</botcount>
   <botspawnmode>Bot spawn mode</botspawnmode>
@@ -3617,8 +3616,15 @@
   <characterappearance>Appearance</characterappearance>
   <disconnect>Disconnect</disconnect>
   <endcampaignverification>Are you sure you want to quit the campaign? All your unsaved progress will be lost.</endcampaignverification>
+  <leveldifficultyexplanation>The difficulty setting affects how the level is generated and what kind of random encounters you may face during the mission. Expect more environmental hazards, larger numbers of creatures and more dangerous enemies on higher difficulty levels.</leveldifficultyexplanation>
+
+  <difficulty.easy>Easy</difficulty.easy>
+  <difficulty.medium>Medium</difficulty.medium>
+  <difficulty.hard>Hard</difficulty.hard>
+  <difficulty.hellish>Hellish</difficulty.hellish>
   
   <!-- Modified values -->
   <pausemenuquitverification>Are you sure you want to return to the main menu? All your unsaved progress will be lost.</pausemenuquitverification>
+  <leveldifficulty>Difficulty</leveldifficulty>
 
 </infotexts>
