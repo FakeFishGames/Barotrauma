@@ -803,7 +803,6 @@ namespace Barotrauma
                 Selected = true,
                 OnSelected = (GUITickBox box) =>
                 {
-                    shuttleList.Enabled = box.Selected;
                     GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, useRespawnShuttle: box.Selected);
                     return true;
                 }
@@ -1147,15 +1146,6 @@ namespace Barotrauma
             chatInput.OnEnterPressed = GameMain.Client.EnterChatMessage;
             chatInput.OnTextChanged += GameMain.Client.TypingChatMessage;
 
-            subList.Enabled = AllowSubSelection;// || GameMain.Server != null;
-            shuttleList.Enabled = AllowSubSelection;// || GameMain.Server != null;
-
-            modeList.Enabled = 
-                GameMain.NetworkMember.ServerSettings.Voting.AllowModeVoting || 
-                (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.SelectMode));
-
-            //ServerName = (GameMain.Server == null) ? ServerName : GameMain.Server.Name;
-
             //disable/hide elements the clients are not supposed to use/see
             clientDisabledElements.ForEach(c => c.Enabled = false);
             clientHiddenElements.ForEach(c => c.Visible = false);
@@ -1296,6 +1286,7 @@ namespace Barotrauma
             ServerMessage.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             shuttleTickBox.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             SubList.Enabled = GameMain.Client.ServerSettings.Voting.AllowSubVoting || GameMain.Client.HasPermission(ClientPermissions.SelectSub);
+            shuttleList.Enabled = GameMain.Client.HasPermission(ClientPermissions.SelectSub);
             ModeList.Enabled = GameMain.Client.ServerSettings.Voting.AllowModeVoting || GameMain.Client.HasPermission(ClientPermissions.SelectMode);
             LogButtons.Visible = GameMain.Client.HasPermission(ClientPermissions.ServerLog);
             GameMain.Client.ShowLogButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ServerLog);
@@ -2990,7 +2981,7 @@ namespace Barotrauma
             }
 
             subList.Enabled = !enabled && AllowSubSelection;
-            shuttleList.Enabled = !enabled && AllowSubSelection;
+            shuttleList.Enabled = !enabled && GameMain.Client.HasPermission(ClientPermissions.SelectSub);
             StartButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageRound) && !enabled;
 
             if (campaignViewButton != null) { campaignViewButton.Visible = enabled; }
