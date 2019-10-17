@@ -422,10 +422,10 @@ namespace Barotrauma
 
             GUILayoutGroup socialHolder = null; GUILayoutGroup serverLogHolder = null;
 
-            LogButtons = new GUILayoutGroup(new RectTransform(new Vector2(0.55f, 0.05f), logHolder.RectTransform), true)
+            LogButtons = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), logHolder.RectTransform), true)
             {
                 Stretch = true,
-                RelativeSpacing = 0.05f
+                RelativeSpacing = 0.02f
             };
 
             clientHiddenElements.Add(LogButtons);
@@ -462,6 +462,8 @@ namespace Barotrauma
                     return true;
                 }
             };
+
+            GUITextBlock.AutoScaleAndNormalize(showChatButton.TextBlock, showLogButton.TextBlock);
 
             GUIFrame logHolderBottom = new GUIFrame(new RectTransform(Vector2.One, logHolder.RectTransform), style: null)
             {
@@ -1276,7 +1278,7 @@ namespace Barotrauma
                 GUILayoutGroup characterInfoTabs = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.04f), infoContainer.RectTransform), isHorizontal: true)
                 {
                     Stretch = true,
-                    RelativeSpacing = 0.05f
+                    RelativeSpacing = 0.02f
                 };
 
                 jobPreferencesButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.33f), characterInfoTabs.RectTransform),
@@ -1285,12 +1287,13 @@ namespace Barotrauma
                     Selected = true,
                     OnClicked = SelectJobPreferencesTab
                 };
-
                 appearanceButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.33f), characterInfoTabs.RectTransform),
                     TextManager.Get("CharacterAppearance"), style: "GUITabButton")
                 {
                     OnClicked = SelectAppearanceTab
                 };
+
+                GUITextBlock.AutoScaleAndNormalize(jobPreferencesButton.TextBlock, appearanceButton.TextBlock);
 
                 characterInfoFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), infoContainer.RectTransform), style: null);
 
@@ -2646,10 +2649,11 @@ namespace Barotrauma
 
             recalculateInnerFrame();
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), parent.RectTransform, Anchor.BottomCenter), jobPrefab.Name, textAlignment: Alignment.Center)
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), parent.RectTransform, Anchor.BottomCenter), jobPrefab.Name, textAlignment: Alignment.Center)
             {
                 CanBeFocused = false,
-                TextColor = jobPrefab.UIColor
+                TextColor = jobPrefab.UIColor,
+                AutoScale = true
             };
 
             return retVal;
