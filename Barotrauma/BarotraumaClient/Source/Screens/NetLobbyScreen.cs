@@ -12,6 +12,8 @@ namespace Barotrauma
 {
     partial class NetLobbyScreen : Screen
     {
+        private readonly List<Sprite> characterSprites = new List<Sprite>();
+
         private GUIFrame infoFrame, modeFrame;
         private GUIFrame myCharacterFrame;
 
@@ -1071,16 +1073,22 @@ namespace Barotrauma
         {
             chatInput.Deselect();
             CampaignCharacterDiscarded = false;
-            HeadSelectionList = null;
-            JobSelectionFrame = null;
+            if (HeadSelectionList != null) { HeadSelectionList.Visible = false; }
+            if (JobSelectionFrame != null) { JobSelectionFrame.Visible = false; }
+
+            foreach (Sprite sprite in characterSprites)
+            {
+                sprite.Remove();
+            }
+            characterSprites.Clear();
         }
 
         public override void Select()
         {
-            if (GameMain.NetworkMember == null) return;
+            if (GameMain.NetworkMember == null) { return; }
 
-            HeadSelectionList = null;
-            JobSelectionFrame = null;
+            if (HeadSelectionList != null) { HeadSelectionList.Visible = false; }
+            if (JobSelectionFrame != null) { JobSelectionFrame.Visible = false; }
 
             Character.Controlled = null;
             GameMain.LightManager.LosEnabled = false;
@@ -2207,21 +2215,14 @@ namespace Barotrauma
                 autoRestartTimer = Math.Max(autoRestartTimer - (float)deltaTime, 0.0f);
             }
 
-            if (HeadSelectionList != null)
+            if (HeadSelectionList != null && PlayerInput.LeftButtonDown() && !GUI.IsMouseOn(HeadSelectionList))
             {
-                if (PlayerInput.LeftButtonDown() && !GUI.IsMouseOn(HeadSelectionList))
-                {
-                    HeadSelectionList = null;
-                }
+                HeadSelectionList.Visible = false;                
             }
-
-            if (JobSelectionFrame != null)
+            if (JobSelectionFrame != null && PlayerInput.LeftButtonDown() && !GUI.IsMouseOn(JobSelectionFrame))
             {
-                if (PlayerInput.LeftButtonDown() && !GUI.IsMouseOn(JobSelectionFrame))
-                {
-                    JobList.Deselect();
-                    JobSelectionFrame = null;
-                }
+                JobList.Deselect();
+                JobSelectionFrame.Visible = false;                
             }
         }
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
@@ -2307,7 +2308,7 @@ namespace Barotrauma
             appearanceFrame.Visible = true;
 
             appearanceFrame.ClearChildren();
-            HeadSelectionList = null;
+            if (HeadSelectionList != null) { HeadSelectionList.Visible = false; }
 
             GUIButton maleButton = null;
             GUIButton femaleButton = null;
@@ -2436,7 +2437,13 @@ namespace Barotrauma
 
         private bool OpenHeadSelection(GUIButton button, object userData)
         {
-            Gender gender = (Gender)userData;
+            Gender selectedGender = (Gender)userData;
+            if (HeadSelectionList != null)
+            {
+                HeadSelectionList.Visible = true;
+                HeadSelectionList.Content.Children.ForEach(c => c.Visible = (Gender)c.UserData == selectedGender);
+                return true;
+            }
 
             var info = GameMain.Client.CharacterInfo;
 
@@ -2460,38 +2467,48 @@ namespace Barotrauma
             string spritePathWithTags = headSpriteElement.Attribute("texture").Value;
 
             var characterConfigElement = info.CharacterConfigElement;
-            foreach (Race race in Enum.GetValues(typeof(Race)))
+            foreach (Gender gender in Enum.GetValues(typeof(Gender)))
             {
-                int headIndex = 1;
-                while (true)
+                row = null;
+                itemsInRow = 0;
+                foreach (Race race in Enum.GetValues(typeof(Race)))
                 {
-                    string spritePath = spritePathWithTags
-                        .Replace("[GENDER]", (gender == Gender.Female) ? "female" : "male")
-                        .Replace("[RACE]", race.ToString().ToLowerInvariant())
-                        .Replace("[HEADID]", headIndex.ToString());
-
-                    if (!File.Exists(spritePath)) { break; }
-
-                    Sprite headSprite = new Sprite(headSpriteElement, "", spritePath);
-                    characterSprites.Add(headSprite);
-
-                    if (row == null || itemsInRow >= 4)
+                    int headIndex = 1;
+                    while (true)
                     {
-                        row = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.333f), HeadSelectionList.Content.RectTransform), true);
-                        itemsInRow = 0;
+                        string spritePath = spritePathWithTags
+                            .Replace("[GENDER]", gender.ToString().ToLowerInvariant())
+                            .Replace("[RACE]", race.ToString().ToLowerInvariant())
+                            .Replace("[HEADID]", headIndex.ToString());
+
+                        if (!File.Exists(spritePath)) { break; }
+
+                        Sprite headSprite = new Sprite(headSpriteElement, "", spritePath);
+                        characterSprites.Add(headSprite);
+
+                        if (row == null || itemsInRow >= 4)
+                        {
+                            row = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.333f), HeadSelectionList.Content.RectTransform), true)
+                            {
+                                UserData = gender,
+                                Visible = gender == selectedGender
+                            };
+                            itemsInRow = 0;
+                        }
+
+                        var btn = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), row.RectTransform), style: "ListBoxElement")
+                        {
+                            OutlineColor = Color.White * 0.5f,
+                            PressedColor = Color.White * 0.5f,
+                            UserData = new Tuple<Gender, Race, int>(gender, race, headIndex),
+                            OnClicked = SwitchHead,
+                            Selected = gender == info.Gender && race == info.Race && headIndex == info.HeadSpriteId
+                        };
+
+                        new GUIImage(new RectTransform(Vector2.One, btn.RectTransform), headSprite, scaleToFit: true);
+                        itemsInRow++;
+                        headIndex++;
                     }
-
-                    var btn = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), row.RectTransform), style: "ListBoxElement")
-                    {
-                        OutlineColor = Color.White * 0.5f,
-                        UserData = new Tuple<Gender, Race, int>(gender, race, headIndex),
-                        OnClicked = SwitchHead,
-                        Selected = gender == info.Gender && race == info.Race && headIndex == info.HeadSpriteId
-                    };
-
-                    new GUIImage(new RectTransform(Vector2.One, btn.RectTransform), headSprite, scaleToFit: true);
-                    itemsInRow++;
-                    headIndex++;
                 }
             }
 
@@ -2537,7 +2554,7 @@ namespace Barotrauma
                 else
                 {
                     JobList.Deselect();
-                    JobSelectionFrame = null;
+                    if (JobSelectionFrame != null) { JobSelectionFrame.Visible = false; }
                 }
             }
             else
@@ -2550,6 +2567,12 @@ namespace Barotrauma
 
         private bool OpenJobSelection(GUIComponent child, object userData)
         {
+            if (JobSelectionFrame != null)
+            {
+                JobSelectionFrame.Visible = true;
+                return true;
+            }
+
             Point frameSize = new Point(characterInfoFrame.Rect.Width, characterInfoFrame.Rect.Height * 2);
             JobSelectionFrame = new GUIFrame(new RectTransform(frameSize, GUI.Canvas, Anchor.TopLeft)
                 { AbsoluteOffset = new Point(characterInfoFrame.Rect.Right - frameSize.X, characterInfoFrame.Rect.Bottom) }, "GUIFrameListBox");
@@ -2745,6 +2768,7 @@ namespace Barotrauma
                         }
 
                         var torsoSprite = new Sprite(spriteElement, path: "", file: textureVariant);
+                        characterSprites.Add(torsoSprite);
                         retVal[n].First[i] = torsoSprite;
 
                         torsoSprite.size = new Vector2(torsoSprite.SourceRect.Width, torsoSprite.SourceRect.Height);
@@ -3108,7 +3132,7 @@ namespace Barotrauma
                         {
                             JobList.Select((int)obj, true);
                             SwitchJob(btn, null);
-                            JobSelectionFrame = null;
+                            if (JobSelectionFrame != null) { JobSelectionFrame.Visible = false; }
                             JobList.Deselect();
 
                             return false;
