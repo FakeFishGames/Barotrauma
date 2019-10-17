@@ -67,7 +67,10 @@ namespace Barotrauma.Networking
                 y += 20;
             }
 
-            GUITextBlock.AutoScaleAndNormalize(tickBoxes.Select(t => t.TextBlock));
+            tickBoxes.Last().TextBlock.RectTransform.SizeChanged += () =>
+            {
+                GUITextBlock.AutoScaleAndNormalize(tickBoxes.Select(t => t.TextBlock));
+            };
 
             var currLines = lines.ToList();
 
@@ -81,11 +84,13 @@ namespace Barotrauma.Networking
 
             if (listBox.BarScroll == 0.0f || listBox.BarScroll == 1.0f) listBox.BarScroll = 1.0f;
 
-            GUIButton closeButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), innerFrame.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.02f, 0.03f) }, TextManager.Get("Close"));
-            closeButton.OnClicked = (button, userData) =>
+            GUIButton closeButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), innerFrame.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.02f, 0.03f) }, TextManager.Get("Close"))
             {
-                LogFrame = null;
-                return true;
+                OnClicked = (button, userData) =>
+                {
+                    LogFrame = null;
+                    return true;
+                }
             };
 
             msgFilter = "";
@@ -102,6 +107,7 @@ namespace Barotrauma.Networking
 
             tickBoxContainer.ClearChildren();
 
+            List<GUITickBox> tickBoxes = new List<GUITickBox>();
             foreach (MessageType msgType in Enum.GetValues(typeof(MessageType)))
             {
                 var tickBox = new GUITickBox(new RectTransform(new Point(tickBoxContainer.Rect.Width, 16), tickBoxContainer.RectTransform), TextManager.Get("ServerLog." + messageTypeName[(int)msgType]), font: GUI.SmallFont)
@@ -116,7 +122,12 @@ namespace Barotrauma.Networking
                     }
                 };
                 tickBox.Selected = !msgTypeHidden[(int)msgType];
+                tickBoxes.Add(tickBox);
             }
+            tickBoxes.Last().TextBlock.RectTransform.SizeChanged += () =>
+            {
+                GUITextBlock.AutoScaleAndNormalize(tickBoxes.Select(t => t.TextBlock));
+            };
 
             inListBox.ClearChildren();
             listBox = inListBox;
@@ -135,12 +146,14 @@ namespace Barotrauma.Networking
         {
             float prevSize = listBox.BarSize;
 
-            var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform), 
-                line.Text, wrap: true, font: GUI.SmallFont);
-            textBlock.TextColor = messageColor[(int)line.Type];
-            textBlock.Visible = !msgTypeHidden[(int)line.Type];
-            textBlock.CanBeFocused = false;
-            textBlock.UserData = line;
+            var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform),
+                line.Text, wrap: true, font: GUI.SmallFont)
+            {
+                TextColor = messageColor[(int)line.Type],
+                Visible = !msgTypeHidden[(int)line.Type],
+                CanBeFocused = false,
+                UserData = line
+            };
 
             if ((prevSize == 1.0f && listBox.BarScroll == 0.0f) || (prevSize < 1.0f && listBox.BarScroll == 1.0f)) listBox.BarScroll = 1.0f;
         }

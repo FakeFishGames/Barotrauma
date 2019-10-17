@@ -560,7 +560,7 @@ namespace Barotrauma
 
             //filter tickbox list ------------------------------------------------------------------
 
-            serverLogFilterTicks = new GUIListBox(new RectTransform(new Vector2(0.3f, 1.0f), serverLogHolderHorizontal.RectTransform))
+            serverLogFilterTicks = new GUIListBox(new RectTransform(new Vector2(0.3f, 1.0f), serverLogHolderHorizontal.RectTransform) { MinSize = new Point(150, 0) })
             {
                 OnSelected = (component, userdata) => { return false; }
             };
@@ -2669,12 +2669,12 @@ namespace Barotrauma
 
             recalculateInnerFrame();
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), parent.RectTransform, Anchor.BottomCenter), jobPrefab.Name, textAlignment: Alignment.Center)
+            var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), parent.RectTransform, Anchor.BottomCenter), jobPrefab.Name, textAlignment: Alignment.Center)
             {
-                CanBeFocused = false,
                 TextColor = jobPrefab.UIColor,
                 AutoScale = true
             };
+            textBlock.RectTransform.SizeChanged += () => { textBlock.TextScale = 1.0f; };
 
             return retVal;
         }

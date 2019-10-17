@@ -262,7 +262,7 @@ namespace Barotrauma
             if (text == null) return;
 
             censoredText = "";
-            for (int i=0;i<text.Length;i++)
+            for (int i = 0; i < text.Length; i++)
             {
                 censoredText += "\u2022";
             }
