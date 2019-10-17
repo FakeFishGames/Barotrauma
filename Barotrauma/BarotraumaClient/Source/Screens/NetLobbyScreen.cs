@@ -2455,60 +2455,43 @@ namespace Barotrauma
             GUILayoutGroup row = null;
             int itemsInRow = 0;
 
+            XElement headElement = info.Ragdoll.MainElement.Elements().FirstOrDefault(e => e.GetAttributeString("type", "").ToLowerInvariant() == "head");
+            XElement headSpriteElement = headElement.Element("sprite");
+            string spritePathWithTags = headSpriteElement.Attribute("texture").Value;
+
             var characterConfigElement = info.CharacterConfigElement;
             foreach (Race race in Enum.GetValues(typeof(Race)))
             {
-                var wearables = info.Wearables.Where(w =>
-                    Enum.TryParse(w.GetAttributeString("gender", "None"), true, out Gender g) && g == gender &&
-                    Enum.TryParse(w.GetAttributeString("race", "None"), true, out Race r) && r == race).ToList();
-
-                if (!wearables.Any()) { continue; }
-
-                var ids = wearables.Select(w => w.GetAttributeInt("headid", -1)).Where(id => id > 0);
-                ids = ids.OrderBy(id => id);
-                int startRange = ids.First();
-                int endRange = ids.Last();
-
-                for (int i = startRange; i <= endRange; i++)
+                int headIndex = 1;
+                while (true)
                 {
-                    foreach (XElement limbElement in info.Ragdoll.MainElement.Elements())
+                    string spritePath = spritePathWithTags
+                        .Replace("[GENDER]", (gender == Gender.Female) ? "female" : "male")
+                        .Replace("[RACE]", race.ToString().ToLowerInvariant())
+                        .Replace("[HEADID]", headIndex.ToString());
+
+                    if (!File.Exists(spritePath)) { break; }
+
+                    Sprite headSprite = new Sprite(headSpriteElement, "", spritePath);
+                    characterSprites.Add(headSprite);
+
+                    if (row == null || itemsInRow >= 4)
                     {
-                        if (limbElement.GetAttributeString("type", "").ToLowerInvariant() != "head") { continue; }
-
-                        XElement spriteElement = limbElement.Element("sprite");
-                        if (spriteElement == null) { continue; }
-
-                        string spritePath = spriteElement.Attribute("texture").Value;
-                        spritePath = spritePath
-                            .Replace("[GENDER]", (gender == Gender.Female) ? "female" : "male")
-                            .Replace("[RACE]", race.ToString().ToLowerInvariant())
-                            .Replace("[HEADID]", i.ToString());
-
-                        if (!File.Exists(spritePath)) { continue; }
-
-                        Sprite headSprite = new Sprite(spriteElement, "", spritePath);
-
-                        if (row == null || itemsInRow >= 4)
-                        {
-                            row = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.333f), HeadSelectionList.Content.RectTransform), true);
-                            itemsInRow = 0;
-                        }
-
-                        var btn = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), row.RectTransform), style: "ListBoxElement")
-                        {
-                            OutlineColor = Color.White * 0.5f,
-                            UserData = new Tuple<Gender, Race, int>(gender, race, i),
-                            OnClicked = SwitchHead,
-                            Selected = gender == info.Gender && race == info.Race && i == info.HeadSpriteId
-                        };
-
-                        new GUIImage(new RectTransform(Vector2.One, btn.RectTransform), headSprite, scaleToFit: true);
-                        itemsInRow++;
-
-                        
-
-                        break;
+                        row = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.333f), HeadSelectionList.Content.RectTransform), true);
+                        itemsInRow = 0;
                     }
+
+                    var btn = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), row.RectTransform), style: "ListBoxElement")
+                    {
+                        OutlineColor = Color.White * 0.5f,
+                        UserData = new Tuple<Gender, Race, int>(gender, race, headIndex),
+                        OnClicked = SwitchHead,
+                        Selected = gender == info.Gender && race == info.Race && headIndex == info.HeadSpriteId
+                    };
+
+                    new GUIImage(new RectTransform(Vector2.One, btn.RectTransform), headSprite, scaleToFit: true);
+                    itemsInRow++;
+                    headIndex++;
                 }
             }
 
