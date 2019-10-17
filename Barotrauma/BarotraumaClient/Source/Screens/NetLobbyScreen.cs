@@ -168,10 +168,28 @@ namespace Barotrauma
         {
             get { return modeList; }
         }
+
+        private int selectedModeIndex;
         public int SelectedModeIndex
         {
+            get { return selectedModeIndex; }
+            set
+            {
+                if (HighlightedModeIndex == selectedModeIndex)
+                {
+                    modeList.Select(value);
+                }
+                selectedModeIndex = value;
+            }
+        }
+
+        public int HighlightedModeIndex
+        {
             get { return modeList.SelectedIndex; }
-            set { modeList.Select(value); }
+            set
+            {
+                modeList.Select(value, true);
+            }
         }
 
         public GUIListBox PlayerList
@@ -1581,7 +1599,8 @@ namespace Barotrauma
                         string presetName = ((GameModePreset)(component.UserData)).Identifier;
 
                         //display a verification prompt when switching away from the campaign
-                        if ((GameMain.NetLobbyScreen.ModeList.SelectedData as GameModePreset)?.Identifier == "multiplayercampaign" &&
+                        if (HighlightedModeIndex == SelectedModeIndex &&
+                            (GameMain.NetLobbyScreen.ModeList.SelectedData as GameModePreset)?.Identifier == "multiplayercampaign" &&
                             presetName != "multiplayercampaign")
                         {
                             var verificationBox = new GUIMessageBox("", TextManager.Get("endcampaignverification"), new string[] { TextManager.Get("yes"), TextManager.Get("no") });
@@ -1595,6 +1614,7 @@ namespace Barotrauma
                             return false;
                         }
                         GameMain.Client.RequestSelectMode(component.Parent.GetChildIndex(component));
+                        HighlightMode(SelectedModeIndex);
                         return (presetName.ToLowerInvariant() != "multiplayercampaign");
                     }
                     return false;
@@ -2835,46 +2855,29 @@ namespace Barotrauma
             config.CharacterFaceAttachmentIndex = info.FaceAttachmentIndex;
         }
 
-        public void SelectMode(int modeIndex, bool forced = false)
+        public void SelectMode(int modeIndex)
         {
             if (modeIndex < 0 || modeIndex >= modeList.Content.CountChildren) { return; }
             
-            if (!forced && campaignUI != null &&
+            if (campaignUI != null &&
                 ((GameModePreset)modeList.Content.GetChild(modeIndex).UserData).Identifier != "multiplayercampaign")
             {
                 ToggleCampaignMode(false);
             }
             
-            if (modeList.SelectedIndex != modeIndex) { modeList.Select(modeIndex, true); }
+            if ((HighlightedModeIndex == selectedModeIndex || HighlightedModeIndex<0) && modeList.SelectedIndex != modeIndex) { modeList.Select(modeIndex, true); }
+            selectedModeIndex = modeIndex;
 
-            MissionTypeFrame.Visible = SelectedMode != null && SelectedMode.Identifier == "mission" && !CampaignSetupFrame.Visible;
+            MissionTypeFrame.Visible = SelectedMode != null && SelectedMode.Identifier == "mission" && HighlightedModeIndex == SelectedModeIndex;
         }
 
-        private bool SelectMode(GUIComponent component, object obj)
+        public void HighlightMode(int modeIndex)
         {
-            if (GameMain.NetworkMember == null || obj == modeList.SelectedData) { return false; }
-            
-            GameModePreset modePreset = obj as GameModePreset;
-            if (modePreset == null) return false;
+            if (modeIndex < 0 || modeIndex >= modeList.Content.CountChildren) { return; }
 
-            MissionTypeFrame.Visible = missionTypeList.Visible = modePreset.Identifier == "mission" && !CampaignSetupFrame.Visible;
-            if (modePreset.Identifier == "multiplayercampaign")
-            {
-                //campaign selected and the campaign view has not been set up yet
-                // -> don't select the mode yet and start campaign setup
-                /*if (GameMain.Server != null && !campaignContainer.Visible)
-                {
-                    campaignSetupUI = MultiPlayerCampaign.StartCampaignSetup();
-                    return false;
-                }*/
-            }
-            else
-            {
-                ToggleCampaignMode(false);
-            }
-
-            //lastUpdateID++;
-            return true;
+            HighlightedModeIndex = modeIndex;
+            MissionTypeFrame.Visible = SelectedMode != null && SelectedMode.Identifier == "mission" && HighlightedModeIndex == SelectedModeIndex;
+            CampaignSetupFrame.Visible = SelectedMode != null && SelectedMode.Identifier == "multiplayercampaign";
         }
 
         public void ToggleCampaignView(bool enabled)
