@@ -188,7 +188,7 @@ namespace Barotrauma
             //find the parent GUIListBox highest in the hierarchy
             for (int i = parentHierarchy.Count - 1; i >= 0; i--)
             {
-                if (parentHierarchy[i].GUIComponent is GUIListBox)
+                if (parentHierarchy[i].GUIComponent is GUIListBox || parentHierarchy[i].GUIComponent is GUILayoutGroup)
                 {
                     if (parentHierarchy[i].Parent != null && parentHierarchy[i].Parent.GUIComponent != null)
                     {
