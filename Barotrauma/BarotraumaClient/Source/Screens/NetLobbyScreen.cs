@@ -2942,8 +2942,10 @@ namespace Barotrauma
             }*/
         }
 
-        public void TryDisplayCampaignSubmarine(string name)
+        public void TryDisplayCampaignSubmarine(Submarine submarine)
         {
+            string name = submarine?.Name;
+            bool displayed = false;
             subList.OnSelected -= VotableClicked;
             subList.Deselect();
             subPreviewContainer.ClearChildren();
@@ -2956,11 +2958,19 @@ namespace Barotrauma
                 if (sub.Name == name)
                 {
                     subList.Select(sub);
-                    sub.CreatePreviewWindow(subPreviewContainer);
+                    if (Submarine.SavedSubmarines.Contains(sub))
+                    {
+                        sub.CreatePreviewWindow(subPreviewContainer);
+                        displayed = true;
+                    }
                     break;
                 }
             }
             subList.OnSelected += VotableClicked;
+            if (!displayed)
+            {
+                submarine.CreatePreviewWindow(subPreviewContainer);
+            }
         }
 
         private bool ViewJobInfo(GUIButton button, object obj)

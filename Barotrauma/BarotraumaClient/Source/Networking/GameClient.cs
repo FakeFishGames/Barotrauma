@@ -1897,7 +1897,7 @@ namespace Barotrauma.Networking
                     GameMain.GameSession?.Submarine?.CheckSubsLeftBehind();
                     if (GameMain.GameSession?.Submarine?.Name != null)
                     {
-                        GameMain.NetLobbyScreen.TryDisplayCampaignSubmarine(GameMain.GameSession.Submarine.Name);
+                        GameMain.NetLobbyScreen.TryDisplayCampaignSubmarine(GameMain.GameSession.Submarine);
                     }
                     campaign.LastSaveID = campaign.PendingSaveID;
 
