@@ -594,6 +594,10 @@ namespace Barotrauma
                         if (Physics.TryParseCollisionCategory(collisionCategory, out Category cat))
                         {
                             body.CollisionCategories = cat;
+                            if (cat.HasFlag(Physics.CollisionCharacter))
+                            {
+                                body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionPlatform | Physics.CollisionProjectile;
+                            }
                         }
                         body.FarseerBody.AngularDamping = 0.2f;
                         body.FarseerBody.LinearDamping = 0.1f;
