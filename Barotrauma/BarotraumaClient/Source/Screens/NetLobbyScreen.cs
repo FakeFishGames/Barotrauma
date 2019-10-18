@@ -826,6 +826,7 @@ namespace Barotrauma
                     return true;
                 }
             };
+            shuttleList.ListBox.RectTransform.MinSize = new Point(250, 0);
 
             subPreviewContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.9f), rightColumn.RectTransform), style: null);
             subPreviewContainer.RectTransform.SizeChanged += () =>
@@ -1639,7 +1640,7 @@ namespace Barotrauma
 
             if (sub.HasTag(SubmarineTag.Shuttle))
             {
-                new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), frame.RectTransform, Anchor.CenterRight) { RelativeOffset = new Vector2(0.1f, 0.0f) },
+                var shuttleText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), frame.RectTransform, Anchor.CenterRight),
                     TextManager.Get("Shuttle", fallBackTag: "RespawnShuttle"), textAlignment: Alignment.CenterRight, font: GUI.SmallFont)
                 {
                     TextColor = subTextBlock.TextColor * 0.8f,
@@ -1649,6 +1650,7 @@ namespace Barotrauma
                 //make shuttles more dim in the sub list (selecting a shuttle as the main sub is allowed but not recommended)
                 if (subList == this.subList.Content)
                 {
+                    shuttleText.RectTransform.RelativeOffset = new Vector2(0.1f, 0.0f);
                     subTextBlock.TextColor *= 0.5f;
                     foreach (GUIComponent child in frame.Children)
                     {
