@@ -448,7 +448,7 @@
   </TraitorMission>
 
 
-  <TraitorMission identifier="tainted welding">
+  <TraitorMission identifier="tainted welding tools">
 
     <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
 
