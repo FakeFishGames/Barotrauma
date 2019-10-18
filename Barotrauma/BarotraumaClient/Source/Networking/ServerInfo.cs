@@ -109,7 +109,10 @@ namespace Barotrauma.Networking
                 Color = Color.White * 0.2f
             };
 
-            var title = new GUITextBlock(new RectTransform(new Vector2(0.9f, 0.0f), titleContainer.RectTransform, Anchor.CenterLeft), ServerName, font: GUI.LargeFont);
+            var title = new GUITextBlock(new RectTransform(new Vector2(0.9f, 0.0f), titleContainer.RectTransform, Anchor.CenterLeft), ServerName, font: GUI.LargeFont)
+            {
+                ToolTip = ServerName
+            };
             title.Text = ToolBox.LimitString(title.Text, title.Font, title.Rect.Width);
 
             title.Padding = new Vector4(10, 0, 0, 10);
@@ -117,6 +120,7 @@ namespace Barotrauma.Networking
             GUITickBox favoriteTickBox = new GUITickBox(new RectTransform(new Vector2(0.9f, 0.85f), titleContainer.RectTransform, Anchor.CenterRight, scaleBasis: ScaleBasis.BothHeight) { RelativeOffset = new Vector2(0.0f, 0.1f) }, "", null, "GUIServerListFavoriteTickBox")
             {
                 Selected = Favorite,
+                ToolTip = TextManager.Get(Favorite ? "removefromfavorites" : "addtofavorites"),
                 OnSelected = (tickbox) =>
                 {
                     if (tickbox.Selected)
@@ -127,6 +131,7 @@ namespace Barotrauma.Networking
                     {
                         GameMain.ServerListScreen.RemoveFromFavoriteServers(this);
                     }
+                    tickbox.ToolTip = TextManager.Get(tickbox.Selected ? "removefromfavorites" : "addtofavorites");
                     return true;
                 }
             };
@@ -134,7 +139,7 @@ namespace Barotrauma.Networking
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), previewContainer.RectTransform),
                 TextManager.AddPunctuation(':', TextManager.Get("ServerListVersion"), string.IsNullOrEmpty(GameVersion) ? TextManager.Get("Unknown") : GameVersion));
 
-            PlayStyle playStyle = PlayStyle.HasValue ? PlayStyle.Value : Networking.PlayStyle.Serious;
+            PlayStyle playStyle = PlayStyle ?? Networking.PlayStyle.Serious;
 
             Sprite playStyleBannerSprite = GameMain.ServerListScreen.PlayStyleBanners[(int)playStyle];
             float playStyleBannerAspectRatio = playStyleBannerSprite.SourceRect.Width / (playStyleBannerSprite.SourceRect.Height * 0.65f);
