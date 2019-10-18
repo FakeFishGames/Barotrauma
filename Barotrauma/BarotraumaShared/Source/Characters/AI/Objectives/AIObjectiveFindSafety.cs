@@ -145,7 +145,10 @@ namespace Barotrauma
                             },
                             onAbandon: () =>
                             {
-                                HumanAIController.UnreachableHulls.Add(goToObjective.Target as Hull);
+                                if (currentHull != null)
+                                {
+                                    HumanAIController.UnreachableHulls.Add(goToObjective.Target as Hull);
+                                }
                                 RemoveSubObjective(ref goToObjective);
                             });
                     }
@@ -226,7 +229,7 @@ namespace Barotrauma
                     var path = character.CurrentHull != null ? 
                         PathSteering.PathFinder.FindPath(character.SimPosition, hull.SimPosition, nodeFilter: node => node.Waypoint.CurrentHull != null) : 
                         PathSteering.PathFinder.FindPath(character.SimPosition, hull.SimPosition);
-                    if (path.Unreachable)
+                    if (path.Unreachable && character.CurrentHull != null)
                     {
                         HumanAIController.UnreachableHulls.Add(hull);
                         continue;
