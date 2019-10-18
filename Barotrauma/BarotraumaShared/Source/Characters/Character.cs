@@ -2993,8 +2993,12 @@ namespace Barotrauma
             }
             if (Submarine == null && target.Submarine != null)
             {
-                // outside and targeting inside
-                targetPos += target.Submarine.SimPosition;
+                if (AIController == null || !(AIController.SteeringManager is IndoorsSteeringManager))
+                {
+                    // outside and targeting inside
+                    // doesn't work with inside steering
+                    targetPos += target.Submarine.SimPosition;
+                }
             }
             else if (Submarine != null && target.Submarine == null)
             {

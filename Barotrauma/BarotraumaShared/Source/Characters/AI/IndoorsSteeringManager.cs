@@ -157,7 +157,16 @@ namespace Barotrauma
                 IsPathDirty = true;
                 if (findPathTimer > 0.0f) { return Vector2.Zero; }
                 currentTarget = target;
-                var newPath = pathFinder.FindPath(host.SimPosition, target, character.Submarine, "(Character: " + character.Name + ")", startNodeFilter, endNodeFilter, nodeFilter);
+                Vector2 currentPos = host.SimPosition;
+                if (character != null && character.Submarine == null)
+                {
+                    var targetHull = Hull.FindHull(FarseerPhysics.ConvertUnits.ToDisplayUnits(target), null, false);
+                    if (targetHull != null && targetHull.Submarine != null)
+                    {
+                        currentPos -= targetHull.Submarine.SimPosition;
+                    }
+                }
+                var newPath = pathFinder.FindPath(currentPos, target, character.Submarine, "(Character: " + character.Name + ")", startNodeFilter, endNodeFilter, nodeFilter);
                 bool useNewPath = currentPath == null || needsNewPath || currentPath.Finished;
                 if (!useNewPath && currentPath != null && currentPath.CurrentNode != null && newPath.Nodes.Any() && !newPath.Unreachable)
                 {
