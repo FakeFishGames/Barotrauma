@@ -344,7 +344,7 @@
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="goblins_objectiveSuccessMessage1"/>
       <StartMessage id="goblins_traitorobjectivestartmessage1"/>
-      <Goal type="finditem" identifier="cyanide" preferNew="false" allowNew="true" allowExisting="true" allowedContainers="suppliescabinet,mediumsteelcabinet,steelcabinet">
+      <Goal type="finditem" identifier="cyanide" preferNew="false" allowNew="true" allowExisting="true" allowedContainers="loosevent,loosepanel,toxcabinet">
         <InfoText id="traitorgoalfinditeminfo"/>
       </Goal>
     </Objective>
@@ -371,9 +371,13 @@
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="goblins_objectiveSuccessMessage4" />
       <StartMessage id="goblins_traitorobjectivestartmessage4"/>
-      <Goal type="killtarget" targetpercentage="100">
-        <InfoText id="traitorgoalkilleveryoneinfo" />
+      <Goal type="killtarget" >
+        <InfoText id="traitorgoalkilltargetinfo"/>
       </Goal>
+      <Goal type="killtarget" >
+        <InfoText id="traitorgoalkilltargetinfo"/>
+      </Goal>
+
     </Objective>
 
   </TraitorMission>
@@ -414,7 +418,7 @@
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="acidparty_objectiveSuccessMessage1"/>
       <StartMessage id="acidparty_traitorobjectivestartmessage1"/>
-      <Goal type="finditem" identifier="deliriumine" preferNew="false" allowNew="true" allowExisting="true" allowedContainers="loosevent,loosepanel,medcabinet">
+      <Goal type="finditem" identifier="deliriumine" preferNew="false" allowNew="true" allowExisting="true" allowedContainers="loosevent,loosepanel,toxcabinet">
         <InfoText id="traitorgoalfinditeminfo"/>
       </Goal>
     </Objective>
