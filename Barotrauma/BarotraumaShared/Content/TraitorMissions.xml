@@ -409,21 +409,17 @@
 
     <StartInfoText id="acidparty_traitormissionStartInfoText"/>
 
+    <!--TODO: spawn more deliriumine/toolbox w/ deliriumine?-->
     <Objective>
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="acidparty_objectiveSuccessMessage1"/>
       <StartMessage id="acidparty_traitorobjectivestartmessage1"/>
-      <Goal type="finditem" identifier="deliriumine" preferNew="false" allowNew="true" allowExisting="true" allowedContainers="suppliescabinet,mediumsteelcabinet,steelcabinet">
-        <InfoText id="traitorgoalfinditeminfo"/>
-      </Goal>
-      <Goal type="finditem" identifier="deliriumine" preferNew="false" allowNew="true" allowExisting="true" allowedContainers="suppliescabinet,mediumsteelcabinet,steelcabinet">
-        <InfoText id="traitorgoalfinditeminfo"/>
-      </Goal>
-      <Goal type="finditem" identifier="deliriumine" preferNew="false" allowNew="true" allowExisting="true" allowedContainers="suppliescabinet,mediumsteelcabinet,steelcabinet">
+      <Goal type="finditem" identifier="deliriumine" preferNew="false" allowNew="true" allowExisting="true" allowedContainers="loosevent,loosepanel,medcabinet">
         <InfoText id="traitorgoalfinditeminfo"/>
       </Goal>
     </Objective>
 
+    <!--TODO: flow when sub has no antidote or haloperidol?-->
     <Objective>
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="acidparty_objectiveSuccessMessage2"/>

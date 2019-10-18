@@ -3606,13 +3606,13 @@
   <signaltrouble_objectivesuccessmessage3>Let's see how long it takes before anyone finds the issue.</signaltrouble_objectivesuccessmessage3>
 
   <!--acidparty traitor mission-->
-  <acidparty_traitormissionstartinfotext>Hey man. You know there's this thing in the center of the moon, right? What if there was, like, a way to see what it is without physically going in there?</acidparty_traitormissionstartinfotext>
-  <acidparty_traitorobjectivestartmessage1>It sounds crazy dude, but just hear me out. Grab that delimi- delirun- der- the thing that says 'DEL', right? \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage1>
-  <acidparty_objectivesuccessmessage1>Yeeah man, that's it. Basically that thing, like, lets you see things without them being there, you know?</acidparty_objectivesuccessmessage1>
-  <acidparty_traitorobjectivestartmessage2>Now here's the snag, right? Sometimes subs carry these- these "vision blockers", right? Basically what they do is, is they ground you and then you only see, like, a real narrow representation of reality, ok? So what you wanna do is you wanna get rid of those. They call them shits halleberrydil or some shit like that. \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage2>
-  <acidparty_objectivesuccessmessage2>That's dope. That shit's like poison for us visionaries, alright?</acidparty_objectivesuccessmessage2>
-  <acidparty_traitorobjectivestartmessage3>Ohh man, we're getting there. First thing we gotta do is share. The thing here is that some people, right? Some people are kinda brainwashed into being afraid of anything that challenges their world view, you know? So you know, you gotta find a way to sneak that good shit into their system, right? \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage3>
-  <acidparty_objectivesuccessmessage3>Oh yeah, that's the stuff. Feel the barrier getting thinner? Just lay down and listen to the waves, man.</acidparty_objectivesuccessmessage3>
+  <acidparty_traitormissionstartinfotext>You find a manically scribbled note in your pocket. "Hey man. You know there's this thing in the center of the moon, right? What if there was, like, a way to see what it is without physically going in there?"</acidparty_traitormissionstartinfotext>
+  <acidparty_traitorobjectivestartmessage1>"Step 1. Find some delimi- delirun- der- the thing that says 'DEL', right?" \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage1>
+  <acidparty_objectivesuccessmessage1>This must be it. Never had this before.</acidparty_objectivesuccessmessage1>
+  <acidparty_traitorobjectivestartmessage2>"Step 2. Sometimes subs carry these- these "vision blockers", right? Basically what they do is, is they ground you and then you only see, like, a real narrow representation of reality, ok? So what you wanna do is you wanna get rid of those. They call them shits halleberrydil or some shit like that." \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage2>
+  <acidparty_objectivesuccessmessage2>Looks like that's all of it.</acidparty_objectivesuccessmessage2>
+  <acidparty_traitorobjectivestartmessage3>"Step 3. "First rule is we gotta share. The thing here is that some people, right? Some people are kinda brainwashed into being afraid of anything that challenges their world view, you know? So you know, you gotta find a way to sneak that good shit into their system, right?" \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage3>
+  <acidparty_objectivesuccessmessage3>"Step 4. Lay down and listen to the waves, man."</acidparty_objectivesuccessmessage3>
 
   <!-- Placeholder text for goals -->
   <traitorgoalkilltargetinfowithcause>Assassinate [targetname] by [causeofdeath].</traitorgoalkilltargetinfowithcause>
