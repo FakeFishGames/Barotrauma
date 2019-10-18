@@ -1732,6 +1732,7 @@ namespace Barotrauma
                             verificationBox.Buttons[0].OnClicked += (btn, userdata) =>
                             {
                                 GameMain.Client.RequestSelectMode(component.Parent.GetChildIndex(component));
+                                HighlightMode(SelectedModeIndex);
                                 verificationBox.Close(btn, userdata);
                                 return true;
                             };
@@ -2257,7 +2258,6 @@ namespace Barotrauma
                                 else
                                 {
                                     sheetIndex = (int)Math.Floor((VoipCapture.Instance?.LastAmplitude ?? 0.0) * (voipSheetRects.Length - 0.99f));
-                                    DebugConsole.NewMessage(sheetIndex.ToString(), Color.Yellow);
                                 }
                                 if (sheetIndex < 0) { sheetIndex = 0; }
                                 if (sheetIndex > voipSheetRects.Length-1) { sheetIndex = voipSheetRects.Length-1; }
@@ -2688,7 +2688,7 @@ namespace Barotrauma
                         sprites[i][0].Visible = currVisible == (i+1);
                         sprites[i][1].Visible = currVisible == (i+1);
 
-                        var variantButton = new GUIButton(new RectTransform(new Vector2(0.15f), jobButton.RectTransform, scaleBasis: ScaleBasis.BothWidth) { RelativeOffset = new Vector2(0.05f + 0.2f * i, 0.05f) }, (i + 1).ToString(), style: null)
+                        var variantButton = new GUIButton(new RectTransform(new Vector2(0.15f), jobButton.RectTransform, scaleBasis: ScaleBasis.BothWidth) { RelativeOffset = new Vector2(0.05f, 0.05f + 0.2f * i) }, (i + 1).ToString(), style: null)
                         {
                             Color = new Color(50, 50, 50, 200),
                             HoverColor = Color.Gray * 0.75f,
@@ -2982,6 +2982,7 @@ namespace Barotrauma
             selectedModeIndex = modeIndex;
 
             MissionTypeFrame.Visible = SelectedMode != null && SelectedMode.Identifier == "mission" && HighlightedModeIndex == SelectedModeIndex;
+            CampaignSetupFrame.Visible = false;
         }
 
         public void HighlightMode(int modeIndex)
@@ -3163,7 +3164,7 @@ namespace Barotrauma
                         {
                             sprites[j][0].Visible = jobPrefab.Second == (j + 1);
                             sprites[j][1].Visible = jobPrefab.Second == (j + 1);
-                            var variantButton = new GUIButton(new RectTransform(new Vector2(0.15f), slot.RectTransform, scaleBasis: ScaleBasis.BothWidth) { RelativeOffset = new Vector2(0.05f + 0.2f * j, 0.05f) }, (j + 1).ToString(), style: null)
+                            var variantButton = new GUIButton(new RectTransform(new Vector2(0.15f), slot.RectTransform, scaleBasis: ScaleBasis.BothWidth) { RelativeOffset = new Vector2(0.05f, 0.25f + 0.2f * j) }, (j + 1).ToString(), style: null)
                             {
                                 Color = new Color(50, 50, 50, 200),
                                 HoverColor = Color.Gray * 0.75f,
