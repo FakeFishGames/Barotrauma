@@ -65,7 +65,7 @@ namespace Barotrauma
                 this.targetPercentage = targetPercentage / 100f;
 
                 if (this.targetPercentage < 1.0f)
-                {
+                { 
                     InfoTextId = "traitorgoalpoisoninfo";
                 }
                 else

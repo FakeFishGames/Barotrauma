@@ -114,7 +114,7 @@
     </Wearable>
   </Item>
 
-  <Item name="Small Mudraptor Egg" identifier="smallmudraptoregg" nameidentifier="mudraptoregg" Tags="smallitem,damageableitem" health="20" category="Misc" scale="0.2" impactsoundtag="impact_soft">
+  <Item name="Small Mudraptor Egg" identifier="smallmudraptoregg" Tags="smallitem,damageableitem" health="20" category="Misc" scale="0.2" impactsoundtag="impact_soft">
     <Sprite texture="Content/Items/CreatureLoot/MudraptorEgg.png" depth="0.7" sourcerect="0,0,128,128" origin="0.5,0.5" />
     <Deconstruct time="10">
       <Item identifier="alienblood" />
@@ -145,7 +145,7 @@
       </Containable>
     </ItemContainer>
   </Item>
-  <Item name="Medium Mudraptor Egg" identifier="mediummudraptoregg" nameidentifier="mudraptoregg" Tags="smallitem,damageableitem" health="50" category="Misc" scale="0.3" impactsoundtag="impact_soft">
+  <Item name="Medium Mudraptor Egg" identifier="mediummudraptoregg" Tags="smallitem,damageableitem" health="50" category="Misc" scale="0.3" impactsoundtag="impact_soft">
     <Sprite texture="Content/Items/CreatureLoot/MudraptorEgg.png" depth="0.7" sourcerect="0,0,128,128" origin="0.5,0.5" />
     <Deconstruct time="10">
       <Item identifier="alienblood" />
@@ -176,7 +176,7 @@
       </Containable>
     </ItemContainer>
   </Item>
-  <Item name="Large Mudraptor Egg" identifier="largemudraptoregg" nameidentifier="mudraptoregg" Tags="damageableitem" health="200" category="Misc" scale="0.6" impactsoundtag="impact_soft">
+  <Item name="Large Mudraptor Egg" identifier="largemudraptoregg" Tags="damageableitem" health="200" category="Misc" scale="0.6" impactsoundtag="impact_soft">
     <Sprite texture="Content/Items/CreatureLoot/MudraptorEgg.png" depth="0.7" sourcerect="0,0,128,128" origin="0.5,0.5" />
     <Deconstruct time="10">
       <Item identifier="alienblood" />

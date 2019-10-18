@@ -233,6 +233,8 @@
     <Compile Include="Source\Screens\NetLobbyScreen.cs" />
     <Compile Include="Source\Screens\UnimplementedScreen.cs" />
     <Compile Include="Source\Traitors\Goals\GoalInjectTarget.cs" />
+    <Compile Include="Source\Traitors\Goals\GoalEntityTransformation.cs" />
+    <Compile Include="Source\Traitors\Goals\GoalKeepTransformedAlive.cs" />
     <Compile Include="Source\Traitors\Goals\GoalUnwiring.cs" />
     <Compile Include="Source\Traitors\Goals\GoalWaitForTraitors.cs" />
     <Compile Include="Source\Traitors\Goals\HumanoidGoal.cs" />

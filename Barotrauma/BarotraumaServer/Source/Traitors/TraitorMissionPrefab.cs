@@ -200,6 +200,15 @@ namespace Barotrauma
                             checker.Optional("connectiondisplayname");
                             goal = new Traitor.GoalUnwiring(Config.GetAttributeString("tag", null), Config.GetAttributeString("connectionname", null), Config.GetAttributeString("connectiondisplayname)", null));
                             break;
+                        case "transformitem":
+                            checker.Required("startingentityid", "transformedentityid", "startingentitytype", "transformedentitytype");
+                            checker.Optional("catalystid");
+                            goal = new Traitor.GoalEntityTransformation(Config.GetAttributeString("startingentityid", null), Config.GetAttributeString("transformedentityid", null), Config.GetAttributeString("startingentitytype", "Item"), Config.GetAttributeString("transformedentitytype", "Item"), Config.GetAttributeString("catalystid", null));
+                            break;
+                        case "keeptransformedalive":
+                            checker.Required("speciesname");
+                            goal = new Traitor.GoalKeepTransformedAlive(Config.GetAttributeString("speciesname", null));
+                            break;
                         default:
                             GameServer.Log($"Unrecognized goal type \"{goalType}\".", ServerLog.MessageType.Error);
                             break;

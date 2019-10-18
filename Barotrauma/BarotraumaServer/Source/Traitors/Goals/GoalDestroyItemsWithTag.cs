@@ -60,6 +60,13 @@ namespace Barotrauma
                         ++result;
                     }
                 }
+
+                // Quick fix
+                if (tagPrefabName == null && matchIdentifier)
+                {
+                    tagPrefabName = TextManager.FormatServerMessage($"entityname.{tag}");
+                }
+
                 return result;
             }
 

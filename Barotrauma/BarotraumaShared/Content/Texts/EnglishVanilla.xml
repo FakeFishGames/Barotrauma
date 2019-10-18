@@ -3552,6 +3552,10 @@
   <gamemodedescription.multiplayercampaign>Embark on a journey through the depths of Europa. Travel from location to another, complete missions to earn money for supplies, discover new biomes — and perhaps eventually uncover the secrets of Europa.</gamemodedescription.multiplayercampaign>
   <entityname.mudraptoregg>Mudraptor Egg</entityname.mudraptoregg>
   <entitydescription.mudraptoregg>A slimy, pulsating mudraptor egg. The gaping maw on top of the egg seems to be grasping for something to eat.</entitydescription.mudraptoregg>
+  <entityname.mediummudraptoregg>Medium Mudraptor Egg</entityname.mediummudraptoregg>
+  <entitydescription.mediummudraptoregg>A slimy, pulsating mudraptor egg. The gaping maw on top of the egg seems to be grasping for something to eat.</entitydescription.mediummudraptoregg>
+  <entityname.largemudraptoregg>Large Mudraptor Egg</entityname.largemudraptoregg>
+  <entitydescription.largemudraptoregg>A slimy, pulsating mudraptor egg. The gaping maw on top of the egg seems to be grasping for something to eat.</entitydescription.largemudraptoregg>
   
   <!-- Server lobby 2.0 -->
   <servertag.casual>Casual</servertag.casual>
@@ -3620,7 +3624,9 @@
   <traitorgoalkilltargetinfowithcauseandhull>Assassinate [targetname] by [causeofdeath] and leave the body in the [targethullname].</traitorgoalkilltargetinfowithcauseandhull>
   <traitorgoalpoisoneveryoneinfo>Inject all crew members with [poison].</traitorgoalpoisoneveryoneinfo>
   <traitorgoalreachdistancefromsub>Swim at least [distance] meters from the submarine.</traitorgoalreachdistancefromsub>
-
+  <traitorgoalincubateegg>Incubate [startingentity] with [catalystitem] to a [transformedentity].</traitorgoalincubateegg>
+  <traitorgoalkeepalive>Protect the [targetcharacter] for [duration].</traitorgoalkeepalive>
+  
   <!-- Tainted welding tools traitor mission text package -->
   <tainted_welding_traitormissionstartinfotext>Scanning furtively around, you notice nobody's looking at you — which makes this the perfect time to snap into action.</tainted_welding_traitormissionstartinfotext>
   <tainted_welding_traitorobjectivestartmessage1>You've spent months gaining the trust of this crew, and it's all about to pay off:\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage1>
