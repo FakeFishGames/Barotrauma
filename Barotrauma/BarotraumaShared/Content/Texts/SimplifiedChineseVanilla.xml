@@ -1675,7 +1675,7 @@
 <reactorwarninghighoutput>输出过高</reactorwarninghighoutput>
 <reactorwarninglowfuel>燃料供应不足</reactorwarninglowfuel>
 <reactorwarningfuelout>燃料耗尽</reactorwarningfuelout>
-<reactorwarningmeltdown>崩溃</reactorwarningmeltdown>
+<reactorwarningmeltdown>熔毁</reactorwarningmeltdown>
 <reactorwarningscram>紧急停堆</reactorwarningscram>
 <reactortipfissionrate>提升裂变效率会让反应堆消耗更多燃料，产生更多热量。热量将用于旋转涡轮以产生电力。</reactortipfissionrate>
 <reactortipturbineoutput>涡轮机功率越高，反应堆产生的电能就越多，如果输出功率高于裂变效率，反应堆会冷却；如果输出功率低于裂变效率，反应堆会过热。</reactortipturbineoutput>
@@ -2104,7 +2104,7 @@
 <jobname.assistant>助手</jobname.assistant>
 <jobdescription.assistant>助手没有特定的专业领域与工作方向，更适用于新手。</jobdescription.assistant>
 <jobname.watchman>保安</jobname.watchman>
-<jobdescription.watchman></jobdescription.watchman>
+<jobdescription.watchman><!-- No data --></jobdescription.watchman>
 
 <!-- Locations -->
 <locationname.none>自然群落</locationname.none>
@@ -2579,7 +2579,7 @@
 <connection.waterdatain>水接触信息输入</connection.waterdatain>
 <connection.oxygendatain>氧含量信息输入</connection.oxygendatain>
 
-<!-- *** New additions *** -->
+
 <itemmsgoxygenrefill>插入氧气罐来进行补给</itemmsgoxygenrefill>
 <missionfailed>任务失败</missionfailed>
 <label.highpressurewarning>警告：高压</label.highpressurewarning>
@@ -2891,5 +2891,79 @@
 <flood_2_objectivesuccessmessage3>非常好！记住同志，没有糟糕的战术，只有糟糕的目标！</flood_2_objectivesuccessmessage3>
 <flood_2_traitorobjectivestartmessage4>快，利用这场混乱，干掉那些猪猡！\n[traitorgoalinfos]</flood_2_traitorobjectivestartmessage4>
 <flood_2_objectivesuccessmessage4>你完成了杀戮之后苦涩地注意到，你的收音器完全沉默了。你的同志把你的命运交给了欧罗巴母亲。</flood_2_objectivesuccessmessage4>
+
+
+<!-- New Additions as of 13th of August -->
+<connection.batterychargestatusout>charge_out</connection.batterychargestatusout>
+<connection.batterychargepercentage>charge_%</connection.batterychargepercentage>
+<connection.batterysetrechargespeed>set_charge_rate</connection.batterysetrechargespeed>
+<connection.batteryrechargespeedout>charge_rate_out</connection.batteryrechargespeedout>
+<personalitytrait.professional>专业</personalitytrait.professional>
+<personalitytrait.laid-back>安详</personalitytrait.laid-back>
+<personalitytrait.rude>粗鲁</personalitytrait.rude>
+<personalitytrait.tough>强硬</personalitytrait.tough>
+<personalitytrait.joker>小丑</personalitytrait.joker>
+<personalitytrait.brokenenglish>蹩脚英语</personalitytrait.brokenenglish>
+<personalitytrait.fearful>可怕</personalitytrait.fearful>
+<personalitytrait.crazy>疯狂</personalitytrait.crazy>
+<sabotagebutton>破坏</sabotagebutton>
+<sabotaging>破坏中</sabotaging>
+<voipattenuation>语音聊天衰减</voipattenuation>
+<voipattenuationtooltip>降低玩家说话时的音量。</voipattenuationtooltip>
+<roundsummaryroundhasended>本轮已结束。</roundsummaryroundhasended>
+<clientpermission.karmaimmunity>道德值免疫</clientpermission.karmaimmunity>
+<karmakicked>由于你的道德值降低至[banthreshold]以下，你已被从服务器踢出。</karmakicked>
+<karma.kicksbeforeban>被禁止前的踢出次数</karma.kicksbeforeban>
+<karma.kicksbeforebantooltip>如果玩家多次由于道德值过低而被踢出服务器，他们将永久被服务器禁止加入。如果该值为0，意味着一旦玩家的道德值过低，他将永远被服务器禁止加入。</karma.kicksbeforebantooltip>
+<traitorgoalreachdistancefromsub>在本艘潜艇中行驶至[distance]的距离。</traitorgoalreachdistancefromsub>
+<traitorgoalisoptionalinfotext>可选：[infotext]</traitorgoalisoptionalinfotext>
+<traitorgoalwithtimelimitinfotext>[infotext] 在[timelimit]内完成本目标。</traitorgoalwithtimelimitinfotext>
+<traitorgoalwithdurationinfotext>[infotext] 本目标必须以[duration]秒内完成。</traitorgoalwithdurationinfotext>
+<traitorgoalwithcumulativedurationinfotext>[infotext] 本目标必须以总计[duration]秒完成。</traitorgoalwithcumulativedurationinfotext>
+<traitorgoalwaitfortraitorsinfotext>等待 [remaining]/[count] 叛徒完成他们的任务。</traitorgoalwaitfortraitorsinfotext>
+<failed>失败</failed>
+<pausemenuquitverificationeditor>你确定要返回至主菜单吗？你所有未保存的进度将丢失。</pausemenuquitverificationeditor>
+<mapentitycategory.decorative>装饰性</mapentitycategory.decorative>
+<mapentitycategory.wall>墙</mapentitycategory.wall>
+<karma.resetkarmabetweenrounds>重置道德值的轮次间隔</karma.resetkarmabetweenrounds>
+<enablesplashscreen>启用开头画面</enablesplashscreen>
+<restartrequiredgeneric>你需要重启游戏才能使这些改动生效。</restartrequiredgeneric>
+<invalidcontentpackage>内容包 '[packagename]' 无法加载。</invalidcontentpackage>
+<xmlfileinvalid>文件 '[filepath]' 并非合法XML文件 ([errormessage])。</xmlfileinvalid>
+<roomname.airlockaccess>气闸接入</roomname.airlockaccess>
+<roomname.gunnerycompartment>枪炮库</roomname.gunnerycompartment>
+<roomname.dronecontrol>无人机操控</roomname.dronecontrol>
+<roomname.drone>无人机操控</roomname.drone>
+<roomname.droneballast>无人机配重</roomname.droneballast>
+<subeditorlights>灯光</subeditorlights>
+<subeditorshadowcastinglights>投影灯</subeditorshadowcastinglights>
+<contentpackagemismatchwarninggeneric>本潜艇可能与当前所选的内容包不兼容。你确定要选择这艘潜艇吗？</contentpackagemismatchwarninggeneric>
+<label.activatedischargecoils>放电线圈</label.activatedischargecoils>
+<label.lights1>灯光 1</label.lights1>
+<label.lights2>灯光 2</label.lights2>
+<label.lights3>灯光 3</label.lights3>
+<label.lights4>灯光 4</label.lights4>
+<label.lights5>灯光 5</label.lights5>
+<label.pumps1>抽水泵 1</label.pumps1>
+<label.pumps2>抽水泵 2</label.pumps2>
+<label.dronecharge>无人机充电</label.dronecharge>
+<label.meltdown>熔毁</label.meltdown>
+<campaignfiletransferinprogress>请等待战役存储文件下载完毕。</campaignfiletransferinprogress>
+<openlinkinbrowserprompt>你要用网页浏览器打开 [link] 链接吗？</openlinkinbrowserprompt>
+<replacelostshuttles>替换丢失的飞船</replacelostshuttles>
+<replaceshuttles>替换</replaceshuttles>
+<replaceshuttledockingportoccupied>这首丢失的飞船无法被替换，因为当前对接舱口已被占用。你需要腾出对接舱口才可替换新的飞船。</replaceshuttledockingportoccupied>
+<character.blackmoloch>黑色摩洛克</character.blackmoloch>
+<character.goldenhammerhead>金色锤头鲨</character.goldenhammerhead>
+<character.hammerheadmatriarch>锤头鲨女族长</character.hammerheadmatriarch>
+<character.bonetigerthresher>骨虎长尾鲨</character.bonetigerthresher>
+
+<!-- Updated values as of 13th of August -->
+
+
+
+
+
+
 
 </infotexts>

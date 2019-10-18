@@ -13,7 +13,7 @@
     <!--<Sprite texture="Content/Items/Containers/crates.png" depth="0.54" sourcerect="1,0,68,39"/>-->
     <Body width="45" height="31" density="20" />
     <MeleeWeapon slots="RightHand+LeftHand,Any" controlpose="true" aimpos="45,10" handle1="0,10" handle2="-15,10" holdangle="0" reload="1" range="50" combatpriority="5" msg="ItemMsgPickUpSelect">
-      <Attack structuredamage="10" stun="0.6" targetimpulse="30">
+      <Attack structuredamage="10" itemdamage="5" stun="0.6" targetimpulse="30">
         <Affliction identifier="internaldamage" strength="2" />
         <Sound file="Content/Items/Weapons/Smack2.ogg" range="800" />
       </Attack>
@@ -22,6 +22,7 @@
       <Containable items="smallitem" excludeditems="toolbox" />
     </ItemContainer>
   </Item>
+  
   <Item name="Welding Tool" identifier="weldingtool" category="Equipment" Tags="smallitem,weldingtool,tools" cargocontaineridentifier="metalcrate" description="One of the most crucial tools on board the submarine. Also works underwater." Scale="0.32" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="75" />
     <Price locationtype="Research" buyprice="75" />
@@ -48,7 +49,7 @@
 									 35" handle2="0,-27" msg="ItemMsgPickUpSelect" />
     <RepairTool structurefixamount="5.0" range="150" barrelpos="35,13" particles="weld" repairmultiple="true" repairthroughwalls="false" combatpriority="20">
       <!-- the item must contain a welding fuel tank for it to work -->
-      <RequiredItems identifier="weldingfuel" type="Contained" msg="ItemMsgWeldingFuelRequired" />
+      <RequiredItems identifier="weldingfuel,oxygensource" type="Contained" msg="ItemMsgWeldingFuelRequired" />
       <ParticleEmitter particle="weld" particlespersecond="50" copyentityangle="true"/>
       <ParticleEmitterHitStructure particle="weldspark" particlespersecond="100" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800" />
       <ParticleEmitterHitStructure particle="weldsmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="20" />
@@ -64,6 +65,23 @@
       <!-- do burn damage to characters -->
       <StatusEffect type="OnUse" targettype="UseTarget">
         <Affliction identifier="burn" amount="0.25" />
+      </StatusEffect>
+      <StatusEffect type="OnUse" targettype="UseTarget" targettags="damageableitem" Condition="-3.0" />
+      <StatusEffect type="OnUse" targettype="Contained" targets="oxygentank" delay="1.0" stackable="false" Condition="-100.0">
+        <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" range="5000" />
+        <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" range="5000" />
+        <Explosion range="250.0" structuredamage="50" force="3.0">
+          <Affliction identifier="burn" strength="50" />
+          <Affliction identifier="stun" strength="5" />
+        </Explosion>
+      </StatusEffect>
+      <StatusEffect type="OnUse" targettype="Contained" targets="oxygenitetank" delay="1.0" stackable="false" Condition="-100.0">
+        <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" range="5000" />
+        <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" range="5000" />
+        <Explosion range="250.0" structuredamage="75" force="6.0">
+          <Affliction identifier="burn" strength="75" />
+          <Affliction identifier="stun" strength="5" />
+        </Explosion>
       </StatusEffect>
       <!-- the tool can fix structures, i.e. walls and windows -->
       <Fixable identifier="structure" />
@@ -82,6 +100,7 @@
       <Containable items="weldingfuel,oxygensource" />
     </ItemContainer>
   </Item>
+  
   <Item name="Plasma Cutter" identifier="plasmacutter" category="Equipment" Tags="smallitem,plasmacutter,tools" cargocontaineridentifier="metalcrate" description="Cuts through various materials using a jet of ionized oxygen." Scale="0.32" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="75" />
     <Price locationtype="Research" buyprice="75" />
@@ -102,12 +121,29 @@
     <Body radius="50" width="180" density="40" />
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true" aimpos="50,0" handle1="-85,-25" handle2="-10,-27" msg="ItemMsgPickUpSelect" />
     <RepairTool structurefixamount="-0.125" range="150" barrelpos="45,10" combatpriority="20">
-      <RequiredItems identifier="oxygentank,oxygenitetank" type="Contained" msg="ItemMsgOxygenTankRequired" />
+      <RequiredItems identifier="oxygentank,oxygenitetank,weldingfueltank,incendiumfueltank" type="Contained" msg="ItemMsgOxygenTankRequired" />
       <StatusEffect type="OnUse" targettype="Contained" targets="oxygentank" Condition="-1.0" />
       <StatusEffect type="OnUse" targettype="Contained" targets="oxygenitetank" Condition="-0.5" />
       <StatusEffect type="OnUse" targettype="UseTarget" targets="door,ductblock,aliendoor" Stuck="-20.0" Condition="-3.0" />
-      <StatusEffect type="OnUse" targettype="UseTarget">
+      <StatusEffect type="OnUse" targettype="UseTarget" targettags="damageableitem" Condition="-3.0" />
+      <StatusEffect type="OnUse" targettype="UseTarget" severlimbsprobability="0.005">        
         <Affliction identifier="burn" amount="0.25" />
+      </StatusEffect>
+      <StatusEffect type="OnUse" targettype="Contained" targets="weldingfueltank,incendiumfueltank" delay="1.0" stackable="false" Condition="-100.0">
+        <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" range="5000" />
+        <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" range="5000" />
+        <Explosion range="250.0" structuredamage="50" force="3.0">
+          <Affliction identifier="burn" strength="50" />
+          <Affliction identifier="stun" strength="5" />
+        </Explosion>
+      </StatusEffect>
+      <StatusEffect type="OnUse" targettype="Contained" targets="incendiumfueltank" delay="1.0" stackable="false" Condition="-100.0">
+        <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" range="5000" />
+        <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" range="5000" />
+        <Explosion range="250.0" structuredamage="75" force="6.0">
+          <Affliction identifier="burn" strength="75" />
+          <Affliction identifier="stun" strength="5" />
+        </Explosion>
       </StatusEffect>
       <ParticleEmitter particle="plasma" particlespersecond="50" copyentityangle="true"/>
       <ParticleEmitterHitStructure particle="plasmaspark" particlespersecond="100" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800" />
@@ -123,13 +159,14 @@
       <StatusEffect type="OnFailure" targettype="Contained" targets="oxygenitetank" Condition="-1.5" />
       <LightComponent LightColor="0.8,0.7,1.0,1.0" Flicker="0.5">
         <sprite texture="Content/Items/Electricity/lightsprite.png" origin="0.5,0.5" />
-      </LightComponent>
+      </LightComponent>      
     </RepairTool>
     <ItemContainer capacity="1" hideitems="false" itempos="20,-30" containedspritedepth="0.56">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="0,157,92,27" />
       <Containable items="weldingfuel,oxygensource" />
     </ItemContainer>
   </Item>
+  
   <Item name="Welding Fuel Tank" identifier="weldingfueltank" category="Equipment" Tags="smallitem,weldingfuel" cargocontaineridentifier="metalcrate" scale="0.3" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Research" buyprice="60" />
@@ -160,6 +197,7 @@
       </StatusEffect>
     </Holdable>
   </Item>
+  
   <Item name="Incendium Fuel Tank" identifier="incendiumfueltank" category="Equipment" Tags="smallitem,weldingfuel" cargocontaineridentifier="metalcrate" scale="0.3" impactsoundtag="impact_metal_light">
     <Deconstruct time="10">
       <Item identifier="aluminium" />
@@ -182,6 +220,7 @@
       </StatusEffect>
     </Holdable>
   </Item>
+  
   <Item name="Fire Extinguisher" identifier="extinguisher" category="Equipment" Tags="smallitem,extinguisher" cargocontaineridentifier="metalcrate" description="A handheld carbon dioxide extinguisher." impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Research" buyprice="100" />
@@ -207,6 +246,7 @@
     </RepairTool>
     <Propulsion force="-80" usablein="water" particles="bubbles" />
   </Item>
+  
   <Item name="Screwdriver" identifier="screwdriver" category="Equipment" Tags="smallitem,tools" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="10" />
     <Price locationtype="Research" buyprice="10" />
@@ -224,6 +264,7 @@
     <Body width="31" height="6" density="50" />
     <Holdable slots="Any,RightHand,LeftHand" holdangle="30" handle1="-10,-5" msg="ItemMsgPickUpSelect" />
   </Item>
+  
   <Item name="Wrench" identifier="wrench" category="Equipment" Tags="smallitem,tools" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="10" />
     <Price locationtype="Research" buyprice="10" />
@@ -240,12 +281,13 @@
     <Sprite texture="tools.png" sourcerect="0,47,32,10" depth="0.55" origin="0.5,0.5" />
     <Body width="30" height="7" density="50" />
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="40,5" handle1="-12,-5" holdangle="60" reload="1.0" range="50" combatpriority="10" msg="ItemMsgPickUpSelect">
-      <Attack structuredamage="2" stun="0.2" targetimpulse="20">
+      <Attack structuredamage="2" itemdamage="2" stun="0.2" targetimpulse="20">
         <Affliction identifier="internaldamage" strength="4" />
         <Sound file="Content/Items/Weapons/Smack1.ogg" range="800" />
       </Attack>
     </MeleeWeapon>
   </Item>
+  
   <Item name="Crowbar" identifier="crowbar" category="Equipment" Tags="smallitem,tools" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="10" />
     <Price locationtype="Research" buyprice="10" />
@@ -263,12 +305,13 @@
     <Sprite texture="tools.png" sourcerect="0,65,65,15" depth="0.55" origin="0.5,0.5" />
     <Body width="60" height="10" density="50" />
     <MeleeWeapon slots="RightHand+LeftHand,Any" controlpose="true" aimpos="45,10" handle1="-20,-7" handle2="-10,0" holdangle="60" reload="1" range="100" combatpriority="30" msg="ItemMsgPickUpSelect">
-      <Attack structuredamage="5" stun="0.3" targetimpulse="20">
+      <Attack structuredamage="5" itemdamage="5" stun="0.3" targetimpulse="20">
         <Affliction identifier="internaldamage" strength="8" />
         <Sound file="Content/Items/Weapons/Smack2.ogg" range="800" />
       </Attack>
     </MeleeWeapon>
   </Item>
+  
   <Item name="Handheld Sonar" identifier="handheldsonar" category="Equipment" Tags="smallitem,sonar" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Research" buyprice="100" />
@@ -304,6 +347,7 @@
       </Containable>
     </ItemContainer>
   </Item>
+  
   <Item name="Sonar Beacon" identifier="sonarbeacon" category="Equipment" Tags="smallitem,sonar" cargocontaineridentifier="metalcrate" Scale="0.5" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Research" buyprice="100" />
@@ -341,6 +385,7 @@
       </Containable>
     </ItemContainer>
   </Item>
+  
   <Item name="Flashlight" identifier="flashlight" category="Equipment" Tags="smallitem,tools" cargocontaineridentifier="metalcrate" Scale="0.32" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="120" />
     <Price locationtype="Research" buyprice="120" />
@@ -373,6 +418,7 @@
     </ItemContainer>
     <AiTarget />
   </Item>
+  
   <Item name="Flare" identifier="flare" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,light" impactsoundtag="impact_soft" isshootable="true">
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Research" buyprice="50" />
@@ -406,6 +452,7 @@
     </LightComponent>
     <AiTarget />
   </Item>
+  
   <Item name="Alien Flare" identifier="alienflare" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,light" impactsoundtag="impact_soft">
     <Deconstruct time="10">
       <Item identifier="flashpowder" mincondition="0.9" outcondition="0.25" />

@@ -2235,7 +2235,7 @@
 <!-- Room 3 -->
 <mechanic.welding>Sızıntılar</mechanic.welding>
 <mechanic.weldingobjective>Sızıntıyı onar</mechanic.weldingobjective>
-<mechanic.weldingtext>Karinadaki sızıntıları onarmak için, üstüne iki kez tıklayarak kaynak aletini kuşan. Bazı eşyalar, kaynak aleti gibi, kullanmak için iki el gerektirir. Bir eşyayı kuşanmayı bırakmak veya eşyayı komple bırakmak için hâlâ kullanırken iki kere tıklaman yeterlidir.\n\nKaynak aleti kuşanılmış durumdayken nişan alırken {0} tuşuna basılı tut. Nişan alırken, kaynak yapmak için {1} tuşuna bas.</mechanic.weldingtext>
+<mechanic.weldingtext>Eşyanın üstüne iki kere tıklayarak az önce dolaptan aldığın kaynak aletini ve dalma maskeisni kuşan. \n\nKaynal aleti ile karinadaki sızıntıları onarabilirsin, dalma maskesi ile suyun altındayken sana gerekli oksijeni sağlar. \n\nKaynak aleti gibi bazı eşyaları kullanmak için iki elin de boşta olması gerekir. Hâlihazırda kullanılan bir eşyayı kullanmayı bırakmak veya atmak için üstüne iki kere tıkla.\n\nKaynak aleti kuşanılmışken nişan almak için {0} tuşuna bas. Nişan alırken kaynak yapmaya başlamak için ise {1} tuşuna bas.</mechanic.weldingtext>
 <mechanic.drain>Su pompaları</mechanic.drain>
 <mechanic.drainobjective>Fazla suyu atmak için yakınlardaki pompayı aç</mechanic.drainobjective>
 <mechanic.draintext>Denizaltını su basmışken, fazla suyu çekmek için pompaları kullan. Normalde pompalar yakınlardaki su dedektörlerinden veya navigasyon terminallerinden sinyaller alırlar ama bazıları elle de kontrol edilebilir. Bu pompa sadece suyu dışarı pompalamaya programlanmıştır. ({0}) ile etkileşime geçerek ve anahtarı açık pozisyonuna getirerek aç.</mechanic.draintext>
@@ -2246,7 +2246,7 @@
 <mechanic.deconstructtext>Fabrikatör, farklı materyalleri alıp işe yarar eşyalara çeviren bir aygıttır. Fabrikasyon için yeterli materyalin yoksa parçalayıcı ile çeşitli eşyaları parçalayabilirsin. Üstteki yuvalardan birine bir eşyayı sürükle ve Parçala butonuna bas.\n\nBu durumda, bir yangın söndürücü fabrikasyonu alüminyum ve sodyum gerektiriyor. Sodyum hâlihazırda var ama alüminyum oksijen tanklarından parçalanarak alınmalı.</mechanic.deconstructtext>
 <mechanic.fabricate>Zanaatkârlık, kısım 2</mechanic.fabricate>
 <mechanic.fabricateobjective>Bir yangın söndürücü oluştur</mechanic.fabricateobjective>
-<mechanic.fabricatetext>Bütün gereken materyalleri topladığımıza göre bir yangın söndürücü üretebiliriz. Listede bul, fabrikatöre gereken materyalleri koy ve üretime başlamak için butona bas.\n\nİşin bittiğinde, ürettiğin eşya fabrikatörün çıktı yuvasından alınabilir.</mechanic.fabricatetext>
+<mechanic.fabricatetext>Bütün gereken materyalleri topladığımıza göre bir yangın söndürücü üretebiliriz. Listede bul, fabrikatöre gereken materyalleri koy ve üretime başlamak için butona bas.\n\nİşin bittiğinde, ürettiğin eşya fabrikatörün çıktı yuvasından alınabilir. Yangın söndürücü iki elin de kullanılması gereken bir eşya olduğundan, söndürücüyü üstüne iki kez tıklayarak kuşan.</mechanic.fabricatetext>
 
 <!-- Room 5 -->
 <mechanic.extinguisher>Yangınlar</mechanic.extinguisher>
@@ -2505,7 +2505,7 @@
 <dialognoleaks>Ne sızıntısı?</dialognoleaks>
 
 <bugreportgithubform>GitHub konu formu</bugreportgithubform>
-<bugreportfeedbackform>Barotrauma geri bildirim formu</bugreportfeedbackform>
+<bugreportfeedbackform>Yardım ve teknik destek</bugreportfeedbackform>
 <bugreportbutton>Hata bildir</bugreportbutton>
 
 <voipcapturedevicenotfound>Ses yakalama başlatılamadı; uygun yakalama cihazı bulunamadı.</voipcapturedevicenotfound>
@@ -2587,7 +2587,7 @@
 <connection.waterdatain>su_verisi_gelen</connection.waterdatain>
 <connection.oxygendatain>oksijen_verisi_gelen</connection.oxygendatain>
 
-<!-- *** New additions *** -->
+
 <itemmsgoxygenrefill>Doldurmak için oksijen takını yerleştir</itemmsgoxygenrefill>
 <missionfailed>Görev başarısız oldu</missionfailed>
 <label.highpressurewarning>UYARI: Yüksek basınç</label.highpressurewarning>
@@ -2687,7 +2687,7 @@
 <traitorgoalkilleveryoneinfo>Bütün mürettebat üyelerini öldür.</traitorgoalkilleveryoneinfo>
 <traitorgoalfinditeminfo>Sıradaki hedefini [targethullname] içindeki [target] içinde bul.</traitorgoalfinditeminfo>
 <traitorgoalcausereactormeltdown>Reaktör erimesine yol aç.</traitorgoalcausereactormeltdown>
-<traitorgoaldestroyitems>Denizaltında bulunan envanter dışı [tag] lerin en az [percentage] kadarını yok et.</traitorgoaldestroyitems>
+<traitorgoaldestroyitems>Denizaltında bulunan bütün envanter dışı [tag] lerin en az [percentage] kadarını yok et.</traitorgoaldestroyitems>
 <traitorgoalfloodpercentofsub>Denizaltının en az [percentage] kadarını su basmasını sağla.</traitorgoalfloodpercentofsub>
 <traitorgoaljamsonarinfo>Aktif bir sonar jammerını [duration] saniye kadar bulunamayacak bir yere sakla.</traitorgoaljamsonarinfo>
 <traitorgoaljamsonarinfoalt>Denizaltının sonarını [duration] saniyeliğine boz.</traitorgoaljamsonarinfoalt>
@@ -2804,8 +2804,8 @@
 <label.engine>Motor</label.engine>
 
 <!-- Karma system -->
-<karma.kickbanthreshold>Yasaklanma eşiği</karma.kickbanthreshold>
-<karma.kickbanthresholdtooltip>Karma düşüşü bu eşiğin altındaki oyuncular sunucudan otomatik olarak yasaklanacaktır.</karma.kickbanthresholdtooltip>
+<karma.kickbanthreshold>Atılma/Yasaklanma Eşiği</karma.kickbanthreshold>
+<karma.kickbanthresholdtooltip>Karması bu eşiğin altında olan oyuncular otomatik olarak sunucudan atılacak/yasaklanacaktır (aşağıda yer alan atılma/yasaklanma ayarına göre değişir)</karma.kickbanthresholdtooltip>
 <karma.karmadecay>Karma eksilme hızı</karma.karmadecay>
 <karma.karmadecaytooltip>Eksilme eşiğini geçtiğinde karmanın saniye başına ne kadar düşeceği.</karma.karmadecaytooltip>
 <karma.karmadecaythreshold>Karma eksilme eşiği</karma.karmadecaythreshold>
@@ -2899,6 +2899,79 @@
 <flood_2_objectivesuccessmessage3>Harika! Unutma yoldaş, kötü taktik yoktur, kötü hedef vardır!</flood_2_objectivesuccessmessage3>
 <flood_2_traitorobjectivestartmessage4>Çabuk, karmaşadan faydalan ve fırsatın varken o domuzlardan en kötüsünü indir!\n[traitorgoalinfos]</flood_2_traitorobjectivestartmessage4>
 <flood_2_objectivesuccessmessage4>Onların canını alırken, belki biraz da hoşnutsuzlukla, alıcının birdenbire sustuğunu fark ediyorsun. Yoldaşların seni Europa Ana'nın merhametine terk etti.</flood_2_objectivesuccessmessage4>
+
+
+<!-- New Additions as of 13th of August -->
+<connection.batterychargestatusout>şarj_çıktı</connection.batterychargestatusout>
+<connection.batterychargepercentage>şarj_%</connection.batterychargepercentage>
+<connection.batterysetrechargespeed>şarj_oranını_ayarla</connection.batterysetrechargespeed>
+<connection.batteryrechargespeedout>şarj_çıkış_oranı</connection.batteryrechargespeedout>
+<personalitytrait.professional>Profesyonel</personalitytrait.professional>
+<personalitytrait.laid-back>Rahat</personalitytrait.laid-back>
+<personalitytrait.rude>Kaba</personalitytrait.rude>
+<personalitytrait.tough>Sert</personalitytrait.tough>
+<personalitytrait.joker>Şakacı</personalitytrait.joker>
+<personalitytrait.brokenenglish>Bozuk İngilizceli</personalitytrait.brokenenglish>
+<personalitytrait.fearful>Korkulu</personalitytrait.fearful>
+<personalitytrait.crazy>Deli</personalitytrait.crazy>
+<sabotagebutton>Sabotaj</sabotagebutton>
+<sabotaging>Sabotaj yapıyor</sabotaging>
+<voipattenuation>Sesli sohbet kapatma</voipattenuation>
+<voipattenuationtooltip>Oyuncular konuşurken oyunun sesini düşürür.</voipattenuationtooltip>
+<roundsummaryroundhasended>Raunt sona erdi.</roundsummaryroundhasended>
+<clientpermission.karmaimmunity>Karma dokunulmazlığı</clientpermission.karmaimmunity>
+<karmakicked>Karman [banthreshold] altına düştüğü için sunucundan atıldın.</karmakicked>
+<karma.kicksbeforeban>Yasaklanmadan önce atılma sayısı</karma.kicksbeforeban>
+<karma.kicksbeforebantooltip>Bir oyuncu sunucudan düşük karma sebebiyle bu kadar kez atılırsa, bir kez daha karmaları atılma/yasaklanma eşiğinin altına düştüğünde yasaklanırlar. Değerin 0 olması, karmalarının eşiğin altına düştüğünde her zaman yasaklanacağı anlamına gelir.</karma.kicksbeforebantooltip>
+<traitorgoalreachdistancefromsub>Denizaltından [distance] mesafeye ulaş.</traitorgoalreachdistancefromsub>
+<traitorgoalisoptionalinfotext>Opsiyonel: [infotext]</traitorgoalisoptionalinfotext>
+<traitorgoalwithtimelimitinfotext>[infotext] Bu hedefi [timelimit] içinde tamamla.</traitorgoalwithtimelimitinfotext>
+<traitorgoalwithdurationinfotext>[infotext] Bu hedef [duration] saniye içinde tamamlanmalıdır.</traitorgoalwithdurationinfotext>
+<traitorgoalwithcumulativedurationinfotext>[infotext] Bu hedef toplamda [duration] saniye içinde tamamlanmalıdır.</traitorgoalwithcumulativedurationinfotext>
+<traitorgoalwaitfortraitorsinfotext>[remaining] [count] hainin görevlerini tamamlamalarını bekle.</traitorgoalwaitfortraitorsinfotext>
+<failed>Başarısız</failed>
+<pausemenuquitverificationeditor>Ana menüye dönmek istediğinden emin misin? Kaydedilmemiş bütün ilerlemen kaybolacak.</pausemenuquitverificationeditor>
+<mapentitycategory.decorative>Dekoratif</mapentitycategory.decorative>
+<mapentitycategory.wall>Duvar</mapentitycategory.wall>
+<karma.resetkarmabetweenrounds>Rauntlar arasında karmayı sıfırla</karma.resetkarmabetweenrounds>
+<enablesplashscreen>Açılış ekranını aktif et</enablesplashscreen>
+<restartrequiredgeneric>Değişikliklerin etki etmesi için oyunu yeniden başlatman gerek.</restartrequiredgeneric>
+<invalidcontentpackage>İçerik paketi '[packagename]' yüklenemiyor.</invalidcontentpackage>
+<xmlfileinvalid>Dosya '[filepath]' geçerli bir XML dosyası değil ([errormessage]).</xmlfileinvalid>
+<roomname.airlockaccess>Hava Kilidi Erişimi</roomname.airlockaccess>
+<roomname.gunnerycompartment>Cephanelik Kompartmanı</roomname.gunnerycompartment>
+<roomname.dronecontrol>Dron Kontrolü</roomname.dronecontrol>
+<roomname.drone>Dron</roomname.drone>
+<roomname.droneballast>Dron Balastı</roomname.droneballast>
+<subeditorlights>Işıklar</subeditorlights>
+<subeditorshadowcastinglights>Gölge verici ışıklar</subeditorshadowcastinglights>
+<contentpackagemismatchwarninggeneric>Bu denizaltı, mevcut seçili içerik paketleriyle uyumlu olmayabilir. Bu denizaltını seçmek istediğinden emin misin?</contentpackagemismatchwarninggeneric>
+<label.activatedischargecoils>Deşarj Bobinleri</label.activatedischargecoils>
+<label.lights1>Işıklar 1</label.lights1>
+<label.lights2>Işıklar 2</label.lights2>
+<label.lights3>Işıklar 3</label.lights3>
+<label.lights4>Işıklar 4</label.lights4>
+<label.lights5>Işıklar 5</label.lights5>
+<label.pumps1>Pompalar 1</label.pumps1>
+<label.pumps2>Pompalar 2</label.pumps2>
+<label.dronecharge>Dron Şarjı</label.dronecharge>
+<label.meltdown>Erime</label.meltdown>
+<campaignfiletransferinprogress>Lütfen kampanya kayıt dosyasının inmesini bekleyin.</campaignfiletransferinprogress>
+<openlinkinbrowserprompt>İnternet tarayıcınızda [link] linkini açmak istiyor musunuz?</openlinkinbrowserprompt>
+<replacelostshuttles>Kayıp araçları yenile</replacelostshuttles>
+<replaceshuttles>Yenile</replaceshuttles>
+<replaceshuttledockingportoccupied>Kayıp araç yenilemez çünkü kenetlenme limanı hâlihazırda kullanılıyor. Yeni bir araç istemeden önce kenetlenme limanını boşaltın.</replaceshuttledockingportoccupied>
+<character.blackmoloch>Kara Molek</character.blackmoloch>
+<character.goldenhammerhead>Altın Çekiçkafa</character.goldenhammerhead>
+<character.hammerheadmatriarch>Çekiçkafa Maderşahi</character.hammerheadmatriarch>
+<character.bonetigerthresher>Kemik Kaplan Harmancı</character.bonetigerthresher>
+
+<!-- Updated values as of 13th of August -->
+
+
+
+
+
 
 
 </infotexts>

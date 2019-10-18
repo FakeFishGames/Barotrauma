@@ -1,7 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Menu>
+
+  <Image url="https://barotraumagame.com/gamedata/HalloweenPackBanner.png" relativesize="0.15,0.21" minsize="200,158" pivot="BottomLeft" relativeoffset="0.3,0.64"/>
+   <!--<Image url="https://barotraumagame.com/gamedata/HalloweenPackTextBlock.png"/>-->
+    
   <GUIListBox anchor="TopRight" ishorizontal="false" relativeoffset="0.02,0.1" relativesize="0.2,0.8" childanchor="TopRight" style="null">
-    <Image url="https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png" relativesize="1.0,0.08"/>
     <Accordion text="Official Halloween pack out now!" relativesize="1.0,0.08" style="GUISlopedHeader">
       <GUIFrame resizetofitchildren="true" relativeresizescale="1.05,1.2" relativesize="1.0,1.0" style="TextFrame" anchor="TopRight">
         <GUILayoutGroup ishorizontal="false" resizetofitchildren="true" relativesize="0.9,0.9" anchor="Center" relativespacing="0.02">

@@ -18,6 +18,51 @@ namespace Barotrauma
 
         public static float DisplayToRealWorldRatio = 1.0f / 80.0f;
 
-        public const float DisplayToSimRation = 100.0f;            
+        public const float DisplayToSimRation = 100.0f;    
+        
+        public static bool TryParseCollisionCategory(string categoryName, out Category category)
+        {
+                category = Category.None;
+            if (string.IsNullOrEmpty(categoryName))
+            {
+                return false;
+            }
+            switch (categoryName.ToLowerInvariant())
+            {
+                case "all":
+                    category = CollisionAll;
+                    return true;
+                case "wall":
+                case "structure":
+                    category = CollisionWall;
+                    return true;
+                case "character":
+                    category = CollisionCharacter;
+                    return true;
+                case "platform":
+                    category = CollisionPlatform;
+                    return true;
+                case "stairs":
+                    category = CollisionStairs;
+                    return true;
+                case "item":
+                    category = CollisionItem;
+                    return true;
+                case "itemblocking":
+                    category = CollisionItemBlocking;
+                    return true;
+                case "projectile":
+                    category = CollisionProjectile;
+                    return true;
+                case "level":
+                    category = CollisionLevel;
+                    return true;
+                case "repair":
+                    category = CollisionRepair;
+                    return true;
+                default:
+                    return false;
+            }
+        }
     }
 }
