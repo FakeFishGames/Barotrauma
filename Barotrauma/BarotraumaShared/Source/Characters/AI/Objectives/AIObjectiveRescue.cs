@@ -14,6 +14,8 @@ namespace Barotrauma
 
         const float TreatmentDelay = 0.5f;
 
+        const float CloseEnoughToTreat = 150.0f;
+
         private readonly Character targetCharacter;
 
         private AIObjectiveGoTo goToObjective;
@@ -58,7 +60,7 @@ namespace Barotrauma
                         if (!character.CanInteractWith(targetCharacter))
                         {
                             RemoveSubObjective(ref goToObjective);
-                            TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(targetCharacter, character, objectiveManager),
+                            TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(targetCharacter, character, objectiveManager) { CloseEnough = CloseEnoughToTreat },
                                 onCompleted: () => RemoveSubObjective(ref goToObjective),
                                 onAbandon: () => RemoveSubObjective(ref goToObjective));
                         }
@@ -91,7 +93,7 @@ namespace Barotrauma
             {
                 RemoveSubObjective(ref goToObjective);
                 // Go to the target and select it
-                TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(targetCharacter, character, objectiveManager),
+                TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(targetCharacter, character, objectiveManager) { CloseEnough = CloseEnoughToTreat },
                     onCompleted: () => RemoveSubObjective(ref goToObjective),
                     onAbandon: () => RemoveSubObjective(ref goToObjective));
             }
@@ -142,20 +144,22 @@ namespace Barotrauma
                     }
                 }
             }
+
+            float cprSuitability = targetCharacter.Oxygen < 0.0f ? -targetCharacter.Oxygen * 100.0f : 0.0f;
             //didn't have any suitable treatments available, try to find some medical items
-            if (currentTreatmentSuitabilities.Any(s => s.Value > 0.0f))
+            if (currentTreatmentSuitabilities.Any(s => s.Value > cprSuitability))
             {
                 itemNameList.Clear();
                 suitableItemIdentifiers.Clear();
-                foreach (KeyValuePair<string,float> treatmentSuitability in currentTreatmentSuitabilities)
+                foreach (KeyValuePair<string, float> treatmentSuitability in currentTreatmentSuitabilities)
                 {
-                    if (treatmentSuitability.Value <= 0.0f) { continue; }
-                    suitableItemIdentifiers.Add(treatmentSuitability.Key);
-
-                    //only list the first 4 items
-                    if (itemNameList.Count < 4)
+                    if (treatmentSuitability.Value <= cprSuitability) { continue; }
+                    if (MapEntityPrefab.Find(null, treatmentSuitability.Key, showErrorMessages: false) is ItemPrefab itemPrefab)
                     {
-                        if (MapEntityPrefab.Find(null, treatmentSuitability.Key, showErrorMessages: false) is ItemPrefab itemPrefab)
+                        if (!Item.ItemList.Any(it => it.prefab.Identifier == treatmentSuitability.Key)) { continue; }
+                        suitableItemIdentifiers.Add(treatmentSuitability.Key);
+                        //only list the first 4 items
+                        if (itemNameList.Count < 4)
                         {
                             itemNameList.Add(itemPrefab.Name);
                         }
@@ -178,13 +182,13 @@ namespace Barotrauma
                             new string[2] { targetCharacter.Name, itemListStr }, new bool[2] { false, true }),
                             null, 2.0f, "listrequiredtreatments" + targetCharacter.Name, 60.0f);
                     }
+                    character.DeselectCharacter();
+                    RemoveSubObjective(ref getItemObjective);
+                    TryAddSubObjective(ref getItemObjective, 
+                        constructor: () => new AIObjectiveGetItem(character, suitableItemIdentifiers.ToArray(), objectiveManager, equip: true),
+                        onCompleted: () => RemoveSubObjective(ref getItemObjective),
+                        onAbandon: () => RemoveSubObjective(ref getItemObjective));
                 }
-                character.DeselectCharacter();
-                RemoveSubObjective(ref getItemObjective);
-                TryAddSubObjective(ref getItemObjective, 
-                    constructor: () => new AIObjectiveGetItem(character, suitableItemIdentifiers.ToArray(), objectiveManager, equip: true),
-                    onCompleted: () => RemoveSubObjective(ref getItemObjective),
-                    onAbandon: () => RemoveSubObjective(ref getItemObjective));
             }
             character.AnimController.Anim = AnimController.Animation.CPR;
         }
