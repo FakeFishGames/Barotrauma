@@ -416,9 +416,8 @@ namespace Barotrauma.Items.Components
 
             if (IgnoredBodies.Contains(target.Body)) { return false; }
 
-            if (target.UserData is Item) { return false; }
-
-            if (target.CollisionCategories == Physics.CollisionCharacter && !(target.Body.UserData is Limb))
+            //ignore character colliders (the projectile only hits limbs)
+            if (target.CollisionCategories == Physics.CollisionCharacter && target.Body.UserData is Character)
             {
                 return false;
             }
@@ -445,9 +444,9 @@ namespace Barotrauma.Items.Components
                 if (attack != null) { attackResult = attack.DoDamageToLimb(User, limb, item.WorldPosition, 1.0f); }
                 if (limb.character != null) { character = limb.character; }
             }
-            else if (target.Body.UserData is Structure structure)
+            else if (target.Body.UserData is IDamageable damageable)
             {
-                if (attack != null) { attackResult = attack.DoDamage(User, structure, item.WorldPosition, 1.0f); }
+                if (attack != null) { attackResult = attack.DoDamage(User, damageable, item.WorldPosition, 1.0f); }
             }
 
             if (character != null) { character.LastDamageSource = item; }

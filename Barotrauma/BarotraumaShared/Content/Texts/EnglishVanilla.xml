@@ -3584,6 +3584,9 @@
   <shuttle>Shuttle</shuttle>
   <privacypolicy>Privacy policy</privacypolicy>
 
+  <entityname.mudraptoregg>Mudraptor Egg</entityname.mudraptoregg>
+  <entitydescription.mudraptoregg>A slimy, pulsating mudraptor egg. The gaping maw on top of the egg seems to be grasping for something to eat.</entitydescription.mudraptoregg>
+  
   <!-- Server lobby 2.0 -->
   <servertag.casual>Casual</servertag.casual>
   <servertagdescription.casual>Having fun is more important than completing the objective. A good choice for new players.</servertagdescription.casual>

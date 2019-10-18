@@ -25,6 +25,10 @@
     <Item identifier="hydroxyapatite" />
     <Item identifier="mudraptorshell" />
   </Inventory>
+  <Inventory slots="Any, Any" accessiblewhenalive="False" commonness="1">
+    <Item identifier="hydroxyapatite" />
+    <Item identifier="smallmudraptoregg" />
+  </Inventory>
   <ai combatstrength="250" sight="0.75" hearing="1" aggressiveboarding="True" fleehealththreshold="20" aggressiongreed="30" aggressionhurt="100" attackonlywhenprovoked="False" retaliatewhentakingdamage="True">
     <latchonto attachtowalls="true" attachtosub="false" />
     <targetpriority tag="decoy" state="Attack" priority="600" />

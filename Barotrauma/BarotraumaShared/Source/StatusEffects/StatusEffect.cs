@@ -93,12 +93,12 @@ namespace Barotrauma
 
             public CharacterSpawnInfo(XElement element, string parentDebugName)
             {
-                string speciesName = 
+                SpeciesName = 
                     element.GetAttributeString("species", null) ?? 
                     element.GetAttributeString("speciesname", "") ?? 
                     element.GetAttributeString("identifier", "");
 
-                if (string.IsNullOrEmpty(speciesName))
+                if (string.IsNullOrEmpty(SpeciesName))
                 {
                     DebugConsole.ThrowError("Invalid character spawn in StatusEffect \"" + parentDebugName + "\" - identifier not found in the element \"" + element.ToString() + "\"");
                 }
