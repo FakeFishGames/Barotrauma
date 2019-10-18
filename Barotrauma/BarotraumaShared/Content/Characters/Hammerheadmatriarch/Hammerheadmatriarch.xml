@@ -8,4 +8,9 @@
   <ai combatstrength="1" sight="1" hearing="1" aggressionhurt="0" aggressiongreed="0" fleehealththreshold="0" attackonlywhenprovoked="False" aggressiveboarding="False" avoidgunfire="False">
     <target tag="wall" state="Attack" priority="100" />
   </ai>
+  <StatusEffect type="Always" target="This" lifetime="5" targetlimb="Head">
+    <Conditional isdead="True"/>
+    <ParticleEmitter particle="waterblood" particlespersecond="100" scalemin="2" scalemax="4" velocitymin="0" velocitymax="50" anglemin="0" anglemax="360"/>
+    <ParticleEmitter particle="blackwaterblood" particlespersecond="100" scalemin="3" scalemax="5" velocitymin="0" velocitymax="50" anglemin="0" anglemax="360"/>
+  </StatusEffect>
 </Character>
