@@ -200,7 +200,7 @@ namespace Barotrauma
         /// </summary>
         public List<PropertyConditional> Conditionals { get; private set; } = new List<PropertyConditional>();
 
-        private readonly List<StatusEffect> statusEffects;
+        private readonly List<StatusEffect> statusEffects = new List<StatusEffect>();
 
         public void SetUser(Character user)
         {
@@ -271,10 +271,6 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "statuseffect":
-                        if (statusEffects == null)
-                        {
-                            statusEffects = new List<StatusEffect>();
-                        }
                         statusEffects.Add(StatusEffect.Load(subElement, parentDebugName));
                         break;
                     case "affliction":
@@ -380,7 +376,6 @@ namespace Barotrauma
             {
                 effectType = ActionType.OnEating;
             }
-            if (statusEffects == null) return attackResult;
 
             foreach (StatusEffect effect in statusEffects)
             {
@@ -437,7 +432,6 @@ namespace Barotrauma
 
             var attackResult = targetLimb.character.ApplyAttack(attacker, worldPosition, this, deltaTime, playSound, targetLimb);
             var effectType = attackResult.Damage > 0.0f ? ActionType.OnUse : ActionType.OnFailure;
-            if (statusEffects == null) return attackResult;            
 
             foreach (StatusEffect effect in statusEffects)
             {

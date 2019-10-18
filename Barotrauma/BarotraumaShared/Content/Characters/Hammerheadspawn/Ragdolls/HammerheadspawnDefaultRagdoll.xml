@@ -1,0 +1,23 @@
+﻿<Ragdoll type="Hammerheadspawn" texture="Content/Characters/Hammerheadmatriarch/Hammerheadmatriarch.png" canentersubmarine="True" spritesheetorientation="90" limbscale="0.1969" jointscale="0.1969" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" canwalk="False" draggable="True" mainlimb="Torso">
+  <collider radius="0" width="75" name="Main Collider" height="200" />
+  <limb id="1" name="Head" type="Head" height="70" width="90" notes="" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="5" radius="0" density="10" ignorecollisions="False" angulardamping="7" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" healthindex="0" friction="0.3" restitution="0.05">
+    <deformablesprite texture="" sourcerect="1514,1433,98,115" origin="0.4460883,0.4520822" depth="0" subdivisions="3,3">
+      <spritedeformation type="bendjoint" resolution="3,3" multiplier="1.0" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="30" strength="1" />
+    </deformablesprite>
+    <attack structuresoundtype="StructureBlunt" context="Water" targettype="Character" targetlimbtype="None" hitdetectiontype="Distance" afterattack="Pursue" reverse="False" range="25" damagerange="25" duration="0.5" cooldown="1" secondarycooldown="0" cooldownrandomfactor="0" structuredamage="0" itemdamage="0" stun="0" onlyhumans="False" applyforceonlimbs="" force="1" torque="2" applyforcesonlyonce="False" targetimpulse="1" targetimpulseworld="0,0" targetforce="0" targetforceworld="0,0" severlimbsprobability="0" priority="0">
+      <affliction identifier="internaldamage" strength="1" probability="1" />
+    </attack>
+  </limb>
+  <limb id="0" name="Torso" type="Torso" height="80" width="100" notes="" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" radius="0" density="10" ignorecollisions="False" angulardamping="7" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" healthindex="0" friction="0.3" restitution="0.05">
+    <deformablesprite texture="" sourcerect="1401,1433,116,115" origin="0.534501,0.4520822" depth="0" subdivisions="3,3">
+      <spritedeformation type="bendjoint" resolution="3,3" multiplier="1.0" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="30" strength="1" />
+    </deformablesprite>
+  </limb>
+  <limb id="2" name="Tail" type="Tail" width="160" height="50" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" radius="0" density="10" ignorecollisions="False" angulardamping="7" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
+    <deformablesprite texture="" sourcerect="1230,1432,177,115" origin="0.6045581,0.4690734" depth="0" subdivisions="3,3">
+      <spritedeformation type="bendjoint" resolution="3,3" multiplier="1.0" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="30" strength="1" />
+    </deformablesprite>
+  </limb>
+  <joint limb1="1" limb2="0" limb1anchor="-43.16693,-0.8315565" limb2anchor="51.36745,-0.6573032" name="Joint 1 - 0" canbesevered="True" limitenabled="True" upperlimit="30" lowerlimit="-30" stiffness="0.25" />
+  <joint limb1="0" limb2="2" limb1anchor="-61.19426,-2.871144" limb2anchor="65.26091,-1.740783" name="Joint 0 - 2" canbesevered="True" limitenabled="True" upperlimit="30" lowerlimit="-30" stiffness="0.25" />
+</Ragdoll>

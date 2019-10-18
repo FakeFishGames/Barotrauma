@@ -129,8 +129,9 @@ namespace Barotrauma
         {
             get
             {
-                //can't flip when attached to something or when reversing or when in a (relatively) small room
-                return !Reverse && 
+                //can't flip when attached to something, when eating, or reversing or in a (relatively) small room
+                return !Reverse &&
+                    (State != AIState.Eat || Character.SelectedCharacter == null) &&
                     (LatchOntoAI == null || !LatchOntoAI.IsAttached) && 
                     (Character.CurrentHull == null || !Character.AnimController.InWater || Math.Min(Character.CurrentHull.Size.X, Character.CurrentHull.Size.Y) > ConvertUnits.ToDisplayUnits(Math.Max(colliderLength, colliderWidth)));
 
@@ -759,7 +760,7 @@ namespace Barotrauma
                 if (wallTarget == null && SelectedAiTarget.Entity is Character targetCharacter)
                 {
                     var targetLimbType = AttackingLimb.Params.Attack.Attack.TargetLimbType;
-                    attackTargetLimb = GetTargetLimb(AttackingLimb, targetLimbType, targetCharacter);
+                    attackTargetLimb = GetTargetLimb(AttackingLimb, targetCharacter, targetLimbType);
                     if (attackTargetLimb == null)
                     {
                         State = AIState.Idle;
@@ -1178,20 +1179,21 @@ namespace Barotrauma
                     return;
                 }
                 Vector2 mouthPos = Character.AnimController.GetMouthPosition().Value;
-                Vector2 attackSimPosition = Character.GetRelativeSimPosition(SelectedAiTarget.Entity);
+                Vector2 attackSimPosition = Character.GetRelativeSimPosition(target);
                 Vector2 limbDiff = attackSimPosition - mouthPos;
-                float limbDist = limbDiff.Length();
-                if (limbDist < 2.0f)
+                float limbDist = limbDiff.LengthSquared();
+                if (limbDist < 2 * 2)
                 {
                     Character.SelectCharacter(target);
-                    steeringManager.SteeringManual(deltaTime, Vector2.Normalize(limbDiff));
+                    steeringManager.SteeringManual(deltaTime, Vector2.Normalize(limbDiff) * 3);
                     Character.AnimController.Collider.ApplyForce(limbDiff * mouthLimb.Mass * 50.0f, mouthPos);
                 }
                 else
                 {
-                    steeringManager.SteeringSeek(attackSimPosition - (mouthPos - SimPosition), 2);
+                    //steeringManager.SteeringSeek(attackSimPosition - (mouthPos - SimPosition), 2);
+                    steeringManager.SteeringSeek(attackSimPosition + limbDiff, 2);
+                    SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 1);
                 }
-                SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 1);
             }
             else
             {
@@ -1646,11 +1648,12 @@ namespace Barotrauma
         }
 
         private List<Limb> targetLimbs = new List<Limb>();
-        public Limb GetTargetLimb(Limb attackLimb, LimbType targetLimbType, Character target)
+        public Limb GetTargetLimb(Limb attackLimb, Character target, LimbType targetLimbType = LimbType.None)
         {
             targetLimbs.Clear();
             foreach (var limb in target.AnimController.Limbs)
             {
+                if (limb.IsSevered) { continue; }
                 if (limb.type == targetLimbType || targetLimbType == LimbType.None)
                 {
                     targetLimbs.Add(limb);

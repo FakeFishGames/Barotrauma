@@ -1,8 +1,19 @@
 ﻿<Character speciesname="Hammerheadmatriarch" humanoid="False" group="hammerhead" husk="False" needsair="False" canspeak="False" noise="100" blooddecal="blood">
   <ragdolls folder="Content/Characters/Hammerheadmatriarch/Ragdolls/" />
   <animations folder="Content/Characters/Hammerheadmatriarch/Animations/" />
+  <bloodemitter particle="blood" particleamount="10" anglemin="0" anglemax="0" scalemin="1" scalemax="1" velocitymin="0" velocitymax="0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
+  <bloodemitter particle="waterblood" particleamount="1" anglemin="0" anglemax="0" scalemin="1" scalemax="1" velocitymin="0" velocitymax="0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
+  <gibemitter particle="gib" particleamount="20" velocitymin="200" velocitymax="700" anglemin="0" anglemax="360" scalemin="1" scalemax="1" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
   <health vitality="400" doesbleed="True" crushdepth="-Infinity" usehealthwindow="False" bleedingreduction="0" burnreduction="0" constanthealthregeneration="0" healthregenerationwheneating="0" />
   <ai combatstrength="1" sight="1" hearing="1" aggressionhurt="0" aggressiongreed="0" fleehealththreshold="0" attackonlywhenprovoked="False" aggressiveboarding="False" avoidgunfire="False">
     <target tag="wall" state="Attack" priority="100" />
+    <target tag="nasonov" state="Attack" priority="50" />
+    <target tag="sonar" state="Attack" priority="50" />
+    <target tag="room" state="Attack" priority="10" />
   </ai>
+  <StatusEffect type="Always" target="This" lifetime="5" targetlimb="Head">
+    <Conditional isdead="True" />
+    <ParticleEmitter particle="waterblood" particlespersecond="100" scalemin="2" scalemax="4" velocitymin="0" velocitymax="50" anglemin="0" anglemax="360" />
+    <ParticleEmitter particle="blackwaterblood" particlespersecond="100" scalemin="3" scalemax="5" velocitymin="0" velocitymax="50" anglemin="0" anglemax="360" />
+  </StatusEffect>
 </Character>

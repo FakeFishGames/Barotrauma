@@ -127,6 +127,9 @@ namespace Barotrauma
         private HashSet<string> tags;
         
         private readonly float duration;
+        private readonly float lifeTime;
+        private float lifeTimer;
+
         public static readonly List<DurationListElement> DurationList = new List<DurationListElement>();
 
         public bool CheckConditionalAlways; //Always do the conditional checks for the duration/delay. If false, only check conditional on apply.
@@ -147,6 +150,8 @@ namespace Barotrauma
         private Character user;
 
         public readonly float FireSize;
+
+        public readonly LimbType targetLimb;
         
         public HashSet<string> TargetIdentifiers
         {
@@ -206,6 +211,11 @@ namespace Barotrauma
             tags = new HashSet<string>(element.GetAttributeString("tags", "").Split(','));
 
             Range = element.GetAttributeFloat("range", 0.0f);
+            string targetLimbName = element.GetAttributeString("targetlimb", null);
+            if (targetLimbName != null)
+            {
+                Enum.TryParse(targetLimbName, out targetLimb);
+            }
 
             IEnumerable<XAttribute> attributes = element.Attributes();
             List<XAttribute> propertyAttributes = new List<XAttribute>();
@@ -258,6 +268,10 @@ namespace Barotrauma
                         break;
                     case "stackable":
                         Stackable = attribute.GetAttributeBool(true);
+                        break;
+                    case "lifetime":
+                        lifeTime = attribute.GetAttributeFloat(0);
+                        lifeTimer = lifeTime;
                         break;
                     case "checkconditionalalways":
                         CheckConditionalAlways = attribute.GetAttributeBool(false);
@@ -595,6 +609,12 @@ namespace Barotrauma
 
         protected void Apply(float deltaTime, Entity entity, List<ISerializableEntity> targets, Vector2? worldPosition = null)
         {
+            if (lifeTime > 0)
+            {
+                lifeTimer -= deltaTime;
+                if (lifeTimer <= 0) { return; }
+            }
+
             Hull hull = null;
             if (entity is Character)
             {
@@ -606,6 +626,17 @@ namespace Barotrauma
             }
 
             Vector2 position = worldPosition ?? entity.WorldPosition;
+            if (targetLimb != LimbType.None)
+            {
+                if (entity is Character c)
+                {
+                    Limb limb = c.AnimController.GetLimb(targetLimb);
+                    if (limb != null)
+                    {
+                        position = limb.WorldPosition;
+                    }
+                }
+            }
 
             foreach (ISerializableEntity serializableEntity in targets)
             {
@@ -738,9 +769,18 @@ namespace Barotrauma
             {
                 foreach (CharacterSpawnInfo characterSpawnInfo in spawnCharacters)
                 {
+                    var characters = new List<Character>();
                     for (int i = 0; i < characterSpawnInfo.Count; i++)
                     {
-                        Entity.Spawner.AddToSpawnQueue(characterSpawnInfo.SpeciesName, position + Rand.Vector(characterSpawnInfo.Spread, Rand.RandSync.Server));
+                        Entity.Spawner.AddToSpawnQueue(characterSpawnInfo.SpeciesName, position + Rand.Vector(characterSpawnInfo.Spread, Rand.RandSync.Server), 
+                            onSpawn: newCharacter =>
+                        {
+                            characters.Add(newCharacter);
+                            if (characters.Count == characterSpawnInfo.Count)
+                            {
+                                SwarmBehavior.CreateSwarm(characters.Cast<AICharacter>());
+                            }
+                        });
                     }
                 }
                 foreach (ItemSpawnInfo itemSpawnInfo in spawnItems)

@@ -454,8 +454,36 @@ namespace Barotrauma.Items.Components
 
             if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
             {
-                ApplyStatusEffects(ActionType.OnUse, 1.0f, character, target.Body.UserData as Limb, user: user);
-                ApplyStatusEffects(ActionType.OnImpact, 1.0f, character, target.Body.UserData as Limb, user: user);
+                if (target.Body.UserData is Limb targetLimb)
+                {
+                    ApplyStatusEffects(ActionType.OnUse, 1.0f, character, targetLimb, user: user);
+                    ApplyStatusEffects(ActionType.OnImpact, 1.0f, character, targetLimb, user: user);
+                    var attack = targetLimb.attack;
+                    if (attack != null)
+                    {
+                        // Apply the status effects defined in the limb's attack that was hit
+                        foreach (var effect in attack.StatusEffects)
+                        {
+                            if (effect.type == ActionType.OnImpact)
+                            {
+                                //effect.Apply(effect.type, 1.0f, targetLimb.character, targetLimb.character, targetLimb.WorldPosition);
+
+                                if (effect.HasTargetType(StatusEffect.TargetType.This))
+                                {
+                                    effect.Apply(effect.type, 1.0f, targetLimb.character, targetLimb.character, targetLimb.WorldPosition);
+                                }
+                                if (effect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
+                                    effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
+                                {
+                                    var targets = new List<ISerializableEntity>();
+                                    effect.GetNearbyTargets(targetLimb.WorldPosition, targets);
+                                    effect.Apply(ActionType.OnActive, 1.0f, targetLimb.character, targets);
+                                }
+
+                            }
+                        }
+                    }
+                }
 #if SERVER
                 if (GameMain.NetworkMember.IsServer)
                 {
