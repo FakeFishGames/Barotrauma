@@ -1002,15 +1002,25 @@ namespace Barotrauma
             clientDisabledElements.AddRange(missionTypeTickBoxes);
 
             //traitor probability ------------------------------------------------------------------
+
             GUILayoutGroup settingsHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.333f, 1.0f), gameModeBackground.RectTransform))
             {
-                Stretch = true,
-                RelativeSpacing = 0.025f
+                Stretch = true
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.05f), settingsHolder.RectTransform), TextManager.Get("Traitors"));
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.055f), settingsHolder.RectTransform) { MinSize = new Point(0, 25) }, style: null);
+            var settingsContent = new GUILayoutGroup(new RectTransform(Vector2.One, settingsHolder.RectTransform))
+            {
+                RelativeSpacing = 0.025f
+            };
+            new GUIFrame(new RectTransform(Vector2.One, settingsContent.RectTransform), style: "InnerFrame")
+            {
+                IgnoreLayoutGroups = true
+            };
 
-            var traitorProbContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), settingsHolder.RectTransform), isHorizontal: true);
+            new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.05f), settingsContent.RectTransform), TextManager.Get("Traitors"));
+
+            var traitorProbContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), settingsContent.RectTransform), isHorizontal: true);
             traitorProbabilityButtons = new GUIButton[2];
             traitorProbabilityButtons[0] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), traitorProbContainer.RectTransform), "<")
             {
@@ -1037,15 +1047,14 @@ namespace Barotrauma
 
             //bot count ------------------------------------------------------------------
 
-            new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.05f), settingsHolder.RectTransform), TextManager.Get("BotCount"));
-            var botCountContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), settingsHolder.RectTransform), isHorizontal: true);
+            new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.05f), settingsContent.RectTransform), TextManager.Get("BotCount"));
+            var botCountContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), settingsContent.RectTransform), isHorizontal: true);
             botCountButtons = new GUIButton[2];
             botCountButtons[0] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), botCountContainer.RectTransform), "<")
             {
                 OnClicked = (button, obj) =>
                 {
                     GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, botCount: -1);
-
                     return true;
                 }
             };
@@ -1056,22 +1065,20 @@ namespace Barotrauma
                 OnClicked = (button, obj) =>
                 {
                     GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, botCount: 1);
-
                     return true;
                 }
             };
 
             clientDisabledElements.AddRange(botCountButtons);
 
-            new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.05f), settingsHolder.RectTransform), TextManager.Get("BotSpawnMode"));
-            var botSpawnModeContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), settingsHolder.RectTransform), isHorizontal: true);
+            new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.05f), settingsContent.RectTransform), TextManager.Get("BotSpawnMode"));
+            var botSpawnModeContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), settingsContent.RectTransform), isHorizontal: true);
             botSpawnModeButtons = new GUIButton[2];
             botSpawnModeButtons[0] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), botSpawnModeContainer.RectTransform), "<")
             {
                 OnClicked = (button, obj) =>
                 {
                     GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, botSpawnMode: -1);
-
                     return true;
                 }
             };
@@ -1082,10 +1089,22 @@ namespace Barotrauma
                 OnClicked = (button, obj) =>
                 {
                     GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, botSpawnMode: 1);
-
                     return true;
                 }
             };
+
+            List<GUIComponent> settingsElements = settingsContent.Children.ToList();
+            int spacingElementCount = 0;
+            for (int i = 1; i < settingsElements.Count; i++)
+            {
+                settingsElements[i].RectTransform.MinSize = new Point(0, (int)(20 * GUI.Scale));
+                if (settingsElements[i] is GUITextBlock)
+                {
+                    var spacing = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.03f), settingsContent.RectTransform), style: null);
+                    spacing.RectTransform.RepositionChildInHierarchy(i + spacingElementCount);
+                    spacingElementCount++;
+                }
+            }
 
             clientDisabledElements.AddRange(botSpawnModeButtons);
         }
@@ -1479,7 +1498,7 @@ namespace Barotrauma
                 foreach (Skill skill in characterInfo.Job.Skills)
                 {
                     Color textColor = Color.White * (0.5f + skill.Level / 200.0f);
-                    var skillText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), infoContainer.RectTransform),
+                    var skillText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.08f), infoContainer.RectTransform),
                         "  - " + TextManager.AddPunctuation(':', TextManager.Get("SkillName." + skill.Identifier), ((int)skill.Level).ToString()), 
                         textColor);
                 }
