@@ -393,7 +393,7 @@
       <EndMessageSuccess id="oxygen_sabotage_objectivesuccessmessage1"/>
       <StartMessage id="oxygen_sabotage_traitorobjectivestartmessage1"/>
       <Goal type="sabotage" tag="oxygengenerator" threshold="10">
-        <InfoText id="traitorgoalsabotageinfo" />
+        <InfoText id="traitorgoalsabotagedurationinfo" />
         <Modifier type="duration" duration="120" cumulative="true" />
       </Goal>
     </Objective>
