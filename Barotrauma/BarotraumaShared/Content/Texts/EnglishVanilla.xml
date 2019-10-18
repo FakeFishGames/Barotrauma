@@ -3596,15 +3596,6 @@
   <oxygen_sabotage_traitorobjectivestartmessage2>When you're happy with the data you've gathered, dispose of the test subjects.\n[traitorgoalinfos]</oxygen_sabotage_traitorobjectivestartmessage2>
   <oxygen_sabotage_objectivesuccessmessage2>Another successful test. Report back to nearest coalition outpost.</oxygen_sabotage_objectivesuccessmessage2>
 
-  <!--signaltrouble mission-->
-  <signaltrouble_traitormissionstartinfotext>Missions have been a bit too straightforward lately, haven't they? Let's do the crew a favor and add some challenge.</signaltrouble_traitormissionstartinfotext>
-  <signaltrouble_traitorobjectivestartmessage1>Get yourself a sonar beacon. You'll see why in a minute. \n[traitorgoalinfos]</signaltrouble_traitorobjectivestartmessage1>
-  <signaltrouble_objectivesuccessmessage1>Now turn it on and hide it somewhere.</signaltrouble_objectivesuccessmessage1>
-  <signaltrouble_traitorobjectivestartmessage2>Find a good spot or someone will find it too soon. \n[traitorgoalinfos]</signaltrouble_traitorobjectivestartmessage2>
-  <signaltrouble_objectivesuccessmessage2>Leave the beacon there. Hopefully it'll be a while before others suspect any foul play. Go cut the signals to ballast pumps and engines.</signaltrouble_objectivesuccessmessage2>
-  <signaltrouble_traitorobjectivestartmessage3>You'll need a screwdriver. Signals are labeled 'force_in' and 'set_targetlevel' on engines and pumps respectively. \n[traitorgoalinfos]</signaltrouble_traitorobjectivestartmessage3>
-  <signaltrouble_objectivesuccessmessage3>Let's see how long it takes before anyone finds the issue.</signaltrouble_objectivesuccessmessage3>
-
   <!--acidparty traitor mission-->
   <acidparty_traitormissionstartinfotext>You find a manically scribbled note in your pocket. "Hey man. You know there's this thing in the center of the moon, right? What if there was, like, a way to see what it is without physically going in there?"</acidparty_traitormissionstartinfotext>
   <acidparty_traitorobjectivestartmessage1>"Step 1. Find some delimi- delirun- der- the thing that says 'DEL', right?" \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage1>
