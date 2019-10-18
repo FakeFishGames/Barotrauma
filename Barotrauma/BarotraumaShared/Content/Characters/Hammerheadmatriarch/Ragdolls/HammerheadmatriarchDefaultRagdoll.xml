@@ -19,11 +19,17 @@
       <Affliction identifier="internaldamage" strength="25" probability="1" />
       <Affliction identifier="stun" strength="4" probability="1" />
       <StatusEffect type="OnImpact" target="This" disabledeltatime="true">
-        <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" range="1000" selectionmode="All" />
-        <sound file="Content/Items/Weapons/Emp.ogg" range="1000" />
-        <Explosion range="500" force="10" smoke="false" sparks="false" shockwave="true" underwaterbubble="true" camerashake="12">
+        <Explosion range="500" force="10" smoke="false" sparks="false" shockwave="true" underwaterbubble="false" camerashake="12">
           <Affliction identifier="stun" strength="2" />
         </Explosion>
+        <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" range="1000" selectionmode="All" />
+        <sound file="Content/Sounds/Damage/Gore1.ogg" range="1000" selectionmode="All" />
+        <ParticleEmitter particle="bubbles" particleamount="30" scalemin="1" scalemax="2" velocitymin="50" velocitymax="100" anglemin="0" anglemax="360"/>
+        <ParticleEmitter particle="bloodtrail" particleamount="20" scalemin="2" scalemax="5" velocitymin="200" velocitymax="1000" anglemin="0" anglemax="360"/>
+        <ParticleEmitter particle="waterblood" particleamount="5" scalemin="2" scalemax="4" velocitymin="0" velocitymax="20" anglemin="0" anglemax="360"/>
+        <ParticleEmitter particle="blackwaterblood" particleamount="5" scalemin="3" scalemax="5" velocitymin="0" velocitymax="20" anglemin="0" anglemax="360"/>
+        <ParticleEmitter particle="heavygib" particleamount="1" scalemin="15" scalemax="15" velocitymin="0" velocitymax="0" anglemin="0" anglemax="360"/>
+        <ParticleEmitter particle="gib" particleamount="100" scalemin="1" scalemax="2" velocitymin="100" velocitymax="300" anglemin="0" anglemax="360"/>
         <SpawnCharacter speciesname="hammerheadspawn" count="20" spread="150" />
         <Affliction identifier="internaldamage" amount="1000" />
       </StatusEffect>
@@ -148,11 +154,17 @@
       <Affliction identifier="internaldamage" strength="25" probability="1" />
       <Affliction identifier="stun" strength="4" probability="1" />
       <StatusEffect type="OnUse" target="This" disabledeltatime="true">
-        <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" range="1000" selectionmode="All" />
-        <sound file="Content/Items/Weapons/Emp.ogg" range="1000" />
-        <Explosion range="500" force="10" smoke="false" sparks="false" shockwave="true" underwaterbubble="true" camerashake="12">
+        <Explosion range="500" force="10" shockwave="true" smoke="false" sparks="false" underwaterbubble="false" flames="false" flash="false" camerashake="12">
           <Affliction identifier="stun" strength="2" />
         </Explosion>
+        <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" range="1000" selectionmode="All" />
+        <sound file="Content/Sounds/Damage/Gore1.ogg" range="1000" selectionmode="All" />
+        <ParticleEmitter particle="bubbles" particleamount="30" scalemin="1" scalemax="2" velocitymin="50" velocitymax="100" anglemin="0" anglemax="360"/>
+        <ParticleEmitter particle="bloodtrail" particleamount="20" scalemin="2" scalemax="5" velocitymin="200" velocitymax="1000" anglemin="0" anglemax="360"/>
+        <ParticleEmitter particle="waterblood" particleamount="5" scalemin="2" scalemax="4" velocitymin="0" velocitymax="20" anglemin="0" anglemax="360"/>
+        <ParticleEmitter particle="blackwaterblood" particleamount="5" scalemin="3" scalemax="5" velocitymin="0" velocitymax="20" anglemin="0" anglemax="360"/>
+        <ParticleEmitter particle="heavygib" particleamount="1" scalemin="15" scalemax="15" velocitymin="0" velocitymax="0" anglemin="0" anglemax="360"/>
+        <ParticleEmitter particle="gib" particleamount="100" scalemin="1" scalemax="2" velocitymin="100" velocitymax="300" anglemin="0" anglemax="360"/>
         <SpawnCharacter speciesname="hammerheadspawn" count="20" spread="150" />
         <Affliction identifier="internaldamage" amount="1000" />
       </StatusEffect>
