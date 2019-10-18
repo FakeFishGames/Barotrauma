@@ -1852,19 +1852,6 @@ namespace Barotrauma.Networking
                         subElement.GetChild<GUITextBlock>().TextColor = new Color(subElement.GetChild<GUITextBlock>().TextColor, 1.0f);
                         subElement.UserData = newSub;
                         subElement.ToolTip = newSub.Description;
-
-                        GUIButton infoButton = subElement.GetChild<GUIButton>();
-                        if (infoButton == null)
-                        {
-                            int buttonSize = (int)(subElement.Rect.Height * 0.8f);
-                            infoButton = new GUIButton(new RectTransform(new Point(buttonSize), subElement.RectTransform, Anchor.CenterLeft) { AbsoluteOffset = new Point((int)(buttonSize * 0.2f), 0) }, "?");
-                        }
-                        infoButton.UserData = newSub;
-                        infoButton.OnClicked = (component, userdata) =>
-                        {
-                            ((Submarine)userdata).CreatePreviewWindow(new GUIMessageBox("", "", new Vector2(0.25f, 0.25f), new Point(500, 400)));
-                            return true;
-                        };
                     }
 
                     if (GameMain.NetLobbyScreen.FailedSelectedSub != null &&
