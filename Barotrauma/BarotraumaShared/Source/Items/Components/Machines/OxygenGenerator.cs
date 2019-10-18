@@ -51,7 +51,7 @@ namespace Barotrauma.Items.Components
 
             if (item.CurrentHull == null) return;
 
-            if (Voltage < minVoltage)
+            if (Voltage < MinVoltage)
             {
                 powerDownTimer += deltaTime;
                 return;

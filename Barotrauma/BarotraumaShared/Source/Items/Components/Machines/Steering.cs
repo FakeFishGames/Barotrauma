@@ -217,7 +217,7 @@ namespace Barotrauma.Items.Components
 
             currPowerConsumption = powerConsumption;
 
-            if (Voltage < minVoltage && currPowerConsumption > 0.0f) { return; }
+            if (Voltage < MinVoltage) { return; }
 
             if (user != null && user.Removed)
             {

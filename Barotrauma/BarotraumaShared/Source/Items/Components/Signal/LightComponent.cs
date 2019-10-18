@@ -218,7 +218,7 @@ namespace Barotrauma.Items.Components
             
             currPowerConsumption = powerConsumption;
 
-            if (Rand.Range(0.0f, 1.0f) < 0.05f && Voltage < Rand.Range(0.0f, minVoltage))
+            if (Rand.Range(0.0f, 1.0f) < 0.05f && Voltage < Rand.Range(0.0f, MinVoltage))
             {
 #if CLIENT
                 if (Voltage > 0.1f)

@@ -36,7 +36,7 @@ namespace Barotrauma.Items.Components
         /// <summary>
         /// The minimum voltage required for the item to work
         /// </summary>
-        protected float minVoltage;
+        private float minVoltage;
 
         /// <summary>
         /// The maximum amount of power the item can draw from connected items
@@ -50,7 +50,7 @@ namespace Barotrauma.Items.Components
             "with a power consumption of 1000 kW would need at least 500 kW of power to work if the minimum voltage is set to 0.5.")]
         public float MinVoltage
         {
-            get { return minVoltage; }
+            get { return powerConsumption <= 0.0f ? 0.0f : minVoltage; }
             set { minVoltage = value; }
         }
 

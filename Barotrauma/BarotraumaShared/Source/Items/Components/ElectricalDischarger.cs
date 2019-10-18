@@ -131,7 +131,7 @@ namespace Barotrauma.Items.Components
             {
                 if (charging)
                 {
-                    if (Voltage > minVoltage || powerConsumption <= 0.0f)
+                    if (Voltage > MinVoltage)
                     {
                         Discharge();
                     }

@@ -76,7 +76,7 @@ namespace Barotrauma.Items.Components
             //pumps consume more power when in a bad condition
             currPowerConsumption *= MathHelper.Lerp(2.0f, 1.0f, item.Condition / item.MaxCondition);
 
-            if (Voltage < minVoltage) { return; }
+            if (Voltage < MinVoltage) { return; }
 
             UpdateProjSpecific(deltaTime);
 

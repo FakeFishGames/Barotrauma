@@ -60,7 +60,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            hasPower = Voltage >= minVoltage;
+            hasPower = Voltage >= MinVoltage;
             if (!hasPower) { return; }
 
             var repairable = item.GetComponent<Repairable>();
