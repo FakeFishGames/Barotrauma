@@ -802,7 +802,6 @@
 <!--<missiondescription.killcrawlerswarm2>Большой рой монстров ([monster]) терроризирует суда, следующие по маршруту [location1] - [location2]. Команде, способной нейтрализовать его, полагается достойная награда в размере [reward] кред.</missiondescription.killcrawlerswarm2>-->
 <!-- Temporary until plural monster names -->
 <missiondescription.killcrawlerswarm2>Большой рой ползунов терроризирует суда, следующие по маршруту [location1] - [location2]. Команде, способной нейтрализовать его, полагается достойная награда в размере [reward] кред.</missiondescription.killcrawlerswarm2>
-
 <missionsonarlabel.killcrawlerswarm2>Рой</missionsonarlabel.killcrawlerswarm2>
 <missionsuccess.killcrawlerswarm2>Рой уничтожен.</missionsuccess.killcrawlerswarm2>
 <missionheader0.killcrawlerswarm2>Цель уничтожена</missionheader0.killcrawlerswarm2>
@@ -2112,7 +2111,7 @@
 <jobname.assistant>Помощник</jobname.assistant>
 <jobdescription.assistant>У помощников нет определенных обязанностей, и они не обладают какими-то особыми знаниями. Эта работа - отличный выбор для новичков, которые хотят освоиться на подводной лодке, не рискуя при этом браться за задания, с которыми они могут не справиться.</jobdescription.assistant>
 <jobname.watchman>Сторож</jobname.watchman>
-<jobdescription.watchman></jobdescription.watchman>
+<jobdescription.watchman><!-- No data --></jobdescription.watchman>
 
 <!-- Locations -->
 <locationname.none>Естественное образование</locationname.none>
@@ -2235,7 +2234,7 @@
 <!-- Room 3 -->
 <mechanic.welding>Протечки</mechanic.welding>
 <mechanic.weldingobjective>Устраните протечку</mechanic.weldingobjective>
-<mechanic.weldingtext>Чтобы устранять протечки, возьмите в руки сварочный аппарат (дважды щелкните по нему левой кнопкой мыши). Чтобы использовать некоторые предметы, например этот сварочный аппарат, их нужно держать в обеих руках.\n\nКогда вы держите сварочный аппарат в руках, зажмите {0}, чтобы прицелиться. Пока вы целитесь, удерживайте {1}, чтобы варить.</mechanic.weldingtext>
+<mechanic.weldingtext>Возьмите в руки сварочный аппарат и маску дайвера, которую вы нашли в шкафчике (дважды щелкните по ним).\n\nС помощью сварочного аппарата вы сможете заделать протечки, а маска обеспечит вам запасом кислорода под водой.\n\nНекоторые предметы, например сварочный аппарат, нужно держать в обеих руках. Снимите или бросьте предмет, дважды щелкнув по нему во время использования.\n\nКогда вы держите сварочный аппарат в руках, зажмите {0}, чтобы прицелиться. Пока вы целитесь, удерживайте {1}, чтобы варить.</mechanic.weldingtext>
 <mechanic.drain>Водяные насосы</mechanic.drain>
 <mechanic.drainobjective>Включите ближний к вам насос, чтобы откачать лишнюю воду</mechanic.drainobjective>
 <mechanic.draintext>Когда подлодка затоплена, лишнюю воду можно откачать при помощи насосов. Обычно насосы получают сигнал от датчиков воды или навигационных терминалов, но некоторые можно использовать и вручную. Чтобы включить насос, используйте {0} и переведите выключатель в положение «Вкл.»</mechanic.draintext>
@@ -2246,7 +2245,7 @@
 <mechanic.deconstructtext>Фабрикатор - это устройство, способное изготавливать полезные предметы из различных материалов. Если у вас недостаточно предметов для производства, попробуйте разобрать что-нибудь ненужное в деконструкторе. Просто перетащите предмет в одну из верхних ячеек и нажмите «Разобрать».\n\nВ данном случае для производства огнетушителя необходимы алюминий и натрий. Натрий у вас уже есть, а чтобы получить алюминий, нужно разобрать кислородные баллоны.</mechanic.deconstructtext>
 <mechanic.fabricate>Создание предметов, часть 2</mechanic.fabricate>
 <mechanic.fabricateobjective>Создайте огнетушитель</mechanic.fabricateobjective>
-<mechanic.fabricatetext>Все необходимые материалы у нас, и можно создать огнетушитель. Найдите его в списке, загрузите в фабрикатор нужные материалы и нажмите соответствующую кнопку, чтобы начать производство.\n\nОтлично, изготовленный предмет можно найти в камере выдачи фабрикатора.</mechanic.fabricatetext>
+<mechanic.fabricatetext>Все необходимые материалы у нас, и можно создать огнетушитель. Найдите его в списке, загрузите в фабрикатор нужные материалы и нажмите кнопку, чтобы начать производство.\n\nОтлично, изготовленный предмет можно найти в камере выдачи фабрикатора. Так как огнетушитель нужно использовать двумя руками, дважды щелкните на него, чтобы надеть.</mechanic.fabricatetext>
 
 <!-- Room 5 -->
 <mechanic.extinguisher>Пожары</mechanic.extinguisher>
@@ -2505,7 +2504,7 @@
 <dialognoleaks>Какие протечки?</dialognoleaks>
 
 <bugreportgithubform>Форма GitHub для отчета о проблеме </bugreportgithubform>
-<bugreportfeedbackform>Форма для фидбека о Barotrauma</bugreportfeedbackform>
+<bugreportfeedbackform>Помощь и техподдержка</bugreportfeedbackform>
 <bugreportbutton>Сообщить об ошибке</bugreportbutton>
 
 <voipcapturedevicenotfound>Не удалось начать запись голоса, подходящее устройство не найдено.</voipcapturedevicenotfound>
@@ -2587,7 +2586,7 @@
 <connection.waterdatain>данные_воды_в</connection.waterdatain>
 <connection.oxygendatain>данные_воздуха_в</connection.oxygendatain>
 
-<!-- *** New additions *** -->
+
 <itemmsgoxygenrefill>Вставьте кислородный баллон, чтобы наполнить его</itemmsgoxygenrefill>
 <missionfailed>Миссия не удалась</missionfailed>
 <label.highpressurewarning>ВНИМАНИЕ: высокое давление</label.highpressurewarning>
@@ -2687,7 +2686,7 @@
 <traitorgoalkilleveryoneinfo>Убить всех членов экипажа.</traitorgoalkilleveryoneinfo>
 <traitorgoalfinditeminfo>Ваша цель: [identifier]. Вы найдете ее здесь: [targethullname].</traitorgoalfinditeminfo>
 <traitorgoalcausereactormeltdown>Вызвать таяние реактора.</traitorgoalcausereactormeltdown>
-<traitorgoaldestroyitems>Уничтожить на подлодке: [tag] (не менее [percentage] процентов)</traitorgoaldestroyitems>
+<traitorgoaldestroyitems>Уничтожить на подлодке: [tag] вне инвентаря (не менее [percentage] процентов)</traitorgoaldestroyitems>
 <traitorgoalfloodpercentofsub>Затопите не менее [percentage] процентов подлодки.</traitorgoalfloodpercentofsub>
 <traitorgoaljamsonarinfo>Спрячьте действующий глушитель сонара так, чтобы его не нашли в течение [duration] сек.</traitorgoaljamsonarinfo>
 <traitorgoaljamsonarinfoalt>Заглушите сонар подлодки на [duration] сек.</traitorgoaljamsonarinfoalt>
@@ -2804,8 +2803,8 @@
 <label.engine>Двигатель</label.engine>
 
 <!-- Karma system -->
-<karma.kickbanthreshold>Порог блокировки</karma.kickbanthreshold>
-<karma.kickbanthresholdtooltip>Игроки, чья карма опуститься ниже это отметки, будут заблокированы на этом сервере.</karma.kickbanthresholdtooltip>
+<karma.kickbanthreshold>Порог отключения/блокировки</karma.kickbanthreshold>
+<karma.kickbanthresholdtooltip>Игроки, чья карма опустится ниже этой отметки, будут отключены и/или заблокированы на сервере (в зависимости от настроек внизу).</karma.kickbanthresholdtooltip>
 <karma.karmadecay>Скорость убывания кармы</karma.karmadecay>
 <karma.karmadecaytooltip>Какое количество кармы вы теряете каждую секунду, когда ее значение находится выше порога кармы.</karma.karmadecaytooltip>
 <karma.karmadecaythreshold>Порог убывания кармы</karma.karmadecaythreshold>
@@ -2899,5 +2898,79 @@
 <flood_2_objectivesuccessmessage3>Превосходно! Помни, товарищ! Не бывает плохой тактики — бывают неподходящие цели!</flood_2_objectivesuccessmessage3>
 <flood_2_traitorobjectivestartmessage4>Скорее! Пока есть возможность, воспользуйся замешательством и убей столько грязных свиней, сколько сможешь!\n[traitorgoalinfos]</flood_2_traitorobjectivestartmessage4>
 <flood_2_objectivesuccessmessage4>Расправляясь с заклятыми врагами, вы с горечью замечаете, что ваш передатчик вдруг умолкает. Ваши товарищи бросили вас, оставив на милость Матери Европы.</flood_2_objectivesuccessmessage4>
+
+
+<!-- New Additions as of 13th of August -->
+<connection.batterychargestatusout>зарядка_из</connection.batterychargestatusout>
+<connection.batterychargepercentage>зарядка_%</connection.batterychargepercentage>
+<connection.batterysetrechargespeed>установить_скорость_зарядки</connection.batterysetrechargespeed>
+<connection.batteryrechargespeedout>скорость_зарядки_из</connection.batteryrechargespeedout>
+<personalitytrait.professional>Компетенция</personalitytrait.professional>
+<personalitytrait.laid-back>Пофигизм</personalitytrait.laid-back>
+<personalitytrait.rude>Грубость</personalitytrait.rude>
+<personalitytrait.tough>Крутость</personalitytrait.tough>
+<personalitytrait.joker>Чувство юмора</personalitytrait.joker>
+<personalitytrait.brokenenglish>Сильный акцент</personalitytrait.brokenenglish>
+<personalitytrait.fearful>Трусость</personalitytrait.fearful>
+<personalitytrait.crazy>Психоз</personalitytrait.crazy>
+<sabotagebutton>Саботаж</sabotagebutton>
+<sabotaging>Саботирование</sabotaging>
+<voipattenuation>Приоритет гол. чата</voipattenuation>
+<voipattenuationtooltip>Громкость игры снижается, когда говорят игроки.</voipattenuationtooltip>
+<roundsummaryroundhasended>Раунд окончен.</roundsummaryroundhasended>
+<clientpermission.karmaimmunity>Иммунитет кармы</clientpermission.karmaimmunity>
+<karmakicked>Вас отключили от сервера, так как уровень вашей кармы упал ниже отметки [banthreshold].</karmakicked>
+<karma.kicksbeforeban>Кол-во отключений до бана</karma.kicksbeforeban>
+<karma.kicksbeforebantooltip>Если игрока отключат от сервера за низкую карму столько раз, то при следующем падении кармы он будет забанен. Значение 0 означает, что игрок будет забанен, если его карма упадет ниже этой отметки.</karma.kicksbeforebantooltip>
+<traitorgoalreachdistancefromsub>Отплывите на [distance] от подлодки.</traitorgoalreachdistancefromsub>
+<traitorgoalisoptionalinfotext>Опционально: [infotext]</traitorgoalisoptionalinfotext>
+<traitorgoalwithtimelimitinfotext>[infotext] Достигните этой цели в течение [timelimit].</traitorgoalwithtimelimitinfotext>
+<traitorgoalwithdurationinfotext>[infotext] Цель должна быть достигнута за [duration] сек.</traitorgoalwithdurationinfotext>
+<traitorgoalwithcumulativedurationinfotext>[infotext] Цель должна быть достигнута за [duration] сек. в общей сложности.</traitorgoalwithcumulativedurationinfotext>
+<traitorgoalwaitfortraitorsinfotext>Подождите, пока [remaining] из [count] предателей выполнят свои задания.</traitorgoalwaitfortraitorsinfotext>
+<failed>Не удалось</failed>
+<pausemenuquitverificationeditor>Вернуться в главное меню? Весь несохраненный прогресс будет утерян.</pausemenuquitverificationeditor>
+<mapentitycategory.decorative>Украшения</mapentitycategory.decorative>
+<mapentitycategory.wall>Стены</mapentitycategory.wall>
+<karma.resetkarmabetweenrounds>Сброс кармы между уровнями</karma.resetkarmabetweenrounds>
+<enablesplashscreen>Активировать начальный экран</enablesplashscreen>
+<restartrequiredgeneric>Чтобы изменения вступили в силу, нужно перезапустить игру.</restartrequiredgeneric>
+<invalidcontentpackage>Не удается загрузить набор контента '[packagename]'.</invalidcontentpackage>
+<xmlfileinvalid>Файл '[filepath]' не является верным XML-файлом ([errormessage]).</xmlfileinvalid>
+<roomname.airlockaccess>Доступ к шлюзу</roomname.airlockaccess>
+<roomname.gunnerycompartment>Орудийный отсек</roomname.gunnerycompartment>
+<roomname.dronecontrol>Управление дроном</roomname.dronecontrol>
+<roomname.drone>Дрон</roomname.drone>
+<roomname.droneballast>Балласт дрона</roomname.droneballast>
+<subeditorlights>Лампы</subeditorlights>
+<subeditorshadowcastinglights>Теневые лампы</subeditorshadowcastinglights>
+<contentpackagemismatchwarninggeneric>Подлодка может быть несовместима с выбранными наборами контента. Вы уверены, что хотите выбрать эту подлодку?</contentpackagemismatchwarninggeneric>
+<label.activatedischargecoils>Разрядные катушки</label.activatedischargecoils>
+<label.lights1>Свет 1</label.lights1>
+<label.lights2>Свет 2</label.lights2>
+<label.lights3>Свет 3</label.lights3>
+<label.lights4>Свет 4</label.lights4>
+<label.lights5>Свет 5</label.lights5>
+<label.pumps1>Насосы 1</label.pumps1>
+<label.pumps2>Насосы 2</label.pumps2>
+<label.dronecharge>Заряд дрона</label.dronecharge>
+<label.meltdown>Плавление</label.meltdown>
+<campaignfiletransferinprogress>Подождите, пока загрузится файл сохранения кампании.</campaignfiletransferinprogress>
+<openlinkinbrowserprompt>Открыть ссылку [link] в браузере?</openlinkinbrowserprompt>
+<replacelostshuttles>Заменить потерянные челноки</replacelostshuttles>
+<replaceshuttles>Заменить</replaceshuttles>
+<replaceshuttledockingportoccupied>Потерянный челнок нельзя заменить, так как стыковочный порт уже используется. Освободите порт перед позиционированием челнока.</replaceshuttledockingportoccupied>
+<character.blackmoloch>Черный молох</character.blackmoloch>
+<character.goldenhammerhead>Золотой молотоглав</character.goldenhammerhead>
+<character.hammerheadmatriarch>Молотоглав-матриарх</character.hammerheadmatriarch>
+<character.bonetigerthresher>Костяной акулий тигр</character.bonetigerthresher>
+
+<!-- Updated values as of 13th of August -->
+
+
+
+
+
+
 
 </infotexts>

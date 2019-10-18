@@ -487,7 +487,7 @@
     </Projectile>
   </Fentanyl>
   
-  <Saline name="Saline" identifier="antibloodloss1" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" useinhealthinterface="true" description="A sodium chloride infusion mildly useful in the treatment of blood loss." scale="0.3" impactsoundtag="impact_metal_light">
+  <Saline name="Saline" identifier="antibloodloss1" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" useinhealthinterface="true" description="A sodium chloride infusion mildly useful in the treatment of blood loss." scale="0.3" impactsoundtag="impact_soft">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="20" />
     <Price locationtype="Military" buyprice="30" />
@@ -520,7 +520,7 @@
     </Holdable>
   </Saline>
   
-  <BloodPack name="Blood Pack" identifier="antibloodloss2" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" useinhealthinterface="true" description="A pack of blood substitute for the treatment of blood loss." scale="0.3" impactsoundtag="impact_metal_light">
+  <BloodPack name="Blood Pack" identifier="antibloodloss2" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" useinhealthinterface="true" description="A pack of blood substitute for the treatment of blood loss." scale="0.3" impactsoundtag="impact_soft">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="120" />
     <Price locationtype="Military" buyprice="150" />

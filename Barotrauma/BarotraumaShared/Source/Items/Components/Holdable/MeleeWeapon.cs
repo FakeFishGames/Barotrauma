@@ -220,6 +220,7 @@ namespace Barotrauma.Items.Components
             Character targetCharacter = null;
             Limb targetLimb = null;
             Structure targetStructure = null;
+            Item targetItem = null;
 
             attack?.SetUser(User);
 
@@ -267,6 +268,19 @@ namespace Barotrauma.Items.Components
                 }
                 hitTargets.Add(targetStructure);
             }
+            else if (f2.Body.UserData is Item)
+            {
+                targetItem = (Item)f2.Body.UserData;
+                if (AllowHitMultiple)
+                {
+                    if (hitTargets.Contains(targetItem)) { return true; }
+                }
+                else
+                {
+                    if (hitTargets.Any(t => t is Item)) { return true; }
+                }
+                hitTargets.Add(targetItem);
+            }
             else
             {
                 return false;
@@ -287,6 +301,10 @@ namespace Barotrauma.Items.Components
                 else if (targetStructure != null)
                 {
                     attack.DoDamage(User, targetStructure, item.WorldPosition, 1.0f);
+                }
+                else if (targetItem != null)
+                {
+                    attack.DoDamage(User, item, item.WorldPosition, 1.0f);
                 }
                 else
                 {

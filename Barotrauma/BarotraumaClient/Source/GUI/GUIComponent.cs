@@ -729,9 +729,10 @@ namespace Barotrauma
 
         private static GUITextBlock LoadGUITextBlock(XElement element, RectTransform parent, string overrideText = null, Anchor? anchor = null)
         {
-            string text = element.Attribute("text") == null ?
-                element.ElementInnerText() :
-                element.GetAttributeString("text", "");
+            string text = overrideText ??
+                (element.Attribute("text") == null ?
+                    element.ElementInnerText() :
+                    element.GetAttributeString("text", ""));
             text = text.Replace(@"\n", "\n");
 
             string style = element.GetAttributeString("style", "");

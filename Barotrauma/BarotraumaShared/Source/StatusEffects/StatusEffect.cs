@@ -87,6 +87,23 @@ namespace Barotrauma
             }
         }
 
+        class CharacterSpawnInfo
+        {
+            public readonly string SpeciesName;
+
+            public CharacterSpawnInfo(XElement element, string parentDebugName)
+            {
+                SpeciesName = 
+                    element.GetAttributeString("species", null) ?? 
+                    element.GetAttributeString("speciesname", "") ?? 
+                    element.GetAttributeString("identifier", "");
+
+                if (string.IsNullOrEmpty(SpeciesName))
+                {
+                    DebugConsole.ThrowError("Invalid character spawn in StatusEffect \"" + parentDebugName + "\" - identifier not found in the element \"" + element.ToString() + "\"");
+                }
+            }
+        }
 
         private TargetType targetTypes;
         protected HashSet<string> targetIdentifiers;
@@ -114,18 +131,21 @@ namespace Barotrauma
 
         private readonly int useItemCount;
         
-        private readonly bool removeItem;
+        private readonly bool removeItem, removeCharacter;
 
         public readonly ActionType type = ActionType.OnActive;
 
-        private Explosion explosion;
+        private readonly Explosion explosion;
 
         private List<ItemSpawnInfo> spawnItems;
+        private List<CharacterSpawnInfo> spawnCharacters;
 
         private Character user;
 
         public readonly float FireSize;
         
+        public readonly float SeverLimbsProbability;
+
         public HashSet<string> TargetIdentifiers
         {
             get { return targetIdentifiers; }
@@ -178,6 +198,7 @@ namespace Barotrauma
         {
             requiredItems = new List<RelatedItem>();
             spawnItems = new List<ItemSpawnInfo>();
+            spawnCharacters = new List<CharacterSpawnInfo>();
             Afflictions = new List<Affliction>();
             ReduceAffliction = new List<Pair<string, float>>();
             tags = new HashSet<string>(element.GetAttributeString("tags", "").Split(','));
@@ -218,6 +239,10 @@ namespace Barotrauma
                         break;
                     case "setvalue":
                         setValue = attribute.GetAttributeBool(false);
+                        break;
+                    case "severlimbs":
+                    case "severlimbsprobability":
+                        SeverLimbsProbability = MathHelper.Clamp(attribute.GetAttributeFloat(0.0f), 0.0f, 1.0f);
                         break;
                     case "targetnames":
                     case "targets":
@@ -276,7 +301,7 @@ namespace Barotrauma
                         explosion = new Explosion(subElement, parentDebugName);
                         break;
                     case "fire":
-                        FireSize = subElement.GetAttributeFloat("size",10.0f);
+                        FireSize = subElement.GetAttributeFloat("size", 10.0f);
                         break;
                     case "use":
                     case "useitem":
@@ -285,6 +310,9 @@ namespace Barotrauma
                     case "remove":
                     case "removeitem":
                         removeItem = true;
+                        break;
+                    case "removecharacter":
+                        removeCharacter = true;
                         break;
                     case "requireditem":
                     case "requireditems":
@@ -359,7 +387,11 @@ namespace Barotrauma
                         break;
                     case "spawnitem":
                         var newSpawnItem = new ItemSpawnInfo(subElement, parentDebugName);
-                        if (newSpawnItem.ItemPrefab != null) spawnItems.Add(newSpawnItem);
+                        if (newSpawnItem.ItemPrefab != null) { spawnItems.Add(newSpawnItem); }
+                        break;
+                    case "spawncharacter":
+                        var newSpawnCharacter = new CharacterSpawnInfo(subElement, parentDebugName);
+                        if (!string.IsNullOrWhiteSpace(newSpawnCharacter.SpeciesName)) { spawnCharacters.Add(newSpawnCharacter); }
                         break;
                 }
             }
@@ -600,9 +632,16 @@ namespace Barotrauma
 
             if (removeItem)
             {
-                foreach (Item item in targets.Where(t => t is Item).Cast<Item>())
+                foreach (var target in targets)
                 {
-                    Entity.Spawner?.AddToRemoveQueue(item);
+                    if (target is Item item) { Entity.Spawner?.AddToRemoveQueue(item); } 
+                }
+            }
+            if (removeCharacter)
+            {
+                foreach (var target in targets)
+                {
+                    if (target is Character character) { Entity.Spawner?.AddToRemoveQueue(character); }
                 }
             }
 
@@ -653,6 +692,7 @@ namespace Barotrauma
                         foreach (Limb limb in character.AnimController.Limbs)
                         {
                             limb.character.DamageLimb(entity.WorldPosition, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source);
+                            limb.character.TrySeverLimbJoints(limb, SeverLimbsProbability);
                             //only apply non-limb-specific afflictions to the first limb
                             if (!affliction.Prefab.LimbSpecific) { break; }
                         }
@@ -661,6 +701,7 @@ namespace Barotrauma
                     {
                         if (limb.character.Removed) { continue; }
                         limb.character.DamageLimb(entity.WorldPosition, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source);
+                        limb.character.TrySeverLimbJoints(limb, SeverLimbsProbability);
                     }
                 }
 
@@ -697,8 +738,12 @@ namespace Barotrauma
             }
             
             bool isNotClient = GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient;
-            if (isNotClient && entity != null && Entity.Spawner != null) //clients are not allowed to spawn items
+            if (isNotClient && entity != null && Entity.Spawner != null) //clients are not allowed to spawn entities
             {
+                foreach (CharacterSpawnInfo characterSpawnInfo in spawnCharacters)
+                {
+                    Entity.Spawner.AddToSpawnQueue(characterSpawnInfo.SpeciesName, entity.WorldPosition);
+                }
                 foreach (ItemSpawnInfo itemSpawnInfo in spawnItems)
                 {
                     switch (itemSpawnInfo.SpawnPosition)

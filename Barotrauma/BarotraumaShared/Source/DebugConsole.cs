@@ -966,8 +966,7 @@ namespace Barotrauma
                     GameMain.Config.SelectedContentPackages.Select(cp => cp.Name).ToArray()
                 };
             }));
-
-#if DEBUG
+            
             commands.Add(new Command("simulatedlatency", "simulatedlatency [minimumlatencyseconds] [randomlatencyseconds]: applies a simulated latency to network messages. Useful for simulating real network conditions when testing the multiplayer locally.", (string[] args) =>
             {
                 if (args.Count() < 2 || (GameMain.NetworkMember == null)) return;
@@ -1039,7 +1038,6 @@ namespace Barotrauma
 #endif
                 NewMessage("Set packet duplication to " + (int)(duplicates * 100) + "%.", Color.White);
             }));
-#endif
 
             //"dummy commands" that only exist so that the server can give clients permissions to use them
             //TODO: alphabetical order?

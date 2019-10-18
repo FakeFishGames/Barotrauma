@@ -635,10 +635,61 @@ namespace Barotrauma
                 }
             }));
 
+            commands.Add(new Command("resetentitiesbyidentifier", "resetentitiesbyidentifier [tag/identifier]: Reset items and structures with the given tag/identifier to prefabs. Only applicable in the subeditor.", args =>
+            {
+                if (args.Length == 0) { return; }
+                if (Screen.Selected == GameMain.SubEditorScreen)
+                {
+                    bool entityFound = false;
+                    foreach (MapEntity entity in MapEntity.mapEntityList)
+                    {
+                        if (entity is Item item)
+                        {
+                            if (item.prefab.Identifier != args[0] && !item.Tags.Contains(args[0])) { continue; }
+                            item.Reset();
+                            if (MapEntity.SelectedList.Contains(item)) { item.CreateEditingHUD(); }
+                            entityFound = true;
+                        }
+                        else if (entity is Structure structure)
+                        {
+                            if (structure.prefab.Identifier != args[0] && !structure.Tags.Contains(args[0])) { continue; }
+                            structure.Reset();
+                            if (MapEntity.SelectedList.Contains(structure)) { structure.CreateEditingHUD(); }
+                            entityFound = true;
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                        NewMessage($"Reset {entity.Name}.");
+                    }
+                    if (!entityFound)
+                    {
+                        if (MapEntity.SelectedList.Count == 0)
+                        {
+                            NewMessage("No entities selected.");
+                            return;
+                        }
+                    }
+                }
+            }, () =>
+            {
+                return new string[][]
+                {
+                    MapEntityPrefab.List.Select(me => me.Identifier).ToArray()
+                };
+            }));
+
             commands.Add(new Command("resetselected", "Reset selected items and structures to prefabs. Only applicable in the subeditor.", args =>
             {
                 if (Screen.Selected == GameMain.SubEditorScreen)
                 {
+                    if (MapEntity.SelectedList.Count == 0)
+                    {
+                        NewMessage("No entities selected.");
+                        return;
+                    }
+
                     foreach (MapEntity entity in MapEntity.SelectedList)
                     {
                         if (entity is Item item)
@@ -649,6 +700,11 @@ namespace Barotrauma
                         {
                             structure.Reset();
                         }
+                        else
+                        {
+                            continue;
+                        }
+                        NewMessage($"Reset {entity.Name}.");
                     }
                     foreach (MapEntity entity in MapEntity.SelectedList)
                     {
@@ -1107,16 +1163,17 @@ namespace Barotrauma
                             {
                                 if (!structure.ResizeHorizontal)
                                 {
-                                    structure.Rect = new Rectangle(structure.Rect.X, structure.Rect.Y,
+                                    structure.Rect = structure.DefaultRect = new Rectangle(structure.Rect.X, structure.Rect.Y,
                                         (int)structure.Prefab.ScaledSize.X,
                                         structure.Rect.Height);
                                 }
                                 if (!structure.ResizeVertical)
                                 {
-                                    structure.Rect = new Rectangle(structure.Rect.X, structure.Rect.Y,
+                                    structure.Rect = structure.DefaultRect = new Rectangle(structure.Rect.X, structure.Rect.Y,
                                         structure.Rect.Width,
                                         (int)structure.Prefab.ScaledSize.Y);
                                 }
+                               
                             }
                         }
                     }

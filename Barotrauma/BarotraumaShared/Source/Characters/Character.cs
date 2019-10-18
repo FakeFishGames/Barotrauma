@@ -2445,35 +2445,38 @@ namespace Barotrauma
 
             bool isNotClient = GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient;
 
+            TrySeverLimbJoints(limbHit, attack.SeverLimbsProbability);
+
+            return attackResult;
+        }
+
+        public void TrySeverLimbJoints(Limb targetLimb, float severLimbsProbability)
+        {
+            bool isNotClient = GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient;
+
             if (isNotClient &&
-                IsDead && Rand.Range(0.0f, 1.0f) < attack.SeverLimbsProbability)
+                IsDead && Rand.Range(0.0f, 1.0f) < severLimbsProbability)
             {
                 foreach (LimbJoint joint in AnimController.LimbJoints)
                 {
-                    if (joint.CanBeSevered && (joint.LimbA == limbHit || joint.LimbB == limbHit))
+                    if (joint.CanBeSevered && (joint.LimbA == targetLimb || joint.LimbB == targetLimb))
                     {
 #if CLIENT
-                        if (CurrentHull != null)
-                        {
-                            CurrentHull.AddDecal("blood", WorldPosition, Rand.Range(0.5f, 1.5f));
-                        }
+                        CurrentHull?.AddDecal("blood", WorldPosition, Rand.Range(0.5f, 1.5f));                       
 #endif
-
                         AnimController.SeverLimbJoint(joint);
 
-                        if (joint.LimbA == limbHit)
+                        if (joint.LimbA == targetLimb)
                         {
-                            joint.LimbB.body.LinearVelocity += limbHit.LinearVelocity * 0.5f;
+                            joint.LimbB.body.LinearVelocity += targetLimb.LinearVelocity * 0.5f;
                         }
                         else
                         {
-                            joint.LimbA.body.LinearVelocity += limbHit.LinearVelocity * 0.5f;
+                            joint.LimbA.body.LinearVelocity += targetLimb.LinearVelocity * 0.5f;
                         }
                     }
                 }
             }
-
-            return attackResult;
         }
 
         public AttackResult AddDamage(Vector2 worldPosition, IEnumerable<Affliction> afflictions, float stun, bool playSound, float attackImpulse = 0.0f, Character attacker = null)

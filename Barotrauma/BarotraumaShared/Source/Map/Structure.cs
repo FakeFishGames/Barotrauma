@@ -206,6 +206,14 @@ namespace Barotrauma
         }
 
         private Rectangle defaultRect;
+        /// <summary>
+        /// Unscaled rect
+        /// </summary>
+        public Rectangle DefaultRect
+        {
+            get { return defaultRect; }
+            set { defaultRect = value; }
+        }
 
         public override Rectangle Rect
         {

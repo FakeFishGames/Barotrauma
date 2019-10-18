@@ -993,7 +993,7 @@ namespace Barotrauma
                             Color.Lerp(Color.Red, Color.Green, item.Condition / item.MaxCondition) * 0.8f, true);
                     }
 
-                    if (itemContainer != null)
+                    if (itemContainer != null && itemContainer.ShowContainedStateIndicator)
                     {
                         float containedState = 0.0f;
                         if (itemContainer.ShowConditionInContainedStateIndicator)

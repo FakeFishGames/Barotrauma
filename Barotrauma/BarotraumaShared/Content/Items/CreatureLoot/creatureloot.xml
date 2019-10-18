@@ -112,7 +112,103 @@
       <sprite name="Security Vest" texture="Content/Items/Jobgear/AlienGear.png" sourcerect="305,10,126,207" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="false" inheritsourcerect="false" origin="0.5,0.5"/>
       <StatusEffect type="OnWearing" target="Character" SpeedMultiplier="0.6" setvalue="true" disabledeltatime="true" />
     </Wearable>
+  </Item>
 
+  <Item name="Small Mudraptor Egg" identifier="smallmudraptoregg" nameidentifier="mudraptoregg" Tags="smallitem,damageableitem" health="20" category="Misc" scale="0.2" impactsoundtag="impact_soft">
+    <Sprite texture="Content/Items/CreatureLoot/MudraptorEgg.png" depth="0.7" sourcerect="0,0,128,128" origin="0.5,0.5" />
+    <Deconstruct time="10">
+      <Item identifier="alienblood" />
+    </Deconstruct>
+    <Body radius="55" friction="1.0" restitution="0.01" collisioncategory="Character"/>
+    <Holdable slots="RightHand,LeftHand,Any" holdpos="0,-70" handle1="0,10" handle2="0,-10">
+      <StatusEffect type="OnBroken" target="This">
+        <particleemitter particle="whitegoosplash" particleamount="20" velocitymin="0" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.5" scalemax="1.0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
+        <particleemitter particle="brownchunks" particleamount="50" velocitymin="0" velocitymax="700" anglemin="0" anglemax="360" scalemin="0.2" scalemax="0.5" />
+        <Sound file="Content/Sounds/Damage/Gore6.ogg" range="800" />
+        <Remove />
+      </StatusEffect>
+      <StatusEffect type="OnFire" target="This" Condition="-5.0"/>
+    </Holdable>
+    <ItemContainer capacity="1" hideitems="true" showcontainedstateindicator="false">
+      <Containable items="antibloodloss1">
+        <!-- increase scale -->
+        <StatusEffect type="OnContaining" target="This" Scale="0.02"/>
+        <StatusEffect type="OnContaining" target="Contained" Condition="-30"/>
+        <!-- remove and spawn a medium egg when scale is greater than or equal to 0.3 -->
+        <StatusEffect type="OnContaining" target="This">
+          <Sound file="Content/Sounds/Damage/Gore6.ogg" range="500" />
+          <particleemitter particle="brownchunks" particleamount="10" velocitymin="0" velocitymax="100" anglemin="0" anglemax="360" scalemin="0.1" scalemax="0.3" />
+          <Conditional Scale="gte 0.25" />
+          <SpawnItem identifier="mediummudraptoregg" spawnposition="This" />
+          <Remove />
+        </StatusEffect>
+      </Containable>
+    </ItemContainer>
+  </Item>
+  <Item name="Medium Mudraptor Egg" identifier="mediummudraptoregg" nameidentifier="mudraptoregg" Tags="smallitem,damageableitem" health="50" category="Misc" scale="0.3" impactsoundtag="impact_soft">
+    <Sprite texture="Content/Items/CreatureLoot/MudraptorEgg.png" depth="0.7" sourcerect="0,0,128,128" origin="0.5,0.5" />
+    <Deconstruct time="10">
+      <Item identifier="alienblood" />
+      <Item identifier="adrenalinegland" />
+    </Deconstruct>
+    <Body radius="55" friction="1.0" restitution="0.01" collisioncategory="Character"/>
+    <Holdable slots="RightHand,LeftHand" holdpos="0,-70" handle1="0,10" handle2="0,-10">
+      <StatusEffect type="OnBroken" target="This">
+        <particleemitter particle="whitegoosplash" particleamount="20" velocitymin="0" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.5" scalemax="1" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
+        <particleemitter particle="brownchunks" particleamount="50" velocitymin="0" velocitymax="700" anglemin="0" anglemax="360" scalemin="0.2" scalemax="0.5" />
+        <Sound file="Content/Sounds/Damage/Gore6.ogg" range="800" />
+        <Remove />
+      </StatusEffect>
+      <StatusEffect type="OnFire" target="This" Condition="-5.0"/>
+    </Holdable>
+    <ItemContainer capacity="1" hideitems="true" showcontainedstateindicator="false">
+      <Containable items="antibloodloss1">
+        <!-- increase scale -->
+        <StatusEffect type="OnContaining" target="This" Scale="0.02"/>
+        <StatusEffect type="OnContaining" target="Contained" Condition="-7.5"/>
+        <StatusEffect type="OnContaining" target="This">
+          <Sound file="Content/Sounds/Damage/Gore6.ogg" range="500" />
+          <particleemitter particle="brownchunks" particleamount="10" velocitymin="0" velocitymax="500" anglemin="0" anglemax="360" scalemin="0.2" scalemax="0.5" />
+          <Conditional Scale="gte 0.55" />
+          <SpawnItem identifier="largemudraptoregg" spawnposition="This" />
+          <Remove />
+        </StatusEffect>
+      </Containable>
+    </ItemContainer>
+  </Item>
+  <Item name="Large Mudraptor Egg" identifier="largemudraptoregg" nameidentifier="mudraptoregg" Tags="damageableitem" health="200" category="Misc" scale="0.6" impactsoundtag="impact_soft">
+    <Sprite texture="Content/Items/CreatureLoot/MudraptorEgg.png" depth="0.7" sourcerect="0,0,128,128" origin="0.5,0.5" />
+    <Deconstruct time="10">
+      <Item identifier="alienblood" />
+      <Item identifier="alienblood" />
+      <Item identifier="adrenalinegland" />
+      <Item identifier="mudraptorshell" />
+    </Deconstruct>
+    <Body radius="55" friction="1.0" restitution="0.01" collisioncategory="Character"/>
+    <Holdable slots="RightHand,LeftHand" holdpos="0,-70" handle1="0,10" handle2="0,-10">
+      <StatusEffect type="OnBroken" target="This">
+        <particleemitter particle="brownchunks" particleamount="100" velocitymin="0" velocitymax="800" anglemin="0" anglemax="360" scalemin="0.4" scalemax="0.6" />
+        <particleemitter particle="whitegoosplash" particleamount="30" velocitymin="0" velocitymax="500" anglemin="0" anglemax="360" scalemin="1" scalemax="1.5" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
+        <Sound file="Content/Sounds/Damage/Gore7.ogg" range="800" />
+        <Remove />
+      </StatusEffect>
+      <StatusEffect type="OnFire" target="This" Condition="-5.0"/>
+    </Holdable>
+    <ItemContainer capacity="1" hideitems="true" showcontainedstateindicator="false">
+      <Containable items="antibloodloss1">
+        <!-- increase scale -->
+        <StatusEffect type="OnContaining" target="This" Scale="0.02"/>
+        <StatusEffect type="OnContaining" target="Contained" Condition="-8"/>
+        <StatusEffect type="OnContaining" target="This">
+          <Conditional Scale="gte 0.8" />
+          <particleemitter particle="brownchunks" particleamount="100" velocitymin="0" velocitymax="700" anglemin="0" anglemax="360" scalemin="0.4" scalemax="0.6" />
+          <particleemitter particle="whitegoosplash" particleamount="30" velocitymin="0" velocitymax="500" anglemin="0" anglemax="360" scalemin="1" scalemax="1.5" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
+          <Sound file="Content/Sounds/Damage/Gore7.ogg" range="1000" />
+          <SpawnCharacter speciesname="mudraptor" />
+          <Remove />
+        </StatusEffect>
+      </Containable>
+    </ItemContainer>
   </Item>
 
 </Items>

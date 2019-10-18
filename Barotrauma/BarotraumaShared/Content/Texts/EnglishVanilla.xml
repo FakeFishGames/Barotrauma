@@ -3550,6 +3550,8 @@
   <gamemodedescription.sandbox>A game mode with no specific objectives.</gamemodedescription.sandbox>
   <gamemodedescription.mission>The crew must work together to complete a specific task, such as retrieving an alien artifact or killing a creature that's terrorizing nearby outposts. The game ends when the task is completed or everyone in the crew has died.</gamemodedescription.mission>
   <gamemodedescription.multiplayercampaign>Embark on a journey through the depths of Europa. Travel from location to another, complete missions to earn money for supplies, discover new biomes — and perhaps eventually uncover the secrets of Europa.</gamemodedescription.multiplayercampaign>
+  <entityname.mudraptoregg>Mudraptor Egg</entityname.mudraptoregg>
+  <entitydescription.mudraptoregg>A slimy, pulsating mudraptor egg. The gaping maw on top of the egg seems to be grasping for something to eat.</entitydescription.mudraptoregg>
   
   <!-- Server lobby 2.0 -->
   <servertag.casual>Casual</servertag.casual>
@@ -3594,22 +3596,23 @@
   <oxygen_sabotage_traitorobjectivestartmessage2>When you're happy with the data you've gathered, dispose of the test subjects.\n[traitorgoalinfos]</oxygen_sabotage_traitorobjectivestartmessage2>
   <oxygen_sabotage_objectivesuccessmessage2>Another successful test. Report back to nearest coalition outpost.</oxygen_sabotage_objectivesuccessmessage2>
 
+  <!--signaltrouble mission-->
   <signaltrouble_traitormissionstartinfotext>Missions have been a bit too straightforward lately, haven't they? Let's do the crew a favor and add some challenge.</signaltrouble_traitormissionstartinfotext>
-  <signaltrouble_traitorobjectivestartmessage1>Get yourself a sonar beacon. You'll see why in a minute.</signaltrouble_traitorobjectivestartmessage1>
+  <signaltrouble_traitorobjectivestartmessage1>Get yourself a sonar beacon. You'll see why in a minute. \n[traitorgoalinfos]</signaltrouble_traitorobjectivestartmessage1>
   <signaltrouble_objectivesuccessmessage1>Now turn it on and hide it somewhere.</signaltrouble_objectivesuccessmessage1>
-  <signaltrouble_traitorobjectivestartmessage2>Find a good spot or someone will find it too soon.</signaltrouble_traitorobjectivestartmessage2>
+  <signaltrouble_traitorobjectivestartmessage2>Find a good spot or someone will find it too soon. \n[traitorgoalinfos]</signaltrouble_traitorobjectivestartmessage2>
   <signaltrouble_objectivesuccessmessage2>Leave the beacon there. Hopefully it'll be a while before others suspect any foul play. Go cut the signals to ballast pumps and engines.</signaltrouble_objectivesuccessmessage2>
-  <signaltrouble_traitorobjectivestartmessage3>You'll need a screwdriver. Signals are labeled 'force_in' and 'set_targetlevel' on engines and pumps respectively.</signaltrouble_traitorobjectivestartmessage3>
+  <signaltrouble_traitorobjectivestartmessage3>You'll need a screwdriver. Signals are labeled 'force_in' and 'set_targetlevel' on engines and pumps respectively. \n[traitorgoalinfos]</signaltrouble_traitorobjectivestartmessage3>
   <signaltrouble_objectivesuccessmessage3>Let's see how long it takes before anyone finds the issue.</signaltrouble_objectivesuccessmessage3>
 
   <!--acidparty traitor mission-->
-  <acidparty_traitormissionstartinfotext>Hey man. You know there's this thing in the center of the moon, right? What if there was, like, a way to see what it is without physically going in there?</acidparty_traitormissionstartinfotext>
-  <acidparty_traitorobjectivestartmessage1>It sounds crazy dude, but just hear me out. Grab that delimi- delirun- der- the thing that says 'DEL', right?</acidparty_traitorobjectivestartmessage1>
-  <acidparty_objectivesuccessmessage1>Yeeah man, that's it. Basically that thing, like, lets you see things without them being there, you know?</acidparty_objectivesuccessmessage1>
-  <acidparty_traitorobjectivestartmessage2>Now here's the snag, right? Sometimes subs carry these- these "vision blockers", right? Basically what they do is, is they ground you and then you only see, like, a real narrow representation of reality, ok? So what you wanna do is you wanna get rid of those. They call them shits halleberrydil or some shit like that.</acidparty_traitorobjectivestartmessage2>
-  <acidparty_objectivesuccessmessage2>That's dope. That shit's like poison for us visionaries, alright?</acidparty_objectivesuccessmessage2>
-  <acidparty_traitorobjectivestartmessage3>Ohh man, we're getting there. First thing we gotta do is share. The thing here is that some people, right? Some people are kinda brainwashed into being afraid of anything that challenges their world view, you know? So you know, you gotta find a way to sneak that good shit into their system, right?</acidparty_traitorobjectivestartmessage3>
-  <acidparty_objectivesuccessmessage3>Oh yeah, that's the stuff. Feel the barrier getting thinner? Just lay down and listen to the waves, man.</acidparty_objectivesuccessmessage3>
+  <acidparty_traitormissionstartinfotext>You find a manically scribbled note in your pocket. "Hey man. You know there's this thing in the center of the moon, right? What if there was, like, a way to see what it is without physically going in there?"</acidparty_traitormissionstartinfotext>
+  <acidparty_traitorobjectivestartmessage1>"Step 1. Find some delimi- delirun- der- the thing that says 'DEL', right?" \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage1>
+  <acidparty_objectivesuccessmessage1>This must be it. Never had this before.</acidparty_objectivesuccessmessage1>
+  <acidparty_traitorobjectivestartmessage2>"Step 2. Sometimes subs carry these- these "vision blockers", right? Basically what they do is, is they ground you and then you only see, like, a real narrow representation of reality, ok? So what you wanna do is you wanna get rid of those. They call them shits halleberrydil or some shit like that." \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage2>
+  <acidparty_objectivesuccessmessage2>Looks like that's all of it.</acidparty_objectivesuccessmessage2>
+  <acidparty_traitorobjectivestartmessage3>"Step 3. "First rule is we gotta share. The thing here is that some people, right? Some people are kinda brainwashed into being afraid of anything that challenges their world view, you know? So you know, you gotta find a way to sneak that good shit into their system, right?" \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage3>
+  <acidparty_objectivesuccessmessage3>"Step 4. Lay down and listen to the waves, man."</acidparty_objectivesuccessmessage3>
 
   <!-- Placeholder text for goals -->
   <traitorgoalkilltargetinfowithcause>Assassinate [targetname] by [causeofdeath].</traitorgoalkilltargetinfowithcause>
