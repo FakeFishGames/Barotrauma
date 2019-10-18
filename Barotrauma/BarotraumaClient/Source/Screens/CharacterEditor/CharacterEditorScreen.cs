@@ -1764,7 +1764,7 @@ namespace Barotrauma.CharacterEditor
                     {
                         case AnimationType.Walk:
                         case AnimationType.Run:
-                            if (!ragdollParams.CanEnterSubmarine) { continue; }
+                            if (!ragdollParams.CanWalk) { continue; }
                             break;
                         case AnimationType.SwimSlow:
                         case AnimationType.SwimFast:

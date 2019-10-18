@@ -15,6 +15,7 @@ namespace Barotrauma.CharacterEditor
         private string name;
         private bool isHumanoid;
         private bool canEnterSubmarine = true;
+        private bool canWalk;
         private string texturePath;
         private string xmlPath;
         private ContentPackage contentPackage;
@@ -37,6 +38,7 @@ namespace Barotrauma.CharacterEditor
             name = character.SpeciesName;
             isHumanoid = character.Humanoid;
             canEnterSubmarine = ragdoll.CanEnterSubmarine;
+            canWalk = ragdoll.CanWalk;
             texturePath = ragdoll.Texture;
         }
 
@@ -165,7 +167,7 @@ namespace Barotrauma.CharacterEditor
                         texturePathElement.Text = TexturePath;
                     }
                 }
-                for (int i = 0; i < 6; i++)
+                for (int i = 0; i < 7; i++)
                 {
                     var mainElement = new GUIFrame(new RectTransform(new Point(topGroup.RectTransform.Rect.Width, elementSize), topGroup.RectTransform), style: null, color: Color.Gray * 0.25f);
                     fields.Add(mainElement);
@@ -212,6 +214,19 @@ namespace Barotrauma.CharacterEditor
                             }
                             break;
                         case 3:
+                            var lbl = new GUITextBlock(leftElement, GetCharacterEditorTranslation("CanWalk"));
+                            var txt = new GUITickBox(rightElement, string.Empty)
+                            {
+                                Selected = CanWalk,
+                                Enabled = !IsCopy,
+                                OnSelected = (tB) => CanWalk = tB.Selected
+                            };
+                            if (!txt.Enabled)
+                            {
+                                lbl.TextColor *= 0.6f;
+                            }
+                            break;
+                        case 4:
                             new GUITextBlock(leftElement, GetCharacterEditorTranslation("ConfigFileOutput"));
                             xmlPathElement = new GUITextBox(rightElement, string.Empty)
                             {
@@ -224,7 +239,7 @@ namespace Barotrauma.CharacterEditor
                                 return true;
                             };
                             break;
-                        case 4:
+                        case 5:
                             //new GUITextBlock(leftElement, GetCharacterEditorTranslation("TexturePath"));
                             texturePathElement = new GUITextBox(rightElement, string.Empty)
                             {
@@ -257,7 +272,7 @@ namespace Barotrauma.CharacterEditor
                                 }
                             };
                             break;
-                        case 5:
+                        case 6:
                             mainElement.RectTransform.NonScaledSize = new Point(
                                 mainElement.RectTransform.NonScaledSize.X,
                                 mainElement.RectTransform.NonScaledSize.Y * 2);
@@ -356,6 +371,7 @@ namespace Barotrauma.CharacterEditor
                     {
                         SourceRagdoll.Texture = TexturePath;
                         SourceRagdoll.CanEnterSubmarine = CanEnterSubmarine;
+                        SourceRagdoll.CanWalk = CanWalk;
                         SourceRagdoll.Serialize();
                         Wizard.Instance.CreateCharacter(SourceRagdoll.MainElement, SourceCharacter.MainElement, SourceAnimations);
                     }
@@ -754,6 +770,7 @@ namespace Barotrauma.CharacterEditor
                             new XAttribute("type", Name),
                             new XAttribute("texture", TexturePath),
                             new XAttribute("canentersubmarine", CanEnterSubmarine),
+                            new XAttribute("canwalk", CanWalk),
                                 colliderElements,
                                 LimbXElements.Values,
                                 JointXElements);
@@ -872,6 +889,11 @@ namespace Barotrauma.CharacterEditor
             {
                 get => Instance.canEnterSubmarine;
                 set => Instance.canEnterSubmarine = value;
+            }
+            public bool CanWalk
+            {
+                get => Instance.canWalk;
+                set => Instance.canWalk = value;
             }
             public ContentPackage ContentPackage
             {
