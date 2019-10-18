@@ -382,7 +382,7 @@
 
   </TraitorMission>
 
-  <TraitorMission identifier="oxygen_sabotage">
+  <TraitorMission identifier="oxygen sabotage">
 
     <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
 
@@ -393,7 +393,7 @@
       <EndMessageSuccess id="oxygen_sabotage_objectivesuccessmessage1"/>
       <StartMessage id="oxygen_sabotage_traitorobjectivestartmessage1"/>
       <Goal type="sabotage" tag="oxygengenerator" threshold="10">
-        <InfoText id="traitorgoalsabotageinfo" />
+        <InfoText id="traitorgoalsabotagedurationinfo" />
         <Modifier type="duration" duration="120" cumulative="true" />
       </Goal>
     </Objective>
@@ -448,7 +448,7 @@
   </TraitorMission>
 
 
-  <TraitorMission identifier="tainted_welding">
+  <TraitorMission identifier="tainted welding tools">
 
     <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
 
@@ -501,7 +501,7 @@
   </TraitorMission>
 
 
-  <TraitorMission identifier="One_of_Us">
+  <TraitorMission identifier="One of Us">
 
     <Icon texture="Content/UI/MissionIcons.png" sourcerect="512,0,256,256" color="200,0,0,255"/>
 
@@ -520,7 +520,7 @@
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="one_of_us_objectivesuccessmessage2" />
       <StartMessage id="one_of_us_traitorobjectivestartmessage2"/>
-      <Goal type="finditem" identifier="huskeggs" preferNew="true" allowNew="true" allowExisting="true" allowedContainers="mediumsteelcabinet, mediumwindowedsteelcabinet, steelcabinet">
+      <Goal type="finditem" identifier="huskeggs" preferNew="true" allowNew="true" allowExisting="true" allowedContainers="loosevent">
         <InfoText id="one_of_us_goalinfotext_2" />
       </Goal>
     </Objective>
@@ -539,11 +539,8 @@
       <EndMessageSuccess id="one_of_us_objectivesuccessmessage4"/>
       <StartMessage id="one_of_us_traitorobjectivestartmessage4"/>
       <Goal type="injectpoison" poison="huskeggs" affliction="huskinfection" targetpercentage="100">
-        <InfoText id="one_of_us_goalinfotext_3"/>
+        <InfoText id="one_of_us_goalinfotext_4"/>
       </Goal>
     </Objective>
-
-
   </TraitorMission>
-
 </TraitorMissions>
