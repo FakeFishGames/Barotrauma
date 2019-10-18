@@ -639,7 +639,12 @@ namespace Barotrauma.Items.Components
             }
 
             LastUser = lastAIUser = character;
-            
+
+            bool prevAutoTemp = autoTemp;
+            bool prevShutDown = shutDown;
+            float prevFissionRate = targetFissionRate;
+            float prevTurbineOutput = targetTurbineOutput;
+
             switch (objective.Option.ToLowerInvariant())
             {
                 case "powerup":
@@ -649,18 +654,10 @@ namespace Barotrauma.Items.Components
                         //characters with insufficient skill levels simply set the autotemp on instead of trying to adjust the temperature manually
                         if (degreeOfSuccess < 0.5f)
                         {
-                            if (!autoTemp)
-                            {
-                                unsentChanges = true;
-                            }
                             AutoTemp = true;
                         }
                         else
                         {
-                            if (autoTemp)
-                            {
-                                unsentChanges = true;
-                            }
                             AutoTemp = false;
                             UpdateAutoTemp(MathHelper.Lerp(0.5f, 2.0f, degreeOfSuccess), 1.0f);
                         }
@@ -675,16 +672,19 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                     onOffSwitch.BarScroll = 1.0f;
 #endif
-                    if (AutoTemp || !shutDown || targetFissionRate > 0.0f || targetTurbineOutput > 0.0f)
-                    {
-                        unsentChanges = true;
-                    }
-
                     AutoTemp = false;
                     shutDown = true;
                     targetFissionRate = 0.0f;
                     targetTurbineOutput = 0.0f;
                     break;
+            }
+
+            if (autoTemp != prevAutoTemp ||
+                prevShutDown != shutDown ||
+                Math.Abs(prevFissionRate - targetFissionRate) > 1.0f || 
+                Math.Abs(prevTurbineOutput - targetTurbineOutput) > 1.0f)
+            {
+                unsentChanges = true;
             }
 
             aiUpdateTimer = AIUpdateInterval;
