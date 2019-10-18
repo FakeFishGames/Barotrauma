@@ -247,29 +247,32 @@ namespace Barotrauma
                     }
                 case ConditionType.Affliction:
                     if (target == null) { return Operator == OperatorType.NotEquals; }
-                    if (target is Character targetChar)
+
+                    Character targetChar = target as Character;
+                    if (target is Limb limb) { targetChar = limb.character;  }
+                    if (targetChar != null)
                     {
                         var health = targetChar.CharacterHealth;
                         if (health == null) { return false; }
                         var affliction = health.GetAffliction(AttributeName);
-                        if (affliction == null) { return false; }
+                        float afflictionStrength = affliction == null ? 0.0f : affliction.Strength;
                         if (FloatValue.HasValue)
                         {
                             float value = FloatValue.Value;
                             switch (Operator)
                             {
                                 case OperatorType.Equals:
-                                    return affliction.Strength == value;
+                                    return afflictionStrength == value;
                                 case OperatorType.GreaterThan:
-                                    return affliction.Strength > value;
+                                    return afflictionStrength > value;
                                 case OperatorType.GreaterThanEquals:
-                                    return affliction.Strength >= value;
+                                    return afflictionStrength >= value;
                                 case OperatorType.LessThan:
-                                    return affliction.Strength < value;
+                                    return afflictionStrength < value;
                                 case OperatorType.LessThanEquals:
-                                    return affliction.Strength <= value;
+                                    return afflictionStrength <= value;
                                 case OperatorType.NotEquals:
-                                    return affliction.Strength != value;
+                                    return afflictionStrength != value;
                             }
                         }
                     }
