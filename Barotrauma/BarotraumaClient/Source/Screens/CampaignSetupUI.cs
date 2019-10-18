@@ -86,6 +86,12 @@ namespace Barotrauma
 
                 subList.OnSelected = OnSubSelected;
             }
+            else // Spacing to fix the multiplayer campaign setup layout
+            {
+                //spacing
+                new GUIFrame(new RectTransform(new Vector2(1.0f, 0.25f), leftColumn.RectTransform), style: null);
+            }
+
             // New game right side
             subPreviewContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.8f), rightColumn.RectTransform))
             {
