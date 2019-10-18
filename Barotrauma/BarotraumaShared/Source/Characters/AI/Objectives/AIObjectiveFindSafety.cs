@@ -216,7 +216,7 @@ namespace Barotrauma
                 {
                     // Inside
                     if (!character.Submarine.IsConnectedTo(hull.Submarine)) { continue; }
-                    hullSafety = HumanAIController.GetHullSafety(hull, character);
+                    hullSafety = HumanAIController.GetHullSafety(hull, hull.GetConnectedHulls(true, 1), character);
                     float yDist = Math.Abs(character.WorldPosition.Y - hull.WorldPosition.Y);
                     yDist = yDist > 100 ? yDist * 3 : 0;
                     float dist = Math.Abs(character.WorldPosition.X - hull.WorldPosition.X) + yDist;
