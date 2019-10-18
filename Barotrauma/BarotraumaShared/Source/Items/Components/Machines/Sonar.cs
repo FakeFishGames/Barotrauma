@@ -248,6 +248,7 @@ namespace Barotrauma.Items.Components
         {
             if (currentMode == Mode.Passive || !aiPingCheckPending) return false;
 
+            // TODO: Don't create new collections here
             Dictionary<string, List<Character>> targetGroups = new Dictionary<string, List<Character>>();
 
             foreach (Character c in Character.CharacterList)

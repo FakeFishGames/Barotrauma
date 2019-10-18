@@ -21,42 +21,42 @@
   <limb id="1" radius="14" height="21" mass="20" type="Torso" attackpriority="3" name="Limb 1" flip="True" healthindex="0" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Legacyhusk/DivingSuit.png" limb="Torso" sourcerect="41,1,42,96" depth="0.05" origin="0.5,0.55" />
   </limb>
-  <limb id="12" radius="13" mass="20" type="Waist" name="Limb 12" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+  <limb id="12" radius="13" mass="20" type="Waist" name="Limb 12" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" height="0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Legacyhusk/DivingSuit.png" sourcerect="0,0,1,1" depth="0.045" origin="0.5,0.5" />
   </limb>
   <!-- left arm -->
-  <limb id="2" radius="8" height="20" mass="3" type="LeftArm" name="Limb 2" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+  <limb id="2" radius="8" height="20" mass="3" type="LeftArm" name="Limb 2" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Legacyhusk/DivingSuit.png" limb="LeftArm" sourcerect="0,0,19,43" depth="0.15" origin="0.5,0.4" />
   </limb>
-  <limb id="3" radius="6" height="26" mass="3" type="LeftHand" pullpos="0,-18" name="Limb 3" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+  <limb id="3" radius="6" height="26" mass="3" type="LeftHand" pullpos="0,-18" name="Limb 3" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" width="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Legacyhusk/DivingSuit.png" limb="LeftHand" sourcerect="0,78,15,50" depth="0.16" origin="0.45,0.4" />
   </limb>
   <!-- right arm -->
-  <limb id="4" radius="8" height="20" mass="3" type="RightArm" name="Limb 4" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+  <limb id="4" radius="8" height="20" mass="3" type="RightArm" name="Limb 4" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Legacyhusk/DivingSuit.png" limb="LeftArm" sourcerect="0,0,19,43" depth="0.01" origin="0.5,0.4" />
   </limb>
-  <limb id="5" radius="6" height="26" mass="3" type="RightHand" pullpos="0,-18" name="Limb 5" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+  <limb id="5" radius="6" height="26" mass="3" type="RightHand" pullpos="0,-18" name="Limb 5" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" width="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Legacyhusk/DivingSuit.png" limb="LeftHand" sourcerect="0,78,15,50" origin="0.45,0.4" depth="0" />
   </limb>
   <!-- left leg -->
-  <limb id="6" radius="10" height="30" mass="8" type="LeftThigh" name="Limb 6" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+  <limb id="6" radius="10" height="30" mass="8" type="LeftThigh" name="Limb 6" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Legacyhusk/DivingSuit.png" limb="RightThigh" sourcerect="22,0,18,44" depth="0.15" origin="0.5,0.5" />
   </limb>
-  <limb id="7" radius="6" height="39" mass="5" type="LeftLeg" name="Limb 7" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+  <limb id="7" radius="6" height="39" mass="5" type="LeftLeg" name="Limb 7" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Legacyhusk/DivingSuit.png" limb="RightLeg" sourcerect="17,47,21,51" depth="0.16" origin="0.5,0.55" />
   </limb>
-  <limb id="8" radius="5" height="13" mass="2" type="LeftFoot" flip="True" pullpos="-5,0" name="Limb 8" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+  <limb id="8" radius="5" height="13" mass="2" type="LeftFoot" flip="True" pullpos="-5,0" name="Limb 8" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" width="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Legacyhusk/legs.png" sourcerect="35,53,16,25" depth="0.14" origin="0.5,0.5" />
     <sound tag="footstep_armor" />
   </limb>
   <!-- right leg -->
-  <limb id="9" radius="10" height="30" mass="8" type="RightThigh" name="Limb 9" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+  <limb id="9" radius="10" height="30" mass="8" type="RightThigh" name="Limb 9" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Legacyhusk/DivingSuit.png" limb="RightThigh" sourcerect="22,0,18,44" depth="0.011" origin="0.5,0.5" />
   </limb>
-  <limb id="10" radius="6" height="39" mass="5" type="RightLeg" name="Limb 10" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+  <limb id="10" radius="6" height="39" mass="5" type="RightLeg" name="Limb 10" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Legacyhusk/DivingSuit.png" limb="RightLeg" sourcerect="17,47,21,51" depth="0.12" origin="0.5,0.55" />
   </limb>
-  <limb id="11" radius="5" height="13" mass="2" type="RightFoot" flip="True" pullpos="-5,0" name="Limb 11" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+  <limb id="11" radius="5" height="13" mass="2" type="RightFoot" flip="True" pullpos="-5,0" name="Limb 11" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" width="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Legacyhusk/legs.png" sourcerect="35,53,16,25" origin="0.5,0.5" depth="0" />
     <sound tag="footstep_armor" />
   </limb>

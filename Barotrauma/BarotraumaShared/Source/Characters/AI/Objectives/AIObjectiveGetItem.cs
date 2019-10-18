@@ -26,6 +26,8 @@ namespace Barotrauma
         private AIObjectiveGoTo goToObjective;
         private float currItemPriority;
 
+        public bool AllowToFindDivingGear { get; set; } = true;
+
         public override float GetPriority()
         {
             if (objectiveManager.CurrentOrder == this)
@@ -35,7 +37,7 @@ namespace Barotrauma
             return 1.0f;
         }
 
-        public AIObjectiveGetItem(Character character, Item targetItem, AIObjectiveManager objectiveManager, bool equip = false, float priorityModifier = 1) 
+        public AIObjectiveGetItem(Character character, Item targetItem, AIObjectiveManager objectiveManager, bool equip = true, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier)
         {
             currSearchIndex = -1;
@@ -43,10 +45,10 @@ namespace Barotrauma
             this.targetItem = targetItem;
         }
 
-        public AIObjectiveGetItem(Character character, string itemIdentifier, AIObjectiveManager objectiveManager, bool equip = false, bool checkInventory = true, float priorityModifier = 1) 
+        public AIObjectiveGetItem(Character character, string itemIdentifier, AIObjectiveManager objectiveManager, bool equip = true, bool checkInventory = true, float priorityModifier = 1) 
             : this(character, new string[] { itemIdentifier }, objectiveManager, equip, checkInventory, priorityModifier) { }
 
-        public AIObjectiveGetItem(Character character, string[] itemIdentifiers, AIObjectiveManager objectiveManager, bool equip = false, bool checkInventory = true, float priorityModifier = 1) 
+        public AIObjectiveGetItem(Character character, string[] itemIdentifiers, AIObjectiveManager objectiveManager, bool equip = true, bool checkInventory = true, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier)
         {
             currSearchIndex = -1;
@@ -65,32 +67,11 @@ namespace Barotrauma
         private void CheckInventory()
         {
             if (itemIdentifiers == null) { return; }
-            for (int i = 0; i < character.Inventory.Items.Length; i++)
+            var item = character.Inventory.FindItem(i => itemIdentifiers.Any(id => i.Prefab.Identifier == id || i.HasTag(id)) && i.Condition > 0, recursive: true);
+            if (item != null)
             {
-                if (character.Inventory.Items[i] == null || character.Inventory.Items[i].Condition <= 0.0f) { continue; }
-                if (itemIdentifiers.Any(id => character.Inventory.Items[i].Prefab.Identifier == id || character.Inventory.Items[i].HasTag(id)))
-                {
-                    targetItem = character.Inventory.Items[i];
-                    moveToTarget = targetItem;
-                    currItemPriority = 100.0f;
-                    break;
-                }
-                //check items inside items (tool inside a toolbox etc)
-                var containedItems = character.Inventory.Items[i].ContainedItems;
-                if (containedItems != null)
-                {
-                    foreach (Item containedItem in containedItems)
-                    {
-                        if (containedItem == null || containedItem.Condition <= 0.0f) { continue; }
-                        if (itemIdentifiers.Any(id => containedItem.Prefab.Identifier == id || containedItem.HasTag(id)))
-                        {
-                            targetItem = containedItem;
-                            moveToTarget = character.Inventory.Items[i];
-                            currItemPriority = 100.0f;
-                            break;
-                        }
-                    }
-                }
+                targetItem = item;
+                moveToTarget = item.GetRootContainer() ?? item;
             }
         }
 
@@ -98,58 +79,91 @@ namespace Barotrauma
         {
             if (character.LockHands)
             {
-                abandon = true;
+                Abandon = true;
                 return;
             }
-
-            FindTargetItem();
-            if (targetItem == null || moveToTarget == null)
+            if (targetItem == null)
             {
-                objectiveManager.GetObjective<AIObjectiveIdle>()?.Wander(deltaTime);
-                return;
+                FindTargetItem();
+                if (targetItem == null || moveToTarget == null)
+                {
+                    if (targetItem != null && moveToTarget == null)
+                    {
+#if DEBUG
+                        DebugConsole.ThrowError($"{character.Name}: Move to target is null!");
+#endif
+                        Abandon = true;
+                    }
+                    objectiveManager.GetObjective<AIObjectiveIdle>().Wander(deltaTime);
+                    return;
+                }
+            }
+            if (character.IsItemTakenBySomeoneElse(targetItem))
+            {
+#if DEBUG
+                DebugConsole.NewMessage($"{character.Name}: Found an item, but it's already equipped by someone else. Aborting.", Color.Yellow);
+#endif
+                Abandon = true;
             }
             if (character.CanInteractWith(targetItem, out _, checkLinked: false))
             {
-                if (IsTakenBySomeone(targetItem))
+                var pickable = targetItem.GetComponent<Pickable>();
+                if (pickable == null)
                 {
 #if DEBUG
-                    DebugConsole.NewMessage($"{character.Name}: Found an item, but it's equipped by someone else. Aborting.", Color.Yellow);
+                    DebugConsole.NewMessage($"{character.Name}: Target not pickable. Aborting.", Color.Yellow);
 #endif
-                    abandon = true;
+                    Abandon = true;
+                    return;
+                }
+                targetItem.TryInteract(character, forceSelectKey: true);
+                if (equip)
+                {
+                    int targetSlot = -1;
+                    //check if all the slots required by the item are free
+                    foreach (InvSlotType slots in pickable.AllowedSlots)
+                    {
+                        if (slots.HasFlag(InvSlotType.Any)) { continue; }
+                        for (int i = 0; i < character.Inventory.Items.Length; i++)
+                        {
+                            //slot not needed by the item, continue
+                            if (!slots.HasFlag(character.Inventory.SlotTypes[i])) { continue; }
+                            targetSlot = i;
+                            //slot free, continue
+                            var otherItem = character.Inventory.Items[i];
+                            if (otherItem == null) { continue; }
+                            //try to move the existing item to LimbSlot.Any and continue if successful
+                            if (character.Inventory.TryPutItem(otherItem, character, new List<InvSlotType>() { InvSlotType.Any })) { continue; }
+                            //if everything else fails, simply drop the existing item
+                            otherItem.Drop(character);
+                        }
+                    }
+                    if (character.Inventory.TryPutItem(targetItem, targetSlot, false, false, character))
+                    {
+                        IsCompleted = true;
+                    }
+                    else
+                    {
+#if DEBUG
+                        DebugConsole.NewMessage($"{character.Name}: Failed to equip/move the item '{targetItem.Name}' into the character inventory. Aborting.", Color.Red);
+#endif
+                        Abandon = true;
+                    }
                 }
                 else
                 {
-                    int targetSlot = -1;
-                    if (equip)
+                    targetItem.ParentInventory.RemoveItem(targetItem);
+                    if (character.Inventory.TryPutItem(targetItem, null, new List<InvSlotType>() { InvSlotType.Any }))
                     {
-                        var pickable = targetItem.GetComponent<Pickable>();
-                        if (pickable == null)
-                        {
-                            abandon = true;
-                            return;
-                        }
-                        //check if all the slots required by the item are free
-                        foreach (InvSlotType slots in pickable.AllowedSlots)
-                        {
-                            if (slots.HasFlag(InvSlotType.Any)) { continue; }
-                            for (int i = 0; i < character.Inventory.Items.Length; i++)
-                            {
-                                //slot not needed by the item, continue
-                                if (!slots.HasFlag(character.Inventory.SlotTypes[i])) { continue; }
-                                targetSlot = i;
-                                //slot free, continue
-                                if (character.Inventory.Items[i] == null) { continue; }
-                                //try to move the existing item to LimbSlot.Any and continue if successful
-                                if (character.Inventory.TryPutItem(character.Inventory.Items[i], character, new List<InvSlotType>() { InvSlotType.Any })) { continue; }
-                                //if everything else fails, simply drop the existing item
-                                character.Inventory.Items[i].Drop(character);
-                            }
-                        }
+                        IsCompleted = true;
                     }
-                    targetItem.TryInteract(character, false, true);
-                    if (targetSlot > -1 && !character.HasEquippedItem(targetItem))
+                    else
                     {
-                        character.Inventory.TryPutItem(targetItem, targetSlot, false, false, character);
+                        Abandon = true;
+#if DEBUG
+                        DebugConsole.NewMessage($"{character.Name}: Failed to equip/move the item '{targetItem.Name}' into the character inventory. Aborting.", Color.Red);
+#endif
+                        targetItem.Drop(character);
                     }
                 }
             }
@@ -158,17 +172,16 @@ namespace Barotrauma
                 TryAddSubObjective(ref goToObjective,
                     constructor: () =>
                     {
-                        //check if we're already looking for a diving gear
-                        bool gettingDivingGear = (targetItem != null && targetItem.Prefab.Identifier == "divingsuit" || targetItem.HasTag("diving")) ||
-                                                (itemIdentifiers != null && (itemIdentifiers.Contains("diving") || itemIdentifiers.Contains("divingsuit")));
-                        return new AIObjectiveGoTo(moveToTarget, character, objectiveManager, repeat: false, getDivingGearIfNeeded: !gettingDivingGear);
+                        return new AIObjectiveGoTo(moveToTarget, character, objectiveManager, repeat: false, getDivingGearIfNeeded: AllowToFindDivingGear);
                     },
                     onAbandon: () =>
                     {
                         targetItem = null;
                         moveToTarget = null;
                         ignoredItems.Add(targetItem);
-                    });
+                        RemoveSubObjective(ref goToObjective);
+                    },
+                    onCompleted: () => RemoveSubObjective(ref goToObjective));
             }
         }
 
@@ -182,9 +195,9 @@ namespace Barotrauma
                 if (targetItem == null)
                 {
 #if DEBUG
-                    DebugConsole.NewMessage($"{character.Name}: Cannot find the item, because neither identifiers nor item is was defined.", Color.Red);
+                    DebugConsole.NewMessage($"{character.Name}: Cannot find the item, because neither identifiers nor item was defined.", Color.Red);
 #endif
-                    abandon = true;
+                    Abandon = true;
                 }
                 return;
             }
@@ -194,26 +207,29 @@ namespace Barotrauma
                 var item = Item.ItemList[currSearchIndex];
                 if (ignoredItems.Contains(item)) { continue; }
                 if (item.Submarine == null) { continue; }
-                else if (item.Submarine.TeamID != character.TeamID) { continue; }
-                else if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { continue; }
+                if (item.Submarine.TeamID != character.TeamID) { continue; }
+                if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { continue; }
                 if (item.CurrentHull == null || item.Condition <= 0.0f) { continue; }
                 if (itemIdentifiers.None(id => item.Prefab.Identifier == id || item.HasTag(id))) { continue; }
                 if (ignoredContainerIdentifiers != null && item.Container != null)
                 {
                     if (ignoredContainerIdentifiers.Contains(item.ContainerIdentifier)) { continue; }
                 }
-                if (IsTakenBySomeone(item)) { continue; }
-                float itemPriority = 0.0f;
+                if (character.IsItemTakenBySomeoneElse(item)) { continue; }
+                float itemPriority = 1;
                 if (GetItemPriority != null)
                 {
-                    //ignore if the item has zero priority
                     itemPriority = GetItemPriority(item);
-                    if (itemPriority <= 0.0f) { continue; }
                 }
                 Item rootContainer = item.GetRootContainer();
-                itemPriority -= Vector2.Distance((rootContainer ?? item).Position, character.Position) * 0.01f;
+                Vector2 itemPos = (rootContainer ?? item).WorldPosition;
+                float yDist = Math.Abs(character.WorldPosition.Y - itemPos.Y);
+                yDist = yDist > 100 ? yDist * 5 : 0;
+                float dist = Math.Abs(character.WorldPosition.X - itemPos.X) + yDist;
+                float distanceFactor = MathHelper.Lerp(1, 0, MathUtils.InverseLerp(0, 10000, dist));
+                itemPriority *= distanceFactor;
                 //ignore if the item has a lower priority than the currently selected one
-                if (moveToTarget != null && itemPriority < currItemPriority) { continue; }
+                if (itemPriority < currItemPriority) { continue; }
                 currItemPriority = itemPriority;
                 targetItem = item;
                 moveToTarget = rootContainer ?? item;
@@ -222,80 +238,27 @@ namespace Barotrauma
             if (currSearchIndex >= Item.ItemList.Count - 1 && targetItem == null)
             {
 #if DEBUG
-                DebugConsole.NewMessage($"{character.Name}: Cannot find the item with the following identifier(s): {string.Join(", ", itemIdentifiers)}", Color.Red);
+                DebugConsole.NewMessage($"{character.Name}: Cannot find the item with the following identifier(s): {string.Join(", ", itemIdentifiers)}", Color.Yellow);
 #endif
-                abandon = true;
+                Abandon = true;
             }
         }
 
-        public override bool IsDuplicate(AIObjective otherObjective)
+        protected override bool Check()
         {
-            if (!(otherObjective is AIObjectiveGetItem getItem)) { return false; }
-            if (getItem.equip != equip) { return false; }
-            if (getItem.itemIdentifiers != null && itemIdentifiers != null)
-            {
-                if (getItem.itemIdentifiers.Length != itemIdentifiers.Length) { return false; }
-                for (int i = 0; i < getItem.itemIdentifiers.Length; i++)
-                {
-                    if (getItem.itemIdentifiers[i] != itemIdentifiers[i]) { return false; }
-                }
-                return true;
-            }
-            else if (getItem.itemIdentifiers == null && itemIdentifiers == null)
-            {
-                return getItem.targetItem == targetItem;
-            }
-            return false;
-        }
-
-        public override bool IsCompleted()
-        {
+            if (IsCompleted) { return true; }
             if (targetItem != null)
             {
-                return HasItem(targetItem);
+                return character.HasItem(targetItem, equip);
             }
             else if (itemIdentifiers != null)
             {
-                foreach (string itemName in itemIdentifiers)
+                var matchingItem = character.Inventory.FindItem(i => !ignoredItems.Contains(i) && itemIdentifiers.Any(id => id == i.Prefab.Identifier || i.HasTag(id)), recursive: true);
+                if (matchingItem != null)
                 {
-                    var matchingItem = character.Inventory.FindItemByTag(itemName) ?? character.Inventory.FindItemByIdentifier(itemName);
-                    if (matchingItem != null && (!equip || character.HasEquippedItem(matchingItem)))
-                    {
-                        return true;
-                    }
+                    return !equip || character.HasEquippedItem(matchingItem);
                 }
                 return false;
-            }
-            return false;
-        }
-
-        private bool HasItem(Item item)
-        {
-            bool isEquipped = !equip || character.HasEquippedItem(item);
-            if (character.Inventory.Items.Contains(item) && isEquipped) { return true; }
-            if (!equip)
-            {
-                Item rootContainer = item.GetRootContainer();
-                if (rootContainer != null && rootContainer.ParentInventory is CharacterInventory)
-                {
-                    return rootContainer.ParentInventory.Owner == character;
-                }
-            }
-            return false;
-        }
-
-        private bool IsTakenBySomeone(Item item)
-        {
-            //if the item is inside a character's inventory, don't steal it unless the character is dead
-            if (item.ParentInventory is CharacterInventory)
-            {
-                if (item.ParentInventory.Owner is Character owner && owner != character && !owner.IsDead) { return true; }
-            }
-            //if the item is inside an item, which is inside a character's inventory, don't steal it unless the character is dead
-            Item rootContainer = item.GetRootContainer();
-            if (rootContainer != null && rootContainer.ParentInventory is CharacterInventory)
-            {
-                if (rootContainer.ParentInventory.Owner is Character owner && owner != character && !owner.IsDead) { return true; }
             }
             return false;
         }

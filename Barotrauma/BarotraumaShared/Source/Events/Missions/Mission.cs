@@ -9,7 +9,25 @@ namespace Barotrauma
     {
         public readonly MissionPrefab Prefab;
         protected bool completed;
-                
+        protected int state;
+        public int State
+        {
+            get { return state; }
+            protected set
+            {
+                if (state != value)
+                {
+                    state = value;
+#if SERVER
+                    GameMain.Server?.UpdateMissionState(state);
+#endif
+                    ShowMessage(State);
+                }
+            }
+        }
+
+        protected bool IsClient => GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient;
+
         public readonly List<string> Headers;
         public readonly List<string> Messages;
         

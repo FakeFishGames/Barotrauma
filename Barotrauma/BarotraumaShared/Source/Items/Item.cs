@@ -978,6 +978,8 @@ namespace Barotrauma
             return rootContainer;
         }
 
+        public bool IsOwnedBy(Character character) => FindParentInventory(i => i.Owner == this) != null;
+
         public Inventory FindParentInventory(Func<Inventory, bool> predicate)
         {
             if (parentInventory != null)
@@ -1874,7 +1876,6 @@ namespace Barotrauma
             character.DeselectItem(this);
             foreach (ItemComponent ic in components) ic.Unequip(character);
         }
-
 
         public List<Pair<object, SerializableProperty>> GetProperties<T>()
         {

@@ -1,12 +1,12 @@
 ﻿<CrawlerSwimFast
   movementspeed="7.5"
   steertorque="15"
-  waveamplitude="0.09180977"
-  wavelength="22.92186"
+  waveamplitude="19.94644"
+  wavelength="36.39117"
   flip="True"
   headangle="77.22551"
   torsoangle="80.92885"
-  mirror="True"
+  mirror="False"
   rotatetowardsmovement="True"
   torsotorque="25"
   headtorque="25"
@@ -15,6 +15,7 @@
   footangle="0"
   cyclespeed="5"
   animationtype="SwimFast"
-  footangles="10: 1.580441"
+  footangles="10: 1.580441,15: 0"
   usesinemovement="False"
-  tailangle="NaN" />
+  tailangle="NaN"
+  tailtorquemultiplier="1" />

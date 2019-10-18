@@ -45,7 +45,7 @@ namespace Barotrauma
         {
             if (!(this is AICharacter) || IsRemotePlayer)
             {
-                if (!AllowInput)
+                if (!CanMove)
                 {
                     AnimController.Frozen = false;
                     if (memInput.Count > 0)
@@ -156,7 +156,7 @@ namespace Barotrauma
                     UInt16 networkUpdateID = msg.ReadUInt16();
                     byte inputCount = msg.ReadByte();
 
-                    if (AllowInput) Enabled = true;
+                    if (AllowInput) { Enabled = true; }
 
                     for (int i = 0; i < inputCount; i++)
                     {

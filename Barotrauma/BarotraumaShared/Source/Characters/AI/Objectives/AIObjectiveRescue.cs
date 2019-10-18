@@ -10,12 +10,14 @@ namespace Barotrauma
     {
         public override string DebugTag => "rescue";
         public override bool ForceRun => true;
+        public override bool KeepDivingGearOn => true;
 
         const float TreatmentDelay = 0.5f;
 
         private readonly Character targetCharacter;
 
         private AIObjectiveGoTo goToObjective;
+        private AIObjectiveGetItem getItemObjective;
         private float treatmentTimer;
         private Hull safeHull;
 
@@ -24,94 +26,79 @@ namespace Barotrauma
         {
             if (targetCharacter == null)
             {
-                string errorMsg = "Attempted to create a Rescue objective with no target!\n" + Environment.StackTrace;
+                string errorMsg = $"{character.Name}: Attempted to create a Rescue objective with no target!\n" + Environment.StackTrace;
                 DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce("AIObjectiveRescue:ctor:targetnull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
-                abandon = true;
-                return;
-            }
-
-            if (targetCharacter == character)
-            {
-                // TODO: enable healing self too
-                abandon = true;
+                Abandon = true;
                 return;
             }
             this.targetCharacter = targetCharacter;
         }
-
-        public override bool IsDuplicate(AIObjective otherObjective)
-        {
-            AIObjectiveRescue rescueObjective = otherObjective as AIObjectiveRescue;
-            return rescueObjective != null && rescueObjective.targetCharacter == targetCharacter;
-        }
         
         protected override void Act(float deltaTime)
         {
-            if (targetCharacter == null || targetCharacter.Removed)
+            if (character.LockHands || targetCharacter == null || targetCharacter.CurrentHull == null || targetCharacter.Removed || targetCharacter.IsDead)
             {
+                Abandon = true;
                 return;
             }
 
-            // Unconcious target is not in a safe place -> Move to a safe place first
-            if (targetCharacter.IsUnconscious && HumanAIController.GetHullSafety(targetCharacter.CurrentHull, targetCharacter) < HumanAIController.HULL_SAFETY_THRESHOLD)
+            if (targetCharacter != character)
             {
-                if (character.SelectedCharacter != targetCharacter)
-                {   
-                    character.Speak(TextManager.GetWithVariables("DialogFoundUnconsciousTarget", new string[2] { "[targetname]", "[roomname]" }, 
-                        new string[2] { targetCharacter.Name, targetCharacter.CurrentHull.DisplayName }, new bool[2] { false, true }),
-                        null, 1.0f, "foundunconscioustarget" + targetCharacter.Name, 60.0f);
-
-                    // Go to the target and select it
-                    if (!character.CanInteractWith(targetCharacter))
+                // Unconcious target is not in a safe place -> Move to a safe place first
+                if (targetCharacter.IsUnconscious && HumanAIController.GetHullSafety(targetCharacter.CurrentHull, targetCharacter) < HumanAIController.HULL_SAFETY_THRESHOLD)
+                {
+                    if (character.SelectedCharacter != targetCharacter)
                     {
-                        if (goToObjective != null && goToObjective.Target != targetCharacter)
+                        character.Speak(TextManager.GetWithVariables("DialogFoundUnconsciousTarget", new string[2] { "[targetname]", "[roomname]" },
+                            new string[2] { targetCharacter.Name, targetCharacter.CurrentHull.DisplayName }, new bool[2] { false, true }),
+                            null, 1.0f, "foundunconscioustarget" + targetCharacter.Name, 60.0f);
+
+                        // Go to the target and select it
+                        if (!character.CanInteractWith(targetCharacter))
                         {
-                            goToObjective = null;
+                            RemoveSubObjective(ref goToObjective);
+                            TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(targetCharacter, character, objectiveManager),
+                                onCompleted: () => RemoveSubObjective(ref goToObjective),
+                                onAbandon: () => RemoveSubObjective(ref goToObjective));
                         }
-                        TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(targetCharacter, character, objectiveManager));
+                        else
+                        {
+                            character.SelectCharacter(targetCharacter);
+                        }
                     }
                     else
                     {
-                        character.SelectCharacter(targetCharacter);
-                    }
-                }
-                else
-                {
-                    // Drag the character into safety
-                    if (goToObjective != null && goToObjective.Target == targetCharacter)
-                    {
-                        goToObjective = null;
-                    }
-                    if (safeHull == null)
-                    {
-                        var findSafety = objectiveManager.GetObjective<AIObjectiveFindSafety>();
-                        if (findSafety == null)
+                        // Drag the character into safety
+                        if (safeHull == null)
                         {
-                            // Ensure that we have the find safety objective (should always be the case)
-                            findSafety = new AIObjectiveFindSafety(character, objectiveManager);
-                            objectiveManager.AddObjective(findSafety);
+                            safeHull = objectiveManager.GetObjective<AIObjectiveFindSafety>().FindBestHull(HumanAIController.VisibleHulls);
                         }
-                        safeHull = findSafety.FindBestHull(HumanAIController.VisibleHulls);
-                    }
-                    if (character.CurrentHull != safeHull)
-                    {
-                        TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(safeHull, character, objectiveManager));
+                        if (character.CurrentHull != safeHull)
+                        {
+                            RemoveSubObjective(ref goToObjective);
+                            TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(safeHull, character, objectiveManager),
+                                onCompleted: () => RemoveSubObjective(ref goToObjective),
+                                onAbandon: () => RemoveSubObjective(ref goToObjective));
+                        }
                     }
                 }
             }
 
             if (subObjectives.Any()) { return; }
 
-            if (!character.CanInteractWith(targetCharacter))
+            if (targetCharacter != character && !character.CanInteractWith(targetCharacter))
             {
+                RemoveSubObjective(ref goToObjective);
                 // Go to the target and select it
-                TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(targetCharacter, character, objectiveManager));
+                TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(targetCharacter, character, objectiveManager),
+                    onCompleted: () => RemoveSubObjective(ref goToObjective),
+                    onAbandon: () => RemoveSubObjective(ref goToObjective));
             }
             else
             {
                 // We can start applying treatment
-                if (character.SelectedCharacter != targetCharacter)
+                if (character != targetCharacter && character.SelectedCharacter != targetCharacter)
                 {                
                     character.Speak(TextManager.GetWithVariables("DialogFoundWoundedTarget", new string[2] { "[targetname]", "[roomname]" },
                         new string[2] { targetCharacter.Name, targetCharacter.CurrentHull.DisplayName }, new bool[2] { false, true }),
@@ -123,7 +110,8 @@ namespace Barotrauma
             }
         }
 
-        // TODO: consider optimizing a bit
+        private HashSet<string> suitableItemIdentifiers = new HashSet<string>();
+        private List<string> itemNameList = new List<string>();
         private void GiveTreatment(float deltaTime)
         {
             if (treatmentTimer > 0.0f)
@@ -131,15 +119,7 @@ namespace Barotrauma
                 treatmentTimer -= deltaTime;
             }
             treatmentTimer = TreatmentDelay;
-
-            var allAfflictions = targetCharacter.CharacterHealth.GetAllAfflictions()
-                .Where(a => a.GetVitalityDecrease(targetCharacter.CharacterHealth) > 0)
-                .ToList();
-
-            allAfflictions.Sort((a1, a2) =>
-            {
-                return Math.Sign(a2.GetVitalityDecrease(targetCharacter.CharacterHealth) - a1.GetVitalityDecrease(targetCharacter.CharacterHealth));
-            });
+            var allAfflictions = GetVitalityReducingAfflictions(targetCharacter).OrderByDescending(a => a.GetVitalityDecrease(targetCharacter.CharacterHealth));
             //check if we already have a suitable treatment for any of the afflictions
             foreach (Affliction affliction in allAfflictions)
             {
@@ -147,7 +127,7 @@ namespace Barotrauma
                 {
                     if (treatmentSuitability.Value > 0.0f)
                     {
-                        Item matchingItem = character.Inventory.FindItemByIdentifier(treatmentSuitability.Key);
+                        Item matchingItem = character.Inventory.FindItemByIdentifier(treatmentSuitability.Key, true);
                         if (matchingItem == null) { continue; }
                         ApplyTreatment(affliction, matchingItem);
                         return;
@@ -155,7 +135,7 @@ namespace Barotrauma
                 }
             }
             //didn't have any suitable treatments available, try to find some medical items
-            HashSet<string> suitableItemIdentifiers = new HashSet<string>();
+            suitableItemIdentifiers.Clear();
             foreach (Affliction affliction in allAfflictions)
             {
                 foreach (KeyValuePair<string, float> treatmentSuitability in affliction.Prefab.TreatmentSuitability)
@@ -168,7 +148,7 @@ namespace Barotrauma
             }
             if (suitableItemIdentifiers.Count > 0)
             {
-                List<string> itemNameList = new List<string>();
+                itemNameList.Clear();
                 foreach (string itemIdentifier in suitableItemIdentifiers)
                 {
                     if (MapEntityPrefab.Find(null, itemIdentifier, showErrorMessages: false) is ItemPrefab itemPrefab)
@@ -189,14 +169,19 @@ namespace Barotrauma
                     {
                         itemListStr = string.Join(" or ", string.Join(", ", itemNameList.Take(itemNameList.Count - 1)), itemNameList.Last());
                     }
-                    
-
-                    character.Speak(TextManager.GetWithVariables("DialogListRequiredTreatments", new string[2] { "[targetname]", "[treatmentlist]" },
-                        new string[2] { targetCharacter.Name, itemListStr }, new bool[2] { false, true }),
-                        null, 2.0f, "listrequiredtreatments" + targetCharacter.Name, 60.0f);
+                    if (targetCharacter != character)
+                    {
+                        character.Speak(TextManager.GetWithVariables("DialogListRequiredTreatments", new string[2] { "[targetname]", "[treatmentlist]" },
+                            new string[2] { targetCharacter.Name, itemListStr }, new bool[2] { false, true }),
+                            null, 2.0f, "listrequiredtreatments" + targetCharacter.Name, 60.0f);
+                    }
                 }
                 character.DeselectCharacter();
-                AddSubObjective(new AIObjectiveGetItem(character, suitableItemIdentifiers.ToArray(), objectiveManager, equip: true));
+                RemoveSubObjective(ref getItemObjective);
+                TryAddSubObjective(ref getItemObjective, 
+                    constructor: () => new AIObjectiveGetItem(character, suitableItemIdentifiers.ToArray(), objectiveManager, equip: true),
+                    onCompleted: () => RemoveSubObjective(ref getItemObjective),
+                    onAbandon: () => RemoveSubObjective(ref getItemObjective));
             }
             character.AnimController.Anim = AnimController.Animation.CPR;
         }
@@ -224,43 +209,46 @@ namespace Barotrauma
             }
         }
 
-        public override bool IsCompleted()
+        protected override bool Check()
         {
-            if (targetCharacter == null || targetCharacter.Removed)
+            if (character.LockHands || targetCharacter == null || targetCharacter.CurrentHull == null || targetCharacter.Removed || targetCharacter.IsDead)
             {
-                abandon = true;
-                return true;
+                Abandon = true;
+                return false;
             }
-
-            bool isCompleted = targetCharacter.Bleeding <= 0 && targetCharacter.Vitality / targetCharacter.MaxVitality > AIObjectiveRescueAll.GetVitalityThreshold(objectiveManager);
-            if (isCompleted)
+            // Don't go into rooms that have enemies
+            if (Character.CharacterList.Any(c => c.CurrentHull == targetCharacter.CurrentHull && !HumanAIController.IsFriendly(character, c) && HumanAIController.IsActive(c)))
+            {
+                Abandon = true;
+                return false;
+            }
+            bool isCompleted = AIObjectiveRescueAll.GetVitalityFactor(targetCharacter) > AIObjectiveRescueAll.GetVitalityThreshold(objectiveManager);
+            if (isCompleted && targetCharacter != character)
             {                
                 character.Speak(TextManager.GetWithVariable("DialogTargetHealed", "[targetname]", targetCharacter.Name),
                     null, 1.0f, "targethealed" + targetCharacter.Name, 60.0f);
             }
-            return isCompleted || targetCharacter.IsDead;
+            return isCompleted;
         }
 
         public override float GetPriority()
         {
-            if (targetCharacter == null) { return 0; }
-            if (targetCharacter.CurrentHull == null || targetCharacter.Removed || targetCharacter.IsDead)
+            if (targetCharacter == null || targetCharacter.CurrentHull == null || targetCharacter.Removed || targetCharacter.IsDead)
             {
-                abandon = true;
-                return 0;
-            }
-            // Don't go into rooms that have enemies
-            if (Character.CharacterList.Any(c => c.CurrentHull == targetCharacter.CurrentHull && !HumanAIController.IsFriendly(c)))
-            {
-                abandon = true;
                 return 0;
             }
             // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
             float dist = Math.Abs(character.WorldPosition.X - targetCharacter.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - targetCharacter.WorldPosition.Y) * 2.0f;
-            float distanceFactor = MathHelper.Lerp(1, 0.5f, MathUtils.InverseLerp(0, 10000, dist));
+            float distanceFactor = MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 5000, dist));
+            if (targetCharacter.CurrentHull == character.CurrentHull)
+            {
+                distanceFactor = 1;
+            }
             float vitalityFactor = AIObjectiveRescueAll.GetVitalityFactor(targetCharacter);
             float devotion = Math.Min(Priority, 10) / 100;
             return MathHelper.Lerp(0, 100, MathHelper.Clamp(devotion + vitalityFactor * distanceFactor, 0, 1));
         }
+
+        public static IEnumerable<Affliction> GetVitalityReducingAfflictions(Character character) => character.CharacterHealth.GetAllAfflictions(a => a.GetVitalityDecrease(character.CharacterHealth) > 0);
     }
 }

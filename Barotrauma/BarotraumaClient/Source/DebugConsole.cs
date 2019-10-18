@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 using System.Globalization;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -484,14 +485,22 @@ namespace Barotrauma
 
             AssignOnExecute("los", (string[] args) =>
              {
-                 GameMain.LightManager.LosEnabled = !GameMain.LightManager.LosEnabled;
+                 if (args.None() || !bool.TryParse(args[0], out bool state))
+                 {
+                     state = !GameMain.LightManager.LosEnabled;
+                 }
+                 GameMain.LightManager.LosEnabled = state;
                  NewMessage("Line of sight effect " + (GameMain.LightManager.LosEnabled ? "enabled" : "disabled"), Color.White);
              });
             AssignRelayToServer("los", false);
 
             AssignOnExecute("lighting|lights", (string[] args) =>
             {
-                GameMain.LightManager.LightingEnabled = !GameMain.LightManager.LightingEnabled;
+                if (args.None() || !bool.TryParse(args[0], out bool state))
+                {
+                    state = !GameMain.LightManager.LightingEnabled;
+                }
+                GameMain.LightManager.LightingEnabled = state;
                 NewMessage("Lighting " + (GameMain.LightManager.LightingEnabled ? "enabled" : "disabled"), Color.White);
             });
             AssignRelayToServer("lighting|lights", false);
@@ -818,7 +827,11 @@ namespace Barotrauma
 
             AssignOnExecute("debugdraw", (string[] args) =>
             {
-                GameMain.DebugDraw = !GameMain.DebugDraw;
+                if (args.None() || !bool.TryParse(args[0], out bool state))
+                {
+                    state = !GameMain.DebugDraw;
+                }
+                GameMain.DebugDraw = state;
                 NewMessage("Debug draw mode " + (GameMain.DebugDraw ? "enabled" : "disabled"), Color.White);
             });
             AssignRelayToServer("debugdraw", false);
@@ -1170,6 +1183,16 @@ namespace Barotrauma
                     }
                 }
             }, isCheat: false));
+
+            commands.Add(new Command("flip", "Flip the currently controlled character.", (string[] args) =>
+            {
+                Character.Controlled?.AnimController.Flip();
+            }, isCheat: false));
+            commands.Add(new Command("mirror", "Mirror the currently controlled character.", (string[] args) =>
+            {
+                (Character.Controlled?.AnimController as FishAnimController)?.Mirror(lerp: false);
+            }, isCheat: false));
+
 #endif
 
             commands.Add(new Command("dumptexts", "dumptexts [filepath]: Extracts all the texts from the given text xml and writes them into a file (using the same filename, but with the .txt extension). If the filepath is omitted, the EnglishVanilla.xml file is used.", (string[] args) =>

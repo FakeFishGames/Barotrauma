@@ -483,43 +483,53 @@ namespace Barotrauma.Items.Components
             {
                 character.Speak(TextManager.Get("DialogSteeringTaken"), null, 0.0f, "steeringtaken", 10.0f);
             }
-
             user = character;
-
+            if (!AutoPilot)
+            {
+                unsentChanges = true;
+                AutoPilot = true;
+            }
             switch (objective.Option.ToLowerInvariant())
             {
                 case "maintainposition":
-                    if (!posToMaintain.HasValue)
+                    if (objective.Override)
                     {
-                        unsentChanges = true;
-                        posToMaintain = controlledSub != null ?
-                            controlledSub.WorldPosition :
-                            item.Submarine == null ? item.WorldPosition : item.Submarine.WorldPosition;
+                        if (!MaintainPos)
+                        {
+                            unsentChanges = true;
+                            MaintainPos = true;
+                        }
+                        if (!posToMaintain.HasValue)
+                        {
+                            unsentChanges = true;
+                            posToMaintain = controlledSub != null ?
+                                controlledSub.WorldPosition :
+                                item.Submarine == null ? item.WorldPosition : item.Submarine.WorldPosition;
+                        }
                     }
-
-                    if (!AutoPilot || !MaintainPos) unsentChanges = true;
-
-                    AutoPilot = true;
-                    MaintainPos = true;
                     break;
                 case "navigateback":
-                    if (!AutoPilot || MaintainPos || LevelEndSelected || !LevelStartSelected)
+                    if (objective.Override)
                     {
-                        unsentChanges = true;
+                        if (MaintainPos || LevelEndSelected || !LevelStartSelected)
+                        {
+                            unsentChanges = true;
+                        }
+                        SetDestinationLevelStart();
                     }
-                    SetDestinationLevelStart();
                     break;
                 case "navigatetodestination":
-                    if (!AutoPilot || MaintainPos || !LevelEndSelected || LevelStartSelected)
+                    if (objective.Override)
                     {
-                        unsentChanges = true;
+                        if (MaintainPos || !LevelEndSelected || LevelStartSelected)
+                        {
+                            unsentChanges = true;
+                        }
+                        SetDestinationLevelEnd();
                     }
-                    SetDestinationLevelEnd();
                     break;
             }
-
             sonar?.AIOperate(deltaTime, character, objective);
-
             return false;
         }
 

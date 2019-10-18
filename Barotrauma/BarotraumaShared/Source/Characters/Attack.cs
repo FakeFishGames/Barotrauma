@@ -15,7 +15,9 @@ namespace Barotrauma
     {
         NotDefined,
         Water,
-        Ground
+        Ground,
+        Inside,
+        Outside
     }
 
     public enum AttackTarget
@@ -70,7 +72,7 @@ namespace Barotrauma
 
     partial class Attack : ISerializableEntity
     {
-        [Serialize(AttackContext.NotDefined, true, description: "Is the attack used only in a specific condition?"), Editable]
+        [Serialize(AttackContext.NotDefined, true, description: "The attack will be used only in this context."), Editable]
         public AttackContext Context { get; private set; }
 
         [Serialize(AttackTarget.Any, true, description: "Does the attack target only specific targets?"), Editable]
@@ -198,7 +200,7 @@ namespace Barotrauma
         /// </summary>
         public List<PropertyConditional> Conditionals { get; private set; } = new List<PropertyConditional>();
 
-        private readonly List<StatusEffect> statusEffects;
+        private readonly List<StatusEffect> statusEffects = new List<StatusEffect>();
 
         public void SetUser(Character user)
         {
@@ -269,10 +271,6 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "statuseffect":
-                        if (statusEffects == null)
-                        {
-                            statusEffects = new List<StatusEffect>();
-                        }
                         statusEffects.Add(StatusEffect.Load(subElement, parentDebugName));
                         break;
                     case "affliction":
@@ -378,27 +376,27 @@ namespace Barotrauma
             {
                 effectType = ActionType.OnEating;
             }
-            if (statusEffects == null) return attackResult;
 
             foreach (StatusEffect effect in statusEffects)
             {
+                // TODO: do we want to apply the effect at the world position or the entity positions in each cases? -> go through also other cases where status effects are applied
                 if (effect.HasTargetType(StatusEffect.TargetType.This))
                 {
-                    effect.Apply(effectType, deltaTime, attacker, attacker);
+                    effect.Apply(effectType, deltaTime, attacker, attacker, worldPosition);
                 }
-                if (target is Character)
+                if (targetCharacter != null)
                 {
                     if (effect.HasTargetType(StatusEffect.TargetType.Character))
                     {
-                        effect.Apply(effectType, deltaTime, (Character)target, (Character)target);
+                        effect.Apply(effectType, deltaTime, targetCharacter, targetCharacter);
                     }
                     if (effect.HasTargetType(StatusEffect.TargetType.Limb))
                     {
-                        effect.Apply(effectType, deltaTime, (Character)target, attackResult.HitLimb);
+                        effect.Apply(effectType, deltaTime, targetCharacter, attackResult.HitLimb);
                     }                    
                     if (effect.HasTargetType(StatusEffect.TargetType.AllLimbs))
                     {
-                        effect.Apply(effectType, deltaTime, (Character)target, ((Character)target).AnimController.Limbs.Cast<ISerializableEntity>().ToList());
+                        effect.Apply(effectType, deltaTime, targetCharacter, targetCharacter.AnimController.Limbs.Cast<ISerializableEntity>().ToList());
                     }
                 }
                 if (target is Entity entity)
@@ -434,7 +432,6 @@ namespace Barotrauma
 
             var attackResult = targetLimb.character.ApplyAttack(attacker, worldPosition, this, deltaTime, playSound, targetLimb);
             var effectType = attackResult.Damage > 0.0f ? ActionType.OnUse : ActionType.OnFailure;
-            if (statusEffects == null) return attackResult;            
 
             foreach (StatusEffect effect in statusEffects)
             {
@@ -506,6 +503,43 @@ namespace Barotrauma
         partial void DamageParticles(float deltaTime, Vector2 worldPosition);
 
         public bool IsValidContext(AttackContext context) => Context == context || Context == AttackContext.NotDefined;
+
+        public bool IsValidContext(IEnumerable<AttackContext> contexts)
+        {
+            foreach (var context in contexts)
+            {
+                switch (context)
+                {
+                    case AttackContext.Ground:
+                        if (Context == AttackContext.Water)
+                        {
+                            return false;
+                        }
+                        break;
+                    case AttackContext.Water:
+                        if (Context == AttackContext.Ground)
+                        {
+                            return false;
+                        }
+                        break;
+                    case AttackContext.Inside:
+                        if (Context == AttackContext.Outside)
+                        {
+                            return false;
+                        }
+                        break;
+                    case AttackContext.Outside:
+                        if (Context == AttackContext.Inside)
+                        {
+                            return false;
+                        }
+                        break;
+                    default:
+                        continue;
+                }
+            }
+            return true;
+        }
 
         public bool IsValidTarget(AttackTarget targetType) => TargetType == AttackTarget.Any || TargetType == targetType;
 

@@ -14,9 +14,12 @@ namespace Barotrauma
         /// </summary>
         public bool RequireAdequateSkills;
 
-        public AIObjectiveRepairItems(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier) { }
+        public override bool AllowMultipleInstances => true;
 
-        public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveRepairItems repairItems && repairItems.RequireAdequateSkills == RequireAdequateSkills;
+        public override bool IsDuplicate<T>(T otherObjective) => 
+            (otherObjective as AIObjective) is AIObjectiveRepairItems repairObjective && repairObjective.RequireAdequateSkills == RequireAdequateSkills;
+
+        public AIObjectiveRepairItems(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier) { }
 
         protected override void CreateObjectives()
         {
@@ -28,7 +31,21 @@ namespace Barotrauma
                     {
                         objective = ObjectiveConstructor(item);
                         Objectives.Add(item, objective);
-                        AddSubObjective(objective);
+                        if (!subObjectives.Contains(objective))
+                        {
+                            subObjectives.Add(objective);
+                        }
+                        objective.Completed += () =>
+                        {
+                            Objectives.Remove(item);
+                            OnObjectiveCompleted(objective, item);
+                        };
+                        objective.Abandoned += () =>
+                        {
+                            Objectives.Remove(item);
+                            ignoreList.Add(item);
+                            targetUpdateTimer = 0;
+                        };
                     }
                     break;
                 }
@@ -40,7 +57,7 @@ namespace Barotrauma
             if (!IsValidTarget(item, character)) { return false; }
             if (item.CurrentHull.FireSources.Count > 0) { return false; }
             // Don't repair items in rooms that have enemies inside.
-            if (Character.CharacterList.Any(c => c.CurrentHull == item.CurrentHull && !HumanAIController.IsFriendly(c))) { return false; }
+            if (Character.CharacterList.Any(c => c.CurrentHull == item.CurrentHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c))) { return false; }
             if (!Objectives.ContainsKey(item))
             {
                 if (item.Repairables.All(r => item.ConditionPercentage > r.ShowRepairUIThreshold)) { return false; }
@@ -52,7 +69,7 @@ namespace Barotrauma
             return true;
         }
 
-        protected override float TargetEvaluation() => Targets.Max(t => 100 - t.ConditionPercentage);
+        protected override float TargetEvaluation() => Targets.Max(t => character.SelectedConstruction == t && t.ConditionPercentage < 100 ? 100 : 100 - t.ConditionPercentage);
         protected override IEnumerable<Item> GetList() => Item.ItemList;
 
         protected override AIObjective ObjectiveConstructor(Item item) 

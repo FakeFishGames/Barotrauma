@@ -228,13 +228,16 @@ namespace Barotrauma
 
             surface = rect.Y - rect.Height;
 
-            aiTarget = new AITarget(this)
+            if (submarine != null)
             {
-                MinSightRange = 2000,
-                MaxSightRange = 5000,
-                MaxSoundRange = 5000,
-                SoundRange = 0
-            };
+                aiTarget = new AITarget(this)
+                {
+                    MinSightRange = 2000,
+                    MaxSightRange = 5000,
+                    MaxSoundRange = 5000,
+                    SoundRange = 0
+                };
+            }
 
             hullList.Add(this);
 
@@ -430,8 +433,11 @@ namespace Barotrauma
 
             FireSource.UpdateAll(FireSources, deltaTime);
 
-            aiTarget.SightRange = Submarine == null ? aiTarget.MinSightRange : Submarine.Velocity.Length() / 2 * aiTarget.MaxSightRange;
-            aiTarget.SoundRange -= deltaTime * 1000.0f;
+            if (aiTarget != null)
+            {
+                aiTarget.SightRange = Submarine == null ? aiTarget.MinSightRange : Submarine.Velocity.Length() / 2 * aiTarget.MaxSightRange;
+                aiTarget.SoundRange -= deltaTime * 1000.0f;
+            }
          
             if (!update)
             {
@@ -594,16 +600,17 @@ namespace Barotrauma
         {
             adjacentHulls.Clear();
             int startStep = 0;
-            return GetAdjacentHulls(includingThis, adjacentHulls, ref startStep, searchDepth);
+            searchDepth = searchDepth ?? 100;
+            return GetAdjacentHulls(includingThis, adjacentHulls, ref startStep, searchDepth.Value);
         }
 
-        private HashSet<Hull> GetAdjacentHulls(bool includingThis, HashSet<Hull> connectedHulls, ref int step, int? searchDepth)
+        private HashSet<Hull> GetAdjacentHulls(bool includingThis, HashSet<Hull> connectedHulls, ref int step, int searchDepth)
         {
             if (includingThis)
             {
                 connectedHulls.Add(this);
             }
-            if (step > searchDepth.Value)
+            if (step > searchDepth)
             {
                 return connectedHulls;
             }

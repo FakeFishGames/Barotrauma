@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
@@ -12,7 +13,7 @@ namespace Barotrauma
         public const float OrderPriority = 70;
         public const float RunPriority = 50;
         // Constantly increases the priority of the selected objective, unless overridden
-        public const float baseDevotion = 2;
+        public const float baseDevotion = 3;
 
         public List<AIObjective> Objectives { get; private set; } = new List<AIObjective>();
 
@@ -35,7 +36,13 @@ namespace Barotrauma
         public AIObjective CurrentOrder { get; private set; }
         public AIObjective CurrentObjective { get; private set; }
 
+        public bool IsCurrentOrder<T>() where T : AIObjective => CurrentOrder is T;
         public bool IsCurrentObjective<T>() where T : AIObjective => CurrentObjective is T;
+        public bool IsActiveObjective<T>() where T : AIObjective => GetActiveObjective() is T;
+
+        public AIObjective GetActiveObjective() => CurrentObjective?.GetActiveObjective();
+
+        public bool HasActiveObjective<T>() where T : AIObjective => CurrentObjective is T || CurrentObjective != null && CurrentObjective.GetSubObjectivesRecursive().Any(so => so is T);
 
         public AIObjectiveManager(Character character)
         {
@@ -43,7 +50,7 @@ namespace Barotrauma
             CreateAutonomousObjectives();
         }
 
-        public void AddObjective(AIObjective objective)
+        public void AddObjective<T>(T objective) where T : AIObjective
         {
             if (objective == null)
             {
@@ -52,21 +59,32 @@ namespace Barotrauma
 #endif
                 return;
             }
-            var duplicate = Objectives.Find(o => o.IsDuplicate(objective));
-            if (duplicate != null)
+            // Can't use the generic type, because it's possible that the user of this method uses the base type AIObjective.
+            // We need to get the highest type.
+            var type = objective.GetType();
+            if (objective.AllowMultipleInstances)
             {
-                duplicate.Reset();
+                if (Objectives.FirstOrDefault(o => o.GetType() == type) is T existingObjective && existingObjective.IsDuplicate(objective))
+                {
+                    Objectives.Remove(existingObjective);
+                }
             }
             else
             {
-                Objectives.Add(objective);
+                Objectives.RemoveAll(o => o.GetType() == type);
             }
+            Objectives.Add(objective);
         }
 
         public Dictionary<AIObjective, CoroutineHandle> DelayedObjectives { get; private set; } = new Dictionary<AIObjective, CoroutineHandle>();
 
         public void CreateAutonomousObjectives()
         {
+            foreach (var delayedObjective in DelayedObjectives)
+            {
+                CoroutineManager.StopCoroutines(delayedObjective.Value);
+            }
+            DelayedObjectives.Clear();
             Objectives.Clear();
             AddObjective(new AIObjectiveFindSafety(character, this));
             AddObjective(new AIObjectiveIdle(character, this));
@@ -82,8 +100,8 @@ namespace Barotrauma
                 matchingItems.RemoveAll(it => it.Submarine != character.Submarine);
                 var item = matchingItems.GetRandom();
                 var order = new Order(
-                    orderPrefab, 
-                    item ?? character.CurrentHull as Entity, 
+                    orderPrefab,
+                    item ?? character.CurrentHull as Entity,
                     item?.Components.FirstOrDefault(ic => ic.GetType() == orderPrefab.ItemComponentType),
                     orderGiver: character);
                 if (order == null) { continue; }
@@ -94,15 +112,15 @@ namespace Barotrauma
                     objectiveCount++;
                 }
             }
-            WaitTimer = Math.Max(WaitTimer, Rand.Range(0.5f, 1f) * objectiveCount);
+            _waitTimer = Math.Max(_waitTimer, Rand.Range(0.5f, 1f) * objectiveCount);
         }
 
-        public void AddObjective(AIObjective objective, float delay, Action callback = null)
+        public void AddObjective<T>(T objective, float delay, Action callback = null) where T : AIObjective
         {
             if (objective == null)
             {
 #if DEBUG
-                DebugConsole.ThrowError("Attempted to add a null objective to AIObjectiveManager\n" + Environment.StackTrace);
+                DebugConsole.ThrowError($"{character.Name}: Attempted to add a null objective to AIObjectiveManager\n" + Environment.StackTrace);
 #endif
                 return;
             }
@@ -120,14 +138,7 @@ namespace Barotrauma
             DelayedObjectives.Add(objective, coroutine);
         }
 
-        public T GetObjective<T>() where T : AIObjective
-        {
-            foreach (AIObjective objective in Objectives)
-            {
-                if (objective is T) return (T)objective;
-            }
-            return null;
-        }
+        public T GetObjective<T>() where T : AIObjective => Objectives.FirstOrDefault(o => o is T) as T;
 
         private AIObjective GetCurrentObjective()
         {
@@ -143,6 +154,7 @@ namespace Barotrauma
             }
             if (previousObjective != CurrentObjective)
             {
+                previousObjective?.OnDeselected();
                 CurrentObjective?.OnSelected();
                 GetObjective<AIObjectiveIdle>().SetRandom();
             }
@@ -165,17 +177,17 @@ namespace Barotrauma
             for (int i = 0; i < Objectives.Count; i++)
             {
                 var objective = Objectives[i];
-                if (objective.IsCompleted())
+                if (objective.IsCompleted)
                 {
 #if DEBUG
-                    DebugConsole.NewMessage($"Removing objective {objective.DebugTag}, because it is completed.");
+                    DebugConsole.NewMessage($"{character.Name}: Removing objective {objective.DebugTag}, because it is completed.", Color.LightGreen);
 #endif
                     Objectives.Remove(objective);
                 }
                 else if (!objective.CanBeCompleted)
                 {
 #if DEBUG
-                    DebugConsole.NewMessage($"Removing objective {objective.DebugTag}, because it cannot be completed.");
+                    DebugConsole.NewMessage($"{character.Name}: Removing objective {objective.DebugTag}, because it cannot be completed.", Color.Red);
 #endif
                     Objectives.Remove(objective);
                 }
@@ -193,7 +205,7 @@ namespace Barotrauma
             {
                 Objectives.Sort((x, y) => y.GetPriority().CompareTo(x.GetPriority()));
             }
-            CurrentObjective?.SortSubObjectives();
+            GetCurrentObjective()?.SortSubObjectives();
         }
         
         public void DoCurrentObjective(float deltaTime)
@@ -260,7 +272,10 @@ namespace Barotrauma
                     newObjective = new AIObjectiveRescueAll(character, this, priorityModifier);
                     break;
                 case "repairsystems":
-                    newObjective = new AIObjectiveRepairItems(character, this, priorityModifier) { RequireAdequateSkills = option == "jobspecific" };
+                    newObjective = new AIObjectiveRepairItems(character, this, priorityModifier)
+                    {
+                        RequireAdequateSkills = option == "jobspecific"
+                    };
                     break;
                 case "pumpwater":
                     newObjective = new AIObjectivePumpWater(character, this, option, priorityModifier: priorityModifier);
@@ -275,11 +290,21 @@ namespace Barotrauma
                     var steering = (order?.TargetEntity as Item)?.GetComponent<Steering>();
                     if (steering != null) steering.PosToMaintain = steering.Item.Submarine?.WorldPosition;
                     if (order.TargetItemComponent == null) { return null; }
-                    newObjective = new AIObjectiveOperateItem(order.TargetItemComponent, character, this, option, requireEquip: false, useController: order.UseController, priorityModifier: priorityModifier) { IsLoop = true };
+                    newObjective = new AIObjectiveOperateItem(order.TargetItemComponent, character, this, option, requireEquip: false, useController: order.UseController, priorityModifier: priorityModifier)
+                    {
+                        IsLoop = true,
+                        // Don't override auto pilot unless it's an order by a player
+                        Override = orderGiver == Character.Controlled || orderGiver.IsRemotePlayer
+                    };
                     break;
                 default:
                     if (order.TargetItemComponent == null) { return null; }
-                    newObjective = new AIObjectiveOperateItem(order.TargetItemComponent, character, this, option, requireEquip: false, useController: order.UseController, priorityModifier: priorityModifier) { IsLoop = true };
+                    newObjective = new AIObjectiveOperateItem(order.TargetItemComponent, character, this, option, requireEquip: false, useController: order.UseController, priorityModifier: priorityModifier)
+                    {
+                        IsLoop = true,
+                        // Don't override auto control unless it's an order by a player
+                        Override = orderGiver == Character.Controlled || orderGiver.IsRemotePlayer
+                    };
                     break;
             }
             return newObjective;

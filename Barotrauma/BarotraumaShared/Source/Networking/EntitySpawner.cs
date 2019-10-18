@@ -72,30 +72,31 @@ namespace Barotrauma
             public readonly Vector2 Position;
             public readonly Submarine Submarine;
 
-            public CharacterSpawnInfo(string identifier, Vector2 worldPosition)
+            private readonly Action<Character> onSpawn;
+
+            public CharacterSpawnInfo(string identifier, Vector2 worldPosition, Action<Character> onSpawn = null)
             {
                 this.identifier = identifier ?? throw new ArgumentException("ItemSpawnInfo prefab cannot be null.");
                 Position = worldPosition;
+                this.onSpawn = onSpawn;
             }
 
-            public CharacterSpawnInfo(string identifier, Vector2 position, Submarine sub)
+            public CharacterSpawnInfo(string identifier, Vector2 position, Submarine sub, Action<Character> onSpawn = null)
             {
                 this.identifier = identifier ?? throw new ArgumentException("ItemSpawnInfo prefab cannot be null.");
                 Position = position;
                 Submarine = sub;
+                this.onSpawn = onSpawn;
             }
 
             public Entity Spawn()
             {
-                if (string.IsNullOrEmpty(identifier))
-                {
-                    return null;
-                }
-
-                return Character.Create(
-                    identifier, 
-                    Submarine == null ? Position : Submarine.Position + Position, 
+                var character = string.IsNullOrEmpty(identifier) ? null : 
+                    Character.Create(identifier,
+                    Submarine == null ? Position : Submarine.Position + Position,
                     ToolBox.RandomSeed(8));
+                onSpawn?.Invoke(character);
+                return character;
             }
         }
 
@@ -166,7 +167,7 @@ namespace Barotrauma
             spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, inventory, condition));
         }
 
-        public void AddToSpawnQueue(string speciesName, Vector2 worldPosition)
+        public void AddToSpawnQueue(string speciesName, Vector2 worldPosition, Action<Character> onSpawn = null)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
             if (string.IsNullOrEmpty(speciesName))
@@ -176,10 +177,10 @@ namespace Barotrauma
                 GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue4:SpeciesNameNullOrEmpty", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return;
             }
-            spawnQueue.Enqueue(new CharacterSpawnInfo(speciesName, worldPosition));
+            spawnQueue.Enqueue(new CharacterSpawnInfo(speciesName, worldPosition, onSpawn));
         }
 
-        public void AddToSpawnQueue(string speciesName, Vector2 position, Submarine sub)
+        public void AddToSpawnQueue(string speciesName, Vector2 position, Submarine sub, Action<Character> onSpawn = null)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
             if (string.IsNullOrEmpty(speciesName))
@@ -189,7 +190,7 @@ namespace Barotrauma
                 GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue5:SpeciesNameNullOrEmpty", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return;
             }
-            spawnQueue.Enqueue(new CharacterSpawnInfo(speciesName, position, sub));
+            spawnQueue.Enqueue(new CharacterSpawnInfo(speciesName, position, sub, onSpawn));
         }
 
         public void AddToRemoveQueue(Entity entity)

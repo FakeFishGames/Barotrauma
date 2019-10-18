@@ -118,6 +118,18 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Husk\DivingSuit_TorsoHusk.png">
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+	<Content Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerheadspawn\Animations\HammerheadspawnSwimFast.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerheadspawn\Animations\HammerheadspawnSwimSlow.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerheadspawn\Hammerheadspawn.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerheadspawn\Ragdolls\HammerheadspawnDefaultRagdoll.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Legacycharybdis\Legacycharybdis.xml">

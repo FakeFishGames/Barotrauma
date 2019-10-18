@@ -15,11 +15,6 @@ namespace Barotrauma
         public AIObjectiveChargeBatteries(Character character, AIObjectiveManager objectiveManager, string option, float priorityModifier) 
             : base(character, objectiveManager, priorityModifier, option) { }
 
-        public override bool IsDuplicate(AIObjective otherObjective)
-        {
-            return otherObjective is AIObjectiveChargeBatteries other && other.Option == Option;
-        }
-
         protected override bool Filter(PowerContainer battery)
         {
             if (battery == null) { return false; }
@@ -29,15 +24,8 @@ namespace Barotrauma
             if (item.Submarine.TeamID != character.TeamID) { return false; }
             if (item.ConditionPercentage <= 0) { return false; }
             if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { return false; }
-            if (Character.CharacterList.Any(c => c.CurrentHull == item.CurrentHull && !HumanAIController.IsFriendly(c))) { return false; }
-            if (Option == "charge")
-            {
-                if (battery.RechargeRatio >= PowerContainer.aiRechargeTargetRatio - 0.01f) { return false; }
-            }
-            else
-            {
-                if (battery.RechargeRatio <= 0) { return false; }
-            }
+            if (Character.CharacterList.Any(c => c.CurrentHull == item.CurrentHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c))) { return false; }
+            if (IsReady(battery)) { return false; }
             return true;
         }
 
@@ -67,8 +55,26 @@ namespace Barotrauma
             return batteryList;
         }
 
-        protected override AIObjective ObjectiveConstructor(PowerContainer battery) 
-            => new AIObjectiveOperateItem(battery, character, objectiveManager, Option, false, priorityModifier: PriorityModifier) { IsLoop = false };
+        private bool IsReady(PowerContainer battery)
+        {
+            if (battery.HasBeenTuned && character.CurrentOrder == null) { return true; }
+            if (Option == "charge")
+            {
+                return battery.RechargeRatio >= PowerContainer.aiRechargeTargetRatio;
+            }
+            else
+            {
+                return battery.RechargeRatio <= 0;
+            }
+        }
+
+        protected override AIObjective ObjectiveConstructor(PowerContainer battery) =>
+            new AIObjectiveOperateItem(battery, character, objectiveManager, Option, false, priorityModifier: PriorityModifier)
+            {
+                IsLoop = false,
+                Override = character.CurrentOrder != null,
+                completionCondition = () => IsReady(battery)
+            };
 
         protected override void OnObjectiveCompleted(AIObjective objective, PowerContainer target) 
             => HumanAIController.RemoveTargets<AIObjectiveChargeBatteries, PowerContainer>(character, target);
