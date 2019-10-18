@@ -216,7 +216,7 @@ namespace Barotrauma.Lights
 
             if (GameMain.Config.SpecularityEnabled)
             {
-                UpdateSpecularMap(graphics, spriteBatch, spriteBatchTransform, cam, backgroundObstructor);
+                //UpdateSpecularMap(graphics, spriteBatch, spriteBatchTransform, cam, backgroundObstructor);
             }
 
             graphics.SetRenderTarget(LightMap);
