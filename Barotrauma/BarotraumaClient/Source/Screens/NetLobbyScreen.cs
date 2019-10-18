@@ -917,7 +917,7 @@ namespace Barotrauma
             GUILayoutGroup gameModeBackground = new GUILayoutGroup(new RectTransform(Vector2.One, gameModeContainer.RectTransform), isHorizontal: true)
             {
                 Stretch = true,
-                RelativeSpacing = 0.015f
+                RelativeSpacing = 0.01f
             };
             
             GUILayoutGroup gameModeHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.333f, 1.0f), gameModeBackground.RectTransform))
