@@ -886,7 +886,7 @@ namespace Barotrauma
             rect.X = (int)(displayPos.X - rect.Width / 2.0f);
             rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
 
-            if (findNewHull) FindHull();
+            if (findNewHull) { FindHull(); }
         }
 
         public void SetActiveSprite()
@@ -1225,6 +1225,8 @@ namespace Barotrauma
 #endif
                 }
             }
+
+            if (Removed) { return; }
 
             if (body != null && body.Enabled)
             {
