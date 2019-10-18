@@ -1018,11 +1018,13 @@ namespace Barotrauma
                 IgnoreLayoutGroups = true
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.05f), settingsContent.RectTransform), TextManager.Get("Traitors"));
+            var traitorsSettingHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), settingsContent.RectTransform), isHorizontal: true) { Stretch = true };
 
-            var traitorProbContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), settingsContent.RectTransform), isHorizontal: true);
+            new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), traitorsSettingHolder.RectTransform), TextManager.Get("Traitors"));
+
+            var traitorProbContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), traitorsSettingHolder.RectTransform), isHorizontal: true) { Stretch = true };
             traitorProbabilityButtons = new GUIButton[2];
-            traitorProbabilityButtons[0] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), traitorProbContainer.RectTransform), "<")
+            traitorProbabilityButtons[0] = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), traitorProbContainer.RectTransform), "<")
             {
                 OnClicked = (button, obj) =>
                 {
@@ -1032,8 +1034,8 @@ namespace Barotrauma
                 }
             };
 
-            traitorProbabilityText = new GUITextBlock(new RectTransform(new Vector2(0.75f, 1.0f), traitorProbContainer.RectTransform), TextManager.Get("No"), textAlignment: Alignment.Center);
-            traitorProbabilityButtons[1] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), traitorProbContainer.RectTransform), ">")
+            traitorProbabilityText = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), traitorProbContainer.RectTransform), TextManager.Get("No"), textAlignment: Alignment.Center);
+            traitorProbabilityButtons[1] = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), traitorProbContainer.RectTransform), ">")
             {
                 OnClicked = (button, obj) =>
                 {
@@ -1047,10 +1049,12 @@ namespace Barotrauma
 
             //bot count ------------------------------------------------------------------
 
-            new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.05f), settingsContent.RectTransform), TextManager.Get("BotCount"));
-            var botCountContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), settingsContent.RectTransform), isHorizontal: true);
+            var botCountSettingHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), settingsContent.RectTransform), isHorizontal: true) { Stretch = true };
+
+            new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), botCountSettingHolder.RectTransform), TextManager.Get("BotCount"));
+            var botCountContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), botCountSettingHolder.RectTransform), isHorizontal: true) { Stretch = true };
             botCountButtons = new GUIButton[2];
-            botCountButtons[0] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), botCountContainer.RectTransform), "<")
+            botCountButtons[0] = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), botCountContainer.RectTransform), "<")
             {
                 OnClicked = (button, obj) =>
                 {
@@ -1059,8 +1063,8 @@ namespace Barotrauma
                 }
             };
 
-            botCountText = new GUITextBlock(new RectTransform(new Vector2(0.75f, 1.0f), botCountContainer.RectTransform), "0", textAlignment: Alignment.Center);
-            botCountButtons[1] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), botCountContainer.RectTransform), ">")
+            botCountText = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), botCountContainer.RectTransform), "0", textAlignment: Alignment.Center);
+            botCountButtons[1] = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), botCountContainer.RectTransform), ">")
             {
                 OnClicked = (button, obj) =>
                 {
@@ -1071,10 +1075,12 @@ namespace Barotrauma
 
             clientDisabledElements.AddRange(botCountButtons);
 
-            new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.05f), settingsContent.RectTransform), TextManager.Get("BotSpawnMode"));
-            var botSpawnModeContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), settingsContent.RectTransform), isHorizontal: true);
+            var botSpawnModeSettingHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), settingsContent.RectTransform), isHorizontal: true) { Stretch = true };
+
+            new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), botSpawnModeSettingHolder.RectTransform), TextManager.Get("BotSpawnMode"));
+            var botSpawnModeContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), botSpawnModeSettingHolder.RectTransform), isHorizontal: true) { Stretch = true };
             botSpawnModeButtons = new GUIButton[2];
-            botSpawnModeButtons[0] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), botSpawnModeContainer.RectTransform), "<")
+            botSpawnModeButtons[0] = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), botSpawnModeContainer.RectTransform), "<")
             {
                 OnClicked = (button, obj) =>
                 {
@@ -1083,8 +1089,8 @@ namespace Barotrauma
                 }
             };
 
-            botSpawnModeText = new GUITextBlock(new RectTransform(new Vector2(0.75f, 1.0f), botSpawnModeContainer.RectTransform), "", textAlignment: Alignment.Center);
-            botSpawnModeButtons[1] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), botSpawnModeContainer.RectTransform), ">")
+            botSpawnModeText = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), botSpawnModeContainer.RectTransform), "", textAlignment: Alignment.Center);
+            botSpawnModeButtons[1] = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), botSpawnModeContainer.RectTransform), ">")
             {
                 OnClicked = (button, obj) =>
                 {
