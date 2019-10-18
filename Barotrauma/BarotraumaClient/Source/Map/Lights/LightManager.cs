@@ -391,10 +391,10 @@ namespace Barotrauma.Lights
 
             if (GameMain.Config.SpecularityEnabled)
             {
-                spriteBatch.Begin(blendState: CustomBlendStates.Multiplicative);
+                /*spriteBatch.Begin(blendState: CustomBlendStates.Multiplicative);
                 spriteBatch.Draw(SpecularMap, Vector2.Zero, Color.White);
                 //spriteBatch.Draw(SpecularMap, Vector2.Zero, Color.White);
-                spriteBatch.End();
+                spriteBatch.End();*/
             }
 
             //draw the actual light volumes, additive particles, hull ambient lights and the halo around the player
