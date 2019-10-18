@@ -3606,13 +3606,13 @@
   <signaltrouble_objectivesuccessmessage3>Let's see how long it takes before anyone finds the issue.</signaltrouble_objectivesuccessmessage3>
 
   <!--acidparty traitor mission-->
-  <acidparty_traitormissionstartinfotext>Hey man. You know there's this thing in the center of the moon, right? What if there was, like, a way to see what it is without physically going in there?</acidparty_traitormissionstartinfotext>
-  <acidparty_traitorobjectivestartmessage1>It sounds crazy dude, but just hear me out. Grab that delimi- delirun- der- the thing that says 'DEL', right? \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage1>
-  <acidparty_objectivesuccessmessage1>Yeeah man, that's it. Basically that thing, like, lets you see things without them being there, you know?</acidparty_objectivesuccessmessage1>
-  <acidparty_traitorobjectivestartmessage2>Now here's the snag, right? Sometimes subs carry these- these "vision blockers", right? Basically what they do is, is they ground you and then you only see, like, a real narrow representation of reality, ok? So what you wanna do is you wanna get rid of those. They call them shits halleberrydil or some shit like that. \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage2>
-  <acidparty_objectivesuccessmessage2>That's dope. That shit's like poison for us visionaries, alright?</acidparty_objectivesuccessmessage2>
-  <acidparty_traitorobjectivestartmessage3>Ohh man, we're getting there. First thing we gotta do is share. The thing here is that some people, right? Some people are kinda brainwashed into being afraid of anything that challenges their world view, you know? So you know, you gotta find a way to sneak that good shit into their system, right? \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage3>
-  <acidparty_objectivesuccessmessage3>Oh yeah, that's the stuff. Feel the barrier getting thinner? Just lay down and listen to the waves, man.</acidparty_objectivesuccessmessage3>
+  <acidparty_traitormissionstartinfotext>You find a manically scribbled note in your pocket. "Hey man. You know there's this thing in the center of the moon, right? What if there was, like, a way to see what it is without physically going in there?"</acidparty_traitormissionstartinfotext>
+  <acidparty_traitorobjectivestartmessage1>"Step 1. Find some delimi- delirun- der- the thing that says 'DEL', right?" \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage1>
+  <acidparty_objectivesuccessmessage1>This must be it. Never had this before.</acidparty_objectivesuccessmessage1>
+  <acidparty_traitorobjectivestartmessage2>"Step 2. Sometimes subs carry these- these "vision blockers", right? Basically what they do is, is they ground you and then you only see, like, a real narrow representation of reality, ok? So what you wanna do is you wanna get rid of those. They call them shits halleberrydil or some shit like that." \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage2>
+  <acidparty_objectivesuccessmessage2>Looks like that's all of it.</acidparty_objectivesuccessmessage2>
+  <acidparty_traitorobjectivestartmessage3>"Step 3. "First rule is we gotta share. The thing here is that some people, right? Some people are kinda brainwashed into being afraid of anything that challenges their world view, you know? So you know, you gotta find a way to sneak that good shit into their system, right?" \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage3>
+  <acidparty_objectivesuccessmessage3>"Step 4. Lay down and listen to the waves, man."</acidparty_objectivesuccessmessage3>
 
   <!-- Placeholder text for goals -->
   <traitorgoalkilltargetinfowithcause>Assassinate [targetname] by [causeofdeath].</traitorgoalkilltargetinfowithcause>
@@ -3636,4 +3636,17 @@
   <tainted_welding_traitorobjectivestartmessage5>Make your escape! A shuttle will be dispatched shortly to pick you up!\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage5>
   <tainted_welding_objectivesuccessmessage5>The warning alarm on your diving suit sounds... the shuttle should have rendezvous with you some time ago, but the only movement in the gloom are schools of alien  organisms. You broadcast another transmission: "This is Europan Resistance direct action, come in! Requesting extraction!". The transmitter remains silent, you've been left to your fate. Europa embraces you. </tainted_welding_objectivesuccessmessage5>
 
+    <!-- One of Us traitor mission text package -->
+  <one_of_us_traitormissionstartinfotext>A voice within your head screams loudly enough to startle you: THE CULT OF THE HUSK CALLS YOU TO SERVICE!</one_of_us_traitormissionstartinfotext>
+  <one_of_us_traitorobjectivestartmessage1>An idea gradually forms in your mind, strangely seductive to you in spite of its mundane nature:\n[traitorgoalinfos]</one_of_us_traitorobjectivestartmessage1>
+  <one_of_us_goalinfotext_1>Search the storage lockers—a special message just for you is hidden under one of the spare oxygen tanks.</one_of_us_goalinfotext_1>
+  <one_of_us_objectivesuccessmessage1>As you somehow predicted, a slip of filthy paper is stuck to the underside of this oxygen tank. It's covered in primitive scribbles, but you intuitively understand it to be coded instructions.</one_of_us_objectivesuccessmessage1>
+  <one_of_us_traitorobjectivestartmessage2>Your first task:\n[traitorgoalinfos]</one_of_us_traitorobjectivestartmessage2>
+  <one_of_us_goalinfotext_2>Sacred vessels of the husk's young have been hidden behind a loose vent. Find these eggs quickly before another stumbles upon them!</one_of_us_goalinfotext_2> 
+  <one_of_us_objectivesuccessmessage2>A rush of pleasure hits you like a wave as you find the eggs. A dry, mad laugh echoes within your head for a moment, fading into indistinct wet clicks.</one_of_us_objectivesuccessmessage2>
+  <one_of_us_traitorobjectivestartmessage3>You read the next coded instruction:\n[traitorgoalinfos]</one_of_us_traitorobjectivestartmessage3>
+  <one_of_us_objectivesuccessmessage3>Your head spins and your vision narrows as the last of the calyxanide is destroyed.</one_of_us_objectivesuccessmessage3>
+  <one_of_us_traitorobjectivestartmessage4>Your read the final task:\n[traitorgoalinfos]</one_of_us_traitorobjectivestartmessage4>
+  <one_of_us_goalinfotext_4>All on this sub must partake of communion with the husk!</one_of_us_goalinfotext_4>
+  <one_of_us_objectivesuccessmessage4>With that, there is nothing more to do. The sub is in disarray, the voice in your head grows silent, and your fate is sealed.</one_of_us_objectivesuccessmessage4>
 </infotexts>
