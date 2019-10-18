@@ -197,16 +197,15 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  
   <Item name="Incendium Fuel Tank" identifier="incendiumfueltank" category="Equipment" Tags="smallitem,weldingfuel" cargocontaineridentifier="metalcrate" scale="0.3" impactsoundtag="impact_metal_light">
     <Deconstruct time="10">
       <Item identifier="aluminium" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="10">
-      <RequiredItem identifier="aluminium"/>
-      <RequiredItem identifier="incendium"/>
+      <RequiredItem identifier="aluminium" />
+      <RequiredItem identifier="incendium" />
     </Fabricate>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,896,64,64" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,901,62,60" origin="0.5,0.5" />
     <Sprite texture="tools_new.png" sourcerect="433,223,39,110" depth="0.55" origin="0.5,0.5" />
     <Body width="39" height="110" density="5" />
     <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5" msg="ItemMsgPickUpSelect">

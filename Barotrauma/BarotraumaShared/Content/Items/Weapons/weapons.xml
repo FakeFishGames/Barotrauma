@@ -10,6 +10,7 @@
     <Fabricate suitablefabricators="fabricator" requiredtime="10">
       <RequiredItem identifier="steel" />
     </Fabricate>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,968,55,55" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="4,133,241,16" depth="0.55" origin="0.5,0.5" />
     <Body width="241" height="16" density="20" />
     <Pickable slots="Any" msg="ItemMsgPickUpSelect" />
@@ -28,6 +29,7 @@
       <RequiredSkill identifier="weapons" level="30" />
       <RequiredItem identifier="physicorium" />
     </Fabricate>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="449,968,55,55" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="4,173,244,18" depth="0.55" origin="0.5,0.5" />
     <Body width="241" height="16" density="20" />
     <Pickable slots="Any" msg="ItemMsgPickUpSelect" />
@@ -49,6 +51,7 @@
       <RequiredItem identifier="spear" />
       <RequiredItem identifier="c4block" />
     </Fabricate>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="385,968,55,55" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="4,153,241,17" depth="0.55" origin="0.5,0.5" />
     <Body width="241" height="16" density="20" />
     <Pickable slots="Any" msg="ItemMsgPickUpSelect" />
@@ -159,7 +162,7 @@
       <Item identifier="plastic" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,64,64,64" origin="0.5,0.5" />
-    <Sprite texture="weapons_new.png" sourcerect="0,1,117,64" depth="0.55" origin="0.5,0.5" />
+    <Sprite texture="weapons_new.png" sourcerect="1,1,117,62" depth="0.55" origin="0.5,0.5" />
     <Body width="110" height="60" density="50" />
     <Holdable slots="Any,RightHand,LeftHand" controlpose="true" aimpos="90,10" handle1="-11,-7" msg="ItemMsgPickUpSelect" />
     <RangedWeapon barrelpos="14,6" spread="0" unskilledspread="2" combatPriority="60">
@@ -399,7 +402,7 @@
       <RequiredItem identifier="iron" />
       <RequiredItem identifier="uex" />
     </Fabricate>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="580,770,64,64" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="580,770,54,63" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="413,0,40,61" depth="0.55" origin="0.5,0.5" />
     <Body width="40" height="60" density="30" />
     <!-- Empty itemcomponent that explodes the grenade when used by something else than a character (e.g. a detonator) -->

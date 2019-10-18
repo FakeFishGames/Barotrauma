@@ -39,7 +39,7 @@
       <RequiredItem identifier="liquidoxygenite" />
       <RequiredItem identifier="liquidoxygenite" />
     </Fabricate>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,896,65,66" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="319,901,61,61" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Tools/tools_new.png" sourcerect="473,223,39,112" depth="0.55" />
     <Body width="39" height="112" density="9.9" />
     <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5" msg="ItemMsgPickUpSelect">
@@ -116,7 +116,7 @@
       <RequiredItem identifier="rubber" />
       <RequiredItem identifier="rubber" />
     </Fabricate>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,320,64,64" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="449,320,63,64" origin="0.5,0.5" />
     <!--
     <Sprite name="Diving Suit" texture="DivingSuit_Item.png" sourcerect="157,0,90,307" depth="0.55" origin="0.4888889,0.5439739" />
     -->

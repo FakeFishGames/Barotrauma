@@ -29,8 +29,8 @@
     </Holdable>
   </Item>
   <Item name="Accordion" identifier="accordion" category="Misc" Tags="smallitem" scale="0.5" description="An old hand-made accordion." price="300" impactsoundtag="impact_metal_light" isshootable="true">
-    <Upgrade gameversion="0.9.2.0" scale="0.5"/>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="575,957,64,64" origin="0.5,0.5" />
+    <Upgrade gameversion="0.9.2.0" scale="0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,956,64,64" origin="0.5,0.5" />
     <Sprite texture="Misc.png" sourcerect="164,5,92,110" depth="0.55" origin="0.5,0.5" />
     <Body width="58" height="20" />
     <Holdable slots="RightHand+LeftHand,Any" aimable="false" aimpos="50,-20" handle1="-20,0" handle2="-10,0" swingamount="50,0" swingspeed="0.5" swingwhenusing="true" msg="ItemMsgPickUpSelect">
