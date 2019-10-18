@@ -104,6 +104,7 @@ namespace Barotrauma
             {
                 if (c.Character?.Info != null && !c.Character.IsDead)
                 {
+                    c.CharacterInfo = c.Character.Info;
                     characterData.Add(new CharacterCampaignData(c));
                 }
             }

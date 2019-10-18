@@ -84,7 +84,7 @@
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="60.0">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
-        <Conditional HuskInfectionState="lt 100.0" />
+        <Conditional huskinfection="lt 100.0" />
         <ReduceAffliction identifier="huskinfection" amount="0.5"/>
         <Affliction identifier="huskinfectionresistance" amount="1.0"/>
       </StatusEffect>
@@ -93,7 +93,7 @@
       </StatusEffect>
       <StatusEffect tags="medical" type="OnFailure" target="Character" duration="60.0">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
-        <Conditional HuskInfectionState="lt 100.0" />
+        <Conditional huskinfection="lt 100.0" />
         <ReduceAffliction identifier="huskinfection" amount="0.25"/>
         <Affliction identifier="huskinfectionresistance" amount="0.5"/>
       </StatusEffect>
@@ -629,13 +629,17 @@
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
       </StatusEffect>
-      <StatusEffect tags="medical" type="OnFailure" target="Character" duration="25">
+      <StatusEffect tags="medical" type="OnUse" target="Character" duration="10">
         <Conditional HuskInfectionState="lt 100.0" />
-        <ReduceAffliction identifier="huskinfection" amount="0.8" />
+        <ReduceAffliction identifier="huskinfection" amount="4" />
+      </StatusEffect>
+      <StatusEffect tags="medical" type="OnFailure" target="Character" duration="20">
+        <Conditional HuskInfectionState="lt 100.0" />
+        <ReduceAffliction identifier="huskinfection" amount="1" />
       </StatusEffect>
       <StatusEffect tags="medical,calyxanide" type="OnUse" target="Character" duration="10.0">
         <!-- Injecting a still-conscious Husk will only piss it off and kill the "conscious" faster -->
-        <Conditional HuskInfectionState="eq 100.0" />
+        <Conditional huskinfection="eq 100.0" />
         <Affliction identifier="internaldamage" amount="3" />
       </StatusEffect>
       <StatusEffect tags="medical,calyxanide" type="OnUse" target="Character" duration="10.0">
@@ -652,12 +656,12 @@
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
       </StatusEffect>
       <StatusEffect tags="medical,calyxanide" type="OnImpact" target="Character">
-        <Conditional HuskInfectionState="lt 100.0" />
+        <Conditional huskinfection="lt 100.0" />
         <ReduceAffliction identifier="huskinfection" amount="40" />
       </StatusEffect>
       <StatusEffect tags="medical,calyxanide" type="OnImpact" target="Character" duration="10.0">
         <!-- Injecting a still-conscious Husk will only piss it off and kill the "conscious" faster -->
-        <Conditional HuskInfectionState="eq 100.0" />
+        <Conditional huskinfection="eq 100.0" />
         <Affliction identifier="internaldamage" amount="3" />
       </StatusEffect>
       <StatusEffect tags="medical,calyxanide" type="OnImpact" target="Character" duration="10.0">

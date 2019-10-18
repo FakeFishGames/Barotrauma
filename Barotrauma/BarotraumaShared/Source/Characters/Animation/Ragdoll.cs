@@ -1031,6 +1031,21 @@ namespace Barotrauma
         /// </summary>
         private float bodyInRestTimer;
 
+        private float BodyInRestDelay = 1.0f;
+
+        public bool BodyInRest
+        {
+            get { return bodyInRestTimer > BodyInRestDelay; }
+            set
+            {
+                foreach (Limb limb in Limbs)
+                {
+                    limb.body.PhysEnabled = !value;
+                }
+                bodyInRestTimer = value ? BodyInRestDelay : 0.0f;
+            }
+        }
+
         public bool forceStanding;
 
         public void Update(float deltaTime, Camera cam)
@@ -1314,7 +1329,7 @@ namespace Barotrauma
             else if (Limbs.All(l => l != null && !l.body.Enabled || l.LinearVelocity.LengthSquared() < 0.001f))
             {
                 bodyInRestTimer += deltaTime;
-                if (bodyInRestTimer > 1.0f)
+                if (bodyInRestTimer > BodyInRestDelay)
                 {
                     foreach (Limb limb in Limbs)
                     {
@@ -1438,7 +1453,7 @@ namespace Barotrauma
 
             Vector2 rayEnd = rayStart - new Vector2(0.0f, height);
 
-            //var lowestLimb = FindLowestLimb();
+            Vector2 colliderBottomDisplay = ConvertUnits.ToDisplayUnits(GetColliderBottom());
 
             float closestFraction = 1;
             GameMain.World.RayCast((fixture, point, normal, fraction) =>
@@ -1451,6 +1466,7 @@ namespace Barotrauma
                         break;
                     case Physics.CollisionPlatform:
                         Structure platform = fixture.Body.UserData as Structure;
+                        if (colliderBottomDisplay.Y < platform.Rect.Y - 16 && (targetMovement.Y <= 0.0f || Stairs != null)) return -1;
                         if (IgnorePlatforms && TargetMovement.Y < -0.5f || Collider.Position.Y < platform.Rect.Y) return -1;
                         break;
                     case Physics.CollisionWall:

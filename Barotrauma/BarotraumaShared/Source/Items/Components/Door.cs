@@ -20,9 +20,9 @@ namespace Barotrauma.Items.Components
         private bool isOpen;
 
         private float openState;
-        private Sprite doorSprite, weldedSprite, brokenSprite;
-        private bool scaleBrokenSprite, fadeBrokenSprite;
-        private bool autoOrientGap;
+        private readonly Sprite doorSprite, weldedSprite, brokenSprite;
+        private readonly bool scaleBrokenSprite, fadeBrokenSprite;
+        private readonly bool autoOrientGap;
 
         private bool isStuck;
         public bool IsStuck => isStuck;
@@ -221,8 +221,8 @@ namespace Barotrauma.Items.Components
 #endif
         }
 
-        private string accessDeniedTxt = TextManager.Get("AccessDenied");
-        private string cannotOpenText = TextManager.Get("DoorMsgCannotOpen");
+        private readonly string accessDeniedTxt = TextManager.Get("AccessDenied");
+        private readonly string cannotOpenText = TextManager.Get("DoorMsgCannotOpen");
         private bool hasValidIdCard;
         public override bool HasRequiredItems(Character character, bool addMessage, string msg = null)
         {
@@ -279,7 +279,7 @@ namespace Barotrauma.Items.Components
 #endif
                 }
             }
-            return item.Condition <= RepairThreshold;
+            return false;
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -340,6 +340,13 @@ namespace Barotrauma.Items.Components
             if (!Impassable)
             {
                 Body.FarseerBody.IsSensor = false;
+                var ce = Body.FarseerBody.ContactList;
+                while (ce != null && ce.Contact != null)
+                {
+                    ce.Contact.Enabled = false;
+                    ce = ce.Next;
+                }
+                PushCharactersAway();
             }
 #if CLIENT
             UpdateConvexHulls();
@@ -354,6 +361,12 @@ namespace Barotrauma.Items.Components
             if (!Impassable)
             {
                 Body.FarseerBody.IsSensor = true;
+                var ce = Body.FarseerBody.ContactList;
+                while (ce != null && ce.Contact != null)
+                {
+                    ce.Contact.Enabled = false;
+                    ce = ce.Next;
+                }
             }
             linkedGap.Open = 1.0f;
             IsOpen = false;
@@ -413,15 +426,14 @@ namespace Barotrauma.Items.Components
             //otherwise the gap will be removed twice and cause console warnings
             if (!Submarine.Unloading)
             {
-                if (linkedGap != null) linkedGap.Remove();
+                linkedGap?.Remove();
             }
-
-            doorSprite.Remove();
-            if (weldedSprite != null) weldedSprite.Remove();
+            doorSprite?.Remove();
+            weldedSprite?.Remove();
 
 #if CLIENT
-            if (convexHull != null) convexHull.Remove();
-            if (convexHull2 != null) convexHull2.Remove();
+            convexHull?.Remove();
+            convexHull2?.Remove();
 #endif
         }
 
@@ -474,7 +486,6 @@ namespace Barotrauma.Items.Components
 
         private bool PushBodyOutOfDoorway(Character c, PhysicsBody body, int dir, Vector2 doorRectSimPos, Vector2 doorRectSimSize)
         {
-            float diff = 0.0f;
             if (!MathUtils.IsValid(body.SimPosition))
             {
                 DebugConsole.ThrowError("Failed to push a limb out of a doorway - position of the body (character \"" + c.Name + "\") is not valid (" + body.SimPosition + ")");
@@ -484,7 +495,8 @@ namespace Barotrauma.Items.Components
                     " Remoteplayer: " + c.IsRemotePlayer);
                 return false;
             }
-            
+
+            float diff;
             if (IsHorizontal)
             {
                 if (body.SimPosition.X < doorRectSimPos.X || body.SimPosition.X > doorRectSimPos.X + doorRectSimSize.X) { return false; }

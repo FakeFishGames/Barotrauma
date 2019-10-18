@@ -2269,7 +2269,7 @@ namespace Barotrauma.Networking
                 if (client.Connection is LidgrenConnection lidgrenConn)
                 {
                     ip = lidgrenConn.IPEndPoint.Address.IsIPv4MappedToIPv6 ?
-                    lidgrenConn.IPEndPoint.Address.MapToIPv4().ToString() :
+                    lidgrenConn.IPEndPoint.Address.MapToIPv4NoThrow().ToString() :
                     lidgrenConn.IPEndPoint.Address.ToString();
                     if (range) { ip = serverSettings.BanList.ToRange(ip); }
                 }

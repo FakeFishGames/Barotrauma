@@ -34,9 +34,10 @@
     <Body width="62" height="115" density="20" />
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
-      <StatusEffect type="OnUse" target="Character" HuskInfectionState="0.01">
+      <StatusEffect type="OnUse" target="Character">
         <!-- HuskInfectionState must be less than 0.01 so you can't speed up the infection -->
-        <Conditional HuskInfectionState="lt 0.01" />
+        <Conditional huskinfection="lt 0.01" />
+        <Affliction identifier="huskinfection" amount="0.01" />
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">

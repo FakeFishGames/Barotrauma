@@ -1082,9 +1082,7 @@ namespace Barotrauma
             Limb rightFoot = GetLimb(LimbType.RightFoot);
             Limb head = GetLimb(LimbType.Head);
             Limb torso = GetLimb(LimbType.Torso);
-
-            Limb waist = GetLimb(LimbType.Waist);
-
+            
             Limb leftHand = GetLimb(LimbType.LeftHand);
             Limb rightHand = GetLimb(LimbType.RightHand);
 
@@ -1107,10 +1105,6 @@ namespace Barotrauma
 
             MoveLimb(head, new Vector2(ladderSimPos.X - 0.27f * Dir, bottomPos + WalkParams.HeadPosition), 10.5f);
             MoveLimb(torso, new Vector2(ladderSimPos.X - 0.27f * Dir, bottomPos + WalkParams.TorsoPosition), 10.5f);
-            if (waist != null)
-            {
-                //MoveLimb(waist, new Vector2(ladderSimPos.X - 0.35f * Dir, Collider.SimPosition.Y + 0.6f - ColliderHeightFromFloor), 10.5f);
-            }
 
             Collider.MoveToPos(new Vector2(ladderSimPos.X - 0.2f * Dir, Collider.SimPosition.Y), 10.5f);            
             
@@ -1140,42 +1134,47 @@ namespace Barotrauma
             Vector2 footPos = new Vector2(
                 handPos.X - Dir * 0.05f,
                 bottomPos + ColliderHeightFromFloor - stepHeight * 2.7f - ladderSimPos.Y);
-            
-            if (slide)
-            {
-                MoveLimb(leftFoot, new Vector2(footPos.X, footPos.Y + ladderSimPos.Y), 15.5f, true);
-                MoveLimb(rightFoot, new Vector2(footPos.X, footPos.Y + ladderSimPos.Y), 15.5f, true);
-            }
-            else
-            {
-                float leftFootPos = MathUtils.Round(footPos.Y + stepHeight, stepHeight * 2.0f) - stepHeight;
-                float prevLeftFootPos = MathUtils.Round(prevFootPos + stepHeight, stepHeight * 2.0f) - stepHeight;
-                MoveLimb(leftFoot, new Vector2(footPos.X, leftFootPos + ladderSimPos.Y), 15.5f, true);
 
-                float rightFootPos = MathUtils.Round(footPos.Y, stepHeight * 2.0f);
-                float prevRightFootPos = MathUtils.Round(prevFootPos, stepHeight * 2.0f);
-                MoveLimb(rightFoot, new Vector2(footPos.X, rightFootPos + ladderSimPos.Y), 15.5f, true);
+            //only move the feet if they're above the bottom of the ladders
+            //(if not, they'll just dangle in air, and the character holds itself up with it's arms)
+            if (footPos.Y > -ConvertUnits.ToSimUnits(character.SelectedConstruction.Rect.Height))
+            {
+                if (slide)
+                {
+                    MoveLimb(leftFoot, new Vector2(footPos.X, footPos.Y + ladderSimPos.Y), 15.5f, true);
+                    MoveLimb(rightFoot, new Vector2(footPos.X, footPos.Y + ladderSimPos.Y), 15.5f, true);
+                }
+                else
+                {
+                    float leftFootPos = MathUtils.Round(footPos.Y + stepHeight, stepHeight * 2.0f) - stepHeight;
+                    float prevLeftFootPos = MathUtils.Round(prevFootPos + stepHeight, stepHeight * 2.0f) - stepHeight;
+                    MoveLimb(leftFoot, new Vector2(footPos.X, leftFootPos + ladderSimPos.Y), 15.5f, true);
+
+                    float rightFootPos = MathUtils.Round(footPos.Y, stepHeight * 2.0f);
+                    float prevRightFootPos = MathUtils.Round(prevFootPos, stepHeight * 2.0f);
+                    MoveLimb(rightFoot, new Vector2(footPos.X, rightFootPos + ladderSimPos.Y), 15.5f, true);
 #if CLIENT
-                if (Math.Abs(leftFootPos - prevLeftFootPos) > stepHeight && leftFoot.LastImpactSoundTime < Timing.TotalTime - Limb.SoundInterval)
-                {
-                    SoundPlayer.PlaySound("footstep_armor_heavy", leftFoot.WorldPosition, hullGuess: currentHull);
-                    leftFoot.LastImpactSoundTime = (float)Timing.TotalTime;
-                }
-                if (Math.Abs(rightFootPos - prevRightFootPos) > stepHeight && rightFoot.LastImpactSoundTime < Timing.TotalTime - Limb.SoundInterval)
-                {
-                    SoundPlayer.PlaySound("footstep_armor_heavy", rightFoot.WorldPosition, hullGuess: currentHull);
-                    rightFoot.LastImpactSoundTime = (float)Timing.TotalTime;
-                }
+                    if (Math.Abs(leftFootPos - prevLeftFootPos) > stepHeight && leftFoot.LastImpactSoundTime < Timing.TotalTime - Limb.SoundInterval)
+                    {
+                        SoundPlayer.PlaySound("footstep_armor_heavy", leftFoot.WorldPosition, hullGuess: currentHull);
+                        leftFoot.LastImpactSoundTime = (float)Timing.TotalTime;
+                    }
+                    if (Math.Abs(rightFootPos - prevRightFootPos) > stepHeight && rightFoot.LastImpactSoundTime < Timing.TotalTime - Limb.SoundInterval)
+                    {
+                        SoundPlayer.PlaySound("footstep_armor_heavy", rightFoot.WorldPosition, hullGuess: currentHull);
+                        rightFoot.LastImpactSoundTime = (float)Timing.TotalTime;
+                    }
 #endif
-                prevFootPos = footPos.Y;
-            }            
+                    prevFootPos = footPos.Y;
+                }
 
-            //apply torque to the legs to make the knees bend
-            Limb leftLeg = GetLimb(LimbType.LeftLeg);
-            Limb rightLeg = GetLimb(LimbType.RightLeg);
+                //apply torque to the legs to make the knees bend
+                Limb leftLeg = GetLimb(LimbType.LeftLeg);
+                Limb rightLeg = GetLimb(LimbType.RightLeg);
 
-            leftLeg.body.ApplyTorque(Dir * -8.0f);
-            rightLeg.body.ApplyTorque(Dir * -8.0f);
+                leftLeg.body.ApplyTorque(Dir * -8.0f);
+                rightLeg.body.ApplyTorque(Dir * -8.0f);
+            }
 
             float movementFactor = (handPos.Y / stepHeight) * (float)Math.PI;
             movementFactor = 0.8f + (float)Math.Abs(Math.Sin(movementFactor));

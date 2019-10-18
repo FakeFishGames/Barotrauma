@@ -459,8 +459,8 @@ namespace Barotrauma
 
         public virtual bool HasRequiredConditions(List<ISerializableEntity> targets)
         {
-            if (!propertyConditionals.Any()) return true;
-            if (requiredItems.All(ri => ri.MatchOnEmpty) && targets.Count == 0) return true;
+            if (!propertyConditionals.Any()) { return true; }
+            if (requiredItems.Any() && requiredItems.All(ri => ri.MatchOnEmpty) && targets.Count == 0) { return true; }
             switch (conditionalComparison)
             {
                 case PropertyConditional.Comparison.Or:
