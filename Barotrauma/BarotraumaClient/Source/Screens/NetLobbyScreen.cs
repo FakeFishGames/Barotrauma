@@ -1719,6 +1719,11 @@ namespace Barotrauma
                     }
                     return false;
                 }
+                if (component.UserData is Submarine sub)
+                {
+                    subPreviewContainer.ClearChildren();
+                    sub.CreatePreviewWindow(subPreviewContainer);
+                }
                 voteType = VoteType.Sub;
             }
             else if (component.Parent == GameMain.NetLobbyScreen.ModeList.Content)

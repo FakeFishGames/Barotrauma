@@ -274,18 +274,6 @@ namespace Barotrauma
             return MainSub.SaveAs(filePath, previewImage);
         }
 
-        public void CreatePreviewWindow(GUIMessageBox messageBox)
-        {
-            var background = new GUIButton(new RectTransform(Vector2.One, messageBox.RectTransform), style: "GUIBackgroundBlocker")
-            {
-                OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) messageBox.Close(); return true; }
-            };
-            background.RectTransform.SetAsFirstChild();
-
-            var holder = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.85f), messageBox.Content.RectTransform), style: null);
-            CreatePreviewWindow(holder);
-        }
-
         public void CreatePreviewWindow(GUIComponent parent)
         {
             var upperPart = new GUILayoutGroup(new RectTransform(new Vector2(1, 0.5f), parent.RectTransform, Anchor.Center, Pivot.BottomCenter));
@@ -297,7 +285,7 @@ namespace Barotrauma
 
             if (PreviewImage == null)
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 1), upperPart.RectTransform), TextManager.Get("SubPreviewImageNotFound"));
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 1), upperPart.RectTransform), TextManager.Get(SavedSubmarines.Contains(this) ? "SubPreviewImageNotFound" : "SubNotDownloaded"));
             }
             else
             {
