@@ -992,30 +992,7 @@ namespace Barotrauma
             //key = item identifier
             //float = suitability
             Dictionary<string, float> treatmentSuitability = new Dictionary<string, float>();
-            float minSuitability = -10, maxSuitability = 10;
-            foreach (Affliction affliction in afflictions)
-            {
-                foreach (KeyValuePair<string, float> treatment in affliction.Prefab.TreatmentSuitability)
-                {
-                    if (!treatmentSuitability.ContainsKey(treatment.Key))
-                    {
-                        treatmentSuitability[treatment.Key] = treatment.Value * affliction.Strength;
-                    }
-                    else
-                    {
-                        treatmentSuitability[treatment.Key] += treatment.Value * affliction.Strength;
-                    }
-                    minSuitability = Math.Min(treatmentSuitability[treatment.Key], minSuitability);
-                    maxSuitability = Math.Max(treatmentSuitability[treatment.Key], maxSuitability);
-                }
-            }
-            //normalize the suitabilities to a range of 0 to 1
-            foreach (string treatment in treatmentSuitability.Keys.ToList())
-            {
-                treatmentSuitability[treatment] = (treatmentSuitability[treatment] - minSuitability) / (maxSuitability - minSuitability);
-                //lerp towards a random value if the medical skill is low
-                treatmentSuitability[treatment] = MathHelper.Lerp(treatmentSuitability[treatment], Rand.Range(0.0f, 1.0f), randomVariance);
-            }
+            GetSuitableTreatments(treatmentSuitability, normalize: true, randomization: randomVariance);
 
             foreach (Affliction affliction in afflictions)
             {
