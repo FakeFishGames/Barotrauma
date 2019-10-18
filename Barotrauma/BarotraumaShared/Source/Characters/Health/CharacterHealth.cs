@@ -781,6 +781,54 @@ namespace Barotrauma
             return allAfflictions;
         }
 
+        /// <summary>
+        /// Get the identifiers of the items that can be used to treat the character. Takes into account all the afflictions the character has,
+        /// and negative treatment suitabilities (e.g. a medicine that causes oxygen loss may not be suitable if the character is already suffocating)
+        /// </summary>
+        /// <param name="treatmentSuitability">A dictionary where the key is the identifier of the item and the value the suitability</param>
+        /// <param name="normalize">If true, the suitability values are normalized between 0 and 1. If not, they're arbitrary values defined in the medical item XML, where negative values are unsuitable, and positive ones suitable.</param>
+        /// <param name="randomization">Amount of randomization to apply to the values (0 = the values are accurate, 1 = the values are completely random)</param>
+        
+        public void GetSuitableTreatments(Dictionary<string, float> treatmentSuitability, bool normalize, float randomization = 0.0f)
+        {
+            //key = item identifier
+            //float = suitability
+            treatmentSuitability.Clear();
+            float minSuitability = -10, maxSuitability = 10;
+            foreach (Affliction affliction in GetAllAfflictions())
+            {
+                foreach (KeyValuePair<string, float> treatment in affliction.Prefab.TreatmentSuitability)
+                {
+                    if (!treatmentSuitability.ContainsKey(treatment.Key))
+                    {
+                        treatmentSuitability[treatment.Key] = treatment.Value * affliction.Strength;
+                    }
+                    else
+                    {
+                        treatmentSuitability[treatment.Key] += treatment.Value * affliction.Strength;
+                    }
+                    minSuitability = Math.Min(treatmentSuitability[treatment.Key], minSuitability);
+                    maxSuitability = Math.Max(treatmentSuitability[treatment.Key], maxSuitability);
+                }
+            }
+            //normalize the suitabilities to a range of 0 to 1
+            if (normalize)
+            {
+                foreach (string treatment in treatmentSuitability.Keys.ToList())
+                {
+                    treatmentSuitability[treatment] = (treatmentSuitability[treatment] - minSuitability) / (maxSuitability - minSuitability);
+                    treatmentSuitability[treatment] = MathHelper.Lerp(treatmentSuitability[treatment], Rand.Range(0.0f, 1.0f), randomization);
+                }
+            }
+            else
+            {
+                foreach (string treatment in treatmentSuitability.Keys.ToList())
+                {
+                    treatmentSuitability[treatment] += Rand.Range(-100.0f, 100.0f) * randomization;
+                }
+            }
+        }
+
         public void ServerWrite(IWriteMessage msg)
         {
             List<Affliction> activeAfflictions = afflictions.FindAll(a => a.Strength > 0.0f && a.Strength >= a.Prefab.ActivationThreshold);

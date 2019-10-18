@@ -14,6 +14,8 @@ namespace Barotrauma
 
         const float TreatmentDelay = 0.5f;
 
+        const float CloseEnoughToTreat = 150.0f;
+
         private readonly Character targetCharacter;
 
         private AIObjectiveGoTo goToObjective;
@@ -58,7 +60,7 @@ namespace Barotrauma
                         if (!character.CanInteractWith(targetCharacter))
                         {
                             RemoveSubObjective(ref goToObjective);
-                            TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(targetCharacter, character, objectiveManager),
+                            TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(targetCharacter, character, objectiveManager) { CloseEnough = CloseEnoughToTreat },
                                 onCompleted: () => RemoveSubObjective(ref goToObjective),
                                 onAbandon: () => RemoveSubObjective(ref goToObjective));
                         }
@@ -91,7 +93,7 @@ namespace Barotrauma
             {
                 RemoveSubObjective(ref goToObjective);
                 // Go to the target and select it
-                TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(targetCharacter, character, objectiveManager),
+                TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(targetCharacter, character, objectiveManager) { CloseEnough = CloseEnoughToTreat },
                     onCompleted: () => RemoveSubObjective(ref goToObjective),
                     onAbandon: () => RemoveSubObjective(ref goToObjective));
             }
@@ -110,53 +112,58 @@ namespace Barotrauma
             }
         }
 
-        private HashSet<string> suitableItemIdentifiers = new HashSet<string>();
-        private List<string> itemNameList = new List<string>();
+        private readonly List<string> suitableItemIdentifiers = new List<string>();
+        private readonly List<string> itemNameList = new List<string>();
+        private Dictionary<string, float> currentTreatmentSuitabilities = new Dictionary<string, float>();
         private void GiveTreatment(float deltaTime)
         {
             if (treatmentTimer > 0.0f)
             {
                 treatmentTimer -= deltaTime;
+                return;
             }
             treatmentTimer = TreatmentDelay;
+
+            //find which treatments are the most suitable to treat the character's current condition
+            targetCharacter.CharacterHealth.GetSuitableTreatments(currentTreatmentSuitabilities, normalize: false);
+
             var allAfflictions = GetVitalityReducingAfflictions(targetCharacter).OrderByDescending(a => a.GetVitalityDecrease(targetCharacter.CharacterHealth));
             //check if we already have a suitable treatment for any of the afflictions
             foreach (Affliction affliction in allAfflictions)
             {
                 foreach (KeyValuePair<string, float> treatmentSuitability in affliction.Prefab.TreatmentSuitability)
                 {
-                    if (treatmentSuitability.Value > 0.0f)
+                    if (currentTreatmentSuitabilities.ContainsKey(treatmentSuitability.Key) && currentTreatmentSuitabilities[treatmentSuitability.Key] > 0.0f)
                     {
                         Item matchingItem = character.Inventory.FindItemByIdentifier(treatmentSuitability.Key, true);
                         if (matchingItem == null) { continue; }
                         ApplyTreatment(affliction, matchingItem);
+                        //wait a bit longer after applying a treatment to wait for potential side-effects to manifest
+                        treatmentTimer = TreatmentDelay * 4;
                         return;
                     }
                 }
             }
+
+            float cprSuitability = targetCharacter.Oxygen < 0.0f ? -targetCharacter.Oxygen * 100.0f : 0.0f;
             //didn't have any suitable treatments available, try to find some medical items
-            suitableItemIdentifiers.Clear();
-            foreach (Affliction affliction in allAfflictions)
-            {
-                foreach (KeyValuePair<string, float> treatmentSuitability in affliction.Prefab.TreatmentSuitability)
-                {
-                    if (treatmentSuitability.Value > 0.0f)
-                    {
-                        suitableItemIdentifiers.Add(treatmentSuitability.Key);
-                    }
-                }
-            }
-            if (suitableItemIdentifiers.Count > 0)
+            if (currentTreatmentSuitabilities.Any(s => s.Value > cprSuitability))
             {
                 itemNameList.Clear();
-                foreach (string itemIdentifier in suitableItemIdentifiers)
+                suitableItemIdentifiers.Clear();
+                foreach (KeyValuePair<string, float> treatmentSuitability in currentTreatmentSuitabilities)
                 {
-                    if (MapEntityPrefab.Find(null, itemIdentifier, showErrorMessages: false) is ItemPrefab itemPrefab)
+                    if (treatmentSuitability.Value <= cprSuitability) { continue; }
+                    if (MapEntityPrefab.Find(null, treatmentSuitability.Key, showErrorMessages: false) is ItemPrefab itemPrefab)
                     {
-                        itemNameList.Add(itemPrefab.Name);
+                        if (!Item.ItemList.Any(it => it.prefab.Identifier == treatmentSuitability.Key)) { continue; }
+                        suitableItemIdentifiers.Add(treatmentSuitability.Key);
+                        //only list the first 4 items
+                        if (itemNameList.Count < 4)
+                        {
+                            itemNameList.Add(itemPrefab.Name);
+                        }
                     }
-                    //only list the first 4 items
-                    if (itemNameList.Count >= 4) { break; }
                 }
                 if (itemNameList.Count > 0)
                 {
@@ -175,16 +182,17 @@ namespace Barotrauma
                             new string[2] { targetCharacter.Name, itemListStr }, new bool[2] { false, true }),
                             null, 2.0f, "listrequiredtreatments" + targetCharacter.Name, 60.0f);
                     }
+                    character.DeselectCharacter();
+                    RemoveSubObjective(ref getItemObjective);
+                    TryAddSubObjective(ref getItemObjective, 
+                        constructor: () => new AIObjectiveGetItem(character, suitableItemIdentifiers.ToArray(), objectiveManager, equip: true),
+                        onCompleted: () => RemoveSubObjective(ref getItemObjective),
+                        onAbandon: () => RemoveSubObjective(ref getItemObjective));
                 }
-                character.DeselectCharacter();
-                RemoveSubObjective(ref getItemObjective);
-                TryAddSubObjective(ref getItemObjective, 
-                    constructor: () => new AIObjectiveGetItem(character, suitableItemIdentifiers.ToArray(), objectiveManager, equip: true),
-                    onCompleted: () => RemoveSubObjective(ref getItemObjective),
-                    onAbandon: () => RemoveSubObjective(ref getItemObjective));
             }
             character.AnimController.Anim = AnimController.Animation.CPR;
         }
+
 
         private void ApplyTreatment(Affliction affliction, Item item)
         {
