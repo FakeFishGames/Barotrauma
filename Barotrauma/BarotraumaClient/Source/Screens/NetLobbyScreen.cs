@@ -800,11 +800,22 @@ namespace Barotrauma
 
             shuttleTickBox = new GUITickBox(new RectTransform(Vector2.One, shuttleHolder.RectTransform), TextManager.Get("RespawnShuttle"))
             {
-                Selected = true,
+                Selected = true,                
                 OnSelected = (GUITickBox box) =>
                 {
                     GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, useRespawnShuttle: box.Selected);
                     return true;
+                }
+            };
+            shuttleTickBox.TextBlock.RectTransform.SizeChanged += () =>
+            {
+                shuttleTickBox.TextBlock.AutoScale = true;
+                shuttleTickBox.TextBlock.TextScale = 1.0f;
+                if (shuttleTickBox.TextBlock.TextScale < 0.75f)
+                {
+                    shuttleTickBox.TextBlock.Wrap = true;
+                    shuttleTickBox.TextBlock.AutoScale = true;
+                    shuttleTickBox.TextBlock.TextScale = 1.0f;
                 }
             };
             shuttleList = new GUIDropDown(new RectTransform(Vector2.One, shuttleHolder.RectTransform), elementCount: 10)
@@ -832,6 +843,7 @@ namespace Barotrauma
 
             GUILayoutGroup miscSettingsHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.075f), gameModeContainer.RectTransform), isHorizontal: true)
             {
+                Stretch = true,
                 RelativeSpacing = 0.01f
             };
             
@@ -885,7 +897,7 @@ namespace Barotrauma
                 }
             };
             difficultyLabel.RectTransform.MaxSize = new Point((int)(difficultyLabel.TextSize.X + 30 * GUI.Scale), int.MaxValue);
-            var difficultyName = new GUITextBlock(new RectTransform(Vector2.One, miscSettingsHolder.RectTransform), "")
+            var difficultyName = new GUITextBlock(new RectTransform(new Vector2(0.25f, 1.0f), miscSettingsHolder.RectTransform), "")
             {
                 ToolTip = TextManager.Get("leveldifficultyexplanation")
             };
