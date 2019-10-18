@@ -3070,7 +3070,7 @@ namespace Barotrauma
         private bool ViewJobInfo(GUIButton button, object obj)
         {
             JobPrefab jobPrefab = button.UserData as JobPrefab;
-            if (jobPrefab == null) return false;
+            if (jobPrefab == null) { return false; }
 
             jobInfoFrame = jobPrefab.CreateInfoFrame();
             GUIButton closeButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), jobInfoFrame.GetChild(2).GetChild(0).RectTransform, Anchor.BottomRight),
@@ -3164,7 +3164,15 @@ namespace Barotrauma
                         }
                     }
 
-                    var removeButton = new GUIButton(new RectTransform(new Vector2(0.15f), slot.RectTransform, Anchor.TopRight, scaleBasis: ScaleBasis.BothWidth) { RelativeOffset = new Vector2(0.05f) }, style: "GUICancelButton")
+                    //info button
+                    new GUIButton(new RectTransform(new Vector2(0.15f), slot.RectTransform, Anchor.TopLeft, scaleBasis: ScaleBasis.BothWidth) { RelativeOffset = new Vector2(0.05f) }, style: "GUIButtonInfo")
+                    {
+                        UserData = jobPrefab.First,
+                        OnClicked = ViewJobInfo                    
+                    };
+
+                    //remove button
+                    new GUIButton(new RectTransform(new Vector2(0.15f), slot.RectTransform, Anchor.TopRight, scaleBasis: ScaleBasis.BothWidth) { RelativeOffset = new Vector2(0.05f) }, style: "GUICancelButton")
                     {
                         UserData = i,
                         OnClicked = (btn, obj) =>
