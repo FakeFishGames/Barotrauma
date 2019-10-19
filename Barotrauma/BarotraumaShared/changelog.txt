@@ -47,7 +47,6 @@ Human AI:
 - Fixed bots in some situations facing the wrong direction. The bots should now always face the item they are operating.
 - Fixed bots' ragdolls getting unstable due to constant flipping in some rare cases.
 - Fixed bots not immediately targeting the other rooms when they reach the airlock (when entering the submarine).
-- Fixed characters not being able to find the path to enter the submarine.
 
 Monsters:
 - New monster: Hammerhead Matriarch
