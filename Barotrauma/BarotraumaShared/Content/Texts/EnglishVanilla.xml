@@ -3633,7 +3633,7 @@
   <tainted_welding_traitorobjectivestartmessage5>Make your escape! A shuttle will be dispatched shortly to pick you up!\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage5>
   <tainted_welding_objectivesuccessmessage5>The warning alarm on your diving suit sounds... the shuttle should have rendezvous with you some time ago, but the only movement in the gloom are schools of alien  organisms. You broadcast another transmission: "This is Europan Resistance direct action, come in! Requesting extraction!". The transmitter remains silent, you've been left to your fate. Europa embraces you. </tainted_welding_objectivesuccessmessage5>
 
-    <!-- One of Us traitor mission text package -->
+  <!-- One of Us traitor mission text package -->
   <one_of_us_traitormissionstartinfotext>A voice within your head screams loudly enough to startle you: THE CULT OF THE HUSK CALLS YOU TO SERVICE!</one_of_us_traitormissionstartinfotext>
   <one_of_us_traitorobjectivestartmessage1>An idea gradually forms in your mind, strangely seductive to you in spite of its mundane nature:\n[traitorgoalinfos]</one_of_us_traitorobjectivestartmessage1>
   <one_of_us_goalinfotext_1>Search the storage lockers—a special message just for you is hidden under one of the spare oxygen tanks.</one_of_us_goalinfotext_1>
@@ -3646,4 +3646,23 @@
   <one_of_us_traitorobjectivestartmessage4>Your read the final task:\n[traitorgoalinfos]</one_of_us_traitorobjectivestartmessage4>
   <one_of_us_goalinfotext_4>All on this sub must partake of communion with the husk!</one_of_us_goalinfotext_4>
   <one_of_us_objectivesuccessmessage4>With that, there is nothing more to do. The sub is in disarray, the voice in your head grows silent, and your fate is sealed.</one_of_us_objectivesuccessmessage4>
+  
+  <!-- One of Us traitor mission text package -->
+  <easterbunny_traitormissionstartinfotext>Hatch an egg</easterbunny_traitormissionstartinfotext>
+  <easterbunny_traitorobjectivestartmessage1>An egg is hidden on the sub:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage1>
+  <easterbunny_goalinfotext_1>Find the egg, possibly hidden in one of the vents</easterbunny_goalinfotext_1>
+  <easterbunny_objectivesuccessmessage1>The egg is gross, but fits neatly in your pocket.</easterbunny_objectivesuccessmessage1>
+  <easterbunny_traitorobjectivestartmessage2>Grow the egg</easterbunny_traitorobjectivestartmessage2>
+  <easterbunny_goalinfotext_2>Find a safe place for the egg to grow, and feed it saline</easterbunny_goalinfotext_2>
+  <easterbunny_objectivesuccessmessage2>The egg bulges and makes strange noises.</easterbunny_objectivesuccessmessage2>
+  <easterbunny_traitorobjectivestartmessage3>The egg cracks and a mudraptor bursts forth:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage3>
+  <easterbunny_objectivesuccessmessage3>Your work here is done.</easterbunny_objectivesuccessmessage3>
+  <easterbunny_traitorobjectivestartmessage4>Escape:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage4>
+  <easterbunny_objectivesuccessmessage4>With that, there is nothing more to do. The sub is in disarray, the voice in your head grows silent, and your fate is sealed.</easterbunny_objectivesuccessmessage4>
+  
+
+
+
+
+
 </infotexts>
