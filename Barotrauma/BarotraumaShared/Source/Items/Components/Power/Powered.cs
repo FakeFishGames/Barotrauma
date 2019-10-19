@@ -168,10 +168,26 @@ namespace Barotrauma.Items.Components
                 {
                     if (c.IsOutput)
                     {
+                        if (c.Name == "power_in")
+                        {
+#if DEBUG
+                            DebugConsole.ThrowError($"Item \"{item.Name}\" has a power output connection called power_in. If the item is supposed to receive power through the connection, change it to an input connection.");
+#else
+                            DebugConsole.NewMessage($"Item \"{item.Name}\" has a power output connection called power_in. If the item is supposed to receive power through the connection, change it to an input connection.", Color.Orange);
+#endif
+                        }
                         powerOut = c;
                     }
                     else
                     {
+                        if (c.Name == "power_out")
+                        {
+#if DEBUG
+                            DebugConsole.ThrowError($"Item \"{item.Name}\" has a power input connection called power_out. If the item is supposed to output power through the connection, change it to an output connection.");
+#else
+                            DebugConsole.NewMessage($"Item \"{item.Name}\" has a power input connection called power_out. If the item is supposed to output power through the connection, change it to an output connection.", Color.Orange);
+#endif
+                        }
                         powerIn = c;
                     }
                 }
