@@ -384,7 +384,7 @@
       <AnimationConditional MotionDetected="true" targetitemcomponent="MotionSensor" />
     </DecorativeSprite>
     <DecorativeSprite texture="Content/Items/Alien/AlienMotionSensor.png" sourcerect="204,2,49,49" depth="0.7" origin="0.5,0.5" offset="80,80" offsetanim="Noise" offsetanimspeed="0.05" />
-    <MotionSensor range="300" output="0" onlyhumans="true" />
+    <MotionSensor range="300" output="0" onlyhumans="true" ignoredead="true" />
     <ConnectionPanel canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
