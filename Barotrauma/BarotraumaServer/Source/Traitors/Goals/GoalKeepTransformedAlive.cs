@@ -8,7 +8,7 @@ namespace Barotrauma
     {
         public sealed class GoalKeepTransformedAlive : Goal
         {
-            public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[targetcharacter]" });
+            public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[speciesname]" });
             public override IEnumerable<string> InfoTextValues(Traitor traitor) => base.InfoTextValues(traitor).Concat(new string[] { targetCharacterName });
 
             public override bool IsCompleted => isCompleted;
@@ -34,7 +34,7 @@ namespace Barotrauma
                     timer += deltaTime;
                 }
 
-                isCompleted = targetCharacter != null && !targetCharacter.IsDead;
+                isCompleted = targetCharacter != null && !targetCharacter.IsDead && timer >= gracePeriod;
             }
 
             public override bool Start(Traitor traitor)
@@ -59,7 +59,7 @@ namespace Barotrauma
                     }
                 }
 
-                targetCharacterName = TextManager.FormatServerMessage($"character.{speciesId}");
+                targetCharacterName = TextManager.FormatServerMessage($"character.{speciesId}").ToLowerInvariant();
 
                 return targetCharacter != null;
             }

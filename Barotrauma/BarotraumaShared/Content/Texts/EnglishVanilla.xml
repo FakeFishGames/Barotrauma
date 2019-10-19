@@ -3552,10 +3552,6 @@
   <gamemodedescription.multiplayercampaign>Embark on a journey through the depths of Europa. Travel from location to another, complete missions to earn money for supplies, discover new biomes — and perhaps eventually uncover the secrets of Europa.</gamemodedescription.multiplayercampaign>
   <entityname.mudraptoregg>Mudraptor Egg</entityname.mudraptoregg>
   <entitydescription.mudraptoregg>A slimy, pulsating mudraptor egg. The gaping maw on top of the egg seems to be grasping for something to eat.</entitydescription.mudraptoregg>
-  <entityname.mediummudraptoregg>Medium Mudraptor Egg</entityname.mediummudraptoregg>
-  <entitydescription.mediummudraptoregg>A slimy, pulsating mudraptor egg. The gaping maw on top of the egg seems to be grasping for something to eat.</entitydescription.mediummudraptoregg>
-  <entityname.largemudraptoregg>Large Mudraptor Egg</entityname.largemudraptoregg>
-  <entitydescription.largemudraptoregg>A slimy, pulsating mudraptor egg. The gaping maw on top of the egg seems to be grasping for something to eat.</entitydescription.largemudraptoregg>
   
   <!-- Server lobby 2.0 -->
   <servertag.casual>Casual</servertag.casual>
@@ -3653,9 +3649,9 @@
   <easterbunny_goalinfotext_1>Find the egg, possibly hidden in one of the vents</easterbunny_goalinfotext_1>
   <easterbunny_objectivesuccessmessage1>The egg is gross, but fits neatly in your pocket.</easterbunny_objectivesuccessmessage1>
   <easterbunny_traitorobjectivestartmessage2>Grow the egg</easterbunny_traitorobjectivestartmessage2>
-  <easterbunny_goalinfotext_2>Find a safe place for the egg to grow, and feed it saline</easterbunny_goalinfotext_2>
+  <easterbunny_goalinfotext_2>Find a safe place for the egg to grow, and feed it [catalystitem]</easterbunny_goalinfotext_2>
   <easterbunny_objectivesuccessmessage2>The egg bulges and makes strange noises.</easterbunny_objectivesuccessmessage2>
-  <easterbunny_traitorobjectivestartmessage3>The egg cracks and a mudraptor bursts forth:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage3>
+  <easterbunny_traitorobjectivestartmessage3>The egg cracks and a [speciesname] bursts forth:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage3>
   <easterbunny_objectivesuccessmessage3>Your work here is done.</easterbunny_objectivesuccessmessage3>
   <easterbunny_traitorobjectivestartmessage4>Escape:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage4>
   <easterbunny_objectivesuccessmessage4>With that, there is nothing more to do. The sub is in disarray, the voice in your head grows silent, and your fate is sealed.</easterbunny_objectivesuccessmessage4>

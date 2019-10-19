@@ -10,24 +10,26 @@ namespace Barotrauma
     {
         public sealed class GoalEntityTransformation : Goal
         {
-            public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[startingentity]", "[transformedentity]", "[catalystitem]" });
-            public override IEnumerable<string> InfoTextValues(Traitor traitor) => base.InfoTextValues(traitor).Concat(new string[] { startingEntityName, transformedEntityName, catalystItemName });
+            public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[catalystitem]" });
+            public override IEnumerable<string> InfoTextValues(Traitor traitor) => base.InfoTextValues(traitor).Concat(new string[] { catalystItemName });
 
-            private bool isCompleted = false;
+            private bool isCompleted;
             public override bool IsCompleted => isCompleted;
 
-            private string startingEntityIdentifier, transformedEntityIdentifier, catalystItemIdentifier;
-            private string startingEntityName, transformedEntityName, catalystItemName;
-            private EntityTypes startingEntityType, transformedEntityType;
+            private string catalystItemIdentifier, catalystItemName;
 
-            private Entity startingEntity;
-            private Vector2 startingEntitySavedPosition;
+            private Vector2 activeEntitySavedPosition;
+            private Entity activeEntity;
+            private int activeEntityIndex;
             private const float gracePeriod = 1f;
             private const float graceDistance = 200f;
             private float graceTimer;
-            private double transformationTime = 0.0;
+            private double transformationTime;
 
             private enum EntityTypes { Character, Item }
+
+            private string[] entities;
+            private EntityTypes[] entityTypes;
 
             public override void Update(float deltaTime)
             {
@@ -42,19 +44,21 @@ namespace Barotrauma
 
             private bool HasTransformed(float deltaTime)
             {
-                if (startingEntity != null && !startingEntity.Removed)
+                if (activeEntity != null && !activeEntity.Removed)
                 {
-                    startingEntitySavedPosition = startingEntity.WorldPosition;
+                    activeEntitySavedPosition = activeEntity.WorldPosition;
                 }
                 else
                 {
-                    if (transformationTime == 0.0)
+                    if (transformationTime == 0)
                     {
+                        graceTimer = 0.0f;
+                        activeEntityIndex++;
                         transformationTime = Timing.TotalTime;
                     }
                     graceTimer += deltaTime;
 
-                    switch (transformedEntityType)
+                    switch (entityTypes[activeEntityIndex])
                     {
                         case EntityTypes.Character:
                             foreach (Character character in Character.CharacterList)
@@ -63,9 +67,11 @@ namespace Barotrauma
                                 {
                                     continue;
                                 }
-                                if (character.SpeciesName.ToLowerInvariant() == transformedEntityIdentifier && Vector2.Distance(startingEntitySavedPosition, character.WorldPosition) < graceDistance)
+                                if (character.SpeciesName.ToLowerInvariant() == entities[activeEntityIndex] && Vector2.Distance(activeEntitySavedPosition, character.WorldPosition) < graceDistance)
                                 {
-                                    return true;
+                                    activeEntity = character;
+                                    transformationTime = 0.0;
+                                    return activeEntityIndex == entities.Length - 1;
                                 }
                             }
                             break;
@@ -76,9 +82,11 @@ namespace Barotrauma
                                 {
                                     continue;
                                 }
-                                if (item.prefab.Identifier == transformedEntityIdentifier && Vector2.Distance(startingEntitySavedPosition, item.WorldPosition) < graceDistance)
+                                if (item.prefab.Identifier == entities[activeEntityIndex] && Vector2.Distance(activeEntitySavedPosition, item.WorldPosition) < graceDistance)
                                 {
-                                    return true;
+                                    activeEntity = item;
+                                    transformationTime = 0.0;
+                                    return activeEntityIndex == entities.Length - 1;
                                 }
                             }
                             break;
@@ -95,16 +103,26 @@ namespace Barotrauma
                     return false;
                 }
 
-                startingEntityName = TextManager.FormatServerMessage(GetTextId(startingEntityType, startingEntityIdentifier)) ?? startingEntityIdentifier;
-                transformedEntityName = TextManager.FormatServerMessage(GetTextId(transformedEntityType, transformedEntityIdentifier)) ?? transformedEntityIdentifier;
-                catalystItemName = TextManager.FormatServerMessage(GetTextId(EntityTypes.Item, catalystItemIdentifier)) ?? catalystItemIdentifier;
+                catalystItemName = TextManager.FormatServerMessage($"entityname.{catalystItemIdentifier}");
 
-                startingEntity = null;
+                activeEntity = null;
+                activeEntityIndex = 0;
 
-                switch (startingEntityType)
+                switch (entityTypes[activeEntityIndex])
                 {
                     case EntityTypes.Character:
-                        // Not used
+                        foreach (Character character in Character.CharacterList)
+                        {
+                            if (character.Submarine == null || Traitors.All(t => character.Submarine.TeamID != t.Character.TeamID))
+                            {
+                                continue;
+                            }
+                            if (character.SpeciesName.ToLowerInvariant() == entities[activeEntityIndex].ToLowerInvariant())
+                            {
+                                activeEntity = character;
+                                break;
+                            }
+                        }
                         break;
                     case EntityTypes.Item:
                         foreach (Item item in Item.ItemList)
@@ -113,9 +131,9 @@ namespace Barotrauma
                             {
                                 continue;
                             }
-                            if (item.prefab.Identifier == startingEntityIdentifier)
+                            if (item.prefab.Identifier.ToLowerInvariant() == entities[0].ToLowerInvariant())
                             {
-                                startingEntity = item;
+                                activeEntity = item;
                                 break;
                             }
                         }
@@ -123,32 +141,19 @@ namespace Barotrauma
                 }           
 
                 graceTimer = 0.0f;
-                return startingEntity != null;
-            }
+                return activeEntity != null;
+            }        
 
-            private string GetTextId(EntityTypes type, string entityId)
+            public GoalEntityTransformation(string[] entities, string[] entityTypes, string catalystItemIdentifier) : base()
             {
-                string textId = null;
-                switch (type)
+                this.entities = entities;
+
+                this.entityTypes = new EntityTypes[entityTypes.Length];
+
+                for (int i = 0; i < this.entityTypes.Length; i++)
                 {
-                    case EntityTypes.Character:
-                        textId = $"character.{entityId}";
-                        break;
-                    case EntityTypes.Item:
-                        textId = $"entityname.{entityId}";
-                        break;
+                    this.entityTypes[i] = (EntityTypes)Enum.Parse(typeof(EntityTypes), entityTypes[i], true);
                 }
-
-                return textId;
-            }
-
-            public GoalEntityTransformation(string startingEntityIdentifier, string transformedEntityIdentifier, string startingEntityType, string transformedEntityType, string catalystItemIdentifier) : base()
-            {
-                this.startingEntityIdentifier = startingEntityIdentifier;
-                this.startingEntityType = (EntityTypes)Enum.Parse(typeof(EntityTypes), startingEntityType, true);
-
-                this.transformedEntityIdentifier = transformedEntityIdentifier.ToLowerInvariant();
-                this.transformedEntityType = (EntityTypes)Enum.Parse(typeof(EntityTypes), transformedEntityType, true);
 
                 this.catalystItemIdentifier = catalystItemIdentifier;
             }

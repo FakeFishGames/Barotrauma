@@ -560,26 +560,8 @@
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="easterbunny_objectivesuccessmessage2"/>
       <StartMessage id="easterbunny_traitorobjectivestartmessage2"/>
-      <Goal type="transformitem" startingentityid="smallmudraptoregg" startingentitytype="item" transformedentityid="mudraptor" transformedentitytype="character" catalystid="antibloodloss1">
+      <Goal type="transformentity" entities="smallmudraptoregg,mediummudraptoregg,largemudraptoregg,mudraptor" entitytypes="item,item,item,character" catalystid="antibloodloss1">
         <InfoText id="easterbunny_goalinfotext_2" />
-      </Goal>
-    </Objective>
-
-    <Objective>
-      <EndMessageFailure id="traitormissionfailuremessage"/>
-      <EndMessageSuccess id="easterbunny_objectivesuccessmessage2"/>
-      <StartMessage id="easterbunny_traitorobjectivestartmessage2"/>
-      <Goal type="transformitem" startingentityid="mediummudraptoregg" startingentitytype="item" transformedentityid="mudraptor" transformedentitytype="character" catalystid="antibloodloss1">
-        <InfoText id="traitorgoalincubateegg" />
-      </Goal>
-    </Objective>
-
-    <Objective>
-      <EndMessageFailure id="traitormissionfailuremessage"/>
-      <EndMessageSuccess id="easterbunny_objectivesuccessmessage2"/>
-      <StartMessage id="easterbunny_traitorobjectivestartmessage2"/>
-      <Goal type="transformitem" startingentityid="largemudraptoregg" startingentitytype="item" transformedentityid="mudraptor" transformedentitytype="character" catalystid="antibloodloss1">
-        <InfoText id="traitorgoalincubateegg" />
       </Goal>
     </Objective>
     

@@ -200,10 +200,10 @@ namespace Barotrauma
                             checker.Optional("connectiondisplayname");
                             goal = new Traitor.GoalUnwiring(Config.GetAttributeString("tag", null), Config.GetAttributeString("connectionname", null), Config.GetAttributeString("connectiondisplayname)", null));
                             break;
-                        case "transformitem":
-                            checker.Required("startingentityid", "transformedentityid", "startingentitytype", "transformedentitytype");
+                        case "transformentity":
+                            checker.Required("entities", "entitytypes");
                             checker.Optional("catalystid");
-                            goal = new Traitor.GoalEntityTransformation(Config.GetAttributeString("startingentityid", null), Config.GetAttributeString("transformedentityid", null), Config.GetAttributeString("startingentitytype", "Item"), Config.GetAttributeString("transformedentitytype", "Item"), Config.GetAttributeString("catalystid", null));
+                            goal = new Traitor.GoalEntityTransformation(Config.GetAttributeStringArray("entities", null), Config.GetAttributeStringArray("entitytypes", null), Config.GetAttributeString("catalystid", null));
                             break;
                         case "keeptransformedalive":
                             checker.Required("speciesname");
