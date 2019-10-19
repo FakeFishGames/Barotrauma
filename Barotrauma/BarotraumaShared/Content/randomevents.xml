@@ -374,12 +374,15 @@
         <MonsterEvent characterfile="Mudraptor" commonness="3" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
         <MonsterEvent characterfile="Crawler" commonness="3" minamount="1" maxamount="2" spawntype="mainpath" musictype="monster" />
         <MonsterEvent characterfile="Hammerheadgold" commonness="2" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
-        <MonsterEvent characterfile="Hammerheadmatriarch" commonness="1" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
       </EventSet>
       <EventSet chooserandom="false">
         <MonsterEvent characterfile="Tigerthresher" minamount="1" maxamount="3" spawntype="mainpath" musictype="monster" />
         <MonsterEvent characterfile="Bonethresher" minamount="1" maxamount="2" spawntype="mainpath" musictype="monster" />
-      </EventSet>     
+      </EventSet>
+      <EventSet chooserandom="false">
+        <MonsterEvent characterfile="Hammerheadmatriarch" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
+        <MonsterEvent characterfile="Hammerhead" minamount="0" maxamount="1" spawntype="mainpath" musictype="monster" />
+      </EventSet>
     </EventSet>
   </EventSet>
   
@@ -437,12 +440,15 @@
         <MonsterEvent characterfile="Mudraptor" commonness="3" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
         <MonsterEvent characterfile="Crawler" commonness="3" minamount="1" maxamount="2" spawntype="mainpath" musictype="monster" />
         <MonsterEvent characterfile="Hammerheadgold" commonness="2" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
-        <MonsterEvent characterfile="Hammerheadmatriarch" commonness="1" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
       </EventSet>
       <EventSet chooserandom="false">
         <MonsterEvent characterfile="Tigerthresher" minamount="1" maxamount="3" spawntype="mainpath" musictype="monster" />
         <MonsterEvent characterfile="Bonethresher" minamount="1" maxamount="2" spawntype="mainpath" musictype="monster" />
-      </EventSet>    
+      </EventSet>
+      <EventSet chooserandom="false">
+        <MonsterEvent characterfile="Hammerheadmatriarch" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
+        <MonsterEvent characterfile="Hammerhead" minamount="0" maxamount="1" spawntype="mainpath" musictype="monster" />
+      </EventSet>
     </EventSet>
   </EventSet>
 
@@ -523,11 +529,14 @@
         <MonsterEvent characterfile="Mudraptor" commonness="3" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
         <MonsterEvent characterfile="Crawler" commonness="3" minamount="1" maxamount="2" spawntype="mainpath" musictype="monster" />
         <MonsterEvent characterfile="Hammerheadgold" commonness="2" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
-        <MonsterEvent characterfile="Hammerheadmatriarch" commonness="1" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
       </EventSet>
       <EventSet chooserandom="false">
         <MonsterEvent characterfile="Tigerthresher" minamount="1" maxamount="4" spawntype="mainpath" musictype="monster" />
         <MonsterEvent characterfile="Bonethresher" minamount="1" maxamount="3" spawntype="mainpath" musictype="monster" />
+      </EventSet>
+      <EventSet chooserandom="false">
+        <MonsterEvent characterfile="Hammerheadmatriarch" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
+        <MonsterEvent characterfile="Hammerhead" minamount="0" maxamount="3" spawntype="mainpath" musictype="monster" />
       </EventSet>
     </EventSet>
   </EventSet>
@@ -580,11 +589,14 @@
       <EventSet chooserandom="true">
         <MonsterEvent characterfile="Hammerhead" commonness="3"  minamount="1" maxamount="3" spawntype="mainpath" musictype="monster" />
         <MonsterEvent characterfile="Hammerheadgold" commonness="2" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
-        <MonsterEvent characterfile="Hammerheadmatriarch" commonness="1" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
       </EventSet>
       <EventSet chooserandom="false">
         <MonsterEvent characterfile="Tigerthresher" minamount="1" maxamount="4" spawntype="mainpath" musictype="monster" />
         <MonsterEvent characterfile="Bonethresher" minamount="1" maxamount="3" spawntype="mainpath" musictype="monster" />
+      </EventSet>
+      <EventSet chooserandom="false">
+        <MonsterEvent characterfile="Hammerheadmatriarch" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
+        <MonsterEvent characterfile="Hammerhead" minamount="0" maxamount="3" spawntype="mainpath" musictype="monster" />
       </EventSet>
     </EventSet>
 
@@ -660,11 +672,14 @@
       <EventSet chooserandom="true">
         <MonsterEvent characterfile="Hammerhead" commonness="3" minamount="3" maxamount="4" spawntype="mainpath" musictype="monster" />
         <MonsterEvent characterfile="Hammerheadgold" commonness="2" minamount="2" maxamount="1" spawntype="mainpath" musictype="monster" />
-        <MonsterEvent characterfile="Hammerheadmatriarch" commonness="1" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
       </EventSet>
       <EventSet chooserandom="false">
         <MonsterEvent characterfile="Tigerthresher" minamount="3" maxamount="4" spawntype="mainpath" musictype="monster" />
         <MonsterEvent characterfile="Bonethresher" minamount="2" maxamount="3" spawntype="mainpath" musictype="monster" />
+      </EventSet>
+      <EventSet chooserandom="false">
+        <MonsterEvent characterfile="Hammerheadmatriarch" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
+        <MonsterEvent characterfile="Hammerhead" minamount="3" maxamount="3" spawntype="mainpath" musictype="monster" />
       </EventSet>
     </EventSet>
 
