@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma.Items.Components
 {
@@ -165,7 +166,10 @@ namespace Barotrauma.Items.Components
         
         private float prevAvailableFuel;
         public float AvailableFuel { get; set; }
-        
+
+        private readonly string[] fuelTags = new string[1] { "reactorfuel" };
+
+
         public Reactor(Item item, XElement element)
             : base(item, element)
         {         
@@ -505,6 +509,19 @@ namespace Barotrauma.Items.Components
             return picker != null;
         }
 
+        private int itemIndex;
+        private List<Item> ignoredContainers = new List<Item>();
+        private bool FindSuitableContainer(Character character, Func<Item, float> priority, out Item suitableContainer)
+        {
+            suitableContainer = null;
+            if (character.FindItem(ref itemIndex, out Item targetContainer, ignoredItems: ignoredContainers, customPriorityFunction: priority))
+            {
+                suitableContainer = targetContainer;
+                return true;
+            }
+            return false;
+        }
+
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return false; }
@@ -516,13 +533,56 @@ namespace Barotrauma.Items.Components
             //characters with insufficient skill levels don't refuel the reactor
             if (degreeOfSuccess > 0.2f)
             {
-                //remove used-up fuel from the reactor
-                var containedItems = item.ContainedItems;
-                foreach (Item item in containedItems)
+                if (objective.SubObjectives.None())
                 {
-                    if (item != null && item.Condition <= 0.0f)
+                    var containedItems = item.ContainedItems;
+                    foreach (Item fuelRod in containedItems)
                     {
-                        item.Drop(character);
+                        if (fuelRod != null && fuelRod.Condition <= 0.0f)
+                        {
+                            if (!FindSuitableContainer(character, 
+                                i =>
+                                {
+                                    var container = i.GetComponent<ItemContainer>();
+                                    if (container == null) { return 0; }
+                                    if (container.Inventory.IsFull()) { return 0; }
+                                    if (container.ShouldBeContained(fuelRod, out bool isRestrictionsDefined))
+                                    {
+                                        if (isRestrictionsDefined)
+                                        {
+                                            return 3;
+                                        }
+                                        else
+                                        {
+                                            if (fuelRod.Prefab.IsContainerPreferred(container, out bool isPreferencesDefined))
+                                            {
+                                                return isPreferencesDefined ? 2 : 1;
+                                            }
+                                            else
+                                            {
+                                                return isPreferencesDefined ? 0 : 1;
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        return 0;
+                                    }
+                                }, out Item targetContainer))
+                            {
+                                return false;
+                            }
+                            var decontainObjective = new AIObjectiveDecontainItem(character, fuelRod, item.GetComponent<ItemContainer>(), objective.objectiveManager, targetContainer?.GetComponent<ItemContainer>());
+                            decontainObjective.Abandoned += () => 
+                            {
+                                itemIndex = 0;
+                                if (targetContainer != null)
+                                {
+                                    ignoredContainers.Add(targetContainer);
+                                }
+                            };
+                            objective.AddSubObjectiveInQueue(decontainObjective);
+                        }
                     }
                 }
 
@@ -535,31 +595,33 @@ namespace Barotrauma.Items.Components
                 //load more fuel if the current maximum output is only 50% of the current load
                 if (NeedMoreFuel(minimumOutputRatio: 0.5f))
                 {
-                    var containFuelObjective = new AIObjectiveContainItem(character, new string[] { "fuelrod", "reactorfuel" }, item.GetComponent<ItemContainer>(), objective.objectiveManager)
-                    {
-                        targetItemCount = item.ContainedItems.Count(i => i != null && i.Prefab.Identifier == "fuelrod" || i.HasTag("reactorfuel")) + 1,
-                        GetItemPriority = (Item fuelItem) =>
-                        {
-                            if (fuelItem.ParentInventory?.Owner is Item)
-                            {
-                                //don't take fuel from other reactors
-                                if (((Item)fuelItem.ParentInventory.Owner).GetComponent<Reactor>() != null) return 0.0f;
-                            }
-                            return 1.0f;
-                        }
-                    };
-                    objective.AddSubObjective(containFuelObjective);
-
-                    character?.Speak(TextManager.Get("DialogReactorFuel"), null, 0.0f, "reactorfuel", 30.0f);
-
                     aiUpdateTimer = AIUpdateInterval;
+                    if (objective.SubObjectives.None())
+                    {
+                        var containFuelObjective = new AIObjectiveContainItem(character, fuelTags, item.GetComponent<ItemContainer>(), objective.objectiveManager)
+                        {
+                            targetItemCount = item.ContainedItems.Count(i => i != null && fuelTags.Any(t => i.Prefab.Identifier == t || i.HasTag(t))) + 1,
+                            GetItemPriority = (Item fuelItem) =>
+                            {
+                                if (fuelItem.ParentInventory?.Owner is Item)
+                                {
+                                    //don't take fuel from other reactors
+                                    if (((Item)fuelItem.ParentInventory.Owner).GetComponent<Reactor>() != null) return 0.0f;
+                                }
+                                return 1.0f;
+                            }
+                        };
+                        containFuelObjective.Abandoned += () => objective.Abandon = true;
+                        objective.AddSubObjective(containFuelObjective);
+                        character?.Speak(TextManager.Get("DialogReactorFuel"), null, 0.0f, "reactorfuel", 30.0f);
+                    }
                     return false;
                 }
                 else if (TooMuchFuel())
                 {
                     foreach (Item item in item.ContainedItems)
                     {
-                        if (item != null && item.HasTag("reactorfuel"))
+                        if (item != null && fuelTags.Any(t => item.Prefab.Identifier == t || item.HasTag(t)))
                         {
                             if (!character.Inventory.TryPutItem(item, character, allowedSlots: item.AllowedSlots))
                             {
@@ -577,22 +639,28 @@ namespace Barotrauma.Items.Components
             }
 
             LastUser = lastAIUser = character;
-            
+
+            bool prevAutoTemp = autoTemp;
+            bool prevShutDown = shutDown;
+            float prevFissionRate = targetFissionRate;
+            float prevTurbineOutput = targetTurbineOutput;
+
             switch (objective.Option.ToLowerInvariant())
             {
                 case "powerup":
                     shutDown = false;
-                    //characters with insufficient skill levels simply set the autotemp on instead of trying to adjust the temperature manually
-                    if (degreeOfSuccess < 0.5f)
+                    if (objective.Override || !autoTemp)
                     {
-                        if (!autoTemp) unsentChanges = true;
-                        AutoTemp = true;
-                    }
-                    else
-                    {
-                        AutoTemp = false;
-                        unsentChanges = true;
-                        UpdateAutoTemp(MathHelper.Lerp(0.5f, 2.0f, degreeOfSuccess), 1.0f);
+                        //characters with insufficient skill levels simply set the autotemp on instead of trying to adjust the temperature manually
+                        if (degreeOfSuccess < 0.5f)
+                        {
+                            AutoTemp = true;
+                        }
+                        else
+                        {
+                            AutoTemp = false;
+                            UpdateAutoTemp(MathHelper.Lerp(0.5f, 2.0f, degreeOfSuccess), 1.0f);
+                        }
                     }
 #if CLIENT
                     onOffSwitch.BarScroll = 0.0f;
@@ -604,16 +672,19 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                     onOffSwitch.BarScroll = 1.0f;
 #endif
-                    if (AutoTemp || !shutDown || targetFissionRate > 0.0f || targetTurbineOutput > 0.0f)
-                    {
-                        unsentChanges = true;
-                    }
-
                     AutoTemp = false;
                     shutDown = true;
                     targetFissionRate = 0.0f;
                     targetTurbineOutput = 0.0f;
                     break;
+            }
+
+            if (autoTemp != prevAutoTemp ||
+                prevShutDown != shutDown ||
+                Math.Abs(prevFissionRate - targetFissionRate) > 1.0f || 
+                Math.Abs(prevTurbineOutput - targetTurbineOutput) > 1.0f)
+            {
+                unsentChanges = true;
             }
 
             aiUpdateTimer = AIUpdateInterval;

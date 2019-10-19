@@ -778,6 +778,9 @@ namespace Barotrauma.Networking
                 case ServerPacketHeader.TRAITOR_MESSAGE:
                     ReadTraitorMessage(inc);
                     break;
+                case ServerPacketHeader.MISSION:
+                    GameMain.GameSession.Mission?.ClientRead(inc);
+                    break;
             }
         }
         

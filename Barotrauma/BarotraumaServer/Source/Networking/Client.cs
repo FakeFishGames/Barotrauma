@@ -57,7 +57,17 @@ namespace Barotrauma.Networking
 
         public float DeleteDisconnectedTimer;
 
-        public CharacterInfo CharacterInfo;
+        private CharacterInfo characterInfo;
+        public CharacterInfo CharacterInfo
+        {
+            get { return characterInfo; }
+            set
+            {
+                if (characterInfo == value) { return; }
+                characterInfo?.Remove();
+                characterInfo = value;
+            }
+        }
         public NetworkConnection Connection { get; set; }
 
         public bool SpectateOnly;
@@ -94,6 +104,8 @@ namespace Barotrauma.Networking
         {
             GameMain.Server.VoipServer.UnregisterQueue(VoipQueue);
             VoipQueue.Dispose();
+            characterInfo?.Remove();
+            characterInfo = null;
         }
 
         public void InitClientSync()
@@ -128,7 +140,7 @@ namespace Barotrauma.Networking
             {
                 if (lidgrenConn.IPEndPoint?.Address == null) { return false; }
                 if ((lidgrenConn.IPEndPoint?.Address.IsIPv4MappedToIPv6 ?? false) &&
-                    lidgrenConn.IPEndPoint?.Address.MapToIPv4().ToString() == endpoint)
+                    lidgrenConn.IPEndPoint?.Address.MapToIPv4NoThrow().ToString() == endpoint)
                 {
                     return true;
                 }

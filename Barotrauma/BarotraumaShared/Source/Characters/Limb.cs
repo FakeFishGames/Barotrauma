@@ -435,17 +435,10 @@ namespace Barotrauma
             //sector 360 degrees or more -> always hits
             if (Math.Abs(armorSector.Y - armorSector.X) >= MathHelper.TwoPi) { return true; }
             float rotation = body.TransformedRotation;
-            float offset = (MathHelper.PiOver2 - GetArmorSectorRotationOffset(armorSector)) * Dir;
+            float offset = (MathHelper.PiOver2 - MathUtils.GetMidAngle(armorSector.X, armorSector.Y)) * Dir;
             float hitAngle = VectorExtensions.Angle(VectorExtensions.Forward(rotation + offset), SimPosition - simPosition);
             float sectorSize = GetArmorSectorSize(armorSector);
             return hitAngle < sectorSize / 2;
-        }
-
-        protected float GetArmorSectorRotationOffset(Vector2 armorSector)
-        {
-            float midAngle = MathUtils.GetMidAngle(armorSector.X, armorSector.Y);
-            float spritesheetOrientation = Params.GetSpriteOrientation();
-            return midAngle + spritesheetOrientation;
         }
 
         protected float GetArmorSectorSize(Vector2 armorSector)

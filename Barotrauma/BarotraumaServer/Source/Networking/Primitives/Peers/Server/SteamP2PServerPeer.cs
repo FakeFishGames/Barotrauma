@@ -200,7 +200,7 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            if (IPAddress.IsLoopback(inc.SenderConnection.RemoteEndPoint.Address.MapToIPv4()))
+            if (IPAddress.IsLoopback(inc.SenderConnection.RemoteEndPoint.Address.MapToIPv4NoThrow()))
             {
                 inc.SenderConnection.Approve();
                 netConnection = inc.SenderConnection;

@@ -4,20 +4,34 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class ConditionalSprite : Sprite
+    partial class ConditionalSprite
     {
         public readonly List<PropertyConditional> conditionals = new List<PropertyConditional>();
         public bool IsActive => Target != null && conditionals.All(c => c.Matches(Target));
-        readonly ISerializableEntity Target;
+        public ISerializableEntity Target { get; private set; }
+        public Sprite Sprite { get; private set; }
+        public DeformableSprite DeformableSprite { get; private set; }
+        public Sprite ActiveSprite => Sprite ?? DeformableSprite.Sprite;
 
-        public ConditionalSprite(XElement element, ISerializableEntity target, string path = "", string file = "") : base(element, path, file)
+        public ConditionalSprite(XElement element, ISerializableEntity target, string path = "", string file = "", bool lazyLoad = false)
         {
             Target = target;
             foreach (XElement subElement in element.Elements())
             {
-                foreach (XAttribute attribute in subElement.Attributes())
+                switch (subElement.Name.ToString().ToLowerInvariant())
                 {
-                    conditionals.Add(new PropertyConditional(attribute));
+                    case "conditional":
+                        foreach (XAttribute attribute in subElement.Attributes())
+                        {
+                            conditionals.Add(new PropertyConditional(attribute));
+                        }
+                        break;
+                    case "sprite":
+                        Sprite = new Sprite(subElement, path, file, lazyLoad: lazyLoad);
+                        break;
+                    case "deformablesprite":
+                        DeformableSprite = new DeformableSprite(subElement, filePath: path, lazyLoad: lazyLoad);
+                        break;
                 }
             }
         }

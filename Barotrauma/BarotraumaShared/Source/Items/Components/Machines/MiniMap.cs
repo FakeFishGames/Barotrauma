@@ -75,13 +75,11 @@ namespace Barotrauma.Items.Components
             currPowerConsumption = powerConsumption;
             currPowerConsumption *= MathHelper.Lerp(2.0f, 1.0f, item.Condition / item.MaxCondition);
 
-            hasPower = voltage > minVoltage;
+            hasPower = Voltage > MinVoltage;
             if (hasPower)
             {
                 ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
             }
-
-            voltage -= deltaTime;
         }
         
         public override bool Pick(Character picker)

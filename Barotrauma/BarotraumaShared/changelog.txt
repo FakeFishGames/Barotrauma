@@ -1,25 +1,91 @@
 ---------------------------------------------------------------------------------------------------------
-v0.9.402.0 (test build)
+v0.9.4.1?
 ---------------------------------------------------------------------------------------------------------
 
-TODO: merge this with the 0.9.4.0 changelog for the actual release, many of these are fixes for issues
-that were introduced in v0.9.4.0.
+Human AI:
+- Changed the logic for automatically unequipping the diving gear, extinguishers or items that are held in hands.
+- Teached the bots to place diving suits, fuel rods and fire extinguishers into right places, if they can't unequip the items without dropping them AND if the current objective is not high priority. The system uses tags/identifiers and two new attributes: "preferredcontainers" in Items and "containablerestrictions" in ItemComponents so it can be adjusted both in the editor and in xml.
+- Improved the code to prevent dead-locks between the AI states.
+- Start looking new oxygen when the current oxygen tank is at 10% instead of starting when it's empty (which often lead the bot to suffocate while doing the objective).
+- Combat: Don't ignore empty weapons when evaluating weapons for the first time (allows to try reloading a weapon before ignoring it as useless).
+- Fight Intruders: Automatically switch weapon when the current weapon runs out of ammo. Find ammunition for the current weapon if no other decent weapon is found. Don't allow to go offensive while armed with poor weapons, like a wrench.
+- Fix Leaks: Improved the operating of welding tools.
+- Rescue: Major refactoring. Allow to heal self. Improve the priority calculation. The priority is now based on the severity of wounds.
+- Teached the bots to look deeper into the inventories (recursive) when seeking items.
+- Changed the decision making on whether or not a bot needs diving gear.
+- The bots now avoid unsafe paths in the idle state or when doing low priority objectives.
+- The bots don't follow targets outside of the submarine.
+- The bots don't stay still when idling underwater.They swim in place instead.
+- Adjusted the combat priorities for the weapons.
+- Increased the minimum initiatives.
+- Adjusted the target evaluation for the Fix Leaks objective.
+- Improved the distance approximations for all AI objectives.
+- Increased the base devotion (how much the current objective priority is boosted).
+- Reduced the shooting distance when the bots are operating turrets.
+- Adjusted the idle waiting, standing, and walking times.
+- Fixed bots getting stuck if the next node was behind a door.
+- Fixed bots getting stuck on ladders when the main collider bottom was slightly lower than the floor level, even though the bot should be able to take off from the ladders.
+- Fixed bots getting stuck on ladders when they need a new target while climbing.
+- Fixed bots ignoring/avoiding targets in hulls when there were dead enemies inside them.
+- Fixed issues in switching empty oxygen tanks to new.
+- Fixed bots unequipping and re-equipping diving gear while ordered to follow another character.
+- Fixed bots not being able to handle things when they cannot find diving gear. Now they should first try to get the gear and if it fails, they should just target a a safe hull.
+- Fixed bots shooting friendly characters with turrets.
+- Fixed bots always treating weapons as revolvers.
+- Fixed the loading of smg magazines/fuel tanks etc (because they are different from revolver rounds).
+- Fixed autonomic objectives overriding the user-defined settings (steering, batteries).
+- Fixed bots being able to do things while hand-cuffed.
+- Fixed a dead-end when an item is taken by another character after the target item was defined and before the objective is completed.
+- Fixed item prioritization calculations.
+- Fixed hull safety calculations always using the current visible hulls (which should only be taken into account when the hull is the current hull).
+- Fixed bots abandoning the operate item objective if there was another character operating the item.
+- Fixed bots speaking about success/failure to repair when another character fixes their target.
+- Fixed bots reporting individual failures when doing a loop objective. Should fix bots spamming with the "Cannot reach the target" msgs.
+- Fixed the current objective not being reassigned after sorting the objectives, leading to sorting the subobjectives of a the old current objective, which would be fixed only after the next time the objectives were sorted (after 1 sec).
+- Fixed the gap size being misinterpreted when calculating the priority for a fix leak objective.
+- Fixed bots switching repair targets while repairing an item.
+- Fixed bots in some situations facing the wrong direction. The bots should now always face the item they are operating.
+- Fixed bots' ragdolls getting unstable due to constant flipping in some rare cases.
+- Fixed bots not immediately targeting the other rooms when they reach the airlock (when entering the submarine).
 
-- Improved logging for DXGI_ERROR crashes on startup.
-- Fixed docking interface becoming active on navigation terminals when any of the submarine's docking
-ports are close to another docking port, even if the terminal in question is not wired to that port.
-- Decreased karma regeneration speed.
-- Fixed item properties not being overridden in items pre-placed in submarines when an item is overridden 
-by a mod.
-- More frequent notifications about karma changes.
-- Fixed character syncing being very inaccurate when switching to freecam and spectating a character
-far away from other players.
-- Fixed delay components always having a delay of 0.
-- Removed unnecessary platform that was creating problems in Berilia's electrical room.
-- Fixed AI targets not being updated when the character is dead, causing the characters to be too 
-perceivable/not perceivable enough by monsters.
-- Made level ambient lighting darker.
-- Added "pause" console command (only usable in single player).
+Monsters:
+- New monster: Hammerhead Matriarch
+- New monster: Hammerhead Spawn
+- Characters now have a separate property that defines whether or not they can walk, meaning that characters can now enter the submarine even if they cannot walk. When there is no water, the character will figet around.
+Also fixes Fractal Guardians flying in non-flooded alien ruins.
+- Monsters now remember the position of the last target even when idling. The memories fade, however.
+- Monsters now flee briefly when being fired at with the turrets. Fixes swarming characters being easy to exploit.
+- Don't allow the monsters to retaliate unless they are in the same submarine as the attacker. Removed the CanRetaliate parameter on character AI that was added in the previous update.
+- Refactored ConditionalSprite: ConditionalSprite now takes Sprite or DeformableSprite as child elements.
+- StatusEffects can now be used to spawn characters
+- Monster missions now support multiple monsters of different species.
+- Minor adjustments on eating. Fixes Bonethresher's eating animation.
+- Improved the avoid steering logic (used when the character is not using pathfiding, i.e. outside the submarine).
+- Charybdis: Increase the damage against structures for all attacks.
+- Adjusted Mudraptor, Bonethresher and Tigerthersher behavior. Threshers now hunt in packs.
+- Fixed incorrect flipping and mirroring. Disable mirroring on characters that don't need it.
+- Fixed Mudraptors preferring doors over humans
+- Fixed targeting at wall center position instead of the section position. Fixes hammerheads and bonethreshers targeting destroyed wall sections.
+- Fixed the damage modifiers on hammerheads not working properly.
+- Fixed a crash when trying to create a swarm with characters that have no swarming behavior defined.
+- Fixed monsters not targeting the closest limb when they should.
+- Fixed ai targets not being updated when the character is dead, causing the characters to be too perceivable/not perceivable enough by the monsters.
+- Fixed light textures repeating (most noticeable in diving suits and scooters).
+- Fixed deformable limbs not obstructing the lights behind them.
+- Fixed limbs' lightsources not being visible inside the submarine.
+- Fixed immobilized characters (e.g. stunned, monsters on dry land) occasionally "hanging" mid-air.
+- Fixed draw order issues due to normal sprites and deformable sprites being used on same characters.
+
+Character editor:
+- Added "TailTorqueBoost" parameter that can be used to prevent long and fast-moving characters, like the Tigerthresher, to get tangled around themselves.
+- "TailTorque" no longer affects the swimming sine amplitude (how strong the tail moves).
+- Sprite orientation now longer affects the damage modifiers.
+- Exposed the ragdoll main limb.
+- Exposed the damage emitters.
+- Exposed the damage sound of damage modifiers.
+- The radial widget angles are now rounded to the closest 10.
+- Fixed characters being able to collide with the submarine, which often caused large monsters to get stunned and impact sounds to be played when they're spawned.
+- Fixed characters moving when they shouldn't.
 
 ---------------------------------------------------------------------------------------------------------
 v0.9.4.0
@@ -34,7 +100,7 @@ Monster additions and changes:
 - Medium sized monsters can now more easily trigger impact effects when ramming the submarine.
 - Characters are now allowed to move faster than previously (9 -> 15).
 - Changed the mouth position calculations and redefined the values for all monsters that have the eating behavior.
-- Removed Moloch Baby (Which was just a test. Molochs will be revisited in the next update).
+- Removed Moloch Baby (Which was just a test. Molochs will be revisited later).
 - Better bend deformations on limbs.
 - Better feedback about hit impacts on limbs when the character takes damage.
 - AI monsters should hit moving targets more easily.
@@ -100,10 +166,15 @@ Misc improvements:
 - When rewiring, clicking the right mouse button only removes one node from the wire.
 - Wire nodes are added by left clicking in the sub editor, and can be laid out horizontally/vertically
 by holding shift.
+- Improved logging for DXGI_ERROR crashes on startup.
+- Made level ambient lighting darker.
+- Added "pause" console command (only usable in single player).
 
 Bugfixes:
 - Fixed crashing when the recharge speed of a PowerContainer with no interface (e.g. Alien Generator) is 
 adjusted by a signal or a bot.
+- Fixed docking interface becoming active on navigation terminals when any of the submarine's docking
+ports are close to another docking port, even if the terminal in question is not wired to that port.
 - Fixed an occasional crash when a bot starts retreating away from an enemy immediately after spawning.
 - Fixed clients not creating a download prompt when a sub they don't have is selected by vote.
 - Fixed traitor missions almost always placing the mission-related items inside the same containers.
@@ -150,6 +221,8 @@ the value change in the editing hud).
 - Clients don't display client-side vitality changes in healthbars until the actual vitality is received 
 from the server. Fixes health occasionally dropping and then jumping back up if the client predicts damage 
 incorrectly (e.g. if a melee attack hits client-side but doesn't server-side).
+- Fixed character syncing being very inaccurate when switching to freecam and spectating a character
+far away from other players.
 - Fixed oxygen/fuel tanks attached to a tool being rendered behind the character's legs.
 
 ---------------------------------------------------------------------------------------------------------

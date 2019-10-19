@@ -162,7 +162,7 @@ namespace Barotrauma.Items.Components
 
             if (currentMode == Mode.Active)
             {
-                if ((voltage >= minVoltage || powerConsumption <= 0.0f) &&
+                if ((Voltage >= MinVoltage) &&
                     (!UseTransducers || connectedTransducers.Count > 0))
                 {
                     if (currentPingIndex != -1)
@@ -235,6 +235,7 @@ namespace Barotrauma.Items.Components
 
         protected override void RemoveComponentSpecific()
         {
+            base.RemoveComponentSpecific();
             sonarBlip?.Remove();
             pingCircle?.Remove();
             directionalPingCircle?.Remove();
@@ -247,6 +248,7 @@ namespace Barotrauma.Items.Components
         {
             if (currentMode == Mode.Passive || !aiPingCheckPending) return false;
 
+            // TODO: Don't create new collections here
             Dictionary<string, List<Character>> targetGroups = new Dictionary<string, List<Character>>();
 
             foreach (Character c in Character.CharacterList)

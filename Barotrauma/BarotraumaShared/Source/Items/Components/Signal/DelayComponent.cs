@@ -96,13 +96,16 @@ namespace Barotrauma.Items.Components
                     if (prevQueuedSignal != null && 
                         prevQueuedSignal.Signal == signal && 
                         MathUtils.NearlyEqual(prevQueuedSignal.SignalStrength, signalStrength) &&
-                        prevQueuedSignal.SendTimer + prevQueuedSignal.SendDuration + 1 == delayTicks)
+                        ((prevQueuedSignal.SendTimer + prevQueuedSignal.SendDuration == delayTicks) || (prevQueuedSignal.SendTimer <= 0 && prevQueuedSignal.SendDuration > 0)))
                     {
                         prevQueuedSignal.SendDuration += 1;
                         return;
                     }
 
-                    prevQueuedSignal = new DelayedSignal(signal, signalStrength, delayTicks);
+                    prevQueuedSignal = new DelayedSignal(signal, signalStrength, delayTicks)
+                    {
+                        SendDuration = 1
+                    };
                     signalQueue.Enqueue(prevQueuedSignal);
                     break;
             }

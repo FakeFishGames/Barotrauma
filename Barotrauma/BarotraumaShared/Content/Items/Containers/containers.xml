@@ -37,7 +37,7 @@
       <Containable items="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
-  <Item name="Railgun Shell Rack" identifier="railgunshellrack" tags="container,railgunshellcontainer" pickdistance="120" scale="0.6">
+  <Item name="Railgun Shell Rack" identifier="railgunshellrack" tags="container,railgunammocontainer" pickdistance="120" scale="0.6">
     <Sprite texture="Content/Items/Weapons/TurretsAndDepthCharges.png" depth="0.84" sourcerect="210,197,182,176" origin="0.5,0.5" />
     <ItemContainer hideitems="false" drawinventory="true" capacity="3" slotsperrow="3" itempos="40,-65" iteminterval="50,0" itemrotation="90" canbeselected="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />

@@ -12,7 +12,7 @@ namespace Barotrauma
         public Dictionary<T, AIObjective> Objectives { get; private set; } = new Dictionary<T, AIObjective>();
         protected HashSet<T> ignoreList = new HashSet<T>();
         private float ignoreListTimer;
-        private float targetUpdateTimer;
+        protected float targetUpdateTimer;
 
         // By default, doesn't clear the list automatically
         protected virtual float IgnoreListClearInterval => 0;
@@ -38,8 +38,11 @@ namespace Barotrauma
             : base(character, objectiveManager, priorityModifier, option) { }
 
         protected override void Act(float deltaTime) { }
-        public override bool IsCompleted() => false;
+        protected override bool Check() => false;
         public override bool CanBeCompleted => true;
+        public override bool AbandonWhenCannotCompleteSubjectives => false;
+        public override bool AllowSubObjectiveSorting => true;
+        public override bool ReportFailures => false;
 
         public override bool IsLoop { get => true; set => throw new System.Exception("Trying to set the value for IsLoop from: " + System.Environment.StackTrace); }
 
@@ -69,11 +72,12 @@ namespace Barotrauma
             foreach (var objective in Objectives)
             {
                 var target = objective.Key;
-                if (!objective.Value.CanBeCompleted)
-                {
-                    ignoreList.Add(target);
-                    targetUpdateTimer = 0;
-                }
+                //if (!objective.Value.CanBeCompleted && !ignoreList.Contains(target))
+                //{
+                //    // TODO: leaks that cannot be accessed from inside cause FixLeak objective to fail, but for some reason it's not ignored. Make sure that it is.
+                //    ignoreList.Add(target);
+                //    targetUpdateTimer = 0;
+                //}
                 if (!Targets.Contains(target))
                 {
                     subObjectives.Remove(objective.Value);
@@ -91,6 +95,7 @@ namespace Barotrauma
 
         public override void Reset()
         {
+            base.Reset();
             ignoreList.Clear();
             ignoreListTimer = 0;
             UpdateTargets();
@@ -98,6 +103,7 @@ namespace Barotrauma
 
         public override float GetPriority()
         {
+            if (character.LockHands) { return 0; }
             if (character.Submarine == null) { return 0; }
             if (Targets.None()) { return 0; }
             // Allow the target value to be more than 100.
@@ -148,12 +154,22 @@ namespace Barotrauma
                 if (!Objectives.TryGetValue(target, out AIObjective objective))
                 {
                     objective = ObjectiveConstructor(target);
-                    objective.Completed += () => OnObjectiveCompleted(objective, target);
                     Objectives.Add(target, objective);
                     if (!subObjectives.Contains(objective))
                     {
                         subObjectives.Add(objective);
                     }
+                    objective.Completed += () =>
+                    {
+                        Objectives.Remove(target);
+                        OnObjectiveCompleted(objective, target);
+                    };
+                    objective.Abandoned += () =>
+                    {
+                        Objectives.Remove(target);
+                        ignoreList.Add(target);
+                        targetUpdateTimer = 0;
+                    };
                 }
             }
         }

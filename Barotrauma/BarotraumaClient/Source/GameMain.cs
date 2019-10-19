@@ -779,7 +779,17 @@ namespace Barotrauma
                         }
                     }
 
-                    GUI.ClearUpdateList();
+#if DEBUG
+                    if (GameMain.NetworkMember == null)
+                    {
+                        if (PlayerInput.KeyHit(Keys.P) && !(GUI.KeyboardDispatcher.Subscriber is GUITextBox))
+                        {
+                            DebugConsole.Paused = !DebugConsole.Paused;
+                        }
+                    }
+#endif
+
+                        GUI.ClearUpdateList();
                     paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen || Tutorial.ContentRunning || DebugConsole.Paused) &&
                              (NetworkMember == null || !NetworkMember.GameStarted);
 
@@ -800,7 +810,7 @@ namespace Barotrauma
 
                     DebugConsole.AddToGUIUpdateList();
 
-                    DebugConsole.Update(this, (float)Timing.Step);
+                    DebugConsole.Update((float)Timing.Step);
                     paused = paused || (DebugConsole.IsOpen && (NetworkMember == null || !NetworkMember.GameStarted));
 
                     if (!paused)

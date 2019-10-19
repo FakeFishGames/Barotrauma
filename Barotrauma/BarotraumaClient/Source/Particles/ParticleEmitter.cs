@@ -25,7 +25,7 @@ namespace Barotrauma.Particles
         public void Emit(float deltaTime, Vector2 position, Hull hullGuess = null, float angle = 0.0f, float particleRotation = 0.0f, float velocityMultiplier = 1.0f, float sizeMultiplier = 1.0f, float amountMultiplier = 1.0f)
         {
             emitTimer += deltaTime * amountMultiplier;
-            burstEmitTimer += deltaTime;
+            burstEmitTimer -= deltaTime;
 
             if (Prefab.ParticlesPerSecond > 0)
             {
@@ -37,9 +37,9 @@ namespace Barotrauma.Particles
                 }
             }
 
-            if (burstEmitTimer < Prefab.EmitInterval) return;
-            burstEmitTimer = 0.0f;
-
+            if (burstEmitTimer > 0.0f) { return; }
+            
+            burstEmitTimer = Prefab.EmitInterval;
             for (int i = 0; i < Prefab.ParticleAmount * amountMultiplier; i++)
             {
                 Emit(position, hullGuess, angle, particleRotation, velocityMultiplier, sizeMultiplier);

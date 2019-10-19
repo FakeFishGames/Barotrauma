@@ -13,6 +13,7 @@ using System.IO;
 using Barotrauma.Steam;
 using System.Xml.Linq;
 using System.Threading;
+using Barotrauma.Extensions;
 
 namespace Barotrauma.Networking
 {
@@ -1875,9 +1876,13 @@ namespace Barotrauma.Networking
                 }
 
                 //find the clients in this team
-                List<Client> teamClients = teamCount == 1 ?
-                    new List<Client>(playingClients) : 
-                    playingClients.FindAll(c => c.TeamID == teamID);
+                List<Client> teamClients = teamCount == 1 ? new List<Client>(playingClients) : playingClients.FindAll(c => c.TeamID == teamID);
+                if (serverSettings.AllowSpectating)
+                {
+                    teamClients.RemoveAll(c => c.SpectateOnly);
+                }
+                //always allow the server owner to spectate even if it's disallowed in server settings
+                teamClients.RemoveAll(c => c.Connection == OwnerConnection && c.SpectateOnly);
 
                 if (!teamClients.Any() && n > 0) { continue; }
 
@@ -1909,7 +1914,10 @@ namespace Barotrauma.Networking
                 int botsToSpawn = serverSettings.BotSpawnMode == BotSpawnMode.Fill ? serverSettings.BotCount - characterInfos.Count : serverSettings.BotCount;
                 for (int i = 0; i < botsToSpawn; i++)
                 {
-                    var botInfo = new CharacterInfo(Character.HumanSpeciesName);
+                    var botInfo = new CharacterInfo(Character.HumanSpeciesName)
+                    {
+                        TeamID = teamID
+                    };
                     characterInfos.Add(botInfo);
                     bots.Add(botInfo);
                 }
@@ -2261,7 +2269,7 @@ namespace Barotrauma.Networking
                 if (client.Connection is LidgrenConnection lidgrenConn)
                 {
                     ip = lidgrenConn.IPEndPoint.Address.IsIPv4MappedToIPv6 ?
-                    lidgrenConn.IPEndPoint.Address.MapToIPv4().ToString() :
+                    lidgrenConn.IPEndPoint.Address.MapToIPv4NoThrow().ToString() :
                     lidgrenConn.IPEndPoint.Address.ToString();
                     if (range) { ip = serverSettings.BanList.ToRange(ip); }
                 }
@@ -2951,7 +2959,7 @@ namespace Barotrauma.Networking
             //count the clients who already have characters with an assigned job
             foreach (Client c in connectedClients)
             {
-                if (c.TeamID != teamID || unassigned.Contains(c)) continue;
+                if (c.TeamID != teamID || unassigned.Contains(c)) { continue; }
                 if (c.Character?.Info?.Job != null && !c.Character.IsDead)
                 {
                     assignedClientCount[c.Character.Info.Job.Prefab]++;
@@ -2961,8 +2969,8 @@ namespace Barotrauma.Networking
             //if any of the players has chosen a job that is Always Allowed, give them that job
             for (int i = unassigned.Count - 1; i >= 0; i--)
             {
-                if (unassigned[i].JobPreferences.Count == 0) continue;
-                if (!unassigned[i].JobPreferences[0].AllowAlways) continue;
+                if (unassigned[i].JobPreferences.Count == 0) { continue; }
+                if (!unassigned[i].JobPreferences[0].AllowAlways) { continue; }
                 unassigned[i].AssignedJob = unassigned[i].JobPreferences[0];
                 unassigned.RemoveAt(i);
             }
@@ -2975,8 +2983,8 @@ namespace Barotrauma.Networking
 
                 foreach (JobPrefab jobPrefab in jobList)
                 {
-                    if (unassigned.Count == 0) break;
-                    if (jobPrefab.MinNumber < 1 || assignedClientCount[jobPrefab] >= jobPrefab.MinNumber) continue;
+                    if (unassigned.Count == 0) { break; }
+                    if (jobPrefab.MinNumber < 1 || assignedClientCount[jobPrefab] >= jobPrefab.MinNumber) { continue; }
 
                     //find the client that wants the job the most, or force it to random client if none of them want it
                     Client assignedClient = FindClientWithJobPreference(unassigned, jobPrefab, true);
@@ -2986,12 +2994,40 @@ namespace Barotrauma.Networking
                     unassigned.Remove(assignedClient);
 
                     //the job still needs more crew members, set unassignedJobsFound to true to keep the while loop running
-                    if (assignedClientCount[jobPrefab] < jobPrefab.MinNumber) unassignedJobsFound = true;
+                    if (assignedClientCount[jobPrefab] < jobPrefab.MinNumber) { unassignedJobsFound = true; }
                 }
             }
 
+            List<WayPoint> spawnPoints = WayPoint.WayPointList.FindAll(wp =>
+                wp.SpawnType == SpawnType.Human &&
+                wp.Submarine != null && wp.Submarine.TeamID == teamID);
+            spawnPoints.OrderBy(sp => Rand.Int(int.MaxValue));
+            spawnPoints.OrderBy(sp => sp.AssignedJob == null ? 0 : 1);
+
+            bool canAssign = false;
+            do
+            {
+                canAssign = false;
+                foreach (WayPoint spawnPoint in spawnPoints)
+                {
+                    if (unassigned.Count == 0) { break; }
+
+                    JobPrefab job = spawnPoint.AssignedJob ?? JobPrefab.List.Values.GetRandom();
+                    if (assignedClientCount[job] >= job.MaxNumber) { continue; }
+
+                    Client assignedClient = FindClientWithJobPreference(unassigned, job, true);
+                    if (assignedClient != null)
+                    {
+                        assignedClient.AssignedJob = job;
+                        assignedClientCount[job]++;
+                        unassigned.Remove(assignedClient);
+                        canAssign = true;
+                    }
+                }
+            } while (unassigned.Count > 0 && canAssign);
+
             //attempt to give the clients a job they have in their job preferences
-            for (int i = unassigned.Count - 1; i >= 0; i--)
+            /*for (int i = unassigned.Count - 1; i >= 0; i--)
             {
                 foreach (JobPrefab preferredJob in unassigned[i].JobPreferences)
                 {
@@ -3005,7 +3041,7 @@ namespace Barotrauma.Networking
                         break;
                     }
                 }
-            }
+            }*/
 
             //give random jobs to rest of the clients
             foreach (Client c in unassigned)
@@ -3039,9 +3075,8 @@ namespace Barotrauma.Networking
 
         public void AssignBotJobs(List<CharacterInfo> bots, Character.TeamType teamID)
         {
-            var jobList = JobPrefab.List.Values.ToList();
             Dictionary<JobPrefab, int> assignedPlayerCount = new Dictionary<JobPrefab, int>();
-            foreach (JobPrefab jp in jobList)
+            foreach (JobPrefab jp in JobPrefab.List.Values)
             {
                 assignedPlayerCount.Add(jp, 0);
             }
@@ -3061,25 +3096,38 @@ namespace Barotrauma.Networking
             }
 
             List<CharacterInfo> unassignedBots = new List<CharacterInfo>(bots);
-            foreach (CharacterInfo bot in bots)
-            {
-                foreach (JobPrefab jobPrefab in jobList)
-                {
-                    if (jobPrefab.MinNumber < 1 || assignedPlayerCount[jobPrefab] >= jobPrefab.MinNumber) continue;
-                    bot.Job = new Job(jobPrefab);
-                    assignedPlayerCount[jobPrefab]++;
-                    unassignedBots.Remove(bot);
-                    break;
-                }
-            }
 
-            //find a suitable job for the rest of the players
+            List<WayPoint> spawnPoints = WayPoint.WayPointList.FindAll(wp =>
+                wp.SpawnType == SpawnType.Human &&
+                wp.Submarine != null && wp.Submarine.TeamID == teamID);
+            spawnPoints.OrderBy(sp => Rand.Int(int.MaxValue));
+            spawnPoints.OrderBy(sp => sp.AssignedJob == null ? 0 : 1);
+
+            bool canAssign = false;
+            do
+            {
+                canAssign = false;
+                foreach (WayPoint spawnPoint in spawnPoints)
+                {
+                    if (unassignedBots.Count == 0) { break; }
+
+                    JobPrefab jobPrefab = spawnPoint.AssignedJob ?? JobPrefab.List.Values.GetRandom();
+                    if (assignedPlayerCount[jobPrefab] >= jobPrefab.MaxNumber) { continue; }
+
+                    unassignedBots[0].Job = new Job(jobPrefab);
+                    assignedPlayerCount[jobPrefab]++;
+                    unassignedBots.Remove(unassignedBots[0]);
+                    canAssign = true;                    
+                }
+            } while (unassignedBots.Count > 0 && canAssign);
+            
+            //find a suitable job for the rest of the bots
             foreach (CharacterInfo c in unassignedBots)
             {
                 //find all jobs that are still available
-                var remainingJobs = jobList.FindAll(jp => assignedPlayerCount[jp] < jp.MaxNumber);
+                var remainingJobs = JobPrefab.List.Values.Where(jp => assignedPlayerCount[jp] < jp.MaxNumber);
                 //all jobs taken, give a random job
-                if (remainingJobs.Count == 0)
+                if (remainingJobs.Count() == 0)
                 {
                     DebugConsole.ThrowError("Failed to assign a suitable job for bot \"" + c.Name + "\" (all jobs already have the maximum numbers of players). Assigning a random job...");
                     c.Job = Job.Random();
@@ -3087,7 +3135,7 @@ namespace Barotrauma.Networking
                 }
                 else //some jobs still left, choose one of them by random
                 {
-                    c.Job = new Job(remainingJobs[Rand.Range(0, remainingJobs.Count)]);
+                    c.Job = new Job(remainingJobs.GetRandom());
                     assignedPlayerCount[c.Job.Prefab]++;
                 }
             }
@@ -3099,7 +3147,7 @@ namespace Barotrauma.Networking
             Client preferredClient = null;
             foreach (Client c in clients)
             {
-                if (c.Karma < job.MinKarma) continue;
+                if (c.Karma < job.MinKarma) { continue; }
                 int index = c.JobPreferences.IndexOf(job);
                 if (index == -1) index = 1000;
 
@@ -3117,6 +3165,17 @@ namespace Barotrauma.Networking
             }
 
             return preferredClient;
+        }
+
+        public void UpdateMissionState(int state)
+        {
+            foreach (var client in connectedClients)
+            {
+                IWriteMessage msg = new WriteOnlyMessage();
+                msg.Write((byte)ServerPacketHeader.MISSION);
+                msg.Write((ushort)state);
+                serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
+            }
         }
 
         public static void Log(string line, ServerLog.MessageType messageType)

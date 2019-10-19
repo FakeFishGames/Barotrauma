@@ -128,6 +128,7 @@ namespace Barotrauma.Items.Components
 
         public override void OnItemLoaded()
         {
+            base.OnItemLoaded();
             if (pumpSpeedSlider != null)
             {
                 pumpSpeedSlider.BarScroll = (flowPercentage + 100.0f) / 200.0f;

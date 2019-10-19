@@ -15,6 +15,13 @@ namespace Barotrauma.Items.Components
         private const float AutopilotRayCastInterval = 0.5f;
         private const float RecalculatePathInterval = 5.0f;
 
+        private const float AutopilotMinDistToPathNode = 30.0f;
+
+        private const float AutoPilotSteeringLerp = 0.1f;
+
+        private const float AutoPilotMaxSpeed = 0.5f;
+        private const float AIPilotMaxSpeed = 1.0f;
+
         private Vector2 currVelocity;
         private Vector2 targetVelocity;
 
@@ -162,6 +169,7 @@ namespace Barotrauma.Items.Components
 
         public override void OnItemLoaded()
         {
+            base.OnItemLoaded();
             sonar = item.GetComponent<Sonar>();
         }
 
@@ -209,7 +217,7 @@ namespace Barotrauma.Items.Components
 
             currPowerConsumption = powerConsumption;
 
-            if (voltage < minVoltage && currPowerConsumption > 0.0f) { return; }
+            if (Voltage < MinVoltage) { return; }
 
             if (user != null && user.Removed)
             {
@@ -221,6 +229,12 @@ namespace Barotrauma.Items.Components
             if (autoPilot)
             {
                 UpdateAutoPilot(deltaTime);
+                float userSkill = 0.0f;
+                if (user != null && (user.SelectedConstruction == item || item.linkedTo.Contains(user.SelectedConstruction)))
+                {
+                    userSkill = user.GetSkillLevel("helm") / 100.0f;
+                }
+                targetVelocity = targetVelocity.ClampLength(MathHelper.Lerp(AutoPilotMaxSpeed, AIPilotMaxSpeed, userSkill) * 100.0f);
             }
             else
             {
@@ -253,8 +267,6 @@ namespace Barotrauma.Items.Components
             targetLevel += (neutralBallastLevel - 0.5f) * 100.0f;
 
             item.SendSignal(0, targetLevel.ToString(CultureInfo.InvariantCulture), "velocity_y_out", null);
-
-            voltage -= deltaTime;
         }
 
         private void UpdateAutoPilot(float deltaTime)
@@ -262,7 +274,8 @@ namespace Barotrauma.Items.Components
             if (controlledSub == null) return;
             if (posToMaintain != null)
             {
-                SteerTowardsPosition((Vector2)posToMaintain);
+                Vector2 steeringVel = GetSteeringVelocity((Vector2)posToMaintain);
+                TargetVelocity = Vector2.Lerp(TargetVelocity, steeringVel, AutoPilotSteeringLerp);               
                 return;
             }
 
@@ -284,7 +297,7 @@ namespace Barotrauma.Items.Components
 
                 //if the node is close enough, check if it's visible
                 float lengthSqr = diff.LengthSquared();
-                if (lengthSqr > 0.001f && lengthSqr < 500.0f)
+                if (lengthSqr > 0.001f && lengthSqr < AutopilotMinDistToPathNode * AutopilotMinDistToPathNode)
                 {
                     diff = Vector2.Normalize(diff);
 
@@ -298,11 +311,11 @@ namespace Barotrauma.Items.Components
                             Vector2 cornerPos =
                                 new Vector2(controlledSub.Borders.Width * x, controlledSub.Borders.Height * y) / 2.0f;
 
-                            cornerPos = ConvertUnits.ToSimUnits(cornerPos * 1.2f + controlledSub.WorldPosition);
+                            cornerPos = ConvertUnits.ToSimUnits(cornerPos * 1.1f + controlledSub.WorldPosition);
 
                             float dist = Vector2.Distance(cornerPos, steeringPath.NextNode.SimPosition);
 
-                            if (Submarine.PickBody(cornerPos, cornerPos + diff * dist, null, Physics.CollisionLevel) == null) continue;
+                            if (Submarine.PickBody(cornerPos, cornerPos + diff * dist, null, Physics.CollisionLevel) == null) { continue; }
 
                             nextVisible = false;
                             x = 2;
@@ -313,19 +326,18 @@ namespace Barotrauma.Items.Components
                     if (nextVisible) steeringPath.SkipToNextNode();
                 }
 
-                
-
                 autopilotRayCastTimer = AutopilotRayCastInterval;
             }
 
+            Vector2 newVelocity = Vector2.Zero;
             if (steeringPath.CurrentNode != null)
             {
-                SteerTowardsPosition(steeringPath.CurrentNode.WorldPosition);
+                newVelocity = GetSteeringVelocity(steeringPath.CurrentNode.WorldPosition);
             }
 
             Vector2 avoidDist = new Vector2(
-                Math.Max(1000.0f * Math.Abs(controlledSub.Velocity.X), controlledSub.Borders.Width * 1.5f),
-                Math.Max(1000.0f * Math.Abs(controlledSub.Velocity.Y), controlledSub.Borders.Height * 1.5f));
+                Math.Max(1000.0f * Math.Abs(controlledSub.Velocity.X), controlledSub.Borders.Width * 0.75f),
+                Math.Max(1000.0f * Math.Abs(controlledSub.Velocity.Y), controlledSub.Borders.Height * 0.75f));
 
             float avoidRadius = avoidDist.Length();
 
@@ -356,22 +368,22 @@ namespace Barotrauma.Items.Components
                             0.0f : Vector2.Dot(controlledSub.Velocity, -normalizedDiff);
 
                         //not heading towards the wall -> ignore
-                        if (dot < 0.5)
+                        if (dot < 1.0)
                         {
                             debugDrawObstacles.Add(new ObstacleDebugInfo(edge, intersection, dot, Vector2.Zero, cell.Translation));
                             continue;
                         }
                         
-                        Vector2 change = (normalizedDiff * Math.Max((avoidRadius - diff.Length()), 0.0f)) / avoidRadius;                        
-                        newAvoidStrength += change * dot;
-                        debugDrawObstacles.Add(new ObstacleDebugInfo(edge, intersection, dot, change * dot, cell.Translation));
+                        Vector2 change = (normalizedDiff * Math.Max((avoidRadius - diff.Length()), 0.0f)) / avoidRadius;
+                        if (change.LengthSquared() < 0.001f) { continue; }
+                        newAvoidStrength += change * (dot - 1.0f);
+                        debugDrawObstacles.Add(new ObstacleDebugInfo(edge, intersection, dot - 1.0f, change * (dot - 1.0f), cell.Translation));
                     }
                 }
             }
 
             avoidStrength = Vector2.Lerp(avoidStrength, newAvoidStrength, deltaTime * 10.0f);
-
-            targetVelocity += avoidStrength * 100.0f;
+            TargetVelocity = Vector2.Lerp(TargetVelocity, newVelocity + avoidStrength * 100.0f, AutoPilotSteeringLerp);
 
             //steer away from other subs
             foreach (Submarine sub in Submarine.Loaded)
@@ -447,21 +459,21 @@ namespace Barotrauma.Items.Components
                 UpdatePath();
             }
         }
-        private void SteerTowardsPosition(Vector2 worldPosition)
+        private Vector2 GetSteeringVelocity(Vector2 worldPosition)
         {
-            float prediction = 10.0f;
+            float prediction = 2.0f;
 
             Vector2 futurePosition = ConvertUnits.ToDisplayUnits(controlledSub.Velocity) * prediction;
             Vector2 targetSpeed = ((worldPosition - controlledSub.WorldPosition) - futurePosition);
 
-            if (targetSpeed.Length() > 500.0f)
+            if (targetSpeed.LengthSquared() > 500.0f * 500.0f)
             {
-                targetSpeed = Vector2.Normalize(targetSpeed);
-                TargetVelocity = targetSpeed * 100.0f;
+                
+                return Vector2.Normalize(targetSpeed) * 100.0f;
             }
             else
             {
-                TargetVelocity = targetSpeed / 5.0f;
+                return targetSpeed / 5.0f;
             }
         }
 
@@ -471,43 +483,53 @@ namespace Barotrauma.Items.Components
             {
                 character.Speak(TextManager.Get("DialogSteeringTaken"), null, 0.0f, "steeringtaken", 10.0f);
             }
-
             user = character;
-
+            if (!AutoPilot)
+            {
+                unsentChanges = true;
+                AutoPilot = true;
+            }
             switch (objective.Option.ToLowerInvariant())
             {
                 case "maintainposition":
-                    if (!posToMaintain.HasValue)
+                    if (objective.Override)
                     {
-                        unsentChanges = true;
-                        posToMaintain = controlledSub != null ?
-                            controlledSub.WorldPosition :
-                            item.Submarine == null ? item.WorldPosition : item.Submarine.WorldPosition;
+                        if (!MaintainPos)
+                        {
+                            unsentChanges = true;
+                            MaintainPos = true;
+                        }
+                        if (!posToMaintain.HasValue)
+                        {
+                            unsentChanges = true;
+                            posToMaintain = controlledSub != null ?
+                                controlledSub.WorldPosition :
+                                item.Submarine == null ? item.WorldPosition : item.Submarine.WorldPosition;
+                        }
                     }
-
-                    if (!AutoPilot || !MaintainPos) unsentChanges = true;
-
-                    AutoPilot = true;
-                    MaintainPos = true;
                     break;
                 case "navigateback":
-                    if (!AutoPilot || MaintainPos || LevelEndSelected || !LevelStartSelected)
+                    if (objective.Override)
                     {
-                        unsentChanges = true;
+                        if (MaintainPos || LevelEndSelected || !LevelStartSelected)
+                        {
+                            unsentChanges = true;
+                        }
+                        SetDestinationLevelStart();
                     }
-                    SetDestinationLevelStart();
                     break;
                 case "navigatetodestination":
-                    if (!AutoPilot || MaintainPos || !LevelEndSelected || LevelStartSelected)
+                    if (objective.Override)
                     {
-                        unsentChanges = true;
+                        if (MaintainPos || !LevelEndSelected || LevelStartSelected)
+                        {
+                            unsentChanges = true;
+                        }
+                        SetDestinationLevelEnd();
                     }
-                    SetDestinationLevelEnd();
                     break;
             }
-
             sonar?.AIOperate(deltaTime, character, objective);
-
             return false;
         }
 

@@ -170,9 +170,16 @@ namespace Barotrauma
             Draw(spriteBatch, editing, back, null);
         }
 
-        public override void DrawDamage(SpriteBatch spriteBatch, Effect damageEffect, bool editing)
+        public void DrawDamage(SpriteBatch spriteBatch, Effect damageEffect, bool editing)
         {
             Draw(spriteBatch, editing, false, damageEffect);
+        }
+
+        public float GetDrawDepth()
+        {
+            float depth = SpriteDepthOverrideIsSet ? SpriteOverrideDepth : prefab.sprite.Depth;
+            depth -= (ID % 255) * 0.000001f;
+            return depth;
         }
 
         private void Draw(SpriteBatch spriteBatch, bool editing, bool back = true, Effect damageEffect = null)
@@ -202,8 +209,7 @@ namespace Barotrauma
 
             Vector2 drawOffset = Submarine == null ? Vector2.Zero : Submarine.DrawPosition;
 
-            float depth = SpriteDepthOverrideIsSet ? SpriteOverrideDepth : prefab.sprite.Depth;
-            depth -= (ID % 255) * 0.000001f;
+            float depth = GetDrawDepth();
 
             Vector2 textureOffset = this.textureOffset;
             if (FlippedX) textureOffset.X = -textureOffset.X;

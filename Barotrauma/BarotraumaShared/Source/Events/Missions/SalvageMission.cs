@@ -14,13 +14,11 @@ namespace Barotrauma
 
         private Level.PositionType spawnPositionType;
 
-        private int state;
-
         public override IEnumerable<Vector2> SonarPositions
         {
             get
             {
-                if (state > 0 )
+                if (State > 0 )
                 {
                     Enumerable.Empty<Vector2>();
                 }
@@ -87,23 +85,23 @@ namespace Barotrauma
 
         public override void Update(float deltaTime)
         {
-            switch (state)
+            switch (State)
             {
                 case 0:
                     //item.body.LinearVelocity = Vector2.Zero;
                     if (item.ParentInventory != null) item.body.FarseerBody.IsKinematic = false;
                     if (item.CurrentHull?.Submarine == null) return;
 
-                    ShowMessage(state);
+                    //ShowMessage(State);
 
-                    state = 1;
+                    State = 1;
                     break;
                 case 1:
                     if (!Submarine.MainSub.AtEndPosition && !Submarine.MainSub.AtStartPosition) return;
 
-                    ShowMessage(state);
+                    //ShowMessage(State);
 
-                    state = 2;
+                    State = 2;
                     break;
             }    
         }
