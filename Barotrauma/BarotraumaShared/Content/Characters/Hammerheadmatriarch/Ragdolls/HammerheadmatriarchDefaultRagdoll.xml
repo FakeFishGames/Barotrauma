@@ -2,7 +2,7 @@
   <collider radius="200" width="0" name="Main Collider" height="600" />
   <limb id="0" name="Torso" type="Torso" height="350" width="500" notes="" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7" mouthpos="0,0">
     <deformablesprite texture="" sourcerect="1163,1,500,558" origin="0.5112625,0.5286262" depth="0.2" subdivisions="5,5">
-      <spritedeformation type="bendjoint" resolution="5,5" multiplier="1.0" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="20" strength="0" />
+      <spritedeformation type="bendjoint" resolution="5,5" multiplier="1.0" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="20" strength="5" />
     </deformablesprite>
   </limb>
   <limb id="1" name="Head" type="Head" height="0" width="0" notes="" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="210" mass="0" density="50" pullpos="0,0" refjoint="-1" ignorecollisions="False" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7" mouthpos="0,0">
@@ -11,12 +11,15 @@
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="0.25" changespeed="2" blendmode="Add" sync="-1" typename="noise" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="True" sineoffset="0" />
       <spritedeformation type="inflate" resolution="5,5" frequency="20" scale="0.04" blendmode="Add" usemovementsine="False" stopwhenhostisdead="True" sync="-1" typename="inflate" strength="1" maxrotation="90" sineoffset="0" />
       <spritedeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="Multiply" row0="0,0 0,0 0.25,0.25 0.5,0.5 1,1" row1="0,0 0,0 0.25,0.25 0.5,0.5 1,1" row2="0,0 0,0 0.25,0.25 0.5,0.5 1,1" row3="0,0 0,0 0.25,0.25 0.5,0.5 1,1" row4="0,0 0,0 0.25,0.25 0.5,0.5 1,1" sync="-1" typename="custom" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
-      <spritedeformation type="bendjoint" resolution="5,5" multiplier="1.0" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="45" strength="10" />
+      <spritedeformation type="bendjoint" resolution="5,5" multiplier="1.0" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="45" strength="5" />
     </deformablesprite>
     <conditionalsprite>
       <conditional isDead="True" />
       <deformablesprite texture="Content/Characters/Hammerheadmatriarch/Hammerheadmatriarch.png" sourcerect="366,0,381,563" origin="0.4631682,0.5593005" depth="0.3" subdivisions="5,5">
-        <spritedeformation type="bendjoint" resolution="5,5" multiplier="1.0" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="20" strength="5" />
+        <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="0.75" changespeed="0.25" blendmode="Add" sync="-1" typename="noise" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
+        <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="0.75" changespeed="0.3" blendmode="Add" sync="-1" typename="noise" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
+        <spritedeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="Multiply" row0="0,0 0,0 0.25,0.25 0.5,0.5 1,1" row1="0,0 0,0 0.25,0.25 0.5,0.5 1,1" row2="0,0 0,0 0.25,0.25 0.5,0.5 1,1" row3="0,0 0,0 0.25,0.25 0.5,0.5 1,1" row4="0,0 0,0 0.25,0.25 0.5,0.5 1,1" sync="-1" typename="custom" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
+        <spritedeformation type="bendjoint" resolution="5,5" multiplier="1.0" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="45" strength="5" />
       </deformablesprite>
     </conditionalsprite>
     <attack targettype="Structure" priority="1" range="150" damagerange="150" cooldown="15" secondarycooldown="1" afterattack="FallBack" structuredamage="200" force="50" targetimpulse="500" structuresoundtype="StructureBlunt" applyforceonlimbs="0, 3" context="NotDefined" hitdetectiontype="Contact" itemdamage="45" stun="0" onlyhumans="False" torque="0" applyforcesonlyonce="False" targetimpulseworld="0,0" targetforce="0" targetforceworld="0,0" severlimbsprobability="0" stickchance="0" duration="0.1" cooldownrandomfactor="0.1" reverse="False" targetlimbtype="None">
@@ -47,25 +50,25 @@
   <limb id="3" width="204" height="224" name="Fin1" type="None" spriteorientation="0" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="2" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="35" mouthpos="0,0">
     <deformablesprite texture="" sourcerect="8,263,202,260" origin="0.5502423,0.3959902" depth="0.1" subdivisions="5,5">
       <spritedeformation type="noise" resolution="3,3" frequency="0.1" amplitude="0.25" changespeed="0.5" blendmode="Add" sync="-1" typename="noise" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" strength="1" maxrotation="90" />
-      <spritedeformation type="custom" resolution="3,3" frequency="0" amplitude="1" blendmode="Multiply" row0="1,0 0,5 0,0" row1="1,0 0,5 0,0" row2="1,0 0,5 0,0" sync="-1" typename="custom" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" strength="1" maxrotation="90" />
+      <spritedeformation type="custom" resolution="3,3" frequency="0" amplitude="1" blendmode="Multiply" row0="0,0 0,0 0,0" row1="0.5,0.5 0.5,0.5 0.5,0.5" row2="1,0 1,1 1,1" sync="-1" typename="custom" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" strength="1" maxrotation="90" />
     </deformablesprite>
   </limb>
   <limb id="4" radius="100" width="0" height="0" mass="0" name="Fin2" type="None" spriteorientation="0" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" density="2" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="35" mouthpos="0,0">
     <deformablesprite texture="" sourcerect="12,29,203,235" origin="0.541802,0.486223" depth="0.1" subdivisions="5,5">
       <spritedeformation type="noise" resolution="3,3" frequency="0.1" amplitude="0.25" changespeed="0.5" blendmode="Add" sync="-1" typename="noise" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" strength="1" maxrotation="90" />
-      <spritedeformation type="custom" resolution="3,3" frequency="0" amplitude="1" blendmode="Multiply" row0="1,0 0,5 0,0" row1="1,0 0,5 0,0" row2="1,0 0,5 0,0" sync="-1" typename="custom" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" strength="1" maxrotation="90" />
+      <spritedeformation type="custom" resolution="3,3" frequency="0" amplitude="1" blendmode="Multiply" row0="0,0 0,0 0,0" row1="0.5,0.5 0.5,0.5 0.5,0.5" row2="1,0 1,1 1,1" sync="-1" typename="custom" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" strength="1" maxrotation="90" />
     </deformablesprite>
   </limb>
   <limb id="5" width="0" height="0" name="RoundFin1" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="150" mass="0" density="2" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="35" mouthpos="0,0">
     <deformablesprite texture="" sourcerect="2,533,325,210" origin="0.4948558,0.5242501" depth="0.1" subdivisions="5,5">
       <spritedeformation type="noise" resolution="3,3" frequency="0.1" amplitude="0.25" changespeed="0.5" blendmode="Add" sync="-1" typename="noise" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" strength="1" maxrotation="90" />
-      <spritedeformation type="custom" resolution="3,3" frequency="0" amplitude="1" blendmode="Multiply" row0="1,0 1,0 1,0" row1="1,0 0,5 1,0" row2="0,0 0,0 0,0" sync="-1" typename="custom" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" strength="1" maxrotation="90" />
+      <spritedeformation type="custom" resolution="3,3" frequency="0" amplitude="1" blendmode="Multiply" row0="1,0 1,0 1,0" row1="1,0 0.5,0.5 1,0" row2="0,0 0,0 0,0" sync="-1" typename="custom" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" strength="1" maxrotation="90" />
     </deformablesprite>
   </limb>
   <limb id="6" radius="150" width="0" height="0" mass="0" name="RoundFin2" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" density="2" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="35" mouthpos="0,0">
     <deformablesprite texture="" sourcerect="2,740,325,233" origin="0.4711748,0.5063239" depth="0.11" subdivisions="5,5">
       <spritedeformation type="noise" resolution="3,3" frequency="0.1" amplitude="0.25" changespeed="0.5" blendmode="Add" sync="-1" typename="noise" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" strength="1" maxrotation="90" />
-      <spritedeformation type="custom" resolution="3,3" frequency="0" amplitude="1" blendmode="Multiply" row0="0,0 0,0 0,0" row1="1,0 0,5 1,0" row2="1,0 1,0 1,0" sync="-1" typename="custom" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" strength="1" maxrotation="90" />
+      <spritedeformation type="custom" resolution="3,3" frequency="0" amplitude="1" blendmode="Multiply" row0="0,0 0,0 0,0" row1="1,0 0.5,0.5 1,0" row2="1,0 1,0 1,0" sync="-1" typename="custom" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" strength="1" maxrotation="90" />
     </deformablesprite>
   </limb>
   <limb id="7" width="243.95" height="389.3" name="SkirtA1" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="1" pullpos="0,0" refjoint="-1" ignorecollisions="True" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="70" mouthpos="0,0">
@@ -255,18 +258,18 @@
   <joint limb1="2" limb2="10" limb1anchor="-137.8407,-7.879963" limb2anchor="0.3250347,43.64072" name="Joint 2 - 10" canbesevered="False" limitenabled="True" upperlimit="270" lowerlimit="270" stiffness="0.25" />
   <joint limb1="0" limb2="5" limb1anchor="-180.5483,91.71019" limb2anchor="6.8,-61.24" name="Joint 0 - 5" canbesevered="True" limitenabled="True" upperlimit="342" lowerlimit="342" stiffness="0.25" />
   <joint limb1="0" limb2="6" limb1anchor="-230.4351,-91.60926" limb2anchor="6.982111,61.08958" name="Joint 0 - 6" canbesevered="True" limitenabled="True" upperlimit="10" lowerlimit="0" stiffness="0.25" />
-  <joint limb1="0" limb2="7" limb1anchor="-152.8381,-4.967737" limb2anchor="96.50256,-8.416684" name="Joint 0 - 7" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" stiffness="0.25" />
-  <joint limb1="10" limb2="19" limb1anchor="14.75196,-59.17786" limb2anchor="-20.87727,107.7341" name="Joint 10 - 19" canbesevered="True" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />
-  <joint limb1="19" limb2="20" limb1anchor="-14.43011,-100.491" limb2anchor="-28.69183,94.44974" name="Joint 19 - 20" canbesevered="True" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />
-  <joint limb1="20" limb2="21" limb1anchor="-16.76549,-115.494" limb2anchor="-17.98608,107.6283" name="Joint 20 - 21" canbesevered="True" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />
+  <joint limb1="0" limb2="7" limb1anchor="-152.8381,-4.967737" limb2anchor="96.50256,-8.416684" name="Joint 0 - 7" canbesevered="False" limitenabled="True" upperlimit="0" lowerlimit="0" stiffness="0.25" />
+  <joint limb1="10" limb2="19" limb1anchor="14.75196,-56.64618" limb2anchor="-20.87727,107.7341" name="Joint 10 - 19" canbesevered="False" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />
+  <joint limb1="19" limb2="20" limb1anchor="-14.43011,-100.491" limb2anchor="-28.69183,94.44974" name="Joint 19 - 20" canbesevered="False" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />
+  <joint limb1="20" limb2="21" limb1anchor="-16.76549,-115.494" limb2anchor="-17.98608,107.6283" name="Joint 20 - 21" canbesevered="False" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />
   <joint limb1="1" limb2="22" limb1anchor="206.7185,-28.73208" limb2anchor="11.97764,-9.081385" name="Joint 1 - 22" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" stiffness="0.25" />
-  <joint limb1="7" limb2="23" limb1anchor="-98.69661,-0.1300369" limb2anchor="148.226,7.534222" name="Joint 7 - 23" canbesevered="True" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />
-  <joint limb1="23" limb2="24" limb1anchor="-168.3845,-3.798505" limb2anchor="204.9549,31.62011" name="Joint 23 - 24" canbesevered="True" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />
+  <joint limb1="7" limb2="23" limb1anchor="-98.69661,-0.1300369" limb2anchor="148.226,7.534222" name="Joint 7 - 23" canbesevered="False" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />
+  <joint limb1="23" limb2="24" limb1anchor="-168.3845,-3.798505" limb2anchor="204.9549,31.62011" name="Joint 23 - 24" canbesevered="False" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />
   <joint limb1="8" limb2="25" limb1anchor="-86.42073,1.905803" limb2anchor="105.5709,-8.359675" name="Joint 8 - 25" canbesevered="True" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />
   <joint limb1="25" limb2="26" limb1anchor="-116.4344,-10.1447" limb2anchor="113.1192,-8.606905" name="Joint 25 - 26" canbesevered="True" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />
   <joint limb1="26" limb2="27" limb1anchor="-130.9346,-9.955917" limb2anchor="154.1395,-6.376718" name="Joint 26 - 27" canbesevered="True" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />
-  <joint limb1="9" limb2="29" limb1anchor="-113.9896,19.77437" limb2anchor="155.993,15.67004" name="Joint 9 - 29" canbesevered="True" limitenabled="True" upperlimit="30" lowerlimit="-30" stiffness="0.25" />
-  <joint limb1="29" limb2="28" limb1anchor="-174.1752,13.32974" limb2anchor="196.8684,1.048683" name="Joint 29 - 28" canbesevered="True" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />
-  <joint limb1="0" limb2="9" limb1anchor="-269.4908,24.92395" limb2anchor="109.1308,-9.167359" name="Joint 0 - 9" canbesevered="True" limitenabled="True" upperlimit="10" lowerlimit="-10" stiffness="0.25" />
+  <joint limb1="9" limb2="29" limb1anchor="-113.9896,19.77437" limb2anchor="155.993,15.67004" name="Joint 9 - 29" canbesevered="False" limitenabled="True" upperlimit="30" lowerlimit="-30" stiffness="0.25" />
+  <joint limb1="29" limb2="28" limb1anchor="-174.1752,13.32974" limb2anchor="196.8684,1.048683" name="Joint 29 - 28" canbesevered="False" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />
+  <joint limb1="0" limb2="9" limb1anchor="-269.4908,24.92395" limb2anchor="109.1308,-9.167359" name="Joint 0 - 9" canbesevered="False" limitenabled="True" upperlimit="10" lowerlimit="-10" stiffness="0.25" />
   <joint limb1="0" limb2="8" limb1anchor="-179.9015,115.6594" limb2anchor="-18.15358,45.9981" name="Joint 0 - 8" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="-30" stiffness="0.25" />
 </Ragdoll>
