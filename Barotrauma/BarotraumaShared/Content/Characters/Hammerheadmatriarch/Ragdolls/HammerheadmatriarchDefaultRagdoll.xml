@@ -22,25 +22,7 @@
         <spritedeformation type="bendjoint" resolution="5,5" multiplier="1.0" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="45" strength="5" />
       </deformablesprite>
     </conditionalsprite>
-    <attack targettype="Structure" priority="1" range="150" damagerange="150" cooldown="15" secondarycooldown="1" afterattack="FallBack" structuredamage="200" force="50" targetimpulse="500" structuresoundtype="StructureBlunt" applyforceonlimbs="0, 3" context="NotDefined" hitdetectiontype="Contact" itemdamage="45" stun="0" onlyhumans="False" torque="0" applyforcesonlyonce="False" targetimpulseworld="0,0" targetforce="0" targetforceworld="0,0" severlimbsprobability="0" stickchance="0" duration="0.1" cooldownrandomfactor="0.1" reverse="False" targetlimbtype="None">
-      <Affliction identifier="internaldamage" strength="25" probability="1" />
-      <Affliction identifier="stun" strength="4" probability="1" />
-      <StatusEffect type="OnImpact" target="This" disabledeltatime="true">
-        <Explosion range="500" force="10" smoke="false" sparks="false" shockwave="true" underwaterbubble="false" camerashake="12">
-          <Affliction identifier="stun" strength="2" />
-        </Explosion>
-        <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" range="1000" selectionmode="All" />
-        <sound file="Content/Sounds/Damage/Gore1.ogg" range="1000" selectionmode="All" />
-        <ParticleEmitter particle="bubbles" particleamount="30" scalemin="1" scalemax="2" velocitymin="50" velocitymax="100" anglemin="0" anglemax="360" />
-        <ParticleEmitter particle="bloodtrail" particleamount="20" scalemin="2" scalemax="5" velocitymin="200" velocitymax="1000" anglemin="0" anglemax="360" />
-        <ParticleEmitter particle="waterblood" particleamount="5" scalemin="2" scalemax="4" velocitymin="0" velocitymax="20" anglemin="0" anglemax="360" />
-        <ParticleEmitter particle="blackwaterblood" particleamount="5" scalemin="3" scalemax="5" velocitymin="0" velocitymax="20" anglemin="0" anglemax="360" />
-        <ParticleEmitter particle="heavygib" particleamount="1" scalemin="15" scalemax="15" velocitymin="0" velocitymax="0" anglemin="0" anglemax="360" />
-        <ParticleEmitter particle="gib" particleamount="100" scalemin="1" scalemax="2" velocitymin="100" velocitymax="300" anglemin="0" anglemax="360" />
-        <SpawnCharacter speciesname="hammerheadspawn" count="20" spread="150" />
-        <Affliction identifier="internaldamage" amount="1000" />
-      </StatusEffect>
-    </attack>
+    <damagemodifier damagesound="Gore" damagemultiplier="10" armorsector="0,360" deflectprojectiles="False" afflictionidentifiers="" afflictiontypes="damage,bleeding" />
   </limb>
   <limb id="2" radius="0" width="450" height="250" mass="0" name="Tail1" type="Tail" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7" mouthpos="0,0">
     <deformablesprite texture="" sourcerect="740,1,430,557" origin="0.5415135,0.5051444" depth="0.3" subdivisions="5,5">
@@ -265,11 +247,11 @@
   <joint limb1="1" limb2="22" limb1anchor="206.7185,-28.73208" limb2anchor="11.97764,-9.081385" name="Joint 1 - 22" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" stiffness="0.25" />
   <joint limb1="7" limb2="23" limb1anchor="-98.69661,-0.1300369" limb2anchor="148.226,7.534222" name="Joint 7 - 23" canbesevered="False" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />
   <joint limb1="23" limb2="24" limb1anchor="-168.3845,-3.798505" limb2anchor="204.9549,31.62011" name="Joint 23 - 24" canbesevered="False" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />
-  <joint limb1="8" limb2="25" limb1anchor="-86.42073,1.905803" limb2anchor="105.5709,-8.359675" name="Joint 8 - 25" canbesevered="True" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />
-  <joint limb1="25" limb2="26" limb1anchor="-116.4344,-10.1447" limb2anchor="113.1192,-8.606905" name="Joint 25 - 26" canbesevered="True" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />
-  <joint limb1="26" limb2="27" limb1anchor="-130.9346,-9.955917" limb2anchor="154.1395,-6.376718" name="Joint 26 - 27" canbesevered="True" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />
+  <joint limb1="8" limb2="25" limb1anchor="-86.42073,1.905803" limb2anchor="105.5709,-8.359675" name="Joint 8 - 25" canbesevered="False" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />
+  <joint limb1="25" limb2="26" limb1anchor="-116.4344,-10.1447" limb2anchor="113.1192,-8.606905" name="Joint 25 - 26" canbesevered="False" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />
+  <joint limb1="26" limb2="27" limb1anchor="-130.9346,-9.955917" limb2anchor="154.1395,-6.376718" name="Joint 26 - 27" canbesevered="False" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />
   <joint limb1="9" limb2="29" limb1anchor="-113.9896,19.77437" limb2anchor="155.993,15.67004" name="Joint 9 - 29" canbesevered="False" limitenabled="True" upperlimit="30" lowerlimit="-30" stiffness="0.25" />
   <joint limb1="29" limb2="28" limb1anchor="-174.1752,13.32974" limb2anchor="196.8684,1.048683" name="Joint 29 - 28" canbesevered="False" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />
   <joint limb1="0" limb2="9" limb1anchor="-269.4908,24.92395" limb2anchor="109.1308,-9.167359" name="Joint 0 - 9" canbesevered="False" limitenabled="True" upperlimit="10" lowerlimit="-10" stiffness="0.25" />
-  <joint limb1="0" limb2="8" limb1anchor="-179.9015,115.6594" limb2anchor="-18.15358,45.9981" name="Joint 0 - 8" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="-30" stiffness="0.25" />
+  <joint limb1="0" limb2="8" limb1anchor="-179.9015,115.6594" limb2anchor="-18.15358,45.9981" name="Joint 0 - 8" canbesevered="False" limitenabled="True" upperlimit="0" lowerlimit="-30" stiffness="0.25" />
 </Ragdoll>
