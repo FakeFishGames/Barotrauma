@@ -3679,22 +3679,18 @@
   <one_of_us_goalinfotext_4>All on this sub must partake of communion with the husk!</one_of_us_goalinfotext_4>
   <one_of_us_objectivesuccessmessage4>With that, there is nothing more to do. The sub is in disarray, the voice in your head grows silent, and your fate is sealed.</one_of_us_objectivesuccessmessage4>
   
-  <!-- One of Us traitor mission text package -->
-  <easterbunny_traitormissionstartinfotext>Hatch an egg</easterbunny_traitormissionstartinfotext>
-  <easterbunny_traitorobjectivestartmessage1>An egg is hidden on the sub:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage1>
-  <easterbunny_goalinfotext_1>Find the egg, possibly hidden in one of the vents</easterbunny_goalinfotext_1>
-  <easterbunny_objectivesuccessmessage1>The egg is gross, but fits neatly in your pocket.</easterbunny_objectivesuccessmessage1>
+  <!-- Easterbunny mission text package -->
+  <easterbunny_traitormissionstartinfotext>Praise the Honkmother!</easterbunny_traitormissionstartinfotext>
+  <easterbunny_traitorobjectivestartmessage1>It's time. As the man with the strange painted face instructed you back on the loading dock at Minos Linea, you get to work:\n[traitorgoalinfos]:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage1>
+  <easterbunny_goalinfotext_1>Find a very special egg, possibly hidden in one of the vents</easterbunny_goalinfotext_1>
+  <easterbunny_objectivesuccessmessage1>The egg disgusts you, but fits neatly in your pocket. HONK!</easterbunny_objectivesuccessmessage1>
   <easterbunny_traitorobjectivestartmessage2>Grow the egg:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage2>
   <easterbunny_goalinfotext_2>Find a safe place for the egg to grow, and feed it [catalystitem]</easterbunny_goalinfotext_2>
-  <easterbunny_objectivesuccessmessage2>The egg bulges and makes strange noises.</easterbunny_objectivesuccessmessage2>
+  <easterbunny_objectivesuccessmessage2>The egg bulges and makes strange noises... You're about to become a parent!</easterbunny_objectivesuccessmessage2>
   <easterbunny_traitorobjectivestartmessage3>The egg cracks and a mudraptor bursts forth:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage3>
-  <easterbunny_objectivesuccessmessage3>Your work here is done.</easterbunny_objectivesuccessmessage3>
+  <easterbunny_goalinfotext_3>See to it by any means that the mudraptor survives for at least 3 minutes</easterbunny_goalinfotext_3>
+  <easterbunny_objectivesuccessmessage3>Honk Honk! That was hilarious, the painted man's going to get a kick out of this when he hears how it went.</easterbunny_objectivesuccessmessage3>
   <easterbunny_traitorobjectivestartmessage4>Escape:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage4>
-  <easterbunny_objectivesuccessmessage4>With that, there is nothing more to do. The sub is in disarray, the voice in your head grows silent, and your fate is sealed.</easterbunny_objectivesuccessmessage4>
-  
-
-
-
-
+  <easterbunny_objectivesuccessmessage4>The lights of a shuttle cut through the gloom. Rescue is at hand! You swear you can almost hear circus music coming from it.</easterbunny_objectivesuccessmessage4>
 
 </infotexts>

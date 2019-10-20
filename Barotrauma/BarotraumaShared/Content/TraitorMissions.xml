@@ -570,8 +570,8 @@
       <EndMessageSuccess id="easterbunny_objectivesuccessmessage3"/>
       <StartMessage id="easterbunny_traitorobjectivestartmessage3"/>
       <Goal type="keeptransformedalive" speciesname="mudraptor">
-        <InfoText id="traitorgoalkeepalive" />
-        <Modifier type="duration" duration="30" cumulative="false" />
+        <InfoText id="easterbunny_goalinfotext_3" />
+        <Modifier type="duration" duration="180" cumulative="false" />
       </Goal>
     </Objective>
 
