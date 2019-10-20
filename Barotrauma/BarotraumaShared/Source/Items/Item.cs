@@ -978,7 +978,7 @@ namespace Barotrauma
             return rootContainer;
         }
 
-        public bool IsOwnedBy(Character character) => FindParentInventory(i => i.Owner == this) != null;
+        public bool IsOwnedBy(Character character) => FindParentInventory(i => i.Owner == character) != null;
 
         public Inventory FindParentInventory(Func<Inventory, bool> predicate)
         {
