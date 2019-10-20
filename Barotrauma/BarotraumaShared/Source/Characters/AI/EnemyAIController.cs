@@ -370,7 +370,7 @@ namespace Barotrauma
                 }
                 SteerInsideLevel(deltaTime);
             }
-            if (pathSteering == null && SelectedAiTarget != null && SelectedAiTarget.Entity.Submarine == Character.Submarine)
+            if (pathSteering == null && SelectedAiTarget?.Entity != null && SelectedAiTarget.Entity.Submarine == Character.Submarine)
             {
                 // Steer towards the target
                 Vector2 targetSimPos = Character.Submarine == null ? ConvertUnits.ToSimUnits(SelectedAiTarget.WorldPosition) : SelectedAiTarget.SimPosition;
@@ -386,7 +386,7 @@ namespace Barotrauma
                 else
                 {
                     var target = SelectedAiTarget ?? _lastAiTarget;
-                    if (target != null && PreviousState == AIState.Attack)
+                    if (target?.Entity != null && PreviousState == AIState.Attack)
                     {
                         var memory = GetTargetMemory(target);
                         if (memory != null)
@@ -480,7 +480,7 @@ namespace Barotrauma
 
         private void UpdateAttack(float deltaTime)
         {
-            if (SelectedAiTarget == null)
+            if (SelectedAiTarget == null || SelectedAiTarget.Entity == null || SelectedAiTarget.Entity.Removed)
             {
                 State = AIState.Idle;
                 return;
@@ -1112,7 +1112,7 @@ namespace Barotrauma
 
         private bool UpdateLimbAttack(float deltaTime, Limb attackingLimb, Vector2 attackSimPos, float distance = -1, Limb targetLimb = null)
         {
-            if (SelectedAiTarget == null) { return false; }
+            if (SelectedAiTarget?.Entity == null) { return false; }
             if (wallTarget != null)
             {
                 // If the selected target is not the wall target, make the wall target the selected target.
