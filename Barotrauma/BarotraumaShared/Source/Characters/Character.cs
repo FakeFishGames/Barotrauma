@@ -2725,6 +2725,8 @@ namespace Barotrauma
                 return;
             }
 
+            IsDead = true;
+
             ApplyStatusEffects(ActionType.OnDeath, 1.0f);
 
             AnimController.Frozen = false;
@@ -2755,8 +2757,6 @@ namespace Barotrauma
             SteamAchievementManager.OnCharacterKilled(this, CauseOfDeath);
 
             KillProjSpecific(causeOfDeath, causeOfDeathAffliction);
-
-            IsDead = true;
 
             if (info != null) info.CauseOfDeath = CauseOfDeath;
             AnimController.movement = Vector2.Zero;

@@ -17,11 +17,9 @@
     <ParticleEmitter particle="blackwaterblood" particlespersecond="100" scalemin="3" scalemax="5" velocitymin="0" velocitymax="50" anglemin="0" anglemax="360" />
   </StatusEffect>
   <StatusEffect type="OnDeath" target="This" targetlimb="Head">
-    <!-- TODO: causes stack overload -> fix
     <Explosion range="500" force="10" smoke="false" sparks="false" shockwave="true" underwaterbubble="false" camerashake="12">
       <Affliction identifier="stun" strength="2" />
     </Explosion>
-    -->
     <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" range="1000" selectionmode="All" />
     <sound file="Content/Sounds/Damage/Gore1.ogg" range="1000" selectionmode="All" />
     <ParticleEmitter particle="bubbles" particleamount="30" scalemin="1" scalemax="2" velocitymin="50" velocitymax="100" anglemin="0" anglemax="360" />
