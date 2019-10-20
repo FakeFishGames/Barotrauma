@@ -133,8 +133,8 @@
     <ItemContainer capacity="1" hideitems="true" showcontainedstateindicator="false">
       <Containable items="antibloodloss1">
         <!-- increase scale -->
-        <StatusEffect type="OnContaining" target="This" Scale="0.02"/>
-        <StatusEffect type="OnContaining" target="Contained" Condition="-8"/>
+        <StatusEffect type="OnContaining" target="This" Scale="0.0025"/>
+        <StatusEffect type="OnContaining" target="Contained" Condition="-1"/>
         <!-- remove and spawn a medium egg when scale is greater than or equal to 0.4 -->
         <StatusEffect type="OnContaining" target="This">
           <Sound file="Content/Sounds/Damage/Gore6.ogg" range="500" />
@@ -165,8 +165,8 @@
       <StatusEffect type="OnFire" target="This" Condition="-5.0"/>
       <Containable items="antibloodloss1">
         <!-- increase scale -->
-        <StatusEffect type="OnContaining" target="This" Scale="0.02"/>
-        <StatusEffect type="OnContaining" target="Contained" Condition="-8"/>
+        <StatusEffect type="OnContaining" target="This" Scale="0.0025"/>
+        <StatusEffect type="OnContaining" target="Contained" Condition="1"/>
         <StatusEffect type="OnContaining" target="This">
           <Sound file="Content/Sounds/Damage/Gore6.ogg" range="500" />
           <particleemitter particle="brownchunks" particleamount="10" emitinterval="1000" velocitymin="0" velocitymax="500" anglemin="0" anglemax="360" scalemin="0.2" scalemax="0.5" />
@@ -198,8 +198,8 @@
       <StatusEffect type="OnFire" target="This" Condition="-5.0"/>      
       <Containable items="antibloodloss1">
         <!-- increase scale -->
-        <StatusEffect type="OnContaining" target="This" Scale="0.02"/>
-        <StatusEffect type="OnContaining" target="Contained" Condition="-8"/>
+        <StatusEffect type="OnContaining" target="This" Scale="0.0025"/>
+        <StatusEffect type="OnContaining" target="Contained" Condition="1"/>
         <StatusEffect type="OnContaining" target="This" Condition="0" setvalue="true">
           <Conditional Scale="gte 0.8" />
           <SpawnCharacter speciesname="mudraptor" />
