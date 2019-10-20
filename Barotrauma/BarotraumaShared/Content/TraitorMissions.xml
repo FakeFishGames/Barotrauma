@@ -452,14 +452,14 @@
 
     <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
 
-    <StartInfoText id="tainted_welding_traitormissionstartinfotext"/>
+    <StartInfoText id="flood_2_traitormissionstartinfotext"/>
 
     <Objective>
       <EndMessageFailure id="traitormissionfailuremessage"/>
-      <EndMessageSuccess id="tainted_welding_objectivesuccessmessage1"/>
-      <StartMessage id="tainted_welding_traitorobjectivestartmessage1"/>
+      <EndMessageSuccess id="flood_2_objectivesuccessmessage1"/>
+      <StartMessage id="flood_2_traitorobjectivestartmessage1"/>
       <Goal type="finditem" identifier="divingmask" preferNew="false" allowNew="true" allowExisting="true" allowedContainers="suppliescabinet">
-        <InfoText id="tainted_welding_goalinfotext_1"/>
+        <InfoText id="flood_2_goalinfotext_1"/>
       </Goal>
     </Objective>
 
@@ -504,21 +504,21 @@
   <TraitorMission identifier="One of Us">
     <Icon texture="Content/UI/MissionIcons.png" sourcerect="512,0,256,256" color="200,0,0,255"/>
 
-    <StartInfoText id="one_of_us_traitormissionstartinfotext" />
+    <StartInfoText id="mvptraitormissionstartinfotext" />
 
     <Objective>
       <EndMessageFailure id="traitormissionfailuremessage"/>
-      <EndMessageSuccess id="one_of_us_objectivesuccessmessage1" />
-      <StartMessage id="one_of_us_traitorobjectivestartmessage1"/>
+      <EndMessageSuccess id="mvpobjectivesuccessmessage1" />
+      <StartMessage id="mvptraitorobjectivestartmessage1"/>
       <Goal type="finditem" identifier="oxygentank" preferNew="false" allowNew="true" allowExisting="true" allowedContainers="mediumsteelcabinet, mediumwindowedsteelcabinet, steelcabinet">
-        <InfoText id="one_of_us_goalinfotext_1" />
+        <InfoText id="mvp_goalinfotext_1" />
       </Goal>
     </Objective>
     
     <Objective>
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="one_of_us_objectivesuccessmessage2" />
-      <StartMessage id="one_of_us_traitorobjectivestartmessage2"/>
+      <StartMessage id="mvptraitorobjectivestartmessage2"/>
       <Goal type="finditem" identifier="huskeggs" preferNew="true" allowNew="true" allowExisting="true" allowedContainers="loosevent">
         <InfoText id="one_of_us_goalinfotext_2" />
       </Goal>
@@ -527,7 +527,7 @@
     <Objective>
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="one_of_us_objectivesuccessmessage3"/>
-      <StartMessage id="one_of_us_traitorobjectivestartmessage3"/>
+      <StartMessage id="mvptraitorobjectivestartmessage3"/>
       <Goal type="destroyitems" tag="calyxanide" percentage="100">
         <InfoText id="traitorgoaldestroyitems" />
       </Goal>
@@ -535,7 +535,7 @@
 
     <Objective>
       <EndMessageFailure id="traitormissionfailuremessage"/>
-      <EndMessageSuccess id="one_of_us_objectivesuccessmessage4"/>
+      <EndMessageSuccess id="mvpobjectivesuccessmessage3"/>
       <StartMessage id="one_of_us_traitorobjectivestartmessage4"/>
       <Goal type="injectpoison" poison="huskeggs" affliction="huskinfection" targetpercentage="100">
         <InfoText id="one_of_us_goalinfotext_4"/>
@@ -545,12 +545,12 @@
 
   <TraitorMission identifier="easterbunny">
     <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
-    <StartInfoText id="easterbunny_traitormissionstartinfotext"/>
+    <StartInfoText id="flood_1_traitormissionstartinfotext"/>
     
     <Objective>
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="easterbunny_objectivesuccessmessage1"/>
-      <StartMessage id="easterbunny_traitorobjectivestartmessage1"/>
+      <StartMessage id="flood_1_traitorobjectivestartmessage1"/>
       <Goal type="finditem" identifier="smallmudraptoregg" preferNew="true" allowNew="true" allowExisting="true" allowedContainers="loosevent">
         <InfoText id="easterbunny_goalinfotext_1"/>
       </Goal>

@@ -3650,11 +3650,8 @@
   <traitorgoalincubateegg>Incubate [startingentity] with [catalystitem] to a [transformedentity].</traitorgoalincubateegg>
   <traitorgoalkeepalive>Protect the [speciesname] for [duration] seconds.</traitorgoalkeepalive>
   
-  <!-- Tainted welding tools traitor mission text package -->
-  <tainted_welding_traitormissionstartinfotext>Scanning furtively around, you notice nobody's looking at you — which makes this the perfect time to snap into action.</tainted_welding_traitormissionstartinfotext>
-  <tainted_welding_traitorobjectivestartmessage1>You've spent months gaining the trust of this crew, and it's all about to pay off:\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage1>
-  <tainted_welding_goalinfotext_1>Search the emergency supply cabinets around the sub. One of the diving masks has a small low-frequency receiver hidden in it, which you'll need in order to achieve your objectives.</tainted_welding_goalinfotext_1>
-  <tainted_welding_objectivesuccessmessage1>You find the tiny radio receiver and activate it.</tainted_welding_objectivesuccessmessage1>
+ 
+  <!-- Tainted welding tools traitor mission text package --> 
   <tainted_welding_traitorobjectivestartmessage2>The receiver crackles and whistles as a weak signal is received: Europan Resistance direct action, you are clear to go ahead with the mission: This sub has to be sunk, and it has to look like an accident. Start by sabotaging the welding gear.\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage2>
   <tainted_welding_goalinfotext_2>Swap the welding fuel for oxygen tanks in at least 70% of the sub's welding tools.</tainted_welding_goalinfotext_2>
   <tainted_welding_objectivesuccessmessage2>Well done. Oxygen tanks tend to burn when loaded in welding tools.</tainted_welding_objectivesuccessmessage2>
@@ -3665,23 +3662,16 @@
   <tainted_welding_traitorobjectivestartmessage5>Make your escape! A shuttle will be dispatched shortly to pick you up!\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage5>
   <tainted_welding_objectivesuccessmessage5>The warning alarm on your diving suit sounds... the shuttle should have rendezvous with you some time ago, but the only movement in the gloom are schools of alien  organisms. You broadcast another transmission: "This is Europan Resistance direct action, come in! Requesting extraction!". The transmitter remains silent, you've been left to your fate. Europa embraces you. </tainted_welding_objectivesuccessmessage5>
 
-  <!-- One of Us traitor mission text package -->
-  <one_of_us_traitormissionstartinfotext>A voice within your head screams loudly enough to startle you: THE CULT OF THE HUSK CALLS YOU TO SERVICE!</one_of_us_traitormissionstartinfotext>
-  <one_of_us_traitorobjectivestartmessage1>An idea gradually forms in your mind, strangely seductive to you in spite of its mundane nature:\n[traitorgoalinfos]</one_of_us_traitorobjectivestartmessage1>
-  <one_of_us_goalinfotext_1>Search the storage lockers—a special message just for you is hidden under one of the spare oxygen tanks.</one_of_us_goalinfotext_1>
-  <one_of_us_objectivesuccessmessage1>As you somehow predicted, a slip of filthy paper is stuck to the underside of this oxygen tank. It's covered in primitive scribbles, but you intuitively understand it to be coded instructions.</one_of_us_objectivesuccessmessage1>
-  <one_of_us_traitorobjectivestartmessage2>Your first task:\n[traitorgoalinfos]</one_of_us_traitorobjectivestartmessage2>
-  <one_of_us_goalinfotext_2>Sacred vessels of the husk's young have been hidden behind a loose vent. Find these eggs quickly before another stumbles upon them!</one_of_us_goalinfotext_2> 
-  <one_of_us_objectivesuccessmessage2>A rush of pleasure hits you like a wave as you find the eggs. A dry, mad laugh echoes within your head for a moment, fading into indistinct wet clicks.</one_of_us_objectivesuccessmessage2>
-  <one_of_us_traitorobjectivestartmessage3>You read the next coded instruction:\n[traitorgoalinfos]</one_of_us_traitorobjectivestartmessage3>
-  <one_of_us_objectivesuccessmessage3>Your head spins and your vision narrows as the last of the calyxanide is destroyed.</one_of_us_objectivesuccessmessage3>
-  <one_of_us_traitorobjectivestartmessage4>Your read the final task:\n[traitorgoalinfos]</one_of_us_traitorobjectivestartmessage4>
-  <one_of_us_goalinfotext_4>All on this sub must partake of communion with the husk!</one_of_us_goalinfotext_4>
-  <one_of_us_objectivesuccessmessage4>With that, there is nothing more to do. The sub is in disarray, the voice in your head grows silent, and your fate is sealed.</one_of_us_objectivesuccessmessage4>
   
-  <!-- Easterbunny mission text package -->
-  <easterbunny_traitormissionstartinfotext>Praise the Honkmother!</easterbunny_traitormissionstartinfotext>
-  <easterbunny_traitorobjectivestartmessage1>It's time. As the man with the strange painted face instructed you back on the loading dock at Minos Linea, you get to work:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage1>
+  <!-- One of Us traitor mission text package -->    
+  <one_of_us_goalinfotext_2>Sacred vessels of the husk's young have been hidden behind a loose vent. Find these eggs quickly before another stumbles upon them!</one_of_us_goalinfotext_2> 
+  <one_of_us_objectivesuccessmessage2>A rush of pleasure hits you like a wave as you find the eggs. A dry, mad laugh echoes within your head for a moment, fading into indistinct wet clicks.</one_of_us_objectivesuccessmessage2> 
+  <one_of_us_objectivesuccessmessage3>Your head spins and your vision narrows as the last of the calyxanide is destroyed.</one_of_us_objectivesuccessmessage3>
+  <one_of_us_traitorobjectivestartmessage4>You read the final task:\n[traitorgoalinfos]</one_of_us_traitorobjectivestartmessage4>
+  <one_of_us_goalinfotext_4>All on this sub must partake of communion with the husk!</one_of_us_goalinfotext_4>
+ 
+  
+  <!-- Easterbunny mission text package -->  
   <easterbunny_goalinfotext_1>Find a very special egg, possibly hidden in one of the vents</easterbunny_goalinfotext_1>
   <easterbunny_objectivesuccessmessage1>The egg disgusts you, but fits neatly in your pocket. HONK!</easterbunny_objectivesuccessmessage1>
   <easterbunny_traitorobjectivestartmessage2>Grow the egg:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage2>
@@ -3692,5 +3682,4 @@
   <easterbunny_objectivesuccessmessage3>Honk Honk! That was hilarious, the painted man's going to get a kick out of this when he hears how it went.</easterbunny_objectivesuccessmessage3>
   <easterbunny_traitorobjectivestartmessage4>Escape:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage4>
   <easterbunny_objectivesuccessmessage4>The lights of a shuttle cut through the gloom. Rescue is at hand! You swear you can almost hear circus music coming from it.</easterbunny_objectivesuccessmessage4>
-
 </infotexts>
