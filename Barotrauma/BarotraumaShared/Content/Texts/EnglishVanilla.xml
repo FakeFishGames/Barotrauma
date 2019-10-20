@@ -3681,7 +3681,7 @@
   
   <!-- Easterbunny mission text package -->
   <easterbunny_traitormissionstartinfotext>Praise the Honkmother!</easterbunny_traitormissionstartinfotext>
-  <easterbunny_traitorobjectivestartmessage1>It's time. As the man with the strange painted face instructed you back on the loading dock at Minos Linea, you get to work:\n[traitorgoalinfos]:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage1>
+  <easterbunny_traitorobjectivestartmessage1>It's time. As the man with the strange painted face instructed you back on the loading dock at Minos Linea, you get to work:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage1>
   <easterbunny_goalinfotext_1>Find a very special egg, possibly hidden in one of the vents</easterbunny_goalinfotext_1>
   <easterbunny_objectivesuccessmessage1>The egg disgusts you, but fits neatly in your pocket. HONK!</easterbunny_objectivesuccessmessage1>
   <easterbunny_traitorobjectivestartmessage2>Grow the egg:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage2>
