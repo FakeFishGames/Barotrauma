@@ -83,10 +83,10 @@ namespace Barotrauma
                     return false;
                 }
                 totalCount = CountMatchingItems();
-                /*if (totalCount <= 0)
+                if (totalCount <= 0)
                 {
                     return false;
-                }*/
+                }
                 targetCount = (int)((1.0f - destroyPercent) * totalCount - 0.5f);
                 return true;
             }
