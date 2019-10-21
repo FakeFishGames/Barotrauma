@@ -212,8 +212,6 @@
         <Explosion range="500" force="10" shockwave="true" smoke="false" sparks="false" underwaterbubble="false" flames="false" flash="false" camerashake="12">
           <Affliction identifier="stun" strength="2" />
         </Explosion>
-        <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" range="1000" selectionmode="All" />
-        <sound file="Content/Sounds/Damage/Gore1.ogg" range="1000" selectionmode="All" />
         <ParticleEmitter particle="bubbles" particleamount="30" scalemin="1" scalemax="2" velocitymin="50" velocitymax="100" anglemin="0" anglemax="360" />
         <ParticleEmitter particle="bloodtrail" particleamount="20" scalemin="2" scalemax="5" velocitymin="200" velocitymax="1000" anglemin="0" anglemax="360" />
         <ParticleEmitter particle="waterblood" particleamount="5" scalemin="2" scalemax="4" velocitymin="0" velocitymax="20" anglemin="0" anglemax="360" />
