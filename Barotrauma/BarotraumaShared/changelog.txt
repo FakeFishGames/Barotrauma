@@ -16,12 +16,23 @@ Misc additions and changes:
 Multiplayer:
 - Option to choose a "play style" for the servers to tell the players what kind of gameplay and rules they can expect on the server.
 - Improved server browser:
-	- More filtering options (karma, traitors, voice chat, friendly fire, modded).
+	- More filtering options
+		- Same version
+		- Show whitelisted
+		- Karma enabled
+		- Traitors enabled
+		- Friendly fire off
+		- Voice chat enabled
+		- Modded
 	- Option to filter by play style.
+	- Option to filter by game mode.
 	- Added the option to favorite servers.
 	- Added a list of recent servers.
+	- Added a friends list, you can keep track on which servers your friends are playing at as well as join them directly from the friends list.
+	- Miscellaneous layout improvements.
 - Improved server lobby:
 	- Improved character customization interface: players now have full control over their appearance.
+	- Improved job preferences interface: players can now more easily switch around their class preferences, as well as pick which variation of an outfit they would like to wear.
 	- Mission selection is more flexible: mission types can be toggled separately.
 	- The campaign interface is displayed directly in the menu, not in a separate view.
 	- The submarine preview is displayed directly in the menu without having to open a separate window.
@@ -29,6 +40,10 @@ Multiplayer:
 	- Voice chat icon now indicates the loudness of the audio being transmitted/received.
 	- Voice chat settings are indicated in the bottom-right corner of the chat box.
 	- The server log is integrated into the chat box.
+	- Added new server settings under anti-griefing tab which previously we're only accessible through serversettings.xml.
+		- Allow friendly fire.
+		- Allow rewiring.
+		- Allow disquises.
 	- Miscellaneous layout changes.
 
 Human AI:
