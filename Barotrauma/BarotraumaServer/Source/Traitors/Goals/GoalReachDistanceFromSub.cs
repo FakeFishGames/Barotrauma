@@ -12,9 +12,10 @@ namespace Barotrauma
         {
             private readonly float requiredDistance;
             private readonly float requiredDistanceSqr;
+            private float requiredDistanceInMeters;
 
             public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[distance]" });
-            public override IEnumerable<string> InfoTextValues(Traitor traitor) => base.InfoTextValues(traitor).Concat(new string[] { $"{requiredDistance:0.00}" });
+            public override IEnumerable<string> InfoTextValues(Traitor traitor) => base.InfoTextValues(traitor).Concat(new string[] { $"{requiredDistanceInMeters:0.00}" });
 
             public override bool IsCompleted
             {
@@ -22,12 +23,21 @@ namespace Barotrauma
                 {
                     return Traitors.Any(traitor =>
                     {
-                        if (traitor.Character?.Submarine == null)
+                        Submarine ownSub = null;
+
+                        for (int i = 0; i < Submarine.MainSubs.Length; i++)
                         {
-                            return false;
+                            if (Submarine.MainSubs[i] != null && Submarine.MainSubs[i].TeamID == traitor.Character.TeamID)
+                            {
+                                ownSub = Submarine.MainSubs[i];
+                                break;
+                            }
                         }
+
+                        if (ownSub == null) return false;                        
+
                         var characterPosition = traitor.Character.WorldPosition;
-                        var submarinePosition = traitor.Character.Submarine.WorldPosition;
+                        var submarinePosition = ownSub.WorldPosition;
                         var distance = Vector2.DistanceSquared(characterPosition, submarinePosition);
                         return distance >= requiredDistanceSqr;
                     });
@@ -37,8 +47,9 @@ namespace Barotrauma
             public GoalReachDistanceFromSub(float requiredDistance) : base()
             {
                 InfoTextId = "TraitorGoalReachDistanceFromSub";
-                this.requiredDistance = requiredDistance;
-                requiredDistanceSqr = requiredDistance * requiredDistance;
+                requiredDistanceInMeters = requiredDistance;
+                this.requiredDistance = requiredDistance / Physics.DisplayToRealWorldRatio;
+                requiredDistanceSqr = this.requiredDistance * this.requiredDistance;
             }
         }
     }

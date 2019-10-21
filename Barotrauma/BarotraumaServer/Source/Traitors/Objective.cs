@@ -125,10 +125,12 @@ namespace Barotrauma
                         completedGoals.Add(goal);
                     }
                 }
-                if (pendingGoals.Count <= 0)
+
+                if (pendingGoals.Count <= 0 && completedGoals.Count < allGoals.Count)
                 {
                     return false;
                 }
+
                 IsStarted = true;
 
                 traitor.SendChatMessageBox(StartMessageText, traitor.Mission?.Identifier);

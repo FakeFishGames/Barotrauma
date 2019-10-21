@@ -3663,8 +3663,74 @@
   <difficulty.hard>Hard</difficulty.hard>
   <difficulty.hellish>Hellish</difficulty.hellish>
   
+  <!-- New traitor missions -->
+
+  <!-- goblin traitor mission text package -->
+  <goblins_traitormissionstartinfotext>As you hear scratching from below, it occurs to you it's been a while since the ballast goblins have been fed. As luck would have it, there's plenty of meat to go around.</goblins_traitormissionstartinfotext>
+  <goblins_traitorobjectivestartmessage1>First, some seasonings. A well stocked kitchen has many options but for this purpose, only the purest cyanide will do.\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage1>
+  <goblins_objectivesuccessmessage1>Ah yes, this will do nicely.</goblins_objectivesuccessmessage1>
+  <goblins_traitorobjectivestartmessage2>Let's start the darlings off with some water.\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage2>
+  <goblins_objectivesuccessmessage2>There we go.</goblins_objectivesuccessmessage2>
+  <goblins_traitorobjectivestartmessage3>Hors d'oeuvres, anyone?\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage3>
+  <goblins_objectivesuccessmessage3>Look at that tender, succulent meat!</goblins_objectivesuccessmessage3>
+  <goblins_traitorobjectivestartmessage4>Now for the main course: \n[traitorgoalinfos]</goblins_traitorobjectivestartmessage4>
+  <goblins_objectivesuccessmessage4>Now the goblins are fed, but the pantry is empty. Time to pick up some more supplies at the next station.</goblins_objectivesuccessmessage4>
+
+  <!-- oxygen_sabotage mission text package -->
+  <oxygen_sabotage_traitormissionstartinfotext>Time for another experiment. This time we're testing how the human body reacts to being deprived of oxygen.</oxygen_sabotage_traitormissionstartinfotext>
+  <oxygen_sabotage_traitorobjectivestartmessage1>Subjects have been gathered and we are ready to start.\n[traitorgoalinfos]</oxygen_sabotage_traitorobjectivestartmessage1>
+  <oxygen_sabotage_objectivesuccessmessage1>Subjects should start feeling the effects shortly. Symptoms for oxygen deprivation include, but aren't limited to: extremities turning blue, seizures and fainting.</oxygen_sabotage_objectivesuccessmessage1>
+  <oxygen_sabotage_traitorobjectivestartmessage2>When you're happy with the data you've gathered, dispose of the test subjects.\n[traitorgoalinfos]</oxygen_sabotage_traitorobjectivestartmessage2>
+  <oxygen_sabotage_objectivesuccessmessage2>Another successful test. Report back to nearest coalition outpost.</oxygen_sabotage_objectivesuccessmessage2>
+
+  <!--acidparty traitor mission-->
+  <acidparty_traitormissionstartinfotext>You find a manically scribbled note in your pocket. "Hey man. You know there's this thing in the center of the moon, right? What if there was, like, a way to see what it is without physically going in there?"</acidparty_traitormissionstartinfotext>
+  <acidparty_traitorobjectivestartmessage1>"Step 1. Find some delimi- delirun- der- the thing that says 'DEL', right?" \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage1>
+  <acidparty_objectivesuccessmessage1>This must be it. Never had this before.</acidparty_objectivesuccessmessage1>
+  <acidparty_traitorobjectivestartmessage2>"Step 2. Sometimes subs carry these- these "vision blockers", right? Basically what they do is, is they ground you and then you only see, like, a real narrow representation of reality, ok? So what you wanna do is you wanna get rid of those. They call them shits halleberrydil or some shit like that." \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage2>
+  <acidparty_objectivesuccessmessage2>Looks like that's all of it.</acidparty_objectivesuccessmessage2>
+  <acidparty_traitorobjectivestartmessage3>"Step 3. "First rule is we gotta share. The thing here is that some people, right? Some people are kinda brainwashed into being afraid of anything that challenges their world view, you know? So you know, you gotta find a way to sneak that good shit into their system, right?" \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage3>
+  <acidparty_objectivesuccessmessage3>"Step 4. Lay down and listen to the waves, man."</acidparty_objectivesuccessmessage3>
+
+  <!-- Text for goals -->
+  <traitorgoalkilltargetinfowithcause>Assassinate [targetname] by [causeofdeath].</traitorgoalkilltargetinfowithcause>
+  <traitorgoalkilltargetinfowithhull>Assassinate [targetname] and leave the body in the [targethullname].</traitorgoalkilltargetinfowithhull>
+  <traitorgoalkilltargetinfowithcauseandhull>Assassinate [targetname] by [causeofdeath] and leave the body in the [targethullname].</traitorgoalkilltargetinfowithcauseandhull>
+  <traitorgoalpoisoneveryoneinfo>Inject all crew members with [poison].</traitorgoalpoisoneveryoneinfo>
+  <traitorgoalreachdistancefromsub>Swim at least [distance] meters from the submarine.</traitorgoalreachdistancefromsub>
+  <traitorgoalkeepalive>Protect the [speciesname] for [duration] seconds.</traitorgoalkeepalive>  
+ 
+  <!-- Tainted welding tools traitor mission text package --> 
+  <tainted_welding_traitorobjectivestartmessage2>The receiver crackles and whistles as a weak signal is received: Europan Resistance direct action, you are clear to go ahead with the mission: This sub has to be sunk, and it has to look like an accident. Start by sabotaging the welding gear.\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage2>
+  <tainted_welding_goalinfotext_2>Swap the welding fuel for oxygen tanks in at least 70% of the sub's welding tools.</tainted_welding_goalinfotext_2>
+  <tainted_welding_objectivesuccessmessage2>Well done. Oxygen tanks tend to burn when loaded in welding tools.</tainted_welding_objectivesuccessmessage2>
+  <tainted_welding_traitorobjectivestartmessage3>Now you'll need to dispose of that commandeered fuel so the crew can't put to use later:\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage3>
+  <tainted_welding_objectivesuccessmessage3>Well done! The crew are in a particularly vulnerable situation now without even knowing it</tainted_welding_objectivesuccessmessage3>
+  <tainted_welding_traitorobjectivestartmessage4>Now quickly, spring the trap!\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage4>
+  <tainted_welding_objectivesuccessmessage4>Fine work, comrade! The pigs are surely doomed now.</tainted_welding_objectivesuccessmessage4>
+  <tainted_welding_traitorobjectivestartmessage5>Make your escape! A shuttle will be dispatched shortly to pick you up!\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage5>
+  <tainted_welding_objectivesuccessmessage5>The warning alarm on your diving suit sounds... the shuttle should have rendezvous with you some time ago, but the only movement in the gloom are schools of alien  organisms. You broadcast another transmission: "This is Europan Resistance direct action, come in! Requesting extraction!". The transmitter remains silent, you've been left to your fate. Europa embraces you. </tainted_welding_objectivesuccessmessage5>
+  
+  <!-- One of Us traitor mission text package -->    
+  <one_of_us_goalinfotext_2>Sacred vessels of the husk's young have been hidden behind a loose vent. Find these eggs quickly before another stumbles upon them!</one_of_us_goalinfotext_2> 
+  <one_of_us_objectivesuccessmessage2>A rush of pleasure hits you like a wave as you find the eggs. A dry, mad laugh echoes within your head for a moment, fading into indistinct wet clicks.</one_of_us_objectivesuccessmessage2> 
+  <one_of_us_objectivesuccessmessage3>Your head spins and your vision narrows as the last of the calyxanide is destroyed.</one_of_us_objectivesuccessmessage3>
+  <one_of_us_traitorobjectivestartmessage4>You read the final task:\n[traitorgoalinfos]</one_of_us_traitorobjectivestartmessage4>
+  <one_of_us_goalinfotext_4>All on this sub must partake of communion with the husk!</one_of_us_goalinfotext_4> 
+  
+  <!-- Easterbunny mission text package -->  
+  <easterbunny_goalinfotext_1>Find a very special egg, possibly hidden in one of the vents</easterbunny_goalinfotext_1>
+  <easterbunny_objectivesuccessmessage1>The egg disgusts you, but fits neatly in your pocket. HONK!</easterbunny_objectivesuccessmessage1>
+  <easterbunny_traitorobjectivestartmessage2>Grow the egg:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage2>
+  <easterbunny_goalinfotext_2>Find a safe place for the egg to grow, and feed it [catalystitem]</easterbunny_goalinfotext_2>
+  <easterbunny_objectivesuccessmessage2>The egg bulges and makes strange noises... You're about to become a parent!</easterbunny_objectivesuccessmessage2>
+  <easterbunny_traitorobjectivestartmessage3>The egg cracks and a mudraptor bursts forth:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage3>
+  <easterbunny_goalinfotext_3>See to it by any means that the mudraptor survives for at least 3 minutes</easterbunny_goalinfotext_3>
+  <easterbunny_objectivesuccessmessage3>Honk Honk! That was hilarious, the painted man's going to get a kick out of this when he hears how it went.</easterbunny_objectivesuccessmessage3>
+  <easterbunny_traitorobjectivestartmessage4>Escape:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage4>
+  <easterbunny_objectivesuccessmessage4>The lights of a shuttle cut through the gloom. Rescue is at hand! You swear you can almost hear circus music coming from it.</easterbunny_objectivesuccessmessage4>
+
   <!-- Modified values -->
   <pausemenuquitverification>Are you sure you want to return to the main menu? All your unsaved progress will be lost.</pausemenuquitverification>
   <leveldifficulty>Difficulty</leveldifficulty>
-
 </infotexts>

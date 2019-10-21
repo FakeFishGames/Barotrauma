@@ -321,26 +321,67 @@ namespace Barotrauma
             }
 
             public delegate bool CharacterFilter(Character character);
-            public Character FindKillTarget(Character traitor, CharacterFilter filter)
+            public List<Character> FindKillTarget(Character traitor, CharacterFilter filter, int count = -1, float percentage = -1f)
             {
                 if (traitor == null) { return null; }
 
-                List<Character> validCharacters = Character.CharacterList.FindAll(c =>
-                    c.TeamID == traitor.TeamID &&
-                    c != traitor &&
-                    !c.IsDead &&
-                    (filter == null || filter(c)));
+                List<Character> validCharacters = Character.CharacterList.FindAll(c => c.TeamID == traitor.TeamID &&
+                                                                                  c != traitor && !c.IsDead &&
+                                                                                  (filter == null || filter(c)));
+
+                int targetCount = 1;
+                if (count > 0)
+                {
+                    targetCount = count;
+                }
+                else if (percentage > 0f)
+                {
+                    targetCount = (int)Math.Max(1, Math.Floor(validCharacters.Count * percentage));
+                }
+
+                List<Character> targetCharacters = new List<Character>();
 
                 if (validCharacters.Count > 0)
                 {
-                    return validCharacters[Random(validCharacters.Count)];
+                    for (int i = 0; i < targetCount; i++)
+                    {
+                        if (validCharacters.Count == 0) break;
+                        Character character = validCharacters[Random(validCharacters.Count)];
+                        targetCharacters.Add(character);
+                        validCharacters.Remove(character);
+                    }
+                    return targetCharacters;
                 }
 
 #if ALLOW_SOLO_TRAITOR
-                return traitor;
+                targetCharacters.Add(traitor);
+                return targetCharacters;
 #else
                 return null;
 #endif
+            }
+
+            public string GetTargetNames(List<Character> targets)
+            {
+                string names = string.Empty;
+                for (int i = 0; i < targets.Count; i++)
+                {
+                    names += targets[i].Name;
+
+                    if (i < targets.Count - 1)
+                    {
+                        names += ", ";
+                    }
+                }
+
+                if (names.Length > 0)
+                {
+                    return names;
+                }
+                else
+                {
+                    return TextManager.FormatServerMessage("unknown");
+                }
             }
 
             public TraitorMission(string identifier, string startText, string globalEndMessageSuccessTextId, string globalEndMessageSuccessDeadTextId, string globalEndMessageSuccessDetainedTextId, string globalEndMessageFailureTextId, string globalEndMessageFailureDeadTextId, string globalEndMessageFailureDetainedTextId, IEnumerable<KeyValuePair<string, RoleFilter>> roles, ICollection<Objective> objectives)

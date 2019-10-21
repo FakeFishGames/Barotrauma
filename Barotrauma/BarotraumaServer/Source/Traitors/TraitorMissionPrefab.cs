@@ -113,15 +113,23 @@ namespace Barotrauma
                         case "killtarget":
                         {
                             checker.Optional(targetFilters.Keys.ToArray());
-                            List<Traitor.TraitorMission.CharacterFilter> filters = new List<Traitor.TraitorMission.CharacterFilter>();
+                            checker.Optional("causeofdeath");
+                            checker.Optional("affliction");
+                            checker.Optional("roomname");
+                            checker.Optional("targetcount");
+                            checker.Optional("targetpercentage");
+                            List<Traitor.TraitorMission.CharacterFilter> killFilters = new List<Traitor.TraitorMission.CharacterFilter>();
                             foreach (var attribute in Config.Attributes())
                             {
                                 if (targetFilters.TryGetValue(attribute.Name.ToString().ToLower(System.Globalization.CultureInfo.InvariantCulture), out var filter))
                                 {
-                                    filters.Add((character) => filter(attribute.Value, character));
+                                    killFilters.Add((character) => filter(attribute.Value, character));
                                 }
                             }
-                            goal = new Traitor.GoalKillTarget((character) => filters.All(f => f(character)));
+                            goal = new Traitor.GoalKillTarget((character) => killFilters.All(f => f(character)), 
+                                (CauseOfDeathType)Enum.Parse(typeof(CauseOfDeathType), Config.GetAttributeString("causeofdeath", "Unknown"), true),
+                                Config.GetAttributeString("affliction", null), Config.GetAttributeString("targethull", null), Config.GetAttributeInt("targetcount", -1), 
+                                Config.GetAttributeFloat("targetpercentage", -1f));
                             break;
                         }
                         case "destroyitems":
@@ -157,8 +165,16 @@ namespace Barotrauma
                             break;
                         case "finditem":
                             checker.Required("identifier");
-                            checker.Optional("preferNew", "allowNew", "allowExisting", "allowedContainers");
-                            goal = new Traitor.GoalFindItem(Config.GetAttributeString("identifier", null), Config.GetAttributeBool("preferNew", true), Config.GetAttributeBool("allowNew", true), Config.GetAttributeBool("allowExisting", true), Config.GetAttributeStringArray("allowedContainers", new string[] {"steelcabinet", "mediumsteelcabinet", "suppliescabinet"}));
+                            checker.Optional("preferNew", "allowNew", "allowExisting", "allowedContainers", "percentage");
+                            List<Traitor.TraitorMission.CharacterFilter> itemCountFilters = new List<Traitor.TraitorMission.CharacterFilter>();
+                            foreach (var attribute in Config.Attributes())
+                            {
+                                if (targetFilters.TryGetValue(attribute.Name.ToString().ToLower(System.Globalization.CultureInfo.InvariantCulture), out var filter))
+                                {
+                                    itemCountFilters.Add((character) => filter(attribute.Value, character));
+                                }
+                            }
+                            goal = new Traitor.GoalFindItem((character) => itemCountFilters.All(f => f(character)), Config.GetAttributeString("identifier", null), Config.GetAttributeBool("preferNew", true), Config.GetAttributeBool("allowNew", true), Config.GetAttributeBool("allowExisting", true), Config.GetAttributeFloat("percentage", -1f), Config.GetAttributeStringArray("allowedContainers", new string[] {"steelcabinet", "mediumsteelcabinet", "suppliescabinet"}));
                             break;
                         case "replaceinventory":
                             checker.Required("containers", "replacements");
@@ -167,7 +183,39 @@ namespace Barotrauma
                             break;
                         case "reachdistancefromsub":
                             checker.Optional("distance");
-                            goal = new Traitor.GoalReachDistanceFromSub(Config.GetAttributeFloat("distance", 10000.0f));
+                            goal = new Traitor.GoalReachDistanceFromSub(Config.GetAttributeFloat("distance", 125f));
+                            break;
+                        case "injectpoison":
+                            checker.Optional(targetFilters.Keys.ToArray());
+                            checker.Required("poison");
+                            checker.Required("affliction");
+                            checker.Optional("targetcount");
+                            checker.Optional("targetpercentage");
+                            List<Traitor.TraitorMission.CharacterFilter> poisonFilters = new List<Traitor.TraitorMission.CharacterFilter>();
+                            foreach (var attribute in Config.Attributes())
+                            {
+                                if (targetFilters.TryGetValue(attribute.Name.ToString().ToLower(System.Globalization.CultureInfo.InvariantCulture), out var filter))
+                                {
+                                    poisonFilters.Add((character) => filter(attribute.Value, character));
+                                }
+                            }
+                            goal = new Traitor.GoalInjectTarget((character) => poisonFilters.All(f => f(character)), Config.GetAttributeString("poison", null), 
+                                Config.GetAttributeString("affliction", null), Config.GetAttributeInt("targetcount", -1), Config.GetAttributeFloat("targetpercentage", -1f));
+                            break;
+                        case "unwire":
+                            checker.Required("tag");
+                            checker.Optional("connectionname");
+                            checker.Optional("connectiondisplayname");
+                            goal = new Traitor.GoalUnwiring(Config.GetAttributeString("tag", null), Config.GetAttributeString("connectionname", null), Config.GetAttributeString("connectiondisplayname)", null));
+                            break;
+                        case "transformentity":
+                            checker.Required("entities", "entitytypes");
+                            checker.Optional("catalystid");
+                            goal = new Traitor.GoalEntityTransformation(Config.GetAttributeStringArray("entities", null), Config.GetAttributeStringArray("entitytypes", null), Config.GetAttributeString("catalystid", null));
+                            break;
+                        case "keeptransformedalive":
+                            checker.Required("speciesname");
+                            goal = new Traitor.GoalKeepTransformedAlive(Config.GetAttributeString("speciesname", null));
                             break;
                         default:
                             GameServer.Log($"Unrecognized goal type \"{goalType}\".", ServerLog.MessageType.Error);

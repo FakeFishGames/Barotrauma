@@ -142,7 +142,7 @@
   <Item
     name="Loose Vent"
     identifier="loosevent"
-    tags="vent"
+    tags="vent,hidden"
     category="Machine"
     linkable="true"
     allowedlinks="oxygenerator"
