@@ -2931,6 +2931,7 @@ namespace Barotrauma.Networking
         {
             var jobList = JobPrefab.List.Values.ToList();
             unassigned = new List<Client>(unassigned);
+            unassigned.OrderBy(sp => Rand.Int(int.MaxValue));
 
             Dictionary<JobPrefab, int> assignedClientCount = new Dictionary<JobPrefab, int>();
             foreach (JobPrefab jp in jobList)
@@ -2998,17 +2999,16 @@ namespace Barotrauma.Networking
                 }
             }
 
-            List<WayPoint> spawnPoints = WayPoint.WayPointList.FindAll(wp =>
+            List<WayPoint> availableSpawnPoints = WayPoint.WayPointList.FindAll(wp =>
                 wp.SpawnType == SpawnType.Human &&
                 wp.Submarine != null && wp.Submarine.TeamID == teamID);
-            spawnPoints.OrderBy(sp => Rand.Int(int.MaxValue));
-            spawnPoints.OrderBy(sp => sp.AssignedJob == null ? 0 : 1);
+            List<WayPoint> unassignedSpawnPoints = new List<WayPoint>(availableSpawnPoints);
 
-            bool canAssign = false;
+            /*bool canAssign = false;
             do
             {
                 canAssign = false;
-                foreach (WayPoint spawnPoint in spawnPoints)
+                foreach (WayPoint spawnPoint in unassignedSpawnPoints)
                 {
                     if (unassigned.Count == 0) { break; }
 
@@ -3024,24 +3024,37 @@ namespace Barotrauma.Networking
                         canAssign = true;
                     }
                 }
-            } while (unassigned.Count > 0 && canAssign);
+            } while (unassigned.Count > 0 && canAssign);*/
 
             //attempt to give the clients a job they have in their job preferences
-            /*for (int i = unassigned.Count - 1; i >= 0; i--)
+            for (int i = unassigned.Count - 1; i >= 0; i--)
             {
+                if (unassignedSpawnPoints.Count == 0) { break; }
                 foreach (JobPrefab preferredJob in unassigned[i].JobPreferences)
                 {
-                    //the maximum number of players that can have this job hasn't been reached yet
-                    // -> assign it to the client
-                    if (assignedClientCount[preferredJob] < preferredJob.MaxNumber && unassigned[i].Karma >= preferredJob.MinKarma)
+                    //can't assign this job if maximum number has reached or the clien't karma is too low
+                    if (assignedClientCount[preferredJob] >= preferredJob.MaxNumber || unassigned[i].Karma < preferredJob.MinKarma)
                     {
+                        continue;
+                    }
+                    //give the client their preferred job if there's a spawnpoint available for that job
+                    var matchingSpawnPoint = unassignedSpawnPoints.Find(s => s.AssignedJob == preferredJob);
+                    //if the job is not available in any spawnpoint (custom job?), treat empty spawnpoints
+                    //as a matching ones
+                    if (matchingSpawnPoint == null && !availableSpawnPoints.Any(s => s.AssignedJob == preferredJob))
+                    {
+                        matchingSpawnPoint = unassignedSpawnPoints.Find(s => s.AssignedJob == null);
+                    }
+                    if (matchingSpawnPoint != null)
+                    {
+                        unassignedSpawnPoints.Remove(matchingSpawnPoint);
                         unassigned[i].AssignedJob = preferredJob;
                         assignedClientCount[preferredJob]++;
                         unassigned.RemoveAt(i);
                         break;
                     }
                 }
-            }*/
+            }
 
             //give random jobs to rest of the clients
             foreach (Client c in unassigned)
@@ -3065,7 +3078,17 @@ namespace Barotrauma.Networking
                     c.AssignedJob = jobList[jobIndex];
                     assignedClientCount[c.AssignedJob]++;
                 }
-                else //some jobs still left, choose one of them by random
+                //if one of the client's preferences is still available, give them that job
+                else if (c.JobPreferences.Any(jp => remainingJobs.Contains(jp)))
+                {
+                    foreach (JobPrefab preferredJob in c.JobPreferences)
+                    {
+                        c.AssignedJob = preferredJob;
+                        assignedClientCount[preferredJob]++;
+                        break;                        
+                    }
+                }
+                else //none of the client's preferred jobs available, choose a random job
                 {
                     c.AssignedJob = remainingJobs[Rand.Range(0, remainingJobs.Count)];
                     assignedClientCount[c.AssignedJob]++;

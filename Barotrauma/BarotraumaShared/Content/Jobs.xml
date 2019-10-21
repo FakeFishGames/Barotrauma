@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Jobs>
   <Job identifier="captain"
-       maxnumber="1" minkarma="45" initialcount="1"
+       minnumber="1" maxnumber="1" minkarma="45" initialcount="1"
        uicolor="0.65,0.73,0.84"
        vitalitymodifier="-20">
     <Skills>
