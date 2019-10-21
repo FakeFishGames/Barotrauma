@@ -23,12 +23,21 @@ namespace Barotrauma
                 {
                     return Traitors.Any(traitor =>
                     {
-                        if (traitor.Character?.Submarine == null)
+                        Submarine ownSub = null;
+
+                        for (int i = 0; i < Submarine.MainSubs.Length; i++)
                         {
-                            return false;
+                            if (Submarine.MainSubs[i] != null && Submarine.MainSubs[i].TeamID == traitor.Character.TeamID)
+                            {
+                                ownSub = Submarine.MainSubs[i];
+                                break;
+                            }
                         }
+
+                        if (ownSub == null) return false;                        
+
                         var characterPosition = traitor.Character.WorldPosition;
-                        var submarinePosition = traitor.Character.Submarine.WorldPosition;
+                        var submarinePosition = ownSub.WorldPosition;
                         var distance = Vector2.DistanceSquared(characterPosition, submarinePosition);
                         return distance >= requiredDistanceSqr;
                     });
