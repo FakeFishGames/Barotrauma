@@ -200,6 +200,7 @@ namespace Barotrauma.Items.Components
 {
     class Wearable : Pickable, IServerSerializable
     {
+        private XElement[] wearableElements;
         private WearableSprite[] wearableSprites;
         private LimbType[] limbType;
         private Limb[] limb;
@@ -232,16 +233,19 @@ namespace Barotrauma.Items.Components
 #elif CLIENT
                 if (variant == value) { return; }
 
-                foreach (var sprite in wearableSprites)
+                for (int i=0;i<wearableSprites.Length;i++)
                 {
-                    sprite.Variant = value;
+                    var subElement = wearableElements[i];
 
-                    if (sprite.Gender != Gender.None)
-                    {
-                        sprite.RefreshPath();
-                        sprite.Sprite.ReloadXML();
-                        sprite.Sprite.ReloadTexture();
-                    }
+                    wearableSprites[i]?.Sprite?.Remove();
+                    wearableSprites[i] = new WearableSprite(subElement, this, value);
+                }
+
+                if (picker != null)
+                {
+                    var character = picker;
+                    Unequip(picker);
+                    Equip(character);
                 }
 
                 variant = value;
@@ -259,6 +263,7 @@ namespace Barotrauma.Items.Components
             Variants = element.GetAttributeInt("variants", 0);
             variant = Rand.Range(1, Variants + 1, Rand.RandSync.Server);
             wearableSprites = new WearableSprite[spriteCount];
+            wearableElements = new XElement[spriteCount];
             limbType    = new LimbType[spriteCount];
             limb        = new Limb[spriteCount];
             autoEquipWhenFull = element.GetAttributeBool("autoequipwhenfull", true);
@@ -278,6 +283,7 @@ namespace Barotrauma.Items.Components
                             subElement.GetAttributeString("limb", "Head"), true);
 
                         wearableSprites[i] = new WearableSprite(subElement, this, variant);
+                        wearableElements[i] = subElement;
 
                         foreach (XElement lightElement in subElement.Elements())
                         {
