@@ -1158,8 +1158,8 @@ namespace Barotrauma
         {
             chatInput.Deselect();
             CampaignCharacterDiscarded = false;
-            if (HeadSelectionList != null) { HeadSelectionList.Visible = false; }
-            if (JobSelectionFrame != null) { JobSelectionFrame.Visible = false; }
+            HeadSelectionList = null;
+            JobSelectionFrame = null;
 
             foreach (Sprite sprite in characterSprites)
             {
