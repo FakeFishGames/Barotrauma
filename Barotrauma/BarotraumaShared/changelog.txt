@@ -1,6 +1,30 @@
 ---------------------------------------------------------------------------------------------------------
-v0.9.4.1?
+v0.9.5.0
 ---------------------------------------------------------------------------------------------------------
+
+Misc additions and changes:
+- A new submarine, Kastrull.
+- 6 new traitor missions with much more varied objectives.
+- Overhauled job assignment logic to make the job distribution a little more balanced. Now each client gets assigned one of the spawnpoints (and its associated job) according to their job preference, which means that if the sub for example has 2x as many engineer spawnpoints than medic spawnpoints, there tend to be 2x more engineers. When playing with a mod that adds new jobs to the game, spawnpoints that have no job associated with them are considered spawnpoints for the non-vanilla jobs.
+- New logic components: sin, cos, tan, asin, acos, atan, modulo, round, ceil, floor and factorial.
+- Improved autopilot: much faster and less likely to get stuck.
+- Items can be made damageable by projectiles, melee weapons and explosions by adding DamagedByProjectiles="true", DamagedByMeleeWeapons="true" or DamagedByExplosions="true" to the config.
+- Added huskified face sprites to all characters.
+- Question prompt in the debug console and dedicated server console (such as "enter the reason to ban XXX") can be cancelled by pressing Ctrl+D or Ctrl+Z (or Ctrl+C in the in-game debug console).
+- Welding tools and plasma cutters explode when loaded with the wrong fuel.
+
+Multiplayer:
+- Option to choose a "play style" for the servers to tell the players what kind of gameplay and rules they can expect on the server.
+- Improved server browser:
+	- More filtering options (karma, traitors, voice chat, friendly fire, modded).
+	- Option to filter by play style.
+	- Added the option to favorite servers.
+	- Added a list of recent servers.
+- Improved server lobby:
+	- New layout.
+	- The campaign interface is displayed directly in them menu, not in a separate view.
+	- The submarine preview is displayed directly in the menu without having to open a separate window.
+	- The job preferences of the players are indicated in the player list.
 
 Human AI:
 - Changed the logic for automatically unequipping the diving gear, extinguishers or items that are held in hands.
@@ -51,20 +75,21 @@ Human AI:
 Monsters:
 - New monster: Hammerhead Matriarch
 - New monster: Hammerhead Spawn
-- Characters now have a separate property that defines whether or not they can walk, meaning that characters can now enter the submarine even if they cannot walk. When there is no water, the character will figet around.
+- New diving suit sprite for husks.
+- Characters now have a separate property that defines whether or not they can walk, meaning that characters can now enter the submarine even if they cannot walk. When there is no water, the character will fidget around.
 Also fixes Fractal Guardians flying in non-flooded alien ruins.
 - Monsters now remember the position of the last target even when idling. The memories fade, however.
 - Monsters now flee briefly when being fired at with the turrets. Fixes swarming characters being easy to exploit.
 - Don't allow the monsters to retaliate unless they are in the same submarine as the attacker. Removed the CanRetaliate parameter on character AI that was added in the previous update.
 - Refactored ConditionalSprite: ConditionalSprite now takes Sprite or DeformableSprite as child elements.
-- StatusEffects can now be used to spawn characters
+- StatusEffects can now be used to spawn characters.
 - Monster missions now support multiple monsters of different species.
 - Minor adjustments on eating. Fixes Bonethresher's eating animation.
 - Improved the avoid steering logic (used when the character is not using pathfiding, i.e. outside the submarine).
 - Charybdis: Increase the damage against structures for all attacks.
 - Adjusted Mudraptor, Bonethresher and Tigerthersher behavior. Threshers now hunt in packs.
 - Fixed incorrect flipping and mirroring. Disable mirroring on characters that don't need it.
-- Fixed Mudraptors preferring doors over humans
+- Fixed Mudraptors preferring doors over humans.
 - Fixed targeting at wall center position instead of the section position. Fixes hammerheads and bonethreshers targeting destroyed wall sections.
 - Fixed the damage modifiers on hammerheads not working properly.
 - Fixed a crash when trying to create a swarm with characters that have no swarming behavior defined.
@@ -86,6 +111,19 @@ Character editor:
 - The radial widget angles are now rounded to the closest 10.
 - Fixed characters being able to collide with the submarine, which often caused large monsters to get stunned and impact sounds to be played when they're spawned.
 - Fixed characters moving when they shouldn't.
+
+Bugfixes:
+- Rewrote power distribution logic to resolve several issues and oddities in the way power was distributed across electrical grids, particularly when relays were used. The new system is also less performance intensive, so submarines that had performance issues due to large and complex power grids should now run better.
+- Fixed broken waypoints in Typhon that prevented bots from opening some of the doors.
+- Fixed characters being very hard or impossible to hit with melee weapons when they're laying on the floor.
+- Fixed characters placing their feet above a platform when not actually standing on the platform (noticeable in rooms where there's a platform on top of the "actual" floor).
+- Fixed husk eggs not causing a husk infection when injected.
+- Fixed depth sorting not working on damageable structures.
+- Fixed characters stepping on nothing if their feet are below the lowest step of a ladder.
+- Fixed door components being selectable when the door is broken, causing characters to drop from ladders if they interact with a door while climbing.
+- Alien motion sensors don't react to dead bodies to prevent bodies from blocking the way through the ruins by constantly activating coils.
+- Put the shotgun shells in Dugong's, Kastrull's and Humpback's armory inside the shotgun.
+- Fixed clients retaining their original character when taking control of another one in the multiplayer campaign, but keeping the items of the new character.
 
 ---------------------------------------------------------------------------------------------------------
 v0.9.4.0
