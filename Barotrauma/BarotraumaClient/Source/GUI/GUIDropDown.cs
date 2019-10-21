@@ -183,7 +183,10 @@ namespace Barotrauma
             parentHierarchy.Clear();
             parentHierarchy = new List<RectTransform>() { RectTransform.Parent };
             RectTransform parent = parentHierarchy.Last();
-            while (parent?.Parent != null && !(parent.Parent is GUICanvas))
+            while (parent?.Parent?.GUIComponent != null &&
+                parent.Parent.GUIComponent != Screen.Selected?.Frame &&
+                parent.Parent.GUIComponent.Style != null &&
+                !(parent.Parent is GUICanvas))
             {
                 parent = parent.Parent;
                 parentHierarchy.Add(parent);
