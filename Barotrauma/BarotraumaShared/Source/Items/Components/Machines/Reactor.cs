@@ -36,6 +36,7 @@ namespace Barotrauma.Items.Components
 
         private float maxPowerOutput;
 
+        private Queue<float> loadQueue = new Queue<float>();
         private float load;
         
         private bool unsentChanges;
@@ -271,8 +272,7 @@ namespace Barotrauma.Items.Components
             {
                 UpdateAutoTemp(2.0f, deltaTime);
             }
-
-            load = 0.0f;
+            float currentLoad = 0.0f;
             List<Connection> connections = item.Connections;
             if (connections != null && connections.Count > 0)
             {
@@ -288,11 +288,18 @@ namespace Barotrauma.Items.Components
 
                         //calculate how much external power there is in the grid 
                         //(power coming from somewhere else than this reactor, e.g. batteries)
-                        float externalPower = Math.Max(CurrPowerConsumption - pt.CurrPowerConsumption, 0);
+                        float externalPower = Math.Max(CurrPowerConsumption - pt.CurrPowerConsumption, 0) * 0.95f;
                         //reduce the external power from the load to prevent overloading the grid
-                        load = Math.Max(load, pt.PowerLoad - externalPower);
+                        currentLoad = Math.Max(currentLoad, pt.PowerLoad - externalPower);
                     }
                 }
+            }
+
+            loadQueue.Enqueue(currentLoad);
+            while (loadQueue.Count() > 60.0f)
+            {
+                load = loadQueue.Average();
+                loadQueue.Dequeue();
             }
 
             if (fissionRate > 0.0f)
