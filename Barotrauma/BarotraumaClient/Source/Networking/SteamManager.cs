@@ -20,6 +20,8 @@ namespace Barotrauma.Steam
         public Facepunch.Steamworks.Auth Auth => client?.Auth;
         public Facepunch.Steamworks.Lobby Lobby => client?.Lobby;
         public Facepunch.Steamworks.LobbyList LobbyList => client?.LobbyList;
+        public Facepunch.Steamworks.ServerList ServerList => client?.ServerList;
+        public Facepunch.Steamworks.Client Client => client;
 
         private SteamManager()
         {
@@ -75,7 +77,8 @@ namespace Barotrauma.Steam
             Joining,
             Joined
         }
-        private static UInt64 lobbyID = 0;
+
+        public static UInt64 LobbyID { get; private set; } = 0;
         private static LobbyState lobbyState = LobbyState.NotConnected;
         private static string lobbyIP = "";
         private static Thread lobbyIPRetrievalThread;
@@ -167,7 +170,7 @@ namespace Barotrauma.Steam
                 lobbyIPRetrievalThread.Start();
                 
                 lobbyState = LobbyState.Owner;
-                lobbyID = instance.client.Lobby.CurrentLobby;
+                LobbyID = instance.client.Lobby.CurrentLobby;
                 UpdateLobby(serverSettings);
             };
             if (lobbyState != LobbyState.NotConnected) { return; }
@@ -192,16 +195,16 @@ namespace Barotrauma.Steam
             {
                 return;
             }
-            
+
             var contentPackages = GameMain.Config.SelectedContentPackages.Where(cp => cp.HasMultiplayerIncompatibleContent);
-            
+
             instance.client.Lobby.Name = serverSettings.ServerName;
-            instance.client.Lobby.Owner = Steam.SteamManager.GetSteamID();
-            instance.client.Lobby.MaxMembers = serverSettings.MaxPlayers+10;
-            instance.client.Lobby.CurrentLobbyData.SetData("playercount", (GameMain.Client?.ConnectedClients?.Count??0).ToString());
+            instance.client.Lobby.Owner = GetSteamID();
+            instance.client.Lobby.MaxMembers = serverSettings.MaxPlayers + 10;
+            instance.client.Lobby.CurrentLobbyData.SetData("playercount", (GameMain.Client?.ConnectedClients?.Count ?? 0).ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("maxplayernum", serverSettings.MaxPlayers.ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("hostipaddress", lobbyIP);
-            //instance.client.Lobby.CurrentLobbyData.SetData("connectsteamid", Steam.SteamManager.GetSteamID().ToString());
+            instance.client.Lobby.CurrentLobbyData.SetData("ownerid", SteamIDUInt64ToString(GetSteamID()));
             instance.client.Lobby.CurrentLobbyData.SetData("haspassword", serverSettings.HasPassword.ToString());
 
             instance.client.Lobby.CurrentLobbyData.SetData("message", serverSettings.ServerMessageText);
@@ -216,9 +219,12 @@ namespace Barotrauma.Steam
             instance.client.Lobby.CurrentLobbyData.SetData("voicechatenabled", serverSettings.VoiceChatEnabled.ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("allowspectating", serverSettings.AllowSpectating.ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("allowrespawn", serverSettings.AllowRespawn.ToString());
+            instance.client.Lobby.CurrentLobbyData.SetData("karmaenabled", serverSettings.KarmaEnabled.ToString());
+            instance.client.Lobby.CurrentLobbyData.SetData("friendlyfireenabled", serverSettings.AllowFriendlyFire.ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("traitors", serverSettings.TraitorsEnabled.ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("gamestarted", GameMain.Client.GameStarted.ToString());
-            instance.client.Lobby.CurrentLobbyData.SetData("gamemode", GameMain.NetLobbyScreen?.SelectedMode?.Identifier??"");
+            instance.client.Lobby.CurrentLobbyData.SetData("playstyle", serverSettings.PlayStyle.ToString());
+            instance.client.Lobby.CurrentLobbyData.SetData("gamemode", GameMain.NetLobbyScreen?.SelectedMode?.Identifier ?? "");
 
             DebugConsole.Log("Lobby updated!");
         }
@@ -232,7 +238,7 @@ namespace Barotrauma.Steam
                 lobbyIPRetrievalThread = null;
 
                 instance.client.Lobby.Leave();
-                lobbyID = 0;
+                LobbyID = 0;
                 lobbyIP = "";
                 lobbyState = LobbyState.NotConnected;
 
@@ -242,7 +248,7 @@ namespace Barotrauma.Steam
         public static void JoinLobby(UInt64 id, bool joinServer)
         {
             if (instance.client.Lobby.CurrentLobby == id) { return; }
-            if (lobbyID == id) { return; }
+            if (LobbyID == id) { return; }
             instance.client.Lobby.OnLobbyJoined = (success) =>
             {
                 try
@@ -253,7 +259,7 @@ namespace Barotrauma.Steam
                         return;
                     }
                     lobbyState = LobbyState.Joined;
-                    lobbyID = instance.client.Lobby.CurrentLobby;
+                    LobbyID = instance.client.Lobby.CurrentLobby;
                     if (joinServer)
                     {
                         GameMain.Instance.ConnectLobby = 0;
@@ -267,7 +273,7 @@ namespace Barotrauma.Steam
                 }
             };
             lobbyState = LobbyState.Joining;
-            lobbyID = id;
+            LobbyID = id;
             instance.client.Lobby.Join(id);
         }
 
@@ -314,9 +320,11 @@ namespace Barotrauma.Steam
             query.OnUpdate = () => { UpdateServerQuery(query, onServerFound, onServerRulesReceived, includeUnresponsive: true); };
             query.OnFinished = onFinished;
 
+#if !DEBUG
             var localQuery = instance.client.ServerList.Local(filter);
             localQuery.OnUpdate = () => { UpdateServerQuery(localQuery, onServerFound, onServerRulesReceived, includeUnresponsive: true); };
             localQuery.OnFinished = onFinished;
+#endif
 
             instance.client.LobbyList.OnLobbiesUpdated = () => { UpdateLobbyQuery(onServerFound, onServerRulesReceived, onFinished); };
             instance.client.LobbyList.Refresh();
@@ -382,6 +390,7 @@ namespace Barotrauma.Steam
                 bool.TryParse(lobby.GetData("haspassword"), out bool hasPassword);
                 int.TryParse(lobby.GetData("playercount"), out int currPlayers);
                 int.TryParse(lobby.GetData("maxplayernum"), out int maxPlayers);
+                UInt64 ownerId = SteamIDStringToUInt64(lobby.GetData("ownerid"));
                 //UInt64.TryParse(lobby.GetData("connectsteamid"), out ulong connectSteamId);
                 string ip = lobby.GetData("hostipaddress");
                 if (string.IsNullOrWhiteSpace(ip)) { ip = ""; }
@@ -390,47 +399,64 @@ namespace Barotrauma.Steam
                 {
                     ServerName = lobby.Name,
                     Port = "",
+                    QueryPort = "",
                     IP = ip,
                     PlayerCount = currPlayers,
                     MaxPlayers = maxPlayers,
                     HasPassword = hasPassword,
                     RespondedToSteamQuery = true,
-                    LobbyID = lobby.LobbyID
+                    LobbyID = lobby.LobbyID,
+                    OwnerID = ownerId
                 };
                 serverInfo.PingChecked = false;
-                serverInfo.ServerMessage = lobby.GetData("message");
-                serverInfo.GameVersion = lobby.GetData("version");
-
-                serverInfo.ContentPackageNames.AddRange(lobby.GetData("contentpackage").Split(','));
-                serverInfo.ContentPackageHashes.AddRange(lobby.GetData("contentpackagehash").Split(','));
-                serverInfo.ContentPackageWorkshopUrls.AddRange(lobby.GetData("contentpackageurl").Split(','));
-
-                serverInfo.UsingWhiteList = lobby.GetData("usingwhitelist") == "True";
-                SelectionMode selectionMode;
-                if (Enum.TryParse(lobby.GetData("modeselectionmode"), out selectionMode)) serverInfo.ModeSelectionMode = selectionMode;
-                if (Enum.TryParse(lobby.GetData("subselectionmode"), out selectionMode)) serverInfo.SubSelectionMode = selectionMode;
-
-                serverInfo.AllowSpectating = lobby.GetData("allowspectating") == "True";
-                serverInfo.AllowRespawn = lobby.GetData("allowrespawn") == "True";
-                serverInfo.VoipEnabled = lobby.GetData("voicechatenabled") == "True";
-                if (Enum.TryParse(lobby.GetData("traitors"), out YesNoMaybe traitorsEnabled)) serverInfo.TraitorsEnabled = traitorsEnabled;
-
-                serverInfo.GameStarted = lobby.GetData("gamestarted") == "True";
-                serverInfo.GameMode = lobby.GetData("gamemode");
-
-                if (serverInfo.ContentPackageNames.Count != serverInfo.ContentPackageHashes.Count ||
-                    serverInfo.ContentPackageHashes.Count != serverInfo.ContentPackageWorkshopUrls.Count)
-                {
-                    //invalid contentpackage info
-                    serverInfo.ContentPackageNames.Clear();
-                    serverInfo.ContentPackageHashes.Clear();
-                }
+                AssignLobbyDataToServerInfo(lobby, serverInfo);
 
                 onServerFound(serverInfo);
                 //onServerRulesReceived(serverInfo);
             }
 
             onFinished();
+        }
+
+        public static void AssignLobbyDataToServerInfo(LobbyList.Lobby lobby, ServerInfo serverInfo)
+        {
+            serverInfo.ServerMessage = lobby.GetData("message");
+            serverInfo.GameVersion = lobby.GetData("version");
+
+            serverInfo.ContentPackageNames.AddRange(lobby.GetData("contentpackage").Split(','));
+            serverInfo.ContentPackageHashes.AddRange(lobby.GetData("contentpackagehash").Split(','));
+            serverInfo.ContentPackageWorkshopUrls.AddRange(lobby.GetData("contentpackageurl").Split(','));
+
+            serverInfo.UsingWhiteList = getLobbyBool("usingwhitelist");
+            SelectionMode selectionMode;
+            if (Enum.TryParse(lobby.GetData("modeselectionmode"), out selectionMode)) { serverInfo.ModeSelectionMode = selectionMode; }
+            if (Enum.TryParse(lobby.GetData("subselectionmode"), out selectionMode)) { serverInfo.SubSelectionMode = selectionMode; }
+
+            serverInfo.AllowSpectating = getLobbyBool("allowspectating");
+            serverInfo.AllowRespawn = getLobbyBool("allowrespawn");
+            serverInfo.VoipEnabled = getLobbyBool("voicechatenabled");
+            serverInfo.KarmaEnabled = getLobbyBool("karmaenabled");
+            serverInfo.FriendlyFireEnabled = getLobbyBool("friendlyfireenabled");
+            if (Enum.TryParse(lobby.GetData("traitors"), out YesNoMaybe traitorsEnabled)) { serverInfo.TraitorsEnabled = traitorsEnabled; }
+
+            serverInfo.GameStarted = lobby.GetData("gamestarted") == "True";
+            serverInfo.GameMode = lobby.GetData("gamemode");
+            if (Enum.TryParse(lobby.GetData("playstyle"), out PlayStyle playStyle)) serverInfo.PlayStyle = playStyle;
+
+            if (serverInfo.ContentPackageNames.Count != serverInfo.ContentPackageHashes.Count ||
+                serverInfo.ContentPackageHashes.Count != serverInfo.ContentPackageWorkshopUrls.Count)
+            {
+                //invalid contentpackage info
+                serverInfo.ContentPackageNames.Clear();
+                serverInfo.ContentPackageHashes.Clear();
+            }
+
+            bool? getLobbyBool(string key)
+            {
+                string data = lobby.GetData(key);
+                if (string.IsNullOrEmpty(data)) { return null; }
+                return data == "True" || data == "true";
+            }
         }
 
         private static void UpdateServerQuery(ServerList.Request query, Action<Networking.ServerInfo> onServerFound, Action<Networking.ServerInfo> onServerRulesReceived, bool includeUnresponsive)
@@ -459,6 +485,7 @@ namespace Barotrauma.Steam
                 {
                     ServerName = s.Name,
                     Port = s.ConnectionPort.ToString(),
+                    QueryPort = s.QueryPort.ToString(),
                     IP = s.Address.ToString(),
                     PlayerCount = s.Players,
                     MaxPlayers = s.MaxPlayers,
@@ -472,58 +499,70 @@ namespace Barotrauma.Steam
                 {
                     s.FetchRules();
                 }
-                s.OnReceivedRules += (bool rulesReceived) =>
-                {
-                    if (!rulesReceived || s.Rules == null) { return; }
-                    
-                    if (s.Rules.ContainsKey("message")) serverInfo.ServerMessage = s.Rules["message"];
-                    if (s.Rules.ContainsKey("version")) serverInfo.GameVersion = s.Rules["version"];
-
-                    if (s.Rules.ContainsKey("playercount"))
-                    {
-                       if (int.TryParse(s.Rules["playercount"], out int playerCount)) serverInfo.PlayerCount = playerCount;
-                    }
-
-                    if (s.Rules.ContainsKey("contentpackage")) serverInfo.ContentPackageNames.AddRange(s.Rules["contentpackage"].Split(','));
-                    if (s.Rules.ContainsKey("contentpackagehash")) serverInfo.ContentPackageHashes.AddRange(s.Rules["contentpackagehash"].Split(','));
-                    if (s.Rules.ContainsKey("contentpackageurl")) serverInfo.ContentPackageWorkshopUrls.AddRange(s.Rules["contentpackageurl"].Split(','));
-
-                    if (s.Rules.ContainsKey("usingwhitelist")) serverInfo.UsingWhiteList = s.Rules["usingwhitelist"] == "True";
-                    if (s.Rules.ContainsKey("modeselectionmode"))
-                    {
-                        if (Enum.TryParse(s.Rules["modeselectionmode"], out SelectionMode selectionMode)) serverInfo.ModeSelectionMode = selectionMode;
-                    }
-                    if (s.Rules.ContainsKey("subselectionmode"))
-                    {
-                        if (Enum.TryParse(s.Rules["subselectionmode"], out SelectionMode selectionMode)) serverInfo.SubSelectionMode = selectionMode;
-                    }
-                    if (s.Rules.ContainsKey("allowspectating")) serverInfo.AllowSpectating = s.Rules["allowspectating"] == "True";
-                    if (s.Rules.ContainsKey("allowrespawn")) serverInfo.AllowRespawn = s.Rules["allowrespawn"] == "True";
-                    if (s.Rules.ContainsKey("voicechatenabled")) serverInfo.VoipEnabled = s.Rules["voicechatenabled"] == "True";
-                    if (s.Rules.ContainsKey("traitors"))
-                    {
-                        if (Enum.TryParse(s.Rules["traitors"], out YesNoMaybe traitorsEnabled)) serverInfo.TraitorsEnabled = traitorsEnabled;
-                    }
-
-                    if (s.Rules.ContainsKey("gamestarted")) serverInfo.GameStarted = s.Rules["gamestarted"] == "True";
-
-                    if (s.Rules.ContainsKey("gamemode"))
-                    {
-                        serverInfo.GameMode = s.Rules["gamemode"];
-                    }
-                    if (serverInfo.ContentPackageNames.Count != serverInfo.ContentPackageHashes.Count ||
-                        serverInfo.ContentPackageHashes.Count != serverInfo.ContentPackageWorkshopUrls.Count)
-                    {
-                        //invalid contentpackage info
-                        serverInfo.ContentPackageNames.Clear();
-                        serverInfo.ContentPackageHashes.Clear();
-                    }
-                    onServerRulesReceived(serverInfo);
-                };
+                s.OnReceivedRules += (bool received) => { OnReceivedRules(s, serverInfo, received); onServerRulesReceived(serverInfo); };
 
                 onServerFound(serverInfo);
             }
             query.Responded.Clear();
+        }
+
+        public static void OnReceivedRules(ServerList.Server s, ServerInfo serverInfo, bool rulesReceived)
+        {
+            if (!rulesReceived || s.Rules == null) { return; }
+                    
+            if (s.Rules.ContainsKey("message")) serverInfo.ServerMessage = s.Rules["message"];
+            if (s.Rules.ContainsKey("version")) serverInfo.GameVersion = s.Rules["version"];
+
+            if (s.Rules.ContainsKey("playercount"))
+            {
+                if (int.TryParse(s.Rules["playercount"], out int playerCount)) serverInfo.PlayerCount = playerCount;
+            }
+
+            serverInfo.ContentPackageNames.Clear();
+            serverInfo.ContentPackageHashes.Clear();
+            serverInfo.ContentPackageWorkshopUrls.Clear();
+            if (s.Rules.ContainsKey("contentpackage")) serverInfo.ContentPackageNames.AddRange(s.Rules["contentpackage"].Split(','));
+            if (s.Rules.ContainsKey("contentpackagehash")) serverInfo.ContentPackageHashes.AddRange(s.Rules["contentpackagehash"].Split(','));
+            if (s.Rules.ContainsKey("contentpackageurl")) serverInfo.ContentPackageWorkshopUrls.AddRange(s.Rules["contentpackageurl"].Split(','));
+
+            if (s.Rules.ContainsKey("usingwhitelist")) serverInfo.UsingWhiteList = s.Rules["usingwhitelist"] == "True";
+            if (s.Rules.ContainsKey("modeselectionmode"))
+            {
+                if (Enum.TryParse(s.Rules["modeselectionmode"], out SelectionMode selectionMode)) serverInfo.ModeSelectionMode = selectionMode;
+            }
+            if (s.Rules.ContainsKey("subselectionmode"))
+            {
+                if (Enum.TryParse(s.Rules["subselectionmode"], out SelectionMode selectionMode)) serverInfo.SubSelectionMode = selectionMode;
+            }
+            if (s.Rules.ContainsKey("allowspectating")) serverInfo.AllowSpectating = s.Rules["allowspectating"] == "True";
+            if (s.Rules.ContainsKey("allowrespawn")) serverInfo.AllowRespawn = s.Rules["allowrespawn"] == "True";
+            if (s.Rules.ContainsKey("voicechatenabled")) serverInfo.VoipEnabled = s.Rules["voicechatenabled"] == "True";
+            if (s.Rules.ContainsKey("karmaenabled")) serverInfo.KarmaEnabled = s.Rules["karmaenabled"] == "True";
+            if (s.Rules.ContainsKey("friendlyfireenabled")) serverInfo.FriendlyFireEnabled = s.Rules["friendlyfireenabled"] == "True";
+            if (s.Rules.ContainsKey("traitors"))
+            {
+                if (Enum.TryParse(s.Rules["traitors"], out YesNoMaybe traitorsEnabled)) serverInfo.TraitorsEnabled = traitorsEnabled;
+            }
+
+            if (s.Rules.ContainsKey("gamestarted")) serverInfo.GameStarted = s.Rules["gamestarted"] == "True";
+
+            if (s.Rules.ContainsKey("gamemode"))
+            {
+                serverInfo.GameMode = s.Rules["gamemode"];
+            }
+
+            if (s.Rules.ContainsKey("playstyle"))
+            {
+                if (Enum.TryParse(s.Rules["playstyle"], out PlayStyle playStyle)) serverInfo.PlayStyle = playStyle;
+            }
+
+            if (serverInfo.ContentPackageNames.Count != serverInfo.ContentPackageHashes.Count ||
+                serverInfo.ContentPackageHashes.Count != serverInfo.ContentPackageWorkshopUrls.Count)
+            {
+                //invalid contentpackage info
+                serverInfo.ContentPackageNames.Clear();
+                serverInfo.ContentPackageHashes.Clear();
+            }
         }
 
         private static bool ValidateServerInfo(ServerList.Server server)

@@ -477,11 +477,6 @@ namespace Barotrauma
         yield return CoroutineStatus.Running;
 
             JobPrefab.LoadAll(GetFilesOfType(ContentType.Jobs));
-            // Add any missing jobs from the prefab into Config.JobNamePreferences.
-            foreach (string job in JobPrefab.List.Keys)
-            {
-                if (!Config.JobPreferences.Contains(job)) { Config.JobPreferences.Add(job); }
-            }
 
             NPCConversation.LoadAll(GetFilesOfType(ContentType.NPCConversations));
 
@@ -888,6 +883,7 @@ namespace Barotrauma
             {
                 spriteBatch.Begin();
                 GUI.DrawRectangle(spriteBatch, GUI.MouseOn.MouseRect, Color.Lime);
+                GUI.DrawRectangle(spriteBatch, GUI.MouseOn.Rect, Color.Cyan);
                 spriteBatch.End();
             }
 
@@ -895,6 +891,61 @@ namespace Barotrauma
             sw.Stop();
             PerformanceCounter.AddElapsedTicks("Draw total", sw.ElapsedTicks);
             PerformanceCounter.DrawTimeGraph.Update(sw.ElapsedTicks / (float)TimeSpan.TicksPerMillisecond);
+        }
+
+
+        public static void QuitToMainMenu(bool save, bool showVerificationPrompt)
+        {
+            if (showVerificationPrompt)
+            {
+                string text = (Screen.Selected is CharacterEditor.CharacterEditorScreen || Screen.Selected is SubEditorScreen) ? "PauseMenuQuitVerificationEditor" : "PauseMenuQuitVerification";
+                var msgBox = new GUIMessageBox("", TextManager.Get(text), new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") })
+                {
+                    UserData = "verificationprompt"
+                };
+                msgBox.Buttons[0].OnClicked = (yesBtn, userdata) =>
+                {
+                    QuitToMainMenu(save);
+                    return true;
+                };
+                msgBox.Buttons[0].OnClicked += msgBox.Close;
+                msgBox.Buttons[1].OnClicked += msgBox.Close;
+            }
+
+        }
+
+        public static void QuitToMainMenu(bool save)
+        {
+            if (save)
+            {
+                SaveUtil.SaveGame(GameMain.GameSession.SavePath);
+            }
+
+            if (GameMain.Client != null)
+            {
+                GameMain.Client.Disconnect();
+                GameMain.Client = null;
+            }
+
+            CoroutineManager.StopCoroutines("EndCinematic");
+
+            if (GameMain.GameSession != null)
+            {
+                if (Tutorial.Initialized)
+                {
+                    ((TutorialMode)GameMain.GameSession.GameMode).Tutorial?.Stop();
+                }
+
+                if (GameSettings.SendUserStatistics)
+                {
+                    Mission mission = GameMain.GameSession.Mission;
+                    GameAnalyticsManager.AddDesignEvent("QuitRound:" + (save ? "Save" : "NoSave"));
+                    GameAnalyticsManager.AddDesignEvent("EndRound:" + (mission == null ? "NoMission" : (mission.Completed ? "MissionCompleted" : "MissionFailed")));
+                }
+                GameMain.GameSession = null;
+            }
+            GUIMessageBox.CloseAll();
+            GameMain.MainMenuScreen.Select();
         }
 
         public void ShowCampaignDisclaimer(Action onContinue = null)

@@ -291,18 +291,6 @@ namespace Barotrauma
             return MainSub.SaveAs(filePath, previewImage);
         }
 
-        public void CreatePreviewWindow(GUIMessageBox messageBox)
-        {
-            var background = new GUIButton(new RectTransform(Vector2.One, messageBox.RectTransform), style: "GUIBackgroundBlocker")
-            {
-                OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) messageBox.Close(); return true; }
-            };
-            background.RectTransform.SetAsFirstChild();
-
-            var holder = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.85f), messageBox.Content.RectTransform), style: null);
-            CreatePreviewWindow(holder);
-        }
-
         public void CreatePreviewWindow(GUIComponent parent)
         {
             var upperPart = new GUILayoutGroup(new RectTransform(new Vector2(1, 0.5f), parent.RectTransform, Anchor.Center, Pivot.BottomCenter));
@@ -314,7 +302,7 @@ namespace Barotrauma
 
             if (PreviewImage == null)
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 1), upperPart.RectTransform), TextManager.Get("SubPreviewImageNotFound"));
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 1), upperPart.RectTransform), TextManager.Get(SavedSubmarines.Contains(this) ? "SubPreviewImageNotFound" : "SubNotDownloaded"));
             }
             else
             {
@@ -327,49 +315,54 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform), Name, font: GUI.LargeFont, wrap: true) { ForceUpperCase = true, CanBeFocused = false };
 
+            float leftPanelWidth = 0.6f;
+            float rightPanelWidth = 0.4f / leftPanelWidth;
+
+            ScalableFont font = descriptionBox.Rect.Width < 350 ? GUI.SmallFont : GUI.Font;
+
             Vector2 realWorldDimensions = Dimensions * Physics.DisplayToRealWorldRatio;
             if (realWorldDimensions != Vector2.Zero)
             {
                 string dimensionsStr = TextManager.GetWithVariables("DimensionsFormat", new string[2] { "[width]", "[height]" }, new string[2] { ((int)realWorldDimensions.X).ToString(), ((int)realWorldDimensions.Y).ToString() });
 
-                var dimensionsText = new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform),
-                    TextManager.Get("Dimensions"), textAlignment: Alignment.TopLeft, font: GUI.Font, wrap: true)
+                var dimensionsText = new GUITextBlock(new RectTransform(new Vector2(leftPanelWidth, 0), descriptionBox.Content.RectTransform),
+                    TextManager.Get("Dimensions"), textAlignment: Alignment.TopLeft, font: font, wrap: true)
                 { CanBeFocused = false };
-                new GUITextBlock(new RectTransform(new Vector2(0.45f, 0.0f), dimensionsText.RectTransform, Anchor.TopRight),
-                    dimensionsStr, textAlignment: Alignment.TopLeft, font: GUI.Font, wrap: true)
+                new GUITextBlock(new RectTransform(new Vector2(rightPanelWidth, 0.0f), dimensionsText.RectTransform, Anchor.TopRight, Pivot.TopLeft),
+                    dimensionsStr, textAlignment: Alignment.TopLeft, font: font, wrap: true)
                 { CanBeFocused = false };
                 dimensionsText.RectTransform.MinSize = new Point(0, dimensionsText.Children.First().Rect.Height);
             }
 
             if (RecommendedCrewSizeMax > 0)
             {
-                var crewSizeText = new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform),
-                    TextManager.Get("RecommendedCrewSize"), textAlignment: Alignment.TopLeft, font: GUI.Font, wrap: true)
+                var crewSizeText = new GUITextBlock(new RectTransform(new Vector2(leftPanelWidth, 0), descriptionBox.Content.RectTransform),
+                    TextManager.Get("RecommendedCrewSize"), textAlignment: Alignment.TopLeft, font: font, wrap: true)
                 { CanBeFocused = false };
-                new GUITextBlock(new RectTransform(new Vector2(0.45f, 0.0f), crewSizeText.RectTransform, Anchor.TopRight),
-                    RecommendedCrewSizeMin + " - " + RecommendedCrewSizeMax, textAlignment: Alignment.TopLeft, font: GUI.Font, wrap: true)
+                new GUITextBlock(new RectTransform(new Vector2(rightPanelWidth, 0.0f), crewSizeText.RectTransform, Anchor.TopRight, Pivot.TopLeft),
+                    RecommendedCrewSizeMin + " - " + RecommendedCrewSizeMax, textAlignment: Alignment.TopLeft, font: font, wrap: true)
                 { CanBeFocused = false };
                 crewSizeText.RectTransform.MinSize = new Point(0, crewSizeText.Children.First().Rect.Height);
             }
 
             if (!string.IsNullOrEmpty(RecommendedCrewExperience))
             {
-                var crewExperienceText = new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform),
-                    TextManager.Get("RecommendedCrewExperience"), textAlignment: Alignment.TopLeft, font: GUI.Font, wrap: true)
+                var crewExperienceText = new GUITextBlock(new RectTransform(new Vector2(leftPanelWidth, 0), descriptionBox.Content.RectTransform),
+                    TextManager.Get("RecommendedCrewExperience"), textAlignment: Alignment.TopLeft, font: font, wrap: true)
                 { CanBeFocused = false };
-                new GUITextBlock(new RectTransform(new Vector2(0.45f, 0.0f), crewExperienceText.RectTransform, Anchor.TopRight),
-                    TextManager.Get(RecommendedCrewExperience), textAlignment: Alignment.TopLeft, font: GUI.Font, wrap: true)
+                new GUITextBlock(new RectTransform(new Vector2(rightPanelWidth, 0.0f), crewExperienceText.RectTransform, Anchor.TopRight, Pivot.TopLeft),
+                    TextManager.Get(RecommendedCrewExperience), textAlignment: Alignment.TopLeft, font: font, wrap: true)
                 { CanBeFocused = false };
                 crewExperienceText.RectTransform.MinSize = new Point(0, crewExperienceText.Children.First().Rect.Height);
             }
             
             if (RequiredContentPackages.Any())
             {
-                var contentPackagesText = new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform),
-                    TextManager.Get("RequiredContentPackages"), textAlignment: Alignment.TopLeft, font: GUI.Font)
+                var contentPackagesText = new GUITextBlock(new RectTransform(new Vector2(leftPanelWidth, 0), descriptionBox.Content.RectTransform),
+                    TextManager.Get("RequiredContentPackages"), textAlignment: Alignment.TopLeft, font: font)
                 { CanBeFocused = false };
-                new GUITextBlock(new RectTransform(new Vector2(0.45f, 0.0f), contentPackagesText.RectTransform, Anchor.TopRight),
-                    string.Join(", ", RequiredContentPackages), textAlignment: Alignment.TopLeft, font: GUI.Font, wrap: true)
+                new GUITextBlock(new RectTransform(new Vector2(rightPanelWidth, 0.0f), contentPackagesText.RectTransform, Anchor.TopRight, Pivot.TopLeft),
+                    string.Join(", ", RequiredContentPackages), textAlignment: Alignment.TopLeft, font: font, wrap: true)
                 { CanBeFocused = false };
                 contentPackagesText.RectTransform.MinSize = new Point(0, contentPackagesText.Children.First().Rect.Height);
             }
@@ -379,13 +372,13 @@ namespace Barotrauma
             //space
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), descriptionBox.Content.RectTransform), style: null);
 
-            if (Description.Length != 0)
+            if (!string.IsNullOrEmpty(Description))
             {
                 new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform), 
                     TextManager.Get("SaveSubDialogDescription", fallBackTag: "WorkshopItemDescription"), font: GUI.Font, wrap: true) { CanBeFocused = false, ForceUpperCase = true };
             }
 
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform), Description, font: GUI.Font, wrap: true)
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform), Description, font: font, wrap: true)
             {
                 CanBeFocused = false
             };

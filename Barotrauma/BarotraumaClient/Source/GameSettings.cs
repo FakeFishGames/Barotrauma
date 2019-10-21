@@ -508,8 +508,8 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), voipSettings.RectTransform), TextManager.Get("VoiceChat"));
 
-            IList<string> deviceNames = Alc.GetStringList((IntPtr)null, Alc.CaptureDeviceSpecifier);
-            foreach (string name in deviceNames)
+            CaptureDeviceNames = Alc.GetStringList((IntPtr)null, Alc.CaptureDeviceSpecifier);
+            foreach (string name in CaptureDeviceNames)
             {
                 DebugConsole.NewMessage(name + " " + name.Length.ToString(), Color.Lime);
             }
@@ -524,19 +524,19 @@ namespace Barotrauma
                 return true;
             };
 
-            if (string.IsNullOrWhiteSpace(VoiceCaptureDevice) || !(deviceNames?.Contains(VoiceCaptureDevice) ?? false))
+            if (string.IsNullOrWhiteSpace(VoiceCaptureDevice) || !(CaptureDeviceNames?.Contains(VoiceCaptureDevice) ?? false))
             {
-                VoiceCaptureDevice = deviceNames?.Count > 0 ? deviceNames[0] : null;
+                VoiceCaptureDevice = CaptureDeviceNames?.Count > 0 ? CaptureDeviceNames[0] : null;
             }
             if (string.IsNullOrWhiteSpace(VoiceCaptureDevice))
             {
                 VoiceSetting = VoiceMode.Disabled;
             }
 #if (!OSX)
-            var deviceList = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.15f), voipSettings.RectTransform), TrimAudioDeviceName(VoiceCaptureDevice), deviceNames.Count);
-            if (deviceNames?.Count > 0)
+            var deviceList = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.15f), voipSettings.RectTransform), TrimAudioDeviceName(VoiceCaptureDevice), CaptureDeviceNames.Count);
+            if (CaptureDeviceNames?.Count > 0)
             {
-                foreach (string name in deviceNames)
+                foreach (string name in CaptureDeviceNames)
                 {
                     deviceList.AddItem(TrimAudioDeviceName(name), name);
                 }
@@ -571,12 +571,12 @@ namespace Barotrauma
                 ToolTip = TextManager.Get("RefreshDefaultDeviceToolTip"),
                 OnClicked = (bt, userdata) =>
                 {
-                    deviceNames = Alc.GetStringList((IntPtr)null, Alc.CaptureDeviceSpecifier);
-                    if (deviceNames?.Count > 0)
+                    CaptureDeviceNames = Alc.GetStringList((IntPtr)null, Alc.CaptureDeviceSpecifier);
+                    if (CaptureDeviceNames?.Count > 0)
                     {
-                        if (VoiceCaptureDevice == deviceNames[0]) return true;
+                        if (VoiceCaptureDevice == CaptureDeviceNames[0]) return true;
 
-                        VoipCapture.ChangeCaptureDevice(deviceNames[0]);
+                        VoipCapture.ChangeCaptureDevice(CaptureDeviceNames[0]);
                         currentDeviceTextBlock.Text = TextManager.AddPunctuation(':', TextManager.Get("CurrentDevice"), TrimAudioDeviceName(VoiceCaptureDevice));
                         currentDeviceTextBlock.Flash(Color.Blue);
                     }
@@ -598,12 +598,12 @@ namespace Barotrauma
             for (int i = 0; i < 3; i++)
             {
                 string langStr = "VoiceMode." + ((VoiceMode)i).ToString();
-                var tick = new GUITickBox(new RectTransform(tickBoxScale / 0.4f, voipSettings.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get(langStr))
+                var tick = new GUITickBox(new RectTransform(tickBoxScale / 0.4f, voipSettings.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get(langStr), style: "GUIRadioButton")
                 {
                     ToolTip = TextManager.Get(langStr + "ToolTip")
                 };
 
-                voiceMode.AddRadioButton((VoiceMode)i, tick);
+                voiceMode.AddRadioButton(i, tick);
             }
 
             var micVolumeText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), voipSettings.RectTransform), TextManager.Get("MicrophoneVolume"));
@@ -667,7 +667,7 @@ namespace Barotrauma
                 return true;
             };
 
-            voiceMode.OnSelect = (GUIRadioButtonGroup rbg, Enum value) =>
+            voiceMode.OnSelect = (GUIRadioButtonGroup rbg, int? value) =>
             {
                 if (rbg.Selected != null && rbg.Selected.Equals(value)) return;
                 try
@@ -708,7 +708,7 @@ namespace Barotrauma
                     VoiceSetting = VoiceMode.Disabled;
                 }
             };
-            voiceMode.Selected = VoiceSetting;
+            voiceMode.Selected = (int)VoiceSetting;
             if (string.IsNullOrWhiteSpace(VoiceCaptureDevice))
             {
                 voiceMode.Enabled = false;

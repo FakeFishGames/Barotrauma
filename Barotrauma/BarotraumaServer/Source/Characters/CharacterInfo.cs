@@ -20,6 +20,7 @@ namespace Barotrauma
             if (Job != null)
             {
                 msg.Write(Job.Prefab.Identifier);
+                msg.Write((byte)Job.Variant);
                 msg.Write((byte)Job.Skills.Count);
                 foreach (Skill skill in Job.Skills)
                 {
@@ -30,6 +31,7 @@ namespace Barotrauma
             else
             {
                 msg.Write("");
+                msg.Write((byte)0);
             }
             // TODO: animations
         }

@@ -9,9 +9,9 @@ using System.Linq;
 namespace Barotrauma
 {
 
-    delegate void TextBoxEvent(GUITextBox sender, Keys key);
+    public delegate void TextBoxEvent(GUITextBox sender, Keys key);
 
-    class GUITextBox : GUIComponent, IKeyboardSubscriber
+    public class GUITextBox : GUIComponent, IKeyboardSubscriber
     {        
         public event TextBoxEvent OnSelected;
         public event TextBoxEvent OnDeselected;
@@ -38,6 +38,7 @@ namespace Barotrauma
 
         public bool CaretEnabled { get; set; }
         public Color? CaretColor { get; set; }
+        public bool DeselectAfterMessage = true;
 
         private int? maxTextLength;
 
@@ -232,6 +233,8 @@ namespace Barotrauma
             Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null)
             : base(style, rectT)
         {
+            CanBeFocused = true;
+
             Enabled = true;
             this.color = color ?? Color.White;
             frame = new GUIFrame(new RectTransform(Vector2.One, rectT, Anchor.Center), style, color);
@@ -477,7 +480,7 @@ namespace Barotrauma
             }
             else
             {
-                if (PlayerInput.LeftButtonClicked() && selected) Deselect();
+                if ((PlayerInput.LeftButtonClicked() || PlayerInput.RightButtonClicked()) && selected) Deselect();
                 isSelecting = false;
                 state = ComponentState.None;
             }
@@ -656,7 +659,12 @@ namespace Barotrauma
             switch (command)
             {
                 case '\b': //backspace
-                    if (selectedCharacters > 0)
+                    if (PlayerInput.KeyDown(Keys.LeftControl) || PlayerInput.KeyDown(Keys.RightControl))
+                    {
+                        SetText(string.Empty, false);
+                        CaretIndex = Text.Length;
+                    }
+                    else if (selectedCharacters > 0)
                     {
                         RemoveSelectedText();
                     }

@@ -796,7 +796,7 @@ namespace Barotrauma.CharacterEditor
             }
 
             // GUI
-            spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
+            spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
             if (drawDamageModifiers)
             {
                 foreach (Limb limb in character.AnimController.Limbs)

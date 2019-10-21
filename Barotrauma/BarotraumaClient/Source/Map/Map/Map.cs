@@ -47,6 +47,7 @@ namespace Barotrauma
         private Vector2 drawOffset;
         private Vector2 drawOffsetNoise;
 
+
         private float subReticleAnimState;
         private float targetReticleAnimState;
         private Vector2 subReticlePosition;
@@ -57,6 +58,9 @@ namespace Barotrauma
         
         private MapTile[,] mapTiles;
         private bool messageBoxOpen;
+        
+        public Vector2 CenterOffset;
+
 #if DEBUG
         private GUIComponent editor;
 
@@ -316,7 +320,7 @@ namespace Barotrauma
 
             hudOpenState = Math.Min(hudOpenState + deltaTime, 0.75f + (float)Math.Sin(Timing.TotalTime * 3.0f) * 0.25f);
             
-            Vector2 rectCenter = new Vector2(rect.Center.X, rect.Center.Y);
+            Vector2 rectCenter = new Vector2(rect.Center.X, rect.Center.Y) + CenterOffset;
             
             float closestDist = 0.0f;
             highlightedLocation = null;
@@ -327,7 +331,7 @@ namespace Barotrauma
                     Location location = Locations[i];
                     Vector2 pos = rectCenter + (location.MapPosition + drawOffset) * zoom;
 
-                    if (!rect.Contains(pos)) continue;
+                    if (!rect.Contains(pos)) { continue; }
 
                     float iconScale = MapGenerationParams.Instance.LocationIconSize / location.Type.Sprite.size.X;
 
@@ -348,28 +352,6 @@ namespace Barotrauma
                 }
             }
 
-            foreach (LocationConnection connection in connections)
-            {
-                if (highlightedLocation != CurrentLocation &&
-                    connection.Locations.Contains(highlightedLocation) && connection.Locations.Contains(CurrentLocation))
-                {
-                    if (PlayerInput.LeftButtonClicked() &&
-                        SelectedLocation != highlightedLocation && highlightedLocation != null)
-                    {
-                        //clients aren't allowed to select the location without a permission
-                        if (GameMain.Client == null || GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign))
-                        {
-                            SelectedConnection = connection;
-                            SelectedLocation = highlightedLocation;
-                            targetReticleAnimState = 0.0f;
-
-                            OnLocationSelected?.Invoke(SelectedLocation, SelectedConnection);
-                            GameMain.Client?.SendCampaignState();
-                        }
-                    }
-                }
-            }
-            
             if (GUI.KeyboardDispatcher.Subscriber == null)
             {
                 float moveSpeed = 1000.0f;
@@ -383,6 +365,28 @@ namespace Barotrauma
 
             if (GUI.MouseOn == mapContainer)
             {
+                foreach (LocationConnection connection in connections)
+                {
+                    if (highlightedLocation != CurrentLocation &&
+                        connection.Locations.Contains(highlightedLocation) && connection.Locations.Contains(CurrentLocation))
+                    {
+                        if (PlayerInput.LeftButtonClicked() &&
+                            SelectedLocation != highlightedLocation && highlightedLocation != null)
+                        {
+                            //clients aren't allowed to select the location without a permission
+                            if (GameMain.Client == null || GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign))
+                            {
+                                SelectedConnection = connection;
+                                SelectedLocation = highlightedLocation;
+                                targetReticleAnimState = 0.0f;
+
+                                OnLocationSelected?.Invoke(SelectedLocation, SelectedConnection);
+                                GameMain.Client?.SendCampaignState();
+                            }
+                        }
+                    }
+                }            
+
                 zoom += PlayerInput.ScrollWheelSpeed / 1000.0f;
                 zoom = MathHelper.Clamp(zoom, 1.0f, 4.0f);
 
@@ -425,12 +429,12 @@ namespace Barotrauma
 
             Vector2 viewOffset = drawOffset + drawOffsetNoise;
 
-            Vector2 rectCenter = new Vector2(rect.Center.X, rect.Center.Y);
+            Vector2 rectCenter = new Vector2(rect.Center.X, rect.Center.Y) + CenterOffset;
 
             Rectangle prevScissorRect = GameMain.Instance.GraphicsDevice.ScissorRectangle;
             spriteBatch.End();
             spriteBatch.GraphicsDevice.ScissorRectangle = Rectangle.Intersect(prevScissorRect, rect);
-            spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
+            spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
 
             for (int x = 0; x < mapTiles.GetLength(0); x++)
             {
@@ -662,15 +666,15 @@ namespace Barotrauma
                 Vector2 size = GUI.LargeFont.MeasureString(location.Name);
                 GUI.Style.GetComponentStyle("OuterGlow").Sprites[GUIComponent.ComponentState.None][0].Draw(
                     spriteBatch, new Rectangle((int)pos.X - 30, (int)pos.Y, (int)size.X + 60, (int)(size.Y + 25 * GUI.Scale)), Color.Black * hudOpenState * 0.7f);
-                GUI.DrawString(spriteBatch, pos, 
+                GUI.DrawString(spriteBatch, pos,
                     location.Name, Color.White * hudOpenState * 1.5f, font: GUI.LargeFont);
-                GUI.DrawString(spriteBatch, pos + Vector2.UnitY * 25 * GUI.Scale, 
+                GUI.DrawString(spriteBatch, pos + Vector2.UnitY * 25 * GUI.Scale,
                     location.Type.Name, Color.White * hudOpenState * 1.5f);
             }
-                        
-            GameMain.Instance.GraphicsDevice.ScissorRectangle = prevScissorRect;
+
             spriteBatch.End();
-            spriteBatch.Begin(SpriteSortMode.Deferred);
+            GameMain.Instance.GraphicsDevice.ScissorRectangle = prevScissorRect;
+            spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
         }
 
         private IEnumerable<object> WaitForMessageBoxClosed(GUIMessageBox box)
@@ -687,11 +691,13 @@ namespace Barotrauma
         private void DrawDecorativeHUD(SpriteBatch spriteBatch, Rectangle rect)
         {
             spriteBatch.End();
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, null, null, GameMain.ScissorTestEnable);
-            
+            spriteBatch.Begin(SpriteSortMode.Deferred, blendState: BlendState.Additive, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
+
+            Vector2 rectCenter = rect.Center.ToVector2() + CenterOffset;
+
             if (generationParams.ShowOverlay)
             {
-                Vector2 mapCenter = rect.Center.ToVector2() + (new Vector2(size, size) / 2 + drawOffset + drawOffsetNoise) * zoom;
+                Vector2 mapCenter = rectCenter + (new Vector2(size, size) / 2 + drawOffset + drawOffsetNoise) * zoom;
                 Vector2 centerDiff = CurrentLocation.MapPosition - new Vector2(size) / 2;
                 int currentZone = (int)Math.Floor((centerDiff.Length() / (size * 0.5f) * generationParams.DifficultyZones));
                 for (int i = 0; i < generationParams.DifficultyZones; i++)
@@ -754,21 +760,21 @@ namespace Barotrauma
 
             //reticles
             generationParams.ReticleLarge.Draw(spriteBatch, (int)(subReticleAnimState * generationParams.ReticleLarge.FrameCount),
-                rect.Center.ToVector2() + (subReticlePosition + drawOffset - drawOffsetNoise * 2) * zoom, Color.White,
+                rectCenter + (subReticlePosition + drawOffset - drawOffsetNoise * 2) * zoom, Color.White,
                 generationParams.ReticleLarge.Origin, 0, Vector2.One * (float)Math.Sqrt(zoom) * 0.4f);
             generationParams.ReticleMedium.Draw(spriteBatch, (int)(subReticleAnimState * generationParams.ReticleMedium.FrameCount),
-                rect.Center.ToVector2() + (subReticlePosition + drawOffset - drawOffsetNoise) * zoom, Color.White,
+                rectCenter + (subReticlePosition + drawOffset - drawOffsetNoise) * zoom, Color.White,
                 generationParams.ReticleMedium.Origin, 0, new Vector2(1.0f, 0.7f) * (float)Math.Sqrt(zoom) * 0.4f);
 
             if (SelectedLocation != null)
             {
                 generationParams.ReticleSmall.Draw(spriteBatch, (int)(targetReticleAnimState * generationParams.ReticleSmall.FrameCount),
-                    rect.Center.ToVector2() + (SelectedLocation.MapPosition + drawOffset + drawOffsetNoise * 2) * zoom, Color.White,
+                    rectCenter + (SelectedLocation.MapPosition + drawOffset + drawOffsetNoise * 2) * zoom, Color.White,
                     generationParams.ReticleSmall.Origin, 0, new Vector2(1.0f, 0.7f) * (float)Math.Sqrt(zoom) * 0.4f);
             }
 
             spriteBatch.End();
-            spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, GameMain.ScissorTestEnable);
+            spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
         }
 
         private void UpdateMapAnim(MapAnim anim, float deltaTime)
@@ -787,8 +793,6 @@ namespace Barotrauma
             if (anim.EndZoom == null) anim.EndZoom = zoom;
 
             anim.StartPos = (anim.StartLocation == null) ? -drawOffset : anim.StartLocation.MapPosition;
-
-
 
             anim.Timer = Math.Min(anim.Timer + deltaTime, anim.Duration);
             float t = anim.Duration <= 0.0f ? 1.0f : Math.Max(anim.Timer / anim.Duration, 0.0f);

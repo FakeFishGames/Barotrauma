@@ -43,7 +43,7 @@ namespace Barotrauma
                     LocationConnection connection = Connections[(MissionsCompleted + i) % Connections.Count];
                     Location destination = connection.OtherLocation(this);
 
-                    var mission = Mission.LoadRandom(new Location[] { this, destination }, rand, true, MissionType.Random, true);
+                    var mission = Mission.LoadRandom(new Location[] { this, destination }, rand, true, MissionType.All, true);
                     if (mission == null) { continue; }
                     if (availableMissions.Any(m => m.Prefab == mission.Prefab)) { continue; }
                     if (GameSettings.VerboseLogging && mission != null)
@@ -65,7 +65,11 @@ namespace Barotrauma
 
         public int SelectedMissionIndex
         {
-            get { return availableMissions.IndexOf(SelectedMission); }
+            get
+            {
+                if (SelectedMission == null) { return -1; }
+                return availableMissions.IndexOf(SelectedMission);
+            }
             set
             {
                 if (value < 0 || value >= AvailableMissions.Count())

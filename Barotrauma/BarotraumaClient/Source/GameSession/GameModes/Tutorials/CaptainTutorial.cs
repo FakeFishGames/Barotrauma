@@ -255,9 +255,9 @@ namespace Barotrauma.Tutorials
                 }
                 if (order.Options[orderIndex] == option)
                 {
-                    if (GameMain.GameSession.CrewManager.OrderOptionButtons[i].Frame.FlashTimer <= 0)
+                    if (GameMain.GameSession.CrewManager.OrderOptionButtons[i].FlashTimer <= 0)
                     {
-                        GameMain.GameSession.CrewManager.OrderOptionButtons[i].Frame.Flash(highlightColor);
+                        GameMain.GameSession.CrewManager.OrderOptionButtons[i].Flash(highlightColor);
                     }
                 }
 

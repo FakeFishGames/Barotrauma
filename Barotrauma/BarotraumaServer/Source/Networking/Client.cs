@@ -52,8 +52,8 @@ namespace Barotrauma.Networking
 
         public bool ReadyToStart;
 
-        public List<JobPrefab> JobPreferences;
-        public JobPrefab AssignedJob;
+        public List<Pair<JobPrefab, int>> JobPreferences;
+        public Pair<JobPrefab, int> AssignedJob;
 
         public float DeleteDisconnectedTimer;
 
@@ -94,7 +94,7 @@ namespace Barotrauma.Networking
         {
             var jobs = JobPrefab.List.Values.ToList();
             // TODO: modding support?
-            JobPreferences = new List<JobPrefab>(jobs.GetRange(0, Math.Min(jobs.Count, 3)));
+            JobPreferences = new List<Pair<JobPrefab, int>>(jobs.GetRange(0, Math.Min(jobs.Count, 3)).Select(j => new Pair<JobPrefab, int>(j, 0)));
 
             VoipQueue = new VoipQueue(ID, true, true);
             GameMain.Server.VoipServer.RegisterQueue(VoipQueue);

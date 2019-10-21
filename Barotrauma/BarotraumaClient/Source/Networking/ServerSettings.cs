@@ -52,7 +52,7 @@ namespace Barotrauma.Networking
                             scrollBar.BarScrollValue = (float)value;
                         }
                     }
-                    else if (GUIComponent is GUIRadioButtonGroup radioButtonGroup) radioButtonGroup.Selected = (Enum)value;
+                    else if (GUIComponent is GUIRadioButtonGroup radioButtonGroup) radioButtonGroup.Selected = (int)value;
                     else if (GUIComponent is GUIDropDown dropdown) dropdown.SelectItem(value);
                     else if (GUIComponent is GUINumberInput numInput)
                     {
@@ -147,7 +147,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void ClientAdminWrite(NetFlags dataToSend, int missionType = 0, float? levelDifficulty = null, bool? autoRestart = null, int traitorSetting = 0, int botCount = 0, int botSpawnMode = 0, bool? useRespawnShuttle = null)
+        public void ClientAdminWrite(NetFlags dataToSend, int? missionTypeOr = null, int? missionTypeAnd = null, float? levelDifficulty = null, bool? autoRestart = null, int traitorSetting = 0, int botCount = 0, int botSpawnMode = 0, bool? useRespawnShuttle = null)
         {
             if (!GameMain.Client.HasPermission(Networking.ClientPermissions.ManageSettings)) return;
 
@@ -200,7 +200,8 @@ namespace Barotrauma.Networking
 
             if (dataToSend.HasFlag(NetFlags.Misc))
             {
-                outMsg.Write((byte)(missionType + 1));
+                outMsg.WriteRangedInteger(missionTypeOr ?? (int)Barotrauma.MissionType.None, 0, (int)Barotrauma.MissionType.All);
+                outMsg.WriteRangedInteger(missionTypeAnd ?? (int)Barotrauma.MissionType.All, 0, (int)Barotrauma.MissionType.All);
                 outMsg.Write((byte)(traitorSetting + 1));
                 outMsg.Write((byte)(botCount + 1));
                 outMsg.Write((byte)(botSpawnMode + 1));
@@ -330,7 +331,30 @@ namespace Barotrauma.Networking
             };
 
             //***********************************************
-            
+
+            // Play Style Selection
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsPlayStyle"));
+            var playStyleSelection = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.16f), serverTab.RectTransform))
+            {
+                AutoHideScrollBar = true,
+                UseGridLayout = true
+            };
+
+            List<GUITickBox> playStyleTickBoxes = new List<GUITickBox>();
+            GUIRadioButtonGroup selectionPlayStyle = new GUIRadioButtonGroup();
+            foreach (PlayStyle playStyle in Enum.GetValues(typeof(PlayStyle)))
+            {
+                var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.32f, 0.49f), playStyleSelection.Content.RectTransform), TextManager.Get("servertag." + playStyle), font: GUI.SmallFont, style: "GUIRadioButton")
+                {
+                    ToolTip = TextManager.Get("servertagdescription." + playStyle)
+                };
+                selectionPlayStyle.AddRadioButton((int)playStyle, selectionTick);
+                playStyleTickBoxes.Add(selectionTick);
+            }
+            GetPropertyData("PlayStyle").AssignGUIComponent(selectionPlayStyle);
+            GUITextBlock.AutoScaleAndNormalize(playStyleTickBoxes.Select(t => t.TextBlock));
+
+            // Sub Selection
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsSubSelection"));
             var selectionFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), isHorizontal: true)
             {
@@ -341,12 +365,13 @@ namespace Barotrauma.Networking
             GUIRadioButtonGroup selectionMode = new GUIRadioButtonGroup();
             for (int i = 0; i < 3; i++)
             {
-                var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), selectionFrame.RectTransform), TextManager.Get(((SelectionMode)i).ToString()), font: GUI.SmallFont);
-                selectionMode.AddRadioButton((SelectionMode)i, selectionTick);
+                var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), selectionFrame.RectTransform), TextManager.Get(((SelectionMode)i).ToString()), font: GUI.SmallFont, style: "GUIRadioButton");
+                selectionMode.AddRadioButton(i, selectionTick);
             }
             DebugConsole.NewMessage(SubSelectionMode.ToString(), Color.White);
             GetPropertyData("SubSelectionMode").AssignGUIComponent(selectionMode);
 
+            // Mode Selection
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsModeSelection"));
             selectionFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), isHorizontal: true)
             {
@@ -357,8 +382,8 @@ namespace Barotrauma.Networking
             selectionMode = new GUIRadioButtonGroup();
             for (int i = 0; i < 3; i++)
             {
-                var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), selectionFrame.RectTransform), TextManager.Get(((SelectionMode)i).ToString()), font: GUI.SmallFont);
-                selectionMode.AddRadioButton((SelectionMode)i, selectionTick);
+                var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), selectionFrame.RectTransform), TextManager.Get(((SelectionMode)i).ToString()), font: GUI.SmallFont, style: "GUIRadioButton");
+                selectionMode.AddRadioButton(i, selectionTick);
             }
             GetPropertyData("ModeSelectionMode").AssignGUIComponent(selectionMode);
 
@@ -714,6 +739,18 @@ namespace Barotrauma.Networking
                 Stretch = true,
                 RelativeSpacing = 0.02f
             };
+
+            var allowFriendlyFire = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), antigriefingTab.RectTransform),
+                TextManager.Get("ServerSettingsAllowFriendlyFire"));
+            GetPropertyData("AllowFriendlyFire").AssignGUIComponent(allowFriendlyFire);
+
+            var allowRewiring = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), antigriefingTab.RectTransform),
+                TextManager.Get("ServerSettingsAllowRewiring"));
+            GetPropertyData("AllowRewiring").AssignGUIComponent(allowRewiring);
+
+            var allowDisguises = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), antigriefingTab.RectTransform),
+                TextManager.Get("ServerSettingsAllowDisguises"));
+            GetPropertyData("AllowDisguises").AssignGUIComponent(allowDisguises);
 
             var voteKickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), antigriefingTab.RectTransform), TextManager.Get("ServerSettingsAllowVoteKick"));
             GetPropertyData("AllowVoteKick").AssignGUIComponent(voteKickBox);

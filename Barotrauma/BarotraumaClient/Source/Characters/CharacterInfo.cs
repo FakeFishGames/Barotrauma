@@ -125,7 +125,7 @@ namespace Barotrauma
             }
         }
 
-        partial void LoadAttachmentSprites()
+        partial void LoadAttachmentSprites(bool omitJob)
         {
             if (attachmentSprites == null)
             {
@@ -139,7 +139,14 @@ namespace Barotrauma
             BeardElement?.Elements("sprite").ForEach(s => attachmentSprites.Add(new WearableSprite(s, WearableType.Beard)));
             MoustacheElement?.Elements("sprite").ForEach(s => attachmentSprites.Add(new WearableSprite(s, WearableType.Moustache)));
             HairElement?.Elements("sprite").ForEach(s => attachmentSprites.Add(new WearableSprite(s, WearableType.Hair)));
-            Job?.Prefab.ClothingElement?.Elements("sprite").ForEach(s => attachmentSprites.Add(new WearableSprite(s, WearableType.JobIndicator)));
+            if (omitJob)
+            {
+                JobPrefab.NoJobElement?.Element("PortraitClothing")?.Elements("sprite").ForEach(s => attachmentSprites.Add(new WearableSprite(s, WearableType.JobIndicator)));
+            }
+            else
+            {
+                Job?.Prefab.ClothingElement?.Elements("sprite").ForEach(s => attachmentSprites.Add(new WearableSprite(s, WearableType.JobIndicator)));
+            }
         }
 
         public void DrawPortrait(SpriteBatch spriteBatch, Vector2 screenPos, float targetWidth)
@@ -234,6 +241,8 @@ namespace Barotrauma
             string ragdollFile = inc.ReadString();
 
             string jobIdentifier = inc.ReadString();
+            int variant = inc.ReadByte();
+
             JobPrefab jobPrefab = null;
             Dictionary<string, float> skillLevels = new Dictionary<string, float>();
             if (!string.IsNullOrEmpty(jobIdentifier))
@@ -249,7 +258,7 @@ namespace Barotrauma
             }
 
             // TODO: animations
-            CharacterInfo ch = new CharacterInfo(speciesName, newName, jobPrefab, ragdollFile)
+            CharacterInfo ch = new CharacterInfo(speciesName, newName, jobPrefab, ragdollFile, variant)
             {
                 ID = infoID,
             };

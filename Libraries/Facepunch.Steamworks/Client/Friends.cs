@@ -36,10 +36,13 @@ namespace Facepunch.Steamworks
         internal Client client;
         private byte[] buffer = new byte[1024 * 128];
 
+        public Dictionary<ulong, Action> OnRichPresenceUpdateCallbacks;
+
         internal Friends( Client c )
         {
             client = c;
 
+            client.RegisterCallback<FriendRichPresenceUpdate_t>(OnRichPresenceUpdate);
             client.RegisterCallback<AvatarImageLoaded_t>( OnAvatarImageLoaded );
             client.RegisterCallback<PersonaStateChange_t>( OnPersonaStateChange );
             client.RegisterCallback<GameRichPresenceJoinRequested_t>( OnGameJoinRequested );
@@ -146,6 +149,33 @@ namespace Facepunch.Steamworks
                 }
 
                 return _allFriends;
+            }
+        }
+
+        public void SetRichPresenceUpdateCallback(ulong steamId, Action callback)
+        {
+            if (callback != null)
+            {
+                if (OnRichPresenceUpdateCallbacks == null)
+                {
+                    OnRichPresenceUpdateCallbacks = new Dictionary<ulong, Action>();
+                }
+                if (!OnRichPresenceUpdateCallbacks.ContainsKey(steamId))
+                {
+                    OnRichPresenceUpdateCallbacks.Add(steamId, callback);
+                }
+                else
+                {
+                    OnRichPresenceUpdateCallbacks[steamId] = callback;
+                }
+            }
+            else
+            {
+                if (OnRichPresenceUpdateCallbacks == null) { return; }
+                if (OnRichPresenceUpdateCallbacks.ContainsKey(steamId))
+                {
+                    OnRichPresenceUpdateCallbacks.Remove(steamId);
+                }
             }
         }
 
@@ -390,6 +420,15 @@ namespace Facepunch.Steamworks
         private void OnAvatarImageLoaded( AvatarImageLoaded_t data )
         {
             LoadAvatarForSteamId( data.SteamID );
+        }
+
+        private void OnRichPresenceUpdate( FriendRichPresenceUpdate_t data )
+        {
+            if (OnRichPresenceUpdateCallbacks == null) { return; }
+            if (OnRichPresenceUpdateCallbacks.ContainsKey(data.SteamIDFriend))
+            {
+                OnRichPresenceUpdateCallbacks[data.SteamIDFriend]?.Invoke();
+            }
         }
 
     }

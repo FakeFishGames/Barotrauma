@@ -125,17 +125,13 @@ namespace Barotrauma
         public static Mission LoadRandom(Location[] locations, MTRandom rand, bool requireCorrectLocationType, MissionType missionType, bool isSinglePlayer = false)
         {
             List<MissionPrefab> allowedMissions = new List<MissionPrefab>();
-            if (missionType == MissionType.Random)
-            {
-                allowedMissions.AddRange(MissionPrefab.List);
-            }
-            else if (missionType == MissionType.None)
+            if (missionType == MissionType.None)
             {
                 return null;
             }
             else
             {
-                allowedMissions = MissionPrefab.List.FindAll(m => m.type == missionType);
+                allowedMissions.AddRange(MissionPrefab.List.Where(m => ((int)(missionType & m.type)) != 0));
             }
 
             allowedMissions.RemoveAll(m => isSinglePlayer ? m.MultiplayerOnly : m.SingleplayerOnly);            
