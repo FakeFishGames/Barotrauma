@@ -17,10 +17,12 @@ namespace Barotrauma
 
         protected Vector2 steering;
         
-        private float rayCastTimer;
+        private float lastRayCastTime;
+
+        private bool avoidRayCastHit;
 
         public Vector2 AvoidDir { get; private set; }
-        public Vector2 AvoidRayCastHit { get; private set; }
+        public Vector2 AvoidRayCastHitPosition { get; private set; }
         public Vector2 AvoidLookAheadPos { get; private set; }
 
         private float wanderAngle;
@@ -138,32 +140,35 @@ namespace Barotrauma
             {
                 return Vector2.Zero;
             }
-            float maxDistance = lookAheadDistance;
-            if (rayCastTimer <= 0.0f)
-            {
-                AvoidRayCastHit = AvoidDir = Vector2.Zero;
-                AvoidLookAheadPos = host.SimPosition + Vector2.Normalize(host.Steering) * maxDistance;
-                rayCastTimer = RayCastInterval;
-                Body closestBody = Submarine.CheckVisibility(host.SimPosition, AvoidLookAheadPos);
-                if (closestBody == null)
-                {
-                    AvoidDir = Vector2.Zero;
-                    return Vector2.Zero;
-                }
 
-                AvoidRayCastHit = Submarine.LastPickedPosition;
-                AvoidDir = Submarine.LastPickedNormal;
-                //add a bit of randomness
-                AvoidDir = MathUtils.RotatePoint(AvoidDir, Rand.Range(-0.15f, 0.15f));
-            }
-            else
+            float maxDistance = lookAheadDistance;
+            if (Timing.TotalTime >= lastRayCastTime + RayCastInterval)
             {
-                rayCastTimer -= deltaTime;
+                avoidRayCastHit = false;
+                AvoidLookAheadPos = host.SimPosition + Vector2.Normalize(host.Steering) * maxDistance;
+                lastRayCastTime = (float)Timing.TotalTime;
+                Body closestBody = Submarine.CheckVisibility(host.SimPosition, AvoidLookAheadPos);
+                if (closestBody != null)
+                {
+                    avoidRayCastHit = true;
+                    AvoidRayCastHitPosition = Submarine.LastPickedPosition;
+                    AvoidDir = Submarine.LastPickedNormal;
+                    //add a bit of randomness
+                    AvoidDir = MathUtils.RotatePoint(AvoidDir, Rand.Range(-0.15f, 0.15f));
+                    //wait a bit longer for the next raycast
+                    lastRayCastTime += RayCastInterval;
+                }
             }
 
             if (AvoidDir.LengthSquared() < 0.0001f) { return Vector2.Zero; }
 
-            Vector2 diff = AvoidRayCastHit - host.SimPosition;
+            //if raycast hit nothing, lerp avoid dir to zero
+            if (!avoidRayCastHit)
+            {
+                AvoidDir -= Vector2.Normalize(AvoidDir) * deltaTime * 0.5f;
+            }
+
+            Vector2 diff = AvoidRayCastHitPosition - host.SimPosition;
             float dist = diff.Length();
 
             //> 0 when heading in the same direction as the obstacle, < 0 when away from it

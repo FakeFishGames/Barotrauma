@@ -118,7 +118,7 @@ namespace Barotrauma
             {
                 if (steeringManager.AvoidDir.LengthSquared() > 0.0001f)
                 {
-                    Vector2 hitPos = ConvertUnits.ToDisplayUnits(steeringManager.AvoidRayCastHit);
+                    Vector2 hitPos = ConvertUnits.ToDisplayUnits(steeringManager.AvoidRayCastHitPosition);
                     hitPos.Y = -hitPos.Y;
 
                     GUI.DrawLine(spriteBatch, hitPos, hitPos + new Vector2(steeringManager.AvoidDir.X, -steeringManager.AvoidDir.Y) * 100, Color.Red, width: 5);
