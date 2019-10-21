@@ -147,8 +147,11 @@ namespace Barotrauma
             GameMode?.AddToGUIUpdateList();
             infoFrame?.AddToGUIUpdateList();
 
-            GameMain.NetLobbyScreen.HeadSelectionList?.AddToGUIUpdateList();
-            GameMain.NetLobbyScreen.JobSelectionFrame?.AddToGUIUpdateList();
+            if (GameMain.NetworkMember != null)
+            {
+                GameMain.NetLobbyScreen?.HeadSelectionList?.AddToGUIUpdateList();
+                GameMain.NetLobbyScreen?.JobSelectionFrame?.AddToGUIUpdateList();
+            }
         }
 
         partial void UpdateProjSpecific(float deltaTime)
