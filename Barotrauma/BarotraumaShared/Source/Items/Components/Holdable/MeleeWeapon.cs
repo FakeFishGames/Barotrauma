@@ -327,9 +327,9 @@ namespace Barotrauma.Items.Components
                 {
                     attack.DoDamage(User, targetStructure, item.WorldPosition, 1.0f);
                 }
-                else if (targetItem != null)
+                else if (targetItem != null && targetItem.Prefab.DamagedByMeleeWeapons)
                 {
-                    attack.DoDamage(User, item, item.WorldPosition, 1.0f);
+                    attack.DoDamage(User, targetItem, item.WorldPosition, 1.0f);
                 }
                 else
                 {

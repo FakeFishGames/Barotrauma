@@ -444,6 +444,13 @@ namespace Barotrauma.Items.Components
                 if (attack != null) { attackResult = attack.DoDamageToLimb(User, limb, item.WorldPosition, 1.0f); }
                 if (limb.character != null) { character = limb.character; }
             }
+            else if (target.Body.UserData is Item targetItem)
+            {
+                if (attack != null && targetItem.Prefab.DamagedByProjectiles) 
+                {
+                    attackResult = attack.DoDamage(User, targetItem, item.WorldPosition, 1.0f); 
+                }
+            }
             else if (target.Body.UserData is IDamageable damageable)
             {
                 if (attack != null) { attackResult = attack.DoDamage(User, damageable, item.WorldPosition, 1.0f); }

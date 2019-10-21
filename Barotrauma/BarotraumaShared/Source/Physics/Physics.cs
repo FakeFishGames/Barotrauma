@@ -22,7 +22,7 @@ namespace Barotrauma
         
         public static bool TryParseCollisionCategory(string categoryName, out Category category)
         {
-                category = Category.None;
+            category = Category.None;
             if (string.IsNullOrEmpty(categoryName))
             {
                 return false;

@@ -250,6 +250,27 @@ namespace Barotrauma
         }
 
         [Serialize(false, false)]
+        public bool DamagedByExplosions
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(false, false)]
+        public bool DamagedByProjectiles
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(false, false)]
+        public bool DamagedByMeleeWeapons
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(false, false)]
         public bool FireProof
         {
             get;

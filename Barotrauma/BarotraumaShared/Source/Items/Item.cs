@@ -591,14 +591,31 @@ namespace Barotrauma
                     case "body":
                         body = new PhysicsBody(subElement, ConvertUnits.ToSimUnits(Position), Scale);
                         string collisionCategory = subElement.GetAttributeString("collisioncategory", null);
-                        if (Physics.TryParseCollisionCategory(collisionCategory, out Category cat))
+                        if (Prefab.DamagedByProjectiles || Prefab.DamagedByMeleeWeapons)
                         {
-                            body.CollisionCategories = cat;
-                            if (cat.HasFlag(Physics.CollisionCharacter))
+                            //force collision category to Character to allow projectiles and weapons to hit
+                            //(we could also do this by making the projectiles and weapons hit CollisionItem
+                            //and check if the collision should be ignored in the OnCollision callback, but
+                            //that'd make the hit detection more expensive because every item would be included)
+                            body.CollisionCategories = Physics.CollisionCharacter;
+                            body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionPlatform | Physics.CollisionProjectile;
+                        }
+                        if (collisionCategory != null)
+                        {                            
+                            if (!Physics.TryParseCollisionCategory(collisionCategory, out Category cat))
                             {
-                                body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionPlatform | Physics.CollisionProjectile;
+                                DebugConsole.ThrowError("Invalid collision category in item \"" + Name+"\" (" + collisionCategory + ")");
+                            }
+                            else
+                            {
+                                body.CollisionCategories = cat;
+                                if (cat.HasFlag(Physics.CollisionCharacter))
+                                {
+                                    body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionPlatform | Physics.CollisionProjectile;
+                                }
                             }
                         }
+
                         body.FarseerBody.AngularDamping = element.GetAttributeFloat("angulardamping", 0.2f);
                         body.FarseerBody.LinearDamping = element.GetAttributeFloat("lineardamping", 0.1f);
                         body.UserData = this;

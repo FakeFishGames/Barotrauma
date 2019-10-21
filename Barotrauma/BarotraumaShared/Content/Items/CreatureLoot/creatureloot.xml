@@ -115,12 +115,12 @@
     </Wearable>
   </Item>
 
-  <Item name="Small Mudraptor Egg" identifier="smallmudraptoregg" nameidentifier="mudraptoregg" Tags="smallitem,damageableitem" health="20" category="Misc" scale="0.2" impactsoundtag="impact_soft">
+  <Item name="Small Mudraptor Egg" identifier="smallmudraptoregg" nameidentifier="mudraptoregg" Tags="smallitem" health="20" damagedbyexplosions="true" damagedbyprojectiles="true" damagedbymeleeweapons="true" category="Misc" scale="0.2" impactsoundtag="impact_soft">
     <Sprite texture="Content/Items/CreatureLoot/MudraptorEgg.png" depth="0.7" sourcerect="0,0,128,128" origin="0.5,0.5" />
     <Deconstruct time="10">
       <Item identifier="alienblood" />
     </Deconstruct>
-    <Body radius="55" width="5" friction="1.0" restitution="0.01" angulardamping="0.8" collisioncategory="Character"/>
+    <Body radius="55" width="5" friction="1.0" restitution="0.01" angulardamping="0.8"/>
     <Holdable slots="RightHand,LeftHand,Any" holdpos="0,-70" handle1="0,10" handle2="0,-10">
       <StatusEffect type="OnBroken" target="This">
         <particleemitter particle="whitegoosplash" particleamount="20" velocitymin="0" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.5" scalemax="1.0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
@@ -146,14 +146,14 @@
       </Containable>
     </ItemContainer>
   </Item>
-  <Item name="Medium Mudraptor Egg" identifier="mediummudraptoregg" nameidentifier="mudraptoregg" Tags="damageableitem" hideinmenus="true" health="50" category="Misc" scale="0.4" impactsoundtag="impact_soft">
+  <Item name="Medium Mudraptor Egg" identifier="mediummudraptoregg" nameidentifier="mudraptoregg" hideinmenus="true" health="50" damagedbyexplosions="true" damagedbyprojectiles="true" damagedbymeleeweapons="true" category="Misc" scale="0.4" impactsoundtag="impact_soft">
     <Sprite texture="Content/Items/CreatureLoot/MudraptorEgg.png" depth="0.7" sourcerect="0,0,128,128" origin="0.5,0.5" />
     <Deconstruct time="10">
       <Item identifier="alienblood" />
       <Item identifier="adrenalinegland" />
     </Deconstruct>
     <!-- rectangular body to prevent the egg from rolling -->
-    <Body width="95" height="100" friction="1.0" restitution="0.01" angulardamping="1.0" collisioncategory="Character"/>
+    <Body width="95" height="100" friction="1.0" restitution="0.01" angulardamping="1.0" />
     <ItemContainer capacity="1" hideitems="true" showcontainedstateindicator="false" canbeselected="true">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
       <StatusEffect type="OnBroken" target="This">
@@ -177,7 +177,7 @@
       </Containable>
     </ItemContainer>
   </Item>
-  <Item name="Large Mudraptor Egg" identifier="largemudraptoregg" nameidentifier="mudraptoregg" Tags="damageableitem" hideinmenus="true" health="200" category="Misc" scale="0.6" impactsoundtag="impact_soft">
+  <Item name="Large Mudraptor Egg" identifier="largemudraptoregg" nameidentifier="mudraptoregg" hideinmenus="true" health="200" damagedbyexplosions="true" damagedbyprojectiles="true" damagedbymeleeweapons="true" category="Misc" scale="0.6" impactsoundtag="impact_soft">
     <Sprite texture="Content/Items/CreatureLoot/MudraptorEgg.png" depth="0.7" sourcerect="0,0,128,128" origin="0.5,0.5" />
     <Deconstruct time="10">
       <Item identifier="alienblood" />
@@ -186,7 +186,7 @@
       <Item identifier="mudraptorshell" />
     </Deconstruct>
     <!-- rectangular body to prevent the egg from rolling -->
-     <Body width="95" height="100" friction="1.0" restitution="0.01" angulardamping="1.0" collisioncategory="Character"/>
+     <Body width="95" height="100" friction="1.0" restitution="0.01" angulardamping="1.0" />
     <ItemContainer capacity="1" hideitems="true" showcontainedstateindicator="false" canbeselected="true">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
       <StatusEffect type="OnBroken" target="This">

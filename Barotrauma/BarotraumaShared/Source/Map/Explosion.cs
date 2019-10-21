@@ -161,7 +161,7 @@ namespace Barotrauma
                             GameMain.NetworkMember.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnFire });
                         }
 
-                        if (item.HasTag("damageableitem") && !item.Indestructible)
+                        if (item.Prefab.DamagedByExplosives && !item.Indestructible)
                         {
                             float limbRadius = item.body == null ? 0.0f : item.body.GetMaxExtent();
                             float dist = Vector2.Distance(item.WorldPosition, worldPosition);
