@@ -18,8 +18,11 @@ namespace Barotrauma
         
         private bool ToggleInfoFrame()
         {
-            GameMain.NetLobbyScreen.HeadSelectionList = null;
-            GameMain.NetLobbyScreen.JobSelectionFrame = null;
+            if (GameMain.NetworkMember != null && GameMain.NetLobbyScreen != null)
+            {
+                if (GameMain.NetLobbyScreen.HeadSelectionList != null) { GameMain.NetLobbyScreen.HeadSelectionList.Visible = false; }
+                if (GameMain.NetLobbyScreen.JobSelectionFrame != null) { GameMain.NetLobbyScreen.JobSelectionFrame.Visible = false; }
+            }
             if (infoFrame == null)
             {
                 CreateInfoFrame();
@@ -171,24 +174,24 @@ namespace Barotrauma
                 ToggleInfoFrame();
             }
 
-            if (GameMain.NetLobbyScreen.HeadSelectionList != null)
+            if (GameMain.NetworkMember != null)
             {
-                if (PlayerInput.LeftButtonDown() && !GUI.IsMouseOn(GameMain.NetLobbyScreen.HeadSelectionList))
+                if (GameMain.NetLobbyScreen?.HeadSelectionList != null)
                 {
-                    GameMain.NetLobbyScreen.HeadSelectionList = null;
+                    if (PlayerInput.LeftButtonDown() && !GUI.IsMouseOn(GameMain.NetLobbyScreen.HeadSelectionList))
+                    {
+                        if (GameMain.NetLobbyScreen.HeadSelectionList != null) { GameMain.NetLobbyScreen.HeadSelectionList.Visible = false; }
+                    }
+                }
+                if (GameMain.NetLobbyScreen?.JobSelectionFrame != null)
+                {
+                    if (PlayerInput.LeftButtonDown() && !GUI.IsMouseOn(GameMain.NetLobbyScreen.JobSelectionFrame))
+                    {
+                        GameMain.NetLobbyScreen.JobList.Deselect();
+                        if (GameMain.NetLobbyScreen.JobSelectionFrame != null) { GameMain.NetLobbyScreen.JobSelectionFrame.Visible = false; }
+                    }
                 }
             }
-
-            if (GameMain.NetLobbyScreen.JobSelectionFrame != null)
-            {
-                if (PlayerInput.LeftButtonDown() && !GUI.IsMouseOn(GameMain.NetLobbyScreen.JobSelectionFrame))
-                {
-                    GameMain.NetLobbyScreen.JobList.Deselect();
-                    GameMain.NetLobbyScreen.JobSelectionFrame = null;
-                }
-            }
-
-            //infoFrame?.UpdateManually(deltaTime);
         }
 
         public void Draw(SpriteBatch spriteBatch)
