@@ -3641,15 +3641,13 @@
   <acidparty_traitorobjectivestartmessage3>"Step 3. "First rule is we gotta share. The thing here is that some people, right? Some people are kinda brainwashed into being afraid of anything that challenges their world view, you know? So you know, you gotta find a way to sneak that good shit into their system, right?" \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage3>
   <acidparty_objectivesuccessmessage3>"Step 4. Lay down and listen to the waves, man."</acidparty_objectivesuccessmessage3>
 
-  <!-- Placeholder text for goals -->
+  <!-- Text for goals -->
   <traitorgoalkilltargetinfowithcause>Assassinate [targetname] by [causeofdeath].</traitorgoalkilltargetinfowithcause>
   <traitorgoalkilltargetinfowithhull>Assassinate [targetname] and leave the body in the [targethullname].</traitorgoalkilltargetinfowithhull>
   <traitorgoalkilltargetinfowithcauseandhull>Assassinate [targetname] by [causeofdeath] and leave the body in the [targethullname].</traitorgoalkilltargetinfowithcauseandhull>
   <traitorgoalpoisoneveryoneinfo>Inject all crew members with [poison].</traitorgoalpoisoneveryoneinfo>
   <traitorgoalreachdistancefromsub>Swim at least [distance] meters from the submarine.</traitorgoalreachdistancefromsub>
-  <traitorgoalincubateegg>Incubate [startingentity] with [catalystitem] to a [transformedentity].</traitorgoalincubateegg>
-  <traitorgoalkeepalive>Protect the [speciesname] for [duration] seconds.</traitorgoalkeepalive>
-  
+  <traitorgoalkeepalive>Protect the [speciesname] for [duration] seconds.</traitorgoalkeepalive>  
  
   <!-- Tainted welding tools traitor mission text package --> 
   <tainted_welding_traitorobjectivestartmessage2>The receiver crackles and whistles as a weak signal is received: Europan Resistance direct action, you are clear to go ahead with the mission: This sub has to be sunk, and it has to look like an accident. Start by sabotaging the welding gear.\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage2>
@@ -3661,15 +3659,13 @@
   <tainted_welding_objectivesuccessmessage4>Fine work, comrade! The pigs are surely doomed now.</tainted_welding_objectivesuccessmessage4>
   <tainted_welding_traitorobjectivestartmessage5>Make your escape! A shuttle will be dispatched shortly to pick you up!\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage5>
   <tainted_welding_objectivesuccessmessage5>The warning alarm on your diving suit sounds... the shuttle should have rendezvous with you some time ago, but the only movement in the gloom are schools of alien  organisms. You broadcast another transmission: "This is Europan Resistance direct action, come in! Requesting extraction!". The transmitter remains silent, you've been left to your fate. Europa embraces you. </tainted_welding_objectivesuccessmessage5>
-
   
   <!-- One of Us traitor mission text package -->    
   <one_of_us_goalinfotext_2>Sacred vessels of the husk's young have been hidden behind a loose vent. Find these eggs quickly before another stumbles upon them!</one_of_us_goalinfotext_2> 
   <one_of_us_objectivesuccessmessage2>A rush of pleasure hits you like a wave as you find the eggs. A dry, mad laugh echoes within your head for a moment, fading into indistinct wet clicks.</one_of_us_objectivesuccessmessage2> 
   <one_of_us_objectivesuccessmessage3>Your head spins and your vision narrows as the last of the calyxanide is destroyed.</one_of_us_objectivesuccessmessage3>
   <one_of_us_traitorobjectivestartmessage4>You read the final task:\n[traitorgoalinfos]</one_of_us_traitorobjectivestartmessage4>
-  <one_of_us_goalinfotext_4>All on this sub must partake of communion with the husk!</one_of_us_goalinfotext_4>
- 
+  <one_of_us_goalinfotext_4>All on this sub must partake of communion with the husk!</one_of_us_goalinfotext_4> 
   
   <!-- Easterbunny mission text package -->  
   <easterbunny_goalinfotext_1>Find a very special egg, possibly hidden in one of the vents</easterbunny_goalinfotext_1>

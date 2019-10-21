@@ -166,7 +166,15 @@ namespace Barotrauma
                         case "finditem":
                             checker.Required("identifier");
                             checker.Optional("preferNew", "allowNew", "allowExisting", "allowedContainers", "percentage");
-                            goal = new Traitor.GoalFindItem(Config.GetAttributeString("identifier", null), Config.GetAttributeBool("preferNew", true), Config.GetAttributeBool("allowNew", true), Config.GetAttributeBool("allowExisting", true), Config.GetAttributeFloat("percentage", -1f), Config.GetAttributeStringArray("allowedContainers", new string[] {"steelcabinet", "mediumsteelcabinet", "suppliescabinet"}));
+                            List<Traitor.TraitorMission.CharacterFilter> itemCountFilters = new List<Traitor.TraitorMission.CharacterFilter>();
+                            foreach (var attribute in Config.Attributes())
+                            {
+                                if (targetFilters.TryGetValue(attribute.Name.ToString().ToLower(System.Globalization.CultureInfo.InvariantCulture), out var filter))
+                                {
+                                    itemCountFilters.Add((character) => filter(attribute.Value, character));
+                                }
+                            }
+                            goal = new Traitor.GoalFindItem((character) => itemCountFilters.All(f => f(character)), Config.GetAttributeString("identifier", null), Config.GetAttributeBool("preferNew", true), Config.GetAttributeBool("allowNew", true), Config.GetAttributeBool("allowExisting", true), Config.GetAttributeFloat("percentage", -1f), Config.GetAttributeStringArray("allowedContainers", new string[] {"steelcabinet", "mediumsteelcabinet", "suppliescabinet"}));
                             break;
                         case "replaceinventory":
                             checker.Required("containers", "replacements");
