@@ -21,10 +21,15 @@ Multiplayer:
 	- Added the option to favorite servers.
 	- Added a list of recent servers.
 - Improved server lobby:
-	- New layout.
-	- The campaign interface is displayed directly in them menu, not in a separate view.
+	- Improved character customization interface: players now have full control over their appearance.
+	- Mission selection is more flexible: mission types can be toggled separately.
+	- The campaign interface is displayed directly in the menu, not in a separate view.
 	- The submarine preview is displayed directly in the menu without having to open a separate window.
-	- The job preferences of the players are indicated in the player list.
+	- The job preferences of other players are indicated in the player list.
+	- Voice chat icon now indicates the loudness of the audio being transmitted/received.
+	- Voice chat settings are indicated in the bottom-right corner of the chat box.
+	- The server log is integrated into the chat box.
+	- Miscellaneous layout changes.
 
 Human AI:
 - Changed the logic for automatically unequipping the diving gear, extinguishers or items that are held in hands.
