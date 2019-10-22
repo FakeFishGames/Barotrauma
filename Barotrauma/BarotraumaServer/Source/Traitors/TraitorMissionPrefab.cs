@@ -12,12 +12,11 @@ namespace Barotrauma
         public class TraitorMissionEntry
         {
             public readonly TraitorMissionPrefab Prefab;
-            public int SelectedWeight;
+            public float SelectedWeight;
 
             public TraitorMissionEntry(XElement element)
             {
                 Prefab = new TraitorMissionPrefab(element);
-                SelectedWeight = 0;
             }
         }
         public static readonly List<TraitorMissionEntry> List = new List<TraitorMissionEntry>();
@@ -39,7 +38,14 @@ namespace Barotrauma
 
         public static TraitorMissionPrefab RandomPrefab()
         {
-            return TraitorManager.WeightedRandom(List, Traitor.TraitorMission.Random, entry => entry.SelectedWeight, (entry, weight) => entry.SelectedWeight = weight, 2, 3)?.Prefab;
+            var selected = ToolBox.SelectWeightedRandom(List, List.Select(mission => Math.Max(mission.SelectedWeight, 0.1f)).ToList(), TraitorManager.Random);
+            //the weight of the missions that didn't get selected keeps growing the make them more likely to get picked
+            foreach (var mission in List)
+            {
+                mission.SelectedWeight++;
+            }
+            selected.SelectedWeight = 0.0f;
+            return selected.Prefab;
         }
 
         private class AttributeChecker : IDisposable

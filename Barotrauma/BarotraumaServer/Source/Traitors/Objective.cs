@@ -101,7 +101,7 @@ namespace Barotrauma
                 {
                     for (var i = allGoalsCount; i > 1;)
                     {
-                        int j = TraitorMission.Random(i--);
+                        int j = TraitorManager.RandomInt(i--);
                         var temp = indices[j];
                         indices[j] = indices[i];
                         indices[i] = temp;
