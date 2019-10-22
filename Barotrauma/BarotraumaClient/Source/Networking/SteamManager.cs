@@ -204,7 +204,7 @@ namespace Barotrauma.Steam
             instance.client.Lobby.CurrentLobbyData.SetData("playercount", (GameMain.Client?.ConnectedClients?.Count ?? 0).ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("maxplayernum", serverSettings.MaxPlayers.ToString());
             instance.client.Lobby.CurrentLobbyData.SetData("hostipaddress", lobbyIP);
-            instance.client.Lobby.CurrentLobbyData.SetData("ownerid", SteamIDUInt64ToString(GetSteamID()));
+            instance.client.Lobby.CurrentLobbyData.SetData("lobbyowner", SteamIDUInt64ToString(GetSteamID()));
             instance.client.Lobby.CurrentLobbyData.SetData("haspassword", serverSettings.HasPassword.ToString());
 
             instance.client.Lobby.CurrentLobbyData.SetData("message", serverSettings.ServerMessageText);
@@ -390,7 +390,7 @@ namespace Barotrauma.Steam
                 bool.TryParse(lobby.GetData("haspassword"), out bool hasPassword);
                 int.TryParse(lobby.GetData("playercount"), out int currPlayers);
                 int.TryParse(lobby.GetData("maxplayernum"), out int maxPlayers);
-                UInt64 ownerId = SteamIDStringToUInt64(lobby.GetData("ownerid"));
+                UInt64 ownerId = SteamIDStringToUInt64(lobby.GetData("lobbyowner"));
                 //UInt64.TryParse(lobby.GetData("connectsteamid"), out ulong connectSteamId);
                 string ip = lobby.GetData("hostipaddress");
                 if (string.IsNullOrWhiteSpace(ip)) { ip = ""; }
