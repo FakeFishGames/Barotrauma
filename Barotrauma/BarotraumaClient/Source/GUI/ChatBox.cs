@@ -159,7 +159,7 @@ namespace Barotrauma
 
             float prevSize = chatBox.BarSize;
 
-            string displayedText = ChatMessage.GetTimeStamp() + message.TranslatedText;
+            string displayedText = message.TranslatedText;
             string senderName = "";
             Color senderColor = Color.White;
             if (!string.IsNullOrWhiteSpace(message.SenderName))
@@ -174,11 +174,14 @@ namespace Barotrauma
             var msgHolder = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.0f), chatBox.Content.RectTransform, Anchor.TopCenter), style: null,
                     color: ((chatBox.Content.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f);
 
-            GUITextBlock senderNameBlock = null;
+            GUITextBlock senderNameBlock = new GUITextBlock(new RectTransform(new Vector2(0.98f, 0.0f), msgHolder.RectTransform) { AbsoluteOffset = new Point((int)(5 * GUI.Scale), 0) },
+                ChatMessage.GetTimeStamp(), textColor: Color.LightGray, font: GUI.SmallFont, textAlignment: Alignment.TopLeft, style: null)
+            {
+                CanBeFocused = true
+            };
             if (!string.IsNullOrEmpty(senderName))
             {
-                senderNameBlock = new GUITextBlock(new RectTransform(new Vector2(0.98f, 0.0f), msgHolder.RectTransform)
-                { AbsoluteOffset = new Point((int)(5 * GUI.Scale), 0) },
+                new GUITextBlock(new RectTransform(new Vector2(0.8f, 1.0f), senderNameBlock.RectTransform) { AbsoluteOffset = new Point((int)(senderNameBlock.TextSize.X), 0) },
                     senderName, textColor: senderColor, font: GUI.SmallFont, textAlignment: Alignment.TopLeft, style: null)
                 {
                     CanBeFocused = true
