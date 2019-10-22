@@ -3547,16 +3547,7 @@
   <mechanic.weldingtext>Equip the welding tool and diving mask you just retrieved from the locker by double-clicking on them. \n\nWith the welding tool you are able to repair leaks in hulls, and the diving mask will provide you with a steady supply of oxygen while underwater. \n\nSome items, like the welding tool, require two free hands to use. Unequip or drop an item by double-clicking it while it is in use.\n\nWhen a welding tool is equipped, hold {0} to aim. While aiming, hold {1} to weld.</mechanic.weldingtext>
   <mechanic.fabricatetext>Now that we have all of the required materials, we can fabricate a fire extinguisher. Find it in the list, load the fabricator with the required materials and press the button to start fabricating.\n\nWhen done, the fabricated item can be found in the fabricator’s output slot. As the fire extinguisher is an item that requires the use of both hands, equip the extinguisher by double-clicking on it.</mechanic.fabricatetext>
 
-  <connection.set_text>set_text</connection.set_text>
-  
   <bugreportfeedbackform>Help and technical support</bugreportfeedbackform>
-
-  <serverlisttab.all>All servers</serverlisttab.all>
-  <serverlisttab.favorites>Favorites</serverlisttab.favorites>
-  <serverlisttab.recent>Recent</serverlisttab.recent>
-
-  <addtofavorites>Add to favorites</addtofavorites>
-  <removefromfavorites>Remove from favorites</removefromfavorites>
 
   <character.hammerheadgold>Golden Hammerhead</character.hammerheadgold>
   <character.bonethresher>Bone Tiger Thresher</character.bonethresher>
@@ -3608,6 +3599,13 @@
   <entitydescription.mudraptoregg>A slimy, pulsating mudraptor egg. The gaping maw on top of the egg seems to be grasping for something to eat.</entitydescription.mudraptoregg>
   
   <!-- Server lobby 2.0 -->
+  <serverlisttab.all>All servers</serverlisttab.all>
+  <serverlisttab.favorites>Favorites</serverlisttab.favorites>
+  <serverlisttab.recent>Recent</serverlisttab.recent>
+
+  <addtofavorites>Add to favorites</addtofavorites>
+  <removefromfavorites>Remove from favorites</removefromfavorites>
+
   <servertag.casual>Casual</servertag.casual>
   <servertagdescription.casual>Having fun is more important than completing the objective. A good choice for new players.</servertagdescription.casual>
   <servertag.serious>Serious</servertag.serious>
@@ -3733,4 +3731,6 @@
   <!-- Modified values -->
   <pausemenuquitverification>Are you sure you want to return to the main menu? All your unsaved progress will be lost.</pausemenuquitverification>
   <leveldifficulty>Difficulty</leveldifficulty>
+  <connection.set_text>set_text</connection.set_text>
+  
 </infotexts>
