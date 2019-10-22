@@ -2936,7 +2936,7 @@ namespace Barotrauma.Networking
         {
             var jobList = JobPrefab.List.Values.ToList();
             unassigned = new List<Client>(unassigned);
-            unassigned.OrderBy(sp => Rand.Int(int.MaxValue));
+            unassigned = unassigned.OrderBy(sp => Rand.Int(int.MaxValue)).ToList();
 
             Dictionary<JobPrefab, int> assignedClientCount = new Dictionary<JobPrefab, int>();
             foreach (JobPrefab jp in jobList)
@@ -3127,9 +3127,10 @@ namespace Barotrauma.Networking
 
             List<WayPoint> spawnPoints = WayPoint.WayPointList.FindAll(wp =>
                 wp.SpawnType == SpawnType.Human &&
-                wp.Submarine != null && wp.Submarine.TeamID == teamID);
-            spawnPoints.OrderBy(sp => Rand.Int(int.MaxValue));
-            spawnPoints.OrderBy(sp => sp.AssignedJob == null ? 0 : 1);
+                wp.Submarine != null && wp.Submarine.TeamID == teamID)
+                    .OrderBy(sp => Rand.Int(int.MaxValue))
+                    .OrderBy(sp => sp.AssignedJob == null ? 0 : 1)
+                        .ToList();
 
             bool canAssign = false;
             do
