@@ -1502,7 +1502,9 @@ namespace Barotrauma
         private void AddToServerList(ServerInfo serverInfo)
         {
             var serverFrame = serverList.Content.FindChild(d => (d.UserData is ServerInfo info) &&
-                                                                info.OwnerID == serverInfo.OwnerID &&
+                                                                (info.LobbyID == serverInfo.LobbyID ||
+                                                                (info.LobbyID == 0 && info.OwnerID == serverInfo.OwnerID &&
+                                                                serverInfo.OwnerVerified)) &&
                                                                 (serverInfo.OwnerID != 0 ? true : (info.IP == serverInfo.IP && info.Port == serverInfo.Port)));
 
             if (serverFrame == null)
@@ -1535,6 +1537,16 @@ namespace Barotrauma
             }
             serverFrame.UserData = serverInfo;
 
+            if (serverInfo.OwnerVerified)
+            {
+                DebugConsole.NewMessage(serverInfo.OwnerID + " verified!");
+                var childrenToRemove = serverList.Content.FindChildren(c => (c.UserData is ServerInfo info) && info != serverInfo && info.OwnerID == serverInfo.OwnerID).ToList();
+                foreach (var child in childrenToRemove)
+                {
+                    serverList.Content.RemoveChild(child);
+                }
+            }
+
             UpdateServerInfo(serverInfo);
 
             SortList(sortedBy, toggle: false);
@@ -1544,7 +1556,9 @@ namespace Barotrauma
         private void UpdateServerInfo(ServerInfo serverInfo)
         {
             var serverFrame = serverList.Content.FindChild(d => (d.UserData is ServerInfo info) &&
-                                                                info.OwnerID == serverInfo.OwnerID &&
+                                                                (info.LobbyID == serverInfo.LobbyID ||
+                                                                (info.LobbyID == 0 && info.OwnerID == serverInfo.OwnerID &&
+                                                                serverInfo.OwnerVerified)) &&
                                                                 (serverInfo.OwnerID != 0 ? true : (info.IP == serverInfo.IP && info.Port == serverInfo.Port)));
             if (serverFrame == null) return;
 

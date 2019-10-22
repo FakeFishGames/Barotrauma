@@ -16,6 +16,7 @@ namespace Barotrauma.Networking
 
         public UInt64 LobbyID;
         public UInt64 OwnerID;
+        public bool OwnerVerified;
 
         public string ServerName;
         public string ServerMessage;
@@ -481,6 +482,7 @@ namespace Barotrauma.Networking
                             LobbyID = lobby.LobbyID;
                             OwnerID = ownerId;
                             PingChecked = false;
+                            OwnerVerified = true;
                             SteamManager.AssignLobbyDataToServerInfo(lobby, this);
 
                             onServerRulesReceived?.Invoke(this);

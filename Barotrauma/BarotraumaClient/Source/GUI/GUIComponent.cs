@@ -106,6 +106,11 @@ namespace Barotrauma
             return Children.Where(c => c.userData == userData);
         }
 
+        public IEnumerable<GUIComponent> FindChildren(Func<GUIComponent, bool> predicate)
+        {
+            return Children.Where(c => predicate(c));
+        }
+
         public virtual void ClearChildren()
         {
             RectTransform.ClearChildren();
