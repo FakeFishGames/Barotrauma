@@ -654,9 +654,9 @@ namespace Barotrauma
             if (newSpeedSqr > maxVelocity * maxVelocity)
             {
                 newVelocity = newVelocity.ClampLength(maxVelocity);
+                force = (newVelocity - body.LinearVelocity) * Mass / (float)Timing.Step;
             }
 
-            Vector2 clampedForce = (newVelocity - body.LinearVelocity) * Mass / (float)Timing.Step;
             if (!IsValidValue(force, "clamped force", -1e10f, 1e10f)) return;
             body.ApplyForce(force);
         }
