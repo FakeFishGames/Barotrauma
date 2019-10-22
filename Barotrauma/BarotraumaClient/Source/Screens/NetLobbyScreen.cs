@@ -13,6 +13,7 @@ namespace Barotrauma
     partial class NetLobbyScreen : Screen
     {
         private readonly List<Sprite> characterSprites = new List<Sprite>();
+        private readonly List<Sprite> jobPreferenceSprites = new List<Sprite>();
 
         private GUIFrame infoFrame, modeFrame;
         private GUIFrame myCharacterFrame;
@@ -1161,11 +1162,11 @@ namespace Barotrauma
             HeadSelectionList = null;
             JobSelectionFrame = null;
 
-            foreach (Sprite sprite in characterSprites)
-            {
-                sprite.Remove();
-            }
+            foreach (Sprite sprite in characterSprites) { sprite.Remove(); }
             characterSprites.Clear();
+
+            foreach (Sprite sprite in jobPreferenceSprites) { sprite.Remove(); }
+            jobPreferenceSprites.Clear();
         }
 
         public override void Select()
@@ -2689,32 +2690,44 @@ namespace Barotrauma
                 };
                 itemsInRow++;
 
-                var sprites = AddJobSpritesToGUIComponent(jobButton, jobPrefab.First);
-                if (sprites.Length > 1)
+                var images = AddJobSpritesToGUIComponent(jobButton, jobPrefab.First);
+                for (int variantIndex = 0; variantIndex < images.Length; variantIndex++)
+                {
+                    foreach (GUIImage image in images[variantIndex])
+                    {
+                        characterSprites.Add(image.Sprite);
+                    }
+                }
+
+                if (images != null && images.Length > 1)
                 {
                     int currVisible = jobPrefab.Second;
                     GUIButton currSelected = null;
-                    for (int i = 0; i < sprites.Length; i++)
+                    for (int variantIndex = 0; variantIndex < images.Length; variantIndex++)
                     {
-                        sprites[i][0].Visible = currVisible == (i+1);
-                        sprites[i][1].Visible = currVisible == (i+1);
+                        foreach (GUIImage image in images[variantIndex])
+                        {
+                            image.Visible = currVisible == (variantIndex + 1);
+                        }
 
-                        var variantButton = new GUIButton(new RectTransform(new Vector2(0.15f), jobButton.RectTransform, scaleBasis: ScaleBasis.BothWidth) { RelativeOffset = new Vector2(0.05f, 0.05f + 0.2f * i) }, (i + 1).ToString(), style: null)
+                        var variantButton = new GUIButton(new RectTransform(new Vector2(0.15f), jobButton.RectTransform, scaleBasis: ScaleBasis.BothWidth) { RelativeOffset = new Vector2(0.05f, 0.05f + 0.2f * variantIndex) }, (variantIndex + 1).ToString(), style: null)
                         {
                             Color = new Color(50, 50, 50, 200),
                             HoverColor = Color.Gray * 0.75f,
                             PressedColor = Color.Black * 0.75f,
                             SelectedColor = new Color(45, 70, 100, 200),
-                            UserData = new Pair<JobPrefab, int>(jobPrefab.First, i+1),
+                            UserData = new Pair<JobPrefab, int>(jobPrefab.First, variantIndex+1),
                             OnClicked = (btn, obj) =>
                             {
                                 currSelected.Selected = false;
                                 int k = ((Pair<JobPrefab, int>)obj).Second;
                                 btn.Parent.UserData = obj;
-                                for (int j = 0; j < sprites.Length; j++)
+                                for (int j = 0; j < images.Length; j++)
                                 {
-                                    sprites[j][0].Visible = k == (j+1);
-                                    sprites[j][1].Visible = k == (j+1);
+                                    foreach (GUIImage image in images[j])
+                                    {
+                                        image.Visible = k == (j + 1);
+                                    }
                                 }
                                 currSelected = btn;
                                 currSelected.Selected = true;
@@ -2723,7 +2736,7 @@ namespace Barotrauma
                             }
                         };
 
-                        if (currVisible == (i + 1))
+                        if (currVisible == (variantIndex + 1))
                         {
                             currSelected = variantButton;
                         }
@@ -2738,7 +2751,7 @@ namespace Barotrauma
         private GUIImage[][] AddJobSpritesToGUIComponent(GUIComponent parent, JobPrefab jobPrefab)
         {
             GUIFrame innerFrame = null;
-            Pair<Sprite[], Vector2>[] sprites = GetJobOutfitSprites(jobPrefab, out Vector2 torsoSize);
+            List<JobPrefab.OutfitPreview> outfitPreviews = jobPrefab.GetJobOutfitSprites(Gender.Male, out Vector2 dimensions);
 
             innerFrame = new GUIFrame(new RectTransform(Vector2.One * 0.8f, parent.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(-0.07f, -0.06f) }, style: null)
             {
@@ -2751,42 +2764,41 @@ namespace Barotrauma
                 float buttonHeight = parent.Rect.Height;
 
                 Vector2 innerFrameSize;
-                if (buttonWidth / torsoSize.X > buttonHeight / torsoSize.Y)
+                if (buttonWidth / dimensions.X > buttonHeight / dimensions.Y)
                 {
-                    innerFrameSize = new Vector2((torsoSize.X / torsoSize.Y) * (buttonHeight / buttonWidth), 1.0f);
+                    innerFrameSize = new Vector2((dimensions.X / dimensions.Y) * (buttonHeight / buttonWidth), 1.0f);
                 }
                 else
                 {
-                    innerFrameSize = new Vector2(1.0f, (torsoSize.Y / torsoSize.X) * (buttonWidth / buttonHeight));
+                    innerFrameSize = new Vector2(1.0f, (dimensions.Y / dimensions.X) * (buttonWidth / buttonHeight));
                 }
 
                 innerFrame.RectTransform.RelativeSize = innerFrameSize * 0.8f;
             }
 
-            parent.RectTransform.SizeChanged += recalculateInnerFrame;
-
-            var retVal = new GUIImage[sprites[0].First.Length][];
-
-            Vector2 torsoSrcRectDims = sprites[0].First[0].SourceRect.Size.ToVector2();
-            Vector2 armSrcRectDims = sprites[1].First[0].SourceRect.Size.ToVector2();
-
-            for (int i = 0; i < sprites[0].First.Length; i++)
+            GUIImage[][] retVal = new GUIImage[0][];
+            if (outfitPreviews != null && outfitPreviews.Any())
             {
-                retVal[i] = new GUIImage[2];
+                parent.RectTransform.SizeChanged += recalculateInnerFrame;
 
-                retVal[i][0] = new GUIImage(new RectTransform((torsoSrcRectDims / torsoSize), innerFrame.RectTransform, Anchor.Center) { RelativeOffset = sprites[0].Second / torsoSize }, sprites[0].First[i], scaleToFit: true)
+                retVal = new GUIImage[outfitPreviews.Count][];
+                for (int i = 0; i < outfitPreviews.Count; i++)
                 {
-                    PressedColor = Color.White,
-                    CanBeFocused = false
-                };
-                retVal[i][1] = new GUIImage(new RectTransform((armSrcRectDims / torsoSize), innerFrame.RectTransform, Anchor.Center) { RelativeOffset = sprites[1].Second / torsoSize }, sprites[1].First[i], scaleToFit: true)
-                {
-                    PressedColor = Color.White,
-                    CanBeFocused = false
-                };
+                    JobPrefab.OutfitPreview outfitPreview = outfitPreviews[i];
+                    retVal[i] = new GUIImage[outfitPreview.Sprites.Count];
+                    for (int j = 0; j < outfitPreview.Sprites.Count; j++)
+                    {
+                        Pair<Sprite, Vector2> sprite = outfitPreview.Sprites[j];
+                        retVal[i][j] = new GUIImage(new RectTransform(sprite.First.SourceRect.Size.ToVector2() / dimensions, innerFrame.RectTransform, Anchor.Center) { RelativeOffset = sprite.Second / dimensions }, sprite.First, scaleToFit: true)
+                        {
+                            PressedColor = Color.White,
+                            CanBeFocused = false
+                        };
+                    }
+                }
+
+                recalculateInnerFrame();
             }
-
-            recalculateInnerFrame();
 
             var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), parent.RectTransform, Anchor.BottomCenter), jobPrefab.Name, textAlignment: Alignment.Center)
             {
@@ -2797,58 +2809,6 @@ namespace Barotrauma
             textBlock.RectTransform.SizeChanged += () => { textBlock.TextScale = 1.0f; };
 
             return retVal;
-        }
-
-        private Pair<Sprite[], Vector2>[] GetJobOutfitSprites(JobPrefab jobPrefab, out Vector2 torsoSize)
-        {
-            var info = GameMain.Client.CharacterInfo;
-
-            var equipIdentifiers = jobPrefab.Element.Elements("Items").Elements().Where(e => e.GetAttributeBool("outfit", false)).Select(e => e.GetAttributeString("identifier", ""));
-
-            var element = jobPrefab.PreviewElement;
-
-            var children = element.Elements().ToList();
-
-            torsoSize = element.GetAttributeVector2("dims", Vector2.One);
-
-            var prefabs = MapEntityPrefab.List
-                    .Where(pf => pf is ItemPrefab).Select(pf => pf as ItemPrefab)
-                    .Where(ipf => equipIdentifiers.Contains(ipf.Identifier));
-            var wearables = prefabs
-                    .Select(ipf => ipf.ConfigElement.Element("Wearable"));
-            if (wearables?.Any() ?? false)
-            {
-                int variantCount = wearables.First().GetAttributeInt("variants", 1);
-
-                var retVal = new Pair<Sprite[], Vector2>[children.Count];
-
-                for (int n = 0; n < children.Count; n++)
-                {
-                    XElement spriteElement = children[n];
-                    string spriteTexture = spriteElement.GetAttributeString("texture", "").Replace("[GENDER]", (info.Gender == Gender.Female) ? "female" : "male");
-
-                    retVal[n] = new Pair<Sprite[], Vector2>(new Sprite[variantCount], children[n].GetAttributeVector2("offset", Vector2.Zero));
-
-                    for (int i = 0; i < variantCount; i++)
-                    {
-                        string textureVariant = spriteTexture.Replace("[VARIANT]", (i + 1).ToString());
-                        if (!File.Exists(textureVariant))
-                        {
-                            textureVariant = spriteTexture.Replace("[VARIANT]", "1");
-                        }
-
-                        var torsoSprite = new Sprite(spriteElement, path: "", file: textureVariant);
-                        characterSprites.Add(torsoSprite);
-                        retVal[n].First[i] = torsoSprite;
-
-                        torsoSprite.size = new Vector2(torsoSprite.SourceRect.Width, torsoSprite.SourceRect.Height);
-                    }
-                }
-
-                return retVal;
-            }
-
-            return null;
         }
 
         private bool SwitchHead(GUIButton button, object obj)
@@ -3136,58 +3096,50 @@ namespace Barotrauma
 
         private void UpdateJobPreferences(GUIListBox listBox)
         {
-            //listBox.Deselect();
+            foreach (Sprite sprite in jobPreferenceSprites) { sprite.Remove(); }
+            jobPreferenceSprites.Clear();
+
             List<Pair<string, int>> jobNamePreferences = new List<Pair<string, int>>();
 
             bool disableNext = false;
             for (int i = 0; i < listBox.Content.CountChildren; i++)
             {
-                float a = (float)(i - 1) / 3.0f;
-                a = Math.Min(a, 3);
-                //Color color = new Color(1.0f - a, (1.0f - a) * 0.6f, 0.0f, 0.3f);
-
                 GUIComponent slot = listBox.Content.GetChild(i);
 
                 slot.OutlineColor = Color.White * 0.4f;
                 slot.Color = Color.Gray;
                 slot.HoverColor = Color.White;
                 slot.SelectedColor = Color.White;
-
-                //(child.GetChild<GUITextBlock>())?.Text = (i + 1) + ". " + (child.UserData as JobPrefab).Name;
-
+                
                 slot.ClearChildren();
 
                 slot.CanBeFocused = !disableNext;
                 if (slot.UserData is Pair<JobPrefab, int> jobPrefab)
                 {
-                    var sprites = AddJobSpritesToGUIComponent(slot, jobPrefab.First);
-
-                    for (int j = 0; j < sprites.Length; j++)
+                    var images = AddJobSpritesToGUIComponent(slot, jobPrefab.First);
+                    for (int variantIndex = 0; variantIndex < images.Length; variantIndex++)
                     {
-                        sprites[j][0].Visible = jobPrefab.Second == (j+1);
-                        sprites[j][1].Visible = jobPrefab.Second == (j+1);
-                    }
-
-                    if (sprites.Length > 1)
-                    {
-                        for (int j = 0; j < sprites.Length; j++)
+                        foreach (GUIImage image in images[variantIndex])
                         {
-                            sprites[j][0].Visible = jobPrefab.Second == (j + 1);
-                            sprites[j][1].Visible = jobPrefab.Second == (j + 1);
-                            var variantButton = new GUIButton(new RectTransform(new Vector2(0.15f), slot.RectTransform, scaleBasis: ScaleBasis.BothWidth) { RelativeOffset = new Vector2(0.05f, 0.25f + 0.2f * j) }, (j + 1).ToString(), style: null)
+                            jobPreferenceSprites.Add(image.Sprite);
+                            int selectedVariantIndex = Math.Min(jobPrefab.Second, images.Length);
+                            image.Visible = images.Length == 1 || selectedVariantIndex == (variantIndex + 1);
+                        }
+                        if (images.Length > 1)
+                        {
+                            var variantButton = new GUIButton(new RectTransform(new Vector2(0.15f), slot.RectTransform, scaleBasis: ScaleBasis.BothWidth) { RelativeOffset = new Vector2(0.05f, 0.25f + 0.2f * variantIndex) }, (variantIndex + 1).ToString(), style: null)
                             {
                                 Color = new Color(50, 50, 50, 200),
                                 HoverColor = Color.Gray * 0.75f,
                                 PressedColor = Color.Black * 0.75f,
                                 SelectedColor = new Color(45, 70, 100, 200),
-                                Selected = jobPrefab.Second == (j + 1),
-                                UserData = new Pair<JobPrefab, int>(jobPrefab.First, j + 1),
+                                Selected = jobPrefab.Second == (variantIndex + 1),
+                                UserData = new Pair<JobPrefab, int>(jobPrefab.First, variantIndex + 1),
                                 OnClicked = (btn, obj) =>
                                 {
                                     int k = ((Pair<JobPrefab, int>)obj).Second;
                                     btn.Parent.UserData = obj;
                                     UpdateJobPreferences(listBox);
-
                                     return false;
                                 }
                             };
