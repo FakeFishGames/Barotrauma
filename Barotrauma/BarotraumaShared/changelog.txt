@@ -1,4 +1,26 @@
 ---------------------------------------------------------------------------------------------------------
+v0.9.501.0 (community test build)
+---------------------------------------------------------------------------------------------------------
+
+- New sound for charybdis and hammerhead matriarch. 
+- Removed sodium as a product of recycling fire extinguishers.
+- Added some loose vents and panels to Orca and Typhon.
+- Fixed clients not being cycled through in a random order when assigning jobs, causing the same player to be always selected as the captain.
+- Fixed the same client getting almost always assigned as the traitor.
+- Fixed inability to drag characters in multiplayer.
+- Fixed "unauthorized access" text popup when a bot tries to open a door they don't have access to.
+- Nicer chat message timestamp formatting.
+- Fixed shuttle dropdown being drawn below the submarine preview in server lobby.
+- Fixed sourcerects being moved when going through the sprite lists with arrow keys in the sprite editor.
+- Fixed hammerhead matriarch's tail not colliding with subs.
+- Removed a broken 2-traitor variant of the flood mission.
+- Fixed hammerhead spawns spinning out of control if their head comes off.
+- Fixed servers occasionally appearing in the server list twice.
+- Option to set a name for a character added by a mod without having to configure it in a separate text file. Use displayname="somemonster" in the character element to set the name.
+- Atan components calculate the output using Atan2 if the input is a vector (i.e. two numbers separated by a comma).
+- Potential fix to mudraptors spawned from eggs still emitting sounds and being reported as intruders by bots after dying.
+
+---------------------------------------------------------------------------------------------------------
 v0.9.5.0
 ---------------------------------------------------------------------------------------------------------
 
