@@ -719,8 +719,8 @@ namespace Barotrauma
             float animStrength = (1.0f - deathAnimTimer / deathAnimDuration);
 
             Limb head = GetLimb(LimbType.Head);
+            if (head != null && head.IsSevered) { return; }
             Limb tail = GetLimb(LimbType.Tail);
-
             if (head != null && !head.IsSevered) head.body.ApplyTorque((float)(Math.Sqrt(head.Mass) * Dir * (Math.Sin(WalkPos) + noise)) * 30.0f * animStrength);
             if (tail != null && !tail.IsSevered) tail.body.ApplyTorque((float)(Math.Sqrt(tail.Mass) * -Dir * (Math.Sin(WalkPos) + noise)) * 30.0f * animStrength);
 
