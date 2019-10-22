@@ -14,7 +14,12 @@
   <sound file="Content/Characters/Hammerheadmatriarch/MHAMMERHEAD_explosion1.ogg" state="Die" range="10000" volume="1" gender="None" />
   <sound file="Content/Characters/Hammerheadmatriarch/MHAMMERHEAD_explosion2.ogg" state="Die" range="10000" volume="1" gender="None" />
   <sound file="Content/Characters/Hammerheadmatriarch/MHAMMERHEAD_explosion3.ogg" state="Die" range="10000" volume="1" gender="None" />
-  <sound file="Content/Characters/Hammerheadmatriarch/MHAMMERHEAD_explosion4.ogg" state="Die" range="10000" volume="1" gender="None" />
+  <sound file="Content/Characters/Hammerheadmatriarch/MHAMMERHEAD_explosion4.ogg" state="Die" range="10000" volume="1" gender="None" />  
+  <sound file="Content/Characters/Hammerheadmatriarch/MHAMMERHEAD_damage1.ogg" state="Damage" range="7000" volume="1" gender="None" />
+  <sound file="Content/Characters/Hammerheadmatriarch/MHAMMERHEAD_damage2.ogg" state="Damage" range="7000" volume="1" gender="None" />
+  <sound file="Content/Characters/Hammerheadmatriarch/MHAMMERHEAD_idle1.ogg" state="Idle" range="6000" volume="1" gender="None" />
+  <sound file="Content/Characters/Hammerheadmatriarch/MHAMMERHEAD_idle2.ogg" state="Idle" range="6000" volume="1" gender="None" />
+  <sound file="Content/Characters/Hammerheadmatriarch/MHAMMERHEAD_idle3.ogg" state="Idle" range="6000" volume="1" gender="None" />
   <StatusEffect type="Always" target="This" lifetime="5" targetlimb="Head">
     <Conditional isdead="True" />
     <ParticleEmitter particle="waterblood" particlespersecond="100" scalemin="2" scalemax="4" velocitymin="0" velocitymax="50" anglemin="0" anglemax="360" />
