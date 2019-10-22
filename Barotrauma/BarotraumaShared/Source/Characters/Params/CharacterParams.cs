@@ -19,6 +19,9 @@ namespace Barotrauma
         [Serialize("", true), Editable]
         public string SpeciesName { get; private set; }
 
+        [Serialize("", true, description: "If the display name is not defined, the game first tries to find the translated name. If that is not found, the species name will be used."), Editable]
+        public string DisplayName { get; private set; }
+
         [Serialize("", true, description: "If defined, different species of the same group are considered like the characters of the same species by the AI."), Editable]
         public string Group { get; private set; }
 

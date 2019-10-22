@@ -194,12 +194,16 @@ namespace Barotrauma
             }
         }
 
-        private string displayName;
         public string DisplayName
         {
             get
             {
-                return displayName != null && displayName.Length > 0 ? displayName : Name;
+                var displayName = Params.DisplayName;
+                if (string.IsNullOrWhiteSpace(displayName))
+                {
+                    displayName = TextManager.Get($"Character.{SpeciesName}", returnNull: true);
+                }
+                return displayName ?? Name;
             }
         }
 
@@ -713,7 +717,6 @@ namespace Barotrauma
             var rootElement = doc.Root;
             var mainElement = rootElement.IsOverride() ? rootElement.FirstElement() : rootElement;
             InitProjSpecific(mainElement);
-            displayName = TextManager.Get($"Character.{speciesName}", true);
 
             List<XElement> inventoryElements = new List<XElement>();
             List<float> inventoryCommonness = new List<float>();
