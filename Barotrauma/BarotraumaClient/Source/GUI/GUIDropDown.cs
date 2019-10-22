@@ -181,14 +181,33 @@ namespace Barotrauma
         private RectTransform FindHighestParent()
         {
             parentHierarchy.Clear();
+
+            //collect entire parent hierarchy to a list
             parentHierarchy = new List<RectTransform>() { RectTransform.Parent };
             RectTransform parent = parentHierarchy.Last();
-            while (parent?.Parent != null && !(parent.Parent is GUICanvas))
+            while (parent?.Parent != null)
             {
+                parentHierarchy.Add(parent.Parent);
                 parent = parent.Parent;
-                parentHierarchy.Add(parent);
             }
-            return parent;
+
+            //find the highest parent that has a guicomponent with a style 
+            //(and so should be rendered and not just some empty parent/root element used for constructing a layout)
+            for (int i = parentHierarchy.Count - 1; i > 0; i--)
+            {
+                if (parentHierarchy[i] is GUICanvas ||
+                    parentHierarchy[i].GUIComponent == null ||
+                    parentHierarchy[i].GUIComponent.Style == null ||
+                    parentHierarchy[i].GUIComponent == Screen.Selected?.Frame)
+                {
+                    parentHierarchy.RemoveAt(i);
+                }
+                else
+                {
+                    break;
+                }
+            }
+            return parentHierarchy.Last();
         }
                 
         public void AddItem(string text, object userData = null, string toolTip = "")

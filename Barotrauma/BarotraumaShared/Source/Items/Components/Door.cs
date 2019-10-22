@@ -272,12 +272,13 @@ namespace Barotrauma.Items.Components
                     ToggleState(ActionType.OnUse);
                     PickingTime = originalPickingTime;
                 }
-                else if (hasRequiredItems)
-                {
 #if CLIENT
+                else if (hasRequiredItems && character != null && character == Character.Controlled)
+                {
                     GUI.AddMessage(accessDeniedTxt, Color.Red);
-#endif
+
                 }
+#endif
             }
             return false;
         }

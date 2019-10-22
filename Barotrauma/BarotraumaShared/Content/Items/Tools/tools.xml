@@ -224,7 +224,6 @@
     <Price locationtype="Mine" buyprice="100" />
     <Deconstruct time="10">
       <Item identifier="aluminium" />
-      <Item identifier="sodium" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="10">
       <RequiredItem identifier="aluminium" />

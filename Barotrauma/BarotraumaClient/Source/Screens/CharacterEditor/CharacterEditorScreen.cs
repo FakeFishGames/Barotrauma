@@ -1904,7 +1904,7 @@ namespace Barotrauma.CharacterEditor
             };
 
             Vector2 buttonSize = new Vector2(1, 0.04f);
-            Vector2 toggleSize = new Vector2(0.03f, 0.03f);
+            Vector2 toggleSize = new Vector2(1.0f, 0.03f);
 
             CreateCharacterSelectionPanel();
             CreateMinorModesPanel(toggleSize);

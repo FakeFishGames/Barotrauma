@@ -428,42 +428,23 @@ namespace Barotrauma
                     viewAreaOffset += moveSpeed.ToPoint();
                 }
             }
-            if (PlayerInput.KeyHit(Keys.Left))
+            if (GUI.KeyboardDispatcher.Subscriber == null)
             {
-                foreach (var sprite in selectedSprites)
+                Point moveAmount = Point.Zero;
+                if (PlayerInput.KeyHit(Keys.Left)) { moveAmount.X--; }
+                if (PlayerInput.KeyHit(Keys.Right)) { moveAmount.X++; }
+                if (PlayerInput.KeyHit(Keys.Up)) { moveAmount.Y--; }
+                if (PlayerInput.KeyHit(Keys.Down)) { moveAmount.Y++; }
+                if (moveAmount != Point.Zero)
                 {
-                    var newRect = sprite.SourceRect;
-                    newRect.X--;
-                    UpdateSourceRect(sprite, newRect);
+                    foreach (var sprite in selectedSprites)
+                    {
+                        var newRect = sprite.SourceRect;
+                        newRect.Location += moveAmount;
+                        UpdateSourceRect(sprite, newRect);
+                    }
                 }
-            }
-            if (PlayerInput.KeyHit(Keys.Right))
-            {
-                foreach (var sprite in selectedSprites)
-                {
-                    var newRect = sprite.SourceRect;
-                    newRect.X++;
-                    UpdateSourceRect(sprite, newRect);
-                }
-            }
-            if (PlayerInput.KeyHit(Keys.Down))
-            {
-                foreach (var sprite in selectedSprites)
-                {
-                    var newRect = sprite.SourceRect;
-                    newRect.Y++;
-                    UpdateSourceRect(sprite, newRect);
-                }
-            }
-            if (PlayerInput.KeyHit(Keys.Up))
-            {
-                foreach (var sprite in selectedSprites)
-                {
-                    var newRect = sprite.SourceRect;
-                    newRect.Y--;
-                    UpdateSourceRect(sprite, newRect);
-                }
-            }
+            }            
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)

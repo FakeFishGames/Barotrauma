@@ -208,8 +208,7 @@
     </Objective>
   </TraitorMission>
 
-  
-  <TraitorMission identifier="flood2">
+  <!-- <TraitorMission identifier="flood2">
     <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
     
     <Role id="t1" jobs="captain, engineer" />

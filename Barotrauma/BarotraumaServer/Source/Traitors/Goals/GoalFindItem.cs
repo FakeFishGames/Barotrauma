@@ -92,7 +92,7 @@ namespace Barotrauma
                 }
 
                 if (suitableItems.Count == 0) { return null; }
-                return suitableItems[TraitorMission.Random(suitableItems.Count)];
+                return suitableItems[TraitorManager.RandomInt(suitableItems.Count)];
             }
 
             protected Item FindTargetContainer(ICollection<Traitor> traitors, ItemPrefab targetPrefabCandidate)

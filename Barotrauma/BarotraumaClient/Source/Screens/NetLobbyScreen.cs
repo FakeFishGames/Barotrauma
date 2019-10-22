@@ -1158,8 +1158,8 @@ namespace Barotrauma
         {
             chatInput.Deselect();
             CampaignCharacterDiscarded = false;
-            if (HeadSelectionList != null) { HeadSelectionList.Visible = false; }
-            if (JobSelectionFrame != null) { JobSelectionFrame.Visible = false; }
+            HeadSelectionList = null;
+            JobSelectionFrame = null;
 
             foreach (Sprite sprite in characterSprites)
             {
@@ -2791,6 +2791,7 @@ namespace Barotrauma
             var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), parent.RectTransform, Anchor.BottomCenter), jobPrefab.Name, textAlignment: Alignment.Center)
             {
                 TextColor = jobPrefab.UIColor,
+                CanBeFocused = false,
                 AutoScale = true
             };
             textBlock.RectTransform.SizeChanged += () => { textBlock.TextScale = 1.0f; };
@@ -3138,7 +3139,7 @@ namespace Barotrauma
         private void UpdateJobPreferences(GUIListBox listBox)
         {
             //listBox.Deselect();
-            List<Pair<string ,int>> jobNamePreferences = new List<Pair<string, int>>();
+            List<Pair<string, int>> jobNamePreferences = new List<Pair<string, int>>();
 
             bool disableNext = false;
             for (int i = 0; i < listBox.Content.CountChildren; i++)

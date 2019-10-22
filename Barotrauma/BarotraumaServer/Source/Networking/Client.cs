@@ -32,6 +32,8 @@ namespace Barotrauma.Networking
         public float ChatSpamTimer;
         public int ChatSpamCount;
 
+        public int RoundsSincePlayedAsTraitor;
+
         public float KickAFKTimer;
 
         public double MidRoundSyncTimeOut;

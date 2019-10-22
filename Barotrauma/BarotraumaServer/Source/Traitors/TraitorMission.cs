@@ -16,16 +16,6 @@ namespace Barotrauma
     {
         public class TraitorMission
         {
-            private static System.Random random = null;
-
-            public static void InitializeRandom() => random = new System.Random((int)DateTime.UtcNow.Ticks);
-
-            // All traitor related functionality should use the following interface for generating random values
-            public static int Random(int n) => random.Next(n);
-
-            // All traitor related functionality should use the following interface for generating random values
-            public static double RandomDouble() => random.NextDouble();
-
             private static string wordsTxt = Path.Combine("Content", "CodeWords.txt");
 
             private readonly List<Objective> allObjectives = new List<Objective>();
@@ -168,14 +158,8 @@ namespace Barotrauma
                     {
                         ++numCandidates;
                     }
-                    var selected = TraitorManager.WeightedRandom(availableCandidates, 0, numCandidates, Random, t =>
-                    {
-                        var previousClient = server.FindPreviousClientData(t.Item1);
-                        return Math.Max(
-                            previousClient != null ? traitorManager.GetTraitorCount(previousClient) : 0,
-                            traitorManager.GetTraitorCount(Tuple.Create(t.Item1.SteamID, t.Item1.Connection?.EndPointString ?? "")));
-                    }, (t, c) => { traitorManager.SetTraitorCount(Tuple.Create(t.Item1.SteamID, t.Item1.Connection?.EndPointString ?? ""), c); }, 2, 3);
 
+                    var selected = ToolBox.SelectWeightedRandom(availableCandidates, availableCandidates.Select(c => Math.Max(c.Item1.RoundsSincePlayedAsTraitor, 0.1f)).ToList(), TraitorManager.Random);
                     assignedCandidates.Add(Tuple.Create(currentRole, selected));
                     foreach (var candidate in roleCandidates.Values)
                     {
@@ -189,7 +173,7 @@ namespace Barotrauma
                 return assignedCandidates;
             }
 
-            public virtual bool CanBeStarted(GameServer server, TraitorManager traitorManager, Character.TeamType team)
+            public bool CanBeStarted(GameServer server, TraitorManager traitorManager, Character.TeamType team)
             {
                 foreach (var role in Roles)
                 {
@@ -202,7 +186,7 @@ namespace Barotrauma
                 return AssignTraitors(server, traitorManager, team) != null;
             }
 
-            public virtual bool Start(GameServer server, TraitorManager traitorManager, Character.TeamType team)
+            public bool Start(GameServer server, TraitorManager traitorManager, Character.TeamType team)
             {
                 var assignedCandidates = AssignTraitors(server, traitorManager, team);
                 if (assignedCandidates == null)
@@ -210,11 +194,17 @@ namespace Barotrauma
                     return false;
                 }
 
+                foreach (Client client in server.ConnectedClients)
+                {
+                    client.RoundsSincePlayedAsTraitor++;
+                }
+
                 Traitors.Clear();
                 foreach (var candidate in assignedCandidates)
                 {
                     var traitor = new Traitor(this, candidate.Item1, candidate.Item2.Item1.Character);
                     Traitors.Add(candidate.Item1, traitor);
+                    candidate.Item2.Item1.RoundsSincePlayedAsTraitor = 0;
                 }
                 CodeWords = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
                 CodeResponse = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
@@ -346,7 +336,7 @@ namespace Barotrauma
                     for (int i = 0; i < targetCount; i++)
                     {
                         if (validCharacters.Count == 0) break;
-                        Character character = validCharacters[Random(validCharacters.Count)];
+                        Character character = validCharacters[TraitorManager.RandomInt(validCharacters.Count)];
                         targetCharacters.Add(character);
                         validCharacters.Remove(character);
                     }
