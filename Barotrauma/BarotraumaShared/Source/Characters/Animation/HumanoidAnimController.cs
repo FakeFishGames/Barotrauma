@@ -352,7 +352,9 @@ namespace Barotrauma
                     Collider.Enabled = false;
                     Collider.LinearVelocity = MainLimb.LinearVelocity;
                     Collider.SetTransformIgnoreContacts(MainLimb.SimPosition, MainLimb.Rotation);
-                    ResetPullJoints();
+                    //reset pull joints to prevent the character from "hanging" mid-air if pull joints had been active when the character was still moving
+                    //(except when dragging, then we need the pull joints)
+                    if (!character.CanBeDragged || character.SelectedBy == null) { ResetPullJoints(); }
                 }
                 return;
             }
