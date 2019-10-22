@@ -19,7 +19,7 @@ namespace Barotrauma.Networking
 
         public const float SpeakRange = 2000.0f;
 
-        private static string dateTimeFormatLongTimePattern = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.LongTimePattern;
+        private static readonly string dateTimeFormatLongTimePattern = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.ShortTimePattern;
 
         public static Color[] MessageColor = 
         {
