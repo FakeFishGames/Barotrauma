@@ -464,7 +464,7 @@ namespace Barotrauma.Networking
                             int.TryParse(lobby.GetData("maxplayernum"), out int maxPlayers);
                             //UInt64.TryParse(lobby.GetData("connectsteamid"), out ulong connectSteamId);
                             string ip = lobby.GetData("hostipaddress");
-                            UInt64 ownerId = SteamManager.SteamIDStringToUInt64(lobby.GetData("ownerid"));
+                            UInt64 ownerId = SteamManager.SteamIDStringToUInt64(lobby.GetData("lobbyowner"));
 
                             if (OwnerID != ownerId) { return; }
 
