@@ -2842,8 +2842,6 @@ namespace Barotrauma
                         retVal[n].First[i] = torsoSprite;
 
                         torsoSprite.size = new Vector2(torsoSprite.SourceRect.Width, torsoSprite.SourceRect.Height);
-
-                        DebugConsole.NewMessage(torsoSprite.size.ToString());
                     }
                 }
 
