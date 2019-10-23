@@ -1086,7 +1086,7 @@ namespace Barotrauma
 
             if (characterPreviewFrame == null || characterPreviewFrame.UserData != characterInfo)
             {
-                characterPreviewFrame = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.5f), tabs[(int)selectedTab].RectTransform, Anchor.TopRight, Pivot.TopLeft))
+                characterPreviewFrame = new GUIFrame(new RectTransform(new Vector2(0.75f, 0.5f), tabs[(int)selectedTab].RectTransform, Anchor.TopRight, Pivot.TopLeft))
                 {
                     UserData = characterInfo
                 };

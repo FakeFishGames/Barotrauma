@@ -42,7 +42,7 @@ namespace Barotrauma
 
             infoFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker");
 
-            var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.35f), infoFrame.RectTransform, Anchor.Center) { MinSize = new Point(width, height) });
+            var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.35f), infoFrame.RectTransform, Anchor.Center) { MinSize = new Point(width, height), RelativeOffset = new Vector2(0.0f, 0.033f) });
 
             var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), innerFrame.RectTransform, Anchor.Center), style: null);
             var buttonArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.08f), paddedFrame.RectTransform), isHorizontal: true)
