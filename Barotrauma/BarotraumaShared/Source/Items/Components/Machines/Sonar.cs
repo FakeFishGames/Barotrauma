@@ -201,7 +201,6 @@ namespace Barotrauma.Items.Components
                     {
                         item.AiTarget.SectorDegrees = 360.0f;
                     }
-                    currentPingIndex = -1;
                     aiPingCheckPending = false;
                 }
             }
