@@ -176,7 +176,7 @@ namespace Barotrauma
             {
                 Sprite.Remove();
             }
-            Sprite = new Sprite(SourceElement, file: SpritePath);
+            Sprite = new Sprite(SourceElement, file: SpritePath, preMultiplyAlpha: true);
             Limb = (LimbType)Enum.Parse(typeof(LimbType), SourceElement.GetAttributeString("limb", "Head"), true);
             HideLimb = SourceElement.GetAttributeBool("hidelimb", false);
             HideOtherWearables = SourceElement.GetAttributeBool("hideotherwearables", false);
