@@ -334,22 +334,6 @@ namespace Barotrauma
             }
         }
 
-        public string AutoRestartText()
-        {
-            /*TODO: fix?
-            if (GameMain.Server != null)
-            {
-                if (!GameMain.Server.AutoRestart || GameMain.Server.ConnectedClients.Count == 0) return "";
-                return TextManager.Get("RestartingIn") + " " + ToolBox.SecondsToReadableTime(Math.Max(GameMain.Server.AutoRestartTimer, 0));
-            }*/
-            string text = "";
-            if (autoRestartTimer > 0.0f)
-            {
-                text = TextManager.Get("RestartingIn") + " " + ToolBox.SecondsToReadableTime(Math.Max(autoRestartTimer, 0));
-            }
-            autoRestartText.Visible = !string.IsNullOrEmpty(text);
-            return text;
-        }
 
         public CampaignUI CampaignUI
         {
@@ -654,14 +638,14 @@ namespace Barotrauma
                 Stretch = true
             };
 
-            GUIFrame readyToStartContainer = new GUIFrame(new RectTransform(Vector2.One, roundControlsHolder.RectTransform), style: "TextFrame");
-
-            // Ready to start tickbox
-            ReadyToStartBox = new GUITickBox(new RectTransform(new Vector2(0.95f, 0.75f), readyToStartContainer.RectTransform, anchor: Anchor.Center),
-                TextManager.Get("ReadyToStartTickBox"))
+            GUIFrame readyToStartContainer = new GUIFrame(new RectTransform(Vector2.One, roundControlsHolder.RectTransform), style: "TextFrame")
             {
                 Visible = false
             };
+
+            // Ready to start tickbox
+            ReadyToStartBox = new GUITickBox(new RectTransform(new Vector2(0.95f, 0.75f), readyToStartContainer.RectTransform, anchor: Anchor.Center),
+                TextManager.Get("ReadyToStartTickBox"));
 
             // Spectate button
             spectateButton = new GUIButton(new RectTransform(Vector2.One, roundControlsHolder.RectTransform),
@@ -679,13 +663,10 @@ namespace Barotrauma
                 }
             };
             clientHiddenElements.Add(StartButton);
-            
+
             //autorestart ------------------------------------------------------------------
 
-            autoRestartText = new GUITextBlock(new RectTransform(Vector2.One, bottomBarMid.RectTransform), "", font: GUI.SmallFont, style: "TextFrame", textAlignment: Alignment.Center)
-            {
-                TextGetter = AutoRestartText
-            };
+            autoRestartText = new GUITextBlock(new RectTransform(Vector2.One, bottomBarMid.RectTransform), "", font: GUI.SmallFont, style: "TextFrame", textAlignment: Alignment.Center);
             GUIFrame autoRestartBoxContainer = new GUIFrame(new RectTransform(Vector2.One, bottomBarMid.RectTransform), style: "TextFrame");
             autoRestartBox = new GUITickBox(new RectTransform(new Vector2(0.95f, 0.75f), autoRestartBoxContainer.RectTransform, Anchor.Center), TextManager.Get("AutoRestart"))
             {
@@ -1194,7 +1175,7 @@ namespace Barotrauma
             if (GameMain.Client != null)
             {
                 spectateButton.Visible = GameMain.Client.GameStarted;
-                ReadyToStartBox.Visible = !GameMain.Client.GameStarted;
+                ReadyToStartBox.Parent.Visible = !GameMain.Client.GameStarted;
                 ReadyToStartBox.Selected = false;
                 if (campaignUI != null)
                 {
@@ -1211,7 +1192,7 @@ namespace Barotrauma
             else
             {
                 spectateButton.Visible = false;
-                ReadyToStartBox.Visible = false;
+                ReadyToStartBox.Parent.Visible = false;
             }
             SetSpectate(spectateBox.Selected);            
 
@@ -1787,7 +1768,7 @@ namespace Barotrauma
                 TextColor = Color.White,
                 UserData = client
             };
-            var soundIcon = new GUIImage(new RectTransform(new Point((int)(textBlock.Rect.Height * 0.8f)), textBlock.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(5, 0) }, 
+            var soundIcon = new GUIImage(new RectTransform(new Point((int)(textBlock.Rect.Height * 0.8f)), textBlock.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(5, 0) },
                 "GUISoundIcon")
             {
                 UserData = new Pair<string, float>("soundicon", 0.0f),
@@ -1802,7 +1783,7 @@ namespace Barotrauma
                 Point sourceRectSize = soundIcon.Style.Sprites.First().Value.First().Sprite.SourceRect.Size;
                 var indexPieces = soundIcon.Style.Element.Attribute("sheetindices").Value.Split(';');
                 voipSheetRects = new Rectangle[indexPieces.Length];
-                for (int i=0;i<indexPieces.Length;i++)
+                for (int i = 0; i < indexPieces.Length; i++)
                 {
                     Point location = XMLExtensions.ParsePoint(indexPieces[i].Trim()) * sourceRectSize;
                     voipSheetRects[i] = new Rectangle(location, sourceRectSize);
@@ -2280,9 +2261,14 @@ namespace Barotrauma
                 }
             }
 
-            if (autoRestartTimer != 0.0f && autoRestartBox.Selected)
+            autoRestartText.Visible = autoRestartTimer > 0.0f && autoRestartBox.Selected;
+            if (!MathUtils.NearlyEqual(autoRestartTimer, 0.0f) && autoRestartBox.Selected)
             {
                 autoRestartTimer = Math.Max(autoRestartTimer - (float)deltaTime, 0.0f);
+                if (autoRestartTimer > 0.0f)
+                {
+                    autoRestartText.Text = TextManager.Get("RestartingIn") + " " + ToolBox.SecondsToReadableTime(Math.Max(autoRestartTimer, 0));
+                }
             }
 
             if (HeadSelectionList != null && PlayerInput.LeftButtonDown() && !GUI.IsMouseOn(HeadSelectionList))
