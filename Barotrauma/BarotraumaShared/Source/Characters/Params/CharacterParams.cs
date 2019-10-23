@@ -426,10 +426,10 @@ namespace Barotrauma
             [Serialize(1.0f, true, description: "Affects how far the character can hear the targets. Used as a multiplier."), Editable(minValue: 0f, maxValue: 10f)]
             public float Hearing { get; private set; }
 
-            [Serialize(100f, true, description: "How much the target priority increase when the character takes damage? Additive."), Editable(minValue: -1000f, maxValue: 1000f)]
+            [Serialize(100f, true, description: "How much the targeting priority increases each time the character takes damage. Works like the greed value, described above. The default value is 100."), Editable(minValue: -1000f, maxValue: 1000f)]
             public float AggressionHurt { get; private set; }
 
-            [Serialize(10f, true, description: "How much the target priority increase when the character takes damage? Additive."), Editable(minValue: 0f, maxValue: 1000f)]
+            [Serialize(10f, true, description: "How much the targeting priority increases each time the character does damage to the target. The actual priority adjustment is calculated based on the damage percentage multiplied by the greed value. The default value is 10, which means the priority will increase by 1 every time the character does damage 10% of the target's current health. If the damage is 50%, then the priority increase is 5."), Editable(minValue: 0f, maxValue: 1000f)]
             public float AggressionGreed { get; private set; }
 
             [Serialize(0f, true, description: "If the health drops below this threshold, the character flees. In percentages."), Editable(minValue: 0f, maxValue: 100f)]
