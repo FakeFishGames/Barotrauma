@@ -73,7 +73,7 @@ namespace Barotrauma
 
         public void SkipStartDelay()
         {
-            startCountdown = 0.0f;
+            startCountdown = 0.01f;
         }
 
         public void Update(float deltaTime)
