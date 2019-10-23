@@ -2315,7 +2315,7 @@ namespace Barotrauma
                 wrap: true, font: GUI.SmallFont)
             {
                 UserData = message,
-                //CanBeFocused = false,
+                CanBeFocused = false
             };
             msg.RectTransform.SizeChanged += Recalculate;
             void Recalculate()
