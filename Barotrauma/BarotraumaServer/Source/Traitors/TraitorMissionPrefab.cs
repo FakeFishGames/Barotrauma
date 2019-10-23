@@ -42,7 +42,7 @@ namespace Barotrauma
             //the weight of the missions that didn't get selected keeps growing the make them more likely to get picked
             foreach (var mission in List)
             {
-                mission.SelectedWeight++;
+                mission.SelectedWeight += 10;
             }
             selected.SelectedWeight = 0.0f;
             return selected.Prefab;
