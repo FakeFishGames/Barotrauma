@@ -186,6 +186,11 @@ namespace Barotrauma
             {
                 clientNameBox.Text = SteamManager.GetUsername();
             }
+            clientNameBox.OnTextChanged += (textbox, text) =>
+            {
+                GameMain.Config.PlayerName = text;
+                return true;
+            };
 
             var tabButtonHolder = new GUIFrame(new RectTransform(new Vector2(1.0f - (sidebarWidth*2.0f), 1.25f), infoHolder.RectTransform), style: null);
 
@@ -564,7 +569,7 @@ namespace Barotrauma
                 {
                     if (selectedServer != null)
                     {
-                        if (!string.IsNullOrWhiteSpace(selectedServer.Port) && int.TryParse(selectedServer.Port, out _))
+                        if (!string.IsNullOrWhiteSpace(selectedServer.IP) && !string.IsNullOrWhiteSpace(selectedServer.Port) && int.TryParse(selectedServer.Port, out _))
                         {
                             JoinServer(selectedServer.IP + ":" + selectedServer.Port, selectedServer.ServerName);
                         }
