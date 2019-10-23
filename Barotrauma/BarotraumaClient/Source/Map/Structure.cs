@@ -253,7 +253,7 @@ namespace Barotrauma
                         color: color,
                         textureScale: TextureScale * Scale,
                         startOffset: backGroundOffset,
-                        depth: Math.Max(Prefab.BackgroundSprite.Depth, depth + 0.000001f));
+                        depth: Math.Max(Prefab.BackgroundSprite.Depth + (ID % 255) * 0.000001f, depth + 0.000001f));
 
                     if (UseDropShadow)
                     {

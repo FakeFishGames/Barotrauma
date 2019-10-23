@@ -71,6 +71,11 @@ namespace Barotrauma
             startCountdown = MathHelper.Lerp(server.ServerSettings.TraitorsMinStartDelay, server.ServerSettings.TraitorsMaxStartDelay, (float)RandomDouble());
         }
 
+        public void SkipStartDelay()
+        {
+            startCountdown = 0.0f;
+        }
+
         public void Update(float deltaTime)
         {
             if (ShouldEndRound) { return; }
