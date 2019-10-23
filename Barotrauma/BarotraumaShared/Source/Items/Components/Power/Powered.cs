@@ -11,7 +11,7 @@ namespace Barotrauma.Items.Components
     partial class Powered : ItemComponent
     {
         private static float updateTimer;
-        protected static float UpdateInterval = 0.5f;
+        protected static float UpdateInterval = 0.2f;
 
         /// <summary>
         /// List of all powered ItemComponents
@@ -204,17 +204,18 @@ namespace Barotrauma.Items.Components
                 return;
             }
             updateTimer = UpdateInterval;
-			UpdateInterval = 0.2f;
 
             //reset power first
             foreach (Powered powered in poweredList)
             {
-                powered.voltage = 0.0f;
                 if (powered is PowerTransfer pt)
                 {
                     powered.CurrPowerConsumption = 0.0f;
                     pt.PowerLoad = 0.0f;
                 }
+                //only reset voltage if the item has a power connector
+                //(other items, such as handheld devices, get power through other means and shouldn't be updated here)
+                if (powered.powerIn != null || powered.powerOut != null) { powered.voltage = 0.0f; }                
             }
 
             //go through all the devices that are consuming/providing power
