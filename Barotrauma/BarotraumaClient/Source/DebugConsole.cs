@@ -1324,6 +1324,17 @@ namespace Barotrauma
                     lines.Add($"[b]{t.Name}[/b]");
                     lines.Add("");
 
+                    lines.Add("[table]");
+                    lines.Add("  [tr]");
+
+                    lines.Add("    [th]Name[/th]");
+                    lines.Add("    [th]Type[/th]");
+                    lines.Add("    [th]Default value[/th]");
+                    lines.Add("    [th]Range[/th]");
+                    lines.Add("    [th]Description[/th]");
+
+                    lines.Add("  [/tr]");
+
                     var properties = t.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.DeclaredOnly);//.Cast<System.ComponentModel.PropertyDescriptor>();
                     Dictionary<string, SerializableProperty> dictionary = new Dictionary<string, SerializableProperty>();
                     foreach (var property in properties)
@@ -1347,16 +1358,6 @@ namespace Barotrauma
                             propertyTypeName = string.Join("/", valueNames);
                         }
 
-                        lines.Add("[table]");
-                        lines.Add("  [tr]");
-
-                        lines.Add("    [th]Name[/th]");
-                        lines.Add("    [th]Type[/th]");
-                        lines.Add("    [th]Default value[/th]");
-                        lines.Add("    [th]Range[/th]");
-                        lines.Add("    [th]Description[/th]");
-
-                        lines.Add("  [/tr]");
 
                         lines.Add("  [tr]");
 
@@ -1365,7 +1366,7 @@ namespace Barotrauma
                         lines.Add($"    [td]{serialize.defaultValue}[/td]");
 
                         Editable editable = attributes.FirstOrDefault(a => a is Editable) as Editable;
-                        string rangeText = "    [td]-[/td]";
+                        string rangeText = "-";
                         if (editable != null)
                         {
                             if (editable.MinValueFloat > float.MinValue || editable.MaxValueFloat < float.MaxValue)
@@ -1377,7 +1378,7 @@ namespace Barotrauma
                                 rangeText = editable.MinValueInt + "-" + editable.MaxValueInt;
                             }
                         }
-                        lines.Add("-");
+                        lines.Add($"    [td]{rangeText}[/td]");
 
                         if (!string.IsNullOrEmpty(serialize.Description))
                         {
@@ -1385,9 +1386,8 @@ namespace Barotrauma
                         }
 
                         lines.Add("  [/tr]");
-
-                        lines.Add("[/table]");
                     }
+                    lines.Add("[/table]");
                     lines.Add("");
                 }
                 File.WriteAllLines(filePath, lines);
