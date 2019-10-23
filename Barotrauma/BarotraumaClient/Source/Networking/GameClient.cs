@@ -1768,7 +1768,7 @@ namespace Barotrauma.Networking
 
         public void SendChatMessage(ChatMessage msg)
         {
-            if (clientPeer.ServerConnection == null) return;
+            if (clientPeer?.ServerConnection == null) { return; }
             lastQueueChatMsgID++;
             msg.NetStateID = lastQueueChatMsgID;
             chatMsgQueue.Add(msg);
@@ -1776,7 +1776,7 @@ namespace Barotrauma.Networking
 
         public void SendChatMessage(string message, ChatMessageType type = ChatMessageType.Default)
         {
-            if (clientPeer.ServerConnection == null) return;
+            if (clientPeer?.ServerConnection == null) { return; }
 
             ChatMessage chatMessage = ChatMessage.Create(
                 gameStarted && myCharacter != null ? myCharacter.Name : name,
