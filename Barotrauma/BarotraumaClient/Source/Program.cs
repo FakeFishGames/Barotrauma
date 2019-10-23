@@ -31,10 +31,12 @@ namespace Barotrauma
         static void Main(string[] args)
         {
             GameMain game = null;
+            string executableDir = "";
 #if !DEBUG
             try
             {
 #endif
+                executableDir = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
                 SteamManager.Initialize();
                 game = new GameMain(args);
                 game.Run();
@@ -45,7 +47,7 @@ namespace Barotrauma
             {
                 try
                 {
-                    CrashDump(game, "crashreport.log", e);
+                    CrashDump(game, Path.Combine(executableDir,"crashreport.log"), e);
                 }
                 catch (Exception e2)
                 {
