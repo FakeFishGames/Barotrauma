@@ -947,7 +947,7 @@ namespace Barotrauma
                     (!filterTraitor.Selected || serverInfo.TraitorsEnabled == YesNoMaybe.Yes || serverInfo.TraitorsEnabled == YesNoMaybe.Maybe) &&
                     (!filterVoip.Selected || serverInfo.VoipEnabled == true) &&
                     (!filterModded.Selected || serverInfo.GetPlayStyleTags().Any(t => t.Contains("modded.true"))) &&
-                    ((selectedTab == ServerListTab.All) ||
+                    ((selectedTab == ServerListTab.All && (serverInfo.LobbyID != 0 || !string.IsNullOrWhiteSpace(serverInfo.Port))) ||
                      (selectedTab == ServerListTab.Recent && serverInfo.Recent) ||
                      (selectedTab == ServerListTab.Favorites && serverInfo.Favorite)) &&
                     (remoteVersion != null && remoteVersion <= GameMain.Version);
