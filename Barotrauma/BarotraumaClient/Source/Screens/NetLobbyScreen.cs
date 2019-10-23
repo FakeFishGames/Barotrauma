@@ -1320,7 +1320,7 @@ namespace Barotrauma
 
             SettingsButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             SettingsButton.OnClicked = GameMain.Client.ServerSettings.ToggleSettingsFrame;
-            StartButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageRound) && !campaignContainer.Visible;
+            StartButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageRound) && !GameMain.Client.GameStarted && !campaignContainer.Visible;
             ServerName.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             ServerMessage.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             shuttleTickBox.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
@@ -2986,7 +2986,7 @@ namespace Barotrauma
 
             subList.Enabled = !enabled && AllowSubSelection;
             shuttleList.Enabled = !enabled && GameMain.Client.HasPermission(ClientPermissions.SelectSub);
-            StartButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageRound) && !enabled;
+            StartButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageRound) && GameMain.Client.GameStarted && !enabled;
 
             if (campaignViewButton != null) { campaignViewButton.Visible = enabled; }
             
