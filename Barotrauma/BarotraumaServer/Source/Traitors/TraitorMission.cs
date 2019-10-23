@@ -22,7 +22,10 @@ namespace Barotrauma
             private readonly List<Objective> pendingObjectives = new List<Objective>();
             private readonly List<Objective> completedObjectives = new List<Objective>();
 
-            public virtual bool IsCompleted => pendingObjectives.Count <= 0;
+            /// <summary>
+            /// Has the mission been completed (does not mean that the traitor necessarily won, the mission is considered completed if the traitor fails for whatever reason)
+            /// </summary>
+            public bool IsCompleted => pendingObjectives.Count <= 0;
 
             public readonly Dictionary<string, Traitor> Traitors = new Dictionary<string, Traitor>();
 
@@ -240,15 +243,17 @@ namespace Barotrauma
 
             public delegate void TraitorWinHandler();
 
-            public virtual void Update(float deltaTime, TraitorWinHandler winHandler)
+            public void Update(float deltaTime, TraitorWinHandler winHandler)
             {
                 if (pendingObjectives.Count <= 0 || Traitors.Count <= 0)
                 {
                     return;
                 }
-                if (Traitors.Values.Any(traitor => traitor.Character?.IsDead ?? true))
+                if (Traitors.Values.Any(traitor => traitor.Character?.IsDead ?? true || traitor.Character.Removed))
                 {
                     Traitors.Values.ForEach(traitor => traitor.UpdateCurrentObjective("", Identifier));
+                    pendingObjectives.Clear();
+                    Traitors.Clear();
                     return;
                 }
                 var startedObjectives = new List<Objective>();

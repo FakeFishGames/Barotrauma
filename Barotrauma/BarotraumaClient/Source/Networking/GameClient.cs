@@ -972,15 +972,12 @@ namespace Barotrauma.Networking
             switch(messageType) {
                 case TraitorMessageType.Objective:
                     var isTraitor = !string.IsNullOrEmpty(message); 
+                    SpawnAsTraitor = isTraitor;
+                    TraitorFirstObjective = message;
                     if (Character != null)
                     {
                         Character.IsTraitor = isTraitor;
                         Character.TraitorCurrentObjective = message;
-                    }
-                    else
-                    {
-                        SpawnAsTraitor = isTraitor;
-                        TraitorFirstObjective = message;
                     }
                     break;
                 case TraitorMessageType.Console:
