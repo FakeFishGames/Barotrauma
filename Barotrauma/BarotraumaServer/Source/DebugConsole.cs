@@ -874,6 +874,11 @@ namespace Barotrauma
                 client.SpectateOnly = false;
             });
 
+            AssignOnExecute("starttraitormissionimmediately", (string[] args) =>
+            {
+                GameMain.Server?.TraitorManager?.SkipStartDelay();
+            });
+
             AssignOnExecute("difficulty|leveldifficulty", (string[] args) =>
             {
                 if (GameMain.Server == null || args.Length < 1) return;
