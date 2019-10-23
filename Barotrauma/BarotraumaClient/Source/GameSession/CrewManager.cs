@@ -1368,7 +1368,7 @@ namespace Barotrauma
         public void UpdateReports(float deltaTime)
         {
             bool canIssueOrders = false;
-            if (Character.Controlled?.CurrentHull != null && Character.Controlled.SpeechImpediment < 100.0f)
+            if (Character.Controlled?.CurrentHull?.Submarine != null && Character.Controlled.SpeechImpediment < 100.0f)
             {
                 WifiComponent radio = GetHeadset(Character.Controlled, true);
                 canIssueOrders = radio != null && radio.CanTransmit();
