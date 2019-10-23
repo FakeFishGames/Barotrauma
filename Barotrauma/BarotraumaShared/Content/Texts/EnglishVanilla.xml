@@ -1196,7 +1196,6 @@
   <!-- Server list -->
   <joinserver>Server browser</joinserver>
   <yourname>Player name</yourname>
-  <serverip>Server IP</serverip>
   <serverlistname>Name</serverlistname>
   <serverlistplayers>Players</serverlistplayers>
   <serverlistversion>Game version</serverlistversion>
@@ -3710,5 +3709,8 @@
   
   <!-- Modified values as of Oct 22 -->
   <entitydescription.atancomponent>Outputs the angle whose tangent is equal to the input. If the input contains a comma, it's interpreted as a vector and the angle calculated using Atan2.</entitydescription.atancomponent>
+
+  <!-- Modified values as of Oct 23 -->
+  <serverendpoint>Server IP / SteamID</serverendpoint>
 
 </infotexts>

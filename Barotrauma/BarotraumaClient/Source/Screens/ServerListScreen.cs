@@ -564,13 +564,18 @@ namespace Barotrauma
                 {
                     if (selectedServer != null)
                     {
-                        if (selectedServer.LobbyID == 0)
+                        if (!string.IsNullOrWhiteSpace(selectedServer.Port) && int.TryParse(selectedServer.Port, out _))
                         {
                             JoinServer(selectedServer.IP + ":" + selectedServer.Port, selectedServer.ServerName);
                         }
-                        else
+                        else if (selectedServer.LobbyID != 0)
                         {
                             Steam.SteamManager.JoinLobby(selectedServer.LobbyID, true);
+                        }
+                        else
+                        {
+                            //TODO: error message here?
+                            return false;
                         }
                     }
                     return true;
@@ -998,14 +1003,14 @@ namespace Barotrauma
                 RelativeSpacing = 0.05f
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.33f), content.RectTransform), TextManager.Get("ServerIP"));
-            var ipBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.33f), content.RectTransform));
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.33f), content.RectTransform), TextManager.Get("ServerEndpoint"));
+            var endpointBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.33f), content.RectTransform));
 
             var okButton = msgBox.Buttons[0];
             okButton.Enabled = false;
             okButton.OnClicked = (btn, userdata) =>
             {
-                JoinServer(ipBox.Text, "");
+                JoinServer(endpointBox.Text, "");
                 msgBox.Close();
                 return true;
             };
@@ -1013,7 +1018,7 @@ namespace Barotrauma
             var cancelButton = msgBox.Buttons[1];
             cancelButton.OnClicked = msgBox.Close;
 
-            ipBox.OnTextChanged += (textBox, text) =>
+            endpointBox.OnTextChanged += (textBox, text) =>
             {
                 okButton.Enabled = !string.IsNullOrEmpty(text);
                 return true;
@@ -1026,11 +1031,11 @@ namespace Barotrauma
             var addToFavoritesButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), spacingLayoutGroup.RectTransform), TextManager.Get("AddToFavorites"));
             addToFavoritesButton.OnClicked = (button, userdata) =>
             {
-                UInt64 steamId = SteamManager.SteamIDStringToUInt64(ipBox.Text);
+                UInt64 steamId = SteamManager.SteamIDStringToUInt64(endpointBox.Text);
                 string ip = ""; int port = 0;
                 if (steamId == 0)
                 {
-                    string hostIP = ipBox.Text;
+                    string hostIP = endpointBox.Text;
 
                     string[] address = hostIP.Split(':');
                     if (address.Length == 1)
@@ -1770,7 +1775,7 @@ namespace Barotrauma
             masterServerResponded = true;
         }
 
-        private bool JoinServer(string ip, string serverName)
+        private bool JoinServer(string endpoint, string serverName)
         {
             if (string.IsNullOrWhiteSpace(clientNameBox.Text))
             {
@@ -1781,7 +1786,7 @@ namespace Barotrauma
             GameMain.Config.PlayerName = clientNameBox.Text;
             GameMain.Config.SaveNewPlayerConfig();
 
-            CoroutineManager.StartCoroutine(ConnectToServer(ip, serverName));
+            CoroutineManager.StartCoroutine(ConnectToServer(endpoint, serverName));
 
             return true;
         }
@@ -1796,7 +1801,7 @@ namespace Barotrauma
             try
             {
 #endif
-                GameMain.Client = new GameClient(clientNameBox.Text, serverIP, serverSteamID, serverName);
+                GameMain.Client = new GameClient(GameMain.Config.PlayerName, serverIP, serverSteamID, serverName);
 #if !DEBUG
             }
             catch (Exception e)
