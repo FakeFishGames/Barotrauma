@@ -763,7 +763,7 @@ namespace Barotrauma
                 var matchingAffliction = AfflictionPrefab.List
                     .Where(p => p.AfflictionType == "huskinfection")
                     .Select(p => p as AfflictionPrefabHusk)
-                    .FirstOrDefault(p => p.TargetSpecies.Contains(AfflictionHusk.GetNonHuskedSpeciesName(speciesName, p)));
+                    .FirstOrDefault(p => p.TargetSpecies.Any(t => t.Equals(AfflictionHusk.GetNonHuskedSpeciesName(speciesName, p), StringComparison.InvariantCultureIgnoreCase)));
                 if (matchingAffliction == null)
                 {
                     DebugConsole.ThrowError("Cannot find a husk infection that matches this species! Please add the speciesnames as 'targets' in the husk affliction prefab definition!");
