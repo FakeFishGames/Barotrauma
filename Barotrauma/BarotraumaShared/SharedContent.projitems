@@ -976,6 +976,12 @@
     <None Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerheadgold\HAMMERHEADg_idle5.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerheadmatriarch\MHAMMERHEAD_damage1.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerheadmatriarch\MHAMMERHEAD_damage2.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerheadmatriarch\MHAMMERHEAD_explosion1.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -986,6 +992,15 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerheadmatriarch\MHAMMERHEAD_explosion4.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerheadmatriarch\MHAMMERHEAD_idle1.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerheadmatriarch\MHAMMERHEAD_idle2.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerheadmatriarch\MHAMMERHEAD_idle3.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerhead\HAMMERHEAD_attack1.ogg">

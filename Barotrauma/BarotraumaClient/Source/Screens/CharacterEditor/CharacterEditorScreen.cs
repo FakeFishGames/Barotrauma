@@ -717,13 +717,13 @@ namespace Barotrauma.CharacterEditor
             limbEditWidgets.Values.ForEach(w => w.Update((float)deltaTime));
             animationWidgets.Values.ForEach(w => w.Update((float)deltaTime));
             // Handle limb selection
-            if (editLimbs && PlayerInput.LeftButtonDown() && GUI.MouseOn == null && Widget.selectedWidgets.None())
+            if (PlayerInput.LeftButtonDown() && GUI.MouseOn == null && Widget.selectedWidgets.None())
             {
                 foreach (Limb limb in character.AnimController.Limbs)
                 {
                     if (limb == null || limb.ActiveSprite == null) { continue; }
                     // Select limbs on ragdoll
-                    if (!spriteSheetRect.Contains(PlayerInput.MousePosition) && MathUtils.RectangleContainsPoint(GetLimbPhysicRect(limb), PlayerInput.MousePosition))
+                    if (editLimbs && !spriteSheetRect.Contains(PlayerInput.MousePosition) && MathUtils.RectangleContainsPoint(GetLimbPhysicRect(limb), PlayerInput.MousePosition))
                     {
                         HandleLimbSelection(limb);
                     }
@@ -3596,6 +3596,10 @@ namespace Barotrauma.CharacterEditor
 
         private void HandleLimbSelection(Limb limb)
         {
+            if (!editLimbs)
+            {
+                SetToggle(limbsToggle, true);
+            }
             if (!selectedLimbs.Contains(limb))
             {
                 if (!Widget.EnableMultiSelect)

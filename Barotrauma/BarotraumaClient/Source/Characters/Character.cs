@@ -524,6 +524,8 @@ namespace Barotrauma
 
         partial void UpdateProjSpecific(float deltaTime, Camera cam)
         {
+            if (!enabled) { return; }
+
             if (!IsDead && !IsUnconscious)
             {
                 if (soundTimer > 0)

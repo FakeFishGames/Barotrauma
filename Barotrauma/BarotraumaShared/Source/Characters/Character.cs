@@ -194,12 +194,16 @@ namespace Barotrauma
             }
         }
 
-        private string displayName;
         public string DisplayName
         {
             get
             {
-                return displayName != null && displayName.Length > 0 ? displayName : Name;
+                var displayName = Params.DisplayName;
+                if (string.IsNullOrWhiteSpace(displayName))
+                {
+                    displayName = TextManager.Get($"Character.{SpeciesName}", returnNull: true);
+                }
+                return displayName ?? Name;
             }
         }
 
@@ -713,7 +717,6 @@ namespace Barotrauma
             var rootElement = doc.Root;
             var mainElement = rootElement.IsOverride() ? rootElement.FirstElement() : rootElement;
             InitProjSpecific(mainElement);
-            displayName = TextManager.Get($"Character.{speciesName}", true);
 
             List<XElement> inventoryElements = new List<XElement>();
             List<float> inventoryCommonness = new List<float>();
@@ -760,7 +763,7 @@ namespace Barotrauma
                 var matchingAffliction = AfflictionPrefab.List
                     .Where(p => p.AfflictionType == "huskinfection")
                     .Select(p => p as AfflictionPrefabHusk)
-                    .FirstOrDefault(p => p.TargetSpecies.Contains(AfflictionHusk.GetNonHuskedSpeciesName(speciesName, p)));
+                    .FirstOrDefault(p => p.TargetSpecies.Any(t => t.Equals(AfflictionHusk.GetNonHuskedSpeciesName(speciesName, p), StringComparison.InvariantCultureIgnoreCase)));
                 if (matchingAffliction == null)
                 {
                     DebugConsole.ThrowError("Cannot find a husk infection that matches this species! Please add the speciesnames as 'targets' in the husk affliction prefab definition!");

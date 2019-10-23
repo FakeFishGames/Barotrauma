@@ -1976,6 +1976,8 @@ namespace Barotrauma.Networking
                 GameMain.ServerChildProcess = null;
             }
 
+            characterInfo?.Remove();
+
             VoipClient?.Dispose();
             VoipClient = null;
             GameMain.Client = null;

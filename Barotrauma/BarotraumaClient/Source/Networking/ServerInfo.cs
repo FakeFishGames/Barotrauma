@@ -16,6 +16,7 @@ namespace Barotrauma.Networking
 
         public UInt64 LobbyID;
         public UInt64 OwnerID;
+        public bool OwnerVerified;
 
         public string ServerName;
         public string ServerMessage;
@@ -464,7 +465,7 @@ namespace Barotrauma.Networking
                             int.TryParse(lobby.GetData("maxplayernum"), out int maxPlayers);
                             //UInt64.TryParse(lobby.GetData("connectsteamid"), out ulong connectSteamId);
                             string ip = lobby.GetData("hostipaddress");
-                            UInt64 ownerId = SteamManager.SteamIDStringToUInt64(lobby.GetData("ownerid"));
+                            UInt64 ownerId = SteamManager.SteamIDStringToUInt64(lobby.GetData("lobbyowner"));
 
                             if (OwnerID != ownerId) { return; }
 
@@ -481,6 +482,7 @@ namespace Barotrauma.Networking
                             LobbyID = lobby.LobbyID;
                             OwnerID = ownerId;
                             PingChecked = false;
+                            OwnerVerified = true;
                             SteamManager.AssignLobbyDataToServerInfo(lobby, this);
 
                             onServerRulesReceived?.Invoke(this);

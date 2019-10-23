@@ -379,7 +379,7 @@ namespace Barotrauma
 
                 CharacterInfo info = CharacterInfo.ClientRead(infoSpeciesName, inc);
 
-                character = Create(infoSpeciesName, position, seed, info, GameMain.Client.ID != ownerId, hasAi);
+                character = Create(speciesName, position, seed, info, GameMain.Client.ID != ownerId, hasAi);
                 character.ID = id;
                 character.TeamID = (TeamType)teamID;
 

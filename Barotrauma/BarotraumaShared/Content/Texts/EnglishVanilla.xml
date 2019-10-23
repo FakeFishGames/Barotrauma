@@ -3543,7 +3543,6 @@
   <entityname.acoscomponent>Acos Component</entityname.acoscomponent>
   <entitydescription.acoscomponent>Outputs the angle whose cosine is equal to the input.</entitydescription.acoscomponent>
   <entityname.atancomponent>Atan Component</entityname.atancomponent>
-  <entitydescription.atancomponent>Outputs the angle whose tangent is equal to the input.</entitydescription.atancomponent>
   <entityname.modulocomponent>Modulo Component</entityname.modulocomponent>
   <entitydescription.modulocomponent>Outputs the remainder when the input is divided by a specific number.</entitydescription.modulocomponent>
   <entityname.roundcomponent>Round Component</entityname.roundcomponent>
@@ -3707,5 +3706,9 @@
   <pausemenuquitverification>Are you sure you want to return to the main menu? All your unsaved progress will be lost.</pausemenuquitverification>
   <leveldifficulty>Difficulty</leveldifficulty>
   <connection.set_text>set_text</connection.set_text>
+  
+  
+  <!-- Modified values as of Oct 22 -->
+  <entitydescription.atancomponent>Outputs the angle whose tangent is equal to the input. If the input contains a comma, it's interpreted as a vector and the angle calculated using Atan2.</entitydescription.atancomponent>
 
 </infotexts>

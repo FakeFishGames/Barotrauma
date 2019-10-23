@@ -700,6 +700,7 @@ namespace Barotrauma
                     text = memento.Undo();
                     if (text != Text)
                     {
+                        ClearSelection();
                         SetText(text, false);
                         CaretIndex = Text.Length;
                         OnTextChanged?.Invoke(this, Text);
@@ -709,6 +710,7 @@ namespace Barotrauma
                     text = memento.Redo();
                     if (text != Text)
                     {
+                        ClearSelection();
                         SetText(text, false);
                         CaretIndex = Text.Length;
                         OnTextChanged?.Invoke(this, Text);
@@ -868,16 +870,12 @@ namespace Barotrauma
         private void RemoveSelectedText()
         {
             if (selectedText.Length == 0) { return; }
-            if (IsLeftToRight)
-            {
-                SetText(Text.Remove(selectionStartIndex, selectedText.Length));
-                CaretIndex = Math.Min(Text.Length, selectionStartIndex);
-            }
-            else
-            {
-                SetText(Text.Remove(selectionEndIndex, selectedText.Length));
-                CaretIndex = Math.Min(Text.Length, selectionEndIndex);
-            }
+
+            selectionStartIndex = Math.Max(0, Math.Min(selectionEndIndex, Math.Min(selectionStartIndex, Text.Length - 1)));
+            int selectionLength = Math.Min(Text.Length - selectionStartIndex, selectedText.Length);
+            SetText(Text.Remove(selectionStartIndex, selectionLength));
+            CaretIndex = Math.Min(Text.Length, selectionStartIndex);
+
             ClearSelection();
             OnTextChanged?.Invoke(this, Text);
         }

@@ -559,7 +559,7 @@ namespace Barotrauma
                 {
                     foreach (Character c in Character.CharacterList)
                     {
-                        if (c.CurrentHull != hull) { continue; }
+                        if (c.CurrentHull != hull || !c.Enabled) { continue; }
                         if (AIObjectiveFightIntruders.IsValidTarget(c, Character))
                         {
                             AddTargets<AIObjectiveFightIntruders, Character>(Character, c);

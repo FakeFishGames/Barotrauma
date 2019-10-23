@@ -70,7 +70,16 @@ namespace Barotrauma.Items.Components
                     break;
                 case FunctionType.Atan:
                     {
-                        float angle = (float)Math.Atan(value);
+                        float angle;
+                        if (signal.Contains(","))
+                        {
+                            Vector2 vectorValue = XMLExtensions.ParseVector2(signal, errorMessages: false);
+                            angle = (float)Math.Atan2(vectorValue.Y, vectorValue.X);
+                        }
+                        else
+                        {
+                            angle = (float)Math.Atan(value);
+                        }
                         if (!UseRadians) { angle = MathHelper.ToDegrees(angle); }
                         item.SendSignal(0, angle.ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
                     }
