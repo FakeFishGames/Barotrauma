@@ -1347,27 +1347,46 @@ namespace Barotrauma
                             propertyTypeName = string.Join("/", valueNames);
                         }
 
-                        lines.Add($"{property.Name} ({propertyTypeName})");
+                        lines.Add("[table]");
+                        lines.Add("  [tr]");
 
-                        if (!string.IsNullOrEmpty(serialize.Description))
-                        {
-                            lines.Add(serialize.Description);
-                        }
+                        lines.Add("    [th]Name[/th]");
+                        lines.Add("    [th]Type[/th]");
+                        lines.Add("    [th]Default value[/th]");
+                        lines.Add("    [th]Range[/th]");
+                        lines.Add("    [th]Description[/th]");
+
+                        lines.Add("  [/tr]");
+
+                        lines.Add("  [tr]");
+
+                        lines.Add($"    [td]{property.Name}[/td]");
+                        lines.Add($"    [td]{propertyTypeName}[/td]");
+                        lines.Add($"    [td]{serialize.defaultValue}[/td]");
+
                         Editable editable = attributes.FirstOrDefault(a => a is Editable) as Editable;
+                        string rangeText = "    [td]-[/td]";
                         if (editable != null)
                         {
                             if (editable.MinValueFloat > float.MinValue || editable.MaxValueFloat < float.MaxValue)
                             {
-                                lines.Add("Range: " + editable.MinValueFloat+"-"+editable.MaxValueFloat);
+                                rangeText = editable.MinValueFloat + "-" + editable.MaxValueFloat;
                             }
                             else if (editable.MinValueInt > int.MinValue || editable.MaxValueInt < int.MaxValue)
                             {
-                                lines.Add("Range: " + editable.MinValueInt + "-" + editable.MaxValueInt);
+                                rangeText = editable.MinValueInt + "-" + editable.MaxValueInt;
                             }
                         }
+                        lines.Add("-");
 
-                        lines.Add("Default value: " + serialize.defaultValue);
-                        lines.Add("");
+                        if (!string.IsNullOrEmpty(serialize.Description))
+                        {
+                            lines.Add($"    [td]{serialize.Description}[/td]");
+                        }
+
+                        lines.Add("  [/tr]");
+
+                        lines.Add("[/table]");
                     }
                     lines.Add("");
                 }
