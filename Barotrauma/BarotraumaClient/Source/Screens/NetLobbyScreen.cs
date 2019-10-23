@@ -22,13 +22,6 @@ namespace Barotrauma
 
         private GUIListBox chatBox, playerList;
         private GUIListBox serverLogBox, serverLogFilterTicks;
-        public GUIListBox ChatBox
-        {
-            get
-            {
-                return chatBox;
-            }
-        }
 
         private GUITextBox chatInput;
         private GUITextBox serverLogFilter;
@@ -41,13 +34,6 @@ namespace Barotrauma
         }
 
         private GUIImage micIcon;
-        public GUIImage MicIcon
-        {
-            get
-            {
-                return micIcon;
-            }
-        }
 
         private GUIScrollBar levelDifficultyScrollBar;
 
@@ -226,15 +212,6 @@ namespace Barotrauma
             private set;
         }
         
-        public GUIFrame InfoFrame
-        {
-            get { return infoFrame; }
-        }
-
-        public GUIFrame ModeFrame 
-        {
-            get { return modeFrame; }
-        }
 
         public Submarine SelectedSub
         {
@@ -2338,10 +2315,20 @@ namespace Barotrauma
                 wrap: true, font: GUI.SmallFont)
             {
                 UserData = message,
-                CanBeFocused = false,
+                //CanBeFocused = false,
             };
+            msg.RectTransform.SizeChanged += Recalculate;
+            void Recalculate()
+            {
+                msg.RectTransform.SizeChanged -= Recalculate;
+                msg.CalculateHeightFromText();
+                msg.RectTransform.SizeChanged += Recalculate;
+            }
 
-            if ((prevSize == 1.0f && chatBox.BarScroll == 0.0f) || (prevSize < 1.0f && chatBox.BarScroll == 1.0f)) chatBox.BarScroll = 1.0f;
+            if ((prevSize == 1.0f && chatBox.BarScroll == 0.0f) || (prevSize < 1.0f && chatBox.BarScroll == 1.0f)) 
+            { 
+                chatBox.BarScroll = 1.0f; 
+            }
         }
 
         private bool SelectJobPreferencesTab(GUIButton button, object userData)
