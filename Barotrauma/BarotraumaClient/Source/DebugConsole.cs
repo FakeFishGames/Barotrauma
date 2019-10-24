@@ -1310,19 +1310,39 @@ namespace Barotrauma
             {
                 Dictionary<string, string> typeNames = new Dictionary<string, string>
                 {
-                    { "Single", "float"},
-                    { "Int32", "integer"},
-                    { "Boolean", "true/false"},
-                    { "String", "text"},
+                    { "Single", "Float"},
+                    { "Int32", "Integer"},
+                    { "Boolean", "True/False"},
+                    { "String", "Yext"},
                 };
 
-                var itemComponentTypes = typeof(ItemComponent).Assembly.GetTypes().Where(type => type.IsSubclassOf(typeof(ItemComponent)));
+                var itemComponentTypes = typeof(ItemComponent).Assembly.GetTypes().Where(type => type.IsSubclassOf(typeof(ItemComponent))).ToList();
+                itemComponentTypes.Sort((i1, i2) => { return i1.Name.CompareTo(i2.Name); });
+
+                itemComponentTypes.Insert(0, typeof(ItemComponent));
+                
                 string filePath = args.Length > 0 ? args[0] : "ItemComponentDocumentation.txt";
                 List<string> lines = new List<string>();
                 foreach (Type t in itemComponentTypes)
                 {
-                    lines.Add($"[b]{t.Name}[/b]");
+
+                    lines.Add($"[h1]{t.Name}[/h1]");
                     lines.Add("");
+
+                    var properties = t.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.DeclaredOnly).ToList();//.Cast<System.ComponentModel.PropertyDescriptor>();
+                    Type baseType = t.BaseType;
+                    while (baseType != null && baseType != typeof(ItemComponent))
+                    {
+                        properties.AddRange(baseType.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.DeclaredOnly));
+                        baseType = baseType.BaseType;
+                    }
+
+                    if (!properties.Any(p => p.GetCustomAttributes(true).Any(a => a is Serialize)))
+                    {
+                        lines.Add("No editable properties.");
+                        lines.Add("");
+                        continue;
+                    }
 
                     lines.Add("[table]");
                     lines.Add("  [tr]");
@@ -1330,12 +1350,13 @@ namespace Barotrauma
                     lines.Add("    [th]Name[/th]");
                     lines.Add("    [th]Type[/th]");
                     lines.Add("    [th]Default value[/th]");
-                    lines.Add("    [th]Range[/th]");
+                    //lines.Add("    [th]Range[/th]");
                     lines.Add("    [th]Description[/th]");
 
                     lines.Add("  [/tr]");
 
-                    var properties = t.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.DeclaredOnly);//.Cast<System.ComponentModel.PropertyDescriptor>();
+
+                    
                     Dictionary<string, SerializableProperty> dictionary = new Dictionary<string, SerializableProperty>();
                     foreach (var property in properties)
                     {
@@ -1358,7 +1379,6 @@ namespace Barotrauma
                             propertyTypeName = string.Join("/", valueNames);
                         }
 
-
                         lines.Add("  [tr]");
 
                         lines.Add($"    [td]{property.Name}[/td]");
@@ -1378,7 +1398,7 @@ namespace Barotrauma
                                 rangeText = editable.MinValueInt + "-" + editable.MaxValueInt;
                             }
                         }
-                        lines.Add($"    [td]{rangeText}[/td]");
+                        //lines.Add($"    [td]{rangeText}[/td]");
 
                         if (!string.IsNullOrEmpty(serialize.Description))
                         {
