@@ -43,8 +43,19 @@ namespace Barotrauma
             }
         }
 
+        private float rotationRadians;
         [Serialize(0.0f, true), Editable]
-        public float Rotation { get; private set; }
+        public float Rotation
+        {
+            get
+            {
+                return MathHelper.ToDegrees(rotationRadians);
+            }
+            private set
+            {
+                rotationRadians = MathHelper.ToRadians(value);
+            }
+        }
 
         [Serialize(AnimationType.None, false), Editable]
         public AnimationType RotationAnim { get; private set; }
@@ -118,16 +129,16 @@ namespace Barotrauma
         {
             if (rotationSpeedRadians <= 0.0f)
             {
-                return Rotation;
+                return rotationRadians;
             }
-            switch (OffsetAnim)
+            switch (RotationAnim)
             {
                 case AnimationType.Sine:
                     rotationState = rotationState % (MathHelper.TwoPi / rotationSpeedRadians);
-                    return Rotation * (float)Math.Sin(rotationState * rotationSpeedRadians);
+                    return rotationRadians * (float)Math.Sin(rotationState * rotationSpeedRadians);
                 case AnimationType.Noise:
                     rotationState = rotationState % (1.0f / rotationSpeedRadians);
-                    return Rotation * PerlinNoise.GetPerlin(rotationState * rotationSpeedRadians, rotationState * rotationSpeedRadians);
+                    return rotationRadians * (PerlinNoise.GetPerlin(rotationState * rotationSpeedRadians, rotationState * rotationSpeedRadians) - 0.5f);
                 default:
                     return rotationState * rotationSpeedRadians;
             }
