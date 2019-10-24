@@ -42,7 +42,7 @@ namespace Barotrauma.Networking
             Whitelist.ServerAdminWrite(outMsg, c);
         }
 
-        public void ServerWrite(IWriteMessage outMsg,Client c)
+        public void ServerWrite(IWriteMessage outMsg, Client c)
         {
             outMsg.Write(ServerName);
             outMsg.Write(ServerMessageText);
@@ -69,8 +69,8 @@ namespace Barotrauma.Networking
                 outMsg.WritePadBits();
             }
         }
-        
-        public void ServerRead(IReadMessage incMsg,Client c)
+
+        public void ServerRead(IReadMessage incMsg, Client c)
         {
             if (!c.HasPermission(Networking.ClientPermissions.ManageSettings)) return;
 
@@ -91,7 +91,7 @@ namespace Barotrauma.Networking
                 if (ServerMessageText != serverMessageText) changed = true;
                 ServerMessageText = serverMessageText;
             }
-            
+                        
             if (flags.HasFlag(NetFlags.Properties))
             {
                 changed |= ReadExtraCargo(incMsg);
@@ -169,7 +169,15 @@ namespace Barotrauma.Networking
                 changed |= true;
             }
 
-            if (changed) GameMain.NetLobbyScreen.LastUpdateID++;
+            if (changed)
+            {
+                if (KarmaPreset == "custom")
+                {
+                    GameMain.NetworkMember?.KarmaManager?.SaveCustomPreset();
+                    GameMain.NetworkMember?.KarmaManager?.Save();
+                }
+                GameMain.NetLobbyScreen.LastUpdateID++;
+            }
         }
 
         public void SaveSettings()
@@ -220,7 +228,7 @@ namespace Barotrauma.Networking
                 doc = XMLExtensions.TryLoadXml(SettingsFile);
             }
 
-            if (doc == null || doc.Root == null)
+            if (doc == null)
             {
                 doc = new XDocument(new XElement("serversettings"));
             }
@@ -249,7 +257,7 @@ namespace Barotrauma.Networking
                     "192-255",
                     "384-591",
                     "1024-1279",
-                    "19968-40959","13312-19903","131072-173791","173824-178207","178208-183983","63744-64255","194560-195103" //CJK
+                    "19968-40959","13312-19903","131072-15043983","15043985-173791","173824-178207","178208-183983","63744-64255","194560-195103" //CJK
                 };
 
             string[] allowedClientNameCharsStr = doc.Root.GetAttributeStringArray("AllowedClientNameChars", defaultAllowedClientNameChars);
@@ -333,6 +341,7 @@ namespace Barotrauma.Networking
             }
 
             XDocument doc = XMLExtensions.TryLoadXml(ClientPermissionsFile);
+            if (doc == null) { return; }
             foreach (XElement clientElement in doc.Root.Elements())
             {
                 string clientName = clientElement.GetAttributeString("name", "");

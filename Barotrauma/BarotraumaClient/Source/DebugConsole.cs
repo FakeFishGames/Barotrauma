@@ -49,6 +49,7 @@ namespace Barotrauma
 
         private static bool isOpen;
         public static bool IsOpen => isOpen;
+        public static bool Paused = false;
         
         private static GUITextBlock activeQuestionText;
         
@@ -773,9 +774,15 @@ namespace Barotrauma
                 }
             }, isCheat: true));
 
-            commands.Add(new Command("messagebox", "", (string[] args) =>
+            commands.Add(new Command("messagebox|guimessagebox", "messagebox [header] [msg] [default/ingame]: Creates a message box.", (string[] args) =>
             {
-                new GUIMessageBox("", string.Join(" ", args));
+                var msgBox = new GUIMessageBox(
+                    args.Length > 0 ? args[0] : "",
+                    args.Length > 1 ? args[1] : "",
+                    buttons: new string[] { "OK" },
+                    type: args.Length < 3 || args[2] == "default" ? GUIMessageBox.Type.Default : GUIMessageBox.Type.InGame);
+
+                msgBox.Buttons[0].OnClicked = msgBox.Close;
             }));
 
             AssignOnExecute("debugdraw", (string[] args) =>
@@ -1121,7 +1128,7 @@ namespace Barotrauma
             {
                 string filePath = args.Length > 0 ? args[0] : "Content/Texts/EnglishVanilla.xml";
                 var doc = XMLExtensions.TryLoadXml(filePath);
-                if (doc?.Root == null) return;
+                if (doc == null) { return; }
                 List<string> lines = new List<string>();
                 foreach (XElement element in doc.Root.Elements())
                 {
@@ -1154,6 +1161,7 @@ namespace Barotrauma
                     return;
                 }
                 var doc = XMLExtensions.TryLoadXml(destinationPath);
+                if (doc == null) { return; }
                 int i = 0;
                 foreach (XElement element in doc.Root.Elements())
                 {
@@ -1185,6 +1193,8 @@ namespace Barotrauma
 
                 var sourceDoc = XMLExtensions.TryLoadXml(sourcePath);
                 var destinationDoc = XMLExtensions.TryLoadXml(destinationPath);
+
+                if (sourceDoc == null || destinationDoc == null) { return; }
 
                 XElement destinationElement = destinationDoc.Root.Elements().First();
                 foreach (XElement element in sourceDoc.Root.Elements())
@@ -1221,6 +1231,76 @@ namespace Barotrauma
                 }
                 File.WriteAllLines(filePath, lines);
             }));
+
+
+            commands.Add(new Command("itemcomponentdocumentation", "", (string[] args) =>
+            {
+                Dictionary<string, string> typeNames = new Dictionary<string, string>
+                {
+                    { "Single", "float"},
+                    { "Int32", "integer"},
+                    { "Boolean", "true/false"},
+                    { "String", "text"},
+                };
+
+                var itemComponentTypes = typeof(ItemComponent).Assembly.GetTypes().Where(type => type.IsSubclassOf(typeof(ItemComponent)));
+                string filePath = args.Length > 0 ? args[0] : "ItemComponentDocumentation.txt";
+                List<string> lines = new List<string>();
+                foreach (Type t in itemComponentTypes)
+                {
+                    lines.Add($"[b]{t.Name}[/b]");
+                    lines.Add("");
+
+                    var properties = t.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.DeclaredOnly);//.Cast<System.ComponentModel.PropertyDescriptor>();
+                    Dictionary<string, SerializableProperty> dictionary = new Dictionary<string, SerializableProperty>();
+                    foreach (var property in properties)
+                    {
+                        object[] attributes = property.GetCustomAttributes(true);
+                        Serialize serialize = attributes.FirstOrDefault(a => a is Serialize) as Serialize;
+                        if (serialize == null) { continue; }
+
+                        string propertyTypeName = property.PropertyType.Name;
+                        if (typeNames.ContainsKey(propertyTypeName))
+                        {
+                            propertyTypeName = typeNames[propertyTypeName];
+                        }
+                        else if (property.PropertyType.IsEnum)
+                        {
+                            List<string> valueNames = new List<string>();
+                            foreach (object enumValue in Enum.GetValues(property.PropertyType))
+                            {
+                                valueNames.Add(enumValue.ToString());
+                            }
+                            propertyTypeName = string.Join("/", valueNames);
+                        }
+
+                        lines.Add($"{property.Name} ({propertyTypeName})");
+
+                        if (!string.IsNullOrEmpty(serialize.Description))
+                        {
+                            lines.Add(serialize.Description);
+                        }
+                        Editable editable = attributes.FirstOrDefault(a => a is Editable) as Editable;
+                        if (editable != null)
+                        {
+                            if (editable.MinValueFloat > float.MinValue || editable.MaxValueFloat < float.MaxValue)
+                            {
+                                lines.Add("Range: " + editable.MinValueFloat+"-"+editable.MaxValueFloat);
+                            }
+                            else if (editable.MinValueInt > int.MinValue || editable.MaxValueInt < int.MaxValue)
+                            {
+                                lines.Add("Range: " + editable.MinValueInt + "-" + editable.MaxValueInt);
+                            }
+                        }
+
+                        lines.Add("Default value: " + serialize.defaultValue);
+                        lines.Add("");
+                    }
+                    lines.Add("");
+                }
+                File.WriteAllLines(filePath, lines);
+                System.Diagnostics.Process.Start(Path.GetFullPath(filePath));
+            }));
 #if DEBUG
             commands.Add(new Command("checkduplicates", "Checks the given language for duplicate translation keys and writes to file.", (string[] args) =>
             {
@@ -1239,12 +1319,6 @@ namespace Barotrauma
                 if (args.Length == 0) return;
                 LocalizationCSVtoXML.Convert(args[0]);
             }));
-
-            commands.Add(new Command("guimessagebox", "guimessagebox [msg] -> Creates a message box with the parameter as a message.", (string[] args) =>
-            {
-                if (args.Length == 0) return;
-                var dialog = new GUIMessageBox("Message box", args[0]);
-            }));
 #endif
 
             commands.Add(new Command("cleanbuild", "", (string[] args) =>
@@ -1257,7 +1331,7 @@ namespace Barotrauma
 
                 GameMain.Config.GraphicsWidth = 0;
                 GameMain.Config.GraphicsHeight = 0;
-                GameMain.Config.WindowMode = WindowMode.Fullscreen;
+                GameMain.Config.WindowMode = WindowMode.BorderlessWindowed;
                 NewMessage("Resolution set to 0 x 0 (screen resolution will be used)", Color.Green);
                 NewMessage("Fullscreen enabled", Color.Green);
 
@@ -1652,7 +1726,7 @@ namespace Barotrauma
                     ThrowError("Not controlling any character!");
                     return;
                 }
-                character.AnimController.ResetRagdoll();
+                character.AnimController.ResetRagdoll(forceReload: true);
             }, isCheat: true));
 
             commands.Add(new Command("reloadwearables", "Reloads the sprites of all limbs and wearable sprites (clothing) of the controlled character. Provide id or name if you want to target another character.", args =>
@@ -1762,7 +1836,7 @@ namespace Barotrauma
                     {
                         if (limb.type != LimbType.Head)
                         {
-                            limb.RecreateSprite();
+                            limb.RecreateSprites();
                         }
                         foreach (var wearable in limb.WearingItems)
                         {
@@ -1846,6 +1920,19 @@ namespace Barotrauma
                     GameAnalyticsManager.AddErrorEventOnce("DebugConsole.SpawnSubmarine:Error", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg + '\n' + e.Message + '\n' + e.StackTrace);
                 }
             }, isCheat: true));
+
+            commands.Add(new Command("pause", "Toggles the pause state when playing offline", (string[] args) =>
+            {
+                if (GameMain.NetworkMember == null)
+                {
+                    Paused = !Paused;
+                    DebugConsole.NewMessage("Game paused: " + Paused);
+                }
+                else
+                {
+                    DebugConsole.NewMessage("Cannot pause when a multiplayer session is active.");
+                }
+            }));
         }
 
         private static void ReloadWearables(Character character, int variant = 0)

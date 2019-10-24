@@ -285,16 +285,9 @@ namespace Barotrauma
 
         public override void DragCharacter(Character target, float deltaTime)
         {
-            if (target == null) return;
-            
-            Limb mouthLimb = Array.Find(Limbs, l => l != null && l.MouthPos.HasValue);
-            if (mouthLimb == null) mouthLimb = GetLimb(LimbType.Head);
-
-            if (mouthLimb == null)
-            {
-                DebugConsole.ThrowError("Character \"" + character.SpeciesName + "\" failed to eat a target (a head or a limb with a mouthpos required)");
-                return;
-            }
+            if (target == null) { return; }     
+            Limb mouthLimb = GetLimb(LimbType.Head);
+            if (mouthLimb == null) { return; }
 
             if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
             {
@@ -489,9 +482,9 @@ namespace Barotrauma
                 {
                     case LimbType.LeftFoot:
                     case LimbType.RightFoot:
-                        if (CurrentSwimParams.FootAnglesInRadians.ContainsKey(limb.limbParams.ID))
+                        if (CurrentSwimParams.FootAnglesInRadians.ContainsKey(limb.Params.ID))
                         {
-                            SmoothRotateWithoutWrapping(limb, movementAngle + CurrentSwimParams.FootAnglesInRadians[limb.limbParams.ID] * Dir, MainLimb, FootTorque);
+                            SmoothRotateWithoutWrapping(limb, movementAngle + CurrentSwimParams.FootAnglesInRadians[limb.Params.ID] * Dir, MainLimb, FootTorque);
                         }
                         break;
                     case LimbType.Tail:
@@ -557,6 +550,9 @@ namespace Barotrauma
                 movementAngle -= MathHelper.TwoPi;
             }
 
+            float stepLift = TargetMovement.X == 0.0f ? 0 :
+                (float)Math.Sin(WalkPos * CurrentGroundedParams.StepLiftFrequency + MathHelper.Pi * CurrentGroundedParams.StepLiftOffset) * (CurrentGroundedParams.StepLiftAmount / 100);
+
             Limb torso = GetLimb(LimbType.Torso);
             if (torso != null)
             {
@@ -566,7 +562,7 @@ namespace Barotrauma
                 }
                 if (TorsoPosition.HasValue)
                 {
-                    Vector2 pos = colliderBottom + Vector2.UnitY * TorsoPosition.Value;
+                    Vector2 pos = colliderBottom + new Vector2(0, TorsoPosition.Value + stepLift);
 
                     if (torso != MainLimb)
                     {
@@ -588,7 +584,7 @@ namespace Barotrauma
                 }
                 if (HeadPosition.HasValue)
                 {
-                    Vector2 pos = colliderBottom + Vector2.UnitY * HeadPosition.Value;
+                    Vector2 pos = colliderBottom + new Vector2(0, HeadPosition.Value + stepLift * CurrentGroundedParams.StepLiftHeadMultiplier);
 
                     if (head != MainLimb)
                     {
@@ -673,10 +669,10 @@ namespace Barotrauma
 #if CLIENT
                         if (playFootstepSound) { PlayImpactSound(limb); }
 #endif
-                        if (CurrentGroundedParams.FootAnglesInRadians.ContainsKey(limb.limbParams.ID))
+                        if (CurrentGroundedParams.FootAnglesInRadians.ContainsKey(limb.Params.ID))
                         {
                             SmoothRotateWithoutWrapping(limb,
-                                movementAngle + CurrentGroundedParams.FootAnglesInRadians[limb.limbParams.ID] * Dir,
+                                movementAngle + CurrentGroundedParams.FootAnglesInRadians[limb.Params.ID] * Dir,
                                 MainLimb, FootTorque);
                         }
                         break;

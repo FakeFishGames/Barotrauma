@@ -20,7 +20,7 @@ namespace Barotrauma.Items.Components
 
         private float[] charWidths;
 
-        [Serialize("0,0,0,0", true)]
+        [Serialize("0,0,0,0", true, description: "The amount of padding around the text in pixels (left,top,right,bottom). ")]
         public Vector4 Padding
         {
             get { return TextBlock.Padding; }
@@ -28,7 +28,7 @@ namespace Barotrauma.Items.Components
         }
 
         private string text;
-        [Serialize("", true, translationTextTag: "Label."), Editable(100)]
+        [Serialize("", true, translationTextTag: "Label.", description: "The text displayed in the label."), Editable(100)]
         public string Text
         {
             get { return text; }
@@ -54,7 +54,7 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
-        [Editable, Serialize("0.0,0.0,0.0,1.0", true)]
+        [Editable, Serialize("0,0,0,255", true, description: "The color of the text displayed on the label (R,G,B,A).")]
         public Color TextColor
         {
             get { return textColor; }
@@ -65,7 +65,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable(0.0f, 10.0f), Serialize(1.0f, true)]
+        [Editable(0.0f, 10.0f), Serialize(1.0f, true, description: "The scale of the text displayed on the label.")]
         public float TextScale
         {
             get { return textBlock == null ? 1.0f : textBlock.TextScale; }
@@ -76,7 +76,7 @@ namespace Barotrauma.Items.Components
         }
 
         private bool scrollable;
-        [Serialize(false, true)]
+        [Serialize(false, true, description: "Should the text scroll horizontally across the item if it's too long to be displayed all at once.")]
         public bool Scrollable
         {
             get { return scrollable; }
@@ -89,7 +89,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(20.0f, true)]
+        [Serialize(20.0f, true, description: "How fast the text scrolls across the item (only valid if Scrollable is set to true).")]
         public float ScrollSpeed
         {
             get;
@@ -202,7 +202,7 @@ namespace Barotrauma.Items.Components
             TextBlock.Text = sb.ToString();            
         }
                 
-        public void Draw(SpriteBatch spriteBatch, bool editing = false)
+        public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
         {
             var drawPos = new Vector2(
                 item.DrawPosition.X - item.Rect.Width / 2.0f,

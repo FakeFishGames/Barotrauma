@@ -15,7 +15,7 @@ namespace Barotrauma.Items.Components
         //openState when the vertices of the convex hull were last calculated
         private float lastConvexHullState;
 
-        [Serialize("1,1", false)]
+        [Serialize("1,1", false, description: "The scale of the shadow-casting area of the door (relative to the actual size of the door).")]
         public Vector2 ShadowScale
         {
             get;
@@ -102,7 +102,7 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        public void Draw(SpriteBatch spriteBatch, bool editing)
+        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
         {
             Color color = item.SpriteColor;
             if (brokenSprite == null)
@@ -115,7 +115,7 @@ namespace Barotrauma.Items.Components
             if (stuck > 0.0f && weldedSprite != null)
             {
                 Vector2 weldSpritePos = new Vector2(item.Rect.Center.X, item.Rect.Y - item.Rect.Height / 2.0f);
-                if (item.Submarine != null) weldSpritePos += item.Submarine.Position;
+                if (item.Submarine != null) weldSpritePos += item.Submarine.DrawPosition;
                 weldSpritePos.Y = -weldSpritePos.Y;
 
                 weldedSprite.Draw(spriteBatch,

@@ -267,7 +267,7 @@ namespace Barotrauma
                 Matrix.CreateTranslation(pos);
         }
 
-        public void Draw(Camera cam, Vector3 pos, Vector2 origin, float rotate, Vector2 scale, Color color, bool flip = false)
+        public void Draw(Camera cam, Vector3 pos, Vector2 origin, float rotate, Vector2 scale, Color color, bool flip = false, bool mirror = false)
         {
             if (Sprite.Texture == null) { return; }
             if (!initialized) { Init(); }
@@ -291,6 +291,10 @@ namespace Barotrauma
             effect.Parameters["deformArray"].SetValue(deformAmount);
             effect.Parameters["deformArrayWidth"].SetValue(deformArrayWidth);
             effect.Parameters["deformArrayHeight"].SetValue(deformArrayHeight);
+            if (mirror)
+            {
+                flip = !flip;
+            }
             effect.Parameters["uvTopLeft"].SetValue(flip ? uvTopLeftFlipped : uvTopLeft);
             effect.Parameters["uvBottomRight"].SetValue(flip ? uvBottomRightFlipped : uvBottomRight);
             effect.GraphicsDevice.SetVertexBuffer(flip ? flippedVertexBuffer : vertexBuffer);
@@ -368,7 +372,7 @@ namespace Barotrauma
 
             foreach (SpriteDeformation deformation in deformations)
             {
-                var deformEditor = new SerializableEntityEditor(container.RectTransform, deformation.DeformationParams, false, true);
+                var deformEditor = new SerializableEntityEditor(container.RectTransform, deformation.Params, false, true);
                 deformEditor.RectTransform.MinSize = new Point(deformEditor.Rect.Width, deformEditor.Rect.Height);
             }
 

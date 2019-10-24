@@ -26,6 +26,9 @@ namespace Barotrauma
         public float LastImpactSoundTime;
         public const float ImpactSoundInterval = 0.2f;
 
+        private bool editingHUDRefreshPending;
+        private float editingHUDRefreshTimer;
+
         class SpriteState
         {
             public float RotationState;
@@ -33,7 +36,7 @@ namespace Barotrauma
             public bool IsActive = true;
         }
 
-        private Dictionary<ItemPrefab.DecorativeSprite, SpriteState> spriteAnimState = new Dictionary<ItemPrefab.DecorativeSprite, SpriteState>();
+        private Dictionary<DecorativeSprite, SpriteState> spriteAnimState = new Dictionary<DecorativeSprite, SpriteState>();
 
         private Sprite activeSprite;
         public override Sprite Sprite
@@ -128,11 +131,13 @@ namespace Barotrauma
                 }
             }
 
-            foreach (BrokenItemSprite brokenSprite in Prefab.BrokenSprites)
+            for (int i = 0; i < Prefab.BrokenSprites.Count;i++)
             {
-                if (condition <= brokenSprite.MaxCondition)
+                float minCondition = i > 0 ? Prefab.BrokenSprites[i - i].MaxCondition : 0.0f;
+                if (condition <= minCondition ||
+                    condition <= Prefab.BrokenSprites[i].MaxCondition && !Prefab.BrokenSprites[i].FadeIn)
                 {
-                    activeSprite = brokenSprite.Sprite;
+                    activeSprite = Prefab.BrokenSprites[i].Sprite;
                     break;
                 }
             }
@@ -211,18 +216,18 @@ namespace Barotrauma
                 }
             }
 
+            float depth = GetDrawDepth();
             if (activeSprite != null)
             {
                 SpriteEffects oldEffects = activeSprite.effects;
                 activeSprite.effects ^= SpriteEffects;
                 SpriteEffects oldBrokenSpriteEffects = SpriteEffects.None;
-                if (fadeInBrokenSprite != null)
+                if (fadeInBrokenSprite != null && fadeInBrokenSprite.Sprite != activeSprite)
                 {
                     oldBrokenSpriteEffects = fadeInBrokenSprite.Sprite.effects;
                     fadeInBrokenSprite.Sprite.effects ^= SpriteEffects;
                 }
 
-                float depth = GetDrawDepth();
                 if (body == null)
                 {
                     bool flipHorizontal = (SpriteEffects & SpriteEffects.FlipHorizontally) != 0;
@@ -304,9 +309,9 @@ namespace Barotrauma
                 }
 
                 activeSprite.effects = oldEffects;
-                if (fadeInBrokenSprite != null)
+                if (fadeInBrokenSprite != null && fadeInBrokenSprite.Sprite != activeSprite)
                 {
-                    fadeInBrokenSprite.Sprite.effects = oldEffects;
+                    fadeInBrokenSprite.Sprite.effects = oldBrokenSpriteEffects;
                 }
             }
 
@@ -314,7 +319,7 @@ namespace Barotrauma
             //causing them to be removed from the list
             for (int i = drawableComponents.Count - 1; i >= 0; i--)
             {
-                drawableComponents[i].Draw(spriteBatch, editing);
+                drawableComponents[i].Draw(spriteBatch, editing, depth);
             }
 
             if (GameMain.DebugDraw)
@@ -437,21 +442,23 @@ namespace Barotrauma
 
         public override void UpdateEditing(Camera cam)
         {
-            if (editingHUD == null || editingHUD.UserData as Item != this)
+            if (editingHUD == null || editingHUD.UserData as Item != this || 
+                (editingHUDRefreshPending && editingHUDRefreshTimer <= 0.0f))
             {
                 editingHUD = CreateEditingHUD(Screen.Selected != GameMain.SubEditorScreen);
+                editingHUDRefreshTimer = 1.0f;
             }
 
-            if (Screen.Selected != GameMain.SubEditorScreen) return;
+            if (Screen.Selected != GameMain.SubEditorScreen) { return; }
 
-            if (Character.Controlled == null) activeHUDs.Clear();
+            if (Character.Controlled == null) { activeHUDs.Clear(); }
 
-            if (!Linkable) return;
+            if (!Linkable) { return; }
 
-            if (!PlayerInput.KeyDown(Keys.Space)) return;
+            if (!PlayerInput.KeyDown(Keys.Space)) { return; }
             bool lClick = PlayerInput.LeftButtonClicked();
             bool rClick = PlayerInput.RightButtonClicked();
-            if (!lClick && !rClick) return;
+            if (!lClick && !rClick) { return; }
 
             Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
             var otherEntity = mapEntityList.FirstOrDefault(e => e != this && e.IsHighlighted && e.IsMouseOn(position));
@@ -472,6 +479,8 @@ namespace Barotrauma
         
         public GUIComponent CreateEditingHUD(bool inGame = false)
         {
+            editingHUDRefreshPending = false;
+
             int heightScaled = (int)(20 * GUI.Scale);
             editingHUD = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.25f), GUI.Canvas, Anchor.CenterRight) { MinSize = new Point(400, 0) }) { UserData = this };
             GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.95f, 0.8f), editingHUD.RectTransform, Anchor.Center), style: null)
@@ -670,6 +679,13 @@ namespace Barotrauma
                 GUIComponent prevEditingHUD = editingHUD;
                 UpdateEditing(cam);
                 editingHUDCreated = editingHUD != null && editingHUD != prevEditingHUD;
+            }
+
+            if (editingHUD == null ||
+                !(GUI.KeyboardDispatcher.Subscriber is GUITextBox textBox) ||
+                !editingHUD.IsParentOf(textBox))
+            {
+                editingHUDRefreshTimer -= deltaTime;
             }
 
             List<ItemComponent> prevActiveHUDs = new List<ItemComponent>(activeHUDs);
@@ -916,6 +932,7 @@ namespace Barotrauma
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
                     ReadPropertyChange(msg, false);
+                    editingHUDRefreshPending = true;
                     break;
                 case NetEntityEvent.Type.Invalid:
                     break;
@@ -954,6 +971,7 @@ namespace Barotrauma
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
                     WritePropertyChange(msg, extraData, true);
+                    editingHUDRefreshTimer = 1.0f;
                     break;
                 case NetEntityEvent.Type.Combine:
                     UInt16 combineTargetID = (UInt16)extraData[1];
@@ -969,6 +987,7 @@ namespace Barotrauma
 
             if (parentInventory != null || body == null || !body.Enabled || Removed)
             {
+                positionBuffer.Clear();
                 return;
             }
 

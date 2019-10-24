@@ -10,11 +10,13 @@ using System.Xml.Linq;
 using Barotrauma.Items.Components;
 using FarseerPhysics.Dynamics;
 using Barotrauma.Extensions;
+#if SERVER
 using System.Text;
+#endif
 
 namespace Barotrauma
 {
-    partial class Character : Entity, IDamageable, ISerializableEntity, IClientSerializable, IServerSerializable, ISpatialEntity
+    partial class Character : Entity, IDamageable, ISerializableEntity, IClientSerializable, IServerSerializable
     {
         public static List<Character> CharacterList = new List<Character>();
 
@@ -92,7 +94,6 @@ namespace Barotrauma
 
         private Vector2 cursorPosition;
 
-        protected bool needsAir;
         protected float oxygenAvailable;
 
         //seed used to generate this character
@@ -102,14 +103,33 @@ namespace Barotrauma
         public Character LastAttacker;
         public Entity LastDamageSource;
 
-        public readonly bool IsHumanoid;
+        public readonly CharacterParams Params;
+        public string SpeciesName => Params.SpeciesName;
+        public bool IsHumanoid => Params.Humanoid;
+        public bool IsHusk => Params.Husk;
+
+        public bool CanSpeak
+        {
+            get => Params.CanSpeak;
+            set => Params.CanSpeak = value;
+        }
+
+        public bool NeedsAir
+        {
+            get => Params.NeedsAir;
+            set => Params.NeedsAir = value;
+        }
+
+        public float Noise
+        {
+            get => Params.Noise;
+            set => Params.Noise = value;
+        }
 
         public bool IsTraitor;
         public string TraitorCurrentObjective = "";
+        public bool IsHuman => SpeciesName.Equals(HumanSpeciesName, StringComparison.OrdinalIgnoreCase);
 
-        //the name of the species (e.q. human)
-        public readonly string SpeciesName;
-        
         private float attackCoolDown;
 
         private Order currentOrder;
@@ -206,11 +226,7 @@ namespace Barotrauma
             }
         }
 
-        public string ConfigPath
-        {
-            get;
-            private set;
-        }
+        public string ConfigPath => Params.File;
 
         public float Mass
         {
@@ -325,8 +341,6 @@ namespace Barotrauma
             }
         }
 
-        private float Noise { get; set; }
-
         private float pressureProtection;
         public float PressureProtection
         {
@@ -345,12 +359,6 @@ namespace Barotrauma
         public bool IsUnconscious
         {
             get { return CharacterHealth.IsUnconscious; }
-        }
-
-        public bool NeedsAir
-        {
-            get { return needsAir; }
-            set { needsAir = value; }
         }
 
         public float Oxygen
@@ -392,6 +400,8 @@ namespace Barotrauma
             get { return CharacterHealth.Vitality; }
         }
 
+        public float HealthPercentage => CharacterHealth.HealthPercentage;
+
         public float MaxVitality
         {
             get { return CharacterHealth.MaxVitality; }
@@ -411,29 +421,6 @@ namespace Barotrauma
         {
             get { return CharacterHealth.GetAfflictionStrength("bleeding", true); }
         }
-        
-        public float HuskInfectionState
-        {
-            get
-            {
-                var huskAffliction = CharacterHealth.GetAffliction("huskinfection", false) as AfflictionHusk;
-                return huskAffliction == null ? 0.0f : huskAffliction.Strength;
-            }
-            set
-            {
-                var huskAffliction = CharacterHealth.GetAffliction("huskinfection", false) as AfflictionHusk;
-                if (huskAffliction == null)
-                {
-                    CharacterHealth.ApplyAffliction(null, AfflictionPrefab.Husk.Instantiate(value));
-                }
-                else
-                {
-                    huskAffliction.Strength = value;
-                }
-            }
-        }
-
-        public bool CanSpeak;
 
         private bool speechImpedimentSet;
 
@@ -544,7 +531,7 @@ namespace Barotrauma
             {
                 if (AnimController?.Collider == null)
                 {
-                    string errorMsg = "Attempted to access a potentially removed character. Character: " + Name + ", id: " + ID + ", removed: " + Removed+".";
+                    string errorMsg = "Attempted to access a potentially removed character. Character: " + Name + ", id: " + ID + ", removed: " + Removed + ".";
                     if (AnimController == null)
                     {
                         errorMsg += " AnimController == null";
@@ -598,13 +585,13 @@ namespace Barotrauma
         /// <param name="ragdoll">Ragdoll configuration file. If null, will select the default.</param>
         public static Character Create(CharacterInfo characterInfo, Vector2 position, string seed, bool isRemotePlayer = false, bool hasAi = true, RagdollParams ragdoll = null)
         {
-            return Create(characterInfo.File, position, seed, characterInfo, isRemotePlayer, hasAi, true, ragdoll);
+            return Create(characterInfo.SpeciesName, position, seed, characterInfo, isRemotePlayer, hasAi, true, ragdoll);
         }
 
         /// <summary>
         /// Create a new character
         /// </summary>
-        /// <param name="file">The path to the character's config file.</param>
+        /// <param name="speciesName">Name of the species (or the path to the config file)</param>
         /// <param name="position">Position in display units.</param>
         /// <param name="seed">RNG seed to use if the character config has randomizable parameters.</param>
         /// <param name="characterInfo">The name, gender, etc of the character. Only used for humans, and if the parameter is not given, a random CharacterInfo is generated.</param>
@@ -612,59 +599,58 @@ namespace Barotrauma
         /// <param name="hasAi">Is the character controlled by AI.</param>
         /// <param name="createNetworkEvent">Should clients receive a network event about the creation of this character?</param>
         /// <param name="ragdoll">Ragdoll configuration file. If null, will select the default.</param>
-        public static Character Create(string file, Vector2 position, string seed, CharacterInfo characterInfo = null, bool isRemotePlayer = false, bool hasAi = true, bool createNetworkEvent = true, RagdollParams ragdoll = null)
+        public static Character Create(string speciesName, Vector2 position, string seed, CharacterInfo characterInfo = null, bool isRemotePlayer = false, bool hasAi = true, bool createNetworkEvent = true, RagdollParams ragdoll = null)
         {
-#if LINUX
-            if (!System.IO.File.Exists(file)) 
+            if (speciesName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
             {
-                //if the file was not found, attempt to convert the name of the folder to upper case
-                var splitPath = file.Split('/');
-                if (splitPath.Length > 2)
-                {
-                    splitPath[splitPath.Length-2] = 
-                        splitPath[splitPath.Length-2].First().ToString().ToUpper() + splitPath[splitPath.Length-2].Substring(1);
-                    
-                    file = string.Join("/", splitPath);
-                }
-
-                if (!System.IO.File.Exists(file))
-                {
-                    DebugConsole.ThrowError("Spawning a character failed - file \""+file+"\" not found!");
-                    return null;
-                }
+                speciesName = Path.GetFileNameWithoutExtension(speciesName).ToLowerInvariant();
             }
-#else
-            if (!System.IO.File.Exists(file))
-            {
-                DebugConsole.ThrowError("Spawning a character failed - file \"" + file + "\" not found!");
-                return null;
-            }
-#endif
             Character newCharacter = null;
-            if (file != HumanConfigFile)
+            if (!speciesName.Equals(HumanSpeciesName, StringComparison.OrdinalIgnoreCase))
             {
-                var aiCharacter = new AICharacter(file, position, seed, characterInfo, isRemotePlayer, ragdoll);
-                var ai = new EnemyAIController(aiCharacter, file, seed);
+                var aiCharacter = new AICharacter(speciesName, position, seed, characterInfo, isRemotePlayer, ragdoll);
+                var ai = new EnemyAIController(aiCharacter, seed);
                 aiCharacter.SetAI(ai);
-
-                //aiCharacter.minVitality = 0.0f;
-                
                 newCharacter = aiCharacter;
             }
             else if (hasAi)
             {
-                var aiCharacter = new AICharacter(file, position, seed, characterInfo, isRemotePlayer, ragdoll);
+                var aiCharacter = new AICharacter(speciesName, position, seed, characterInfo, isRemotePlayer, ragdoll);
                 var ai = new HumanAIController(aiCharacter);
                 aiCharacter.SetAI(ai);
-
-                //aiCharacter.minVitality = -100.0f;
-
                 newCharacter = aiCharacter;
             }
             else
             {
-                newCharacter = new Character(file, position, seed, characterInfo, isRemotePlayer, ragdoll);
-                //newCharacter.minVitality = -100.0f;
+                newCharacter = new Character(speciesName, position, seed, characterInfo, isRemotePlayer, ragdoll);
+            }
+
+            float healthRegen = newCharacter.Params.Health.ConstantHealthRegeneration;
+            if (healthRegen > 0)
+            {
+                AddDamageReduction("damage", healthRegen);
+            }
+            float eatingRegen = newCharacter.Params.Health.HealthRegenerationWhenEating;
+            if (eatingRegen > 0)
+            {
+                AddDamageReduction("damage", eatingRegen, ActionType.OnEating);
+            }
+            float burnReduction = newCharacter.Params.Health.BurnReduction;
+            if (burnReduction > 0)
+            {
+                AddDamageReduction("burn", burnReduction);
+            }
+            float bleedReduction = newCharacter.Params.Health.BleedingReduction;
+            if (bleedReduction > 0)
+            {
+                AddDamageReduction("bleeding", bleedReduction);
+            }
+
+            void AddDamageReduction(string affliction, float amount, ActionType actionType = ActionType.Always)
+            {
+                newCharacter.statusEffects.Add(StatusEffect.Load(
+                new XElement("StatusEffect", new XAttribute("type", actionType), new XAttribute("target", "Character"),
+                new XElement("ReduceAffliction", new XAttribute("identifier", affliction), new XAttribute("amount", amount))), $"automatic damage reduction ({affliction})"));
             }
 
 #if SERVER
@@ -676,30 +662,35 @@ namespace Barotrauma
             return newCharacter;
         }
 
-        protected Character(string file, Vector2 position, string seed, CharacterInfo characterInfo = null, bool isRemotePlayer = false, RagdollParams ragdollParams = null)
+        protected Character(string speciesName, Vector2 position, string seed, CharacterInfo characterInfo = null, bool isRemotePlayer = false, RagdollParams ragdollParams = null)
             : base(null)
         {
-            ConfigPath = file;
+            string path = GetConfigFilePath(speciesName);
+            if (!TryGetConfigFile(path, out XDocument doc))
+            {
+                throw new Exception($"Failed to load the config file for {speciesName} from {path}!");
+            }
             this.seed = seed;
             MTRandom random = new MTRandom(ToolBox.StringToInt(seed));
 
             selectedItems = new Item[2];
 
             IsRemotePlayer = isRemotePlayer;
-            
+
             oxygenAvailable = 100.0f;
             aiTarget = new AITarget(this);
 
             lowPassMultiplier = 1.0f;
 
             Properties = SerializableProperty.GetProperties(this);
+            Params = new CharacterParams(path);
 
             Info = characterInfo;
-            if (file == HumanConfigFile || file == GetConfigFile("humanhusk"))
+            if (speciesName.Equals(HumanSpeciesName, StringComparison.OrdinalIgnoreCase))
             {
                 if (characterInfo == null)
                 {
-                    Info = new CharacterInfo(HumanConfigFile);
+                    Info = new CharacterInfo(HumanSpeciesName);
                 }
             }
 
@@ -709,48 +700,16 @@ namespace Barotrauma
                 keys[i] = new Key((InputType)i);
             }
 
-            XDocument doc = XMLExtensions.TryLoadXml(file);
-            if (doc == null || doc.Root == null) return;
-
-            InitProjSpecific(doc);
-            SpeciesName = doc.Root.GetAttributeString("name", "Unknown");
-            displayName = TextManager.Get($"Character.{Path.GetFileName(Path.GetDirectoryName(file))}", true);
-
-            IsHumanoid = doc.Root.GetAttributeBool("humanoid", false);
-            CanSpeak = doc.Root.GetAttributeBool("canspeak", false);
-            needsAir = doc.Root.GetAttributeBool("needsair", false);
-            Noise = doc.Root.GetAttributeFloat("noise", 100f);
-
-            //List<XElement> ragdollElements = new List<XElement>();
-            //List<float> ragdollCommonness = new List<float>();
-            //foreach (XElement element in doc.Root.Elements())
-            //{
-            //    if (element.Name.ToString().ToLowerInvariant() != "ragdoll") continue;                
-            //    ragdollElements.Add(element);
-            //    ragdollCommonness.Add(element.GetAttributeFloat("commonness", 1.0f));                
-            //}
-
-            ////choose a random ragdoll element
-            //XElement ragdollElement = ragdollElements.Count == 1 ?
-            //    ragdollElements[0] : ToolBox.SelectWeightedRandom(ragdollElements, ragdollCommonness, random);
-
-            if (IsHumanoid)
-            {
-                AnimController = new HumanoidAnimController(this, seed, ragdollParams as HumanRagdollParams);
-                AnimController.TargetDir = Direction.Right;
-                
-            }
-            else
-            {
-                AnimController = new FishAnimController(this, seed, ragdollParams as FishRagdollParams);
-                PressureProtection = 100.0f;
-            }
+            var rootElement = doc.Root;
+            var mainElement = rootElement.IsOverride() ? rootElement.FirstElement() : rootElement;
+            InitProjSpecific(mainElement);
+            displayName = TextManager.Get($"Character.{speciesName}", true);
 
             List<XElement> inventoryElements = new List<XElement>();
             List<float> inventoryCommonness = new List<float>();
             List<XElement> healthElements = new List<XElement>();
             List<float> healthCommonness = new List<float>();
-            foreach (XElement subElement in doc.Root.Elements())
+            foreach (XElement subElement in mainElement.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -767,10 +726,11 @@ namespace Barotrauma
                         break;
                 }
             }
+
             if (inventoryElements.Count > 0)
             {
                 Inventory = new CharacterInventory(
-                    inventoryElements.Count == 1 ? inventoryElements[0] : ToolBox.SelectWeightedRandom(inventoryElements, inventoryCommonness, random), 
+                    inventoryElements.Count == 1 ? inventoryElements[0] : ToolBox.SelectWeightedRandom(inventoryElements, inventoryCommonness, random),
                     this);
             }
             if (healthElements.Count == 0)
@@ -780,8 +740,40 @@ namespace Barotrauma
             else
             {
                 CharacterHealth = new CharacterHealth(
-                    healthElements.Count == 1 ? healthElements[0] : ToolBox.SelectWeightedRandom(healthElements, healthCommonness, random), 
+                    healthElements.Count == 1 ? healthElements[0] : ToolBox.SelectWeightedRandom(healthElements, healthCommonness, random),
                     this);
+            }
+
+            if (Params.Husk)
+            {
+                // Get the non husked name and find the ragdoll with it
+                var matchingAffliction = AfflictionPrefab.List
+                    .Where(p => p.AfflictionType == "huskinfection")
+                    .Select(p => p as AfflictionPrefabHusk)
+                    .FirstOrDefault(p => p.TargetSpecies.Contains(AfflictionHusk.GetNonHuskedSpeciesName(speciesName, p)));
+                if (matchingAffliction == null)
+                {
+                    DebugConsole.ThrowError("Cannot find a husk infection that matches this species! Please add the speciesnames as 'targets' in the husk affliction prefab definition!");
+                    return;
+                }
+                string nonHuskedSpeciesName = AfflictionHusk.GetNonHuskedSpeciesName(speciesName, matchingAffliction);
+                ragdollParams = IsHumanoid ? RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(nonHuskedSpeciesName) : RagdollParams.GetDefaultRagdollParams<FishRagdollParams>(nonHuskedSpeciesName) as RagdollParams;
+                if (info == null)
+                {
+                    info = new CharacterInfo(nonHuskedSpeciesName, ragdollParams.FileName);
+                }
+            }
+
+            if (IsHumanoid)
+            {
+                AnimController = new HumanoidAnimController(this, seed, ragdollParams as HumanRagdollParams);
+                AnimController.TargetDir = Direction.Right;
+
+            }
+            else
+            {
+                AnimController = new FishAnimController(this, seed, ragdollParams as FishRagdollParams);
+                PressureProtection = 100.0f;
             }
 
             AnimController.SetPosition(ConvertUnits.ToSimUnits(position));
@@ -798,12 +790,12 @@ namespace Barotrauma
             //  - if an AICharacter, the server enables it when close enough to any of the players
             Enabled = GameMain.NetworkMember == null;
 
-            if (Info != null)
+            if (info != null)
             {
                 LoadHeadAttachments();
             }
         }
-        partial void InitProjSpecific(XDocument doc);
+        partial void InitProjSpecific(XElement mainElement);
 
         public void ReloadHead(int? headId = null, int hairIndex = -1, int beardIndex = -1, int moustacheIndex = -1, int faceAttachmentIndex = -1)
         {
@@ -812,7 +804,7 @@ namespace Barotrauma
             if (head == null) { return; }
             Info.RecreateHead(headId ?? Info.HeadSpriteId, Info.Race, Info.Gender, hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
 #if CLIENT
-            head.RecreateSprite();
+            head.RecreateSprites();
 #endif
             LoadHeadAttachments();
         }
@@ -843,65 +835,135 @@ namespace Barotrauma
 #endif
         }
 
-        private static string humanConfigFile;
-        public static string HumanConfigFile
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(humanConfigFile))
-                {
-                    humanConfigFile = GameMain.Instance.GetFilesOfType(ContentType.Character)?
-                            .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == "human.xml");
-
-                    if (humanConfigFile == null)
-                    {
-                        DebugConsole.ThrowError($"Couldn't find a human config file from the selected content packages!");
-                        DebugConsole.ThrowError($"(The config file must end with \"human.xml\")");
-                        return string.Empty;
-                    }
-                }
-                return humanConfigFile;
-            }
-        }
-
-        private static IEnumerable<string> characterConfigFiles;
-        private static IEnumerable<string> CharacterConfigFiles
-        {
-            get
-            {
-                if (characterConfigFiles == null)
-                {
-                    characterConfigFiles = GameMain.Instance.GetFilesOfType(ContentType.Character);
-                }
-                return characterConfigFiles;
-            }
-        }
+        public static string HumanSpeciesName = "human";
+        public static string HumanConfigFile => GetConfigFilePath(HumanSpeciesName);
 
         /// <summary>
         /// Searches for a character config file from all currently selected content packages, 
         /// or from a specific package if the contentPackage parameter is given.
         /// </summary>
-        public static string GetConfigFile(string speciesName, ContentPackage contentPackage = null)
+        public static string GetConfigFilePath(string speciesName, ContentPackage contentPackage = null)
         {
-            string configFile = null;
-            if (contentPackage == null)
+            if (configFilePaths.None() || configFiles.None())
             {
-                configFile = GameMain.Instance.GetFilesOfType(ContentType.Character)
-                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
+                LoadAllConfigFiles();
             }
-            else
+            string configFile = null;
+            if (contentPackage != null)
             {
                 configFile = contentPackage.GetFilesOfType(ContentType.Character)?
                     .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
-            }
 
-            if (configFile == null)
+                if (configFile == null)
+                {
+                    DebugConsole.ThrowError($"Couldn't find a config file for {speciesName} from the specified content package {contentPackage.Name} defined in {contentPackage.Path}!");
+                    DebugConsole.ThrowError($"(The config file must end with \"{speciesName}.xml\")");
+                    return string.Empty;
+                }
+            }
+            else
             {
-                DebugConsole.ThrowError($"Couldn't find a config file for {speciesName} from the selected content packages!");
-                DebugConsole.ThrowError($"(The config file must end with \"{speciesName}.xml\")");
-                return string.Empty;
+                if (!configFilePaths.TryGetValue(speciesName.ToLowerInvariant(), out configFile))
+                {
+                    DebugConsole.ThrowError($"Couldn't find a config file for species \"{speciesName}\" from the selected content packages!");
+                }
             }
             return configFile;
+        }
+
+        private readonly static Dictionary<string, string> configFilePaths = new Dictionary<string, string>();
+        private readonly static Dictionary<string, XDocument> configFiles = new Dictionary<string, XDocument>();
+
+        public static IEnumerable<string> ConfigFilePaths => configFiles.Keys;
+        public static IEnumerable<XDocument> ConfigFiles => configFiles.Values;
+
+        public static bool TryAddConfigFile(string file, bool forceOverride)
+        {
+            if (configFilePaths.None() || configFiles.None())
+            {
+                LoadAllConfigFiles();
+            }
+            return AddConfigFile(file, forceOverride);
+        }
+
+        private static bool AddConfigFile(string file, bool forceOverride = false)
+        {
+            XDocument doc = XMLExtensions.TryLoadXml(file);
+            if (doc == null)
+            {
+                DebugConsole.ThrowError($"Loading character file failed: {file}");
+                return false;
+            }
+            if (configFilePaths.ContainsKey(file))
+            {
+                DebugConsole.ThrowError($"Duplicate path: {file}");
+                return false;
+            }
+            XElement mainElement = doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;
+            var name = mainElement.GetAttributeString("name", null);
+            if (name != null)
+            {
+                DebugConsole.NewMessage($"Error in {file}: 'name' is deprecated! Use 'speciesname' instead.", Color.Orange);
+            }
+            else
+            {
+                name = mainElement.GetAttributeString("speciesname", string.Empty);
+            }
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                DebugConsole.ThrowError($"No species name defined for: {file}");
+                return false;
+            }
+            name = name.ToLowerInvariant();
+            var duplicate = configFiles.FirstOrDefault(kvp => (kvp.Value.Root.IsOverride() ? kvp.Value.Root.FirstElement() : kvp.Value.Root)
+                .GetAttributeString("speciesname", string.Empty).Equals(name, StringComparison.OrdinalIgnoreCase));
+            if (duplicate.Value != null)
+            {
+                if (forceOverride || doc.Root.IsOverride())
+                {
+                    DebugConsole.NewMessage($"Overriding the existing character '{name}' defined in '{duplicate.Key}' with '{file}'", Color.Yellow);
+                    configFiles.Remove(duplicate.Key);
+                    configFilePaths.Remove(name);
+                }
+                else
+                {
+                    DebugConsole.ThrowError($"Duplicate species name '{name}' in '{file}'! Add <override></override> tags as the parent of the character definition to override an existing character.");
+                    return false;
+                }
+
+            }
+            configFiles.Add(file, doc);
+            configFilePaths.Add(name, file);
+            return true;
+        }
+
+        public static XDocument GetConfigFile(string speciesName)
+        {
+            string file = GetConfigFilePath(speciesName);
+            if (!TryGetConfigFile(file, out XDocument doc))
+            {
+                DebugConsole.ThrowError($"Failed to load the config file for {speciesName} from {file}!");
+            }
+            return doc;
+        }
+
+        public static bool TryGetConfigFile(string file, out XDocument doc)
+        {
+            doc = null;
+            if (configFiles.None()) { LoadAllConfigFiles(); }
+            if (string.IsNullOrWhiteSpace(file)) { return false; }
+            configFiles.TryGetValue(file, out doc);
+            return doc != null;
+        }
+
+        public static void LoadAllConfigFiles()
+        {
+            configFiles.Clear();
+            configFilePaths.Clear();
+            foreach (var file in ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.Character))
+            {
+                AddConfigFile(file);
+            }
         }
 
         public bool IsKeyHit(InputType inputType)
@@ -1020,7 +1082,7 @@ namespace Barotrauma
         public void ClearInput(InputType inputType)
         {
             keys[(int)inputType].Hit = false;
-            keys[(int)inputType].Held = false;            
+            keys[(int)inputType].Held = false;
         }
 
         public void ClearInputs()
@@ -1049,7 +1111,7 @@ namespace Barotrauma
         {
             return (Info == null || Info.Job == null) ? 0.0f : Info.Job.GetSkillLevel(skillIdentifier);
         }
-        
+
         // TODO: reposition? there's also the overrideTargetMovement variable, but it's not in the same manner
         public Vector2? OverrideMovement { get; set; }
         public bool ForceRun { get; set; }
@@ -1090,7 +1152,7 @@ namespace Barotrauma
                     (!(AnimController is HumanoidAnimController) || !((HumanoidAnimController)AnimController).Crouching) &&
                     !AnimController.IsMovingBackwards;
             }
-            
+
             float currentSpeed = AnimController.GetCurrentSpeed(run);
             targetMovement *= currentSpeed;
             float maxSpeed = ApplyTemporarySpeedLimits(currentSpeed);
@@ -1189,7 +1251,7 @@ namespace Barotrauma
                 smoothedCursorDiff = NetConfig.InterpolateCursorPositionError(smoothedCursorDiff);
                 SmoothedCursorPosition = cursorPosition - smoothedCursorDiff;
             }
-            
+
             if (!(this is AICharacter) || Controlled == this || IsRemotePlayer)
             {
                 Vector2 targetMovement = GetTargetMovement();
@@ -1200,7 +1262,7 @@ namespace Barotrauma
 
             if (AnimController is HumanoidAnimController)
             {
-                ((HumanoidAnimController) AnimController).Crouching = IsKeyDown(InputType.Crouch);
+                ((HumanoidAnimController)AnimController).Crouching = IsKeyDown(InputType.Crouch);
             }
 
             if (AnimController.onGround &&
@@ -1225,7 +1287,7 @@ namespace Barotrauma
                     AnimController.TargetDir = Direction.Right;
                 }
             }
-            
+
             if (GameMain.NetworkMember != null)
             {
                 if (GameMain.NetworkMember.IsServer)
@@ -1310,8 +1372,8 @@ namespace Barotrauma
                             }
                             else if (body.UserData is Limb)
                             {
-                                attackTarget = ((Limb)body.UserData).character;                            
-                            }                            
+                                attackTarget = ((Limb)body.UserData).character;
+                            }
                         }
                     }
 
@@ -1326,7 +1388,7 @@ namespace Barotrauma
 
             if (SelectedConstruction == null || !SelectedConstruction.Prefab.DisableItemUsageWhenSelected)
             {
-                for (int i = 0; i < selectedItems.Length; i++ )
+                for (int i = 0; i < selectedItems.Length; i++)
                 {
                     if (selectedItems[i] == null) { continue; }
                     if (i == 1 && selectedItems[0] == selectedItems[1]) { continue; }
@@ -1352,7 +1414,7 @@ namespace Barotrauma
                     }
                 }
             }
-            
+
             if (SelectedConstruction != null)
             {
                 if (IsKeyDown(InputType.Aim) || !SelectedConstruction.RequireAimToSecondaryUse)
@@ -1382,8 +1444,8 @@ namespace Barotrauma
                     DeselectCharacter();
                 }
             }
-            
-            if (IsRemotePlayer && keys!=null)
+
+            if (IsRemotePlayer && keys != null)
             {
                 foreach (Key key in keys)
                 {
@@ -1521,12 +1583,12 @@ namespace Barotrauma
             bool leftHand = Inventory.IsInLimbSlot(item, InvSlotType.LeftHand);
 
             bool selected = false;
-            if (rightHand && (SelectedItems[0] == null || SelectedItems[0] == item))
+            if (rightHand && (selectedItems[0] == null || selectedItems[0] == item))
             {
                 selectedItems[0] = item;
                 selected = true;
             }
-            if (leftHand && (SelectedItems[1] == null || SelectedItems[1] == item))
+            if (leftHand && (selectedItems[1] == null || selectedItems[1] == item))
             {
                 selectedItems[1] = item;
                 selected = true;
@@ -1584,7 +1646,7 @@ namespace Barotrauma
 
             return checkVisibility ? CanSeeCharacter(c) : true;
         }
-        
+
         public bool CanInteractWith(Item item)
         {
             return CanInteractWith(item, out float distanceToItem, checkLinked: true);
@@ -1637,12 +1699,12 @@ namespace Barotrauma
                     }
                 }
             }
-            
+
             if (item.InteractDistance == 0.0f && !item.Prefab.Triggers.Any()) { return false; }
-            
+
             Pickable pickableComponent = item.GetComponent<Pickable>();
             if (pickableComponent != null && (pickableComponent.Picker != null && !pickableComponent.Picker.IsDead)) { return false; }
-                        
+
             Vector2 characterDirection = Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(AnimController.Collider.Rotation));
 
             Vector2 upperBodyPosition = Position + (characterDirection * 20.0f);
@@ -1661,7 +1723,7 @@ namespace Barotrauma
 
             // Get the point along the line between lowerBodyPosition and upperBodyPosition which is closest to the center of itemDisplayRect
             Vector2 playerDistanceCheckPosition = Vector2.Clamp(itemDisplayRect.Center.ToVector2(), lowerBodyPosition, upperBodyPosition);
-            
+
             // If playerDistanceCheckPosition is inside the itemDisplayRect then we consider the character to within 0 distance of the item
             if (itemDisplayRect.Contains(playerDistanceCheckPosition))
             {
@@ -1739,7 +1801,7 @@ namespace Barotrauma
         public void SelectCharacter(Character character)
         {
             if (character == null) return;
-            
+
             SelectedCharacter = character;
         }
 
@@ -1780,7 +1842,7 @@ namespace Barotrauma
 #if CLIENT
             if (isLocalPlayer)
             {
-                if (GUI.MouseOn == null && 
+                if (GUI.MouseOn == null &&
                     (!CharacterInventory.IsMouseOnInventory() || CharacterInventory.DraggingItemToWorld))
                 {
                     if (findFocusedTimer <= 0.0f || Screen.Selected == GameMain.SubEditorScreen)
@@ -1793,14 +1855,14 @@ namespace Barotrauma
                 }
                 else
                 {
-                    focusedItem = null; 
+                    focusedItem = null;
                 }
                 findFocusedTimer -= deltaTime;
             }
 #endif
             //climb ladders automatically when pressing up/down inside their trigger area
             Ladder currentLadder = SelectedConstruction?.GetComponent<Ladder>();
-            if ((SelectedConstruction == null || currentLadder != null) && 
+            if ((SelectedConstruction == null || currentLadder != null) &&
                 !AnimController.InWater && Screen.Selected != GameMain.SubEditorScreen)
             {
                 bool climbInput = IsKeyDown(InputType.Up) || IsKeyDown(InputType.Down);
@@ -1840,7 +1902,7 @@ namespace Barotrauma
                     if (nearbyLadder.Select(this)) SelectedConstruction = nearbyLadder.Item;
                 }
             }
-            
+
             if (SelectedCharacter != null && (IsKeyHit(InputType.Grab) || IsKeyHit(InputType.Health))) //Let people use ladders and buttons and stuff when dragging chars
             {
                 DeselectCharacter();
@@ -1895,13 +1957,13 @@ namespace Barotrauma
 #endif
             }
         }
-        
+
         public static void UpdateAnimAll(float deltaTime)
         {
             foreach (Character c in CharacterList)
             {
                 if (!c.Enabled || c.AnimController.Frozen) continue;
-                
+
                 c.AnimController.UpdateAnim(deltaTime);
             }
         }
@@ -1993,10 +2055,10 @@ namespace Barotrauma
         public virtual void Update(float deltaTime, Camera cam)
         {
             UpdateProjSpecific(deltaTime, cam);
-            
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && this == Controlled && !isSynced) return;
 
-            if (!Enabled) return;
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && this == Controlled && !isSynced) { return; }
+
+            if (!Enabled) { return; }
 
             if (Level.Loaded != null && WorldPosition.Y < Level.MaxEntityDepth ||
                 (Submarine != null && Submarine.WorldPosition.Y < Level.MaxEntityDepth))
@@ -2019,7 +2081,7 @@ namespace Barotrauma
             {
                 foreach (Item item in Inventory.Items)
                 {
-                    if (item == null || item.body == null || item.body.Enabled) continue;
+                    if (item == null || item.body == null || item.body.Enabled) { continue; }
 
                     item.SetTransform(SimPosition, 0.0f);
                     item.Submarine = Submarine;
@@ -2028,8 +2090,12 @@ namespace Barotrauma
 
             HideFace = false;
 
-            if (IsDead) return;
-            
+
+            UpdateSightRange();
+            UpdateSoundRange();
+
+            if (IsDead) { return; }
+
             if (GameMain.NetworkMember != null)
             {
                 UpdateNetInput();
@@ -2047,10 +2113,10 @@ namespace Barotrauma
                 speechImpediment = 0.0f;
             }
             speechImpedimentSet = false;
-            
-            if (needsAir)
+
+            if (NeedsAir)
             {
-                bool protectedFromPressure = PressureProtection > 0.0f;            
+                bool protectedFromPressure = PressureProtection > 0.0f;
                 //cannot be protected from pressure when below crush depth
                 protectedFromPressure = protectedFromPressure && WorldPosition.Y > CharacterHealth.CrushDepth;
                 //implode if not protected from pressure, and either outside or in a high-pressure hull
@@ -2092,14 +2158,14 @@ namespace Barotrauma
                 }
             }
 
-            ApplyStatusEffects(AnimController.InWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);            
+            ApplyStatusEffects(AnimController.InWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
 
             UpdateControlled(deltaTime, cam);
-            
+
             //Health effects
-            if (needsAir) UpdateOxygen(deltaTime);
+            if (NeedsAir) UpdateOxygen(deltaTime);
             CharacterHealth.Update(deltaTime);
-            
+
             if (IsUnconscious)
             {
                 UpdateUnconscious(deltaTime);
@@ -2136,13 +2202,10 @@ namespace Barotrauma
                     IsRagdolled = IsKeyDown(InputType.Ragdoll); //Handle this here instead of Control because we can stop being ragdolled ourselves
                     if (wasRagdolled != IsRagdolled) { ragdollingLockTimer = 0.25f; }
                 }
-           }
-            
-            UpdateSightRange();
-            UpdateSoundRange();
+            }
 
             lowPassMultiplier = MathHelper.Lerp(lowPassMultiplier, 1.0f, 0.1f);
-            
+
             //ragdoll button
             if (IsRagdolled)
             {
@@ -2165,12 +2228,12 @@ namespace Barotrauma
                 Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
                 DoInteractionUpdate(deltaTime, mouseSimPos);
             }
-                        
+
             if (SelectedConstruction != null && !CanInteractWith(SelectedConstruction))
             {
                 SelectedConstruction = null;
             }
-            
+
             if (!IsDead) LockHands = false;
         }
 
@@ -2224,7 +2287,7 @@ namespace Barotrauma
             if (orderGiver != null)
             {
                 //set the character order only if the character is close enough to hear the message
-                ChatMessageType messageType = ChatMessage.CanUseRadio(orderGiver) && ChatMessage.CanUseRadio(this) ? 
+                ChatMessageType messageType = ChatMessage.CanUseRadio(orderGiver) && ChatMessage.CanUseRadio(this) ?
                     ChatMessageType.Radio : ChatMessageType.Default;
                 if (string.IsNullOrEmpty(ChatMessage.ApplyDistanceEffect("message", messageType, orderGiver, this))) return;
             }
@@ -2351,12 +2414,18 @@ namespace Barotrauma
             float attackImpulse = attack.TargetImpulse + attack.TargetForce * deltaTime;
 
             var attackResult = targetLimb == null ?
-                AddDamage(worldPosition, attack.Afflictions, attack.Stun, playSound, attackImpulse, out limbHit, attacker) :
-                DamageLimb(worldPosition, targetLimb, attack.Afflictions, attack.Stun, playSound, attackImpulse, attacker);
+                AddDamage(worldPosition, attack.Afflictions.Keys, attack.Stun, playSound, attackImpulse, out limbHit, attacker) :
+                DamageLimb(worldPosition, targetLimb, attack.Afflictions.Keys, attack.Stun, playSound, attackImpulse, attacker);
 
-            if (limbHit == null) return new AttackResult();
-            
+            if (limbHit == null) { return new AttackResult(); }
+
             limbHit.body?.ApplyLinearImpulse(attack.TargetImpulseWorld + attack.TargetForceWorld * deltaTime, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+            var mainLimb = limbHit.character.AnimController.MainLimb;
+            if (limbHit != mainLimb)
+            {
+                // Always add force to mainlimb
+                mainLimb.body?.ApplyLinearImpulse(attack.TargetImpulseWorld + attack.TargetForceWorld * deltaTime, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+            }
 #if SERVER
             if (attacker is Character attackingCharacter && attackingCharacter.AIController == null)
             {
@@ -2376,43 +2445,46 @@ namespace Barotrauma
 
             bool isNotClient = GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient;
 
+            TrySeverLimbJoints(limbHit, attack.SeverLimbsProbability);
+
+            return attackResult;
+        }
+
+        public void TrySeverLimbJoints(Limb targetLimb, float severLimbsProbability)
+        {
+            bool isNotClient = GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient;
+
             if (isNotClient &&
-                IsDead && Rand.Range(0.0f, 1.0f) < attack.SeverLimbsProbability)
+                IsDead && Rand.Range(0.0f, 1.0f) < severLimbsProbability)
             {
                 foreach (LimbJoint joint in AnimController.LimbJoints)
                 {
-                    if (joint.CanBeSevered && (joint.LimbA == limbHit || joint.LimbB == limbHit))
+                    if (joint.CanBeSevered && (joint.LimbA == targetLimb || joint.LimbB == targetLimb))
                     {
 #if CLIENT
-                        if (CurrentHull != null)
-                        {
-                            CurrentHull.AddDecal("blood", WorldPosition, Rand.Range(0.5f, 1.5f));                            
-                        }
+                        CurrentHull?.AddDecal("blood", WorldPosition, Rand.Range(0.5f, 1.5f));                       
 #endif
-
                         AnimController.SeverLimbJoint(joint);
 
-                        if (joint.LimbA == limbHit)
+                        if (joint.LimbA == targetLimb)
                         {
-                            joint.LimbB.body.LinearVelocity += limbHit.LinearVelocity * 0.5f;
+                            joint.LimbB.body.LinearVelocity += targetLimb.LinearVelocity * 0.5f;
                         }
                         else
                         {
-                            joint.LimbA.body.LinearVelocity += limbHit.LinearVelocity * 0.5f;
+                            joint.LimbA.body.LinearVelocity += targetLimb.LinearVelocity * 0.5f;
                         }
                     }
                 }
             }
-
-            return attackResult;
         }
-        
-        public AttackResult AddDamage(Vector2 worldPosition, List<Affliction> afflictions, float stun, bool playSound, float attackImpulse = 0.0f, Character attacker = null)
+
+        public AttackResult AddDamage(Vector2 worldPosition, IEnumerable<Affliction> afflictions, float stun, bool playSound, float attackImpulse = 0.0f, Character attacker = null)
         {
             return AddDamage(worldPosition, afflictions, stun, playSound, attackImpulse, out _, attacker);
         }
 
-        public AttackResult AddDamage(Vector2 worldPosition, List<Affliction> afflictions, float stun, bool playSound, float attackImpulse, out Limb hitLimb, Character attacker = null)
+        public AttackResult AddDamage(Vector2 worldPosition, IEnumerable<Affliction> afflictions, float stun, bool playSound, float attackImpulse, out Limb hitLimb, Character attacker = null)
         {
             hitLimb = null;
 
@@ -2437,9 +2509,23 @@ namespace Barotrauma
             return DamageLimb(worldPosition, hitLimb, afflictions, stun, playSound, attackImpulse, attacker);
         }
 
-        public AttackResult DamageLimb(Vector2 worldPosition, Limb hitLimb, List<Affliction> afflictions, float stun, bool playSound, float attackImpulse, Character attacker = null)
+        public AttackResult DamageLimb(Vector2 worldPosition, Limb hitLimb, IEnumerable<Affliction> afflictions, float stun, bool playSound, float attackImpulse, Character attacker = null)
         {
             if (Removed) { return new AttackResult(); }
+
+            //character inside the sub received damage from a monster outside the sub
+            //can happen during normal gameplay if someone for example fires a ranged weapon from outside, 
+            //the intention of this error message is to diagnose an issue with monsters being able to damage characters from outside
+            if (attacker?.AIController is EnemyAIController && Submarine != null && attacker.Submarine == null)
+            {
+                string errorMsg = $"Character {Name} received damage from outside the sub while inside (attacker: {attacker.Name})";
+                GameAnalyticsManager.AddErrorEventOnce("Character.DamageLimb:DamageFromOutside" + Name + attacker.Name,
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Warning,
+                    errorMsg + "\n" + Environment.StackTrace);
+#if DEBUG
+                DebugConsole.ThrowError(errorMsg);
+#endif
+            }
 
             if (attacker != null && attacker != this && GameMain.NetworkMember != null && !GameMain.NetworkMember.ServerSettings.AllowFriendlyFire)
             {
@@ -2451,9 +2537,16 @@ namespace Barotrauma
             if (Math.Abs(attackImpulse) > 0.0f)
             {
                 Vector2 diff = dir;
-                if (diff == Vector2.Zero) diff = Rand.Vector(1.0f);
-                hitLimb.body.ApplyLinearImpulse(Vector2.Normalize(diff) * attackImpulse, hitLimb.SimPosition + ConvertUnits.ToSimUnits(diff),
-                        maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                if (diff == Vector2.Zero) { diff = Rand.Vector(1.0f); }
+                Vector2 impulse = Vector2.Normalize(diff) * attackImpulse;
+                Vector2 hitPos = hitLimb.SimPosition + ConvertUnits.ToSimUnits(diff);
+                hitLimb.body.ApplyLinearImpulse(impulse, hitPos, maxVelocity: NetConfig.MaxPhysicsBodyVelocity * 0.5f);
+                var mainLimb = hitLimb.character.AnimController.MainLimb;
+                if (hitLimb != mainLimb)
+                {
+                    // Always add force to mainlimb
+                    mainLimb.body.ApplyLinearImpulse(impulse, hitPos, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                }
             }
             Vector2 simPos = hitLimb.SimPosition + ConvertUnits.ToSimUnits(dir);
             AttackResult attackResult = hitLimb.AddDamage(simPos, afflictions, playSound);
@@ -2476,12 +2569,13 @@ namespace Barotrauma
 
         public void SetStun(float newStun, bool allowStunDecrease = false, bool isNetworkMessage = false)
         {
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && !isNetworkMessage) return;
-            
-            if ((newStun <= Stun && !allowStunDecrease) || !MathUtils.IsValid(newStun)) return;
-            
-            if (Math.Sign(newStun) != Math.Sign(Stun)) AnimController.ResetPullJoints();
-
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && !isNetworkMessage) { return; }
+            if (Screen.Selected != GameMain.GameScreen) { return; }
+            if ((newStun <= Stun && !allowStunDecrease) || !MathUtils.IsValid(newStun)) { return; }
+            if (Math.Sign(newStun) != Math.Sign(Stun))
+            {
+                AnimController.ResetPullJoints();
+            }
             CharacterHealth.StunTimer = newStun;
             if (newStun > 0.0f)
             {
@@ -2514,7 +2608,7 @@ namespace Barotrauma
 
             if (!isNetworkMessage)
             {
-                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) return; 
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) return;
             }
 
             Kill(CauseOfDeathType.Pressure, null, isNetworkMessage);
@@ -2559,7 +2653,7 @@ namespace Barotrauma
             if (IsDead || CharacterHealth.Unkillable) { return; }
 
             HealthUpdateInterval = 0.0f;
-            
+
             //clients aren't allowed to kill characters unless they receive a network message
             if (!isNetworkMessage && GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
             {
@@ -2569,7 +2663,7 @@ namespace Barotrauma
             ApplyStatusEffects(ActionType.OnDeath, 1.0f);
 
             AnimController.Frozen = false;
-            
+
             if (GameSettings.SendUserStatistics)
             {
                 string characterType = "Unknown";
@@ -2589,7 +2683,7 @@ namespace Barotrauma
             }
 
             CauseOfDeath = new CauseOfDeath(
-                causeOfDeath, causeOfDeathAffliction?.Prefab, 
+                causeOfDeath, causeOfDeathAffliction?.Prefab,
                 causeOfDeathAffliction?.Source ?? LastAttacker, LastDamageSource);
             OnDeath?.Invoke(this, CauseOfDeath);
 
@@ -2603,10 +2697,11 @@ namespace Barotrauma
             AnimController.movement = Vector2.Zero;
             AnimController.TargetMovement = Vector2.Zero;
 
-            for (int i = 0; i < selectedItems.Length; i++ )
+            for (int i = 0; i < selectedItems.Length; i++)
             {
-                if (selectedItems[i] != null) selectedItems[i].Drop(this);            
+                if (selectedItems[i] != null) selectedItems[i].Drop(this);
             }
+
             SelectedConstruction = null;
             
             AnimController.ResetPullJoints();

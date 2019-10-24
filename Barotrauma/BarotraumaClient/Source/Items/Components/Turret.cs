@@ -25,7 +25,7 @@ namespace Barotrauma.Items.Components
 
         private Vector2 crosshairPos, crosshairPointerPos;
 
-        private Dictionary<string, Widget> widgets = new Dictionary<string, Widget>();
+        private readonly Dictionary<string, Widget> widgets = new Dictionary<string, Widget>();
         private float prevAngle;
         
         private bool flashLowPower;
@@ -33,30 +33,30 @@ namespace Barotrauma.Items.Components
         private float flashTimer;
         private float flashLength = 1;
 
-        private List<ParticleEmitter> particleEmitters = new List<ParticleEmitter>();
+        private readonly List<ParticleEmitter> particleEmitters = new List<ParticleEmitter>();
 
-        [Editable, Serialize("0.0,0.0,0.0,0.0", true)]
+        [Editable, Serialize("0,0,0,0", true, description: "Optional screen tint color when the item is being operated (R,G,B,A).")]
         public Color HudTint
         {
             get;
             private set;
         }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Should the charge of the connected batteries/supercapacitors be shown at the top of the screen when operating the item.")]
         public bool ShowChargeIndicator
         {
             get;
             private set;
         }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Should the available ammunition be shown at the top of the screen when operating the item.")]
         public bool ShowProjectileIndicator
         {
             get;
             private set;
         }
 
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false, description: "How far the barrel \"recoils back\" when the turret is fired (in pixels).")]
         public float RecoilDistance
         {
             get;
@@ -240,7 +240,7 @@ namespace Barotrauma.Items.Components
             crosshairPointerPos = PlayerInput.MousePosition;
         }
         
-        public void Draw(SpriteBatch spriteBatch, bool editing = false)
+        public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
         {
             Vector2 drawPos = new Vector2(item.Rect.X + transformedBarrelPos.X, item.Rect.Y - transformedBarrelPos.Y);
             if (item.Submarine != null) drawPos += item.Submarine.DrawPosition;

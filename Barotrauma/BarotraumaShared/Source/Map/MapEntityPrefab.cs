@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -303,6 +304,43 @@ namespace Barotrauma
         public static object GetSelected()
         {
             return (object)selected;            
-        }      
+        }
+        
+        protected bool HandleExisting(string identifier, bool allowOverriding, string file = null)
+        {
+            if (!string.IsNullOrEmpty(identifier))
+            {
+                MapEntityPrefab existingPrefab = List.Find(e => e.Identifier == identifier);
+                if (existingPrefab != null)
+                {
+                    if (allowOverriding)
+                    {
+                        string msg = $"Overriding an existing map entity with the identifier '{identifier}'";
+                        if (!string.IsNullOrWhiteSpace(file))
+                        {
+                            msg += $" using the file '{file}'";
+                        }
+                        msg += ".";
+                        DebugConsole.NewMessage(msg, Color.Yellow);
+                        List.Remove(existingPrefab);
+                    }
+                    else
+                    {
+                        if (!string.IsNullOrWhiteSpace(file))
+                        {
+                            DebugConsole.ThrowError($"Error in '{file}': Map entity prefabs \"" + name + "\" and \"" + existingPrefab.Name + "\" have the same identifier! " +
+                                "Use the <override> XML element as the parent of the map element's definition to override the existing map element.");
+                        }
+                        else
+                        {
+                            DebugConsole.ThrowError("Map entity prefabs \"" + name + "\" and \"" + existingPrefab.Name + "\" have the same identifier! " +
+                                "Use the <override> XML element as the parent of the map element's definition to override the existing map element.");
+                        }
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
     }
 }

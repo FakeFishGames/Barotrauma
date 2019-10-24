@@ -140,8 +140,6 @@ namespace Barotrauma.Networking
         public Dictionary<string, long> messageCount = new Dictionary<string, long>();
 #endif
         
-        protected string name;
-
         protected ServerSettings serverSettings;
         
         protected TimeSpan updateInterval;
@@ -154,6 +152,12 @@ namespace Barotrauma.Networking
         protected RespawnManager respawnManager;
 
         public bool ShowNetStats;
+
+#if DEBUG
+        public float SimulatedRandomLatency, SimulatedMinimumLatency;
+        public float SimulatedLoss;
+        public float SimulatedDuplicatesChance;
+#endif
 
         public int TickRate
         {
@@ -170,16 +174,6 @@ namespace Barotrauma.Networking
             get;
             private set;
         } = new KarmaManager();
-
-        public string Name
-        {
-            get { return name; }
-            set
-            {
-                if (string.IsNullOrEmpty(value)) { return; }
-                name = value.Replace(":", "").Replace(";", "");
-            }
-        }
 
         public bool GameStarted
         {

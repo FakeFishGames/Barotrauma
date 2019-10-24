@@ -209,7 +209,7 @@ namespace Barotrauma
                     distFactors.Add(limb, distFactor);
                     
                     List<Affliction> modifiedAfflictions = new List<Affliction>();
-                    foreach (Affliction affliction in attack.Afflictions)
+                    foreach (Affliction affliction in attack.Afflictions.Keys)
                     {
                         modifiedAfflictions.Add(affliction.CreateMultiplied(distFactor / c.AnimController.Limbs.Length));
                     }
@@ -248,26 +248,20 @@ namespace Barotrauma
                         Vector2 impulsePoint = limb.SimPosition - limbDiff * limbRadius;
                         limb.body.ApplyLinearImpulse(impulse, impulsePoint, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
                     }
-                }     
-                
+                }
+
                 //sever joints 
                 if (c.IsDead && attack.SeverLimbsProbability > 0.0f)
                 {
                     foreach (Limb limb in c.AnimController.Limbs)
                     {
-                        if (!distFactors.ContainsKey(limb)) continue;
-
-                        foreach (LimbJoint joint in c.AnimController.LimbJoints)
+                        if (!distFactors.ContainsKey(limb)) { continue; }
+                        if (Rand.Range(0.0f, 1.0f) < attack.SeverLimbsProbability * distFactors[limb])
                         {
-                            if (joint.IsSevered || (joint.LimbA != limb && joint.LimbB != limb)) continue;
-
-                            if (Rand.Range(0.0f, 1.0f) < attack.SeverLimbsProbability * distFactors[limb])
-                            {
-                                c.AnimController.SeverLimbJoint(joint);
-                            }
+                            c.TrySeverLimbJoints(limb, 1.0f);
                         }
                     }
-                }          
+                }
             }
         }
 

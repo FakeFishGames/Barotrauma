@@ -414,6 +414,7 @@ namespace Barotrauma.Networking
                 case NetConnectionStatus.Disconnected:
                     string disconnectMsg = inc.ReadString();
                     Close(disconnectMsg);
+                    OnDisconnectMessageReceived?.Invoke(disconnectMsg);
                     break;
             }
         }
@@ -429,7 +430,7 @@ namespace Barotrauma.Networking
 
             isActive = false;
 
-            for (int i=remotePeers.Count-1;i>=0;i--)
+            for (int i = remotePeers.Count - 1; i >= 0; i--)
             {
                 DisconnectPeer(remotePeers[i], msg ?? DisconnectReason.ServerShutdown.ToString());
             }
@@ -444,7 +445,7 @@ namespace Barotrauma.Networking
             netClient.Shutdown(msg ?? TextManager.Get("Disconnecting"));
             netClient = null;
 
-            OnDisconnect?.Invoke(msg);
+            OnDisconnect?.Invoke();
 
             Steam.SteamManager.Instance.Networking.OnIncomingConnection = null;
             Steam.SteamManager.Instance.Networking.OnP2PData = null;
@@ -478,6 +479,12 @@ namespace Barotrauma.Networking
             lidgrenMsg.Write((UInt16)length);
             lidgrenMsg.Write(msgData, 0, length);
 
+#if DEBUG
+            netPeerConfiguration.SimulatedDuplicatesChance = GameMain.Client.SimulatedDuplicatesChance;
+            netPeerConfiguration.SimulatedMinimumLatency = GameMain.Client.SimulatedMinimumLatency;
+            netPeerConfiguration.SimulatedRandomLatency = GameMain.Client.SimulatedRandomLatency;
+            netPeerConfiguration.SimulatedLoss = GameMain.Client.SimulatedLoss;
+#endif
             NetSendResult result = netClient.SendMessage(lidgrenMsg, lidgrenDeliveryMethod);
             if (result != NetSendResult.Queued && result != NetSendResult.Sent)
             {

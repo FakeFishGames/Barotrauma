@@ -6,9 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
-#if CLIENT
-using Barotrauma.Particles;
-#endif
 
 namespace Barotrauma.Items.Components
 {
@@ -25,40 +22,57 @@ namespace Barotrauma.Items.Components
 
         private Vector2 debugRayStartPos, debugRayEndPos;
 
-        [Serialize("Both", false)]
+        [Serialize("Both", false, description: "Can the item be used in air, water or both.")]
         public UseEnvironment UsableIn
         {
             get; set;
         }
 
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false, description: "The distance at which the item can repair targets.")]
         public float Range { get; set; }
 
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false, description: "Random spread applied to the firing angle when used by a character with sufficient skills to use the tool (in degrees).")]
+        public float Spread
+        {
+            get;
+            set;
+        }
+
+        [Serialize(0.0f, false, description: "Random spread applied to the firing angle when used by a character with insufficient skills to use the tool (in degrees).")]
+        public float UnskilledSpread
+        {
+            get;
+            set;
+        }
+
+        [Serialize(0.0f, false, description: "How many units of damage the item removes from structures per second.")]
         public float StructureFixAmount
         {
             get; set;
         }
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false, description: "How much the item decreases the size of fires per second.")]
         public float ExtinguishAmount
         {
             get; set;
         }
 
-        [Serialize("0.0,0.0", false)]
+        [Serialize("0.0,0.0", false, description: "The position of the barrel as an offset from the item's center (in pixels).")]
         public Vector2 BarrelPos { get; set; }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Can the item repair things through walls.")]
         public bool RepairThroughWalls { get; set; }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Can the item repair multiple things at once, or will it only affect the first thing the ray from the barrel hits.")]
         public bool RepairMultiple { get; set; }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Can the item repair things through holes in walls.")]
         public bool RepairThroughHoles { get; set; }
 
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false, description: "The probability of starting a fire somewhere along the ray fired from the barrel (for example, 0.1 = 10% chance to start a fire during a second of use).")]
         public float FireProbability { get; set; }
+
+        [Serialize(0.0f, false, description: "Force applied to the entity the ray hits.")]
+        public float TargetForce { get; set; }
 
         public Vector2 TransformedBarrelPos
         {
@@ -164,10 +178,12 @@ namespace Barotrauma.Items.Components
                 if (item.Submarine != null) { rayStart += item.Submarine.SimPosition; }
             }
 
+            float spread = MathHelper.ToRadians(MathHelper.Lerp(UnskilledSpread, Spread, degreeOfSuccess));
+            float angle = item.body.Rotation + spread * Rand.Range(-0.5f, 0.5f);
             Vector2 rayEnd = rayStart + 
                 ConvertUnits.ToSimUnits(new Vector2(
-                    (float)Math.Cos(item.body.Rotation),
-                    (float)Math.Sin(item.body.Rotation)) * Range * item.body.Dir);
+                    (float)Math.Cos(angle),
+                    (float)Math.Sin(angle)) * Range * item.body.Dir);
 
             List<Body> ignoredBodies = new List<Body>();
             foreach (Limb limb in character.AnimController.Limbs)
@@ -319,6 +335,7 @@ namespace Barotrauma.Items.Components
 
                 if (!fixableEntities.Contains("structure") && !fixableEntities.Contains(targetStructure.Prefab.Identifier)) { return true; }
 
+                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, new ISerializableEntity[] { targetStructure });
                 FixStructureProjSpecific(user, deltaTime, targetStructure, sectionIndex);
                 targetStructure.AddDamage(sectionIndex, -StructureFixAmount * degreeOfSuccess, user);
 
@@ -341,15 +358,43 @@ namespace Barotrauma.Items.Components
             {
                 if (targetCharacter.Removed) { return false; }
                 targetCharacter.LastDamageSource = item;
-                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, new List<ISerializableEntity>() { targetCharacter });
+                Limb closestLimb = null;
+                float closestDist = float.MaxValue;
+                foreach (Limb limb in targetCharacter.AnimController.Limbs)
+                {
+                    float dist = Vector2.DistanceSquared(item.SimPosition, limb.SimPosition);
+                    if (dist < closestDist)
+                    {
+                        closestLimb = limb;
+                        closestDist = dist;
+                    }
+                }
+
+                if (closestLimb != null && !MathUtils.NearlyEqual(TargetForce, 0.0f))
+                {
+                    Vector2 dir = closestLimb.WorldPosition - item.WorldPosition;
+                    dir = dir.LengthSquared() < 0.0001f ? Vector2.UnitY : Vector2.Normalize(dir);
+                    closestLimb.body.ApplyForce(dir * TargetForce, maxVelocity: 10.0f);
+                }
+
+                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse,
+                    closestLimb == null ? new ISerializableEntity[] { targetCharacter } : new ISerializableEntity[] { targetCharacter, closestLimb });
                 FixCharacterProjSpecific(user, deltaTime, targetCharacter);
                 return true;
             }
             else if (targetBody.UserData is Limb targetLimb)
             {
                 if (targetLimb.character == null || targetLimb.character.Removed) { return false; }
+
+                if (!MathUtils.NearlyEqual(TargetForce, 0.0f))
+                {
+                    Vector2 dir = targetLimb.WorldPosition - item.WorldPosition;
+                    dir = dir.LengthSquared() < 0.0001f ? Vector2.UnitY : Vector2.Normalize(dir);
+                    targetLimb.body.ApplyForce(dir * TargetForce, maxVelocity: 10.0f);
+                }
+
                 targetLimb.character.LastDamageSource = item;
-                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, new List<ISerializableEntity>() { targetLimb.character, targetLimb });
+                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, new ISerializableEntity[] { targetLimb.character, targetLimb });
                 FixCharacterProjSpecific(user, deltaTime, targetLimb.character);
                 return true;
             }
@@ -358,6 +403,13 @@ namespace Barotrauma.Items.Components
                 targetItem.IsHighlighted = true;
                 
                 ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, targetItem.AllPropertyObjects);
+
+                if (targetItem.body != null && !MathUtils.NearlyEqual(TargetForce, 0.0f))
+                {
+                    Vector2 dir = targetItem.WorldPosition - item.WorldPosition;
+                    dir = dir.LengthSquared() < 0.0001f ? Vector2.UnitY : Vector2.Normalize(dir);
+                    targetItem.body.ApplyForce(dir * TargetForce, maxVelocity: 10.0f);
+                }
 
                 var levelResource = targetItem.GetComponent<LevelResource>();
                 if (levelResource != null && levelResource.IsActive &&
@@ -509,6 +561,15 @@ namespace Barotrauma.Items.Components
                 {
                     effect.Apply(actionType, deltaTime, item, targets);
                 }
+                else if (effect.HasTargetType(StatusEffect.TargetType.Character))
+                {
+                    effect.Apply(actionType, deltaTime, item, targets.Where(t => t is Character));
+                }
+                else if (effect.HasTargetType(StatusEffect.TargetType.Limb))
+                {
+                    effect.Apply(actionType, deltaTime, item, targets.Where(t => t is Limb));
+                }
+
 #if CLIENT
                 // Hard-coded progress bars for welding doors stuck.
                 // A general purpose system could be better, but it would most likely require changes in the way we define the status effects in xml.

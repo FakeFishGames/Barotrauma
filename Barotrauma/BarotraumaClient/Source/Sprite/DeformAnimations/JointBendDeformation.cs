@@ -21,7 +21,7 @@ namespace Barotrauma.SpriteDeformations
         public float BendRight
         {
             get { return bendRight; }
-            set { bendRight = MathHelper.Clamp(value, -maxRotation, maxRotation); }
+            set { bendRight = MathHelper.Clamp(value, -MaxRotationInRadians, MaxRotationInRadians); }
         }
         //the pivot point to rotate the right side around
         public Vector2 BendRightRefPos = new Vector2(1.0f, 0.5f);
@@ -30,7 +30,7 @@ namespace Barotrauma.SpriteDeformations
         public float BendLeft
         {
             get { return bendLeft; }
-            set { bendLeft = MathHelper.Clamp(value, -maxRotation, maxRotation); }
+            set { bendLeft = MathHelper.Clamp(value, -MaxRotationInRadians, MaxRotationInRadians); }
         }
         public Vector2 BendLeftRefPos = new Vector2(0.0f, 0.5f);
 
@@ -38,7 +38,7 @@ namespace Barotrauma.SpriteDeformations
         public float BendUp
         {
             get { return bendUp; }
-            set { bendUp = MathHelper.Clamp(value, -maxRotation, maxRotation); }
+            set { bendUp = MathHelper.Clamp(value, -MaxRotationInRadians, MaxRotationInRadians); }
         }
         public Vector2 BendUpRefPos = new Vector2(0.5f, 0.0f);
 
@@ -46,18 +46,15 @@ namespace Barotrauma.SpriteDeformations
         public float BendDown
         {
             get { return bendDown; }
-            set { bendDown = MathHelper.Clamp(value, -maxRotation, maxRotation); }
+            set { bendDown = MathHelper.Clamp(value, -MaxRotationInRadians, MaxRotationInRadians); }
         }
         public Vector2 BendDownRefPos = new Vector2(0.5f, 1.0f);
 
         public Vector2 Scale = Vector2.Zero;
 
-        private float maxRotation;
+        private float MaxRotationInRadians => MathHelper.ToRadians(Params.MaxRotation);
 
-        public JointBendDeformation(XElement element) : base(element, new JointBendDeformationParams(element))
-        {
-            maxRotation = MathHelper.ToRadians(element == null ? 90.0f : element.GetAttributeFloat("maxrotation", 90.0f));
-        }
+        public JointBendDeformation(XElement element) : base(element, new JointBendDeformationParams(element)) { }
 
         protected override void GetDeformation(out Vector2[,] deformation, out float multiplier)
         {
@@ -80,7 +77,7 @@ namespace Barotrauma.SpriteDeformations
                     {
                         float strength = 1.0f - normalizedPos.X;//(1.0f - Math.Max(normalizedPos.X - BendLeftRefPos.X, 0.0f) / (1.0f - BendLeftRefPos.X));
                         strength = Math.Max((strength - 0.5f) * 2.0f, 0.0f);
-                        Vector2 rotatedP = RotatePointAroundTarget(normalizedPos, BendLeftRefPos, BendLeft * strength);
+                        Vector2 rotatedP = RotatePointAroundTarget(normalizedPos, BendLeftRefPos, BendLeft * strength * Params.Strength);
                         Vector2 offset = rotatedP - normalizedPos;
                         offset.X *= Scale.Y / Scale.X;
                         Deformation[x, y] += offset;
@@ -89,7 +86,7 @@ namespace Barotrauma.SpriteDeformations
                     {
                         float strength = normalizedPos.X;//(1.0f - Math.Max(BendRightRefPos.X - normalizedPos.X, 0.0f) / (BendRightRefPos.X));
                         strength = Math.Max((strength - 0.5f) * 2.0f, 0.0f);
-                        Vector2 rotatedP = RotatePointAroundTarget(normalizedPos, BendRightRefPos, BendRight * strength);
+                        Vector2 rotatedP = RotatePointAroundTarget(normalizedPos, BendRightRefPos, BendRight * strength * Params.Strength);
                         Vector2 offset = rotatedP - normalizedPos;
                         offset.X *= Scale.Y / Scale.X;
                         Deformation[x, y] += offset;
@@ -99,7 +96,7 @@ namespace Barotrauma.SpriteDeformations
                     {
                         float strength = 1.0f - normalizedPos.Y;//(1.0f - Math.Max(normalizedPos.Y - BendUpRefPos.Y, 0.0f) / (1.0f - BendUpRefPos.Y));
                         strength = Math.Max((strength - 0.5f) * 2.0f, 0.0f);
-                        Vector2 rotatedP = RotatePointAroundTarget(normalizedPos, BendUpRefPos, BendUp * strength);
+                        Vector2 rotatedP = RotatePointAroundTarget(normalizedPos, BendUpRefPos, BendUp * strength * Params.Strength);
                         Vector2 offset = rotatedP - normalizedPos;
                         offset.Y *= Scale.X / Scale.Y;
                         Deformation[x, y] += offset;
@@ -108,7 +105,7 @@ namespace Barotrauma.SpriteDeformations
                     {
                         float strength = normalizedPos.Y;//(1.0f - Math.Max(BendDownRefPos.Y - normalizedPos.Y, 0.0f) / (BendDownRefPos.Y));
                         strength = Math.Max((strength - 0.5f) * 2.0f, 0.0f);
-                        Vector2 rotatedP = RotatePointAroundTarget(normalizedPos, BendDownRefPos, BendDown * strength);
+                        Vector2 rotatedP = RotatePointAroundTarget(normalizedPos, BendDownRefPos, BendDown * strength * Params.Strength);
                         Vector2 offset = rotatedP - normalizedPos;
                         offset.Y *= Scale.X / Scale.Y;
                         Deformation[x, y] += offset;

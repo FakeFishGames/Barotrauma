@@ -16,6 +16,7 @@ using System.IO;
 using System.Threading;
 using Barotrauma.Tutorials;
 using Barotrauma.Media;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -44,7 +45,7 @@ namespace Barotrauma
         public static ParticleEditorScreen ParticleEditorScreen;
         public static LevelEditorScreen LevelEditorScreen;
         public static SpriteEditorScreen SpriteEditorScreen;
-        public static CharacterEditorScreen CharacterEditorScreen;
+        public static CharacterEditor.CharacterEditorScreen CharacterEditorScreen;
 
         public static Lights.LightManager LightManager;
 
@@ -52,7 +53,7 @@ namespace Barotrauma
 
         public static Thread MainThread { get; private set; }
 
-        public static HashSet<ContentPackage> SelectedPackages
+        public static IEnumerable<ContentPackage> SelectedPackages
         {
             get { return Config?.SelectedContentPackages; }
         }
@@ -170,6 +171,9 @@ namespace Barotrauma
             Content.RootDirectory = "Content";
 
             GraphicsDeviceManager = new GraphicsDeviceManager(this);
+
+            GraphicsDeviceManager.IsFullScreen = false;
+            GraphicsDeviceManager.ApplyChanges();
 
             Window.Title = "Barotrauma";
 
@@ -405,7 +409,7 @@ namespace Barotrauma
                 }
             }
 
-            if (SelectedPackages.Count == 0)
+            if (SelectedPackages.None())
             {
                 DebugConsole.Log("No content packages selected");
             }
@@ -452,7 +456,9 @@ namespace Barotrauma
 
         yield return CoroutineStatus.Running;
 
+            Character.LoadAllConfigFiles();
             MissionPrefab.Init();
+            TraitorMissionPrefab.Init();
             MapEntityPrefab.Init();
             Tutorials.Tutorial.Init();
             MapGenerationParams.Init();
@@ -472,9 +478,9 @@ namespace Barotrauma
 
             JobPrefab.LoadAll(GetFilesOfType(ContentType.Jobs));
             // Add any missing jobs from the prefab into Config.JobNamePreferences.
-            foreach (JobPrefab job in JobPrefab.List)
+            foreach (string job in JobPrefab.List.Keys)
             {
-                if (!Config.JobPreferences.Contains(job.Identifier)) { Config.JobPreferences.Add(job.Identifier); }
+                if (!Config.JobPreferences.Contains(job)) { Config.JobPreferences.Add(job); }
             }
 
             NPCConversation.LoadAll(GetFilesOfType(ContentType.NPCConversations));
@@ -523,7 +529,7 @@ namespace Barotrauma
 
             LevelEditorScreen       = new LevelEditorScreen();
             SpriteEditorScreen      = new SpriteEditorScreen();
-            CharacterEditorScreen   = new CharacterEditorScreen();
+            CharacterEditorScreen   = new CharacterEditor.CharacterEditorScreen();
 
         yield return CoroutineStatus.Running;
 
@@ -726,7 +732,7 @@ namespace Barotrauma
                             GameMain.MainMenuScreen.Select();
                         }
                         UInt64 serverSteamId = SteamManager.SteamIDStringToUInt64(ConnectEndpoint);
-                        Client = new GameClient(SteamManager.GetUsername(),
+                        Client = new GameClient(Config.PlayerName,
                                                 serverSteamId != 0 ? null : ConnectEndpoint,
                                                 serverSteamId,
                                                 string.IsNullOrWhiteSpace(ConnectName) ? ConnectEndpoint : ConnectName);
@@ -762,8 +768,11 @@ namespace Barotrauma
                         {
                             GUI.TogglePauseMenu();
                         }
-                        else if ((Character.Controlled?.SelectedConstruction == null || !Character.Controlled.SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null))
-                            && Inventory.SelectedSlot == null && CharacterHealth.OpenHealthWindow == null)
+                        //open the pause menu if not controlling a character OR if the character has no UIs active that can be closed with ESC
+                        else if (Character.Controlled == null ||
+                            ((Character.Controlled.SelectedConstruction == null || !Character.Controlled.SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null))
+                            //TODO: do we need to check Inventory.SelectedSlot?
+                            && Inventory.SelectedSlot == null && CharacterHealth.OpenHealthWindow == null))
                         {
                             // Otherwise toggle pausing, unless another window/interface is open.
                             GUI.TogglePauseMenu();
@@ -771,7 +780,7 @@ namespace Barotrauma
                     }
 
                     GUI.ClearUpdateList();
-                    paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen || Tutorial.ContentRunning) &&
+                    paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen || Tutorial.ContentRunning || DebugConsole.Paused) &&
                              (NetworkMember == null || !NetworkMember.GameStarted);
 
 #if !DEBUG
@@ -801,6 +810,17 @@ namespace Barotrauma
                     else if (Tutorial.Initialized && Tutorial.ContentRunning)
                     {
                         (GameSession.GameMode as TutorialMode).Update((float)Timing.Step);
+                    }
+                    else if (DebugConsole.Paused)
+                    {
+                        if (Screen.Selected.Cam == null)
+                        {
+                            DebugConsole.Paused = false;
+                        }
+                        else
+                        {
+                            Screen.Selected.Cam.MoveCamera((float)Timing.Step);
+                        }
                     }
 
                     if (NetworkMember != null)
@@ -908,7 +928,7 @@ namespace Barotrauma
                     UserData = link.Second,
                     OnClicked = (btn, userdata) =>
                     {
-                        Process.Start(userdata as string);
+                        ShowOpenUrlInWebBrowserPrompt(userdata as string);
                         return true;
                     }
                 };
@@ -920,7 +940,6 @@ namespace Barotrauma
             Config.SaveNewPlayerConfig();
         }
 
-        // ToDo: Move texts/links to localization, when possible.
         public void ShowBugReporter()
         {
             var msgBox = new GUIMessageBox(TextManager.Get("bugreportbutton"), "");
@@ -928,24 +947,27 @@ namespace Barotrauma
             var linkHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), msgBox.Content.RectTransform)) { Stretch = true, RelativeSpacing = 0.025f };
             linkHolder.RectTransform.MaxSize = new Point(int.MaxValue, linkHolder.Rect.Height);
 
-            List<Pair<string, string>> links = new List<Pair<string, string>>()
-                {
-                    new Pair<string, string>(TextManager.Get("bugreportfeedbackform"),"https://barotraumagame.com/feedback"),
-                    new Pair<string, string>(TextManager.Get("bugreportgithubform"),"https://github.com/Regalis11/Barotrauma/issues/new?template=bug_report.md")
-                };
-            foreach (var link in links)
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), linkHolder.RectTransform), TextManager.Get("bugreportfeedbackform"), style: "MainMenuGUIButton", textAlignment: Alignment.Left)
             {
-                new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), linkHolder.RectTransform), link.First, style: "MainMenuGUIButton", textAlignment: Alignment.Left)
+                UserData = "https://steamcommunity.com/app/602960/discussions/1/",
+                OnClicked = (btn, userdata) =>
                 {
-                    UserData = link.Second,
-                    OnClicked = (btn, userdata) =>
-                    {
-                        Process.Start(userdata as string);
-                        msgBox.Close();
-                        return true;
-                    }
-                };
-            }
+                    SteamManager.OverlayCustomURL(userdata as string);
+                    msgBox.Close();
+                    return true;
+                }
+            };
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), linkHolder.RectTransform), TextManager.Get("bugreportgithubform"), style: "MainMenuGUIButton", textAlignment: Alignment.Left)
+            {
+                UserData = "https://github.com/Regalis11/Barotrauma/issues/new?template=bug_report.md",
+                OnClicked = (btn, userdata) =>
+                {
+                    ShowOpenUrlInWebBrowserPrompt(userdata as string);
+                    msgBox.Close();
+                    return true;
+                }
+            };
 
             msgBox.InnerFrame.RectTransform.MinSize = new Point(0,
                 msgBox.InnerFrame.Rect.Height + linkHolder.Rect.Height + msgBox.Content.AbsoluteSpacing * 2 + (int)(50 * GUI.Scale));
@@ -967,6 +989,25 @@ namespace Barotrauma
             if (GameSettings.SendUserStatistics) GameAnalytics.OnQuit();
             if (GameSettings.SaveDebugConsoleLogs) DebugConsole.SaveLogs();
             base.OnExiting(sender, args);
+        }
+
+        public void ShowOpenUrlInWebBrowserPrompt(string url)
+        {
+            if (string.IsNullOrEmpty(url)) { return; }
+            if (GUIMessageBox.VisibleBox?.UserData as string == "verificationprompt") { return; }
+
+            var msgBox = new GUIMessageBox("", TextManager.GetWithVariable("openlinkinbrowserprompt", "[link]", url),
+                new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
+            {
+                UserData = "verificationprompt"
+            };
+            msgBox.Buttons[0].OnClicked = (btn, userdata) =>
+            {
+                Process.Start(url);
+                msgBox.Close();
+                return true;
+            };
+            msgBox.Buttons[1].OnClicked = msgBox.Close;
         }
     }
 }

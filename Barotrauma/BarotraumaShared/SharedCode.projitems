@@ -50,11 +50,12 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\AnimController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\FishAnimController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\HumanoidAnimController.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\Params\Animation\AnimationParams.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\Params\Animation\FishAnimations.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\Params\Animation\HumanoidAnimations.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\Params\EditableParams.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\Params\Ragdoll\RagdollParams.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Params\Animation\AnimationParams.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Params\Animation\FishAnimations.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Params\Animation\HumanoidAnimations.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Params\CharacterParams.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Params\EditableParams.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Params\Ragdoll\RagdollParams.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\Ragdoll.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Attack.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\CauseOfDeath.cs" />

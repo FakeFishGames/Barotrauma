@@ -50,12 +50,18 @@ namespace Barotrauma
                 {
                     DebugConsole.ShowQuestionPrompt("Enter a save name for the campaign:", (string saveName) =>
                     {
-                        StartNewCampaign(saveName, GameMain.NetLobbyScreen.SelectedSub.FilePath, GameMain.NetLobbyScreen.LevelSeed);
+                        string savePath = SaveUtil.CreateSavePath(SaveUtil.SaveType.Multiplayer, saveName);
+                        StartNewCampaign(savePath, GameMain.NetLobbyScreen.SelectedSub.FilePath, GameMain.NetLobbyScreen.LevelSeed);
                     });
                 }
                 else
                 {
                     var saveFiles = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Multiplayer).ToArray();
+                    if (saveFiles.Length == 0)
+                    {
+                        DebugConsole.ThrowError("No save files found.");
+                        return;
+                    }
                     DebugConsole.NewMessage("Saved campaigns:", Color.White);
                     for (int i = 0; i < saveFiles.Length; i++)
                     {
@@ -64,9 +70,16 @@ namespace Barotrauma
                     DebugConsole.ShowQuestionPrompt("Select a save file to load (0 - " + (saveFiles.Length - 1) + "):", (string selectedSave) =>
                     {
                         int saveIndex = -1;
-                        if (!int.TryParse(selectedSave, out saveIndex)) return;
+                        if (!int.TryParse(selectedSave, out saveIndex)) { return; }
 
-                        LoadCampaign(saveFiles[saveIndex]);
+                        if (saveIndex < 0 || saveIndex >= saveFiles.Length)
+                        {
+                            DebugConsole.ThrowError("Invalid save file index.");
+                        }
+                        else
+                        {
+                            LoadCampaign(saveFiles[saveIndex]);
+                        }
                     });
                 }
             });
@@ -170,6 +183,7 @@ namespace Barotrauma
             msg.Write(Money);
             msg.Write(PurchasedHullRepairs);
             msg.Write(PurchasedItemRepairs);
+            msg.Write(PurchasedLostShuttles);
 
             msg.Write((UInt16)CargoManager.PurchasedItems.Count);
             foreach (PurchasedItem pi in CargoManager.PurchasedItems)
@@ -196,6 +210,7 @@ namespace Barotrauma
             byte selectedMissionIndex = msg.ReadByte();
             bool purchasedHullRepairs = msg.ReadBoolean();
             bool purchasedItemRepairs = msg.ReadBoolean();
+            bool purchasedLostShuttles = msg.ReadBoolean();
             UInt16 purchasedItemCount = msg.ReadUInt16();
 
             List<PurchasedItem> purchasedItems = new List<PurchasedItem>();
@@ -236,6 +251,24 @@ namespace Barotrauma
                 {
                     this.PurchasedItemRepairs = false;
                     Money += ItemRepairCost;
+                }
+            }
+            if (purchasedLostShuttles != this.PurchasedLostShuttles)
+            {
+                if (GameMain.GameSession?.Submarine != null &&
+                    GameMain.GameSession.Submarine.LeftBehindSubDockingPortOccupied)
+                {
+                    GameMain.Server.SendDirectChatMessage(TextManager.FormatServerMessage("ReplaceShuttleDockingPortOccupied"), sender, ChatMessageType.MessageBox);
+                }
+                else if (purchasedLostShuttles && Money >= ShuttleReplaceCost)
+                {
+                    this.PurchasedLostShuttles = true;
+                    Money -= ShuttleReplaceCost;
+                }
+                else if (!purchasedItemRepairs)
+                {
+                    this.PurchasedLostShuttles = false;
+                    Money += ShuttleReplaceCost;
                 }
             }
 

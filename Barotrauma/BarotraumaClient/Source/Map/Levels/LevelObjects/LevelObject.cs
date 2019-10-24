@@ -132,7 +132,7 @@ namespace Barotrauma
                     var newDeformation = SpriteDeformation.Load(animationElement, Prefab.Name);
                     if (newDeformation != null)
                     {
-                        newDeformation.DeformationParams = Prefab.SpriteDeformations[j].DeformationParams;
+                        newDeformation.Params = Prefab.SpriteDeformations[j].Params;
                         spriteDeformations.Add(newDeformation);
                         j++;
                     }

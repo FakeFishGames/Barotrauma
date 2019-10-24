@@ -209,7 +209,7 @@ namespace Barotrauma
                     characterFiles[i] = Path.GetFileNameWithoutExtension(characterFiles[i]).ToLowerInvariant();
                 }
 
-                foreach (JobPrefab jobPrefab in JobPrefab.List)
+                foreach (JobPrefab jobPrefab in JobPrefab.List.Values)
                 {
                     characterFiles.Add(jobPrefab.Name);
                 }
@@ -618,7 +618,7 @@ namespace Barotrauma
             {
                 return new string[][]
                 {
-        Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
                 };
             }, isCheat: true));
 
@@ -626,6 +626,9 @@ namespace Barotrauma
             {
                 Character.Controlled = null;
                 GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
+#if CLIENT
+                GameMain.Client?.SendConsoleCommand("freecam");
+#endif
             }, isCheat: true));
 
             commands.Add(new Command("eventmanager", "eventmanager: Toggle event manager on/off. No new random events are created when the event manager is disabled.", (string[] args) =>
@@ -965,7 +968,6 @@ namespace Barotrauma
             }));
 
 #if DEBUG
-            /*TODO: reimplement
             commands.Add(new Command("simulatedlatency", "simulatedlatency [minimumlatencyseconds] [randomlatencyseconds]: applies a simulated latency to network messages. Useful for simulating real network conditions when testing the multiplayer locally.", (string[] args) =>
             {
                 if (args.Count() < 2 || (GameMain.NetworkMember == null)) return;
@@ -982,18 +984,19 @@ namespace Barotrauma
 #if CLIENT
                 if (GameMain.Client != null)
                 {
-                    GameMain.Client.NetPeerConfiguration.SimulatedMinimumLatency = minimumLatency;
-                    GameMain.Client.NetPeerConfiguration.SimulatedRandomLatency = randomLatency;
+                    GameMain.Client.SimulatedMinimumLatency = minimumLatency;
+                    GameMain.Client.SimulatedRandomLatency = randomLatency;
                 }
 #elif SERVER
                 if (GameMain.Server != null)
                 {
-                    GameMain.Server.NetPeerConfiguration.SimulatedMinimumLatency = minimumLatency;
-                    GameMain.Server.NetPeerConfiguration.SimulatedRandomLatency = randomLatency;
+                    GameMain.Server.SimulatedMinimumLatency = minimumLatency;
+                    GameMain.Server.SimulatedRandomLatency = randomLatency;
                 }
 #endif
                 NewMessage("Set simulated minimum latency to " + minimumLatency + " and random latency to " + randomLatency + ".", Color.White);
             }));
+
             commands.Add(new Command("simulatedloss", "simulatedloss [lossratio]: applies simulated packet loss to network messages. For example, a value of 0.1 would mean 10% of the packets are dropped. Useful for simulating real network conditions when testing the multiplayer locally.", (string[] args) =>
             {
                 if (args.Count() < 1 || (GameMain.NetworkMember == null)) return;
@@ -1005,12 +1008,12 @@ namespace Barotrauma
 #if CLIENT
                 if (GameMain.Client != null)
                 {
-                    GameMain.Client.NetPeerConfiguration.SimulatedLoss = loss;
+                    GameMain.Client.SimulatedLoss = loss;
                 }
 #elif SERVER
                 if (GameMain.Server != null)
                 {
-                    GameMain.Server.NetPeerConfiguration.SimulatedLoss = loss;
+                    GameMain.Server.SimulatedLoss = loss;
                 }
 #endif
                 NewMessage("Set simulated packet loss to " + (int)(loss * 100) + "%.", Color.White);
@@ -1026,16 +1029,16 @@ namespace Barotrauma
 #if CLIENT
                 if (GameMain.Client != null)
                 {
-                    GameMain.Client.NetPeerConfiguration.SimulatedDuplicatesChance = duplicates;
+                    GameMain.Client.SimulatedDuplicatesChance = duplicates;
                 }
 #elif SERVER
                 if (GameMain.Server != null)
                 {
-                    GameMain.Server.NetPeerConfiguration.SimulatedDuplicatesChance = duplicates;
+                    GameMain.Server.SimulatedDuplicatesChance = duplicates;
                 }
 #endif
                 NewMessage("Set packet duplication to " + (int)(duplicates * 100) + "%.", Color.White);
-            }));*/
+            }));
 #endif
 
             //"dummy commands" that only exist so that the server can give clients permissions to use them
@@ -1338,9 +1341,12 @@ namespace Barotrauma
             WayPoint spawnPoint = null;
 
             string characterLowerCase = args[0].ToLowerInvariant();
-            JobPrefab job = JobPrefab.List.Find(jp => jp.Name.ToLowerInvariant() == characterLowerCase || jp.Identifier.ToLowerInvariant() == characterLowerCase);
-            bool human = job != null || characterLowerCase == "human";
-
+            if (!JobPrefab.List.TryGetValue(characterLowerCase, out JobPrefab job))
+            {
+                job = JobPrefab.List.Values.FirstOrDefault(jp => jp.Name?.ToLowerInvariant() == characterLowerCase);
+            }
+            bool human = job != null || characterLowerCase == Character.HumanSpeciesName;
+            
             if (args.Length > 1)
             {
                 switch (args[1].ToLowerInvariant())
@@ -1389,7 +1395,7 @@ namespace Barotrauma
 
             if (human)
             {
-                CharacterInfo characterInfo = new CharacterInfo(Character.HumanConfigFile, jobPrefab: job);
+                CharacterInfo characterInfo = new CharacterInfo(Character.HumanSpeciesName, jobPrefab: job);
                 spawnedCharacter = Character.Create(characterInfo, spawnPosition, ToolBox.RandomSeed(8));
                 if (job != null)
                 {
@@ -1410,23 +1416,10 @@ namespace Barotrauma
             }
             else
             {
-                IEnumerable<string> characterFiles = GameMain.Instance.GetFilesOfType(ContentType.Character);
-                foreach (string characterFile in characterFiles)
+                if (Character.GetConfigFilePath(args[0]) != null)
                 {
-                    if (Path.GetFileNameWithoutExtension(characterFile).ToLowerInvariant() == args[0].ToLowerInvariant())
-                    {
-                        Character.Create(characterFile, spawnPosition, ToolBox.RandomSeed(8));
-                        return;
-                    }
+                    Character.Create(args[0], spawnPosition, ToolBox.RandomSeed(8));
                 }
-
-                errorMsg = "No character matching the name \"" + args[0] + "\" found in the selected content package.";
-
-                //attempt to open the config from the default path (the file may still be present even if it isn't included in the content package)
-                string configPath = "Content/Characters/"
-                    + args[0].First().ToString().ToUpper() + args[0].Substring(1)
-                    + "/" + args[0].ToLower() + ".xml";
-                Character.Create(configPath, spawnPosition, ToolBox.RandomSeed(8));
             }
         }
 
@@ -1437,7 +1430,23 @@ namespace Barotrauma
 
             Vector2? spawnPos = null;
             Inventory spawnInventory = null;
-            
+
+            string itemName = args[0].ToLowerInvariant();
+            if (!(MapEntityPrefab.Find(itemName, showErrorMessages: false) is ItemPrefab itemPrefab))
+            {
+                errorMsg = "Item \"" + itemName + "\" not found!";
+                var matching = MapEntityPrefab.List.Find(me => me.Name.ToLowerInvariant().StartsWith(itemName) && me is ItemPrefab);
+                if (matching != null)
+                {
+                    errorMsg += $" Did you mean \"{matching.Name}\"?";
+                    if (matching.Name.Contains(" "))
+                    {
+                        errorMsg += $" Please note that you should surround multi-word names with quotation marks (e.q. spawnitem \"{matching.Name}\")";
+                    }
+                }
+                return;
+            }
+
             if (args.Length > 1)
             {
                 switch (args.Last())
@@ -1461,14 +1470,7 @@ namespace Barotrauma
                         break;
                 }
             }
-
-            string itemName = args[0].ToLowerInvariant();
-            if (!(MapEntityPrefab.Find(itemName) is ItemPrefab itemPrefab))
-            {
-                errorMsg = "Item \"" + itemName + "\" not found!";
-                return;
-            }
-
+            
             if ((spawnPos == null || spawnPos == Vector2.Zero) && spawnInventory == null)
             {
                 var wp = WayPoint.GetRandom(SpawnType.Human, null, Submarine.MainSub);
@@ -1550,30 +1552,36 @@ namespace Barotrauma
                 }
                 else
                 {
-                    int parsedNum = 0;
-                    if (!int.TryParse(currNum, out parsedNum))
+                    if (!int.TryParse(currNum, out int parsedNum) || parsedNum < 0)
                     {
                         return false;
                     }
-
-                    switch (c)
+                    try
                     {
-                        case 'd':
-                            timeSpan += new TimeSpan(parsedNum, 0, 0, 0, 0);
-                            break;
-                        case 'h':
-                            timeSpan += new TimeSpan(0, parsedNum, 0, 0, 0);
-                            break;
-                        case 'm':
-                            timeSpan += new TimeSpan(0, 0, parsedNum, 0, 0);
-                            break;
-                        case 's':
-                            timeSpan += new TimeSpan(0, 0, 0, parsedNum, 0);
-                            break;
-                        default:
-                            return false;
+                        switch (c)
+                        {
+                            case 'd':
+                                timeSpan += new TimeSpan(parsedNum, 0, 0, 0, 0);
+                                break;
+                            case 'h':
+                                timeSpan += new TimeSpan(0, parsedNum, 0, 0, 0);
+                                break;
+                            case 'm':
+                                timeSpan += new TimeSpan(0, 0, parsedNum, 0, 0);
+                                break;
+                            case 's':
+                                timeSpan += new TimeSpan(0, 0, 0, parsedNum, 0);
+                                break;
+                            default:
+                                return false;
+                        }
                     }
-
+                    catch (ArgumentOutOfRangeException)
+                    {
+                        ThrowError($"{parsedNum} {c} exceeds the maximum supported time span. Using the maximum time span {TimeSpan.MaxValue} instead.");
+                        timeSpan = TimeSpan.MaxValue;
+                        return true;
+                    }
                     currNum = "";
                 }
             }
@@ -1598,13 +1606,17 @@ namespace Barotrauma
             if (e != null)
             {
                 error += " {" + e.Message + "}\n" + e.StackTrace;
+                if (e.InnerException != null)
+                {
+                    error += "\n\nInner exception: " + e.InnerException.Message + "\n" + e.InnerException.StackTrace;
+                }
             }
             System.Diagnostics.Debug.WriteLine(error);
             NewMessage(error, Color.Red);
 #if CLIENT
             if (createMessageBox)
             {
-                new GUIMessageBox(TextManager.Get("Error"), error);
+                CoroutineManager.StartCoroutine(CreateMessageBox(error));
             }
             else
             {
@@ -1612,7 +1624,20 @@ namespace Barotrauma
             }
 #endif
         }
-        
+
+#if CLIENT
+        private static IEnumerable<object> CreateMessageBox(string errorMsg)
+        {
+            while (GUI.Style == null)
+            {
+                yield return null;
+            }
+
+            new GUIMessageBox(TextManager.Get("Error"), errorMsg);
+            yield return CoroutineStatus.Success;
+        }
+#endif
+
         public static void SaveLogs()
         {
             if (unsavedMessages.Count == 0) return;

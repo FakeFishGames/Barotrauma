@@ -65,35 +65,37 @@ namespace Barotrauma.Items.Components
         private bool useDirectionalPing = false;
         private Vector2 pingDirection = new Vector2(1.0f, 0.0f);
 
-        private Sprite pingCircle, directionalPingCircle, screenOverlay, screenBackground;
+        private Sprite pingCircle, directionalPingCircle;
+        private Sprite screenOverlay, screenBackground;
+
         private Sprite sonarBlip;
         private Sprite lineSprite;
 
         private bool aiPingCheckPending;
 
         //the float value is a timer used for disconnecting the transducer if no signal is received from it for 1 second
-        private List<ConnectedTransducer> connectedTransducers;
+        private readonly List<ConnectedTransducer> connectedTransducers;
 
         public IEnumerable<SonarTransducer> ConnectedTransducers
         {
             get { return connectedTransducers.Select(t => t.Transducer); }
         }
 
-        [Serialize(DefaultSonarRange, false)]
+        [Serialize(DefaultSonarRange, false, description: "The maximum range of the sonar.")]
         public float Range
         {
             get { return range; }
             set { range = MathHelper.Clamp(value, 0.0f, 100000.0f); }
         }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Should the sonar display the walls of the submarine it is inside.")]
         public bool DetectSubmarineWalls
         {
             get;
             set;
         }
 
-        [Serialize(false, false), Editable(ToolTip = "Does the sonar have to be connected to external transducers to work.")]
+        [Editable, Serialize(false, false, description: "Does the sonar have to be connected to external transducers to work.")]
         public bool UseTransducers
         {
             get;

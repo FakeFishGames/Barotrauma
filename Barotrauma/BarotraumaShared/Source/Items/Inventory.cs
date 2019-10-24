@@ -11,7 +11,7 @@ namespace Barotrauma
     {
         public readonly Entity Owner;
 
-        protected int capacity;
+        protected readonly int capacity;
 
         public Item[] Items;
         protected bool[] hideEmptySlot;
@@ -25,7 +25,7 @@ namespace Barotrauma
             get { return capacity; }
         }
 
-        public Inventory(Entity owner, int capacity, Vector2? centerPos = null, int slotsPerRow = 5)
+        public Inventory(Entity owner, int capacity, int slotsPerRow = 5)
         {
             this.capacity = capacity;
 
@@ -132,7 +132,7 @@ namespace Barotrauma
             //there's already an item in the slot
             if (Items[i] != null && allowCombine)
             {
-                if (Items[i].Combine(item))
+                if (Items[i].Combine(item, user))
                 {
                     System.Diagnostics.Debug.Assert(Items[i] != null);
                     return true;

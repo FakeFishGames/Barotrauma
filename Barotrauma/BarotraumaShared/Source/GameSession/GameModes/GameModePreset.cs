@@ -7,48 +7,23 @@ namespace Barotrauma
     class GameModePreset
     {
         public static List<GameModePreset> List = new List<GameModePreset>();
-        
-        public ConstructorInfo Constructor
-        {
-            get;
-            private set;
-        }
 
-        public string Name
-        {
-            get;
-            private set;
-        }
+        public readonly ConstructorInfo Constructor;
 
-        public string Identifier
-        {
-            get;
-            private set;
-        }
+        public readonly string Name;
+        public readonly string Description;
 
-        public bool IsSinglePlayer
-        {
-            get;
-            private set;
-        }
+        public readonly string Identifier;
+
+        public readonly bool IsSinglePlayer;
 
         //are clients allowed to vote for this gamemode
-        public bool Votable
-        {
-            get;
-            private set;
-        }
-
-        //TODO: translate mission descriptions
-        public string Description
-        {
-            get;
-            private set;
-        }
+        public readonly bool Votable;
 
         public GameModePreset(string identifier, Type type, bool isSinglePlayer = false, bool votable = true)
         {
             Name = TextManager.Get("GameMode." + identifier);
+            Description = TextManager.Get("GameModeDescription." + identifier, returnNull: true) ?? "";
             Identifier = identifier;
 
             Constructor = type.GetConstructor(new Type[] { typeof(GameModePreset), typeof(object) });
@@ -70,23 +45,10 @@ namespace Barotrauma
 #if CLIENT
             new GameModePreset("singleplayercampaign", typeof(SinglePlayerCampaign), true);
             new GameModePreset("tutorial", typeof(TutorialMode), true);
-            new GameModePreset("devsandbox", typeof(GameMode), true)
-            {
-                Description = "Single player sandbox mode for debugging."
-            };
+            new GameModePreset("devsandbox", typeof(GameMode), true);
 #endif
-            new GameModePreset("sandbox", typeof(GameMode), false)
-            {
-                Description = "A game mode with no specific objectives."
-            };
-
-            new GameModePreset("mission", typeof(MissionMode), false)
-            {
-                Description = "The crew must work together to complete a specific task, such as retrieving "
-                + "an alien artifact or killing a creature that's terrorizing nearby outposts. The game ends "
-                + "when the task is completed or everyone in the crew has died."
-            };
-
+            new GameModePreset("sandbox", typeof(GameMode), false);
+            new GameModePreset("mission", typeof(MissionMode), false);
             new GameModePreset("multiplayercampaign", typeof(MultiPlayerCampaign), false, false);
         }
     }

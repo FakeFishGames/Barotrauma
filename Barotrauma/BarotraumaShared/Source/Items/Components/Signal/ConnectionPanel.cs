@@ -21,7 +21,7 @@ namespace Barotrauma.Items.Components
 
         private List<ushort> disconnectedWireIds;
 
-        [Serialize(false, true), Editable(ToolTip = "Locked connection panels cannot be rewired in-game.")]
+        [Editable, Serialize(false, true, description: "Locked connection panels cannot be rewired in-game.")]
         public bool Locked
         {
             get;
@@ -171,9 +171,9 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        public override void Load(XElement element)
+        public override void Load(XElement element, bool usePrefabValues)
         {
-            base.Load(element);
+            base.Load(element, usePrefabValues);
 
             List<Connection> loadedConnections = new List<Connection>();
 

@@ -42,17 +42,17 @@ namespace Barotrauma.Items.Components
 
         public int DockingDir { get; private set; }
 
-        [Serialize("32.0,32.0", false)]
+        [Serialize("32.0,32.0", false, description: "How close the docking port has to be to another port to dock.")]
         public Vector2 DistanceTolerance { get; set; }
 
-        [Serialize(32.0f, false)]
+        [Serialize(32.0f, false, description: "How close together the docking ports are forced when docked.")]
         public float DockedDistance
         {
             get;
             set;
         }
 
-        [Serialize(true, false)]
+        [Serialize(true, false, description: "Is the port horizontal.")]
         public bool IsHorizontal
         {
             get;
@@ -189,9 +189,7 @@ namespace Barotrauma.Items.Components
                 GameMain.GameScreen.Cam.Shake = Vector2.Distance(DockingTarget.item.Submarine.Velocity, item.Submarine.Velocity);
             }
 
-            DockingDir = IsHorizontal ? 
-                Math.Sign(DockingTarget.item.WorldPosition.X - item.WorldPosition.X) :
-                Math.Sign(DockingTarget.item.WorldPosition.Y - item.WorldPosition.Y);
+            DockingDir = GetDir(DockingTarget);
             DockingTarget.DockingDir = -DockingDir;
            
             if (door != null && DockingTarget.door != null)
@@ -230,9 +228,7 @@ namespace Barotrauma.Items.Components
 
             if (!(joint is WeldJoint))
             {
-                DockingDir = IsHorizontal ?
-                    Math.Sign(DockingTarget.item.WorldPosition.X - item.WorldPosition.X) :
-                    Math.Sign(DockingTarget.item.WorldPosition.Y - item.WorldPosition.Y);
+                DockingDir = GetDir(DockingTarget);
                 DockingTarget.DockingDir = -DockingDir;
 
                 ApplyStatusEffects(ActionType.OnUse, 1.0f);
@@ -312,7 +308,7 @@ namespace Barotrauma.Items.Components
             joint.CollideConnected = true;
         }
 
-        public int GetDir()
+        public int GetDir(DockingPort dockingTarget = null)
         {
             if (DockingDir != 0) { return DockingDir; }
 
@@ -325,7 +321,12 @@ namespace Barotrauma.Items.Components
                         Math.Sign(door.Item.WorldPosition.Y - door.LinkedGap.linkedTo[0].WorldPosition.Y);
                 }
             }
-
+            if (dockingTarget != null)
+            {
+                return IsHorizontal ?
+                    Math.Sign(dockingTarget.item.WorldPosition.X - item.WorldPosition.X) :
+                    Math.Sign(dockingTarget.item.WorldPosition.Y - item.WorldPosition.Y);
+            }
             if (item.Submarine != null)
             {
                 return IsHorizontal ?
@@ -962,58 +963,6 @@ namespace Barotrauma.Items.Components
             {
                 msg.Write(DockingTarget.item.ID);                
                 msg.Write(hulls != null && hulls[0] != null && hulls[1] != null && gap != null);
-            }
-        }
-
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
-        {
-            bool isDocked = msg.ReadBoolean();
-
-            for (int i = 0; i < 2; i++)
-            {
-                if (hulls[i] == null) continue;
-                item.linkedTo.Remove(hulls[i]);
-                hulls[i].Remove();
-                hulls[i] = null;
-            }
-
-            if (gap != null)
-            {
-                item.linkedTo.Remove(gap);
-                gap.Remove();
-                gap = null;
-            }
-
-            if (isDocked)
-            {
-                ushort dockingTargetID = msg.ReadUInt16();
-
-                bool isLocked = msg.ReadBoolean();
-                
-                Entity targetEntity = Entity.FindEntityByID(dockingTargetID);
-                if (targetEntity == null || !(targetEntity is Item))
-                {
-                    DebugConsole.ThrowError("Invalid docking port network event (can't dock to " + targetEntity.ToString() + ")");
-                    return;
-                }
-
-                DockingTarget = (targetEntity as Item).GetComponent<DockingPort>();
-                if (DockingTarget == null)
-                {
-                    DebugConsole.ThrowError("Invalid docking port network event (" + targetEntity + " doesn't have a docking port component)");
-                    return;
-                }
-
-                Dock(DockingTarget);
-
-                if (isLocked)
-                {
-                    Lock(isNetworkMessage: true, forcePosition: true);
-                }
-            }
-            else
-            {
-                Undock();
             }
         }
     }

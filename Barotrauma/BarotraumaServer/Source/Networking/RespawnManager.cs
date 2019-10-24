@@ -43,7 +43,7 @@ namespace Barotrauma.Networking
                 CharacterInfo botToRespawn = existingBots.Find(b => b.IsDead)?.Info;
                 if (botToRespawn == null)
                 {
-                    botToRespawn = new CharacterInfo(Character.HumanConfigFile);
+                    botToRespawn = new CharacterInfo(Character.HumanSpeciesName);
                 }
                 else
                 {
@@ -225,7 +225,7 @@ namespace Barotrauma.Networking
                 //all characters are in Team 1 in game modes/missions with only one team.
                 //if at some point we add a game mode with multiple teams where respawning is possible, this needs to be reworked
                 c.TeamID = Character.TeamType.Team1;
-                if (c.CharacterInfo == null) c.CharacterInfo = new CharacterInfo(Character.HumanConfigFile, c.Name);
+                if (c.CharacterInfo == null) c.CharacterInfo = new CharacterInfo(Character.HumanSpeciesName, c.Name);
             }
             List<CharacterInfo> characterInfos = clients.Select(c => c.CharacterInfo).ToList();
 
@@ -290,7 +290,7 @@ namespace Barotrauma.Networking
 
                         var oxyTank = new Item(oxyPrefab, pos, respawnSub);
                         Spawner.CreateNetworkEvent(oxyTank, false);
-                        divingSuit.Combine(oxyTank);
+                        divingSuit.Combine(oxyTank, user: null);
                         respawnItems.Add(oxyTank);
                     }
 
@@ -302,7 +302,7 @@ namespace Barotrauma.Networking
                         var battery = new Item(batteryPrefab, pos, respawnSub);
                         Spawner.CreateNetworkEvent(battery, false);
 
-                        scooter.Combine(battery);
+                        scooter.Combine(battery, user: null);
                         respawnItems.Add(scooter);
                         respawnItems.Add(battery);
                     }

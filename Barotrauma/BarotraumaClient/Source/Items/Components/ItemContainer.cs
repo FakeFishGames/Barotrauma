@@ -33,49 +33,49 @@ namespace Barotrauma.Items.Components
         }
 
 #if DEBUG
-        [Serialize("0.0,0.0", false), Editable]
-#else
-        [Serialize("0.0,0.0", false)]
+        [Editable]
 #endif
+        [Serialize("0.0,0.0", false, description: "The position where the contained items get drawn at (offset from the upper left corner of the sprite in pixels).")]
         public Vector2 ItemPos { get; set; }
 
 #if DEBUG
-        [Serialize("0.0,0.0", false), Editable]
-#else
-        [Serialize("0.0,0.0", false)]
+        [Editable]
 #endif
+        [Serialize("0.0,0.0", false, description: "The interval at which the contained items are spaced apart from each other (in pixels).")]
         public Vector2 ItemInterval { get; set; }
-        [Serialize(100, false)]
+        [Serialize(100, false, description: "How many items are placed in a row before starting a new row.")]
         public int ItemsPerRow { get; set; }
 
         /// <summary>
         /// Depth at which the contained sprites are drawn. If not set, the original depth of the item sprites is used.
         /// </summary>
-        [Serialize(-1.0f, false)]
+        [Serialize(-1.0f, false, description: "Depth at which the contained sprites are drawn. If not set, the original depth of the item sprites is used.")]
         public float ContainedSpriteDepth { get; set; }
 
 
         private float itemRotation;
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false, description: "The rotation in which the contained sprites are drawn (in degrees).")]
         public float ItemRotation
         {
             get { return MathHelper.ToDegrees(itemRotation); }
             set { itemRotation = MathHelper.ToRadians(value); }
         }
 
-        [Serialize(null, false)]
+        [Serialize(null, false, description: "An optional text displayed above the item's inventory.")]
         public string UILabel { get; set; }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "If enabled, the condition of this item is displayed in the indicator that would normally show the state of the contained items." +
+            " May be useful for items such as ammo boxes and magazines that spawn projectiles as needed," +
+            " and use the condition to determine how many projectiles can be spawned in total.")]
         public bool ShowConditionInContainedStateIndicator
         {
             get;
             set;
         }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Should the inventory of this item be kept open when the item is equipped by a character.")]
         public bool KeepOpenWhenEquipped { get; set; }
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Can the inventory of this item be moved around on the screen by the player.")]
         public bool MovableFrame { get; set; }
 
         public Vector2 DrawSize
@@ -132,13 +132,13 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool editing = false)
+        public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
         {
             if (hideItems || (item.body != null && !item.body.Enabled)) { return; }
-            DrawContainedItems(spriteBatch);
+            DrawContainedItems(spriteBatch, itemDepth);
         }
 
-        public void DrawContainedItems(SpriteBatch spriteBatch)
+        public void DrawContainedItems(SpriteBatch spriteBatch, float itemDepth)
         {
             Vector2 transformedItemPos = ItemPos * item.Scale;
             Vector2 transformedItemInterval = ItemInterval * item.Scale;
@@ -199,20 +199,28 @@ namespace Barotrauma.Items.Components
                 {
                     containedItem.body.SetTransformIgnoreContacts(containedItem.body.SimPosition, currentRotation);
                 }
+                
+                Vector2 origin = containedItem.Sprite.Origin;
+                if (item.FlippedX) { origin.X = containedItem.Sprite.SourceRect.Width - origin.X; }
+                if (item.FlippedY) { origin.Y = containedItem.Sprite.SourceRect.Height - origin.Y; }
+
+                float containedSpriteDepth = ContainedSpriteDepth < 0.0f ? containedItem.Sprite.Depth : ContainedSpriteDepth;
+                containedSpriteDepth = itemDepth + (containedSpriteDepth - item.SpriteDepth) / 10000.0f;
 
                 containedItem.Sprite.Draw(
                     spriteBatch,
                     new Vector2(currentItemPos.X, -currentItemPos.Y),
                     containedItem.GetSpriteColor(),
-                    -currentRotation,
+                    origin,
+                    - currentRotation,
                     containedItem.Scale,
                     spriteEffects,
-                    depth: ContainedSpriteDepth < 0.0f ? containedItem.Sprite.Depth : ContainedSpriteDepth);
+                    depth: containedSpriteDepth);
 
                 foreach (ItemContainer ic in containedItem.GetComponents<ItemContainer>())
                 {
                     if (ic.hideItems) continue;
-                    ic.DrawContainedItems(spriteBatch);
+                    ic.DrawContainedItems(spriteBatch, containedSpriteDepth);
                 }
 
                 i++;

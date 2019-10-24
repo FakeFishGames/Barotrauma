@@ -69,6 +69,10 @@ namespace Barotrauma
 
         public HumanAIController(Character c) : base(c)
         {
+            if (!c.IsHuman)
+            {
+                throw new System.Exception($"Tried to create a human ai controller for a non-human: {c.SpeciesName}!");
+            }
             insideSteering = new IndoorsSteeringManager(this, true, false);
             outsideSteering = new SteeringManager(this);
             objectiveManager = new AIObjectiveManager(c);
@@ -324,7 +328,7 @@ namespace Barotrauma
                             AddTargets<AIObjectiveFightIntruders, Character>(Character, c);
                             if (newOrder == null)
                             {
-                                var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportintruders");
+                                var orderPrefab = Order.GetPrefab("reportintruders");
                                 newOrder = new Order(orderPrefab, c.CurrentHull, null, orderGiver: Character);
                             }
                         }
@@ -334,7 +338,7 @@ namespace Barotrauma
                         AddTargets<AIObjectiveExtinguishFires, Hull>(Character, hull);
                         if (newOrder == null)
                         {
-                            var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportfire");
+                            var orderPrefab = Order.GetPrefab("reportfire");
                             newOrder = new Order(orderPrefab, hull, null, orderGiver: Character);
                         }
                     }
@@ -347,7 +351,7 @@ namespace Barotrauma
                             {
                                 if (newOrder == null)
                                 {
-                                    var orderPrefab = Order.PrefabList.Find(o => o.AITag == "requestfirstaid");
+                                    var orderPrefab = Order.GetPrefab("requestfirstaid");
                                     newOrder = new Order(orderPrefab, c.CurrentHull, null, orderGiver: Character);
                                 }
                             }
@@ -360,7 +364,7 @@ namespace Barotrauma
                             AddTargets<AIObjectiveFixLeaks, Gap>(Character, gap);
                             if (newOrder == null && !gap.IsRoomToRoom)
                             {
-                                var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportbreach");
+                                var orderPrefab = Order.GetPrefab("reportbreach");
                                 newOrder = new Order(orderPrefab, hull, null, orderGiver: Character);
                             }
                         }
@@ -374,7 +378,7 @@ namespace Barotrauma
                             AddTargets<AIObjectiveRepairItems, Item>(Character, item);
                             if (newOrder == null)
                             {
-                                var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportbrokendevices");
+                                var orderPrefab = Order.GetPrefab("reportbrokendevices");
                                 newOrder = new Order(orderPrefab, item.CurrentHull, item.Repairables?.FirstOrDefault(), orderGiver: Character);
                             }
                         }
@@ -518,11 +522,7 @@ namespace Barotrauma
                 }
                 else if (ObjectiveManager.CurrentOrder is AIObjectiveRescueAll rescueAll && rescueAll.Targets.None())
                 {
-                    //TODO: re-enable on all languages after DialogNoRescueTargets has been translated
-                    if (TextManager.Language == "English")
-                    {
-                        Character.Speak(TextManager.Get("DialogNoRescueTargets"), null, 3.0f, "norescuetargets");
-                    }
+                    Character.Speak(TextManager.Get("DialogNoRescueTargets"), null, 3.0f, "norescuetargets");                    
                 }
                 else if (ObjectiveManager.CurrentOrder is AIObjectivePumpWater pumpWater && pumpWater.Targets.None())
                 {
@@ -620,7 +620,7 @@ namespace Barotrauma
 
         public static void RefreshTargets(Character character, Order order, Hull hull)
         {
-            switch (order.AITag)
+            switch (order.Identifier)
             {
                 case "reportfire":
                     AddTargets<AIObjectiveExtinguishFires, Hull>(character, hull);
@@ -667,7 +667,7 @@ namespace Barotrauma
                     break;
                 default:
 #if DEBUG
-                    DebugConsole.ThrowError(order.AITag + " not implemented!");
+                    DebugConsole.ThrowError(order.Identifier + " not implemented!");
 #endif
                     break;
             }
@@ -765,6 +765,9 @@ namespace Barotrauma
 
         public bool IsFriendly(Character other) => IsFriendly(Character, other);
 
-        public static bool IsFriendly(Character me, Character other) => (other.TeamID == me.TeamID || other.TeamID == Character.TeamType.FriendlyNPC || me.TeamID == Character.TeamType.FriendlyNPC) && other.SpeciesName == me.SpeciesName;
+        public static bool IsFriendly(Character me, Character other) => 
+            (other.TeamID == me.TeamID || 
+            other.TeamID == Character.TeamType.FriendlyNPC || 
+            me.TeamID == Character.TeamType.FriendlyNPC) && (other.SpeciesName == me.SpeciesName || other.Params.CompareGroup(me.Params.Group));
     }
 }

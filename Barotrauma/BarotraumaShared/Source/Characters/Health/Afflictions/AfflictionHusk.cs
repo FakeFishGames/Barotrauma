@@ -22,7 +22,7 @@ namespace Barotrauma
         {
             get { return state; }
         }
-        
+
         public AfflictionHusk(AfflictionPrefab prefab, float strength) : 
             base(prefab, strength)
         {
@@ -96,60 +96,27 @@ namespace Barotrauma
             }
         }
 
-        private void ActivateHusk(Character character)
+        public void ActivateHusk(Character character)
         {
-            character.NeedsAir = false;
             if (huskAppendage == null)
             {
-                huskAppendage = AttachHuskAppendage(character);
-                character.SetStun(0.5f);
-            }
-        }
-
-        public static List<Limb> AttachHuskAppendage(Character character, Ragdoll ragdoll = null)
-        {
-            var huskDoc = XMLExtensions.TryLoadXml(Character.GetConfigFile("humanhusk"));
-            string pathToAppendage = huskDoc.Root.Element("huskappendage").GetAttributeString("path", string.Empty);
-            XDocument doc = XMLExtensions.TryLoadXml(pathToAppendage);
-            if (doc == null || doc.Root == null) { return null; }
-            if (ragdoll == null)
-            {
-                ragdoll = character.AnimController;
-            }
-            if (ragdoll.Dir < 1.0f)
-            {
-                ragdoll.Flip();
-            }
-            var huskAppendages = new List<Limb>();
-            var limbElements = doc.Root.Elements("limb").ToDictionary(e => e.GetAttributeString("id", null), e => e);
-            foreach (var jointElement in doc.Root.Elements("joint"))
-            {
-                if (limbElements.TryGetValue(jointElement.GetAttributeString("limb2", null), out XElement limbElement))
+                huskAppendage = AttachHuskAppendage(character, Prefab.Identifier);
+                if (huskAppendage != null)
                 {
-                    JointParams jointParams = new JointParams(jointElement, ragdoll.RagdollParams);
-                    Limb attachLimb = ragdoll.Limbs[jointParams.Limb1];
-                    Limb huskAppendage = new Limb(ragdoll, character, new LimbParams(limbElement, ragdoll.RagdollParams));
-                    huskAppendage.body.Submarine = character.Submarine;
-                    huskAppendage.body.SetTransform(attachLimb.SimPosition, attachLimb.Rotation);
-                    ragdoll.AddLimb(huskAppendage);
-                    ragdoll.AddJoint(jointParams);
-                    huskAppendages.Add(huskAppendage);
+                    character.NeedsAir = false;
+                    character.SetStun(0.5f);
                 }
             }
-            return huskAppendages;
         }
 
         private void DeactivateHusk(Character character)
         {
-            character.NeedsAir = true;
-            RemoveHuskAppendage(character);
-        }
-
-        private void RemoveHuskAppendage(Character character)
-        {
-            if (huskAppendage == null) return;
-            huskAppendage.ForEach(l => character.AnimController.RemoveLimb(l));
-            huskAppendage = null;
+            character.NeedsAir = character.Params.MainElement.GetAttributeBool("needsair", false);
+            if (huskAppendage != null)
+            {
+                huskAppendage.ForEach(l => character.AnimController.RemoveLimb(l));
+                huskAppendage = null;
+            }
         }
 
         public void Remove(Character character)
@@ -182,7 +149,8 @@ namespace Barotrauma
             character.Enabled = false;
             Entity.Spawner.AddToRemoveQueue(character);
 
-            var configFile = Character.GetConfigFile("humanhusk");
+            string speciesName = GetHuskedSpeciesName(character.SpeciesName, Prefab as AfflictionPrefabHusk);
+            string configFile = Character.GetConfigFilePath(speciesName);
 
             if (string.IsNullOrEmpty(configFile))
             {
@@ -190,16 +158,7 @@ namespace Barotrauma
                 yield return CoroutineStatus.Success;
             }
 
-            //XDocument doc = XMLExtensions.TryLoadXml(configFile);
-            //if (doc?.Root == null)
-            //{
-            //    DebugConsole.ThrowError("Failed to turn character \"" + character.Name + "\" into a husk - husk config file ("+configFile+") could not be read.");
-            //    yield return CoroutineStatus.Success;
-            //}
-            
-            //character.Info.Ragdoll = null;
-            //character.Info.SourceElement = doc.Root;
-            var husk = Character.Create(configFile, character.WorldPosition, character.Info.Name, character.Info, isRemotePlayer: false, hasAi: true);
+            var husk = Character.Create(configFile, character.WorldPosition, character.Info.Name, character.Info, isRemotePlayer: false, hasAi: true, ragdoll: character.AnimController.RagdollParams);
 
             foreach (Limb limb in husk.AnimController.Limbs)
             {
@@ -220,7 +179,7 @@ namespace Barotrauma
 
             if (character.Inventory.Items.Length != husk.Inventory.Items.Length)
             {
-                string errorMsg = "Failed to move items from a human's inventory into a humanhusk's inventory (inventory sizes don't match)";
+                string errorMsg = "Failed to move items from the source character's inventory into a husk's inventory (inventory sizes don't match)";
                 DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce("AfflictionHusk.CreateAIHusk:InventoryMismatch", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 yield return CoroutineStatus.Success;
@@ -233,6 +192,104 @@ namespace Barotrauma
             }
 
             yield return CoroutineStatus.Success;
+        }
+
+        public static List<Limb> AttachHuskAppendage(Character character, string afflictionIdentifier, XElement appendageDefinition = null, Ragdoll ragdoll = null)
+        {
+            var appendage = new List<Limb>();
+            if (!(AfflictionPrefab.List.FirstOrDefault(ap => ap.Identifier == afflictionIdentifier) is AfflictionPrefabHusk matchingAffliction))
+            {
+                DebugConsole.ThrowError($"Could not find an affliction of type 'huskinfection' that matches the affliction '{afflictionIdentifier}'!");
+                return appendage;
+            }
+            string nonhuskedSpeciesName = GetNonHuskedSpeciesName(character.SpeciesName, matchingAffliction);
+            string huskedSpeciesName = GetHuskedSpeciesName(nonhuskedSpeciesName, matchingAffliction);
+            string filePath = Character.GetConfigFilePath(huskedSpeciesName);
+            if (!Character.TryGetConfigFile(filePath, out XDocument huskDoc))
+            {
+                DebugConsole.ThrowError($"Error in '{filePath}': Failed to load the config file for the husk infected species with the species name '{huskedSpeciesName}'!");
+                return appendage;
+            }
+            var mainElement = huskDoc.Root.IsOverride() ? huskDoc.Root.FirstElement() : huskDoc.Root;
+            var element = appendageDefinition;
+            if (element == null)
+            {
+                element = mainElement.GetChildElements("huskappendage").FirstOrDefault(e => e.GetAttributeString("affliction", string.Empty).Equals(afflictionIdentifier));
+            }
+            if (element == null)
+            {
+                DebugConsole.ThrowError($"Error in '{filePath}': Failed to find a huskappendage that matches the affliction with an identifier '{afflictionIdentifier}'!");
+                return appendage;
+            }
+            string pathToAppendage = element.GetAttributeString("path", string.Empty);
+            XDocument doc = XMLExtensions.TryLoadXml(pathToAppendage);
+            if (doc == null) { return appendage; }
+            if (ragdoll == null)
+            {
+                ragdoll = character.AnimController;
+            }
+            if (ragdoll.Dir < 1.0f)
+            {
+                ragdoll.Flip();
+            }
+            var limbElements = doc.Root.Elements("limb").ToDictionary(e => e.GetAttributeString("id", null), e => e);
+            foreach (var jointElement in doc.Root.Elements("joint"))
+            {
+                if (limbElements.TryGetValue(jointElement.GetAttributeString("limb2", null), out XElement limbElement))
+                {
+                    var jointParams = new RagdollParams.JointParams(jointElement, ragdoll.RagdollParams);
+                    Limb attachLimb = null;
+                    if (matchingAffliction.AttachLimbId > -1)
+                    {
+                        attachLimb = ragdoll.Limbs.FirstOrDefault(l => l.Params.ID == matchingAffliction.AttachLimbId);
+                    }
+                    else if (matchingAffliction.AttachLimbName != null)
+                    {
+                        attachLimb = ragdoll.Limbs.FirstOrDefault(l => l.Name == matchingAffliction.AttachLimbName);
+                    }
+                    else if (matchingAffliction.AttachLimbType != LimbType.None)
+                    {
+                        attachLimb = ragdoll.Limbs.FirstOrDefault(l => l.type == matchingAffliction.AttachLimbType);
+                    }
+                    if (attachLimb == null)
+                    {
+                        DebugConsole.Log("Attachment limb not defined in the affliction prefab or no matching limb could be found. Using the appendage definition as it is.");
+                        attachLimb = ragdoll.Limbs.FirstOrDefault(l => l.Params.ID == jointParams.Limb1);
+                    }
+                    if (attachLimb != null)
+                    {
+                        jointParams.Limb1 = attachLimb.Params.ID;
+                        var appendageLimbParams = new RagdollParams.LimbParams(limbElement, ragdoll.RagdollParams)
+                        {
+                            // Ensure that we have a valid id for the new limb
+                            ID = ragdoll.Limbs.Length
+                        };
+                        jointParams.Limb2 = appendageLimbParams.ID;
+                        Limb huskAppendage = new Limb(ragdoll, character, appendageLimbParams);
+                        huskAppendage.body.Submarine = character.Submarine;
+                        huskAppendage.body.SetTransform(attachLimb.SimPosition, attachLimb.Rotation);
+                        ragdoll.AddLimb(huskAppendage);
+                        ragdoll.AddJoint(jointParams);
+                        appendage.Add(huskAppendage);
+                    }
+                    else
+                    {
+                        DebugConsole.ThrowError("Attachment limb not found!");
+                    }
+                }
+            }
+            return appendage;
+        }
+
+        public static string GetHuskedSpeciesName(string speciesName, AfflictionPrefabHusk prefab)
+        {
+            return prefab.HuskedSpeciesName.Replace(AfflictionPrefabHusk.Tag, speciesName);
+        }
+
+        public static string GetNonHuskedSpeciesName(string huskedSpeciesName, AfflictionPrefabHusk prefab)
+        {
+            string nonTag = prefab.HuskedSpeciesName.Remove(AfflictionPrefabHusk.Tag);
+            return huskedSpeciesName.Remove(nonTag);
         }
     }
 }

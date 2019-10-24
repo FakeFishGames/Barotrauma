@@ -5,21 +5,21 @@ namespace Barotrauma.Items.Components
 {
     partial class ItemLabel : ItemComponent, IDrawableComponent
     {
-        [Serialize("", true), Editable(100)]
+        [Serialize("", true, description: "The text to display on the label."), Editable(100)]
         public string Text
         {
             get;
             set;
         }
 
-        [Editable, Serialize("0.0,0.0,0.0,1.0", true)]
+        [Editable, Serialize("0,0,0,255", true, description: "The color of the text displayed on the label.")]
         public Color TextColor
         {
             get;
             set;
         }
         
-        [Editable, Serialize(1.0f, true)]
+        [Editable, Serialize(1.0f, true, description: "The scale of the text displayed on the label.")]
         public float TextScale
         {
             get;

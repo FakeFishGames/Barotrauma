@@ -145,7 +145,7 @@ namespace Barotrauma
                 UnlockAchievement(c, "clowncostume");
             }
 
-            if (Submarine.MainSub != null && c.Submarine == null && c.ConfigPath == Character.HumanConfigFile)
+            if (Submarine.MainSub != null && c.Submarine == null && c.SpeciesName.Equals(Character.HumanSpeciesName, StringComparison.OrdinalIgnoreCase))
             {
                 float dist = 500 / Physics.DisplayToRealWorldRatio;
                 if (Vector2.DistanceSquared(c.WorldPosition, Submarine.MainSub.WorldPosition) >
@@ -218,7 +218,7 @@ namespace Barotrauma
                 causeOfDeath.Killer == Character.Controlled)
             {
                 SteamManager.IncrementStat(
-                    character.SpeciesName.ToLowerInvariant() == "human" ? "humanskilled" : "monsterskilled",
+                    character.IsHuman ? "humanskilled" : "monsterskilled",
                     1);
             }
 
@@ -228,6 +228,14 @@ namespace Barotrauma
             if (character.CurrentHull != null)
             {
                 UnlockAchievement(causeOfDeath.Killer, "kill" + character.SpeciesName + "indoors");
+            }
+            if (character.SpeciesName.EndsWith("boss"))
+            {
+                UnlockAchievement(causeOfDeath.Killer, "kill" + character.SpeciesName.Replace("boss", ""));
+                if (character.CurrentHull != null)
+                {
+                    UnlockAchievement(causeOfDeath.Killer, "kill" + character.SpeciesName.Replace("boss", "") + "indoors");
+                }
             }
 
             if (character.HasEquippedItem("clownmask") && 

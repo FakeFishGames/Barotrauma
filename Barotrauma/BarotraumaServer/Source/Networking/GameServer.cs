@@ -23,6 +23,19 @@ namespace Barotrauma.Networking
             get { return true; }
         }
 
+        private string serverName;
+
+        public string ServerName
+        {
+            get { return serverName; }
+            set
+            {
+                if (string.IsNullOrEmpty(value)) { return; }
+                serverName = value.Replace(":", "").Replace(";", "");
+            }
+        }
+
+
         private List<Client> connectedClients = new List<Client>();
 
         //for keeping track of disconnected clients in case the reconnect shortly after
@@ -39,7 +52,7 @@ namespace Barotrauma.Networking
 
         private ServerPeer serverPeer;
         public ServerPeer ServerPeer { get { return serverPeer; } }
-        
+
         private DateTime refreshMasterTimer;
         private TimeSpan refreshMasterInterval = new TimeSpan(0, 0, 60);
         private bool registeredToMaster;
@@ -58,7 +71,7 @@ namespace Barotrauma.Networking
             get;
             private set;
         }
-        
+
         private bool initiatedStartGame;
         private CoroutineHandle startGameCoroutine;
 
@@ -90,7 +103,7 @@ namespace Barotrauma.Networking
         {
             get { return entityEventManager; }
         }
-        
+
         public TimeSpan UpdateInterval
         {
             get { return updateInterval; }
@@ -113,12 +126,13 @@ namespace Barotrauma.Networking
             {
                 name = name.Substring(0, NetConfig.ServerNameMaxLength);
             }
-            
-            this.name = name;
-            
+
+            this.serverName = name;
+
             LastClientListUpdateID = 0;
 
             serverSettings = new ServerSettings(this, name, port, queryPort, maxPlayers, isPublic, attemptUPnP);
+            KarmaManager.SelectPreset(serverSettings.KarmaPreset);
             if (!string.IsNullOrEmpty(password))
             {
                 serverSettings.SetPassword(password);
@@ -129,7 +143,7 @@ namespace Barotrauma.Networking
             ownerSteamId = steamId;
 
             entityEventManager = new ServerEntityEventManager(this);
-            
+
             CoroutineManager.StartCoroutine(StartServer(isPublic));
         }
 
@@ -141,12 +155,12 @@ namespace Barotrauma.Networking
                 Log("Starting the server...", ServerLog.MessageType.ServerMessage);
                 if (!ownerSteamId.HasValue || ownerSteamId.Value == 0)
                 {
-                    Log("Using Lidgren networking", ServerLog.MessageType.ServerMessage);
+                    Log("Using Lidgren networking. Manual port forwarding may be required. If players cannot connect to the server, you may want to use the in-game hosting menu (which uses SteamP2P networking and does not require port forwarding).", ServerLog.MessageType.ServerMessage);
                     serverPeer = new LidgrenServerPeer(ownerKey, serverSettings);
                 }
                 else
                 {
-                    Log("Using SteamP2P", ServerLog.MessageType.ServerMessage);
+                    Log("Using SteamP2P networking.", ServerLog.MessageType.ServerMessage);
                     serverPeer = new SteamP2PServerPeer(ownerSteamId.Value, serverSettings);
                 }
 
@@ -169,14 +183,14 @@ namespace Barotrauma.Networking
                 Log("Error while starting the server (" + e.Message + ")", ServerLog.MessageType.Error);
 
                 System.Net.Sockets.SocketException socketException = e as System.Net.Sockets.SocketException;
-                
+
                 error = true;
             }
 
             if (error)
             {
                 if (serverPeer != null) serverPeer.Close("Error while starting the server");
-                
+
                 Environment.Exit(-1);
 
                 yield return CoroutineStatus.Success;
@@ -257,7 +271,7 @@ namespace Barotrauma.Networking
                     newClient.AddKickVote(c);
                 }
             }
-            
+
             LastClientListUpdateID++;
 
             if (newClient.Connection == OwnerConnection)
@@ -317,7 +331,7 @@ namespace Barotrauma.Networking
 
             var request = new RestRequest("masterserver3.php", Method.GET);
             request.AddParameter("action", "addserver");
-            request.AddParameter("servername", name);
+            request.AddParameter("servername", serverName);
             request.AddParameter("serverport", Port);
             request.AddParameter("currplayers", connectedClients.Count);
             request.AddParameter("maxplayers", serverSettings.MaxPlayers);
@@ -434,12 +448,12 @@ namespace Barotrauma.Networking
         public override void Update(float deltaTime)
         {
 #if CLIENT
-            if (ShowNetStats) netStats.Update(deltaTime);
+            if (ShowNetStats) { netStats.Update(deltaTime); }
 #endif
-            if (!started) return;
+            if (!started) { return; }
 
             base.Update(deltaTime);
-            
+
             fileSender.Update(deltaTime);
             KarmaManager.UpdateClients(ConnectedClients, deltaTime);
 
@@ -492,16 +506,16 @@ namespace Barotrauma.Networking
                 {
                     if (Level.Loaded?.EndOutpost != null)
                     {
-                        bool charactersInsideOutpost = connectedClients.Any(c => 
-                            c.Character != null && 
-                            !c.Character.IsDead && 
+                        bool charactersInsideOutpost = connectedClients.Any(c =>
+                            c.Character != null &&
+                            !c.Character.IsDead &&
                             c.Character.Submarine == Level.Loaded.EndOutpost);
 
                         //level finished if the sub is docked to the outpost
                         //or very close and someone from the crew made it inside the outpost
-                        subAtLevelEnd = 
+                        subAtLevelEnd =
                             Submarine.MainSub.DockedTo.Contains(Level.Loaded.EndOutpost) ||
-                            (Submarine.MainSub.AtEndPosition && charactersInsideOutpost);                      
+                            (Submarine.MainSub.AtEndPosition && charactersInsideOutpost);
                     }
                     else
                     {
@@ -510,7 +524,12 @@ namespace Barotrauma.Networking
                 }
 
                 float endRoundDelay = 1.0f;
-                if (serverSettings.AutoRestart && isCrewDead)
+                if (TraitorManager?.ShouldEndRound ?? false)
+                {
+                    endRoundDelay = 5.0f;
+                    endRoundTimer += deltaTime;
+                }
+                else if (serverSettings.AutoRestart && isCrewDead)
                 {
                     endRoundDelay = 5.0f;
                     endRoundTimer += deltaTime;
@@ -533,10 +552,14 @@ namespace Barotrauma.Networking
                 {
                     endRoundTimer = 0.0f;
                 }
-                
+
                 if (endRoundTimer >= endRoundDelay)
                 {
-                    if (serverSettings.AutoRestart && isCrewDead)
+                    if (TraitorManager?.ShouldEndRound ?? false)
+                    {
+                        Log("Ending round (a traitor completed their mission)", ServerLog.MessageType.ServerMessage);
+                    }
+                    else if (serverSettings.AutoRestart && isCrewDead)
                     {
                         Log("Ending round (entire crew dead)", ServerLog.MessageType.ServerMessage);
                     }
@@ -572,8 +595,8 @@ namespace Barotrauma.Networking
                 if (serverSettings.AutoRestart)
                 {
                     //autorestart if there are any non-spectators on the server (ignoring the server owner)
-                    bool shouldAutoRestart = connectedClients.Any(c => 
-                        c.Connection != OwnerConnection && 
+                    bool shouldAutoRestart = connectedClients.Any(c =>
+                        c.Connection != OwnerConnection &&
                         (!c.SpectateOnly || !serverSettings.AllowSpectating));
 
                     if (shouldAutoRestart != autoRestartTimerRunning)
@@ -629,7 +652,7 @@ namespace Barotrauma.Networking
                 }
             }
 
-            IEnumerable<Client> kickAFK = connectedClients.FindAll(c => 
+            IEnumerable<Client> kickAFK = connectedClients.FindAll(c =>
                 c.KickAFKTimer >= serverSettings.KickAFKTime &&
                 (OwnerConnection == null || c.Connection != OwnerConnection));
             foreach (Client c in kickAFK)
@@ -638,6 +661,9 @@ namespace Barotrauma.Networking
             }
 
             serverPeer.Update(deltaTime);
+
+            //don't run the rest of the method if something in serverPeer.Update causes the server to shutdown
+            if (!started) { return; }
 
             // if update interval has passed
             if (updateTimer < DateTime.Now)
@@ -662,7 +688,7 @@ namespace Barotrauma.Networking
                             }
 
                             GameAnalyticsManager.AddErrorEventOnce(
-                                "GameServer.Update:ClientWriteFailed" + e.StackTrace, 
+                                "GameServer.Update:ClientWriteFailed" + e.StackTrace,
                                 GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
                                 errorMsg);
                         }
@@ -705,7 +731,7 @@ namespace Barotrauma.Networking
                 serverSettings.ServerDetailsChanged = false;
             }
         }
-        
+
         private void ReadDataMessage(NetworkConnection sender, IReadMessage inc)
         {
             var connectedClient = connectedClients.Find(c => c.Connection == sender);
@@ -748,7 +774,7 @@ namespace Barotrauma.Networking
                         if (matchingSub == null)
                         {
                             SendDirectChatMessage(
-                                TextManager.GetWithVariable("CampaignStartFailedSubNotFound", "[subname]", subName), 
+                                TextManager.GetWithVariable("CampaignStartFailedSubNotFound", "[subname]", subName),
                                 connectedClient, ChatMessageType.MessageBox);
                         }
                         else
@@ -890,8 +916,8 @@ namespace Barotrauma.Networking
                         c.LastRecvLobbyUpdate = NetIdUtils.Clamp(inc.ReadUInt16(), c.LastRecvLobbyUpdate, GameMain.NetLobbyScreen.LastUpdateID);
                         c.LastRecvChatMsgID = NetIdUtils.Clamp(inc.ReadUInt16(), c.LastRecvChatMsgID, c.LastChatMsgQueueID);
                         c.LastRecvClientListUpdate = NetIdUtils.Clamp(inc.ReadUInt16(), c.LastRecvClientListUpdate, LastClientListUpdateID);
-                        
-                        TryChangeClientName(c, inc.ReadString());                        
+
+                        TryChangeClientName(c, inc);
 
                         c.LastRecvCampaignSave = inc.ReadUInt16();
                         if (c.LastRecvCampaignSave > 0)
@@ -907,7 +933,7 @@ namespace Barotrauma.Networking
                                     campaign.DiscardClientCharacterData(c);
                                 }
 
-                                //the client has a campaign save for another campaign 
+                                //the client has a campaign save for another campaign
                                 //(the server started a new campaign and the client isn't aware of it yet?)
                                 if (campaign.CampaignID != campaignID)
                                 {
@@ -963,7 +989,7 @@ namespace Barotrauma.Networking
                         UInt16 lastRecvChatMsgID = inc.ReadUInt16();
                         UInt16 lastRecvEntityEventID = inc.ReadUInt16();
                         UInt16 lastRecvClientListUpdate = inc.ReadUInt16();
-                        
+
                         //last msgs we've created/sent, the client IDs should never be higher than these
                         UInt16 lastEntityEventID = entityEventManager.Events.Count == 0 ? (UInt16)0 : entityEventManager.Events.Last().ID;
 
@@ -1071,10 +1097,10 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            //clients are allowed to end the round by talking with the watchman in multiplayer 
+            //clients are allowed to end the round by talking with the watchman in multiplayer
             //campaign even if they don't have the special permission
             bool peekBool = inc.ReadBoolean(); inc.BitPosition--;
-            if (command == ClientPermissions.ManageRound && peekBool && 
+            if (command == ClientPermissions.ManageRound && peekBool &&
                 GameMain.GameSession?.GameMode is MultiPlayerCampaign mpCampaign)
             {
                 if (!mpCampaign.AllowedToEndRound(sender.Character) && !sender.HasPermission(command))
@@ -1192,7 +1218,7 @@ namespace Barotrauma.Networking
                         {
                             msg.Write(saveFile);
                         }
-                            
+
                         serverPeer.Send(msg, sender.Connection, DeliveryMethod.Reliable);
                     }
                     else
@@ -1267,10 +1293,10 @@ namespace Barotrauma.Networking
                 {
                     c.Character.ClientDisconnected = true;
                 }
-                
+
                 ClientWriteLobby(c);
 
-                if (GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign && 
+                if (GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign &&
                     GameMain.NetLobbyScreen.SelectedMode == campaign.Preset &&
                     NetIdUtils.IdMoreRecent(campaign.LastSaveID, c.LastRecvCampaignSave))
                 {
@@ -1284,7 +1310,7 @@ namespace Barotrauma.Networking
                             return;
                         }
                     }
-                    
+
                     if (!fileSender.ActiveTransfers.Any(t => t.Connection == c.Connection && t.FileType == FileTransferType.CampaignSave))
                     {
                         fileSender.StartTransfer(c.Connection, FileTransferType.CampaignSave, GameMain.GameSession.SavePath);
@@ -1312,14 +1338,15 @@ namespace Barotrauma.Networking
             {
                 outmsg.Write(subList[i].Name);
                 outmsg.Write(subList[i].MD5Hash.ToString());
+                outmsg.Write(subList[i].RequiredContentPackagesInstalled);
             }
 
             outmsg.Write(GameStarted);
             outmsg.Write(serverSettings.AllowSpectating);
-            
+
             c.WritePermissions(outmsg);
         }
-        
+
         private void ClientWriteIngame(Client c)
         {
             //don't send position updates to characters who are still midround syncing
@@ -1392,7 +1419,7 @@ namespace Barotrauma.Networking
             while (!c.NeedsMidRoundSync && c.PendingPositionUpdates.Count > 0)
             {
                 var entity = c.PendingPositionUpdates.Peek();
-                if (entity == null || entity.Removed || 
+                if (entity == null || entity.Removed ||
                     (entity is Item item && item.PositionUpdateInterval == float.PositiveInfinity))
                 {
                     c.PendingPositionUpdates.Dequeue();
@@ -1436,7 +1463,7 @@ namespace Barotrauma.Networking
                 DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce("GameServer.ClientWriteIngame1:PacketSizeExceeded" + outmsg.LengthBytes, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
             }
-            
+
             serverPeer.Send(outmsg, c.Connection, DeliveryMethod.Unreliable);
 
             //---------------------------------------------------------------------------
@@ -1476,24 +1503,25 @@ namespace Barotrauma.Networking
                     DebugConsole.ThrowError(errorMsg);
                     GameAnalyticsManager.AddErrorEventOnce("GameServer.ClientWriteIngame2:PacketSizeExceeded" + outmsg.LengthBytes, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 }
-                
-                serverPeer.Send(outmsg, c.Connection, DeliveryMethod.Unreliable);     
-            }                  
+
+                serverPeer.Send(outmsg, c.Connection, DeliveryMethod.Unreliable);
+            }
         }
 
         private void WriteClientList(Client c, IWriteMessage outmsg)
         {
             bool hasChanged = NetIdUtils.IdMoreRecent(LastClientListUpdateID, c.LastRecvClientListUpdate);
             if (!hasChanged) { return; }
-            
+
             outmsg.Write((byte)ServerNetObject.CLIENT_LIST);
             outmsg.Write(LastClientListUpdateID);
-            
+
             outmsg.Write((byte)connectedClients.Count);
             foreach (Client client in connectedClients)
             {
                 outmsg.Write(client.ID);
                 outmsg.Write(client.SteamID);
+                outmsg.Write(client.NameID);
                 outmsg.Write(client.Name);
                 outmsg.Write(client.Character == null || !gameStarted ? (ushort)0 : client.Character.ID);
                 outmsg.Write(client.Muted);
@@ -1512,25 +1540,28 @@ namespace Barotrauma.Networking
             outmsg.Write((byte)ServerNetObject.SYNC_IDS);
 
             int settingsBytes = outmsg.LengthBytes;
+            int initialUpdateBytes = 0;
 
+            IWriteMessage settingsBuf = null;
             if (NetIdUtils.IdMoreRecent(GameMain.NetLobbyScreen.LastUpdateID, c.LastRecvLobbyUpdate))
             {
                 outmsg.Write(true);
                 outmsg.WritePadBits();
-                
+
                 outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
 
-                IWriteMessage settingsBuf = new ReadWriteMessage();
+                settingsBuf = new ReadWriteMessage();
                 serverSettings.ServerWrite(settingsBuf, c);
-
                 outmsg.Write((UInt16)settingsBuf.LengthBytes);
-                outmsg.Write(settingsBuf.Buffer,0,settingsBuf.LengthBytes);
+                outmsg.Write(settingsBuf.Buffer, 0, settingsBuf.LengthBytes);
 
                 outmsg.Write(c.LastRecvLobbyUpdate < 1);
                 if (c.LastRecvLobbyUpdate < 1)
                 {
                     isInitialUpdate = true;
+                    initialUpdateBytes = outmsg.LengthBytes;
                     ClientWriteInitial(c, outmsg);
+                    initialUpdateBytes = outmsg.LengthBytes - initialUpdateBytes;
                 }
                 outmsg.Write(GameMain.NetLobbyScreen.SelectedSub.Name);
                 outmsg.Write(GameMain.NetLobbyScreen.SelectedSub.MD5Hash.ToString());
@@ -1572,7 +1603,7 @@ namespace Barotrauma.Networking
             int campaignBytes = outmsg.LengthBytes;
             var campaign = GameMain.GameSession?.GameMode as MultiPlayerCampaign;
             if (outmsg.LengthBytes < MsgConstants.MTU - 500 &&
-                campaign != null && campaign.Preset == GameMain.NetLobbyScreen.SelectedMode && 
+                campaign != null && campaign.Preset == GameMain.NetLobbyScreen.SelectedMode &&
                 NetIdUtils.IdMoreRecent(campaign.LastUpdateID, c.LastRecvCampaignUpdate))
             {
                 outmsg.Write(true);
@@ -1600,7 +1631,7 @@ namespace Barotrauma.Networking
             chatMessageBytes = outmsg.LengthBytes - outmsg.LengthBytes;
 
             outmsg.Write((byte)ServerNetObject.END_OF_MESSAGE);
-            
+
             if (isInitialUpdate)
             {
                 //the initial update may be very large if the host has a large number
@@ -1619,13 +1650,23 @@ namespace Barotrauma.Networking
             {
                 if (outmsg.LengthBytes > MsgConstants.MTU)
                 {
-                    string errorMsg = "Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + MsgConstants.MTU + ")";
+                    string errorMsg = "Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + MsgConstants.MTU + ")\n";
                     errorMsg +=
                         "  Client list size: " + clientListBytes + " bytes\n" +
                         "  Chat message size: " + chatMessageBytes + " bytes\n" +
                         "  Campaign size: " + campaignBytes + " bytes\n" +
-                        "  Settings size: " + settingsBytes + " bytes\n\n";
-                        DebugConsole.ThrowError(errorMsg);
+                        "  Settings size: " + settingsBytes + " bytes\n";
+                    if (initialUpdateBytes > 0)
+                    {
+                        errorMsg +=
+                            "    Initial update size: " + settingsBuf.LengthBytes + " bytes\n";
+                    }
+                    if (settingsBuf != null)
+                    {
+                        errorMsg +=
+                            "    Settings buffer size: " + settingsBuf.LengthBytes + " bytes\n";
+                    }
+                    DebugConsole.ThrowError(errorMsg);
                     GameAnalyticsManager.AddErrorEventOnce("GameServer.ClientWriteIngame1:ClientWriteLobby" + outmsg.LengthBytes, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 }
 
@@ -1649,6 +1690,8 @@ namespace Barotrauma.Networking
 
         public bool StartGame()
         {
+            if (initiatedStartGame || gameStarted) { return false; }
+
             Log("Starting a new round...", ServerLog.MessageType.ServerMessage);
 
             Submarine selectedSub = null;
@@ -1691,7 +1734,7 @@ namespace Barotrauma.Networking
         private IEnumerable<object> InitiateStartGame(Submarine selectedSub, Submarine selectedShuttle, bool usingShuttle, GameModePreset selectedMode)
         {
             initiatedStartGame = true;
-            
+
             if (connectedClients.Any())
             {
                 IWriteMessage msg = new WriteOnlyMessage();
@@ -1705,7 +1748,7 @@ namespace Barotrauma.Networking
                 msg.Write(selectedShuttle.MD5Hash.Hash);
 
                 connectedClients.ForEach(c => c.ReadyToStart = false);
-                
+
                 foreach (NetworkConnection conn in connectedClients.Select(c => c.Connection))
                 {
                     serverPeer.Send(msg, conn, DeliveryMethod.Reliable);
@@ -1725,7 +1768,7 @@ namespace Barotrauma.Networking
                     while (fileSender.ActiveTransfers.Count > 0 && waitForTransfersTimer > 0.0f)
                     {
                         waitForTransfersTimer -= CoroutineManager.UnscaledDeltaTime;
-                        
+
                         yield return CoroutineStatus.Running;
                     }
                 }
@@ -1739,7 +1782,7 @@ namespace Barotrauma.Networking
         private IEnumerable<object> StartGame(Submarine selectedSub, Submarine selectedShuttle, bool usingShuttle, GameModePreset selectedMode)
         {
             entityEventManager.Clear();
-            
+
             roundStartSeed = DateTime.Now.Millisecond;
             Rand.SetSyncedSeed(roundStartSeed);
 
@@ -1767,8 +1810,16 @@ namespace Barotrauma.Networking
                 GameMain.GameSession = new GameSession(selectedSub, "", selectedMode, (MissionType)GameMain.NetLobbyScreen.MissionTypeIndex);
             }
 
+            List<Client> playingClients = new List<Client>(connectedClients);
+            if (serverSettings.AllowSpectating)
+            {
+                playingClients.RemoveAll(c => c.SpectateOnly);
+            }
+            //always allow the server owner to spectate even if it's disallowed in server settings
+            playingClients.RemoveAll(c => c.Connection == OwnerConnection && c.SpectateOnly);
+
             if (GameMain.GameSession.GameMode.Mission != null &&
-                GameMain.GameSession.GameMode.Mission.AssignTeamIDs(connectedClients))
+                GameMain.GameSession.GameMode.Mission.AssignTeamIDs(playingClients))
             {
                 teamCount = 2;
             }
@@ -1797,10 +1848,18 @@ namespace Barotrauma.Networking
                 Log("Level seed: " + GameMain.NetLobbyScreen.LevelSeed, ServerLog.MessageType.ServerMessage);
             }
 
+            if (GameMain.GameSession.Submarine.IsFileCorrupted)
+            {
+                CoroutineManager.StopCoroutines(startGameCoroutine);
+                initiatedStartGame = false;
+                SendChatMessage(TextManager.FormatServerMessage($"SubLoadError~[subname]={GameMain.GameSession.Submarine.Name}"), ChatMessageType.Error);
+                yield return CoroutineStatus.Failure;
+            }
+
             MissionMode missionMode = GameMain.GameSession.GameMode as MissionMode;
             bool missionAllowRespawn = campaign == null && (missionMode?.Mission == null || missionMode.Mission.AllowRespawn);
 
-            if (serverSettings.AllowRespawn && missionAllowRespawn) respawnManager = new RespawnManager(this, usingShuttle ? selectedShuttle : null);
+            if (serverSettings.AllowRespawn && missionAllowRespawn) { respawnManager = new RespawnManager(this, usingShuttle ? selectedShuttle : null); }
 
             entityEventManager.RefreshEntityIDs();
 
@@ -1816,15 +1875,9 @@ namespace Barotrauma.Networking
                 }
 
                 //find the clients in this team
-                List<Client> teamClients = teamCount == 1 ? 
-                    new List<Client>(connectedClients) : 
-                    connectedClients.FindAll(c => c.TeamID == teamID);
-                if (serverSettings.AllowSpectating)
-                {
-                    teamClients.RemoveAll(c => c.SpectateOnly);
-                }
-                //always allow the server owner to spectate even if it's disallowed in server settings
-                teamClients.RemoveAll(c => c.Connection == OwnerConnection && c.SpectateOnly);
+                List<Client> teamClients = teamCount == 1 ?
+                    new List<Client>(playingClients) : 
+                    playingClients.FindAll(c => c.TeamID == teamID);
 
                 if (!teamClients.Any() && n > 0) { continue; }
 
@@ -1843,7 +1896,7 @@ namespace Barotrauma.Networking
 
                     if (client.CharacterInfo == null)
                     {
-                        client.CharacterInfo = new CharacterInfo(Character.HumanConfigFile, client.Name);
+                        client.CharacterInfo = new CharacterInfo(Character.HumanSpeciesName, client.Name);
                     }
                     characterInfos.Add(client.CharacterInfo);
                     if (client.CharacterInfo.Job == null || client.CharacterInfo.Job.Prefab != client.AssignedJob)
@@ -1851,12 +1904,12 @@ namespace Barotrauma.Networking
                         client.CharacterInfo.Job = new Job(client.AssignedJob);
                     }
                 }
-                
+
                 List<CharacterInfo> bots = new List<CharacterInfo>();
                 int botsToSpawn = serverSettings.BotSpawnMode == BotSpawnMode.Fill ? serverSettings.BotCount - characterInfos.Count : serverSettings.BotCount;
                 for (int i = 0; i < botsToSpawn; i++)
                 {
-                    var botInfo = new CharacterInfo(Character.HumanConfigFile);
+                    var botInfo = new CharacterInfo(Character.HumanSpeciesName);
                     characterInfos.Add(botInfo);
                     bots.Add(botInfo);
                 }
@@ -1929,9 +1982,9 @@ namespace Barotrauma.Networking
 
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
             GameMain.GameScreen.Select();
-            
+
             Log("Round started.", ServerLog.MessageType.ServerMessage);
-                    
+
             gameStarted = true;
             initiatedStartGame = false;
             GameMain.ResetFrameTime();
@@ -1988,7 +2041,7 @@ namespace Barotrauma.Networking
             msg.Write(serverSettings.AllowRagdollButton);
 
             serverSettings.WriteMonsterEnabled(msg);
-            
+
             serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
         }
 
@@ -2022,10 +2075,10 @@ namespace Barotrauma.Networking
                 "[endsummary]=" + roundSummary.Substring(roundSummaryStart),
                 "[endsummary]\n\n[endsummary.traitorinfo]"
             }.Where(s => !string.IsNullOrEmpty(s)));
-            
+
             Mission mission = GameMain.GameSession.Mission;
             GameMain.GameSession.GameMode.End(endMessage);
-            
+
             endRoundTimer = 0.0f;
 
             if (serverSettings.AutoRestart)
@@ -2036,7 +2089,7 @@ namespace Barotrauma.Networking
             }
 
             if (serverSettings.SaveServerLogs) serverSettings.ServerLog.Save();
-            
+
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
 
             entityEventManager.Clear();
@@ -2063,7 +2116,7 @@ namespace Barotrauma.Networking
                 msg.Write(endMessage);
                 msg.Write(mission != null && mission.Completed);
                 msg.Write(GameMain.GameSession?.WinningTeam == null ? (byte)0 : (byte)GameMain.GameSession.WinningTeam);
-                
+
                 foreach (Client client in connectedClients)
                 {
                     serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
@@ -2080,7 +2133,7 @@ namespace Barotrauma.Networking
 
             GameMain.NetLobbyScreen.RandomizeSettings();
         }
-        
+
         public override void AddChatMessage(ChatMessage message)
         {
             if (string.IsNullOrEmpty(message.Text)) { return; }
@@ -2089,9 +2142,14 @@ namespace Barotrauma.Networking
             base.AddChatMessage(message);
         }
 
-        private bool TryChangeClientName(Client c, string newName)
+        private bool TryChangeClientName(Client c, IReadMessage inc)
         {
-            if (c == null || string.IsNullOrEmpty(newName)) { return false; }
+            UInt16 nameId = inc.ReadUInt16();
+            string newName = inc.ReadString();
+
+            if (c == null || string.IsNullOrEmpty(newName) || !NetIdUtils.IdMoreRecent(nameId, c.NameID)) { return false; }
+
+            c.NameID = nameId;
 
             newName = Client.SanitizeName(newName);
             if (newName == c.Name) { return false; }
@@ -2107,13 +2165,13 @@ namespace Barotrauma.Networking
                     SendDirectChatMessage("Could not change your name to \"" + newName + "\" (the name contains disallowed symbols).", c, ChatMessageType.MessageBox);
                     return false;
                 }
-                if (Homoglyphs.Compare(newName.ToLower(), Name.ToLower()))
+                if (Homoglyphs.Compare(newName.ToLower(), ServerName.ToLower()))
                 {
                     SendDirectChatMessage("Could not change your name to \"" + newName + "\" (too similar to the server's name).", c, ChatMessageType.MessageBox);
                     return false;
                 }
             }
-            
+
             Client nameTaken = ConnectedClients.Find(c2 => c != c2 && Homoglyphs.Compare(c2.Name.ToLower(), newName.ToLower()));
             if (nameTaken != null)
             {
@@ -2207,7 +2265,7 @@ namespace Barotrauma.Networking
                     lidgrenConn.IPEndPoint.Address.ToString();
                     if (range) { ip = serverSettings.BanList.ToRange(ip); }
                 }
-                
+
                 serverSettings.BanList.BanPlayer(client.Name, ip, reason, duration);
             }
             if (client.SteamID > 0)
@@ -2280,7 +2338,7 @@ namespace Barotrauma.Networking
             {
                 if (client.HasKickVoteFrom(c)) { previousPlayer.KickVoters.Add(c); }
             }
-            
+
             serverPeer.Disconnect(client.Connection, targetmsg);
             client.Dispose();
             connectedClients.Remove(client);
@@ -2288,7 +2346,7 @@ namespace Barotrauma.Networking
             KarmaManager.OnClientDisconnected(client);
 
             UpdateVoteStatus();
-            
+
             SendChatMessage(msg, ChatMessageType.Server);
 
             UpdateCrewFrame();
@@ -2360,7 +2418,7 @@ namespace Barotrauma.Networking
                     default:
                         if (command != "")
                         {
-                            if (command.ToLower() == name.ToLower())
+                            if (command.ToLower() == serverName.ToLower())
                             {
                                 //a private message to the host
                                 if (OwnerConnection != null)
@@ -2411,7 +2469,7 @@ namespace Barotrauma.Networking
                     //msg sent by the server
                     if (senderCharacter == null)
                     {
-                        senderName = name;
+                        senderName = serverName;
                     }
                     else //msg sent by an AI character
                     {
@@ -2443,14 +2501,14 @@ namespace Barotrauma.Networking
                     //msg sent by the server
                     if (senderCharacter == null)
                     {
-                        senderName = name;
+                        senderName = serverName;
                     }
                     else //sent by an AI character, not allowed when the game is not running
                     {
                         return;
                     }
                 }
-                else //msg sent by a client          
+                else //msg sent by a client
                 {
                     //game not started -> clients can only send normal and private chatmessages
                     if (type != ChatMessageType.Private) type = ChatMessageType.Default;
@@ -2482,7 +2540,7 @@ namespace Barotrauma.Networking
                     break;
             }
 
-            if (type == ChatMessageType.Server)
+            if (type == ChatMessageType.Server || type == ChatMessageType.Error)
             {
                 senderName = null;
                 senderCharacter = null;
@@ -2570,7 +2628,7 @@ namespace Barotrauma.Networking
             }
 
             string myReceivedMessage = message.Text;
-            
+
             if (!string.IsNullOrWhiteSpace(myReceivedMessage))
             {
                 AddChatMessage(new OrderChatMessage(message.Order, message.OrderOption, myReceivedMessage, message.TargetEntity, message.TargetCharacter, message.Sender));
@@ -2603,7 +2661,7 @@ namespace Barotrauma.Networking
 
             Client.UpdateKickVotes(connectedClients);
 
-            var clientsToKick = connectedClients.FindAll(c => 
+            var clientsToKick = connectedClients.FindAll(c =>
                 c.Connection != OwnerConnection &&
                 c.KickVoteCount >= connectedClients.Count * serverSettings.KickVoteRequiredRatio);
             foreach (Client c in clientsToKick)
@@ -2641,7 +2699,7 @@ namespace Barotrauma.Networking
             msg.Write((byte)ServerNetObject.VOTE);
             serverSettings.Voting.ServerWrite(msg);
             msg.Write((byte)ServerNetObject.END_OF_MESSAGE);
-            
+
             foreach (var c in recipients)
             {
                 serverPeer.Send(msg, c.Connection, DeliveryMethod.Reliable);
@@ -2702,7 +2760,7 @@ namespace Barotrauma.Networking
                     yield return CoroutineStatus.Success;
                 }
                 yield return null;
-            }            
+            }
 
             SendClientPermissions(recipient, client);
             yield return CoroutineStatus.Success;
@@ -2718,7 +2776,7 @@ namespace Barotrauma.Networking
             client.WritePermissions(msg);
             serverPeer.Send(msg, recipient.Connection, DeliveryMethod.Reliable);
         }
-        
+
         public void GiveAchievement(Character character, string achievementIdentifier)
         {
             achievementIdentifier = achievementIdentifier.ToLowerInvariant();
@@ -2740,22 +2798,18 @@ namespace Barotrauma.Networking
             IWriteMessage msg = new WriteOnlyMessage();
             msg.Write((byte)ServerPacketHeader.ACHIEVEMENT);
             msg.Write(achievementIdentifier);
-            
+
             serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
         }
 
-        public void SendTraitorMessage(Client client, string message, TraitorMessageType messageType)
+        public void SendTraitorMessage(Client client, string message, string missionIdentifier, TraitorMessageType messageType)
         {
             if (client == null) { return; }
-            if (!TraitorManager.IsTraitor(client.Character) && client.Connection != OwnerConnection)
-            {
-                return;
-            }
-            var msg = new WriteOnlyMessage(); 
+            var msg = new WriteOnlyMessage();
             msg.Write((byte)ServerPacketHeader.TRAITOR_MESSAGE);
             msg.Write((byte)messageType);
+            msg.Write(missionIdentifier ?? "");
             msg.Write(message);
-
             serverPeer.Send(msg, client.Connection, DeliveryMethod.ReliableOrdered);
         }
 
@@ -2767,10 +2821,10 @@ namespace Barotrauma.Networking
             msg.Write((byte)ServerPacketHeader.CHEATS_ENABLED);
             msg.Write(DebugConsole.CheatsEnabled);
             msg.WritePadBits();
-            
+
             foreach (Client c in connectedClients)
             {
-                serverPeer.Send(msg, c.Connection, DeliveryMethod.Reliable); 
+                serverPeer.Send(msg, c.Connection, DeliveryMethod.Reliable);
             }
         }
 
@@ -2844,15 +2898,17 @@ namespace Barotrauma.Networking
 
             List<JobPrefab> jobPreferences = new List<JobPrefab>();
             int count = message.ReadByte();
+            // TODO: modding support?
             for (int i = 0; i < Math.Min(count, 3); i++)
             {
                 string jobIdentifier = message.ReadString();
-
-                JobPrefab jobPrefab = JobPrefab.List.Find(jp => jp.Identifier == jobIdentifier);
-                if (jobPrefab != null) jobPreferences.Add(jobPrefab);
+                if (JobPrefab.List.TryGetValue(jobIdentifier, out JobPrefab jobPrefab))
+                {
+                    jobPreferences.Add(jobPrefab);
+                }
             }
 
-            sender.CharacterInfo = new CharacterInfo(Character.HumanConfigFile, sender.Name);
+            sender.CharacterInfo = new CharacterInfo(Character.HumanSpeciesName, sender.Name);
             sender.CharacterInfo.RecreateHead(headSpriteId, race, gender, hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
 
             //if the client didn't provide job preferences, we'll use the preferences that are randomly assigned in the Client constructor
@@ -2865,10 +2921,11 @@ namespace Barotrauma.Networking
 
         public void AssignJobs(List<Client> unassigned)
         {
+            var jobList = JobPrefab.List.Values.ToList();
             unassigned = new List<Client>(unassigned);
 
             Dictionary<JobPrefab, int> assignedClientCount = new Dictionary<JobPrefab, int>();
-            foreach (JobPrefab jp in JobPrefab.List)
+            foreach (JobPrefab jp in jobList)
             {
                 assignedClientCount.Add(jp, 0);
             }
@@ -2916,7 +2973,7 @@ namespace Barotrauma.Networking
             {
                 unassignedJobsFound = false;
 
-                foreach (JobPrefab jobPrefab in JobPrefab.List)
+                foreach (JobPrefab jobPrefab in jobList)
                 {
                     if (unassigned.Count == 0) break;
                     if (jobPrefab.MinNumber < 1 || assignedClientCount[jobPrefab] >= jobPrefab.MinNumber) continue;
@@ -2954,22 +3011,22 @@ namespace Barotrauma.Networking
             foreach (Client c in unassigned)
             {
                 //find all jobs that are still available
-                var remainingJobs = JobPrefab.List.FindAll(jp => assignedClientCount[jp] < jp.MaxNumber && c.Karma >= jp.MinKarma);
+                var remainingJobs = jobList.FindAll(jp => assignedClientCount[jp] < jp.MaxNumber && c.Karma >= jp.MinKarma);
 
                 //all jobs taken, give a random job
                 if (remainingJobs.Count == 0)
                 {
                     DebugConsole.ThrowError("Failed to assign a suitable job for \"" + c.Name + "\" (all jobs already have the maximum numbers of players). Assigning a random job...");
-                    int jobIndex = Rand.Range(0, JobPrefab.List.Count);
+                    int jobIndex = Rand.Range(0, jobList.Count);
                     int skips = 0;
-                    while (c.Karma < JobPrefab.List[jobIndex].MinKarma)
+                    while (c.Karma < jobList[jobIndex].MinKarma)
                     {
                         jobIndex++;
                         skips++;
-                        if (jobIndex >= JobPrefab.List.Count) jobIndex -= JobPrefab.List.Count;
-                        if (skips >= JobPrefab.List.Count) break;
+                        if (jobIndex >= jobList.Count) jobIndex -= jobList.Count;
+                        if (skips >= jobList.Count) break;
                     }
-                    c.AssignedJob = JobPrefab.List[jobIndex];
+                    c.AssignedJob = jobList[jobIndex];
                     assignedClientCount[c.AssignedJob]++;
                 }
                 else //some jobs still left, choose one of them by random
@@ -2982,12 +3039,13 @@ namespace Barotrauma.Networking
 
         public void AssignBotJobs(List<CharacterInfo> bots, Character.TeamType teamID)
         {
+            var jobList = JobPrefab.List.Values.ToList();
             Dictionary<JobPrefab, int> assignedPlayerCount = new Dictionary<JobPrefab, int>();
-            foreach (JobPrefab jp in JobPrefab.List)
+            foreach (JobPrefab jp in jobList)
             {
                 assignedPlayerCount.Add(jp, 0);
             }
-            
+
             //count the clients who already have characters with an assigned job
             foreach (Client c in connectedClients)
             {
@@ -3005,7 +3063,7 @@ namespace Barotrauma.Networking
             List<CharacterInfo> unassignedBots = new List<CharacterInfo>(bots);
             foreach (CharacterInfo bot in bots)
             {
-                foreach (JobPrefab jobPrefab in JobPrefab.List)
+                foreach (JobPrefab jobPrefab in jobList)
                 {
                     if (jobPrefab.MinNumber < 1 || assignedPlayerCount[jobPrefab] >= jobPrefab.MinNumber) continue;
                     bot.Job = new Job(jobPrefab);
@@ -3019,12 +3077,12 @@ namespace Barotrauma.Networking
             foreach (CharacterInfo c in unassignedBots)
             {
                 //find all jobs that are still available
-                var remainingJobs = JobPrefab.List.FindAll(jp => assignedPlayerCount[jp] < jp.MaxNumber);
+                var remainingJobs = jobList.FindAll(jp => assignedPlayerCount[jp] < jp.MaxNumber);
                 //all jobs taken, give a random job
                 if (remainingJobs.Count == 0)
                 {
                     DebugConsole.ThrowError("Failed to assign a suitable job for bot \"" + c.Name + "\" (all jobs already have the maximum numbers of players). Assigning a random job...");
-                    c.Job = new Job(JobPrefab.List[Rand.Range(0, JobPrefab.List.Count)]);
+                    c.Job = Job.Random();
                     assignedPlayerCount[c.Job.Prefab]++;
                 }
                 else //some jobs still left, choose one of them by random
@@ -3121,7 +3179,7 @@ namespace Barotrauma.Networking
             }
         }
     }
-    
+
     partial class PreviousPlayer
     {
         public string Name;

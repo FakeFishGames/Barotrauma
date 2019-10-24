@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Xml;
 using System.Xml.Linq;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
@@ -32,8 +33,10 @@ namespace Barotrauma
             }
         }
 
-        public XElement MainElement => doc.Root;
+        public virtual XElement MainElement => doc.Root;
         public XElement OriginalElement { get; protected set; }
+
+        protected virtual string GetName() => Path.GetFileNameWithoutExtension(FullPath).FormatCamelCaseWithSpaces();
 
         protected virtual bool Deserialize(XElement element = null)
         {
@@ -67,7 +70,7 @@ namespace Barotrauma
         protected virtual void UpdatePath(string fullPath)
         {
             FullPath = fullPath;
-            Name = Path.GetFileNameWithoutExtension(FullPath);
+            Name = GetName();
             FileName = Path.GetFileName(FullPath);
             Folder = Path.GetDirectoryName(FullPath);
         }
@@ -112,23 +115,22 @@ namespace Barotrauma
 
 #if CLIENT
         public SerializableEntityEditor SerializableEntityEditor { get; protected set; }
-        public virtual void AddToEditor(ParamsEditor editor)
+        public virtual void AddToEditor(ParamsEditor editor, int space = 0)
         {
             if (!IsLoaded)
             {
                 DebugConsole.ThrowError("[Params] Not loaded!");
                 return;
             }
-            SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, this, false, true);
+            SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, this, false, true, titleFont: GUI.LargeFont);
+            if (space > 0)
+            {
+                new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, space), editor.EditorBox.Content.RectTransform), style: null, color: ParamsEditor.Color)
+                {
+                    CanBeFocused = false
+                };
+            }
         }
 #endif
-
-        #region Memento
-        public readonly Memento<EditableParams> memento = new Memento<EditableParams>();
-        public abstract void CreateSnapshot();
-        public abstract void Undo();
-        public abstract void Redo();
-        public void ClearHistory() => memento.Clear();
-        #endregion
     }
 }

@@ -94,7 +94,23 @@ namespace Barotrauma
         
         public KarmaManager()
         {
-            XDocument doc = XMLExtensions.TryLoadXml(ConfigFile);
+            XDocument doc = null;
+            int maxLoadRetries = 4;
+            for (int i = 0; i <= maxLoadRetries; i++)
+            {
+                try
+                {
+                    doc = XMLExtensions.TryLoadXml(ConfigFile);
+                    break;
+                }
+                catch (IOException)
+                {
+                    if (i == maxLoadRetries) { break; }
+                    DebugConsole.NewMessage("Opening karma settings file \"" + ConfigFile + "\" failed, retrying in 250 ms...");
+                    System.Threading.Thread.Sleep(250);
+                }
+            }
+
             SerializableProperties = SerializableProperty.DeserializeProperties(this, doc?.Root);
             if (doc?.Root != null)
             {
@@ -104,7 +120,7 @@ namespace Barotrauma
                     string presetName = subElement.GetAttributeString("name", "");
                     Presets[presetName.ToLowerInvariant()] = subElement;
                 }
-                SelectPreset("default");
+                SelectPreset(GameMain.NetworkMember?.ServerSettings?.KarmaPreset ?? "default");
             }
             herpesAffliction = AfflictionPrefab.List.Find(ap => ap.Identifier == "spaceherpes");
         }
@@ -118,13 +134,18 @@ namespace Barotrauma
             {
                 SerializableProperty.DeserializeProperties(this, Presets[presetName]);
             }
+            else if (Presets.ContainsKey("custom"))
+            {
+                SerializableProperty.DeserializeProperties(this, Presets["custom"]);
+
+            }
         }
 
         public void SaveCustomPreset()
         {
             if (Presets.ContainsKey("custom"))
             {
-                SerializableProperty.SerializeProperties(this, Presets["custom"]);
+                SerializableProperty.SerializeProperties(this, Presets["custom"], saveIfDefault: true);
             }
         }
 
@@ -143,9 +164,25 @@ namespace Barotrauma
                 NewLineOnAttributes = true
             };
 
-            using (var writer = XmlWriter.Create(ConfigFile, settings))
+            int maxLoadRetries = 4;
+            for (int i = 0; i <= maxLoadRetries; i++)
             {
-                doc.Save(writer);
+                try
+                {
+                    using (var writer = XmlWriter.Create(ConfigFile, settings))
+                    {
+                        doc.Save(writer);
+                    }
+                    break;
+                }
+                catch (IOException)
+                {
+                    if (i == maxLoadRetries) { throw; }
+
+                    DebugConsole.NewMessage("Saving karma settings file file \"" + ConfigFile + "\" failed, retrying in 250 ms...");
+                    System.Threading.Thread.Sleep(250);
+                    continue;
+                }
             }
         }
     }

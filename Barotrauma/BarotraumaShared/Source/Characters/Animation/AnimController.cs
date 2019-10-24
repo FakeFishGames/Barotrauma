@@ -37,7 +37,7 @@ namespace Barotrauma
                 }
                 if (!CanWalk)
                 {
-                    DebugConsole.ThrowError($"{character.SpeciesName} cannot walk!");
+                    //DebugConsole.ThrowError($"{character.SpeciesName} cannot walk!");
                     return null;
                 }
                 else
@@ -214,6 +214,8 @@ namespace Barotrauma
                     return SwimSlowParams;
                 case AnimationType.SwimFast:
                     return SwimFastParams;
+                case AnimationType.NotDefined:
+                    return null;
                 default:
                     throw new NotImplementedException(type.ToString());
             }

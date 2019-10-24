@@ -246,6 +246,23 @@ namespace Barotrauma
             }
         }
 
+        private bool? subsLeftBehind;
+        public bool SubsLeftBehind
+        {
+            get
+            {
+                if (subsLeftBehind.HasValue) { return subsLeftBehind.Value; }
+                
+                CheckSubsLeftBehind();
+                return subsLeftBehind.Value;
+            }
+            //set { subsLeftBehind = value; }
+        }
+        public bool LeftBehindSubDockingPortOccupied
+        {
+            get; private set;
+        }
+
         public new Vector2 DrawPosition
         {
             get;
@@ -306,6 +323,20 @@ namespace Barotrauma
             private set;
         }
 
+        private bool? requiredContentPackagesInstalled;
+        public bool RequiredContentPackagesInstalled
+        {
+            get
+            {
+                if (requiredContentPackagesInstalled.HasValue) { return requiredContentPackagesInstalled.Value; }
+                return RequiredContentPackages.All(cp => GameMain.SelectedPackages.Any(cp2 => cp2.Name == cp));
+            }
+            set
+            {
+                requiredContentPackagesInstalled = value;
+            }
+        }
+
         //constructors & generation ----------------------------------------------------
 
         public Submarine(string filePath, string hash = "", bool tryLoad = true) : base(null)
@@ -324,6 +355,8 @@ namespace Barotrauma
             {
                 this.hash = new Md5Hash(hash);
             }
+
+            IsFileCorrupted = false;
 
             if (tryLoad)
             {
@@ -376,6 +409,8 @@ namespace Barotrauma
                     {
                         RequiredContentPackages.Add(contentPackageName);
                     }
+
+                    CheckSubsLeftBehind(doc.Root);
 #if CLIENT                    
                     string previewImageData = doc.Root.GetAttributeString("previewimage", "");
                     if (!string.IsNullOrEmpty(previewImageData))
@@ -435,6 +470,42 @@ namespace Barotrauma
             if (!tags.HasFlag(tag)) return;
 
             tags &= ~tag;
+        }
+
+        public void CheckSubsLeftBehind(XElement element = null)
+        {
+            if (element == null)
+            {
+                XDocument doc = null;
+                int maxLoadRetries = 4;
+                for (int i = 0; i <= maxLoadRetries; i++)
+                {
+                    doc = OpenFile(filePath, out Exception e);
+                    if (e != null && !(e is IOException)) { break; }
+                    if (doc != null || i == maxLoadRetries || !File.Exists(filePath)) { break; }
+                    DebugConsole.NewMessage("Opening submarine file \"" + filePath + "\" failed, retrying in 250 ms...");
+                    Thread.Sleep(250);
+                }
+                if (doc?.Root == null) { return; }
+                element = doc.Root;
+            }
+
+            subsLeftBehind = false;
+            LeftBehindSubDockingPortOccupied = false;
+            foreach (XElement subElement in element.Elements())
+            {
+                if (subElement.Name.ToString().ToLowerInvariant() != "linkedsubmarine") { continue; }
+                if (subElement.Attribute("location") == null) { continue; }
+                
+                subsLeftBehind = true;
+                ushort targetDockingPortID = (ushort)subElement.GetAttributeInt("originallinkedto", 0);
+                XElement targetPortElement = targetDockingPortID == 0 ? null :
+                    element.Elements().FirstOrDefault(e => e.GetAttributeInt("ID", 0) == targetDockingPortID);
+                if (targetPortElement != null && targetPortElement.GetAttributeIntArray("linked", new int[0]).Length > 0)
+                {
+                    LeftBehindSubDockingPortOccupied = true;
+                }
+            }
         }
 
         public void MakeOutpost()
@@ -931,7 +1002,7 @@ namespace Barotrauma
             parents.Add(this);
 
             flippedX = !flippedX;
-
+            
             Item.UpdateHulls();
 
             List<Item> bodyItems = Item.ItemList.FindAll(it => it.Submarine == this && it.body != null);
@@ -974,6 +1045,8 @@ namespace Barotrauma
                 entityGrid = null;
             }
             entityGrid = Hull.GenerateEntityGrid(this);
+
+            SubBody.FlipX();
 
             foreach (MapEntity mapEntity in subEntities)
             {
@@ -1314,6 +1387,12 @@ namespace Barotrauma
                 {
                     stream = SaveUtil.DecompressFiletoStream(file);
                 }
+                catch (FileNotFoundException e)
+                {
+                    exception = e;
+                    DebugConsole.ThrowError("Loading submarine \"" + file + "\" failed! (File not found)");
+                    return null;
+                }
                 catch (Exception e) 
                 {
                     exception = e;
@@ -1377,7 +1456,11 @@ namespace Barotrauma
                     DebugConsole.NewMessage("Loading the submarine \"" + Name + "\" failed, retrying in 250 ms...");
                     Thread.Sleep(250);
                 }
-                if (doc == null || doc.Root == null) { return; }
+                if (doc == null || doc.Root == null)
+                {
+                    IsFileCorrupted = true;
+                    return;
+                }
                 submarineElement = doc.Root;
             }
 
@@ -1574,6 +1657,8 @@ namespace Barotrauma
                 if (e.Submarine != this || !e.ShouldBeSaved) continue;
                 e.Save(element);
             }
+
+            CheckSubsLeftBehind(element);
         }
 
 

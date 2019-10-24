@@ -9,19 +9,17 @@ namespace Barotrauma
         {
             private readonly string optionalInfoTextId;
 
-            public override string StatusValueTextId => (base.IsStarted && !base.CanBeCompleted) ? "failed" : base.StatusValueTextId;
+            public override string StatusValueTextId => (Traitors.Any(IsStarted) && !base.CanBeCompleted(Traitors)) ? "failed" : base.StatusValueTextId;
 
-            public override IEnumerable<string> StatusTextValues
+            public override IEnumerable<string> StatusTextValues(Traitor traitor)
             {
-                get {
-                    var values = base.StatusTextValues.ToArray();
-                    values[1] = TextManager.GetServerMessage(StatusValueTextId);
-                    return values;
-                }
+                var values = base.StatusTextValues(traitor).ToArray();
+                values[1] = TextManager.GetServerMessage(StatusValueTextId);
+                return values;
             }
 
-            public override bool IsCompleted => base.IsCompleted || (base.IsStarted && !base.CanBeCompleted);
-            public override bool CanBeCompleted => true;
+            public override bool IsCompleted => base.IsCompleted || (Traitors.Any(IsStarted) && !base.CanBeCompleted(Traitors));
+            public override bool CanBeCompleted(ICollection<Traitor> traitors) => true;
 
             protected internal override string GetInfoText(Traitor traitor, string textId, IEnumerable<string> keys, IEnumerable<string> values)
             {

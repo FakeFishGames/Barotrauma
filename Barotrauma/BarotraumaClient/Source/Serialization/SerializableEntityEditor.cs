@@ -253,19 +253,21 @@ namespace Barotrauma
             }
         }
 
-        public SerializableEntityEditor(RectTransform parent, ISerializableEntity entity, bool inGame, bool showName, string style = "", int elementHeight = 24) : base(style, new RectTransform(Vector2.One, parent))
+        public SerializableEntityEditor(RectTransform parent, ISerializableEntity entity, bool inGame, bool showName, string style = "", int elementHeight = 24, ScalableFont titleFont = null)
+            : this(parent, entity, inGame ? SerializableProperty.GetProperties<InGameEditable>(entity) : SerializableProperty.GetProperties<Editable>(entity), showName, style, elementHeight, titleFont)
+        {
+        }
+
+        public SerializableEntityEditor(RectTransform parent, ISerializableEntity entity, IEnumerable<SerializableProperty> properties, bool showName, string style = "", int elementHeight = 24, ScalableFont titleFont = null)
+            : base(style, new RectTransform(Vector2.One, parent))
         {
             this.elementHeight = (int)(elementHeight * GUI.Scale);
-            List<SerializableProperty> editableProperties = inGame ? 
-                SerializableProperty.GetProperties<InGameEditable>(entity) : 
-                SerializableProperty.GetProperties<Editable>(entity);
-            
             layoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, RectTransform)) { AbsoluteSpacing = 2 };
             if (showName)
             {
-                new GUITextBlock(new RectTransform(new Point(layoutGroup.Rect.Width, this.elementHeight), layoutGroup.RectTransform), entity.Name, font: GUI.Font);
+                new GUITextBlock(new RectTransform(new Point(layoutGroup.Rect.Width, this.elementHeight), layoutGroup.RectTransform), entity.Name, font: titleFont ?? GUI.Font);
             }
-            editableProperties.ForEach(ep => CreateNewField(ep, entity));
+            properties.ForEach(ep => CreateNewField(ep, entity));
 
             //scale the size of this component and the layout group to fit the children
             int contentHeight = ContentHeight;
@@ -300,7 +302,7 @@ namespace Barotrauma
             {
                 displayName = property.Name.FormatCamelCaseWithSpaces();
             }
-            string toolTip = property.GetAttribute<Editable>().ToolTip;
+            string toolTip = property.GetAttribute<Serialize>().Description;
             GUIComponent propertyField = null;
             if (value is bool)
             {
@@ -383,24 +385,37 @@ namespace Barotrauma
             {
                 ToolTip = toolTip
             };
-            GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform,
-                Anchor.TopRight), GUINumberInput.NumberType.Int)
-            {
-                ToolTip = toolTip,
-                Font = GUI.SmallFont
-            };
             var editableAttribute = property.GetAttribute<Editable>();
-            numberInput.MinValueInt = editableAttribute.MinValueInt;
-            numberInput.MaxValueInt = editableAttribute.MaxValueInt;
-            numberInput.IntValue = value;
-            numberInput.OnValueChanged += (numInput) =>
+            GUIComponent field;
+            if (editableAttribute.ReadOnly)
             {
-                if (property.TrySetValue(entity, numInput.IntValue))
+                var numberInput = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform, Anchor.TopRight), value.ToString())
                 {
-                    TrySendNetworkUpdate(entity, property);
-                }
-            };
-            if (!Fields.ContainsKey(property.Name)) { Fields.Add(property.Name, new GUIComponent[] { numberInput }); }
+                    ToolTip = toolTip,
+                    Font = GUI.SmallFont
+                };
+                field = numberInput as GUIComponent;
+            }
+            else
+            {
+                var numberInput = new GUINumberInput(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform, Anchor.TopRight), GUINumberInput.NumberType.Int)
+                {
+                    ToolTip = toolTip,
+                    Font = GUI.SmallFont
+                };
+                numberInput.MinValueInt = editableAttribute.MinValueInt;
+                numberInput.MaxValueInt = editableAttribute.MaxValueInt;
+                numberInput.IntValue = value;
+                numberInput.OnValueChanged += (numInput) =>
+                {
+                    if (property.TrySetValue(entity, numInput.IntValue))
+                    {
+                        TrySendNetworkUpdate(entity, property);
+                    }
+                };
+                field = numberInput as GUIComponent;
+            }
+            if (!Fields.ContainsKey(property.Name)) { Fields.Add(property.Name, new GUIComponent[] { field }); }
             return frame;
         }
 
@@ -411,6 +426,7 @@ namespace Barotrauma
             {
                 ToolTip = toolTip
             };
+            
             GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform,
                 Anchor.TopRight), GUINumberInput.NumberType.Float)
             {
@@ -450,6 +466,7 @@ namespace Barotrauma
             {
                 enumDropDown.AddItem(enumValue.ToString(), enumValue);
             }
+            enumDropDown.SelectItem(value);
             enumDropDown.OnSelected += (selected, val) =>
             {
                 if (property.TrySetValue(entity, val))
@@ -458,7 +475,6 @@ namespace Barotrauma
                 }
                 return true;
             };
-            enumDropDown.SelectItem(value);
             if (!Fields.ContainsKey(property.Name)) { Fields.Add(property.Name, new GUIComponent[] { enumDropDown }); }
             return frame;
         }
@@ -506,8 +522,10 @@ namespace Barotrauma
             {
                 ToolTip = toolTip
             };
+            var editableAttribute = property.GetAttribute<Editable>();
             GUITextBox propertyBox = new GUITextBox(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform))
             {
+                Enabled = editableAttribute != null && !editableAttribute.ReadOnly,
                 ToolTip = toolTip,
                 Font = GUI.SmallFont,
                 Text = value,

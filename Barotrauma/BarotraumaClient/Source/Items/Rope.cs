@@ -13,7 +13,7 @@ namespace Barotrauma.Items.Components
             get { return Vector2.Zero; }
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool editing = false)
+        public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
         {
             if (!IsActive) return;
 

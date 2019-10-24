@@ -18,7 +18,7 @@ namespace Barotrauma.Items.Components
             get { return light; }
         }
         
-        public void Draw(SpriteBatch spriteBatch, bool editing = false)
+        public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
         {
             if (light.LightSprite != null && (item.body == null || item.body.Enabled) && lightBrightness > 0.0f)
             {
@@ -28,7 +28,7 @@ namespace Barotrauma.Items.Components
 
         public override void FlipX(bool relativeToSub)
         {
-            if (light?.LightSprite != null)
+            if (light?.LightSprite != null && item.Prefab.CanSpriteFlipX)
             {
                 light.LightSpriteEffect = light.LightSpriteEffect == SpriteEffects.None ?
                     SpriteEffects.FlipHorizontally : SpriteEffects.None;                

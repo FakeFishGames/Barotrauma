@@ -166,11 +166,11 @@ namespace Barotrauma
 
             if (Submarine == null)
             {
-                DebugConsole.ThrowError("Couldn't start game session, submarine not selected");
+                DebugConsole.ThrowError("Couldn't start game session, submarine not selected.");
                 return;
             }
 
-            if (reloadSub || Submarine.MainSub != Submarine) Submarine.Load(true);
+            if (reloadSub || Submarine.MainSub != Submarine) { Submarine.Load(true); }
             Submarine.MainSub = Submarine;
             if (loadSecondSub)
             {
@@ -183,6 +183,12 @@ namespace Barotrauma
                 {
                     Submarine.MainSubs[1].Load(false);
                 }
+            }
+            
+            if (Submarine.IsFileCorrupted)
+            {
+                DebugConsole.ThrowError("Couldn't start game session, submarine file corrupted.");
+                return;
             }
 
             if (level != null)

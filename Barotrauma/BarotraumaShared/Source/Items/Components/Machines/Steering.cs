@@ -74,9 +74,10 @@ namespace Barotrauma.Items.Components
                 }
             }
         }
-        
-        [Editable(0.0f, 1.0f, decimals: 3, ToolTip = "How full the ballast tanks should be when the submarine is not being steered upwards/downwards."
-            +" Can be used to compensate if the ballast tanks are too large/small relative to the size of the submarine."), Serialize(0.5f, true)]
+
+        [Editable(0.0f, 1.0f, decimals: 3),
+        Serialize(0.5f, true, description: "How full the ballast tanks should be when the submarine is not being steered upwards/downwards."
+            + " Can be used to compensate if the ballast tanks are too large/small relative to the size of the submarine.")]
         public float NeutralBallastLevel
         {
             get { return neutralBallastLevel; }
@@ -86,7 +87,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(1000.0f, true)]
+        [Serialize(1000.0f, true, description: "How close the docking port has to be to another docking port for the docking mode to become active.")]
         public float DockingAssistThreshold
         {
             get;
@@ -519,99 +520,6 @@ namespace Barotrauma.Items.Components
             else
             {
                 base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power, signalStrength);
-            }
-        }
-
-        public void ServerRead(ClientNetObject type, IReadMessage msg, Barotrauma.Networking.Client c)
-        {
-            bool autoPilot              = msg.ReadBoolean();
-            bool dockingButtonClicked   = msg.ReadBoolean();
-            Vector2 newSteeringInput    = targetVelocity;
-            bool maintainPos            = false;
-            Vector2? newPosToMaintain   = null;
-            bool headingToStart         = false;
-
-            if (autoPilot)
-            {
-                maintainPos = msg.ReadBoolean();
-                if (maintainPos)
-                {
-                    newPosToMaintain = new Vector2(
-                        msg.ReadSingle(), 
-                        msg.ReadSingle());
-                }
-                else
-                {
-                    headingToStart = msg.ReadBoolean();
-                }
-            }
-            else
-            {
-                newSteeringInput = new Vector2(msg.ReadSingle(), msg.ReadSingle());
-            }
-
-            if (!item.CanClientAccess(c)) return;
-
-            user = c.Character;
-            AutoPilot = autoPilot;
-
-            if (dockingButtonClicked)
-            {
-                item.SendSignal(0, "1", "toggle_docking", sender: Character.Controlled);
-            }
-
-            if (!AutoPilot)
-            {
-                steeringInput = newSteeringInput;
-                steeringAdjustSpeed = MathHelper.Lerp(0.2f, 1.0f, c.Character.GetSkillLevel("helm") / 100.0f);
-            }
-            else
-            {
-                MaintainPos = newPosToMaintain != null;
-                posToMaintain = newPosToMaintain;
-
-                if (posToMaintain == null)
-                {
-                    LevelStartSelected = headingToStart;
-                    LevelEndSelected = !headingToStart;
-                    UpdatePath();
-                }
-                else
-                {
-                    LevelStartSelected = false;
-                    LevelEndSelected = false;
-                }
-            }
-
-            //notify all clients of the changed state
-            unsentChanges = true;
-        }
-
-        public void ServerWrite(IWriteMessage msg, Barotrauma.Networking.Client c, object[] extraData = null)
-        {
-            msg.Write(autoPilot);
-
-            if (!autoPilot)
-            {
-                //no need to write steering info if autopilot is controlling
-                msg.Write(steeringInput.X);
-                msg.Write(steeringInput.Y);
-                msg.Write(targetVelocity.X);
-                msg.Write(targetVelocity.Y);
-                msg.Write(steeringAdjustSpeed);
-            }
-            else
-            {
-                msg.Write(posToMaintain != null);
-                if (posToMaintain != null)
-                {
-                    msg.Write(((Vector2)posToMaintain).X);
-                    msg.Write(((Vector2)posToMaintain).Y);
-                }
-                else
-                {
-                    msg.Write(LevelStartSelected);
-                }
             }
         }
     }

@@ -4,10 +4,12 @@ using Barotrauma.Tutorials;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using RestSharp;
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Xml.Linq;
 
@@ -67,6 +69,16 @@ namespace Barotrauma
                 Stretch = true,
                 RelativeSpacing = 0.02f
             };
+
+            FetchRemoteContent(Frame.RectTransform);
+            /*var doc = XMLExtensions.TryLoadXml("Content/UI/MenuTextTest.xml");
+            if (doc?.Root != null)
+            {
+                foreach (XElement subElement in doc?.Root.Elements())
+                {
+                    GUIComponent.FromXML(subElement, Frame.RectTransform);
+                }
+            }*/       
 
             // === CAMPAIGN
             var campaignHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 1.0f), parent: buttonsParent.RectTransform) { RelativeOffset = new Vector2(0.1f, 0.0f) }, isHorizontal: true);
@@ -360,6 +372,7 @@ namespace Barotrauma
             {
                 OnClicked = SelectTab
             };
+
         }
         #endregion
 
@@ -506,7 +519,8 @@ namespace Barotrauma
                 }
             }
             else
-            { 
+            {
+                titleText.Visible = true;
                 selectedTab = 0;
             }
 
@@ -575,7 +589,7 @@ namespace Barotrauma
             //(gamesession.GameMode as SinglePlayerCampaign).GenerateMap(ToolBox.RandomSeed(8));
             gamesession.StartRound(ToolBox.RandomSeed(8));
             GameMain.GameScreen.Select();
-
+            // TODO: modding support
             string[] jobIdentifiers = new string[] { "captain", "engineer", "mechanic" };
             for (int i = 0; i < 3; i++)
             {
@@ -587,14 +601,14 @@ namespace Barotrauma
                     return;
                 }
                 var characterInfo = new CharacterInfo(
-                    Character.HumanConfigFile,
-                    jobPrefab: JobPrefab.List.Find(j => j.Identifier == jobIdentifiers[i]));
+                    Character.HumanSpeciesName,
+                    jobPrefab: JobPrefab.Get(jobIdentifiers[i]));
                 if (characterInfo.Job == null)
                 {
                     DebugConsole.ThrowError("Failed to find the job \"" + jobIdentifiers[i] + "\"!");
                 }
 
-                var newCharacter = Character.Create(Character.HumanConfigFile, spawnPoint.WorldPosition, ToolBox.RandomSeed(8), characterInfo);
+                var newCharacter = Character.Create(Character.HumanSpeciesName, spawnPoint.WorldPosition, ToolBox.RandomSeed(8), characterInfo);
                 newCharacter.GiveJobItems(spawnPoint);
                 gamesession.CrewManager.AddCharacter(newCharacter);
                 Character.Controlled = newCharacter;
@@ -872,7 +886,7 @@ namespace Barotrauma
                         GUI.DrawLine(spriteBatch, textPos, textPos - Vector2.UnitX * textSize.X, mouseOn ? Color.White : Color.White * 0.7f);
                         if (mouseOn && PlayerInput.LeftButtonClicked())
                         {
-                            Process.Start("http://privacypolicy.daedalic.com");
+                            GameMain.Instance.ShowOpenUrlInWebBrowserPrompt("http://privacypolicy.daedalic.com");
                         }
                     }
                     textPos.Y -= textSize.Y;
@@ -955,7 +969,7 @@ namespace Barotrauma
             if (File.Exists(ServerSettings.SettingsFile))
             {
                 XDocument settingsDoc = XMLExtensions.TryLoadXml(ServerSettings.SettingsFile);
-                if (settingsDoc?.Root != null)
+                if (settingsDoc != null)
                 {
                     port = settingsDoc.Root.GetAttributeInt("port", port);
                     queryPort = settingsDoc.Root.GetAttributeInt("queryport", queryPort);
@@ -1050,7 +1064,47 @@ namespace Barotrauma
                 OnClicked = HostServerClicked
             };
         }
-#endregion
+        #endregion
 
+        private void FetchRemoteContent(RectTransform parent)
+        {
+            if (string.IsNullOrEmpty(GameMain.Config.RemoteContentUrl)) { return; }
+            try
+            {
+                var client = new RestClient(GameMain.Config.RemoteContentUrl);
+                var request = new RestRequest("MenuContent.xml", Method.GET);
+
+                IRestResponse response = client.Execute(request);
+                if (response.ResponseStatus != ResponseStatus.Completed)
+                {
+                    return;
+                }
+                if (response.StatusCode != HttpStatusCode.OK)
+                {
+                    return;
+                }
+
+                string xml = response.Content;
+                int index = xml.IndexOf('<');
+                if (index > 0) { xml = xml.Substring(index, xml.Length - index); }
+                if (string.IsNullOrWhiteSpace(xml)) { return; }
+
+                XElement element = XDocument.Parse(xml)?.Root;
+                foreach (XElement subElement in element.Elements())
+                {
+                    GUIComponent.FromXML(subElement, parent);
+                }
+            }
+
+            catch (Exception e)
+            {
+#if DEBUG
+                DebugConsole.ThrowError("Fetching remote content to the main menu failed.", e);
+#endif
+                GameAnalyticsManager.AddErrorEventOnce("MainMenuScreen.FetchRemoteContent:Exception", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    "Fetching remote content to the main menu failed. " + e.Message);
+                return;
+            }
+        }
     }
 }

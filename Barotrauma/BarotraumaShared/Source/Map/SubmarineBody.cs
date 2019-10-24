@@ -26,6 +26,12 @@ namespace Barotrauma
         public const float DamageDepth = -30000.0f;
         private const float ImpactDamageMultiplier = 10.0f;
 
+        //limbs with a mass smaller than this won't cause an impact when they hit the sub
+        private const float MinImpactLimbMass = 10.0f;
+        //impacts smaller than this are ignored
+        private const float MinCollisionImpact = 3.0f;
+        //impacts are clamped below this value
+        private const float MaxCollisionImpact = 5.0f;
         private const float Friction = 0.2f, Restitution = 0.0f;
 
         public List<Vector2> HullVertices
@@ -94,11 +100,11 @@ namespace Barotrauma
             else
             {
                 List<Vector2> convexHull = GenerateConvexHull();
-                HullVertices = convexHull;
                 for (int i = 0; i < convexHull.Count; i++)
                 {
                     convexHull[i] = ConvertUnits.ToSimUnits(convexHull[i]);
                 }
+                HullVertices = convexHull;
 
                 Vector2 minExtents = Vector2.Zero, maxExtents = Vector2.Zero;
 
@@ -216,7 +222,6 @@ namespace Barotrauma
 
             Body = new PhysicsBody(farseerBody);
         }
-
 
         private List<Vector2> GenerateConvexHull()
         {
@@ -405,6 +410,16 @@ namespace Barotrauma
             depthDamageTimer = 10.0f;
         }
 
+        public void FlipX()
+        {
+            List<Vector2> convexHull = GenerateConvexHull();
+            for (int i = 0; i < convexHull.Count; i++)
+            {
+                convexHull[i] = ConvertUnits.ToSimUnits(convexHull[i]);
+            }
+            HullVertices = convexHull;
+        }
+
         public bool OnCollision(Fixture f1, Fixture f2, Contact contact)
         {
             if (f2.Body.UserData is Limb limb)
@@ -418,19 +433,19 @@ namespace Barotrauma
                 return CheckCharacterCollision(contact, character);
             }
 
-            contact.GetWorldManifold(out Vector2 normal, out FixedArray2<Vector2> points);
+            contact.GetWorldManifold(out Vector2 normal, out FixedArray2<Vector2> _);
             if (contact.FixtureA.Body == f1.Body)
             {
                 normal = -normal;
             }
 
-            if (f2.UserData is VoronoiCell cell)
+            if (f2.UserData is VoronoiCell)
             {
                 HandleLevelCollision(contact, normal);
                 return true;
             }
 
-            if (f2.Body.UserData is Structure structure)
+            if (f2.Body.UserData is Structure)
             {
 
                 HandleLevelCollision(contact, normal);
@@ -481,18 +496,19 @@ namespace Barotrauma
 
         private void HandleLimbCollision(Contact contact, Limb limb)
         {
-            if (limb.Mass > 100.0f)
+            if (limb.Mass > MinImpactLimbMass)
             {
-                Vector2 normal = Vector2.DistanceSquared(Body.SimPosition, limb.SimPosition) < 0.0001f ?
+                Vector2 normal = 
+                    Vector2.DistanceSquared(Body.SimPosition, limb.SimPosition) < 0.0001f ?
                     Vector2.UnitY :
                     Vector2.Normalize(Body.SimPosition - limb.SimPosition);
 
-                float impact = Math.Min(Vector2.Dot(Velocity - limb.LinearVelocity, -normal), 50.0f) / 5.0f * Math.Min(limb.Mass / 200.0f, 1);
+                float impact = Math.Min(Vector2.Dot(Velocity - limb.LinearVelocity, -normal), 50.0f) * Math.Min(limb.Mass / 100.0f, 1);
 
-                ApplyImpact(impact, -normal, contact, applyDamage: false);
+                ApplyImpact(impact, normal, contact, applyDamage: false);
                 foreach (Submarine dockedSub in submarine.DockedTo)
                 {
-                    dockedSub.SubBody.ApplyImpact(impact, -normal, contact, applyDamage: false);
+                    dockedSub.SubBody.ApplyImpact(impact, normal, contact, applyDamage: false);
                 }
             }
 
@@ -558,9 +574,7 @@ namespace Barotrauma
 
                 float damageAmount = contactDot * Body.Mass / limb.character.Mass;
 
-                Vector2 n;
-                FixedArray2<Vector2> contactPos;
-                contact.GetWorldManifold(out n, out contactPos);
+                contact.GetWorldManifold(out _, out FixedArray2<Vector2> contactPos);
                 limb.character.LastDamageSource = submarine;
                 limb.character.DamageLimb(ConvertUnits.ToDisplayUnits(contactPos[0]), limb, 
                     new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate(damageAmount) }, 0.0f, true, 0.0f);
@@ -587,9 +601,7 @@ namespace Barotrauma
             }
 
 #if CLIENT
-            Vector2 n;
-            FixedArray2<Vector2> particlePos;
-            contact.GetWorldManifold(out n, out particlePos);
+            contact.GetWorldManifold(out _, out FixedArray2<Vector2> particlePos);
             
             int particleAmount = (int)Math.Min(wallImpact * 10.0f, 50);
             for (int i = 0; i < particleAmount; i++)
@@ -605,9 +617,7 @@ namespace Barotrauma
         {
             Debug.Assert(otherSub != submarine);
 
-            Vector2 normal;
-            FixedArray2<Vector2> points;
-            contact.GetWorldManifold(out normal, out points);
+            contact.GetWorldManifold(out Vector2 normal, out FixedArray2<Vector2> points);
             if (contact.FixtureA.Body == otherSub.SubBody.Body.FarseerBody)
             {
                 normal = -normal;
@@ -688,15 +698,13 @@ namespace Barotrauma
 
         private void ApplyImpact(float impact, Vector2 direction, Contact contact, bool applyDamage = true)
         {
-            float minImpact = 3.0f;
-
-            if (impact < minImpact) { return; }
+            if (impact < MinCollisionImpact) { return; }
 
             contact.GetWorldManifold(out Vector2 tempNormal, out FixedArray2<Vector2> worldPoints);
             Vector2 lastContactPoint = worldPoints[0];
             
             Vector2 impulse = direction * impact * 0.5f;            
-            impulse = impulse.ClampLength(5.0f);
+            impulse = impulse.ClampLength(MaxCollisionImpact);
 
             if (!MathUtils.IsValid(impulse))
             {
@@ -719,23 +727,38 @@ namespace Barotrauma
             if (Character.Controlled != null && Character.Controlled.Submarine == submarine)
             {
                 GameMain.GameScreen.Cam.Shake = impact * 2.0f;
-                float angularVelocity = 
-                    (lastContactPoint.X - Body.SimPosition.X) / ConvertUnits.ToSimUnits(submarine.Borders.Width / 2) * impulse.Y 
-                    - (lastContactPoint.Y - Body.SimPosition.Y) / ConvertUnits.ToSimUnits(submarine.Borders.Height / 2) * impulse.X;
-                GameMain.GameScreen.Cam.AngularVelocity = MathHelper.Clamp(angularVelocity * 0.1f, -1.0f, 1.0f);
+                if (!submarine.IsOutpost && !submarine.DockedTo.Any(s => s.IsOutpost))
+                {
+                    float angularVelocity = 
+                        (lastContactPoint.X - Body.SimPosition.X) / ConvertUnits.ToSimUnits(submarine.Borders.Width / 2) * impulse.Y 
+                        - (lastContactPoint.Y - Body.SimPosition.Y) / ConvertUnits.ToSimUnits(submarine.Borders.Height / 2) * impulse.X;
+                    GameMain.GameScreen.Cam.AngularVelocity = MathHelper.Clamp(angularVelocity * 0.1f, -1.0f, 1.0f);
+                }
             }
 #endif
 
             foreach (Character c in Character.CharacterList)
             {
-                if (c.Submarine != submarine) continue;
-                if (impact > 2.0f) c.SetStun((impact - 2.0f) * 0.1f);
+                if (c.Submarine != submarine) { continue; }
                 
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
-                    limb.body.ApplyLinearImpulse(limb.Mass * impulse, 20.0f);
+                    limb.body.ApplyLinearImpulse(limb.Mass * impulse, 10.0f);
                 }
-                c.AnimController.Collider.ApplyLinearImpulse(c.AnimController.Collider.Mass * impulse, 20.0f);
+                c.AnimController.Collider.ApplyLinearImpulse(c.AnimController.Collider.Mass * impulse, 10.0f);
+
+                bool holdingOntoSomething = false;
+                if (c.SelectedConstruction != null)
+                {
+                    var controller = c.SelectedConstruction.GetComponent<Items.Components.Controller>();
+                    holdingOntoSomething = controller != null && controller.LimbPositions.Any();
+                }
+
+                //stun for up to 1 second if the impact equal or higher to the maximum impact
+                if (impact >= MaxCollisionImpact && !holdingOntoSomething)
+                {
+                    c.SetStun(Math.Min(impulse.Length() * 0.2f, 1.0f));
+                }
             }
 
             foreach (Item item in Item.ItemList)
@@ -743,7 +766,7 @@ namespace Barotrauma
                 if (item.Submarine != submarine || item.CurrentHull == null || 
                     item.body == null || !item.body.Enabled) continue;
 
-                item.body.ApplyLinearImpulse(item.body.Mass * impulse, 20.0f);
+                item.body.ApplyLinearImpulse(item.body.Mass * impulse, 10.0f);
             }
             
             var damagedStructures = Explosion.RangedStructureDamage(
@@ -770,7 +793,7 @@ namespace Barotrauma
                     "StructureBlunt",
                     impact * 10.0f,
                     ConvertUnits.ToDisplayUnits(lastContactPoint),
-                    MathHelper.Lerp(2000.0f, 10000.0f, (impact - minImpact) / 2.0f),
+                    MathHelper.Lerp(2000.0f, 10000.0f, (impact - MinCollisionImpact) / 2.0f),
                     maxDamageStructure.Tags);            
             }
 #endif

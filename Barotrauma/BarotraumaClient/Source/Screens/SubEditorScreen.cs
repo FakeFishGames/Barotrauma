@@ -242,16 +242,16 @@ namespace Barotrauma
             //empty guiframe as a separator
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), paddedLeftPanel.RectTransform) { AbsoluteOffset = new Point(0, TopPanel.Rect.Height) }, style: null);
 
-            var itemCountText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedLeftPanel.RectTransform), TextManager.Get("Items"));
-            var itemCount = new GUITextBlock(new RectTransform(Vector2.One, itemCountText.RectTransform), "", textAlignment: Alignment.TopRight);
+            var itemCountText = new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.0f), paddedLeftPanel.RectTransform), TextManager.Get("Items"));
+            var itemCount = new GUITextBlock(new RectTransform(new Vector2(0.33f, 1.0f), itemCountText.RectTransform, Anchor.TopRight, Pivot.TopLeft), "", textAlignment: Alignment.TopRight);
             itemCount.TextGetter = () =>
             {
                 itemCount.TextColor = ToolBox.GradientLerp(Item.ItemList.Count / 5000.0f, Color.LightGreen, Color.Yellow, Color.Red);
                 return Item.ItemList.Count.ToString();
             };
 
-            var structureCountText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedLeftPanel.RectTransform), TextManager.Get("Structures"));
-            var structureCount = new GUITextBlock(new RectTransform(Vector2.One, structureCountText.RectTransform), "", textAlignment: Alignment.TopRight);
+            var structureCountText = new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.0f), paddedLeftPanel.RectTransform), TextManager.Get("Structures"));
+            var structureCount = new GUITextBlock(new RectTransform(new Vector2(0.33f, 1.0f), structureCountText.RectTransform, Anchor.TopRight, Pivot.TopLeft), "", textAlignment: Alignment.TopRight);
             structureCount.TextGetter = () =>
             {
                 int count = (MapEntity.mapEntityList.Count - Item.ItemList.Count - Hull.hullList.Count - WayPoint.WayPointList.Count - Gap.GapList.Count);
@@ -259,13 +259,43 @@ namespace Barotrauma
                 return count.ToString();
             };
 
-            var wallCountText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedLeftPanel.RectTransform), TextManager.Get("Walls"));
-            var wallCount = new GUITextBlock(new RectTransform(Vector2.One, wallCountText.RectTransform), "", textAlignment: Alignment.TopRight);
+            var wallCountText = new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.0f), paddedLeftPanel.RectTransform), TextManager.Get("Walls"));
+            var wallCount = new GUITextBlock(new RectTransform(new Vector2(0.33f, 1.0f), wallCountText.RectTransform, Anchor.TopRight, Pivot.TopLeft), "", textAlignment: Alignment.TopRight);
             wallCount.TextGetter = () =>
             {
                 wallCount.TextColor = ToolBox.GradientLerp(Structure.WallList.Count / 500.0f, Color.LightGreen, Color.Yellow, Color.Red);
                 return Structure.WallList.Count.ToString();
             };
+            
+            var lightCountText = new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.0f), paddedLeftPanel.RectTransform), TextManager.Get("SubEditorLights"));
+            var lightCount = new GUITextBlock(new RectTransform(new Vector2(0.33f, 1.0f), lightCountText.RectTransform, Anchor.TopRight, Pivot.TopLeft), "", textAlignment: Alignment.TopRight);
+            lightCount.TextGetter = () =>
+            {
+                int disabledItemLightCount = 0;
+                foreach (Item item in Item.ItemList)
+                {
+                    if (item.ParentInventory == null) { continue; }
+                    disabledItemLightCount += item.GetComponents<LightComponent>().Count();
+                }
+                int count = GameMain.LightManager.Lights.Count() - disabledItemLightCount;
+                lightCount.TextColor = ToolBox.GradientLerp(count / 250.0f, Color.LightGreen, Color.Yellow, Color.Red);
+                return count.ToString();
+            };
+            var shadowCastingLightCountText = new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.0f), paddedLeftPanel.RectTransform), TextManager.Get("SubEditorShadowCastingLights"));
+            var shadowCastingLightCount = new GUITextBlock(new RectTransform(new Vector2(0.33f, 1.0f), shadowCastingLightCountText.RectTransform, Anchor.TopRight, Pivot.TopLeft), "", textAlignment: Alignment.TopRight);
+            shadowCastingLightCount.TextGetter = () =>
+            {
+                int disabledItemLightCount = 0;
+                foreach (Item item in Item.ItemList)
+                {
+                    if (item.ParentInventory == null) { continue; }
+                    disabledItemLightCount += item.GetComponents<LightComponent>().Count();
+                }
+                int count = GameMain.LightManager.Lights.Count(l => l.CastShadows) - disabledItemLightCount;
+                shadowCastingLightCount.TextColor = ToolBox.GradientLerp(count / 60.0f, Color.LightGreen, Color.Yellow, Color.Red);
+                return count.ToString();
+            };
+            GUITextBlock.AutoScaleAndNormalize(paddedLeftPanel.Children.Where(c => c is GUITextBlock).Cast<GUITextBlock>());
 
             hullVolumeFrame = new GUIFrame(new RectTransform(new Vector2(0.15f, 2.0f), TopPanel.RectTransform, Anchor.BottomLeft, Pivot.TopLeft, minSize: new Point(300, 85)) { AbsoluteOffset = new Point(LeftPanel.Rect.Width, 0) }, "GUIToolTip")
             {
@@ -855,7 +885,7 @@ namespace Barotrauma
         {
             if (dummyCharacter != null) RemoveDummyCharacter();
 
-            dummyCharacter = Character.Create(Character.HumanConfigFile, Vector2.Zero, "", hasAi: false);
+            dummyCharacter = Character.Create(Character.HumanSpeciesName, Vector2.Zero, "", hasAi: false);
 
             //make space for the entity menu
             for (int i = 0; i < dummyCharacter.Inventory.SlotPositions.Length; i++)
@@ -1037,8 +1067,6 @@ namespace Barotrauma
                 ChangeSubDescription(textBox, text);
                 return true;
             };
-            descriptionBox.Text = Submarine.MainSub == null ? "" : Submarine.MainSub.Description;
-            submarineDescriptionCharacterCount.Text = descriptionBox.Text.Length + " / " + submarineDescriptionLimit;
 
             var crewSizeArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.03f), leftColumn.RectTransform), isHorizontal: true) { AbsoluteSpacing = 5 };
 
@@ -1256,7 +1284,10 @@ namespace Barotrauma
             {
                 OnClicked = SaveSub
             };
-
+            paddedSaveFrame.Recalculate();
+            leftColumn.Recalculate();
+            descriptionBox.Text = Submarine.MainSub == null ? "" : Submarine.MainSub.Description;
+            submarineDescriptionCharacterCount.Text = descriptionBox.Text.Length + " / " + submarineDescriptionLimit;
         }
 
 
@@ -2258,7 +2289,7 @@ namespace Barotrauma
                         me.IsHighlighted = false;
                     }
 
-                    if (WiringMode && dummyCharacter.SelectedConstruction==null)
+                    if (WiringMode && dummyCharacter.SelectedConstruction == null)
                     {
                         List<Wire> wires = new List<Wire>();
                         foreach (Item item in Item.ItemList)
@@ -2269,8 +2300,29 @@ namespace Barotrauma
                         Wire.UpdateEditing(wires);
                     }
 
-                    if (dummyCharacter.SelectedConstruction==null || dummyCharacter.SelectedConstruction.GetComponent<Pickable>() != null)
+                    if (dummyCharacter.SelectedConstruction == null || 
+                        dummyCharacter.SelectedConstruction.GetComponent<Pickable>() != null)
                     {
+                        if (WiringMode && (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift) || PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.Right)))
+                        {
+                            Wire equippedWire =
+                                Character.Controlled?.SelectedItems[0]?.GetComponent<Wire>() ??
+                                Character.Controlled?.SelectedItems[1]?.GetComponent<Wire>();
+                            if (equippedWire != null && equippedWire.GetNodes().Count > 0)
+                            {
+                                Vector2 lastNode = equippedWire.GetNodes().Last();
+                                if (equippedWire.Item.Submarine != null)
+                                {
+                                    lastNode += equippedWire.Item.Submarine.HiddenSubPosition + equippedWire.Item.Submarine.Position;
+                                }
+
+                                dummyCharacter.CursorPosition =
+                                    Math.Abs(dummyCharacter.CursorPosition.X - lastNode.X) < Math.Abs(dummyCharacter.CursorPosition.Y - lastNode.Y) ?
+                                        new Vector2(lastNode.X, dummyCharacter.CursorPosition.Y) :
+                                        dummyCharacter.CursorPosition = new Vector2(dummyCharacter.CursorPosition.X, lastNode.Y);
+                            }
+                        }
+
                         Vector2 mouseSimPos = FarseerPhysics.ConvertUnits.ToSimUnits(dummyCharacter.CursorPosition);
                         foreach (Limb limb in dummyCharacter.AnimController.Limbs)
                         {
@@ -2403,10 +2455,13 @@ namespace Barotrauma
             Submarine.DrawBack(spriteBatch, editing: true);
 
             spriteBatch.End();
+
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: cam.Transform);
+            Submarine.DrawDamageable(spriteBatch, null, editing: true);
+            spriteBatch.End();
 
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: cam.Transform);
             Submarine.DrawFront(spriteBatch, editing: true);
-
             if (!CharacterMode && !WiringMode && GUI.MouseOn == null)
             {
                 MapEntityPrefab.Selected?.DrawPlacing(spriteBatch, cam);                

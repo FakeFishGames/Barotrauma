@@ -85,7 +85,7 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), clientNameHolder.RectTransform), TextManager.Get("YourName"));
             clientNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.5f), clientNameHolder.RectTransform), "")
             {
-                Text = GameMain.Config.DefaultPlayerName,
+                Text = GameMain.Config.PlayerName,
                 MaxTextLength = Client.MaxNameLength,
                 OverflowClip = true
             };
@@ -822,11 +822,20 @@ namespace Barotrauma
 
         private void ServerQueryFinished()
         {
-            if (serverList.Content.Children.All(c => !c.Visible))
+            if (!serverList.Content.Children.Any())
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), serverList.Content.RectTransform),
-                    TextManager.Get("NoMatchingServers"))
+                new GUITextBlock(new RectTransform(Vector2.One, serverList.Content.RectTransform),
+                    TextManager.Get("NoServers"), textAlignment: Alignment.Center)
                 {
+                    CanBeFocused = false
+                };
+            }
+            else if (serverList.Content.Children.All(c => !c.Visible))
+            {
+                new GUITextBlock(new RectTransform(Vector2.One, serverList.Content.RectTransform),
+                    TextManager.Get("NoMatchingServers"), textAlignment: Alignment.Center)
+                {
+                    CanBeFocused = false,
                     UserData = "noresults"
                 };
             }
@@ -918,7 +927,7 @@ namespace Barotrauma
                 return false;
             }
 
-            GameMain.Config.DefaultPlayerName = clientNameBox.Text;
+            GameMain.Config.PlayerName = clientNameBox.Text;
             GameMain.Config.SaveNewPlayerConfig();
 
             CoroutineManager.StartCoroutine(ConnectToServer(ip, serverName));

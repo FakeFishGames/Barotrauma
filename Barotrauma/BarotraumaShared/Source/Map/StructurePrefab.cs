@@ -102,6 +102,13 @@ namespace Barotrauma
             private set;
         }
 
+        [Serialize(45.0f, false)]
+        public float StairAngle
+        {
+            get;
+            private set;
+        }
+
         [Serialize(false, false)]
         public bool NoAITarget
         {
@@ -152,18 +159,39 @@ namespace Barotrauma
             foreach (string filePath in filePaths)
             {
                 XDocument doc = XMLExtensions.TryLoadXml(filePath);
-                if (doc == null || doc.Root == null) return;
-
-                foreach (XElement el in doc.Root.Elements())
-                {        
-                    StructurePrefab sp = Load(el);
-                    
-                    List.Add(sp);
+                if (doc == null) { return; }
+                var rootElement = doc.Root;
+                if (rootElement.IsOverride())
+                {
+                    foreach (var element in rootElement.Elements())
+                    {
+                        foreach (var childElement in element.Elements())
+                        {
+                            Load(childElement, true);
+                        }
+                    }
+                }
+                else
+                {
+                    foreach (var element in rootElement.Elements())
+                    {
+                        if (element.IsOverride())
+                        {
+                            foreach (var childElement in element.Elements())
+                            {
+                                Load(childElement, true);
+                            }
+                        }
+                        else
+                        {
+                            Load(element, false);
+                        }
+                    }
                 }
             }
         }
         
-        public static StructurePrefab Load(XElement element)
+        public static StructurePrefab Load(XElement element, bool allowOverride)
         {
             StructurePrefab sp = new StructurePrefab
             {
@@ -275,16 +303,10 @@ namespace Barotrauma
                 DebugConsole.ThrowError(
                     "Structure prefab \"" + sp.name + "\" has no identifier. All structure prefabs have a unique identifier string that's used to differentiate between items during saving and loading.");
             }
-            if (!string.IsNullOrEmpty(sp.identifier))
+            if (sp.HandleExisting(sp.Identifier, allowOverride))
             {
-                MapEntityPrefab existingPrefab = List.Find(e => e.Identifier == sp.identifier);
-                if (existingPrefab != null)
-                {
-                    DebugConsole.ThrowError(
-                        "Map entity prefabs \"" + sp.name + "\" and \"" + existingPrefab.Name + "\" have the same identifier!");
-                }
+                List.Add(sp);
             }
-
             return sp;
         }
 
@@ -315,7 +337,7 @@ namespace Barotrauma
                 }
                 if (ResizeVertical && Math.Abs(placeSize.Y) < Submarine.GridSize.Y)
                 {
-                    placeSize.X = Submarine.GridSize.Y;
+                    placeSize.Y = Submarine.GridSize.Y;
                 }
 
                 newRect = Submarine.AbsRect(placePosition, placeSize);

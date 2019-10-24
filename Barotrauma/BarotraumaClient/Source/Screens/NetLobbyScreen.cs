@@ -449,11 +449,7 @@ namespace Barotrauma
                 {
                     UserData = mode
                 };
-                //TODO: translate mission descriptions
-                if (TextManager.Language == "English")
-                {
-                    textBlock.ToolTip = mode.Description;
-                }
+                textBlock.ToolTip = mode.Description;                
             }
 
             //mission type ------------------------------------------------------------------
@@ -731,7 +727,7 @@ namespace Barotrauma
                 ReadyToStartBox.Selected = false;
                 if (campaignUI != null)
                 {
-                    //SelectTab(Tab.Map);
+                    campaignUI.SelectTab(CampaignUI.Tab.Map);
                     if (campaignUI.StartButton != null)
                     {
                         campaignUI.StartButton.Visible = !GameMain.Client.GameStarted &&
@@ -909,7 +905,7 @@ namespace Barotrauma
         {
             if (characterInfo == null)
             {
-                characterInfo = new CharacterInfo(Character.HumanConfigFile, GameMain.NetworkMember.Name, null);
+                characterInfo = new CharacterInfo(Character.HumanSpeciesName, GameMain.Client.Name, null);
                 characterInfo.RecreateHead(
                     GameMain.Config.CharacterHeadIndex,
                     GameMain.Config.CharacterRace,
@@ -930,7 +926,7 @@ namespace Barotrauma
                 UserData = characterInfo
             };
 
-            CharacterNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.1f), infoContainer.RectTransform), characterInfo.Name, font: GUI.LargeFont, textAlignment: Alignment.Center)
+            CharacterNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.1f), infoContainer.RectTransform), characterInfo.Name, textAlignment: Alignment.Center)
             {
                 MaxTextLength = Client.MaxNameLength,
                 OverflowClip = true
@@ -947,7 +943,7 @@ namespace Barotrauma
                 else
                 {
                     ReadyToStartBox.Selected = false;
-                    GameMain.Client.Name = tb.Text;
+                    GameMain.Client.SetName(tb.Text);
                 };
             };
 
@@ -1011,7 +1007,7 @@ namespace Barotrauma
                 int i = 1;
                 foreach (string jobIdentifier in GameMain.Config.JobPreferences)
                 {
-                    JobPrefab job = JobPrefab.List.Find(j => j.Identifier == jobIdentifier);
+                    if (!JobPrefab.List.TryGetValue(jobIdentifier, out JobPrefab job)) { continue; }
                     if (job == null || job.MaxNumber <= 0) continue;
 
                     var jobFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), jobList.Content.RectTransform) { MinSize = new Point(0, 20) }, style: "ListBoxElement")
@@ -1247,6 +1243,12 @@ namespace Barotrauma
                 };
             }
 
+            if (!sub.RequiredContentPackagesInstalled)
+            {
+                subTextBlock.TextColor = Color.Lerp(subTextBlock.TextColor, Color.DarkRed, 0.5f);
+                frame.ToolTip = TextManager.Get("ContentPackageMismatch") + "\n\n" + frame.ToolTip;
+            }
+
             if (sub.HasTag(SubmarineTag.Shuttle))
             {
                 new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), frame.RectTransform, Anchor.CenterRight) { RelativeOffset = new Vector2(0.1f, 0.0f) },
@@ -1270,14 +1272,32 @@ namespace Barotrauma
 
         public bool VotableClicked(GUIComponent component, object userData)
         {
-            if (GameMain.Client == null) return false;
+            if (GameMain.Client == null) { return false; }
             
             VoteType voteType;
             if (component.Parent == GameMain.NetLobbyScreen.SubList.Content)
             {
                 if (!GameMain.Client.ServerSettings.Voting.AllowSubVoting)
                 {
-                    if (GameMain.Client.HasPermission(ClientPermissions.SelectSub))
+                    var selectedSub = component.UserData as Submarine;
+                    if (!selectedSub.RequiredContentPackagesInstalled)
+                    {
+                        var msgBox = new GUIMessageBox(TextManager.Get("ContentPackageMismatch"),
+                            selectedSub.RequiredContentPackages.Any() ?
+                            TextManager.GetWithVariable("ContentPackageMismatchWarning", "[requiredcontentpackages]", string.Join(", ", selectedSub.RequiredContentPackages)) :
+                            TextManager.Get("ContentPackageMismatchWarningGeneric"),
+                            new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+
+                        msgBox.Buttons[0].OnClicked = msgBox.Close;
+                        msgBox.Buttons[0].OnClicked += (button, obj) =>
+                        {
+                            GameMain.Client.RequestSelectSub(component.Parent.GetChildIndex(component), isShuttle: false);
+                            return true;
+                        };
+                        msgBox.Buttons[1].OnClicked = msgBox.Close;
+                        return false;
+                    }
+                    else if (GameMain.Client.HasPermission(ClientPermissions.SelectSub))
                     {
                         GameMain.Client.RequestSelectSub(component.Parent.GetChildIndex(component), isShuttle: false);
                         return true;
@@ -1714,16 +1734,6 @@ namespace Barotrauma
             jobInfoFrame?.AddToGUIUpdateList();
         }
         
-        public List<Submarine> GetSubList()
-        {
-            List<Submarine> subs = new List<Submarine>();
-            foreach (GUIComponent component in subList.Content.Children)
-            {
-                if (component.UserData is Submarine) subs.Add((Submarine)component.UserData);
-            }
-
-            return subs;
-        }
 
         public override void Update(double deltaTime)
         {
@@ -2057,7 +2067,7 @@ namespace Barotrauma
                 .UserData as Submarine;
 
             //matching sub found and already selected, all good
-            if (sub != null && subList.SelectedData is Submarine selectedSub && selectedSub.MD5Hash?.Hash == md5Hash)
+            if (sub != null && subList.SelectedData is Submarine selectedSub && selectedSub.MD5Hash?.Hash == md5Hash && System.IO.File.Exists(sub.FilePath))
             {
                 return true;
             }
@@ -2090,12 +2100,12 @@ namespace Barotrauma
                     FailedSelectedShuttle = null;
                 
                 //hashes match, all good
-                if (sub.MD5Hash?.Hash == md5Hash)
+                if (sub.MD5Hash?.Hash == md5Hash && Submarine.SavedSubmarines.Contains(sub))
                 {
                     return true;
                 }
             }
-            
+
             //-------------------------------------------------------------------------------------
             //if we get to this point, a matching sub was not found or it has an incorrect MD5 hash
             
@@ -2105,14 +2115,15 @@ namespace Barotrauma
                 FailedSelectedShuttle = new Pair<string, string>(subName, md5Hash);
 
             string errorMsg = "";
-            if (sub == null)
+            if (sub == null || !Submarine.SavedSubmarines.Contains(sub))
             {
                 errorMsg = TextManager.GetWithVariable("SubNotFoundError", "[subname]", subName) + " ";
             }
             else if (sub.MD5Hash?.Hash == null)
             {
                 errorMsg = TextManager.GetWithVariable("SubLoadError", "[subname]", subName) + " ";
-                subList.Content.GetChildByUserData(sub).GetChild<GUITextBox>().TextColor = Color.Red;
+                GUITextBlock textBlock = subList.Content.GetChildByUserData(sub)?.GetChild<GUITextBlock>();
+                if (textBlock != null) { textBlock.TextColor = Color.Red; }
             }
             else
             {

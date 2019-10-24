@@ -85,7 +85,7 @@ namespace Barotrauma
 
         private void SendKarmaNotifications(Client client, string debugKarmaChangeReason = "")
         {
-            //send a notification about karma changing if the karma has changed by x% within the last second
+            //send a notification about karma changing if the karma has changed by x%
 
             var clientMemory = GetClientMemory(client);
             float karmaChange = client.Karma - clientMemory.PreviousNotifiedKarma;
@@ -110,8 +110,8 @@ namespace Barotrauma
                 {
                     GameMain.Server.SendDirectChatMessage(TextManager.Get(karmaChange < 0 ? "KarmaDecreasedUnknownAmount" : "KarmaIncreasedUnknownAmount"), client);
                 }
+                clientMemory.PreviousNotifiedKarma = client.Karma;                
             }
-            clientMemory.PreviousNotifiedKarma = client.Karma;
         }
 
         private void UpdateClient(Client client, float deltaTime)
@@ -324,13 +324,12 @@ namespace Barotrauma
             if (damageAmount > 0)
             {
                 if (StructureDamageKarmaDecrease <= 0.0f) { return; }
-
-                if (GameMain.Server.TraitorManager?.Traitors != null)
-                {                    
-                    if (GameMain.Server.TraitorManager.Traitors.Any(t => 
-                        t.Character == attacker && 
-                        t.CurrentObjective != null && 
-                        t.CurrentObjective.HasGoalsOfType<Traitor.GoalFloodPercentOfSub>()))
+                 if (GameMain.Server.TraitorManager?.Traitors != null)
+                {
+                    if (GameMain.Server.TraitorManager.Traitors.Any(t =>
+                        t.Character == attacker &&
+                        t.CurrentObjective != null &&
+                        t.CurrentObjective.IsAllowedToDamage(structure)))
                     {
                         //traitor tasked to flood the sub -> damaging structures is ok
                         return;

@@ -251,7 +251,7 @@ namespace Barotrauma
             {
                 this.texDims = texDims;
                 this.baseChar = baseChar;
-                face.SetPixelSizes(0, size);
+                lock (mutex) { face.SetPixelSizes(0, size); }
                 face.LoadGlyph(face.GetCharIndex(baseChar), LoadFlags.Default, LoadTarget.Normal);
                 baseHeight = face.Glyph.Metrics.Height.ToInt32();
                 CrossThread.RequestExecutionOnMainThread(() =>
@@ -263,6 +263,7 @@ namespace Barotrauma
             uint glyphIndex = face.GetCharIndex(character);
             if (glyphIndex == 0) { return; }
 
+            lock (mutex) { face.SetPixelSizes(0, size); }
             face.LoadGlyph(glyphIndex, LoadFlags.Default, LoadTarget.Normal);
             if (face.Glyph.Metrics.Width == 0 || face.Glyph.Metrics.Height == 0)
             {

@@ -400,7 +400,7 @@ namespace Barotrauma.Items.Components
                     string style = subElement.Attribute("style") == null ?
                         null : subElement.GetAttributeString("style", "");
 
-                    GuiFrame = new GUIFrame(RectTransform.Load(subElement, GUI.Canvas), style, color);
+                    GuiFrame = new GUIFrame(RectTransform.Load(subElement, GUI.Canvas, Anchor.Center), style, color);
                     DefaultLayout = GUILayoutSettings.Load(subElement);
                     break;
                 case "alternativelayout":

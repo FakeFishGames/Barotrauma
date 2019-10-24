@@ -254,7 +254,7 @@ namespace Barotrauma
             protected set;
         }
         
-        [Serialize("1.0,1.0,1.0,1.0", true), Editable(ToolTip = "Changes the color of the item this item is contained inside. Only has an effect if either of the UseContainedSpriteColor or UseContainedInventoryIconColor property of the container is set to true.")]
+        [Editable, Serialize("1.0,1.0,1.0,1.0", true, description: "Changes the color of the item this item is contained inside. Only has an effect if either of the UseContainedSpriteColor or UseContainedInventoryIconColor property of the container is set to true.")]
         public Color ContainerColor
         {
             get;
@@ -505,7 +505,7 @@ namespace Barotrauma
             get { return ownInventory; }
         }
 
-        [Serialize(false, true), Editable(ToolTip =
+        [Editable, Serialize(false, true, description:
             "Enable if you want to display the item HUD side by side with another item's HUD, when linked together. " +
             "Disclaimer: It's possible or even likely that the views block each other, if they were not designed to be viewed together!")]
         public bool DisplaySideBySideWhenLinked { get; set; }
@@ -611,8 +611,6 @@ namespace Barotrauma
                         break;
                     case "aitarget":
                         aiTarget = new AITarget(this, subElement);
-                        aiTarget.SoundRange = aiTarget.MinSoundRange;
-                        aiTarget.SightRange = aiTarget.MinSightRange;
                         break;
                     default:
                         ItemComponent ic = ItemComponent.Load(subElement, this, itemPrefab.ConfigFile);
@@ -1157,11 +1155,9 @@ namespace Barotrauma
         public override void Update(float deltaTime, Camera cam)
         {
             base.Update(deltaTime, cam);
-            //aitarget goes silent/invisible if the components don't keep it active
             if (aiTarget != null)
             {
-                aiTarget.SightRange -= deltaTime * (aiTarget.MaxSightRange / aiTarget.FadeOutTime);
-                aiTarget.SoundRange -= deltaTime * (aiTarget.MaxSoundRange / aiTarget.FadeOutTime);
+                aiTarget.Update(deltaTime);
             }
 
             bool broken = condition <= 0.0f;
@@ -1794,13 +1790,13 @@ namespace Barotrauma
             if (remove) { Spawner?.AddToRemoveQueue(this); }
         }
 
-        public bool Combine(Item item)
+        public bool Combine(Item item, Character user)
         {
             if (item == this) { return false; }
             bool isCombined = false;
             foreach (ItemComponent ic in components)
             {
-                if (ic.Combine(item)) { isCombined = true; }
+                if (ic.Combine(item, user)) { isCombined = true; }
             }
 #if CLIENT
             if (isCombined) { GameMain.Client?.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Combine, item.ID }); }
@@ -1976,7 +1972,7 @@ namespace Barotrauma
             SerializableProperty property = allProperties[propertyIndex].Second;
             if (inGameEditableOnly && parentObject is ItemComponent ic)
             {
-                if (!ic.AllowInGameEditing) allowEditing = false;
+                if (!ic.AllowInGameEditing) { allowEditing = false; }
             }
 
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer && !CanClientAccess(sender))
@@ -2138,18 +2134,27 @@ namespace Barotrauma
                 }
             }
 
+            bool thisIsOverride = element.GetAttributeBool("isoverride", false);
+
+            //if we're overriding a non-overridden item in a sub/assembly xml or vice versa, 
+            //use the values from the prefab instead of loading them from the sub/assembly xml
+            bool usePrefabValues = thisIsOverride != prefab.IsOverride;
             List<ItemComponent> unloadedComponents = new List<ItemComponent>(item.components);
             foreach (XElement subElement in element.Elements())
             {
                 ItemComponent component = unloadedComponents.Find(x => x.Name == subElement.Name.ToString());
                 if (component == null) { continue; }
-
-                component.Load(subElement);
+                component.Load(subElement, usePrefabValues);
                 unloadedComponents.Remove(component);
             }
+            if (usePrefabValues)
+            {
+                //use prefab scale when overriding a non-overridden item or vice versa
+                item.Scale = prefab.ConfigElement.GetAttributeFloat(item.scale, "scale", "Scale");
+            }
 
-            if (element.GetAttributeBool("flippedx", false)) item.FlipX(false);
-            if (element.GetAttributeBool("flippedy", false)) item.FlipY(false);
+            if (element.GetAttributeBool("flippedx", false)) { item.FlipX(false); }
+            if (element.GetAttributeBool("flippedy", false)) { item.FlipY(false); }
 
             float condition = element.GetAttributeFloat("condition", item.MaxCondition);
             item.condition = MathHelper.Clamp(condition, 0, item.MaxCondition);
@@ -2179,8 +2184,9 @@ namespace Barotrauma
                 new XAttribute("identifier", Prefab.Identifier),
                 new XAttribute("ID", ID));
 
-            if (FlippedX) element.Add(new XAttribute("flippedx", true));
-            if (FlippedY) element.Add(new XAttribute("flippedy", true));
+            if (Prefab.IsOverride) { element.Add(new XAttribute("isoverride", "true")); }
+            if (FlippedX) { element.Add(new XAttribute("flippedx", true)); }
+            if (FlippedY) { element.Add(new XAttribute("flippedy", true)); }
 
             if (condition < Prefab.Health)
             {

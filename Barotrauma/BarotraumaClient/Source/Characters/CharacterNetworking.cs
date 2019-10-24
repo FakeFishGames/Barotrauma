@@ -20,13 +20,13 @@ namespace Barotrauma
                         return;
                     }
 
-                    //freeze AI characters if more than 1 seconds have passed since last update from the server
-                    if (lastRecvPositionUpdateTime < Lidgren.Network.NetTime.Now - 1.0f)
+                    //freeze AI characters if more than x seconds have passed since last update from the server
+                    if (lastRecvPositionUpdateTime < Lidgren.Network.NetTime.Now - NetConfig.FreezeCharacterIfPositionDataMissingDelay)
                     {
                         AnimController.Frozen = true;
                         memState.Clear();
-                        //hide after 2 seconds
-                        if (lastRecvPositionUpdateTime < Lidgren.Network.NetTime.Now - 2.0f)
+                        //hide after y seconds
+                        if (lastRecvPositionUpdateTime < Lidgren.Network.NetTime.Now - NetConfig.DisableCharacterIfPositionDataMissingDelay)
                         {
                             Enabled = false;
                             return;
@@ -74,7 +74,7 @@ namespace Barotrauma
                         states = newInput,
                         intAim = intAngle
                     };
-                    if (focusedItem != null && !CharacterInventory.DraggingItemToWorld && 
+                    if (focusedItem != null && !CharacterInventory.DraggingItemToWorld &&
                         (!newMem.states.HasFlag(InputNetFlags.Grab) && !newMem.states.HasFlag(InputNetFlags.Health)))
                     {
                         newMem.interact = focusedItem.ID;
@@ -133,9 +133,9 @@ namespace Barotrauma
                 {
                     msg.WriteRangedInteger((int)memInput[i].states, 0, (int)InputNetFlags.MaxVal);
                     msg.Write(memInput[i].intAim);
-                    if (memInput[i].states.HasFlag(InputNetFlags.Select) || 
+                    if (memInput[i].states.HasFlag(InputNetFlags.Select) ||
                         memInput[i].states.HasFlag(InputNetFlags.Deselect) ||
-                        memInput[i].states.HasFlag(InputNetFlags.Use) || 
+                        memInput[i].states.HasFlag(InputNetFlags.Use) ||
                         memInput[i].states.HasFlag(InputNetFlags.Health) ||
                         memInput[i].states.HasFlag(InputNetFlags.Grab))
                     {
@@ -187,11 +187,11 @@ namespace Barotrauma
                         bool attackInput = msg.ReadBoolean();
                         keys[(int)InputType.Attack].Held = attackInput;
                         keys[(int)InputType.Attack].SetState(false, attackInput);
-                        
+
                         double aimAngle = msg.ReadUInt16() / 65535.0 * 2.0 * Math.PI;
                         cursorPosition = AimRefPosition + new Vector2((float)Math.Cos(aimAngle), (float)Math.Sin(aimAngle)) * 500.0f;
                         TransformCursorPos();
-                        
+
                         bool ragdollInput = msg.ReadBoolean();
                         keys[(int)InputType.Ragdoll].Held = ragdollInput;
                         keys[(int)InputType.Ragdoll].SetState(false, ragdollInput);
@@ -225,7 +225,7 @@ namespace Barotrauma
                         msg.ReadSingle());
                     float MaxVel = NetConfig.MaxPhysicsBodyVelocity;
                     Vector2 linearVelocity = new Vector2(
-                        msg.ReadRangedSingle(-MaxVel, MaxVel, 12), 
+                        msg.ReadRangedSingle(-MaxVel, MaxVel, 12),
                         msg.ReadRangedSingle(-MaxVel, MaxVel, 12));
                     linearVelocity = NetConfig.Quantize(linearVelocity, -MaxVel, MaxVel, 12);
 
@@ -252,9 +252,9 @@ namespace Barotrauma
                     if (GameMain.Client.Character == this && AllowInput)
                     {
                         var posInfo = new CharacterStateInfo(
-                            pos, rotation, 
-                            networkUpdateID, 
-                            facingRight ? Direction.Right : Direction.Left, 
+                            pos, rotation,
+                            networkUpdateID,
+                            facingRight ? Direction.Right : Direction.Left,
                             selectedCharacter, selectedItem, animation);
 
                         while (index < memState.Count && NetIdUtils.IdMoreRecent(posInfo.ID, memState[index].ID))
@@ -264,11 +264,11 @@ namespace Barotrauma
                     else
                     {
                         var posInfo = new CharacterStateInfo(
-                            pos, rotation, 
-                            linearVelocity, angularVelocity, 
-                            sendingTime, facingRight ? Direction.Right : Direction.Left, 
+                            pos, rotation,
+                            linearVelocity, angularVelocity,
+                            sendingTime, facingRight ? Direction.Right : Direction.Left,
                             selectedCharacter, selectedItem, animation);
-                        
+
                         while (index < memState.Count && posInfo.Timestamp > memState[index].Timestamp)
                             index++;
                         memState.Insert(index, posInfo);
@@ -359,18 +359,12 @@ namespace Barotrauma
 
             DebugConsole.Log("Received spawn data for " + speciesName);
 
-            string configPath = GetConfigFile(speciesName);
-            if (string.IsNullOrEmpty(configPath))
-            {
-                throw new Exception("Error in character spawn data - could not find a config file for the character \"" + configPath + "\"!");
-            }
-
             Character character = null;
             if (noInfo)
             {
                 if (!spawn) return null;
 
-                character = Create(configPath, position, seed, null, true);
+                character = Create(speciesName, position, seed, null, true);
                 character.ID = id;
             }
             else
@@ -383,19 +377,13 @@ namespace Barotrauma
 
                 if (!spawn) return null;
 
-                string infoConfigPath = GetConfigFile(infoSpeciesName);
-                if (string.IsNullOrEmpty(infoConfigPath))
-                {
-                    throw new Exception("Error in character spawn data - could not find a config file for the character info \"" + configPath + "\"!");
-                }
+                CharacterInfo info = CharacterInfo.ClientRead(infoSpeciesName, inc);
 
-                CharacterInfo info = CharacterInfo.ClientRead(infoConfigPath, inc);
-
-                character = Create(configPath, position, seed, info, GameMain.Client.ID != ownerId, hasAi);
+                character = Create(infoSpeciesName, position, seed, info, GameMain.Client.ID != ownerId, hasAi);
                 character.ID = id;
                 character.TeamID = (TeamType)teamID;
 
-                if (configPath == HumanConfigFile && character.TeamID != TeamType.FriendlyNPC)
+                if (character.IsHuman && character.TeamID != TeamType.FriendlyNPC)
                 {
                     CharacterInfo duplicateCharacterInfo = GameMain.GameSession.CrewManager.GetCharacterInfos().FirstOrDefault(c => c.ID == info.ID);
                     GameMain.GameSession.CrewManager.RemoveCharacterInfo(duplicateCharacterInfo);
@@ -421,15 +409,6 @@ namespace Barotrauma
             return character;
         }
 
-        private void ReadTraitorStatus(IReadMessage msg)
-        {
-            IsTraitor = msg.ReadBoolean();
-            if (IsTraitor)
-            {
-                TraitorCurrentObjective = msg.ReadString();
-            }
-        }
-        
         private void ReadStatus(IReadMessage msg)
         {
             bool isDead = msg.ReadBoolean();

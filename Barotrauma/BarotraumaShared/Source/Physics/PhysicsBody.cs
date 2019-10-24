@@ -6,6 +6,8 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using LimbParams = Barotrauma.RagdollParams.LimbParams;
+using ColliderParams = Barotrauma.RagdollParams.ColliderParams;
 
 namespace Barotrauma
 {
@@ -358,6 +360,7 @@ namespace Barotrauma
             body.CollisionCategories = Physics.CollisionItem;
             body.Friction = limbParams.Friction;
             body.Restitution = limbParams.Restitution;
+            body.AngularDamping = limbParams.AngularDamping;
             body.UserData = this;
             SetTransformIgnoreContacts(position, 0.0f);
             LastSentPosition = position;

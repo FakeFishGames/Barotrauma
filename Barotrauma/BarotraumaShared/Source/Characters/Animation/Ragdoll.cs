@@ -10,6 +10,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
+using LimbParams = Barotrauma.RagdollParams.LimbParams;
+using JointParams = Barotrauma.RagdollParams.JointParams;
 
 namespace Barotrauma
 {
@@ -223,7 +225,7 @@ namespace Barotrauma
                 {
                     foreach (Limb limb in Limbs)
                     {
-                        if (limb.IsSevered) continue;
+                        if (limb.IsSevered || !limb.body.PhysEnabled) { continue; }
                         limb.body.SetTransform(Collider.SimPosition, Collider.Rotation);
                         //reset pull joints (they may be somewhere far away if the character has moved from the position where animations were last updated)
                         limb.PullJointEnabled = false;
@@ -233,8 +235,7 @@ namespace Barotrauma
             }
         }
 
-        // Currently the camera cannot handle greater speeds. It starts to lag behind.
-        public const float MAX_SPEED = 9;
+        public const float MAX_SPEED = 15;
 
         public Vector2 TargetMovement
         {
@@ -258,6 +259,7 @@ namespace Barotrauma
         public float ImpactTolerance => RagdollParams.ImpactTolerance;
         public bool Draggable => RagdollParams.Draggable;
         public bool CanEnterSubmarine => RagdollParams.CanEnterSubmarine;
+        public bool CanAttackSubmarine => Limbs.Any(l => l.attack != null && l.attack.IsValidTarget(AttackTarget.Structure));
 
         public float Dir
         {
@@ -317,7 +319,7 @@ namespace Barotrauma
             }
             else
             {
-                items = limbs?.ToDictionary(l => l.limbParams, l => l.WearingItems);
+                items = limbs?.ToDictionary(l => l.Params, l => l.WearingItems);
             }
             foreach (var limbParams in RagdollParams.Limbs)
             {
@@ -327,7 +329,7 @@ namespace Barotrauma
                     limbParams.Radius = 10;
                 }
             }
-            foreach (var colliderParams in RagdollParams.ColliderParams)
+            foreach (var colliderParams in RagdollParams.Colliders)
             {
                 if (!PhysicsBody.IsValidShape(colliderParams.Radius, colliderParams.Height, colliderParams.Width))
                 {
@@ -352,11 +354,16 @@ namespace Barotrauma
                     limb.WearingItems.AddRange(itemList);
                 }
             }
-            if (character.SpeciesName.ToLowerInvariant() == "humanhusk")
+
+            if (character.IsHusk)
             {
-                if (Limbs.None(l => l.Name.ToLowerInvariant() == "huskappendage"))
+                if (Character.TryGetConfigFile(character.ConfigPath, out XDocument configFile))
                 {
-                    AfflictionHusk.AttachHuskAppendage(character, this);
+                    var mainElement = configFile.Root.IsOverride() ? configFile.Root.FirstElement() : configFile.Root;
+                    foreach (var huskAppendage in mainElement.GetChildElements("huskappendage"))
+                    {
+                        AfflictionHusk.AttachHuskAppendage(character, huskAppendage.GetAttributeString("affliction", string.Empty), huskAppendage, ragdoll: this);
+                    }
                 }
             }
         }
@@ -376,7 +383,7 @@ namespace Barotrauma
             }
             DebugConsole.Log($"Creating colliders from {RagdollParams.Name}.");
             collider = new List<PhysicsBody>();
-            foreach (ColliderParams cParams in RagdollParams.ColliderParams)
+            foreach (var cParams in RagdollParams.Colliders)
             {
                 if (!PhysicsBody.IsValidShape(cParams.Radius, cParams.Height, cParams.Width))
                 {
@@ -456,38 +463,18 @@ namespace Barotrauma
         /// </summary>
         public void SaveRagdoll(string fileNameWithoutExtension = null)
         {
-            SaveJoints();
-            SaveLimbs();
             RagdollParams.Save(fileNameWithoutExtension);
         }
 
         /// <summary>
         /// Resets the serializable data to the currently selected ragdoll params.
-        /// Force reloading always loads the xml stored in the disk.
+        /// Force reloading always loads the xml stored on the disk.
         /// </summary>
         public void ResetRagdoll(bool forceReload = false)
         {
             RagdollParams.Reset(forceReload);
             ResetJoints();
             ResetLimbs();
-        }
-
-        /// <summary>
-        /// Saves the current joint values to the serializable joint params. This method should properly handle character flipping. 
-        /// NOTE: Currently all the params are handled stored as SubRagdollParams and handled in the RagdollParams Save method. This method does nothing.
-        /// </summary>
-        public void SaveJoints()
-        {
-            LimbJoints.ForEach(j => j.SaveParams());
-        }
-
-        /// <summary>
-        /// Handles custom serialization per limb. Currently only the attacks need to be serialized, since they cannot be stored as SubRagdollParams (because they shouldn't be decoupled with ragdolls).
-        /// Note: Saving to file is not handled by this method. Calling RagdollParams.Save() after this method should work.
-        /// </summary>
-        public void SaveLimbs()
-        {
-            Limbs.ForEach(l => l.attack?.Serialize());
         }
 
         /// <summary>
@@ -792,17 +779,9 @@ namespace Barotrauma
 
             foreach (Limb limb in Limbs)
             {
-                if (limb == null || limb.IsSevered) continue;
-
+                if (limb == null || limb.IsSevered) { continue; }
                 limb.Dir = Dir;
-
-                if (limb.MouthPos.HasValue)
-                {
-                    limb.MouthPos = new Vector2(
-                        -limb.MouthPos.Value.X,
-                        limb.MouthPos.Value.Y);
-                }
-
+                limb.MouthPos = new Vector2(-limb.MouthPos.X, limb.MouthPos.Y);
                 limb.MirrorPullJoint();
             }
 
@@ -1051,6 +1030,21 @@ namespace Barotrauma
         /// How long has the ragdoll stayed motionless
         /// </summary>
         private float bodyInRestTimer;
+
+        private float BodyInRestDelay = 1.0f;
+
+        public bool BodyInRest
+        {
+            get { return bodyInRestTimer > BodyInRestDelay; }
+            set
+            {
+                foreach (Limb limb in Limbs)
+                {
+                    limb.body.PhysEnabled = !value;
+                }
+                bodyInRestTimer = value ? BodyInRestDelay : 0.0f;
+            }
+        }
 
         public bool forceStanding;
 
@@ -1335,7 +1329,7 @@ namespace Barotrauma
             else if (Limbs.All(l => l != null && !l.body.Enabled || l.LinearVelocity.LengthSquared() < 0.001f))
             {
                 bodyInRestTimer += deltaTime;
-                if (bodyInRestTimer > 1.0f)
+                if (bodyInRestTimer > BodyInRestDelay)
                 {
                     foreach (Limb limb in Limbs)
                     {
@@ -1615,24 +1609,27 @@ namespace Barotrauma
         {
             if (GameMain.NetworkMember == null) return;
 
-            float lowestSubPos = ConvertUnits.ToSimUnits(Submarine.Loaded.Min(s => s.HiddenSubPosition.Y - s.Borders.Height - 128.0f));
-
-            for (int i = 0; i < character.MemState.Count; i++ )
+            float lowestSubPos = float.MaxValue;
+            if (Submarine.Loaded.Any())
             {
-                if (character.Submarine == null)
+                lowestSubPos = ConvertUnits.ToSimUnits(Submarine.Loaded.Min(s => s.HiddenSubPosition.Y - s.Borders.Height - 128.0f));
+                for (int i = 0; i < character.MemState.Count; i++)
                 {
-                    //transform in-sub coordinates to outside coordinates
-                    if (character.MemState[i].Position.Y > lowestSubPos)
-                        character.MemState[i].TransformInToOutside();
-                }
-                else if (currentHull?.Submarine != null)
-                {
-                    //transform outside coordinates to in-sub coordinates
-                    if (character.MemState[i].Position.Y < lowestSubPos)
-                        character.MemState[i].TransformOutToInside(currentHull.Submarine);
+                    if (character.Submarine == null)
+                    {
+                        //transform in-sub coordinates to outside coordinates
+                        if (character.MemState[i].Position.Y > lowestSubPos)
+                            character.MemState[i].TransformInToOutside();
+                    }
+                    else if (currentHull?.Submarine != null)
+                    {
+                        //transform outside coordinates to in-sub coordinates
+                        if (character.MemState[i].Position.Y < lowestSubPos)
+                            character.MemState[i].TransformOutToInside(currentHull.Submarine);
+                    }
                 }
             }
-            
+
             UpdateNetPlayerPositionProjSpecific(deltaTime, lowestSubPos);
         }
         
@@ -1663,22 +1660,14 @@ namespace Barotrauma
 
         public Vector2? GetMouthPosition()
         {
-            Limb mouthLimb = Array.Find(Limbs, l => l != null && l.MouthPos.HasValue);
-            if (mouthLimb == null) mouthLimb = GetLimb(LimbType.Head);
-            if (mouthLimb == null) return null;
-
-            Vector2 mouthPos = mouthLimb.SimPosition;
-            if (mouthLimb.MouthPos.HasValue)
-            {
-                float cos = (float)Math.Cos(mouthLimb.Rotation);
-                float sin = (float)Math.Sin(mouthLimb.Rotation);
-                mouthPos += new Vector2(
-                     mouthLimb.MouthPos.Value.X * cos - mouthLimb.MouthPos.Value.Y * sin,
-                     mouthLimb.MouthPos.Value.X * sin + mouthLimb.MouthPos.Value.Y * cos) * RagdollParams.LimbScale;
-            }
-            return mouthPos;
+            Limb mouthLimb = GetLimb(LimbType.Head);
+            if (mouthLimb == null) { return null; }
+            float cos = (float)Math.Cos(mouthLimb.Rotation);
+            float sin = (float)Math.Sin(mouthLimb.Rotation);
+            Vector2 bodySize = mouthLimb.body.GetSize();
+            Vector2 offset = new Vector2(mouthLimb.MouthPos.X * bodySize.X / 2, mouthLimb.MouthPos.Y * bodySize.Y / 2);
+            return mouthLimb.SimPosition + new Vector2(offset.X * cos - offset.Y * sin, offset.X * sin + offset.Y * cos) * RagdollParams.LimbScale;
         }
-
 
         public Vector2 GetColliderBottom()
         {

@@ -172,6 +172,11 @@ namespace Barotrauma
             }
 
             var reports = Order.PrefabList.FindAll(o => o.TargetAllCharacters && o.SymbolSprite != null);
+            if (reports.None())
+            {
+                DebugConsole.ThrowError("No valid orders for report buttons found! Cannot create report buttons. The orders for the report buttons must have 'targetallcharacters' attribute enabled and a valid 'symbolsprite' defined.");
+                return;
+            }
             reportButtonFrame = new GUILayoutGroup(new RectTransform(
                 new Point((HUDLayoutSettings.CrewArea.Height - (int)((reports.Count - 1) * 5 * GUI.Scale)) / reports.Count, HUDLayoutSettings.CrewArea.Height), guiFrame.RectTransform))
             {
@@ -322,7 +327,7 @@ namespace Barotrauma
         /// </summary>
         private GUIComponent CreateCharacterFrame(Character character, GUIComponent parent)
         {
-            int correctOrderCount = 0, neutralOrderCount = 0, wrongOrderCount = 0;
+            int genericOrderCount = 0, correctOrderCount = 0, wrongOrderCount = 0;
             //sort the orders
             //  1. generic orders (follow, wait, etc)
             //  2. orders appropriate for the character's job (captain -> steer, etc)
@@ -331,15 +336,16 @@ namespace Barotrauma
             foreach (Order order in Order.PrefabList)
             {
                 if (order.TargetAllCharacters || order.SymbolSprite == null) continue;
-                if (order.AppropriateJobs == null || order.AppropriateJobs.Length == 0)
+                if (!JobPrefab.List.Values.Any(jp => jp.AppropriateOrders.Contains(order.Identifier)) &&
+                    (order.AppropriateJobs == null || !order.AppropriateJobs.Any()))
                 {
                     orders.Insert(0, order);
-                    correctOrderCount++;
+                    genericOrderCount++;
                 }
                 else if (order.HasAppropriateJob(character))
                 {
                     orders.Add(order);
-                    neutralOrderCount++;
+                    correctOrderCount++;
                 }
             }
             foreach (Order order in Order.PrefabList)
@@ -481,7 +487,7 @@ namespace Barotrauma
                 var order = orders[i];
                 if (order.TargetAllCharacters) continue;
 
-                RectTransform btnParent = (i >= correctOrderCount + neutralOrderCount) ?
+                RectTransform btnParent = (i >= genericOrderCount + correctOrderCount) ?
                     wrongOrderList.Content.RectTransform :
                     orderButtonFrame.RectTransform;
 
@@ -516,7 +522,7 @@ namespace Barotrauma
 
                     if (btn.GetChildByUserData("selected").Visible)
                     {
-                        SetCharacterOrder(character, Order.PrefabList.Find(o => o.AITag == "dismissed"), null, Character.Controlled);
+                        SetCharacterOrder(character, Order.GetPrefab("dismissed"), null, Character.Controlled);
                     }
                     else
                     {
@@ -535,7 +541,7 @@ namespace Barotrauma
                 btn.ToolTip = order.Name;
 
                 //divider between different groups of orders
-                if (i == correctOrderCount - 1 || i == correctOrderCount + neutralOrderCount - 1)
+                if (i == genericOrderCount - 1 || i == genericOrderCount + correctOrderCount - 1)
                 {
                     //TODO: divider sprite
                     new GUIFrame(new RectTransform(new Point(8, iconSize), orderButtonFrame.RectTransform), style: "GUIButton");
@@ -999,14 +1005,15 @@ namespace Barotrauma
                 color: matchingItems.Count > 1 ? Color.Black * 0.9f : Color.Black * 0.7f);
         }
 
-        public void HighlightOrderButton(Character character, string orderAiTag, Color color, Vector2? flashRectInflate = null)
+        public void HighlightOrderButton(Character character, string orderIdentifier, Color color, Vector2? flashRectInflate = null)
         {
-            var order = Order.PrefabList.Find(o => o.AITag == orderAiTag);
+            var order = Order.GetPrefab(orderIdentifier);
             if (order == null)
             {
-                DebugConsole.ThrowError("Could not find an order with the AI tag \"" + orderAiTag + "\".\n" + Environment.StackTrace);
+                DebugConsole.ThrowError("Could not find an order with the AI tag \"" + orderIdentifier + "\".\n" + Environment.StackTrace);
                 return;
             }
+            ToggleCrewAreaOpen = true;
             var characterElement = characterListBox.Content.FindChild(character);
             GUIButton orderBtn = characterElement.FindChild(order, recursive: true) as GUIButton;
             if (orderBtn.Frame.FlashTimer <= 0)
@@ -1417,14 +1424,14 @@ namespace Barotrauma
         //    return true;
         //}
 
-        private void ToggleReportButton(string orderAiTag, bool enabled)
+        private void ToggleReportButton(string orderIdentifier, bool enabled)
         {
-            Order order = Order.PrefabList.Find(o => o.AITag == orderAiTag);
+            Order order = Order.GetPrefab(orderIdentifier);
 
             //already reported, disable the button
             /*if (GameMain.GameSession.CrewManager.ActiveOrders.Any(o =>
                 o.First.TargetEntity == Character.Controlled.CurrentHull &&
-                o.First.AITag == orderAiTag))
+                o.First.Identifier == orderIdentifier))
             {
                 enabled = false;
             }*/

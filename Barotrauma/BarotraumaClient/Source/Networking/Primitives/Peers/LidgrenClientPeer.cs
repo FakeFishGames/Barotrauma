@@ -136,6 +136,7 @@ namespace Barotrauma.Networking
                 case NetConnectionStatus.Disconnected:
                     string disconnectMsg = inc.ReadString();
                     Close(disconnectMsg);
+                    OnDisconnectMessageReceived?.Invoke(disconnectMsg);
                     break;
             }
         }
@@ -227,7 +228,7 @@ namespace Barotrauma.Networking
             netClient.Shutdown(msg ?? TextManager.Get("Disconnecting"));
             netClient = null;
             steamAuthTicket?.Cancel(); steamAuthTicket = null;
-            OnDisconnect?.Invoke(msg);
+            OnDisconnect?.Invoke();
         }
 
         public override void Send(IWriteMessage msg, DeliveryMethod deliveryMethod)
@@ -247,6 +248,13 @@ namespace Barotrauma.Networking
                     lidgrenDeliveryMethod = NetDeliveryMethod.ReliableOrdered;
                     break;
             }
+
+#if DEBUG
+            netPeerConfiguration.SimulatedDuplicatesChance = GameMain.Client.SimulatedDuplicatesChance;
+            netPeerConfiguration.SimulatedMinimumLatency = GameMain.Client.SimulatedMinimumLatency;
+            netPeerConfiguration.SimulatedRandomLatency = GameMain.Client.SimulatedRandomLatency;
+            netPeerConfiguration.SimulatedLoss = GameMain.Client.SimulatedLoss;
+#endif
 
             NetOutgoingMessage lidgrenMsg = netClient.CreateMessage();
             byte[] msgData = new byte[msg.LengthBytes];
