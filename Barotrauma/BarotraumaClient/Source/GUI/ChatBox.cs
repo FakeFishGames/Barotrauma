@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -213,6 +214,7 @@ namespace Barotrauma
             {
                 msgHolder.RectTransform.SizeChanged -= Recalculate;
                 //resize the holder to match the size of the message and add some spacing
+                msgHolder.Children.ForEach(c => (c as GUITextBlock)?.CalculateHeightFromText());
                 msgHolder.RectTransform.Resize(new Point(msgHolder.Rect.Width, msgHolder.Children.Sum(c => c.Rect.Height) + (int)(10 * GUI.Scale)), resizeChildren: false);
                 msgHolder.RectTransform.SizeChanged += Recalculate;
             }
