@@ -1313,7 +1313,7 @@ namespace Barotrauma
                     { "Single", "Float"},
                     { "Int32", "Integer"},
                     { "Boolean", "True/False"},
-                    { "String", "Yext"},
+                    { "String", "Text"},
                 };
 
                 var itemComponentTypes = typeof(ItemComponent).Assembly.GetTypes().Where(type => type.IsSubclassOf(typeof(ItemComponent))).ToList();
@@ -1378,12 +1378,17 @@ namespace Barotrauma
                             }
                             propertyTypeName = string.Join("/", valueNames);
                         }
+                        string defaultValueString = serialize.defaultValue?.ToString() ?? "";
+                        if (property.PropertyType == typeof(float))
+                        {
+                            defaultValueString = ((float)serialize.defaultValue).ToString(CultureInfo.InvariantCulture);
+                        }
 
                         lines.Add("  [tr]");
 
                         lines.Add($"    [td]{property.Name}[/td]");
                         lines.Add($"    [td]{propertyTypeName}[/td]");
-                        lines.Add($"    [td]{serialize.defaultValue}[/td]");
+                        lines.Add($"    [td]{defaultValueString}[/td]");
 
                         Editable editable = attributes.FirstOrDefault(a => a is Editable) as Editable;
                         string rangeText = "-";
