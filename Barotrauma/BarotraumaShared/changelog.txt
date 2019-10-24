@@ -70,14 +70,14 @@ Multiplayer:
 
 Human AI:
 - Changed the logic for automatically unequipping the diving gear, extinguishers or items that are held in hands.
-- Teached the bots to place diving suits, fuel rods and fire extinguishers into right places, if they can't unequip the items without dropping them AND if the current objective is not high priority. The system uses tags/identifiers and two new attributes: "preferredcontainers" in Items and "containablerestrictions" in ItemComponents so it can be adjusted both in the editor and in xml.
+- Taught the bots to place diving suits, fuel rods and fire extinguishers into right places, if they can't unequip the items without dropping them AND if the current objective is not high priority. The system uses tags/identifiers and two new attributes: "preferredcontainers" in Items and "containablerestrictions" in ItemComponents so it can be adjusted both in the editor and in xml.
 - Improved the code to prevent dead-locks between the AI states.
 - Start looking new oxygen when the current oxygen tank is at 10% instead of starting when it's empty (which often lead the bot to suffocate while doing the objective).
 - Combat: Don't ignore empty weapons when evaluating weapons for the first time (allows to try reloading a weapon before ignoring it as useless).
 - Fight Intruders: Automatically switch weapon when the current weapon runs out of ammo. Find ammunition for the current weapon if no other decent weapon is found. Don't allow to go offensive while armed with poor weapons, like a wrench.
 - Fix Leaks: Improved the operating of welding tools.
 - Rescue: Major refactoring. Allow to heal self. Improve the priority calculation. The priority is now based on the severity of wounds.
-- Teached the bots to look deeper into the inventories (recursive) when seeking items.
+- Taught the bots to look deeper into the inventories (recursive) when seeking items.
 - Changed the decision making on whether or not a bot needs diving gear.
 - The bots now avoid unsafe paths in the idle state or when doing low priority objectives.
 - The bots don't follow targets outside of the submarine.
