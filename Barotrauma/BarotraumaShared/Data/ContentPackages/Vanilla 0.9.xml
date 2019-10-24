@@ -83,6 +83,8 @@
   <Submarine file="Submarines/Selkie.sub" />
   <Submarine file="Submarines/Bunyip.sub" />
   <Submarine file="Submarines/Humpback.sub" />
+  <Submarine file="Submarines/Kastrull.sub" />
+  <Submarine file="Submarines/KastrullDrone.sub" />
   <Submarine file="Submarines/Dugong.sub" />
   <Submarine file="Submarines/Venture.sub" />
   <Submarine file="Submarines/Remora.sub" />
