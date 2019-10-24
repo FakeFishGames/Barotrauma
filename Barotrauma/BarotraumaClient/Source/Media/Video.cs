@@ -108,7 +108,13 @@ namespace Barotrauma.Media
         public uint Width { get; private set; }
         public uint Height { get; private set; }
 
-        public Video(GraphicsDevice graphicsDevice,SoundManager soundManager,string filename,uint width,uint height)
+        public float AudioGain
+        {
+            get { return sound == null ? 0.0f : sound.BaseGain; }
+            set { if (sound != null) { sound.BaseGain = value; } }
+        }
+
+        public Video(GraphicsDevice graphicsDevice, SoundManager soundManager, string filename, uint width, uint height)
         {
             Init();
 

@@ -382,9 +382,10 @@ namespace Barotrauma
             if (Config.EnableSplashScreen)
             {
                 var pendingSplashScreens = TitleScreen.PendingSplashScreens;
-                pendingSplashScreens?.Enqueue(new Pair<string, Point>("Content/Splash_UTG.mp4", new Point(1280, 720)));
-                pendingSplashScreens?.Enqueue(new Pair<string, Point>("Content/Splash_FF.mp4", new Point(1280, 720)));
-                pendingSplashScreens?.Enqueue(new Pair<string, Point>("Content/Splash_Daedalic.mp4", new Point(1920, 1080)));
+                float baseVolume = MathHelper.Clamp(Config.SoundVolume * 2.0f, 0.0f, 1.0f);
+                pendingSplashScreens?.Enqueue(new Triplet<string, Point, float>("Content/Splash_UTG.mp4", new Point(1280, 720), baseVolume * 0.5f));
+                pendingSplashScreens?.Enqueue(new Triplet<string, Point, float>("Content/Splash_FF.mp4", new Point(1280, 720), baseVolume));
+                pendingSplashScreens?.Enqueue(new Triplet<string, Point, float>("Content/Splash_Daedalic.mp4", new Point(1920, 1080), baseVolume * 0.15f));
             }
 
             //if not loading in a separate thread, wait for the splash screens to finish before continuing the loading

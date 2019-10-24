@@ -21,11 +21,11 @@ namespace Barotrauma
         private Video currSplashScreen;
         private DateTime videoStartTime;
 
-        private Queue<Pair<string, Point>> pendingSplashScreens = new Queue<Pair<string, Point>>();
+        private Queue<Triplet<string, Point, float>> pendingSplashScreens = new Queue<Triplet<string, Point, float>>();
         /// <summary>
-        /// Pair.first = filepath, Pair.second = resolution
+        /// Triplet.first = filepath, Triplet.second = resolution, Triplet.third = audio gain
         /// </summary>
-        public Queue<Pair<string, Point>> PendingSplashScreens
+        public Queue<Triplet<string, Point, float>> PendingSplashScreens
         {
             get
             {
@@ -280,6 +280,7 @@ namespace Barotrauma
                 try
                 {
                     currSplashScreen = new Video(graphics, GameMain.SoundManager, fileName, (uint)resolution.X, (uint)resolution.Y);
+                    currSplashScreen.AudioGain = newSplashScreen.Third;
                     videoStartTime = DateTime.Now;
                 }
                 catch (Exception e)
