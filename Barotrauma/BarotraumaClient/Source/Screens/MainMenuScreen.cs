@@ -1,4 +1,6 @@
-﻿using Barotrauma.Extensions;
+﻿//#define TEST_REMOTE_CONTENT
+
+using Barotrauma.Extensions;
 using Barotrauma.Networking;
 using Barotrauma.Tutorials;
 using Lidgren.Network;
@@ -71,15 +73,20 @@ namespace Barotrauma
                 RelativeSpacing = 0.02f
             };
 
-            FetchRemoteContent(Frame.RectTransform);
-            /*var doc = XMLExtensions.TryLoadXml("Content/UI/MenuTextTest.xml");
+#if TEST_REMOTE_CONTENT
+
+            var doc = XMLExtensions.TryLoadXml("Content/UI/MenuTextTest.xml");
             if (doc?.Root != null)
             {
                 foreach (XElement subElement in doc?.Root.Elements())
                 {
                     GUIComponent.FromXML(subElement, Frame.RectTransform);
                 }
-            }*/       
+            }   
+#else
+            FetchRemoteContent(Frame.RectTransform);
+#endif
+
 
             // === CAMPAIGN
             var campaignHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 1.0f), parent: buttonsParent.RectTransform) { RelativeOffset = new Vector2(0.1f, 0.0f) }, isHorizontal: true);
@@ -375,9 +382,9 @@ namespace Barotrauma
             };
 
         }
-        #endregion
+#endregion
 
-        #region Selection
+#region Selection
         public override void Select()
         {
             base.Select();
@@ -394,7 +401,7 @@ namespace Barotrauma
 
             GameAnalyticsManager.SetCustomDimension01("");
 
-            #if OSX
+#if OSX
             // Hack for adjusting the viewport properly after splash screens on older Macs
             if (firstLoadOnMac)
             {
@@ -411,7 +418,7 @@ namespace Barotrauma
 
                 SelectTab(null, Tab.Empty);
             }
-            #endif
+#endif
         }
 
         public override void Deselect()
