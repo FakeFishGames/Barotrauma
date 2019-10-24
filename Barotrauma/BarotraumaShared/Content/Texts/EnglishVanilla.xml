@@ -3708,9 +3708,7 @@
   
   
   <!-- Modified values as of Oct 22 -->
-  <entitydescription.atancomponent>Outputs the angle whose tangent is equal to the input. If the input contains a comma, it's interpreted as a vector and the angle calculated using Atan2.</entitydescription.atancomponent>
-
-  <!-- Modified values as of Oct 23 -->
+  <entitydescription.atancomponent>Outputs the angle whose tangent is equal to the input. If the the "signal_in_x" and "signal_in_y" connections are used, the input is interpreted as a vector and the angle calculated using Atan2.</entitydescription.atancomponent>
   <serverendpoint>Server IP / SteamID</serverendpoint>
 
 </infotexts>

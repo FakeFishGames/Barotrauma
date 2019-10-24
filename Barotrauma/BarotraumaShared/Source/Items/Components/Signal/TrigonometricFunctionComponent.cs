@@ -17,6 +17,8 @@ namespace Barotrauma.Items.Components
             Atan,
         }
 
+        protected float[] receivedSignal = new float[2];
+
         [Serialize(FunctionType.Sin, false, description: "Which kind of function to run the input through.")]
         public FunctionType Function
         {
@@ -36,6 +38,14 @@ namespace Barotrauma.Items.Components
         {
             IsActive = true;
         }
+
+        public override void Update(float deltaTime, Camera cam)
+        {
+            //reset received signals
+            receivedSignal[0] = float.NaN;
+            receivedSignal[1] = float.NaN;
+        }
+
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1)
         {
@@ -68,18 +78,24 @@ namespace Barotrauma.Items.Components
                         item.SendSignal(0, angle.ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
                     }
                     break;
-                case FunctionType.Atan:
+                case FunctionType.Atan:                    
+                    if (connection.Name == "signal_in_x")
                     {
-                        float angle;
-                        if (signal.Contains(","))
+                        float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[0]);
+                    }
+                    else if (connection.Name == "signal_in_y")
+                    {
+                        float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[1]);   
+                        if (!float.IsNaN(receivedSignal[0]) && !float.IsNaN(receivedSignal[1]))
                         {
-                            Vector2 vectorValue = XMLExtensions.ParseVector2(signal, errorMessages: false);
-                            angle = (float)Math.Atan2(vectorValue.Y, vectorValue.X);
+                            float angle = (float)Math.Atan2(receivedSignal[1], receivedSignal[0]);
+                            if (!UseRadians) { angle = MathHelper.ToDegrees(angle); }
+                            item.SendSignal(0, angle.ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
                         }
-                        else
-                        {
-                            angle = (float)Math.Atan(value);
-                        }
+                    }
+                    else
+                    {
+                        float angle = (float)Math.Atan(value);
                         if (!UseRadians) { angle = MathHelper.ToDegrees(angle); }
                         item.SendSignal(0, angle.ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
                     }
