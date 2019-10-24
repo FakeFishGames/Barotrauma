@@ -119,6 +119,19 @@ namespace Barotrauma
             }
         }
 
+        public override ScalableFont Font
+        {
+            get
+            {
+                return base.Font;
+            }
+            set
+            {
+                base.Font = value;
+                if (TextBox != null) { TextBox.Font = value; }
+            }
+        }
+
         public GUILayoutGroup LayoutGroup
         {
             get;
