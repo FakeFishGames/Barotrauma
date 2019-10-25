@@ -1157,7 +1157,7 @@ namespace Barotrauma
         {
             ApplySettings();
             if (Screen.Selected != GameMain.MainMenuScreen) GUI.SettingsMenuOpen = false;
-            if (contentPackageSelectionDirty)
+            if (contentPackageSelectionDirty || ContentPackage.List.Any(cp => cp.NeedsRestart))
             {
                 new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("RestartRequiredGeneric"));
             }

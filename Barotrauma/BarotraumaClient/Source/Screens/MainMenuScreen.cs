@@ -661,13 +661,15 @@ namespace Barotrauma
         {
             GameMain.Config.SaveNewPlayerConfig();
 
-            if (userData is Tab) SelectTab(button, (Tab)userData);
+            if (userData is Tab) { SelectTab(button, (Tab)userData); }
 
-            if (GameMain.GraphicsWidth != GameMain.Config.GraphicsWidth || GameMain.GraphicsHeight != GameMain.Config.GraphicsHeight)
+            if (GameMain.GraphicsWidth != GameMain.Config.GraphicsWidth || 
+                GameMain.GraphicsHeight != GameMain.Config.GraphicsHeight ||
+                ContentPackage.List.Any(cp => cp.NeedsRestart))
             {
                 new GUIMessageBox(
                     TextManager.Get("RestartRequiredLabel"),
-                    TextManager.Get("RestartRequiredText"));
+                    TextManager.Get("RestartRequiredGeneric"));
             }
 
             return true;
