@@ -85,7 +85,6 @@
       <Order identifier="fixleaks" prioritymodifier="0.75"/>
       <Order identifier="operatereactor" option="powerup" prioritymodifier="0.3"/>
       <Order identifier="repairsystems" option="all" prioritymodifier="0.5"/>
-      <Order identifier="chargebatteries" option="charge" prioritymodifier="0.25"/>
       <Order identifier="pumpwater" option="pumpout" prioritymodifier="0.25"/>
     </AutonomousObjectives>
     <AppropriateOrders>
@@ -136,7 +135,6 @@
       <Order identifier="repairsystems" option="jobspecific" prioritymodifier="1"/>
       <Order identifier="repairsystems" option="all" prioritymodifier="0.5"/>
       <Order identifier="pumpwater" option="pumpout" prioritymodifier="0.5"/>
-      <Order identifier="chargebatteries" option="charge" prioritymodifier="0.25"/>
     </AutonomousObjectives>
     <AppropriateOrders>
       <Order identifier="fixleaks"/>
@@ -183,7 +181,6 @@
       <Order identifier="fightintruders" prioritymodifier="1"/>
       <Order identifier="extinguishfires" prioritymodifier ="0.75"/>
       <Order identifier="pumpwater" option="pumpout" prioritymodifier="0.25"/>
-      <Order identifier="chargebatteries" option="charge" prioritymodifier="0.25"/>
       <Order identifier="fixleaks" prioritymodifier="0.2"/>
       <Order identifier="repairsystems" option="all" prioritymodifier="0.2"/>
       <Order identifier="operateweapons" option="holdfire" prioritymodifier="0.1"/>
@@ -226,7 +223,6 @@
       <Order identifier="extinguishfires" prioritymodifier ="1"/>
       <Order identifier="rescue" prioritymodifier="1"/>
       <Order identifier="pumpwater" option="pumpout" prioritymodifier="0.25"/>
-      <Order identifier="chargebatteries" option="charge" prioritymodifier="0.25"/>
       <Order identifier="fixleaks" prioritymodifier="0.2"/>
       <Order identifier="repairsystems" option="all" prioritymodifier="0.2"/>
     </AutonomousObjectives>
@@ -266,7 +262,6 @@
     </PreviewSprites>
     <AutonomousObjectives>
       <Order identifier="extinguishfires" prioritymodifier ="1"/>
-      <Order identifier="chargebatteries" option="charge" prioritymodifier="1"/>
       <Order identifier="pumpwater" option="pumpout" prioritymodifier="1"/>
       <Order identifier="repairsystems" option="all" prioritymodifier="0.5"/>
       <Order identifier="fixleaks" prioritymodifier="0.5"/>
