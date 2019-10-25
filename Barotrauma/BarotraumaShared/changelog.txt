@@ -1,4 +1,39 @@
 ---------------------------------------------------------------------------------------------------------
+v0.9.502.0 (community test build)
+---------------------------------------------------------------------------------------------------------
+
+- Added idle and damage sounds for Hammerhead Matriarch.
+- AI characters don't set stationary batteries to recharge unless ordered to do so.
+- Added deconstruction recipes to all drugs.
+- Fixed errors when spawning legacy tiger threshers.
+- Fixed inability for mods to override jobs.
+- Nerfed welding fuel + diving mask combo. The tank depletes much faster and one tank is only enough to make the target fall unconscious, not to kill them.
+- Fixed empty exploding ammo boxes exploding when deconstructed.
+- Fixed clients being able to join servers after enabling a required content package in the settings, even though they need to restart first (leading to errors when a round starts).
+- Fixed start button and "ready to start" panel being visible in the server lobby when a round is already running.
+- Fixed restart timer not being visible in the server lobby.
+- Fixed old chat messages overlapping in the server lobby after the scrollbar of the chatbox becomes active.
+- Fixed textbox selection not being cleared when pressing Ctrl+Z or Ctrl+R, causing a crash if the selection is outside the bounds of the current text and the player attempts to remove text from the box.
+- Fixed humahusk not being used in multiplayer when a character becomes fully huskified.
+- Fixed crashing if a client has written something in the chatbox, gets disconnected and sends the message.
+- Don't allow reporting things while inside ruins.
+- Fixed handheld sonars having trouble staying powered.
+- Fixed servers showing up in the server lobby after the server has been shut down.
+- Fixed traitor missions not ending when the traitor dies and the traitor retaining their old mission info in the info menu.
+- Decreased the chance of selecting a traitor mission that's already been selected during the session.
+- Fixed dead characters still appearing in the crew list when a client joins mid-round.
+- Fixes to decorative sprites: Rotation property is in degrees, fixed offset anim type being used as the rotation anim.
+- Alarm buzzers twitch when active to make it more clear where the sound is coming from.
+- Improved color input layout in EntityEditors to prevent overlaps.
+- Added signal_in_x and signal_in_y connections to Atan component to make it easier to deal with vectors.
+- Balanced splash screen audio volumes.
+- Numerous improves to Kastrull and its drone.
+- Fixed "attempted to access a potentially removed character" console errors if a character dies while the client is waiting to apply the character's remote inventory state.
+- Launch server through CMD on Windows to work around alt-tab locking in fullscreen.
+- Fixed pumps calculating targetlevel incorrectly when receiving a "set_targetlevel" signal, causing neutral ballast level value in the sub editor to be off.
+- Fixes to waypoints and outdated structure sourcerects in Bunyip, Selkie & Venture.
+
+---------------------------------------------------------------------------------------------------------
 v0.9.501.0 (community test build)
 ---------------------------------------------------------------------------------------------------------
 
