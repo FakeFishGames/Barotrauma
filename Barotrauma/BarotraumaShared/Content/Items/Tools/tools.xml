@@ -396,7 +396,8 @@
         <Conditional IsOn="eq False" targetitemcomponent="LightComponent" />
         <sound file="Content/Items/Tools/FlareIgnite.ogg" range="800.0" />
       </StatusEffect>
-      <StatusEffect type="OnActive" targettype="This" Condition="-0.25">
+      <StatusEffect type="OnActive" targettype="This" Condition="-0.25" />
+      <StatusEffect type="OnActive" targettype="This">
         <Conditional PhysicsBodyActive="eq true" />
         <ParticleEmitter particle="flare" particlespersecond="30" />
         <ParticleEmitter particle="bubbles" particlespersecond="30" />
