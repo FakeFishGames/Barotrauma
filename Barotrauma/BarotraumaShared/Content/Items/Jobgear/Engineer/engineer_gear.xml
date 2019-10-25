@@ -8,7 +8,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,320,64,64" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Jobgear/clothes.png" sourcerect="264,36,185,69" depth="0.6" origin="0.5,0.5" />
     <Body width="100" height="50" density="30" />
-    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect" variants="2">
+    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect" variants="3">
       <sprite name="Engineer Torso" texture="engineer_torso_[GENDER]_[VARIANT].png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Engineer Left Upper Arm" texture="engineer_torso_[GENDER]_[VARIANT].png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Engineer Right Upper Arm" texture="engineer_torso_[GENDER]_[VARIANT].png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
