@@ -522,13 +522,13 @@ namespace Barotrauma
 
                 Color currentTextColor;
 
-                if (currentColorData != null && i >= currentColorData.EndIndex + lineNum)
+                if (currentColorData != null && i > currentColorData.EndIndex + lineNum)
                 {
                     colorDataIndex++;
                     currentColorData = colorDataIndex < colorData.Count ? colorData[colorDataIndex] : null;
                 }
 
-                if (currentColorData != null && currentColorData.StartIndex <= i && i < currentColorData.EndIndex)
+                if (currentColorData != null && currentColorData.StartIndex + lineNum <= i && i <= currentColorData.EndIndex + lineNum)
                 {
                     currentTextColor = currentColorData.Color;
                 }
