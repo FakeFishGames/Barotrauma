@@ -37,7 +37,7 @@ namespace Barotrauma
             {
                 GUIComponent.FromXML(subElement, listBox.Content.RectTransform);
             }
-            foreach (GUIComponent child in listBox.Children)
+            foreach (GUIComponent child in listBox.Content.Children)
             {
                 child.CanBeFocused = false;
             }

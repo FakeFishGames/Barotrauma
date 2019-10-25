@@ -9,6 +9,7 @@ namespace Barotrauma
     {
         public override string DebugTag => "extinguish fires";
         public override bool ForceRun => true;
+        public override bool IgnoreUnsafeHulls => true;
 
         public AIObjectiveExtinguishFires(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier) { }
 
@@ -18,7 +19,6 @@ namespace Barotrauma
 
         public static float GetFireSeverity(Hull hull) => hull.FireSources.Sum(fs => fs.Size.X);
 
-        public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveExtinguishFires;
         protected override IEnumerable<Hull> GetList() => Hull.hullList;
 
         protected override AIObjective ObjectiveConstructor(Hull target) 

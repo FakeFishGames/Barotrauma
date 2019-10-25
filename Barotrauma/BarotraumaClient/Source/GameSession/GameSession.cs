@@ -18,6 +18,11 @@ namespace Barotrauma
         
         private bool ToggleInfoFrame()
         {
+            if (GameMain.NetworkMember != null && GameMain.NetLobbyScreen != null)
+            {
+                if (GameMain.NetLobbyScreen.HeadSelectionList != null) { GameMain.NetLobbyScreen.HeadSelectionList.Visible = false; }
+                if (GameMain.NetLobbyScreen.JobSelectionFrame != null) { GameMain.NetLobbyScreen.JobSelectionFrame.Visible = false; }
+            }
             if (infoFrame == null)
             {
                 CreateInfoFrame();
@@ -37,7 +42,7 @@ namespace Barotrauma
 
             infoFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker");
 
-            var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.35f), infoFrame.RectTransform, Anchor.Center) { MinSize = new Point(width, height) });
+            var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.35f), infoFrame.RectTransform, Anchor.Center) { MinSize = new Point(width, height), RelativeOffset = new Vector2(0.0f, 0.033f) });
 
             var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), innerFrame.RectTransform, Anchor.Center), style: null);
             var buttonArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.08f), paddedFrame.RectTransform), isHorizontal: true)
@@ -144,6 +149,12 @@ namespace Barotrauma
             if (GUI.DisableHUD) return;
             GameMode?.AddToGUIUpdateList();
             infoFrame?.AddToGUIUpdateList();
+
+            if (GameMain.NetworkMember != null)
+            {
+                GameMain.NetLobbyScreen?.HeadSelectionList?.AddToGUIUpdateList();
+                GameMain.NetLobbyScreen?.JobSelectionFrame?.AddToGUIUpdateList();
+            }
         }
 
         partial void UpdateProjSpecific(float deltaTime)
@@ -163,7 +174,24 @@ namespace Barotrauma
                 ToggleInfoFrame();
             }
 
-            infoFrame?.UpdateManually(deltaTime);
+            if (GameMain.NetworkMember != null)
+            {
+                if (GameMain.NetLobbyScreen?.HeadSelectionList != null)
+                {
+                    if (PlayerInput.LeftButtonDown() && !GUI.IsMouseOn(GameMain.NetLobbyScreen.HeadSelectionList))
+                    {
+                        if (GameMain.NetLobbyScreen.HeadSelectionList != null) { GameMain.NetLobbyScreen.HeadSelectionList.Visible = false; }
+                    }
+                }
+                if (GameMain.NetLobbyScreen?.JobSelectionFrame != null)
+                {
+                    if (PlayerInput.LeftButtonDown() && !GUI.IsMouseOn(GameMain.NetLobbyScreen.JobSelectionFrame))
+                    {
+                        GameMain.NetLobbyScreen.JobList.Deselect();
+                        if (GameMain.NetLobbyScreen.JobSelectionFrame != null) { GameMain.NetLobbyScreen.JobSelectionFrame.Visible = false; }
+                    }
+                }
+            }
         }
 
         public void Draw(SpriteBatch spriteBatch)
@@ -171,7 +199,7 @@ namespace Barotrauma
             if (GUI.DisableHUD) return;
 
             GameMode?.Draw(spriteBatch);
-            infoFrame?.DrawManually(spriteBatch);
+            //infoFrame?.DrawManually(spriteBatch);
         }
     }
 }

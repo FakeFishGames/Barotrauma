@@ -171,9 +171,9 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        public override void Load(XElement element)
+        public override void Load(XElement element, bool usePrefabValues)
         {
-            base.Load(element);
+            base.Load(element, usePrefabValues);
 
             List<Connection> loadedConnections = new List<Connection>();
 

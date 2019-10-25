@@ -10,19 +10,35 @@
     <Item identifier="swimbladder" />
     <Item identifier="alienblood" />
   </Inventory>
-  <ai combatstrength="400" sight="3" hearing="2" aggressionhurt="50" aggressiongreed="10" fleehealththreshold="0" attackonlywhenprovoked="False" aggressiveboarding="False" retaliatewhentakingdamage="False">
-    <targetpriority tag="decoy" state="Attack" priority="300" />
-    <targetpriority tag="nasonov" state="Attack" priority="200" />
-    <targetpriority tag="wall" state="Attack" priority="80" />
-    <targetpriority tag="door" state="Attack" priority="80" />
-    <targetpriority tag="human" state="Attack" priority="50" />
-    <targetpriority tag="room" state="Attack" priority="80" />
-    <!--TODO
-    <targetpriority tag="stronger" state="Avoid" priority="50" />
-    -->
-    <targetpriority tag="weaker" state="Attack" priority="25" />
+  <sound file="Content/Characters/Hammerheadgold/HAMMERHEADg_idle1.ogg" state="Idle" range="5000" volume="1" gender="None" />
+  <sound file="Content/Characters/Hammerheadgold/HAMMERHEADg_idle2.ogg" state="Idle" range="5000" volume="1" gender="None" />
+  <sound file="Content/Characters/Hammerheadgold/HAMMERHEADg_idle3.ogg" state="Idle" range="5000" volume="1" gender="None" />
+  <sound file="Content/Characters/Hammerheadgold/HAMMERHEADg_idle4.ogg" state="Idle" range="5000" volume="1" gender="None" />
+  <sound file="Content/Characters/Hammerheadgold/HAMMERHEADg_idle5.ogg" state="Idle" range="5000" volume="1" gender="None" />
+
+  <sound file="Content/Characters/Hammerheadgold/HAMMERHEADg_attack1.ogg" state="Attack" range="6000" volume="1" gender="None" />
+  <sound file="Content/Characters/Hammerheadgold/HAMMERHEADg_attack2.ogg" state="Attack" range="6000" volume="1" gender="None" />
+  <sound file="Content/Characters/Hammerheadgold/HAMMERHEADg_attack3.ogg" state="Attack" range="6000" volume="1" gender="None" />
+  <sound file="Content/Characters/Hammerheadgold/HAMMERHEADg_attack4.ogg" state="Attack" range="6000" volume="1" gender="None" />
+
+  <sound file="Content/Characters/Hammerheadgold/HAMMERHEADg_damage1.ogg" state="Damage" range="4000" volume="1" gender="None" />
+  <sound file="Content/Characters/Hammerheadgold/HAMMERHEADg_damage2.ogg" state="Damage" range="4000" volume="1" gender="None" />
+  <sound file="Content/Characters/Hammerheadgold/HAMMERHEADg_damage3.ogg" state="Damage" range="4000" volume="1" gender="None" />
+  <sound file="Content/Characters/Hammerheadgold/HAMMERHEADg_damage4.ogg" state="Damage" range="4000" volume="1" gender="None" />
+
+  <sound file="Content/Characters/Hammerheadgold/HAMMERHEADg_death1.ogg" state="Die" range="4000" volume="1" gender="None" />
+  <sound file="Content/Characters/Hammerheadgold/HAMMERHEADg_death2.ogg" state="Die" range="4000" volume="1" gender="None" />
+  <sound file="Content/Characters/Hammerheadgold/HAMMERHEADg_death3.ogg" state="Die" range="4000" volume="1" gender="None" />
+  
+  <ai combatstrength="400" sight="3" hearing="2" aggressionhurt="50" aggressiongreed="10" fleehealththreshold="0" attackonlywhenprovoked="False" aggressiveboarding="False">
+    <target tag="decoy" state="Attack" priority="300" />
+    <target tag="nasonov" state="Attack" priority="200" />
     <target tag="provocative" state="Attack" priority="100" />
     <target tag="light" state="Attack" priority="100" />
-    <target tag="stronger" state="Escape" priority="200" />
+    <target tag="wall" state="Attack" priority="80" />
+    <target tag="door" state="Attack" priority="80" />
+    <target tag="stronger" state="Escape" priority="50" />
+    <target tag="human" state="Attack" priority="25" />
+    <target tag="weaker" state="Attack" priority="25" />
   </ai>
 </Character>

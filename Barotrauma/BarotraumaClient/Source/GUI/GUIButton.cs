@@ -153,15 +153,18 @@ namespace Barotrauma
         
         public GUIButton(RectTransform rectT, string text = "", Alignment textAlignment = Alignment.Center, string style = "", Color? color = null) : base(style, rectT)
         {
+            CanBeFocused = true;
+
             if (color.HasValue)
             {
                 this.color = color.Value;
             }
-            frame = new GUIFrame(new RectTransform(Vector2.One, rectT), style);
+            frame = new GUIFrame(new RectTransform(Vector2.One, rectT), style) { CanBeFocused = false };
             if (style != null) GUI.Style.Apply(frame, style == "" ? "GUIButton" : style);
             textBlock = new GUITextBlock(new RectTransform(Vector2.One, rectT), text, textAlignment: textAlignment, style: null)
             {
-                TextColor = this.style == null ? Color.Black : this.style.textColor
+                TextColor = this.style == null ? Color.Black : this.style.textColor,
+                CanBeFocused = false
             };
             if (rectT.Rect.Height == 0 && !string.IsNullOrEmpty(text))
             {

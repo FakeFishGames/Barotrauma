@@ -81,6 +81,7 @@
     <Compile Include="Input\KeyboardUtil.SDL.cs" />
     <Compile Include="Input\Mouse.SDL.cs" />
     <Compile Include="Input\MouseCursor.SDL.cs" />
+    <Compile Include="MessageBox.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.Windows.cs">
       <Platforms>Windows</Platforms>

@@ -79,7 +79,7 @@ namespace Barotrauma
             }
         }
 
-        private static Queue<ColoredText> queuedMessages = new Queue<ColoredText>();
+        private static readonly Queue<ColoredText> queuedMessages = new Queue<ColoredText>();
 
         static partial void ShowHelpMessage(Command command);
         
@@ -90,7 +90,7 @@ namespace Barotrauma
         public delegate void QuestionCallback(string answer);
         private static QuestionCallback activeQuestionCallback;
 
-        private static List<Command> commands = new List<Command>();
+        private static readonly List<Command> commands = new List<Command>();
         public static List<Command> Commands
         {
             get { return commands; }
@@ -100,12 +100,12 @@ namespace Barotrauma
         private static int currentAutoCompletedIndex;
 
         //used for keeping track of the message entered when pressing up/down
-        static int selectedIndex;
+        private static int selectedIndex;
 
         public static bool CheatsEnabled;
 
-        private static List<ColoredText> unsavedMessages = new List<ColoredText>();
-        private static int messagesPerFile = 5000;
+        private static readonly List<ColoredText> unsavedMessages = new List<ColoredText>();
+        private static readonly int messagesPerFile = 5000;
         public const string SavePath = "ConsoleLogs";
 
         private static void AssignOnExecute(string names, Action<string[]> onExecute)
@@ -113,7 +113,7 @@ namespace Barotrauma
             var matchingCommand = commands.Find(c => c.names.Intersect(names.Split('|')).Count() > 0);
             if (matchingCommand == null)
             {
-                throw new Exception("AssignOnExecute failed. Command matching the name(s) \""+names+"\" not found.");
+                throw new Exception("AssignOnExecute failed. Command matching the name(s) \"" + names + "\" not found.");
             }
             else
             {
@@ -165,8 +165,7 @@ namespace Barotrauma
                 NewMessage("***************", Color.Cyan);
                 foreach (MapEntityPrefab ep in MapEntityPrefab.List)
                 {
-                    var itemPrefab = ep as ItemPrefab;
-                    if (itemPrefab == null || itemPrefab.Name == null) continue;
+                    if (!(ep is ItemPrefab itemPrefab) || itemPrefab.Name == null) continue;
                     string text = $"- {itemPrefab.Name}";
                     if (itemPrefab.Tags.Any())
                     {
@@ -284,6 +283,8 @@ namespace Barotrauma
                 NewMessage("Enemy AI enabled", Color.Green);
             }, isCheat: true));
 
+            commands.Add(new Command("starttraitormissionimmediately", "starttraitormissionimmediately: Skip the initial delay of the traitor mission and start one immediately.", null));
+
             commands.Add(new Command("botcount", "botcount [x]: Set the number of bots in the crew in multiplayer.", null));
 
             commands.Add(new Command("botspawnmode", "botspawnmode [fill/normal]: Set how bots are spawned in the multiplayer.", null));
@@ -335,18 +336,19 @@ namespace Barotrauma
 
             commands.Add(new Command("kick", "kick [name]: Kick a player out of the server.", (string[] args) =>
             {
-                if (GameMain.NetworkMember == null || args.Length == 0) return;
+                if (GameMain.NetworkMember == null || args.Length == 0) { return; }
 
                 string playerName = string.Join(" ", args);
 
-                ShowQuestionPrompt("Reason for kicking \"" + playerName + "\"?", (reason) =>
+                ShowQuestionPrompt("Reason for kicking \"" + playerName + "\"? (Enter c to cancel)", (reason) =>
                 {
+                    if (reason == "c" || reason == "C") { return; }
                     GameMain.NetworkMember.KickPlayer(playerName, reason);
                 });
             },
             () =>
             {
-                if (GameMain.NetworkMember == null) return null;
+                if (GameMain.NetworkMember == null) { return null; }
 
                 return new string[][]
                 {
@@ -366,8 +368,9 @@ namespace Barotrauma
                     return;
                 }
 
-                ShowQuestionPrompt("Reason for kicking \"" + client.Name + "\"?", (reason) =>
+                ShowQuestionPrompt("Reason for kicking \"" + client.Name + "\"? (Enter c to cancel)", (reason) =>
                 {
+                    if (reason == "c" || reason == "C") { return; }
                     GameMain.NetworkMember.KickPlayer(client.Name, reason);
                 });
             }));
@@ -377,10 +380,12 @@ namespace Barotrauma
                 if (GameMain.NetworkMember == null || args.Length == 0) return;
 
                 string clientName = string.Join(" ", args);
-                ShowQuestionPrompt("Reason for banning \"" + clientName + "\"?", (reason) =>
+                ShowQuestionPrompt("Reason for banning \"" + clientName + "\"? (Enter c to cancel)", (reason) =>
                 {
-                    ShowQuestionPrompt("Enter the duration of the ban (leave empty to ban permanently, or use the format \"[days] d [hours] h\")", (duration) =>
+                    if (reason == "c" || reason == "C") { return; }
+                    ShowQuestionPrompt("Enter the duration of the ban (leave empty to ban permanently, or use the format \"[days] d [hours] h\") (Enter c to cancel)", (duration) =>
                     {
+                        if (duration == "c" || duration == "C") { return; }
                         TimeSpan? banDuration = null;
                         if (!string.IsNullOrWhiteSpace(duration))
                         {
@@ -418,10 +423,12 @@ namespace Barotrauma
                     return;
                 }
 
-                ShowQuestionPrompt("Reason for banning \"" + client.Name + "\"?", (reason) =>
+                ShowQuestionPrompt("Reason for banning \"" + client.Name + "\"? (Enter c to cancel)", (reason) =>
                 {
-                    ShowQuestionPrompt("Enter the duration of the ban (leave empty to ban permanently, or use the format \"[days] d [hours] h\")", (duration) =>
+                    if (reason == "c" || reason == "C") { return; }
+                    ShowQuestionPrompt("Enter the duration of the ban (leave empty to ban permanently, or use the format \"[days] d [hours] h\") (c to cancel)", (duration) =>
                     {
+                        if (duration == "c" || duration == "C") { return; }
                         TimeSpan? banDuration = null;
                         if (!string.IsNullOrWhiteSpace(duration))
                         {
@@ -874,8 +881,7 @@ namespace Barotrauma
 
             commands.Add(new Command("campaigninfo|campaignstatus", "campaigninfo: Display information about the state of the currently active campaign.", (string[] args) =>
             {
-                var campaign = GameMain.GameSession?.GameMode as CampaignMode;
-                if (campaign == null)
+                if (!(GameMain.GameSession?.GameMode is CampaignMode campaign))
                 {
                     ThrowError("No campaign active!");
                     return;
@@ -886,8 +892,7 @@ namespace Barotrauma
 
             commands.Add(new Command("campaigndestination|setcampaigndestination", "campaigndestination [index]: Set the location to head towards in the currently active campaign.", (string[] args) =>
             {
-                var campaign = GameMain.GameSession?.GameMode as CampaignMode;
-                if (campaign == null)
+                if (!(GameMain.GameSession?.GameMode is CampaignMode campaign))
                 {
                     ThrowError("No campaign active!");
                     return;
@@ -938,7 +943,6 @@ namespace Barotrauma
                 NewMessage((GameSettings.VerboseLogging ? "Enabled" : "Disabled") + " verbose logging.", Color.White);
             }, isCheat: false));
 
-
             commands.Add(new Command("calculatehashes", "calculatehashes [content package name]: Show the MD5 hashes of the files in the selected content package. If the name parameter is omitted, the first content package is selected.", (string[] args) =>
             {
                 if (args.Length > 0)
@@ -967,7 +971,21 @@ namespace Barotrauma
                 };
             }));
 
-#if DEBUG
+            commands.Add(new Command("debugai", "", onExecute: (string[] args) =>
+            {
+                var commands = new List<KeyValuePair<string, string[]>>()
+                {
+                    new KeyValuePair<string, string[]>("debugdraw", new string[]{ "true" }),
+                    new KeyValuePair<string, string[]>("los", new string[]{ "false" }),
+                    new KeyValuePair<string, string[]>("lights", new string[]{ "false" }),
+                    new KeyValuePair<string, string[]>("freecam", new string[0]),
+                };
+                foreach (var command in commands)
+                {
+                    Commands.Find(c => c.names.Any(n => n.Equals(command.Key, StringComparison.OrdinalIgnoreCase)))?.Execute(command.Value);
+                }
+            }));
+
             commands.Add(new Command("simulatedlatency", "simulatedlatency [minimumlatencyseconds] [randomlatencyseconds]: applies a simulated latency to network messages. Useful for simulating real network conditions when testing the multiplayer locally.", (string[] args) =>
             {
                 if (args.Count() < 2 || (GameMain.NetworkMember == null)) return;
@@ -1039,7 +1057,6 @@ namespace Barotrauma
 #endif
                 NewMessage("Set packet duplication to " + (int)(duplicates * 100) + "%.", Color.White);
             }));
-#endif
 
             //"dummy commands" that only exist so that the server can give clients permissions to use them
             //TODO: alphabetical order?
@@ -1170,16 +1187,6 @@ namespace Barotrauma
             }
         }
 
-        private static string AutoCompleteStr(string str, IEnumerable<string> validStrings)
-        {
-            if (string.IsNullOrEmpty(str)) return str;
-            foreach (string validStr in validStrings)
-            {
-                if (validStr.Length > str.Length && validStr.Substring(0, str.Length) == str) return validStr;
-            }
-            return str;
-        }
-
         public static void ResetAutoComplete()
         {
             currentAutoCompletedCommand = "";
@@ -1197,7 +1204,7 @@ namespace Barotrauma
 			{
 				selectedIndex += direction;
 				if (selectedIndex < 0) selectedIndex = Messages.Count - 1;
-				selectedIndex = selectedIndex % Messages.Count;
+				selectedIndex %= Messages.Count;
 				if (++i >= Messages.Count) break;
 			} while (!Messages[selectedIndex].IsCommand || Messages[selectedIndex].Text == currentText);
 
@@ -1257,13 +1264,6 @@ namespace Barotrauma
                     
                     return;
                 }
-#if !DEBUG
-                if (!IsCommandPermitted(splitCommand[0].ToLowerInvariant(), GameMain.Client))
-                {
-                    ThrowError("You're not permitted to use the command \"" + splitCommand[0].ToLowerInvariant() + "\"!");
-                    return;
-                }
-#endif
             }
 #endif
 
@@ -1509,9 +1509,7 @@ namespace Barotrauma
 
         public static void NewMessage(string msg, Color color, bool isCommand = false)
         {
-            if (string.IsNullOrEmpty((msg))) return;
-            
-            var newMsg = new ColoredText(msg, color, isCommand);
+            if (string.IsNullOrEmpty(msg)) { return; }
             
             lock (queuedMessages)
             {

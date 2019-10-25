@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
 using System.Linq;
+using System.IO;
 
 namespace Barotrauma
 {
@@ -31,6 +32,8 @@ namespace Barotrauma
     partial class JobPrefab
     {
         public static Dictionary<string, JobPrefab> List;
+
+        public static XElement NoJobElement;
         public static JobPrefab Get(string identifier)
         {
             if (List == null)
@@ -146,7 +149,10 @@ namespace Barotrauma
             private set;
         }
 
+        public XElement Element { get; private set; }
         public XElement ClothingElement { get; private set; }
+
+        public XElement PreviewElement { get; private set; }
 
         public JobPrefab(XElement element)
         {
@@ -154,6 +160,8 @@ namespace Barotrauma
             Name = TextManager.Get("JobName." + Identifier);
             Description = TextManager.Get("JobDescription." + Identifier);
             Identifier = Identifier.ToLowerInvariant();
+
+            Element = element;
 
             foreach (XElement subElement in element.Elements())
             {
@@ -220,7 +228,69 @@ namespace Barotrauma
             {
                 ClothingElement = element.Element("portraitclothing");
             }
+
+            PreviewElement = element.Element("PreviewSprites");
+            if (PreviewElement == null)
+            {
+                PreviewElement = element.Element("previewsprites");
+            }
         }
+        
+        public class OutfitPreview
+        {
+            /// <summary>
+            /// Pair.First = sprite, Pair.Second = draw offset
+            /// </summary>
+            public readonly List<Pair<Sprite, Vector2>> Sprites;
+
+            public OutfitPreview()
+            {
+                Sprites = new List<Pair<Sprite, Vector2>>();
+            }
+
+            public void AddSprite(Sprite sprite, Vector2 drawOffset)
+            {
+                Sprites.Add(new Pair<Sprite, Vector2>(sprite, drawOffset));
+            }
+        }
+
+        public List<OutfitPreview> GetJobOutfitSprites(Gender gender, out Vector2 dimensions)
+        {
+            var equipIdentifiers = Element.Elements("Items").Elements().Where(e => e.GetAttributeBool("outfit", false)).Select(e => e.GetAttributeString("identifier", ""));
+
+            var children = PreviewElement.Elements().ToList();
+            dimensions = PreviewElement.GetAttributeVector2("dims", Vector2.One);
+
+            var outfitPrefab = MapEntityPrefab.List.Find(me => me is ItemPrefab itemPrefab && equipIdentifiers.Contains(itemPrefab.Identifier)) as ItemPrefab;
+            if (outfitPrefab == null) { return null; }
+            var wearables = outfitPrefab.ConfigElement.Elements("Wearable");
+            if (!wearables.Any()) { return null; }
+
+            int variantCount = wearables.First().GetAttributeInt("variants", 1);
+
+            List<OutfitPreview> outfitPreviews = new List<OutfitPreview>();
+            for (int i = 0; i < variantCount; i++)
+            {
+                var outfitPreview = new OutfitPreview();
+                for (int n = 0; n < children.Count; n++)
+                {
+                    XElement spriteElement = children[n];
+                    string spriteTexture = spriteElement.GetAttributeString("texture", "").Replace("[GENDER]", (gender == Gender.Female) ? "female" : "male");
+                    string textureVariant = spriteTexture.Replace("[VARIANT]", (i + 1).ToString());
+                    if (!File.Exists(textureVariant))
+                    {
+                        textureVariant = spriteTexture.Replace("[VARIANT]", "1");
+                    }
+                    var torsoSprite = new Sprite(spriteElement, path: "", file: textureVariant);
+                    torsoSprite.size = new Vector2(torsoSprite.SourceRect.Width, torsoSprite.SourceRect.Height);
+                    outfitPreview.AddSprite(torsoSprite, children[n].GetAttributeVector2("offset", Vector2.Zero));
+                }
+                outfitPreviews.Add(outfitPreview);
+            }
+
+            return outfitPreviews;
+        }
+
 
         public static JobPrefab Random(Rand.RandSync sync = Rand.RandSync.Unsynced) => List.Values.GetRandom(sync);
 
@@ -239,6 +309,7 @@ namespace Barotrauma
                 }
                 foreach (XElement element in mainElement.Elements())
                 {
+                    if (element.Name.ToString().ToLowerInvariant() == "nojob") { continue; }
                     if (element.IsOverride())
                     {
                         var job = new JobPrefab(element.FirstElement());
@@ -262,6 +333,8 @@ namespace Barotrauma
                         }
                     }
                 }
+                NoJobElement = NoJobElement ?? mainElement.Element("NoJob");
+                NoJobElement = NoJobElement ?? mainElement.Element("nojob");
             }
         }
     }

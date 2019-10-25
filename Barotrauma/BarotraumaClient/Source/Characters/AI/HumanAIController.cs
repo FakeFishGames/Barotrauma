@@ -25,7 +25,7 @@ namespace Barotrauma
         {
             Vector2 pos = Character.WorldPosition;
             pos.Y = -pos.Y;
-            Vector2 textOffset = new Vector2(-40, -120);
+            Vector2 textOffset = new Vector2(-40, -160);
 
             if (SelectedAiTarget?.Entity != null)
             {
@@ -33,25 +33,35 @@ namespace Barotrauma
                 //GUI.DrawString(spriteBatch, pos + textOffset, $"AI TARGET: {SelectedAiTarget.Entity.ToString()}", Color.White, Color.Black);
             }
 
+            GUI.DrawString(spriteBatch, pos + textOffset, Character.Name, Color.White, Color.Black);
+
             if (ObjectiveManager != null)
             {
                 var currentOrder = ObjectiveManager.CurrentOrder;
                 if (currentOrder != null)
                 {
-                    GUI.DrawString(spriteBatch, pos + textOffset, $"ORDER: {currentOrder.DebugTag} ({currentOrder.GetPriority().FormatZeroDecimal()})", Color.White, Color.Black);
+                    GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 20), $"ORDER: {currentOrder.DebugTag} ({currentOrder.GetPriority().FormatZeroDecimal()})", Color.White, Color.Black);
                 }
                 else if (ObjectiveManager.WaitTimer > 0)
                 {
-                    GUI.DrawString(spriteBatch, pos + textOffset, $"Waiting... {ObjectiveManager.WaitTimer.FormatZeroDecimal()}", Color.White, Color.Black);
+                    GUI.DrawString(spriteBatch, pos + new Vector2(0, 20), $"Waiting... {ObjectiveManager.WaitTimer.FormatZeroDecimal()}", Color.White, Color.Black);
                 }
                 var currentObjective = ObjectiveManager.CurrentObjective;
                 if (currentObjective != null)
                 {
-                    GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 20), $"OBJECTIVE: {currentObjective.DebugTag} ({currentObjective.GetPriority().FormatZeroDecimal()})", Color.White, Color.Black);
+                    if (currentOrder == null)
+                    {
+                        GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 20), $"MAIN OBJECTIVE: {currentObjective.DebugTag} ({currentObjective.GetPriority().FormatZeroDecimal()})", Color.White, Color.Black);
+                    }
                     var subObjective = currentObjective.SubObjectives.FirstOrDefault();
                     if (subObjective != null)
                     {
                         GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 40), $"SUBOBJECTIVE: {subObjective.DebugTag} ({subObjective.GetPriority().FormatZeroDecimal()})", Color.White, Color.Black);
+                    }
+                    var activeObjective = ObjectiveManager.GetActiveObjective();
+                    if (activeObjective != null)
+                    {
+                        GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 60), $"ACTIVE OBJECTIVE: {activeObjective.DebugTag} ({activeObjective.GetPriority().FormatZeroDecimal()})", Color.White, Color.Black);
                     }
                 }
             }
@@ -81,7 +91,7 @@ namespace Barotrauma
                             new Vector2(path.CurrentNode.DrawPosition.X, -path.CurrentNode.DrawPosition.Y),
                             Color.BlueViolet, 0, 3);
 
-                        GUI.DrawString(spriteBatch, pos + textOffset - new Vector2(0, 20), "Path cost: " + path.Cost.FormatZeroDecimal(), Color.White, Color.Black * 0.5f);
+                        GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 80), "Path cost: " + path.Cost.FormatZeroDecimal(), Color.White, Color.Black * 0.5f);
                     }
                 }
             }

@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 using System.Globalization;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -49,12 +50,14 @@ namespace Barotrauma
 
         private static bool isOpen;
         public static bool IsOpen => isOpen;
+        public static bool Paused = false;
         
         private static GUITextBlock activeQuestionText;
         
         private static GUIFrame frame;
         private static GUIListBox listBox;
         private static GUITextBox textBox;
+        private const int maxLength = 1000;
 
         public static GUITextBox TextBox => textBox;
 
@@ -91,6 +94,7 @@ namespace Barotrauma
             {
                 IsFixedSize = false
             });
+            textBox.MaxTextLength = maxLength;
             textBox.OnKeyHit += (sender, key) =>
             {
                 if (key != Keys.Tab)
@@ -108,7 +112,7 @@ namespace Barotrauma
             }
         }
 
-        public static void Update(GameMain game, float deltaTime)
+        public static void Update(float deltaTime)
         {
             lock (queuedMessages)
             {
@@ -161,6 +165,16 @@ namespace Barotrauma
                      textBox.Text = AutoComplete(textBox.Text, increment: string.IsNullOrEmpty(currentAutoCompletedCommand) ? 0 : 1 );
                 }
 
+                if (PlayerInput.KeyDown(Keys.LeftControl) || PlayerInput.KeyDown(Keys.RightControl))
+                {
+                    if ((PlayerInput.KeyDown(Keys.C) || PlayerInput.KeyDown(Keys.D) || PlayerInput.KeyDown(Keys.Z)) && activeQuestionCallback != null)
+                    {
+                        activeQuestionCallback = null;
+                        activeQuestionText = null;
+                        NewMessage(PlayerInput.KeyDown(Keys.C) ? "^C" : PlayerInput.KeyDown(Keys.D) ? "^D" : "^Z", Color.White, true);
+                    }
+                }
+
                 if (PlayerInput.KeyHit(Keys.Enter))
                 {
                     ExecuteCommand(textBox.Text);
@@ -181,41 +195,6 @@ namespace Barotrauma
             {
                 GUI.ForceMouseOn(null);
                 textBox.Deselect();
-            }
-        }
-
-        public static void Draw(SpriteBatch spriteBatch)
-        {
-            if (!isOpen) return;
-
-            frame.DrawManually(spriteBatch);
-        }
-
-        private static bool IsCommandPermitted(string command, GameClient client)
-        {
-            switch (command)
-            {
-                case "kick":
-                    return client.HasPermission(ClientPermissions.Kick);
-                case "ban":
-                case "banip":
-                case "banendpoint":
-                    return client.HasPermission(ClientPermissions.Ban);
-                case "unban":
-                case "unbanip":
-                    return client.HasPermission(ClientPermissions.Unban);
-                case "netstats":
-                case "help":
-                case "dumpids":
-                case "admin":
-                case "entitylist":
-                case "togglehud":
-                case "toggleupperhud":
-                case "togglecharacternames":
-                case "fpscounter":
-                    return true;
-                default:
-                    return client.HasConsoleCommandPermission(command);
             }
         }
 
@@ -293,7 +272,7 @@ namespace Barotrauma
             };
             textContainer.RectTransform.NonScaledSize = new Point(textContainer.RectTransform.NonScaledSize.X, textBlock.RectTransform.NonScaledSize.Y + 5);
             textBlock.SetTextPos();
-            var nameBlock = new GUITextBlock(new RectTransform(new Point(150, textContainer.Rect.Height), textContainer.RectTransform),
+            new GUITextBlock(new RectTransform(new Point(150, textContainer.Rect.Height), textContainer.RectTransform),
                 command.names[0], textAlignment: Alignment.TopLeft);
 
             listBox.UpdateScrollBarSize();
@@ -508,14 +487,22 @@ namespace Barotrauma
 
             AssignOnExecute("los", (string[] args) =>
              {
-                 GameMain.LightManager.LosEnabled = !GameMain.LightManager.LosEnabled;
+                 if (args.None() || !bool.TryParse(args[0], out bool state))
+                 {
+                     state = !GameMain.LightManager.LosEnabled;
+                 }
+                 GameMain.LightManager.LosEnabled = state;
                  NewMessage("Line of sight effect " + (GameMain.LightManager.LosEnabled ? "enabled" : "disabled"), Color.White);
              });
             AssignRelayToServer("los", false);
 
             AssignOnExecute("lighting|lights", (string[] args) =>
             {
-                GameMain.LightManager.LightingEnabled = !GameMain.LightManager.LightingEnabled;
+                if (args.None() || !bool.TryParse(args[0], out bool state))
+                {
+                    state = !GameMain.LightManager.LightingEnabled;
+                }
+                GameMain.LightManager.LightingEnabled = state;
                 NewMessage("Lighting " + (GameMain.LightManager.LightingEnabled ? "enabled" : "disabled"), Color.White);
             });
             AssignRelayToServer("lighting|lights", false);
@@ -634,10 +621,61 @@ namespace Barotrauma
                 }
             }));
 
+            commands.Add(new Command("resetentitiesbyidentifier", "resetentitiesbyidentifier [tag/identifier]: Reset items and structures with the given tag/identifier to prefabs. Only applicable in the subeditor.", args =>
+            {
+                if (args.Length == 0) { return; }
+                if (Screen.Selected == GameMain.SubEditorScreen)
+                {
+                    bool entityFound = false;
+                    foreach (MapEntity entity in MapEntity.mapEntityList)
+                    {
+                        if (entity is Item item)
+                        {
+                            if (item.prefab.Identifier != args[0] && !item.Tags.Contains(args[0])) { continue; }
+                            item.Reset();
+                            if (MapEntity.SelectedList.Contains(item)) { item.CreateEditingHUD(); }
+                            entityFound = true;
+                        }
+                        else if (entity is Structure structure)
+                        {
+                            if (structure.prefab.Identifier != args[0] && !structure.Tags.Contains(args[0])) { continue; }
+                            structure.Reset();
+                            if (MapEntity.SelectedList.Contains(structure)) { structure.CreateEditingHUD(); }
+                            entityFound = true;
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                        NewMessage($"Reset {entity.Name}.");
+                    }
+                    if (!entityFound)
+                    {
+                        if (MapEntity.SelectedList.Count == 0)
+                        {
+                            NewMessage("No entities selected.");
+                            return;
+                        }
+                    }
+                }
+            }, () =>
+            {
+                return new string[][]
+                {
+                    MapEntityPrefab.List.Select(me => me.Identifier).ToArray()
+                };
+            }));
+
             commands.Add(new Command("resetselected", "Reset selected items and structures to prefabs. Only applicable in the subeditor.", args =>
             {
                 if (Screen.Selected == GameMain.SubEditorScreen)
                 {
+                    if (MapEntity.SelectedList.Count == 0)
+                    {
+                        NewMessage("No entities selected.");
+                        return;
+                    }
+
                     foreach (MapEntity entity in MapEntity.SelectedList)
                     {
                         if (entity is Item item)
@@ -648,6 +686,11 @@ namespace Barotrauma
                         {
                             structure.Reset();
                         }
+                        else
+                        {
+                            continue;
+                        }
+                        NewMessage($"Reset {entity.Name}.");
                     }
                     foreach (MapEntity entity in MapEntity.SelectedList)
                     {
@@ -786,7 +829,11 @@ namespace Barotrauma
 
             AssignOnExecute("debugdraw", (string[] args) =>
             {
-                GameMain.DebugDraw = !GameMain.DebugDraw;
+                if (args.None() || !bool.TryParse(args[0], out bool state))
+                {
+                    state = !GameMain.DebugDraw;
+                }
+                GameMain.DebugDraw = state;
                 NewMessage("Debug draw mode " + (GameMain.DebugDraw ? "enabled" : "disabled"), Color.White);
             });
             AssignRelayToServer("debugdraw", false);
@@ -1011,22 +1058,38 @@ namespace Barotrauma
 
             commands.Add(new Command("checkmissingloca", "", (string[] args) =>
             {
-                foreach (MapEntityPrefab me in MapEntityPrefab.List)
+                //key = text tag, value = list of languages the tag is missing from
+                Dictionary<string, List<string>> missingTags = new Dictionary<string, List<string>>();
+                Dictionary<string, HashSet<string>> tags = new Dictionary<string, HashSet<string>>();
+                foreach (string language in TextManager.AvailableLanguages)
                 {
-                    string name = TextManager.Get("entityname." + me.Identifier, returnNull: true);
-                    if (!string.IsNullOrEmpty(name)) { continue; }
+                    TextManager.Language = language;
+                    tags.Add(language, new HashSet<string>(TextManager.GetAllTagTextPairs().Select(t => t.Key)));
+                }
 
-                    if (me is ItemPrefab itemPrefab)
+                foreach (string englishTag in tags["English"])
+                {
+                    if (englishTag == "entitydescription.reinforceddoor")
                     {
-                        string nameIdentifier = itemPrefab.ConfigElement?.GetAttributeString("nameidentifier", "");
-                        if (nameIdentifier != null)
+                        int asdfsdf = 1;
+                    }
+                    foreach (string language in TextManager.AvailableLanguages)
+                    {
+                        if (language == "English") { continue; }
+                        if (!tags[language].Contains(englishTag))
                         {
-                            name = TextManager.Get("entityname." + nameIdentifier, returnNull: true);
-                            if (!string.IsNullOrEmpty(name)) { continue; }
+                            if (!missingTags.ContainsKey(englishTag))
+                            {
+                                missingTags[englishTag] = new List<string>();
+                            }
+                            missingTags[englishTag].Add(language);
                         }
                     }
-                    NewMessage("Entity name not translated (" + me.Name + ", " + me.Identifier + ")!", me is ItemPrefab ? Color.Red : Color.Yellow);
                 }
+                string filePath = "missingloca.txt";
+                File.WriteAllLines(filePath, missingTags.Select(t => "\""+t.Key + "\"\n    missing from " + string.Join(", ", t.Value)));
+                System.Diagnostics.Process.Start(Path.GetFullPath(filePath));
+                TextManager.Language = "English";
             }));
 
             commands.Add(new Command("spamchatmessages", "", (string[] args) =>
@@ -1106,21 +1169,32 @@ namespace Barotrauma
                             {
                                 if (!structure.ResizeHorizontal)
                                 {
-                                    structure.Rect = new Rectangle(structure.Rect.X, structure.Rect.Y,
+                                    structure.Rect = structure.DefaultRect = new Rectangle(structure.Rect.X, structure.Rect.Y,
                                         (int)structure.Prefab.ScaledSize.X,
                                         structure.Rect.Height);
                                 }
                                 if (!structure.ResizeVertical)
                                 {
-                                    structure.Rect = new Rectangle(structure.Rect.X, structure.Rect.Y,
+                                    structure.Rect = structure.DefaultRect = new Rectangle(structure.Rect.X, structure.Rect.Y,
                                         structure.Rect.Width,
                                         (int)structure.Prefab.ScaledSize.Y);
                                 }
+                               
                             }
                         }
                     }
                 }
             }, isCheat: false));
+
+            commands.Add(new Command("flip", "Flip the currently controlled character.", (string[] args) =>
+            {
+                Character.Controlled?.AnimController.Flip();
+            }, isCheat: false));
+            commands.Add(new Command("mirror", "Mirror the currently controlled character.", (string[] args) =>
+            {
+                (Character.Controlled?.AnimController as FishAnimController)?.Mirror(lerp: false);
+            }, isCheat: false));
+
 #endif
 
             commands.Add(new Command("dumptexts", "dumptexts [filepath]: Extracts all the texts from the given text xml and writes them into a file (using the same filename, but with the .txt extension). If the filepath is omitted, the EnglishVanilla.xml file is used.", (string[] args) =>
@@ -1236,21 +1310,53 @@ namespace Barotrauma
             {
                 Dictionary<string, string> typeNames = new Dictionary<string, string>
                 {
-                    { "Single", "float"},
-                    { "Int32", "integer"},
-                    { "Boolean", "true/false"},
-                    { "String", "text"},
+                    { "Single", "Float"},
+                    { "Int32", "Integer"},
+                    { "Boolean", "True/False"},
+                    { "String", "Text"},
                 };
 
-                var itemComponentTypes = typeof(ItemComponent).Assembly.GetTypes().Where(type => type.IsSubclassOf(typeof(ItemComponent)));
+                var itemComponentTypes = typeof(ItemComponent).Assembly.GetTypes().Where(type => type.IsSubclassOf(typeof(ItemComponent))).ToList();
+                itemComponentTypes.Sort((i1, i2) => { return i1.Name.CompareTo(i2.Name); });
+
+                itemComponentTypes.Insert(0, typeof(ItemComponent));
+                
                 string filePath = args.Length > 0 ? args[0] : "ItemComponentDocumentation.txt";
                 List<string> lines = new List<string>();
                 foreach (Type t in itemComponentTypes)
                 {
-                    lines.Add($"[b]{t.Name}[/b]");
+
+                    lines.Add($"[h1]{t.Name}[/h1]");
                     lines.Add("");
 
-                    var properties = t.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.DeclaredOnly);//.Cast<System.ComponentModel.PropertyDescriptor>();
+                    var properties = t.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.DeclaredOnly).ToList();//.Cast<System.ComponentModel.PropertyDescriptor>();
+                    Type baseType = t.BaseType;
+                    while (baseType != null && baseType != typeof(ItemComponent))
+                    {
+                        properties.AddRange(baseType.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.DeclaredOnly));
+                        baseType = baseType.BaseType;
+                    }
+
+                    if (!properties.Any(p => p.GetCustomAttributes(true).Any(a => a is Serialize)))
+                    {
+                        lines.Add("No editable properties.");
+                        lines.Add("");
+                        continue;
+                    }
+
+                    lines.Add("[table]");
+                    lines.Add("  [tr]");
+
+                    lines.Add("    [th]Name[/th]");
+                    lines.Add("    [th]Type[/th]");
+                    lines.Add("    [th]Default value[/th]");
+                    //lines.Add("    [th]Range[/th]");
+                    lines.Add("    [th]Description[/th]");
+
+                    lines.Add("  [/tr]");
+
+
+                    
                     Dictionary<string, SerializableProperty> dictionary = new Dictionary<string, SerializableProperty>();
                     foreach (var property in properties)
                     {
@@ -1272,29 +1378,41 @@ namespace Barotrauma
                             }
                             propertyTypeName = string.Join("/", valueNames);
                         }
-
-                        lines.Add($"{property.Name} ({propertyTypeName})");
-
-                        if (!string.IsNullOrEmpty(serialize.Description))
+                        string defaultValueString = serialize.defaultValue?.ToString() ?? "";
+                        if (property.PropertyType == typeof(float))
                         {
-                            lines.Add(serialize.Description);
+                            defaultValueString = ((float)serialize.defaultValue).ToString(CultureInfo.InvariantCulture);
                         }
+
+                        lines.Add("  [tr]");
+
+                        lines.Add($"    [td]{property.Name}[/td]");
+                        lines.Add($"    [td]{propertyTypeName}[/td]");
+                        lines.Add($"    [td]{defaultValueString}[/td]");
+
                         Editable editable = attributes.FirstOrDefault(a => a is Editable) as Editable;
+                        string rangeText = "-";
                         if (editable != null)
                         {
                             if (editable.MinValueFloat > float.MinValue || editable.MaxValueFloat < float.MaxValue)
                             {
-                                lines.Add("Range: " + editable.MinValueFloat+"-"+editable.MaxValueFloat);
+                                rangeText = editable.MinValueFloat + "-" + editable.MaxValueFloat;
                             }
                             else if (editable.MinValueInt > int.MinValue || editable.MaxValueInt < int.MaxValue)
                             {
-                                lines.Add("Range: " + editable.MinValueInt + "-" + editable.MaxValueInt);
+                                rangeText = editable.MinValueInt + "-" + editable.MaxValueInt;
                             }
                         }
+                        //lines.Add($"    [td]{rangeText}[/td]");
 
-                        lines.Add("Default value: " + serialize.defaultValue);
-                        lines.Add("");
+                        if (!string.IsNullOrEmpty(serialize.Description))
+                        {
+                            lines.Add($"    [td]{serialize.Description}[/td]");
+                        }
+
+                        lines.Add("  [/tr]");
                     }
+                    lines.Add("[/table]");
                     lines.Add("");
                 }
                 File.WriteAllLines(filePath, lines);
@@ -1545,10 +1663,12 @@ namespace Barotrauma
                 (string[] args) =>
                 {
                     if (GameMain.Client == null || args.Length == 0) return;
-                    ShowQuestionPrompt("Reason for banning the endpoint \"" + args[0] + "\"?", (reason) =>
+                    ShowQuestionPrompt("Reason for banning the endpoint \"" + args[0] + "\"? (Enter c to cancel)", (reason) =>
                     {
-                        ShowQuestionPrompt("Enter the duration of the ban (leave empty to ban permanently, or use the format \"[days] d [hours] h\")", (duration) =>
+                        if (reason == "c" || reason == "C") { return; }
+                        ShowQuestionPrompt("Enter the duration of the ban (leave empty to ban permanently, or use the format \"[days] d [hours] h\") (Enter c to cancel)", (duration) =>
                         {
+                            if (duration == "c" || duration == "C") { return; }
                             TimeSpan? banDuration = null;
                             if (!string.IsNullOrWhiteSpace(duration))
                             {
@@ -1919,6 +2039,19 @@ namespace Barotrauma
                     GameAnalyticsManager.AddErrorEventOnce("DebugConsole.SpawnSubmarine:Error", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg + '\n' + e.Message + '\n' + e.StackTrace);
                 }
             }, isCheat: true));
+
+            commands.Add(new Command("pause", "Toggles the pause state when playing offline", (string[] args) =>
+            {
+                if (GameMain.NetworkMember == null)
+                {
+                    Paused = !Paused;
+                    DebugConsole.NewMessage("Game paused: " + Paused);
+                }
+                else
+                {
+                    DebugConsole.NewMessage("Cannot pause when a multiplayer session is active.");
+                }
+            }));
         }
 
         private static void ReloadWearables(Character character, int variant = 0)

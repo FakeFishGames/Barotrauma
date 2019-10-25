@@ -194,12 +194,16 @@ namespace Barotrauma
             }
         }
 
-        private string displayName;
         public string DisplayName
         {
             get
             {
-                return displayName != null && displayName.Length > 0 ? displayName : Name;
+                var displayName = Params.DisplayName;
+                if (string.IsNullOrWhiteSpace(displayName))
+                {
+                    displayName = TextManager.Get($"Character.{SpeciesName}", returnNull: true);
+                }
+                return displayName ?? Name;
             }
         }
 
@@ -260,6 +264,16 @@ namespace Barotrauma
         public bool AllowInput
         {
             get { return !IsUnconscious && Stun <= 0.0f && !IsDead; }
+        }
+
+        public bool CanMove
+        {
+            get
+            {
+                if (!AllowInput) { return false; }
+                if (!AnimController.InWater && !AnimController.CanWalk) { return false; }
+                return true;
+            }
         }
 
         public bool CanInteract
@@ -703,7 +717,6 @@ namespace Barotrauma
             var rootElement = doc.Root;
             var mainElement = rootElement.IsOverride() ? rootElement.FirstElement() : rootElement;
             InitProjSpecific(mainElement);
-            displayName = TextManager.Get($"Character.{speciesName}", true);
 
             List<XElement> inventoryElements = new List<XElement>();
             List<float> inventoryCommonness = new List<float>();
@@ -750,7 +763,7 @@ namespace Barotrauma
                 var matchingAffliction = AfflictionPrefab.List
                     .Where(p => p.AfflictionType == "huskinfection")
                     .Select(p => p as AfflictionPrefabHusk)
-                    .FirstOrDefault(p => p.TargetSpecies.Contains(AfflictionHusk.GetNonHuskedSpeciesName(speciesName, p)));
+                    .FirstOrDefault(p => p.TargetSpecies.Any(t => t.Equals(AfflictionHusk.GetNonHuskedSpeciesName(speciesName, p), StringComparison.InvariantCultureIgnoreCase)));
                 if (matchingAffliction == null)
                 {
                     DebugConsole.ThrowError("Cannot find a husk infection that matches this species! Please add the speciesnames as 'targets' in the husk affliction prefab definition!");
@@ -1237,7 +1250,7 @@ namespace Barotrauma
         public void Control(float deltaTime, Camera cam)
         {
             ViewTarget = null;
-            if (!AllowInput) return;
+            if (!AllowInput) { return; }
 
             if (Controlled == this || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer))
             {
@@ -1252,10 +1265,10 @@ namespace Barotrauma
                 SmoothedCursorPosition = cursorPosition - smoothedCursorDiff;
             }
 
-            if (!(this is AICharacter) || Controlled == this || IsRemotePlayer)
+            bool playerControlled = !(this is AICharacter) || Controlled == this || IsRemotePlayer;
+            if (playerControlled)
             {
                 Vector2 targetMovement = GetTargetMovement();
-
                 AnimController.TargetMovement = targetMovement;
                 AnimController.IgnorePlatforms = AnimController.TargetMovement.Y < -0.1f;
             }
@@ -1265,7 +1278,8 @@ namespace Barotrauma
                 ((HumanoidAnimController)AnimController).Crouching = IsKeyDown(InputType.Crouch);
             }
 
-            if (AnimController.onGround &&
+            if (playerControlled &&
+                AnimController.onGround &&
                 !AnimController.InWater &&
                 AnimController.Anim != AnimController.Animation.UsingConstruction &&
                 AnimController.Anim != AnimController.Animation.CPR &&
@@ -1292,13 +1306,16 @@ namespace Barotrauma
             {
                 if (GameMain.NetworkMember.IsServer)
                 {
-                    if (dequeuedInput.HasFlag(InputNetFlags.FacingLeft))
+                    if (playerControlled)
                     {
-                        AnimController.TargetDir = Direction.Left;
-                    }
-                    else
-                    {
-                        AnimController.TargetDir = Direction.Right;
+                        if (dequeuedInput.HasFlag(InputNetFlags.FacingLeft))
+                        {
+                            AnimController.TargetDir = Direction.Left;
+                        }
+                        else
+                        {
+                            AnimController.TargetDir = Direction.Right;
+                        }
                     }
                 }
                 else if (GameMain.NetworkMember.IsClient && Controlled != this)
@@ -1327,8 +1344,8 @@ namespace Barotrauma
             }
             else if (IsKeyDown(InputType.Attack))
             {
-                AttackContext currentContext = GetAttackContext();
-                var validLimbs = AnimController.Limbs.Where(l => !l.IsSevered && !l.IsStuck && l.attack != null && l.attack.IsValidContext(currentContext));
+                var currentContexts = GetAttackContexts();
+                var validLimbs = AnimController.Limbs.Where(l => !l.IsSevered && !l.IsStuck && l.attack != null && l.attack.IsValidContext(currentContexts));
                 var sortedLimbs = validLimbs.OrderBy(l => Vector2.DistanceSquared(ConvertUnits.ToDisplayUnits(l.SimPosition), cursorPosition));
                 // Select closest
                 var attackLimb = sortedLimbs.FirstOrDefault();
@@ -1457,14 +1474,7 @@ namespace Barotrauma
         public bool CanSeeCharacter(Character target)
         {
             Limb seeingLimb = GetSeeingLimb();
-            foreach (var targetLimb in target.AnimController.Limbs)
-            {
-                if (CanSeeTarget(targetLimb, seeingLimb))
-                {
-                    return true;
-                }
-            }
-            return false;
+            return target.AnimController.Limbs.Any(l => CanSeeTarget(l, seeingLimb));
         }
 
         private Limb GetSeeingLimb()
@@ -1546,8 +1556,7 @@ namespace Barotrauma
             return (wall == null || !wall.CastShadow) && (door == null || door.IsOpen);
         }
 
-        public bool HasItem(Item item, bool requireEquipped = false) => 
-            requireEquipped ? HasEquippedItem(item) : item.FindParentInventory(i => i.Owner == this) != null;
+        public bool HasItem(Item item, bool requireEquipped = false) => requireEquipped ? HasEquippedItem(item) : item.IsOwnedBy(this);
 
         public bool HasEquippedItem(Item item)
         {
@@ -1635,6 +1644,62 @@ namespace Barotrauma
             }
             return true;
         }
+
+        private float _selectedItemPriority;
+        private Item _foundItem;
+        /// <summary>
+        /// Finds the closest item seeking by identifiers or tags from the world.
+        /// Ignores items that are outside or in another team's submarine or in a submarine that is not connected to this submarine.
+        /// Also ignores items that are taken by someone else.
+        /// The method is run in steps for performance reasons. So you'll have to provide the reference to the itemIndex.
+        /// Returns false while running and true when done.
+        /// </summary>
+        public bool FindItem(ref int itemIndex, out Item targetItem, IEnumerable<string> identifiers = null, bool ignoreBroken = true, 
+            IEnumerable<Item> ignoredItems = null, IEnumerable<string> ignoredContainerIdentifiers = null, 
+            Func<Item, bool> customPredicate = null, Func<Item, float> customPriorityFunction = null, float maxItemDistance = 10000)
+        {
+            if (itemIndex == 0)
+            {
+                _foundItem = null;
+                _selectedItemPriority = 0;
+            }
+            for (int i = 0; i < 10 && itemIndex < Item.ItemList.Count - 1; i++)
+            {
+                itemIndex++;
+                var item = Item.ItemList[itemIndex];
+                if (ignoredItems != null && ignoredItems.Contains(item)) { continue; }
+                if (item.Submarine == null) { continue; }
+                if (item.Submarine.TeamID != TeamID) { continue; }
+                if (Submarine != null && !Submarine.IsEntityFoundOnThisSub(item, true)) { continue; }
+                if (item.CurrentHull == null) { continue; }
+                if (ignoreBroken && item.Condition <= 0) { continue; }
+                if (customPredicate != null && !customPredicate(item)) { continue; }
+                if (identifiers != null && identifiers.None(id => item.Prefab.Identifier == id || item.HasTag(id))) { continue; }
+                if (ignoredContainerIdentifiers != null && item.Container != null)
+                {
+                    if (ignoredContainerIdentifiers.Contains(item.ContainerIdentifier)) { continue; }
+                }
+                if (IsItemTakenBySomeoneElse(item)) { continue; }
+                float itemPriority = customPriorityFunction != null ? customPriorityFunction(item) : 1;
+                if (itemPriority <= 0) { continue; }
+                Item rootContainer = item.GetRootContainer();
+                Vector2 itemPos = (rootContainer ?? item).WorldPosition;
+                float yDist = Math.Abs(WorldPosition.Y - itemPos.Y);
+                yDist = yDist > 100 ? yDist * 5 : 0;
+                float dist = Math.Abs(WorldPosition.X - itemPos.X) + yDist;
+                float distanceFactor = MathHelper.Lerp(1, 0, MathUtils.InverseLerp(0, maxItemDistance, dist));
+                itemPriority *= distanceFactor;
+                if (itemPriority > _selectedItemPriority)
+                {
+                    _selectedItemPriority = itemPriority;
+                    _foundItem = item;
+                }
+            }
+            targetItem = _foundItem;
+            return itemIndex >= Item.ItemList.Count - 1;
+        }
+
+        public bool IsItemTakenBySomeoneElse(Item item) => item.FindParentInventory(i => i.Owner != this && i.Owner is Character owner && !owner.IsDead && !owner.Removed) != null;
 
         public bool CanInteractWith(Character c, float maxDist = 200.0f, bool checkVisibility = true)
         {
@@ -2445,35 +2510,38 @@ namespace Barotrauma
 
             bool isNotClient = GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient;
 
+            TrySeverLimbJoints(limbHit, attack.SeverLimbsProbability);
+
+            return attackResult;
+        }
+
+        public void TrySeverLimbJoints(Limb targetLimb, float severLimbsProbability)
+        {
+            bool isNotClient = GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient;
+
             if (isNotClient &&
-                IsDead && Rand.Range(0.0f, 1.0f) < attack.SeverLimbsProbability)
+                IsDead && Rand.Range(0.0f, 1.0f) < severLimbsProbability)
             {
                 foreach (LimbJoint joint in AnimController.LimbJoints)
                 {
-                    if (joint.CanBeSevered && (joint.LimbA == limbHit || joint.LimbB == limbHit))
+                    if (joint.CanBeSevered && (joint.LimbA == targetLimb || joint.LimbB == targetLimb))
                     {
 #if CLIENT
-                        if (CurrentHull != null)
-                        {
-                            CurrentHull.AddDecal("blood", WorldPosition, Rand.Range(0.5f, 1.5f));
-                        }
+                        CurrentHull?.AddDecal("blood", WorldPosition, Rand.Range(0.5f, 1.5f));                       
 #endif
-
                         AnimController.SeverLimbJoint(joint);
 
-                        if (joint.LimbA == limbHit)
+                        if (joint.LimbA == targetLimb)
                         {
-                            joint.LimbB.body.LinearVelocity += limbHit.LinearVelocity * 0.5f;
+                            joint.LimbB.body.LinearVelocity += targetLimb.LinearVelocity * 0.5f;
                         }
                         else
                         {
-                            joint.LimbA.body.LinearVelocity += limbHit.LinearVelocity * 0.5f;
+                            joint.LimbA.body.LinearVelocity += targetLimb.LinearVelocity * 0.5f;
                         }
                     }
                 }
             }
-
-            return attackResult;
         }
 
         public AttackResult AddDamage(Vector2 worldPosition, IEnumerable<Affliction> afflictions, float stun, bool playSound, float attackImpulse = 0.0f, Character attacker = null)
@@ -2513,16 +2581,19 @@ namespace Barotrauma
             //character inside the sub received damage from a monster outside the sub
             //can happen during normal gameplay if someone for example fires a ranged weapon from outside, 
             //the intention of this error message is to diagnose an issue with monsters being able to damage characters from outside
-            if (attacker?.AIController is EnemyAIController && Submarine != null && attacker.Submarine == null)
-            {
-                string errorMsg = $"Character {Name} received damage from outside the sub while inside (attacker: {attacker.Name})";
-                GameAnalyticsManager.AddErrorEventOnce("Character.DamageLimb:DamageFromOutside" + Name + attacker.Name,
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Warning,
-                    errorMsg + "\n" + Environment.StackTrace);
-#if DEBUG
-                DebugConsole.ThrowError(errorMsg);
-#endif
-            }
+
+            // Disabled, because this happens every now and then when the monsters can get in and out of the sub.
+
+//            if (attacker?.AIController is EnemyAIController && Submarine != null && attacker.Submarine == null)
+//            {
+//                string errorMsg = $"Character {Name} received damage from outside the sub while inside (attacker: {attacker.Name})";
+//                GameAnalyticsManager.AddErrorEventOnce("Character.DamageLimb:DamageFromOutside" + Name + attacker.Name,
+//                    GameAnalyticsSDK.Net.EGAErrorSeverity.Warning,
+//                    errorMsg + "\n" + Environment.StackTrace);
+//#if DEBUG
+//                DebugConsole.ThrowError(errorMsg);
+//#endif
+//            }
 
             if (attacker != null && attacker != this && GameMain.NetworkMember != null && !GameMain.NetworkMember.ServerSettings.AllowFriendlyFire)
             {
@@ -2657,6 +2728,8 @@ namespace Barotrauma
                 return;
             }
 
+            IsDead = true;
+
             ApplyStatusEffects(ActionType.OnDeath, 1.0f);
 
             AnimController.Frozen = false;
@@ -2687,8 +2760,6 @@ namespace Barotrauma
             SteamAchievementManager.OnCharacterKilled(this, CauseOfDeath);
 
             KillProjSpecific(causeOfDeath, causeOfDeathAffliction);
-
-            IsDead = true;
 
             if (info != null) info.CauseOfDeath = CauseOfDeath;
             AnimController.movement = Vector2.Zero;
@@ -2838,7 +2909,29 @@ namespace Barotrauma
             }
         }
 
-        public AttackContext GetAttackContext() => AnimController.CurrentAnimationParams.IsGroundedAnimation ? AttackContext.Ground : AttackContext.Water;
+        private HashSet<AttackContext> currentContexts = new HashSet<AttackContext>();
+
+        public IEnumerable<AttackContext> GetAttackContexts()
+        {
+            currentContexts.Clear();
+            if (AnimController.CurrentAnimationParams.IsGroundedAnimation)
+            {
+                currentContexts.Add(AttackContext.Ground);
+            }
+            else
+            {
+                currentContexts.Add(AttackContext.Water);
+            }
+            if (CurrentHull == null)
+            {
+                currentContexts.Add(AttackContext.Outside);
+            }
+            else
+            {
+                currentContexts.Add(AttackContext.Inside);
+            }
+            return currentContexts;
+        }
 
         private readonly List<Hull> visibleHulls = new List<Hull>();
         private readonly HashSet<Hull> tempList = new HashSet<Hull>();
@@ -2866,7 +2959,7 @@ namespace Barotrauma
                         }
                     }
                 }
-                visibleHulls.AddRange(CurrentHull.GetLinkedEntities<Hull>(tempList, filter: h =>
+                visibleHulls.AddRange(CurrentHull.GetLinkedEntities(tempList, filter: h =>
                 {
                     // Ignore adjacent hulls because they were already handled above
                     if (adjacentHulls.Contains(h))
@@ -2890,6 +2983,44 @@ namespace Barotrauma
                 }));
             }
             return visibleHulls;
+        }
+
+        public Vector2 GetRelativeSimPosition(ISpatialEntity target, Vector2? worldPos = null)
+        {
+            Vector2 targetPos = target.SimPosition;
+            if (worldPos.HasValue)
+            {
+                Vector2 wp = worldPos.Value;
+                if (target.Submarine != null)
+                {
+                    wp -= target.Submarine.Position;
+                }
+                targetPos = ConvertUnits.ToSimUnits(wp);
+            }
+            if (Submarine == null && target.Submarine != null)
+            {
+                if (AIController == null || !(AIController.SteeringManager is IndoorsSteeringManager))
+                {
+                    // outside and targeting inside
+                    // doesn't work with inside steering
+                    targetPos += target.Submarine.SimPosition;
+                }
+            }
+            else if (Submarine != null && target.Submarine == null)
+            {
+                // inside and targeting outside
+                targetPos -= Submarine.SimPosition;
+            }
+            else if (Submarine != target.Submarine)
+            {
+                if (Submarine != null && target.Submarine != null)
+                {
+                    // both inside, but in different subs
+                    Vector2 diff = Submarine.SimPosition - target.Submarine.SimPosition;
+                    targetPos -= diff;
+                }
+            }
+            return targetPos;
         }
     }
 }

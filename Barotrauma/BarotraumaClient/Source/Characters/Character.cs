@@ -343,7 +343,7 @@ namespace Barotrauma
         
         partial void OnAttackedProjSpecific(Character attacker, AttackResult attackResult)
         {
-            if (attackResult.Damage <= 1.0f) { return; }
+            if (attackResult.Damage <= 1.0f || IsDead) { return; }
             if (soundTimer < soundInterval * 0.5f)
             {
                 PlaySound(CharacterSound.SoundType.Damage);
@@ -524,6 +524,8 @@ namespace Barotrauma
 
         partial void UpdateProjSpecific(float deltaTime, Camera cam)
         {
+            if (!enabled) { return; }
+
             if (!IsDead && !IsUnconscious)
             {
                 if (soundTimer > 0)

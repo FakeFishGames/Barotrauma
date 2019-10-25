@@ -232,6 +232,10 @@
     <Compile Include="Source\Program.cs" />
     <Compile Include="Source\Screens\NetLobbyScreen.cs" />
     <Compile Include="Source\Screens\UnimplementedScreen.cs" />
+    <Compile Include="Source\Traitors\Goals\GoalInjectTarget.cs" />
+    <Compile Include="Source\Traitors\Goals\GoalEntityTransformation.cs" />
+    <Compile Include="Source\Traitors\Goals\GoalKeepTransformedAlive.cs" />
+    <Compile Include="Source\Traitors\Goals\GoalUnwiring.cs" />
     <Compile Include="Source\Traitors\Goals\GoalWaitForTraitors.cs" />
     <Compile Include="Source\Traitors\Goals\HumanoidGoal.cs" />
     <Compile Include="Source\Traitors\Goals\Modifiers\GoalIsOptional.cs" />
@@ -310,11 +314,7 @@
     </None>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Source\Traitors\" />
-    <Folder Include="Source\Traitors\Goals\" />
-    <Folder Include="Source\Traitors\Goals\Modifiers\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="..\BarotraumaShared\SharedCode.projitems" Label="Shared" />
   <Import Project="..\BarotraumaShared\SharedContent.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

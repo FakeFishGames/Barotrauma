@@ -57,13 +57,13 @@ namespace Barotrauma
             });
         }
 
-        public static Texture2D FromFile(string path, bool preMultiplyAlpha = true)
+        public static Texture2D FromFile(string path, bool preMultiplyAlpha = true, bool mipmap=false)
         {
             try
             {
                 using (Stream fileStream = File.OpenRead(path))
                 {
-                    return FromStream(fileStream, preMultiplyAlpha, path);
+                    return FromStream(fileStream, preMultiplyAlpha, path, mipmap);
                 }
 
             }
@@ -74,7 +74,7 @@ namespace Barotrauma
             }
         }
 
-        public static Texture2D FromStream(Stream fileStream, bool preMultiplyAlpha = true, string path=null)
+        public static Texture2D FromStream(Stream fileStream, bool preMultiplyAlpha = true, string path=null, bool mipmap=false)
         {
             try
             {
@@ -88,13 +88,17 @@ namespace Barotrauma
                 Texture2D tex = null;
                 CrossThread.RequestExecutionOnMainThread(() =>
                 {
-                    tex = new Texture2D(_graphicsDevice, width, height);
+                    tex = new Texture2D(_graphicsDevice, width, height, mipmap, SurfaceFormat.Color);
                     tex.SetData(textureData);
                 });
                 return tex;
             }
             catch (Exception e)
             {
+#if WINDOWS
+                if (e is SharpDX.SharpDXException) { throw; }
+#endif
+
                 DebugConsole.ThrowError("Loading texture from stream failed!", e);
                 return null;
             }

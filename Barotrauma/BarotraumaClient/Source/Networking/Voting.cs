@@ -16,7 +16,7 @@ namespace Barotrauma
                 allowSubVoting = value;
                 GameMain.NetLobbyScreen.SubList.Enabled = value ||
                     (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.SelectSub));
-                GameMain.NetLobbyScreen.InfoFrame.FindChild("subvotes", true).Visible = value;
+                GameMain.NetLobbyScreen.Frame.FindChild("subvotes", true).Visible = value;
 
                 UpdateVoteTexts(null, VoteType.Sub);
                 GameMain.NetLobbyScreen.SubList.Deselect();
@@ -33,7 +33,7 @@ namespace Barotrauma
                     value || 
                     (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.SelectMode));
 
-                GameMain.NetLobbyScreen.InfoFrame.FindChild("modevotes", true).Visible = value;
+                GameMain.NetLobbyScreen.Frame.FindChild("modevotes", true).Visible = value;
 
                 //gray out modes that can't be voted
                 foreach (GUITextBlock comp in GameMain.NetLobbyScreen.ModeList.Content.Children)

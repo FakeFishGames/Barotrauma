@@ -500,7 +500,7 @@
   <Item name="Physicorium Bar" identifier="physicorium" category="Material" Tags="smallitem" scale="0.5" cargocontaineridentifier="metalcrate" canbepicked="true">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="200" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="70,835,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="70,835,52,59" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Alien/AlienMaterials.png" sourcerect="97,349,58,71" depth="0.55" origin="0.5,0.5" />
     <Body radius="25" density="50" />
     <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">

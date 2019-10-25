@@ -98,10 +98,11 @@ namespace Barotrauma
                     if (parentItem == null) { return false; }
                     return CheckContained(parentItem);
                 case RelationType.Container:
-                    if (parentItem == null || parentItem.Container == null) { return false; }
+                    if (parentItem == null || parentItem.Container == null) { return MatchOnEmpty; }
                     return parentItem.Container.Condition > 0.0f && MatchesItem(parentItem.Container);
                 case RelationType.Equipped:
                     if (character == null) { return false; }
+                    if (MatchOnEmpty && character.SelectedItems.All(it => it == null)) { return true; }
                     foreach (Item equippedItem in character.SelectedItems)
                     {
                         if (equippedItem == null) { continue; }

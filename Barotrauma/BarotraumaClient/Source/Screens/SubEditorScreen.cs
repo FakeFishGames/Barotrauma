@@ -2478,7 +2478,7 @@ namespace Barotrauma
 
             //-------------------- HUD -----------------------------
             
-            spriteBatch.Begin(SpriteSortMode.Deferred);
+            spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState);
 
             if (Submarine.MainSub != null)
             {

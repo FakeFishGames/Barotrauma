@@ -667,9 +667,9 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        public virtual void Load(XElement componentElement)
+        public virtual void Load(XElement componentElement, bool usePrefabValues)
         {
-            if (componentElement == null) return;
+            if (componentElement == null || usePrefabValues) { return; }
             foreach (XAttribute attribute in componentElement.Attributes())
             {
                 if (!SerializableProperties.TryGetValue(attribute.Name.ToString().ToLowerInvariant(), out SerializableProperty property)) continue;

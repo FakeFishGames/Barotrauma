@@ -14,7 +14,7 @@ namespace Barotrauma.Items.Components
 
         private float charge;
 
-        private float rechargeVoltage;
+        //private float rechargeVoltage;
 
         //how fast the battery can be recharged
         private float maxRechargeSpeed;
@@ -28,10 +28,7 @@ namespace Barotrauma.Items.Components
         protected Vector2 indicatorPosition, indicatorSize;
 
         protected bool isHorizontal;
-
-        //a list of powered devices connected directly to this item
-        private readonly List<Pair<Powered, Connection>> directlyConnected = new List<Pair<Powered, Connection>>(10);
-
+        
         public float CurrPowerOutput
         {
             get;
@@ -107,12 +104,18 @@ namespace Barotrauma.Items.Components
                 if (!MathUtils.IsValid(value)) return;              
                 rechargeSpeed = MathHelper.Clamp(value, 0.0f, maxRechargeSpeed);
                 rechargeSpeed = MathUtils.RoundTowardsClosest(rechargeSpeed, Math.Max(maxRechargeSpeed * 0.1f, 1.0f));
+                if (isRunning)
+                {
+                    HasBeenTuned = true;
+                }
             }
         }
 
         public float RechargeRatio => RechargeSpeed / MaxRechargeSpeed;
 
         public const float aiRechargeTargetRatio = 0.5f;
+        private bool isRunning;
+        public bool HasBeenTuned { get; private set; }
 
         public PowerContainer(Item item, XElement element)
             : base(item, element)
@@ -131,14 +134,13 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam) 
         {
+            isRunning = true;
             float chargeRatio = charge / capacity;
             float gridPower = 0.0f;
             float gridLoad = 0.0f;
-            directlyConnected.Clear();
-
             foreach (Connection c in item.Connections)
             {
-                if (c.Name == "power_in") continue;
+                if (!c.IsPower || !c.IsOutput) { continue; }
                 foreach (Connection c2 in c.Recipients)
                 {
                     if (c2.Item.Condition <= 0.0f) { continue; }
@@ -149,15 +151,13 @@ namespace Barotrauma.Items.Components
                         foreach (Powered powered in c2.Item.GetComponents<Powered>())
                         {
                             if (!powered.IsActive) continue;
-                            directlyConnected.Add(new Pair<Powered, Connection>(powered, c2));
                             gridLoad += powered.CurrPowerConsumption;
                         }
                         continue;
                     }
                     if (!pt.IsActive || !pt.CanTransfer) { continue; }
-
-                    gridLoad += pt.PowerLoad;
                     gridPower -= pt.CurrPowerConsumption;
+                    gridLoad += pt.PowerLoad;
                 }
             }
             
@@ -168,66 +168,51 @@ namespace Barotrauma.Items.Components
             
             if (charge >= capacity)
             {
-                rechargeVoltage = 0.0f;
+                //rechargeVoltage = 0.0f;
                 charge = capacity;
-
                 CurrPowerConsumption = 0.0f;
             }
             else
             {
                 currPowerConsumption = MathHelper.Lerp(currPowerConsumption, rechargeSpeed, 0.05f);
-                Charge += currPowerConsumption * rechargeVoltage / 3600.0f;
+                Charge += currPowerConsumption * Voltage / 3600.0f;
             }
-                        
-            //provide power to the grid
-            if (gridLoad > 0.0f)
+                       
+
+            if (charge <= 0.0f)
             {
-                if (charge <= 0.0f)
-                {
-                    CurrPowerOutput = 0.0f;
-                    charge = 0.0f;
-                    return;
-                }
-
-                if (gridPower < gridLoad)
-                {
-                    //output starts dropping when the charge is less than 10%
-                    float maxOutputRatio = 1.0f;
-                    if (chargeRatio < 0.1f)
-                    {
-                        maxOutputRatio = Math.Max(chargeRatio * 10.0f, 0.0f);
-                    }
-
-                    CurrPowerOutput = MathHelper.Lerp(
-                       CurrPowerOutput,
-                       Math.Min(MaxOutPut * maxOutputRatio, gridLoad),
-                       deltaTime * 10.0f);
-                }
-                else
-                {
-                    CurrPowerOutput = MathHelper.Lerp(CurrPowerOutput, 0.0f, deltaTime * 10.0f);
-                }
-
-                Charge -= CurrPowerOutput / 3600.0f;
+                CurrPowerOutput = 0.0f;
+                charge = 0.0f;
+                return;
             }
-            item.SendSignal(0, ((int)Charge).ToString(), "charge", null);
-            item.SendSignal(0, ((int)((Charge / capacity) * 100)).ToString(), "charge_%", null);
-            item.SendSignal(0, ((int)((RechargeSpeed / maxRechargeSpeed) * 100)).ToString(), "charge_rate", null);
 
-            foreach (Pair<Powered, Connection> connected in directlyConnected)
+            //output starts dropping when the charge is less than 10%
+            float maxOutputRatio = 1.0f;
+            if (chargeRatio < 0.1f)
             {
-                connected.First.ReceiveSignal(0, "", connected.Second, source: item, sender: null, 
-                    power: gridLoad <= 0.0f ? 1.0f : CurrPowerOutput / gridLoad);
+                maxOutputRatio = Math.Max(chargeRatio * 10.0f, 0.0f);
             }
 
-            rechargeVoltage = 0.0f;
+            CurrPowerOutput += (gridLoad - gridPower) * deltaTime;
+
+            float maxOutput = Math.Min(MaxOutPut * maxOutputRatio, gridLoad);
+            CurrPowerOutput = MathHelper.Clamp(CurrPowerOutput, 0.0f, maxOutput);
+            Charge -= CurrPowerOutput / 3600.0f;
+            
+            item.SendSignal(0, ((int)Math.Round(Charge)).ToString(), "charge", null);
+            item.SendSignal(0, ((int)Math.Round((Charge / capacity) * 100)).ToString(), "charge_%", null);
+            item.SendSignal(0, ((int)Math.Round((RechargeSpeed / maxRechargeSpeed) * 100)).ToString(), "charge_rate", null);
         }
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
-#if CLIENT
-            if (GameMain.Client != null) return false;
-#endif
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return false; }
+
+            if (objective.Override)
+            {
+                HasBeenTuned = false;
+            }
+            if (HasBeenTuned) { return true; }
 
             if (string.IsNullOrEmpty(objective.Option) || objective.Option.ToLowerInvariant() == "charge")
             {
@@ -274,6 +259,8 @@ namespace Barotrauma.Items.Components
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power, float signalStrength = 1.0f)
         {
+            if (connection.IsPower) { return; }
+
             if (connection.Name == "set_rate")
             {
                 if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempSpeed))
@@ -289,12 +276,6 @@ namespace Barotrauma.Items.Components
                     }
 #endif
                 }
-            }
-            if (!connection.IsPower) { return; }
-
-            if (connection.Name == "power_in")
-            {
-                rechargeVoltage = Math.Min(power, 1.0f);
             }
         }
     }

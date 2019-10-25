@@ -1,4 +1,6 @@
-﻿using Barotrauma.Extensions;
+﻿//#define TEST_REMOTE_CONTENT
+
+using Barotrauma.Extensions;
 using Barotrauma.Networking;
 using Barotrauma.Tutorials;
 using Lidgren.Network;
@@ -19,27 +21,28 @@ namespace Barotrauma
     {
         public enum Tab { NewGame = 1, LoadGame = 2, HostServer = 3, Settings = 4, Tutorials = 5, JoinServer = 6, CharacterEditor = 7, SubmarineEditor = 8, QuickStartDev = 9, SteamWorkshop = 10, Credits = 11, Empty = 12 }
 
-        private GUIComponent buttonsParent;
+        private readonly GUIComponent buttonsParent;
 
         private readonly GUIFrame[] menuTabs;
 
-        private CampaignSetupUI campaignSetupUI;
+        private readonly CampaignSetupUI campaignSetupUI;
 
         private GUITextBox serverNameBox, /*portBox, queryPortBox,*/ passwordBox, maxPlayersBox;
         private GUITickBox isPublicBox/*, useUpnpBox*/;
+        private readonly GUIButton joinServerButton, hostServerButton, steamWorkshopButton;
+        private readonly GameMain game;
 
-        private GUIButton joinServerButton, hostServerButton, steamWorkshopButton;
-
-        private GameMain game;
+        private GUIImage playstyleBanner;
+        private GUITextBlock playstyleDescription;
 
         private Tab selectedTab;
 
         private Sprite backgroundSprite;
         private Sprite backgroundVignette;
 
-        private GUIComponent titleText;
+        private readonly GUIComponent titleText;
 
-        private CreditsPlayer creditsPlayer;
+        private readonly CreditsPlayer creditsPlayer;
 
         #if OSX
         private bool firstLoadOnMac = true;
@@ -70,15 +73,20 @@ namespace Barotrauma
                 RelativeSpacing = 0.02f
             };
 
-            FetchRemoteContent(Frame.RectTransform);
-            /*var doc = XMLExtensions.TryLoadXml("Content/UI/MenuTextTest.xml");
+#if TEST_REMOTE_CONTENT
+
+            var doc = XMLExtensions.TryLoadXml("Content/UI/MenuTextTest.xml");
             if (doc?.Root != null)
             {
                 foreach (XElement subElement in doc?.Root.Elements())
                 {
                     GUIComponent.FromXML(subElement, Frame.RectTransform);
                 }
-            }*/       
+            }   
+#else
+            FetchRemoteContent(Frame.RectTransform);
+#endif
+
 
             // === CAMPAIGN
             var campaignHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 1.0f), parent: buttonsParent.RectTransform) { RelativeOffset = new Vector2(0.1f, 0.0f) }, isHorizontal: true);
@@ -331,7 +339,7 @@ namespace Barotrauma
                 StartNewGame = StartGame
             };
 
-            var hostServerScale = new Vector2(0.7f, 0.6f);
+            var hostServerScale = new Vector2(0.7f, 1.2f);
             menuTabs[(int)Tab.HostServer] = new GUIFrame(new RectTransform(
                 Vector2.Multiply(relativeSize, hostServerScale), GUI.Canvas, anchor, pivot, minSize.Multiply(hostServerScale), maxSize.Multiply(hostServerScale)) { RelativeOffset = relativeSpacing });
 
@@ -374,9 +382,9 @@ namespace Barotrauma
             };
 
         }
-        #endregion
+#endregion
 
-        #region Selection
+#region Selection
         public override void Select()
         {
             base.Select();
@@ -393,7 +401,7 @@ namespace Barotrauma
 
             GameAnalyticsManager.SetCustomDimension01("");
 
-            #if OSX
+#if OSX
             // Hack for adjusting the viewport properly after splash screens on older Macs
             if (firstLoadOnMac)
             {
@@ -410,7 +418,7 @@ namespace Barotrauma
 
                 SelectTab(null, Tab.Empty);
             }
-            #endif
+#endif
         }
 
         public override void Deselect()
@@ -482,6 +490,7 @@ namespace Barotrauma
                         GameMain.ServerListScreen.Select();
                         break;
                     case Tab.HostServer:
+                        SetServerPlayStyle(PlayStyle.Serious);
                         if (!GameMain.Config.CampaignDisclaimerShown)
                         {
                             selectedTab = 0;
@@ -661,13 +670,15 @@ namespace Barotrauma
         {
             GameMain.Config.SaveNewPlayerConfig();
 
-            if (userData is Tab) SelectTab(button, (Tab)userData);
+            if (userData is Tab) { SelectTab(button, (Tab)userData); }
 
-            if (GameMain.GraphicsWidth != GameMain.Config.GraphicsWidth || GameMain.GraphicsHeight != GameMain.Config.GraphicsHeight)
+            if (GameMain.GraphicsWidth != GameMain.Config.GraphicsWidth || 
+                GameMain.GraphicsHeight != GameMain.Config.GraphicsHeight ||
+                ContentPackage.List.Any(cp => cp.NeedsRestart))
             {
                 new GUIMessageBox(
                     TextManager.Get("RestartRequiredLabel"),
-                    TextManager.Get("RestartRequiredText"));
+                    TextManager.Get("RestartRequiredGeneric"));
             }
 
             return true;
@@ -744,6 +755,7 @@ namespace Barotrauma
 
                 string arguments = "-name \"" + name.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"" +
                                    " -public " + isPublicBox.Selected.ToString() +
+                                   " -playstyle " + ((PlayStyle)playstyleBanner.UserData).ToString()  +
                                    " -password \"" + passwordBox.Text.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"" +
                                    " -maxplayers " + maxPlayersBox.Text;
 
@@ -762,6 +774,10 @@ namespace Barotrauma
                 string filename = exeName;
 #if LINUX || OSX
                 filename = "./" + Path.GetFileNameWithoutExtension(exeName);
+#elif WINDOWS
+                DateTime startTime = DateTime.Now;
+                filename = "cmd.exe";
+                arguments = "/C start /b " + exeName + " " + arguments;
 #endif
                 var processInfo = new ProcessStartInfo
                 {
@@ -775,6 +791,10 @@ namespace Barotrauma
                 };
                 GameMain.ServerChildProcess = Process.Start(processInfo);
                 Thread.Sleep(1000); //wait until the server is ready before connecting
+
+#if WINDOWS
+                GameMain.ServerChildProcess = Process.GetProcessesByName(Path.GetFileNameWithoutExtension(exeName)).First(p => p.StartTime >= startTime);
+#endif
 
                 GameMain.Client = new GameClient(name, System.Net.IPAddress.Loopback.ToString(), Steam.SteamManager.GetSteamID(), name, ownerKey, true);
             }
@@ -856,7 +876,7 @@ namespace Barotrauma
         {
             DrawBackground(graphics, spriteBatch);
 
-            spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, GameMain.ScissorTestEnable);
+            spriteBatch.Begin(SpriteSortMode.Deferred, null, GUI.SamplerState, null, GameMain.ScissorTestEnable);
 
             GUI.Draw(Cam, spriteBatch);
 
@@ -981,14 +1001,71 @@ namespace Barotrauma
             Alignment textAlignment = Alignment.CenterLeft;
             Vector2 textFieldSize = new Vector2(0.5f, 1.0f);
             Vector2 tickBoxSize = new Vector2(0.4f, 0.07f);
-            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.85f, 0.75f), menuTabs[(int)Tab.HostServer].RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.05f) })
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.85f, 0.8f), menuTabs[(int)Tab.HostServer].RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.05f) })
             {
                 RelativeSpacing = 0.02f,
                 Stretch = true
             }; 
             GUIComponent parent = paddedFrame;
-            
+
             new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("HostServerButton"), textAlignment: Alignment.Center, font: GUI.LargeFont) { ForceUpperCase = true };
+
+            //play style -----------------------------------------------------
+
+            var playstyleContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), parent.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
+            {
+                Stretch = true,
+                Color = Color.Black
+                //RelativeSpacing = 0.02f
+            };
+            
+            new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), playstyleContainer.RectTransform), style: "UIToggleButton")
+            {
+                OnClicked = (btn, userdata) =>
+                {
+                    int playStyleIndex = (int)playstyleBanner.UserData - 1;
+                    if (playStyleIndex < 0) { playStyleIndex = Enum.GetValues(typeof(PlayStyle)).Length - 1; }
+                    SetServerPlayStyle((PlayStyle)playStyleIndex);
+                    return true;
+                }
+            }.Children.ForEach(c => c.SpriteEffects = SpriteEffects.FlipHorizontally);
+
+            playstyleBanner = new GUIImage(new RectTransform(new Vector2(0.8f, 1.0f), playstyleContainer.RectTransform), style: null, scaleToFit: true)
+            {
+                UserData = PlayStyle.Serious
+            };
+            new GUITextBlock(new RectTransform(new Vector2(0.15f, 0.05f), playstyleBanner.RectTransform) { RelativeOffset = new Vector2(0.01f, 0.06f) },
+                "playstyle name goes here", font: GUI.SmallFont, textAlignment: Alignment.Center, textColor: Color.White, style: "GUISlopedHeader");
+
+            new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), playstyleContainer.RectTransform), style: "UIToggleButton")
+            {
+                OnClicked = (btn, userdata) =>
+                {
+                    int playStyleIndex = (int)playstyleBanner.UserData + 1;
+                    if (playStyleIndex >= Enum.GetValues(typeof(PlayStyle)).Length) { playStyleIndex = 0; }
+                    SetServerPlayStyle((PlayStyle)playStyleIndex);
+                    return true;
+                }
+            };
+
+            string longestPlayStyleStr = "";
+            foreach (PlayStyle playStyle in Enum.GetValues(typeof(PlayStyle)))
+            {
+                string playStyleStr = TextManager.Get("servertagdescription." + playStyle);
+                if (playStyleStr.Length > longestPlayStyleStr.Length) { longestPlayStyleStr = playStyleStr; }
+            }
+
+            playstyleDescription = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), playstyleBanner.RectTransform, Anchor.BottomCenter),
+                "playstyle description goes here", style: null, wrap: true)
+            {
+                Color = Color.Black * 0.8f,
+                TextColor = Color.White
+            };
+            playstyleDescription.Padding = Vector4.One * 10.0f * GUI.Scale;
+            playstyleDescription.CalculateHeightFromText(padding: (int)(15 * GUI.Scale));
+            playstyleDescription.RectTransform.MinSize = new Point(0, playstyleDescription.Rect.Height);
+
+            //other settings -----------------------------------------------------
 
             var label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("ServerName"), textAlignment: textAlignment);
             serverNameBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment)
@@ -996,7 +1073,7 @@ namespace Barotrauma
                 MaxTextLength = NetConfig.ServerNameMaxLength,
                 OverflowClip = true
             };
-
+ 
             /* TODO: allow lidgren servers from client?
             label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("ServerPort"), textAlignment: textAlignment);
             portBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment)
@@ -1064,7 +1141,21 @@ namespace Barotrauma
                 OnClicked = HostServerClicked
             };
         }
-        #endregion
+
+        private void SetServerPlayStyle(PlayStyle playStyle)
+        {
+            playstyleBanner.Sprite = GameMain.ServerListScreen.PlayStyleBanners[(int)playStyle];
+            playstyleBanner.UserData = playStyle;
+
+            var nameText = playstyleBanner.GetChild<GUITextBlock>();
+            nameText.Text = TextManager.AddPunctuation(':', TextManager.Get("serverplaystyle"), TextManager.Get("servertag." + playStyle));
+            nameText.Color = GameMain.ServerListScreen.PlayStyleColors[(int)playStyle];
+            nameText.RectTransform.NonScaledSize = (nameText.Font.MeasureString(nameText.Text) + new Vector2(25, 10) * GUI.Scale).ToPoint();
+
+            playstyleDescription.Text = TextManager.Get("servertagdescription." + playStyle);
+            playstyleDescription.CalculateHeightFromText(padding: (int)(15 * GUI.Scale));
+        }
+#endregion
 
         private void FetchRemoteContent(RectTransform parent)
         {

@@ -135,6 +135,8 @@ namespace Barotrauma
 
         public GUIListBox(RectTransform rectT, bool isHorizontal = false, Color? color = null, string style = "") : base(style, rectT)
         {
+            CanBeFocused = true;
+
             selected = new List<GUIComponent>();
 
             Point frameSize = isHorizontal ? 
@@ -176,7 +178,7 @@ namespace Barotrauma
 
         private void UpdateDimensions()
         {
-            if (!ScrollBarEnabled)
+            if (!ScrollBar.Visible)
             {
                 Content.RectTransform.NonScaledSize = Rect.Size;
             }
@@ -295,7 +297,7 @@ namespace Barotrauma
                 if (child == null) continue;
 
                 // selecting
-                if (Enabled && child.CanBeFocused && (GUI.IsMouseOn(child)) && child.Rect.Contains(PlayerInput.MousePosition))
+                if (Enabled && CanBeFocused && child.CanBeFocused && (GUI.IsMouseOn(child)) && child.Rect.Contains(PlayerInput.MousePosition))
                 {
                     child.State = ComponentState.Hover;
                     if (PlayerInput.LeftButtonClicked())
@@ -322,6 +324,15 @@ namespace Barotrauma
         public override void AddToGUIUpdateList(bool ignoreChildren = false, int order = 0)
         {
             if (!Visible) { return; }
+
+            if (!ignoreChildren)
+            {
+                foreach (GUIComponent child in Children)
+                {
+                    if (child == Content || child == ScrollBar) { continue; }
+                    child.AddToGUIUpdateList(ignoreChildren, order);
+                }       
+            }
             
             foreach (GUIComponent child in Content.Children)
             {
@@ -406,11 +417,15 @@ namespace Barotrauma
                 scrollBarNeedsRecalculation = false;
             }
 
+            bool prevScrollBarVisible = ScrollBar.Visible;
+
             ScrollBar.Enabled = ScrollBarEnabled && ScrollBar.BarSize < 1.0f;
             if (AutoHideScrollBar)
             {
                 ScrollBar.Visible = ScrollBar.BarSize < 1.0f;
             }
+
+            if (ScrollBar.Visible != prevScrollBarVisible) { UpdateDimensions(); }
 
             if ((GUI.IsMouseOn(this) || GUI.IsMouseOn(ScrollBar)) && PlayerInput.ScrollWheelSpeed != 0)
             {
@@ -594,7 +609,7 @@ namespace Barotrauma
             {                    
                 spriteBatch.End();
                 spriteBatch.GraphicsDevice.ScissorRectangle = Rectangle.Intersect(prevScissorRect, Content.Rect);
-                spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
+                spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
             }
 
             var children = Content.Children;
@@ -618,7 +633,7 @@ namespace Barotrauma
             {
                 spriteBatch.End();
                 spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
-                spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: prevRasterizerState);
+                spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: prevRasterizerState);
             }
 
             if (ScrollBar.Visible) ScrollBar.DrawManually(spriteBatch, alsoChildren: true, recursive: true);

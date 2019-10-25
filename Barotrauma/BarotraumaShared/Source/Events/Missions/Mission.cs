@@ -9,7 +9,25 @@ namespace Barotrauma
     {
         public readonly MissionPrefab Prefab;
         protected bool completed;
-                
+        protected int state;
+        public int State
+        {
+            get { return state; }
+            protected set
+            {
+                if (state != value)
+                {
+                    state = value;
+#if SERVER
+                    GameMain.Server?.UpdateMissionState(state);
+#endif
+                    ShowMessage(State);
+                }
+            }
+        }
+
+        protected bool IsClient => GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient;
+
         public readonly List<string> Headers;
         public readonly List<string> Messages;
         
@@ -107,17 +125,13 @@ namespace Barotrauma
         public static Mission LoadRandom(Location[] locations, MTRandom rand, bool requireCorrectLocationType, MissionType missionType, bool isSinglePlayer = false)
         {
             List<MissionPrefab> allowedMissions = new List<MissionPrefab>();
-            if (missionType == MissionType.Random)
-            {
-                allowedMissions.AddRange(MissionPrefab.List);
-            }
-            else if (missionType == MissionType.None)
+            if (missionType == MissionType.None)
             {
                 return null;
             }
             else
             {
-                allowedMissions = MissionPrefab.List.FindAll(m => m.type == missionType);
+                allowedMissions.AddRange(MissionPrefab.List.Where(m => ((int)(missionType & m.type)) != 0));
             }
 
             allowedMissions.RemoveAll(m => isSinglePlayer ? m.MultiplayerOnly : m.SingleplayerOnly);            

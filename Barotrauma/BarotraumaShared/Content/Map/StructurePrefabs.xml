@@ -1575,61 +1575,61 @@
   <bunk name="Bunk" identifier="bunk" width="173" height="129">
     <sprite texture="Content/Map/structures2.png" sourcerect="0,129,173,129" depth="0.9" />
   </bunk>
-  <RuinWallHorizontal name="Ruin Wall Horizontal" identifier="RuinWallHorizontal" category="Alien" castshadow="true" width="256" height="80" resizehorizontal="true" body="true" health="200">
+  <RuinWallHorizontal name="Ruin Wall Horizontal" identifier="RuinWallHorizontal" category="Alien" castshadow="true" width="256" height="80" resizehorizontal="true" body="true" health="200" noaitarget="true">
     <sprite texture="Content/Map/AlienWallSet1.png" sourcerect="0,384,256,80" depth="0.06" />
   </RuinWallHorizontal>
-  <RuinWallVertical name="Ruin Wall Vertical" identifier="RuinWallVertical" category="Alien" castshadow="true" width="80" height="256" resizevertical="true" body="true" health="200">
+  <RuinWallVertical name="Ruin Wall Vertical" identifier="RuinWallVertical" category="Alien" castshadow="true" width="80" height="256" resizevertical="true" body="true" health="200" noaitarget="true">
     <sprite texture="Content/Map/AlienWallSet1.png" sourcerect="128,0,80,256" depth="0.061" />
   </RuinWallVertical>
-  <RuinWallHeavyHorizontal name="Ruin Wall Heavy Horizontal" identifier="RuinWallHeavyHorizontal" category="Alien" castshadow="true" width="128" height="128" resizehorizontal="true" body="true" health="10000">
+  <RuinWallHeavyHorizontal name="Ruin Wall Heavy Horizontal" identifier="RuinWallHeavyHorizontal" category="Alien" castshadow="true" width="128" height="128" resizehorizontal="true" body="true" health="10000" noaitarget="true">
     <sprite texture="Content/Map/AlienWallSet1.png" sourcerect="0,256,256,128" depth="0.06" />
   </RuinWallHeavyHorizontal>
-  <RuinWallHeavyVertical name="Ruin Wall Heavy Vertical" identifier="RuinWallHeavyVertical" category="Alien" castshadow="true" width="128" height="128" resizevertical="true" body="true" health="10000">
+  <RuinWallHeavyVertical name="Ruin Wall Heavy Vertical" identifier="RuinWallHeavyVertical" category="Alien" castshadow="true" width="128" height="128" resizevertical="true" body="true" health="10000" noaitarget="true">
     <sprite texture="Content/Map/AlienWallSet1.png" sourcerect="0,0,128,256" depth="0.061" />
   </RuinWallHeavyVertical>
-  <RuinWallHorizontalSmall name="Ruin Wall Small Horizontal" identifier="RuinWallHorizontalSmall" category="Alien" castshadow="true" width="256" height="48" resizehorizontal="true" body="true" health="100">
+  <RuinWallHorizontalSmall name="Ruin Wall Small Horizontal" identifier="RuinWallHorizontalSmall" category="Alien" castshadow="true" width="256" height="48" resizehorizontal="true" body="true" health="100" noaitarget="true">
     <sprite texture="Content/Map/AlienWallSet1.png" sourcerect="0,464,256,48" depth="0.062" />
   </RuinWallHorizontalSmall>
-  <RuinWallVerticalSmall name="Ruin Wall Small Vertical" identifier="RuinWallVerticalSmall" category="Alien" castshadow="true" width="48" height="256" resizevertical="true" body="true" health="100">
+  <RuinWallVerticalSmall name="Ruin Wall Small Vertical" identifier="RuinWallVerticalSmall" category="Alien" castshadow="true" width="48" height="256" resizevertical="true" body="true" health="100" noaitarget="true">
     <sprite texture="Content/Map/AlienWallSet1.png" sourcerect="202,0,54,256" depth="0.063" />
   </RuinWallVerticalSmall>
-  <RuinBack1 name="Ruin BackWall 1" identifier="RuinBack1" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
+  <RuinBack1 name="Ruin BackWall 1" identifier="RuinBack1" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true" noaitarget="true">
     <sprite texture="Content/Map/AlienBackground1.png" sourcerect="0,0,512,512" depth="0.98" premultiplyalpha="false" />
   </RuinBack1>
-  <RuinBack2 name="Ruin BackWall 2" identifier="RuinBack2" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
+  <RuinBack2 name="Ruin BackWall 2" identifier="RuinBack2" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true" noaitarget="true">
     <sprite texture="Content/Map/AlienBackground1.png" sourcerect="512,0,512,512" depth="0.981" premultiplyalpha="false" />
   </RuinBack2>
-  <RuinBack3 name="Ruin BackWall 3" identifier="RuinBack3" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
+  <RuinBack3 name="Ruin BackWall 3" identifier="RuinBack3" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true" noaitarget="true">
     <sprite texture="Content/Map/AlienBackground1.png" sourcerect="0,512,512,512" depth="0.98" premultiplyalpha="false" />
   </RuinBack3>
-  <RuinBack4 name="Ruin BackWall 4" identifier="RuinBack4" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
+  <RuinBack4 name="Ruin BackWall 4" identifier="RuinBack4" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true" noaitarget="true">
     <sprite texture="Content/Map/AlienBackground1.png" sourcerect="512,512,512,512" depth="0.98" premultiplyalpha="false" />
   </RuinBack4>
-  <RuinBack5 name="Ruin BackWall 5" identifier="RuinBack5" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
+  <RuinBack5 name="Ruin BackWall 5" identifier="RuinBack5" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true" noaitarget="true">
     <sprite texture="Content/Map/AlienBackground2.png" sourcerect="0,0,512,512" depth="0.98" premultiplyalpha="false" />
   </RuinBack5>
-  <RuinBack6 name="Ruin BackWall 6" identifier="RuinBack6" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
+  <RuinBack6 name="Ruin BackWall 6" identifier="RuinBack6" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true" noaitarget="true">
     <sprite texture="Content/Map/AlienBackground2.png" sourcerect="512,0,512,512" depth="0.98" premultiplyalpha="false" />
   </RuinBack6>
   <RuinBlock name="Ruin Prop Block" identifier="RuinBlock" category="Alien" allowattachitems="true" width="514" height="296">
     <sprite texture="Content/Map/ruins.png" sourcerect="0,513,514,296" depth="0.98" />
   </RuinBlock>
-  <RuinFractalBall name="Ruin Prop Fractalball" identifier="RuinFractalBall" category="Alien" allowattachitems="true" width="512" height="512">
+  <RuinFractalBall name="Ruin Prop Fractalball" identifier="RuinFractalBall" category="Alien" allowattachitems="true" width="512" height="512" noaitarget="true">
     <sprite texture="Content/Map/AlienRuins.png" sourcerect="1024,512,512,512" depth="0.971" />
   </RuinFractalBall>
-  <RuinClaw name="Ruin Prop Claw" identifier="RuinClaw" category="Alien" allowattachitems="true" width="126" height="270">
+  <RuinClaw name="Ruin Prop Claw" identifier="RuinClaw" category="Alien" allowattachitems="true" width="126" height="270" noaitarget="true">
     <sprite texture="Content/Map/ruins.png" sourcerect="512,517,126,270" depth="0.97" />
   </RuinClaw>
-  <RuinDecal1 name="Ruin Decal 1" identifier="RuinDecal1" category="Alien" allowattachitems="true" width="256" height="256">
+  <RuinDecal1 name="Ruin Decal 1" identifier="RuinDecal1" category="Alien" allowattachitems="true" width="256" height="256" noaitarget="true">
     <sprite texture="Content/Map/AlienDecals1.png" sourcerect="0,0,256,256" depth="0.97" />
   </RuinDecal1>
-  <RuinDecal2 name="Ruin Decal 2" identifier="RuinDecal2" category="Alien" allowattachitems="true" width="256" height="256">
+  <RuinDecal2 name="Ruin Decal 2" identifier="RuinDecal2" category="Alien" allowattachitems="true" width="256" height="256" noaitarget="true">
     <sprite texture="Content/Map/AlienDecals1.png" sourcerect="256,0,256,256" depth="0.97" />
   </RuinDecal2>
-  <RuinDecal3 name="Ruin Decal 3" identifier="RuinDecal3" category="Alien" allowattachitems="true" width="256" height="256">
+  <RuinDecal3 name="Ruin Decal 3" identifier="RuinDecal3" category="Alien" allowattachitems="true" width="256" height="256" noaitarget="true">
     <sprite texture="Content/Map/AlienDecals1.png" sourcerect="0,256,256,256" depth="0.97" />
   </RuinDecal3>
-  <RuinDecal4 name="Ruin Decal 4" identifier="RuinDecal4" category="Alien" allowattachitems="true" width="256" height="256">
+  <RuinDecal4 name="Ruin Decal 4" identifier="RuinDecal4" category="Alien" allowattachitems="true" width="256" height="256" noaitarget="true">
     <sprite texture="Content/Map/AlienDecals1.png" sourcerect="256,256,256,256" depth="0.97" />
   </RuinDecal4>
   <!-- BACKGROUND ROCKS -->

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Items.Components;
 using Barotrauma.Extensions;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -175,7 +176,7 @@ namespace Barotrauma
             {
                 Sprite.Remove();
             }
-            Sprite = new Sprite(SourceElement, file: SpritePath);
+            Sprite = new Sprite(SourceElement, file: SpritePath, preMultiplyAlpha: true);
             Limb = (LimbType)Enum.Parse(typeof(LimbType), SourceElement.GetAttributeString("limb", "Head"), true);
             HideLimb = SourceElement.GetAttributeBool("hidelimb", false);
             HideOtherWearables = SourceElement.GetAttributeBool("hideotherwearables", false);
@@ -197,8 +198,9 @@ namespace Barotrauma
 
 namespace Barotrauma.Items.Components
 {
-    class Wearable : Pickable
+    class Wearable : Pickable, IServerSerializable
     {
+        private XElement[] wearableElements;
         private WearableSprite[] wearableSprites;
         private LimbType[] limbType;
         private Limb[] limb;
@@ -214,8 +216,43 @@ namespace Barotrauma.Items.Components
         public bool AutoEquipWhenFull
         {
             get { return autoEquipWhenFull; }
-        }               
-        
+        }
+
+        public readonly int Variants;
+
+        private int variant;
+        public int Variant
+        {
+            get { return variant; }
+            set
+            {
+#if SERVER
+                variant = value;
+
+                item.CreateServerEvent(this);
+#elif CLIENT
+                if (variant == value) { return; }
+
+                for (int i=0;i<wearableSprites.Length;i++)
+                {
+                    var subElement = wearableElements[i];
+
+                    wearableSprites[i]?.Sprite?.Remove();
+                    wearableSprites[i] = new WearableSprite(subElement, this, value);
+                }
+
+                if (picker != null)
+                {
+                    var character = picker;
+                    Unequip(picker);
+                    Equip(character);
+                }
+
+                variant = value;
+#endif
+            }
+        }
+
         public Wearable(Item item, XElement element) : base(item, element)
         {
             this.item = item;
@@ -223,9 +260,10 @@ namespace Barotrauma.Items.Components
             damageModifiers = new List<DamageModifier>();
             
             int spriteCount = element.Elements().Count(x => x.Name.ToString() == "sprite");
-            int variants = element.GetAttributeInt("variants", 0);
-            int variant = variants > 0 ? Rand.Range(1, variants + 1, Rand.RandSync.Server) : 1;
+            Variants = element.GetAttributeInt("variants", 0);
+            variant = Rand.Range(1, Variants + 1, Rand.RandSync.Server);
             wearableSprites = new WearableSprite[spriteCount];
+            wearableElements = new XElement[spriteCount];
             limbType    = new LimbType[spriteCount];
             limb        = new Limb[spriteCount];
             autoEquipWhenFull = element.GetAttributeBool("autoequipwhenfull", true);
@@ -245,6 +283,7 @@ namespace Barotrauma.Items.Components
                             subElement.GetAttributeString("limb", "Head"), true);
 
                         wearableSprites[i] = new WearableSprite(subElement, this, variant);
+                        wearableElements[i] = subElement;
 
                         foreach (XElement lightElement in subElement.Elements())
                         {
@@ -378,6 +417,20 @@ namespace Barotrauma.Items.Components
             {
                 if (wearableSprite != null && wearableSprite.Sprite != null) wearableSprite.Sprite.Remove();
             }
+        }
+
+        public override void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        {
+            msg.Write((byte)Variant);
+
+            base.ServerWrite(msg, c, extraData);
+        }
+
+        public override void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        {
+            Variant = (int)msg.ReadByte();
+
+            base.ClientRead(type, msg, sendingTime);
         }
 
     }

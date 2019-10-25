@@ -22,7 +22,7 @@ namespace Barotrauma.Items.Components
         [Serialize(Character.TeamType.None, false, description: "WiFi components can only communicate with components that have the same Team ID.")]
         public Character.TeamType TeamID { get; set; }
 
-        [Serialize(20000.0f, false, description: "How close the recipient has to be to receive a signal from this WiFi component.")]
+        [Editable, Serialize(20000.0f, false, description: "How close the recipient has to be to receive a signal from this WiFi component.")]
         public float Range
         {
             get { return range; }
@@ -174,8 +174,6 @@ namespace Barotrauma.Items.Components
 
         protected override void RemoveComponentSpecific()
         {
-            base.RemoveComponentSpecific();
-
             list.Remove(this);
         }
     }

@@ -46,12 +46,12 @@ namespace Barotrauma.Items.Components
 
             if (powerConsumption <= 0.0f)
             {
-                voltage = 1.0f;
+                Voltage = 1.0f;
             }
 
             if (item.CurrentHull == null) return;
 
-            if (voltage < minVoltage)
+            if (Voltage < MinVoltage)
             {
                 powerDownTimer += deltaTime;
                 return;
@@ -61,7 +61,7 @@ namespace Barotrauma.Items.Components
                 powerDownTimer = 0.0f;
             }
             
-            CurrFlow = Math.Min(voltage, 1.0f) * generatedAmount * 100.0f;
+            CurrFlow = Math.Min(Voltage, 1.0f) * generatedAmount * 100.0f;
 
             //less effective when in bad condition
             float conditionMult = item.Condition / item.MaxCondition;
@@ -71,8 +71,6 @@ namespace Barotrauma.Items.Components
             CurrFlow *= conditionMult * conditionMult;
 
             UpdateVents(CurrFlow);
-            
-            voltage -= deltaTime;
         }
 
         public override void UpdateBroken(float deltaTime, Camera cam)

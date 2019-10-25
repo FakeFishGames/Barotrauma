@@ -25,7 +25,7 @@
   <Inventory slots="Any, Any" accessiblewhenalive="False" commonness="50">
     <Item identifier="alienblood" />
   </Inventory>
-  <ai combatstrength="100" sight="0.75" hearing="1" fleehealththreshold="10" aggressiveboarding="True" aggressiongreed="10" aggressionhurt="100" attackonlywhenprovoked="False" retaliatewhentakingdamage="True">
+  <ai combatstrength="100" sight="0.75" hearing="1" fleehealththreshold="10" aggressiveboarding="True" aggressiongreed="10" aggressionhurt="100" attackonlywhenprovoked="False">
     <target tag="decoy" state="Attack" priority="150" />
     <target tag="stronger" state="Escape" priority="200" />
     <target tag="provocative" state="Attack" priority="90" />
@@ -35,10 +35,10 @@
     <target tag="wall" state="Attack" priority="40" />
     <target tag="nasonov" state="Attack" priority="70" />
     <target tag="sonar" state="Attack" priority="60" />
-    <target tag="door" state="Attack" priority="40" />
+    <target tag="door" state="Attack" priority="30" />
     <target tag="weaker" state="Attack" priority="30" />
     <target tag="room" state="Attack" priority="20" />
-    <SwarmBehavior mindistfromclosest="200" maxdistfromcenter="1000" cohesion="0.1" />
+    <SwarmBehavior mindistfromclosest="200" maxdistfromcenter="1000" cohesion="1" />
   </ai>
   <ai combatstrength="100" sight="0.75" hearing="1.0" fleehealththreshold="10" aggressiveboarding="true" aggressiongreed="10" aggressionhurt="100">
     <target tag="decoy" state="Attack" priority="150" />
@@ -50,7 +50,7 @@
     <target tag="wall" state="Attack" priority="40" />
     <target tag="nasonov" state="Attack" priority="70" />
     <target tag="sonar" state="Attack" priority="60" />
-    <target tag="door" state="Attack" priority="40" />
+    <target tag="door" state="Attack" priority="30" />
     <target tag="weaker" state="Attack" priority="30" />
     <target tag="room" state="Attack" priority="20" />
     <latchonto attachtowalls="true" attachtosub="true" mindeattachspeed="3.0" maxdeattachspeed="10.0" damageondetach="1000" detachstun="5.0" attachlimb="Head" localattachpos="40,10" attachlimbrotation="100" />

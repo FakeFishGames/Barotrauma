@@ -54,7 +54,7 @@ namespace Barotrauma.Items.Components
         //float = strength of the disruption, between 0-1
         List<Pair<Vector2, float>> disruptedDirections = new List<Pair<Vector2, float>>();
         
-        private static Color[] blipColorGradient =
+        private static readonly Color[] blipColorGradient =
         {
             Color.TransparentBlack,
             new Color(0, 50, 160),
@@ -162,9 +162,9 @@ namespace Barotrauma.Items.Components
             signalWarningText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), paddedControlContainer.RectTransform), "", Color.Orange, textAlignment: Alignment.Center);
 
             GUIRadioButtonGroup sonarMode = new GUIRadioButtonGroup();
-            sonarMode.AddRadioButton(Mode.Active, activeTickBox);
-            sonarMode.AddRadioButton(Mode.Passive, passiveTickBox);
-            sonarMode.Selected = Mode.Passive;
+            sonarMode.AddRadioButton((int)Mode.Active, activeTickBox);
+            sonarMode.AddRadioButton((int)Mode.Passive, passiveTickBox);
+            sonarMode.Selected = (int)Mode.Passive;
             
             GuiFrame.CanBeFocused = false;
 
@@ -226,6 +226,7 @@ namespace Barotrauma.Items.Components
 
         public override void OnItemLoaded()
         {
+            base.OnItemLoaded();
             zoomSlider.BarScroll = MathUtils.InverseLerp(MinZoom, MaxZoom, zoom);
             //make the sonarView customcomponent render the steering view so it gets drawn in front of the sonar
             item.GetComponent<Steering>()?.AttachToSonarHUD(sonarView);
@@ -675,14 +676,14 @@ namespace Barotrauma.Items.Components
             }
             else if (startOutside)
             {
-                if (MathUtils.GetLineCircleIntersections(Vector2.Zero, DisplayRadius, end, start, true, out Vector2? intersection1, out Vector2? intersection2) == 1)
+                if (MathUtils.GetLineCircleIntersections(Vector2.Zero, DisplayRadius, end, start, true, out Vector2? intersection1, out _) == 1)
                 {
                     DrawLineSprite(spriteBatch, center + intersection1.Value, center + end, color, width: width);
                 }
             }
             else if (endOutside)
             {
-                if (MathUtils.GetLineCircleIntersections(Vector2.Zero, DisplayRadius, start, end, true, out Vector2? intersection1, out Vector2? intersection2) == 1)
+                if (MathUtils.GetLineCircleIntersections(Vector2.Zero, DisplayRadius, start, end, true, out Vector2? intersection1, out _) == 1)
                 {
                     DrawLineSprite(spriteBatch, center + start, center + intersection1.Value, color, width: width);
                 }
@@ -750,7 +751,7 @@ namespace Barotrauma.Items.Components
                 {
                     size.Y = 0.0f;
                 }
-                GUI.DrawLine(spriteBatch, center + offset - size, center + offset + size, Color.LightGreen, width: (int)(zoom * 2.5f));
+                GUI.DrawLine(spriteBatch, center + offset - size, center + offset + size, Color.LightGreen * signalStrength, width: (int)(zoom * 2.5f));
             }
         }
 
@@ -768,8 +769,6 @@ namespace Barotrauma.Items.Components
             Vector2 sourcePortPos = new Vector2(sourcePortDiff.X, -sourcePortDiff.Y);
             Vector2 targetPortDiff = (steering.DockingTarget.Item.WorldPosition - transducerCenter) * scale;
             Vector2 targetPortPos = new Vector2(targetPortDiff.X, -targetPortDiff.Y);
-
-            Vector2 midPos = (sourcePortPos + targetPortPos) / 2.0f;
 
             System.Diagnostics.Debug.Assert(steering.ActiveDockingSource.IsHorizontal == steering.DockingTarget.IsHorizontal);
             Vector2 diff = steering.DockingTarget.Item.WorldPosition - steering.ActiveDockingSource.Item.WorldPosition;
@@ -851,7 +850,6 @@ namespace Barotrauma.Items.Components
         private void UpdateDisruptions(Vector2 pingSource, float worldPingRadius, float worldPrevPingRadius)
         {
             float worldPingRadiusSqr = worldPingRadius * worldPingRadius;
-            float worldPrevPingRadiusSqr = worldPrevPingRadius * worldPrevPingRadius;
 
             disruptedDirections.Clear();
             if (Level.Loaded == null) { return; }

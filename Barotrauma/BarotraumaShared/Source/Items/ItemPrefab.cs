@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
 using System.Linq;
+using Barotrauma.Items.Components;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -150,6 +152,11 @@ namespace Barotrauma
         /// </summary>
         public readonly string OriginalName;
 
+        /// <summary>
+        /// Is this prefab overriding a prefab in another content package
+        /// </summary>
+        public bool IsOverride;
+
         public string ConfigFile
         {
             get { return configFile; }
@@ -243,6 +250,27 @@ namespace Barotrauma
         }
 
         [Serialize(false, false)]
+        public bool DamagedByExplosions
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(false, false)]
+        public bool DamagedByProjectiles
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(false, false)]
+        public bool DamagedByMeleeWeapons
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(false, false)]
         public bool FireProof
         {
             get;
@@ -303,6 +331,17 @@ namespace Barotrauma
         {
             get;
             private set;
+        }
+
+        private HashSet<string> preferredContainers = new HashSet<string>();
+        [Serialize("", true, description: "Define containers (by identifiers or tags) that this item should be placed in. These are preferences, which are not enforced.")]
+        public string PreferredContainers
+        {
+            get { return string.Join(",", preferredContainers); }
+            set
+            {
+                StringFormatter.ParseCommaSeparatedStringToCollection(value, preferredContainers);
+            }
         }
 
         /// <summary>
@@ -428,7 +467,10 @@ namespace Barotrauma
                                 var itemElement = element.GetChildElement("item");
                                 if (itemElement != null)
                                 {
-                                    new ItemPrefab(itemElement, filePath, true);
+                                    new ItemPrefab(itemElement, filePath, true)
+                                    {
+                                        IsOverride = true
+                                    };
                                 }
                                 else
                                 {
@@ -447,7 +489,10 @@ namespace Barotrauma
                         {
                             foreach (var element in items.Elements())
                             {
-                                new ItemPrefab(element, filePath, true);
+                                new ItemPrefab(element, filePath, true)
+                                {
+                                    IsOverride = true
+                                };
                             }
                         }
                         foreach (var element in rootElement.GetChildElements("item"))
@@ -783,9 +828,24 @@ namespace Barotrauma
             }
             return prefab;
         }
+
         public IEnumerable<PriceInfo> GetPrices()
         {
             return prices?.Values;
+        }
+
+        public bool IsContainerPreferred(ItemContainer itemContainer, out bool isPreferencesDefined)
+        {
+            isPreferencesDefined = preferredContainers.Any();
+            if (!isPreferencesDefined) { return true; }
+            return preferredContainers.Any(id => itemContainer.Item.Prefab.Identifier == id || itemContainer.Item.HasTag(id));
+        }
+
+        public bool IsContainerPreferred(string[] identifiersOrTags, out bool isPreferencesDefined)
+        {
+            isPreferencesDefined = preferredContainers.Any();
+            if (!isPreferencesDefined) { return true; }
+            return preferredContainers.Any(id => preferredContainers.Any(p => p == id));
         }
     }
 }

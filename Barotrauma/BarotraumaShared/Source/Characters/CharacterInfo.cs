@@ -170,6 +170,8 @@ namespace Barotrauma
             }
         }
 
+        public bool OmitJobInPortraitClothing;
+
         private Sprite portrait;
         public Sprite Portrait
         {
@@ -223,7 +225,7 @@ namespace Barotrauma
             {
                 if (attachmentSprites == null)
                 {
-                    LoadAttachmentSprites();
+                    LoadAttachmentSprites(OmitJobInPortraitClothing);
                 }
                 return attachmentSprites;
             }
@@ -350,7 +352,7 @@ namespace Barotrauma
         public bool IsAttachmentsLoaded => HairIndex > -1 && BeardIndex > -1 && MoustacheIndex > -1 && FaceAttachmentIndex > -1;
 
         // Used for creating the data
-        public CharacterInfo(string speciesName, string name = "", JobPrefab jobPrefab = null, string ragdollFileName = null)
+        public CharacterInfo(string speciesName, string name = "", JobPrefab jobPrefab = null, string ragdollFileName = null, int variant = 0)
         {
             if (speciesName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
             {
@@ -372,7 +374,7 @@ namespace Barotrauma
             Head.race = GetRandomRace();
             CalculateHeadSpriteRange();
             Head.HeadSpriteId = GetRandomHeadID();
-            Job = (jobPrefab == null) ? Job.Random(Rand.RandSync.Server) : new Job(jobPrefab);
+            Job = (jobPrefab == null) ? Job.Random(Rand.RandSync.Server) : new Job(jobPrefab, variant);
             if (!string.IsNullOrEmpty(name))
             {
                 Name = name;
@@ -743,7 +745,7 @@ namespace Barotrauma
             }
         }
 
-        partial void LoadAttachmentSprites();
+        partial void LoadAttachmentSprites(bool omitJob);
         
         // TODO: change the formula so that it's not linear and so that it takes into account the usefulness of the skill 
         // -> give a weight to each skill, because some are much more valuable than others?

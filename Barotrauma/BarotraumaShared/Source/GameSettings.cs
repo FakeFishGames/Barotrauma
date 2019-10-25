@@ -51,6 +51,8 @@ namespace Barotrauma
         public bool VoipAttenuationEnabled { get; set; }
         public bool UseDirectionalVoiceChat { get; set; }
 
+        public IList<string> CaptureDeviceNames;
+
         public enum VoiceMode
         {
             Disabled,
@@ -69,7 +71,7 @@ namespace Barotrauma
 
         private LosMode losMode;
 
-        public List<string> jobPreferences;
+        public List<Pair<string, int>> jobPreferences;
 
         private bool useSteamMatchmaking;
         private bool requireSteamAuthentication;
@@ -119,7 +121,7 @@ namespace Barotrauma
             }
         }
 
-        public List<string> JobPreferences
+        public List<Pair<string, int>> JobPreferences
         {
             get { return jobPreferences; }
             set { jobPreferences = value; }
@@ -232,6 +234,7 @@ namespace Barotrauma
             if (!SelectedContentPackages.Contains(contentPackage))
             {
                 SelectedContentPackages.Add(contentPackage);
+                contentPackage.NeedsRestart |= contentPackage.HasMultiplayerIncompatibleContent;
                 ContentPackage.SortContentPackages();
             }
         }
@@ -241,6 +244,7 @@ namespace Barotrauma
             if (SelectedContentPackages.Contains(contentPackage))
             {
                 SelectedContentPackages.Remove(contentPackage);
+                contentPackage.NeedsRestart |= contentPackage.HasMultiplayerIncompatibleContent;
                 ContentPackage.SortContentPackages();
             }
         }
@@ -442,11 +446,7 @@ namespace Barotrauma
                 GraphicsHeight = 768;
                 MasterServerUrl = "";
                 SelectContentPackage(ContentPackage.List.Any() ? ContentPackage.List[0] : new ContentPackage(""));
-                jobPreferences = new List<string>();
-                foreach (string job in JobPrefab.List.Keys)
-                {
-                    jobPreferences.Add(job);
-                }
+                jobPreferences = new List<Pair<string, int>>();
                 return;
             }
 
@@ -570,9 +570,12 @@ namespace Barotrauma
 
             var gameplay = new XElement("gameplay");
             var jobPreferences = new XElement("jobpreferences");
-            foreach (string jobName in JobPreferences)
+            foreach (Pair<string, int> job in JobPreferences)
             {
-                jobPreferences.Add(new XElement("job", new XAttribute("identifier", jobName)));
+                XElement jobElement = new XElement("job");
+                jobElement.Add(new XAttribute("identifier", job.First));
+                jobElement.Add(new XAttribute("variant", job.Second));
+                jobPreferences.Add(jobElement);
             }
             gameplay.Add(jobPreferences);
             doc.Root.Add(gameplay);
@@ -687,11 +690,23 @@ namespace Barotrauma
                 }
                 else if (!matchingContentPackage.IsCompatible())
                 {
+                    DebugConsole.NewMessage(
+                        $"Content package \"{matchingContentPackage.Name}\" is not compatible with this version of Barotrauma (game version: {GameMain.Version}, content package version: {matchingContentPackage.GameVersion})",
+                        Color.Red);
                     incompatiblePackages.Add(matchingContentPackage);
                 }
                 else if (!matchingContentPackage.CheckValidity(out List<string> errorMessages))
                 {
+                    DebugConsole.NewMessage(
+                        $"Content package \"{matchingContentPackage.Name}\" is invalid: " + string.Join(", ", errorMessages),
+                        Color.Red);
                     invalidPackages.Add(matchingContentPackage);
+                    //never consider the vanilla content package invalid
+                    //(otherwise a player might brick the game by, for example, deleting vanilla content files)
+                    if (matchingContentPackage == GameMain.VanillaContent)
+                    {
+                        SelectedContentPackages.Add(matchingContentPackage);
+                    }
                 }
                 else
                 {
@@ -878,9 +893,12 @@ namespace Barotrauma
 
             var gameplay = new XElement("gameplay");
             var jobPreferences = new XElement("jobpreferences");
-            foreach (string jobName in JobPreferences)
+            foreach (Pair<string, int> job in JobPreferences)
             {
-                jobPreferences.Add(new XElement("job", new XAttribute("identifier", jobName)));
+                XElement jobElement = new XElement("job");
+                jobElement.Add(new XAttribute("identifier", job.First));
+                jobElement.Add(new XAttribute("variant", job.Second));
+                jobPreferences.Add(jobElement);
             }
             gameplay.Add(jobPreferences);
             doc.Root.Add(gameplay);
@@ -960,14 +978,19 @@ namespace Barotrauma
             CampaignDisclaimerShown = doc.Root.GetAttributeBool("campaigndisclaimershown", CampaignDisclaimerShown);
             EditorDisclaimerShown = doc.Root.GetAttributeBool("editordisclaimershown", EditorDisclaimerShown);
             XElement gameplayElement = doc.Root.Element("gameplay");
+            jobPreferences = new List<Pair<string, int>>();
             if (gameplayElement != null)
             {
-                jobPreferences = new List<string>();
-                foreach (XElement ele in gameplayElement.Element("jobpreferences").Elements("job"))
+                var preferencesElement = gameplayElement.Element("jobpreferences");
+                if (preferencesElement != null)
                 {
-                    string jobIdentifier = ele.GetAttributeString("identifier", "");
-                    if (string.IsNullOrEmpty(jobIdentifier)) continue;
-                    jobPreferences.Add(jobIdentifier);
+                    foreach (XElement ele in preferencesElement.Elements("job"))
+                    {
+                        string jobIdentifier = ele.GetAttributeString("identifier", "");
+                        int outfitVariant = ele.GetAttributeInt("variant", 1);
+                        if (string.IsNullOrEmpty(jobIdentifier)) continue;
+                        jobPreferences.Add(new Pair<string, int>(jobIdentifier, outfitVariant));
+                    }
                 }
             }
 

@@ -58,6 +58,8 @@
   <Character file="Content/Characters/Fractalguardian2/Fractalguardian2.xml" />
   <Character file="Content/Characters/Hammerhead/Hammerhead.xml" />
   <Character file="Content/Characters/Hammerheadgold/Hammerheadgold.xml" />
+  <Character file="Content/Characters/Hammerheadmatriarch/Hammerheadmatriarch.xml" />
+  <Character file="Content/Characters/Hammerheadspawn/Hammerheadspawn.xml" />
   <Character file="Content/Characters/Human/Human.xml" />
   <Character file="Content/Characters/Husk/Husk.xml" />
   <Character file="Content/Characters/Humanhusk/Humanhusk.xml" />
@@ -81,9 +83,10 @@
   <Submarine file="Submarines/Selkie.sub" />
   <Submarine file="Submarines/Bunyip.sub" />
   <Submarine file="Submarines/Humpback.sub" />
+  <Submarine file="Submarines/Kastrull.sub" />
+  <Submarine file="Submarines/KastrullDrone.sub" />
   <Submarine file="Submarines/Dugong.sub" />
   <Submarine file="Submarines/Venture.sub" />
-  <Submarine file="Submarines/Berilia.sub" />
   <Submarine file="Submarines/Remora.sub" />
   <Submarine file="Submarines/RemoraDrone.sub" />
   <Text file="Content/Texts/EnglishVanilla.xml" />

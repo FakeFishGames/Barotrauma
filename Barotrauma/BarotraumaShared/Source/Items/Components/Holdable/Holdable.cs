@@ -191,9 +191,16 @@ namespace Barotrauma.Items.Components
             }    
         }
 
-        public override void Load(XElement componentElement)
+        public override void Load(XElement componentElement, bool usePrefabValues)
         {
-            base.Load(componentElement);
+            base.Load(componentElement, usePrefabValues);
+
+            if (usePrefabValues)
+            {
+                //this needs to be loaded regardless
+                Attached = componentElement.GetAttributeBool("attached", attached);
+            }
+
             if (attachable)
             {
                 prevMsg = DisplayMsg;

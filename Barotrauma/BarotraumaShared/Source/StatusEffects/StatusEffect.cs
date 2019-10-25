@@ -87,6 +87,27 @@ namespace Barotrauma
             }
         }
 
+        class CharacterSpawnInfo : ISerializableEntity
+        {
+            public string Name => $"Character Spawn Info ({SpeciesName})";
+            public Dictionary<string, SerializableProperty> SerializableProperties { get; set; }
+
+            [Serialize("", false)]
+            public string SpeciesName { get; private set; }
+            [Serialize(1, false)]
+            public int Count { get; private set; }
+            [Serialize(0f, false)]
+            public float Spread { get; private set; }
+
+            public CharacterSpawnInfo(XElement element, string parentDebugName)
+            {
+                SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+                if (string.IsNullOrEmpty(SpeciesName))
+                {
+                    DebugConsole.ThrowError($"Invalid character spawn ({Name}) in StatusEffect \"{parentDebugName}\" - identifier not found in the element \"{element.ToString()}\"");
+                }
+            }
+        }
 
         private TargetType targetTypes;
         protected HashSet<string> targetIdentifiers;
@@ -106,6 +127,9 @@ namespace Barotrauma
         private HashSet<string> tags;
         
         private readonly float duration;
+        private readonly float lifeTime;
+        private float lifeTimer;
+
         public static readonly List<DurationListElement> DurationList = new List<DurationListElement>();
 
         public bool CheckConditionalAlways; //Always do the conditional checks for the duration/delay. If false, only check conditional on apply.
@@ -114,18 +138,23 @@ namespace Barotrauma
 
         private readonly int useItemCount;
         
-        private readonly bool removeItem;
+        private readonly bool removeItem, removeCharacter;
 
         public readonly ActionType type = ActionType.OnActive;
 
-        private Explosion explosion;
+        private readonly Explosion explosion;
 
         private List<ItemSpawnInfo> spawnItems;
+        private List<CharacterSpawnInfo> spawnCharacters;
 
         private Character user;
 
         public readonly float FireSize;
+
+        public readonly LimbType targetLimb;
         
+        public readonly float SeverLimbsProbability;
+
         public HashSet<string> TargetIdentifiers
         {
             get { return targetIdentifiers; }
@@ -178,11 +207,17 @@ namespace Barotrauma
         {
             requiredItems = new List<RelatedItem>();
             spawnItems = new List<ItemSpawnInfo>();
+            spawnCharacters = new List<CharacterSpawnInfo>();
             Afflictions = new List<Affliction>();
             ReduceAffliction = new List<Pair<string, float>>();
             tags = new HashSet<string>(element.GetAttributeString("tags", "").Split(','));
 
             Range = element.GetAttributeFloat("range", 0.0f);
+            string targetLimbName = element.GetAttributeString("targetlimb", null);
+            if (targetLimbName != null)
+            {
+                Enum.TryParse(targetLimbName, out targetLimb);
+            }
 
             IEnumerable<XAttribute> attributes = element.Attributes();
             List<XAttribute> propertyAttributes = new List<XAttribute>();
@@ -219,6 +254,10 @@ namespace Barotrauma
                     case "setvalue":
                         setValue = attribute.GetAttributeBool(false);
                         break;
+                    case "severlimbs":
+                    case "severlimbsprobability":
+                        SeverLimbsProbability = MathHelper.Clamp(attribute.GetAttributeFloat(0.0f), 0.0f, 1.0f);
+                        break;
                     case "targetnames":
                     case "targets":
                     case "targetidentifiers":
@@ -235,6 +274,10 @@ namespace Barotrauma
                         break;
                     case "stackable":
                         Stackable = attribute.GetAttributeBool(true);
+                        break;
+                    case "lifetime":
+                        lifeTime = attribute.GetAttributeFloat(0);
+                        lifeTimer = lifeTime;
                         break;
                     case "checkconditionalalways":
                         CheckConditionalAlways = attribute.GetAttributeBool(false);
@@ -276,7 +319,7 @@ namespace Barotrauma
                         explosion = new Explosion(subElement, parentDebugName);
                         break;
                     case "fire":
-                        FireSize = subElement.GetAttributeFloat("size",10.0f);
+                        FireSize = subElement.GetAttributeFloat("size", 10.0f);
                         break;
                     case "use":
                     case "useitem":
@@ -285,6 +328,9 @@ namespace Barotrauma
                     case "remove":
                     case "removeitem":
                         removeItem = true;
+                        break;
+                    case "removecharacter":
+                        removeCharacter = true;
                         break;
                     case "requireditem":
                     case "requireditems":
@@ -359,7 +405,11 @@ namespace Barotrauma
                         break;
                     case "spawnitem":
                         var newSpawnItem = new ItemSpawnInfo(subElement, parentDebugName);
-                        if (newSpawnItem.ItemPrefab != null) spawnItems.Add(newSpawnItem);
+                        if (newSpawnItem.ItemPrefab != null) { spawnItems.Add(newSpawnItem); }
+                        break;
+                    case "spawncharacter":
+                        var newSpawnCharacter = new CharacterSpawnInfo(subElement, parentDebugName);
+                        if (!string.IsNullOrWhiteSpace(newSpawnCharacter.SpeciesName)) { spawnCharacters.Add(newSpawnCharacter); }
                         break;
                 }
             }
@@ -427,8 +477,8 @@ namespace Barotrauma
 
         public virtual bool HasRequiredConditions(List<ISerializableEntity> targets)
         {
-            if (!propertyConditionals.Any()) return true;
-            if (requiredItems.All(ri => ri.MatchOnEmpty) && targets.Count == 0) return true;
+            if (!propertyConditionals.Any()) { return true; }
+            if (requiredItems.Any() && requiredItems.All(ri => ri.MatchOnEmpty) && targets.Count == 0) { return true; }
             switch (conditionalComparison)
             {
                 case PropertyConditional.Comparison.Or:
@@ -474,20 +524,24 @@ namespace Barotrauma
 
             if (entity is Item item)
             {
+                if (targetIdentifiers.Contains("item")) return true;
                 if (item.HasTag(targetIdentifiers)) return true;
                 if (targetIdentifiers.Any(id => id == item.Prefab.Identifier)) return true;
             }
             else if (entity is ItemComponent itemComponent)
             {
+                if (targetIdentifiers.Contains("itemcomponent")) return true;
                 if (itemComponent.Item.HasTag(targetIdentifiers)) return true;
                 if (targetIdentifiers.Any(id => id == itemComponent.Item.Prefab.Identifier)) return true;
             }
             else if (entity is Structure structure)
             {
+                if (targetIdentifiers.Contains("structure")) return true;
                 if (targetIdentifiers.Any(id => id == structure.Prefab.Identifier)) return true;
             }
             else if (entity is Character character)
             {
+                if (targetIdentifiers.Contains("character")) return true;
                 if (targetIdentifiers.Any(id => id == character.SpeciesName)) return true;
             }
 
@@ -503,7 +557,7 @@ namespace Barotrauma
             }
         }
 
-        public virtual void Apply(ActionType type, float deltaTime, Entity entity, ISerializableEntity target)
+        public virtual void Apply(ActionType type, float deltaTime, Entity entity, ISerializableEntity target, Vector2? worldPosition = null)
         {
             if (this.type != type || !HasRequiredItems(entity)) return;
 
@@ -525,11 +579,11 @@ namespace Barotrauma
 
             if (!HasRequiredConditions(targets)) return;
 
-            Apply(deltaTime, entity, targets);
+            Apply(deltaTime, entity, targets, worldPosition);
         }
 
         protected readonly List<ISerializableEntity> currentTargets = new List<ISerializableEntity>();
-        public virtual void Apply(ActionType type, float deltaTime, Entity entity, IEnumerable<ISerializableEntity> targets)
+        public virtual void Apply(ActionType type, float deltaTime, Entity entity, IEnumerable<ISerializableEntity> targets, Vector2? worldPosition = null)
         {
             if (this.type != type) return;
 
@@ -560,11 +614,17 @@ namespace Barotrauma
                 }
             }
 
-            Apply(deltaTime, entity, currentTargets);
+            Apply(deltaTime, entity, currentTargets, worldPosition);
         }
 
-        protected void Apply(float deltaTime, Entity entity, List<ISerializableEntity> targets)
+        protected void Apply(float deltaTime, Entity entity, List<ISerializableEntity> targets, Vector2? worldPosition = null)
         {
+            if (lifeTime > 0)
+            {
+                lifeTimer -= deltaTime;
+                if (lifeTimer <= 0) { return; }
+            }
+
             Hull hull = null;
             if (entity is Character)
             {
@@ -575,9 +635,22 @@ namespace Barotrauma
                 hull = ((Item)entity).CurrentHull;
             }
 
+            Vector2 position = worldPosition ?? entity.WorldPosition;
+            if (targetLimb != LimbType.None)
+            {
+                if (entity is Character c)
+                {
+                    Limb limb = c.AnimController.GetLimb(targetLimb);
+                    if (limb != null)
+                    {
+                        position = limb.WorldPosition;
+                    }
+                }
+            }
+
             foreach (ISerializableEntity serializableEntity in targets)
             {
-                if (!(serializableEntity is Item item)) continue;
+                if (!(serializableEntity is Item item)) { continue; }
 
                 Character targetCharacter = targets.FirstOrDefault(t => t is Character character && !character.Removed) as Character;
                 if (targetCharacter == null)
@@ -596,9 +669,16 @@ namespace Barotrauma
 
             if (removeItem)
             {
-                foreach (Item item in targets.Where(t => t is Item).Cast<Item>())
+                foreach (var target in targets)
                 {
-                    Entity.Spawner?.AddToRemoveQueue(item);
+                    if (target is Item item) { Entity.Spawner?.AddToRemoveQueue(item); } 
+                }
+            }
+            if (removeCharacter)
+            {
+                foreach (var target in targets)
+                {
+                    if (target is Character character) { Entity.Spawner?.AddToRemoveQueue(character); }
                 }
             }
 
@@ -633,7 +713,10 @@ namespace Barotrauma
                 }                
             }
 
-            if (explosion != null && entity != null) { explosion.Explode(entity.WorldPosition, damageSource: entity, attacker: user); }
+            if (explosion != null && entity != null)
+            {
+                explosion.Explode(position, damageSource: entity, attacker: user);
+            }
 
             foreach (ISerializableEntity target in targets)
             {
@@ -648,7 +731,8 @@ namespace Barotrauma
                         character.LastDamageSource = entity;
                         foreach (Limb limb in character.AnimController.Limbs)
                         {
-                            limb.character.DamageLimb(entity.WorldPosition, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source);
+                            limb.character.DamageLimb(position, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source);
+                            limb.character.TrySeverLimbJoints(limb, SeverLimbsProbability);
                             //only apply non-limb-specific afflictions to the first limb
                             if (!affliction.Prefab.LimbSpecific) { break; }
                         }
@@ -656,7 +740,8 @@ namespace Barotrauma
                     else if (target is Limb limb)
                     {
                         if (limb.character.Removed) { continue; }
-                        limb.character.DamageLimb(entity.WorldPosition, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source);
+                        limb.character.DamageLimb(position, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source);
+                        limb.character.TrySeverLimbJoints(limb, SeverLimbsProbability);
                     }
                 }
 
@@ -682,25 +767,40 @@ namespace Barotrauma
                         GameMain.Server.KarmaManager.OnCharacterHealthChanged(targetCharacter, user, prevVitality - targetCharacter.Vitality);
 #endif
                     }
-
                 }
             }
 
             if (FireSize > 0.0f && entity != null)
             {
-                var fire = new FireSource(entity.WorldPosition, hull);
+                var fire = new FireSource(position, hull);
                 fire.Size = new Vector2(FireSize, fire.Size.Y);
             }
             
             bool isNotClient = GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient;
-            if (isNotClient && entity != null && Entity.Spawner != null) //clients are not allowed to spawn items
+            if (isNotClient && entity != null && Entity.Spawner != null) //clients are not allowed to spawn entities
             {
+                foreach (CharacterSpawnInfo characterSpawnInfo in spawnCharacters)
+                {
+                    var characters = new List<Character>();
+                    for (int i = 0; i < characterSpawnInfo.Count; i++)
+                    {
+                        Entity.Spawner.AddToSpawnQueue(characterSpawnInfo.SpeciesName, position + Rand.Vector(characterSpawnInfo.Spread, Rand.RandSync.Server), 
+                            onSpawn: newCharacter =>
+                        {
+                            characters.Add(newCharacter);
+                            if (characters.Count == characterSpawnInfo.Count)
+                            {
+                                SwarmBehavior.CreateSwarm(characters.Cast<AICharacter>());
+                            }
+                        });
+                    }
+                }
                 foreach (ItemSpawnInfo itemSpawnInfo in spawnItems)
                 {
                     switch (itemSpawnInfo.SpawnPosition)
                     {
                         case ItemSpawnInfo.SpawnPositionType.This:
-                            Entity.Spawner.AddToSpawnQueue(itemSpawnInfo.ItemPrefab, entity.WorldPosition);
+                            Entity.Spawner.AddToSpawnQueue(itemSpawnInfo.ItemPrefab, position);
                             break;
                         case ItemSpawnInfo.SpawnPositionType.ThisInventory:
                             { 
@@ -749,10 +849,10 @@ namespace Barotrauma
                 }
             }
 
-            ApplyProjSpecific(deltaTime, entity, targets, hull);
+            ApplyProjSpecific(deltaTime, entity, targets, hull, position);
         }
 
-        partial void ApplyProjSpecific(float deltaTime, Entity entity, List<ISerializableEntity> targets, Hull currentHull);
+        partial void ApplyProjSpecific(float deltaTime, Entity entity, List<ISerializableEntity> targets, Hull currentHull, Vector2 worldPosition);
 
         private void ApplyToProperty(ISerializableEntity target, SerializableProperty property, object value, float deltaTime)
         {

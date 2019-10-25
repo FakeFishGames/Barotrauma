@@ -342,7 +342,7 @@ namespace Barotrauma.Networking
                     if (!Client.IsValidName(name, serverSettings))
                     {
                         if (OwnerConnection != null ||
-                            !IPAddress.IsLoopback(pendingClient.Connection.RemoteEndPoint.Address.MapToIPv4()) &&
+                            !IPAddress.IsLoopback(pendingClient.Connection.RemoteEndPoint.Address.MapToIPv4NoThrow()) &&
                             ownerKey == null || ownKey == 0 && ownKey != ownerKey)
                         {
                             RemovePendingClient(pendingClient, DisconnectReason.InvalidName, "The name \"" + name + "\" is invalid");
@@ -519,7 +519,7 @@ namespace Barotrauma.Networking
                 pendingClients.Remove(pendingClient);
 
                 if (OwnerConnection == null &&
-                    IPAddress.IsLoopback(pendingClient.Connection.RemoteEndPoint.Address.MapToIPv4()) &&
+                    IPAddress.IsLoopback(pendingClient.Connection.RemoteEndPoint.Address.MapToIPv4NoThrow()) &&
                     ownerKey != null && pendingClient.OwnerKey != 0 && pendingClient.OwnerKey == ownerKey)
                 {
                     ownerKey = null;

@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -52,6 +53,8 @@ namespace Barotrauma
 
         public GUIButton ToggleButton { get; private set; }
 
+        private GUIButton showNewMessagesButton;
+
         public ChatBox(GUIComponent parent, bool isSinglePlayer)
         {
             this.IsSinglePlayer = isSinglePlayer;
@@ -65,8 +68,9 @@ namespace Barotrauma
 
             int toggleButtonWidth = (int)(30 * GUI.Scale);
             GUIFrame = new GUIFrame(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ChatBoxArea, parent.RectTransform), style: null);
-            var chatBoxHolder = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.9f), GUIFrame.RectTransform), style: "ChatBox");
+            var chatBoxHolder = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.875f), GUIFrame.RectTransform), style: "ChatBox");
             chatBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.95f), chatBoxHolder.RectTransform, Anchor.CenterRight), style: null);
+
             ToggleButton = new GUIButton(new RectTransform(new Point(toggleButtonWidth, HUDLayoutSettings.ChatBoxArea.Height), parent.RectTransform),
                 style: "UIToggleButton");
 
@@ -76,7 +80,7 @@ namespace Barotrauma
                 return true;
             };
 
-            InputBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.1f), GUIFrame.RectTransform, Anchor.BottomCenter),
+            InputBox = new GUITextBox(new RectTransform(new Vector2(0.925f, 0.125f), GUIFrame.RectTransform, Anchor.BottomLeft),
                 style: "ChatTextBox")
             {
                 Font = GUI.SmallFont,
@@ -84,9 +88,25 @@ namespace Barotrauma
             };
             InputBox.OnDeselected += (gui, Keys) =>
             {
-                gui.Text = "";
+                //gui.Text = "";
             };
-            
+
+            var chatSendButton = new GUIButton(new RectTransform(new Vector2(0.075f, 0.125f), GUIFrame.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.0f, -0.01f) }, ">");
+            chatSendButton.OnClicked += (GUIButton btn, object userdata) =>
+            {
+                InputBox.OnEnterPressed(InputBox, InputBox.Text);
+                return true;
+            };
+
+            showNewMessagesButton = new GUIButton(new RectTransform(new Vector2(1f, 0.125f), GUIFrame.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0.0f, -0.125f) }, TextManager.Get("chat.shownewmessages"));
+            showNewMessagesButton.OnClicked += (GUIButton btn, object userdata) =>
+            {
+                chatBox.ScrollBar.BarScrollValue = 1f;
+                showNewMessagesButton.Visible = false;
+                return true;
+            };
+
+            showNewMessagesButton.Visible = false;
             ToggleOpen = GameMain.Config.ChatOpen;
         }
 
@@ -133,7 +153,7 @@ namespace Barotrauma
 
         public void AddMessage(ChatMessage message)
         {
-            while (chatBox.Content.CountChildren > 20)
+            while (chatBox.Content.CountChildren > 60)
             {
                 chatBox.RemoveChild(chatBox.Content.Children.First());
             }
@@ -155,11 +175,14 @@ namespace Barotrauma
             var msgHolder = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.0f), chatBox.Content.RectTransform, Anchor.TopCenter), style: null,
                     color: ((chatBox.Content.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f);
 
-            GUITextBlock senderNameBlock = null;
+            GUITextBlock senderNameBlock = new GUITextBlock(new RectTransform(new Vector2(0.98f, 0.0f), msgHolder.RectTransform) { AbsoluteOffset = new Point((int)(5 * GUI.Scale), 0) },
+                ChatMessage.GetTimeStamp(), textColor: Color.LightGray, font: GUI.SmallFont, textAlignment: Alignment.TopLeft, style: null)
+            {
+                CanBeFocused = true
+            };
             if (!string.IsNullOrEmpty(senderName))
             {
-                senderNameBlock = new GUITextBlock(new RectTransform(new Vector2(0.98f, 0.0f), msgHolder.RectTransform)
-                { AbsoluteOffset = new Point((int)(5 * GUI.Scale), 0) },
+                new GUITextBlock(new RectTransform(new Vector2(0.8f, 1.0f), senderNameBlock.RectTransform) { AbsoluteOffset = new Point((int)(senderNameBlock.TextSize.X), 0) },
                     senderName, textColor: senderColor, font: GUI.SmallFont, textAlignment: Alignment.TopLeft, style: null)
                 {
                     CanBeFocused = true
@@ -185,12 +208,25 @@ namespace Barotrauma
             {
                 msgHolder.Flash(Color.Yellow * 0.6f);
             }
-            //resize the holder to match the size of the message and add some spacing
-            msgHolder.RectTransform.Resize(new Point(msgHolder.Rect.Width, msgHolder.Children.Sum(c => c.Rect.Height) + (int)(10 * GUI.Scale)), resizeChildren: false);
+            msgHolder.RectTransform.SizeChanged += Recalculate;
+            Recalculate();
+            void Recalculate()
+            {
+                msgHolder.RectTransform.SizeChanged -= Recalculate;
+                //resize the holder to match the size of the message and add some spacing
+                msgHolder.Children.ForEach(c => (c as GUITextBlock)?.CalculateHeightFromText());
+                msgHolder.RectTransform.Resize(new Point(msgHolder.Rect.Width, msgHolder.Children.Sum(c => c.Rect.Height) + (int)(10 * GUI.Scale)), resizeChildren: false);
+                msgHolder.RectTransform.SizeChanged += Recalculate;
+            }
 
             CoroutineManager.StartCoroutine(UpdateMessageAnimation(msgHolder, 0.5f));
 
             chatBox.UpdateScrollBarSize();
+                       
+            if (chatBox.ScrollBar.Visible && chatBox.ScrollBar.BarScroll < 1f)
+            {
+                showNewMessagesButton.Visible = true;
+            }
 
             if (!ToggleOpen)
             {
@@ -275,6 +311,11 @@ namespace Barotrauma
                 SetUILayout();
                 screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
                 prevUIScale = GUI.Scale;
+            }
+
+            if (showNewMessagesButton.Visible && chatBox.ScrollBar.BarScroll == 1f)
+            {
+                showNewMessagesButton.Visible = false;
             }
 
             if (ToggleOpen || (InputBox != null && InputBox.Selected))

@@ -21,11 +21,11 @@ namespace Barotrauma
         private Video currSplashScreen;
         private DateTime videoStartTime;
 
-        private Queue<Pair<string, Point>> pendingSplashScreens = new Queue<Pair<string, Point>>();
+        private Queue<Triplet<string, Point, float>> pendingSplashScreens = new Queue<Triplet<string, Point, float>>();
         /// <summary>
-        /// Pair.first = filepath, Pair.second = resolution
+        /// Triplet.first = filepath, Triplet.second = resolution, Triplet.third = audio gain
         /// </summary>
-        public Queue<Pair<string, Point>> PendingSplashScreens
+        public Queue<Triplet<string, Point, float>> PendingSplashScreens
         {
             get
             {
@@ -149,7 +149,7 @@ namespace Barotrauma
                 TitlePosition = new Vector2(GameMain.GraphicsWidth * 0.5f, GameMain.GraphicsHeight * 0.45f);
             }
 
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, samplerState: GUI.SamplerState);
             graphics.Clear(Color.Black);
 
             spriteBatch.Draw(backgroundTexture, BackgroundPosition, null, Color.White * Math.Min(state / 5.0f, 1.0f), 0.0f,
@@ -168,7 +168,7 @@ namespace Barotrauma
                 WaterRenderer.Instance.RenderWater(spriteBatch, renderTarget, null);
             }
 
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, samplerState: GUI.SamplerState);
 
             titleSprite?.Draw(spriteBatch, TitlePosition, Color.White * Math.Min((state - 1.0f) / 5.0f, 1.0f), scale: titleScale);
 
@@ -280,6 +280,7 @@ namespace Barotrauma
                 try
                 {
                     currSplashScreen = new Video(graphics, GameMain.SoundManager, fileName, (uint)resolution.X, (uint)resolution.Y);
+                    currSplashScreen.AudioGain = newSplashScreen.Third;
                     videoStartTime = DateTime.Now;
                 }
                 catch (Exception e)

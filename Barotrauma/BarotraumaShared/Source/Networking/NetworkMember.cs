@@ -62,7 +62,8 @@ namespace Barotrauma.Networking
         STARTGAME,          //start a new round
         ENDGAME,
 
-        TRAITOR_MESSAGE
+        TRAITOR_MESSAGE,
+        MISSION
     }
     enum ServerNetObject
     {
@@ -152,12 +153,10 @@ namespace Barotrauma.Networking
         protected RespawnManager respawnManager;
 
         public bool ShowNetStats;
-
-#if DEBUG
+        
         public float SimulatedRandomLatency, SimulatedMinimumLatency;
         public float SimulatedLoss;
         public float SimulatedDuplicatesChance;
-#endif
 
         public int TickRate
         {
