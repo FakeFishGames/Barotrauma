@@ -169,7 +169,7 @@
     <Price locationtype="City" buyprice="400" />
     <Deconstruct time="10">
       <Item identifier="steel" copycondition="true" />
-      <Item identifier="uex" copycondition="true" />
+      <Item identifier="uex" copycondition="true" mincondition="0.1"/>
       <Item identifier="aluminium" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
