@@ -307,10 +307,9 @@ namespace Barotrauma
                 {
                     DebugConsole.ThrowError($"Error in '{filePath}': Cannot override all job prefabs, because many of them are required by the main game! Please try overriding jobs one by one.");
                 }
-                var elements = mainElement.Elements("Job");
-                if (elements == null) elements = mainElement.Elements("job");
-                foreach (XElement element in elements)
+                foreach (XElement element in mainElement.Elements())
                 {
+                    if (element.Name.ToString().ToLowerInvariant() == "nojob") { continue; }
                     if (element.IsOverride())
                     {
                         var job = new JobPrefab(element.FirstElement());
