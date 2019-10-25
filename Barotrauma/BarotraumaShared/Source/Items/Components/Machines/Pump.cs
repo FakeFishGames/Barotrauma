@@ -122,7 +122,7 @@ namespace Barotrauma.Items.Components
             {
                 if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempTarget))
                 {
-                    targetLevel = MathHelper.Clamp((tempTarget + 100.0f) / 2.0f, 0.0f, 100.0f);
+                    targetLevel = MathHelper.Clamp(tempTarget + 50.0f, 0.0f, 100.0f);
                     controlLockTimer = 0.1f;
                 }
             }

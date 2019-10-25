@@ -670,13 +670,15 @@ namespace Barotrauma
         {
             GameMain.Config.SaveNewPlayerConfig();
 
-            if (userData is Tab) SelectTab(button, (Tab)userData);
+            if (userData is Tab) { SelectTab(button, (Tab)userData); }
 
-            if (GameMain.GraphicsWidth != GameMain.Config.GraphicsWidth || GameMain.GraphicsHeight != GameMain.Config.GraphicsHeight)
+            if (GameMain.GraphicsWidth != GameMain.Config.GraphicsWidth || 
+                GameMain.GraphicsHeight != GameMain.Config.GraphicsHeight ||
+                ContentPackage.List.Any(cp => cp.NeedsRestart))
             {
                 new GUIMessageBox(
                     TextManager.Get("RestartRequiredLabel"),
-                    TextManager.Get("RestartRequiredText"));
+                    TextManager.Get("RestartRequiredGeneric"));
             }
 
             return true;
@@ -772,6 +774,10 @@ namespace Barotrauma
                 string filename = exeName;
 #if LINUX || OSX
                 filename = "./" + Path.GetFileNameWithoutExtension(exeName);
+#elif WINDOWS
+                DateTime startTime = DateTime.Now;
+                filename = "cmd.exe";
+                arguments = "/C start /b " + exeName + " " + arguments;
 #endif
                 var processInfo = new ProcessStartInfo
                 {
@@ -785,6 +791,10 @@ namespace Barotrauma
                 };
                 GameMain.ServerChildProcess = Process.Start(processInfo);
                 Thread.Sleep(1000); //wait until the server is ready before connecting
+
+#if WINDOWS
+                GameMain.ServerChildProcess = Process.GetProcessesByName(Path.GetFileNameWithoutExtension(exeName)).First(p => p.StartTime >= startTime);
+#endif
 
                 GameMain.Client = new GameClient(name, System.Net.IPAddress.Loopback.ToString(), Steam.SteamManager.GetSteamID(), name, ownerKey, true);
             }

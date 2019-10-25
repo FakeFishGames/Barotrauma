@@ -166,6 +166,8 @@ namespace Barotrauma
             get { return loadingScreenOpen; }
         }
 
+        private const GraphicsProfile GfxProfile = GraphicsProfile.Reach;
+
         public GameMain(string[] args)
         {
             Content.RootDirectory = "Content";
@@ -173,6 +175,7 @@ namespace Barotrauma
             GraphicsDeviceManager = new GraphicsDeviceManager(this);
 
             GraphicsDeviceManager.IsFullScreen = false;
+            GraphicsDeviceManager.GraphicsProfile = GfxProfile;
             GraphicsDeviceManager.ApplyChanges();
 
             Window.Title = "Barotrauma";
@@ -222,7 +225,7 @@ namespace Barotrauma
                     GraphicsHeight = Math.Min(GraphicsDevice.DisplayMode.Height, GraphicsHeight);
                     break;
             }
-            GraphicsDeviceManager.GraphicsProfile = GraphicsProfile.Reach;
+            GraphicsDeviceManager.GraphicsProfile = GfxProfile;
             GraphicsDeviceManager.PreferredBackBufferFormat = SurfaceFormat.Color;
             GraphicsDeviceManager.PreferMultiSampling = false;
             GraphicsDeviceManager.SynchronizeWithVerticalRetrace = Config.VSyncEnabled;
@@ -292,6 +295,8 @@ namespace Barotrauma
             GraphicsWidth = GraphicsDevice.Viewport.Width;
             GraphicsHeight = GraphicsDevice.Viewport.Height;
 
+            ApplyGraphicsSettings();
+
             ConvertUnits.SetDisplayUnitToSimUnitRatio(Physics.DisplayToSimRation);
 
             spriteBatch = new SpriteBatch(GraphicsDevice);
@@ -307,8 +312,6 @@ namespace Barotrauma
             };
 
             bool canLoadInSeparateThread = true;
-
-            ApplyGraphicsSettings();
 
             loadingCoroutine = CoroutineManager.StartCoroutine(Load(canLoadInSeparateThread), "Load", canLoadInSeparateThread);
         }

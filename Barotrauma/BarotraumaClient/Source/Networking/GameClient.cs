@@ -636,11 +636,14 @@ namespace Barotrauma.Networking
 
             if (IsServerOwner && connected && !connectCancelled)
             {
-                if (GameMain.ServerChildProcess?.HasExited ?? true)
+                if (GameMain.WindowActive)
                 {
-                    Disconnect();
-                    var msgBox = new GUIMessageBox(TextManager.Get("ConnectionLost"), TextManager.Get("ServerProcessClosed"));
-                    msgBox.Buttons[0].OnClicked += ReturnToPreviousMenu;
+                    if (GameMain.ServerChildProcess?.HasExited ?? true)
+                    {
+                        Disconnect();
+                        var msgBox = new GUIMessageBox(TextManager.Get("ConnectionLost"), TextManager.Get("ServerProcessClosed"));
+                        msgBox.Buttons[0].OnClicked += ReturnToPreviousMenu;
+                    }
                 }
             }
 
