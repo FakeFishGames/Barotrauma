@@ -23,7 +23,7 @@ namespace Barotrauma.Items.Components
     partial class Controller : ItemComponent, IServerSerializable
     {
         //where the limbs of the user should be positioned when using the controller
-        private List<LimbPos> limbPositions;
+        private readonly List<LimbPos> limbPositions;
 
         private Direction dir;
 
@@ -50,6 +50,8 @@ namespace Barotrauma.Items.Components
         {
             get { return user; }
         }
+
+        public IEnumerable<LimbPos> LimbPositions { get { return limbPositions; } }
 
         [Editable, Serialize(false, false, description: "When enabled, the item will continuously send out a 0/1 signal and interacting with it will flip the signal (making the item behave like a switch). When disabled, the item will simply send out 1 when interacted with.")]
         public bool IsToggle
@@ -146,7 +148,7 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, user);
 
-            if (limbPositions.Count == 0) return;
+            if (limbPositions.Count == 0) { return; }
 
             user.AnimController.Anim = AnimController.Animation.UsingConstruction;
 

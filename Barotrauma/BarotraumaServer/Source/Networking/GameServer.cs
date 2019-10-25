@@ -155,12 +155,12 @@ namespace Barotrauma.Networking
                 Log("Starting the server...", ServerLog.MessageType.ServerMessage);
                 if (!ownerSteamId.HasValue || ownerSteamId.Value == 0)
                 {
-                    Log("Using Lidgren networking", ServerLog.MessageType.ServerMessage);
+                    Log("Using Lidgren networking. Manual port forwarding may be required. If players cannot connect to the server, you may want to use the in-game hosting menu (which uses SteamP2P networking and does not require port forwarding).", ServerLog.MessageType.ServerMessage);
                     serverPeer = new LidgrenServerPeer(ownerKey, serverSettings);
                 }
                 else
                 {
-                    Log("Using SteamP2P", ServerLog.MessageType.ServerMessage);
+                    Log("Using SteamP2P networking.", ServerLog.MessageType.ServerMessage);
                     serverPeer = new SteamP2PServerPeer(ownerSteamId.Value, serverSettings);
                 }
 
@@ -1876,7 +1876,7 @@ namespace Barotrauma.Networking
 
                 //find the clients in this team
                 List<Client> teamClients = teamCount == 1 ?
-                    new List<Client>(connectedClients) : 
+                    new List<Client>(playingClients) : 
                     playingClients.FindAll(c => c.TeamID == teamID);
 
                 if (!teamClients.Any() && n > 0) { continue; }

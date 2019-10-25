@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Character speciesname="Legacytigerthresher" humanoid="false">
+
+  <ragdolls folder="default"/>
+  <animations folder="default"/>
+
+  <bloodemitter particle="blood" particleamount="10" scalemin="1" scalemax="2"/>
+  <bloodemitter particle="waterblood" particleamount="1" scalemin="1" scalemax="2"/>
+  <gibemitter particle="gib" particleamount="30" velocitymin="200" velocitymax="1500" anglemin="0" anglemax="360" scalemin="1" scalemax="2"/>
+  <gibemitter particle="heavygib" particleamount="15" velocitymin="50" velocitymax="1000" anglemin="0" anglemax="360" scalemin="1" scalemax="2"/>
+
+  <health
+    vitality="150"
+    doesbleed="true"/>
+
+  <sound file="Content/Characters/Legacytigerthresher/thresherattack1.ogg" state="Attack" />
+  <sound file="Content/Characters/Legacytigerthresher/thresheridle1.ogg" state="Idle" />
+  <sound file="Content/Characters/Legacytigerthresher/thresheridle2.ogg" state="Idle" />
+
+  <ai
+    combatstrength="400"
+    sight="1.0"
+    hearing="1.0">
+    <targetpriority tag="decoy" state="Attack" priority="600" />
+    <targetpriority tag="stronger" state="Escape" priority="100"/>
+    <targetpriority tag="human" state="Attack" priority="90"/>
+    <targetpriority tag="dead" state="Eat" priority="60"/>
+    <targetpriority tag="weaker" state="Attack" priority="50"/>
+    <targetpriority tag="nasonov" state="Attack" priority="50"/>
+    <targetpriority tag="sonar" state="Attack" priority="45"/>
+    <targetpriority tag="room" state="Attack" priority="40"/>
+  </ai>
+
+</Character>

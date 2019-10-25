@@ -49,6 +49,7 @@ namespace Barotrauma
 
         private static bool isOpen;
         public static bool IsOpen => isOpen;
+        public static bool Paused = false;
         
         private static GUITextBlock activeQuestionText;
         
@@ -1919,6 +1920,19 @@ namespace Barotrauma
                     GameAnalyticsManager.AddErrorEventOnce("DebugConsole.SpawnSubmarine:Error", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg + '\n' + e.Message + '\n' + e.StackTrace);
                 }
             }, isCheat: true));
+
+            commands.Add(new Command("pause", "Toggles the pause state when playing offline", (string[] args) =>
+            {
+                if (GameMain.NetworkMember == null)
+                {
+                    Paused = !Paused;
+                    DebugConsole.NewMessage("Game paused: " + Paused);
+                }
+                else
+                {
+                    DebugConsole.NewMessage("Cannot pause when a multiplayer session is active.");
+                }
+            }));
         }
 
         private static void ReloadWearables(Character character, int variant = 0)

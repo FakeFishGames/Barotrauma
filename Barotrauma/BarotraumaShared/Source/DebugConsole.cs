@@ -618,7 +618,7 @@ namespace Barotrauma
             {
                 return new string[][]
                 {
-        Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
                 };
             }, isCheat: true));
 
@@ -626,6 +626,9 @@ namespace Barotrauma
             {
                 Character.Controlled = null;
                 GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
+#if CLIENT
+                GameMain.Client?.SendConsoleCommand("freecam");
+#endif
             }, isCheat: true));
 
             commands.Add(new Command("eventmanager", "eventmanager: Toggle event manager on/off. No new random events are created when the event manager is disabled.", (string[] args) =>
@@ -1338,9 +1341,12 @@ namespace Barotrauma
             WayPoint spawnPoint = null;
 
             string characterLowerCase = args[0].ToLowerInvariant();
-            JobPrefab.List.TryGetValue(characterLowerCase, out JobPrefab job);
+            if (!JobPrefab.List.TryGetValue(characterLowerCase, out JobPrefab job))
+            {
+                job = JobPrefab.List.Values.FirstOrDefault(jp => jp.Name?.ToLowerInvariant() == characterLowerCase);
+            }
             bool human = job != null || characterLowerCase == Character.HumanSpeciesName;
-
+            
             if (args.Length > 1)
             {
                 switch (args[1].ToLowerInvariant())
@@ -1410,23 +1416,10 @@ namespace Barotrauma
             }
             else
             {
-                IEnumerable<string> characterFiles = GameMain.Instance.GetFilesOfType(ContentType.Character);
-                foreach (string characterFile in characterFiles)
+                if (Character.GetConfigFilePath(args[0]) != null)
                 {
-                    if (Path.GetFileNameWithoutExtension(characterFile).ToLowerInvariant() == args[0].ToLowerInvariant())
-                    {
-                        Character.Create(characterFile, spawnPosition, ToolBox.RandomSeed(8));
-                        return;
-                    }
+                    Character.Create(args[0], spawnPosition, ToolBox.RandomSeed(8));
                 }
-
-                errorMsg = "No character matching the name \"" + args[0] + "\" found in the selected content package.";
-
-                //attempt to open the config from the default path (the file may still be present even if it isn't included in the content package)
-                string configPath = "Content/Characters/"
-                    + args[0].First().ToString().ToUpper() + args[0].Substring(1)
-                    + "/" + args[0].ToLower() + ".xml";
-                Character.Create(configPath, spawnPosition, ToolBox.RandomSeed(8));
             }
         }
 
@@ -1437,7 +1430,23 @@ namespace Barotrauma
 
             Vector2? spawnPos = null;
             Inventory spawnInventory = null;
-            
+
+            string itemName = args[0].ToLowerInvariant();
+            if (!(MapEntityPrefab.Find(itemName, showErrorMessages: false) is ItemPrefab itemPrefab))
+            {
+                errorMsg = "Item \"" + itemName + "\" not found!";
+                var matching = MapEntityPrefab.List.Find(me => me.Name.ToLowerInvariant().StartsWith(itemName) && me is ItemPrefab);
+                if (matching != null)
+                {
+                    errorMsg += $" Did you mean \"{matching.Name}\"?";
+                    if (matching.Name.Contains(" "))
+                    {
+                        errorMsg += $" Please note that you should surround multi-word names with quotation marks (e.q. spawnitem \"{matching.Name}\")";
+                    }
+                }
+                return;
+            }
+
             if (args.Length > 1)
             {
                 switch (args.Last())
@@ -1461,14 +1470,7 @@ namespace Barotrauma
                         break;
                 }
             }
-
-            string itemName = args[0].ToLowerInvariant();
-            if (!(MapEntityPrefab.Find(itemName) is ItemPrefab itemPrefab))
-            {
-                errorMsg = "Item \"" + itemName + "\" not found!";
-                return;
-            }
-
+            
             if ((spawnPos == null || spawnPos == Vector2.Zero) && spawnInventory == null)
             {
                 var wp = WayPoint.GetRandom(SpawnType.Human, null, Submarine.MainSub);

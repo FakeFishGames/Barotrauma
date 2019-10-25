@@ -198,7 +198,7 @@ namespace Barotrauma.Items.Components
                     {
                         if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
                         {
-                            deteriorationTimer -= deltaTime;
+                            deteriorationTimer -= deltaTime * GetDeteriorationDelayMultiplier();
 #if SERVER
                             if (deteriorationTimer <= 0.0f) { item.CreateServerEvent(this); }
 #endif
@@ -354,6 +354,26 @@ namespace Barotrauma.Items.Components
             }
 
             return DeteriorateAlways;
+        }
+
+        private float GetDeteriorationDelayMultiplier()
+        {
+            foreach (ItemComponent ic in item.Components)
+            {
+                if (ic is Engine engine)
+                {
+                    return Math.Abs(engine.Force) / 100.0f;
+                }
+                else if (ic is Pump pump)
+                {
+                    return Math.Abs(pump.FlowPercentage) / 100.0f;
+                }
+                else if (ic is Reactor reactor)
+                {
+                    return (reactor.FissionRate + reactor.TurbineOutput) / 200.0f;
+                }
+            }
+            return 1.0f;
         }
 
         private void UpdateFixAnimation(Character character)

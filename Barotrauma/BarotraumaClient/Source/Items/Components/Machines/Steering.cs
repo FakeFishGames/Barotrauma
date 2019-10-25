@@ -47,6 +47,10 @@ namespace Barotrauma.Items.Components
         private Sprite maintainPosIndicator, maintainPosOriginIndicator;
         private Sprite steeringIndicator;
 
+        private List<DockingPort> connectedPorts = new List<DockingPort>();
+        private float checkConnectedPortsTimer;
+        private const float CheckConnectedPortsInterval = 1.0f;
+
         private Vector2 keyboardInput = Vector2.Zero;
         private float inputCumulation;
 
@@ -85,6 +89,19 @@ namespace Barotrauma.Items.Components
             get;
             set;
         } = true;
+
+        private float steerRadius;
+        public float? SteerRadius
+        {
+            get
+            {
+                return steerRadius;
+            }
+            set
+            {
+                steerRadius = value ?? (steerArea.Rect.Width / 2);
+            }
+        }
 
         public List<DockingPort> DockingSources = new List<DockingPort>();
         public DockingPort ActiveDockingSource, DockingTarget;
@@ -384,6 +401,8 @@ namespace Barotrauma.Items.Components
             statusContainer.RectTransform.AbsoluteOffset = new Point((int)(viewSize * 0.9f), 0);
             steerArea.RectTransform.NonScaledSize = new Point(viewSize);
             dockingContainer.RectTransform.AbsoluteOffset = new Point((int)(viewSize * 0.9f), 0);
+
+            steerRadius = steerArea.Rect.Width / 2;
         }
 
         private void FindConnectedDockingPort()
@@ -661,7 +680,7 @@ namespace Barotrauma.Items.Components
 
             pressureWarningText.Visible = item.Submarine != null && item.Submarine.AtDamageDepth && Timing.TotalTime % 1.0f < 0.5f;
 
-            if (Vector2.Distance(PlayerInput.MousePosition, steerArea.Rect.Center.ToVector2()) < steerArea.Rect.Width / 2)
+            if (Vector2.DistanceSquared(PlayerInput.MousePosition, steerArea.Rect.Center.ToVector2()) < steerRadius * steerRadius)
             {
                 if (PlayerInput.LeftButtonHeld())
                 {
@@ -735,10 +754,21 @@ namespace Barotrauma.Items.Components
             }
 
             if (!UseAutoDocking) { return; }
+
+            if (checkConnectedPortsTimer <= 0.0f)
+            {
+                Connection dockingConnection = item.Connections?.FirstOrDefault(c => c.Name == "toggle_docking");
+                if (dockingConnection != null)
+                {
+                    connectedPorts = item.GetConnectedComponentsRecursive<DockingPort>(dockingConnection);
+                }
+                checkConnectedPortsTimer = CheckConnectedPortsInterval;
+            }
             
             float closestDist = DockingAssistThreshold * DockingAssistThreshold;
             DockingModeEnabled = false;
-            foreach (DockingPort sourcePort in DockingPort.List)
+            
+            foreach (DockingPort sourcePort in connectedPorts)
             {
                 if (sourcePort.Docked || sourcePort.Item.Submarine == null) { continue; }
                 if (sourcePort.Item.Submarine != controlledSub) { continue; }

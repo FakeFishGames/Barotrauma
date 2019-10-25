@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Xml.Linq;
 
@@ -11,6 +12,8 @@ namespace Barotrauma
         public readonly Type EventType;
         
         public readonly string MusicType;
+
+        public float Commonness;
 
         public ScriptedEventPrefab(XElement element)
         {
@@ -30,6 +33,7 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError("Could not find an event class of the type \"" + ConfigElement.Name + "\".");
             }
+            Commonness = element.GetAttributeFloat("commonness", 1.0f);
         }
 
         public ScriptedEvent CreateInstance()

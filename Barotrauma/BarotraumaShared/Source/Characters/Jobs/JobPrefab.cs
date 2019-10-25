@@ -53,7 +53,9 @@ namespace Barotrauma
         public readonly List<string> ItemNames = new List<string>();
         public readonly List<SkillPrefab> Skills = new List<SkillPrefab>();
         public readonly List<AutonomousObjective> AutomaticOrders = new List<AutonomousObjective>();
-        
+        public readonly List<string> AppropriateOrders = new List<string>();
+
+
         [Serialize("1,1,1,1", false)]
         public Color UIColor
         {
@@ -169,6 +171,10 @@ namespace Barotrauma
                         break;
                     case "autonomousobjectives":
                         subElement.Elements().ForEach(order => AutomaticOrders.Add(new AutonomousObjective(order)));
+                        break;
+                    case "appropriateobjectives":
+                    case "appropriateorders":
+                        subElement.Elements().ForEach(order => AppropriateOrders.Add(order.GetAttributeString("identifier", "").ToLowerInvariant()));
                         break;
                 }
             }

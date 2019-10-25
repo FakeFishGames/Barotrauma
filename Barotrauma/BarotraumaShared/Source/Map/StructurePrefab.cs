@@ -102,6 +102,13 @@ namespace Barotrauma
             private set;
         }
 
+        [Serialize(45.0f, false)]
+        public float StairAngle
+        {
+            get;
+            private set;
+        }
+
         [Serialize(false, false)]
         public bool NoAITarget
         {

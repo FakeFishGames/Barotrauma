@@ -248,6 +248,7 @@ namespace Barotrauma
         private HashSet<string> selectedContentPackagePaths = new HashSet<string>();
 
         public string MasterServerUrl { get; set; }
+        public string RemoteContentUrl { get; set; }
         public bool AutoCheckUpdates { get; set; }
         public bool WasGameUpdated { get; set; }
 
@@ -454,6 +455,7 @@ namespace Barotrauma
             SetDefaultBindings(doc, legacy: false);
 
             MasterServerUrl = doc.Root.GetAttributeString("masterserverurl", MasterServerUrl);
+            RemoteContentUrl = doc.Root.GetAttributeString("remotecontenturl", RemoteContentUrl);
             WasGameUpdated = doc.Root.GetAttributeBool("wasgameupdated", WasGameUpdated);
             VerboseLogging = doc.Root.GetAttributeBool("verboselogging", VerboseLogging);
             SaveDebugConsoleLogs = doc.Root.GetAttributeBool("savedebugconsolelogs", SaveDebugConsoleLogs);
@@ -484,6 +486,7 @@ namespace Barotrauma
             doc.Root.Add(
                 new XAttribute("language", TextManager.Language),
                 new XAttribute("masterserverurl", MasterServerUrl),
+                new XAttribute("remotecontenturl", RemoteContentUrl),
                 new XAttribute("autocheckupdates", AutoCheckUpdates),
                 new XAttribute("musicvolume", musicVolume),
                 new XAttribute("soundvolume", soundVolume),
@@ -684,11 +687,23 @@ namespace Barotrauma
                 }
                 else if (!matchingContentPackage.IsCompatible())
                 {
+                    DebugConsole.NewMessage(
+                        $"Content package \"{matchingContentPackage.Name}\" is not compatible with this version of Barotrauma (game version: {GameMain.Version}, content package version: {matchingContentPackage.GameVersion})",
+                        Color.Red);
                     incompatiblePackages.Add(matchingContentPackage);
                 }
                 else if (!matchingContentPackage.CheckValidity(out List<string> errorMessages))
                 {
+                    DebugConsole.NewMessage(
+                        $"Content package \"{matchingContentPackage.Name}\" is invalid: " + string.Join(", ", errorMessages),
+                        Color.Red);
                     invalidPackages.Add(matchingContentPackage);
+                    //never consider the vanilla content package invalid
+                    //(otherwise a player might brick the game by, for example, deleting vanilla content files)
+                    if (matchingContentPackage == GameMain.VanillaContent)
+                    {
+                        SelectedContentPackages.Add(matchingContentPackage);
+                    }
                 }
                 else
                 {
@@ -861,7 +876,9 @@ namespace Barotrauma
             doc.Root.Add(keyMappingElement);
             for (int i = 0; i < keyMapping.Length; i++)
             {
-                if (keyMapping[i].MouseButton == null)
+                var key = keyMapping[i];
+                if (key == null) { continue; }
+                if (key.MouseButton == null)
                 {
                     keyMappingElement.Add(new XAttribute(((InputType)i).ToString(), keyMapping[i].Key));
                 }

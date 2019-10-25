@@ -613,8 +613,6 @@ namespace Barotrauma
                         break;
                     case "aitarget":
                         aiTarget = new AITarget(this, subElement);
-                        aiTarget.SoundRange = aiTarget.MinSoundRange;
-                        aiTarget.SightRange = aiTarget.MinSightRange;
                         break;
                     default:
                         ItemComponent ic = ItemComponent.Load(subElement, this, itemPrefab.ConfigFile);
@@ -1159,11 +1157,9 @@ namespace Barotrauma
         public override void Update(float deltaTime, Camera cam)
         {
             base.Update(deltaTime, cam);
-            //aitarget goes silent/invisible if the components don't keep it active
             if (aiTarget != null)
             {
-                aiTarget.SightRange -= deltaTime * (aiTarget.MaxSightRange / aiTarget.FadeOutTime);
-                aiTarget.SoundRange -= deltaTime * (aiTarget.MaxSoundRange / aiTarget.FadeOutTime);
+                aiTarget.Update(deltaTime);
             }
 
             bool broken = condition <= 0.0f;
@@ -2144,18 +2140,27 @@ namespace Barotrauma
                 }
             }
 
+            bool thisIsOverride = element.GetAttributeBool("isoverride", false);
+
+            //if we're overriding a non-overridden item in a sub/assembly xml or vice versa, 
+            //use the values from the prefab instead of loading them from the sub/assembly xml
+            bool usePrefabValues = thisIsOverride != prefab.IsOverride;
             List<ItemComponent> unloadedComponents = new List<ItemComponent>(item.components);
             foreach (XElement subElement in element.Elements())
             {
                 ItemComponent component = unloadedComponents.Find(x => x.Name == subElement.Name.ToString());
                 if (component == null) { continue; }
-
-                component.Load(subElement);
+                component.Load(subElement, usePrefabValues);
                 unloadedComponents.Remove(component);
             }
+            if (usePrefabValues)
+            {
+                //use prefab scale when overriding a non-overridden item or vice versa
+                item.Scale = prefab.ConfigElement.GetAttributeFloat(item.scale, "scale", "Scale");
+            }
 
-            if (element.GetAttributeBool("flippedx", false)) item.FlipX(false);
-            if (element.GetAttributeBool("flippedy", false)) item.FlipY(false);
+            if (element.GetAttributeBool("flippedx", false)) { item.FlipX(false); }
+            if (element.GetAttributeBool("flippedy", false)) { item.FlipY(false); }
 
             float condition = element.GetAttributeFloat("condition", item.MaxCondition);
             item.condition = MathHelper.Clamp(condition, 0, item.MaxCondition);
@@ -2185,8 +2190,9 @@ namespace Barotrauma
                 new XAttribute("identifier", Prefab.Identifier),
                 new XAttribute("ID", ID));
 
-            if (FlippedX) element.Add(new XAttribute("flippedx", true));
-            if (FlippedY) element.Add(new XAttribute("flippedy", true));
+            if (Prefab.IsOverride) { element.Add(new XAttribute("isoverride", "true")); }
+            if (FlippedX) { element.Add(new XAttribute("flippedx", true)); }
+            if (FlippedY) { element.Add(new XAttribute("flippedy", true)); }
 
             if (condition < Prefab.Health)
             {

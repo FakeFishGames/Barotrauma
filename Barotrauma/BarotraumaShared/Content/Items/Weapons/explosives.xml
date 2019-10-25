@@ -129,7 +129,7 @@
       </StatusEffect>
     </Throwable>
   </Item>
-  <Item name="Detonator" identifier="detonator" description="A device that detonates any contained explosive when receiving a signal." category="Equipment" Tags="smallitem" Scale="0.5" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="Detonator" identifier="detonator" description="A device that detonates any contained explosive when receiving a signal." category="Equipment" Tags="smallitem,detonator" Scale="0.5" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_metal_light" isshootable="true">
     <Upgrade gameversion="0.9.3.0" scale="0.5"/>
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="100" />
@@ -139,16 +139,16 @@
     <Sprite texture="weapons_new.png" depth="0.8" sourcerect="-1,385,41,21" origin="0.5,0.5" />
     <Body width="40" height="22" density="20" />
     <Holdable selectkey="Action" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
-      <RequiredItem identifier="wrench" type="Equipped" />
+      <RequiredItem items="wrench" type="Equipped" />
     </Holdable>
     <ItemContainer canbeselected="true" capacity="1" itempos="0,0" hideitems="false">
       <GuiFrame relativesize="0.13,0.18" anchor="Center" style="ItemUI" />
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,204,110,27" />
-      <Containable identifiers="explosive" />
+      <Containable items="explosive" />
     </ItemContainer>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,175" maxsize="480,210" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver" type="Equipped" />
+      <RequiredItem items="screwdriver" type="Equipped" />
       <input name="activate" displayname="connection.activate">
         <StatusEffect type="OnUse" target="Contained">
           <Use />

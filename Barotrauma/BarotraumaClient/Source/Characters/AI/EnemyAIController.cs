@@ -45,9 +45,6 @@ namespace Barotrauma
                 case AIState.Eat:
                     stateColor = Color.Brown;
                     break;
-                case AIState.GoTo:
-                    stateColor = Color.Magenta;
-                    break;
             }
             GUI.DrawString(spriteBatch, pos - Vector2.UnitY * 80.0f, State.ToString(), stateColor, Color.Black);
 

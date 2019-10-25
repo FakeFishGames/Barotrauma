@@ -788,13 +788,21 @@
 <missionheader0.killhammerhead>Cible éliminée</missionheader0.killhammerhead>
 <missionmessage0.killhammerhead>Le squale-marteau est mort. Quittez la grotte pour obtenir votre récompense.</missionmessage0.killhammerhead>
 <missionname.killcrawlerswarm1>Élimination de nuée</missionname.killcrawlerswarm1>
-<missiondescription.killcrawlerswarm1>Une petite nuée de [monster] terrorise les sous-marins entre les secteurs [location1] et [location2]. On offre une récompense de [reward] crédits à ceux qui parviendront à les neutraliser.</missiondescription.killcrawlerswarm1>
+
+<!--<missiondescription.killcrawlerswarm1>Une petite nuée de [monster] terrorise les sous-marins entre les secteurs [location1] et [location2]. On offre une récompense de [reward] crédits à ceux qui parviendront à les neutraliser.</missiondescription.killcrawlerswarm1>-->
+<!-- Temporary until plural monster names -->
+<missiondescription.killcrawlerswarm1>Une petite nuée de rampeurs terrorise les sous-marins entre les secteurs [location1] et [location2]. On offre une récompense de [reward] crédits à ceux qui parviendront à les neutraliser.</missiondescription.killcrawlerswarm1>
+
 <missionsonarlabel.killcrawlerswarm1>Nuée</missionsonarlabel.killcrawlerswarm1>
 <missionsuccess.killcrawlerswarm1>La nuée a été éliminée.</missionsuccess.killcrawlerswarm1>
 <missionheader0.killcrawlerswarm1>Cible éliminée</missionheader0.killcrawlerswarm1>
 <missionmessage0.killcrawlerswarm1>La nuée a été éliminée. Quittez la grotte pour obtenir votre récompense.</missionmessage0.killcrawlerswarm1>
 <missionname.killcrawlerswarm2>Élimination de nuée</missionname.killcrawlerswarm2>
-<missiondescription.killcrawlerswarm2>Une importante nuée de [monster] terrorise les sous-marins entre les secteurs [location1] et [location2]. On offre une récompense de [reward] crédits à ceux qui parviendront à les neutraliser.</missiondescription.killcrawlerswarm2>
+
+<!--<missiondescription.killcrawlerswarm2>Une importante nuée de [monster] terrorise les sous-marins entre les secteurs [location1] et [location2]. On offre une récompense de [reward] crédits à ceux qui parviendront à les neutraliser.</missiondescription.killcrawlerswarm2>-->
+<!-- Temporary until plural monster names -->
+<missiondescription.killcrawlerswarm2>Une importante nuée de rampeurs terrorise les sous-marins entre les secteurs [location1] et [location2]. On offre une récompense de [reward] crédits à ceux qui parviendront à les neutraliser.</missiondescription.killcrawlerswarm2>
+
 <missionsonarlabel.killcrawlerswarm2>Nuée</missionsonarlabel.killcrawlerswarm2>
 <missionsuccess.killcrawlerswarm2>La nuée a été éliminée.</missionsuccess.killcrawlerswarm2>
 <missionheader0.killcrawlerswarm2>Cible éliminée</missionheader0.killcrawlerswarm2>
@@ -2227,7 +2235,7 @@
 <!-- Room 3 -->
 <mechanic.welding>Fuites</mechanic.welding>
 <mechanic.weldingobjective>Réparer la fuite</mechanic.weldingobjective>
-<mechanic.weldingtext>Pour réparer les fuites de la coque, équipez-vous du chalumeau en double-cliquant dessus. Certains objets, comme le chalumeau, se manient à deux mains. Faites un double clic sur l'objet que vous utilisez pour le déséquiper ou le poser.\n\nUne fois le chalumeau équipé, maintenez {0} pour viser. En visant, maintenez {1} pour souder.</mechanic.weldingtext>
+<mechanic.weldingtext>Équipez-vous du chalumeau et du masque de plongée que vous avez trouvés dans le casier en double-cliquant dessus.\n\nLe chalumeau sert à réparer les fuites de la coque, et le masque de plongée permet de respirer sous l'eau durant un certain temps. \n\nCertains objets, comme le chalumeau, se manient à deux mains. Faites un double clic sur l'objet que vous utilisez pour le déséquiper ou le poser.\n\nUne fois le chalumeau équipé, maintenez {0} pour viser. En visant, maintenez {1} pour souder.</mechanic.weldingtext>
 <mechanic.drain>Pompes à eau</mechanic.drain>
 <mechanic.drainobjective>Allumer la pompe à proximité pour vider l'eau</mechanic.drainobjective>
 <mechanic.draintext>Quand le sous-marin est inondé, utilisez les pompes pour vider l'eau. Généralement, les pompes reçoivent des signaux des détecteurs d'eau ou des terminaux de navigation proches, mais certaines sont dotées de commandes manuelles. Cette pompe est programmée uniquement pour vider l'eau. Interagissez avec elle ({0}) et placez l'interrupteur sur ON pour l'allumer.</mechanic.draintext>
@@ -2238,7 +2246,7 @@
 <mechanic.deconstructtext>Le fabricateur est un appareil qui produit des objets utiles à partir de divers matériaux. Si vous manquez de matériaux de fabrication, vous pouvez décomposer des objets à l'aide du désassembleur. Faites glisser l'objet dans l'un des emplacements du haut et appuyez sur le bouton Désassembler.\n\nDans le cas présent, la fabrication d'un extincteur nécessite de l'aluminium et du sel. Le sel est immédiatement disponible, mais l'aluminium s'obtient en désassemblant des bouteilles d'oxygène.</mechanic.deconstructtext>
 <mechanic.fabricate>Fabrication, 2ème partie</mechanic.fabricate>
 <mechanic.fabricateobjective>Fabriquer un extincteur</mechanic.fabricateobjective>
-<mechanic.fabricatetext>Maintenant que vous avez tous les matériaux nécessaires, vous pouvez fabriquer un extincteur. Trouvez-le dans la liste, chargez les matériaux dans le fabricateur et appuyez sur le bouton pour lancer la production.\n\nVous pourrez ensuite récupérer l'objet fabriqué dans l'emplacement Production du fabricateur.</mechanic.fabricatetext>
+<mechanic.fabricatetext>Maintenant que vous avez tous les matériaux nécessaires, vous pouvez fabriquer un extincteur. Trouvez-le dans la liste, chargez les matériaux nécessaires dans le fabricateur et appuyez sur le bouton pour lancer la production.\n\nVous pourrez ensuite récupérer l'objet fabriqué dans l'emplacement Production du fabricateur. Comme l'extincteur s'utilise avec les deux mains, équipez-le en double-cliquant dessus.</mechanic.fabricatetext>
 
 <!-- Room 5 -->
 <mechanic.extinguisher>Incendies</mechanic.extinguisher>
@@ -2497,7 +2505,7 @@
 <dialognoleaks>Quelles fuites ?</dialognoleaks>
 
 <bugreportgithubform>Formulaire de problème GitHub</bugreportgithubform>
-<bugreportfeedbackform>Formulaire de feedback Barotrauma</bugreportfeedbackform>
+<bugreportfeedbackform>Aide et assistance technique</bugreportfeedbackform>
 <bugreportbutton>Signaler un bug</bugreportbutton>
 
 <voipcapturedevicenotfound>Impossible de démarrer la capture audio ; appareil de capture adéquat introuvable.</voipcapturedevicenotfound>
@@ -2579,7 +2587,7 @@
 <connection.waterdatain>entrée_données_eau</connection.waterdatain>
 <connection.oxygendatain>entrée_données_oxygène</connection.oxygendatain>
 
-<!-- *** New additions *** -->
+
 <itemmsgoxygenrefill>Insérer une bouteille d'oxygène pour la remplir</itemmsgoxygenrefill>
 <missionfailed>Échec de la mission</missionfailed>
 <label.highpressurewarning>AVERTISSEMENT : Haute pression</label.highpressurewarning>
@@ -2679,7 +2687,7 @@
 <traitorgoalkilleveryoneinfo>Tuez tous les membres de l'équipage.</traitorgoalkilleveryoneinfo>
 <traitorgoalfinditeminfo>Trouvez votre prochain objectif [identifier] dans [targethullname].</traitorgoalfinditeminfo>
 <traitorgoalcausereactormeltdown>Causez une fusion du réacteur.</traitorgoalcausereactormeltdown>
-<traitorgoaldestroyitems>Détruisez un minimum de [percentage] pour cent de tous les [tag] non inventoriés dans le sous-marin.</traitorgoaldestroyitems>
+<traitorgoaldestroyitems>Supprimez un minimum de [percentage] pour cent de tous les [tag] non inventoriés dans le sous-marin.</traitorgoaldestroyitems>
 <traitorgoalfloodpercentofsub>Inondez un minimum de [percentage] pour cent du sous-marin.</traitorgoalfloodpercentofsub>
 <traitorgoaljamsonarinfo>Dissimulez un brouilleur de sonar actif dans un endroit où l'on ne pourra pas le trouver pendant [duration] secondes.</traitorgoaljamsonarinfo>
 <traitorgoaljamsonarinfoalt>Brouillez le sonar du sous-marin pendant [duration] secondes.</traitorgoaljamsonarinfoalt>
@@ -2796,8 +2804,8 @@
 <label.engine>Moteur</label.engine>
 
 <!-- Karma system -->
-<karma.kickbanthreshold>Seuil d'exclusion</karma.kickbanthreshold>
-<karma.kickbanthresholdtooltip>Les joueurs dont le karma passe sous cette barre sont automatiquement exclus du serveur.</karma.kickbanthresholdtooltip>
+<karma.kickbanthreshold>Seuil d'exclusion/de bannissement</karma.kickbanthreshold>
+<karma.kickbanthresholdtooltip>Les joueurs dont le karma passe sous cette barre sont automatiquement rejetés et/ou bannis du serveur (selon les paramètres de rejet/bannissement ci-dessous).</karma.kickbanthresholdtooltip>
 <karma.karmadecay>Vitesse de diminution du karma</karma.karmadecay>
 <karma.karmadecaytooltip>Taux de diminution du karma par seconde lorsqu'il est supérieur au seuil de diminution.</karma.karmadecaytooltip>
 <karma.karmadecaythreshold>Seuil de diminution du karma</karma.karmadecaythreshold>
@@ -2891,6 +2899,79 @@
 <flood_2_objectivesuccessmessage3>Magnifique ! Et camarade, n'oubliez pas : il n'y a pas de mauvaises tactiques, que des mauvaises cibles !</flood_2_objectivesuccessmessage3>
 <flood_2_traitorobjectivestartmessage4>Vite, profitez de la confusion et achevez autant de porcs que possible !\n[traitorgoalinfos]</flood_2_traitorobjectivestartmessage4>
 <flood_2_objectivesuccessmessage4>Alors que vous les achevez, vous remarquez, non sans une certaine amertume, que votre transmetteur est désormais silencieux. Vos camarades vous ont laissé à la merci de Mère Europe.</flood_2_objectivesuccessmessage4>
+
+
+<!-- New Additions as of 13th of August -->
+<connection.batterychargestatusout>charge_out</connection.batterychargestatusout>
+<connection.batterychargepercentage>charge_%</connection.batterychargepercentage>
+<connection.batterysetrechargespeed>set_charge_rate</connection.batterysetrechargespeed>
+<connection.batteryrechargespeedout>charge_rate_out</connection.batteryrechargespeedout>
+<personalitytrait.professional>Professionnalisme</personalitytrait.professional>
+<personalitytrait.laid-back>Désinvolture</personalitytrait.laid-back>
+<personalitytrait.rude>Impolitesse</personalitytrait.rude>
+<personalitytrait.tough>Détermination</personalitytrait.tough>
+<personalitytrait.joker>Humour</personalitytrait.joker>
+<personalitytrait.brokenenglish>Langage sommaire</personalitytrait.brokenenglish>
+<personalitytrait.fearful>Crainte</personalitytrait.fearful>
+<personalitytrait.crazy>Folie</personalitytrait.crazy>
+<sabotagebutton>Sabotage</sabotagebutton>
+<sabotaging>Tentative de sabotage</sabotaging>
+<voipattenuation>Atténuation pour le chat vocal</voipattenuation>
+<voipattenuationtooltip>Réduction du volume du jeu quand les joueurs parlent.</voipattenuationtooltip>
+<roundsummaryroundhasended>La manche est finie.</roundsummaryroundhasended>
+<clientpermission.karmaimmunity>Immunité de karma</clientpermission.karmaimmunity>
+<karmakicked>Vous avez été exclu du serveur car votre karma est inférieur à [banthreshold].</karmakicked>
+<karma.kicksbeforeban>Nombre d'exclusions avant bannissement</karma.kicksbeforeban>
+<karma.kicksbeforebantooltip>Si le nombre d'exclusions causées par un mauvais karma atteint ce nombre, le joueur sera banni si son karma descend à nouveau en dessous du seuil d'exclusion/de bannissement. Si ce nombre est défini sur 0, les joueurs seront immédiatement bannis si leur karma est inférieur au seuil.</karma.kicksbeforebantooltip>
+<traitorgoalreachdistancefromsub>Éloignez-vous de [distance] par rapport au sous-marin.</traitorgoalreachdistancefromsub>
+<traitorgoalisoptionalinfotext>Facultatif : [infotext]</traitorgoalisoptionalinfotext>
+<traitorgoalwithtimelimitinfotext>[infotext] Accomplissez l'objectif en moins de [timelimit]</traitorgoalwithtimelimitinfotext>
+<traitorgoalwithdurationinfotext>[infotext] Maintenez l'objectif pendant [duration] secondes.</traitorgoalwithdurationinfotext>
+<traitorgoalwithcumulativedurationinfotext>[infotext] Maintenez l'objectif pendant [duration] secondes au total.</traitorgoalwithcumulativedurationinfotext>
+<traitorgoalwaitfortraitorsinfotext>Attendez que [remaining] sur [count] traîtres aient terminé leurs missions.</traitorgoalwaitfortraitorsinfotext>
+<failed>Échec</failed>
+<pausemenuquitverificationeditor>Voulez-vous vraiment retourner au menu principal ? Toute progression non sauvegardée sera perdue.</pausemenuquitverificationeditor>
+<mapentitycategory.decorative>Décoratif</mapentitycategory.decorative>
+<mapentitycategory.wall>Mur</mapentitycategory.wall>
+<karma.resetkarmabetweenrounds>Réinitialiser le karma entre les manches</karma.resetkarmabetweenrounds>
+<enablesplashscreen>Activer l'écran d'accueil</enablesplashscreen>
+<restartrequiredgeneric>Vous devez redémarrer le jeu pour que ces modifications s'appliquent.</restartrequiredgeneric>
+<invalidcontentpackage>Impossible de charger le Pack de contenu '[packagename]' </invalidcontentpackage>
+<xmlfileinvalid>Le ficher '[filepath]' n'est pas un fichier XML valide ([errormessage])</xmlfileinvalid>
+<roomname.airlockaccess>Accès au sas</roomname.airlockaccess>
+<roomname.gunnerycompartment>Compartiment d'artillerie</roomname.gunnerycompartment>
+<roomname.dronecontrol>Commandes de drone</roomname.dronecontrol>
+<roomname.drone>Drone</roomname.drone>
+<roomname.droneballast>Ballast de drone</roomname.droneballast>
+<subeditorlights>Lumières</subeditorlights>
+<subeditorshadowcastinglights>Lumières projetant une ombre</subeditorshadowcastinglights>
+<contentpackagemismatchwarninggeneric>Le sous-marin ne sera peut-être pas compatible avec les packs de contenu sélectionnés actuellement. Voulez-vous vraiment choisir ce sous-marin ?</contentpackagemismatchwarninggeneric>
+<label.activatedischargecoils>Bobine</label.activatedischargecoils>
+<label.lights1>Lumières 1</label.lights1>
+<label.lights2>Lumières 2</label.lights2>
+<label.lights3>Lumières 3</label.lights3>
+<label.lights4>Lumières 4</label.lights4>
+<label.lights5>Lumières 5</label.lights5>
+<label.pumps1>Pompes 1</label.pumps1>
+<label.pumps2>Pompes 2</label.pumps2>
+<label.dronecharge>Charge de drone</label.dronecharge>
+<label.meltdown>Fusion du cœur</label.meltdown>
+<campaignfiletransferinprogress>Téléchargement du fichier de la sauvegarde. Veuillez patienter.</campaignfiletransferinprogress>
+<openlinkinbrowserprompt>Souhaitez-vous ouvrir le lien [link] dans votre navigateur Internet ?</openlinkinbrowserprompt>
+<replacelostshuttles>Remplacer les navettes perdues</replacelostshuttles>
+<replaceshuttles>Remplacer</replaceshuttles>
+<replaceshuttledockingportoccupied>La navette perdue ne peut pas être remplacée car le port d'amarrage est en cours d'utilisation. Libérez le port d'amarrage avant de demander une nouvelle navette.</replaceshuttledockingportoccupied>
+<character.blackmoloch>Moloch noir</character.blackmoloch>
+<character.goldenhammerhead>Squale-marteau doré</character.goldenhammerhead>
+<character.hammerheadmatriarch>Matriarche squale-marteau</character.hammerheadmatriarch>
+<character.bonetigerthresher>Squale-tigre d'os</character.bonetigerthresher>
+
+<!-- Updated values as of 13th of August -->
+
+
+
+
+
 
 
 </infotexts>

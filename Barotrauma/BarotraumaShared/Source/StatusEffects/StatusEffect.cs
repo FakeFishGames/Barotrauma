@@ -126,6 +126,8 @@ namespace Barotrauma
 
         public readonly float FireSize;
         
+        public readonly float SeverLimbsProbability;
+
         public HashSet<string> TargetIdentifiers
         {
             get { return targetIdentifiers; }
@@ -198,6 +200,7 @@ namespace Barotrauma
                             DebugConsole.ThrowError("Invalid action type \"" + attribute.Value + "\" in StatusEffect (" + parentDebugName + ")");
                         }
                         break;
+                    case "targettype":
                     case "target":
                         string[] Flags = attribute.Value.Split(',');
                         foreach (string s in Flags)
@@ -218,10 +221,14 @@ namespace Barotrauma
                     case "setvalue":
                         setValue = attribute.GetAttributeBool(false);
                         break;
-                    case "targetnames":
-                        DebugConsole.ThrowError("Error in StatusEffect config (" + parentDebugName + ") - use identifiers or tags to define the targets instead of names.");
+                    case "severlimbs":
+                    case "severlimbsprobability":
+                        SeverLimbsProbability = MathHelper.Clamp(attribute.GetAttributeFloat(0.0f), 0.0f, 1.0f);
                         break;
+                    case "targetnames":
+                    case "targets":
                     case "targetidentifiers":
+                    case "targettags":
                         string[] identifiers = attribute.Value.Split(',');
                         targetIdentifiers = new HashSet<string>();
                         for (int i = 0; i < identifiers.Length; i++)
@@ -275,7 +282,7 @@ namespace Barotrauma
                         explosion = new Explosion(subElement, parentDebugName);
                         break;
                     case "fire":
-                        FireSize = subElement.GetAttributeFloat("size",10.0f);
+                        FireSize = subElement.GetAttributeFloat("size", 10.0f);
                         break;
                     case "use":
                     case "useitem":
@@ -473,20 +480,24 @@ namespace Barotrauma
 
             if (entity is Item item)
             {
+                if (targetIdentifiers.Contains("item")) return true;
                 if (item.HasTag(targetIdentifiers)) return true;
                 if (targetIdentifiers.Any(id => id == item.Prefab.Identifier)) return true;
             }
             else if (entity is ItemComponent itemComponent)
             {
+                if (targetIdentifiers.Contains("itemcomponent")) return true;
                 if (itemComponent.Item.HasTag(targetIdentifiers)) return true;
                 if (targetIdentifiers.Any(id => id == itemComponent.Item.Prefab.Identifier)) return true;
             }
             else if (entity is Structure structure)
             {
+                if (targetIdentifiers.Contains("structure")) return true;
                 if (targetIdentifiers.Any(id => id == structure.Prefab.Identifier)) return true;
             }
             else if (entity is Character character)
             {
+                if (targetIdentifiers.Contains("character")) return true;
                 if (targetIdentifiers.Any(id => id == character.SpeciesName)) return true;
             }
 
@@ -648,6 +659,7 @@ namespace Barotrauma
                         foreach (Limb limb in character.AnimController.Limbs)
                         {
                             limb.character.DamageLimb(entity.WorldPosition, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source);
+                            limb.character.TrySeverLimbJoints(limb, SeverLimbsProbability);
                             //only apply non-limb-specific afflictions to the first limb
                             if (!affliction.Prefab.LimbSpecific) { break; }
                         }
@@ -656,6 +668,7 @@ namespace Barotrauma
                     {
                         if (limb.character.Removed) { continue; }
                         limb.character.DamageLimb(entity.WorldPosition, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source);
+                        limb.character.TrySeverLimbJoints(limb, SeverLimbsProbability);
                     }
                 }
 

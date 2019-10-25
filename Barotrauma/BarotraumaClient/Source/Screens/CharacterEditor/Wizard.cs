@@ -37,7 +37,7 @@ namespace Barotrauma.CharacterEditor
             name = character.SpeciesName;
             isHumanoid = character.Humanoid;
             canEnterSubmarine = ragdoll.CanEnterSubmarine;
-            texturePath = ragdoll.Limbs.First().GetSprite().Texture;
+            texturePath = ragdoll.Texture;
         }
 
         public static Wizard instance;
@@ -354,7 +354,7 @@ namespace Barotrauma.CharacterEditor
                     }
                     if (IsCopy)
                     {
-                        SourceRagdoll.Limbs.ForEach(l => l.GetSprite().Texture = TexturePath);
+                        SourceRagdoll.Texture = TexturePath;
                         SourceRagdoll.CanEnterSubmarine = CanEnterSubmarine;
                         SourceRagdoll.Serialize();
                         Wizard.Instance.CreateCharacter(SourceRagdoll.MainElement, SourceCharacter.MainElement, SourceAnimations);
@@ -752,6 +752,7 @@ namespace Barotrauma.CharacterEditor
                     }
                     var mainElement = new XElement("Ragdoll",
                             new XAttribute("type", Name),
+                            new XAttribute("texture", TexturePath),
                             new XAttribute("canentersubmarine", CanEnterSubmarine),
                                 colliderElements,
                                 LimbXElements.Values,
@@ -977,7 +978,7 @@ namespace Barotrauma.CharacterEditor
                         new XAttribute("type", limbType.ToString()),
                         colliderAttributes,
                         new XElement("sprite",
-                            new XAttribute("texture", TexturePath),
+                            new XAttribute("texture", ""),
                             new XAttribute("sourcerect", $"{rectInputs[0].IntValue}, {rectInputs[1].IntValue}, {width}, {height}")),
                         new XAttribute("notes", null ?? string.Empty)
                     ));
@@ -1072,7 +1073,7 @@ namespace Barotrauma.CharacterEditor
                             new XAttribute("name", limbName),
                             new XAttribute("type", ParseLimbType(limbName).ToString()),
                             new XElement("sprite",
-                                new XAttribute("texture", TexturePath),
+                                new XAttribute("texture", ""),
                                 new XAttribute("sourcerect", $"{x}, {y}, {width}, {height}"))
                             ));
                         limbCallback?.Invoke(id, limbName, ParseLimbType(limbName), new Rectangle(x, y, width, height));

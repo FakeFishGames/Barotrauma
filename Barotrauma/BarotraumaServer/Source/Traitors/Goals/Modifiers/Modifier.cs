@@ -48,7 +48,7 @@ namespace Barotrauma
 
             public override bool IsCompleted => Goal.IsCompleted;
             public override bool IsStarted(Traitor traitor) => base.IsStarted(traitor) && Goal.IsStarted(traitor);
-            public override bool CanBeCompleted => base.CanBeCompleted && Goal.CanBeCompleted;
+            public override bool CanBeCompleted(ICollection<Traitor> traitors) => base.CanBeCompleted(traitors) && Goal.CanBeCompleted(traitors);
 
             public override bool IsEnemy(Character character) => base.IsEnemy(character) || Goal.IsEnemy(character);
 

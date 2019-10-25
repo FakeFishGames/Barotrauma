@@ -5,11 +5,11 @@
        uicolor="0.65,0.73,0.84"
        vitalitymodifier="-20">
     <Skills>
-      <Skill identifier="helm" level="60,80"/>
-      <Skill identifier="weapons" level="40,50"/>
-      <Skill identifier="mechanical" level="20,30"/>
-      <Skill identifier="electrical" level="20,30"/>
-      <Skill identifier="medical" level="10,30"/>
+      <Skill identifier="helm" level="30,40"/>
+      <Skill identifier="weapons" level="20,25"/>
+      <Skill identifier="mechanical" level="10,15"/>
+      <Skill identifier="electrical" level="10,15"/>
+      <Skill identifier="medical" level="5,15"/>
       <!--<Skill identifier="resolution" level="20,100"/>-->
       <Skill identifier="initiative" level="20,100"/>
     </Skills>
@@ -24,6 +24,9 @@
         <Item identifier="revolverround"/>
         <Item identifier="revolverround"/>
         <Item identifier="revolverround"/>
+        <Item identifier="revolverround"/>
+        <Item identifier="revolverround"/>
+        <Item identifier="revolverround"/>
       </Item>
     </Items>
     <PortraitClothing>
@@ -33,6 +36,9 @@
       <Order identifier="extinguishfires" prioritymodifier ="1"/>
       <Order identifier="steer" option="maintainposition" prioritymodifier="0.5"/>
     </AutonomousObjectives>
+    <AppropriateOrders>
+      <Order identifier="steer"/>
+    </AppropriateOrders>
   </Job>
   
   <Job identifier="engineer"    
@@ -40,11 +46,11 @@
        uicolor="0.88,0.72,0.43"
        vitalitymodifier="-10">
     <Skills>
-      <Skill identifier="electrical" level="60,80"/>
-      <Skill identifier="mechanical" level="25,35"/>
-      <Skill identifier="weapons" level="10,30"/>
-      <Skill identifier="medical" level="10,20"/>
-      <Skill identifier="helm" level="10,20"/>
+      <Skill identifier="electrical" level="30,40"/>
+      <Skill identifier="mechanical" level="12,17"/>
+      <Skill identifier="weapons" level="5,15"/>
+      <Skill identifier="medical" level="5,15"/>
+      <Skill identifier="helm" level="5,10"/>
       <!--<Skill identifier="resolution" level="20,100"/>-->
       <Skill identifier="initiative" level="20,100"/>
     </Skills>
@@ -74,6 +80,12 @@
       <Order identifier="chargebatteries" option="charge" prioritymodifier="0.25"/>
       <Order identifier="pumpwater" option="pumpout" prioritymodifier="0.25"/>
     </AutonomousObjectives>
+    <AppropriateOrders>
+      <Order identifier="operatereactor"/>
+      <Order identifier="repairsystems"/>
+      <Order identifier="chargebatteries"/>
+      <Order identifier="reportbrokendevices"/>
+    </AppropriateOrders>
   </Job>
 
   <Job identifier="mechanic"
@@ -81,11 +93,11 @@
        uicolor="0.5,0.86,0.9"
        vitalitymodifier="-10">
     <Skills>
-      <Skill identifier="mechanical" level="60,80"/>
-      <Skill identifier="electrical" level="25,35"/>
-      <Skill identifier="weapons" level="10,30"/>
-      <Skill identifier="medical" level="10,20"/>
-      <Skill identifier="helm" level="10,20"/>
+      <Skill identifier="mechanical" level="30,40"/>
+      <Skill identifier="electrical" level="12,17"/>
+      <Skill identifier="weapons" level="5,15"/>
+      <Skill identifier="medical" level="5,10"/>
+      <Skill identifier="helm" level="5,10"/>
       <!--<Skill identifier="resolution" level="20,100"/>-->
       <Skill identifier="initiative" level="20,100"/>
     </Skills>
@@ -114,6 +126,12 @@
       <Order identifier="pumpwater" option="pumpout" prioritymodifier="0.5"/>
       <Order identifier="chargebatteries" option="charge" prioritymodifier="0.25"/>
     </AutonomousObjectives>
+    <AppropriateOrders>
+      <Order identifier="fixleaks"/>
+      <Order identifier="pumpwater"/>
+      <Order identifier="repairsystems"/>
+      <Order identifier="reportbrokendevices"/>
+    </AppropriateOrders>
   </Job>
 
   <Job identifier="securityofficer"
@@ -121,11 +139,11 @@
        uicolor="0.57,0.48,0.43"
        vitalitymodifier="0">
     <Skills>
-      <Skill identifier="weapons" level="50,60"/>
-      <Skill identifier="medical" level="30,40"/>
-      <Skill identifier="mechanical" level="10,20"/>
-      <Skill identifier="electrical" level="10,20"/>
-      <Skill identifier="helm" level="10,20"/>
+      <Skill identifier="weapons" level="25,30"/>
+      <Skill identifier="medical" level="15,20"/>
+      <Skill identifier="mechanical" level="5,10"/>
+      <Skill identifier="electrical" level="5,10"/>
+      <Skill identifier="helm" level="5,10"/>
       <!--<Skill identifier="resolution" level="20,100"/>-->
       <Skill identifier="initiative" level="20,100"/>
     </Skills>
@@ -154,6 +172,10 @@
       <Order identifier="repairsystems" option="all" prioritymodifier="0.2"/>
       <Order identifier="operateweapons" option="holdfire" prioritymodifier="0.1"/>
     </AutonomousObjectives>
+    <AppropriateOrders>
+      <Order identifier="operateweapons"/>
+      <Order identifier="fightintruders"/>
+    </AppropriateOrders>
   </Job>
 
   <Job identifier="medicaldoctor"
@@ -161,11 +183,11 @@
        uicolor="0.81,0.31,0.19"
        vitalitymodifier="0">
     <Skills>
-      <Skill identifier="medical" level="60,70"/>
-      <Skill identifier="weapons" level="10,20"/>
-      <Skill identifier="mechanical" level="10,20"/>
-      <Skill identifier="electrical" level="10,20"/>
-      <Skill identifier="helm" level="10,20"/>
+      <Skill identifier="medical" level="30,35"/>
+      <Skill identifier="weapons" level="5,10"/>
+      <Skill identifier="mechanical" level="5,10"/>
+      <Skill identifier="electrical" level="5,10"/>
+      <Skill identifier="helm" level="5,10"/>
       <!--<Skill identifier="resolution" level="20,100"/>-->
       <Skill identifier="initiative" level="20,100"/>
     </Skills>
@@ -188,17 +210,21 @@
       <Order identifier="fixleaks" prioritymodifier="0.2"/>
       <Order identifier="repairsystems" option="all" prioritymodifier="0.2"/>
     </AutonomousObjectives>
+    <AppropriateOrders>
+      <Order identifier="rescue"/>
+      <Order identifier="requestfirstaid"/>
+    </AppropriateOrders>
   </Job>
 
   <Job identifier="assistant"
        allowalways="true" minkarma="0"
        vitalitymodifier="-10">
     <Skills>
-      <Skill identifier="weapons" level="20,32"/>
-      <Skill identifier="mechanical" level="20,32"/>
-      <Skill identifier="electrical" level="20,32"/>
-      <Skill identifier="medical" level="10,22"/>
-      <Skill identifier="helm" level="10,20"/>
+      <Skill identifier="weapons" level="10,16"/>
+      <Skill identifier="mechanical" level="10,16"/>
+      <Skill identifier="electrical" level="10,16"/>
+      <Skill identifier="medical" level="5,11"/>
+      <Skill identifier="helm" level="5,10"/>
       <!--<Skill identifier="resolution" level="20,100"/>-->
       <Skill identifier="initiative" level="0,60"/>
     </Skills>

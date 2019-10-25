@@ -175,13 +175,17 @@ namespace Barotrauma
 
         protected override void WatchmanInteract(Character watchman, Character interactor)
         {
+            if (interactor != null)
+            {
+                interactor.FocusedCharacter = null;
+            }
+
             Submarine leavingSub = GetLeavingSub();
             if (leavingSub == null)
             {
                 CreateDialog(new List<Character> { watchman }, "WatchmanInteractNoLeavingSub", 5.0f);
                 return;
             }
-
 
             CreateDialog(new List<Character> { watchman }, "WatchmanInteract", 1.0f);
 
@@ -295,7 +299,7 @@ namespace Barotrauma
                         {
                             GameMain.GameSession.LoadPrevious();
                             GameMain.LobbyScreen.Select();
-                            (GUIMessageBox.VisibleBox as GUIMessageBox)?.Close();
+                            GUIMessageBox.MessageBoxes.RemoveAll(c => c?.UserData as string == "roundsummary");
                             return true;
                         }
                     };
@@ -305,7 +309,7 @@ namespace Barotrauma
                     quitButton.OnClicked += GameMain.LobbyScreen.QuitToMainMenu;
                     quitButton.OnClicked += (GUIButton button, object obj) =>
                     {
-                        (GUIMessageBox.VisibleBox as GUIMessageBox)?.Close();
+                        GUIMessageBox.MessageBoxes.RemoveAll(c => c?.UserData as string == "roundsummary");
                         return true;
                     };
                 }

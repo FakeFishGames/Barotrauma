@@ -783,7 +783,7 @@ namespace Barotrauma
                     }
 
                     GUI.ClearUpdateList();
-                    paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen || Tutorial.ContentRunning) &&
+                    paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen || Tutorial.ContentRunning || DebugConsole.Paused) &&
                              (NetworkMember == null || !NetworkMember.GameStarted);
 
 #if !DEBUG
@@ -813,6 +813,17 @@ namespace Barotrauma
                     else if (Tutorial.Initialized && Tutorial.ContentRunning)
                     {
                         (GameSession.GameMode as TutorialMode).Update((float)Timing.Step);
+                    }
+                    else if (DebugConsole.Paused)
+                    {
+                        if (Screen.Selected.Cam == null)
+                        {
+                            DebugConsole.Paused = false;
+                        }
+                        else
+                        {
+                            Screen.Selected.Cam.MoveCamera((float)Timing.Step);
+                        }
                     }
 
                     if (NetworkMember != null)
@@ -920,7 +931,7 @@ namespace Barotrauma
                     UserData = link.Second,
                     OnClicked = (btn, userdata) =>
                     {
-                        Process.Start(userdata as string);
+                        ShowOpenUrlInWebBrowserPrompt(userdata as string);
                         return true;
                     }
                 };
@@ -932,7 +943,6 @@ namespace Barotrauma
             Config.SaveNewPlayerConfig();
         }
 
-        // ToDo: Move texts/links to localization, when possible.
         public void ShowBugReporter()
         {
             var msgBox = new GUIMessageBox(TextManager.Get("bugreportbutton"), "");
@@ -940,24 +950,27 @@ namespace Barotrauma
             var linkHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), msgBox.Content.RectTransform)) { Stretch = true, RelativeSpacing = 0.025f };
             linkHolder.RectTransform.MaxSize = new Point(int.MaxValue, linkHolder.Rect.Height);
 
-            List<Pair<string, string>> links = new List<Pair<string, string>>()
-                {
-                    new Pair<string, string>(TextManager.Get("bugreportfeedbackform"),"https://barotraumagame.com/feedback"),
-                    new Pair<string, string>(TextManager.Get("bugreportgithubform"),"https://github.com/Regalis11/Barotrauma/issues/new?template=bug_report.md")
-                };
-            foreach (var link in links)
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), linkHolder.RectTransform), TextManager.Get("bugreportfeedbackform"), style: "MainMenuGUIButton", textAlignment: Alignment.Left)
             {
-                new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), linkHolder.RectTransform), link.First, style: "MainMenuGUIButton", textAlignment: Alignment.Left)
+                UserData = "https://steamcommunity.com/app/602960/discussions/1/",
+                OnClicked = (btn, userdata) =>
                 {
-                    UserData = link.Second,
-                    OnClicked = (btn, userdata) =>
-                    {
-                        Process.Start(userdata as string);
-                        msgBox.Close();
-                        return true;
-                    }
-                };
-            }
+                    SteamManager.OverlayCustomURL(userdata as string);
+                    msgBox.Close();
+                    return true;
+                }
+            };
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), linkHolder.RectTransform), TextManager.Get("bugreportgithubform"), style: "MainMenuGUIButton", textAlignment: Alignment.Left)
+            {
+                UserData = "https://github.com/Regalis11/Barotrauma/issues/new?template=bug_report.md",
+                OnClicked = (btn, userdata) =>
+                {
+                    ShowOpenUrlInWebBrowserPrompt(userdata as string);
+                    msgBox.Close();
+                    return true;
+                }
+            };
 
             msgBox.InnerFrame.RectTransform.MinSize = new Point(0,
                 msgBox.InnerFrame.Rect.Height + linkHolder.Rect.Height + msgBox.Content.AbsoluteSpacing * 2 + (int)(50 * GUI.Scale));
@@ -979,6 +992,25 @@ namespace Barotrauma
             if (GameSettings.SendUserStatistics) GameAnalytics.OnQuit();
             if (GameSettings.SaveDebugConsoleLogs) DebugConsole.SaveLogs();
             base.OnExiting(sender, args);
+        }
+
+        public void ShowOpenUrlInWebBrowserPrompt(string url)
+        {
+            if (string.IsNullOrEmpty(url)) { return; }
+            if (GUIMessageBox.VisibleBox?.UserData as string == "verificationprompt") { return; }
+
+            var msgBox = new GUIMessageBox("", TextManager.GetWithVariable("openlinkinbrowserprompt", "[link]", url),
+                new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
+            {
+                UserData = "verificationprompt"
+            };
+            msgBox.Buttons[0].OnClicked = (btn, userdata) =>
+            {
+                Process.Start(url);
+                msgBox.Close();
+                return true;
+            };
+            msgBox.Buttons[1].OnClicked = msgBox.Close;
         }
     }
 }

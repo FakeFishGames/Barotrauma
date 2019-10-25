@@ -165,7 +165,7 @@ namespace Barotrauma
             if (element.Attribute("name") != null)
             {
                 //backwards compatibility + a console warning
-                DebugConsole.ThrowError("Error in RelatedItem config (" + (string.IsNullOrEmpty(parentDebugName) ? element.ToString() : parentDebugName) + ") - use item identifiers or tags instead of names.");
+                DebugConsole.ThrowError("Error in RelatedItem config (" + (string.IsNullOrEmpty(parentDebugName) ? element.ToString() : parentDebugName) + ") - use item tags or identifiers instead of names.");
                 string[] itemNames = element.GetAttributeStringArray("name", new string[0]);
                 //attempt to convert to identifiers and tags
                 List<string> convertedIdentifiers = new List<string>();
@@ -185,14 +185,28 @@ namespace Barotrauma
             }
             else
             {
-                identifiers = element.GetAttributeStringArray("identifiers", new string[0]);
-                if (identifiers.Length == 0) { identifiers = element.GetAttributeStringArray("identifier", new string[0]); }
+                identifiers = element.GetAttributeStringArray("items", null, convertToLowerInvariant: true) ?? element.GetAttributeStringArray("item", null, convertToLowerInvariant: true);
+                if (identifiers == null)
+                {
+                    identifiers = element.GetAttributeStringArray("identifiers", null, convertToLowerInvariant: true) ?? element.GetAttributeStringArray("tags", null, convertToLowerInvariant: true);
+                    if (identifiers == null)
+                    {
+                        identifiers = element.GetAttributeStringArray("identifier", null, convertToLowerInvariant: true) ?? element.GetAttributeStringArray("tag", new string[0], convertToLowerInvariant: true);
+                    }
+                }
             }
 
-            string[] excludedIdentifiers = element.GetAttributeStringArray("excludedidentifiers", new string[0]);
-            if (excludedIdentifiers.Length == 0) excludedIdentifiers = element.GetAttributeStringArray("excludedidentifier", new string[0]);
+            string[] excludedIdentifiers = element.GetAttributeStringArray("excludeditems", null, convertToLowerInvariant: true) ?? element.GetAttributeStringArray("excludeditem", null, convertToLowerInvariant: true);
+            if (excludedIdentifiers == null)
+            {
+                excludedIdentifiers = element.GetAttributeStringArray("excludedidentifiers", null, convertToLowerInvariant: true) ?? element.GetAttributeStringArray("excludedtags", null, convertToLowerInvariant: true);
+                if (excludedIdentifiers == null)
+                {
+                    excludedIdentifiers = element.GetAttributeStringArray("excludedidentifier", null, convertToLowerInvariant: true) ?? element.GetAttributeStringArray("excludedtag", new string[0], convertToLowerInvariant: true);
+                }
+            }
 
-            if (identifiers.Length == 0 && excludedIdentifiers.Length == 0) return null;
+            if (identifiers.Length == 0 && excludedIdentifiers.Length == 0) { return null; }
 
             RelatedItem ri = new RelatedItem(identifiers, excludedIdentifiers);
             

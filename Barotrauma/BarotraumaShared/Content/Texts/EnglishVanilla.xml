@@ -465,8 +465,8 @@
 
   <!-- Links -->
   <editordisclaimerwikiurl>https://barotrauma.gamepedia.com/Barotrauma_Wiki</editordisclaimerwikiurl>
-  <editordisclaimerdiscordurl>https://discordapp.com/invite/xjeSzWU</editordisclaimerdiscordurl>
   <editordisclaimerforumurl>https://undertowgames.com/forum/viewforum.php?f=17</editordisclaimerforumurl>
+  <editordisclaimerdiscordurl>https://discordapp.com/invite/undertow</editordisclaimerdiscordurl>
 
   <!-- Structure -->
   <entityname.hull>Hull</entityname.hull>
@@ -997,6 +997,7 @@
   <charactereditor.onlyshowselectedlimbs>Show Only Selected Limbs</charactereditor.onlyshowselectedlimbs>
   <charactereditor.newcontentpackage>New Content Package</charactereditor.newcontentpackage>
   <charactereditor.existingjointfound>A joint between limb [limbid1] and [limbid2] already found!</charactereditor.existingjointfound>
+  <charactereditor.unrestrict>Unrestrict</charactereditor.unrestrict>
 
   <!-- Submarine editor -->
   <items>Items</items>
@@ -3291,7 +3292,6 @@
   <editordisclaimerdiscordlink>Barotrauma Discord Server</editordisclaimerdiscordlink>
   <editordisclaimerforumlink>Barotrauma Forums</editordisclaimerforumlink>
   <bugreportgithubform>GitHub issue form</bugreportgithubform>
-  <bugreportfeedbackform>Barotrauma feedback form</bugreportfeedbackform>
   <bugreportbutton>Report a bug</bugreportbutton>
   <centerarealockedheader>Mysteries lie ahead...</centerarealockedheader>
   <centerarealockedtext>This area is unreachable in this version of Barotrauma. Please wait for future updates!</centerarealockedtext>
@@ -3451,7 +3451,11 @@
   <waterdetector.falseoutput>False output</waterdetector.falseoutput>
   <wificomponent.channel>Channel</wificomponent.channel>
 
-  <!-- New Additions as of 13th of August -->
+  <!-- Values temporarily in use until plural monster names are added -->
+  <missiondescription.killcrawlerswarm1>A small swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew that can neutralize it.</missiondescription.killcrawlerswarm1>
+  <missiondescription.killcrawlerswarm2>A large swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew that can neutralize it.</missiondescription.killcrawlerswarm2>
+
+  <!-- New Additions as of 13th of August for the minor update in October -->
   <connection.batterychargestatusout>charge_out</connection.batterychargestatusout>
   <connection.batterychargepercentage>charge_%</connection.batterychargepercentage>
   <connection.batterysetrechargespeed>set_charge_rate</connection.batterysetrechargespeed>
@@ -3485,8 +3489,69 @@
   <mapentitycategory.decorative>Decorative</mapentitycategory.decorative>
   <mapentitycategory.wall>Wall</mapentitycategory.wall>
   <karma.resetkarmabetweenrounds>Reset karma between rounds</karma.resetkarmabetweenrounds>
-  <enablesplashscreen>Enable splash screen</enablesplashscreen>
+  <enablesplashscreen>Enable splash screen</enablesplashscreen>  
   
+  <restartrequiredgeneric>You need to restart the game for the changes to take effect.</restartrequiredgeneric>
+  <invalidcontentpackage>Content package '[packagename]' cannot be loaded.</invalidcontentpackage>
+  <xmlfileinvalid>File '[filepath]' is not a valid XML file ([errormessage]).</xmlfileinvalid>
+
+  <roomname.airlockaccess>Airlock Access</roomname.airlockaccess>
+  <roomname.gunnerycompartment>Gunnery Compartment</roomname.gunnerycompartment>
+  <roomname.dronecontrol>Drone Control</roomname.dronecontrol>
+  <roomname.drone>Drone</roomname.drone>
+  <roomname.droneballast>Drone Ballast</roomname.droneballast>  
+
+  <subeditorlights>Lights</subeditorlights>
+  <subeditorshadowcastinglights>Shadow-casting lights</subeditorshadowcastinglights>
+
+  <contentpackagemismatchwarninggeneric>The submarine may not be compatible with the currently selected content packages. Are you sure you want to choose the submarine?</contentpackagemismatchwarninggeneric>
+
+  <label.activatedischargecoils>Discharge Coils</label.activatedischargecoils>
+  <label.lights1>Lights 1</label.lights1>
+  <label.lights2>Lights 2</label.lights2>
+  <label.lights3>Lights 3</label.lights3>
+  <label.lights4>Lights 4</label.lights4>
+  <label.lights5>Lights 5</label.lights5>
+  <label.pumps1>Pumps 1</label.pumps1>
+  <label.pumps2>Pumps 2</label.pumps2>
+  <label.dronecharge>Drone Charge</label.dronecharge>
+  <label.meltdown>Meltdown</label.meltdown>
+  
+  <campaignfiletransferinprogress>Please wait for the campaign save file to finish downloading.</campaignfiletransferinprogress>
+  
+  <openlinkinbrowserprompt>Do you want to open the link "[link]" in your web browser?</openlinkinbrowserprompt>
+
+  <replacelostshuttles>Replace lost shuttles</replacelostshuttles>
+  <replaceshuttles>Replace</replaceshuttles>
+  <replaceshuttledockingportoccupied>The lost shuttle cannot be replaced because the docking port is already in use. Clear the docking port before requisitioning a new shuttle.</replaceshuttledockingportoccupied>
+  <campaignfiletransferinprogress>Please wait for the campaign save file to finish downloading.</campaignfiletransferinprogress>
+
+  <character.blackmoloch>Black Moloch</character.blackmoloch>
+  <character.hammerheadmatriarch>Hammerhead Matriarch</character.hammerheadmatriarch>
+  
+  <!-- Changed values as of 13th of August for the minor update in October -->
+  <traitorgoaldestroyitems>Dispose of at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>
+  <karma.kickbanthreshold>Kick/Ban threshold</karma.kickbanthreshold>
+  <karma.kickbanthresholdtooltip>The players whose karma decrease below this threshold get automatically kicked and/or banned from the server (depending on the kick/ban settings below).</karma.kickbanthresholdtooltip>
+  <mechanic.weldingtext>Equip the welding tool and diving mask you just retrieved from the locker by double-clicking on them. \n\nWith the welding tool you are able to repair leaks in hulls, and the diving mask will provide you with a steady supply of oxygen while underwater. \n\nSome items, like the welding tool, require two free hands to use. Unequip or drop an item by double-clicking it while it is in use.\n\nWhen a welding tool is equipped, hold {0} to aim. While aiming, hold {1} to weld.</mechanic.weldingtext>
+  <mechanic.fabricatetext>Now that we have all of the required materials, we can fabricate a fire extinguisher. Find it in the list, load the fabricator with the required materials and press the button to start fabricating.\n\nWhen done, the fabricated item can be found in the fabricator’s output slot. As the fire extinguisher is an item that requires the use of both hands, equip the extinguisher by double-clicking on it.</mechanic.fabricatetext>
+
+  <connection.set_text>set_text</connection.set_text>
+  
+  <bugreportfeedbackform>Help and technical support</bugreportfeedbackform>
+
+  <character.hammerheadgold>Golden Hammerhead</character.hammerheadgold>
+  <character.bonethresher>Bone Tiger Thresher</character.bonethresher>
+  
+  <!-- New additions for the major update coming in November -->
+  <submarine.name.kastrull>Kastrull</submarine.name.kastrull>
+  <submarine.description.kastrull>The Kastrull is a dependable attack sub class bringing plenty of firepower to any fight, and although not very nimble, they do sport a drone gunship as standard. Keep in mind that with its experimental open ballast tanks, low tolerance to flooding, and numerous crew stations, a large experienced crew will get the most out of these subs.</submarine.description.kastrull>
+  <gamemodedescription.singleplayercampaign>Embark on a journey through the depths of Europa. Travel from location to another, complete missions to earn money for supplies, discover new biomes — and perhaps eventually uncover the secrets of Europa.</gamemodedescription.singleplayercampaign>
+  <gamemodedescription.sandbox>A game mode with no specific objectives.</gamemodedescription.sandbox>
+  <gamemodedescription.mission>The crew must work together to complete a specific task, such as retrieving an alien artifact or killing a creature that's terrorizing nearby outposts. The game ends when the task is completed or everyone in the crew has died.</gamemodedescription.mission>
+  <gamemodedescription.multiplayercampaign>Embark on a journey through the depths of Europa. Travel from location to another, complete missions to earn money for supplies, discover new biomes — and perhaps eventually uncover the secrets of Europa.</gamemodedescription.multiplayercampaign>
+  
+  <!-- Server lobby 2.0 -->
   <servertag.casual>Casual</servertag.casual>
   <servertagdescription.casual>Having fun is more important than completing the objective. A good choice for new players.</servertagdescription.casual>
   <servertag.serious>Serious</servertag.serious>
@@ -3508,44 +3573,4 @@
   <servertagdescription.voipdisabled>Voice chat is disabled.</servertagdescription.voipdisabled>
   <servertag.karmadisabled>Karma disabled</servertag.karmadisabled>
   <servertagdescription.karmadisabled>Karma system is disabled.</servertagdescription.karmadisabled>
-  <restartrequiredgeneric>You need to restart the game for the changes to take effect.</restartrequiredgeneric>
-  <invalidcontentpackage>Content package '[packagename]' cannot be loaded.</invalidcontentpackage>
-  <xmlfileinvalid>File '[filepath]' is not a valid XML file ([errormessage]).</xmlfileinvalid>
-
-
-  <roomname.airlockaccess>Airlock Access</roomname.airlockaccess>
-  <roomname.gunnerycompartment>Gunnery Compartment</roomname.gunnerycompartment>
-  <roomname.dronecontrol>Drone Control</roomname.dronecontrol>
-  <roomname.drone>Drone</roomname.drone>
-  <roomname.droneballast>Drone Ballast</roomname.droneballast>
-  
-
-  <subeditorlights>Lights</subeditorlights>
-  <subeditorshadowcastinglights>Shadow-casting lights</subeditorshadowcastinglights>
-
-  <contentpackagemismatchwarninggeneric>The submarine may not be compatible with the currently selected content packages. Are you sure you want to choose the submarine?</contentpackagemismatchwarninggeneric>
-
-  <label.activatedischargecoils>Discharge Coils</label.activatedischargecoils>
-  <label.lights1>Lights 1</label.lights1>
-  <label.lights2>Lights 2</label.lights2>
-  <label.lights3>Lights 3</label.lights3>
-  <label.lights4>Lights 4</label.lights4>
-  <label.lights5>Lights 5</label.lights5>
-  <label.pumps1>Pumps 1</label.pumps1>
-  <label.pumps2>Pumps 2</label.pumps2>
-  <label.dronecharge>Drone Charge</label.dronecharge>
-  <label.meltdown>Meltdown</label.meltdown>
-
-  <campaignfiletransferinprogress>Please wait for the campaign save file to finish downloading.</campaignfiletransferinprogress>
-
-  <!-- Changed values as of 13th of August -->
-  <traitorgoaldestroyitems>Dispose of at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>
-  <karma.kickbanthreshold>Kick/Ban threshold</karma.kickbanthreshold>
-  <karma.kickbanthresholdtooltip>The players whose karma decrease below this threshold get automatically kicked and/or banned from the server (depending on the kick/ban settings below).</karma.kickbanthresholdtooltip>
-  <missiondescription.killcrawlerswarm1>A small swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew that can neutralize it.</missiondescription.killcrawlerswarm1>
-  <missiondescription.killcrawlerswarm2>A large swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew that can neutralize it.</missiondescription.killcrawlerswarm2>
-  <mechanic.weldingtext>Equip the welding tool and diving mask you just retrieved from the locker by double-clicking on them. \n\nWith the welding tool you are able to repair leaks in hulls, and the diving mask will provide you with a steady supply of oxygen while underwater. \n\nSome items, like the welding tool, require two free hands to use. Unequip or drop an item by double-clicking it while it is in use.\n\nWhen welding tool is equipped, hold {0} to aim. While aiming, hold {1} to weld.</mechanic.weldingtext>
-  <mechanic.fabricatetext>Now that we have all of the required materials, we can fabricate a fire extinguisher. Find it in the list, load the fabricator with materials and press the button to start fabricating.\n\nWhen done, the fabricated item can be found in the fabricator’s output slot. As the fire extinguisher is an item that requires the use of both hands, equip the item by double-clicking on it.</mechanic.fabricatetext>
-
-  <connection.set_text>set_text</connection.set_text>
 </infotexts>

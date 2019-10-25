@@ -788,13 +788,21 @@
 <missionheader0.killhammerhead>Cel wyeliminowany</missionheader0.killhammerhead>
 <missionmessage0.killhammerhead>Ryba młot nie żyje. Wypłyń okrętem z jaskini, aby odebrać nagrodę.</missionmessage0.killhammerhead>
 <missionname.killcrawlerswarm1>Wybij rój</missionname.killcrawlerswarm1>
-<missiondescription.killcrawlerswarm1>Niewielki rój stworzeń ([monster]) terroryzuje łodzie podróżujące na trasie [location1] – [location2]. Na śmiałków, którzy go wybiją, czeka nagroda w postaci [reward] kredytów.</missiondescription.killcrawlerswarm1>
+
+<!--<missiondescription.killcrawlerswarm1>Niewielki rój stworzeń ([monster]) terroryzuje łodzie podróżujące na trasie [location1] – [location2]. Na śmiałków, którzy go wybiją, czeka nagroda w postaci [reward] kredytów.</missiondescription.killcrawlerswarm1>-->
+<!-- Temporary until plural monster names -->
+<missiondescription.killcrawlerswarm1>Niewielki rój pełzacze terroryzuje łodzie podróżujące na trasie [location1] – [location2]. Na śmiałków, którzy go wybiją, czeka nagroda w postaci [reward] kredytów.</missiondescription.killcrawlerswarm1>
+
 <missionsonarlabel.killcrawlerswarm1>Rój</missionsonarlabel.killcrawlerswarm1>
 <missionsuccess.killcrawlerswarm1>Wybito rój.</missionsuccess.killcrawlerswarm1>
 <missionheader0.killcrawlerswarm1>Cel wyeliminowany</missionheader0.killcrawlerswarm1>
 <missionmessage0.killcrawlerswarm1>Wybito rój. Wypłyń okrętem z jaskini, aby odebrać nagrodę.</missionmessage0.killcrawlerswarm1>
 <missionname.killcrawlerswarm2>Wybij rój</missionname.killcrawlerswarm2>
-<missiondescription.killcrawlerswarm2>Duży rój stworzeń ([monster]) terroryzuje łodzie podróżujące na trasie [location1] – [location2]. Na śmiałków, którzy go wybiją, czeka nagroda w postaci [reward] kredytów.</missiondescription.killcrawlerswarm2>
+
+<!--<missiondescription.killcrawlerswarm2>Duży rój stworzeń ([monster]) terroryzuje łodzie podróżujące na trasie [location1] – [location2]. Na śmiałków, którzy go wybiją, czeka nagroda w postaci [reward] kredytów.</missiondescription.killcrawlerswarm2>-->
+<!-- Temporary until plural monster names -->
+<missiondescription.killcrawlerswarm2>Duży rój pełzacze terroryzuje łodzie podróżujące na trasie [location1] – [location2]. Na śmiałków, którzy go wybiją, czeka nagroda w postaci [reward] kredytów.</missiondescription.killcrawlerswarm2>
+
 <missionsonarlabel.killcrawlerswarm2>Rój</missionsonarlabel.killcrawlerswarm2>
 <missionsuccess.killcrawlerswarm2>Wybito rój.</missionsuccess.killcrawlerswarm2>
 <missionheader0.killcrawlerswarm2>Cel wyeliminowany</missionheader0.killcrawlerswarm2>
@@ -2227,7 +2235,7 @@
 <!-- Room 3 -->
 <mechanic.welding>Przecieki</mechanic.welding>
 <mechanic.weldingobjective>Napraw przeciek</mechanic.weldingobjective>
-<mechanic.weldingtext>Aby naprawić przeciek w kadłubie, weź spawarkę, dwukrotnie ją klikając. Niektóre przedmioty, jak np. spawarka, wymagają dwóch wolnych rąk. Zdejmij lub upuść trzymany przedmiot, klikając go dwukrotnie.\n\nPo wzięciu spawarki przytrzymaj {0}, aby wycelować. Celując, przytrzymaj {1}, aby spawać.</mechanic.weldingtext>
+<mechanic.weldingtext>Weź wyjęte z szafki spawarkę i maskę do nurkowania i wyposaż się w nie, dwukrotnie je klikając.\n\nSpawarką możesz naprawić przeciek w kadłubie, a maska do nurkowania zapewni ci pod wodą stały dopływ tlenu.\n\nNiektóre przedmioty, jak np. spawarka, wymagają dwóch wolnych rąk. Zdejmij lub upuść trzymany przedmiot, klikając go dwukrotnie.\n\nPo wzięciu spawarki przytrzymaj {0}, aby wycelować. Celując, przytrzymaj {1}, aby spawać.</mechanic.weldingtext>
 <mechanic.drain>Pompy</mechanic.drain>
 <mechanic.drainobjective>Włącz pobliską pompę, aby odprowadzić nadmiarową wodę</mechanic.drainobjective>
 <mechanic.draintext>Użyj pomp, aby odprowadzić wodę z zalanego okrętu. Zazwyczaj pompy otrzymują sygnał z pobliskich czujników wody lub terminala nawigacyjnego, ale niektóre można obsługiwać ręcznie. Ta pompa jest zaprogramowana tylko do wypompowywania wody. Włącz ją ({0}) i przesuń wajchę przełącznika na pozycję „ON”.</mechanic.draintext>
@@ -2238,7 +2246,7 @@
 <mechanic.deconstructtext>Wytwarzacz to urządzenie, które z różnych materiałów tworzy przydatne przedmioty. Jeśli nie masz dość surowców, możesz rozłożyć coś na części w dekonstruktorze. Przeciągnij przedmiot na jedno z górnych miejsc w schowku urządzenia i naciśnij przycisk „Dekonstrukcja”.\n\nW tym wypadku wytworzenie gaśnicy wymaga aluminium i sodu. Sód jest łatwo dostępny, ale aluminium zdobędziesz po dekonstrukcji butli z tlenem.</mechanic.deconstructtext>
 <mechanic.fabricate>Wytwórstwo, cz. 2</mechanic.fabricate>
 <mechanic.fabricateobjective>Wytwórz gaśnicę</mechanic.fabricateobjective>
-<mechanic.fabricatetext>Skoro mamy już wszystkie wymagane materiały, możemy zrobić gaśnicę. Znajdź ją na liście, załaduj materiały do wytwarzacza i naciśnij guzik, by zacząć wytwarzanie.\n\nPo zakończeniu procesu gotowy przedmiot można znaleźć w schowku wyjściowym wytwarzacza.</mechanic.fabricatetext>
+<mechanic.fabricatetext>Skoro mamy już wszystkie wymagane materiały, możemy zrobić gaśnicę. Znajdź ją na liście, załaduj materiały do wytwarzacza i naciśnij guzik, by zacząć wytwarzanie.\n\nPo zakończeniu procesu gotowy przedmiot można znaleźć w schowku wyjściowym wytwarzacza. Ponieważ gaśnica wymaga użycia obu rąk, weź ją, dwukrotnie klikając.</mechanic.fabricatetext>
 
 <!-- Room 5 -->
 <mechanic.extinguisher>Pożary</mechanic.extinguisher>
@@ -2497,7 +2505,7 @@
 <dialognoleaks>Jakie przecieki?</dialognoleaks>
 
 <bugreportgithubform>Formularz GitHub</bugreportgithubform>
-<bugreportfeedbackform>Wyślij opinię o grze Barotrauma</bugreportfeedbackform>
+<bugreportfeedbackform>Pomoc i wsparcie techniczne</bugreportfeedbackform>
 <bugreportbutton>Zgłoś błąd</bugreportbutton>
 
 <voipcapturedevicenotfound>Nie można rozpocząć nagrywania głosu – nie znaleziono odpowiedniego urządzenia rejestrującego.</voipcapturedevicenotfound>
@@ -2579,7 +2587,7 @@
 <connection.waterdatain>woda_dane_wejść</connection.waterdatain>
 <connection.oxygendatain>tlen_dane_wejść</connection.oxygendatain>
 
-<!-- *** New additions *** -->
+
 <itemmsgoxygenrefill>Włóż butlę z tlenem, aby ją uzupełnić</itemmsgoxygenrefill>
 <missionfailed>Porażka</missionfailed>
 <label.highpressurewarning>UWAGA: wysokie ciśnienie</label.highpressurewarning>
@@ -2679,7 +2687,7 @@
 <traitorgoalkilleveryoneinfo>Zabij wszystkich członków załogi.</traitorgoalkilleveryoneinfo>
 <traitorgoalfinditeminfo>Kolejny cel: [identifier], [targethullname].</traitorgoalfinditeminfo>
 <traitorgoalcausereactormeltdown>Doprowadź do stopienia rdzenia reaktora.</traitorgoalcausereactormeltdown>
-<traitorgoaldestroyitems>[tag] – zniszcz przynajmniej [percentage]% z nich na okręcie.</traitorgoaldestroyitems>
+<traitorgoaldestroyitems>[tag] – pozbądź się przynajmniej [percentage]% z nich na okręcie.</traitorgoaldestroyitems>
 <traitorgoalfloodpercentofsub>Zalej przynajmniej [percentage]% okrętu.</traitorgoalfloodpercentofsub>
 <traitorgoaljamsonarinfo>Ukryj zagłuszacz sonaru aktywnego tak, żeby nie można było go znaleźć przez [duration] sek.</traitorgoaljamsonarinfo>
 <traitorgoaljamsonarinfoalt>Zagłuszaj sonar okrętu przez [duration] sek.</traitorgoaljamsonarinfoalt>
@@ -2796,8 +2804,8 @@
 <label.engine>Silnik</label.engine>
 
 <!-- Karma system -->
-<karma.kickbanthreshold>Próg blokady</karma.kickbanthreshold>
-<karma.kickbanthresholdtooltip>Gracze, których karma spadnie poniżej tego poziomu, automatycznie otrzymują blokadę na serwerze.</karma.kickbanthresholdtooltip>
+<karma.kickbanthreshold>Próg wyrzucenia/blokady</karma.kickbanthreshold>
+<karma.kickbanthresholdtooltip>Gracze, których karma spadnie poniżej tego poziomu, są automatycznie wyrzucani lub otrzymują blokadę na serwerze (w zależności od poniższych ustawień).</karma.kickbanthresholdtooltip>
 <karma.karmadecay>Prędkość ubytku karmy</karma.karmadecay>
 <karma.karmadecaytooltip>Prędkość ubytku karmy na sekundę, kiedy zostanie przekroczony próg ubytku.</karma.karmadecaytooltip>
 <karma.karmadecaythreshold>Próg ubytku karmy</karma.karmadecaythreshold>
@@ -2891,6 +2899,79 @@
 <flood_2_objectivesuccessmessage3>Świetnie! Pamiętajcie, towarzyszu, nie ma złej taktyki, tylko złe cele!</flood_2_objectivesuccessmessage3>
 <flood_2_traitorobjectivestartmessage4>Szybko, wykorzystaj zamieszanie i wyciągnij z tych świń co najgorsze, póki jeszcze możesz!\n[traitorgoalinfos]</flood_2_traitorobjectivestartmessage4>
 <flood_2_objectivesuccessmessage4>Po pozbawieniu ich życia zauważasz, być może z pewną dozą goryczy, że twój odbiornik nagle umilkł. Twoi towarzysze zostawili cię na łasce Mateczki Europy.</flood_2_objectivesuccessmessage4>
+
+
+<!-- New Additions as of 13th of August -->
+<connection.batterychargestatusout>ładowanie_wyjść</connection.batterychargestatusout>
+<connection.batterychargepercentage>%_ładowania</connection.batterychargepercentage>
+<connection.batterysetrechargespeed>ustaw_szybkość_ładowania</connection.batterysetrechargespeed>
+<connection.batteryrechargespeedout>szybkość_ładowania_wyjść</connection.batteryrechargespeedout>
+<personalitytrait.professional>Profesjonalista</personalitytrait.professional>
+<personalitytrait.laid-back>Wyluzowany</personalitytrait.laid-back>
+<personalitytrait.rude>Niegrzeczny</personalitytrait.rude>
+<personalitytrait.tough>Twardziel</personalitytrait.tough>
+<personalitytrait.joker>Żartowniś</personalitytrait.joker>
+<personalitytrait.brokenenglish>Łamany język</personalitytrait.brokenenglish>
+<personalitytrait.fearful>Strachliwy</personalitytrait.fearful>
+<personalitytrait.crazy>Szalony</personalitytrait.crazy>
+<sabotagebutton>Sabotaż</sabotagebutton>
+<sabotaging>Sabotuje</sabotaging>
+<voipattenuation>Ściszanie gry na czacie głosowym</voipattenuation>
+<voipattenuationtooltip>Ścisza głośność gry, kiedy gracze się odzywają.</voipattenuationtooltip>
+<roundsummaryroundhasended>Runda się skończyła.</roundsummaryroundhasended>
+<clientpermission.karmaimmunity>Odporność na karmę</clientpermission.karmaimmunity>
+<karmakicked>Wyrzucono cię z serwera, ponieważ karma spadła poniżej [banthreshold].</karmakicked>
+<karma.kicksbeforeban>Liczba wyrzuceń przed blokadą</karma.kicksbeforeban>
+<karma.kicksbeforebantooltip>Jeśli gracza wielokrotnie wyrzucono z serwera z powodu niskiego poziomu karmy, dostanie on blokadę, jeśli poziom karmy ponownie spadnie poniżej progu wyrzucenia/blokady. Wartość „0” oznacza, że gracz dostanie blokadę zawsze, kiedy jego poziom karmy spadnie poniżej progu.</karma.kicksbeforebantooltip>
+<traitorgoalreachdistancefromsub>Znajdź się w odległości [distance] od okrętu.</traitorgoalreachdistancefromsub>
+<traitorgoalisoptionalinfotext>Opcjonalne: [infotext]</traitorgoalisoptionalinfotext>
+<traitorgoalwithtimelimitinfotext>[infotext] Osiągnij ten cel w [timelimit].</traitorgoalwithtimelimitinfotext>
+<traitorgoalwithdurationinfotext>[infotext] Cel musi być osiągnięty przez [duration] sek.</traitorgoalwithdurationinfotext>
+<traitorgoalwithcumulativedurationinfotext>[infotext] Cel musi być osiągnięty łącznie przez [duration] sek.</traitorgoalwithcumulativedurationinfotext>
+<traitorgoalwaitfortraitorsinfotext>Poczekaj na [remaining] z [count] zdrajców, aż ukończą swoje zadania.</traitorgoalwaitfortraitorsinfotext>
+<failed>Porażka</failed>
+<pausemenuquitverificationeditor>Na pewno chcesz wrócić do menu głównego? Niezapisane postępy zostaną utracone.</pausemenuquitverificationeditor>
+<mapentitycategory.decorative>Ozdoba</mapentitycategory.decorative>
+<mapentitycategory.wall>Ściana</mapentitycategory.wall>
+<karma.resetkarmabetweenrounds>Zeruj karmę pomiędzy rundami</karma.resetkarmabetweenrounds>
+<enablesplashscreen>Włącz ekran powitalny</enablesplashscreen>
+<restartrequiredgeneric>Zmiany zostaną wprowadzone po ponownym uruchomieniu gry.</restartrequiredgeneric>
+<invalidcontentpackage>Nie można załadować pakietu zawartości „[packagename]”.</invalidcontentpackage>
+<xmlfileinvalid>Plik „[filepath]” nie jest poprawnym plikiem XML ([errormessage]).</xmlfileinvalid>
+<roomname.airlockaccess>Dostęp do śluzy powietrznej</roomname.airlockaccess>
+<roomname.gunnerycompartment>Zbrojownia</roomname.gunnerycompartment>
+<roomname.dronecontrol>Sterownia dronów</roomname.dronecontrol>
+<roomname.drone>Dron</roomname.drone>
+<roomname.droneballast>Balast drona</roomname.droneballast>
+<subeditorlights>Oświetlenie</subeditorlights>
+<subeditorshadowcastinglights>Oświetlenie rzucające cień</subeditorshadowcastinglights>
+<contentpackagemismatchwarninggeneric>Okręt podwodny może być niezgodny z wybranymi obecnie pakietami zawartości. Na pewno wybrać ten okręt podwodny?</contentpackagemismatchwarninggeneric>
+<label.activatedischargecoils>Cewki</label.activatedischargecoils>
+<label.lights1>Oświetlenie 1</label.lights1>
+<label.lights2>Oświetlenie 2</label.lights2>
+<label.lights3>Oświetlenie 3</label.lights3>
+<label.lights4>Oświetlenie 4</label.lights4>
+<label.lights5>Oświetlenie 5</label.lights5>
+<label.pumps1>Pompy 1</label.pumps1>
+<label.pumps2>Pompy 2</label.pumps2>
+<label.dronecharge>Ładowanie drona</label.dronecharge>
+<label.meltdown>Stopienie rdzenia</label.meltdown>
+<campaignfiletransferinprogress>Proszę czekać, aż zostanie ukończone pobieranie pliku zapisu kampanii.</campaignfiletransferinprogress>
+<openlinkinbrowserprompt>Otworzyć link „[link]” w przeglądarce?</openlinkinbrowserprompt>
+<replacelostshuttles>Zastąp utracone transportowce</replacelostshuttles>
+<replaceshuttles>Zastąp</replaceshuttles>
+<replaceshuttledockingportoccupied>Nie można zastąpić utraconego transportowca, ponieważ szczelina dokująca jest już w użyciu. Opróżnij szczelinę dokującą przed zamówieniem nowego transportowca.</replaceshuttledockingportoccupied>
+<character.blackmoloch>Czarny moloch</character.blackmoloch>
+<character.goldenhammerhead>Złota ryba młot</character.goldenhammerhead>
+<character.hammerheadmatriarch>Matka ryb młotów</character.hammerheadmatriarch>
+<character.bonetigerthresher>Kościany młocarz tygrysi</character.bonetigerthresher>
+
+<!-- Updated values as of 13th of August -->
+
+
+
+
+
 
 
 </infotexts>

@@ -65,7 +65,9 @@ namespace Barotrauma.Items.Components
         private bool useDirectionalPing = false;
         private Vector2 pingDirection = new Vector2(1.0f, 0.0f);
 
-        private Sprite pingCircle, directionalPingCircle, screenOverlay, screenBackground;
+        private Sprite pingCircle, directionalPingCircle;
+        private Sprite screenOverlay, screenBackground;
+
         private Sprite sonarBlip;
         private Sprite lineSprite;
 

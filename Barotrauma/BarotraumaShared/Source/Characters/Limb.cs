@@ -76,10 +76,6 @@ namespace Barotrauma
     
     partial class Limb : ISerializableEntity, ISpatialEntity
     {
-        // Note: not used
-        private const float LimbDensity = 15;
-        private const float LimbAngularDamping = 7;
-
         //how long it takes for severed limbs to fade out
         private const float SeveredFadeOutTime = 10.0f;
 
@@ -105,8 +101,23 @@ namespace Barotrauma
         
         private bool isSevered;
         private float severedFadeOutTimer;
-                
-        public Vector2? MouthPos;
+
+        private Vector2? mouthPos;
+        public Vector2 MouthPos
+        {
+            get
+            {
+                if (!mouthPos.HasValue)
+                {
+                    mouthPos = Params.MouthPos;
+                }
+                return mouthPos.Value;
+            }
+            set
+            {
+                mouthPos = value;
+            }
+        }
         
         public readonly Attack attack;
         private List<DamageModifier> damageModifiers;
@@ -304,19 +315,16 @@ namespace Barotrauma
             pullJoint = new FixedMouseJoint(body.FarseerBody, ConvertUnits.ToSimUnits(limbParams.PullPos * Scale))
             {
                 Enabled = false,
-                MaxForce = ((type == LimbType.LeftHand || type == LimbType.RightHand) ? 400.0f : 150.0f) * body.Mass
+                //MaxForce = ((type == LimbType.LeftHand || type == LimbType.RightHand) ? 400.0f : 150.0f) * body.Mass
+                // 150 or even 400 is too low if the joint is used for moving the character position from the mainlimb towards the collider position
+                MaxForce = 1000 * Mass
             };
 
             GameMain.World.AddJoint(pullJoint);
 
             var element = limbParams.Element;
-            if (element.Attribute("mouthpos") != null)
-            {
-                MouthPos = ConvertUnits.ToSimUnits(element.GetAttributeVector2("mouthpos", Vector2.Zero));
-            }
 
             body.BodyType = BodyType.Dynamic;
-            body.FarseerBody.AngularDamping = LimbAngularDamping;
 
             damageModifiers = new List<DamageModifier>();
 
@@ -475,10 +483,13 @@ namespace Barotrauma
 
         partial void UpdateProjSpecific(float deltaTime);
 
+
+        private readonly List<Body> contactBodies = new List<Body>();
+        private List<Body> ignoredBodies;
         /// <summary>
         /// Returns true if the attack successfully hit something. If the distance is not given, it will be calculated.
         /// </summary>
-        public bool UpdateAttack(float deltaTime, Vector2 attackSimPos, IDamageable damageTarget, out AttackResult attackResult, float distance = -1)
+        public bool UpdateAttack(float deltaTime, Vector2 attackSimPos, IDamageable damageTarget, out AttackResult attackResult, float distance = -1, Limb targetLimb = null)
         {
             attackResult = default(AttackResult);
             float dist = distance > -1 ? distance : ConvertUnits.ToDisplayUnits(Vector2.Distance(SimPosition, attackSimPos));
@@ -494,8 +505,11 @@ namespace Barotrauma
                     case HitDetection.Distance:
                         if (dist < attack.DamageRange)
                         {
-                            List<Body> ignoredBodies = character.AnimController.Limbs.Select(l => l.body.FarseerBody).ToList();
-                            ignoredBodies.Add(character.AnimController.Collider.FarseerBody);
+                            if (ignoredBodies == null)
+                            {
+                                ignoredBodies = character.AnimController.Limbs.Select(l => l.body.FarseerBody).ToList();
+                                ignoredBodies.Add(character.AnimController.Collider.FarseerBody);
+                            }
 
                             structureBody = Submarine.PickBody(
                                 SimPosition, attackSimPos,
@@ -521,46 +535,42 @@ namespace Barotrauma
                         }
                         break;
                     case HitDetection.Contact:
-                        var targetBodies = new List<Body>();
+                        contactBodies.Clear();
                         if (damageTarget is Character targetCharacter)
                         {
                             foreach (Limb limb in targetCharacter.AnimController.Limbs)
                             {
-                                if (!limb.IsSevered && limb.body?.FarseerBody != null) targetBodies.Add(limb.body.FarseerBody);
+                                if (!limb.IsSevered && limb.body?.FarseerBody != null) contactBodies.Add(limb.body.FarseerBody);
                             }
                         }
                         else if (damageTarget is Structure targetStructure)
                         {
                             if (character.Submarine == null && targetStructure.Submarine != null)
                             {
-                                targetBodies.Add(targetStructure.Submarine.PhysicsBody.FarseerBody);
+                                contactBodies.Add(targetStructure.Submarine.PhysicsBody.FarseerBody);
                             }
                             else
                             {
-                                targetBodies.AddRange(targetStructure.Bodies);
+                                contactBodies.AddRange(targetStructure.Bodies);
                             }
                         }
                         else if (damageTarget is Item)
                         {
                             Item targetItem = damageTarget as Item;
-                            if (targetItem.body?.FarseerBody != null) targetBodies.Add(targetItem.body.FarseerBody);
+                            if (targetItem.body?.FarseerBody != null) contactBodies.Add(targetItem.body.FarseerBody);
                         }
-
-                        if (targetBodies != null)
+                        ContactEdge contactEdge = body.FarseerBody.ContactList;
+                        while (contactEdge != null)
                         {
-                            ContactEdge contactEdge = body.FarseerBody.ContactList;
-                            while (contactEdge != null)
+                            if (contactEdge.Contact != null &&
+                                contactEdge.Contact.IsTouching &&
+                                contactBodies.Any(b => b == contactEdge.Contact.FixtureA?.Body || b == contactEdge.Contact.FixtureB?.Body))
                             {
-                                if (contactEdge.Contact != null &&
-                                    contactEdge.Contact.IsTouching &&
-                                    targetBodies.Any(b => b == contactEdge.Contact.FixtureA?.Body || b == contactEdge.Contact.FixtureB?.Body))
-                                {
-                                    structureBody = targetBodies.LastOrDefault();
-                                    wasHit = true;
-                                    break;
-                                }
-                                contactEdge = contactEdge.Next;
+                                structureBody = contactBodies.LastOrDefault();
+                                wasHit = true;
+                                break;
                             }
+                            contactEdge = contactEdge.Next;
                         }
                         break;
                 }
@@ -581,7 +591,14 @@ namespace Barotrauma
                     LastAttackSoundTime = SoundInterval;
                 }
 #endif
-                attackResult = attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, playSound);
+                if (damageTarget is Character targetCharacter && targetLimb != null)
+                {
+                    attackResult = attack.DoDamageToLimb(character, targetLimb, WorldPosition, 1.0f, playSound);
+                }
+                else
+                {
+                    attackResult = attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, playSound);
+                }
                 if (structureBody != null && attack.StickChance > Rand.Range(0.0f, 1.0f, Rand.RandSync.Server))
                 {
                     // TODO: use the hit pos?

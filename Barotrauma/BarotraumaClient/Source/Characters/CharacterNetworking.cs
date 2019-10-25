@@ -20,13 +20,13 @@ namespace Barotrauma
                         return;
                     }
 
-                    //freeze AI characters if more than 1 seconds have passed since last update from the server
-                    if (lastRecvPositionUpdateTime < Lidgren.Network.NetTime.Now - 1.0f)
+                    //freeze AI characters if more than x seconds have passed since last update from the server
+                    if (lastRecvPositionUpdateTime < Lidgren.Network.NetTime.Now - NetConfig.FreezeCharacterIfPositionDataMissingDelay)
                     {
                         AnimController.Frozen = true;
                         memState.Clear();
-                        //hide after 2 seconds
-                        if (lastRecvPositionUpdateTime < Lidgren.Network.NetTime.Now - 2.0f)
+                        //hide after y seconds
+                        if (lastRecvPositionUpdateTime < Lidgren.Network.NetTime.Now - NetConfig.DisableCharacterIfPositionDataMissingDelay)
                         {
                             Enabled = false;
                             return;

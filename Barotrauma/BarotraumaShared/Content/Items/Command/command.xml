@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Navigation Terminal" identifier="navterminal" tags="command" linkable="true" allowedlinks="statusmonitor" category="Machine">
+  <Item name="Navigation Terminal" identifier="navterminal" tags="command,navterminal" linkable="true" allowedlinks="statusmonitor" category="Machine">
     <Sprite texture="Content/Items/Command/CommandDevices.png" depth="0.8" sourcerect="0,0,188,194" origin="0.5,0.5" />
     <BrokenSprite texture="Content/Items/Command/CommandDevices.png" sourcerect="188,0,188,194" depth="0.8" maxcondition="80" fadein="true" origin="0.5,0.5" />
     <BrokenSprite texture="Content/Items/Command/CommandDevices.png" sourcerect="376,0,188,194" depth="0.8" maxcondition="0" origin="0.5,0.5" />
@@ -30,6 +30,10 @@
       <DirectionalPingCircle texture="Content/Items/Command/directionalPingCircle.png" origin="0.0,0.5" />
       <ScreenOverlay texture="Content/Items/Command/sonarOverlay.png" origin="0.5,0.5" />
       <ScreenBackground texture="Content/Items/Command/sonarBackground.png" origin="0.5,0.5" />
+      <DirectionalPingBackground texture="Content/Items/Command/directionalPingBackground.png" origin="0.5,0.5" />
+      <DirectionalPingButton index="0" texture="Content/Items/Command/directionalPingButton.png" sourcerect="0,0,91,266" origin="-4.5275,0.5" />
+      <DirectionalPingButton index="1" texture="Content/Items/Command/directionalPingButton.png" sourcerect="133,0,91,266" origin="-4.5275,0.5" />
+      <DirectionalPingButton index="2" texture="Content/Items/Command/directionalPingButton.png" sourcerect="266,0,91,266" origin="-4.5275,0.5" />
       <Blip texture="Content/Items/Command/sonarBlip.png" origin="0.5,0.5" />
       <LineSprite texture="Content/Items/Command/NavUI.png" sourcerect="181,141,109,4" origin="0,0.5"/>
     </Sonar>
@@ -41,7 +45,7 @@
     </CustomInterface>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <requireditem identifier="screwdriver" type="Equipped" />
+      <requireditem items="screwdriver" type="Equipped" />
       <input name="power_in" displayname="connection.powerin" />
       <input name="transducer_in" displayname="connection.sonartransducerin" />
       <input name="velocity_in" displayname="connection.steeringvelocityin" />
@@ -55,13 +59,13 @@
     <Repairable selectkey="Action" header="electricalrepairsheader" deteriorationspeed="0.125" mindeteriorationdelay="180" maxdeteriorationdelay="720" mindeteriorationcondition="0" ShowRepairUIThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="electrical" level="40" />
-      <RequiredItem identifier="screwdriver" type="equipped" />
+      <RequiredItem items="screwdriver" type="equipped" />
       <ParticleEmitter particle="spark" particleamount="10" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="15.0" maxcondition="35.0" />
       <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="3" mincondition="0.0" maxcondition="15.0" />
       <ParticleEmitter particle="spark" particleamount="5" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="15.0" />
     </Repairable>
   </Item>
-  <Item name="Shuttle Navigation Terminal" identifier="shuttlenavterminal" tags="command" linkable="true" allowedlinks="statusmonitor" category="Machine" scale="0.5">
+  <Item name="Shuttle Navigation Terminal" identifier="shuttlenavterminal" tags="command,navterminal" linkable="true" allowedlinks="statusmonitor" category="Machine" scale="0.5">
     <Sprite texture="Content/Items/Command/CommandDevices.png" depth="0.8" sourcerect="2,196,284,237" origin="0.5,0.5" />
     <BrokenSprite texture="Content/Items/Command/CommandDevices.png" sourcerect="285,196,284,237" depth="0.8" maxcondition="80" fadein="true" origin="0.5,0.5" />
     <BrokenSprite texture="Content/Items/Command/CommandDevices.png" sourcerect="572,196,284,237" depth="0.8" maxcondition="0" origin="0.5,0.5" />
@@ -93,7 +97,7 @@
     </CustomInterface>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <requireditem identifier="screwdriver" type="Equipped" />
+      <requireditem items="screwdriver" type="Equipped" />
       <input name="power_in" displayname="connection.powerin" />
       <input name="transducer_in" displayname="connection.sonartransducerin" />
       <input name="velocity_in" displayname="connection.steeringvelocityin" />
@@ -105,12 +109,12 @@
     <Repairable selectkey="Action" header="electricalrepairsheader" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="electrical" level="40" />
-      <RequiredItem identifier="screwdriver" type="equipped" />
+      <RequiredItem items="screwdriver" type="equipped" />
       <ParticleEmitter particle="spark" particleamount="10" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="25.0" />
       <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="3" mincondition="0.0" maxcondition="0.0" />
     </Repairable>
   </Item>
-  <Item name="Sonar Monitor" identifier="sonarmonitor" tags="command" linkable="true" allowedlinks="statusmonitor" category="Machine">
+  <Item name="Sonar Monitor" identifier="sonarmonitor" tags="command,sonarmonitor" linkable="true" allowedlinks="statusmonitor" category="Machine">
     <Sprite texture="Content/Items/Command/CommandDevices.png" depth="0.8" sourcerect="0,1,188,194" origin="0.5,0.5" />
     <BrokenSprite texture="Content/Items/Command/CommandDevices.png" sourcerect="188,1,188,194" depth="0.8" maxcondition="80" fadein="true" origin="0.5,0.5" />
     <BrokenSprite texture="Content/Items/Command/CommandDevices.png" sourcerect="376,1,188,194" depth="0.8" maxcondition="0" origin="0.5,0.5" />
@@ -126,18 +130,18 @@
     </Sonar>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <requireditem identifier="screwdriver" type="Equipped" />
+      <requireditem items="screwdriver" type="Equipped" />
       <input name="power_in" displayname="connection.powerin" />
     </ConnectionPanel>
     <Repairable selectkey="Action" header="electricalrepairsheader" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="electrical" level="40" />
-      <RequiredItem identifier="screwdriver" type="equipped" />
+      <RequiredItem items="screwdriver" type="equipped" />
       <ParticleEmitter particle="spark" particleamount="10" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="50.0" />
       <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="2" mincondition="0.0" maxcondition="0.0" />
     </Repairable>
   </Item>
-  <Item name="Status Monitor" identifier="statusmonitor" tags="command" aliases="MiniMap" category="Machine" linkable="true" allowedlinks="navterminal">
+  <Item name="Status Monitor" identifier="statusmonitor" tags="command,statusmonitor" aliases="MiniMap" category="Machine" linkable="true" allowedlinks="navterminal">
     <Sprite texture="Content/Items/Command/CommandDevices.png" sourcerect="588,1,113,192" depth="0.8" origin="0.5,0.5" />
     <BrokenSprite texture="Content/Items/Command/CommandDevices.png" sourcerect="701,1,113,192" depth="0.8" maxcondition="80" fadein="true" origin="0.5,0.5" />
     <BrokenSprite texture="Content/Items/Command/CommandDevices.png" sourcerect="812,1,113,192" depth="0.8" maxcondition="0" origin="0.5,0.5" />
@@ -149,7 +153,7 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <AlternativeLayout anchor="CenterRight" />
-      <requireditem identifier="screwdriver" type="Equipped" />
+      <requireditem items="screwdriver" type="Equipped" />
       <input name="power_in" displayname="connection.powerin" />
       <input name="water_data_in" displayname="connection.waterdatain" />
       <input name="oxygen_data_in" displayname="connection.oxygendatain" />
@@ -157,18 +161,18 @@
     <Repairable selectkey="Action" header="electricalrepairsheader" deteriorationspeed="0.15" mindeteriorationdelay="120" maxdeteriorationdelay="480" MinDeteriorationCondition="0" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="electrical" level="40" />
-      <RequiredItem identifier="screwdriver" type="equipped" />
+      <RequiredItem items="screwdriver" type="equipped" />
       <ParticleEmitter particle="spark" particleamount="10" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="50.0" />
       <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="2" mincondition="0.0" maxcondition="0.0" />
     </Repairable>
   </Item>
-  <Item name="Sonar Transducer" identifier="sonartransducer" tags="command" category="Machine" spritecolor="255,255,255,255" Scale="0.75">
+  <Item name="Sonar Transducer" identifier="sonartransducer" tags="command,sonartransducer" category="Machine" spritecolor="255,255,255,255" Scale="0.75">
     <!-- TODO: sonar transducer light implementation -->
     <Sprite texture="Content/Items/Command/CommandDevices.png" sourcerect="0,437,133,130" depth="0.8" origin="0.5,0.5" />
     <SonarTransducer MinVoltage="0.5" PowerConsumption="100" canbeselected="true" />
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <requireditem identifier="screwdriver" type="Equipped" />
+      <requireditem items="screwdriver" type="Equipped" />
       <input name="power_in" displayname="connection.powerin" />
       <output name="data_out" displayname="connection.sonardataout" fallbackdisplayname="connection.signalout"/>
     </ConnectionPanel>

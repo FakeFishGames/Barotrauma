@@ -26,7 +26,7 @@
 
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <requireditem identifier="screwdriver" type="Equipped"/>
+      <requireditem items="screwdriver" type="Equipped"/>
       <input name="set_text" displayname="connection.set_text" fallbackdisplayname="connection.setoutput"/>
     </ConnectionPanel>
   </Item>

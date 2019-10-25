@@ -235,8 +235,7 @@ namespace Barotrauma
             }
         }
 
-        // Currently the camera cannot handle greater speeds. It starts to lag behind.
-        public const float MAX_SPEED = 9;
+        public const float MAX_SPEED = 15;
 
         public Vector2 TargetMovement
         {
@@ -260,6 +259,7 @@ namespace Barotrauma
         public float ImpactTolerance => RagdollParams.ImpactTolerance;
         public bool Draggable => RagdollParams.Draggable;
         public bool CanEnterSubmarine => RagdollParams.CanEnterSubmarine;
+        public bool CanAttackSubmarine => Limbs.Any(l => l.attack != null && l.attack.IsValidTarget(AttackTarget.Structure));
 
         public float Dir
         {
@@ -779,17 +779,9 @@ namespace Barotrauma
 
             foreach (Limb limb in Limbs)
             {
-                if (limb == null || limb.IsSevered) continue;
-
+                if (limb == null || limb.IsSevered) { continue; }
                 limb.Dir = Dir;
-
-                if (limb.MouthPos.HasValue)
-                {
-                    limb.MouthPos = new Vector2(
-                        -limb.MouthPos.Value.X,
-                        limb.MouthPos.Value.Y);
-                }
-
+                limb.MouthPos = new Vector2(-limb.MouthPos.X, limb.MouthPos.Y);
                 limb.MirrorPullJoint();
             }
 
@@ -1669,22 +1661,14 @@ namespace Barotrauma
 
         public Vector2? GetMouthPosition()
         {
-            Limb mouthLimb = Array.Find(Limbs, l => l != null && l.MouthPos.HasValue);
-            if (mouthLimb == null) mouthLimb = GetLimb(LimbType.Head);
-            if (mouthLimb == null) return null;
-
-            Vector2 mouthPos = mouthLimb.SimPosition;
-            if (mouthLimb.MouthPos.HasValue)
-            {
-                float cos = (float)Math.Cos(mouthLimb.Rotation);
-                float sin = (float)Math.Sin(mouthLimb.Rotation);
-                mouthPos += new Vector2(
-                     mouthLimb.MouthPos.Value.X * cos - mouthLimb.MouthPos.Value.Y * sin,
-                     mouthLimb.MouthPos.Value.X * sin + mouthLimb.MouthPos.Value.Y * cos) * RagdollParams.LimbScale;
-            }
-            return mouthPos;
+            Limb mouthLimb = GetLimb(LimbType.Head);
+            if (mouthLimb == null) { return null; }
+            float cos = (float)Math.Cos(mouthLimb.Rotation);
+            float sin = (float)Math.Sin(mouthLimb.Rotation);
+            Vector2 bodySize = mouthLimb.body.GetSize();
+            Vector2 offset = new Vector2(mouthLimb.MouthPos.X * bodySize.X / 2, mouthLimb.MouthPos.Y * bodySize.Y / 2);
+            return mouthLimb.SimPosition + new Vector2(offset.X * cos - offset.Y * sin, offset.X * sin + offset.Y * cos) * RagdollParams.LimbScale;
         }
-
 
         public Vector2 GetColliderBottom()
         {

@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ItemAssembly name="Small Diving Gear Cabinet" description="" hideinmenus="false">
-  <Item name="Medium Windowed Steel Cabinet" identifier="mediumwindowedsteelcabinet" ID="28" rect="-48,96,84,188" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="cabinet" displaysidebysidewhenlinked="False" spritedepth="0.84" scale="0.5">
+  <Item name="Medium Windowed Steel Cabinet" identifier="mediumwindowedsteelcabinet" ID="28" rect="-48,96,84,188" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="locker" displaysidebysidewhenlinked="False" spritedepth="0.84" scale="0.5">
     <ItemContainer itempos="0,0" iteminterval="0,0" pickingtime="0" allowingameediting="True" msg="ItemMsgInteractSelect" contained="29,31,33,35,37,39,41,43,45,47,49,50,51,52,53" />
   </Item>
   <Item name="Diving Mask" identifier="divingmask" ID="41" rect="222,-109,37,38" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,diving" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">

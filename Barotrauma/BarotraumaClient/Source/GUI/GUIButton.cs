@@ -163,6 +163,12 @@ namespace Barotrauma
             {
                 TextColor = this.style == null ? Color.Black : this.style.textColor
             };
+            if (rectT.Rect.Height == 0 && !string.IsNullOrEmpty(text))
+            {
+                RectTransform.Resize(new Point(RectTransform.Rect.Width, (int)Font.MeasureString(textBlock.Text).Y));
+                RectTransform.MinSize = textBlock.RectTransform.MinSize = new Point(0, Rect.Height);
+                TextBlock.SetTextPos();
+            }
             GUI.Style.Apply(textBlock, "", this);
             Enabled = true;
         }

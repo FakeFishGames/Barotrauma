@@ -449,11 +449,7 @@ namespace Barotrauma
                 {
                     UserData = mode
                 };
-                //TODO: translate mission descriptions
-                if (TextManager.Language == "English")
-                {
-                    textBlock.ToolTip = mode.Description;
-                }
+                textBlock.ToolTip = mode.Description;                
             }
 
             //mission type ------------------------------------------------------------------
@@ -731,7 +727,7 @@ namespace Barotrauma
                 ReadyToStartBox.Selected = false;
                 if (campaignUI != null)
                 {
-                    //SelectTab(Tab.Map);
+                    campaignUI.SelectTab(CampaignUI.Tab.Map);
                     if (campaignUI.StartButton != null)
                     {
                         campaignUI.StartButton.Visible = !GameMain.Client.GameStarted &&

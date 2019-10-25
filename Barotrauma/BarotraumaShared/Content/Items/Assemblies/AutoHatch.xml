@@ -1,77 +1,103 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ItemAssembly name="AutoHatch" description="" hideinmenus="false">
-  <Item name="Blue Wire" identifier="bluewire" ID="16" rect="299,40,42,16" hiddeningame="False" spritecolor="51,121,173,255" inventoryiconcolor="51,121,173,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
-    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="ItemMsgPickUpSelect" />
-    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="-1;-8.5;-72.5;-8" />
-  </Item>
-  <Item name="Blue Wire" identifier="bluewire" ID="15" rect="299,40,42,16" hiddeningame="False" spritecolor="51,121,173,255" inventoryiconcolor="51,121,173,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
-    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="ItemMsgPickUpSelect" />
-    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="-72.5;-8;72;-10.5" />
-  </Item>
-  <Item name="Blue Wire" identifier="bluewire" ID="14" rect="299,40,42,16" hiddeningame="False" spritecolor="51,121,173,255" inventoryiconcolor="51,121,173,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
-    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="ItemMsgPickUpSelect" />
-    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="-72.5;-8;-89;-6.5" />
-  </Item>
-  <Item name="And Component" identifier="andcomponent" ID="11" rect="-80,-1,15,14" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
-    <AndComponent timeframe="0" output="0" falseoutput="" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
-    <Holdable attached="True" holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="5" canbepicked="True" allowingameediting="True" msg="ItemMsgDetachWrench">
-      <requireditem identifiers="wrench" type="Equipped" optional="false" />
-    </Holdable>
-    <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
-      <requireditem identifiers="screwdriver" type="Equipped" optional="false" />
-      <input name="signal_in1">
-        <link w="15" />
-      </input>
-      <input name="signal_in2">
-        <link w="14" />
-      </input>
-      <input name="set_output" />
-      <output name="signal_out">
-        <link w="16" />
-      </output>
-    </ConnectionPanel>
-  </Item>
-  <Item name="Oscillator" identifier="oscillator" ID="10" rect="-96,0,14,13" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
-    <OscillatorComponent outputtype="Pulse" frequency="1" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
-    <Holdable attached="True" holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="5" canbepicked="True" allowingameediting="True" msg="ItemMsgDetachWrench">
-      <requireditem identifiers="wrench" type="Equipped" optional="false" />
-    </Holdable>
-    <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
-      <requireditem identifiers="screwdriver" type="Equipped" optional="false" />
-      <input name="set_frequency" />
-      <input name="set_outputtype" />
-      <output name="signal_out">
-        <link w="14" />
-      </output>
-    </ConnectionPanel>
-  </Item>
-  <Item name="Motion Detector" identifier="motiondetector" ID="12" rect="61,0,22,21" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.16">
-    <MotionSensor onlyhumans="False" rangex="75" rangey="200" detectoffset="-75,0" output="" falseoutput="1" minimumvelocity="0.001" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
-    <Holdable attached="True" holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="5" canbepicked="True" allowingameediting="True" msg="ItemMsgDetachWrench">
-      <requireditem identifiers="wrench" type="Equipped" optional="false" />
-    </Holdable>
-    <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
-      <requireditem identifiers="screwdriver" type="Equipped" optional="false" />
-      <output name="state_out">
-        <link w="15" />
-      </output>
-    </ConnectionPanel>
-  </Item>
-  <Item name="Hatch with Buttons" identifier="hatchwbuttons" ID="13" rect="-65,16,128,49" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="door" displaysidebysidewhenlinked="False" spritedepth="0.51" scale="0.5">
-    <Door isopen="False" pickingtime="10" canbepicked="True" allowingameediting="True" msg="ItemMsgForceOpenCrowbar">
-      <requireditem identifiers="crowbar" type="Equipped" optional="true" />
-      <requireditem identifiers="idcard" type="Picked" optional="true" />
+<ItemAssembly name="AutoHatch" description="A hatch that closes automatically if it detects no movement near it." hideinmenus="false">
+  <Item name="Hatch" identifier="hatchwbuttons" ID="577" rect="-48,32,128,49" linked="582" hiddeningame="False" noninteractable="False" scale="0.5" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="door" displaysidebysidewhenlinked="False" spritedepth="0.51">
+    <Door openingspeed="3" closingspeed="3" isopen="False" pickingtime="10" canbepicked="True" allowingameediting="True" msg="ItemMsgForceOpenCrowbar">
+      <requireditem identifiers="crowbar" type="Equipped" optional="true" ignoreineditor="false" />
+      <requireditem identifiers="idcard" type="Picked" optional="true" ignoreineditor="false" />
     </Door>
     <Repairable deteriorationspeed="0" mindeteriorationdelay="0" maxdeteriorationdelay="0" mindeteriorationcondition="50" showrepairuithreshold="80" fixdurationlowskill="25" fixdurationhighskill="10" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRepairWrench">
-      <requireditem identifiers="wrench" type="Equipped" optional="false" />
+      <requireditem identifiers="wrench" type="Equipped" optional="false" ignoreineditor="false" />
     </Repairable>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
-      <requireditem identifiers="screwdriver" type="Equipped" optional="false" />
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false" />
       <input name="toggle" />
       <input name="set_state">
-        <link w="16" />
+        <link w="583" />
       </input>
       <output name="state_out" />
     </ConnectionPanel>
   </Item>
+  <Item name="Blue Wire" identifier="bluewire" ID="587" rect="48939,-10664,42,16" hiddeningame="False" noninteractable="False" scale="0.5" spritecolor="51,121,173,255" inventoryiconcolor="51,121,173,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="-56.5;9.5;88;5.5" />
+  </Item>
+  <Item name="Blue Wire" identifier="bluewire" ID="586" rect="48939,-10664,42,16" hiddeningame="False" noninteractable="False" scale="0.5" spritecolor="51,121,173,255" inventoryiconcolor="51,121,173,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="-56.5;9.5;-72.5;9" />
+  </Item>
+  <Item name="Blue Wire" identifier="bluewire" ID="585" rect="48939,-10664,42,16" hiddeningame="False" noninteractable="False" scale="0.5" spritecolor="51,121,173,255" inventoryiconcolor="51,121,173,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="-72.5;9;-56.5;25.5" />
+  </Item>
+  <Item name="Blue Wire" identifier="bluewire" ID="584" rect="48939,-10664,42,16" hiddeningame="False" noninteractable="False" scale="0.5" spritecolor="51,121,173,255" inventoryiconcolor="51,121,173,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="-56.5;25.5;88;5.5" />
+  </Item>
+  <Item name="Blue Wire" identifier="bluewire" ID="583" rect="48939,-10664,42,16" hiddeningame="False" noninteractable="False" scale="0.5" spritecolor="51,121,173,255" inventoryiconcolor="51,121,173,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="-72.5;9;32;8;16;7.5" />
+  </Item>
+  <Item name="Not Component" identifier="notcomponent" ID="580" rect="-64,16,15,13" hiddeningame="False" noninteractable="False" scale="0.5" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.8">
+    <NotComponent pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
+    <Holdable attached="True" holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="5" canbepicked="True" allowingameediting="True" msg="ItemMsgDetachWrench">
+      <requireditem identifiers="wrench" type="Equipped" optional="false" ignoreineditor="false" />
+    </Holdable>
+    <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false" />
+      <input name="signal_in">
+        <link w="587" />
+      </input>
+      <output name="signal_out">
+        <link w="586" />
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="And Component" identifier="andcomponent" ID="579" rect="-80,16,15,14" hiddeningame="False" noninteractable="False" scale="0.5" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.8">
+    <AndComponent timeframe="0" output="0" falseoutput="" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
+    <Holdable attached="True" holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="5" canbepicked="True" allowingameediting="True" msg="ItemMsgDetachWrench">
+      <requireditem identifiers="wrench" type="Equipped" optional="false" ignoreineditor="false" />
+    </Holdable>
+    <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false" />
+      <input name="signal_in1">
+        <link w="586" />
+      </input>
+      <input name="signal_in2">
+        <link w="585" />
+      </input>
+      <input name="set_output" />
+      <output name="signal_out">
+        <link w="583" />
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Delay Component" identifier="delaycomponent" ID="578" rect="-64,32,15,13" hiddeningame="False" noninteractable="False" scale="0.5" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.8">
+    <DelayComponent delay="4" resetwhensignalreceived="False" resetwhendifferentsignalreceived="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
+    <Holdable attached="True" holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="5" canbepicked="True" allowingameediting="True" msg="ItemMsgDetachWrench">
+      <requireditem identifiers="wrench" type="Equipped" optional="false" ignoreineditor="false" />
+    </Holdable>
+    <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false" />
+      <input name="signal_in">
+        <link w="584" />
+      </input>
+      <output name="signal_out">
+        <link w="585" />
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Motion Detector" identifier="motiondetector" ID="581" rect="77,16,22,21" hiddeningame="False" noninteractable="False" scale="0.5" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.8">
+    <MotionSensor onlyhumans="False" rangex="75" rangey="200" detectoffset="-75,0" output="1" falseoutput="0" minimumvelocity="0" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
+    <Holdable attached="True" holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="5" canbepicked="True" allowingameediting="True" msg="ItemMsgDetachWrench">
+      <requireditem identifiers="wrench" type="Equipped" optional="false" ignoreineditor="false" />
+    </Holdable>
+    <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false" />
+      <output name="state_out">
+        <link w="584" />
+        <link w="587" />
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Gap ID="582" horizontal="false" rect="-48,37,128,59" />
 </ItemAssembly>
