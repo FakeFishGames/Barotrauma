@@ -49,7 +49,7 @@ namespace Barotrauma
             {
                 lock (loadMutex)
                 {
-                    return currSplashScreen != null;
+                    return currSplashScreen != null || pendingSplashScreens.Count > 0;
                 }
             }
         }
