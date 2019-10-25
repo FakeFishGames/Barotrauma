@@ -234,7 +234,7 @@
       <RequiredItem identifier="organicfiber" />
     </Fabricate>
     <Deconstruct time="20">
-      <Item identifier="organicfiber" />
+      <Item identifier="organicfiber" copycondition="true" mincondition="0.1"/>
     </Deconstruct>
     <SuitableTreatment identifier="bleeding" suitability="50" />
     <SuitableTreatment identifier="gunshotwound" suitability="50" />
@@ -278,8 +278,8 @@
       <RequiredItem identifier="elastin" />
     </Fabricate>
     <Deconstruct time="20">
-      <Item identifier="antibleeding1" />
-      <Item identifier="elastin" />
+      <Item identifier="antibleeding1" copycondition="true" mincondition="0.1" />
+      <Item identifier="elastin" copycondition="true" mincondition="0.1" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="959,771,63,59" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="67,808,45,70" depth="0.6" origin="0.5,0.5" />
@@ -324,9 +324,9 @@
       <RequiredItem identifier="elastin" />
     </Fabricate>
     <Deconstruct time="20">
-      <Item identifier="stabilozine" />
-      <Item identifier="antibiotics" />
-      <Item identifier="elastin" />
+      <Item identifier="stabilozine" copycondition="true" mincondition="0.1" />
+      <Item identifier="antibiotics" copycondition="true" mincondition="0.1" />
+      <Item identifier="elastin" copycondition="true" mincondition="0.1" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,448,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="20,765,110,40" depth="0.6" origin="0.5,0.5" />
@@ -375,8 +375,8 @@
       <RequiredItem identifier="opium" />
     </Fabricate>
     <Deconstruct time="20">
-      <Item identifier="opium" />
-      <Item identifier="opium" />
+      <Item identifier="opium" copycondition="true" mincondition="0.1" />
+      <Item identifier="opium" copycondition="true" mincondition="0.1" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,448,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="0,0,63,115" depth="0.6" origin="0.5,0.5" />
@@ -442,9 +442,9 @@
       <RequiredItem identifier="ethanol" />
     </Fabricate>
     <Deconstruct time="20">
-      <Item identifier="antidama1" />
-      <Item identifier="adrenaline" />
-      <Item identifier="ethanol" />
+      <Item identifier="antidama1" copycondition="true" mincondition="0.1" />
+      <Item identifier="adrenaline" copycondition="true" mincondition="0.1" />
+      <Item identifier="ethanol" copycondition="true" mincondition="0.1" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,448,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="62,0,62,115" depth="0.6" origin="0.5,0.5" />
@@ -504,8 +504,8 @@
       <RequiredItem identifier="chlorine" />
     </Fabricate>
     <Deconstruct time="20">
-      <Item identifier="sodium" />
-      <Item identifier="chlorine" />
+      <Item identifier="sodium" copycondition="true" mincondition="0.1" />
+      <Item identifier="chlorine" copycondition="true" mincondition="0.1" />
     </Deconstruct>
     <SuitableTreatment identifier="bloodloss" suitability="30" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,640,64,64" origin="0.5,0.5" />
@@ -542,9 +542,9 @@
       <RequiredItem identifier="stabilozine" />
     </Fabricate>
     <Deconstruct time="20">
-      <Item identifier="alienblood" />
-      <Item identifier="antibloodloss1" />
-      <Item identifier="stabilozine" />
+      <Item identifier="alienblood" copycondition="true" mincondition="0.1" />
+      <Item identifier="antibloodloss1" copycondition="true" mincondition="0.1" />
+      <Item identifier="stabilozine" copycondition="true" mincondition="0.1" />
     </Deconstruct>
     <SuitableTreatment identifier="bloodloss" suitability="60" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,640,64,64" origin="0.5,0.5" />
@@ -578,9 +578,9 @@
       <RequiredItem identifier="liquidoxygenite" />
     </Fabricate>
     <Deconstruct time="20">
-      <Item identifier="antibleeding3" />
-      <Item identifier="antidama2" />
-      <Item identifier="liquidoxygenite" />
+      <Item identifier="antibleeding3" copycondition="true" mincondition="0.1" />
+      <Item identifier="antidama2" copycondition="true" mincondition="0.1" />
+      <Item identifier="liquidoxygenite" copycondition="true" mincondition="0.1" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,704,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="378,515,62,115" depth="0.6" origin="0.5,0.5" />
@@ -636,9 +636,9 @@
       <RequiredItem identifier="stabilozine" />
     </Fabricate>
     <Deconstruct time="20">
-      <Item identifier="huskeggs" />
-      <Item identifier="antibiotics" />
-      <Item identifier="stabilozine" />
+      <Item identifier="huskeggs" copycondition="true" mincondition="0.1" />
+      <Item identifier="antibiotics" copycondition="true" mincondition="0.1" />
+      <Item identifier="stabilozine" copycondition="true" mincondition="0.1" />
     </Deconstruct>
     <SuitableTreatment identifier="huskinfection" suitability="100" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="897,449,63,63" origin="0.5,0.5" />
@@ -707,9 +707,9 @@
       <RequiredItem identifier="chlorine" />
     </Fabricate>
     <Deconstruct time="20">
-      <Item identifier="lithium" />
-      <Item identifier="carbon" />
-      <Item identifier="chlorine" />
+      <Item identifier="lithium" copycondition="true" mincondition="0.1" />
+      <Item identifier="carbon" copycondition="true" mincondition="0.1" />
+      <Item identifier="chlorine" copycondition="true" mincondition="0.1" />
     </Deconstruct>
     <SuitableTreatment identifier="psychosis" suitability="100" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,640,64,64" origin="0.5,0.5" />
@@ -754,8 +754,8 @@
       <RequiredItem identifier="stabilozine" />
     </Fabricate>
     <Deconstruct time="20">
-      <Item identifier="antidama1" />
-      <Item identifier="stabilozine" />
+      <Item identifier="antidama1" copycondition="true" mincondition="0.1" />
+      <Item identifier="stabilozine" copycondition="true" mincondition="0.1" />
     </Deconstruct>    
     <SuitableTreatment identifier="opiateaddiction" suitability="100" />
     <SuitableTreatment identifier="opiatewithdrawal" suitability="100" />
@@ -808,8 +808,8 @@
       <RequiredItem identifier="stabilozine" mincondition="0.25" />
     </Fabricate>
     <Deconstruct time="20">
-      <Item identifier="morbusine" />
-      <Item identifier="stabilozine" />
+      <Item identifier="morbusine" copycondition="true" mincondition="0.1" />
+      <Item identifier="stabilozine" copycondition="true" mincondition="0.1" />
     </Deconstruct>
     <SuitableTreatment identifier="morbusinepoisoning" suitability="100" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,704,64,64" origin="0.5,0.5" />
@@ -847,8 +847,8 @@
       <RequiredItem identifier="stabilozine" />
     </Fabricate>
     <Deconstruct time="20">
-      <Item identifier="cyanide" />
-      <Item identifier="stabilozine" />
+      <Item identifier="cyanide" copycondition="true" mincondition="0.1" />
+      <Item identifier="stabilozine" copycondition="true" mincondition="0.1" />
     </Deconstruct>
     <SuitableTreatment identifier="cyanidepoisoning" suitability="100" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,704,64,64" origin="0.5,0.5" />
@@ -886,8 +886,8 @@
       <RequiredItem identifier="stabilozine" />
     </Fabricate>
     <Deconstruct time="20">
-      <Item identifier="sufforin" />
-      <Item identifier="stabilozine" />
+      <Item identifier="sufforin" copycondition="true" mincondition="0.1" />
+      <Item identifier="stabilozine" copycondition="true" mincondition="0.1" />
     </Deconstruct>
     <SuitableTreatment identifier="sufforinpoisoning" suitability="100" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,704,64,64" origin="0.5,0.5" />
@@ -925,8 +925,8 @@
       <RequiredItem identifier="stabilozine" />
     </Fabricate>
     <Deconstruct time="20">
-      <Item identifier="deliriumine" />
-      <Item identifier="stabilozine" />
+      <Item identifier="deliriumine" copycondition="true" mincondition="0.1" />
+      <Item identifier="stabilozine" copycondition="true" mincondition="0.1" />
     </Deconstruct>
     <SuitableTreatment identifier="deliriuminepoisoning" suitability="100" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,703,64,64" origin="0.5,0.5" />
@@ -969,8 +969,8 @@
       <RequiredItem identifier="stabilozine" />
     </Fabricate>
     <Deconstruct time="20">
-      <Item identifier="radiotoxin" />
-      <Item identifier="stabilozine" />
+      <Item identifier="radiotoxin" copycondition="true" mincondition="0.1" />
+      <Item identifier="stabilozine" copycondition="true" mincondition="0.1" />
     </Deconstruct>
     <SuitableTreatment identifier="radiationsickness" suitability="100" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,704,64,64" origin="0.5,0.5" />
@@ -1008,9 +1008,9 @@
       <RequiredItem identifier="oxygeniteshard" />
     </Fabricate>
     <Deconstruct time="20">
-      <Item identifier="tonicliquid" />
-      <Item identifier="stabilozine" />
-      <Item identifier="oxygeniteshard" />
+      <Item identifier="tonicliquid" copycondition="true" mincondition="0.1" />
+      <Item identifier="stabilozine" copycondition="true" mincondition="0.1" />
+      <Item identifier="oxygeniteshard" copycondition="true" mincondition="0.1" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,640,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="311,235,62,115" depth="0.6" origin="0.5,0.5" />
@@ -1067,9 +1067,9 @@
       <RequiredItem identifier="potassium" />
     </Fabricate>
     <Deconstruct time="20">
-      <Item identifier="calcium" />
-      <Item identifier="potassium" />
-      <Item identifier="zinc" />
+      <Item identifier="calcium" copycondition="true" mincondition="0.1" />
+      <Item identifier="potassium" copycondition="true" mincondition="0.1" />
+      <Item identifier="zinc" copycondition="true" mincondition="0.1" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,704,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="138,759,63,150" depth="0.6" origin="0.5,0.5" />
@@ -1097,9 +1097,9 @@
       <RequiredItem identifier="carbon" />
     </Fabricate>
     <Deconstruct time="20">
-      <Item identifier="phosphorus" />
-      <Item identifier="carbon" />
-      <Item identifier="chlorine" />
+      <Item identifier="phosphorus" copycondition="true" mincondition="0.1" />
+      <Item identifier="carbon" copycondition="true" mincondition="0.1" />
+      <Item identifier="chlorine" copycondition="true" mincondition="0.1" />
     </Deconstruct>
     <!-- TODO: sprite -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,448,64,64" origin="0.5,0.5" />
@@ -1147,8 +1147,8 @@
       <RequiredItem identifier="antidama2" />
     </Fabricate>
     <Deconstruct time="20">
-      <Item identifier="tonicliquid" />
-      <Item identifier="antidama2" />
+      <Item identifier="tonicliquid" copycondition="true" mincondition="0.1" />
+      <Item identifier="antidama2" copycondition="true" mincondition="0.1" />
     </Deconstruct>
     <!-- TODO: sprite -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,448,64,64" origin="0.5,0.5" />
@@ -1188,8 +1188,8 @@
       <RequiredItem identifier="steroids" />
     </Fabricate>
     <Deconstruct time="20">
-      <Item identifier="meth" />
-      <Item identifier="steroids" />
+      <Item identifier="meth" copycondition="true" mincondition="0.1" />
+      <Item identifier="steroids" copycondition="true" mincondition="0.1" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,448,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="249,0,62,115" depth="0.6" origin="0.5,0.5" />
@@ -1236,8 +1236,8 @@
       <RequiredItem identifier="deusizine" count="2" />
     </Fabricate>
     <Deconstruct time="20">
-      <Item identifier="sulphuricacid" />
-      <Item identifier="deusizine" />
+      <Item identifier="sulphuricacid" copycondition="true" mincondition="0.1" />
+      <Item identifier="deusizine" copycondition="true" mincondition="0.1" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,640,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="311,120,62,115" depth="0.6" origin="0.5,0.5" />
@@ -1274,8 +1274,8 @@
       <RequiredItem identifier="ethanol" />
     </Fabricate>
     <Deconstruct time="20">
-      <Item identifier="chlorine" />
-      <Item identifier="ethanol" />
+      <Item identifier="chlorine" copycondition="true" mincondition="0.1" />
+      <Item identifier="ethanol" copycondition="true" mincondition="0.1" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,704,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="126,232,67,124" depth="0.6" origin="0.5,0.5" />
@@ -1312,8 +1312,8 @@
       <RequiredItem identifier="sodium" />
     </Fabricate>
     <Deconstruct time="20">
-      <Item identifier="chloralhydrate" />
-      <Item identifier="sodium" />
+      <Item identifier="chloralhydrate" copycondition="true" mincondition="0.1" />
+      <Item identifier="sodium" copycondition="true" mincondition="0.1" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,640,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="63,117,62,115" depth="0.6" origin="0.5,0.5" />
@@ -1348,8 +1348,8 @@
       <RequiredItem identifier="uranium" />
     </Fabricate>
     <Deconstruct time="20">
-      <Item identifier="thorium" />
-      <Item identifier="thorium" />
+      <Item identifier="thorium" copycondition="true" mincondition="0.1" />
+      <Item identifier="thorium" copycondition="true" mincondition="0.1" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,448,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="0,115,62,115" depth="0.6" origin="0.5,0.5" />
@@ -1384,8 +1384,8 @@
       <RequiredItem identifier="flashpowder" />
     </Fabricate>
     <Deconstruct time="20">
-      <Item identifier="sulphuricacid" />
-      <Item identifier="flashpowder" />
+      <Item identifier="sulphuricacid" copycondition="true" mincondition="0.1" />
+      <Item identifier="flashpowder" copycondition="true" mincondition="0.1" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,640,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="188,120,62,115" depth="0.6" origin="0.5,0.5" />
@@ -1419,7 +1419,7 @@
       <RequiredItem identifier="dementonite" />
     </Fabricate>
     <Deconstruct time="20">
-      <Item identifier="dementonite" />
+      <Item identifier="dementonite" copycondition="true" mincondition="0.1" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,704,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="378,239,62,115" depth="0.6" origin="0.5,0.5" />
