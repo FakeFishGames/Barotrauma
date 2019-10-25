@@ -535,7 +535,7 @@ namespace Barotrauma
 
             float[] components = new float[4] { 1.0f, 1.0f, 1.0f, 1.0f };
 
-            if (strComponents.Length < 3)
+            if (strComponents.Length == 1)
             {
                 bool hexFailed = true;
                 stringColor = stringColor.Trim();
