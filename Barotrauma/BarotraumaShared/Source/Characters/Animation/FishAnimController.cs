@@ -143,10 +143,11 @@ namespace Barotrauma
                 if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
                 {
                     Collider.Enabled = false;
-                    Collider.FarseerBody.FixedRotation = false;
-                    Collider.LinearVelocity = mainLimb.LinearVelocity;
-                    Collider.SetTransformIgnoreContacts(mainLimb.SimPosition, mainLimb.Rotation);
-                    ResetPullJoints();
+                    Collider.LinearVelocity = MainLimb.LinearVelocity;
+                    Collider.SetTransformIgnoreContacts(MainLimb.SimPosition, MainLimb.Rotation);
+                    //reset pull joints to prevent the character from "hanging" mid-air if pull joints had been active when the character was still moving
+                    //(except when dragging, then we need the pull joints)
+                    if (!character.CanBeDragged || character.SelectedBy == null) { ResetPullJoints(); }
                 }
                 if (character.IsDead && deathAnimTimer < deathAnimDuration)
                 {
