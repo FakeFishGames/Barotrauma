@@ -362,36 +362,37 @@ namespace Barotrauma.Networking
                         return;
                     }
 
-                    Int32 contentPackageCount = inc.ReadVariableInt32();
-                    List<ClientContentPackage> contentPackages = new List<ClientContentPackage>();
+                    int contentPackageCount = inc.ReadVariableInt32();
+                    List<ClientContentPackage> clientContentPackages = new List<ClientContentPackage>();
                     for (int i = 0; i < contentPackageCount; i++)
                     {
                         string packageName = inc.ReadString();
                         string packageHash = inc.ReadString();
-                        contentPackages.Add(new ClientContentPackage(packageName, packageHash));
+                        clientContentPackages.Add(new ClientContentPackage(packageName, packageHash));
                     }
 
+                    //check if the client is missing any of our packages
                     List<ContentPackage> missingPackages = new List<ContentPackage>();
-                    foreach (ContentPackage contentPackage in GameMain.SelectedPackages)
+                    foreach (ContentPackage serverContentPackage in GameMain.SelectedPackages)
                     {
-                        if (!contentPackage.HasMultiplayerIncompatibleContent) continue;
-                        bool packageFound = false;
-                        for (int i = 0; i < contentPackageCount; i++)
-                        {
-                            if (contentPackages[i].Name == contentPackage.Name && contentPackages[i].Hash == contentPackage.MD5hash.Hash)
-                            {
-                                packageFound = true;
-                                break;
-                            }
-                        }
-                        if (!packageFound) missingPackages.Add(contentPackage);
+                        if (!serverContentPackage.HasMultiplayerIncompatibleContent) continue;
+                        bool packageFound = clientContentPackages.Any(cp => cp.Name == serverContentPackage.Name && cp.Hash == serverContentPackage.MD5hash.Hash);
+                        if (!packageFound) { missingPackages.Add(serverContentPackage); }
+                    }
+
+                    //check if the client is using packages we don't have
+                    List<ClientContentPackage> redundantPackages = new List<ClientContentPackage>();
+                    foreach (ClientContentPackage clientContentPackage in clientContentPackages)
+                    {
+                        bool packageFound = GameMain.SelectedPackages.Any(cp => cp.Name == clientContentPackage.Name && cp.MD5hash.Hash == clientContentPackage.Hash);
+                        if (!packageFound) { redundantPackages.Add(clientContentPackage); }
                     }
 
                     if (missingPackages.Count == 1)
                     {
                         RemovePendingClient(pendingClient, DisconnectReason.MissingContentPackage,
                             $"DisconnectMessage.MissingContentPackage~[missingcontentpackage]={GetPackageStr(missingPackages[0])}");
-                        GameServer.Log(name + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (missing content package " + GetPackageStr(missingPackages[0]) + ")", ServerLog.MessageType.Error);
+                        GameServer.Log(name + " (" + inc.SenderConnection.RemoteEndPoint.Address + ") couldn't join the server (missing content package " + GetPackageStr(missingPackages[0]) + ")", ServerLog.MessageType.Error);
                         return;
                     }
                     else if (missingPackages.Count > 1)
@@ -400,7 +401,23 @@ namespace Barotrauma.Networking
                         missingPackages.ForEach(cp => packageStrs.Add(GetPackageStr(cp)));
                         RemovePendingClient(pendingClient, DisconnectReason.MissingContentPackage,
                             $"DisconnectMessage.MissingContentPackages~[missingcontentpackages]={string.Join(", ", packageStrs)}");
-                        GameServer.Log(name + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (missing content packages " + string.Join(", ", packageStrs) + ")", ServerLog.MessageType.Error);
+                        GameServer.Log(name + " (" + inc.SenderConnection.RemoteEndPoint.Address + ") couldn't join the server (missing content packages " + string.Join(", ", packageStrs) + ")", ServerLog.MessageType.Error);
+                        return;
+                    }
+                    if (redundantPackages.Count == 1)
+                    {
+                        RemovePendingClient(pendingClient, DisconnectReason.IncompatibleContentPackage,
+                            $"DisconnectMessage.IncompatibleContentPackage~[incompatiblecontentpackage]={GetPackageStr(redundantPackages[0])}");
+                        GameServer.Log(name + " (" + inc.SenderConnection.RemoteEndPoint.Address + ") couldn't join the server (using an incompatible content package " + GetPackageStr(redundantPackages[0]) + ")", ServerLog.MessageType.Error);
+                        return;
+                    }
+                    if (redundantPackages.Count > 1)
+                    {
+                        List<string> packageStrs = new List<string>();
+                        redundantPackages.ForEach(cp => packageStrs.Add(GetPackageStr(cp)));
+                        RemovePendingClient(pendingClient, DisconnectReason.IncompatibleContentPackage,
+                            $"DisconnectMessage.IncompatibleContentPackages~[incompatiblecontentpackages]={string.Join(", ", packageStrs)}");
+                        GameServer.Log(name + " (" + inc.SenderConnection.RemoteEndPoint.Address + ") couldn't join the server (using incompatible content packages " + string.Join(", ", packageStrs) + ")", ServerLog.MessageType.Error);
                         return;
                     }
 
@@ -476,21 +493,6 @@ namespace Barotrauma.Networking
             }
         }
 
-        protected struct ClientContentPackage
-        {
-            public string Name;
-            public string Hash;
-
-            public ClientContentPackage(string name, string hash)
-            {
-                Name = name; Hash = hash;
-            }
-        }
-
-        private string GetPackageStr(ContentPackage contentPackage)
-        {
-            return "\"" + contentPackage.Name + "\" (hash " + contentPackage.MD5hash.ShortHash + ")";
-        }
 
         private void UpdatePendingClient(PendingClient pendingClient, float deltaTime)
         {
