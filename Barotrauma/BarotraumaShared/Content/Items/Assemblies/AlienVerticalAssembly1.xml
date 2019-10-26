@@ -17,7 +17,7 @@
   </Item>
   <Item name="Alien Button" identifier="alienbutton" ID="9" rect="48,47,24,27" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,alien" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1">
     <Controller pickingtime="0" canbepicked="True" allowingameediting="False" msg="itemmsgpressselect" />
-    <ConnectionPanel locked="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="Rewire [Screwdriver]">
+    <ConnectionPanel locked="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="ItemMsgRewireScrewdriver">
       <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false" />
       <output name="signal_out">
         <link w="31" />
@@ -26,7 +26,7 @@
   </Item>
   <Item name="Alien Button" identifier="alienbutton" ID="8" rect="-112,47,24,27" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,alien" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1">
     <Controller pickingtime="0" canbepicked="True" allowingameediting="False" msg="itemmsgpressselect" />
-    <ConnectionPanel locked="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="Rewire [Screwdriver]">
+    <ConnectionPanel locked="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="ItemMsgRewireScrewdriver">
       <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false" />
       <output name="signal_out">
         <link w="36" />
@@ -35,7 +35,7 @@
   </Item>
   <Item name="Alien Button" identifier="alienbutton" ID="7" rect="-112,143,24,27" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,alien" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1">
     <Controller pickingtime="0" canbepicked="True" allowingameediting="False" msg="itemmsgpressselect" />
-    <ConnectionPanel locked="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="Rewire [Screwdriver]">
+    <ConnectionPanel locked="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="ItemMsgRewireScrewdriver">
       <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false" />
       <output name="signal_out">
         <link w="30" />
@@ -44,7 +44,7 @@
   </Item>
   <Item name="Alien Button" identifier="alienbutton" ID="6" rect="48,143,24,27" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,alien" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1">
     <Controller pickingtime="0" canbepicked="True" allowingameediting="False" msg="itemmsgpressselect" />
-    <ConnectionPanel locked="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="Rewire [Screwdriver]">
+    <ConnectionPanel locked="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="ItemMsgRewireScrewdriver">
       <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false" />
       <output name="signal_out">
         <link w="32" />
