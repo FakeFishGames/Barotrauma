@@ -256,10 +256,13 @@ namespace Barotrauma
 
         public List<OutfitPreview> GetJobOutfitSprites(Gender gender, out Vector2 dimensions)
         {
+            List<OutfitPreview> outfitPreviews = new List<OutfitPreview>();
+            dimensions = PreviewElement.GetAttributeVector2("dims", Vector2.One);
+            if (PreviewElement == null) { return outfitPreviews; }
+             
             var equipIdentifiers = Element.Elements("Items").Elements().Where(e => e.GetAttributeBool("outfit", false)).Select(e => e.GetAttributeString("identifier", ""));
 
             var children = PreviewElement.Elements().ToList();
-            dimensions = PreviewElement.GetAttributeVector2("dims", Vector2.One);
 
             var outfitPrefab = MapEntityPrefab.List.Find(me => me is ItemPrefab itemPrefab && equipIdentifiers.Contains(itemPrefab.Identifier)) as ItemPrefab;
             if (outfitPrefab == null) { return null; }
@@ -268,7 +271,6 @@ namespace Barotrauma
 
             int variantCount = wearables.First().GetAttributeInt("variants", 1);
 
-            List<OutfitPreview> outfitPreviews = new List<OutfitPreview>();
             for (int i = 0; i < variantCount; i++)
             {
                 var outfitPreview = new OutfitPreview();
