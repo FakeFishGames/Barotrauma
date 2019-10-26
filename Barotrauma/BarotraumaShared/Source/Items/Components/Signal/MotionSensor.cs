@@ -147,5 +147,15 @@ namespace Barotrauma.Items.Components
         {
             detectOffset.Y = -detectOffset.Y;
         }
+        public override XElement Save(XElement parentElement)
+        {
+            Vector2 prevDetectOffset = detectOffset;
+            //undo flipping before saving
+            if (item.FlippedX) { detectOffset.X = -detectOffset.X; }
+            if (item.FlippedY) { detectOffset.Y = -detectOffset.Y; }
+            XElement element = base.Save(parentElement);
+            detectOffset = prevDetectOffset;
+            return element;
+        }
     }
 }
