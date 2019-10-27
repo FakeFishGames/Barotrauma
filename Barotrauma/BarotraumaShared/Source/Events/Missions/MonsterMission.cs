@@ -87,7 +87,7 @@ namespace Barotrauma
         
         public override void End()
         {
-            if (State == 1) { return; }
+            if (State < 1) { return; }
                         
             GiveReward();
             completed = true;
