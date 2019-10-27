@@ -2014,7 +2014,7 @@ namespace Barotrauma
                 }
 #endif
             }
-            else if (IsKeyHit(InputType.Deselect) && SelectedConstruction != null)
+            else if (IsKeyHit(InputType.Deselect) && SelectedConstruction != null && SelectedConstruction.GetComponent<Ladder>() == null)
             {
                 SelectedConstruction = null;
 #if CLIENT
