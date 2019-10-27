@@ -189,7 +189,7 @@ namespace Barotrauma
                 };
             }
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), msgHolder.RectTransform)
+            var msgText =new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), msgHolder.RectTransform)
             { AbsoluteOffset = new Point((int)(10 * GUI.Scale), senderNameBlock == null ? 0 : senderNameBlock.Rect.Height) },
                 displayedText, textColor: message.Color, font: GUI.SmallFont, textAlignment: Alignment.TopLeft, style: null, wrap: true,
                 color: ((chatBox.Content.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f)
@@ -214,9 +214,12 @@ namespace Barotrauma
             {
                 msgHolder.RectTransform.SizeChanged -= Recalculate;
                 //resize the holder to match the size of the message and add some spacing
+                msgText.RectTransform.MaxSize = new Point(msgHolder.Rect.Width - msgText.RectTransform.AbsoluteOffset.X, int.MaxValue);
+                senderNameBlock.RectTransform.MaxSize = new Point(msgHolder.Rect.Width - senderNameBlock.RectTransform.AbsoluteOffset.X, int.MaxValue);
                 msgHolder.Children.ForEach(c => (c as GUITextBlock)?.CalculateHeightFromText());
                 msgHolder.RectTransform.Resize(new Point(msgHolder.Rect.Width, msgHolder.Children.Sum(c => c.Rect.Height) + (int)(10 * GUI.Scale)), resizeChildren: false);
                 msgHolder.RectTransform.SizeChanged += Recalculate;
+                chatBox.RecalculateChildren();
             }
 
             CoroutineManager.StartCoroutine(UpdateMessageAnimation(msgHolder, 0.5f));
@@ -239,16 +242,16 @@ namespace Barotrauma
                 {
                     CanBeFocused = false
                 };
-                var msgText = new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.0f), popupMsg.RectTransform, Anchor.TopRight)
+                var msgPopupText = new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.0f), popupMsg.RectTransform, Anchor.TopRight)
                     { AbsoluteOffset = new Point(0, senderText.Rect.Height) },
                     displayedText, textColor: message.Color, font: GUI.SmallFont, textAlignment: Alignment.TopRight, style: null, wrap: true)
                 {
                     CanBeFocused = false
                 };
                 int textWidth = (int)Math.Max(
-                    msgText.Font.MeasureString(msgText.WrappedText).X,
+                    msgPopupText.Font.MeasureString(msgPopupText.WrappedText).X,
                     senderText.Font.MeasureString(senderText.WrappedText).X);
-                popupMsg.RectTransform.Resize(new Point(textWidth + 20, msgText.Rect.Bottom - senderText.Rect.Y), resizeChildren: false);
+                popupMsg.RectTransform.Resize(new Point(textWidth + 20, msgPopupText.Rect.Bottom - senderText.Rect.Y), resizeChildren: false);
                 popupMessages.Enqueue(popupMsg);
             }
 
