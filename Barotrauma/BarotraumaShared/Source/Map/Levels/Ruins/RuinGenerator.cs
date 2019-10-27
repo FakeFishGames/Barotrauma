@@ -559,6 +559,11 @@ namespace Barotrauma.RuinGeneration
                                     foreach (MapEntity e in entities)
                                     {
                                         e.Move(doorOffset);
+                                        Door doorComponent = (e as Item)?.GetComponent<Door>();
+                                        if (doorComponent != null && !entities.Contains(doorComponent.LinkedGap))
+                                        {
+                                            doorComponent.LinkedGap.Move(doorOffset);
+                                        }
                                     }
                                 }
                             }
