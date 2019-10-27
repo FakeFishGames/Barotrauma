@@ -77,34 +77,37 @@
       type="Back"
       commonness="1" />
     <item
-    prefab="RuinDecal1"
-    alignment="Center"
-    minoffset="-0.5,-0.5"
-    maxoffset="0.5,0.5"
-    type="Prop"
-    commonness="5" />
+      prefab="RuinDecal1"
+      alignment="Center"
+      minoffset="-0.4,-0.4"
+      maxoffset="0.4,0.4"
+      minroomsize="500,500"
+      type="Prop"
+      commonness="5" />
     <item
-    prefab="RuinDecal2"
-    alignment="Center"
-    minoffset="-0.5,-0.5"
-    maxoffset="0.5,0.5"
-    type="Prop"
-    commonness="5" />
+      prefab="RuinDecal2"
+      alignment="Center"
+      minoffset="-0.4,-0.4"
+      maxoffset="0.4,0.4"
+      minroomsize="500,500"
+      type="Prop"
+      commonness="5" />
     <item
-    prefab="RuinDecal3"
-    alignment="Center"
-    minoffset="-0.5,-0.5"
-    maxoffset="0.5,0.5"
-    type="Prop"
-    commonness="5" />
+      prefab="RuinDecal3"
+      alignment="Center"
+      minoffset="-0.4,-0.4"
+      maxoffset="0.4,0.4"
+      minroomsize="500,500"
+      type="Prop"
+      commonness="5" />
     <item
-    prefab="RuinDecal4"
-    alignment="Center"
-    minoffset="-0.5,-0.5"
-    maxoffset="0.5,0.5"
-    type="Prop"
-    commonness="5" />
-
+      prefab="RuinDecal4"
+      alignment="Center"
+      minoffset="-0.4,-0.4"
+      maxoffset="0.4,0.4"
+      minroomsize="500,500"
+      type="Prop"
+      commonness="5" />
     <item
       prefab="RuinFractalBall"
       alignment="Center,Right,Top,Bottom,Left"
@@ -201,33 +204,37 @@
       type="Back"
       commonness="2" />
     <item
-    prefab="RuinDecal1"
-    alignment="Center"
-    minoffset="-0.5,-0.5"
-    maxoffset="0.5,0.5"
-    type="Prop"
-    commonness="5" />
+      prefab="RuinDecal1"
+      alignment="Center"
+      minoffset="-0.4,-0.4"
+      maxoffset="0.4,0.4"
+      minroomsize="500,500"
+      type="Prop"
+      commonness="5" />
     <item
-    prefab="RuinDecal2"
-    alignment="Center"
-    minoffset="-0.5,-0.5"
-    maxoffset="0.5,0.5"
-    type="Prop"
-    commonness="5" />
+      prefab="RuinDecal2"
+      alignment="Center"
+      minoffset="-0.4,-0.4"
+      maxoffset="0.4,0.4"
+      minroomsize="500,500"
+      type="Prop"
+      commonness="5" />
     <item
-    prefab="RuinDecal3"
-    alignment="Center"
-    minoffset="-0.5,-0.5"
-    maxoffset="0.5,0.5"
-    type="Prop"
-    commonness="5" />
+      prefab="RuinDecal3"
+      alignment="Center"
+      minoffset="-0.4,-0.4"
+      maxoffset="0.4,0.4"
+      minroomsize="500,500"
+      type="Prop"
+      commonness="5" />
     <item
-    prefab="RuinDecal4"
-    alignment="Center"
-    minoffset="-0.5,-0.5"
-    maxoffset="0.5,0.5"
-    type="Prop"
-    commonness="5" />
+      prefab="RuinDecal4"
+      alignment="Center"
+      minoffset="-0.4,-0.4"
+      maxoffset="0.4,0.4"
+      minroomsize="500,500"
+      type="Prop"
+      commonness="5" />
     <ChooseOne>
       <itemassembly
         prefab="aliengenericroomassembly1"
@@ -868,33 +875,37 @@
       type="Back"
       commonness="2" />
     <item
-    prefab="RuinDecal1"
-    alignment="Center"
-    minoffset="-0.5,-0.5"
-    maxoffset="0.5,0.5"
-    type="Prop"
-    commonness="5" />
+      prefab="RuinDecal1"
+      alignment="Center"
+      minoffset="-0.4,-0.4"
+      maxoffset="0.4,0.4"
+      minroomsize="500,500"
+      type="Prop"
+      commonness="5" />
     <item
-    prefab="RuinDecal2"
-    alignment="Center"
-    minoffset="-0.5,-0.5"
-    maxoffset="0.5,0.5"
-    type="Prop"
-    commonness="5" />
+      prefab="RuinDecal2"
+      alignment="Center"
+      minoffset="-0.4,-0.4"
+      maxoffset="0.4,0.4"
+      minroomsize="500,500"
+      type="Prop"
+      commonness="5" />
     <item
-    prefab="RuinDecal3"
-    alignment="Center"
-    minoffset="-0.5,-0.5"
-    maxoffset="0.5,0.5"
-    type="Prop"
-    commonness="5" />
+      prefab="RuinDecal3"
+      alignment="Center"
+      minoffset="-0.4,-0.4"
+      maxoffset="0.4,0.4"
+      minroomsize="500,500"
+      type="Prop"
+      commonness="5" />
     <item
-    prefab="RuinDecal4"
-    alignment="Center"
-    minoffset="-0.5,-0.5"
-    maxoffset="0.5,0.5"
-    type="Prop"
-    commonness="5" />
+      prefab="RuinDecal4"
+      alignment="Center"
+      minoffset="-0.4,-0.4"
+      maxoffset="0.4,0.4"
+      minroomsize="500,500"
+      type="Prop"
+      commonness="5" />
     <ChooseOne>
       <itemassembly
         prefab="aliengenericroomassembly1"
@@ -1536,34 +1547,37 @@
       type="Back"
       commonness="3" />
     <item
-    prefab="RuinDecal1"
-    alignment="Center"
-    minoffset="-0.5,-0.5"
-    maxoffset="0.5,0.5"
-    type="Prop"
-    commonness="5" />
+      prefab="RuinDecal1"
+      alignment="Center"
+      minoffset="-0.4,-0.4"
+      maxoffset="0.4,0.4"
+      minroomsize="500,500"
+      type="Prop"
+      commonness="5" />
     <item
-    prefab="RuinDecal2"
-    alignment="Center"
-    minoffset="-0.5,-0.5"
-    maxoffset="0.5,0.5"
-    type="Prop"
-    commonness="5" />
+      prefab="RuinDecal2"
+      alignment="Center"
+      minoffset="-0.4,-0.4"
+      maxoffset="0.4,0.4"
+      minroomsize="500,500"
+      type="Prop"
+      commonness="5" />
     <item
-    prefab="RuinDecal3"
-    alignment="Center"
-    minoffset="-0.5,-0.5"
-    maxoffset="0.5,0.5"
-    type="Prop"
-    commonness="5" />
+      prefab="RuinDecal3"
+      alignment="Center"
+      minoffset="-0.4,-0.4"
+      maxoffset="0.4,0.4"
+      minroomsize="500,500"
+      type="Prop"
+      commonness="5" />
     <item
-    prefab="RuinDecal4"
-    alignment="Center"
-    minoffset="-0.5,-0.5"
-    maxoffset="0.5,0.5"
-    type="Prop"
-    commonness="5" />
-
+      prefab="RuinDecal4"
+      alignment="Center"
+      minoffset="-0.4,-0.4"
+      maxoffset="0.4,0.4"
+      minroomsize="500,500"
+      type="Prop"
+      commonness="5" />
     <item
       prefab="aliendoor"
       alignment="Center"
@@ -1591,34 +1605,37 @@
       type="Back"
       commonness="3" />
     <item
-    prefab="RuinDecal1"
-    alignment="Center"
-    minoffset="-0.5,-0.5"
-    maxoffset="0.5,0.5"
-    type="Prop"
-    commonness="5" />
+      prefab="RuinDecal1"
+      alignment="Center"
+      minoffset="-0.4,-0.4"
+      maxoffset="0.4,0.4"
+      minroomsize="500,500"
+      type="Prop"
+      commonness="5" />
     <item
-    prefab="RuinDecal2"
-    alignment="Center"
-    minoffset="-0.5,-0.5"
-    maxoffset="0.5,0.5"
-    type="Prop"
-    commonness="5" />
+      prefab="RuinDecal2"
+      alignment="Center"
+      minoffset="-0.4,-0.4"
+      maxoffset="0.4,0.4"
+      minroomsize="500,500"
+      type="Prop"
+      commonness="5" />
     <item
-    prefab="RuinDecal3"
-    alignment="Center"
-    minoffset="-0.5,-0.5"
-    maxoffset="0.5,0.5"
-    type="Prop"
-    commonness="5" />
+      prefab="RuinDecal3"
+      alignment="Center"
+      minoffset="-0.4,-0.4"
+      maxoffset="0.4,0.4"
+      minroomsize="500,500"
+      type="Prop"
+      commonness="5" />
     <item
-    prefab="RuinDecal4"
-    alignment="Center"
-    minoffset="-0.5,-0.5"
-    maxoffset="0.5,0.5"
-    type="Prop"
-    commonness="5" />
-
+      prefab="RuinDecal4"
+      alignment="Center"
+      minoffset="-0.4,-0.4"
+      maxoffset="0.4,0.4"
+      minroomsize="500,500"
+      type="Prop"
+      commonness="5" />
     <itemassembly
       prefab="aliendoorassembly1"
       alignment="Center"
@@ -1659,33 +1676,37 @@
       type="Back"
       commonness="3" />
     <item
-    prefab="RuinDecal1"
-    alignment="Center"
-    minoffset="-0.5,-0.5"
-    maxoffset="0.5,0.5"
-    type="Prop"
-    commonness="5" />
+      prefab="RuinDecal1"
+      alignment="Center"
+      minoffset="-0.4,-0.4"
+      maxoffset="0.4,0.4"
+      minroomsize="500,500"
+      type="Prop"
+      commonness="5" />
     <item
-    prefab="RuinDecal2"
-    alignment="Center"
-    minoffset="-0.5,-0.5"
-    maxoffset="0.5,0.5"
-    type="Prop"
-    commonness="5" />
+      prefab="RuinDecal2"
+      alignment="Center"
+      minoffset="-0.4,-0.4"
+      maxoffset="0.4,0.4"
+      minroomsize="500,500"
+      type="Prop"
+      commonness="5" />
     <item
-    prefab="RuinDecal3"
-    alignment="Center"
-    minoffset="-0.5,-0.5"
-    maxoffset="0.5,0.5"
-    type="Prop"
-    commonness="5" />
+      prefab="RuinDecal3"
+      alignment="Center"
+      minoffset="-0.4,-0.4"
+      maxoffset="0.4,0.4"
+      minroomsize="500,500"
+      type="Prop"
+      commonness="5" />
     <item
-    prefab="RuinDecal4"
-    alignment="Center"
-    minoffset="-0.5,-0.5"
-    maxoffset="0.5,0.5"
-    type="Prop"
-    commonness="5" />
+      prefab="RuinDecal4"
+      alignment="Center"
+      minoffset="-0.4,-0.4"
+      maxoffset="0.4,0.4"
+      minroomsize="500,500"
+      type="Prop"
+      commonness="5" />
 
     <itemassembly
       prefab="aliendoorassembly1"
