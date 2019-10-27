@@ -42,20 +42,28 @@ namespace Barotrauma.RuinGeneration
 
         public void Split(float minDivRatio, float verticalProbability = 0.5f, int minWidth = 200, int minHeight = 200)
         {
-            if (Rand.Range(0.0f, rect.Height / (float)rect.Width, Rand.RandSync.Server) < verticalProbability && 
-                rect.Width * minDivRatio >= minWidth)
+            bool verticalSplit = Rand.Range(0.0f, rect.Height / (float)rect.Width, Rand.RandSync.Server) < verticalProbability;
+            if (rect.Width * minDivRatio < minWidth && rect.Height * minDivRatio < minHeight)
             {
-                subRooms = new BTRoom[2];
-                SplitVertical(minDivRatio);
+                minDivRatio = 0.5f;
             }
-            else if (rect.Height * minDivRatio >= minHeight)
+            else if (rect.Width * minDivRatio < minWidth)
             {
-                subRooms = new BTRoom[2];
-                SplitHorizontal(minDivRatio);
+                verticalSplit = false;
+            }
+            else if (rect.Height * minDivRatio < minHeight)
+            {
+                verticalSplit = true;
+            }
+
+            subRooms = new BTRoom[2];
+            if (verticalSplit)
+            {
+                SplitVertical(minDivRatio);
             }
             else
             {
-                return;
+                SplitHorizontal(minDivRatio);
             }
 
             subRooms[0].Parent = this;
