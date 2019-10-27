@@ -69,8 +69,14 @@ namespace Barotrauma.RuinGeneration
             set;
         }
 
-        [Serialize(400, false, description: "The splitting algorithm attempts to keep the dimensions the split areas larger than this. For example, if the width of the split areas would be smaller than this after a vertical split, the algorithm will do a horizontal split."), Editable]
+        [Serialize(400, false, description: "The splitting algorithm attempts to keep the width of the split areas larger than this. If the width of the split areas would be smaller than this after a vertical split, the algorithm would do a horizontal split."), Editable]
         public int MinSplitWidth
+        {
+            get;
+            set;
+        }
+        [Serialize(400, false, description: "The splitting algorithm attempts to keep the height of the split areas larger than this. If the height of the split areas would be smaller than this after a vertical split, the algorithm would do a horizontal split."), Editable]
+        public int MinSplitHeight
         {
             get;
             set;
