@@ -44,8 +44,9 @@ namespace Barotrauma.Items.Components
         public bool WasUsed;
 
         public readonly Dictionary<ActionType, List<StatusEffect>> statusEffectLists;
-                
+
         public Dictionary<RelatedItem.RelationType, List<RelatedItem>> requiredItems;
+        public readonly List<RelatedItem> DisabledRequiredItems = new List<RelatedItem>();
 
         public List<Skill> requiredSkills;
 
@@ -271,14 +272,25 @@ namespace Barotrauma.Items.Components
                         break;
                     case "requireditem":
                     case "requireditems":
-                        RelatedItem ri = RelatedItem.Load(subElement, item.Name);
+                        bool returnEmpty = false;
+#if CLIENT
+                        returnEmpty = Screen.Selected == GameMain.SubEditorScreen;
+#endif
+                        RelatedItem ri = RelatedItem.Load(subElement, returnEmpty: returnEmpty, item.Name);
                         if (ri != null)
                         {
-                            if (!requiredItems.ContainsKey(ri.Type))
+                            if (ri.Identifiers.Length == 0)
                             {
-                                requiredItems.Add(ri.Type, new List<RelatedItem>());
+                                DisabledRequiredItems.Add(ri);
                             }
-                            requiredItems[ri.Type].Add(ri);
+                            else
+                            {
+                                if (!requiredItems.ContainsKey(ri.Type))
+                                {
+                                    requiredItems.Add(ri.Type, new List<RelatedItem>());
+                                }
+                                requiredItems[ri.Type].Add(ri);
+                            }
                         }
                         else
                         {
@@ -762,6 +774,12 @@ namespace Barotrauma.Items.Components
                     componentElement.Add(newElement);
                 }
             }
+            foreach (RelatedItem ri in DisabledRequiredItems)
+            {
+                XElement newElement = new XElement("requireditem");
+                ri.Save(newElement);
+                componentElement.Add(newElement);
+            }
 
 
             SerializableProperty.SerializeProperties(this, componentElement);
@@ -783,12 +801,16 @@ namespace Barotrauma.Items.Components
             var prevRequiredItems = new Dictionary<RelatedItem.RelationType, List<RelatedItem>>(requiredItems);
             requiredItems.Clear();
 
+            bool returnEmptyRequirements = false;
+#if CLIENT
+            returnEmptyRequirements = Screen.Selected == GameMain.SubEditorScreen;
+#endif
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "requireditem":
-                        RelatedItem newRequiredItem = RelatedItem.Load(subElement, item.Name);
+                        RelatedItem newRequiredItem = RelatedItem.Load(subElement, returnEmptyRequirements, item.Name);
                         if (newRequiredItem == null) continue;
 
                         var prevRequiredItem = prevRequiredItems.ContainsKey(newRequiredItem.Type) ?
