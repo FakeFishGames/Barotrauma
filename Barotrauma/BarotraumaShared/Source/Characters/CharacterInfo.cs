@@ -11,7 +11,7 @@ using System.Xml.Linq;
 namespace Barotrauma
 {
     public enum Gender { None, Male, Female };
-    public enum Race { None, White, Black, Asian };
+    public enum Race { None, White, Black, Brown, Asian };
     
     // TODO: Generating the HeadInfo could be simplified.
     partial class CharacterInfo
