@@ -233,6 +233,12 @@ namespace Barotrauma.Items.Components
 #elif CLIENT
                 if (variant == value) { return; }
 
+                Character character = picker;
+                if (character != null)
+                {
+                    Unequip(character);
+                }
+
                 for (int i=0;i<wearableSprites.Length;i++)
                 {
                     var subElement = wearableElements[i];
@@ -241,10 +247,8 @@ namespace Barotrauma.Items.Components
                     wearableSprites[i] = new WearableSprite(subElement, this, value);
                 }
 
-                if (picker != null)
+                if (character != null)
                 {
-                    var character = picker;
-                    Unequip(picker);
                     Equip(character);
                 }
 
