@@ -33,51 +33,46 @@ namespace Barotrauma
             }
         }
 
-        private GUIImage micIcon;
+        private readonly GUIImage micIcon;
 
-        private GUIScrollBar levelDifficultyScrollBar;
+        private readonly GUIScrollBar levelDifficultyScrollBar;
 
-        private GUIButton[] traitorProbabilityButtons;
-        private GUITextBlock traitorProbabilityText;
+        private readonly GUIButton[] traitorProbabilityButtons;
+        private readonly GUITextBlock traitorProbabilityText;
 
-        private GUIButton[] botCountButtons;
-        private GUITextBlock botCountText;
+        private readonly GUIButton[] botCountButtons;
+        private readonly GUITextBlock botCountText;
 
-        private GUIButton[] botSpawnModeButtons;
-        private GUITextBlock botSpawnModeText;
+        private readonly GUIButton[] botSpawnModeButtons;
+        private readonly GUITextBlock botSpawnModeText;
 
-        public GUIFrame MissionTypeFrame;
-        public GUIFrame CampaignSetupFrame;
+        public readonly GUIFrame MissionTypeFrame;
+        public readonly GUIFrame CampaignSetupFrame;
 
-        private GUITickBox[] missionTypeTickBoxes;
-        private GUITextBlock missionTypeLabel;
-        private GUIListBox missionTypeList;
+        private readonly GUITickBox[] missionTypeTickBoxes;
+        private readonly GUIListBox missionTypeList;
 
-        private GUITextBox seedBox;
         
         public GUITextBox SeedBox
         {
-            get
-            {
-                return seedBox;
-            }
+            get; private set;
         }
 
-        private GUIComponent gameModeContainer, campaignContainer;
-        private GUIButton gameModeViewButton, campaignViewButton, spectateButton;
-        private GUILayoutGroup roundControlsHolder;
+        private readonly GUIComponent gameModeContainer, campaignContainer;
+        private readonly GUIButton gameModeViewButton, campaignViewButton, spectateButton;
+        private readonly GUILayoutGroup roundControlsHolder;
         public GUIButton SettingsButton { get; private set; }
 
-        private GUITickBox spectateBox;
+        private readonly GUITickBox spectateBox;
         
-        private GUIFrame playerInfoContainer;
-        private GUIButton playerFrame;
+        private readonly GUIFrame playerInfoContainer;
         private GUIButton jobInfoFrame;
+        private GUIButton playerFrame;
 
-        private GUIComponent subPreviewContainer;
+        private readonly GUIComponent subPreviewContainer;
 
-        private GUITickBox autoRestartBox;
-        private GUITextBlock autoRestartText;
+        private readonly GUITickBox autoRestartBox;
+        private readonly GUITextBlock autoRestartText;
                 
         private GUIDropDown shuttleList;
         private GUITickBox shuttleTickBox;
@@ -111,9 +106,9 @@ namespace Barotrauma
         }
 
         //elements that can only be used by the host
-        private List<GUIComponent> clientDisabledElements = new List<GUIComponent>();
+        private readonly List<GUIComponent> clientDisabledElements = new List<GUIComponent>();
         //elements that aren't shown client-side
-        private List<GUIComponent> clientHiddenElements = new List<GUIComponent>();
+        private readonly List<GUIComponent> clientHiddenElements = new List<GUIComponent>();
 
         public GUIComponent FileTransferFrame { get; private set; }
         public GUITextBlock FileTransferTitle { get; private set; }
@@ -305,9 +300,7 @@ namespace Barotrauma
 
                 int intSeed = ToolBox.StringToInt(levelSeed);
                 backgroundSprite = LocationType.Random(new MTRandom(intSeed))?.GetPortrait(intSeed);
-                seedBox.Text = levelSeed;
-
-                //lastUpdateID++;
+                SeedBox.Text = levelSeed;
             }
         }
 
@@ -831,12 +824,12 @@ namespace Barotrauma
 
             var seedLabel = new GUITextBlock(new RectTransform(Vector2.One, miscSettingsHolder.RectTransform), TextManager.Get("LevelSeed"));
             seedLabel.RectTransform.MaxSize = new Point((int)(seedLabel.TextSize.X + 30 * GUI.Scale), int.MaxValue);
-            seedBox = new GUITextBox(new RectTransform(new Vector2(0.25f, 1.0f), miscSettingsHolder.RectTransform));
-            seedBox.OnDeselected += (textBox, key) =>
+            SeedBox = new GUITextBox(new RectTransform(new Vector2(0.25f, 1.0f), miscSettingsHolder.RectTransform));
+            SeedBox.OnDeselected += (textBox, key) =>
             {
                 GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.LevelSeed);
             };
-            clientDisabledElements.Add(seedBox);
+            clientDisabledElements.Add(SeedBox);
             LevelSeed = ToolBox.RandomSeed(8);
 
             //level difficulty ------------------------------------------------------------------
@@ -922,7 +915,7 @@ namespace Barotrauma
                 Stretch = true
             };
 
-            missionTypeLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.055f), missionHolder.RectTransform) { MinSize = new Point(0, 25) }, TextManager.Get("MissionType"));
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.055f), missionHolder.RectTransform) { MinSize = new Point(0, 25) }, TextManager.Get("MissionType"));
             missionTypeList = new GUIListBox(new RectTransform(Vector2.One, missionHolder.RectTransform))
             {
                 OnSelected = (component, obj) =>
@@ -1173,56 +1166,6 @@ namespace Barotrauma
             }
             SetSpectate(spectateBox.Selected);            
 
-            /*if (IsServer && GameMain.Server != null)
-            {
-                List<Submarine> subsToShow = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.HideInMenus)).ToList();
-
-                ReadyToStartBox.Visible = false;
-                StartButton.OnClicked = GameMain.Server.StartGameClicked;
-                settingsButton.OnClicked = GameMain.Server.ToggleSettingsFrame;
-
-                int prevSelectedSub = subList.SelectedIndex;
-                UpdateSubList(subList, subsToShow);
-
-                int prevSelectedShuttle = shuttleList.SelectedIndex;
-                UpdateSubList(shuttleList, subsToShow);
-                modeList.OnSelected = VotableClicked;
-                modeList.OnSelected = SelectMode;
-                subList.OnSelected = VotableClicked;
-                subList.OnSelected = SelectSub;
-                shuttleList.OnSelected = SelectSub;
-
-                levelDifficultyScrollBar.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
-                {
-                    SetLevelDifficulty(barScroll * 100.0f);
-                    return true;
-                };
-
-                traitorProbabilityButtons[0].OnClicked = traitorProbabilityButtons[1].OnClicked = ToggleTraitorsEnabled;
-                botCountButtons[0].OnClicked = botCountButtons[1].OnClicked = ChangeBotCount;
-                botSpawnModeButtons[0].OnClicked = botSpawnModeButtons[1].OnClicked = ChangeBotSpawnMode;
-                missionTypeButtons[0].OnClicked = missionTypeButtons[1].OnClicked = ToggleMissionType;
-                
-                if (subList.SelectedComponent == null) subList.Select(Math.Max(0, prevSelectedSub));
-                if (shuttleList.Selected == null)
-                {
-                    var shuttles = shuttleList.GetChildren().Where(c => c.UserData is Submarine && ((Submarine)c.UserData).HasTag(SubmarineTag.Shuttle));
-                    if (prevSelectedShuttle == -1 && shuttles.Any())
-                    {
-                        shuttleList.SelectItem(shuttles.First().UserData);
-                    }
-                    else
-                    {
-                        shuttleList.Select(Math.Max(0, prevSelectedShuttle));
-                    }
-                }
-
-                GameAnalyticsManager.SetCustomDimension01("multiplayer");
-                
-                if (GameModePreset.List.Count > 0 && modeList.SelectedComponent == null) modeList.Select(0);
-                GameMain.Server.Voting.ResetVotes(GameMain.Server.ConnectedClients);
-            }
-            else */
             if (GameMain.Client != null)
             {
                 GameMain.Client.ServerSettings.Voting.ResetVotes(GameMain.Client.ConnectedClients);
@@ -1239,23 +1182,6 @@ namespace Barotrauma
             base.Select();
         }
 
-        /*TODO: remove?
-        public void RandomizeSettings()
-        {
-            if (GameMain.Server == null) return;
-
-            if (GameMain.Server.RandomizeSeed) LevelSeed = ToolBox.RandomSeed(8);
-            if (GameMain.Server.SubSelectionMode == SelectionMode.Random)
-            {
-                var nonShuttles = subList.Content.Children.Where(c => c.UserData is Submarine && !((Submarine)c.UserData).HasTag(SubmarineTag.Shuttle));
-                subList.Select(nonShuttles.GetRandom());
-            }
-            if (GameMain.Server.ModeSelectionMode == SelectionMode.Random)
-            {
-                var allowedGameModes = GameModePreset.List.FindAll(m => !m.IsSinglePlayer && m.Identifier != "multiplayercampaign");
-                modeList.Select(allowedGameModes[Rand.Range(0, allowedGameModes.Count)]);
-            }
-        }*/
         
         public void UpdatePermissions()
         {
@@ -1274,7 +1200,7 @@ namespace Barotrauma
             botSpawnModeButtons[1].Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             levelDifficultyScrollBar.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             autoRestartBox.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
-            seedBox.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            SeedBox.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
 
             SettingsButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             SettingsButton.OnClicked = GameMain.Client.ServerSettings.ToggleSettingsFrame;
@@ -1792,7 +1718,6 @@ namespace Barotrauma
             playerFrame.Text = client.Name;
             
             Color color = Color.White;
-            
             if (JobPrefab.List.ContainsKey(client.PreferredJob))
             {
                 color = JobPrefab.List[client.PreferredJob].UIColor;
@@ -1948,8 +1873,7 @@ namespace Barotrauma
                         //reset rank to custom
                         rankDropDown.SelectItem(null);
 
-                        var client = playerFrame.UserData as Client;
-                        if (client == null) { return false; }
+                        if (!(playerFrame.UserData is Client client)) { return false; }
 
                         foreach (GUIComponent child in tickbox.Parent.GetChild<GUIListBox>().Content.Children)
                         {
@@ -3033,8 +2957,7 @@ namespace Barotrauma
 
         private bool ViewJobInfo(GUIButton button, object obj)
         {
-            JobPrefab jobPrefab = button.UserData as JobPrefab;
-            if (jobPrefab == null) { return false; }
+            if (!(button.UserData is JobPrefab jobPrefab)) { return false; }
 
             jobInfoFrame = jobPrefab.CreateInfoFrame();
             GUIButton closeButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), jobInfoFrame.GetChild(2).GetChild(0).RectTransform, Anchor.BottomRight),
@@ -3050,21 +2973,6 @@ namespace Barotrauma
         private bool CloseJobInfo(GUIButton button, object obj)
         {
             jobInfoFrame = null;
-            return true;
-        }
-
-        private bool ChangeJobPreference(GUIButton button, object obj)
-        {
-            GUIComponent jobText = button.Parent.Parent;
-
-            int index = JobList.Content.GetChildIndex(jobText);
-            int newIndex = index + (int)obj;
-            if (newIndex < 0 || newIndex > JobList.Content.CountChildren - 1) return false;
-
-            jobText.RectTransform.RepositionChildInHierarchy(newIndex);
-
-            UpdateJobPreferences(JobList);
-
             return true;
         }
 
