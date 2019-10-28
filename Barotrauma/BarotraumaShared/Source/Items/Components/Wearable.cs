@@ -130,7 +130,7 @@ namespace Barotrauma
 
         private string ParseSpritePath(string texturePath) => texturePath.Contains("/") ? texturePath : $"{Path.GetDirectoryName(WearableComponent.Item.Prefab.ConfigFile)}/{texturePath}";
 
-        private void ParsePath(bool parseSpritePath)
+        public void ParsePath(bool parseSpritePath)
         {
             string tempPath = UnassignedSpritePath;
             if (_gender != Gender.None)
