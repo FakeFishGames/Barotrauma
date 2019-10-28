@@ -724,24 +724,9 @@ namespace Barotrauma
                             case "requireditem":
                             case "requireditems":
                                 itemComponent.requiredItems.Clear();
+                                itemComponent.DisabledRequiredItems.Clear();
 
-                                bool returnEmpty = false;
-#if CLIENT
-                                returnEmpty = Screen.Selected == GameMain.SubEditorScreen;
-#endif
-                                RelatedItem ri = RelatedItem.Load(element, returnEmpty, item2.Name);
-                                if (ri != null)
-                                {
-                                    if (!itemComponent.requiredItems.ContainsKey(ri.Type))
-                                    {
-                                        itemComponent.requiredItems.Add(ri.Type, new List<RelatedItem>());
-                                    }
-                                    itemComponent.requiredItems[ri.Type].Add(ri);
-                                }
-                                else
-                                {
-                                    DebugConsole.ThrowError("Error in item config \"" + item2.ConfigFile + "\" - component " + itemComponent.GetType().ToString() + " requires an item with no identifiers.");
-                                }
+                                itemComponent.SetRequiredItems(element);
                                 break;
                         }
                     }                   

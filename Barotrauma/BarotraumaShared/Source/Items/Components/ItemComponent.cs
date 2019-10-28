@@ -272,30 +272,7 @@ namespace Barotrauma.Items.Components
                         break;
                     case "requireditem":
                     case "requireditems":
-                        bool returnEmpty = false;
-#if CLIENT
-                        returnEmpty = Screen.Selected == GameMain.SubEditorScreen;
-#endif
-                        RelatedItem ri = RelatedItem.Load(subElement, returnEmpty, item.Name);
-                        if (ri != null)
-                        {
-                            if (ri.Identifiers.Length == 0)
-                            {
-                                DisabledRequiredItems.Add(ri);
-                            }
-                            else
-                            {
-                                if (!requiredItems.ContainsKey(ri.Type))
-                                {
-                                    requiredItems.Add(ri.Type, new List<RelatedItem>());
-                                }
-                                requiredItems[ri.Type].Add(ri);
-                            }
-                        }
-                        else
-                        {
-                            DebugConsole.ThrowError("Error in item config \"" + item.ConfigFile + "\" - component " + GetType().ToString() + " requires an item with no identifiers.");
-                        }
+                        SetRequiredItems(subElement);
                         break;
                     case "requiredskill":
                     case "requiredskills":
@@ -333,6 +310,34 @@ namespace Barotrauma.Items.Components
                         break;
                 }
             }        
+        }
+
+        public void SetRequiredItems(XElement element)
+        {
+            bool returnEmpty = false;
+#if CLIENT
+            returnEmpty = Screen.Selected == GameMain.SubEditorScreen;
+#endif
+            RelatedItem ri = RelatedItem.Load(element, returnEmpty, item.Name);
+            if (ri != null)
+            {
+                if (ri.Identifiers.Length == 0)
+                {
+                    DisabledRequiredItems.Add(ri);
+                }
+                else
+                {
+                    if (!requiredItems.ContainsKey(ri.Type))
+                    {
+                        requiredItems.Add(ri.Type, new List<RelatedItem>());
+                    }
+                    requiredItems[ri.Type].Add(ri);
+                }
+            }
+            else
+            {
+                DebugConsole.ThrowError("Error in item config \"" + item.ConfigFile + "\" - component " + GetType().ToString() + " requires an item with no identifiers.");
+            }
         }
 
         public virtual void Move(Vector2 amount) { }
