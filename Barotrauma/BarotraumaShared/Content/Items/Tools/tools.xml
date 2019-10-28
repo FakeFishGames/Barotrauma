@@ -98,7 +98,7 @@
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="0,157,92,27" />
       <Containable items="weldingfuel,oxygensource" />
     </ItemContainer>
-    <Upgrade gameversion="0.9.502.0">
+    <Upgrade gameversion="0.9.4.0">
       <RepairTool>
         <RequiredItems identifier="weldingfuel,oxygensource" type="Contained" msg="ItemMsgWeldingFuelRequired" />
       </RepairTool>
@@ -168,7 +168,7 @@
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="0,157,92,27" />
       <Containable items="weldingfuel,oxygensource" />
     </ItemContainer>
-    <Upgrade gameversion="0.9.502.0">
+    <Upgrade gameversion="0.9.4.0">
       <RepairTool>
         <RequiredItems identifier="oxygentank,oxygenitetank,weldingfueltank,incendiumfueltank" type="Contained" msg="ItemMsgOxygenTankRequired" />
       </RepairTool>

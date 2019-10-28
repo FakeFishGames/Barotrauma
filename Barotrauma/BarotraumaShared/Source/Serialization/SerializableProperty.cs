@@ -724,7 +724,12 @@ namespace Barotrauma
                             case "requireditem":
                             case "requireditems":
                                 itemComponent.requiredItems.Clear();
-                                RelatedItem ri = RelatedItem.Load(element, item2.Name);
+
+                                bool returnEmpty = false;
+#if CLIENT
+                                returnEmpty = Screen.Selected == GameMain.SubEditorScreen;
+#endif
+                                RelatedItem ri = RelatedItem.Load(element, returnEmpty, item2.Name);
                                 if (ri != null)
                                 {
                                     if (!itemComponent.requiredItems.ContainsKey(ri.Type))
