@@ -689,7 +689,8 @@ namespace Barotrauma
             {
                 if (subElement.Name.ToString().ToLowerInvariant() != "upgrade") { continue; }
                 var upgradeVersion = new Version(subElement.GetAttributeString("gameversion", "0.0.0.0"));
-                if (savedVersion >= upgradeVersion) { continue; }                
+                if (savedVersion >= upgradeVersion) { continue; }         
+                
                 foreach (XAttribute attribute in subElement.Attributes())
                 {
                     string attributeName = attribute.Name.ToString().ToLowerInvariant();
@@ -698,9 +699,9 @@ namespace Barotrauma
                     {
                         property.TrySetValue(entity, attribute.Value);
                     }
-                    else if (entity is Item item)
+                    else if (entity is Item item1)
                     {
-                        foreach (ISerializableEntity component in item.AllPropertyObjects)
+                        foreach (ISerializableEntity component in item1.AllPropertyObjects)
                         {
                             if (component.SerializableProperties.TryGetValue(attributeName, out SerializableProperty componentProperty))
                             {
@@ -708,7 +709,38 @@ namespace Barotrauma
                             }
                         }
                     }
-                }                
+                }
+
+                if (entity is Item item2)
+                {
+                    XElement componentElement = subElement.FirstElement();
+                    if (componentElement == null) continue;
+                    ItemComponent itemComponent = item2.Components.First(c => c.Name == componentElement.Name.ToString());
+                    if (itemComponent == null) continue;
+                    foreach (XElement element in componentElement.Elements())
+                    {
+                        switch (element.Name.ToString().ToLowerInvariant())
+                        {
+                            case "requireditem":
+                            case "requireditems":
+                                itemComponent.requiredItems.Clear();
+                                RelatedItem ri = RelatedItem.Load(element, item2.Name);
+                                if (ri != null)
+                                {
+                                    if (!itemComponent.requiredItems.ContainsKey(ri.Type))
+                                    {
+                                        itemComponent.requiredItems.Add(ri.Type, new List<RelatedItem>());
+                                    }
+                                    itemComponent.requiredItems[ri.Type].Add(ri);
+                                }
+                                else
+                                {
+                                    DebugConsole.ThrowError("Error in item config \"" + item2.ConfigFile + "\" - component " + itemComponent.GetType().ToString() + " requires an item with no identifiers.");
+                                }
+                                break;
+                        }
+                    }                   
+                }
             }
         }
     }

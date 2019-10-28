@@ -98,6 +98,11 @@
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="0,157,92,27" />
       <Containable items="weldingfuel,oxygensource" />
     </ItemContainer>
+    <Upgrade gameversion="0.9.502.0">
+      <RepairTool>
+        <RequiredItems identifier="weldingfuel,oxygensource" type="Contained" msg="ItemMsgWeldingFuelRequired" />
+      </RepairTool>
+    </Upgrade>
   </Item>
   <Item name="Plasma Cutter" identifier="plasmacutter" category="Equipment" Tags="smallitem,plasmacutter,tools" preferredcontainers="suppliescabinet,locker" cargocontaineridentifier="metalcrate" description="Cuts through various materials using a jet of ionized oxygen." Scale="0.32" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="75" />
@@ -163,6 +168,11 @@
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="0,157,92,27" />
       <Containable items="weldingfuel,oxygensource" />
     </ItemContainer>
+    <Upgrade gameversion="0.9.502.0">
+      <RepairTool>
+        <RequiredItems identifier="oxygentank,oxygenitetank,weldingfueltank,incendiumfueltank" type="Contained" msg="ItemMsgOxygenTankRequired" />
+      </RepairTool>
+    </Upgrade>
   </Item>
   <Item name="Welding Fuel Tank" identifier="weldingfueltank" category="Equipment" Tags="smallitem,weldingfuel" preferredcontainers="locker" cargocontaineridentifier="metalcrate" scale="0.3" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="50" />
