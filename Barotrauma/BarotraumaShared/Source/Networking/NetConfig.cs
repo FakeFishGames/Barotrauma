@@ -44,6 +44,7 @@ namespace Barotrauma.Networking
         public const float ItemConditionUpdateInterval = 0.15f;
         public const float LevelObjectUpdateInterval = 0.5f;
         public const float HullUpdateInterval = 0.5f;
+        public const float SparseHullUpdateInterval = 5.0f;
         public const float HullUpdateDistance = 20000.0f;
 
         public const int MaxEventPacketsPerUpdate = 4;
