@@ -78,7 +78,7 @@ namespace Barotrauma.Networking
 
         public TraitorManager TraitorManager;
 
-        private ServerEntityEventManager entityEventManager;
+        private readonly ServerEntityEventManager entityEventManager;
 
         private FileSender fileSender;
 #if DEBUG
@@ -116,8 +116,8 @@ namespace Barotrauma.Networking
         public int QueryPort => serverSettings?.QueryPort ?? 0;
 
         public NetworkConnection OwnerConnection { get; private set; }
-        private int? ownerKey;
-        private UInt64? ownerSteamId;
+        private readonly int? ownerKey;
+        private readonly UInt64? ownerSteamId;
 
         public GameServer(string name, int port, int queryPort = 0, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10, int? ownKey = null, UInt64? steamId = null)
         {
@@ -216,6 +216,16 @@ namespace Barotrauma.Networking
 
             GameMain.NetLobbyScreen.Select();
             GameMain.NetLobbyScreen.RandomizeSettings();
+            if (!string.IsNullOrEmpty(serverSettings.SelectedSubmarine)) 
+            {
+                Submarine sub = Submarine.SavedSubmarines.FirstOrDefault(s => s.Name == serverSettings.SelectedSubmarine);
+                if (sub != null) { GameMain.NetLobbyScreen.SelectedSub = sub; }
+            }
+            if (!string.IsNullOrEmpty(serverSettings.SelectedShuttle))
+            {
+                Submarine shuttle = Submarine.SavedSubmarines.FirstOrDefault(s => s.Name == serverSettings.SelectedShuttle);
+                if (shuttle != null) { GameMain.NetLobbyScreen.SelectedShuttle = shuttle; }
+            }
             started = true;
 
             GameAnalyticsManager.AddDesignEvent("GameServer:Start");
@@ -1439,7 +1449,7 @@ namespace Barotrauma.Networking
                 }
 
                 //no more room in this packet
-                if (outmsg.LengthBytes + tempBuffer.LengthBytes > MsgConstants.MTU - 20)
+                if (outmsg.LengthBytes + tempBuffer.LengthBytes > MsgConstants.MTU - 100)
                 {
                     break;
                 }
@@ -2097,7 +2107,7 @@ namespace Barotrauma.Networking
                 GameMain.NetLobbyScreen.LastUpdateID++;
             }
 
-            if (serverSettings.SaveServerLogs) serverSettings.ServerLog.Save();
+            if (serverSettings.SaveServerLogs) { serverSettings.ServerLog.Save(); }
 
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
 
@@ -3240,6 +3250,9 @@ namespace Barotrauma.Networking
                 started = false;
 
                 serverSettings.BanList.Save();
+
+                if (GameMain.NetLobbyScreen.SelectedSub != null) { serverSettings.SelectedSubmarine = GameMain.NetLobbyScreen.SelectedSub.Name; }
+                if (GameMain.NetLobbyScreen.SelectedShuttle != null) { serverSettings.SelectedShuttle = GameMain.NetLobbyScreen.SelectedShuttle.Name; }
                 serverSettings.SaveSettings();
 
                 if (registeredToMaster)
