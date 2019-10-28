@@ -1492,7 +1492,7 @@ namespace Barotrauma
             else
             {
                 string errorMsg = item.ErrorCode.HasValue ?
-                    TextManager.Get("WorkshopPublishError." + item.ErrorCode.Value.ToString(), returnNull: true) :
+                    TextManager.GetWithVariable("WorkshopPublishError." + item.ErrorCode.Value.ToString(), "[savepath]", SaveUtil.SaveFolder, returnNull: true) :
                     null;
 
                 if (errorMsg == null)
