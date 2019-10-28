@@ -183,23 +183,19 @@ namespace Barotrauma.Items.Components
 {
     class Wearable : Pickable, IServerSerializable
     {
-        private XElement[] wearableElements;
-        private WearableSprite[] wearableSprites;
-        private LimbType[] limbType;
-        private Limb[] limb;
+        private readonly XElement[] wearableElements;
+        private readonly WearableSprite[] wearableSprites;
+        private readonly LimbType[] limbType;
+        private readonly Limb[] limb;
 
-        private List<DamageModifier> damageModifiers;
+        private readonly List<DamageModifier> damageModifiers;
 
-        public List<DamageModifier> DamageModifiers
+        public IEnumerable<DamageModifier> DamageModifiers
         {
             get { return damageModifiers; }
         }
 
-        private bool autoEquipWhenFull;
-        public bool AutoEquipWhenFull
-        {
-            get { return autoEquipWhenFull; }
-        }
+        public bool AutoEquipWhenFull { get; private set; }
 
         public readonly int Variants;
 
@@ -211,7 +207,6 @@ namespace Barotrauma.Items.Components
             {
 #if SERVER
                 variant = value;
-
                 item.CreateServerEvent(this);
 #elif CLIENT
                 if (variant == value) { return; }
@@ -222,7 +217,7 @@ namespace Barotrauma.Items.Components
                     Unequip(character);
                 }
 
-                for (int i=0;i<wearableSprites.Length;i++)
+                for (int i = 0; i < wearableSprites.Length; i++)
                 {
                     var subElement = wearableElements[i];
 
@@ -253,7 +248,7 @@ namespace Barotrauma.Items.Components
             wearableElements = new XElement[spriteCount];
             limbType    = new LimbType[spriteCount];
             limb        = new Limb[spriteCount];
-            autoEquipWhenFull = element.GetAttributeBool("autoequipwhenfull", true);
+            AutoEquipWhenFull = element.GetAttributeBool("autoequipwhenfull", true);
             int i = 0;
             foreach (XElement subElement in element.Elements())
             {
