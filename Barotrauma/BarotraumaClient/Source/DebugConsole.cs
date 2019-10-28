@@ -2067,13 +2067,13 @@ namespace Barotrauma
                     {
                         wearable.Variant = variant;
                     }
-                    wearable.RefreshPath();
+                    wearable.ParsePath(true);
                     wearable.Sprite.ReloadXML();
                     wearable.Sprite.ReloadTexture();
                 }
                 foreach (var wearable in limb.OtherWearables)
                 {
-                    wearable.RefreshPath();
+                    wearable.ParsePath(true);
                     wearable.Sprite.ReloadXML();
                     wearable.Sprite.ReloadTexture();
                 }

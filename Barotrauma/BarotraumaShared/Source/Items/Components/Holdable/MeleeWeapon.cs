@@ -242,6 +242,15 @@ namespace Barotrauma.Items.Components
                 User = null;
             }
 
+            //ignore collision if there's a wall between the user and the weapon to prevent hitting through walls
+            if (Submarine.PickBody(User.AnimController.AimSourceSimPos, 
+                item.SimPosition, 
+                collisionCategory: Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionItemBlocking, 
+                allowInsideFixture: true) != null)
+            {
+                return false;
+            }
+
             Character targetCharacter = null;
             Limb targetLimb = null;
             Structure targetStructure = null;

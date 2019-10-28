@@ -159,7 +159,7 @@ namespace Barotrauma
             if (!string.IsNullOrWhiteSpace(Msg)) element.Add(new XAttribute("msg", Msg));
         }
 
-        public static RelatedItem Load(XElement element, string parentDebugName)
+        public static RelatedItem Load(XElement element, bool returnEmpty, string parentDebugName)
         {
             string[] identifiers;
             if (element.Attribute("name") != null)
@@ -206,10 +206,9 @@ namespace Barotrauma
                 }
             }
 
-            if (identifiers.Length == 0 && excludedIdentifiers.Length == 0) { return null; }
+            if (identifiers.Length == 0 && excludedIdentifiers.Length == 0 && !returnEmpty) { return null; }
 
             RelatedItem ri = new RelatedItem(identifiers, excludedIdentifiers);
-            
             string typeStr = element.GetAttributeString("type", "");
             if (string.IsNullOrEmpty(typeStr))
             {

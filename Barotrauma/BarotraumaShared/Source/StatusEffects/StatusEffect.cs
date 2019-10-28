@@ -334,7 +334,7 @@ namespace Barotrauma
                         break;
                     case "requireditem":
                     case "requireditems":
-                        RelatedItem newRequiredItem = RelatedItem.Load(subElement, parentDebugName);
+                        RelatedItem newRequiredItem = RelatedItem.Load(subElement, returnEmpty: false, parentDebugName: parentDebugName);
                         if (newRequiredItem == null)
                         {
                             DebugConsole.ThrowError("Error in StatusEffect config - requires an item with no identifiers.");

@@ -12,31 +12,31 @@ namespace Barotrauma
     {
         public enum Tab { Map, Crew, Store, Repair }
         private Tab selectedTab;
-        private GUIFrame[] tabs;
-        private GUIFrame topPanel;
+        private readonly GUIFrame[] tabs;
+        private readonly GUIFrame topPanel;
 
-        private GUIListBox characterList;
+        private readonly GUIListBox characterList;
 
         private MapEntityCategory selectedItemCategory = MapEntityCategory.Equipment;
 
-        private GUIListBox myItemList;
-        private GUIListBox storeItemList;
-        private GUITextBox searchBox;
+        private readonly GUIListBox myItemList;
+        private readonly GUIListBox storeItemList;
+        private readonly GUITextBox searchBox;
 
-        private GUIComponent missionPanel;
-        private GUIComponent selectedLocationInfo;
-        private GUIListBox selectedMissionInfo;
+        private readonly GUIComponent missionPanel;
+        private readonly GUIComponent selectedLocationInfo;
+        private readonly GUIListBox selectedMissionInfo;
 
-        private GUIButton repairHullsButton, replaceShuttlesButton, repairItemsButton;
+        private readonly GUIButton repairHullsButton, replaceShuttlesButton, repairItemsButton;
 
         private GUIFrame characterPreviewFrame;
 
         private bool displayMissionPanelInMapTab;
 
-        private List<GUIButton> tabButtons = new List<GUIButton>();
-        private List<GUIButton> itemCategoryButtons = new List<GUIButton>();
+        private readonly List<GUIButton> tabButtons = new List<GUIButton>();
+        private readonly List<GUIButton> itemCategoryButtons = new List<GUIButton>();
+        private readonly List<GUITickBox> missionTickBoxes = new List<GUITickBox>();
         private GUIRadioButtonGroup missionRadioButtonGroup = new GUIRadioButtonGroup();
-        private List<GUITickBox> missionTickBoxes = new List<GUITickBox>();
 
         private Location selectedLocation;
 
@@ -709,10 +709,12 @@ namespace Barotrauma
                 Mission selectedMission = Campaign.Map.CurrentLocation.SelectedMission != null && availableMissions.Contains(Campaign.Map.CurrentLocation.SelectedMission) ?
                     Campaign.Map.CurrentLocation.SelectedMission : null;
                 missionTickBoxes.Clear();
-                missionRadioButtonGroup = new GUIRadioButtonGroup();
-                missionRadioButtonGroup.UserData = availableMissions;
+                missionRadioButtonGroup = new GUIRadioButtonGroup
+                {
+                    UserData = availableMissions
+                };
 
-                for (int i=0;i<availableMissions.Count;i++)
+                for (int i = 0; i < availableMissions.Count; i++)
                 {
                     var mission = availableMissions[i];
                     var tickBox = new GUITickBox(new RectTransform(new Vector2(0.1f, 0.1f), missionContent.RectTransform) { MaxSize = maxTickBoxSize },
@@ -812,7 +814,7 @@ namespace Barotrauma
             }
         }
 
-        private GUIComponent CreateItemFrame(PurchasedItem pi, PriceInfo priceInfo, GUIListBox listBox, int width)
+        private GUIComponent CreateItemFrame(PurchasedItem pi, PriceInfo priceInfo, GUIListBox listBox)
         {
             GUIFrame frame = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, (int)(GUI.Scale * 50)), listBox.Content.RectTransform), style: "ListBoxElement")
             {
@@ -943,7 +945,7 @@ namespace Barotrauma
                 var itemFrame = myItemList.Content.GetChildByUserData(pi);
                 if (itemFrame == null)
                 {
-                    itemFrame = CreateItemFrame(pi, pi.ItemPrefab.GetPrice(Campaign.Map.CurrentLocation), myItemList, myItemList.Rect.Width);
+                    itemFrame = CreateItemFrame(pi, pi.ItemPrefab.GetPrice(Campaign.Map.CurrentLocation), myItemList);
                 }
                 itemFrame.GetChild(0).GetChild<GUINumberInput>().IntValue = pi.Quantity;
                 existingItemFrames.Add(itemFrame);
@@ -1013,7 +1015,6 @@ namespace Barotrauma
             float prevStoreItemScroll = storeItemList.BarScroll;
             float prevMyItemScroll = myItemList.BarScroll;
 
-            int width = storeItemList.Rect.Width;
             HashSet<GUIComponent> existingItemFrames = new HashSet<GUIComponent>();
             foreach (MapEntityPrefab mapEntityPrefab in MapEntityPrefab.List)
             {
@@ -1024,7 +1025,7 @@ namespace Barotrauma
                 var itemFrame = myItemList.Content.GetChildByUserData(priceInfo);
                 if (itemFrame == null)
                 {
-                    itemFrame = CreateItemFrame(new PurchasedItem(itemPrefab, 0), priceInfo, storeItemList, width);
+                    itemFrame = CreateItemFrame(new PurchasedItem(itemPrefab, 0), priceInfo, storeItemList);
                 }
                 existingItemFrames.Add(itemFrame);
             }
