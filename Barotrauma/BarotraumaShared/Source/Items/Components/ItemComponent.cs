@@ -276,7 +276,7 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                         returnEmpty = Screen.Selected == GameMain.SubEditorScreen;
 #endif
-                        RelatedItem ri = RelatedItem.Load(subElement, returnEmpty: returnEmpty, item.Name);
+                        RelatedItem ri = RelatedItem.Load(subElement, returnEmpty, item.Name);
                         if (ri != null)
                         {
                             if (ri.Identifiers.Length == 0)
