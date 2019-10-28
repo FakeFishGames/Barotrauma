@@ -1801,6 +1801,7 @@ namespace Barotrauma
             playerFrame.HoverColor = color * 0.6f;
             playerFrame.SelectedColor = color * 0.8f;
             playerFrame.OutlineColor = color * 0.5f;
+            playerFrame.TextColor = color;
         }
 
         public void SetPlayerVoiceIconState(Client client, bool muted, bool mutedLocally)
