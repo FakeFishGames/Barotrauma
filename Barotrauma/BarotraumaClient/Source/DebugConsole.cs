@@ -1069,10 +1069,6 @@ namespace Barotrauma
 
                 foreach (string englishTag in tags["English"])
                 {
-                    if (englishTag == "entitydescription.reinforceddoor")
-                    {
-                        int asdfsdf = 1;
-                    }
                     foreach (string language in TextManager.AvailableLanguages)
                     {
                         if (language == "English") { continue; }

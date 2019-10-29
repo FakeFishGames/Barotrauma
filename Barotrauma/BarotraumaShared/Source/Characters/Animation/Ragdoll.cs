@@ -718,19 +718,19 @@ namespace Barotrauma
             foreach (Limb limb in Limbs)
             {
                 if (connectedLimbs.Contains(limb)) continue;
-                
-                limb.IsSevered = true;                           
+
+                limb.IsSevered = true;
             }
 
-            SeverLimbJointProjSpecific(limbJoint);
+            SeverLimbJointProjSpecific(limbJoint, playSound: true);
 
-            if (GameMain.NetworkMember!=null && GameMain.NetworkMember.IsServer)
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
             {
                 GameMain.NetworkMember.CreateEntityEvent(character, new object[] { NetEntityEvent.Type.Status });
             }
         }
 
-        partial void SeverLimbJointProjSpecific(LimbJoint limbJoint, bool playSound = true);
+        partial void SeverLimbJointProjSpecific(LimbJoint limbJoint, bool playSound);
 
         private void GetConnectedLimbs(List<Limb> connectedLimbs, List<LimbJoint> checkedJoints, Limb limb)
         {

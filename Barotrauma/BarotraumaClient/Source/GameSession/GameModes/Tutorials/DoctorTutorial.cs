@@ -22,7 +22,6 @@ namespace Barotrauma.Tutorials
         private ItemContainer doctor_medBayCabinet;
         private Character patient1, patient2;
         private List<Character> subPatients;
-        private Hull startRoom;
         private Hull medBay;
 
         private Door doctor_firstDoor;

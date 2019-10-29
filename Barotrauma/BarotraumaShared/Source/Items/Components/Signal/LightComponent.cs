@@ -18,11 +18,10 @@ namespace Barotrauma.Items.Components
         private float flicker;
         private bool castShadows;
         private bool drawBehindSubs;
-
         private float blinkTimer;
-        
+#if SERVER
         private bool itemLoaded;
-
+#endif
         public PhysicsBody ParentBody;
 
         [Serialize(100.0f, true, description: "The range of the emitted light. Higher values are more performance-intensive."), 
@@ -172,10 +171,11 @@ namespace Barotrauma.Items.Components
         public override void OnItemLoaded()
         {
             base.OnItemLoaded();
-            itemLoaded = true;
 #if CLIENT
             light.Color = IsActive ? lightColor : Color.Transparent;
             if (!IsActive) lightBrightness = 0.0f;
+#elif SERVER
+            itemLoaded = true;
 #endif
         }
 

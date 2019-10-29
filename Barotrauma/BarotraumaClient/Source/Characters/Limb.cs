@@ -84,9 +84,9 @@ namespace Barotrauma
             //    pos.Y = -pos.Y;
             //    ShapeExtensions.DrawPoint(spriteBatch, pos, Color.Red, size: 5);
             //}
-            return;
+
             // A debug visualisation on the bezier curve between limbs.
-            var start = LimbA.WorldPosition;
+            /*var start = LimbA.WorldPosition;
             var end = LimbB.WorldPosition;
             var jointAPos = ConvertUnits.ToDisplayUnits(LocalAnchorA);
             var control = start + Vector2.Transform(jointAPos, Matrix.CreateRotationZ(LimbA.Rotation));
@@ -99,7 +99,7 @@ namespace Barotrauma
             //GUI.DrawLine(spriteBatch, start, end, Color.White);
             //GUI.DrawLine(spriteBatch, start, control, Color.Black);
             //GUI.DrawLine(spriteBatch, control, end, Color.Black);
-            GUI.DrawBezierWithDots(spriteBatch, start, end, control, 1000, Color.Red);
+            GUI.DrawBezierWithDots(spriteBatch, start, end, control, 1000, Color.Red);*/
         }
     }
 
