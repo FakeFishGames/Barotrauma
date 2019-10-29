@@ -2435,48 +2435,50 @@ namespace Barotrauma
             string spritePathWithTags = headSpriteElement.Attribute("texture").Value;
 
             var characterConfigElement = info.CharacterConfigElement;
-            foreach (Gender gender in Enum.GetValues(typeof(Gender)))
+
+            var heads = info.Heads;
+            if (heads != null)
             {
                 row = null;
                 itemsInRow = 0;
-                foreach (Race race in Enum.GetValues(typeof(Race)))
+                foreach (var head in heads)
                 {
-                    int headIndex = 1;
-                    while (true)
+                    var headPreset = head.Key;
+                    Gender gender = headPreset.Gender;
+                    Race race = headPreset.Race;
+                    int headIndex = headPreset.ID;
+
+                    string spritePath = spritePathWithTags
+                        .Replace("[GENDER]", gender.ToString().ToLowerInvariant())
+                        .Replace("[RACE]", race.ToString().ToLowerInvariant());
+
+                    if (!File.Exists(spritePath)) { continue; }
+
+                    Sprite headSprite = new Sprite(headSpriteElement, "", spritePath);
+                    headSprite.SourceRect = new Rectangle(CharacterInfo.CalculateOffset(headSprite, head.Value.ToPoint()), headSprite.SourceRect.Size);
+                    characterSprites.Add(headSprite);
+
+                    if (row == null || itemsInRow >= 4)
                     {
-                        string spritePath = spritePathWithTags
-                            .Replace("[GENDER]", gender.ToString().ToLowerInvariant())
-                            .Replace("[RACE]", race.ToString().ToLowerInvariant())
-                            .Replace("[HEADID]", headIndex.ToString());
-
-                        if (!File.Exists(spritePath)) { break; }
-
-                        Sprite headSprite = new Sprite(headSpriteElement, "", spritePath);
-                        characterSprites.Add(headSprite);
-
-                        if (row == null || itemsInRow >= 4)
+                        row = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.333f), HeadSelectionList.Content.RectTransform), true)
                         {
-                            row = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.333f), HeadSelectionList.Content.RectTransform), true)
-                            {
-                                UserData = gender,
-                                Visible = gender == selectedGender
-                            };
-                            itemsInRow = 0;
-                        }
-
-                        var btn = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), row.RectTransform), style: "ListBoxElement")
-                        {
-                            OutlineColor = Color.White * 0.5f,
-                            PressedColor = Color.White * 0.5f,
-                            UserData = new Tuple<Gender, Race, int>(gender, race, headIndex),
-                            OnClicked = SwitchHead,
-                            Selected = gender == info.Gender && race == info.Race && headIndex == info.HeadSpriteId
+                            UserData = gender,
+                            Visible = gender == selectedGender
                         };
-
-                        new GUIImage(new RectTransform(Vector2.One, btn.RectTransform), headSprite, scaleToFit: true);
-                        itemsInRow++;
-                        headIndex++;
+                        itemsInRow = 0;
                     }
+
+                    var btn = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), row.RectTransform), style: "ListBoxElement")
+                    {
+                        OutlineColor = Color.White * 0.5f,
+                        PressedColor = Color.White * 0.5f,
+                        UserData = new Tuple<Gender, Race, int>(gender, race, headIndex),
+                        OnClicked = SwitchHead,
+                        Selected = gender == info.Gender && race == info.Race && headIndex == info.HeadSpriteId
+                    };
+
+                    new GUIImage(new RectTransform(Vector2.One, btn.RectTransform), headSprite, scaleToFit: true);
+                    itemsInRow++;
                 }
             }
 

@@ -90,12 +90,12 @@ namespace Barotrauma
             }
         }
 
-        public WearableSprite(XElement subElement, WearableType type, Point? sheetIndex = null)
+        public WearableSprite(XElement subElement, WearableType type)
         {
             Type = type;
             SourceElement = subElement;
             UnassignedSpritePath = subElement.GetAttributeString("texture", string.Empty);
-            Init(sheetIndex: sheetIndex);
+            Init();
             switch (type)
             {
                 case WearableType.Hair:
@@ -150,7 +150,7 @@ namespace Barotrauma
         }
 
         public bool IsInitialized { get; private set; }
-        public void Init(Gender gender = Gender.None, Point? sheetIndex = null)
+        public void Init(Gender gender = Gender.None)
         {
             if (IsInitialized) { return; }
             _gender = UnassignedSpritePath.Contains("[GENDER]") ? gender : Gender.None;
@@ -173,10 +173,6 @@ namespace Barotrauma
             if (index.X > -1 && index.Y > -1)
             {
                 SheetIndex = index;
-            }
-            else if (sheetIndex.HasValue)
-            {
-                SheetIndex = sheetIndex;
             }
             IsInitialized = true;
         }

@@ -110,8 +110,20 @@ namespace Barotrauma
             }
         }
 
+        public Dictionary<HeadPreset, Vector2> Heads
+        {
+            get
+            {
+                if (heads == null)
+                {
+                    LoadHeadPresets();
+                }
+                return heads;
+            }
+        }
+
         private static Dictionary<HeadPreset, Vector2> heads;
-        private class HeadPreset : ISerializableEntity
+        public class HeadPreset : ISerializableEntity
         {
             [Serialize(Race.None, false)]
             public Race Race { get; private set; }
@@ -207,6 +219,12 @@ namespace Barotrauma
                 {
                     LoadHeadSprite();
                 }
+#if CLIENT
+                if (headSprite != null)
+                {
+                    CalculateHeadPosition(headSprite);
+                }
+#endif
                 return headSprite;
             }
             private set
@@ -717,7 +735,8 @@ namespace Barotrauma
             {
                 if (hairs == null)
                 {
-                    hairs = AddEmpty(FilterByTypeAndHeadID(FilterElementsByGenderAndRace(wearables), WearableType.Hair), WearableType.Hair);
+                    float commonness = Gender == Gender.Female ? 0.05f : 0.2f;
+                    hairs = AddEmpty(FilterByTypeAndHeadID(FilterElementsByGenderAndRace(wearables), WearableType.Hair), WearableType.Hair, commonness);
                 }
                 if (beards == null)
                 {
@@ -769,10 +788,10 @@ namespace Barotrauma
                     Head.FaceAttachmentIndex = faceAttachments.IndexOf(Head.FaceAttachment);
                 }
 
-                List<XElement> AddEmpty(IEnumerable<XElement> elements, WearableType type)
+                List<XElement> AddEmpty(IEnumerable<XElement> elements, WearableType type, float commonness = 1)
                 {
                     // Let's add an empty element so that there's a chance that we don't get any actual element -> allows bald and beardless guys, for example.
-                    var emptyElement = new XElement("EmptyWearable", type.ToString());
+                    var emptyElement = new XElement("EmptyWearable", type.ToString(), new XAttribute("commonness", commonness));
                     var list = new List<XElement>() { emptyElement };
                     list.AddRange(elements);
                     return list;
