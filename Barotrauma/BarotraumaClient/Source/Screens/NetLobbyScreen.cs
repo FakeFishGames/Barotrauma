@@ -2719,15 +2719,7 @@ namespace Barotrauma
 
             if (gender != info.Gender || race != info.Race || id != info.HeadSpriteId)
             {
-                info.Head = new CharacterInfo.HeadInfo(id)
-                {
-                    gender = gender,
-                    race = race,
-                    BeardIndex = 0,
-                    HairIndex = 0,
-                    FaceAttachmentIndex = 0,
-                    MoustacheIndex = 0
-                };
+                info.Head = new CharacterInfo.HeadInfo(id, gender, race);
                 info.ReloadHeadAttachments();
             }
             StoreHead();
@@ -2739,87 +2731,34 @@ namespace Barotrauma
             return true;
         }
 
-        private bool SwitchHair(GUIScrollBar scrollBar, float barScroll)
+        private bool SwitchHair(GUIScrollBar scrollBar, float barScroll) => SwitchAttachment(scrollBar, WearableType.Hair);
+        private bool SwitchBeard(GUIScrollBar scrollBar, float barScroll) => SwitchAttachment(scrollBar, WearableType.Beard);
+        private bool SwitchMoustache(GUIScrollBar scrollBar, float barScroll) => SwitchAttachment(scrollBar, WearableType.Moustache);
+        private bool SwitchFaceAttachment(GUIScrollBar scrollBar, float barScroll) => SwitchAttachment(scrollBar, WearableType.FaceAttachment);
+        private bool SwitchAttachment(GUIScrollBar scrollBar, WearableType type)
         {
             var info = GameMain.Client.CharacterInfo;
-
             int index = (int)scrollBar.BarScrollValue;
-
-            info.Head = new CharacterInfo.HeadInfo(info.HeadSpriteId)
+            switch (type)
             {
-                gender = info.Gender,
-                race = info.Race,
-                BeardIndex = info.BeardIndex,
-                HairIndex = index,
-                FaceAttachmentIndex = info.FaceAttachmentIndex,
-                MoustacheIndex = info.MoustacheIndex
-            };
+                case WearableType.Beard:
+                    info.Head = new CharacterInfo.HeadInfo(info.HeadSpriteId, info.Gender, info.Race, info.HairIndex, index, info.MoustacheIndex, info.FaceAttachmentIndex);
+                    break;
+                case WearableType.FaceAttachment:
+                    info.Head = new CharacterInfo.HeadInfo(info.HeadSpriteId, info.Gender, info.Race, info.HairIndex, info.BeardIndex, info.MoustacheIndex, index);
+                    break;
+                case WearableType.Hair:
+                    info.Head = new CharacterInfo.HeadInfo(info.HeadSpriteId, info.Gender, info.Race, index, info.BeardIndex, info.MoustacheIndex, info.FaceAttachmentIndex);
+                    break;
+                case WearableType.Moustache:
+                    info.Head = new CharacterInfo.HeadInfo(info.HeadSpriteId, info.Gender, info.Race, info.HairIndex, info.BeardIndex, index, info.FaceAttachmentIndex);
+                    break;
+                default:
+                    DebugConsole.ThrowError($"Wearable type not implemented: {type.ToString()}");
+                    return false;
+            }
             info.ReloadHeadAttachments();
             StoreHead();
-
-            return true;
-        }
-
-        private bool SwitchMoustache(GUIScrollBar scrollBar, float barScroll)
-        {
-            var info = GameMain.Client.CharacterInfo;
-
-            int index = (int)scrollBar.BarScrollValue;
-
-            info.Head = new CharacterInfo.HeadInfo(info.HeadSpriteId)
-            {
-                gender = info.Gender,
-                race = info.Race,
-                BeardIndex = info.BeardIndex,
-                HairIndex = info.HairIndex,
-                FaceAttachmentIndex = info.FaceAttachmentIndex,
-                MoustacheIndex = index
-            };
-            info.ReloadHeadAttachments();
-            StoreHead();
-
-            return true;
-        }
-
-        private bool SwitchBeard(GUIScrollBar scrollBar, float barScroll)
-        {
-            var info = GameMain.Client.CharacterInfo;
-
-            int index = (int)scrollBar.BarScrollValue;
-
-            info.Head = new CharacterInfo.HeadInfo(info.HeadSpriteId)
-            {
-                gender = info.Gender,
-                race = info.Race,
-                BeardIndex = index,
-                HairIndex = info.HairIndex,
-                FaceAttachmentIndex = info.FaceAttachmentIndex,
-                MoustacheIndex = info.MoustacheIndex
-            };
-            info.ReloadHeadAttachments();
-            StoreHead();
-
-            return true;
-        }
-
-        private bool SwitchFaceAttachment(GUIScrollBar scrollBar, float barScroll)
-        {
-            var info = GameMain.Client.CharacterInfo;
-
-            int index = (int)scrollBar.BarScrollValue;
-
-            info.Head = new CharacterInfo.HeadInfo(info.HeadSpriteId)
-            {
-                gender = info.Gender,
-                race = info.Race,
-                BeardIndex = info.BeardIndex,
-                HairIndex = info.HairIndex,
-                FaceAttachmentIndex = index,
-                MoustacheIndex = info.MoustacheIndex
-            };
-            info.ReloadHeadAttachments();
-            StoreHead();
-
             return true;
         }
 

@@ -33,17 +33,7 @@ namespace Barotrauma
                     {
                         _headSpriteId = (int)headSpriteRange.X;
                     }
-                    if (heads.Any())
-                    {
-                        var matchingHead = heads.Keys.FirstOrDefault(h => h.Gender == gender && h.Race == race && h.ID == _headSpriteId);
-                        if (matchingHead != null)
-                        {
-                            if (heads.TryGetValue(matchingHead, out Vector2 index))
-                            {
-                                SheetIndex = index;
-                            }
-                        }
-                    }
+                    GetSpriteSheetIndex();
                 }
             }
             public Vector2? SheetIndex { get; private set; }
@@ -63,9 +53,16 @@ namespace Barotrauma
             
             public HeadInfo() { }
 
-            public HeadInfo(int headId)
+            public HeadInfo(int headId, Gender gender, Race race, int hairIndex = 0, int beardIndex = 0, int moustacheIndex = 0, int faceAttachmentIndex = 0)
             {
                 _headSpriteId = Math.Max(headId, 1);
+                this.gender = gender;
+                this.race = race;
+                HairIndex = hairIndex;
+                BeardIndex = beardIndex;
+                MoustacheIndex = moustacheIndex;
+                FaceAttachmentIndex = faceAttachmentIndex;
+                GetSpriteSheetIndex();
             }
 
             public void ResetAttachmentIndices()
@@ -74,6 +71,21 @@ namespace Barotrauma
                 BeardIndex = -1;
                 MoustacheIndex = -1;
                 FaceAttachmentIndex = -1;
+            }
+
+            private void GetSpriteSheetIndex()
+            {
+                if (heads.Any())
+                {
+                    var matchingHead = heads.Keys.FirstOrDefault(h => h.Gender == gender && h.Race == race && h.ID == _headSpriteId);
+                    if (matchingHead != null)
+                    {
+                        if (heads.TryGetValue(matchingHead, out Vector2 index))
+                        {
+                            SheetIndex = index;
+                        }
+                    }
+                }
             }
         }
 
@@ -646,16 +658,7 @@ namespace Barotrauma
             {
                 gender = Gender.None;
             }
-
-            head = new HeadInfo(headID)
-            {
-                race = race,
-                gender = gender,
-                HairIndex = hairIndex,
-                BeardIndex = beardIndex,
-                MoustacheIndex = moustacheIndex,
-                FaceAttachmentIndex = faceAttachmentIndex
-            };
+            head = new HeadInfo(headID, gender, race, hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
             CalculateHeadSpriteRange();
             ReloadHeadAttachments();
         }
