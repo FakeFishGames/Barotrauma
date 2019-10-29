@@ -118,6 +118,9 @@ namespace Microsoft.Xna.Framework.Graphics
                     }
                     GraphicsExtensions.CheckGLError();
 
+                    GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
+                    GraphicsExtensions.CheckGLError();
+
 #if !ANDROID
                     // Required to make sure that any texture uploads on a thread are completed
                     // before the main thread tries to use the texture.

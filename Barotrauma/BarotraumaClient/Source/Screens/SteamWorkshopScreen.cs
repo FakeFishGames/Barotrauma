@@ -1492,7 +1492,7 @@ namespace Barotrauma
             else
             {
                 string errorMsg = item.ErrorCode.HasValue ?
-                    TextManager.Get("WorkshopPublishError." + item.ErrorCode.Value.ToString(), returnNull: true) :
+                    TextManager.GetWithVariable("WorkshopPublishError." + item.ErrorCode.Value.ToString(), "[savepath]", SaveUtil.SaveFolder, returnNull: true) :
                     null;
 
                 if (errorMsg == null)
@@ -1520,7 +1520,7 @@ namespace Barotrauma
 
             GameMain.MainMenuScreen.DrawBackground(graphics, spriteBatch);
 
-            spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, GameMain.ScissorTestEnable);
+            spriteBatch.Begin(SpriteSortMode.Deferred, null, GUI.SamplerState, null, GameMain.ScissorTestEnable);
             GUI.Draw(Cam, spriteBatch);
             spriteBatch.End();
         }

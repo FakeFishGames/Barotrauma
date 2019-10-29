@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -12,24 +13,25 @@ namespace Barotrauma
 
         //can either be a tag or an identifier
         private readonly string[] itemIdentifiers;
-        private readonly ItemContainer container;
+        private readonly ItemContainer sourceContainer;
+        private ItemContainer targetContainer;
         private readonly Item targetItem;
 
         private AIObjectiveGoTo goToObjective;
-        private bool isCompleted;
+        private AIObjectiveContainItem containObjective;
 
-        public AIObjectiveDecontainItem(Character character, Item targetItem, ItemContainer container, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
+        public AIObjectiveDecontainItem(Character character, Item targetItem, ItemContainer sourceContainer, AIObjectiveManager objectiveManager, ItemContainer targetContainer = null, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier)
         {
             this.targetItem = targetItem;
-            this.container = container;
+            this.sourceContainer = sourceContainer;
+            this.targetContainer = targetContainer;
         }
 
+        public AIObjectiveDecontainItem(Character character, string itemIdentifier, ItemContainer sourceContainer, AIObjectiveManager objectiveManager, ItemContainer targetContainer = null, float priorityModifier = 1) 
+            : this(character, new string[] { itemIdentifier }, sourceContainer, objectiveManager, targetContainer, priorityModifier) { }
 
-        public AIObjectiveDecontainItem(Character character, string itemIdentifier, ItemContainer container, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
-            : this(character, new string[] { itemIdentifier }, container, objectiveManager, priorityModifier) { }
-
-        public AIObjectiveDecontainItem(Character character, string[] itemIdentifiers, ItemContainer container, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
+        public AIObjectiveDecontainItem(Character character, string[] itemIdentifiers, ItemContainer sourceContainer, AIObjectiveManager objectiveManager, ItemContainer targetContainer = null, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier)
         {
             this.itemIdentifiers = itemIdentifiers;
@@ -37,10 +39,11 @@ namespace Barotrauma
             {
                 itemIdentifiers[i] = itemIdentifiers[i].ToLowerInvariant();
             }
-            this.container = container;
+            this.sourceContainer = sourceContainer;
+            this.targetContainer = targetContainer;
         }
 
-        public override bool IsCompleted() => isCompleted;
+        protected override bool Check() => IsCompleted;
 
         public override float GetPriority()
         {
@@ -53,58 +56,50 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            if (isCompleted) { return; }
-            Item itemToDecontain = null;
-            //get the item that should be de-contained
-            if (targetItem == null)
+            Item itemToDecontain = targetItem ?? sourceContainer.Inventory.FindItem(i => itemIdentifiers.Any(id => i.Prefab.Identifier == id || i.HasTag(id)), recursive: false);
+            if (itemToDecontain == null)
             {
-                if (itemIdentifiers != null)
+                Abandon = true;
+                return;
+            }
+            if (targetContainer == null)
+            {
+                if (itemToDecontain.Container != sourceContainer.Item)
                 {
-                    foreach (string identifier in itemIdentifiers)
-                    {
-                        itemToDecontain = container.Inventory.FindItemByIdentifier(identifier) ?? container.Inventory.FindItemByTag(identifier);
-                        if (itemToDecontain != null) { break; }
-                    }
+                    IsCompleted = true;
+                    return;
                 }
             }
             else
             {
-                itemToDecontain = targetItem;
-            }
-            if (itemToDecontain == null || itemToDecontain.Container != container.Item) // Item not found or already de-contained, consider complete
-            {
-                isCompleted = true;
-                return;
-            }
-            if (itemToDecontain.OwnInventory != character.Inventory && itemToDecontain.ParentInventory != character.Inventory)
-            {
-                if (!character.CanInteractWith(container.Item, out _, checkLinked: false))
+                if (targetContainer.Inventory.Items.Contains(itemToDecontain))
                 {
-                    TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(container.Item, character, objectiveManager));
+                    IsCompleted = true;
                     return;
                 }
             }
-            itemToDecontain.Drop(character);
-            isCompleted = true;
-        }
-
-        public override bool IsDuplicate(AIObjective otherObjective)
-        {
-            if (!(otherObjective is AIObjectiveDecontainItem decontainItem)) { return false; }
-            if (decontainItem.itemIdentifiers != null && itemIdentifiers != null)
+            if (goToObjective == null && !itemToDecontain.IsOwnedBy(character))
             {
-                if (decontainItem.itemIdentifiers.Length != itemIdentifiers.Length) { return false; }
-                for (int i = 0; i < decontainItem.itemIdentifiers.Length; i++)
+                if (!character.CanInteractWith(sourceContainer.Item, out _, checkLinked: false))
                 {
-                    if (decontainItem.itemIdentifiers[i] != itemIdentifiers[i]) { return false; }
+                    TryAddSubObjective(ref goToObjective,
+                        constructor: () => new AIObjectiveGoTo(sourceContainer.Item, character, objectiveManager),
+                        onAbandon: () => Abandon = true);
+                    return;
                 }
-                return true;
             }
-            else if (decontainItem.itemIdentifiers == null && itemIdentifiers == null)
+            if (targetContainer != null)
             {
-                return decontainItem.targetItem == targetItem;
+                TryAddSubObjective(ref containObjective,
+                    constructor: () => new AIObjectiveContainItem(character, itemToDecontain, targetContainer, objectiveManager) { GetItemPriority = this.GetItemPriority },
+                    onCompleted: () => IsCompleted = true,
+                    onAbandon: () => targetContainer = null);
             }
-            return false;
+            else
+            {
+                itemToDecontain.Drop(character);
+                IsCompleted = true;
+            }
         }
     }
 }

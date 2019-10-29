@@ -83,6 +83,11 @@ namespace Barotrauma
             }
         }
 
+        public JobPrefab AssignedJob
+        {
+            get { return assignedJob; }
+        }
+
         public WayPoint(Vector2 position, SpawnType spawnType, Submarine submarine, Gap gap = null)
             : this(new Rectangle((int)position.X - 3, (int)position.Y + 3, 6, 6), submarine)
         {

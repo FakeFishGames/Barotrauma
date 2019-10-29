@@ -21,7 +21,7 @@
 		<ConnectionPanel selectkey="Action" canbeselected = "true">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
 			<RequiredItem identifier="screwdriver" type="Equipped"/>
-			<output name="power_in" displayname="connection.powerin"/>
+			<input name="power_in" displayname="connection.powerin"/>
 		</ConnectionPanel>
 
     <ItemContainer capacity="5" canbeselected="true" hideitems="true" slotsperrow="5" uilabel="Input" allowuioverlap="true"/>
@@ -48,7 +48,7 @@
     <ConnectionPanel selectkey="Action" canbeselected = "true">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
       <RequiredItem identifier="screwdriver" type="Equipped"/>
-      <output name="power_in" displayname="connection.powerin"/>
+      <input name="power_in" displayname="connection.powerin"/>
     </ConnectionPanel>
 
     <ItemContainer capacity="4" canbeselected="true" hideitems="true" slotsperrow="4" uilabel="Input" allowuioverlap="true"/>
@@ -74,7 +74,7 @@
     <ConnectionPanel selectkey="Action" canbeselected = "true">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
       <RequiredItem identifier="screwdriver" type="Equipped"/>
-      <output name="power_in" displayname="connection.powerin"/>
+      <input name="power_in" displayname="connection.powerin"/>
     </ConnectionPanel>
 
     <ItemContainer capacity="3" canbeselected="true" hideitems="true" hudpos="0.5, 0.4" slotsperrow="1" uilabel="Input" allowuioverlap="true"/>

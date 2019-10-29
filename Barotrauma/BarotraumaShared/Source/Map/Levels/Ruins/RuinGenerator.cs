@@ -239,7 +239,7 @@ namespace Barotrauma.RuinGeneration
 
             for (int i = 0; i < iterations; i++)
             {
-                rooms.ForEach(l => l.Split(0.3f, verticalProbability, generationParams.MinSplitWidth));
+                rooms.ForEach(l => l.Split(0.3f, verticalProbability, generationParams.MinSplitWidth, generationParams.MinSplitHeight));
                 rooms = baseRoom.GetLeaves();
             }
 
@@ -559,6 +559,11 @@ namespace Barotrauma.RuinGeneration
                                     foreach (MapEntity e in entities)
                                     {
                                         e.Move(doorOffset);
+                                        Door doorComponent = (e as Item)?.GetComponent<Door>();
+                                        if (doorComponent != null && !entities.Contains(doorComponent.LinkedGap))
+                                        {
+                                            doorComponent.LinkedGap.Move(doorOffset);
+                                        }
                                     }
                                 }
                             }

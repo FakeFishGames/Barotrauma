@@ -34,8 +34,18 @@ namespace Barotrauma
         [Serialize("", true, description: "Default path for the limb sprite textures. Used only if the limb specific path for the limb is not defined"), Editable]
         public string Texture { get; set; }
 
-        [Serialize(0f, true, description: "The orientation of the sprites as drawn on the sprite sheet. Can be overridden by setting a value for Limb's 'Sprite Orientation'. Used mainly for animations and widgets."), Editable(-360, 360)]
+        [Serialize(0.0f, true, description: "The orientation of the sprites as drawn on the sprite sheet. Can be overridden by setting a value for Limb's 'Sprite Orientation'. Used mainly for animations and widgets."), Editable(-360, 360)]
         public float SpritesheetOrientation { get; set; }
+
+        public bool IsSpritesheetOrientationHorizontal
+        {
+            get
+            {
+                return 
+                    (SpritesheetOrientation > 45.0f && SpritesheetOrientation < 135.0f) ||
+                    (SpritesheetOrientation > 255.0f && SpritesheetOrientation < 315.0f);
+            }
+        }
 
         private float limbScale;
         [Serialize(1.0f, true), Editable(MIN_SCALE, MAX_SCALE, DecimalCount = 3)]
@@ -55,11 +65,17 @@ namespace Barotrauma
         [Serialize(50f, true, description: "How much impact is required before the character takes impact damage?"), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
         public float ImpactTolerance { get; set; }
 
-        [Serialize(true, true, description: "Can the creature enter submarine and walk when there is no water? Creatures that cannot enter submarines, always collide with it, even when there is a gap."), Editable()]
+        [Serialize(true, true, description: "Can the creature enter submarine. Creatures that cannot enter submarines, always collide with it, even when there is a gap."), Editable()]
         public bool CanEnterSubmarine { get; set; }
+
+        [Serialize(true, true), Editable]
+        public bool CanWalk { get; set; }
 
         [Serialize(true, true, description: "Can the character be dragged around by other creatures?"), Editable()]
         public bool Draggable { get; set; }
+
+        [Serialize(LimbType.Torso, true), Editable]
+        public LimbType MainLimb { get; set; }
 
         private static Dictionary<string, Dictionary<string, RagdollParams>> allRagdolls = new Dictionary<string, Dictionary<string, RagdollParams>>();
 
@@ -513,6 +529,9 @@ namespace Barotrauma
             [Serialize(float.NaN, true, description: "The orientation of the sprite as drawn on the sprite sheet. Overrides the value defined in the Ragdoll settings. Used mainly for animations and widgets."), Editable(-360, 360)]
             public float SpriteOrientation { get; set; }
 
+            /// <summary>
+            /// The orientation of the sprite as drawn on the sprite sheet (in radians).
+            /// </summary>
             public float GetSpriteOrientation() => MathHelper.ToRadians(float.IsNaN(SpriteOrientation) ? Ragdoll.SpritesheetOrientation : SpriteOrientation);
 
             [Serialize(true, true, description: "Does the limb flip when the character flips?"), Editable()]
@@ -527,7 +546,7 @@ namespace Barotrauma
             [Serialize(false, true, description: "Disable drawing for this limb."), Editable()]
             public bool Hide { get; set; }
 
-            [Serialize(1f, true, description: "Higher values make AI characters prefer attacking this limb."), Editable()]
+            [Serialize(1f, true, description: "Higher values make AI characters prefer attacking this limb."), Editable(MinValueFloat = 0.1f, MaxValueFloat = 10)]
             public float AttackPriority { get; set; }
 
             [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 500)]

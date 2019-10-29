@@ -2,7 +2,7 @@
   <ragdolls folder="Content/Characters/Tigerthresher/Ragdolls/" />
   <animations folder="Content/Characters/Tigerthresher/Animations/" />
   <health vitality="150" doesbleed="True" crushdepth="-Infinity" usehealthwindow="False" bleedingreduction="1" burnreduction="0" constanthealthregeneration="0" healthregenerationwheneating="3" />
-  <ai combatstrength="350" sight="1" hearing="1" aggressionhurt="200" aggressiongreed="10" fleehealththreshold="0" attackonlywhenprovoked="False" aggressiveboarding="True" retaliatewhentakingdamage="True">
+  <ai combatstrength="350" sight="1" hearing="1" aggressionhurt="200" aggressiongreed="10" fleehealththreshold="0" attackonlywhenprovoked="False" aggressiveboarding="True">
     <target tag="decoy" state="Attack" priority="200" />
     <target tag="provocative" state="Attack" priority="100" />
     <target tag="light" state="Attack" priority="50" />
@@ -10,8 +10,8 @@
     <target tag="human" state="Attack" priority="60" />
     <target tag="weaker" state="Attack" priority="50" />
     <target tag="stronger" state="Attack" priority="50" />
-    <target tag="wall" state="Attack" priority="10" />
-    <target tag="door" state="Attack" priority="10" />
+    <target tag="room" state="Attack" priority="20" />
+    <SwarmBehavior mindistfromclosest="400" maxdistfromcenter="2000" cohesion="0.5" />
   </ai>
   <sound file="Content/Characters/Tigerthresher/TIGERTRESHER_idle1.ogg" state="Idle" range="3000" volume="1" gender="None" />
   <sound file="Content/Characters/Tigerthresher/TIGERTRESHER_idle2.ogg" state="Idle" range="3000" volume="1" gender="None" />

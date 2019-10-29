@@ -68,7 +68,6 @@
   <campaignlabel>Campaign</campaignlabel>
   <multiplayerlabel>Multiplayer</multiplayerlabel>
   <customizelabel>Customize</customizelabel>
-  <privacypolicy>Privacy policy</privacypolicy>
 
   <!-- Main menu buttons -->
   <tutorialbutton>Training</tutorialbutton>
@@ -91,6 +90,7 @@
   <pausemenuquit>Main Menu</pausemenuquit>
   <pausemenuquitverification>Are you sure you want to quit the game? All your unsaved progress will be lost.</pausemenuquitverification>
   <pausemenuretryverification>Are you sure you want to stop the mission and load the previous save file? All your unsaved progress will be lost.</pausemenuretryverification>
+  <pausemenuquitverificationeditor>Are you sure you want to return to the main menu? All your unsaved progress will be lost.</pausemenuquitverificationeditor>
 
   <!-- Host server menu -->
   <servername>Server name</servername>
@@ -191,7 +191,6 @@
   <workshop.contenttag.itemassembly>Item assembly</workshop.contenttag.itemassembly>
   <workshop.contenttag.language>Language</workshop.contenttag.language>
   <workshoperroronenable>Cannot enable Workshop item '[itemname]'.</workshoperroronenable>
-  <workshoppublisherror.limitexceeded>Publishing the Workshop item failed (limit exceeded). Make sure you have enabled Steam Cloud and haven't exceeded your Steam Cloud quota.</workshoppublisherror.limitexceeded>
   <workshoppublisherror.limiteduseraccount>Publishing the Workshop item failed. Limited user accounts are not allowed to publish items in the Steam Workshop. You need to spend at least $5 in the Steam store to become a non-limited user.</workshoppublisherror.limiteduseraccount>
   <workshoppublisherror.banned>Publishing the Workshop item failed because your account has been banned.</workshoppublisherror.banned>
   <workshoppublisherror.insufficientprivilege>Publishing the Workshop item failed (insufficient privileges). This can happen due to a hub ban, account lock or a community ban. You may need to contact Steam Support.</workshoppublisherror.insufficientprivilege>
@@ -202,6 +201,7 @@
 
   <!-- Settings Menu -->
   <settings>Settings</settings>
+  <restartrequiredgeneric>You need to restart the game for the changes to take effect.</restartrequiredgeneric>
 
   <!-- General tab -->
   <settingstab.general>General</settingstab.general>
@@ -230,6 +230,7 @@
   <pauseonfocuslost>Pause on focus lost</pauseonfocuslost>
   <pauseonfocuslosttooltip>Pauses the game when its window is not in focus. Note that the game won't be paused when a multiplayer session is active.</pauseonfocuslosttooltip>
   <voipcapturedevicenotfound>Could not start voice capture; suitable capture device not found.</voipcapturedevicenotfound>
+  <enablesplashscreen>Enable splash screen</enablesplashscreen>
 
   <!-- Graphics tab -->
   <settingstab.graphics>Graphics</settingstab.graphics>
@@ -279,6 +280,8 @@
   <dynamicrangecompression>Dynamic range compression</dynamicrangecompression>
   <dynamicrangecompressiontooltip>Adjusts the game's volume automatically to prevent audio distortion.</dynamicrangecompressiontooltip>
   <voipnodevices>No audio capture devices found</voipnodevices>
+  <voipattenuation>Voice chat attenuation</voipattenuation>
+  <voipattenuationtooltip>Lowers the game's volume when players are speaking.</voipattenuationtooltip>
 
   <!-- Controls tab -->
   <settingstab.controls>Controls</settingstab.controls>
@@ -366,6 +369,7 @@
   <roundsummaryreturn>[sub] has returned to [location].</roundsummaryreturn>
   <roundsummarygameover>The ocean has claimed [sub] and its crew.</roundsummarygameover>
   <roundsummarycrewstatus>Crew status</roundsummarycrewstatus>
+  <roundsummaryroundhasended>The round has ended.</roundsummaryroundhasended>
 
   <!-- Character HUD -->
   <oxygenhudwarning>Oxygen low</oxygenhudwarning>
@@ -460,6 +464,11 @@
   <complete>Complete</complete>
   <wrongfiletype>Wrong file type!</wrongfiletype>
   <debugconsolehelptext>Debug console—press F3 to open/close; enter help for a list of available commands</debugconsolehelptext>
+  <failed>Failed</failed>
+  <invalidcontentpackage>Content package '[packagename]' cannot be loaded.</invalidcontentpackage>
+  <xmlfileinvalid>File '[filepath]' is not a valid XML file ([errormessage]).</xmlfileinvalid>
+  <openlinkinbrowserprompt>Do you want to open the link [link] in your web browser?</openlinkinbrowserprompt>
+  <contentpackagemismatchwarninggeneric>The submarine may not be compatible with the currently selected content packages. Are you sure you want to choose the submarine?</contentpackagemismatchwarninggeneric>
 
   <!-- Editor -->
 
@@ -941,7 +950,8 @@
   <charactereditor.lowerlimit>Lower Limit</charactereditor.lowerlimit>
   <charactereditor.defaultname>Character X</charactereditor.defaultname>
   <charactereditor.ishumanoid>Is Humanoid?</charactereditor.ishumanoid>
-  <charactereditor.canentersubmarines>Can Enter Submarines and Walk?</charactereditor.canentersubmarines>
+  <charactereditor.canentersubmarines>Can Enter Submarines?</charactereditor.canentersubmarines>
+  <charactereditor.canwalk>Can Walk?</charactereditor.canwalk>
   <charactereditor.configfileoutput>Config File Output</charactereditor.configfileoutput>
   <charactereditor.texturepath>Texture Path</charactereditor.texturepath>
   <charactereditor.selecttexture>Select Texture</charactereditor.selecttexture>
@@ -981,6 +991,7 @@
   <charactereditor.addaitarget>Add Target</charactereditor.addaitarget>
   <charactereditor.addbloodemitter>Add Blood Emitter</charactereditor.addbloodemitter>
   <charactereditor.addgibemitter>Add Gib Emitter</charactereditor.addgibemitter>
+  <charactereditor.adddamageemitter>Add Damage Emitter</charactereditor.adddamageemitter>
   <charactereditor.addsound>Add Sound</charactereditor.addsound>
   <charactereditor.addlightsource>Add Light</charactereditor.addlightsource>
   <charactereditor.addattack>Add Attack</charactereditor.addattack>
@@ -1057,7 +1068,6 @@
   <noballasttagswarning>You should add the tag 'ballast' to the ballast pumps to allow AI characters to identify which pumps are used for controlling the buoyancy of the submarine.</noballasttagswarning>
   <nohullnameswarning>No names given to any of the hulls, using autogenerated names. Characters use the names to refer to different rooms when reporting things such as hull breaches.</nohullnameswarning>
   <deletingcontainerwithitems>A container with items inside was deleted, delete contained items as well?\n\nContained items:\n\n</deletingcontainerwithitems>
-  <shuttle>Shuttle</shuttle>
   <hideinmenus>Hide in menus</hideinmenus>
   <unspecifiedsubfilename>Unnamed</unspecifiedsubfilename>
   <reloadsprite>Reload Sprite</reloadsprite>
@@ -1072,6 +1082,9 @@
   <!-- Entity editor -->
   <stringpropertytranslate>This text will be translated to [translation].</stringpropertytranslate>
   <stringpropertycannottranslate>This text will not be translated - text with the tag [tag] not found in the language files.</stringpropertycannottranslate>
+  <charactereditor.contentpackagenameinuse>A content package with the same name already exists. Please choose another name or select the existing content package from the dropdown if you want to add the character to it.</charactereditor.contentpackagenameinuse>
+  <subeditorlights>Lights</subeditorlights>
+  <subeditorshadowcastinglights>Shadow-casting lights</subeditorshadowcastinglights>
 
   <!-- Characters -->
   <MyCharacter>My character</MyCharacter>
@@ -1094,6 +1107,10 @@
   <character.tigerthresherboss>Tiger Thresher Boss</character.tigerthresherboss>
   <character.watcher>Watcher</character.watcher>
   <character.hammerhead>Hammerhead</character.hammerhead>
+  <character.blackmoloch>Black Moloch</character.blackmoloch>
+  <character.hammerheadgold>Golden Hammerhead</character.hammerheadgold>
+  <character.hammerheadmatriarch>Hammerhead Matriarch</character.hammerheadmatriarch>
+  <character.bonethresher>Bone Tiger Thresher</character.bonethresher>
 
   <!-- Pronouns -->
   <pronounmale>He</pronounmale>
@@ -1128,6 +1145,7 @@
   <contentpackagemismatch>Mismatching content package</contentpackagemismatch>
   <contentpackagemismatchwarning>The submarine may not be compatible with the currently selected content packages, because it requires the content packages [requiredcontentpackages]. Are you sure you want to choose the submarine?</contentpackagemismatchwarning>
   <campaignstartfailedsubnotfound>Failed to start a campaign. Submarine [subname] not found.</campaignstartfailedsubnotfound>
+  <campaignfiletransferinprogress>Please wait for the campaign save file to finish downloading.</campaignfiletransferinprogress>
 
   <!-- Campaign menu -->
   <map>Map</map>
@@ -1160,8 +1178,11 @@
   <!-- In-game messages -->
   <endroundvotes>Votes to end the round [votes]/[max]</endroundvotes>
   <respawnshuttledispatching>Respawn shuttle dispatching in [time]</respawnshuttledispatching>
-  <respawningin>Respawning players in [time]</respawningin>
   <respawnshuttleleavingin>Respawn shuttle leaving in [time]</respawnshuttleleavingin>
+  <replacelostshuttles>Replace lost shuttles</replacelostshuttles>
+  <replaceshuttles>Replace</replaceshuttles>
+  <replaceshuttledockingportoccupied>The lost shuttle cannot be replaced because the docking port is already in use. Clear the docking port before requisitioning a new shuttle.</replaceshuttledockingportoccupied>
+  <respawningin>Respawning players in [time]</respawningin>
   <camfollowsubmarine>Follow submarine</camfollowsubmarine>
   <insufficientskills>Your skills may be insufficient to use the item! [requiredskill] level [requiredlevel] required.</insufficientskills>
   <skillincreased>[name]'s [skillname] skill increased to [newlevel]!</skillincreased>
@@ -1174,7 +1195,6 @@
   <!-- Server list -->
   <joinserver>Server browser</joinserver>
   <yourname>Player name</yourname>
-  <serverip>Server IP</serverip>
   <serverlistname>Name</serverlistname>
   <serverlistplayers>Players</serverlistplayers>
   <serverlistversion>Game version</serverlistversion>
@@ -1388,6 +1408,7 @@
   <clientpermission.manageround>Manage round</clientpermission.manageround>
   <clientpermission.managesettings>Manage settings</clientpermission.managesettings>
   <clientpermission.managepermissions>Manage permissions</clientpermission.managepermissions>
+  <clientpermission.karmaimmunity>Karma immunity</clientpermission.karmaimmunity>
 
   <!-- Mission types -->
   <missiontype.none>None</missiontype.none>
@@ -1536,6 +1557,8 @@
   <mapentitycategory.alien>Alien</mapentitycategory.alien>
   <mapentitycategory.itemassembly>ItemAssembly</mapentitycategory.itemassembly>
   <mapentitycategory.legacy>Legacy</mapentitycategory.legacy>
+  <mapentitycategory.decorative>Decorative</mapentitycategory.decorative>
+  <mapentitycategory.wall>Wall</mapentitycategory.wall>
 
   <!-- Display names -->
   <displayname.oxygentankempty>Oxygen Tank (empty)</displayname.oxygentankempty>
@@ -2259,6 +2282,11 @@
   <roomname.centralaccessshaft>Central access shaft</roomname.centralaccessshaft>
   <roomname.forwardaccessshaft>Forward access shaft</roomname.forwardaccessshaft>
   <roomname.aftaccessshaft>Aft access shaft</roomname.aftaccessshaft>
+  <roomname.airlockaccess>Airlock Access</roomname.airlockaccess>
+  <roomname.gunnerycompartment>Gunnery Compartment</roomname.gunnerycompartment>
+  <roomname.dronecontrol>Drone Control</roomname.dronecontrol>
+  <roomname.drone>Drone</roomname.drone>
+  <roomname.droneballast>Drone Ballast</roomname.droneballast>
 
   <!-- Submarine & outpost labels -->
   <label.ventralcoilguncontrol>Ventral Coilgun Control</label.ventralcoilguncontrol>
@@ -2327,6 +2355,16 @@
   <label.navterminalundock>Undock</label.navterminalundock>
   <label.highpressurewarning>WARNING: High pressure</label.highpressurewarning>
   <label.reactortempwarning>Reactor temp. caution</label.reactortempwarning>
+  <label.activatedischargecoils>Discharge Coils</label.activatedischargecoils>
+  <label.lights1>Lights 1</label.lights1>
+  <label.lights2>Lights 2</label.lights2>
+  <label.lights3>Lights 3</label.lights3>
+  <label.lights4>Lights 4</label.lights4>
+  <label.lights5>Lights 5</label.lights5>
+  <label.pumps1>Pumps 1</label.pumps1>
+  <label.pumps2>Pumps 2</label.pumps2>
+  <label.dronecharge>Drone Charge</label.dronecharge>
+  <label.meltdown>Meltdown</label.meltdown>
 
   <!-- Submarine description -->
   <dimensions>Dimensions</dimensions>
@@ -2914,7 +2952,7 @@
   <jobname.assistant>Assistant</jobname.assistant>
   <jobdescription.assistant>Assistants don't have any specific responsibilities or areas of expertise. This job is a good choice for newcomers who want to get a hang of working on board the submarine without taking up tasks that they aren't qualified for.</jobdescription.assistant>
   <jobname.watchman>Watchman</jobname.watchman>
-  <jobdescription.watchman></jobdescription.watchman>
+  <jobdescription.watchman><!-- No data --></jobdescription.watchman>
 
   <!-- Locations -->
   <locationname.none>Natural Formation</locationname.none>
@@ -3037,7 +3075,7 @@
   <!-- Room 3 -->
   <mechanic.welding>Leaks</mechanic.welding>
   <mechanic.weldingobjective>Repair leak</mechanic.weldingobjective>
-  <!--<mechanic.weldingtext>Equip the welding tool and the diving mask you just retrieved from the locker by double-clicking on them. \n\nWith the welding tool you are able to repair leaks in hulls and the diving mask will provide you with a steady supply of oxygen while underwater. Some items, like the welding tool, require two free hands to use. Unequip or drop an item by double-clicking it while it is in use.\n\nWhen welding tool is equipped, hold {0} to aim. While aiming, hold {1} to weld.</mechanic.weldingtext>-->
+  <mechanic.weldingtext>Equip the welding tool and diving mask you just retrieved from the locker by double-clicking on them. \n\nWith the welding tool you are able to repair leaks in hulls, and the diving mask will provide you with a steady supply of oxygen while underwater. \n\nSome items, like the welding tool, require two free hands to use. Unequip or drop an item by double-clicking it while it is in use.\n\nWhen a welding tool is equipped, hold {0} to aim. While aiming, hold {1} to weld.</mechanic.weldingtext>
   <mechanic.drain>Water pumps</mechanic.drain>
   <mechanic.drainobjective>Turn on nearby pump to drain excess water</mechanic.drainobjective>
   <mechanic.draintext>When the sub is flooded, use pumps to drain excess water. Usually pumps receive signals from nearby water detectors or navigation terminals, but some can be operated manually. This pump is programmed to only pump water out. Turn it on by interacting with it ({0}) and flip the switch to the “on” position.</mechanic.draintext>
@@ -3048,7 +3086,7 @@
   <mechanic.deconstructtext>The fabricator is a device that can take different kinds of materials and turn them into useful items. If you don't have enough materials for fabrication, you can break down items in the deconstructor. Just drag the item into one of the top slots and press the “Deconstruct” button.\n\nIn this case, fabricating a fire extinguisher requires aluminum and sodium. Sodium is readily available, but aluminum must be deconstructed from oxygen tanks.</mechanic.deconstructtext>
   <mechanic.fabricate>Crafting, part 2</mechanic.fabricate>
   <mechanic.fabricateobjective>Fabricate a fire extinguisher</mechanic.fabricateobjective>
-  <!--<mechanic.fabricatetext>Now that we have all of the required materials, we can fabricate a fire extinguisher. Find it in the list, load the fabricator with materials and press the button to start fabricating.\n\nWhen done, the fabricated item can be found in the fabricator’s output slot. As the fire extinguisher is an item that requires both hands, equip it by double-clicking on the item.</mechanic.fabricatetext>-->
+  <mechanic.fabricatetext>Now that we have all of the required materials, we can fabricate a fire extinguisher. Find it in the list, load the fabricator with the required materials and press the button to start fabricating.\n\nWhen done, the fabricated item can be found in the fabricator’s output slot. As the fire extinguisher is an item that requires the use of both hands, equip the extinguisher by double-clicking on it.</mechanic.fabricatetext>
 
   <!-- Room 5 -->
   <mechanic.extinguisher>Fires</mechanic.extinguisher>
@@ -3235,6 +3273,8 @@
   <karmabanwarning>WARNING: Your karma is dangerously low. You will be banned from the server if it decreases further.</karmabanwarning>
   <karmabanned>You have been banned from the server because your Karma decreased below [banthreshold].</karmabanned>
   <karmajobdisallowed>You are not allowed to select this job because your Karma is too low ([yourkarma]/[minkarma]).</karmajobdisallowed>
+  <karma.kickbanthreshold>Kick/Ban threshold</karma.kickbanthreshold>
+  <karma.kickbanthresholdtooltip>The players whose karma decrease below this threshold get automatically kicked and/or banned from the server (depending on the kick/ban settings below).</karma.kickbanthresholdtooltip>
   <karma.karmadecay>Karma decay speed</karma.karmadecay>
   <karma.karmadecaytooltip>How much karma decreases per second when it's above the decay threshold.</karma.karmadecaytooltip>
   <karma.karmadecaythreshold>Karma decay threshold</karma.karmadecaythreshold>
@@ -3280,6 +3320,10 @@
   <afflictiondescription.spaceherpes>The patient's face is covered with nasty-looking blisters and ulcers.</afflictiondescription.spaceherpes>
   <afflictionname.invertcontrols>Disoriented</afflictionname.invertcontrols>
   <afflictiondescription.invertcontrols>The patient's eyes are darting around and they seem to be having trouble orienting to their surroundings.</afflictiondescription.invertcontrols>
+  <karmakicked>You have been kicked from the server because your Karma decreased below [banthreshold].</karmakicked>
+  <karma.kicksbeforeban>Number of kicks before a ban</karma.kicksbeforeban>
+  <karma.kicksbeforebantooltip>If the player has been kicked from the server due to low karma this many times, they will be banned if their karma drops below the kick/ban threshold again. A value of 0 means players will always get banned if their karma drops below the threshold.</karma.kicksbeforebantooltip>
+  <karma.resetkarmabetweenrounds>Reset karma between rounds</karma.resetkarmabetweenrounds>
 
   <!-- Disclaimers -->
   <campaigndisclaimertitle>Welcome to Barotrauma!</campaigndisclaimertitle>
@@ -3292,6 +3336,7 @@
   <editordisclaimerdiscordlink>Barotrauma Discord Server</editordisclaimerdiscordlink>
   <editordisclaimerforumlink>Barotrauma Forums</editordisclaimerforumlink>
   <bugreportgithubform>GitHub issue form</bugreportgithubform>
+  <bugreportfeedbackform>Help and technical support</bugreportfeedbackform>
   <bugreportbutton>Report a bug</bugreportbutton>
   <centerarealockedheader>Mysteries lie ahead...</centerarealockedheader>
   <centerarealockedtext>This area is unreachable in this version of Barotrauma. Please wait for future updates!</centerarealockedtext>
@@ -3338,15 +3383,22 @@
   <connection.activate>activate</connection.activate>
   <connection.dockingproximitysensor>proximity_sensor</connection.dockingproximitysensor>
   <connection.signalx>signal_[num]</connection.signalx>
+  <!--<connection.set_text>signal_[num]</connection.set_text>-->
   <connection.stateout>state_out</connection.stateout>
   <connection.turretaimingout>position_out</connection.turretaimingout>
   <connection.turrettriggerout>trigger_out</connection.turrettriggerout>
   <connection.sonardataout>data_out</connection.sonardataout>
+  <connection.batterychargestatusout>charge_out</connection.batterychargestatusout>
+  <connection.batterychargepercentage>charge_%</connection.batterychargepercentage>
+  <connection.batterysetrechargespeed>set_charge_rate</connection.batterysetrechargespeed>
+  <connection.batteryrechargespeedout>charge_rate_out</connection.batteryrechargespeedout>
 
   <!-- Traitor system -->
   <traitormissionstartmessage>You are the traitor! You have successfully infiltrated the submarine and now it's time to put the plans in motion.</traitormissionstartmessage>
   <traitormissionfailuremessage>You have failed in your mission. As a result, the mission has been canceled and you are now part of the crew. Keep a low profile until you are contacted again.</traitormissionfailuremessage>
   <traitormissionsuccessmessage>You have successfully sabotaged the crew's efforts. An escape shuttle has been dispatched for you.</traitormissionsuccessmessage>
+  <sabotagebutton>Sabotage</sabotagebutton>
+  <sabotaging>Sabotaging</sabotaging>
 
   <!-- Traitor objectives -->
   <traitorobjectivestartmessage>You have a new objective. The following goals need to be completed:\n[traitorgoalinfos]</traitorobjectivestartmessage>
@@ -3359,14 +3411,14 @@
   <traitorobjectiveendmessagefailuredetained>[traitorname] was a traitor but got detained while failing to complete the given goals:\n[traitorgoalinfos]</traitorobjectiveendmessagefailuredetained>
   <traitorobjectivegoalinfoformat>- [statustext]\n</traitorobjectivegoalinfoformat>
 
-  <!-- Traitor goals (new) -->
+  <!-- Traitor goals -->
   <traitorgoalstatustextformat>[infotext] ([status])</traitorgoalstatustextformat>
   <traitorgoaltimelimitfailure>You failed to complete your objective in time.</traitorgoaltimelimitfailure>
   <traitorgoalkilltargetinfo>Assassinate [targetname].</traitorgoalkilltargetinfo>
   <traitorgoalkilleveryoneinfo>Kill all crew members.</traitorgoalkilleveryoneinfo>
   <traitorgoalfinditeminfo>Find a [identifier] in [targethullname].</traitorgoalfinditeminfo>
   <traitorgoalcausereactormeltdown>Cause a reactor meltdown.</traitorgoalcausereactormeltdown>
-
+  <traitorgoaldestroyitems>Dispose of at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>
   <traitorgoalfloodpercentofsub>Flood at least [percentage] percent of the submarine.</traitorgoalfloodpercentofsub>
   <traitorgoaljamsonarinfo>Hide an active sonar jammer somewhere it can't be found for [duration] seconds.</traitorgoaljamsonarinfo>
   <traitorgoaljamsonarinfoalt>Jam the submarine's sonar for [duration] seconds.</traitorgoaljamsonarinfoalt>
@@ -3377,12 +3429,16 @@
   <traitorgoaltampercoilguninfomulti>Load dummy ammunition into [number] coilgun loaders.</traitorgoaltampercoilguninfomulti>
   <traitorgoaltamperrailguninfo>Load a dummy shell into all railgun loaders.</traitorgoaltamperrailguninfo>
   <traitorgoaltamperrailguninfomulti>Load [number] dummy shells into a railgun loader.</traitorgoaltamperrailguninfomulti>
-
-  <!-- Traitor goals -->
   <traitorgoalfindcontainerinfo>Find your next objective inside a [target] in [targethullname].</traitorgoalfindcontainerinfo>
   <traitorgoaldestroyoxygen>Destroy at least [percentage] percent of all non-inventory oxygen tanks on the sub.</traitorgoaldestroyoxygen>
   <traitorgoalsabotagedurationinfo>Sabotage the [tag] so that its condition is under [threshold]% for at least [duration] seconds.</traitorgoalsabotagedurationinfo>
   <traitorgoalescape>Escape to the nearby shuttle.</traitorgoalescape>
+  <traitorgoalreachdistancefromsub>Reach distance of [distance] from the sub.</traitorgoalreachdistancefromsub>
+  <traitorgoalisoptionalinfotext>Optional: [infotext]</traitorgoalisoptionalinfotext>
+  <traitorgoalwithtimelimitinfotext>[infotext] Complete this goal within [timelimit].</traitorgoalwithtimelimitinfotext>
+  <traitorgoalwithdurationinfotext>[infotext] The goal must be completed for [duration] seconds.</traitorgoalwithdurationinfotext>
+  <traitorgoalwithcumulativedurationinfotext>[infotext] The goal must be completed for a total of [duration] seconds.</traitorgoalwithcumulativedurationinfotext>
+  <traitorgoalwaitfortraitorsinfotext>Wait for [remaining] of [count] traitors to complete their tasks.</traitorgoalwaitfortraitorsinfotext>
 
   <!-- MVP traitor mission text package -->
   <mvptraitormissionstartinfotext>A voice within your head screams loudly enough to startle you: THE CULT OF THE HUSK CALLS YOU TO SERVICE!</mvptraitormissionstartinfotext>
@@ -3451,15 +3507,7 @@
   <waterdetector.falseoutput>False output</waterdetector.falseoutput>
   <wificomponent.channel>Channel</wificomponent.channel>
 
-  <!-- Values temporarily in use until plural monster names are added -->
-  <missiondescription.killcrawlerswarm1>A small swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew that can neutralize it.</missiondescription.killcrawlerswarm1>
-  <missiondescription.killcrawlerswarm2>A large swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew that can neutralize it.</missiondescription.killcrawlerswarm2>
-
-  <!-- New Additions as of 13th of August for the minor update in October -->
-  <connection.batterychargestatusout>charge_out</connection.batterychargestatusout>
-  <connection.batterychargepercentage>charge_%</connection.batterychargepercentage>
-  <connection.batterysetrechargespeed>set_charge_rate</connection.batterysetrechargespeed>
-  <connection.batteryrechargespeedout>charge_rate_out</connection.batteryrechargespeedout>
+  <!-- Personality traits -->
   <personalitytrait.professional>Professional</personalitytrait.professional>
   <personalitytrait.laid-back>Laid-back</personalitytrait.laid-back>
   <personalitytrait.rude>Rude</personalitytrait.rude>
@@ -3468,109 +3516,200 @@
   <personalitytrait.brokenenglish>Broken English</personalitytrait.brokenenglish>
   <personalitytrait.fearful>Fearful</personalitytrait.fearful>
   <personalitytrait.crazy>Crazy</personalitytrait.crazy>
-  <sabotagebutton>Sabotage</sabotagebutton>
-  <sabotaging>Sabotaging</sabotaging>
-  <voipattenuation>Voice chat attenuation</voipattenuation>
-  <voipattenuationtooltip>Lowers the game's volume when players are speaking.</voipattenuationtooltip>
-  <roundsummaryroundhasended>The round has ended.</roundsummaryroundhasended>
-  <clientpermission.karmaimmunity>Karma immunity</clientpermission.karmaimmunity>
-
-  <karmakicked>You have been kicked from the server because your Karma decreased below [banthreshold].</karmakicked>
-  <karma.kicksbeforeban>Number of kicks before a ban</karma.kicksbeforeban>
-  <karma.kicksbeforebantooltip>If the player has been kicked from the server due to low karma this many times, they will be banned if the karma drops below the kick/ban threshold again. A value of 0 means players will always get banned if their karma drops below the threshold.</karma.kicksbeforebantooltip>
-  <traitorgoalreachdistancefromsub>Reach distance of [distance] from the sub.</traitorgoalreachdistancefromsub>
-  <traitorgoalisoptionalinfotext>Optional: [infotext]</traitorgoalisoptionalinfotext>
-  <traitorgoalwithtimelimitinfotext>[infotext] Complete this goal within [timelimit].</traitorgoalwithtimelimitinfotext>
-  <traitorgoalwithdurationinfotext>[infotext] The goal must be completed for [duration] seconds.</traitorgoalwithdurationinfotext>
-  <traitorgoalwithcumulativedurationinfotext>[infotext] The goal must be completed for a total of [duration] seconds.</traitorgoalwithcumulativedurationinfotext>
-  <traitorgoalwaitfortraitorsinfotext>Wait for [remaining] of [count] traitors to complete their tasks.</traitorgoalwaitfortraitorsinfotext>
-  <failed>Failed</failed>
-  <pausemenuquitverificationeditor>Are you sure you want to return to the main menu? All your unsaved progress will be lost.</pausemenuquitverificationeditor>
-  <mapentitycategory.decorative>Decorative</mapentitycategory.decorative>
-  <mapentitycategory.wall>Wall</mapentitycategory.wall>
-  <karma.resetkarmabetweenrounds>Reset karma between rounds</karma.resetkarmabetweenrounds>
-  <enablesplashscreen>Enable splash screen</enablesplashscreen>  
   
-  <restartrequiredgeneric>You need to restart the game for the changes to take effect.</restartrequiredgeneric>
-  <invalidcontentpackage>Content package '[packagename]' cannot be loaded.</invalidcontentpackage>
-  <xmlfileinvalid>File '[filepath]' is not a valid XML file ([errormessage]).</xmlfileinvalid>
+  <!-- Values temporarily in use until plural monster names are added -->
+  <missiondescription.killcrawlerswarm1>A small swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew that can neutralize it.</missiondescription.killcrawlerswarm1>
+  <missiondescription.killcrawlerswarm2>A large swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew that can neutralize it.</missiondescription.killcrawlerswarm2>
 
-  <roomname.airlockaccess>Airlock Access</roomname.airlockaccess>
-  <roomname.gunnerycompartment>Gunnery Compartment</roomname.gunnerycompartment>
-  <roomname.dronecontrol>Drone Control</roomname.dronecontrol>
-  <roomname.drone>Drone</roomname.drone>
-  <roomname.droneballast>Drone Ballast</roomname.droneballast>  
-
-  <subeditorlights>Lights</subeditorlights>
-  <subeditorshadowcastinglights>Shadow-casting lights</subeditorshadowcastinglights>
-
-  <contentpackagemismatchwarninggeneric>The submarine may not be compatible with the currently selected content packages. Are you sure you want to choose the submarine?</contentpackagemismatchwarninggeneric>
-
-  <label.activatedischargecoils>Discharge Coils</label.activatedischargecoils>
-  <label.lights1>Lights 1</label.lights1>
-  <label.lights2>Lights 2</label.lights2>
-  <label.lights3>Lights 3</label.lights3>
-  <label.lights4>Lights 4</label.lights4>
-  <label.lights5>Lights 5</label.lights5>
-  <label.pumps1>Pumps 1</label.pumps1>
-  <label.pumps2>Pumps 2</label.pumps2>
-  <label.dronecharge>Drone Charge</label.dronecharge>
-  <label.meltdown>Meltdown</label.meltdown>
-  
-  <campaignfiletransferinprogress>Please wait for the campaign save file to finish downloading.</campaignfiletransferinprogress>
-  
-  <openlinkinbrowserprompt>Do you want to open the link "[link]" in your web browser?</openlinkinbrowserprompt>
-
-  <replacelostshuttles>Replace lost shuttles</replacelostshuttles>
-  <replaceshuttles>Replace</replaceshuttles>
-  <replaceshuttledockingportoccupied>The lost shuttle cannot be replaced because the docking port is already in use. Clear the docking port before requisitioning a new shuttle.</replaceshuttledockingportoccupied>
-  <campaignfiletransferinprogress>Please wait for the campaign save file to finish downloading.</campaignfiletransferinprogress>
-
-  <character.blackmoloch>Black Moloch</character.blackmoloch>
-  <character.hammerheadmatriarch>Hammerhead Matriarch</character.hammerheadmatriarch>
-  
-  <!-- Changed values as of 13th of August for the minor update in October -->
-  <traitorgoaldestroyitems>Dispose of at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>
-  <karma.kickbanthreshold>Kick/Ban threshold</karma.kickbanthreshold>
-  <karma.kickbanthresholdtooltip>The players whose karma decrease below this threshold get automatically kicked and/or banned from the server (depending on the kick/ban settings below).</karma.kickbanthresholdtooltip>
-  <mechanic.weldingtext>Equip the welding tool and diving mask you just retrieved from the locker by double-clicking on them. \n\nWith the welding tool you are able to repair leaks in hulls, and the diving mask will provide you with a steady supply of oxygen while underwater. \n\nSome items, like the welding tool, require two free hands to use. Unequip or drop an item by double-clicking it while it is in use.\n\nWhen a welding tool is equipped, hold {0} to aim. While aiming, hold {1} to weld.</mechanic.weldingtext>
-  <mechanic.fabricatetext>Now that we have all of the required materials, we can fabricate a fire extinguisher. Find it in the list, load the fabricator with the required materials and press the button to start fabricating.\n\nWhen done, the fabricated item can be found in the fabricator’s output slot. As the fire extinguisher is an item that requires the use of both hands, equip the extinguisher by double-clicking on it.</mechanic.fabricatetext>
-
-  <connection.set_text>set_text</connection.set_text>
-  
-  <bugreportfeedbackform>Help and technical support</bugreportfeedbackform>
-
-  <character.hammerheadgold>Golden Hammerhead</character.hammerheadgold>
-  <character.bonethresher>Bone Tiger Thresher</character.bonethresher>
-  
-  <!-- New additions for the major update coming in November -->
+  <!-- New Additions for the November update -->
   <submarine.name.kastrull>Kastrull</submarine.name.kastrull>
   <submarine.description.kastrull>The Kastrull is a dependable attack sub class bringing plenty of firepower to any fight, and although not very nimble, they do sport a drone gunship as standard. Keep in mind that with its experimental open ballast tanks, low tolerance to flooding, and numerous crew stations, a large experienced crew will get the most out of these subs.</submarine.description.kastrull>
+
   <gamemodedescription.singleplayercampaign>Embark on a journey through the depths of Europa. Travel from location to another, complete missions to earn money for supplies, discover new biomes — and perhaps eventually uncover the secrets of Europa.</gamemodedescription.singleplayercampaign>
   <gamemodedescription.sandbox>A game mode with no specific objectives.</gamemodedescription.sandbox>
   <gamemodedescription.mission>The crew must work together to complete a specific task, such as retrieving an alien artifact or killing a creature that's terrorizing nearby outposts. The game ends when the task is completed or everyone in the crew has died.</gamemodedescription.mission>
   <gamemodedescription.multiplayercampaign>Embark on a journey through the depths of Europa. Travel from location to another, complete missions to earn money for supplies, discover new biomes — and perhaps eventually uncover the secrets of Europa.</gamemodedescription.multiplayercampaign>
-  
-  <!-- Server lobby 2.0 -->
+
+  <entityname.sincomponent>Sin Component</entityname.sincomponent>
+  <entitydescription.sincomponent>Outputs the sine of the input.</entitydescription.sincomponent>
+  <entityname.coscomponent>Cos Component</entityname.coscomponent>
+  <entitydescription.coscomponent>Outputs the cosine of the input.</entitydescription.coscomponent>
+  <entityname.tancomponent>Tan Component</entityname.tancomponent>
+  <entitydescription.tancomponent>Outputs the tangent of the input.</entitydescription.tancomponent>
+  <entityname.asincomponent>Asin Component</entityname.asincomponent>
+  <entitydescription.asincomponent>Outputs the angle whose sine is equal to the input.</entitydescription.asincomponent>
+  <entityname.acoscomponent>Acos Component</entityname.acoscomponent>
+  <entitydescription.acoscomponent>Outputs the angle whose cosine is equal to the input.</entitydescription.acoscomponent>
+  <entityname.atancomponent>Atan Component</entityname.atancomponent>
+  <entityname.modulocomponent>Modulo Component</entityname.modulocomponent>
+  <entitydescription.modulocomponent>Outputs the remainder when the input is divided by a specific number.</entitydescription.modulocomponent>
+  <entityname.roundcomponent>Round Component</entityname.roundcomponent>
+  <entitydescription.roundcomponent>Rounds a numerical input to the nearest integer value.</entitydescription.roundcomponent>
+  <entityname.ceilcomponent>Ceil Component</entityname.ceilcomponent>
+  <entitydescription.ceilcomponent>Outputs the smallest integer value that is bigger than or equal to the input.</entitydescription.ceilcomponent>
+  <entityname.floorcomponent>Floor Component</entityname.floorcomponent>
+  <entitydescription.floorcomponent>Outputs the greates integer value that is less than or equal to the input.</entitydescription.floorcomponent>
+  <entityname.factorialcomponent>Factorial Component</entityname.factorialcomponent>
+  <entitydescription.factorialcomponent>Outputs the factorial of the input.</entitydescription.factorialcomponent>
+  <entityname.squarerootcomponent>Square Root Component</entityname.squarerootcomponent>
+  <entitydescription.squarerootcomponent>Outputs the square root of the input.</entitydescription.squarerootcomponent>
+  <entityname.abscomponent>Abs Component</entityname.abscomponent>
+  <entitydescription.abscomponent>Outputs the absolute value of the input.</entitydescription.abscomponent>
+  <entityname.powcomponent>Exponentiation Component</entityname.powcomponent>
+  <entitydescription.powcomponent>Outputs the input raised to a given power.</entitydescription.powcomponent>
+
+  <connection.setmodulus>set_modulus</connection.setmodulus>
+  <shuttle>Shuttle</shuttle>
+  <privacypolicy>Privacy policy</privacypolicy>
+  <entityname.mudraptoregg>Mudraptor Egg</entityname.mudraptoregg>
+  <entitydescription.mudraptoregg>A slimy, pulsating mudraptor egg. The gaping maw on top of the egg seems to be grasping for something to eat.</entitydescription.mudraptoregg>
+
+    <!-- Server lobby 2.0 -->
+  <serverlisttab.all>All servers</serverlisttab.all>
+  <serverlisttab.favorites>Favorites</serverlisttab.favorites>
+  <serverlisttab.recent>Recent</serverlisttab.recent>
+  <addtofavorites>Add to favorites</addtofavorites>
+  <removefromfavorites>Remove from favorites</removefromfavorites>
   <servertag.casual>Casual</servertag.casual>
   <servertagdescription.casual>Having fun is more important than completing the objective. A good choice for new players.</servertagdescription.casual>
   <servertag.serious>Serious</servertag.serious>
   <servertagdescription.serious>The crew should focus on working together efficiently and completing their objective. No unnecessary messing around.</servertagdescription.serious>
-  <servertag.roleplaying>Roleplaying</servertag.roleplaying>
-  <servertagdescription.roleplaying>The crew should aim to act like a real submarine crew. Chain of command is important, as is taking care of your responsibilities and following orders. Speaking out-of-character should be avoided when a round is running.</servertagdescription.roleplaying>
-  <servertag.somethingelse>Something else</servertag.somethingelse>
-  <servertagdescription.somethingelse>Gameplay differs significantly from the usual Barotrauma gameplay. Modded servers, very unconventional subs, battle royale rounds, shuttle racing, deathrun maps... Anything goes!</servertagdescription.somethingelse>
+  <servertag.roleplay>Roleplay</servertag.roleplay>
+  <servertagdescription.roleplay>The crew should aim to act like a real submarine crew. Chain of command is important, as is taking care of your responsibilities and following orders. Speaking out-of-character should be avoided when a round is running.</servertagdescription.roleplay>
+  <servertag.somethingdifferent>Something different</servertag.somethingdifferent>
+  <servertagdescription.somethingdifferent>Gameplay differs significantly from the usual Barotrauma gameplay. Modded servers, very unconventional subs, battle royale rounds, shuttle racing, deathrun maps... Anything goes!</servertagdescription.somethingdifferent>
   <servertag.rampage>Rampage</servertag.rampage>
-  <servertagdescription.rampage>Get ready to fight for your life! A server heavily geared towards combat. This can mean player-versus-player combat, PvE or both — see the server description before you start wrenching your crewmates' faces.</servertagdescription.rampage>
+  <servertagdescription.rampage>Get ready to fight for your life! A server heavily geared towards combat. This can mean player-versus-player combat, PvE or both — the server description should include a guideline as to what kind of violence is allowed on the server.</servertagdescription.rampage>
+  <servertag.modded.true>Modded</servertag.modded.true>
+  <servertagdescription.modded.true>One or more mods enabled. Installing mods from the Workshop may be required to join the server.</servertagdescription.modded.true>
+  <servertag.modded.false>Vanilla</servertag.modded.false>
+  <servertagdescription.modded.false>The server is not using any mods.</servertagdescription.modded.false>
+  <servertag.247.true>24/7</servertag.247.true>
+  <servertagdescription.247.true>Runs around the clock.</servertagdescription.247.true>
+  <servertag.247.false>Occasionally up</servertag.247.false>
+  <servertagdescription.247.false>The server is not run 24/7.</servertagdescription.247.false>
+  <servertag.friendlyfire.true>Friendly fire on</servertag.friendlyfire.true>
+  <servertagdescription.friendlyfire.true>Causing damage to your crew mates is enabled.</servertagdescription.friendlyfire.true>
+  <servertag.friendlyfire.false>Friendly fire off</servertag.friendlyfire.false>
+  <servertagdescription.friendlyfire.false>Causing damage to your crew mates is disabled.</servertagdescription.friendlyfire.false>
+  <servertag.voip.true>Voice chat enabled</servertag.voip.true>
+  <servertagdescription.voip.true>Voice chat is enabled.</servertagdescription.voip.true>
+  <servertag.voip.false>Voice chat disabled</servertag.voip.false>
+  <servertagdescription.voip.false>Voice chat is disabled.</servertagdescription.voip.false>
+  <servertag.karma.true>Karma enabled</servertag.karma.true>
+  <servertagdescription.karma.true>Karma system is enabled.</servertagdescription.karma.true>
+  <servertag.karma.false>Karma disabled</servertag.karma.false>
+  <servertagdescription.karma.false>Karma system is disabled.</servertagdescription.karma.false>
+  <servertag.traitors.true>Traitors enabled</servertag.traitors.true>
+  <servertagdescription.traitors.true>Traitors are enabled on the server.</servertagdescription.traitors.true>
+  <servertag.traitor.false>Traitors disabled</servertag.traitor.false>
+  <servertagdescription.traitors.false>Traitors are disabled on the server.</servertagdescription.traitors.false>
+  
+  <friendplayingbarotrauma>Playing Barotrauma</friendplayingbarotrauma>
+  <friendplayinganothergame>Playing another game</friendplayinganothergame>
+  <friendnotplaying>Not playing</friendnotplaying>
 
-  <servertag.modded>Modded</servertag.modded>
-  <servertagdescription.modded>One or more mods enabled. Installing mods from the Workshop may be required to join the server.</servertagdescription.modded>
-  <servertag.247>24/7</servertag.247>
-  <servertagdescription.247>Runs around the clock.</servertagdescription.247>
-  <servertag.nofriendlyfire>Friendly fire off</servertag.nofriendlyfire>
-  <servertagdescription.nofriendlyfire>Causing damage to your crew mates is disabled.</servertagdescription.nofriendlyfire>
-  <servertag.voipdisabled>Voice chat disabled</servertag.voipdisabled>
-  <servertagdescription.voipdisabled>Voice chat is disabled.</servertagdescription.voipdisabled>
-  <servertag.karmadisabled>Karma disabled</servertag.karmadisabled>
-  <servertagdescription.karmadisabled>Karma system is disabled.</servertagdescription.karmadisabled>
+  <serversettingsplaystyle>Play style</serversettingsplaystyle>
+
+  <serversettingsallowfriendlyfire>Allow friendly fire</serversettingsallowfriendlyfire>
+  <serversettingsallowrewiring>Allow rewiring</serversettingsallowrewiring>
+  <serversettingsallowdisguises>Allow disguises</serversettingsallowdisguises>
+
+  <filtersameversion>Same version</filtersameversion>
+  <filterwhitelistedservers>Show whitelisted</filterwhitelistedservers>
+  
+  <!-- Misc -->
+  <chat.shownewmessages>Show new messages</chat.shownewmessages>
+  <chat>Chat</chat>
+  <clicktoselectjob>Click to select a job</clicktoselectjob>
+  <faceattachment.hair>Hair</faceattachment.hair>
+  <faceattachment.beard>Beard</faceattachment.beard>
+  <faceattachment.moustache>Moustache</faceattachment.moustache>
+  <faceattachment.accessories>Accessories</faceattachment.accessories>
+  <characterappearance>Appearance</characterappearance>
+  <disconnect>Disconnect</disconnect>
+  <endcampaignverification>Are you sure you want to quit the campaign? All your unsaved progress will be lost.</endcampaignverification>
+  <leveldifficultyexplanation>The difficulty setting affects how the level is generated and what kind of random encounters you may face during the mission. Expect more environmental hazards, larger numbers of creatures and more dangerous enemies on higher difficulty levels.</leveldifficultyexplanation>
+  <subnotdownloaded>Submarine not downloaded</subnotdownloaded>
+
+  <difficulty.easy>Easy</difficulty.easy>
+  <difficulty.medium>Medium</difficulty.medium>
+  <difficulty.hard>Hard</difficulty.hard>
+  <difficulty.hellish>Hellish</difficulty.hellish>
+
+  <!-- New traitor goals -->
+  <traitorgoalkilltargetinfowithcause>Assassinate [targetname] by [causeofdeath].</traitorgoalkilltargetinfowithcause>
+  <traitorgoalkilltargetinfowithhull>Assassinate [targetname] and leave the body in the [targethullname].</traitorgoalkilltargetinfowithhull>
+  <traitorgoalkilltargetinfowithcauseandhull>Assassinate [targetname] by [causeofdeath] and leave the body in the [targethullname].</traitorgoalkilltargetinfowithcauseandhull>
+  <traitorgoalpoisoneveryoneinfo>Inject all crew members with [poison].</traitorgoalpoisoneveryoneinfo>
+  <traitorgoalkeepalive>Protect the [speciesname] for [duration] seconds.</traitorgoalkeepalive>
+
+  <!-- Goblin mission -->
+  <goblins_traitormissionstartinfotext>As you hear scratching from below, it occurs to you it's been a while since the ballast goblins have been fed. As luck would have it, there's plenty of meat to go around.</goblins_traitormissionstartinfotext>
+  <goblins_traitorobjectivestartmessage1>First, some seasonings. A well stocked kitchen has many options but for this purpose, only the purest cyanide will do.\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage1>
+  <goblins_objectivesuccessmessage1>Ah yes, this will do nicely.</goblins_objectivesuccessmessage1>
+  <goblins_traitorobjectivestartmessage2>Let's start the darlings off with some water.\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage2>
+  <goblins_objectivesuccessmessage2>There we go.</goblins_objectivesuccessmessage2>
+  <goblins_traitorobjectivestartmessage3>Hors d'oeuvres, anyone?\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage3>
+  <goblins_objectivesuccessmessage3>Look at that tender, succulent meat!</goblins_objectivesuccessmessage3>
+  <goblins_traitorobjectivestartmessage4>Now for the main course: \n[traitorgoalinfos]</goblins_traitorobjectivestartmessage4>
+  <goblins_objectivesuccessmessage4>Now the goblins are fed, but the pantry is empty. Time to pick up some more supplies at the next station.</goblins_objectivesuccessmessage4>
+
+  <!-- Oxygen sabotage mission -->
+  <oxygen_sabotage_traitormissionstartinfotext>Time for another experiment. This time we're testing how the human body reacts to being deprived of oxygen.</oxygen_sabotage_traitormissionstartinfotext>
+  <oxygen_sabotage_traitorobjectivestartmessage1>Subjects have been gathered and we are ready to start.\n[traitorgoalinfos]</oxygen_sabotage_traitorobjectivestartmessage1>
+  <oxygen_sabotage_objectivesuccessmessage1>Subjects should start feeling the effects shortly. Symptoms for oxygen deprivation include, but aren't limited to: extremities turning blue, seizures and fainting.</oxygen_sabotage_objectivesuccessmessage1>
+  <oxygen_sabotage_traitorobjectivestartmessage2>When you're happy with the data you've gathered, dispose of the test subjects.\n[traitorgoalinfos]</oxygen_sabotage_traitorobjectivestartmessage2>
+  <oxygen_sabotage_objectivesuccessmessage2>Another successful test. Report back to nearest coalition outpost.</oxygen_sabotage_objectivesuccessmessage2>
+
+  <!-- Acidparty mission -->
+  <acidparty_traitormissionstartinfotext>You find a manically scribbled note in your pocket. Hey man. You know there's this thing in the center of the moon, right? What if there was, like, a way to see what it is without physically going in there?</acidparty_traitormissionstartinfotext>
+  <acidparty_traitorobjectivestartmessage1>Step 1. Find some delimi- delirun- der- the thing that says 'DEL', right? \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage1>
+  <acidparty_objectivesuccessmessage1>This must be it. Never had this before.</acidparty_objectivesuccessmessage1>
+  <acidparty_traitorobjectivestartmessage2>Step 2. Sometimes subs carry these- these vision blockers, right? Basically what they do is, is they ground you and then you only see, like, a real narrow representation of reality, ok? So what you wanna do is you wanna get rid of those. They call them shits halleberrydil or some shit like that. \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage2>
+  <acidparty_objectivesuccessmessage2>Looks like that's all of it.</acidparty_objectivesuccessmessage2>
+  <acidparty_traitorobjectivestartmessage3>Step 3. First rule is we gotta share. The thing here is that some people, right? Some people are kinda brainwashed into being afraid of anything that challenges their world view, you know? So you know, you gotta find a way to sneak that good shit into their system, right? \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage3>
+  <acidparty_objectivesuccessmessage3>Step 4. Lay down and listen to the waves, man.</acidparty_objectivesuccessmessage3>
+
+  <!-- Tainted welding mission -->
+  <tainted_welding_traitorobjectivestartmessage2>The receiver crackles and whistles as a weak signal is received: Europan Resistance direct action, you are clear to go ahead with the mission: This sub has to be sunk, and it has to look like an accident. Start by sabotaging the welding gear.\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage2>
+  <tainted_welding_goalinfotext_2>Swap the welding fuel for oxygen tanks in at least 70% of the sub's welding tools.</tainted_welding_goalinfotext_2>
+  <tainted_welding_objectivesuccessmessage2>Well done. Oxygen tanks tend to burn when loaded in welding tools.</tainted_welding_objectivesuccessmessage2>
+  <tainted_welding_traitorobjectivestartmessage3>Now you'll need to dispose of that commandeered fuel so the crew can't put to use later:\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage3>
+  <tainted_welding_objectivesuccessmessage3>Well done! The crew are in a particularly vulnerable situation now without even knowing it</tainted_welding_objectivesuccessmessage3>
+  <tainted_welding_traitorobjectivestartmessage4>Now quickly, spring the trap!\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage4>
+  <tainted_welding_objectivesuccessmessage4>Fine work, comrade! The pigs are surely doomed now.</tainted_welding_objectivesuccessmessage4>
+  <tainted_welding_traitorobjectivestartmessage5>Make your escape! A shuttle will be dispatched shortly to pick you up!\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage5>
+  <tainted_welding_objectivesuccessmessage5>The warning alarm on your diving suit sounds... the shuttle should have rendezvous with you some time ago, but the only movement in the gloom are schools of alien  organisms. You broadcast another transmission: This is Europan Resistance direct action, come in! Requesting extraction!. The transmitter remains silent, you've been left to your fate. Europa embraces you.</tainted_welding_objectivesuccessmessage5>
+
+  <!-- One of Us mission -->
+  <one_of_us_goalinfotext_2>Sacred vessels of the husk's young have been hidden behind a loose vent. Find these eggs quickly before another stumbles upon them!</one_of_us_goalinfotext_2>
+  <one_of_us_objectivesuccessmessage2>A rush of pleasure hits you like a wave as you find the eggs. A dry, mad laugh echoes within your head for a moment, fading into indistinct wet clicks.</one_of_us_objectivesuccessmessage2>
+  <one_of_us_objectivesuccessmessage3>Your head spins and your vision narrows as the last of the calyxanide is destroyed.</one_of_us_objectivesuccessmessage3>
+  <one_of_us_traitorobjectivestartmessage4>You read the final task:\n[traitorgoalinfos]</one_of_us_traitorobjectivestartmessage4>
+  <one_of_us_goalinfotext_4>All on this sub must partake of communion with the husk!</one_of_us_goalinfotext_4>
+
+  <!-- Easter bunny mission -->
+  <easterbunny_goalinfotext_1>Find a very special egg, possibly hidden in one of the vents</easterbunny_goalinfotext_1>
+  <easterbunny_objectivesuccessmessage1>The egg disgusts you, but fits neatly in your pocket. HONK!</easterbunny_objectivesuccessmessage1>
+  <easterbunny_traitorobjectivestartmessage2>Grow the egg:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage2>
+  <easterbunny_goalinfotext_2>Find a safe place for the egg to grow, and feed it [catalystitem]</easterbunny_goalinfotext_2>
+  <easterbunny_objectivesuccessmessage2>The egg bulges and makes strange noises... You're about to become a parent!</easterbunny_objectivesuccessmessage2>
+  <easterbunny_traitorobjectivestartmessage3>The egg cracks and a mudraptor bursts forth:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage3>
+  <easterbunny_goalinfotext_3>See to it by any means that the mudraptor survives for at least 3 minutes</easterbunny_goalinfotext_3>
+  <easterbunny_objectivesuccessmessage3>Honk Honk! That was hilarious, the painted man's going to get a kick out of this when he hears how it went.</easterbunny_objectivesuccessmessage3>
+  <easterbunny_traitorobjectivestartmessage4>Escape:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage4>
+
+  <!-- Modified values -->
+  <pausemenuquitverification>Are you sure you want to return to the main menu? All your unsaved progress will be lost.</pausemenuquitverification>
+  <leveldifficulty>Difficulty</leveldifficulty>
+  <connection.set_text>set_text</connection.set_text>
+  
+  
+  <!-- Modified values as of Oct 22 -->
+  <entitydescription.atancomponent>Outputs the angle whose tangent is equal to the input. If the the "signal_in_x" and "signal_in_y" connections are used, the input is interpreted as a vector and the angle calculated using Atan2.</entitydescription.atancomponent>
+  <serverendpoint>Server IP / SteamID</serverendpoint>
+
+  <workshoppublisherror.limitexceeded>Publishing the Workshop item failed (limit exceeded). Make sure you have enabled Steam Cloud and haven't exceeded your Steam Cloud quota. If you are using Steam Cloud sync, a large number of save files can cause you to run out of space on the cloud. You may want to check [savepath] to make sure you're not storing an excessive number of save files.</workshoppublisherror.limitexceeded>
+
 </infotexts>

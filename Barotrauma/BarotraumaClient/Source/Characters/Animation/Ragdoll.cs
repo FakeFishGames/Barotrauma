@@ -24,7 +24,7 @@ namespace Barotrauma
 
         partial void UpdateNetPlayerPositionProjSpecific(float deltaTime, float lowestSubPos)
         {
-            if (character != GameMain.Client.Character || !character.AllowInput)
+            if (character != GameMain.Client.Character || !character.CanMove)
             {
                 //remove states without a timestamp (there may still be ID-based states 
                 //in the list when the controlled character switches to timestamp-based interpolation)
@@ -92,10 +92,10 @@ namespace Barotrauma
                     Collider.AngularVelocity = newAngularVelocity;
 
                     float distSqrd = Vector2.DistanceSquared(newPosition, Collider.SimPosition);
-                    float errorTolerance = character.AllowInput ? 0.01f : 0.2f;
+                    float errorTolerance = character.CanMove ? 0.01f : 0.2f;
                     if (distSqrd > errorTolerance)
                     {
-                        if (distSqrd > 10.0f || !character.AllowInput)
+                        if (distSqrd > 10.0f || !character.CanMove)
                         {
                             Collider.TargetRotation = newRotation;
                             SetPosition(newPosition, lerp: distSqrd < 5.0f, ignorePlatforms: false);
@@ -108,9 +108,9 @@ namespace Barotrauma
                         }
                     }
                     
-                    //unconscious/dead characters can't correct their position using AnimController movement
+                    //immobilized characters can't correct their position using AnimController movement
                     // -> we need to correct it manually
-                    if (!character.AllowInput)
+                    if (!character.CanMove)
                     {
                         float mainLimbDistSqrd = Vector2.DistanceSquared(MainLimb.PullJointWorldAnchorA, Collider.SimPosition);
                         float mainLimbErrorTolerance = 0.1f;

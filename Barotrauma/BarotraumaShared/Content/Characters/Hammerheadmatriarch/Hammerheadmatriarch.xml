@@ -1,6 +1,40 @@
-﻿<Character speciesname="Hammerheadmatriarch" humanoid="False" group="" husk="False" needsair="False" canspeak="False" noise="100" blooddecal="blood">
+﻿<Character speciesname="Hammerheadmatriarch" humanoid="False" group="hammerhead" husk="False" needsair="False" canspeak="False" noise="100" blooddecal="blood">
   <ragdolls folder="Content/Characters/Hammerheadmatriarch/Ragdolls/" />
   <animations folder="Content/Characters/Hammerheadmatriarch/Animations/" />
-  <health vitality="100" doesbleed="True" crushdepth="-Infinity" usehealthwindow="False" />
-  <ai combatstrength="1" sight="1" hearing="1" aggressionhurt="100" aggressiongreed="10" fleehealththreshold="0" attackonlywhenprovoked="False" aggressiveboarding="False" />
+  <bloodemitter particle="blood" particleamount="10" anglemin="0" anglemax="0" scalemin="1" scalemax="1" velocitymin="0" velocitymax="0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
+  <bloodemitter particle="waterblood" particleamount="1" anglemin="0" anglemax="0" scalemin="1" scalemax="1" velocitymin="0" velocitymax="0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
+  <gibemitter particle="gib" particleamount="20" velocitymin="200" velocitymax="700" anglemin="0" anglemax="360" scalemin="1" scalemax="1" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
+  <health vitality="400" doesbleed="True" crushdepth="-Infinity" usehealthwindow="False" bleedingreduction="0" burnreduction="0" constanthealthregeneration="0" healthregenerationwheneating="0" />
+  <ai combatstrength="1" sight="1" hearing="1" aggressionhurt="0" aggressiongreed="0" fleehealththreshold="0" attackonlywhenprovoked="False" aggressiveboarding="False" avoidgunfire="False">
+    <target tag="wall" state="Attack" priority="100" />
+    <target tag="nasonov" state="Attack" priority="50" />
+    <target tag="sonar" state="Attack" priority="50" />
+    <target tag="room" state="Attack" priority="10" />
+  </ai>
+  <sound file="Content/Characters/Hammerheadmatriarch/MHAMMERHEAD_explosion1.ogg" state="Die" range="10000" volume="1" gender="None" />
+  <sound file="Content/Characters/Hammerheadmatriarch/MHAMMERHEAD_explosion2.ogg" state="Die" range="10000" volume="1" gender="None" />
+  <sound file="Content/Characters/Hammerheadmatriarch/MHAMMERHEAD_explosion3.ogg" state="Die" range="10000" volume="1" gender="None" />
+  <sound file="Content/Characters/Hammerheadmatriarch/MHAMMERHEAD_explosion4.ogg" state="Die" range="10000" volume="1" gender="None" />  
+  <sound file="Content/Characters/Hammerheadmatriarch/MHAMMERHEAD_damage1.ogg" state="Damage" range="7000" volume="1" gender="None" />
+  <sound file="Content/Characters/Hammerheadmatriarch/MHAMMERHEAD_damage2.ogg" state="Damage" range="7000" volume="1" gender="None" />
+  <sound file="Content/Characters/Hammerheadmatriarch/MHAMMERHEAD_idle1.ogg" state="Idle" range="6000" volume="1" gender="None" />
+  <sound file="Content/Characters/Hammerheadmatriarch/MHAMMERHEAD_idle2.ogg" state="Idle" range="6000" volume="1" gender="None" />
+  <sound file="Content/Characters/Hammerheadmatriarch/MHAMMERHEAD_idle3.ogg" state="Idle" range="6000" volume="1" gender="None" />
+  <StatusEffect type="Always" target="This" lifetime="5" targetlimb="Head">
+    <Conditional isdead="True" />
+    <ParticleEmitter particle="waterblood" particlespersecond="100" scalemin="2" scalemax="4" velocitymin="0" velocitymax="50" anglemin="0" anglemax="360" />
+    <ParticleEmitter particle="blackwaterblood" particlespersecond="100" scalemin="3" scalemax="5" velocitymin="0" velocitymax="50" anglemin="0" anglemax="360" />
+  </StatusEffect>
+  <StatusEffect type="OnDeath" target="This" targetlimb="Head">
+    <Explosion range="500" force="10" smoke="false" sparks="false" shockwave="true" underwaterbubble="false" camerashake="12">
+      <Affliction identifier="stun" strength="2" />
+    </Explosion>
+    <ParticleEmitter particle="bubbles" particleamount="30" scalemin="1" scalemax="2" velocitymin="50" velocitymax="100" anglemin="0" anglemax="360" />
+    <ParticleEmitter particle="bloodtrail" particleamount="20" scalemin="2" scalemax="5" velocitymin="200" velocitymax="1000" anglemin="0" anglemax="360" />
+    <ParticleEmitter particle="waterblood" particleamount="5" scalemin="2" scalemax="4" velocitymin="0" velocitymax="20" anglemin="0" anglemax="360" />
+    <ParticleEmitter particle="blackwaterblood" particleamount="5" scalemin="3" scalemax="5" velocitymin="0" velocitymax="20" anglemin="0" anglemax="360" />
+    <ParticleEmitter particle="heavygib" particleamount="1" scalemin="15" scalemax="15" velocitymin="0" velocitymax="0" anglemin="0" anglemax="360" />
+    <ParticleEmitter particle="gib" particleamount="100" scalemin="1" scalemax="2" velocitymin="100" velocitymax="300" anglemin="0" anglemax="360" />
+    <SpawnCharacter speciesname="hammerheadspawn" count="20" spread="150" />
+  </StatusEffect>
 </Character>

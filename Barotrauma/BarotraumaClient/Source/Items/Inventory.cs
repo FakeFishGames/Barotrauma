@@ -993,7 +993,7 @@ namespace Barotrauma
                             Color.Lerp(Color.Red, Color.Green, item.Condition / item.MaxCondition) * 0.8f, true);
                     }
 
-                    if (itemContainer != null)
+                    if (itemContainer != null && itemContainer.ShowContainedStateIndicator)
                     {
                         float containedState = 0.0f;
                         if (itemContainer.ShowConditionInContainedStateIndicator)
@@ -1156,7 +1156,7 @@ namespace Barotrauma
 
         private void ApplyReceivedState()
         {
-            if (receivedItemIDs == null) return;
+            if (receivedItemIDs == null || (Owner != null && Owner.Removed)) { return; }
 
             for (int i = 0; i < capacity; i++)
             {
@@ -1171,7 +1171,7 @@ namespace Barotrauma
             {
                 if (receivedItemIDs[i] > 0)
                 {
-                    if (!(Entity.FindEntityByID(receivedItemIDs[i]) is Item item) || Items[i] == item) continue;
+                    if (!(Entity.FindEntityByID(receivedItemIDs[i]) is Item item) || Items[i] == item) { continue; }
 
                     TryPutItem(item, i, true, true, null, false);
                     for (int j = 0; j < capacity; j++)

@@ -79,6 +79,7 @@ namespace Barotrauma.Items.Components
 
             if (hitPos < MathHelper.PiOver4) { return false; }
 
+            ActivateNearbySleepingCharacters();
             reloadTimer = reload;
 
             item.body.FarseerBody.CollisionCategories = Physics.CollisionProjectile;
@@ -156,12 +157,36 @@ namespace Barotrauma.Items.Components
             {
                 hitPos = MathUtils.WrapAnglePi(hitPos - deltaTime * 15f);
                 ac.HoldItem(deltaTime, item, handlePos, new Vector2(2, 0), Vector2.Zero, false, hitPos, holdAngle + hitPos); // aimPos not used -> zero (new Vector2(-0.3f, 0.2f)), holdPos new Vector2(0.6f, -0.1f)
-                if (hitPos < -MathHelper.PiOver4 * 1.2f)
+                if (hitPos < -MathHelper.PiOver2)
                 {
                     RestoreCollision();
                     hitting = false;
                     hitTargets.Clear();
                     hitPos = 0;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Activate sleeping ragdolls that are close enough to hit with the weapon (otherwise the collision will not be registered)
+        /// </summary>
+        private void ActivateNearbySleepingCharacters()
+        {
+            foreach (Character c in Character.CharacterList)
+            {
+                if (!c.Enabled || !c.AnimController.BodyInRest) { continue; }
+                //do a broad check first
+                if (Math.Abs(c.WorldPosition.X - item.WorldPosition.X) > 1000.0f) { continue; }
+                if (Math.Abs(c.WorldPosition.Y - item.WorldPosition.Y) > 1000.0f) { continue; }
+
+                foreach (Limb limb in c.AnimController.Limbs)
+                {
+                    float hitRange = 2.0f;
+                    if (Vector2.DistanceSquared(limb.SimPosition, item.SimPosition) < hitRange * hitRange)
+                    {
+                        c.AnimController.BodyInRest = false;
+                        break;
+                    }
                 }
             }
         }
@@ -217,9 +242,19 @@ namespace Barotrauma.Items.Components
                 User = null;
             }
 
+            //ignore collision if there's a wall between the user and the weapon to prevent hitting through walls
+            if (Submarine.PickBody(User.AnimController.AimSourceSimPos, 
+                item.SimPosition, 
+                collisionCategory: Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionItemBlocking, 
+                allowInsideFixture: true) != null)
+            {
+                return false;
+            }
+
             Character targetCharacter = null;
             Limb targetLimb = null;
             Structure targetStructure = null;
+            Item targetItem = null;
 
             attack?.SetUser(User);
 
@@ -267,6 +302,19 @@ namespace Barotrauma.Items.Components
                 }
                 hitTargets.Add(targetStructure);
             }
+            else if (f2.Body.UserData is Item)
+            {
+                targetItem = (Item)f2.Body.UserData;
+                if (AllowHitMultiple)
+                {
+                    if (hitTargets.Contains(targetItem)) { return true; }
+                }
+                else
+                {
+                    if (hitTargets.Any(t => t is Item)) { return true; }
+                }
+                hitTargets.Add(targetItem);
+            }
             else
             {
                 return false;
@@ -287,6 +335,10 @@ namespace Barotrauma.Items.Components
                 else if (targetStructure != null)
                 {
                     attack.DoDamage(User, targetStructure, item.WorldPosition, 1.0f);
+                }
+                else if (targetItem != null && targetItem.Prefab.DamagedByMeleeWeapons)
+                {
+                    attack.DoDamage(User, targetItem, item.WorldPosition, 1.0f);
                 }
                 else
                 {

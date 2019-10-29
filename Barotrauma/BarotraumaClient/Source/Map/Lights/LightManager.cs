@@ -216,7 +216,7 @@ namespace Barotrauma.Lights
 
             if (GameMain.Config.SpecularityEnabled)
             {
-                UpdateSpecularMap(graphics, spriteBatch, spriteBatchTransform, cam, backgroundObstructor);
+                //UpdateSpecularMap(graphics, spriteBatch, spriteBatchTransform, cam, backgroundObstructor);
             }
 
             graphics.SetRenderTarget(LightMap);
@@ -302,19 +302,38 @@ namespace Barotrauma.Lights
 
             //draw characters to obstruct the highlighted items/characters and light sprites
             //---------------------------------------------------------------------------------------------------
-            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: spriteBatchTransform);
+
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, effect: SolidColorEffect, transformMatrix: spriteBatchTransform);
             foreach (Character character in Character.CharacterList)
             {
                 if (character.CurrentHull == null || !character.Enabled) continue;
-                if (Character.Controlled?.FocusedCharacter == character) continue;                
+                if (Character.Controlled?.FocusedCharacter == character) continue;
                 foreach (Limb limb in character.AnimController.Limbs)
                 {
+                    if (limb.DeformSprite != null) continue;
                     limb.Draw(spriteBatch, cam, Color.Black);
                 }
             }
             spriteBatch.End();
-            graphics.BlendState = BlendState.Additive;
             
+            DeformableSprite.Effect.CurrentTechnique = DeformableSprite.Effect.Techniques["DeformShaderSolidColor"];
+            DeformableSprite.Effect.Parameters["solidColor"].SetValue(Color.Black.ToVector4());
+            DeformableSprite.Effect.CurrentTechnique.Passes[0].Apply();
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, transformMatrix: spriteBatchTransform);
+            foreach (Character character in Character.CharacterList)
+            {
+                if (character.CurrentHull == null || !character.Enabled) continue;
+                if (Character.Controlled?.FocusedCharacter == character) continue;
+                foreach (Limb limb in character.AnimController.Limbs)
+                {
+                    if (limb.DeformSprite == null) continue;
+                    limb.Draw(spriteBatch, cam, Color.Black);
+                }
+            }
+            spriteBatch.End();
+            DeformableSprite.Effect.CurrentTechnique = DeformableSprite.Effect.Techniques["DeformShader"];
+            graphics.BlendState = BlendState.Additive;
+
             //draw the actual light volumes, additive particles, hull ambient lights and the halo around the player
             //---------------------------------------------------------------------------------------------------
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, transformMatrix: spriteBatchTransform);
@@ -372,10 +391,10 @@ namespace Barotrauma.Lights
 
             if (GameMain.Config.SpecularityEnabled)
             {
-                spriteBatch.Begin(blendState: CustomBlendStates.Multiplicative);
+                /*spriteBatch.Begin(blendState: CustomBlendStates.Multiplicative);
                 spriteBatch.Draw(SpecularMap, Vector2.Zero, Color.White);
                 //spriteBatch.Draw(SpecularMap, Vector2.Zero, Color.White);
-                spriteBatch.End();
+                spriteBatch.End();*/
             }
 
             //draw the actual light volumes, additive particles, hull ambient lights and the halo around the player

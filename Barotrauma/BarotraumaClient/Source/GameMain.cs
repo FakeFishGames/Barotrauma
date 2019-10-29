@@ -166,6 +166,8 @@ namespace Barotrauma
             get { return loadingScreenOpen; }
         }
 
+        private const GraphicsProfile GfxProfile = GraphicsProfile.Reach;
+
         public GameMain(string[] args)
         {
             Content.RootDirectory = "Content";
@@ -173,6 +175,7 @@ namespace Barotrauma
             GraphicsDeviceManager = new GraphicsDeviceManager(this);
 
             GraphicsDeviceManager.IsFullScreen = false;
+            GraphicsDeviceManager.GraphicsProfile = GfxProfile;
             GraphicsDeviceManager.ApplyChanges();
 
             Window.Title = "Barotrauma";
@@ -222,7 +225,7 @@ namespace Barotrauma
                     GraphicsHeight = Math.Min(GraphicsDevice.DisplayMode.Height, GraphicsHeight);
                     break;
             }
-            GraphicsDeviceManager.GraphicsProfile = GraphicsProfile.Reach;
+            GraphicsDeviceManager.GraphicsProfile = GfxProfile;
             GraphicsDeviceManager.PreferredBackBufferFormat = SurfaceFormat.Color;
             GraphicsDeviceManager.PreferMultiSampling = false;
             GraphicsDeviceManager.SynchronizeWithVerticalRetrace = Config.VSyncEnabled;
@@ -292,6 +295,8 @@ namespace Barotrauma
             GraphicsWidth = GraphicsDevice.Viewport.Width;
             GraphicsHeight = GraphicsDevice.Viewport.Height;
 
+            ApplyGraphicsSettings();
+
             ConvertUnits.SetDisplayUnitToSimUnitRatio(Physics.DisplayToSimRation);
 
             spriteBatch = new SpriteBatch(GraphicsDevice);
@@ -307,8 +312,6 @@ namespace Barotrauma
             };
 
             bool canLoadInSeparateThread = true;
-
-            ApplyGraphicsSettings();
 
             loadingCoroutine = CoroutineManager.StartCoroutine(Load(canLoadInSeparateThread), "Load", canLoadInSeparateThread);
         }
@@ -382,9 +385,10 @@ namespace Barotrauma
             if (Config.EnableSplashScreen)
             {
                 var pendingSplashScreens = TitleScreen.PendingSplashScreens;
-                pendingSplashScreens?.Enqueue(new Pair<string, Point>("Content/Splash_UTG.mp4", new Point(1280, 720)));
-                pendingSplashScreens?.Enqueue(new Pair<string, Point>("Content/Splash_FF.mp4", new Point(1280, 720)));
-                pendingSplashScreens?.Enqueue(new Pair<string, Point>("Content/Splash_Daedalic.mp4", new Point(1920, 1080)));
+                float baseVolume = MathHelper.Clamp(Config.SoundVolume * 2.0f, 0.0f, 1.0f);
+                pendingSplashScreens?.Enqueue(new Triplet<string, Point, float>("Content/Splash_UTG.mp4", new Point(1280, 720), baseVolume * 0.5f));
+                pendingSplashScreens?.Enqueue(new Triplet<string, Point, float>("Content/Splash_FF.mp4", new Point(1280, 720), baseVolume));
+                pendingSplashScreens?.Enqueue(new Triplet<string, Point, float>("Content/Splash_Daedalic.mp4", new Point(1920, 1080), baseVolume * 0.15f));
             }
 
             //if not loading in a separate thread, wait for the splash screens to finish before continuing the loading
@@ -477,11 +481,6 @@ namespace Barotrauma
         yield return CoroutineStatus.Running;
 
             JobPrefab.LoadAll(GetFilesOfType(ContentType.Jobs));
-            // Add any missing jobs from the prefab into Config.JobNamePreferences.
-            foreach (string job in JobPrefab.List.Keys)
-            {
-                if (!Config.JobPreferences.Contains(job)) { Config.JobPreferences.Add(job); }
-            }
 
             NPCConversation.LoadAll(GetFilesOfType(ContentType.NPCConversations));
 
@@ -779,7 +778,17 @@ namespace Barotrauma
                         }
                     }
 
-                    GUI.ClearUpdateList();
+#if DEBUG
+                    if (GameMain.NetworkMember == null)
+                    {
+                        if (PlayerInput.KeyHit(Keys.P) && !(GUI.KeyboardDispatcher.Subscriber is GUITextBox))
+                        {
+                            DebugConsole.Paused = !DebugConsole.Paused;
+                        }
+                    }
+#endif
+
+                        GUI.ClearUpdateList();
                     paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen || Tutorial.ContentRunning || DebugConsole.Paused) &&
                              (NetworkMember == null || !NetworkMember.GameStarted);
 
@@ -800,7 +809,7 @@ namespace Barotrauma
 
                     DebugConsole.AddToGUIUpdateList();
 
-                    DebugConsole.Update(this, (float)Timing.Step);
+                    DebugConsole.Update((float)Timing.Step);
                     paused = paused || (DebugConsole.IsOpen && (NetworkMember == null || !NetworkMember.GameStarted));
 
                     if (!paused)
@@ -878,6 +887,7 @@ namespace Barotrauma
             {
                 spriteBatch.Begin();
                 GUI.DrawRectangle(spriteBatch, GUI.MouseOn.MouseRect, Color.Lime);
+                GUI.DrawRectangle(spriteBatch, GUI.MouseOn.Rect, Color.Cyan);
                 spriteBatch.End();
             }
 
@@ -885,6 +895,61 @@ namespace Barotrauma
             sw.Stop();
             PerformanceCounter.AddElapsedTicks("Draw total", sw.ElapsedTicks);
             PerformanceCounter.DrawTimeGraph.Update(sw.ElapsedTicks / (float)TimeSpan.TicksPerMillisecond);
+        }
+
+
+        public static void QuitToMainMenu(bool save, bool showVerificationPrompt)
+        {
+            if (showVerificationPrompt)
+            {
+                string text = (Screen.Selected is CharacterEditor.CharacterEditorScreen || Screen.Selected is SubEditorScreen) ? "PauseMenuQuitVerificationEditor" : "PauseMenuQuitVerification";
+                var msgBox = new GUIMessageBox("", TextManager.Get(text), new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") })
+                {
+                    UserData = "verificationprompt"
+                };
+                msgBox.Buttons[0].OnClicked = (yesBtn, userdata) =>
+                {
+                    QuitToMainMenu(save);
+                    return true;
+                };
+                msgBox.Buttons[0].OnClicked += msgBox.Close;
+                msgBox.Buttons[1].OnClicked += msgBox.Close;
+            }
+
+        }
+
+        public static void QuitToMainMenu(bool save)
+        {
+            if (save)
+            {
+                SaveUtil.SaveGame(GameMain.GameSession.SavePath);
+            }
+
+            if (GameMain.Client != null)
+            {
+                GameMain.Client.Disconnect();
+                GameMain.Client = null;
+            }
+
+            CoroutineManager.StopCoroutines("EndCinematic");
+
+            if (GameMain.GameSession != null)
+            {
+                if (Tutorial.Initialized)
+                {
+                    ((TutorialMode)GameMain.GameSession.GameMode).Tutorial?.Stop();
+                }
+
+                if (GameSettings.SendUserStatistics)
+                {
+                    Mission mission = GameMain.GameSession.Mission;
+                    GameAnalyticsManager.AddDesignEvent("QuitRound:" + (save ? "Save" : "NoSave"));
+                    GameAnalyticsManager.AddDesignEvent("EndRound:" + (mission == null ? "NoMission" : (mission.Completed ? "MissionCompleted" : "MissionFailed")));
+                }
+                GameMain.GameSession = null;
+            }
+            GUIMessageBox.CloseAll();
+            GameMain.MainMenuScreen.Select();
         }
 
         public void ShowCampaignDisclaimer(Action onContinue = null)
@@ -986,8 +1051,19 @@ namespace Barotrauma
         {
             if (NetworkMember != null) NetworkMember.Disconnect();
             SteamManager.ShutDown();
-            if (GameSettings.SendUserStatistics) GameAnalytics.OnQuit();
-            if (GameSettings.SaveDebugConsoleLogs) DebugConsole.SaveLogs();
+
+            try
+            {
+                SaveUtil.CleanUnnecessarySaveFiles();
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Error while cleaning unnecessary save files", e);
+            }
+
+            if (GameSettings.SendUserStatistics){ GameAnalytics.OnQuit(); }
+            if (GameSettings.SaveDebugConsoleLogs) { DebugConsole.SaveLogs(); }
+
             base.OnExiting(sender, args);
         }
 

@@ -238,7 +238,7 @@ namespace Barotrauma.Networking
             GameMain.Server.AssignJobs(clients);
             foreach (Client c in clients)
             {
-                c.CharacterInfo.Job = new Job(c.AssignedJob);
+                c.CharacterInfo.Job = new Job(c.AssignedJob.First, c.AssignedJob.Second);
             }
 
             //the spawnpoints where the characters will spawn

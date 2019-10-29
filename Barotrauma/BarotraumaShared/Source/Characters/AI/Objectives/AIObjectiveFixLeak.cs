@@ -11,10 +11,10 @@ namespace Barotrauma
     {
         public override string DebugTag => "fix leak";
         public override bool ForceRun => true;
+        public override bool KeepDivingGearOn => true;
 
         public Gap Leak { get; private set; }
 
-        private AIObjectiveFindDivingGear findDivingGear;
         private AIObjectiveGetItem getWeldingTool;
         private AIObjectiveContainItem refuelObjective;
         private AIObjectiveGoTo gotoObjective;
@@ -25,43 +25,30 @@ namespace Barotrauma
             Leak = leak;
         }
 
-        public override bool IsCompleted()
-        {
-            return Leak.Open <= 0.0f || Leak.Removed;
-        }
+        protected override bool Check() => Leak.Open <= 0 || Leak.Removed;
 
         public override float GetPriority()
         {
-            if (Leak.Open == 0.0f) { return 0.0f; }
-            // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
-            float dist = Math.Abs(character.WorldPosition.X - Leak.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - Leak.WorldPosition.Y) * 2.0f;
-            float distanceFactor = MathHelper.Lerp(1, 0.25f, MathUtils.InverseLerp(0, 10000, dist));
-            float severity = AIObjectiveFixLeaks.GetLeakSeverity(Leak);
+            if (Leak.Removed || Leak.Open <= 0) { return 0; }
+            float xDist = Math.Abs(character.WorldPosition.X - Leak.WorldPosition.X);
+            float yDist = Math.Abs(character.WorldPosition.Y - Leak.WorldPosition.Y);
+            // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally).
+            // If the target is close, ignore the distance factor alltogether so that we keep fixing the leaks that are nearby.
+            float distanceFactor = xDist < 200 && yDist < 100 ? 1 : MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 5000, xDist + yDist * 3.0f));
+            float severity = AIObjectiveFixLeaks.GetLeakSeverity(Leak) / 100;
             float max = Math.Min((AIObjectiveManager.OrderPriority - 1), 90);
             float devotion = Math.Min(Priority, 10) / 100;
             return MathHelper.Lerp(0, max, MathHelper.Clamp(devotion + severity * distanceFactor * PriorityModifier, 0, 1));
         }
 
-        public override bool IsDuplicate(AIObjective otherObjective)
-        {
-            if (!(otherObjective is AIObjectiveFixLeak fixLeak)) { return false; }
-            return fixLeak.Leak == Leak;
-        }
-
         protected override void Act(float deltaTime)
         {
-            if (!Leak.IsRoomToRoom)
-            {
-                if (!HumanAIController.HasDivingSuit(character))
-                {
-                    TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, true, objectiveManager));
-                    return;
-                }
-            }
-            var weldingTool = character.Inventory.FindItemByTag("weldingtool");
+            var weldingTool = character.Inventory.FindItemByTag("weldingtool", true);
             if (weldingTool == null)
             {
-                TryAddSubObjective(ref getWeldingTool, () => new AIObjectiveGetItem(character, "weldingtool", objectiveManager, true));
+                TryAddSubObjective(ref getWeldingTool, () => new AIObjectiveGetItem(character, "weldingtool", objectiveManager, true), 
+                    onAbandon: () => Abandon = true,
+                    onCompleted: () => RemoveSubObjective(ref getWeldingTool));
                 return;
             }
             else
@@ -70,9 +57,9 @@ namespace Barotrauma
                 if (containedItems == null)
                 {
 #if DEBUG
-                    DebugConsole.ThrowError("AIObjectiveFixLeak failed - the item \"" + weldingTool + "\" has no proper inventory");
+                    DebugConsole.ThrowError($"{character.Name}: AIObjectiveFixLeak failed - the item \"" + weldingTool + "\" has no proper inventory");
 #endif
-                    abandon = true;
+                    Abandon = true;
                     return;
                 }
                 // Drop empty tanks
@@ -84,9 +71,11 @@ namespace Barotrauma
                         containedItem.Drop(character);
                     }
                 }
-                if (containedItems.None(i => i.HasTag("weldingfueltank") && i.Condition > 0.0f))
+                if (containedItems.None(i => i.HasTag("weldingfuel") && i.Condition > 0.0f))
                 {
-                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, "weldingfueltank", weldingTool.GetComponent<ItemContainer>(), objectiveManager));
+                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, "weldingfuel", weldingTool.GetComponent<ItemContainer>(), objectiveManager), 
+                        onAbandon: () => Abandon = true,
+                        onCompleted: () => RemoveSubObjective(ref refuelObjective));
                     return;
                 }
             }
@@ -95,30 +84,56 @@ namespace Barotrauma
             if (repairTool == null)
             {
 #if DEBUG
-                DebugConsole.ThrowError("AIObjectiveFixLeak failed - the item \"" + weldingTool + "\" has no RepairTool component but is tagged as a welding tool");
+                DebugConsole.ThrowError($"{character.Name}: AIObjectiveFixLeak failed - the item \"" + weldingTool + "\" has no RepairTool component but is tagged as a welding tool");
 #endif
-                abandon = true;
+                Abandon = true;
                 return;
             }
-            Vector2 gapDiff = Leak.WorldPosition - character.WorldPosition;
+            Vector2 toLeak = Leak.WorldPosition - character.WorldPosition;
             // TODO: use the collider size/reach?
-            if (!character.AnimController.InWater && Math.Abs(gapDiff.X) < 100 && gapDiff.Y < 0.0f && gapDiff.Y > -150)
+            if (!character.AnimController.InWater && Math.Abs(toLeak.X) < 100 && toLeak.Y < 0.0f && toLeak.Y > -150)
             {
                 HumanAIController.AnimController.Crouching = true;
             }
-            // Use a greater reach, because the distance is calculated from the character to the leak, not from the item to the leak.
-            float reach = repairTool.Range + ((HumanoidAnimController)character.AnimController).ArmLength;
-            bool canOperate = gapDiff.LengthSquared() < reach * reach;
+            float reach = repairTool.Range + ConvertUnits.ToDisplayUnits(((HumanoidAnimController)character.AnimController).ArmLength);
+            bool canOperate = toLeak.LengthSquared() < reach * reach;
             if (canOperate)
             {
-                TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: "", requireEquip: true, operateTarget: Leak));
+                TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: "", requireEquip: true, operateTarget: Leak), 
+                    onAbandon: () => Abandon = true,
+                    onCompleted: () =>
+                    {
+                        if (Check()) { IsCompleted = true; }
+                        else
+                        {
+                            // Failed to operate. Probably too far.
+                            Abandon = true;
+                        }
+                    });
             }
             else
             {
                 TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(Leak, character, objectiveManager)
                 {
+                    // Allow to go outside only when ordered to fix leaks
+                    AllowGoingOutside = HumanAIController.CurrentOrder != null,
                     CloseEnough = reach
-                });
+                }, 
+                onAbandon: () =>
+                {
+                    if (Check()) { IsCompleted = true; }
+                    else if ((Leak.WorldPosition - character.WorldPosition).LengthSquared() > reach * reach * 2)
+                    {
+                        // Too far
+                        Abandon = true;
+                    }
+                    else
+                    {
+                        // We are close, try again.
+                        RemoveSubObjective(ref gotoObjective);
+                    }
+                },
+                onCompleted: () => RemoveSubObjective(ref gotoObjective));
             }
         }
     }

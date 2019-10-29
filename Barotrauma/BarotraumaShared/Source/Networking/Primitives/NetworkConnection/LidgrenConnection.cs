@@ -14,7 +14,7 @@ namespace Barotrauma.Networking
         {
             get
             {
-                return IPEndPoint.Address.IsIPv4MappedToIPv6 ? IPEndPoint.Address.MapToIPv4().ToString() : IPEndPoint.Address.ToString();
+                return IPEndPoint.Address.IsIPv4MappedToIPv6 ? IPEndPoint.Address.MapToIPv4NoThrow().ToString() : IPEndPoint.Address.ToString();
             }
         }
 

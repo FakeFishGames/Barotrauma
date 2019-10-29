@@ -110,9 +110,17 @@ namespace Barotrauma
             get { return aiTarget; }
         }
 
+        public double SpawnTime
+        {
+            get { return spawnTime;  }
+        }
+
+        private readonly double spawnTime;
+
         public Entity(Submarine submarine)
         {
             this.Submarine = submarine;
+            spawnTime = Timing.TotalTime;
 
             //give a unique ID
             id = this is EntitySpawner ?

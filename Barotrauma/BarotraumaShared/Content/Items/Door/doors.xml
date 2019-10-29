@@ -267,7 +267,6 @@
       <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="500.0" />
       <sound file="Content/Items/Door/DuctBreak.ogg" type="OnBroken" range="2000" />
     </Door>
-    <AiTarget sightrange="1500.0" static="True"/>
     <Repairable selectkey="Action" header="mechanicalrepairsheader" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="40" />

@@ -1,6 +1,6 @@
 ﻿<Ragdoll type="Moloch" limbscale="1" jointscale="1" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" canentersubmarine="False" canwalk="False" draggable="True" spritesheetorientation="0">
   <collider radius="309" width="635" name="Main Collider" height="0" />
-  <limb id="3" name="Torso" type="Torso" radius="309" width="635" notes="0_Torso" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="3" name="Torso" type="Torso" radius="309" width="635" notes="0_Torso" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" height="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="36,0,1588,669" origin="0.4949142,0.4817872" depth="0.1" subdivisions="15,15"></deformablesprite>
     <attack cooldown="15" range="700" damagerange="400" duration="0.25" force="15" targetforce="0" structuresoundtype="StructureBlunt" context="NotDefined" targettype="Any" hitdetectiontype="Distance" afterattack="FallBack" secondarycooldown="0" structuredamage="35" itemdamage="50" stun="0" onlyhumans="False" applyforceonlimbs="" torque="0" applyforcesonlyonce="False" targetimpulse="1000" targetimpulseworld="0,0" targetforceworld="0,0" severlimbsprobability="0" stickchance="0" priority="0" cooldownrandomfactor="0.1">
       <Affliction identifier="internaldamage" strength="200" />
@@ -9,7 +9,7 @@
     <damagemodifier armorsector="-90,110" afflictiontypes="damage" damagemultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true" />
     <damagemodifier armorsector="-90,110" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
   </limb>
-  <limb id="16" name="Bladder" type="None" radius="457" width="311" notes="1bc_Bladder" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="16" name="Bladder" type="None" radius="457" width="311" notes="1bc_Bladder" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" height="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="423,1025,1226,915" depth="0.29" origin="0.5,0.5" subdivisions="15,15">
       <Spritedeformation type="noise" resolution="5,5" frequency="0.5" amplitude="1" changespeed="0.1" blendmode="add" />
       <SpriteDeformation type="inflate" resolution="5,5" frequency="2" scale="0.5" blendmode="add" usemovementsine="true" sineoffset="0.75" />
@@ -18,97 +18,97 @@
     </deformablesprite>
     <damagemodifier isarmor="false" armorsector="75,285" afflictiontypes="bleeding,damage" damagemultiplier="2" damagesound="LimbSlash" deflectprojectiles="false" />
   </limb>
-  <limb id="7" name="TentacleArm11" type="LeftArm" width="100" height="300" notes="2bl_TentacleArm11" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="7" name="TentacleArm11" type="LeftArm" width="100" height="300" notes="2bl_TentacleArm11" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="0,663,147,327" origin="0.5,0.5" depth="0.2" subdivisions="5,5">
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="8" name="TentacleArm21" type="None" width="100" height="300" notes="3bc_TentacleArm21" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="8" name="TentacleArm21" type="None" width="100" height="300" notes="3bc_TentacleArm21" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="147,663,138,327" origin="0.5,0.5" depth="0.2" subdivisions="5,5">
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="9" name="TentacleArm31" type="None" width="100" height="300" notes="4br_TentacleArm31" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="9" name="TentacleArm31" type="None" width="100" height="300" notes="4br_TentacleArm31" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="285,663,138,327" origin="0.5,0.5" depth="0.2" subdivisions="5,5">
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="13" name="TentacleArm12" type="None" width="100" height="290" notes="21bc_TentacleArm12" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="13" name="TentacleArm12" type="None" width="100" height="290" notes="21bc_TentacleArm12" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="5,990,142,293" origin="0.5,0.5" depth="0.21" subdivisions="5,5">
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="14" name="TentacleArm22" type="None" width="100" height="290" notes="31bc_TentacleArm22" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="14" name="TentacleArm22" type="None" width="100" height="290" notes="31bc_TentacleArm22" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="147,990,138,293" origin="0.5,0.5" depth="0.21" subdivisions="5,5">
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="15" name="TentacleArm32" type="None" width="80" height="290" notes="41bc_TentacleArm32" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="15" name="TentacleArm32" type="None" width="80" height="290" notes="41bc_TentacleArm32" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="285,990,138,293" origin="0.5,0.5" depth="0.21" subdivisions="5,5">
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="20" name="TentacleArm13" type="None" width="100" height="200" notes="211bc_TentacleArm13" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0"  mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="20" name="TentacleArm13" type="None" width="100" height="200" notes="211bc_TentacleArm13" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0"  mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="0,1283,147,204" origin="0.5,0.5" depth="0.211" subdivisions="5,5">
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="21" name="TentacleArm23" type="None" width="100" height="300" notes="311bc_TentacleArm23" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="21" name="TentacleArm23" type="None" width="100" height="300" notes="311bc_TentacleArm23" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="147,1283,138,204" origin="0.5,0.5" depth="0.211" subdivisions="5,5">
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="22" name="TentacleArm33" type="None" width="100" height="300" notes="411bc_TentacleArm33" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="22" name="TentacleArm33" type="None" width="100" height="300" notes="411bc_TentacleArm33" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="285,1283,138,204" origin="0.5,0.5" depth="0.211" subdivisions="5,5">
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="29" name="TentacleArm14" type="None" width="80" height="150" notes="2111bc_TentacleArm14" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="29" name="TentacleArm14" type="None" width="80" height="150" notes="2111bc_TentacleArm14" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="0,1487,147,183" origin="0.5,0.5" depth="0.22" subdivisions="5,5">
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="30" name="TentacleArm24" type="None" width="50" height="180"  notes="3111bc_TentacleArm24" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="30" name="TentacleArm24" type="None" width="50" height="180"  notes="3111bc_TentacleArm24" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="149,1488,147,183" origin="0.5,0.5" depth="0.22" subdivisions="5,5">
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="31" name="TentacleArm34" type="None" width="100" height="180" notes="4111bc_TentacleArm34" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="31" name="TentacleArm34" type="None" width="100" height="180" notes="4111bc_TentacleArm34" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="283,1488,147,183" origin="0.5,0.5" depth="0.22" subdivisions="5,5">
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="32" name="TentacleArm15" type="None" width="100" height="150"  notes="21111bc_TentacleArm15" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="32" name="TentacleArm15" type="None" width="100" height="150"  notes="21111bc_TentacleArm15" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="5,1670,142,156" origin="0.5,0.5" depth="0.221" subdivisions="5,5">
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="33" name="TentacleArm25" type="None" width="100" height="150"  notes="31111bc_TentacleArm25" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="33" name="TentacleArm25" type="None" width="100" height="150"  notes="31111bc_TentacleArm25" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="147,1670,138,156" origin="0.5,0.5" depth="0.221" subdivisions="5,5">
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="34" name="TentacleArm35" type="None" width="100" height="150" notes="41111bc_TentacleArm35" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="34" name="TentacleArm35" type="None" width="100" height="150" notes="41111bc_TentacleArm35" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="285,1670,138,156" origin="0.5,0.5" depth="0.221" subdivisions="5,5">
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="38" name="TentacleArm16" type="None" width="100" height="220" notes="211111bc_TentacleArm16" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="38" name="TentacleArm16" type="None" width="100" height="220" notes="211111bc_TentacleArm16" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="0,1826,147,222" origin="0.5,0.5" depth="0.222" subdivisions="5,5">
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="39" name="TentacleArm26" type="None" width="100" height="220" notes="311111bc_TentacleArm26" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0"  mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="39" name="TentacleArm26" type="None" width="100" height="220" notes="311111bc_TentacleArm26" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0"  mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="147,1826,138,222" origin="0.5,0.5" depth="0.222" subdivisions="5,5">
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="40" name="TentacleArm36" type="None" width="100" height="220"  notes="411111bc_TentacleArm36" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="40" name="TentacleArm36" type="None" width="100" height="220"  notes="411111bc_TentacleArm36" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="285,1826,138,222" origin="0.5,0.5" depth="0.222" subdivisions="5,5">
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="0" name="Skirt11" type="None" width="200" height="513" notes="5bl_Skirt11" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="0" name="Skirt11" type="None" width="200" height="513" notes="5bl_Skirt11" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <!--<sprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="1649,0,399,513" origin="0.5,0.5" depth="0.1" />-->
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="1649,0,399,513" origin="0.5,0.5" depth="0.3" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="add" sync="1" />
@@ -118,7 +118,7 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="1" name="Skirt21" type="None" width="200" height="513" notes="6bc_Skirt21" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="1" name="Skirt21" type="None" width="200" height="513" notes="6bc_Skirt21" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="1649,0,399,513" origin="0.5,0.5" depth="0.3" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="add" sync="2" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="1,1 1,1 1,1 1,1 1,1" row2="1,1 1,1 1,1 1,1 1,1" row3="1,1 1,1 1,1 1,1 1,1" row4="0,0 0,0 0,0 0,0 0,0" />
@@ -127,7 +127,7 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="2" name="Skirt31" type="None" width="200" height="513" notes="7br_Skirt31" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="2" name="Skirt31" type="None" width="200" height="513" notes="7br_Skirt31" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="1649,0,399,513" origin="0.5,0.5" depth="0.3" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="add" sync="3" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="1,1 1,1 1,1 1,1 1,1" row2="1,1 1,1 1,1 1,1 1,1" row3="1,1 1,1 1,1 1,1 1,1" row4="0,0 0,0 0,0 0,0 0,0" />
@@ -138,7 +138,7 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="4" name="Skirt12" type="None" width="200" height="290"  notes="51bc_Skirt12" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="4" name="Skirt12" type="None" width="200" height="290"  notes="51bc_Skirt12" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="1649,513,399,297" origin="0.5,0.5" depth="0.31" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="2" changespeed="0.5" blendmode="add" sync="1" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row2="1,1 1,1 1,1 1,1 1,1" row3="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row4="0,0 0,0 0,0 0,0 0,0" />
@@ -147,7 +147,7 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="5" name="Skirt22" type="None" width="200" height="290" notes="61bc_Skirt22" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="5" name="Skirt22" type="None" width="200" height="290" notes="61bc_Skirt22" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="1649,513,399,297" origin="0.5,0.5" depth="0.31" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="add" sync="2" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row2="1,1 1,1 1,1 1,1 1,1" row3="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row4="0,0 0,0 0,0 0,0 0,0" />
@@ -156,14 +156,14 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="6" name="Skirt32" type="None" width="200" height="290" notes="71bc_Skirt32" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="6" name="Skirt32" type="None" width="200" height="290" notes="71bc_Skirt32" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="1649,513,399,297" origin="0.5,0.5" depth="0.31" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="add" sync="3" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row2="1,1 1,1 1,1 1,1 1,1" row3="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row4="0,0 0,0 0,0 0,0 0,0" />
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="10" name="Skirt13" type="None" width="180" height="242" notes="511bc_Skirt13" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="10" name="Skirt13" type="None" width="180" height="242" notes="511bc_Skirt13" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="1649,810,390,242" origin="0.5,0.5" depth="0.311" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="add" sync="1" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row2="1,1 1,1 1,1 1,1 1,1" row3="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row4="0,0 0,0 0,0 0,0 0,0" />
@@ -172,7 +172,7 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="11" name="Skirt23" type="None" width="180" height="242" notes="611bc_Skirt23" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="11" name="Skirt23" type="None" width="180" height="242" notes="611bc_Skirt23" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="1649,810,390,242" origin="0.5,0.5" depth="0.311" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="add" sync="2" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row2="1,1 1,1 1,1 1,1 1,1" row3="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row4="0,0 0,0 0,0 0,0 0,0" />
@@ -181,7 +181,7 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="12" name="Skirt33" type="None" width="180" height="242" notes="711bc_Skirt33" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="12" name="Skirt33" type="None" width="180" height="242" notes="711bc_Skirt33" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="1649,810,390,242" origin="0.5,0.5" depth="0.311" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="add" sync="3" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row2="1,1 1,1 1,1 1,1 1,1" row3="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row4="0,0 0,0 0,0 0,0 0,0" />
@@ -190,7 +190,7 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="17" name="Skirt14" type="None" width="150" height="231" notes="5111bc_Skirt14" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="17" name="Skirt14" type="None" width="150" height="231" notes="5111bc_Skirt14" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="1649,1052,390,231" origin="0.5,0.5" depth="0.32" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="add" sync="1" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row2="1,1 1,1 1,1 1,1 1,1" row3="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row4="0,0 0,0 0,0 0,0 0,0" />
@@ -199,7 +199,7 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="18" name="Skirt24" type="None" width="150" height="231" notes="6111bc_Skirt24" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="18" name="Skirt24" type="None" width="150" height="231" notes="6111bc_Skirt24" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="1649,1052,390,231" origin="0.5,0.5" depth="0.32" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="add" sync="2" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row2="1,1 1,1 1,1 1,1 1,1" row3="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row4="0,0 0,0 0,0 0,0 0,0" />
@@ -208,7 +208,7 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="19" name="Skirt34" type="None" width="150" height="231" notes="7111bc_Skirt34" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="19" name="Skirt34" type="None" width="150" height="231" notes="7111bc_Skirt34" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="1649,1052,390,231" origin="0.5,0.5" depth="0.32" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="add" sync="3" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row2="1,1 1,1 1,1 1,1 1,1" row3="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row4="0,0 0,0 0,0 0,0 0,0" />
@@ -217,7 +217,7 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="23" name="Skirt15" type="None" width="150" height="177" notes="51111bc_Skirt15" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="23" name="Skirt15" type="None" width="150" height="177" notes="51111bc_Skirt15" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="1649,1283,390,177" origin="0.5,0.5" depth="0.321" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="add" sync="1" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row2="1,1 1,1 1,1 1,1 1,1" row3="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row4="0,0 0,0 0,0 0,0 0,0" />
@@ -226,7 +226,7 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="24" name="Skirt25" type="None" width="150" height="177" notes="61111bc_Skirt25" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="24" name="Skirt25" type="None" width="150" height="177" notes="61111bc_Skirt25" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="1649,1283,390,177" origin="0.5,0.5" depth="0.321" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="add" sync="2" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row2="1,1 1,1 1,1 1,1 1,1" row3="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row4="0,0 0,0 0,0 0,0 0,0" />
@@ -235,7 +235,7 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="25" name="Skirt35" type="None" width="150" height="177" notes="71111bc_Skirt35" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="25" name="Skirt35" type="None" width="150" height="177" notes="71111bc_Skirt35" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="1649,1283,390,177" origin="0.5,0.5" depth="0.321" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="add" sync="3" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row2="1,1 1,1 1,1 1,1 1,1" row3="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row4="0,0 0,0 0,0 0,0 0,0" />
@@ -244,7 +244,7 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="26" name="Skirt16" type="None" width="150" height="210" notes="511111bc_Skirt16" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="26" name="Skirt16" type="None" width="150" height="210" notes="511111bc_Skirt16" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="1649,1460,399,210" origin="0.5,0.5" depth="0.322" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="add" sync="1" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row2="1,1 1,1 1,1 1,1 1,1" row3="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row4="0,0 0,0 0,0 0,0 0,0" />
@@ -253,7 +253,7 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="27" name="Skirt26" type="None" width="150" height="210" notes="611111bc_Skirt26" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="27" name="Skirt26" type="None" width="150" height="210" notes="611111bc_Skirt26" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="1649,1460,399,210" origin="0.5,0.5" depth="0.322" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="add" sync="2" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row2="1,1 1,1 1,1 1,1 1,1" row3="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row4="0,0 0,0 0,0 0,0 0,0" />
@@ -262,7 +262,7 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="28" name="Skirt36" type="None" width="150" height="210" notes="711111bc_Skirt36" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="28" name="Skirt36" type="None" width="150" height="210" notes="711111bc_Skirt36" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="1649,1460,399,210" origin="0.5,0.5" depth="0.322" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="add" sync="3" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row2="1,1 1,1 1,1 1,1 1,1" row3="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row4="0,0 0,0 0,0 0,0 0,0" />
@@ -271,7 +271,7 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="35" name="Skirt17" type="None" width="150" height="350" notes="5111111bc_Skirt17" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="35" name="Skirt17" type="None" width="150" height="350" notes="5111111bc_Skirt17" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="1649,1670,399,378" origin="0.5,0.5" depth="0.33" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="add" sync="1" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row2="1,1 1,1 1,1 1,1 1,1" row3="1,1 1,1 1,1 1,1 1,1" row4="1,1 1,1 1,1 1,1 1,1" />
@@ -280,7 +280,7 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="36" name="Skirt27" type="None" width="150" height="350" notes="6111111bc_Skirt27" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="36" name="Skirt27" type="None" width="150" height="350" notes="6111111bc_Skirt27" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="1649,1670,399,378" origin="0.5,0.5" depth="0.33" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="add" sync="2" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row2="1,1 1,1 1,1 1,1 1,1" row3="1,1 1,1 1,1 1,1 1,1" row4="1,1 1,1 1,1 1,1 1,1" />
@@ -289,7 +289,7 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <limb id="37" name="Skirt37" type="None" width="150" height="350" notes="7111111bc_Skirt37" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="37" name="Skirt37" type="None" width="150" height="350" notes="7111111bc_Skirt37" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="1649,1670,399,378" origin="0.5,0.5" depth="0.33" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="add" sync="3" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row2="1,1 1,1 1,1 1,1 1,1" row3="1,1 1,1 1,1 1,1 1,1" row4="1,1 1,1 1,1 1,1 1,1" />

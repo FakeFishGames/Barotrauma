@@ -27,7 +27,7 @@
     <Item identifier="shellshield" />
     <Item identifier="brockite" />
   </Inventory>
-  <ai combatstrength="1500" sight="0" hearing="1" aggressionhurt="10" aggressiongreed="1" fleehealththreshold="0" attackonlywhenprovoked="False" retaliatewhentakingdamage="False" aggressiveboarding="False">
+  <ai combatstrength="1500" sight="0" hearing="1" aggressionhurt="10" aggressiongreed="1" fleehealththreshold="0" attackonlywhenprovoked="False" aggressiveboarding="False" avoidgunfire="False">
     <targetpriority tag="decoy" state="Attack" priority="300" />
     <targetpriority tag="stronger" state="Escape" priority="100" />
     <targetpriority tag="sonar" state="Attack" priority="100" />

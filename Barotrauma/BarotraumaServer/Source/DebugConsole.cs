@@ -197,7 +197,20 @@ namespace Barotrauma
                                 }
                                 break;
                             default:
-                                if (key.KeyChar != 0)
+                                if (key.Modifiers.HasFlag(ConsoleModifiers.Control))
+                                {
+                                    if (key.Key == ConsoleKey.Z)
+                                    {
+                                        activeQuestionCallback = null;
+                                        NewMessage("^Z");
+                                    }
+                                    else if (key.Key == ConsoleKey.D)
+                                    {
+                                        activeQuestionCallback = null;
+                                        NewMessage("^D");
+                                    }
+                                }
+                                else if (key.KeyChar != 0)
                                 {
                                     input += key.KeyChar;
                                     memoryIndex = -1;
@@ -759,10 +772,12 @@ namespace Barotrauma
             {
                 if (GameMain.Server == null || args.Length == 0) return;
 
-                ShowQuestionPrompt("Reason for banning the endpoint \"" + args[0] + "\"?", (reason) =>
+                ShowQuestionPrompt("Reason for banning the endpoint \"" + args[0] + "\"? (c to cancel)", (reason) =>
                 {
-                    ShowQuestionPrompt("Enter the duration of the ban (leave empty to ban permanently, or use the format \"[days] d [hours] h\")", (duration) =>
+                    if (reason == "c" || reason == "C") { return; }
+                    ShowQuestionPrompt("Enter the duration of the ban (leave empty to ban permanently, or use the format \"[days] d [hours] h\") (c to cancel)", (duration) =>
                     {
+                        if (duration == "c" || duration == "C") { return; }
                         TimeSpan? banDuration = null;
                         if (!string.IsNullOrWhiteSpace(duration))
                         {
@@ -857,6 +872,11 @@ namespace Barotrauma
                 var character = FindMatchingCharacter(args.Skip(1).ToArray(), false);
                 GameMain.Server.SetClientCharacter(client, character);
                 client.SpectateOnly = false;
+            });
+
+            AssignOnExecute("starttraitormissionimmediately", (string[] args) =>
+            {
+                GameMain.Server?.TraitorManager?.SkipStartDelay();
             });
 
             AssignOnExecute("difficulty|leveldifficulty", (string[] args) =>
@@ -1140,14 +1160,7 @@ namespace Barotrauma
             commands.Add(new Command("mission", "mission [name]/[index]: Select the mission type for the next round. The parameter can either be the name or the index number of the mission type (0 = first mission type, 1 = second mission type, etc).", (string[] args) =>
             {
                 int index = -1;
-                if (int.TryParse(string.Join(" ", args), out index))
-                {
-                    GameMain.NetLobbyScreen.MissionTypeIndex = index;
-                }
-                else
-                {
-                    GameMain.NetLobbyScreen.MissionTypeName = string.Join(" ", args);
-                }
+                GameMain.NetLobbyScreen.MissionTypeName = string.Join(" ", args);
                 NewMessage("Set mission to " + GameMain.NetLobbyScreen.MissionTypeName, Color.Cyan);
             },
             () =>

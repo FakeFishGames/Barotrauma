@@ -59,6 +59,8 @@ namespace Barotrauma
 
         public readonly XElement StaticBodyConfig;
 
+        private bool transformDirty = true;
+
         private float lastSentCondition;
         private float sendConditionUpdateTimer;
         private bool conditionUpdatePending;
@@ -465,7 +467,7 @@ namespace Barotrauma
         {
             get;
             private set;
-        } = new List<Item>();
+        } = new List<Item>(20);
 
         public string ConfigFile
         {
@@ -578,7 +580,7 @@ namespace Barotrauma
 
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
 
-            if (submarine == null || !submarine.Loading) FindHull();
+            if (submarine == null || !submarine.Loading) { FindHull(); }
 
             SetActiveSprite();
 
@@ -588,8 +590,35 @@ namespace Barotrauma
                 {
                     case "body":
                         body = new PhysicsBody(subElement, ConvertUnits.ToSimUnits(Position), Scale);
-                        body.FarseerBody.AngularDamping = 0.2f;
-                        body.FarseerBody.LinearDamping  = 0.1f;
+                        string collisionCategory = subElement.GetAttributeString("collisioncategory", null);
+                        if (Prefab.DamagedByProjectiles || Prefab.DamagedByMeleeWeapons)
+                        {
+                            //force collision category to Character to allow projectiles and weapons to hit
+                            //(we could also do this by making the projectiles and weapons hit CollisionItem
+                            //and check if the collision should be ignored in the OnCollision callback, but
+                            //that'd make the hit detection more expensive because every item would be included)
+                            body.CollisionCategories = Physics.CollisionCharacter;
+                            body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionPlatform | Physics.CollisionProjectile;
+                        }
+                        if (collisionCategory != null)
+                        {                            
+                            if (!Physics.TryParseCollisionCategory(collisionCategory, out Category cat))
+                            {
+                                DebugConsole.ThrowError("Invalid collision category in item \"" + Name+"\" (" + collisionCategory + ")");
+                            }
+                            else
+                            {
+                                body.CollisionCategories = cat;
+                                if (cat.HasFlag(Physics.CollisionCharacter))
+                                {
+                                    body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionPlatform | Physics.CollisionProjectile;
+                                }
+                            }
+                        }
+
+                        body.FarseerBody.AngularDamping = element.GetAttributeFloat("angulardamping", 0.2f);
+                        body.FarseerBody.LinearDamping = element.GetAttributeFloat("lineardamping", 0.1f);
+                        body.UserData = this;
                         break;
                     case "trigger":
                     case "inventoryicon":
@@ -874,7 +903,7 @@ namespace Barotrauma
             rect.X = (int)(displayPos.X - rect.Width / 2.0f);
             rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
 
-            if (findNewHull) FindHull();
+            if (findNewHull) { FindHull(); }
         }
 
         public void SetActiveSprite()
@@ -965,6 +994,8 @@ namespace Barotrauma
 
             return rootContainer;
         }
+
+        public bool IsOwnedBy(Character character) => FindParentInventory(i => i.Owner == character) != null;
 
         public Inventory FindParentInventory(Func<Inventory, bool> predicate)
         {
@@ -1214,11 +1245,13 @@ namespace Barotrauma
                 }
             }
 
+            if (Removed) { return; }
+
             if (body != null && body.Enabled)
             {
                 System.Diagnostics.Debug.Assert(body.FarseerBody.FixtureList != null);
 
-                if (Math.Abs(body.LinearVelocity.X) > 0.01f || Math.Abs(body.LinearVelocity.Y) > 0.01f)
+                if (Math.Abs(body.LinearVelocity.X) > 0.01f || Math.Abs(body.LinearVelocity.Y) > 0.01f || transformDirty)
                 {
                     UpdateTransform();
                     if (CurrentHull == null && body.SimPosition.Y < ConvertUnits.ToSimUnits(Level.MaxEntityDepth))
@@ -1255,6 +1288,8 @@ namespace Barotrauma
                 
         public void UpdateTransform()
         {
+            if (body == null) { return; }
+
             Submarine prevSub = Submarine;
 
             FindHull();
@@ -1283,6 +1318,8 @@ namespace Barotrauma
                     MathHelper.Clamp(body.LinearVelocity.X, -NetConfig.MaxPhysicsBodyVelocity, NetConfig.MaxPhysicsBodyVelocity),
                     MathHelper.Clamp(body.LinearVelocity.Y, -NetConfig.MaxPhysicsBodyVelocity, NetConfig.MaxPhysicsBodyVelocity));
             }
+
+            transformDirty = false;
         }
 
         /// <summary>
@@ -1503,34 +1540,37 @@ namespace Barotrauma
                 }
             }
         }
-
-
+        
         public void SendSignal(int stepsTaken, string signal, string connectionName, Character sender, float power = 0.0f, Item source = null, float signalStrength = 1.0f)
         {
-            LastSentSignalRecipients.Clear();
             if (connections == null) { return; }
+            if (!connections.TryGetValue(connectionName, out Connection c)) { return; }
+            SendSignal(stepsTaken, signal, c, sender, power, source, signalStrength);           
+        }
+
+        public void SendSignal(int stepsTaken, string signal, Connection connection, Character sender, float power = 0.0f, Item source = null, float signalStrength = 1.0f)
+        {
+            LastSentSignalRecipients.Clear();
+            if (connections == null || connection == null) { return; }
 
             stepsTaken++;
-
-            if (!connections.TryGetValue(connectionName, out Connection c)) { return; }
-
+            
             if (stepsTaken > 10)
             {
                 //use a coroutine to prevent infinite loops by creating a one 
                 //frame delay if the "signal chain" gets too long
-                CoroutineManager.StartCoroutine(SendSignal(signal, c, sender, power, signalStrength));
+                CoroutineManager.StartCoroutine(SendSignal(signal, connection, sender, power, signalStrength));
             }
             else
             {
-                foreach (StatusEffect effect in c.Effects)
+                foreach (StatusEffect effect in connection.Effects)
                 {
                     if (condition <= 0.0f && effect.type != ActionType.OnBroken) { continue; }
                     if (signal != "0" && !string.IsNullOrEmpty(signal)) { ApplyStatusEffect(effect, ActionType.OnUse, (float)Timing.Step, null, null, false, false); }
                 }
-                c.SendSignal(stepsTaken, signal, source ?? this, sender, power, signalStrength);
-            }            
+                connection.SendSignal(stepsTaken, signal, source ?? this, sender, power, signalStrength);
+            }
         }
-
         private IEnumerable<object> SendSignal(string signal, Connection connection, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
             //wait one frame
@@ -1853,7 +1893,6 @@ namespace Barotrauma
             character.DeselectItem(this);
             foreach (ItemComponent ic in components) ic.Unequip(character);
         }
-
 
         public List<Pair<object, SerializableProperty>> GetProperties<T>()
         {

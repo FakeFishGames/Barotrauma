@@ -55,7 +55,7 @@ namespace Barotrauma
             GUI.DrawBackgroundSprite(spriteBatch, 
                 GameMain.GameSession.Map.CurrentLocation.Type.GetPortrait(GameMain.GameSession.Map.CurrentLocation.PortraitId));
 
-            spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
+            spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
             GUI.Draw(Cam, spriteBatch);
             spriteBatch.End();
         }

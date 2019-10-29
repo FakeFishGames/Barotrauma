@@ -10,6 +10,8 @@ namespace Barotrauma
     {
         public override string DebugTag => "fix leaks";
         public override bool ForceRun => true;
+        public override bool KeepDivingGearOn => true;
+        public override bool IgnoreUnsafeHulls => true;
 
         public AIObjectiveFixLeaks(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier) { }
 
@@ -18,7 +20,7 @@ namespace Barotrauma
         public static float GetLeakSeverity(Gap leak)
         {
             if (leak == null) { return 0; }
-            float sizeFactor = MathHelper.Lerp(1, 10, MathUtils.InverseLerp(0, 200, (leak.IsHorizontal ? leak.Rect.Width : leak.Rect.Height)));
+            float sizeFactor = MathHelper.Lerp(1, 10, MathUtils.InverseLerp(0, 200, leak.Size));
             float severity = sizeFactor * leak.Open;
             if (!leak.IsRoomToRoom)
             {
@@ -32,7 +34,6 @@ namespace Barotrauma
             }
         }
 
-        public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveFixLeaks;
         protected override float TargetEvaluation() => Targets.Max(t => GetLeakSeverity(t));
         protected override IEnumerable<Gap> GetList() => Gap.GapList;
         protected override AIObjective ObjectiveConstructor(Gap gap) 

@@ -89,7 +89,7 @@
         </Explosion>
       </StatusEffect>
       <requireditem items="Screwdriver" type="Equipped" />
-      <input name="power_out" displayname="connection.powerout" />
+      <output name="power_out" displayname="connection.powerout" />
       <input name="power_in" displayname="connection.powerin" />
       <input name="set_rate" displayname="connection.batterysetrechargespeed" />
       <output name="charge" displayname="connection.batterychargestatusout" />
@@ -109,7 +109,7 @@
     </Repairable>
   </Item>
   <Item name="ShuttleBattery" identifier="shuttlebattery" tags="battery" category="Electrical" Scale="0.5" description="Generally used for storing backup power in case of a reactor failure.">
-    <Upgrade gameversion="0.9.3.1" scale="0.5" indicatorposition="21,12" indicatorsize="54,35"/>
+    <Upgrade gameversion="0.9.5.0" scale="0.5" indicatorposition="21,12" indicatorsize="54,35"/>
     <Sprite texture="battery.png" sourcerect="0,207,120,125" depth="0.8" />
     <BrokenSprite texture="ShuttleBattery.png" sourcerect="299,0,299,307" depth="0.8" maxcondition="80" fadein="true" />
     <BrokenSprite texture="ShuttleBattery.png" sourcerect="598,0,299,307" depth="0.8" maxcondition="0" />
@@ -126,7 +126,7 @@
         </Explosion>
       </StatusEffect>
       <RequiredItem items="screwdriver" type="Equipped" />
-      <input name="power_out" displayname="connection.powerout" />
+      <output name="power_out" displayname="connection.powerout" />
       <input name="power_in" displayname="connection.powerin" />
       <input name="set_rate" displayname="connection.batterysetrechargespeed" />
       <output name="charge" displayname="connection.batterychargestatusout" />
@@ -154,7 +154,7 @@
         </Explosion>
       </StatusEffect>
       <RequiredItem items="screwdriver" type="Equipped" />
-      <input name="power_out" displayname="connection.powerout" />
+      <output name="power_out" displayname="connection.powerout" />
       <input name="power_in" displayname="connection.powerin" />
       <output name="charge" displayname="connection.batterychargestatusout" />
       <output name="charge_%" displayname="connection.batterychargepercentage" />

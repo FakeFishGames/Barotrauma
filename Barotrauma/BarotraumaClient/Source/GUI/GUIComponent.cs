@@ -106,9 +106,19 @@ namespace Barotrauma
             return Children.Where(c => c.userData == userData);
         }
 
+        public IEnumerable<GUIComponent> FindChildren(Func<GUIComponent, bool> predicate)
+        {
+            return Children.Where(c => predicate(c));
+        }
+
         public virtual void ClearChildren()
         {
             RectTransform.ClearChildren();
+        }
+
+        public void SetAsFirstChild()
+        {
+            RectTransform.SetAsFirstChild();
         }
 
         public void SetAsLastChild()
@@ -319,7 +329,7 @@ namespace Barotrauma
 
             Font = GUI.Font;
 
-            CanBeFocused = true;
+            CanBeFocused = true; //TODO: change default to false?
 
             if (style != null)
                 GUI.Style.Apply(this, style);
@@ -729,9 +739,10 @@ namespace Barotrauma
 
         private static GUITextBlock LoadGUITextBlock(XElement element, RectTransform parent, string overrideText = null, Anchor? anchor = null)
         {
-            string text = element.Attribute("text") == null ?
-                element.ElementInnerText() :
-                element.GetAttributeString("text", "");
+            string text = overrideText ??
+                (element.Attribute("text") == null ?
+                    element.ElementInnerText() :
+                    element.GetAttributeString("text", ""));
             text = text.Replace(@"\n", "\n");
 
             string style = element.GetAttributeString("style", "");

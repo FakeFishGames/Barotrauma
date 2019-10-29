@@ -38,7 +38,7 @@ namespace Barotrauma.Items.Components
 
         private void ToggleCrewArea(bool value, bool storeOriginalState)
         {
-            var crewManager = GameMain.GameSession.CrewManager;
+            var crewManager = GameMain.GameSession?.CrewManager;
             if (crewManager == null) { return; }
 
             if (storeOriginalState)
@@ -50,7 +50,7 @@ namespace Barotrauma.Items.Components
 
         private void ToggleChatBox(bool value, bool storeOriginalState)
         {
-            var crewManager = GameMain.GameSession.CrewManager;
+            var crewManager = GameMain.GameSession?.CrewManager;
             if (crewManager == null) { return; }
 
             if (crewManager.IsSinglePlayer)

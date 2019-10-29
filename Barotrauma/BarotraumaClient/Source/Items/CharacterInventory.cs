@@ -718,11 +718,11 @@ namespace Barotrauma
             
             if (item.ParentInventory != this)
             {
-                //in another inventory -> attempt to place in the character's inventory
-                if (item.ParentInventory.Locked || item.ParentInventory == null)
+                if (item.ParentInventory == null || item.ParentInventory.Locked)
                 {
                     return QuickUseAction.None;
                 }
+                //in another inventory -> attempt to place in the character's inventory
                 else if (allowInventorySwap)
                 {
                     if (item.Container == null || character.Inventory.FindIndex(item.Container) == -1) // Not a subinventory in the character's inventory

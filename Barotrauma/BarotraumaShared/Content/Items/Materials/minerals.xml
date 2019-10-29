@@ -105,7 +105,7 @@
       <Item identifier="silicon" />
       <Item identifier="silicon" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="194,518,60,60" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="194,515,60,60" origin="0.5,0.5" />
     <ContainedSprite texture="Content/Items/Materials/MineralEnvironment.png" usewhenattached="true" depth="0.2" sourcerect="798,2,203,159" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.55" sourcerect="386,6,123,122" origin="0.5,0.5" />
     <Body radius="40" width="20" density="50" />
@@ -121,7 +121,7 @@
       <Item identifier="carbon" />
       <Item identifier="carbon" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="194,518,60,60" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="194,515,60,60" origin="0.5,0.5" />
     <ContainedSprite texture="Content/Items/Materials/MineralEnvironment.png" usewhenattached="true" depth="0.2" sourcerect="798,2,203,159" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.55" sourcerect="386,6,123,122" origin="0.5,0.5" />
     <Body radius="40" width="20" density="50" />

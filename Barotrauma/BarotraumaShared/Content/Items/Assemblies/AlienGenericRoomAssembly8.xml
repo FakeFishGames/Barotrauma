@@ -31,10 +31,10 @@
   </Item>
   <Item name="Oscillator" identifier="oscillator" ID="18" rect="288,144,16,16" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
     <OscillatorComponent outputtype="Pulse" frequency="0.1" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
-    <Holdable attached="True" holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="5" canbepicked="True" allowingameediting="True" msg="Detach [Wrench]">
+    <Holdable attached="True" holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="5" canbepicked="True" allowingameediting="True" msg="ItemMsgDetachWrench">
       <requireditem identifiers="wrench" type="Equipped" optional="false" ignoreineditor="false" />
     </Holdable>
-    <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
+    <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
       <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false" />
       <input name="set_frequency" />
       <input name="set_outputtype" />
@@ -45,10 +45,10 @@
   </Item>
   <Item name="Relay Component" identifier="relaycomponent" ID="16" rect="320,144,16,16" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
     <RelayComponent maxpower="1000" ison="False" canbeoverloaded="True" overloadvoltage="2" fireprobability="0.15" isactive="True" minvoltage="0.5" powerconsumption="0" vulnerabletoemp="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
-    <Holdable attached="True" holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="5" canbepicked="True" allowingameediting="True" msg="Detach [Wrench]">
+    <Holdable attached="True" holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="5" canbepicked="True" allowingameediting="True" msg="ItemMsgDetachWrench">
       <requireditem identifiers="wrench" type="Equipped" optional="false" ignoreineditor="false" />
     </Holdable>
-    <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
+    <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
       <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false" />
       <input name="power_in" />
       <input name="signal_in1">

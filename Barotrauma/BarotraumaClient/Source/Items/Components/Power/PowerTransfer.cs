@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -46,19 +47,20 @@ namespace Barotrauma.Items.Components
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), textContainer.RectTransform), "", textColor: Color.LightGreen)
             {
                 ToolTip = TextManager.Get("PowerTransferTipPower"),
-                TextGetter = () => { return powerStr.Replace("[power]", ((int)(-currPowerConsumption)).ToString()); }
+                TextGetter = () => { return powerStr.Replace("[power]", ((int)Math.Round(-currPowerConsumption)).ToString()); }
             };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), textContainer.RectTransform),
                 TextManager.Get("PowerTransferLoadLabel"), font: GUI.LargeFont)
             {
                 ToolTip = TextManager.Get("PowerTransferTipLoad")
+                
             };
             string loadStr = TextManager.Get("PowerTransferLoad");
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), textContainer.RectTransform), "", textColor: Color.LightBlue)
             {
                 ToolTip = TextManager.Get("PowerTransferTipLoad"),
-                TextGetter = () => { return loadStr.Replace("[load]", ((int)(powerLoad)).ToString()); }
+                TextGetter = () => { return loadStr.Replace("[load]", ((int)Math.Round(powerLoad)).ToString()); }
             };
         }
 

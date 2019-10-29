@@ -55,6 +55,8 @@ namespace Barotrauma
             set { open = MathHelper.Clamp(value, 0.0f, 1.0f); }
         }
 
+        public float Size => IsHorizontal ? Rect.Height : Rect.Width;
+
         public Door ConnectedDoor;
 
         public Structure ConnectedWall;

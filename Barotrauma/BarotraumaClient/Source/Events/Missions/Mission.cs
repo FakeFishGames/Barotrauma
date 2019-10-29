@@ -1,4 +1,6 @@
-﻿namespace Barotrauma
+﻿using Barotrauma.Networking;
+
+namespace Barotrauma
 {
     partial class Mission
     {
@@ -13,6 +15,11 @@
             {
                 IconColor = Prefab.IconColor
             };
+        }
+
+        public void ClientRead(IReadMessage msg)
+        {
+            State = msg.ReadInt16();
         }
     }
 }

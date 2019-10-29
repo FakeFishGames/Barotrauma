@@ -28,6 +28,15 @@ namespace Barotrauma.Networking
         Normal, Fill
     }
 
+    public enum PlayStyle
+    {
+        Serious = 0,
+        Casual = 1,
+        Roleplay = 2,
+        Rampage = 3,
+        SomethingDifferent = 4
+    }
+
     partial class ServerSettings : ISerializableEntity
     {
         public const string SettingsFile = "serversettings.xml";
@@ -82,10 +91,9 @@ namespace Barotrauma.Networking
 
         partial class NetPropertyData
         {
-            private SerializableProperty property;
-            private string typeString;
-
-            private object parentObject;
+            private readonly SerializableProperty property;
+            private readonly string typeString;
+            private readonly object parentObject;
 
             public string Name
             {
@@ -257,7 +265,7 @@ namespace Barotrauma.Networking
             private set;
         }
 
-        Dictionary<UInt32, NetPropertyData> netProperties;
+        private readonly Dictionary<UInt32, NetPropertyData> netProperties;
 
         partial void InitProjSpecific();
 
@@ -348,7 +356,6 @@ namespace Barotrauma.Networking
 
         public Dictionary<ItemPrefab, int> ExtraCargo { get; private set; }
 
-        private TimeSpan sparseUpdateInterval = new TimeSpan(0, 0, 0, 3);
         private float selectedLevelDifficulty;
         private byte[] password;
 
@@ -481,6 +488,18 @@ namespace Barotrauma.Networking
             }
         }
 
+        private PlayStyle playstyleSelection;
+        [Serialize(PlayStyle.Serious, true)]
+        public PlayStyle PlayStyle
+        {
+            get { return playstyleSelection; }
+            set 
+            {
+                playstyleSelection = value;
+                ServerDetailsChanged = true;
+            }
+        }
+
         [Serialize(800, true)]
         private int LinesPerLogFile
         {
@@ -598,6 +617,20 @@ namespace Barotrauma.Networking
 
         [Serialize(true, true)]
         public bool AllowFriendlyFire
+        {
+            get;
+            set;
+        }
+
+
+        [Serialize("", true)]
+        public string SelectedSubmarine
+        {
+            get;
+            set;
+        }
+        [Serialize("", true)]
+        public string SelectedShuttle
         {
             get;
             set;
@@ -744,7 +777,7 @@ namespace Barotrauma.Networking
             set;
         }
 
-        [Serialize("Random", true)]
+        [Serialize("All", true)]
         public string MissionType
         {
             get;

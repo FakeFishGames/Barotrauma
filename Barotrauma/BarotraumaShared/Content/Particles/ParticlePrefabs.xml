@@ -206,7 +206,7 @@
     startrotationmin="0"
     startrotationmax="360"
     startcolor="200,0,0,255"
-    endcolor="127,0,0,0"
+    endcolor="200,0,0,255"
     lifetime="1"
     growtime="0.1"
     velocitychange="0,-0.1"
@@ -296,6 +296,54 @@
       rows="8"
       origin="0.3,0.5" />
   </blackblood>
+  <whitegoosplash
+    startsizemin="0.5,0.5"
+    startsizemax="1,1"
+    startrotationmin="0"
+    startrotationmax="360"
+    startcolor="200,255,255,255"
+    endcolor="200,255,255,255"
+    lifetime="1.5"
+    growtime="0.1"
+    velocitychange="0,-5.0"
+    startdelaymin="0"
+    startdelaymax="0.2"
+    angularvelocitymin="0"
+    angularvelocitymax="0"
+    rotatetodirection="False"
+    drag="0"
+    waterdrag="0"
+    velocitychangewater="0,-0.1"
+    collisionradius="1"
+    usecollision="False"
+    deleteoncollision="False"
+    friction="0.5"
+    restitution="0.5"
+    sizechangemin="0,0"
+    sizechangemax="0,0"
+    drawtarget="Air"
+    blendstate="AlphaBlend"
+    animduration="1.5"
+    loopanim="True">
+    <animatedsprite
+      texture="Content/Particles/Spatter1.png"
+      sourcerect="0,0,1024,1024"
+      columns="4"
+      rows="8"
+      origin="0.2,0.5" />
+    <animatedsprite
+      texture="Content/Particles/Spatter2.png"
+      sourcerect="0,0,1024,1024"
+      columns="4"
+      rows="8"
+      origin="0.5,0.5" />
+    <animatedsprite
+      texture="Content/Particles/Spatter3.png"
+      sourcerect="0,0,1024,1024"
+      columns="4"
+      rows="8"
+      origin="0.3,0.5" />
+  </whitegoosplash>
   <waterblood
     startsizemin="0.1,0.1"
     startsizemax="0.3,0.3"
@@ -1828,78 +1876,54 @@
   </iceshards>
   <brownchunks
     lifetime="3"
-    angularvelocitymin="0"
-    angularvelocitymax="0"
+    angularvelocitymin="-50"
+    angularvelocitymax="50"
     startrotationmin="0"
     startrotationmax="360"
     rotatetodirection="False"
     drag="0"
     waterdrag="0.3"
-    velocitychange="0,-1"
+    velocitychange="0,-8"
     velocitychangewater="0,-1"
     collisionradius="10"
     usecollision="True"
-    deleteoncollision="True"
+    deleteoncollision="False"
     friction="0.5"
-    restitution="0.5"
+    restitution="0.01"
     startsizemin="1,1"
     startsizemax="2,2"
     sizechangemin="0,0"
     sizechangemax="0,0"
     growtime="0"
-    startcolor="116,59,33,255"
-    endcolor="116,59,33,0"
-    drawtarget="Water"
+    startcolor="255,255,255,255"
+    endcolor="255,255,255,0"
+    drawtarget="Both"
     blendstate="AlphaBlend"
     animduration="1"
     loopanim="True"
     startdelaymin="0"
-    startdelaymax="0">
+    startdelaymax="0.2">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="0,64,32,32" />
+      sourcerect="128,128,32,32" />
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="32,64,32,32" />
+      sourcerect="160,128,32,32" />
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="64,64,32,32" />
+      sourcerect="192,128,32,32" />
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="96,64,32,32" />
+      sourcerect="128,160,32,32" />
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="128,64,32,32" />
+      sourcerect="160,160,32,32" />
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="160,64,48,32" />
+      sourcerect="192,160,32,32" />
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="208,64,48,32" />
-    <sprite
-      texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="0,96,32,32" />
-    <sprite
-      texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="32,96,32,32" />
-    <sprite
-      texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="64,96,32,32" />
-    <sprite
-      texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="96,96,32,32" />
-    <sprite
-      texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="128,96,32,32" />
-    <sprite
-      texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="160,96,32,32" />
-    <sprite
-      texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="192,96,32,32" />
-    <sprite
-      texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="224,96,32,32" />
+      sourcerect="128,192,32,32" />
   </brownchunks>
   <aliengas
     lifetime="5"

@@ -249,7 +249,7 @@ namespace Barotrauma
                     msg.ReadPadBits();
 
                     int index = 0;
-                    if (GameMain.Client.Character == this && AllowInput)
+                    if (GameMain.Client.Character == this && CanMove)
                     {
                         var posInfo = new CharacterStateInfo(
                             pos, rotation,
@@ -309,7 +309,7 @@ namespace Barotrauma
                                     LastNetworkUpdateID = controlled.LastNetworkUpdateID;
                                 }
 
-                                Controlled = this;
+                                if (!IsDead) { Controlled = this; }
                                 IsRemotePlayer = false;
                                 GameMain.Client.HasSpawned = true;
                                 GameMain.Client.Character = this;
@@ -342,7 +342,7 @@ namespace Barotrauma
             }
         }
 
-        public static Character ReadSpawnData(IReadMessage inc, bool spawn = true)
+        public static Character ReadSpawnData(IReadMessage inc)
         {
             DebugConsole.Log("Reading character spawn data");
 
@@ -362,10 +362,9 @@ namespace Barotrauma
             Character character = null;
             if (noInfo)
             {
-                if (!spawn) return null;
-
                 character = Create(speciesName, position, seed, null, true);
                 character.ID = id;
+                character.ReadStatus(inc);
             }
             else
             {
@@ -375,15 +374,14 @@ namespace Barotrauma
                 bool hasAi = inc.ReadBoolean();
                 string infoSpeciesName = inc.ReadString();
 
-                if (!spawn) return null;
-
                 CharacterInfo info = CharacterInfo.ClientRead(infoSpeciesName, inc);
 
-                character = Create(infoSpeciesName, position, seed, info, GameMain.Client.ID != ownerId, hasAi);
+                character = Create(speciesName, position, seed, info, GameMain.Client.ID != ownerId, hasAi);
                 character.ID = id;
                 character.TeamID = (TeamType)teamID;
+                character.ReadStatus(inc);
 
-                if (character.IsHuman && character.TeamID != TeamType.FriendlyNPC)
+                if (character.IsHuman && character.TeamID != TeamType.FriendlyNPC && !character.IsDead)
                 {
                     CharacterInfo duplicateCharacterInfo = GameMain.GameSession.CrewManager.GetCharacterInfos().FirstOrDefault(c => c.ID == info.ID);
                     GameMain.GameSession.CrewManager.RemoveCharacterInfo(duplicateCharacterInfo);
@@ -394,7 +392,7 @@ namespace Barotrauma
                 {
                     GameMain.Client.HasSpawned = true;
                     GameMain.Client.Character = character;
-                    Controlled = character;
+                    if (!character.IsDead) { Controlled = character; }
 
                     GameMain.LightManager.LosEnabled = true;
 

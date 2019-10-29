@@ -269,6 +269,7 @@ namespace Barotrauma
 
         public static string SecondsToReadableTime(float seconds)
         {
+            //TODO: localize time format
             int s = (int)(seconds % 60.0f);
             if (seconds < 60.0f)
             {

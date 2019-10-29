@@ -25,7 +25,7 @@ namespace Barotrauma
         {
             GameMain game = null;
 
-#if !DEBUG
+#if !DEBUG || TRUE
             try
             {
 #endif
@@ -49,7 +49,7 @@ namespace Barotrauma
                 DebugConsole.InputThread?.Abort(); DebugConsole.InputThread?.Join();
                 if (GameSettings.SendUserStatistics) GameAnalytics.OnQuit();
                 SteamManager.ShutDown();
-#if !DEBUG
+#if !DEBUG || TRUE
             }
             catch (Exception e)
             {

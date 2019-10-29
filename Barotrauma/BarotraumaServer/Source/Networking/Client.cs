@@ -32,6 +32,8 @@ namespace Barotrauma.Networking
         public float ChatSpamTimer;
         public int ChatSpamCount;
 
+        public int RoundsSincePlayedAsTraitor;
+
         public float KickAFKTimer;
 
         public double MidRoundSyncTimeOut;
@@ -52,12 +54,22 @@ namespace Barotrauma.Networking
 
         public bool ReadyToStart;
 
-        public List<JobPrefab> JobPreferences;
-        public JobPrefab AssignedJob;
+        public List<Pair<JobPrefab, int>> JobPreferences;
+        public Pair<JobPrefab, int> AssignedJob;
 
         public float DeleteDisconnectedTimer;
 
-        public CharacterInfo CharacterInfo;
+        private CharacterInfo characterInfo;
+        public CharacterInfo CharacterInfo
+        {
+            get { return characterInfo; }
+            set
+            {
+                if (characterInfo == value) { return; }
+                characterInfo?.Remove();
+                characterInfo = value;
+            }
+        }
         public NetworkConnection Connection { get; set; }
 
         public bool SpectateOnly;
@@ -84,7 +96,7 @@ namespace Barotrauma.Networking
         {
             var jobs = JobPrefab.List.Values.ToList();
             // TODO: modding support?
-            JobPreferences = new List<JobPrefab>(jobs.GetRange(0, Math.Min(jobs.Count, 3)));
+            JobPreferences = new List<Pair<JobPrefab, int>>(jobs.GetRange(0, Math.Min(jobs.Count, 3)).Select(j => new Pair<JobPrefab, int>(j, 0)));
 
             VoipQueue = new VoipQueue(ID, true, true);
             GameMain.Server.VoipServer.RegisterQueue(VoipQueue);
@@ -94,6 +106,8 @@ namespace Barotrauma.Networking
         {
             GameMain.Server.VoipServer.UnregisterQueue(VoipQueue);
             VoipQueue.Dispose();
+            characterInfo?.Remove();
+            characterInfo = null;
         }
 
         public void InitClientSync()
@@ -128,7 +142,7 @@ namespace Barotrauma.Networking
             {
                 if (lidgrenConn.IPEndPoint?.Address == null) { return false; }
                 if ((lidgrenConn.IPEndPoint?.Address.IsIPv4MappedToIPv6 ?? false) &&
-                    lidgrenConn.IPEndPoint?.Address.MapToIPv4().ToString() == endpoint)
+                    lidgrenConn.IPEndPoint?.Address.MapToIPv4NoThrow().ToString() == endpoint)
                 {
                     return true;
                 }

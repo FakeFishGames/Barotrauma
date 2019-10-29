@@ -808,16 +808,19 @@ namespace Barotrauma
                 AbsoluteOffset = new Point(label.Rect.Width, 0)
             }, color: Color.Black, style: null);
             var colorBox = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), colorBoxBack.RectTransform, Anchor.Center), style: null);
-            var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 1), frame.RectTransform, Anchor.TopRight), isHorizontal: true, childAnchor: Anchor.CenterRight)
+            var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(Math.Max((frame.Rect.Width - label.Rect.Width - colorBoxBack.Rect.Width) / (float)frame.Rect.Width, 0.5f), 1), frame.RectTransform, Anchor.TopRight), isHorizontal: true, childAnchor: Anchor.CenterRight)
             {
                 Stretch = true,
-                RelativeSpacing = 0.01f
+                RelativeSpacing = 0.001f
             };
             var fields = new GUIComponent[4];
             for (int i = 3; i >= 0; i--)
             {
-                var element = new GUIFrame(new RectTransform(new Vector2(0.2f, 1), inputArea.RectTransform) { MinSize = new Point(40, 0), MaxSize = new Point(100, 50) }, style: null);
-                new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), GUI.colorComponentLabels[i], font: GUI.SmallFont, textAlignment: Alignment.CenterLeft);
+                var element = new GUILayoutGroup(new RectTransform(new Vector2(0.2f, 1), inputArea.RectTransform), isHorizontal: true)
+                {
+                    Stretch = true
+                };
+                new GUITextBlock(new RectTransform(new Vector2(0.2f, 1), element.RectTransform, Anchor.CenterLeft) { MinSize = new Point(15, 0) }, GUI.colorComponentLabels[i], font: GUI.SmallFont, textAlignment: Alignment.Center);
                 GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.CenterRight),
                     GUINumberInput.NumberType.Int)
                 {

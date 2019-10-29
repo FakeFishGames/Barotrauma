@@ -12,6 +12,16 @@ namespace Barotrauma
 
         public abstract string DebugTag { get; }
         public virtual bool ForceRun => false;
+        public virtual bool IgnoreUnsafeHulls => false;
+        public virtual bool AbandonWhenCannotCompleteSubjectives => true;
+        public virtual bool AllowSubObjectiveSorting => false;
+        public virtual bool ReportFailures => true;
+
+        /// <summary>
+        /// Can there be multiple objective instaces of the same type? Currently multiple instances allowed only for main objectives and the subobjectives of objetive loops.
+        /// In theory, there could be multiple subobjectives of same type for concurrent objectives, but that would make things more complex -> potential issues
+        /// </summary>
+        public virtual bool AllowMultipleInstances => false;
 
         /// <summary>
         /// Run the main objective with all subobjectives concurrently?
@@ -19,19 +29,30 @@ namespace Barotrauma
         /// </summary>
         public virtual bool ConcurrentObjectives => false;
 
+        public virtual bool KeepDivingGearOn => false;
+
         protected readonly List<AIObjective> subObjectives = new List<AIObjective>();
         public float Priority { get; set; }
         public float PriorityModifier { get; private set; } = 1;
         public readonly Character character;
         public readonly AIObjectiveManager objectiveManager;
-        public string Option { get; protected set; }
+        public string Option { get; private set; }
 
-        protected bool abandon;
+        private bool _abandon;
+        public bool Abandon
+        {
+            get { return _abandon; }
+            set
+            {
+                _abandon = value;
+                if (_abandon)
+                {
+                    OnAbandon();
+                }
+            }
+        }
 
-        /// <summary>
-        /// Can the objective be completed. That is, does the objective have failing subobjectives or other conditions that prevent it from completing.
-        /// </summary>
-        public virtual bool CanBeCompleted => !abandon && subObjectives.All(so => so.CanBeCompleted);
+        public virtual bool CanBeCompleted => !Abandon;
 
         /// <summary>
         /// When true, the objective is never completed, unless CanBeCompleted returns false.
@@ -39,71 +60,85 @@ namespace Barotrauma
         public virtual bool IsLoop { get; set; }
         public IEnumerable<AIObjective> SubObjectives => subObjectives;
 
+        private readonly List<AIObjective> all = new List<AIObjective>();
+        public IEnumerable<AIObjective> GetSubObjectivesRecursive(bool includingSelf = false)
+        {
+            all.Clear();
+            if (includingSelf)
+            {
+                all.Add(this);
+            }
+            foreach (var subObjective in subObjectives)
+            {
+                all.AddRange(subObjective.GetSubObjectivesRecursive(true));
+            }
+            return all;
+        }
+
         public event Action Completed;
+        public event Action Abandoned;
+        public event Action Selected;
+        public event Action Deselected;
 
         protected HumanAIController HumanAIController => character.AIController as HumanAIController;
         protected IndoorsSteeringManager PathSteering => HumanAIController.PathSteering;
         protected SteeringManager SteeringManager => HumanAIController.SteeringManager;
-        
+
+        public AIObjective GetActiveObjective()
+        {
+            var subObjective = SubObjectives.FirstOrDefault();
+            return subObjective == null ? this : subObjective.GetActiveObjective();
+        }
+
         public AIObjective(Character character, AIObjectiveManager objectiveManager, float priorityModifier, string option = null)
         {
             this.objectiveManager = objectiveManager;
             this.character = character;
             Option = option ?? string.Empty;
-
             PriorityModifier = priorityModifier;
-#if DEBUG
-            IsDuplicate(null);
-#endif
         }
 
         /// <summary>
-        /// makes the character act according to the objective, or according to any subobjectives that
-        /// need to be completed before this one
+        /// Makes the character act according to the objective, or according to any subobjectives that need to be completed before this one
         /// </summary>
         public void TryComplete(float deltaTime)
         {
+            if (isCompleted) { return; }
+            //if (Abandon && !IsLoop && subObjectives.None()) { return; }
+            if (CheckState()) { return; }
+            // Not ready -> act (can't do foreach because it's possible that the collection is modified in event callbacks.
             for (int i = 0; i < subObjectives.Count; i++)
             {
-                var subObjective = subObjectives[i];
-                if (subObjective.IsCompleted())
-                {
-#if DEBUG
-                    DebugConsole.NewMessage($"Removing subobjective {subObjective.DebugTag} of {DebugTag}, because it is completed.");
-#endif
-                    subObjective.OnCompleted();
-                    subObjectives.Remove(subObjective);
-                }
-                else if (!subObjective.CanBeCompleted)
-                {
-#if DEBUG
-                    DebugConsole.NewMessage($"Removing subobjective {subObjective.DebugTag} of {DebugTag}, because it cannot be completed.");
-#endif
-                    subObjectives.Remove(subObjective);
-                }
+                subObjectives[i].TryComplete(deltaTime);
+                if (!ConcurrentObjectives) { return; }
             }
-
-            foreach (AIObjective objective in subObjectives)
-            {
-                objective.TryComplete(deltaTime);
-                if (!ConcurrentObjectives)
-                {
-                    return;
-                }
-            }
-
             Act(deltaTime);
-            if (IsCompleted())
+        }
+
+        // TODO: check turret aioperate
+        public void AddSubObjective(AIObjective objective, bool addFirst = false)
+        {
+            var type = objective.GetType();
+            subObjectives.RemoveAll(o => o.GetType() == type);
+            if (addFirst)
             {
-                OnCompleted();
+                subObjectives.Insert(0, objective);
+            }
+            else
+            {
+                subObjectives.Add(objective);
             }
         }
 
-        // TODO: go through AIOperate methods where subobjectives are added and ensure that they add the subobjectives correctly -> use TryAddSubObjective method instead?
-        public void AddSubObjective(AIObjective objective)
+        /// <summary>
+        /// This method allows multiple subobjectives of same type. Use with caution.
+        /// </summary>
+        public void AddSubObjectiveInQueue(AIObjective objective)
         {
-            if (subObjectives.Any(o => o.IsDuplicate(objective))) { return; }
-            subObjectives.Add(objective);
+            if (!subObjectives.Contains(objective))
+            {
+                subObjectives.Add(objective);
+            }
         }
 
         public void RemoveSubObjective<T>(ref T objective) where T : AIObjective
@@ -120,6 +155,7 @@ namespace Barotrauma
 
         public void SortSubObjectives()
         {
+            if (!AllowSubObjectiveSorting) { return; }
             if (subObjectives.None()) { return; }
             subObjectives.Sort((x, y) => y.GetPriority().CompareTo(x.GetPriority()));
             if (ConcurrentObjectives)
@@ -133,6 +169,8 @@ namespace Barotrauma
         }
 
         public virtual float GetPriority() => Priority * PriorityModifier;
+
+        public virtual bool IsDuplicate<T>(T otherObjective) where T : AIObjective => otherObjective.Option == Option;
 
         public virtual void Update(float deltaTime)
         {
@@ -150,8 +188,8 @@ namespace Barotrauma
                     }
                 }
                 Priority = MathHelper.Clamp(Priority, 0, 100);
-                subObjectives.ForEach(so => so.Update(deltaTime));
             }
+            subObjectives.ForEach(so => so.Update(deltaTime));
         }
 
         /// <summary>
@@ -174,9 +212,9 @@ namespace Barotrauma
         /// <summary>
         /// Checks if the objective already is created and added in subobjectives. If not, creates it.
         /// Handles objectives that cannot be completed. If the objective has been removed form the subobjectives, a null value is assigned to the reference.
-        /// Returns true if the objective was created.
+        /// Returns true if the objective was created and successfully added.
         /// </summary>
-        protected bool TryAddSubObjective<T>(ref T objective, Func<T> constructor, Action onAbandon = null) where T : AIObjective
+        protected bool TryAddSubObjective<T>(ref T objective, Func<T> constructor, Action onCompleted = null, Action onAbandon = null) where T : AIObjective
         {
             if (objective != null)
             {
@@ -184,11 +222,6 @@ namespace Barotrauma
                 // If the sub objective is removed -> it's either completed or impossible to complete.
                 if (!subObjectives.Contains(objective))
                 {
-                    if (!objective.CanBeCompleted)
-                    {
-                        abandon = true;
-                        onAbandon?.Invoke();
-                    }
                     objective = null;
                 }
                 return false;
@@ -198,37 +231,122 @@ namespace Barotrauma
                 objective = constructor();
                 if (!subObjectives.Contains(objective))
                 {
-                    AddSubObjective(objective);
+                    if (objective.AllowMultipleInstances)
+                    {
+                        subObjectives.Add(objective);
+                    }
+                    else
+                    {
+                        AddSubObjective(objective);
+                    }
+                    if (onCompleted != null)
+                    {
+                        objective.Completed += onCompleted;
+                    }
+                    if (onAbandon != null)
+                    {
+                        objective.Abandoned += onAbandon;
+                    }
+                    return true;
                 }
-                return true;
+#if DEBUG
+                DebugConsole.ThrowError("Attempted to add a duplicate subobjective!\n" + Environment.StackTrace);
+#endif
+                return false;
             }
         }
 
         public virtual void OnSelected()
         {
-            // Should we reset steering here?
-            //if (!ConcurrentObjectives)
-            //{
-            //    SteeringManager.Reset();
-            //}
+            Reset();
+            Selected?.Invoke();
+        }
+
+        public virtual void OnDeselected()
+        {
+            Deselected?.Invoke();
         }
 
         protected virtual void OnCompleted()
         {
             Completed?.Invoke();
-            //if (Completed != null)
-            //{
-            //    Completed();
-            //    Completed = null;
-            //}
         }
 
-        public virtual void Reset() { }
+        protected virtual void OnAbandon()
+        {
+            Abandoned?.Invoke();
+        }
+
+        public virtual void Reset()
+        {
+            isCompleted = false;
+            hasBeenChecked = false;
+            _abandon = false;
+        }
 
         protected abstract void Act(float deltaTime);
 
-        public abstract bool IsCompleted();
+        private bool isCompleted;
+        private bool hasBeenChecked;
 
-        public abstract bool IsDuplicate(AIObjective otherObjective);
+        public bool IsCompleted
+        {
+            get
+            {
+                if (!hasBeenChecked)
+                {
+                    CheckState();
+                }
+                return isCompleted;
+            }
+            protected set
+            {
+                isCompleted = value;
+            }
+        }
+
+        protected abstract bool Check();
+
+        private bool CheckState()
+        {
+            hasBeenChecked = true;
+            CheckSubObjectives();
+            if (subObjectives.None())
+            {
+                if (Check())
+                {
+                    isCompleted = true;
+                    OnCompleted();
+                }
+            }
+            return isCompleted;
+        }
+
+        private void CheckSubObjectives()
+        {
+            for (int i = 0; i < subObjectives.Count; i++)
+            {
+                var subObjective = subObjectives[i];
+                subObjective.CheckState();
+                if (subObjective.IsCompleted)
+                {
+#if DEBUG
+                    DebugConsole.NewMessage($"{character.Name}: Removing SUBobjective {subObjective.DebugTag} of {DebugTag}, because it is completed.", Color.LightGreen);
+#endif
+                    subObjectives.Remove(subObjective);
+                }
+                else if (!subObjective.CanBeCompleted)
+                {
+#if DEBUG
+                    DebugConsole.NewMessage($"{character.Name}: Removing SUBobjective {subObjective.DebugTag} of {DebugTag}, because it cannot be completed.", Color.Red);
+#endif
+                    subObjectives.Remove(subObjective);
+                    if (AbandonWhenCannotCompleteSubjectives)
+                    {
+                        Abandon = true;
+                    }
+                }
+            }
+        }
     }
 }

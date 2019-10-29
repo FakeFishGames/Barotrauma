@@ -33,6 +33,7 @@ namespace Barotrauma
 #endif
 #if CLIENT
             levelDifficultyScrollBar.BarScroll = difficulty / 100.0f;
+            levelDifficultyScrollBar.OnMoved(levelDifficultyScrollBar, levelDifficultyScrollBar.BarScroll);
 #endif
         }
         

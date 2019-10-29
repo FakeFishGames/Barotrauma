@@ -19,12 +19,16 @@ namespace Barotrauma
 
         public readonly Color OutlineColor;
 
+        public readonly XElement Element;
+
         public readonly Dictionary<GUIComponent.ComponentState, List<UISprite>> Sprites;
         
         public Dictionary<string, GUIComponentStyle> ChildStyles;
 
         public GUIComponentStyle(XElement element)
         {
+            Element = element;
+
             Sprites = new Dictionary<GUIComponent.ComponentState, List<UISprite>>();
             foreach (GUIComponent.ComponentState state in Enum.GetValues(typeof(GUIComponent.ComponentState)))
             {
