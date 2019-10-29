@@ -2029,6 +2029,13 @@ namespace Barotrauma
                         int.TryParse(args[4], out faceAttachmentIndex);
                     }
                     character.ReloadHead(id, hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
+                    foreach (var limb in character.AnimController.Limbs)
+                    {
+                        if (limb.type != LimbType.Head)
+                        {
+                            limb.RecreateSprites();
+                        }
+                    }
                 }
             }, isCheat: true));
 
