@@ -6,8 +6,6 @@ namespace Barotrauma.Steam
 {
     partial class SteamManager
     {
-        public const bool USE_STEAM = true;
-
         public const int STEAMP2P_OWNER_PORT = 30000;
 
         public const uint AppID = 602960;
@@ -52,7 +50,11 @@ namespace Barotrauma.Steam
         {
             get
             {
-                if (instance == null) instance = new SteamManager();
+#if !USE_STEAM
+                return null;
+#endif
+
+                if (instance == null) { instance = new SteamManager(); }
                 return instance;
             }
         }
@@ -68,7 +70,9 @@ namespace Barotrauma.Steam
         
         public static void Initialize()
         {
-            if (!USE_STEAM) return;
+#if !USE_STEAM
+            return;
+#endif
             instance = new SteamManager();
         }
 

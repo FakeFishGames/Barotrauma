@@ -507,15 +507,14 @@ namespace Barotrauma
             TitleScreen.LoadState = 70.0f;
         yield return CoroutineStatus.Running;
 
-            if (SteamManager.USE_STEAM)
+#if USE_STEAM
+            SteamWorkshopScreen = new SteamWorkshopScreen();
+            if (SteamManager.IsInitialized)
             {
-                SteamWorkshopScreen = new SteamWorkshopScreen();
-                if (SteamManager.IsInitialized)
-                {
-                    SteamManager.Instance.Friends.OnInvitedToGame += OnInvitedToGame;
-                    SteamManager.Instance.Lobby.OnLobbyJoinRequested += OnLobbyJoinRequested;
-                }
+                SteamManager.Instance.Friends.OnInvitedToGame += OnInvitedToGame;
+                SteamManager.Instance.Lobby.OnLobbyJoinRequested += OnLobbyJoinRequested;
             }
+#endif
             SubEditorScreen         = new SubEditorScreen();
 
             TitleScreen.LoadState = 75.0f;

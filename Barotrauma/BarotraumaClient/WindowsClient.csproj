@@ -49,7 +49,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugWindows|x64'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>..\bin\DebugWindows\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;WINDOWS;CLIENT;X64</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;WINDOWS;CLIENT;X64;USE_STEAM</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x64</PlatformTarget>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>

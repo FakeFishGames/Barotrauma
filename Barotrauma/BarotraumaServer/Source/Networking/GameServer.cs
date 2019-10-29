@@ -197,13 +197,11 @@ namespace Barotrauma.Networking
                 yield return CoroutineStatus.Success;
             }
 
-
             if (serverPeer is LidgrenServerPeer)
             {
-                if (SteamManager.USE_STEAM)
-                {
-                    registeredToMaster = SteamManager.CreateServer(this, isPublic);
-                }
+#if USE_STEAM
+                registeredToMaster = SteamManager.CreateServer(this, isPublic);
+#endif
                 if (isPublic && !GameMain.Config.UseSteamMatchmaking)
                 {
                     CoroutineManager.StartCoroutine(RegisterToMasterServer());

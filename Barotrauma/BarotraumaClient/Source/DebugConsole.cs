@@ -30,10 +30,9 @@ namespace Barotrauma
                 if (!CheatsEnabled && IsCheat)
                 {
                     NewMessage("You need to enable cheats using the command \"enablecheats\" before you can use the command \"" + names[0] + "\".", Color.Red);
-                    if (Steam.SteamManager.USE_STEAM)
-                    {
-                        NewMessage("Enabling cheats will disable Steam achievements during this play session.", Color.Red);
-                    }
+#if USE_STEAM
+                    NewMessage("Enabling cheats will disable Steam achievements during this play session.", Color.Red);
+#endif
                     return;
                 }
 
@@ -367,10 +366,9 @@ namespace Barotrauma
                 CheatsEnabled = true;
                 SteamAchievementManager.CheatsEnabled = true;
                 NewMessage("Enabled cheat commands.", Color.Red);
-                if (Steam.SteamManager.USE_STEAM)
-                {
-                    NewMessage("Steam achievements have been disabled during this play session.", Color.Red);
-                }
+#if USE_STEAM
+                NewMessage("Steam achievements have been disabled during this play session.", Color.Red);
+#endif
             }));
 
             commands.Add(new Command("mainmenu|menu", "mainmenu/menu: Go to the main menu.", (string[] args) =>
