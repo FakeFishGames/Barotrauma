@@ -173,6 +173,10 @@ namespace Barotrauma
                 // Scale down the head sprite 10%
                 float scale = targetWidth * 0.9f / Portrait.size.X;
                 Vector2 offset = Portrait.size * backgroundScale / 4;
+                if (Head.SheetIndex.HasValue)
+                {
+                    Portrait.SourceRect = new Rectangle(CalculateOffset(Portrait, Head.SheetIndex.Value.ToPoint()), Portrait.SourceRect.Size);
+                }
                 Portrait.Draw(spriteBatch, screenPos + offset, scale: scale, spriteEffect: SpriteEffects.FlipHorizontally);
                 if (AttachmentSprites != null)
                 {
