@@ -33,8 +33,20 @@ namespace Barotrauma
                     {
                         _headSpriteId = (int)headSpriteRange.X;
                     }
+                    if (heads.Any())
+                    {
+                        var matchingHead = heads.Keys.FirstOrDefault(h => h.Gender == gender && h.Race == race && h.ID == _headSpriteId);
+                        if (matchingHead != null)
+                        {
+                            if (heads.TryGetValue(matchingHead, out Vector2 index))
+                            {
+                                sheetIndex = index;
+                            }
+                        }
+                    }
                 }
             }
+            public Vector2? sheetIndex;
             public Vector2 headSpriteRange;
             public Gender gender;
             public Race race;
@@ -83,6 +95,31 @@ namespace Barotrauma
                     HeadSprite = null;
                     AttachmentSprites = null;
                 }
+            }
+        }
+
+        private static Dictionary<HeadPreset, Vector2> heads;
+        private class HeadPreset : ISerializableEntity
+        {
+            [Serialize(Race.None, false)]
+            public Race Race { get; private set; }
+
+            [Serialize(Gender.None, false)]
+            public Gender Gender { get; private set; }
+
+            [Serialize(0, false)]
+            public int ID { get; private set; }
+
+            [Serialize("0,0", false)]
+            public Vector2 SheetIndex { get; private set; }
+
+            public string Name => $"Head Preset {Race} {Gender} {ID}";
+
+            public Dictionary<string, SerializableProperty> SerializableProperties { get; private set; }
+
+            public HeadPreset(XElement element)
+            {
+                SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
             }
         }
 
@@ -536,11 +573,38 @@ namespace Barotrauma
                 Enum.TryParse(w.GetAttributeString("race", "None"), true, out Race r) && r == Head.race);
         }
 
+        private void LoadHeadPresets()
+        {
+            if (CharacterConfigElement == null) { return; }
+            heads = new Dictionary<HeadPreset, Vector2>();
+            var headsElement = CharacterConfigElement.GetChildElement("heads");
+            if (headsElement != null)
+            {
+                foreach (var head in headsElement.GetChildElements("head"))
+                {
+                    var preset = new HeadPreset(head);
+                    heads.Add(preset, preset.SheetIndex);
+                }
+            }
+        }
+
         private void CalculateHeadSpriteRange()
         {
             if (CharacterConfigElement == null) { return; }
             Head.headSpriteRange = CharacterConfigElement.GetAttributeVector2("headidrange", Vector2.Zero);
-            // If range is defined, we use it as it is
+            // If the range is defined, we use it as it is
+            if (Head.headSpriteRange != Vector2.Zero) { return; }
+            if (heads == null)
+            {
+                LoadHeadPresets();
+            }
+            // If there are any head presets defined, use them.
+            if (heads.Any())
+            {
+                var ids = heads.Keys.Where(h => h.Race == Race && h.Gender == Gender).Select(w => w.ID);
+                ids = ids.OrderBy(id => id);
+                Head.headSpriteRange = new Vector2(ids.First(), ids.Last());
+            }
             // Else we calculate the range from the wearables.
             if (Head.headSpriteRange == Vector2.Zero)
             {
@@ -598,7 +662,6 @@ namespace Barotrauma
 
         public void LoadHeadSprite()
         {
-            // TODO: use ragdollparams instead?
             foreach (XElement limbElement in Ragdoll.MainElement.Elements())
             {
                 if (limbElement.GetAttributeString("type", "").ToLowerInvariant() != "head") { continue; }

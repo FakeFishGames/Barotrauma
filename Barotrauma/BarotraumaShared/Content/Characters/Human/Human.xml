@@ -71,103 +71,147 @@
 
   <inventory arrowslot="9" slots="Card, Headset, Head, InnerClothes, OuterClothes, LeftHand, RightHand, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any"/>
 
+  <Heads>
+    <Head race="asian" gender="female" id="1" sheetindex="0,0"/>
+    <Head race="asian" gender="female" id="2" sheetindex="1,0"/>
+    <Head race="asian" gender="female" id="3" sheetindex="2,0"/>
+    <Head race="asian" gender="female" id="4" sheetindex="0,1"/>
+    <Head race="asian" gender="female" id="5" sheetindex="1,1"/>
+    <Head race="asian" gender="female" id="6" sheetindex="2,1"/>
+    <Head race="black" gender="female" id="1" sheetindex="0,0"/>
+    <Head race="black" gender="female" id="2" sheetindex="1,0"/>
+    <Head race="black" gender="female" id="3" sheetindex="2,0"/>
+    <Head race="black" gender="female" id="4" sheetindex="0,1"/>
+    <Head race="black" gender="female" id="5" sheetindex="1,1"/>
+    <Head race="black" gender="female" id="6" sheetindex="2,1"/>
+    <Head race="brown" gender="female" id="1" sheetindex="0,0"/>
+    <Head race="brown" gender="female" id="2" sheetindex="1,0"/>
+    <Head race="brown" gender="female" id="3" sheetindex="2,0"/>
+    <Head race="brown" gender="female" id="4" sheetindex="0,1"/>
+    <Head race="brown" gender="female" id="5" sheetindex="1,1"/>
+    <Head race="brown" gender="female" id="6" sheetindex="2,1"/>
+    <Head race="white" gender="female" id="1" sheetindex="0,0"/>
+    <Head race="white" gender="female" id="2" sheetindex="1,0"/>
+    <Head race="white" gender="female" id="3" sheetindex="2,0"/>
+    <Head race="white" gender="female" id="4" sheetindex="0,1"/>
+    <Head race="white" gender="female" id="5" sheetindex="1,1"/>
+    <Head race="white" gender="female" id="6" sheetindex="2,1"/>
+    <Head race="white" gender="female" id="7" sheetindex="0,2"/>
+    <Head race="asian" gender="male" id="1" sheetindex="0,0"/>
+    <Head race="asian" gender="male" id="2" sheetindex="1,0"/>
+    <Head race="asian" gender="male" id="3" sheetindex="2,0"/>
+    <Head race="asian" gender="male" id="4" sheetindex="0,1"/>
+    <Head race="asian" gender="male" id="5" sheetindex="1,1"/>
+    <Head race="asian" gender="male" id="6" sheetindex="2,1"/>
+    <Head race="black" gender="male" id="1" sheetindex="0,0"/>
+    <Head race="black" gender="male" id="2" sheetindex="1,0"/>
+    <Head race="black" gender="male" id="3" sheetindex="2,0"/>
+    <Head race="black" gender="male" id="4" sheetindex="0,1"/>
+    <Head race="black" gender="male" id="5" sheetindex="1,1"/>
+    <Head race="black" gender="male" id="6" sheetindex="2,1"/>
+    <Head race="brown" gender="male" id="1" sheetindex="0,0"/>
+    <Head race="brown" gender="male" id="2" sheetindex="1,0"/>
+    <Head race="brown" gender="male" id="3" sheetindex="2,0"/>
+    <Head race="brown" gender="male" id="4" sheetindex="0,1"/>
+    <Head race="brown" gender="male" id="5" sheetindex="1,1"/>
+    <Head race="brown" gender="male" id="6" sheetindex="2,1"/>
+    <Head race="white" gender="male" id="1" sheetindex="0,0"/>
+    <Head race="white" gender="male" id="2" sheetindex="1,0"/>
+    <Head race="white" gender="male" id="3" sheetindex="2,0"/>
+    <Head race="white" gender="male" id="4" sheetindex="0,1"/>
+    <Head race="white" gender="male" id="5" sheetindex="2,1"/>
+    <Head race="white" gender="male" id="6" sheetindex="0,2"/>
+    <Head race="white" gender="male" id="7" sheetindex="1,2"/>
+    <Head race="white" gender="male" id="8" sheetindex="2,2"/>
+  </Heads>
+
   <HeadAttachments>
-
-    <!-- Male Asian 1 -->
-    <Wearable type="Hair" headid="1" gender="male" race="asian">
-      <sprite name="Male Asian 1 Hair 1" texture="Content/Characters/Human/Heads/head_male_asian_hair_1.png" sheetindex="0,0"/>
+    <!-- Male Asian -->
+    <Wearable type="Hair" gender="male" race="asian">
+      <sprite name="Male Asian Hair 1" texture="Content/Characters/Human/Heads/head_male_asian_hair_1.png" />
     </Wearable>
-    <Wearable type="Hair" headid="1" gender="male" race="asian">
-      <sprite name="Male Asian 1 Hair 2" texture="Content/Characters/Human/Heads/head_male_asian_hair_2.png" sheetindex="0,0"/>
+    <Wearable type="Hair" gender="male" race="asian">
+      <sprite name="Male Asian Hair 2" texture="Content/Characters/Human/Heads/head_male_asian_hair_2.png" />
     </Wearable>
-    <Wearable type="Hair" headid="1" gender="male" race="asian">
-      <sprite name="Male Asian 1 Hair 3" texture="Content/Characters/Human/Heads/head_male_asian_hair_3.png" sheetindex="0,0"/>
+    <Wearable type="Hair" gender="male" race="asian">
+      <sprite name="Male Asian Hair 3" texture="Content/Characters/Human/Heads/head_male_asian_hair_3.png" />
     </Wearable>
-    <Wearable type="Husk" headid="1" gender="male" race="asian">
-      <sprite name="Male Asian 1 Husk" texture="Content/Characters/Human/Heads/head_male_asian_husk.png" sheetindex="0,0"/>
+    <Wearable type="Husk" gender="male" race="asian">
+      <sprite name="Male Asian Husk" texture="Content/Characters/Human/Heads/head_male_asian_husk.png" />
     </Wearable>
-
-    <!-- Male black 1 -->
-    <Wearable type="Hair" headid="1" gender="male" race="black">
-      <sprite name="Male Black 1 Hair 1" texture="Content/Characters/Human/Heads/head_male_black_hair_1.png" sheetindex="0,0"/>
+    <!-- Male Black -->
+    <Wearable type="Hair" gender="male" race="black">
+      <sprite name="Male Black Hair 1" texture="Content/Characters/Human/Heads/head_male_black_hair_1.png" />
     </Wearable>
-    <Wearable type="Husk" headid="1" gender="male" race="black">
-      <sprite name="Male Black 1 Husk" texture="Content/Characters/Human/Heads/head_male_black_husk.png" sheetindex="0,0"/>
+    <Wearable type="Husk"  gender="male" race="black">
+      <sprite name="Male Black Husk" texture="Content/Characters/Human/Heads/head_male_black_husk.png" />
     </Wearable>
-
-    <!-- Male brown 1 -->
-    <Wearable type="Hair" headid="1" gender="male" race="brown">
-      <sprite name="Male Brown 1 Hair 1" texture="Content/Characters/Human/Heads/head_male_brown_hair_1.png" sheetindex="0,0"/>
+    <!-- Male Brown -->
+    <Wearable type="Hair" gender="male" race="brown">
+      <sprite name="Male Brown Hair 1" texture="Content/Characters/Human/Heads/head_male_brown_hair_1.png" />
     </Wearable>
-    <Wearable type="Hair" headid="1" gender="male" race="brown">
-      <sprite name="Male Brown 1 Hair 2" texture="Content/Characters/Human/Heads/head_male_brown_hair_2.png" sheetindex="0,0"/>
+    <Wearable type="Hair" gender="male" race="brown">
+      <sprite name="Male Brown Hair 2" texture="Content/Characters/Human/Heads/head_male_brown_hair_2.png" />
     </Wearable>
-    <Wearable type="Hair" headid="1" gender="male" race="brown">
-      <sprite name="Male Brown 1 Hair 3" texture="Content/Characters/Human/Heads/head_male_brown_hair_3.png" sheetindex="0,0"/>
+    <Wearable type="Hair" gender="male" race="brown">
+      <sprite name="Male Brown Hair 3" texture="Content/Characters/Human/Heads/head_male_brown_hair_3.png" />
     </Wearable>
-    <Wearable type="Husk" headid="1" gender="male" race="brown">
-      <sprite name="Male Brown 1 Husk" texture="Content/Characters/Human/Heads/head_male_brown_husk.png" sheetindex="0,0"/>
+    <Wearable type="Husk" gender="male" race="brown">
+      <sprite name="Male Brown Husk" texture="Content/Characters/Human/Heads/head_male_brown_husk.png" />
+    </Wearable>    
+    <!-- Male White -->
+    <Wearable type="Hair" gender="male" race="white" disallow="Moustache2, Beard2">
+      <sprite name="Male White Hair Dark" texture="Content/Characters/Human/Heads/head_male_white_hair_dark.png" />
     </Wearable>
-    
-    <!-- Male White 1 -->
-    <Wearable type="Hair" headid="1" gender="male" race="white" disallow="Moustache2, Beard2">
-      <sprite name="Male White 1 Hair Dark" texture="Content/Characters/Human/Heads/head_male_white_hair_dark.png" sheetindex="0,0"/>
+    <Wearable type="Hair" gender="male" race="white">
+      <sprite name="Male White Hair Light" texture="Content/Characters/Human/Heads/head_male_white_hair_light.png" />
     </Wearable>
-    <Wearable type="Hair" headid="1" gender="male" race="white">
-      <sprite name="Male White 1 Hair Light" texture="Content/Characters/Human/Heads/head_male_white_hair_light.png" sheetindex="0,0"/>
+    <Wearable type="Beard" gender="male" race="white" disallow="Moustache2">
+      <sprite name="Male White Beard Dark" texture="Content/Characters/Human/Heads/head_male_white_beard_dark.png" />
     </Wearable>
-    <Wearable type="Beard" headid="1" gender="male" race="white" disallow="Moustache2">
-      <sprite name="Male White 1 Beard Dark" texture="Content/Characters/Human/Heads/head_male_white_beard_dark.png" sheetindex="0,0"/>
+    <Wearable type="Moustache" gender="male" race="white" disallow="Beard2">
+      <sprite name="Male White Moustache Dark" texture="Content/Characters/Human/Heads/head_male_white_moustache_dark.png" />
     </Wearable>
-    <Wearable type="Moustache" headid="1" gender="male" race="white" disallow="Beard2">
-      <sprite name="Male White 1 Moustache Dark" texture="Content/Characters/Human/Heads/head_male_white_moustache_dark.png" sheetindex="0,0"/>
+    <Wearable type="Moustache" gender="male" race="white" disallow="Beard1">
+      <sprite name="Male White Moustache Light" texture="Content/Characters/Human/Heads/head_male_white_moustache_light.png" />
     </Wearable>
-    <Wearable type="Moustache" headid="1" gender="male" race="white" disallow="Beard1">
-      <sprite name="Male White 1 Moustache Light" texture="Content/Characters/Human/Heads/head_male_white_moustache_light.png" sheetindex="0,0"/>
+    <Wearable type="Husk" gender="male" race="white">
+      <sprite name="Male White Husk" texture="Content/Characters/Human/Heads/head_male_white_husk.png" />
     </Wearable>
-    <Wearable type="Husk" headid="1" gender="male" race="white">
-      <sprite name="Male White 1 Husk" texture="Content/Characters/Human/Heads/head_male_white_husk.png" sheetindex="0,0"/>
+    <!-- Female Asian -->
+    <Wearable type="Hair" gender="female" race="asian">
+      <sprite name="Female Asian Hair 1" texture="Content/Characters/Human/Heads/head_female_asian_hair_dark_1.png" />
     </Wearable>
-
-    <!-- Female Asian 1 -->
-    <Wearable type="Hair" headid="1" gender="female" race="asian">
-      <sprite name="Female Asian 1 Hair 1" texture="Content/Characters/Human/Heads/head_female_asian_hair_dark_1.png" sheetindex="0,0"/>
+    <Wearable type="Hair" gender="female" race="asian">
+      <sprite name="Female Asian Hair 2" texture="Content/Characters/Human/Heads/head_female_asian_hair_dark_2.png" />
     </Wearable>
-    <Wearable type="Hair" headid="1" gender="female" race="asian">
-      <sprite name="Female Asian 1 Hair 2" texture="Content/Characters/Human/Heads/head_female_asian_hair_dark_2.png" sheetindex="0,0"/>
+    <Wearable type="Husk" gender="female" race="asian">
+      <sprite name="Female Asian Husk" texture="Content/Characters/Human/Heads/head_female_asian_husk.png" />
     </Wearable>
-    <Wearable type="Husk" headid="1" gender="female" race="asian">
-      <sprite name="Female Asian 1 Husk" texture="Content/Characters/Human/Heads/head_female_asian_husk.png" sheetindex="0,0"/>
+    <!-- Female Black -->
+    <Wearable type="Hair" gender="female" race="black">
+      <sprite name="Female Black Hair 1" texture="Content/Characters/Human/Heads/head_female_black_hair_1.png" />
     </Wearable>
-
-    <!-- Female Black 1 -->
-    <Wearable type="Hair" headid="1" gender="female" race="black">
-      <sprite name="Female Black 1 Hair 1" texture="Content/Characters/Human/Heads/head_female_black_hair_1.png" sheetindex="0,0"/>
+    <Wearable type="Husk" gender="female" race="black">
+      <sprite name="Female Black Husk" texture="Content/Characters/Human/Heads/head_female_black_husk.png" />
     </Wearable>
-    <Wearable type="Husk" headid="1" gender="female" race="black">
-      <sprite name="Female Black 1 Husk" texture="Content/Characters/Human/Heads/head_female_black_husk.png" sheetindex="0,0"/>
+    <!-- Female Brown -->
+    <Wearable type="Hair" gender="female" race="brown">
+      <sprite name="Female Brown Hair 1" texture="Content/Characters/Human/Heads/head_female_brown_hair_1.png" />
     </Wearable>
-
-    <!-- Female Brown 1 -->
-    <Wearable type="Hair" headid="1" gender="female" race="brown">
-      <sprite name="Female Brown 1 Hair 1" texture="Content/Characters/Human/Heads/head_female_brown_hair_1.png" sheetindex="0,0"/>
+    <Wearable type="Husk" gender="female" race="brown">
+      <sprite name="Female Brown Husk" texture="Content/Characters/Human/Heads/head_female_brown_husk.png" />
     </Wearable>
-    <Wearable type="Husk" headid="1" gender="female" race="brown">
-      <sprite name="Female Brown 1 Husk" texture="Content/Characters/Human/Heads/head_female_brown_husk.png" sheetindex="0,0"/>
+    <!-- Female White -->
+    <Wearable type="Hair" gender="female" race="white">
+      <sprite name="Female White Hair Dark" texture="Content/Characters/Human/Heads/head_female_white_hair_dark.png" />
     </Wearable>
-
-    <!-- Female White 1 -->
-    <Wearable type="Hair" headid="1" gender="female" race="white">
-      <sprite name="Female White 1 Hair Dark" texture="Content/Characters/Human/Heads/head_female_white_hair_dark.png" sheetindex="0,0"/>
+    <Wearable type="Hair" gender="female" race="white">
+      <sprite name="Female White Hair Light" texture="Content/Characters/Human/Heads/head_female_white_hair_light.png" />
     </Wearable>
-    <Wearable type="Hair" headid="1" gender="female" race="white">
-      <sprite name="Female White 1 Hair Light" texture="Content/Characters/Human/Heads/head_female_white_hair_light.png" sheetindex="0,0"/>
+    <Wearable type="Husk" gender="female" race="white">
+      <sprite name="Female White Husk" texture="Content/Characters/Human/Heads/head_female_white_husk.png" />
     </Wearable>
-    <Wearable type="Husk" headid="1" gender="female" race="white">
-      <sprite name="Female White 1 Husk" texture="Content/Characters/Human/Heads/head_female_white_husk.png" sheetindex="0,0"/>
-    </Wearable>
-    
   </HeadAttachments> 
-
 </Character>
 

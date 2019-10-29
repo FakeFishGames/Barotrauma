@@ -4,8 +4,6 @@
   <!-- head -->
   <limb id="0" radius="13" mass="6" type="Head" attackpriority="2" healthindex="0" name="Limb 0" flip="True" steerforce="0" stepoffset="0,0" height="0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Human/Heads/head_[GENDER]_[RACE].png" sourcerect="0,0,85,85" depth="0.1" origin="0.5,0.5" />
-    <!--TODO: sheet index, like on wearables-->
-    <!--<damagedsprite texture="Content/Characters/Human/damagedhead.png" sourcerect="1,1,37,38" origin="0.5,0.5" depth="0" />-->
   </limb>
   <!-- body -->
   <limb id="1" radius="14" height="26" mass="20" type="Torso" attackpriority="3" healthindex="1" name="Limb 1" flip="True" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
