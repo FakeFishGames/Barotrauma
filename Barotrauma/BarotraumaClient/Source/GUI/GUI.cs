@@ -84,15 +84,8 @@ namespace Barotrauma
         private static Sprite Cursor => Style.CursorSprite;
 
         private static bool debugDrawSounds, debugDrawEvents;
-        
-        private static GraphicsDevice graphicsDevice;
-        public static GraphicsDevice GraphicsDevice
-        {
-            get
-            {
-                return graphicsDevice;
-            }
-        }
+
+        public static GraphicsDevice GraphicsDevice { get; private set; }
 
         private static List<GUIMessage> messages = new List<GUIMessage>();
         private static Sound[] sounds;
@@ -184,7 +177,7 @@ namespace Barotrauma
 
         public static void Init(GameWindow window, IEnumerable<ContentPackage> selectedContentPackages, GraphicsDevice graphicsDevice)
         {
-            GUI.graphicsDevice = graphicsDevice;
+            GUI.GraphicsDevice = graphicsDevice;
 
             var files = ContentPackage.GetFilesOfType(selectedContentPackages, ContentType.UIStyle);
             XElement selectedStyle = null;
@@ -492,7 +485,7 @@ namespace Barotrauma
             }
         }
 
-        public static void DrawBackgroundSprite(SpriteBatch spriteBatch, Sprite backgroundSprite, float blurAmount = 1.0f, float aberrationStrength = 1.0f)
+        public static void DrawBackgroundSprite(SpriteBatch spriteBatch, Sprite backgroundSprite, float aberrationStrength = 1.0f)
         {
             double aberrationT = (Timing.TotalTime * 0.5f);
             GameMain.GameScreen.PostProcessEffect.Parameters["blurDistance"].SetValue(0.001f * aberrationStrength);
@@ -522,15 +515,15 @@ namespace Barotrauma
         }
 
         #region Update list
-        private static List<GUIComponent> updateList = new List<GUIComponent>();
+        private static readonly List<GUIComponent> updateList = new List<GUIComponent>();
         //essentially a copy of the update list, used as an optimization to quickly check if the component is present in the update list
-        private static HashSet<GUIComponent> updateListSet = new HashSet<GUIComponent>();
-        private static Queue<GUIComponent> removals = new Queue<GUIComponent>();
-        private static Queue<GUIComponent> additions = new Queue<GUIComponent>();
+        private static readonly HashSet<GUIComponent> updateListSet = new HashSet<GUIComponent>();
+        private static readonly Queue<GUIComponent> removals = new Queue<GUIComponent>();
+        private static readonly Queue<GUIComponent> additions = new Queue<GUIComponent>();
         // A helpers list for all elements that have a draw order less than 0.
-        private static List<GUIComponent> first = new List<GUIComponent>();
+        private static readonly List<GUIComponent> first = new List<GUIComponent>();
         // A helper list for all elements that have a draw order greater than 0.
-        private static List<GUIComponent> last = new List<GUIComponent>();
+        private static readonly List<GUIComponent> last = new List<GUIComponent>();
 
         /// <summary>
         /// Adds the component on the addition queue.
@@ -1221,7 +1214,7 @@ namespace Barotrauma
         {
             font = font ?? SmallFont;
             var frame = new GUIFrame(new RectTransform(new Point(parent.Rect.Width, elementHeight), parent), color: Color.Transparent);
-            var label = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform), name, font: font)
+            new GUITextBlock(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform), name, font: font)
             {
                 ToolTip = toolTip
             };
@@ -1242,7 +1235,7 @@ namespace Barotrauma
         {
             var frame = new GUIFrame(new RectTransform(new Point(parent.Rect.Width, Math.Max(elementHeight, 26)), parent), color: Color.Transparent);
             font = font ?? SmallFont;
-            var label = new GUITextBlock(new RectTransform(new Vector2(0.2f, 1), frame.RectTransform), name, font: font)
+            new GUITextBlock(new RectTransform(new Vector2(0.2f, 1), frame.RectTransform), name, font: font)
             {
                 ToolTip = toolTip
             };
@@ -1286,7 +1279,7 @@ namespace Barotrauma
         public static GUIComponent CreatePointField(Point value, int elementHeight, string displayName, RectTransform parent, string toolTip = null)
         {
             var frame = new GUIFrame(new RectTransform(new Point(parent.Rect.Width, Math.Max(elementHeight, 26)), parent), color: Color.Transparent);
-            var label = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform), displayName, font: SmallFont)
+            new GUITextBlock(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform), displayName, font: SmallFont)
             {
                 ToolTip = toolTip
             };
@@ -1317,7 +1310,7 @@ namespace Barotrauma
         {
             font = font ?? SmallFont;
             var frame = new GUIFrame(new RectTransform(new Point(parent.Rect.Width, Math.Max(elementHeight, 26)), parent), color: Color.Transparent);
-            var label = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform), name, font: font)
+            new GUITextBlock(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform), name, font: font)
             {
                 ToolTip = toolTip
             };

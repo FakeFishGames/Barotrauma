@@ -8,7 +8,7 @@ namespace Barotrauma
         private Submarine[] subs;
         private List<Character>[] crews;
 
-        private string[] descriptions;
+        private readonly string[] descriptions;
         private static string[] teamNames = { "Team A", "Team B" };
 
         public override bool AllowRespawn

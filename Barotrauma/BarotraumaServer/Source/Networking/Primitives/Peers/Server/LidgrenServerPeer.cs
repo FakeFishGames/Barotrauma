@@ -9,7 +9,7 @@ namespace Barotrauma.Networking
 {
     class LidgrenServerPeer : ServerPeer
     {
-        private ServerSettings serverSettings;
+        private readonly ServerSettings serverSettings;
 
         private NetPeerConfiguration netPeerConfiguration;
         private NetServer netServer;
@@ -43,10 +43,10 @@ namespace Barotrauma.Networking
             }
         }
 
-        private List<LidgrenConnection> connectedClients;
-        private List<PendingClient> pendingClients;
+        private readonly List<LidgrenConnection> connectedClients;
+        private readonly List<PendingClient> pendingClients;
 
-        private List<NetIncomingMessage> incomingLidgrenMessages;
+        private readonly List<NetIncomingMessage> incomingLidgrenMessages;
 
         public LidgrenServerPeer(int? ownKey, ServerSettings settings)
         {

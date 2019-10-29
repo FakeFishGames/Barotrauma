@@ -2285,7 +2285,7 @@ namespace Barotrauma.Networking
                     ip = lidgrenConn.IPEndPoint.Address.IsIPv4MappedToIPv6 ?
                     lidgrenConn.IPEndPoint.Address.MapToIPv4NoThrow().ToString() :
                     lidgrenConn.IPEndPoint.Address.ToString();
-                    if (range) { ip = serverSettings.BanList.ToRange(ip); }
+                    if (range) { ip = BanList.ToRange(ip); }
                 }
 
                 serverSettings.BanList.BanPlayer(client.Name, ip, reason, duration);

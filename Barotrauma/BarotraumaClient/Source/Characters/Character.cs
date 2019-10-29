@@ -51,7 +51,7 @@ namespace Barotrauma
         }
         
         private Dictionary<object, HUDProgressBar> hudProgressBars;
-        private List<KeyValuePair<object, HUDProgressBar>> progressBarRemovals = new List<KeyValuePair<object, HUDProgressBar>>();
+        private readonly List<KeyValuePair<object, HUDProgressBar>> progressBarRemovals = new List<KeyValuePair<object, HUDProgressBar>>();
 
         public Dictionary<object, HUDProgressBar> HUDProgressBars
         {
@@ -88,19 +88,19 @@ namespace Barotrauma
 
         public string BloodDecalName => Params.BloodDecal;
                 
-        private List<ParticleEmitter> bloodEmitters = new List<ParticleEmitter>();
+        private readonly List<ParticleEmitter> bloodEmitters = new List<ParticleEmitter>();
         public IEnumerable<ParticleEmitter> BloodEmitters
         {
             get { return bloodEmitters; }
         }
 
-        private List<ParticleEmitter> damageEmitters = new List<ParticleEmitter>();
+        private readonly List<ParticleEmitter> damageEmitters = new List<ParticleEmitter>();
         public IEnumerable<ParticleEmitter> DamageEmitters
         {
             get { return damageEmitters; }
         }
 
-        private List<ParticleEmitter> gibEmitters = new List<ParticleEmitter>();
+        private readonly List<ParticleEmitter> gibEmitters = new List<ParticleEmitter>();
         public IEnumerable<ParticleEmitter> GibEmitters
         {
             get { return gibEmitters; }
@@ -127,7 +127,7 @@ namespace Barotrauma
             }
         }
 
-        private List<ObjectiveEntity> activeObjectiveEntities = new List<ObjectiveEntity>();
+        private readonly List<ObjectiveEntity> activeObjectiveEntities = new List<ObjectiveEntity>();
         public IEnumerable<ObjectiveEntity> ActiveObjectiveEntities
         {
             get { return activeObjectiveEntities; }
@@ -302,7 +302,7 @@ namespace Barotrauma
                     }
                     //reset focus to prevent us from accidentally interacting with another entity
                     focusedItem = null;
-                    focusedCharacter = null;
+                    FocusedCharacter = null;
                     findFocusedTimer = 0.2f;
                     SelectedConstruction = null;
                 }
@@ -677,7 +677,7 @@ namespace Barotrauma
             float hudInfoAlpha = MathHelper.Clamp(1.0f - (cursorDist - (hoverRange - fadeOutRange)) / fadeOutRange, 0.2f, 1.0f);
             
             if (!GUI.DisableCharacterNames && hudInfoVisible && info != null &&
-                (controlled == null || this != controlled.focusedCharacter))
+                (controlled == null || this != controlled.FocusedCharacter))
             {
                 string name = Info.DisplayName;
                 if (controlled == null && name != Info.Name) name += " " + TextManager.Get("Disguised");

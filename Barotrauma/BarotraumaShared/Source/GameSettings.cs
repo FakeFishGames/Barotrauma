@@ -1067,9 +1067,8 @@ namespace Barotrauma
                 VoiceCaptureDevice = audioSettings.GetAttributeString("voicecapturedevice", VoiceCaptureDevice);
                 NoiseGateThreshold = audioSettings.GetAttributeFloat("noisegatethreshold", NoiseGateThreshold);
                 MicrophoneVolume = audioSettings.GetAttributeFloat("microphonevolume", MicrophoneVolume);
-                var voiceSetting = VoiceMode.Disabled;
                 string voiceSettingStr = audioSettings.GetAttributeString("voicesetting", "");
-                if (Enum.TryParse(voiceSettingStr, out voiceSetting))
+                if (Enum.TryParse(voiceSettingStr, out VoiceMode voiceSetting))
                 {
                     VoiceSetting = voiceSetting;
                 }

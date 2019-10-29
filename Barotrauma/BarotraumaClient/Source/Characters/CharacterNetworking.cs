@@ -79,9 +79,9 @@ namespace Barotrauma
                     {
                         newMem.interact = focusedItem.ID;
                     }
-                    else if (focusedCharacter != null)
+                    else if (FocusedCharacter != null)
                     {
-                        newMem.interact = focusedCharacter.ID;
+                        newMem.interact = FocusedCharacter.ID;
                     }
 
                     memInput.Insert(0, newMem);

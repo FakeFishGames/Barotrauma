@@ -69,7 +69,7 @@ namespace Barotrauma
         }
 
         protected Key[] keys;
-        private Item[] selectedItems;
+        private readonly Item[] selectedItems;
 
         public enum TeamType
         {
@@ -99,7 +99,7 @@ namespace Barotrauma
         //seed used to generate this character
         private readonly string seed;
         protected Item focusedItem;
-        private Character focusedCharacter, selectedCharacter, selectedBy;
+        private Character selectedCharacter, selectedBy;
         public Character LastAttacker;
         public Entity LastDamageSource;
 
@@ -132,16 +132,10 @@ namespace Barotrauma
 
         private float attackCoolDown;
 
-        private Order currentOrder;
-        public Order CurrentOrder
-        {
-            get { return currentOrder; }
-        }
+        public Order CurrentOrder { get; private set; }
 
-        private string currentOrderOption;
-
-        private List<StatusEffect> statusEffects = new List<StatusEffect>();
-        private List<float> speedMultipliers = new List<float>();
+        private readonly List<StatusEffect> statusEffects = new List<StatusEffect>();
+        private readonly List<float> speedMultipliers = new List<float>();
 
         public Entity ViewTarget
         {
@@ -302,11 +296,7 @@ namespace Barotrauma
             get { return Submarine == null ? cursorPosition : cursorPosition + Submarine.Position; }
         }
 
-        public Character FocusedCharacter
-        {
-            get { return focusedCharacter; }
-            set { focusedCharacter = value; }
-        }
+        public Character FocusedCharacter { get; set; }
 
         public Character SelectedCharacter
         {
@@ -779,9 +769,10 @@ namespace Barotrauma
 
             if (IsHumanoid)
             {
-                AnimController = new HumanoidAnimController(this, seed, ragdollParams as HumanRagdollParams);
-                AnimController.TargetDir = Direction.Right;
-
+                AnimController = new HumanoidAnimController(this, seed, ragdollParams as HumanRagdollParams)
+                {
+                    TargetDir = Direction.Right
+                };
             }
             else
             {
@@ -792,7 +783,7 @@ namespace Barotrauma
             AnimController.SetPosition(ConvertUnits.ToSimUnits(position));
 
             AnimController.FindHull(null);
-            if (AnimController.CurrentHull != null) Submarine = AnimController.CurrentHull.Submarine;
+            if (AnimController.CurrentHull != null) { Submarine = AnimController.CurrentHull.Submarine; }
 
             CharacterList.Add(this);
 
@@ -1151,7 +1142,7 @@ namespace Barotrauma
             if (AnimController.InWater)
             {
                 float length = targetMovement.Length();
-                if (length > 0.0f) targetMovement = targetMovement / length;
+                if (length > 0.0f) targetMovement /= length;
             }
 
             bool run = false;
@@ -1714,7 +1705,7 @@ namespace Barotrauma
 
         public bool CanInteractWith(Item item)
         {
-            return CanInteractWith(item, out float distanceToItem, checkLinked: true);
+            return CanInteractWith(item, out float _, checkLinked: true);
         }
 
         public bool CanInteractWith(Item item, out float distanceToItem, bool checkLinked)
@@ -1898,7 +1889,7 @@ namespace Barotrauma
                 focusedItem = null;
                 if (!AllowInput)
                 {
-                    focusedCharacter = null;
+                    FocusedCharacter = null;
                     if (SelectedCharacter != null) DeselectCharacter();
                     return;
                 }
@@ -1912,7 +1903,7 @@ namespace Barotrauma
                 {
                     if (findFocusedTimer <= 0.0f || Screen.Selected == GameMain.SubEditorScreen)
                     {
-                        focusedCharacter = FindCharacterAtPosition(mouseSimPos);
+                        FocusedCharacter = FindCharacterAtPosition(mouseSimPos);
                         focusedItem = CanInteract ?
                             FindItemAtPosition(mouseSimPos, GameMain.Config.AimAssistAmount * (AnimController.InWater ? 1.5f : 1.0f)) : null;
                         findFocusedTimer = 0.05f;
@@ -1972,13 +1963,13 @@ namespace Barotrauma
             {
                 DeselectCharacter();
             }
-            else if (focusedCharacter != null && IsKeyHit(InputType.Grab) && FocusedCharacter.CanBeDragged)
+            else if (FocusedCharacter != null && IsKeyHit(InputType.Grab) && FocusedCharacter.CanBeDragged)
             {
-                SelectCharacter(focusedCharacter);
+                SelectCharacter(FocusedCharacter);
             }
-            else if (focusedCharacter != null && IsKeyHit(InputType.Health) && focusedCharacter.CharacterHealth.UseHealthWindow && CanInteractWith(focusedCharacter, 160f, false))
+            else if (FocusedCharacter != null && IsKeyHit(InputType.Health) && FocusedCharacter.CharacterHealth.UseHealthWindow && CanInteractWith(FocusedCharacter, 160f, false))
             {
-                if (focusedCharacter == SelectedCharacter)
+                if (FocusedCharacter == SelectedCharacter)
                 {
                     DeselectCharacter();
 #if CLIENT
@@ -1987,15 +1978,15 @@ namespace Barotrauma
                 }
                 else
                 {
-                    SelectCharacter(focusedCharacter);
+                    SelectCharacter(FocusedCharacter);
 #if CLIENT
-                    if (Controlled == this) CharacterHealth.OpenHealthWindow = focusedCharacter.CharacterHealth;
+                    if (Controlled == this) CharacterHealth.OpenHealthWindow = FocusedCharacter.CharacterHealth;
 #endif
                 }
             }
-            else if (focusedCharacter != null && IsKeyHit(InputType.Select) && FocusedCharacter.onCustomInteract != null)
+            else if (FocusedCharacter != null && IsKeyHit(InputType.Select) && FocusedCharacter.onCustomInteract != null)
             {
-                FocusedCharacter.onCustomInteract(focusedCharacter, this);
+                FocusedCharacter.onCustomInteract(FocusedCharacter, this);
             }
             else if (focusedItem != null)
             {
@@ -2228,12 +2219,12 @@ namespace Barotrauma
             UpdateControlled(deltaTime, cam);
 
             //Health effects
-            if (NeedsAir) UpdateOxygen(deltaTime);
+            if (NeedsAir) { UpdateOxygen(deltaTime); }
             CharacterHealth.Update(deltaTime);
 
             if (IsUnconscious)
             {
-                UpdateUnconscious(deltaTime);
+                UpdateUnconscious();
                 return;
             }
 
@@ -2323,9 +2314,8 @@ namespace Barotrauma
 
             OxygenAvailable += MathHelper.Clamp(hullAvailableOxygen - oxygenAvailable, -deltaTime * 50.0f, deltaTime * 50.0f);
         }
-        partial void UpdateOxygenProjSpecific(float prevOxygen);
 
-        private void UpdateUnconscious(float deltaTime)
+        private void UpdateUnconscious()
         {
             Stun = Math.Max(5.0f, Stun);
 
@@ -2360,12 +2350,11 @@ namespace Barotrauma
             HumanAIController humanAI = AIController as HumanAIController;
             humanAI?.SetOrder(order, orderOption, orderGiver, speak);
 
-            currentOrder = order;
-            currentOrderOption = orderOption;
+            CurrentOrder = order;
         }
 
-        private List<AIChatMessage> aiChatMessageQueue = new List<AIChatMessage>();
-        private List<AIChatMessage> prevAiChatMessages = new List<AIChatMessage>();
+        private readonly List<AIChatMessage> aiChatMessageQueue = new List<AIChatMessage>();
+        private readonly List<AIChatMessage> prevAiChatMessages = new List<AIChatMessage>();
 
         public void DisableLine(string identifier)
         {
@@ -2442,14 +2431,12 @@ namespace Barotrauma
             }
         }
 
-
         public void ShowSpeechBubble(float duration, Color color)
         {
             speechBubbleTimer = Math.Max(speechBubbleTimer, duration);
             speechBubbleColor = color;
         }
 
-        partial void DamageHUD(float amount);
 
         public void SetAllDamage(float damageAmount, float bleedingDamageAmount, float burnDamageAmount)
         {
@@ -2870,7 +2857,7 @@ namespace Barotrauma
 
             foreach (Character c in CharacterList)
             {
-                if (c.focusedCharacter == this) { c.focusedCharacter = null; }
+                if (c.FocusedCharacter == this) { c.FocusedCharacter = null; }
                 if (c.SelectedCharacter == this) { c.SelectedCharacter = null; }
             }
         }
@@ -2909,7 +2896,7 @@ namespace Barotrauma
             }
         }
 
-        private HashSet<AttackContext> currentContexts = new HashSet<AttackContext>();
+        private readonly HashSet<AttackContext> currentContexts = new HashSet<AttackContext>();
 
         public IEnumerable<AttackContext> GetAttackContexts()
         {

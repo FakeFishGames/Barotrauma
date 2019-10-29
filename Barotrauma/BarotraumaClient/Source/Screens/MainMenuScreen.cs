@@ -846,8 +846,7 @@ namespace Barotrauma
 
             if (backgroundSprite != null)
             {
-                GUI.DrawBackgroundSprite(spriteBatch, backgroundSprite, 
-                    blurAmount: 0.0f, 
+                GUI.DrawBackgroundSprite(spriteBatch, backgroundSprite,
                     aberrationStrength: 0.0f);
             }
 

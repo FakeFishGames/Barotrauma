@@ -85,10 +85,10 @@ namespace Barotrauma.Items.Components
             for (int i = 0; i< customInterfaceElementList.Count; i++)
             {
                 editor.CreateStringField(customInterfaceElementList[i],
-                    new SerializableProperty(labelProperty, customInterfaceElementList[i]),
+                    new SerializableProperty(labelProperty),
                     customInterfaceElementList[i].Label, "Label #" + (i + 1), "");
                 editor.CreateStringField(customInterfaceElementList[i],
-                    new SerializableProperty(signalProperty, customInterfaceElementList[i]),
+                    new SerializableProperty(signalProperty),
                     customInterfaceElementList[i].Signal, "Signal #" + (i + 1), "");
             }
         }

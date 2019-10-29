@@ -7,7 +7,7 @@ namespace Barotrauma.RuinGeneration
 
     class Corridor : RuinShape
     {
-        private bool isHorizontal;
+        private readonly bool isHorizontal;
         
         public bool IsHorizontal
         {
@@ -57,8 +57,6 @@ namespace Barotrauma.RuinGeneration
                 }
                 else
                 {
-                    room1 = suitableLeaves[0].Rect;
-                    room2 = suitableLeaves[1].Rect;
                     ConnectedRooms[0] = suitableLeaves[0];
                     ConnectedRooms[1] = suitableLeaves[1];
                 }
@@ -157,8 +155,6 @@ namespace Barotrauma.RuinGeneration
 
         private bool CheckForIntersection(BTRoom potential1, BTRoom potential2, List<BTRoom> leaves1, List<BTRoom> leaves2, int width, bool isHorizontal)
         {
-            Rectangle potential1Rect = potential1.Rect;
-            Rectangle potential2Rect = potential2.Rect;
             Rectangle potentialCorridorRectangle = CalculateRectangle(potential1.Rect, potential2.Rect, width, isHorizontal);
 
             if (potentialCorridorRectangle.Width <= 0 || potentialCorridorRectangle.Height <= 0) return true; // Invalid rectangle

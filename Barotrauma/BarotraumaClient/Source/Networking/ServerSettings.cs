@@ -87,7 +87,7 @@ namespace Barotrauma.Networking
 
             foreach (var property in properties)
             {
-                SerializableProperty objProperty = new SerializableProperty(property, this);
+                SerializableProperty objProperty = new SerializableProperty(property);
                 SerializableProperties.Add(property.Name.ToLowerInvariant(), objProperty);
             }
         }

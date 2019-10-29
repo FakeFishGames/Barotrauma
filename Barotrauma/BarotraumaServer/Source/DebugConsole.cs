@@ -1157,9 +1157,8 @@ namespace Barotrauma
                 };
             }));
 
-            commands.Add(new Command("mission", "mission [name]/[index]: Select the mission type for the next round. The parameter can either be the name or the index number of the mission type (0 = first mission type, 1 = second mission type, etc).", (string[] args) =>
+            commands.Add(new Command("mission", "mission [name]: Select the mission type for the next round.", (string[] args) =>
             {
-                int index = -1;
                 GameMain.NetLobbyScreen.MissionTypeName = string.Join(" ", args);
                 NewMessage("Set mission to " + GameMain.NetLobbyScreen.MissionTypeName, Color.Cyan);
             },
@@ -1844,8 +1843,7 @@ namespace Barotrauma
                 "campaigndestination|setcampaigndestination",
                 (Client senderClient, Vector2 cursorWorldPos, string[] args) =>
                 {
-                    var campaign = GameMain.GameSession?.GameMode as CampaignMode;
-                    if (campaign == null)
+                    if (!(GameMain.GameSession?.GameMode is CampaignMode campaign))
                     {
                         GameMain.Server.SendConsoleMessage("No campaign active!", senderClient);
                         return;

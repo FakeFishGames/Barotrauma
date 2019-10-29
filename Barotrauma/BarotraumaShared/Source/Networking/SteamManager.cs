@@ -1,5 +1,4 @@
-﻿using Facepunch.Steamworks;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -16,7 +15,7 @@ namespace Barotrauma.Steam
         private Facepunch.Steamworks.Client client;
         private Facepunch.Steamworks.Server server;
 
-        private static List<string> initializationErrors = new List<string>();
+        private static readonly List<string> initializationErrors = new List<string>();
         public static IEnumerable<string> InitializationErrors
         {
             get { return initializationErrors; }
@@ -24,7 +23,7 @@ namespace Barotrauma.Steam
 
         public const string MetadataFileName = "filelist.xml";
 
-        private Dictionary<string, int> tagCommonness = new Dictionary<string, int>()
+        private readonly Dictionary<string, int> tagCommonness = new Dictionary<string, int>()
         {
             { "submarine", 10 },
             { "item", 10 },
@@ -38,7 +37,7 @@ namespace Barotrauma.Steam
             { "language", 5 }
         };
 
-        private List<string> popularTags = new List<string>();
+        private readonly List<string> popularTags = new List<string>();
         public static IEnumerable<string> PopularTags
         {
             get
@@ -194,10 +193,9 @@ namespace Barotrauma.Steam
             string[] split = str.Substring(6).Split(':');
             if (split.Length != 3) { return 0; }
 
-            UInt64 universe = 0; UInt64 y = 0; UInt64 accountNumber = 0;
-            if (!UInt64.TryParse(split[0], out universe)) { return 0; }
-            if (!UInt64.TryParse(split[1], out y)) { return 0; }
-            if (!UInt64.TryParse(split[2], out accountNumber)) { return 0; }
+            if (!UInt64.TryParse(split[0], out UInt64 universe)) { return 0; }
+            if (!UInt64.TryParse(split[1], out UInt64 y)) { return 0; }
+            if (!UInt64.TryParse(split[2], out UInt64 accountNumber)) { return 0; }
 
             UInt64 accountInstance = 1; UInt64 accountType = 1;
 

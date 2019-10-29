@@ -12,7 +12,6 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using SpriteParams = Barotrauma.RagdollParams.SpriteParams;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
