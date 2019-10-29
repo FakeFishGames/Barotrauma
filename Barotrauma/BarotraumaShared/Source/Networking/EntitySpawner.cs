@@ -12,6 +12,7 @@ namespace Barotrauma
         interface IEntitySpawnInfo
         {
             Entity Spawn();
+            void OnSpawned(Entity entity);
         }
 
         class ItemSpawnInfo : IEntitySpawnInfo
@@ -66,8 +67,13 @@ namespace Barotrauma
                 {
                     spawnedItem = new Item(Prefab, Position, Submarine);
                 }
-                onSpawned?.Invoke(spawnedItem);
                 return spawnedItem;
+            }
+
+            public void OnSpawned(Entity spawnedItem)
+            {
+                if (!(spawnedItem is Item item)) { throw new ArgumentException($"The entity passed to ItemSpawnInfo.OnSpawned must be an Item (value was {spawnedItem?.ToString() ?? "null"})."); }
+                onSpawned?.Invoke(item);
             }
         }
 
@@ -78,13 +84,13 @@ namespace Barotrauma
             public readonly Vector2 Position;
             public readonly Submarine Submarine;
 
-            private readonly Action<Character> onSpawn;
+            private readonly Action<Character> onSpawned;
 
             public CharacterSpawnInfo(string identifier, Vector2 worldPosition, Action<Character> onSpawn = null)
             {
                 this.identifier = identifier ?? throw new ArgumentException("ItemSpawnInfo prefab cannot be null.");
                 Position = worldPosition;
-                this.onSpawn = onSpawn;
+                this.onSpawned = onSpawn;
             }
 
             public CharacterSpawnInfo(string identifier, Vector2 position, Submarine sub, Action<Character> onSpawn = null)
@@ -92,17 +98,23 @@ namespace Barotrauma
                 this.identifier = identifier ?? throw new ArgumentException("ItemSpawnInfo prefab cannot be null.");
                 Position = position;
                 Submarine = sub;
-                this.onSpawn = onSpawn;
+                this.onSpawned = onSpawn;
             }
+
 
             public Entity Spawn()
             {
-                var character = string.IsNullOrEmpty(identifier) ? null : 
+                var character = string.IsNullOrEmpty(identifier) ? null :
                     Character.Create(identifier,
                     Submarine == null ? Position : Submarine.Position + Position,
                     ToolBox.RandomSeed(8));
-                onSpawn?.Invoke(character);
                 return character;
+            }
+
+            public void OnSpawned(Entity spawnedCharacter)
+            {
+                if (!(spawnedCharacter is Character character)) { throw new ArgumentException($"The entity passed to CharacterSpawnInfo.OnSpawned must be a Character (value was {spawnedCharacter?.ToString() ?? "null"})."); }
+                onSpawned?.Invoke(character);
             }
         }
 
@@ -246,6 +258,7 @@ namespace Barotrauma
                     {
                         ((Item)spawnedEntity).Condition = ((ItemSpawnInfo)entitySpawnInfo).Condition;
                     }
+                    entitySpawnInfo.OnSpawned(spawnedEntity);
                 }
             }
 
