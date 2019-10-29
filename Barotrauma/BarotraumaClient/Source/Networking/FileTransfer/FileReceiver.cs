@@ -164,8 +164,8 @@ namespace Barotrauma.Networking
 
         private Dictionary<FileTransferType, string> downloadFolders = new Dictionary<FileTransferType, string>()
         {
-            { FileTransferType.Submarine, "Submarines/Downloaded" },
-            { FileTransferType.CampaignSave, "Data/Saves/Multiplayer" }
+            { FileTransferType.Submarine, SaveUtil.SubmarineDownloadFolder },
+            { FileTransferType.CampaignSave, SaveUtil.CampaignDownloadFolder }
         };
 
         public List<FileTransferIn> ActiveTransfers
