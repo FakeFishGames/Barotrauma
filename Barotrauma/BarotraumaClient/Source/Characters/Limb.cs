@@ -317,6 +317,18 @@ namespace Barotrauma
             }
         }
 
+        private void CalculateHeadPosition()
+        {
+            if (type != LimbType.Head) { return; }
+            var info = character.Info;
+            if (info == null) { return; }
+            if (info.Head.SheetIndex != null)
+            {
+                Point location = ActiveSprite.SourceRect.Size * info.Head.SheetIndex.Value.ToPoint();
+                ActiveSprite.SourceRect = new Rectangle(location, ActiveSprite.SourceRect.Size);
+            }
+        }
+
         private string GetSpritePath(XElement element, SpriteParams spriteParams)
         {
             string texturePath = element.GetAttributeString("texture", null);
@@ -489,6 +501,12 @@ namespace Barotrauma
                 enableHuskSprite && HuskSprite != null && HuskSprite.HideLimb || 
                 OtherWearables.Any(w => w.HideLimb) || 
                 wearingItems.Any(w => w != null && w.HideLimb);
+
+            if (type == LimbType.Head)
+            {
+                CalculateHeadPosition();
+            }
+
             // TODO: there's now two calls to this, because body.Draw() method calls this too -> is this an issue?
             body.UpdateDrawPosition();
 

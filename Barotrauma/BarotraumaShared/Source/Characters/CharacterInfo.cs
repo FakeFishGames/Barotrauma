@@ -40,13 +40,13 @@ namespace Barotrauma
                         {
                             if (heads.TryGetValue(matchingHead, out Vector2 index))
                             {
-                                sheetIndex = index;
+                                SheetIndex = index;
                             }
                         }
                     }
                 }
             }
-            public Vector2? sheetIndex;
+            public Vector2? SheetIndex { get; private set; }
             public Vector2 headSpriteRange;
             public Gender gender;
             public Race race;
