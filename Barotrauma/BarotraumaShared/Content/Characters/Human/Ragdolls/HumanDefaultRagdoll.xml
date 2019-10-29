@@ -1,50 +1,50 @@
-﻿<Ragdoll type="human" colliderheightfromfloor="65" impacttolerance="7.5" draggable="True" texturescale="0.366" limbscale="1.075" jointscale="1.075" canentersubmarine="True" canwalk="True" spritesheetorientation="0">
+﻿<Ragdoll type="human" colliderheightfromfloor="65" impacttolerance="7.5" draggable="True" texturescale="0.366" limbscale="1.075" jointscale="1.075" canentersubmarine="True" canwalk="True" spritesheetorientation="0" texture="" mainlimb="Torso">
   <collider height="55" radius="15" name="Main Collider" width="0" />
   <collider height="40" radius="15" name="Secondary Collider" width="0" />
   <!-- head -->
-  <limb id="0" radius="13" mass="6" type="Head" attackpriority="2" healthindex="0" name="Limb 0" flip="True" steerforce="0" stepoffset="0,0" height="0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+  <limb id="0" radius="13" mass="6" type="Head" attackpriority="2" healthindex="0" name="Limb 0" flip="True" steerforce="0" stepoffset="0,0" height="0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <sprite texture="Content/Characters/Human/Heads/head_[GENDER]_[RACE].png" sourcerect="0,0,85,85" depth="0.1" origin="0.5,0.5" />
   </limb>
   <!-- body -->
-  <limb id="1" radius="14" height="26" mass="20" type="Torso" attackpriority="3" healthindex="1" name="Limb 1" flip="True" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+  <limb id="1" radius="14" height="26" mass="20" type="Torso" attackpriority="3" healthindex="1" name="Limb 1" flip="True" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <sprite texture="Content/Characters/Human/torso_[GENDER]_[RACE].png" sourcerect="2,0,119,257" depth="0.06" origin="0.5169492,0.4631148" />
   </limb>
-  <limb id="12" radius="13" mass="20" type="Waist" healthindex="1" name="Limb 12" flip="True" attackpriority="1" steerforce="0" stepoffset="0,0" height="0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+  <limb id="12" radius="13" mass="20" type="Waist" healthindex="1" name="Limb 12" flip="True" attackpriority="1" steerforce="0" stepoffset="0,0" height="0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <sprite texture="Content/Characters/Human/legs_[GENDER].png" sourcerect="0,1,98,90" depth="0.11" origin="0.4897959,0.6111111" />
   </limb>
   <!-- left arm -->
-  <limb id="2" radius="8" height="20" mass="3" type="LeftArm" healthindex="2" name="Limb 2" flip="True" attackpriority="1" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+  <limb id="2" radius="8" height="20" mass="3" type="LeftArm" healthindex="2" name="Limb 2" flip="True" attackpriority="1" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <sprite texture="Content/Characters/Human/torso_[GENDER]_[RACE].png" sourcerect="121,128,76,128" depth="0.15" origin="0.4868421,0.3658537" />
   </limb>
-  <limb id="3" radius="6" height="26" mass="3" type="LeftHand" pullpos="0,-18" healthindex="2" name="Limb 3" flip="True" attackpriority="1" steerforce="0" stepoffset="0,0" width="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+  <limb id="3" radius="6" height="26" mass="3" type="LeftHand" pullpos="0,-18" healthindex="2" name="Limb 3" flip="True" attackpriority="1" steerforce="0" stepoffset="0,0" width="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <sprite texture="Content/Characters/Human/torso_[GENDER]_[RACE].png" sourcerect="197,128,59,128" depth="0.16" origin="0.4576271,0.484375" />
   </limb>
   <!-- right arm -->
-  <limb id="4" radius="8" height="20" mass="3" type="RightArm" healthindex="3" name="Limb 4" flip="True" attackpriority="1" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+  <limb id="4" radius="8" height="20" mass="3" type="RightArm" healthindex="3" name="Limb 4" flip="True" attackpriority="1" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <sprite texture="Content/Characters/Human/torso_[GENDER]_[RACE].png" sourcerect="121,0,76,128" depth="0.01" origin="0.4868421,0.3658537" />
   </limb>
-  <limb id="5" radius="6" height="26" mass="3" type="RightHand" pullpos="0,-18" healthindex="3" name="Limb 5" flip="True" attackpriority="1" steerforce="0" stepoffset="0,0" width="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+  <limb id="5" radius="6" height="26" mass="3" type="RightHand" pullpos="0,-18" healthindex="3" name="Limb 5" flip="True" attackpriority="1" steerforce="0" stepoffset="0,0" width="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <sprite texture="Content/Characters/Human/torso_[GENDER]_[RACE].png" sourcerect="197,0,59,128" origin="0.4576271,0.484375" depth="0" />
   </limb>
   <!-- left leg -->
-  <limb id="6" radius="10" height="30" mass="8" type="LeftThigh" healthindex="4" name="Limb 6" flip="True" attackpriority="1" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+  <limb id="6" radius="10" height="30" mass="8" type="LeftThigh" healthindex="4" name="Limb 6" flip="True" attackpriority="1" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <sprite texture="Content/Characters/Human/legs_[GENDER].png" sourcerect="177,1,78,145" depth="0.15" origin="0.5316457,0.5310345" />
   </limb>
-  <limb id="7" radius="7" height="19.032" mass="5" type="LeftLeg" healthindex="4" name="Limb 7" flip="True" attackpriority="1" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+  <limb id="7" radius="7" height="19.032" mass="5" type="LeftLeg" healthindex="4" name="Limb 7" flip="True" attackpriority="1" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <sprite texture="Content/Characters/Human/legs_[GENDER].png" sourcerect="177,146,78,110" depth="0.16" origin="0.5384616,0.5" />
   </limb>
-  <limb id="8" radius="6" height="15" mass="2" type="LeftFoot" flip="True" pullpos="-4.7,2" healthindex="4" name="Limb 8" attackpriority="1" steerforce="0" stepoffset="0,0" width="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+  <limb id="8" radius="6" height="15" mass="2" type="LeftFoot" flip="True" pullpos="-4.7,2" healthindex="4" name="Limb 8" attackpriority="1" steerforce="0" stepoffset="0,0" width="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <sprite texture="Content/Characters/Human/legs_[GENDER].png" sourcerect="1,91,73,102" depth="0.17" origin="0.4520548,0.4117647" />
     <sound tag="footstep_metal" />
   </limb>
   <!-- right leg -->
-  <limb id="9" radius="10" height="30" mass="8" type="RightThigh" healthindex="5" name="Limb 9" flip="True" attackpriority="1" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+  <limb id="9" radius="10" height="30" mass="8" type="RightThigh" healthindex="5" name="Limb 9" flip="True" attackpriority="1" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <sprite texture="Content/Characters/Human/legs_[GENDER].png" sourcerect="99,1,78,145" depth="0.11" origin="0.5454546,0.5310345" />
   </limb>
-  <limb id="10" radius="7" height="19.032" mass="5" type="RightLeg" healthindex="5" name="Limb 10" flip="True" attackpriority="1" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+  <limb id="10" radius="7" height="19.032" mass="5" type="RightLeg" healthindex="5" name="Limb 10" flip="True" attackpriority="1" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <sprite texture="Content/Characters/Human/legs_[GENDER].png" sourcerect="99,146,78,110" depth="0.12" origin="0.5384616,0.5" />
   </limb>
-  <limb id="11" radius="6" height="15" mass="2" type="RightFoot" flip="True" pullpos="-4.669737,1.984612" healthindex="5" name="Limb 11" attackpriority="1" steerforce="0" stepoffset="0,0" width="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+  <limb id="11" radius="6" height="15" mass="2" type="RightFoot" flip="True" pullpos="-4.669737,1.984612" healthindex="5" name="Limb 11" attackpriority="1" steerforce="0" stepoffset="0,0" width="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,0">
     <sprite texture="Content/Characters/Human/legs_[GENDER].png" sourcerect="1,91,73,102" origin="0.4520548,0.4117647" depth="0.14" />
     <sound tag="footstep_metal" />
   </limb>
@@ -58,7 +58,7 @@
   <joint limb1="1" limb1anchor="-7.013377,8.597107" limb2="4" limb2anchor="0.1378281,6.515157" limitenabled="False" name="Joint 1 - 4" canbesevered="True" upperlimit="220.5413" lowerlimit="-65.71375" stiffness="0.25" />
   <joint limb1="4" limb1anchor="0.598445,-15.47756" limb2="5" limb2anchor="-0.2582154,15.09215" lowerlimit="3.949243" upperlimit="181.6321" canbesevered="True" name="Joint 4 - 5" limitenabled="True" stiffness="0.25" />
   <!-- body to left leg -->
-  <joint limb1="12" limb1anchor="3.045837,-0.2198574" limb2="6" limb2anchor="-2.293741,15.82768" lowerlimit="-11.98455" upperlimit="1.191315" canbesevered="True" name="Joint 12 - 6" limitenabled="True" stiffness="0.25" />
+  <joint limb1="12" limb1anchor="1.939754,-0.07583398" limb2="6" limb2anchor="-2.293741,15.82768" lowerlimit="-11.98455" upperlimit="1.191315" canbesevered="True" name="Joint 12 - 6" limitenabled="True" stiffness="0.25" />
   <joint limb1="6" limb1anchor="3.097271,-18.08422" limb2="7" limb2anchor="2.890171,17.48538" lowerlimit="-99.91029" upperlimit="-4.698214" canbesevered="True" name="Joint 6 - 7" limitenabled="True" stiffness="0.25" />
   <joint limb1="7" limb1anchor="-1.837945,-12.91255" limb2="8" limb2anchor="7.783974,5.812551" lowerlimit="45.68608" upperlimit="90" canbesevered="True" name="Joint 7 - 8" limitenabled="True" stiffness="0.25" />
   <!-- body to right leg -->
