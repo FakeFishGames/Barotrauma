@@ -60,7 +60,13 @@ namespace Barotrauma.Items.Components
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), textContainer.RectTransform), "", textColor: Color.LightBlue)
             {
                 ToolTip = TextManager.Get("PowerTransferTipLoad"),
-                TextGetter = () => { return loadStr.Replace("[load]", ((int)Math.Round(powerLoad)).ToString()); }
+                TextGetter = () => 
+                { 
+                    return loadStr.Replace("[load]", 
+                        this is RelayComponent relay ?
+                        ((int)Math.Round(relay.DisplayLoad)).ToString() :
+                        ((int)Math.Round(powerLoad)).ToString()); 
+                }
             };
         }
 
