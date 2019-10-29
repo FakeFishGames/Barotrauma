@@ -136,6 +136,12 @@
     <Wearable type="Hair" gender="male" race="asian">
       <sprite name="Male Asian Hair 3" texture="Content/Characters/Human/Heads/head_male_asian_hair_3.png" />
     </Wearable>
+    <Wearable type="Beard" gender="male" race="asian">
+      <sprite name="Male Asian Beard 1" texture="Content/Characters/Human/Heads/head_male_asian_beard_1.png" />
+    </Wearable>
+    <Wearable type="Moustache" gender="male" race="asian">
+      <sprite name="Male Asian Moustache 1" texture="Content/Characters/Human/Heads/head_male_asian_moustache_1.png" />
+    </Wearable>
     <Wearable type="Husk" gender="male" race="asian">
       <sprite name="Male Asian Husk" texture="Content/Characters/Human/Heads/head_male_asian_husk.png" />
     </Wearable>
@@ -146,14 +152,14 @@
     <Wearable type="Hair" gender="male" race="black">
       <sprite name="Male Black Hair 1" texture="Content/Characters/Human/Heads/head_male_black_hair_1.png" />
     </Wearable>
-    <Wearable type="Husk"  gender="male" race="black">
-      <sprite name="Male Black Husk" texture="Content/Characters/Human/Heads/head_male_black_husk.png" />
-    </Wearable>
     <Wearable type="Beard" gender="male" race="black">
       <sprite name="Male Black Beard 1" texture="Content/Characters/Human/Heads/head_male_black_beard_1.png" />
     </Wearable>
     <Wearable type="Moustache" gender="male" race="black">
       <sprite name="Male Black Moustache 1" texture="Content/Characters/Human/Heads/head_male_black_moustache_1.png" />
+    </Wearable>
+    <Wearable type="Husk"  gender="male" race="black">
+      <sprite name="Male Black Husk" texture="Content/Characters/Human/Heads/head_male_black_husk.png" />
     </Wearable>
     <Wearable type="Herpes" gender="male" race="black">
       <sprite name="Male Black Herpes" texture="Content/Characters/Human/Heads/head_male_black_herpes.png" />
