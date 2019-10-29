@@ -2316,11 +2316,7 @@ namespace Barotrauma
                 Selected = info.Gender == Gender.Female
             };
 
-            var hairCount = info.Wearables.Where(w =>
-                    Enum.TryParse(w.GetAttributeString("gender", "None"), true, out Gender g) && g == info.Gender &&
-                    Enum.TryParse(w.GetAttributeString("race", "None"), true, out Race r) && r == info.Race &&
-                    w.GetAttributeInt("headid", -1) == info.HeadSpriteId &&
-                    Enum.TryParse(w.GetAttributeString("type", "None"), true, out WearableType t) && t == WearableType.Hair).ToList().Count;
+            int hairCount = info.FilterByTypeAndHeadID(info.FilterElementsByGenderAndRace(info.Wearables), WearableType.Hair).Count();
             if (hairCount > 0)
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), leftColumn.RectTransform), TextManager.Get("FaceAttachment.Hair"));
@@ -2334,11 +2330,7 @@ namespace Barotrauma
                 };
             }
 
-            var beardCount = info.Wearables.Where(w =>
-                    Enum.TryParse(w.GetAttributeString("gender", "None"), true, out Gender g) && g == info.Gender &&
-                    Enum.TryParse(w.GetAttributeString("race", "None"), true, out Race r) && r == info.Race &&
-                    w.GetAttributeInt("headid", -1) == info.HeadSpriteId &&
-                    Enum.TryParse(w.GetAttributeString("type", "None"), true, out WearableType t) && t == WearableType.Beard).ToList().Count;
+            int beardCount = info.FilterByTypeAndHeadID(info.FilterElementsByGenderAndRace(info.Wearables), WearableType.Beard).Count();
             if (beardCount > 0)
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), leftColumn.RectTransform), TextManager.Get("FaceAttachment.Beard"));
@@ -2364,11 +2356,7 @@ namespace Barotrauma
                 CanBeFocused = false
             };
 
-            var moustacheCount = info.Wearables.Where(w =>
-                    Enum.TryParse(w.GetAttributeString("gender", "None"), true, out Gender g) && g == info.Gender &&
-                    Enum.TryParse(w.GetAttributeString("race", "None"), true, out Race r) && r == info.Race &&
-                    w.GetAttributeInt("headid", -1) == info.HeadSpriteId &&
-                    Enum.TryParse(w.GetAttributeString("type", "None"), true, out WearableType t) && t == WearableType.Moustache).ToList().Count;
+            int moustacheCount = info.FilterByTypeAndHeadID(info.FilterElementsByGenderAndRace(info.Wearables), WearableType.Moustache).Count();
             if (moustacheCount > 0)
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), rightColumn.RectTransform), TextManager.Get("FaceAttachment.Moustache"));
@@ -2382,11 +2370,7 @@ namespace Barotrauma
                 };
             }
 
-            var faceAttachmentCount = info.Wearables.Where(w =>
-                    Enum.TryParse(w.GetAttributeString("gender", "None"), true, out Gender g) && g == info.Gender &&
-                    Enum.TryParse(w.GetAttributeString("race", "None"), true, out Race r) && r == info.Race &&
-                    w.GetAttributeInt("headid", -1) == info.HeadSpriteId &&
-                    Enum.TryParse(w.GetAttributeString("type", "None"), true, out WearableType t) && t == WearableType.FaceAttachment).ToList().Count;
+            int faceAttachmentCount = info.FilterByTypeAndHeadID(info.FilterElementsByGenderAndRace(info.Wearables), WearableType.Beard).Count();
             if (faceAttachmentCount > 0)
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), rightColumn.RectTransform), TextManager.Get("FaceAttachment.Accessories"));
