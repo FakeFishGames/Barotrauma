@@ -668,9 +668,6 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\Clown\clown.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\Mechanic\mechanic_torso_male_3 .png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\Mechanic\mechanic_torso_male_3.png" />
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\Medic\medic_legs_female_2.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
