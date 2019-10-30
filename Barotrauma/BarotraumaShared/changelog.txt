@@ -1,61 +1,4 @@
 ---------------------------------------------------------------------------------------------------------
-v0.9.502.0 (community test build)
----------------------------------------------------------------------------------------------------------
-
-- Added idle and damage sounds for Hammerhead Matriarch.
-- AI characters don't set stationary batteries to recharge unless ordered to do so.
-- Added deconstruction recipes to all drugs.
-- Fixed errors when spawning legacy tiger threshers.
-- Fixed inability for mods to override jobs.
-- Nerfed welding fuel + diving mask combo. The tank depletes much faster and one tank is only enough to make the target fall unconscious, not to kill them.
-- Fixed empty exploding ammo boxes exploding when deconstructed.
-- Fixed clients being able to join servers after enabling a required content package in the settings, even though they need to restart first (leading to errors when a round starts).
-- Fixed start button and "ready to start" panel being visible in the server lobby when a round is already running.
-- Fixed restart timer not being visible in the server lobby.
-- Fixed old chat messages overlapping in the server lobby after the scrollbar of the chatbox becomes active.
-- Fixed textbox selection not being cleared when pressing Ctrl+Z or Ctrl+R, causing a crash if the selection is outside the bounds of the current text and the player attempts to remove text from the box.
-- Fixed humahusk not being used in multiplayer when a character becomes fully huskified.
-- Fixed crashing if a client has written something in the chatbox, gets disconnected and sends the message.
-- Don't allow reporting things while inside ruins.
-- Fixed handheld sonars having trouble staying powered.
-- Fixed servers showing up in the server lobby after the server has been shut down.
-- Fixed traitor missions not ending when the traitor dies and the traitor retaining their old mission info in the info menu.
-- Decreased the chance of selecting a traitor mission that's already been selected during the session.
-- Fixed dead characters still appearing in the crew list when a client joins mid-round.
-- Fixes to decorative sprites: Rotation property is in degrees, fixed offset anim type being used as the rotation anim.
-- Alarm buzzers twitch when active to make it more clear where the sound is coming from.
-- Improved color input layout in EntityEditors to prevent overlaps.
-- Added signal_in_x and signal_in_y connections to Atan component to make it easier to deal with vectors.
-- Balanced splash screen audio volumes.
-- Numerous improves to Kastrull and its drone.
-- Fixed "attempted to access a potentially removed character" console errors if a character dies while the client is waiting to apply the character's remote inventory state.
-- Launch server through CMD on Windows to work around alt-tab locking in fullscreen.
-- Fixed pumps calculating targetlevel incorrectly when receiving a "set_targetlevel" signal, causing neutral ballast level value in the sub editor to be off.
-- Fixes to waypoints and outdated structure sourcerects in Bunyip, Selkie & Venture.
-
----------------------------------------------------------------------------------------------------------
-v0.9.501.0 (community test build)
----------------------------------------------------------------------------------------------------------
-
-- New sound for charybdis and hammerhead matriarch. 
-- Removed sodium as a product of recycling fire extinguishers.
-- Added some loose vents and panels to Orca and Typhon.
-- Fixed clients not being cycled through in a random order when assigning jobs, causing the same player to be always selected as the captain.
-- Fixed the same client getting almost always assigned as the traitor.
-- Fixed inability to drag characters in multiplayer.
-- Fixed "unauthorized access" text popup when a bot tries to open a door they don't have access to.
-- Nicer chat message timestamp formatting.
-- Fixed shuttle dropdown being drawn below the submarine preview in server lobby.
-- Fixed sourcerects being moved when going through the sprite lists with arrow keys in the sprite editor.
-- Fixed hammerhead matriarch's tail not colliding with subs.
-- Removed a broken 2-traitor variant of the flood mission.
-- Fixed hammerhead spawns spinning out of control if their head comes off.
-- Fixed servers occasionally appearing in the server list twice.
-- Option to set a name for a character added by a mod without having to configure it in a separate text file. Use displayname="somemonster" in the character element to set the name.
-- Atan components calculate the output using Atan2 if the input is a vector (i.e. two numbers separated by a comma).
-- Potential fix to mudraptors spawned from eggs still emitting sounds and being reported as intruders by bots after dying.
-
----------------------------------------------------------------------------------------------------------
 v0.9.5.0
 ---------------------------------------------------------------------------------------------------------
 
@@ -65,10 +8,20 @@ Misc additions and changes:
 - Overhauled job assignment logic to make the job distribution a little more balanced. Now each client gets assigned one of the spawnpoints (and its associated job) according to their job preference, which means that if the sub for example has 2x as many engineer spawnpoints than medic spawnpoints, there tend to be 2x more engineers. When playing with a mod that adds new jobs to the game, spawnpoints that have no job associated with them are considered spawnpoints for the non-vanilla jobs.
 - New logic components: sin, cos, tan, asin, acos, atan, modulo, round, ceil, floor and factorial.
 - Improved autopilot: much faster and less likely to get stuck.
+- AI characters don't set stationary batteries to recharge unless ordered to do so.
 - Items can be made damageable by projectiles, melee weapons and explosions by adding DamagedByProjectiles="true", DamagedByMeleeWeapons="true" or DamagedByExplosions="true" to the config.
+- Nerfed welding fuel + diving mask combo. The tank depletes much faster and one tank is only enough to make the target fall unconscious, not to kill them.
+- Added deconstruction recipes to all drugs.
 - Added huskified face sprites to all characters.
 - Question prompt in the debug console and dedicated server console (such as "enter the reason to ban XXX") can be cancelled by pressing Ctrl+D or Ctrl+Z (or Ctrl+C in the in-game debug console).
 - Welding tools and plasma cutters explode when loaded with the wrong fuel.
+- Removed sodium as a product of recycling fire extinguishers.
+- Added some loose vents and panels to Orca and Typhon.
+- Option to set a name for a character added by a mod without having to configure it in a separate text file. Use displayname="somemonster" in the character element to set the name.
+- Balanced splash screen audio volumes.
+- Alarm buzzers twitch when active to make it more clear where the sound is coming from.
+- Scrollbars that work as on/off switches (e.g. power switches and autotemp sliders in item interfaces) can be toggled by clicking on them.
+- Decreased the chance of selecting a traitor mission that's already been selected during the session.
 
 Multiplayer:
 - Option to choose a "play style" for the servers to tell the players what kind of gameplay and rules they can expect on the server.
@@ -191,6 +144,11 @@ Character editor:
 
 Bugfixes:
 - Rewrote power distribution logic to resolve several issues and oddities in the way power was distributed across electrical grids, particularly when relays were used. The new system is also less performance intensive, so submarines that had performance issues due to large and complex power grids should now run better.
+- Fixed inability for mods to override jobs.
+- Fixed pumps calculating targetlevel incorrectly when receiving a "set_targetlevel" signal, causing neutral ballast level value in the sub editor to be off.
+- Fixed clients being able to join servers when they're using content packages the server doesn't have, which usually causes the client to get disconnected when a round starts.
+- Fixed clients being able to join servers after enabling a required content package in the settings, even though they need to restart first (leading to errors when a round starts).
+- Fixed "attempted to access a potentially removed character" console errors if a character dies while the client is waiting to apply the character's remote inventory state.
 - Fixed broken waypoints in Typhon that prevented bots from opening some of the doors.
 - Fixed characters being very hard or impossible to hit with melee weapons when they're laying on the floor.
 - Fixed characters placing their feet above a platform when not actually standing on the platform (noticeable in rooms where there's a platform on top of the "actual" floor).
@@ -199,8 +157,31 @@ Bugfixes:
 - Fixed characters stepping on nothing if their feet are below the lowest step of a ladder.
 - Fixed door components being selectable when the door is broken, causing characters to drop from ladders if they interact with a door while climbing.
 - Alien motion sensors don't react to dead bodies to prevent bodies from blocking the way through the ruins by constantly activating coils.
+- Fixes to waypoints and outdated structure sourcerects in Bunyip, Selkie & Venture.
 - Put the shotgun shells in Dugong's, Kastrull's and Humpback's armory inside the shotgun.
 - Fixed clients retaining their original character when taking control of another one in the multiplayer campaign, but keeping the items of the new character.
+- Fixed sourcerects being moved when going through the sprite lists with arrow keys in the sprite editor.
+- Fixed servers occasionally appearing in the server list twice.
+- Improved color input layout in EntityEditors to prevent overlaps.
+- Fixed flares not depleting when in inventory.
+- Fixed propeller position becoming unmirrored when saving and reloading a mirrored engine.
+- Fixed detection area offset becoming unmirrored when saving and reloading a mirrored motion sensor.
+- Fixed a couple of doors and hatches in vanilla subs being repairable with welding tools instead of wrenches.
+- Fixed ruins occasionally having rooms too narrow to pass through.
+- Fixed door gaps occasionally geting misplaced when placing them in ruins, preventing water from flowing through the room.
+- Fixed "picked/selected required" fields disappearing from the item editing panel in the submarine editor if left blank.
+- Fixed being able to hit through walls with melee weapons.
+- Fixed framerate issues when using passive sonar near large amounts of sound emitters (right outside a submarine for example).
+- Fixed empty exploding ammo boxes exploding when deconstructed.
+- Fixed old chat messages overlapping in the server lobby after the scrollbar of the chatbox becomes active.
+- Fixed textbox selection not being cleared when pressing Ctrl+Z or Ctrl+R, causing a crash if the selection is outside the bounds of the current text and the player attempts to remove text from the box.
+- Don't allow reporting things while inside ruins.
+- Fixed crashing if a client has written something in the chatbox, gets disconnected and sends the message.
+- Fixed servers showing up in the server lobby after the server has been shut down.
+- Fixed traitor missions not ending when the traitor dies and the traitor retaining their old mission info in the info menu.
+- Fixed dead characters still appearing in the crew list when a client joins mid-round.
+- Fixes to decorative sprites: Rotation property is in degrees, fixed offset anim type being used as the rotation anim.
+
 
 ---------------------------------------------------------------------------------------------------------
 v0.9.4.0
