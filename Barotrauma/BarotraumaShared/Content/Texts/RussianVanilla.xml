@@ -1102,17 +1102,17 @@
 <entitydescription.chargingdock>Настенная станция зарядки аккумуляторов.</entitydescription.chargingdock>
 <entityname.fpgacircuit>Схема на базе ППВМ</entityname.fpgacircuit>
 <entitydescription.fpgacircuit>Программируемая пользователем вентильная матрица - универсальная схема, конфигурацию которой можно свободно менять для использования в ряде электрических устройств.</entitydescription.fpgacircuit>
-<entityname.andcomponent>Элемент «И»</entityname.andcomponent>
+<entityname.andcomponent>Компонент «И»</entityname.andcomponent>
 <entitydescription.andcomponent>Отправляет сигнал, когда его получают оба входа примерно в одно и то же время.</entitydescription.andcomponent>
-<entityname.addercomponent>Элемент «Сложение»</entityname.addercomponent>
+<entityname.addercomponent>Компонент «Сложение»</entityname.addercomponent>
 <entitydescription.addercomponent>Выдает сумму принятых сигналов.</entitydescription.addercomponent>
-<entityname.orcomponent>Элемент «Или»</entityname.orcomponent>
+<entityname.orcomponent>Компонент «Или»</entityname.orcomponent>
 <entitydescription.orcomponent>Отправляет сигнал, когда его получает один из входов.</entitydescription.orcomponent>
-<entityname.notcomponent>Элемент «Не»</entityname.notcomponent>
+<entityname.notcomponent>Компонент «Не»</entityname.notcomponent>
 <entitydescription.notcomponent>Отправляет сигнал, когда вход его НЕ получает.</entitydescription.notcomponent>
-<entityname.relaycomponent>Элемент «Реле»</entityname.relaycomponent>
+<entityname.relaycomponent>Компонент «Реле»</entityname.relaycomponent>
 <entitydescription.relaycomponent>Во время работы направляет все принимаемые сигналы из входов к выходам.</entitydescription.relaycomponent>
-<entityname.delaycomponent>Элемент «Задержки»</entityname.delaycomponent>
+<entityname.delaycomponent>Компонент «Задержки»</entityname.delaycomponent>
 <entitydescription.delaycomponent>Задерживает все принимаемые сигналы на определенное время.</entitydescription.delaycomponent>
 <entityname.oxygendetector>Детектор кислорода</entityname.oxygendetector>
 <entitydescription.oxygendetector>Отправляет значение в диапазоне от 1 до 100, в зависимости от качества окружающего его воздуха.</entitydescription.oxygendetector>
@@ -1122,14 +1122,14 @@
 <entitydescription.smokedetector>Отправляет сигнал, когда детектор обнаруживает дым.</entitydescription.smokedetector>
 <entityname.motiondetector>Детектор движений</entityname.motiondetector>
 <entitydescription.motiondetector>Отправляет сигнал, когда детектор обнаруживает движение.</entitydescription.motiondetector>
-<entityname.signalcheckcomponent>Элемент проверки сигнала</entityname.signalcheckcomponent>
+<entityname.signalcheckcomponent>Компонент проверки сигнала</entityname.signalcheckcomponent>
 <entitydescription.signalcheckcomponent>Отправляет сигнал, когда детектор сам получает сигнал с определенным значением.</entitydescription.signalcheckcomponent>
-<entityname.regexcomponent>Элемент поиска регулярных выражение</entityname.regexcomponent>
+<entityname.regexcomponent>Компонент поиска регулярных выражений</entityname.regexcomponent>
 <entitydescription.regexcomponent>Отправляет сигнал, если детектор сам получает сигнал, соответствующий схеме определенного регулярного выражения.</entitydescription.regexcomponent>
 <entityname.oscillator>Осциллятор</entityname.oscillator>
 <entitydescription.oscillator>Отправляет периодический колеблющийся сигнал.</entitydescription.oscillator>
-<entityname.wificomponent>Беспроводной элемент</entityname.wificomponent>
-<entitydescription.wificomponent>Обеспечивает беспроводную связь с другими беспроводными элементами, работающими на том же канале.</entitydescription.wificomponent>
+<entityname.wificomponent>Беспроводной компонент</entityname.wificomponent>
+<entitydescription.wificomponent>Обеспечивает беспроводную связь с другими беспроводными компонентами, работающими на том же канале.</entitydescription.wificomponent>
 <entityname.camera>Камера</entityname.camera>
 <entitydescription.camera>Устанавливается на оптронную мачту и передает на подлодку высокоточное изображение окружающей местности.</entitydescription.camera>
 <entityname.button>Кнопка</entityname.button>
@@ -1154,7 +1154,7 @@
 <entitydescription.blackwire>Соединяет выходной контакт одного устройства с входным контактом другого.</entitydescription.blackwire>
 <entityname.brownwire>Коричневый провод</entityname.brownwire>
 <entitydescription.brownwire>Соединяет выходной контакт одного устройства с входным контактом другого.</entitydescription.brownwire>
-<entityname.lightcomponent>Осветительный элемент</entityname.lightcomponent>
+<entityname.lightcomponent>Осветительный компонент</entityname.lightcomponent>
 <entitydescription.lightcomponent>Освещение общего назначения. Работает без электропитания.</entitydescription.lightcomponent>
 <entityname.emergencysiren>Аварийная сирена</entityname.emergencysiren>
 <entitydescription.emergencysiren>После активации издает ужасный шум.</entitydescription.emergencysiren>
@@ -2961,16 +2961,188 @@
 <replaceshuttles>Заменить</replaceshuttles>
 <replaceshuttledockingportoccupied>Потерянный челнок нельзя заменить, так как стыковочный порт уже используется. Освободите порт перед позиционированием челнока.</replaceshuttledockingportoccupied>
 <character.blackmoloch>Черный молох</character.blackmoloch>
-<character.goldenhammerhead>Золотой молотоглав</character.goldenhammerhead>
+<character.hammerheadgold>Золотой молотоглав</character.hammerheadgold>
 <character.hammerheadmatriarch>Молотоглав-матриарх</character.hammerheadmatriarch>
-<character.bonetigerthresher>Костяной акулий тигр</character.bonetigerthresher>
+<character.bonethresher>Костяной акулий тигр</character.bonethresher>
 
-<!-- Updated values as of 13th of August -->
+<!-- New Additions for the November update -->
+<submarine.name.kastrull>Кастрюля</submarine.name.kastrull>
+<submarine.description.kastrull>Кастрюля – надежная ударная субмарина со значительной огневой мощью, и, хотя она довольно неповоротлива, при ней, как правило, есть дрон с тяжелым вооружением. Эта подлодка с экспериментальными открытыми балластными баками, низкой устойчивостью к затоплению и многочисленными рабочими станциями для экипажа достигает максимальной эффективности с большой и опытной командой.</submarine.description.kastrull>
 
+<gamemodedescription.singleplayercampaign>Отправляйтесь в плавание по глубоким водам Европы. Путешествуйте от одной точки к другой, выполняйте задания, зарабатывайте деньги, чтобы покупать припасы, открывайте новые зоны - и постепенно раскрывайте тайны Европы.</gamemodedescription.singleplayercampaign>
+<gamemodedescription.sandbox>В этом режиме игры нет никаких особых целей.</gamemodedescription.sandbox>
+<gamemodedescription.mission>Команда должна работать слаженно и выполнить конкретное задание, например захват инопланетных артефактов или уничтожение существ, терроризирующих ближайшие аванпосты. Игра закончится, когда задание будет выполнено или вся команда погибнет.</gamemodedescription.mission>
+<gamemodedescription.multiplayercampaign>Отправляйтесь в плавание по глубоким водам Европы. Путешествуйте от одной точки к другой, выполняйте задания, зарабатывайте деньги, чтобы покупать припасы, открывайте новые зоны - и постепенно раскрывайте тайны Европы.</gamemodedescription.multiplayercampaign>
 
+<entityname.sincomponent>Компонент Синус</entityname.sincomponent>
+<entitydescription.sincomponent>Выдает синус введенного значения.</entitydescription.sincomponent>
+<entityname.coscomponent>Компонент Косинус</entityname.coscomponent>
+<entitydescription.coscomponent>Выдает косинус введенного значения.</entitydescription.coscomponent>
+<entityname.tancomponent>Компонент Тангенс</entityname.tancomponent>
+<entitydescription.tancomponent>Выдает тангенс введенного значения.</entitydescription.tancomponent>
+<entityname.asincomponent>Компонент Арксинус</entityname.asincomponent>
+<entitydescription.asincomponent>Выдает угол, синус которого равен введенному значению.</entitydescription.asincomponent>
+<entityname.acoscomponent>Компонент Арккосинус</entityname.acoscomponent>
+<entitydescription.acoscomponent>Выдает угол, косинус которого равен введенному значению.</entitydescription.acoscomponent>
+<entityname.atancomponent>Компонент Арктангенс</entityname.atancomponent>
+<entitydescription.atancomponent>Выдает угол, тангенс которого равен введенному значению.</entitydescription.atancomponent>
+<entityname.modulocomponent>Компонент Остаток</entityname.modulocomponent>
+<entitydescription.modulocomponent>Выдает остаток от деления введенного значения на определенное число.</entitydescription.modulocomponent>
+<entityname.roundcomponent>Компонент Округление</entityname.roundcomponent>
+<entitydescription.roundcomponent>Округляет числовое значение до ближайшего целого числа.</entitydescription.roundcomponent>
+<entityname.ceilcomponent>Компонент Верхнее округление</entityname.ceilcomponent>
+<entitydescription.ceilcomponent>Выдает наименьшее целое число, которое равно или больше, чем введенное значение.</entitydescription.ceilcomponent>
+<entityname.floorcomponent>Компонент Нижнее округление</entityname.floorcomponent>
+<entitydescription.floorcomponent>Выдает наибольшее целое число, которое равно или меньше, чем введенное значение.</entitydescription.floorcomponent>
+<entityname.factorialcomponent>Компонент Факториал</entityname.factorialcomponent>
+<entitydescription.factorialcomponent>Выдает факториал введенного значения.</entitydescription.factorialcomponent>
+<entityname.squarerootcomponent>Компонент Квадратный корень</entityname.squarerootcomponent>
+<entitydescription.squarerootcomponent>Выдает квадратный корень введенного значения.</entitydescription.squarerootcomponent>
+<entityname.abscomponent>Компонент Модуль</entityname.abscomponent>
+<entitydescription.abscomponent>Выдает абсолютную величину введенного значения.</entitydescription.abscomponent>
+<entityname.powcomponent>Компонент Возведение в степень</entityname.powcomponent>
+<entitydescription.powcomponent>Выдает введенное значение, возведенное в определенную степень.</entitydescription.powcomponent>
 
+<connection.setmodulus>назначить_абсолютное_значение</connection.setmodulus>
+<shuttle>Челнок</shuttle>
+<privacypolicy>Политика конфиденциальности</privacypolicy>
+<entityname.mudraptoregg>Яйцо грязевого раптора</entityname.mudraptoregg>
+<entitydescription.mudraptoregg>Покрытое слизью, пульсирующее яйцо грязевого раптора. Зияющая пасть на верхушке яйца словно желает схватить что-нибудь и сожрать.</entitydescription.mudraptoregg>
 
+<!-- Server lobby 2.0 -->
+<serverlisttab.all>Все серверы</serverlisttab.all>
+<serverlisttab.favorites>Избранные</serverlisttab.favorites>
+<serverlisttab.recent>Недавние</serverlisttab.recent>
+<addtofavorites>Добавить в избранные</addtofavorites>
+<removefromfavorites>Удалить из избранных</removefromfavorites>
+<servertag.casual>Развлечение</servertag.casual>
+<servertagdescription.casual>Удовольствие от игры важнее, чем выполнение заданий. Хороший выбор для новых игроков.</servertagdescription.casual>
+<servertag.serious>Все всерьез</servertag.serious>
+<servertagdescription.serious>Команда должна сосредоточиться на слаженной работе для выполнения задания. Никакой лишней суеты.</servertagdescription.serious>
+<servertag.roleplay>Ролевая игра</servertag.roleplay>
+<servertagdescription.roleplay>Команда старается действовать, как экипаж настоящей подлодки. Важно соблюдать субординацию, выполнять свою работу и приказы командования. Во время раунда следует избегать разговоров не от лица ваших персонажей.</servertagdescription.roleplay>
+<servertag.somethingdifferent>Что-то другое</servertag.somethingdifferent>
+<servertagdescription.somethingdifferent>Игровой процесс значительно отличается от обычной игры Barotrauma. Серверы с модами, своеобразные подлодки, раунды Королевской битвы, гонки на челноках, карты на прохождение... Это может быть что угодно!</servertagdescription.somethingdifferent>
+<servertag.rampage>Неистовство</servertag.rampage>
+<servertagdescription.rampage>Готовьтесь к бою не на жизнь, а на смерть! Сервер ориентирован на сражения. Это могут быть битвы PvP, PvE или и то, и другое сразу — в описании сервера должно быть указано, какого рода насилие на нем разрешено.</servertagdescription.rampage>
+<servertag.modded.true>Моды</servertag.modded.true>
+<servertagdescription.modded.true>На этом сервере используются моды. Для игры на нем может потребоваться установка модов из мастерской.</servertagdescription.modded.true>
+<servertag.modded.false>Базовая игра</servertag.modded.false>
+<servertagdescription.modded.false>На этом сервере не используются модификации.</servertagdescription.modded.false>
+<servertag.247.true>24/7</servertag.247.true>
+<servertagdescription.247.true>Работает круглосуточно.</servertagdescription.247.true>
+<servertag.247.false>С отключением</servertag.247.false>
+<servertagdescription.247.false>Этот сервер работает не круглосуточно.</servertagdescription.247.false>
+<servertag.friendlyfire.true>Огонь по своим включен</servertag.friendlyfire.true>
+<servertagdescription.friendlyfire.true>Попадания по союзникам наносят урон.</servertagdescription.friendlyfire.true>
+<servertag.friendlyfire.false>Огонь по своим отключен</servertag.friendlyfire.false>
+<servertagdescription.friendlyfire.false>Попадания по союзникам не наносят урона.</servertagdescription.friendlyfire.false>
+<servertag.voip.true>Голосовой чат включен</servertag.voip.true>
+<servertagdescription.voip.true>Голосовой чат включен.</servertagdescription.voip.true>
+<servertag.voip.false>Голосовой чат отключен</servertag.voip.false>
+<servertagdescription.voip.false>Голосовой чат отключен.</servertagdescription.voip.false>
+<servertag.karma.true>Карма включена</servertag.karma.true>
+<servertagdescription.karma.true>Включена система кармы.</servertagdescription.karma.true>
+<servertag.karma.false>Карма отключена</servertag.karma.false>
+<servertagdescription.karma.false>Система кармы отключена.</servertagdescription.karma.false>
+<servertag.traitors.true>Предатели включены</servertag.traitors.true>
+<servertagdescription.traitors.true>На этом сервере работает система предательства.</servertagdescription.traitors.true>
+<servertag.traitor.false>Предатели отключены</servertag.traitor.false>
+<servertagdescription.traitors.false>На этом сервере нет системы предательства.</servertagdescription.traitors.false>
+<friendplayingbarotrauma>Играет в Barotrauma</friendplayingbarotrauma>
+<friendplayinganothergame>Играет в другую игру</friendplayinganothergame>
+<friendnotplaying>Не играет</friendnotplaying>
+<serversettingsplaystyle>Стиль игры</serversettingsplaystyle>
+<serversettingsallowfriendlyfire>Разрешить огонь по своим</serversettingsallowfriendlyfire>
+<serversettingsallowrewiring>Разрешить работу с проводкой</serversettingsallowrewiring>
+<serversettingsallowdisguises>Разрешить маскировку</serversettingsallowdisguises>
+<filtersameversion>Та же версия</filtersameversion>
+<filterwhitelistedservers>Показать белый список</filterwhitelistedservers>
+<!-- Misc -->
+<chat.shownewmessages>Показать новые сообщения</chat.shownewmessages>
+<chat>Чат</chat>
+<clicktoselectjob>Щелкните для выбора профессии</clicktoselectjob>
+<faceattachment.hair>Волосы</faceattachment.hair>
+<faceattachment.beard>Борода</faceattachment.beard>
+<faceattachment.moustache>Усы</faceattachment.moustache>
+<faceattachment.accessories>Аксессуары</faceattachment.accessories>
+<characterappearance>Внешность</characterappearance>
+<disconnect>Отключиться</disconnect>
+<endcampaignverification>Вы уверены, что хотите завершить кампанию? Все несохраненные данные будут потеряны.</endcampaignverification>
+<leveldifficultyexplanation>Уровень сложности влияет на то, как будет сгенерирован уровень и какие обитатели глубин вам встретятся. Чем выше уровень сложности, тем больше природных опасностей, многочисленнее неведомые существа и опаснее враги.</leveldifficultyexplanation>
+<subnotdownloaded>Подлодка не загружена</subnotdownloaded>
 
+<difficulty.easy>Низкий</difficulty.easy>
+<difficulty.medium>Средний</difficulty.medium>
+<difficulty.hard>Высокий</difficulty.hard>
+<difficulty.hellish>Максимальный</difficulty.hellish>
 
+<!-- New traitor goals -->
+<traitorgoalkilltargetinfowithcause>Убить цель: [targetname], способ: [causeofdeath].</traitorgoalkilltargetinfowithcause>
+<traitorgoalkilltargetinfowithhull>Убить цель: [targetname], оставить тело здесь: [targethullname].</traitorgoalkilltargetinfowithhull>
+<traitorgoalkilltargetinfowithcauseandhull>Убить цель: [targetname], способ: [causeofdeath], оставить тело здесь: [targethullname].</traitorgoalkilltargetinfowithcauseandhull>
+<traitorgoalpoisoneveryoneinfo>Ввести всем членам экипажа яд: [poison].</traitorgoalpoisoneveryoneinfo>
+<traitorgoalkeepalive>Защищать существо [speciesname] в течение [duration] с.</traitorgoalkeepalive>
+
+<!-- Goblin mission -->
+<goblins_traitormissionstartinfotext>Услышав скрежет внизу, вы вспомнили, что балластных гоблинов давно не кормили. К счастью, мяса у вас в запасе предостаточно.</goblins_traitormissionstartinfotext>
+<goblins_traitorobjectivestartmessage1>Но сначала надо добавить приправу. На хорошей кухне всегда найдется немало изысканных приправ, но нам сейчас нужен чистейший цианид.\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage1>
+<goblins_objectivesuccessmessage1>Да, это подойдет.</goblins_objectivesuccessmessage1>
+<goblins_traitorobjectivestartmessage2>Для затравки добавим водички.\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage2>
+<goblins_objectivesuccessmessage2>Вот так.</goblins_objectivesuccessmessage2>
+<goblins_traitorobjectivestartmessage3>Кто-нибудь хочет попробовать эту закуску?\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage3>
+<goblins_objectivesuccessmessage3>Только посмотрите, какое это мясо нежное и сочное!</goblins_objectivesuccessmessage3>
+<goblins_traitorobjectivestartmessage4>А теперь основное блюдо: \n[traitorgoalinfos]</goblins_traitorobjectivestartmessage4>
+<goblins_objectivesuccessmessage4>Теперь гоблины накормлены, но кладовая опустела. Пора пополнить припасы на следующей станции.</goblins_objectivesuccessmessage4>
+
+<!-- Oxygen sabotage mission -->
+<oxygen_sabotage_traitormissionstartinfotext>Пора провести очередной эксперимент. На этот раз мы исследуем реакцию человеческого тела на нехватку кислорода.</oxygen_sabotage_traitormissionstartinfotext>
+<oxygen_sabotage_traitorobjectivestartmessage1>Подопытные набраны, можно приступать к эксперименту.\n[traitorgoalinfos]</oxygen_sabotage_traitorobjectivestartmessage1>
+<oxygen_sabotage_objectivesuccessmessage1>Вскоре подопытные что-то почувствуют. Симптомы кислородного голодания включают в себя, не ограничиваясь перечисленным: посинение конечностей, судороги и головокружение.</oxygen_sabotage_objectivesuccessmessage1>
+<oxygen_sabotage_traitorobjectivestartmessage2>Когда соберете достаточно экспериментальных данных, избавьтесь от подопытных.\n[traitorgoalinfos]</oxygen_sabotage_traitorobjectivestartmessage2>
+<oxygen_sabotage_objectivesuccessmessage2>Еще один успешный эксперимент. Нужно сообщить о нем на ближайший аванпост Коалиции.</oxygen_sabotage_objectivesuccessmessage2>
+
+<!-- Acidparty mission -->
+<acidparty_traitormissionstartinfotext>У вас в кармане обнаружилась небрежно нацарапанная записка. Знаешь, что? Вот эта штука в центре луны, ты же про нее в курсе, да? А что если есть способ посмотреть, что это такое, не отправляясь туда физически?</acidparty_traitormissionstartinfotext>
+<acidparty_traitorobjectivestartmessage1>Шаг 1. Найдите делими- удали- де- штуку, на которой есть DEL, ясно? \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage1>
+<acidparty_objectivesuccessmessage1>Наверное, это оно. У меня такого еще не было.</acidparty_objectivesuccessmessage1>
+<acidparty_traitorobjectivestartmessage2>Шаг 2. Иногда на подлодках бывают такие... которые закрывают обзор, ясно? По сути, что они делают, это как бы приземляют тебя, и ты потом видишь как бы сильно узкую картину реальности, да? Так вот, что тебе надо сделать, так это избавиться от них. Эта дрянь называется как-то типа халле-берри-дил или вроде того. \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage2>
+<acidparty_objectivesuccessmessage2>Вроде получилось.</acidparty_objectivesuccessmessage2>
+<acidparty_traitorobjectivestartmessage3>Шаг 3. Правило номер один: надо делиться. Что у нас здесь есть, так это какие-то люди, да? Какие-то люди, которым промыли мозги, так что они теперь боятся всего, что угрожает их представлениям о мире, ясно? Так что, тебе придется найти способ пропихнуть это дерьмо внутрь их системы, ясно? \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage3>
+<acidparty_objectivesuccessmessage3>Шаг 4. Ложись и слушай волны, дружище.</acidparty_objectivesuccessmessage3>
+
+<!-- Tainted welding mission -->
+<tainted_welding_traitorobjectivestartmessage2>Приемник шипит и потрескивает, но сквозь шум помех вам все же удается разобрать сообщение: Руководство Сил сопротивления Европы разрешает приступить к выполнению задания. Эту подлодку следует затопить, и это должно выглядеть, как несчастный случай. Для начала нужно испортить сварочное оборудование.\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage2>
+<tainted_welding_goalinfotext_2>Замените сварочное топливо на кислородные баллоны не менее чем в 70% сварочных аппаратов подлодки.</tainted_welding_goalinfotext_2>
+<tainted_welding_objectivesuccessmessage2>Отлично! Кислородные баллоны хорошо поддерживают горение, если зарядить их в сварочные аппараты.</tainted_welding_objectivesuccessmessage2>
+<tainted_welding_traitorobjectivestartmessage3>Теперь следует избавиться от этого топлива, чтобы команда не смогла им воспользоваться позже:\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage3>
+<tainted_welding_objectivesuccessmessage3>Отлично! Команда оказалась в весьма неприятной ситуации, и даже не знает об этом.</tainted_welding_objectivesuccessmessage3>
+<tainted_welding_traitorobjectivestartmessage4>А теперь быстро запускайте ловушку!\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage4>
+<tainted_welding_objectivesuccessmessage4>Отличная работа, товарищ! Теперь эти свиньи обречены.</tainted_welding_objectivesuccessmessage4>
+<tainted_welding_traitorobjectivestartmessage5>Пора покинуть это место! Скоро прибудет челнок, который заберет вас оттуда!\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage5>
+<tainted_welding_objectivesuccessmessage5>На вашем водолазном скафандре сработал сигнал тревоги... Челнок уже давно должен был подобрать вас, но в окружающем мраке движутся лишь косяки инопланетных организмов. Вы передали следующее сообщение: Руководство Сил сопротивления Европы, прием! Запрашиваю эвакуацию! Приемник молчал. Вы брошены на произвол судьбы. Вас приняла в свои объятия Европа.</tainted_welding_objectivesuccessmessage5>
+
+<!-- One of Us mission -->
+<one_of_us_goalinfotext_2>Священные сосуды с молодью трупного паразита были спрятаны за открытым клапаном вентиляции. Скорее отыщите эти яйца, пока на них не наткнулся кто-то еще!</one_of_us_goalinfotext_2>
+<one_of_us_objectivesuccessmessage2>Обнаружение яиц приносит вам поистине невиданное удовольствие. На миг в вашей голове раздается сухой безумный хохот, который быстро сменяется жутковатым влажным пощелкиванием.</one_of_us_objectivesuccessmessage2>
+<one_of_us_objectivesuccessmessage3>У вас кружится голова, все вокруг темнеет. Последние каликсаниды уничтожены.</one_of_us_objectivesuccessmessage3>
+<one_of_us_traitorobjectivestartmessage4>Вы читаете последнее указание:\n[traitorgoalinfos]</one_of_us_traitorobjectivestartmessage4>
+<one_of_us_goalinfotext_4>Все на этой подлодке должны подцепить трупного паразита!</one_of_us_goalinfotext_4>
+
+<!-- Easter bunny mission -->
+<easterbunny_goalinfotext_1>Найдите каждое яйцо, все до единого! Они могут быть спрятаны в вентиляции.</easterbunny_goalinfotext_1>
+<easterbunny_objectivesuccessmessage1>Яйцо вызывает у вас отвращение, но прекрасно помещается в ваш карман. КО-КО!</easterbunny_objectivesuccessmessage1>
+<easterbunny_traitorobjectivestartmessage2>Вырастите яйцо:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage2>
+<easterbunny_goalinfotext_2>Найдите безопасное место, чтобы вырастить яйцо, и давайте ему корм: [catalystitem].</easterbunny_goalinfotext_2>
+<easterbunny_objectivesuccessmessage2>Яйцо распухает и издает странные звуки... Вы вот-вот станете родителем!</easterbunny_objectivesuccessmessage2>
+<easterbunny_traitorobjectivestartmessage3>Яйцо раскалывается, и из него появляется грязевой раптор:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage3>
+<easterbunny_goalinfotext_3>Сделайте все возможное, чтобы грязевой раптор прожил хотя бы 3 минуты.</easterbunny_goalinfotext_3>
+<easterbunny_objectivesuccessmessage3>Ко-ко, ко-ко! Это было забавно. Человек с раскрашенным лицом будет просто в шоке, когда узнает, как тут все прошло.</easterbunny_objectivesuccessmessage3>
+<easterbunny_traitorobjectivestartmessage4>Спастись:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage4>
+
+<!-- Modified values -->
+<pausemenuquitverification>Вернуться в главное меню? Все несохраненные данные будут потеряны.</pausemenuquitverification>
+<leveldifficulty>Сложность</leveldifficulty>
+<connection.set_text>назначить_текст</connection.set_text>
 
 </infotexts>

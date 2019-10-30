@@ -2962,16 +2962,188 @@
 <replaceshuttles>Substituir</replaceshuttles>
 <replaceshuttledockingportoccupied>O submersível perdido não pode ser substituído porque a porta de acoplagem já está em uso. Libere a porta de acoplagem para solicitar um novo submersível.</replaceshuttledockingportoccupied>
 <character.blackmoloch>Moloque Preto</character.blackmoloch>
-<character.goldenhammerhead>Predador-Martelo Dourado</character.goldenhammerhead>
+<character.hammerheadgold>Predador-Martelo Dourado</character.hammerheadgold>
 <character.hammerheadmatriarch>Matriarca Predador-Martelo</character.hammerheadmatriarch>
-<character.bonetigerthresher>Debulhador-Tigre de Osso</character.bonetigerthresher>
+<character.bonethresher>Debulhador-Tigre de Osso</character.bonethresher>
 
-<!-- Updated values as of 13th of August -->
+<!-- New Additions for the November update -->
+<submarine.name.kastrull>Kastrull</submarine.name.kastrull>
+<submarine.description.kastrull>O Kastrull é um submarino de ataque confiável, com grande poder de fogo em qualquer situação. Apesar de não ser muito ágil, conta com um drone de caça como padrão. Lembre-se de que com os tanques experimentais de lastro abertos, uma baixa tolerância para alagamentos e diversas estações para tripulantes, uma tripulação grande e experiente poderá tirar o melhor proveito deste submarino.</submarine.description.kastrull>
 
+<gamemodedescription.singleplayercampaign>Embarque em uma jornada pelas profundezas de Europa. Viaje de um local a outro, conclua missões para ganhar dinheiro para suprimentos, descubra novos biomas — e talvez um dia você consiga desvendar os segredos de Europa.</gamemodedescription.singleplayercampaign>
+<gamemodedescription.sandbox>Modo de jogo sem objetivos específicos.</gamemodedescription.sandbox>
+<gamemodedescription.mission>Os tripulantes precisam trabalhar juntos para concluir uma tarefa específica, como recuperar um artefato alienígena ou matar uma criatura que está aterrorizando postos avançados próximos. O jogo termina quando a tarefa é concluída ou quando todos na tripulação morrem.</gamemodedescription.mission>
+<gamemodedescription.multiplayercampaign>Embarque em uma jornada pelas profundezas de Europa. Viaje de um local a outro, conclua missões para ganhar dinheiro para suprimentos, descubra novos biomas — e talvez um dia você consiga desvendar os segredos de Europa.</gamemodedescription.multiplayercampaign>
 
+<entityname.sincomponent>Componente Sen</entityname.sincomponent>
+<entitydescription.sincomponent>Gera a saída do seno da entrada.</entitydescription.sincomponent>
+<entityname.coscomponent>Componente Cos</entityname.coscomponent>
+<entitydescription.coscomponent>Gera a saída do cosseno da entrada.</entitydescription.coscomponent>
+<entityname.tancomponent>Componente Tan</entityname.tancomponent>
+<entitydescription.tancomponent>Gera a saída da tangente da entrada.</entitydescription.tancomponent>
+<entityname.asincomponent>Componente Asen</entityname.asincomponent>
+<entitydescription.asincomponent>Gera a saída do ângulo cujo seno é igual à entrada.</entitydescription.asincomponent>
+<entityname.acoscomponent>Componente Acos</entityname.acoscomponent>
+<entitydescription.acoscomponent>Gera a saída do ângulo cujo cosseno é igual à entrada.</entitydescription.acoscomponent>
+<entityname.atancomponent>Componente Atan</entityname.atancomponent>
+<entitydescription.atancomponent>Gera a saída do ângulo cuja tangente é igual à entrada.</entitydescription.atancomponent>
+<entityname.modulocomponent>Componente Módulo</entityname.modulocomponent>
+<entitydescription.modulocomponent>Gera a saída do resto ao dividir a entrada por um número determinado.</entitydescription.modulocomponent>
+<entityname.roundcomponent>Componente Arredondar</entityname.roundcomponent>
+<entitydescription.roundcomponent>Arredonda uma entrada numérica para o valor inteiro mais próximo.</entitydescription.roundcomponent>
+<entityname.ceilcomponent>Componente Teto</entityname.ceilcomponent>
+<entitydescription.ceilcomponent>Gera a saída do menor valor inteiro que é maior ou igual à entrada.</entitydescription.ceilcomponent>
+<entityname.floorcomponent>Componente Piso</entityname.floorcomponent>
+<entitydescription.floorcomponent>Gera a saída do maior valor inteiro que é menor ou igual à entrada.</entitydescription.floorcomponent>
+<entityname.factorialcomponent>Componente Fatorial</entityname.factorialcomponent>
+<entitydescription.factorialcomponent>Gera a saída do fatorial da entrada.</entitydescription.factorialcomponent>
+<entityname.squarerootcomponent>Componente Raiz Quadrada</entityname.squarerootcomponent>
+<entitydescription.squarerootcomponent>Gera a saída da raiz quadrada da entrada.</entitydescription.squarerootcomponent>
+<entityname.abscomponent>Componente Abs</entityname.abscomponent>
+<entitydescription.abscomponent>Gera a saída do valor absoluto da entrada.</entitydescription.abscomponent>
+<entityname.powcomponent>Componente Exponencial</entityname.powcomponent>
+<entitydescription.powcomponent>Gera a saída da entrada elevada a uma potência determinada.</entitydescription.powcomponent>
 
+<connection.setmodulus>definir_módulo</connection.setmodulus>
+<shuttle>Submersível</shuttle>
+<privacypolicy>Política de privacidade</privacypolicy>
+<entityname.mudraptoregg>Ovo de Raptor de Terra</entityname.mudraptoregg>
+<entitydescription.mudraptoregg>Ovo gosmento e pulsante de raptor de terra. A boca escancarada na parte superior do ovo parece estar em busca de algo para comer.</entitydescription.mudraptoregg>
 
+<!-- Server lobby 2.0 -->
+<serverlisttab.all>Todos os servidores</serverlisttab.all>
+<serverlisttab.favorites>Favoritos</serverlisttab.favorites>
+<serverlisttab.recent>Recente</serverlisttab.recent>
+<addtofavorites>Adicionar a favoritos</addtofavorites>
+<removefromfavorites>Remover dos favoritos</removefromfavorites>
+<servertag.casual>Casual</servertag.casual>
+<servertagdescription.casual>Se divertir é mais importante do que concluir o objetivo. Uma boa escolha para novos jogadores.</servertagdescription.casual>
+<servertag.serious>Sério</servertag.serious>
+<servertagdescription.serious>Os tripulantes devem se concentrar em trabalhar juntos de maneira eficiente para concluir o objetivo. Sem brincadeiras desnecessárias.</servertagdescription.serious>
+<servertag.roleplay>Roleplay</servertag.roleplay>
+<servertagdescription.roleplay>A tripulação deve tentar agir como uma tripulação de submarino real. A hierarquia tem um papel importante e todos devem cuidar de suas responsabilidades e seguir ordens. Durante uma rodada, tripulantes devem evitar falar fora de seus personagens.</servertagdescription.roleplay>
+<servertag.somethingdifferent>Algo diferente</servertag.somethingdifferent>
+<servertagdescription.somethingdifferent>O jogo difere significativamente de um jogo comum de Barotrauma. Servidores com mods, submarinos totalmente fora do padrão, rodadas de battle royale, corrida de submersíveis, mapas de corrida mortal... Vale tudo!</servertagdescription.somethingdifferent>
+<servertag.rampage>Massacre</servertag.rampage>
+<servertagdescription.rampage>Prepare-se para lutar pela sua vida! Um servidor voltado totalmente para o combate. Isso pode significar combate jogador x jogador, jogador x ambiente ou ambos — a descrição do servidor deve incluir orientações sobre o tipo de violência permitida no servidor.</servertagdescription.rampage>
+<servertag.modded.true>Com mod</servertag.modded.true>
+<servertagdescription.modded.true>Um ou mais mods estão habilitados. Talvez seja preciso instalar mods na Oficina para entrar no servidor.</servertagdescription.modded.true>
+<servertag.modded.false>Original</servertag.modded.false>
+<servertagdescription.modded.false>O servidor não utiliza mods.</servertagdescription.modded.false>
+<servertag.247.true>24/7</servertag.247.true>
+<servertagdescription.247.true>Está sempre ativo.</servertagdescription.247.true>
+<servertag.247.false>Às vezes ativo</servertag.247.false>
+<servertagdescription.247.false>O servidor não fica ativo 24/7.</servertagdescription.247.false>
+<servertag.friendlyfire.true>Fogo amigo ativado</servertag.friendlyfire.true>
+<servertagdescription.friendlyfire.true>Causar dano a seus companheiros de tripulação está habilitado.</servertagdescription.friendlyfire.true>
+<servertag.friendlyfire.false>Fogo amigo desativado</servertag.friendlyfire.false>
+<servertagdescription.friendlyfire.false>Causar dano a seus companheiros de tripulação está desabilitado.</servertagdescription.friendlyfire.false>
+<servertag.voip.true>Bate-papo por voz habilitado</servertag.voip.true>
+<servertagdescription.voip.true>O bate-papo por voz está habilitado.</servertagdescription.voip.true>
+<servertag.voip.false>Bate-papo por voz desabilitado</servertag.voip.false>
+<servertagdescription.voip.false>O bate-papo por voz está desabilitado.</servertagdescription.voip.false>
+<servertag.karma.true>Carma habilitado</servertag.karma.true>
+<servertagdescription.karma.true>O sistema de Carma está habilitado.</servertagdescription.karma.true>
+<servertag.karma.false>Carma desabilitado</servertag.karma.false>
+<servertagdescription.karma.false>O sistema de Carma está desabilitado.</servertagdescription.karma.false>
+<servertag.traitors.true>Traidores habilitados</servertag.traitors.true>
+<servertagdescription.traitors.true>Traidores estão habilitados no servidor.</servertagdescription.traitors.true>
+<servertag.traitor.false>Traidores desabilitados</servertag.traitor.false>
+<servertagdescription.traitors.false>Traidores estão desabilitados no servidor.</servertagdescription.traitors.false>
+<friendplayingbarotrauma>Jogando Barotrauma</friendplayingbarotrauma>
+<friendplayinganothergame>Jogando outro jogo</friendplayinganothergame>
+<friendnotplaying>Não está jogando</friendnotplaying>
+<serversettingsplaystyle>Estilo de jogo</serversettingsplaystyle>
+<serversettingsallowfriendlyfire>Permitir fogo amigo</serversettingsallowfriendlyfire>
+<serversettingsallowrewiring>Permitir refazer fiação</serversettingsallowrewiring>
+<serversettingsallowdisguises>Permitir disfarces</serversettingsallowdisguises>
+<filtersameversion>Mesma versão</filtersameversion>
+<filterwhitelistedservers>Exibir lista de permissões</filterwhitelistedservers>
+<!-- Misc -->
+<chat.shownewmessages>Exibir mensagens novas</chat.shownewmessages>
+<chat>Bate-papo</chat>
+<clicktoselectjob>Clique para selecionar uma função</clicktoselectjob>
+<faceattachment.hair>Cabelo</faceattachment.hair>
+<faceattachment.beard>Barba</faceattachment.beard>
+<faceattachment.moustache>Bigode</faceattachment.moustache>
+<faceattachment.accessories>Acessórios</faceattachment.accessories>
+<characterappearance>Aparência</characterappearance>
+<disconnect>Desconectar</disconnect>
+<endcampaignverification>Quer mesmo sair da campanha? Todo o progresso não salvo será perdido.</endcampaignverification>
+<leveldifficultyexplanation>A configuração dificuldade afeta a maneira como o nível é gerado e os tipos de encontros aleatórios que você pode enfrentar durante a missão. Níveis de dificuldade mais altos significam mais ameaças ambientais, mais criaturas e mais inimigos perigosos.</leveldifficultyexplanation>
+<subnotdownloaded>Submarino não baixado</subnotdownloaded>
 
+<difficulty.easy>Fácil</difficulty.easy>
+<difficulty.medium>Moderada</difficulty.medium>
+<difficulty.hard>Difícil</difficulty.hard>
+<difficulty.hellish>Infernal</difficulty.hellish>
 
+<!-- New traitor goals -->
+<traitorgoalkilltargetinfowithcause>Assassine [targetname] ([causeofdeath]).</traitorgoalkilltargetinfowithcause>
+<traitorgoalkilltargetinfowithhull>Assassine [targetname] e deixe seu corpo em: [targethullname].</traitorgoalkilltargetinfowithhull>
+<traitorgoalkilltargetinfowithcauseandhull>Assassine [targetname] ([causeofdeath]) e deixe seu corpo em: [targethullname].</traitorgoalkilltargetinfowithcauseandhull>
+<traitorgoalpoisoneveryoneinfo>Injete todos os membros da tripulação com [poison].</traitorgoalpoisoneveryoneinfo>
+<traitorgoalkeepalive>Proteja por [duration] segundos: [speciesname].</traitorgoalkeepalive>
+
+<!-- Goblin mission -->
+<goblins_traitormissionstartinfotext>Ao ouvir o som de arranhadelas vindas de baixo, você se lembra que faz algum tempo desde que os goblins do lastro foram alimentados. Mas estão com sorte pois há carne suficiente para todos.</goblins_traitormissionstartinfotext>
+<goblins_traitorobjectivestartmessage1>Primeiro, o tempero. Uma cozinha bem abastecida dispõe de muitas opções, mas para a finalidade atual, apenas cianureto puro servirá.\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage1>
+<goblins_objectivesuccessmessage1>Ah, sim, isso vai servir.</goblins_objectivesuccessmessage1>
+<goblins_traitorobjectivestartmessage2>Vamos começar dando água para os queridos.\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage2>
+<goblins_objectivesuccessmessage2>Muito bem.</goblins_objectivesuccessmessage2>
+<goblins_traitorobjectivestartmessage3>Alguém quer um petisco?\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage3>
+<goblins_objectivesuccessmessage3>Olhe só como esta carne está macia e suculenta!</goblins_objectivesuccessmessage3>
+<goblins_traitorobjectivestartmessage4>Agora, o prato principal: \n[traitorgoalinfos]</goblins_traitorobjectivestartmessage4>
+<goblins_objectivesuccessmessage4>Agora os goblins foram alimentados, mas a despensa está vazia. Será preciso coletar mais suprimentos na próxima estação.</goblins_objectivesuccessmessage4>
+
+<!-- Oxygen sabotage mission -->
+<oxygen_sabotage_traitormissionstartinfotext>É chegada a hora de outro experimento. Vamos testar como o corpo humano reage à privação de oxigênio.</oxygen_sabotage_traitormissionstartinfotext>
+<oxygen_sabotage_traitorobjectivestartmessage1>As cobaias foram escolhidas e estamos prontos para começar.\n[traitorgoalinfos]</oxygen_sabotage_traitorobjectivestartmessage1>
+<oxygen_sabotage_objectivesuccessmessage1>As cobaias devem começar a sentir os efeitos em breve. Sintomas de privação de oxigênio incluem, mas não se limitam a: extremidades azuladas, convulsões e desmaios.</oxygen_sabotage_objectivesuccessmessage1>
+<oxygen_sabotage_traitorobjectivestartmessage2>Quando você estiver satisfeito com os dados coletados, descarte as cobaias de teste.\n[traitorgoalinfos]</oxygen_sabotage_traitorobjectivestartmessage2>
+<oxygen_sabotage_objectivesuccessmessage2>Mais um teste bem-sucedido. Informe seus resultados para o posto avançado da Coalizão mais próximo.</oxygen_sabotage_objectivesuccessmessage2>
+
+<!-- Acidparty mission -->
+<acidparty_traitormissionstartinfotext>Você encontra uma anotação com rabiscos malucos no seu bolso. Ei, cara, tá sabendo que tem uma parada no centro da lua, né? E se, tipo, tivesse como ir lá dentro, tipo, em pessoa?</acidparty_traitormissionstartinfotext>
+<acidparty_traitorobjectivestartmessage1>Passo 1. Encontre delimi... deliru... der... a paradinha com DEL no rótulo, saca? \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage1>
+<acidparty_objectivesuccessmessage1>Deve ser isso. Nunca tomei isso antes.</acidparty_objectivesuccessmessage1>
+<acidparty_traitorobjectivestartmessage2>Passo 2. Alguns submarinos são equipados com uns... uns bloqueadores de visão, saca? Basicamente o que eles fazem é que eles te limitam e daí você só consegue ver, tipo, uma representação superlimitada da realidade, saca? Então o que você tem que fazer é que você tem que se livrar deles. O nome dessa parada é haleberridila, ou um troço desses. \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage2>
+<acidparty_objectivesuccessmessage2>Acho que foi tudo.</acidparty_objectivesuccessmessage2>
+<acidparty_traitorobjectivestartmessage3>Passo 3. A primeira regra é que a gente precisa compartilhar. A questão é que tem umas pessoas, saca? Tem umas pessoas que são meio que doutrinadas a ter medo de tudo que questione a visão de mundo deles, saca? Então pra isso, você precisa encontrar um jeito de colocar a paradinha da boa no sistema deles sem eles saberem, sacou? \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage3>
+<acidparty_objectivesuccessmessage3>Passo 4. Deita e se concentra no som das ondas, cara.</acidparty_objectivesuccessmessage3>
+
+<!-- Tainted welding mission -->
+<tainted_welding_traitorobjectivestartmessage2>O receptor emite estalidos e assobios ao receber um sinal fraco: ação direta da Resistência Europana, você tem permissão para prosseguir com a missão: você precisa afundar este submarino de modo a parecer um acidente. Para começar, sabote o equipamento de solda.\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage2>
+<tainted_welding_goalinfotext_2>Substitua o combustível de solda por tanques de oxigênio em pelo menos 70% por cento das máquinas de solda do submarino.</tainted_welding_goalinfotext_2>
+<tainted_welding_objectivesuccessmessage2>Bom trabalho. Tanques de oxigênio costumam queimar ao serem carregados em máquinas de solda.</tainted_welding_objectivesuccessmessage2>
+<tainted_welding_traitorobjectivestartmessage3>Agora você precisa se livrar do combustível confiscado para que a tripulação não possa usar mais tarde:\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage3>
+<tainted_welding_objectivesuccessmessage3>Bom trabalho! Agora a tripulação está em uma situação particularmente vulnerável, sem fazer a menor ideia disso.</tainted_welding_objectivesuccessmessage3>
+<tainted_welding_traitorobjectivestartmessage4>Agora, rápido, ative a armadilha!\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage4>
+<tainted_welding_objectivesuccessmessage4>Excelente trabalho, camarada! Os porcos estão condenados.</tainted_welding_objectivesuccessmessage4>
+<tainted_welding_traitorobjectivestartmessage5>Agora, fuja! Em breve enviaremos um submersível para resgatar você!\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage5>
+<tainted_welding_objectivesuccessmessage5>O alarme de aviso soa em seu traje de mergulho... O submersível já deveria ter se encontrado com você há algum tempo, mas os únicos movimentos na escuridão são cardumes de organismos alienígenas. Você envia mais uma transmissão: aqui é a ação direta da Resistência Europana, respondam! Solicitando extração! O transmissor continua sem respostas; abandonaram você à sua sorte. Você sente o abraço de Europa.</tainted_welding_objectivesuccessmessage5>
+
+<!-- One of Us mission -->
+<one_of_us_goalinfotext_2>Receptáculos sagrados da prole do parasita-carcaça foram escondidos atrás de um duto frouxo. Encontre os ovos antes que outra pessoa os descubra!</one_of_us_goalinfotext_2>
+<one_of_us_objectivesuccessmessage2>Uma descarga de prazer toma conta do seu corpo quando você encontra os ovos. Por um momento, uma gargalhada insana ecoa em sua mente, sumindo em indistintos cliques molhados.</one_of_us_objectivesuccessmessage2>
+<one_of_us_objectivesuccessmessage3>Sua mente dá voltas e sua visão se afunila quando o último frasco de calixanida é destruído.</one_of_us_objectivesuccessmessage3>
+<one_of_us_traitorobjectivestartmessage4>Você lê a tarefa final:\n[traitorgoalinfos]</one_of_us_traitorobjectivestartmessage4>
+<one_of_us_goalinfotext_4>Todos neste submarino precisam tomar parte na comunhão com o parasita-carcaça!</one_of_us_goalinfotext_4>
+
+<!-- Easter bunny mission -->
+<easterbunny_goalinfotext_1>Encontre um ovo muito especial que pode estar escondido em um dos dutos.</easterbunny_goalinfotext_1>
+<easterbunny_objectivesuccessmessage1>O ovo é repugnante, mas cabe direitinho no seu bolso. FON!</easterbunny_objectivesuccessmessage1>
+<easterbunny_traitorobjectivestartmessage2>Cultive o ovo:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage2>
+<easterbunny_goalinfotext_2>Encontre um local seguro para o ovo crescer e o alimente com [catalystitem].</easterbunny_goalinfotext_2>
+<easterbunny_objectivesuccessmessage2>O ovo incha e emite sons estranhos... Você está prestes a ter um filhinho!</easterbunny_objectivesuccessmessage2>
+<easterbunny_traitorobjectivestartmessage3>O ovo racha e um raptor de terra irrompe dele:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage3>
+<easterbunny_goalinfotext_3>Faça tudo que estiver ao seu alcance para que o raptor de terra sobreviva por pelo menos 3 minutos.</easterbunny_goalinfotext_3>
+<easterbunny_objectivesuccessmessage3>FON, FON! Isso foi hilário. O homem pintado vai se fazer quando souber dessa história.</easterbunny_objectivesuccessmessage3>
+<easterbunny_traitorobjectivestartmessage4>Fuja:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage4>
+
+<!-- Modified values -->
+<pausemenuquitverification>Quer mesmo voltar ao menu principal? Todo o progresso não salvo será perdido.</pausemenuquitverification>
+<leveldifficulty>Dificuldade</leveldifficulty>
+<connection.set_text>definir_texto</connection.set_text>
 
 </infotexts>

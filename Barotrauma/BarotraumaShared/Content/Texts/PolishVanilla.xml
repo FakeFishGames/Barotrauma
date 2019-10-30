@@ -2962,16 +2962,188 @@
 <replaceshuttles>Zastąp</replaceshuttles>
 <replaceshuttledockingportoccupied>Nie można zastąpić utraconego transportowca, ponieważ szczelina dokująca jest już w użyciu. Opróżnij szczelinę dokującą przed zamówieniem nowego transportowca.</replaceshuttledockingportoccupied>
 <character.blackmoloch>Czarny moloch</character.blackmoloch>
-<character.goldenhammerhead>Złota ryba młot</character.goldenhammerhead>
+<character.hammerheadgold>Złota ryba młot</character.hammerheadgold>
 <character.hammerheadmatriarch>Matka ryb młotów</character.hammerheadmatriarch>
-<character.bonetigerthresher>Kościany młocarz tygrysi</character.bonetigerthresher>
+<character.bonethresher>Kościany młocarz tygrysi</character.bonethresher>
 
-<!-- Updated values as of 13th of August -->
+<!-- New Additions for the November update -->
+<submarine.name.kastrull>Kastrull</submarine.name.kastrull>
+<submarine.description.kastrull>Kastrull to niezawodny okręt wojenny o dużej sile ognia. Nie jest zbyt zwrotny, ale ma na wyposażeniu dron bojowy. Eksperymentalne otwarte zbiorniki balastowe, niska tolerancja na zalanie i liczne stanowiska dla załogi sprawiają, że potrzeba sporej, doświadczonej załogi, aby jak najlepiej wykorzystać ten okręt.</submarine.description.kastrull>
 
+<gamemodedescription.singleplayercampaign>Wyrusz w podróż przez głębiny Europy. Przemieszczaj się z miejsca na miejsca, wykonuj misje i zdobywaj pieniądze na zapasy, odkrywaj nowe biomy, a może w końcu poznasz sekrety Europy.</gamemodedescription.singleplayercampaign>
+<gamemodedescription.sandbox>Tryb gry bez określonych celów.</gamemodedescription.sandbox>
+<gamemodedescription.mission>Załoga musi współpracować, aby osiągnąć konkretny cel, taki jak odzyskanie artefaktu obcych lub zabicie stwora, który terroryzuje pobliskie placówki. Gra kończy się po osiągnięciu celu lub gdy wszyscy członkowie załogi zginą.</gamemodedescription.mission>
+<gamemodedescription.multiplayercampaign>Wyrusz w podróż przez głębiny Europy. Przemieszczaj się z miejsca na miejsca, wykonuj misje i zdobywaj pieniądze na zapasy, odkrywaj nowe biomy, a może w końcu poznasz sekrety Europy.</gamemodedescription.multiplayercampaign>
 
+<entityname.sincomponent>Element sinus</entityname.sincomponent>
+<entitydescription.sincomponent>Wysyła sinus z wartości wejścia.</entitydescription.sincomponent>
+<entityname.coscomponent>Element cosinus</entityname.coscomponent>
+<entitydescription.coscomponent>Wysyła cosinus z wartości wejścia.</entitydescription.coscomponent>
+<entityname.tancomponent>Element tangens</entityname.tancomponent>
+<entitydescription.tancomponent>Wysyła tangens z wartości wejścia.</entitydescription.tancomponent>
+<entityname.asincomponent>Element arcsin</entityname.asincomponent>
+<entitydescription.asincomponent>Wysyła kąt w radianach, którego sinus jest równy wartości wejścia.</entitydescription.asincomponent>
+<entityname.acoscomponent>Element arccos</entityname.acoscomponent>
+<entitydescription.acoscomponent>Wysyła kąt w radianach, którego cosinus jest równy wartości wejścia.</entitydescription.acoscomponent>
+<entityname.atancomponent>Element arctan</entityname.atancomponent>
+<entitydescription.atancomponent>Wysyła kąt w radianach, którego tangens jest równy wartości wejścia.</entitydescription.atancomponent>
+<entityname.modulocomponent>Element modulo</entityname.modulocomponent>
+<entitydescription.modulocomponent>Wysyła resztę z dzielenia wartości wejścia przez określoną liczbę.</entitydescription.modulocomponent>
+<entityname.roundcomponent>Element zaokrąglenia</entityname.roundcomponent>
+<entitydescription.roundcomponent>Zaokrągla liczbową wartość wejścia do najbliższej liczby całkowitej.</entitydescription.roundcomponent>
+<entityname.ceilcomponent>Element sufitu</entityname.ceilcomponent>
+<entitydescription.ceilcomponent>Wysyła najmniejszą liczbę całkowitą większą lub równą wartości wejścia.</entitydescription.ceilcomponent>
+<entityname.floorcomponent>Element podłogi</entityname.floorcomponent>
+<entitydescription.floorcomponent>Wysyła największą liczbę całkowitą mniejszą lub równą wartości wejścia.</entitydescription.floorcomponent>
+<entityname.factorialcomponent>Element silni</entityname.factorialcomponent>
+<entitydescription.factorialcomponent>Wysyła silnię z wartości wejścia.</entitydescription.factorialcomponent>
+<entityname.squarerootcomponent>Element pierwiastka kwadratowego</entityname.squarerootcomponent>
+<entitydescription.squarerootcomponent>Wysyła pierwiastek kwadratowy z wartości wejścia.</entitydescription.squarerootcomponent>
+<entityname.abscomponent>Element abs</entityname.abscomponent>
+<entitydescription.abscomponent>Wysyła wartość bezwzględną z wartości wejścia.</entitydescription.abscomponent>
+<entityname.powcomponent>Element potęgowania</entityname.powcomponent>
+<entitydescription.powcomponent>Wysyła wartość wejścia podniesioną do danej potęgi.</entitydescription.powcomponent>
 
+<connection.setmodulus>ustaw_abs</connection.setmodulus>
+<shuttle>Transportowiec</shuttle>
+<privacypolicy>Polityka prywatności</privacypolicy>
+<entityname.mudraptoregg>Jajo błotozaura</entityname.mudraptoregg>
+<entitydescription.mudraptoregg>Oślizgłe, pulsujące jajo błotozaura. Rozdziawiona paszcza u góry wygląda, jakby czekała na jedzenie.</entitydescription.mudraptoregg>
 
+<!-- Server lobby 2.0 -->
+<serverlisttab.all>Wszystkie serwery</serverlisttab.all>
+<serverlisttab.favorites>Ulubione</serverlisttab.favorites>
+<serverlisttab.recent>Ostatnie</serverlisttab.recent>
+<addtofavorites>Dodaj do ulubionych</addtofavorites>
+<removefromfavorites>Usuń z ulubionych</removefromfavorites>
+<servertag.casual>Swoboda</servertag.casual>
+<servertagdescription.casual>Dobra zabawa jest ważniejsza niż osiągnięcie celu. Dobry wybór dla nowych graczy.</servertagdescription.casual>
+<servertag.serious>Zaangażowanie</servertag.serious>
+<servertagdescription.serious>Załoga powinna skupić się na współpracy i osiągnięciu celu. Bez niepotrzebnych wygłupów.</servertagdescription.serious>
+<servertag.roleplay>Odgrywanie</servertag.roleplay>
+<servertagdescription.roleplay>Załoga powinna próbować zachowywać się jak na prawdziwym okręcie. Łańcuch dowodzenia jest bardzo istotny, tak jak wykonywanie swoich obowiązków i słuchanie rozkazów. Należy unikać rozmów poza postacią w trakcie trwania rundy.</servertagdescription.roleplay>
+<servertag.somethingdifferent>Coś innego</servertag.somethingdifferent>
+<servertagdescription.somethingdifferent>Rozgrywka znacząco różni się od standardowej. Zmodyfikowane serwery, nieszablonowe okręty, rundy w trybie battle royale, wyścigi transportowców, mapy w stylu bieg śmierci… Wszystko jest dozwolone!</servertagdescription.somethingdifferent>
+<servertag.rampage>Szaleństwo</servertag.rampage>
+<servertagdescription.rampage>Przygotuj się do walki o życie! Serwer mocno nastawiony na walkę. Może to oznaczać walkę PvP, PvE albo jedno i drugie – opis serwera powinien zawierać wytyczne co do dozwolonego rodzaju przemocy.</servertagdescription.rampage>
+<servertag.modded.true>Zmodyfikowany</servertag.modded.true>
+<servertagdescription.modded.true>Serwer korzysta z jednego lub więcej modów. Dołączenie może wymagać zainstalowania modów z Warsztatu.</servertagdescription.modded.true>
+<servertag.modded.false>Wersja Vanilla</servertag.modded.false>
+<servertagdescription.modded.false>Serwer nie korzysta z żadnych modów.</servertagdescription.modded.false>
+<servertag.247.true>24/7</servertag.247.true>
+<servertagdescription.247.true>Serwer działa cały czas.</servertagdescription.247.true>
+<servertag.247.false>Od czasu do czasu</servertag.247.false>
+<servertagdescription.247.false>Serwer nie działa cały czas.</servertagdescription.247.false>
+<servertag.friendlyfire.true>Ostrzał własny włączony</servertag.friendlyfire.true>
+<servertagdescription.friendlyfire.true>Zadawanie obrażeń własnej załodze włączone.</servertagdescription.friendlyfire.true>
+<servertag.friendlyfire.false>Ostrzał własny wyłączony</servertag.friendlyfire.false>
+<servertagdescription.friendlyfire.false>Zadawanie obrażeń własnej załodze wyłączone.</servertagdescription.friendlyfire.false>
+<servertag.voip.true>Czat głosowy włączony</servertag.voip.true>
+<servertagdescription.voip.true>Czat głosowy jest włączony.</servertagdescription.voip.true>
+<servertag.voip.false>Czat głosowy wyłączony</servertag.voip.false>
+<servertagdescription.voip.false>Czat głosowy jest wyłączony.</servertagdescription.voip.false>
+<servertag.karma.true>Karma włączona</servertag.karma.true>
+<servertagdescription.karma.true>System karmy jest włączony.</servertagdescription.karma.true>
+<servertag.karma.false>Karma wyłączona</servertag.karma.false>
+<servertagdescription.karma.false>System karmy jest wyłączony.</servertagdescription.karma.false>
+<servertag.traitors.true>Zdrajcy</servertag.traitors.true>
+<servertagdescription.traitors.true>Zdrajcy są włączeni na tym serwerze.</servertagdescription.traitors.true>
+<servertag.traitor.false>Bez zdrajców</servertag.traitor.false>
+<servertagdescription.traitors.false>Zdrajcy są wyłączeni na tym serwerze.</servertagdescription.traitors.false>
+<friendplayingbarotrauma>Gra w Barotraumę</friendplayingbarotrauma>
+<friendplayinganothergame>Gra w inną grę</friendplayinganothergame>
+<friendnotplaying>Nie gra</friendnotplaying>
+<serversettingsplaystyle>Styl gry</serversettingsplaystyle>
+<serversettingsallowfriendlyfire>Zezwól na ostrzał własny</serversettingsallowfriendlyfire>
+<serversettingsallowrewiring>Zezwól na wymianę okablowania</serversettingsallowrewiring>
+<serversettingsallowdisguises>Zezwól na przebrania</serversettingsallowdisguises>
+<filtersameversion>Identyczna wersja</filtersameversion>
+<filterwhitelistedservers>Pokaż białą listę</filterwhitelistedservers>
+<!-- Misc -->
+<chat.shownewmessages>Pokaż nowe wiadomości</chat.shownewmessages>
+<chat>Czat</chat>
+<clicktoselectjob>Kliknij, aby wybrać rolę</clicktoselectjob>
+<faceattachment.hair>Włosy</faceattachment.hair>
+<faceattachment.beard>Broda</faceattachment.beard>
+<faceattachment.moustache>Wąsy</faceattachment.moustache>
+<faceattachment.accessories>Dodatki</faceattachment.accessories>
+<characterappearance>Wygląd</characterappearance>
+<disconnect>Rozłącz</disconnect>
+<endcampaignverification>Na pewno chcesz opuścić kampanię? Niezapisane postępy zostaną utracone.</endcampaignverification>
+<leveldifficultyexplanation>Poziom trudności wpływa na generowanie poziomu i na to, co może się wydarzyć w trakcie misji. Na wyższych poziomach spodziewaj się bardziej niebezpiecznego środowiska, więcej stworów i groźniejszych przeciwników.</leveldifficultyexplanation>
+<subnotdownloaded>Nie pobrano okrętu podwodnego</subnotdownloaded>
 
+<difficulty.easy>Łatwy</difficulty.easy>
+<difficulty.medium>Średni</difficulty.medium>
+<difficulty.hard>Trudny</difficulty.hard>
+<difficulty.hellish>Piekło</difficulty.hellish>
 
+<!-- New traitor goals -->
+<traitorgoalkilltargetinfowithcause>Cel do zabicia: [targetname]; metoda: [causeofdeath].</traitorgoalkilltargetinfowithcause>
+<traitorgoalkilltargetinfowithhull>Cel do zabicia: [targetname]; miejsce pozostawienia ciała: [targethullname].</traitorgoalkilltargetinfowithhull>
+<traitorgoalkilltargetinfowithcauseandhull>Cel do zabicia: [targetname]; metoda: [causeofdeath]; miejsce pozostawienia ciała: [targethullname].</traitorgoalkilltargetinfowithcauseandhull>
+<traitorgoalpoisoneveryoneinfo>Wstrzyknij wszystkim członkom załogi: [poison].</traitorgoalpoisoneveryoneinfo>
+<traitorgoalkeepalive>Chroń cel [speciesname] przez [duration] sek.</traitorgoalkeepalive>
+
+<!-- Goblin mission -->
+<goblins_traitormissionstartinfotext>Kiedy słyszysz drapanie dochodzące z dołu, przypominasz sobie, że gobliny balastowe dawno już nic nie jadły. Na szczęście mięsa starczy dla wszystkich.</goblins_traitormissionstartinfotext>
+<goblins_traitorobjectivestartmessage1>Najpierw przyprawy. Dobrze wyposażona kuchnia może wiele zaoferować, ale do tego dania pasuje tylko najczystszy cyjanek.\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage1>
+<goblins_objectivesuccessmessage1>Tak, tyle powinno wystarczyć.</goblins_objectivesuccessmessage1>
+<goblins_traitorobjectivestartmessage2>Na początek trochę wody.\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage2>
+<goblins_objectivesuccessmessage2>Proszę bardzo.</goblins_objectivesuccessmessage2>
+<goblins_traitorobjectivestartmessage3>Może przystawkę?\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage3>
+<goblins_objectivesuccessmessage3>Spójrzcie na to kruche, soczyste mięsko!</goblins_objectivesuccessmessage3>
+<goblins_traitorobjectivestartmessage4>Pora na główne danie: \n[traitorgoalinfos]</goblins_traitorobjectivestartmessage4>
+<goblins_objectivesuccessmessage4>Gobliny nakarmione, ale spiżarnia jest pusta. Pora wybrać się po zapasy na kolejną stację.</goblins_objectivesuccessmessage4>
+
+<!-- Oxygen sabotage mission -->
+<oxygen_sabotage_traitormissionstartinfotext>Czas na kolejny eksperyment. Tym razem sprawdzimy, jak się zachowuje ludzkie ciało pozbawione tlenu.</oxygen_sabotage_traitormissionstartinfotext>
+<oxygen_sabotage_traitorobjectivestartmessage1>Obiekty badawcze są zebrane w jednym miejscu. Możemy zaczynać.\n[traitorgoalinfos]</oxygen_sabotage_traitorobjectivestartmessage1>
+<oxygen_sabotage_objectivesuccessmessage1>Wkrótce obiekty testowe powinny zacząć odczuwać skutki niedotlenienia. Do objawów należą między innymi sinienie kończyn, atak serca i mdlenie.</oxygen_sabotage_objectivesuccessmessage1>
+<oxygen_sabotage_traitorobjectivestartmessage2>Jeśli zadowalają cię uzyskane dane, pozbądź się obiektów badawczych.\n[traitorgoalinfos]</oxygen_sabotage_traitorobjectivestartmessage2>
+<oxygen_sabotage_objectivesuccessmessage2>Kolejny udany eksperyment. Zamelduj się w najbliższej placówce koalicji.</oxygen_sabotage_objectivesuccessmessage2>
+
+<!-- Acidparty mission -->
+<acidparty_traitormissionstartinfotext>W kieszeni znajdujesz maniakalnie nabazgraną notatkę. „Ej, ty. Wiesz, że na środku księżyca jest ta rzecz, no nie? A gdyby tak można było sprawdzić, co to jest, bez udawania się tam osobiście?”</acidparty_traitormissionstartinfotext>
+<acidparty_traitorobjectivestartmessage1>Krok 1. Znajdź jakieś delimi… deliru… der… Dobra, coś, co ma napisane „DEL”, ok? \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage1>
+<acidparty_objectivesuccessmessage1>To musi być to. Pierwszy raz tego próbuję.</acidparty_objectivesuccessmessage1>
+<acidparty_traitorobjectivestartmessage2>Krok 2. Czasem na okrętach mają takie… te takie blokery wizji, prawda? Ogólnie to one uziemiają cię i widzisz tylko takie naprawdę małe wyobrażenie rzeczywistości, no nie? A więc trzeba się ich pozbyć. Nazywają je cholernymi wizjonerami czy jakoś tak.\n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage2>
+<acidparty_objectivesuccessmessage2>Wygląda, że to wszystko.</acidparty_objectivesuccessmessage2>
+<acidparty_traitorobjectivestartmessage3>Krok 3. Najważniejsza zasada: musimy się dzielić. Chodzi o to, że niektórzy ludzie, jasne? Niektórzy ludzie mają wyprany mózg i boją się wszystkiego, co kwestionuje ich światopogląd, prawda? Więc wiesz, musisz znaleźć sposób, by przemycić dobry towar do ich systemu, no nie? \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage3>
+<acidparty_objectivesuccessmessage3>Krok 4. Połóż się i słuchaj szumu fal.</acidparty_objectivesuccessmessage3>
+
+<!-- Tainted welding mission -->
+<tainted_welding_traitorobjectivestartmessage2>Odbiornik trzeszczy i gwiżdże, odbierając słaby sygnał: „Bezpośrednia akcja Oporu Europejskiego, możesz zacząć misję. Ten okręt musi zatonąć i niech to wygląda na wypadek. Zacznij od sabotażu wyposażenia spawalniczego”.\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage2>
+<tainted_welding_goalinfotext_2>Zamień butle z paliwem spawalniczym na butle z tlenem przynajmniej w 70% narzędzi spawalniczych.</tainted_welding_goalinfotext_2>
+<tainted_welding_objectivesuccessmessage2>Dobra robota. Butle z tlenem w połączeniu z narzędziami spawalniczymi lubią się zapalać.</tainted_welding_objectivesuccessmessage2>
+<tainted_welding_traitorobjectivestartmessage3>Teraz musisz pozbyć się zarekwirowanego paliwa, żeby załoga nie mogła z niego skorzystać:\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage3>
+<tainted_welding_objectivesuccessmessage3>Dobra robota! Załoga znalazła się w trudnej sytuacji i nawet nie zdaje sobie z tego sprawy.</tainted_welding_objectivesuccessmessage3>
+<tainted_welding_traitorobjectivestartmessage4>Szybko, zastaw pułapkę!\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage4>
+<tainted_welding_objectivesuccessmessage4>Doskonale, towarzyszu! Te świnie czeka teraz koniec.</tainted_welding_objectivesuccessmessage4>
+<tainted_welding_traitorobjectivestartmessage5>Uciekaj! Wkrótce wyślemy po ciebie transportowiec!\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage5>
+<tainted_welding_objectivesuccessmessage5>Skafander wydaje ostrzegawcze dźwięki… Transportowiec powinien dotrzeć do ciebie już jakiś czas temu, ale w otaczającym cię mroku poruszają się jedynie ławice obcych. Nadajesz kolejną wiadomość: „Bezpośrednia akcja Oporu Europejskiego, zgłoście się! Proszę o ekstrakcję!”. Przekaźnik milczy. Zostajesz sam na sam z przeznaczeniem. Europa przyjmuje cię w swoje objęcia.</tainted_welding_objectivesuccessmessage5>
+
+<!-- One of Us mission -->
+<one_of_us_goalinfotext_2>Święte zbiorniki młodych skorupnika zostały ukryte za poluzowanym otworem wentylacyjnym. Szybko odnajdź jaja, nim ktoś inny się na nie natknie!</one_of_us_goalinfotext_2>
+<one_of_us_objectivesuccessmessage2>Ogarnia cię fala przyjemności, kiedy znajdujesz jaja. W twojej głowie rozbrzmiewa przez chwilę dziki, spazmatyczny śmiech, który przekształca się w mokre klekotanie.</one_of_us_objectivesuccessmessage2>
+<one_of_us_objectivesuccessmessage3>Kręci ci się w głowie, a twoje pole widzenia zwęża się, kiedy niszczysz ostatnie calyxanidum.</one_of_us_objectivesuccessmessage3>
+<one_of_us_traitorobjectivestartmessage4>Czytasz ostateczne zadanie:\n[traitorgoalinfos]</one_of_us_traitorobjectivestartmessage4>
+<one_of_us_goalinfotext_4>Wszyscy na okręcie muszą wziąć udział w komunii ze skorupnikiem!</one_of_us_goalinfotext_4>
+
+<!-- Easter bunny mission -->
+<easterbunny_goalinfotext_1>Znajdź wyjątkowe jajo, ukryte prawdopodobnie w jednym z otworów wentylacyjnych.</easterbunny_goalinfotext_1>
+<easterbunny_objectivesuccessmessage1>Jajo jest obrzydliwe, ale idealnie mieści ci się w kieszeni. TI-TA!</easterbunny_objectivesuccessmessage1>
+<easterbunny_traitorobjectivestartmessage2>Wykluj jajo:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage2>
+<easterbunny_goalinfotext_2>Znajdź bezpieczne miejsce, by jajo mogło rosnąć, i karm je ([catalystitem]).</easterbunny_goalinfotext_2>
+<easterbunny_objectivesuccessmessage2>Jajo bulgocze i wydaje dziwne dźwięki… Wkrótce zostaniesz rodzicem!</easterbunny_objectivesuccessmessage2>
+<easterbunny_traitorobjectivestartmessage3>Jajo pęka i wykluwa się z niego błotozaur:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage3>
+<easterbunny_goalinfotext_3>Dołóż wszelkich starań, aby błotozaur przeżył przynajmniej 3 minuty.</easterbunny_goalinfotext_3>
+<easterbunny_objectivesuccessmessage3>Ti-ta ti-ta! To było przezabawne. Malowany człowiek będzie miał niezłą uciechę, jak o tym usłyszy.</easterbunny_objectivesuccessmessage3>
+<easterbunny_traitorobjectivestartmessage4>Ucieczka:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage4>
+
+<!-- Modified values -->
+<pausemenuquitverification>Na pewno chcesz wrócić do menu głównego? Niezapisane postępy zostaną utracone.</pausemenuquitverification>
+<leveldifficulty>Trudność</leveldifficulty>
+<connection.set_text>ustaw_tekst</connection.set_text>
 
 </infotexts>

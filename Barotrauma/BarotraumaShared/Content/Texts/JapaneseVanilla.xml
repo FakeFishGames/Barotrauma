@@ -2962,16 +2962,188 @@
 <replaceshuttles>置き換え</replaceshuttles>
 <replaceshuttledockingportoccupied>この失われた飛行船は置き換えされできません。ドッキングポートが現在使用中で、ドッキングポートが空いたら新しい飛行船の置き換えが可能です。</replaceshuttledockingportoccupied>
 <character.blackmoloch>黒いモロク</character.blackmoloch>
-<character.goldenhammerhead>金色のシュモクザメ</character.goldenhammerhead>
+<character.hammerheadgold>金色のシュモクザメ</character.hammerheadgold>
 <character.hammerheadmatriarch>シュモクザメ女族長</character.hammerheadmatriarch>
-<character.bonetigerthresher>ボーンタイガーシャーク</character.bonetigerthresher>
+<character.bonethresher>ボーンタイガーシャーク</character.bonethresher>
 
-<!-- Updated values as of 13th of August -->
+<!-- New Additions for the November update -->
+<submarine.name.kastrull>カストラル</submarine.name.kastrull>
+<submarine.description.kastrull>カストラルはあらゆる戦闘において、十分な火力をもたらす信頼性の高い攻撃潜水艦クラスです。それほど軽快ではありませんが、標準でドローンガンシップを搭載しています。試験用オープンバラストタンク、洪水に対する低い耐性、多くの乗組員ステーションがあります。多くの経験豊富な乗組員はこの潜水艦を最大限に活用するでしょう。</submarine.description.kastrull>
 
+<gamemodedescription.singleplayercampaign>エウロパの奥深くに向けた旅に乗り出します。土地から土地へ旅を続け、物資の資金を調達するためにミッションを遂行。新しい生物群を見つけだし、最終的にはエウロパの秘密を明らかにします。</gamemodedescription.singleplayercampaign>
+<gamemodedescription.sandbox>特定の目的を持たないゲームモード</gamemodedescription.sandbox>
+<gamemodedescription.mission>エイリアンから戦利品を獲得したり、近くの前哨基地を恐怖に陥れている生き物を殺害するなど、乗組員は特定の任務を完了させるために協力する必要があります。任務を全て完了するか、乗組員の全員が死亡すると、ゲームは終了します。</gamemodedescription.mission>
+<gamemodedescription.multiplayercampaign>エウロパの奥深くに向けた旅に乗り出します。土地から土地へ旅を続け、物資の資金を調達するためにミッションを遂行。新しい生物群を見つけだし、最終的にはエウロパの秘密を明らかにします。</gamemodedescription.multiplayercampaign>
 
+<entityname.sincomponent>Sin コンポーネント</entityname.sincomponent>
+<entitydescription.sincomponent>入力されたサインを出力します。</entitydescription.sincomponent>
+<entityname.coscomponent>Cos コンポーネント</entityname.coscomponent>
+<entitydescription.coscomponent>入力されたコサインを出力します。</entitydescription.coscomponent>
+<entityname.tancomponent>Tan コンポーネント</entityname.tancomponent>
+<entitydescription.tancomponent>入力されたタンジェントを出力します。</entitydescription.tancomponent>
+<entityname.asincomponent>Asin コンポーネント</entityname.asincomponent>
+<entitydescription.asincomponent>サインが入力値と等しい角度を出力します。</entitydescription.asincomponent>
+<entityname.acoscomponent>Acos コンポーネント</entityname.acoscomponent>
+<entitydescription.acoscomponent>コサインが入力値と等しい角度を出力します</entitydescription.acoscomponent>
+<entityname.atancomponent>Atan コンポーネント</entityname.atancomponent>
+<entitydescription.atancomponent>タンジェントが入力値と等しい角度を出力します。</entitydescription.atancomponent>
+<entityname.modulocomponent>モジュロ コンポーネント</entityname.modulocomponent>
+<entitydescription.modulocomponent>入力値が特定の数値で割り算された時、その残りを出力します。</entitydescription.modulocomponent>
+<entityname.roundcomponent>ラウンド コンポーネント</entityname.roundcomponent>
+<entitydescription.roundcomponent>入力された数値を最も近い整数値に四捨五入します。</entitydescription.roundcomponent>
+<entityname.ceilcomponent>セイル コンポーネント</entityname.ceilcomponent>
+<entitydescription.ceilcomponent>入力値以上の最小の整数値を出力します。切り上げ。</entitydescription.ceilcomponent>
+<entityname.floorcomponent>フロア コンポーネント</entityname.floorcomponent>
+<entitydescription.floorcomponent>入力値以下の最大の整数値を出力します。切り捨て。</entitydescription.floorcomponent>
+<entityname.factorialcomponent>階乗 コンポーネント</entityname.factorialcomponent>
+<entitydescription.factorialcomponent>入力値の階乗を出力します</entitydescription.factorialcomponent>
+<entityname.squarerootcomponent>平方根 コンポーネント</entityname.squarerootcomponent>
+<entitydescription.squarerootcomponent>入力値の平方根を出力します。</entitydescription.squarerootcomponent>
+<entityname.abscomponent>絶対値 コンポーネント</entityname.abscomponent>
+<entitydescription.abscomponent>入力値の絶対値を出力します。</entitydescription.abscomponent>
+<entityname.powcomponent>べき乗 コンポーネント</entityname.powcomponent>
+<entitydescription.powcomponent>入力値を指定された累乗で出力します。</entitydescription.powcomponent>
 
+<connection.setmodulus>set_modulus</connection.setmodulus>
+<shuttle>シャトル</shuttle>
+<privacypolicy>プライバシー ポリシー</privacypolicy>
+<entityname.mudraptoregg>マッドラプターの卵</entityname.mudraptoregg>
+<entitydescription.mudraptoregg>ヌルヌルして脈打っているマッドラプターの卵。その卵の上にぽっかりと開いたアゴは、何か食べるものをつかんでいるようだ。</entitydescription.mudraptoregg>
 
+<!-- Server lobby 2.0 -->
+<serverlisttab.all>全てのサーバー</serverlisttab.all>
+<serverlisttab.favorites>お気に入り</serverlisttab.favorites>
+<serverlisttab.recent>最近使用</serverlisttab.recent>
+<addtofavorites>お気に入りに追加</addtofavorites>
+<removefromfavorites>お気に入りから削除</removefromfavorites>
+<servertag.casual>カジュアル</servertag.casual>
+<servertagdescription.casual>楽しむことは、任務の達成よりも重要です。新規プレーヤーにおすすめ。</servertagdescription.casual>
+<servertag.serious>シリアス</servertag.serious>
+<servertagdescription.serious>乗組員は効率的に協力し合い、その任務を完了することに集中する必要があります。細かい設定は必要ありません。</servertagdescription.serious>
+<servertag.roleplay>ロールプレイ</servertag.roleplay>
+<servertagdescription.roleplay>実際の潜水艦の乗組員のように行動する必要があります。指揮系統が重要な鍵となり、責任を遂行し命令に従うことも重要となります。ラウンドが進行中は、そのキャラクターとしての会話以外は避けるべきです。</servertagdescription.roleplay>
+<servertag.somethingdifferent>他とは違う</servertag.somethingdifferent>
+<servertagdescription.somethingdifferent>Barotraumaのゲームプレーは他のそれとは大きく異なります。改造されたサーバー、とても型破りな潜水艦、バトルロワイヤルラウンド、シャトルレース、デスランマップなど様々です！</servertagdescription.somethingdifferent>
+<servertag.rampage>大暴れ</servertag.rampage>
+<servertagdescription.rampage>その命をかけて戦う準備をしてください！戦闘に重点を置いたサーバー。これはプレイヤー対プレイヤーの戦闘、PvEもしくはその両方を意味し、サーバーの説明に「サーバー上で許可される暴力の種類に関するガイドライン」を定める必要があります。</servertagdescription.rampage>
+<servertag.modded.true>モッド</servertag.modded.true>
+<servertagdescription.modded.true>１つ以上のMODsが有効になっています。サーバーに参加するにはワークショップからMODsをインストールする必要がある場合があります。</servertagdescription.modded.true>
+<servertag.modded.false>バニラ</servertag.modded.false>
+<servertagdescription.modded.false>サーバーはMODを使用していません。</servertagdescription.modded.false>
+<servertag.247.true>年中無休</servertag.247.true>
+<servertagdescription.247.true>２４時間体制</servertagdescription.247.true>
+<servertag.247.false>時々UP</servertag.247.false>
+<servertagdescription.247.false>サーバーの稼働は年中無休ではありません。</servertagdescription.247.false>
+<servertag.friendlyfire.true>フレンドリーファイア ON</servertag.friendlyfire.true>
+<servertagdescription.friendlyfire.true>乗組員の仲間にダメージを与える可能性があります。</servertagdescription.friendlyfire.true>
+<servertag.friendlyfire.false>フレンドリーファイア OFF</servertag.friendlyfire.false>
+<servertagdescription.friendlyfire.false>乗組員の仲間にダメージを与える事はありません。</servertagdescription.friendlyfire.false>
+<servertag.voip.true>音声チャットが有効です。</servertag.voip.true>
+<servertagdescription.voip.true>音声チャットが有効になっています。</servertagdescription.voip.true>
+<servertag.voip.false>音声チャットが無効です。</servertag.voip.false>
+<servertagdescription.voip.false>音声チャットが無効になっています。</servertagdescription.voip.false>
+<servertag.karma.true>カルマが有効です。</servertag.karma.true>
+<servertagdescription.karma.true>カルマシステムが有効になっています。</servertagdescription.karma.true>
+<servertag.karma.false>カルマが無効です。</servertag.karma.false>
+<servertagdescription.karma.false>カルマシステムが無効になっています。</servertagdescription.karma.false>
+<servertag.traitors.true>裏切りが有効です。</servertag.traitors.true>
+<servertagdescription.traitors.true>裏切り者はサーバー上で有効になっています。</servertagdescription.traitors.true>
+<servertag.traitor.false>裏切り者は無効です。</servertag.traitor.false>
+<servertagdescription.traitors.false>裏切り者はサーバー上で無効になっています。</servertagdescription.traitors.false>
+<friendplayingbarotrauma>Barotraumaをプレイ</friendplayingbarotrauma>
+<friendplayinganothergame>他のゲームをプレイ</friendplayinganothergame>
+<friendnotplaying>プレイしない</friendnotplaying>
+<serversettingsplaystyle>プレイスタイル</serversettingsplaystyle>
+<serversettingsallowfriendlyfire>フレンドリーファイアを許可</serversettingsallowfriendlyfire>
+<serversettingsallowrewiring>再配線を許可</serversettingsallowrewiring>
+<serversettingsallowdisguises>偽装を許可</serversettingsallowdisguises>
+<filtersameversion>同じバージョン</filtersameversion>
+<filterwhitelistedservers>ホワイトリストを表示</filterwhitelistedservers>
+<!-- Misc -->
+<chat.shownewmessages>新しいメッセージを表示</chat.shownewmessages>
+<chat>チャット</chat>
+<clicktoselectjob>クリックしてジョブを選択</clicktoselectjob>
+<faceattachment.hair>髪の毛</faceattachment.hair>
+<faceattachment.beard>ひげ</faceattachment.beard>
+<faceattachment.moustache>口ひげ</faceattachment.moustache>
+<faceattachment.accessories>アクセサリー</faceattachment.accessories>
+<characterappearance>外観</characterappearance>
+<disconnect>切断</disconnect>
+<endcampaignverification>キャンペーンを終了してもよろしいですか？保存されていないデータは全て失われます。</endcampaignverification>
+<leveldifficultyexplanation>難易度の設定は、レベルの進行度合いとミッション中に直面する可能性のあるランダムな出来事に影響します。より高い難易度では、より多くの危険な環境、より多くの危険な生命体、そしてより多くの危険な敵との遭遇に備えてください。</leveldifficultyexplanation>
+<subnotdownloaded>潜水艦はダウンロードされていません。</subnotdownloaded>
 
+<difficulty.easy>初級</difficulty.easy>
+<difficulty.medium>中級</difficulty.medium>
+<difficulty.hard>上級</difficulty.hard>
+<difficulty.hellish>地獄級</difficulty.hellish>
 
+<!-- New traitor goals -->
+<traitorgoalkilltargetinfowithcause>[causeofdeath]によって[targetname]を暗殺</traitorgoalkilltargetinfowithcause>
+<traitorgoalkilltargetinfowithhull>[targetname]を暗殺し、[targethullname]に遺体を放置する。</traitorgoalkilltargetinfowithhull>
+<traitorgoalkilltargetinfowithcauseandhull>[causeofdeath]によって[targetname]を暗殺し、[targethullname]に遺体を放置する。</traitorgoalkilltargetinfowithcauseandhull>
+<traitorgoalpoisoneveryoneinfo>全ての乗組員に[poison]を注射。</traitorgoalpoisoneveryoneinfo>
+<traitorgoalkeepalive>[duration]秒間、[speciesname]を保護する。</traitorgoalkeepalive>
+
+<!-- Goblin mission -->
+<goblins_traitormissionstartinfotext>下から引っ掻く音が聞こえるなら、バラストゴブリンが餌を与えられてから時間が経っています。運が良ければ、周りに肉がたくさんあるかもしれません。</goblins_traitormissionstartinfotext>
+<goblins_traitorobjectivestartmessage1>まずは、いくつかの調味料。品揃え豊富なキッチンには多くの選択肢がありますが、この目的を果たすためには、純粋なシアン化物のみが使用されます。\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage1>
+<goblins_objectivesuccessmessage1>ああ、はい。これは上手くいくでしょう。</goblins_objectivesuccessmessage1>
+<goblins_traitorobjectivestartmessage2>水を飲んでお気に入りから始めよう。\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage2>
+<goblins_objectivesuccessmessage2>さあ行こう。</goblins_objectivesuccessmessage2>
+<goblins_traitorobjectivestartmessage3>誰か、オードブルは？\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage3>
+<goblins_objectivesuccessmessage3>あの柔らかくて、ジューシーな肉を見ろよ！</goblins_objectivesuccessmessage3>
+<goblins_traitorobjectivestartmessage4>じゃあメインは: \n[traitorgoalinfos]</goblins_traitorobjectivestartmessage4>
+<goblins_objectivesuccessmessage4>今ゴブリンに餌が与えられました。しかし食料貯蔵室は空です。次の場所で物資を手に入れましょう。</goblins_objectivesuccessmessage4>
+
+<!-- Oxygen sabotage mission -->
+<oxygen_sabotage_traitormissionstartinfotext>その他の実験の時間です。今回は人体が酸素を奪われた時にどのように反応するかをテストしています。</oxygen_sabotage_traitormissionstartinfotext>
+<oxygen_sabotage_traitorobjectivestartmessage1>被験者が集まり、準備は整いました。\n[traitorgoalinfos]</oxygen_sabotage_traitorobjectivestartmessage1>
+<oxygen_sabotage_objectivesuccessmessage1>間も無く、被験者たちには症状が現れるでしょう。酸欠状態では、末端が青くなり、けいれん、失神などが見られますが、その限りではありません。</oxygen_sabotage_objectivesuccessmessage1>
+<oxygen_sabotage_traitorobjectivestartmessage2>収集したデータに問題がなければ、被験者を破棄します。\n[traitorgoalinfos]</oxygen_sabotage_traitorobjectivestartmessage2>
+<oxygen_sabotage_objectivesuccessmessage2>テストの成果。最寄りの連合の前哨基地に報告して下さい</oxygen_sabotage_objectivesuccessmessage2>
+
+<!-- Acidparty mission -->
+<acidparty_traitormissionstartinfotext>ポケットの中に走り書きされたメモを見つけます。「やあ君、月の真ん中にこれがあることを知っているだろう？実際にそこに行かず、それが何であるかを確認する方法があるとしたら？」</acidparty_traitormissionstartinfotext>
+<acidparty_traitorobjectivestartmessage1>ステップ１・delimi- delirun- der-（デリミ -、デリラン - 、デア - ）など「DEL」(デル)と書かれているものを見つけろ。 \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage1>
+<acidparty_objectivesuccessmessage1>それでなければなりません。今まではこれを持っていませんでした。</acidparty_objectivesuccessmessage1>
+<acidparty_traitorobjectivestartmessage2>ステップ２・時々潜水艦はこれら…視界遮断薬を運ぶだろ？基本的に彼らがする事は、お前を地に運び、お前には現実の本当に狭い画像のように見えるだけだよな？そこでお前がしたい事は、それを取り除く事。それはhalleberrydil（ホールベリーディル）とか何とか呼ばれているんだ。\n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage2>
+<acidparty_objectivesuccessmessage2>それだけのようだ。</acidparty_objectivesuccessmessage2>
+<acidparty_traitorobjectivestartmessage3>ステップ３・最初のルール、我々は共有する事。ここで重要なのは一部の人々だろ？一部の人々はその世界観への挑戦を恐るように洗脳されているよね？だからお前は、彼らのシステムに潜り込んで、そのいいことをこっそりやってのける方法を見つけなきゃならないんだ。いいかい？\n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage3>
+<acidparty_objectivesuccessmessage3>ステップ４・横になって波に耳を傾けろ。</acidparty_objectivesuccessmessage3>
+
+<!-- Tainted welding mission -->
+<tainted_welding_traitorobjectivestartmessage2>弱い信号が受信されると、受信機はパチパチと音を立てます。：エウロパ　レジスタンスの行動、あなたがこのミッションを遂行する事は明らかです。この潜水艦は沈め、事故に見せかける必要があります。溶接ギアの損壊から始めます。\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage2>
+<tainted_welding_goalinfotext_2>潜水艦の溶接ツールの少なくとも７０％の酸素タンクと溶接燃料を交換してください。</tainted_welding_goalinfotext_2>
+<tainted_welding_objectivesuccessmessage2>よくできました。酸素タンクは溶接ツールに装填されると引火する傾向があります。</tainted_welding_objectivesuccessmessage2>
+<tainted_welding_traitorobjectivestartmessage3>ここで、乗組員が後で使用することができないように、奪った燃料を処分する必要があります。:\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage3>
+<tainted_welding_objectivesuccessmessage3>よくできました！乗組員はそれを知らずとも、とても危険な状況下にあります。</tainted_welding_objectivesuccessmessage3>
+<tainted_welding_traitorobjectivestartmessage4>いますぐ、トラップを仕掛けろ！\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage4>
+<tainted_welding_objectivesuccessmessage4>よくやったぞ、我が同士！豚どもはもうこの運命から逃れられない。</tainted_welding_objectivesuccessmessage4>
+<tainted_welding_traitorobjectivestartmessage5>脱出ルートを確保しろ！シャトルが間も無く出迎えに来ます！\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage5>
+<tainted_welding_objectivesuccessmessage5>ダイビングスーツの警告音が鳴ります…シャトルが少し前にあなたと合流したはずですが、暗闇の中で唯一動いているのはエイリアンの群れです。あなたは別の電波を受信します：「こちらはエウロパ レジスタンスです。入ってください。脱出を要求します！」送信機は無音です。運命に任されました。エウロパはあなたを受け入れます。</tainted_welding_objectivesuccessmessage5>
+
+<!-- One of Us mission -->
+<one_of_us_goalinfotext_2>殻の若者の神聖な船は緩やかな通気口の後ろに隠されています。誰かが踏みつけてしまう前に、すぐにそれらの卵を見つけてください！</one_of_us_goalinfotext_2>
+<one_of_us_objectivesuccessmessage2>卵を見つけると、快楽の波があなたに押し寄せます。乾いたような狂った笑いがしばらく頭の中に響き渡り、不明瞭で湿った音の中に消えて行きます。</one_of_us_objectivesuccessmessage2>
+<one_of_us_objectivesuccessmessage3>最後のシアン化物が破壊されると、頭がぐるぐる回り、視界が狭くなります。</one_of_us_objectivesuccessmessage3>
+<one_of_us_traitorobjectivestartmessage4>最後の任務を確認する:\n[traitorgoalinfos]</one_of_us_traitorobjectivestartmessage4>
+<one_of_us_goalinfotext_4>この潜水艦の全ては、殻とのかかわりに取り組まなければなりません。</one_of_us_goalinfotext_4>
+
+<!-- Easter bunny mission -->
+<easterbunny_goalinfotext_1>非常に特別な卵を見つけてください。おそらく通気口の１つに隠されています。</easterbunny_goalinfotext_1>
+<easterbunny_objectivesuccessmessage1>卵にうんざりするかもしれませんが、あなたのポケットにすっぽりと収まります。ホンクッ！</easterbunny_objectivesuccessmessage1>
+<easterbunny_traitorobjectivestartmessage2>卵を育てる:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage2>
+<easterbunny_goalinfotext_2>卵が成長するために安全な場所を見つけ、世話をしてください [catalystitem].</easterbunny_goalinfotext_2>
+<easterbunny_objectivesuccessmessage2>卵が膨らみ、奇妙な音を立てます…あなたは親になろうとしています！</easterbunny_objectivesuccessmessage2>
+<easterbunny_traitorobjectivestartmessage3>卵に亀裂が入り、マッドラプターが飛び出す:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage3>
+<easterbunny_goalinfotext_3>マッドラプターが少なくとも３分間生き続けられるように、手段を講じてください。</easterbunny_goalinfotext_3>
+<easterbunny_objectivesuccessmessage3>ホンク ホンクッ！それは陽気でした。塗装された男はその様子を聞くと、ここから追い出すつもりだった。</easterbunny_objectivesuccessmessage3>
+<easterbunny_traitorobjectivestartmessage4>避難:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage4>
+
+<!-- Modified values -->
+<pausemenuquitverification>メインメニューに戻りますか？保存されていないデータは全て失われます。</pausemenuquitverification>
+<leveldifficulty>難易度</leveldifficulty>
+<connection.set_text>set_text</connection.set_text>
 
 </infotexts>
