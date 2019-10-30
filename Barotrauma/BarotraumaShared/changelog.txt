@@ -5,17 +5,19 @@ v0.9.5.0
 Misc additions and changes:
 - A new submarine, Kastrull.
 - 6 new traitor missions with much more varied objectives.
-- 3 variants of all job outfits.
+- More variants of all job outfits.
 - 30 new character face sprites. 
 - Overhauled job assignment logic to make the job distribution a little more balanced. Now each client gets assigned one of the spawnpoints (and its associated job) according to their job preference, which means that if the sub for example has 2x as many engineer spawnpoints than medic spawnpoints, there tend to be 2x more engineers. When playing with a mod that adds new jobs to the game, spawnpoints that have no job associated with them are considered spawnpoints for the non-vanilla jobs.
+	- We would like to get feedback from players about this: does the job assignment seem fair, are people generally getting the jobs they want? 
 - New logic components: sin, cos, tan, asin, acos, atan, modulo, round, ceil, floor and factorial.
 - Improved autopilot: much faster and less likely to get stuck.
+	- We would like to get feedback from players about this: Is there still incentive to steer manually?
 - AI characters don't set stationary batteries to recharge unless ordered to do so.
 - Items can be made damageable by projectiles, melee weapons and explosions by adding DamagedByProjectiles="true", DamagedByMeleeWeapons="true" or DamagedByExplosions="true" to the config.
 - Nerfed welding fuel + diving mask combo. The tank depletes much faster and one tank is only enough to make the target fall unconscious, not to kill them.
 - Added deconstruction recipes to all drugs.
 - Added huskified face sprites to all characters.
-- Question prompt in the debug console and dedicated server console (such as "enter the reason to ban XXX") can be cancelled by pressing Ctrl+D or Ctrl+Z (or Ctrl+C in the in-game debug console).
+- Question prompts in the debug console and dedicated server console (such as "enter the reason to ban XXX") can be cancelled by pressing Ctrl+D or Ctrl+Z (or Ctrl+C in the in-game debug console).
 - Welding tools and plasma cutters explode when loaded with the wrong fuel.
 - Removed sodium as a product of recycling fire extinguishers.
 - Added some loose vents and panels to Orca and Typhon.
@@ -85,7 +87,7 @@ Human AI:
 - Fixed bots ignoring/avoiding targets in hulls when there were dead enemies inside them.
 - Fixed issues in switching empty oxygen tanks to new.
 - Fixed bots unequipping and re-equipping diving gear while ordered to follow another character.
-- Fixed bots not being able to handle things when they cannot find diving gear. Now they should first try to get the gear and if it fails, they should just target a a safe hull.
+- Fixed bots not being able to handle things when they cannot find diving gear. Now they should first try to get the gear and if it fails, they should just target a safe hull.
 - Fixed bots shooting friendly characters with turrets.
 - Fixed bots always treating weapons as revolvers.
 - Fixed the loading of smg magazines/fuel tanks etc (because they are different from revolver rounds).
@@ -97,7 +99,7 @@ Human AI:
 - Fixed bots abandoning the operate item objective if there was another character operating the item.
 - Fixed bots speaking about success/failure to repair when another character fixes their target.
 - Fixed bots reporting individual failures when doing a loop objective. Should fix bots spamming with the "Cannot reach the target" msgs.
-- Fixed the current objective not being reassigned after sorting the objectives, leading to sorting the subobjectives of a the old current objective, which would be fixed only after the next time the objectives were sorted (after 1 sec).
+- Fixed the current objective not being reassigned after sorting the objectives, leading to sorting the subobjectives of the old current objective, which would be fixed only after the next time the objectives were sorted (after 1 sec).
 - Fixed the gap size being misinterpreted when calculating the priority for a fix leak objective.
 - Fixed bots switching repair targets while repairing an item.
 - Fixed bots in some situations facing the wrong direction. The bots should now always face the item they are operating.
@@ -127,16 +129,14 @@ Also fixes Fractal Guardians flying in non-flooded alien ruins.
 - Fixed a crash when trying to create a swarm with characters that have no swarming behavior defined.
 - Fixed monsters not targeting the closest limb when they should.
 - Fixed ai targets not being updated when the character is dead, causing the characters to be too perceivable/not perceivable enough by the monsters.
-- Fixed light textures repeating (most noticeable in diving suits and scooters).
-- Fixed deformable limbs not obstructing the lights behind them.
 - Fixed limbs' lightsources not being visible inside the submarine.
 - Fixed immobilized characters (e.g. stunned, monsters on dry land) occasionally "hanging" mid-air.
-- Fixed draw order issues due to normal sprites and deformable sprites being used on same characters.
+- Fixed draw order issues due to normal sprites and deformable sprites being used on the same characters.
 
 Character editor:
 - Added "TailTorqueBoost" parameter that can be used to prevent long and fast-moving characters, like the Tigerthresher, to get tangled around themselves.
 - "TailTorque" no longer affects the swimming sine amplitude (how strong the tail moves).
-- Sprite orientation now longer affects the damage modifiers.
+- Sprite orientation no longer affects the damage modifiers.
 - Exposed the ragdoll main limb.
 - Exposed the damage emitters.
 - Exposed the damage sound of damage modifiers.
@@ -152,7 +152,7 @@ Bugfixes:
 - Fixed clients being able to join servers after enabling a required content package in the settings, even though they need to restart first (leading to errors when a round starts).
 - Fixed "attempted to access a potentially removed character" console errors if a character dies while the client is waiting to apply the character's remote inventory state.
 - Fixed broken waypoints in Typhon that prevented bots from opening some of the doors.
-- Fixed characters being very hard or impossible to hit with melee weapons when they're laying on the floor.
+- Fixed characters being very hard or impossible to hit with melee weapons when they're lying on the floor.
 - Fixed characters placing their feet above a platform when not actually standing on the platform (noticeable in rooms where there's a platform on top of the "actual" floor).
 - Fixed husk eggs not causing a husk infection when injected.
 - Fixed depth sorting not working on damageable structures.
@@ -170,7 +170,7 @@ Bugfixes:
 - Fixed detection area offset becoming unmirrored when saving and reloading a mirrored motion sensor.
 - Fixed a couple of doors and hatches in vanilla subs being repairable with welding tools instead of wrenches.
 - Fixed ruins occasionally having rooms too narrow to pass through.
-- Fixed door gaps occasionally geting misplaced when placing them in ruins, preventing water from flowing through the room.
+- Fixed door gaps occasionally getting misplaced when placing them in ruins, preventing water from flowing through the room.
 - Fixed "picked/selected required" fields disappearing from the item editing panel in the submarine editor if left blank.
 - Fixed being able to hit through walls with melee weapons.
 - Fixed framerate issues when using passive sonar near large amounts of sound emitters (right outside a submarine for example).
@@ -183,7 +183,6 @@ Bugfixes:
 - Fixed traitor missions not ending when the traitor dies and the traitor retaining their old mission info in the info menu.
 - Fixed dead characters still appearing in the crew list when a client joins mid-round.
 - Fixes to decorative sprites: Rotation property is in degrees, fixed offset anim type being used as the rotation anim.
-
 
 ---------------------------------------------------------------------------------------------------------
 v0.9.4.0
