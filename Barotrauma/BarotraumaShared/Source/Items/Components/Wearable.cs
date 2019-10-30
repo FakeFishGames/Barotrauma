@@ -401,17 +401,37 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public override XElement Save(XElement parentElement)
+        {
+            XElement componentElement = base.Save(parentElement);
+            componentElement.Add(new XAttribute("variant", variant));
+            return componentElement;
+        }
+
+        private int loadedVariant = -1;
+        public override void Load(XElement componentElement, bool usePrefabValues)
+        {
+            base.Load(componentElement, usePrefabValues);
+            loadedVariant = componentElement.GetAttributeInt("variant", -1);
+        }
+        public override void OnItemLoaded()
+        {
+            base.OnItemLoaded();
+            //do this here to prevent creating a network event before the item has been fully initialized
+            if (loadedVariant > 0 && loadedVariant < Variants + 1)
+            {
+                Variant = loadedVariant;
+            }
+        }
         public override void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             msg.Write((byte)Variant);
-
             base.ServerWrite(msg, c, extraData);
         }
 
         public override void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             Variant = (int)msg.ReadByte();
-
             base.ClientRead(type, msg, sendingTime);
         }
 
