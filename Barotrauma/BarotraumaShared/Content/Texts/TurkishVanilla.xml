@@ -2962,16 +2962,188 @@
 <replaceshuttles>Yenile</replaceshuttles>
 <replaceshuttledockingportoccupied>Kayıp araç yenilemez çünkü kenetlenme limanı hâlihazırda kullanılıyor. Yeni bir araç istemeden önce kenetlenme limanını boşaltın.</replaceshuttledockingportoccupied>
 <character.blackmoloch>Kara Molek</character.blackmoloch>
-<character.goldenhammerhead>Altın Çekiçkafa</character.goldenhammerhead>
+<character.hammerheadgold>Altın Çekiçkafa</character.hammerheadgold>
 <character.hammerheadmatriarch>Çekiçkafa Maderşahi</character.hammerheadmatriarch>
-<character.bonetigerthresher>Kemik Kaplan Harmancı</character.bonetigerthresher>
+<character.bonethresher>Kemik Kaplan Harmancı</character.bonethresher>
 
-<!-- Updated values as of 13th of August -->
+<!-- New Additions for the November update -->
+<submarine.name.kastrull>Kastrull</submarine.name.kastrull>
+<submarine.description.kastrull>Kastrull, her savaşa ciddi oranda ateş gücü getiren güvenilir bir saldırı denizaltı sınıfıdır. Çok çevik olmasa bile standart olarak silahlı bir dron barındırır. Deneysel açık balast tankları sebebiyle baskınlara karşı toleransı düşüktür ve birçok tayfa istasyou bulunmaktadır. Büyük, tecrübeli bir tayfa bu denizaltını daha iyi kullanacaktır.</submarine.description.kastrull>
 
+<gamemodedescription.singleplayercampaign>Europa'nın derinliklerinde bir yolculuğa çık. Konumdan konuma yolculuk et, para ve malzeme kazanmak için görevleri tamamla, yeni biyomları keşfet. Hatta belki nihayetinde Europa'nın sırlarını bile keşfet.</gamemodedescription.singleplayercampaign>
+<gamemodedescription.sandbox>Özel bir hedef bulunmayan oyun modu.</gamemodedescription.sandbox>
+<gamemodedescription.mission>Tayfa belli bir görevi tamamlamak için, yabancı bir nesneyi getirmek veya yakınlardaki üslere terör estiren bir yaratık olabilir, birlikte çalışmalıdır. Görev tamamlandığında veya tayfadaki herkes öldüğünde oyun sona erer.</gamemodedescription.mission>
+<gamemodedescription.multiplayercampaign>Europa'nın derinliklerinde bir yolculuğa çık. Konumdan konuma yolculuk et, para ve malzeme kazanmak için görevleri tamamla, yeni biyomları keşfet. Hatta belki nihayetinde Europa'nın sırlarını bile keşfet.</gamemodedescription.multiplayercampaign>
 
+<entityname.sincomponent>Sin Bileşeni</entityname.sincomponent>
+<entitydescription.sincomponent>Girdinin sinini çıkarır.</entitydescription.sincomponent>
+<entityname.coscomponent>Kos Bileşeni</entityname.coscomponent>
+<entitydescription.coscomponent>Girdinin kosinüsünü çıkarır.</entitydescription.coscomponent>
+<entityname.tancomponent>Tan Bileşeni</entityname.tancomponent>
+<entitydescription.tancomponent>Girdinin tanjantını çıkarır.</entitydescription.tancomponent>
+<entityname.asincomponent>Asin Bileşeni</entityname.asincomponent>
+<entitydescription.asincomponent>Sinüsü girdiye eşit olan açıyı çıkarır.</entitydescription.asincomponent>
+<entityname.acoscomponent>Acos Bileşeni</entityname.acoscomponent>
+<entitydescription.acoscomponent>Kosinüsü girdiye eşit olan açıyı çıkarır.</entitydescription.acoscomponent>
+<entityname.atancomponent>Atan Bileşeni</entityname.atancomponent>
+<entitydescription.atancomponent>Tanjantı girdiye eşit olan açıyı çıkarır.</entitydescription.atancomponent>
+<entityname.modulocomponent>Modulo Bileşeni</entityname.modulocomponent>
+<entitydescription.modulocomponent>Girdi belli bir sayıya ulaştığında kalan artığı çıkarır.</entitydescription.modulocomponent>
+<entityname.roundcomponent>Yuvarlak Bileşen</entityname.roundcomponent>
+<entitydescription.roundcomponent>Sayısal bir girdiyi en yakın tam sayı değerine yuvarlar.</entitydescription.roundcomponent>
+<entityname.ceilcomponent>Tavan Bileşeni</entityname.ceilcomponent>
+<entitydescription.ceilcomponent>Girdiden daha büyük veya ona eşit olan en küçük tam sayı değerini çıkarır.</entitydescription.ceilcomponent>
+<entityname.floorcomponent>Zemin Bileşeni</entityname.floorcomponent>
+<entitydescription.floorcomponent>Girdiye eşit olan veya ondan büyük olan en büyük tam sayı değerini çıkarır.</entitydescription.floorcomponent>
+<entityname.factorialcomponent>Faktöriyel Bileşeni</entityname.factorialcomponent>
+<entitydescription.factorialcomponent>Girdinin faktöriyelini çıkarır.</entitydescription.factorialcomponent>
+<entityname.squarerootcomponent>Karekök Bileşeni</entityname.squarerootcomponent>
+<entitydescription.squarerootcomponent>Girdnin karekökünü çıkarır.</entitydescription.squarerootcomponent>
+<entityname.abscomponent>Mutlak Bileşen</entityname.abscomponent>
+<entitydescription.abscomponent>Girdinin mutlak değerini çıkarır.</entitydescription.abscomponent>
+<entityname.powcomponent>Üs Bileşeni</entityname.powcomponent>
+<entitydescription.powcomponent>Girdinin üssünü alır ve çıkarır.</entitydescription.powcomponent>
 
+<connection.setmodulus>ayarla_modulus</connection.setmodulus>
+<shuttle>Araç</shuttle>
+<privacypolicy>Gizlilik politikası</privacypolicy>
+<entityname.mudraptoregg>Çamur Raptörü Yumurtası</entityname.mudraptoregg>
+<entitydescription.mudraptoregg>Balçıksı, titreyen bir çamur raptörü yumurtası. Yumurtanın tepesindeki açık ağız, yiyecek bir şey aradığını gösteriyor.</entitydescription.mudraptoregg>
 
+<Server lobby 2.0><!-- No data --></Server lobby 2.0>
+<serverlisttab.all>Tüm sunucular</serverlisttab.all>
+<serverlisttab.favorites>Favoriler</serverlisttab.favorites>
+<serverlisttab.recent>Son Zamandakiler</serverlisttab.recent>
+<addtofavorites>Favorilere ekle</addtofavorites>
+<removefromfavorites>Favorilerden kaldır</removefromfavorites>
+<servertag.casual>Basit Eğlence</servertag.casual>
+<servertagdescription.casual>Eğlenmek, bir hedefi tamamlamaktan daha önemlidir. Yeni oyuncular için iyi bir seçimdir.</servertagdescription.casual>
+<servertag.serious>Ciddi</servertag.serious>
+<servertagdescription.serious>Tayfa verimli şekilde birbirleriyle çalışmaya ve görevlerini tamamlamaya odaklanmalıdır. Boş gezmek yok.</servertagdescription.serious>
+<servertag.roleplay>Rol Oyunu</servertag.roleplay>
+<servertagdescription.roleplay>Tayfa gerçek bir denizaltı tayfası gibi hareket etmelidir. Emir komuta zinciri, sorumlulukları yerine getirmek, emirleri dinlemek gibi şeyler önemlidir. Raunt esnasında karaktere uymayan konuşmalar yapılmamalıdır.</servertagdescription.roleplay>
+<servertag.somethingdifferent>Farklı bir şey</servertag.somethingdifferent>
+<servertagdescription.somethingdifferent>Oynanış, sıradan Barotrauma oynanışından tamamen farklıdır. Modlu sunucular, çok sıra dışı denizaltları, büyük savaşlar, araç yarışları, ölüm koşusu haritaları… Ne ararsan!</servertagdescription.somethingdifferent>
+<servertag.rampage>Hücum</servertag.rampage>
+<servertagdescription.rampage>Hayatın için savaşmaya hazırlan! Savaş için düzenlenmiş bir sunucu. Bu oyuncuya karşı oyuncu savaşı, PvE veya ikisi de olabilir. Sunucu tanımlamasında, sunucuda izin verilen şiddet eylemlerine yönelik bir rehber de bulunacaktır.</servertagdescription.rampage>
+<servertag.modded.true>Modlu</servertag.modded.true>
+<servertagdescription.modded.true>Bir veya daha fazla mod açık. Bu sunucuya katılmak için Atölye'den mod yüklemek gerekebilir.</servertagdescription.modded.true>
+<servertag.modded.false>Sade</servertag.modded.false>
+<servertagdescription.modded.false>Sunucu herhangi bir mod kullanmıyor.</servertagdescription.modded.false>
+<servertag.247.true>7/24</servertag.247.true>
+<servertagdescription.247.true>Sürekli çalışır.</servertagdescription.247.true>
+<servertag.247.false>Bazen açık</servertag.247.false>
+<servertagdescription.247.false>Sunucu 7/24 açık değil.</servertagdescription.247.false>
+<servertag.friendlyfire.true>Dost ateşi açık</servertag.friendlyfire.true>
+<servertagdescription.friendlyfire.true>Tayfa arkadaşlarına hasar verebilirsin.</servertagdescription.friendlyfire.true>
+<servertag.friendlyfire.false>Dost ateşi kapalı</servertag.friendlyfire.false>
+<servertagdescription.friendlyfire.false>Tayfa arkadaşlarına hasar veremezsin.</servertagdescription.friendlyfire.false>
+<servertag.voip.true>Sesli sohbet açıldı</servertag.voip.true>
+<servertagdescription.voip.true>Sesli sohbet açık</servertagdescription.voip.true>
+<servertag.voip.false>Sesli sohbet kapandı</servertag.voip.false>
+<servertagdescription.voip.false>Sesli sohbet kapalı</servertagdescription.voip.false>
+<servertag.karma.true>Karma açıldı</servertag.karma.true>
+<servertagdescription.karma.true>Karma sistemi açık</servertagdescription.karma.true>
+<servertag.karma.false>Karma kapandı</servertag.karma.false>
+<servertagdescription.karma.false>Karma sistemi kapalı</servertagdescription.karma.false>
+<servertag.traitors.true>Hainler açıldı</servertag.traitors.true>
+<servertagdescription.traitors.true>Sunucuda hainler açık.</servertagdescription.traitors.true>
+<servertag.traitor.false>Hainler kapandı</servertag.traitor.false>
+<servertagdescription.traitors.false>Sunucuda hainler kapalı.</servertagdescription.traitors.false>
+<friendplayingbarotrauma>Barotrauma oynuyor</friendplayingbarotrauma>
+<friendplayinganothergame>Başka bir oyun oynuyor</friendplayinganothergame>
+<friendnotplaying>Oynamıyor</friendnotplaying>
+<serversettingsplaystyle>Oyun tarzı</serversettingsplaystyle>
+<serversettingsallowfriendlyfire>Dost ateşine izin ver</serversettingsallowfriendlyfire>
+<serversettingsallowrewiring>Yeniden sarmaya izin ver</serversettingsallowrewiring>
+<serversettingsallowdisguises>Kılıklara izin ver</serversettingsallowdisguises>
+<filtersameversion>Aynı versiyon</filtersameversion>
+<filterwhitelistedservers>Beyaz listeyi göster</filterwhitelistedservers>
+<!-- Misc -->
+<chat.shownewmessages>Yeni mesajları göster</chat.shownewmessages>
+<chat>Sohbet</chat>
+<clicktoselectjob>Bir iş seçmek için tıkla</clicktoselectjob>
+<faceattachment.hair>Saç</faceattachment.hair>
+<faceattachment.beard>Sakal</faceattachment.beard>
+<faceattachment.moustache>Bıyık</faceattachment.moustache>
+<faceattachment.accessories>Aksesuarlar</faceattachment.accessories>
+<characterappearance>Görünüm</characterappearance>
+<disconnect>Bağlantıyı kes</disconnect>
+<endcampaignverification>Seferden ayrılmak istediğine emin misin? Kaydedilmemiş ilerlemen kaybedilecek.</endcampaignverification>
+<leveldifficultyexplanation>Zorluk ayarı seviyenin ayarlanma şeklini ve görev esnasında karşına rastgele çıkabilecek olayları etkiler. Daha yüksek zorluk seviyelerinde daha fazla çevresel tehlike, daha fazla sayıda yaratık ve daha tehlikeli düşmanlar beklemen yerinde olur.</leveldifficultyexplanation>
+<subnotdownloaded>Denizaltı indirilmedi</subnotdownloaded>
 
+<difficulty.easy>Kolay</difficulty.easy>
+<difficulty.medium>Orta</difficulty.medium>
+<difficulty.hard>Zor</difficulty.hard>
+<difficulty.hellish>Cehennemvari</difficulty.hellish>
 
+<!-- New traitor goals -->
+<traitorgoalkilltargetinfowithcause>[targetname] karakterine [causeofdeath] ile suikast düzenle.</traitorgoalkilltargetinfowithcause>
+<traitorgoalkilltargetinfowithhull>[targetname] karakterine suikast düzenle ve cesedini [targethullname] konumunda bırak.</traitorgoalkilltargetinfowithhull>
+<traitorgoalkilltargetinfowithcauseandhull>[targetname] karakterine [causeofdeath] ile suikast düzenle ve cesedini [targethullname] konumunda bırak.</traitorgoalkilltargetinfowithcauseandhull>
+<traitorgoalpoisoneveryoneinfo>Bütün tayfa üyelerine [poison] ver.</traitorgoalpoisoneveryoneinfo>
+<traitorgoalkeepalive>[speciesname] 'leri [duration] saniye boyunca koru.</traitorgoalkeepalive>
+
+<!-- Goblin mission -->
+<goblins_traitormissionstartinfotext>Alttan gelen kazıma seslerini duydukça, balast goblinlerini besleyeli epey olduğunu fark ediyorsun. Şansa bak ki etrafta bir sürü et var.</goblins_traitormissionstartinfotext>
+<goblins_traitorobjectivestartmessage1>Önce baharatlar. Dolu bir mutfakta bu amaca hizmet edecek bir sürü seçenek vardır, sadece en saf siyanür iş görür.\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage1>
+<goblins_objectivesuccessmessage1>Evet, bu güzel olur.</goblins_objectivesuccessmessage1>
+<goblins_traitorobjectivestartmessage2>İşi önce biraz suyla başlatalım.\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage2>
+<goblins_objectivesuccessmessage2>İşte böyle.</goblins_objectivesuccessmessage2>
+<goblins_traitorobjectivestartmessage3>Hors d'oeuvres, millet?\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage3>
+<goblins_objectivesuccessmessage3>Şu yumuşak, leziz ete bir bak!</goblins_objectivesuccessmessage3>
+<goblins_traitorobjectivestartmessage4>Şimdi ana hedef: \n[traitorgoalinfos]</goblins_traitorobjectivestartmessage4>
+<goblins_objectivesuccessmessage4>Goblinler beslendi ama kiler boş. Sonraki istasyondan biraz malzeme toplama vakti.</goblins_objectivesuccessmessage4>
+
+<!-- Oxygen sabotage mission -->
+<oxygen_sabotage_traitormissionstartinfotext>Yeni bir deney zamanı geldi. Bu defa insan bedeni, oksijensiz kaldığında nasıl tepki veriyor ona bakacağız.</oxygen_sabotage_traitormissionstartinfotext>
+<oxygen_sabotage_traitorobjectivestartmessage1>Denekler toplandı ve başlamaya hazırız.\n[traitorgoalinfos]</oxygen_sabotage_traitorobjectivestartmessage1>
+<oxygen_sabotage_objectivesuccessmessage1>Denekler kısa süre sonra etkiyi hissetmeye başlamalı. Oksijen yokluğunun semptomları, sayılanlarla sınırlı olmamak üzere şunlardır: ellerin ve ayakların mavileşmesi, nöbet geçirme ve bayılma.</oxygen_sabotage_objectivesuccessmessage1>
+<oxygen_sabotage_traitorobjectivestartmessage2>Topladığın veriden memnun olduğunda, deneklerden kurtul.\n[traitorgoalinfos]</oxygen_sabotage_traitorobjectivestartmessage2>
+<oxygen_sabotage_objectivesuccessmessage2>Başarılı bir test daha. En yakın koalisyon üssüne rapor ver.</oxygen_sabotage_objectivesuccessmessage2>
+
+<!-- Acidparty mission -->
+<acidparty_traitormissionstartinfotext>Cebinde manyakça yazılmış bir not buluyorsun. Selam adamım. Ayın tam ortasında bir şey var, biliyorsun, değil mi? Ya fiziksel olarak oraya ulaşmadan, onun ne olduğunu görme imkânı olsaydı?</acidparty_traitormissionstartinfotext>
+<acidparty_traitorobjectivestartmessage1>Adım 1. Biraz delimi… delirun… der… DEL şeyini bul işte, tamam mı?\n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage1>
+<acidparty_objectivesuccessmessage1>Bu olmalı. Daha önce hiç buna sahip olmamıştım.</acidparty_objectivesuccessmessage1>
+<acidparty_traitorobjectivestartmessage2>Adım 2. Bazen denizaltlarında şey olur… şu görüş engelleyiciler, tamam mı? Basitçe yaptıkları şey, seni bir noktaya hapsetmeleri ve sadece gerçekliğin çok dar bir kısmını görebilmen oluyor. Yani, onlardan kurtulman gerek. O boklara halleberdil mi ne öyle bir şey diyorlar.\n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage2>
+<acidparty_objectivesuccessmessage2>Tamamlamış olmalıyım.</acidparty_objectivesuccessmessage2>
+<acidparty_traitorobjectivestartmessage3>Adım 3. İlk kural, paylaşmamız gerektiği. Buradaki bazı insanların sorunu b, değil mi? Dünya görüşlerine meydan okuyan her şeyden korkmaları konusunda beyinleri yıkanmış, bilmem anlatabildim mi. Yani o boku onların sistemine sokmanın bir yolunu bulmalısın, tamam mı?\n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage3>
+<acidparty_objectivesuccessmessage3>Adım 4. Uzan ve dalgaları dinle adamım.</acidparty_objectivesuccessmessage3>
+
+<!-- Tainted welding mission -->
+<tainted_welding_traitorobjectivestartmessage2>Verici çatırdıyor ve zayıf bir sinyal alınıyor: Europan Direniş direkt aksiyonu, göreve devam etme izni verildi: Bu denizaltı batırılmalı ve bu bir kaza gibi görünmeli. Kaynak aletini sabote etmeye başla.\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage2>
+<tainted_welding_goalinfotext_2>Denizaltındaki kaynak aletlerinin en az %70'inin kaynak yakıtlarını oksijen tüpleriyle değiştir.</tainted_welding_goalinfotext_2>
+<tainted_welding_objectivesuccessmessage2>Aferin. Oksijen tüpleri, kaynak aletlerine konulduğunda genelde yanar.</tainted_welding_objectivesuccessmessage2>
+<tainted_welding_traitorobjectivestartmessage3>Şimdi o yakıttan kurtul ki mürettebat daha sonra onu kullanamasın:\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage3>
+<tainted_welding_objectivesuccessmessage3>Tebrikler! Mürettebat şu an farkında değil ama kırılgan bir durumda.</tainted_welding_objectivesuccessmessage3>
+<tainted_welding_traitorobjectivestartmessage4>Şimdi, çabucak. Tuzak kur!\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage4>
+<tainted_welding_objectivesuccessmessage4>İyi iş yoldaş! Bu domuzların işi bitti artık.</tainted_welding_objectivesuccessmessage4>
+<tainted_welding_traitorobjectivestartmessage5>Kaç! Seni alması için bir araç gönderilecek!\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage5>
+<tainted_welding_objectivesuccessmessage5>Dalış kıyafetindeki uyarı alarmının sesi geliyor… Araç bir süre önce seni almaya gelmiş olmalıydı ama gördüğün tek hareket, bir sürü yabancı organizmadan ibaret. Bir mesaj daha gönderiyorsun: Ben Europan Direniş direkt askiyonu, cevap verin! Tahliye talep ediyorum! Cevap gelmiyor. Kaderine terk edildin. Europa seni kucaklıyor.</tainted_welding_objectivesuccessmessage5>
+
+<!-- One of Us mission -->
+<one_of_us_goalinfotext_2>Kabuğun çocukları, kutsal bedenleri bir havalandırmanın arkasında saklanıyor. O yumurtaları başkası onlara rastlamadan bul!</one_of_us_goalinfotext_2>
+<one_of_us_objectivesuccessmessage2>Yumurtaları bulduğunda bir mutluluk dalgası sana vuruyor. Kuru, çılgın bir kahkaha kısa süreliğine zihninde yankılanıyor ve yavaşça yok oluyor.</one_of_us_objectivesuccessmessage2>
+<one_of_us_objectivesuccessmessage3>Son calyxanide yok edilince başın dönüyor ve görüşün daralıyor.</one_of_us_objectivesuccessmessage3>
+<one_of_us_traitorobjectivestartmessage4>Son görevi okuyorsun:\n[traitorgoalinfos]</one_of_us_traitorobjectivestartmessage4>
+<one_of_us_goalinfotext_4>Bu denizaltının tamamı kabuğun komünyonuna katılmalı!</one_of_us_goalinfotext_4>
+
+<!-- Easter bunny mission -->
+<easterbunny_goalinfotext_1>Çok özel bir yumurta bul, havalandırmalardan birinin arkasında olabilir.</easterbunny_goalinfotext_1>
+<easterbunny_objectivesuccessmessage1>Yumurta mideni bulandırıyor ama cebine tam oturuyor. HONK!</easterbunny_objectivesuccessmessage1>
+<easterbunny_traitorobjectivestartmessage2>Yumurtayı büyüt:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage2>
+<easterbunny_goalinfotext_2>Yumurtanın büyüyebileceği güvenli bir yer bul ve onu besle [catalystitem].</easterbunny_goalinfotext_2>
+<easterbunny_objectivesuccessmessage2>Yumurta şişiyor ve tuhaf sesler çıkarıyor… Ebeveyn olmak üzeresin!</easterbunny_objectivesuccessmessage2>
+<easterbunny_traitorobjectivestartmessage3>Yumurta kırılıyor ve çamur raptörü doğuyor:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage3>
+<easterbunny_goalinfotext_3>Çamur raptörünün en azından 3 dakika boyunca hayatta kalması için her şeyi yap.</easterbunny_goalinfotext_3>
+<easterbunny_objectivesuccessmessage3>Honk honk! Bu çok komikti. Boyalı adam bunu duyduğunda çok gülecek.</easterbunny_objectivesuccessmessage3>
+<easterbunny_traitorobjectivestartmessage4>Kaç:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage4>
+
+<!-- Modified values -->
+<pausemenuquitverification>Ana menüye dönmek istediğine emin misin? Kaydedilmemiş bütün ilerlemen kaybedilecek.</pausemenuquitverification>
+<leveldifficulty>Zorluk</leveldifficulty>
+<connection.set_text>ayarla_metin</connection.set_text>
 
 </infotexts>

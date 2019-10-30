@@ -336,6 +336,7 @@
 <banreason>Grund:</banreason>
 
 <!-- Round summary -->
+
 <roundsummaryprogress>[sub] hat es hierhin geschafft: [location]</roundsummaryprogress>
 <roundsummaryprogress>[sub] ist hier angekommen: [location]</roundsummaryprogress>
 <roundsummaryreturn>[sub] kehrte hierhin zurück: [location]</roundsummaryreturn>
@@ -2960,16 +2961,188 @@
 <replaceshuttles>Ersetzen</replaceshuttles>
 <replaceshuttledockingportoccupied>Die verlorenen Shuttle können nicht ersetzt werden, da die Andockschleuse bereits verwendet wird. Mach die Andockschleuse frei, bevor du ein neues Shuttle anforderst.</replaceshuttledockingportoccupied>
 <character.blackmoloch>Schwarzer Moloch</character.blackmoloch>
-<character.goldenhammerhead>Goldener Hammerkopf</character.goldenhammerhead>
+<character.hammerheadgold>Goldener Hammerkopf</character.hammerheadgold>
 <character.hammerheadmatriarch>Hammerkopf-Matriarchin</character.hammerheadmatriarch>
-<character.bonetigerthresher>Knochen-Tigerflosser</character.bonetigerthresher>
+<character.bonethresher>Knochen-Tigerflosser</character.bonethresher>
 
-<!-- Updated values as of 13th of August -->
+<!-- New Additions for the November update -->
+<submarine.name.kastrull>Kastrull</submarine.name.kastrull>
+<submarine.description.kastrull>Die verlässlichen Angriffs-U-Boote der Kastrull-Klasse weisen eine große Feuerkraft auf. Sie sind zwar nicht sonderlich wendig, aber standardmäßig mit einer Kanonenboot-Drohne ausgestattet. Aufgrund der experimentellen offenen Ballasttanks, der geringen Flutungs-Toleranz und der zahlreichen zu besetzenden Stationen ist eine große, erfahrene Besatzung nötig, um diese U-Boot-Klasse optimal nutzen zu können.</submarine.description.kastrull>
 
+<gamemodedescription.singleplayercampaign>Begib dich auf eine Reise durch die Tiefen Europas. Reise von Schauplatz zu Schauplatz, schließe Missionen ab, um Geld für Vorräte zu verdienen, entdecke neue Biome ... und ergründe vielleicht die Geheimnisse der alten Welt.</gamemodedescription.singleplayercampaign>
+<gamemodedescription.sandbox>Ein Spielmodus ohne bestimmte Ziele.</gamemodedescription.sandbox>
+<gamemodedescription.mission>Die Besatzung muss zusammenarbeiten, um eine bestimmte Aufgabe zu absolvieren – beispielsweise um ein außerirdisches Artefakt zu bergen oder eine Kreatur zu töten, die Außenposten terrorisiert. Das Spiel endet, wenn die Aufgabe abgeschlossen oder die gesamte Besatzung gestorben ist.</gamemodedescription.mission>
+<gamemodedescription.multiplayercampaign>Begib dich auf eine Reise durch die Tiefen Europas. Reise von Schauplatz zu Schauplatz, schließe Missionen ab, um Geld für Vorräte zu verdienen, entdecke neue Biome ... und ergründe vielleicht die Geheimnisse der alten Welt.</gamemodedescription.multiplayercampaign>
 
+<entityname.sincomponent>Sin-Komponente</entityname.sincomponent>
+<entitydescription.sincomponent>Gibt den Sinus des Eingabewerts aus.</entitydescription.sincomponent>
+<entityname.coscomponent>Cos-Komponente</entityname.coscomponent>
+<entitydescription.coscomponent>Gibt den Kosinus des Eingabewerts aus.</entitydescription.coscomponent>
+<entityname.tancomponent>Tan-Komponente</entityname.tancomponent>
+<entitydescription.tancomponent>Gibt den Tangens des Eingabewerts aus.</entitydescription.tancomponent>
+<entityname.asincomponent>Asin-Komponente</entityname.asincomponent>
+<entitydescription.asincomponent>Gibt den Winkel aus, dessen Sinus gleich dem Eingabewert ist.</entitydescription.asincomponent>
+<entityname.acoscomponent>Acos-Komponente</entityname.acoscomponent>
+<entitydescription.acoscomponent>Gibt den Winkel aus, dessen Kosinus gleich dem Eingabewert ist.</entitydescription.acoscomponent>
+<entityname.atancomponent>Atan-Komponente</entityname.atancomponent>
+<entitydescription.atancomponent>Gibt den Winkel aus, dessen Tangens gleich dem Eingabewert ist.</entitydescription.atancomponent>
+<entityname.modulocomponent>Modulo-Komponente</entityname.modulocomponent>
+<entitydescription.modulocomponent>Gibt den Rest aus der Division des Eingabewerts mit einer bestimmten Zahl aus.</entitydescription.modulocomponent>
+<entityname.roundcomponent>Rundung-Komponente</entityname.roundcomponent>
+<entitydescription.roundcomponent>Rundet einen numerischen Eingabewert auf den nächsten ganzzahligen Wert auf beziehungsweise ab.</entitydescription.roundcomponent>
+<entityname.ceilcomponent>Ceil-Komponente</entityname.ceilcomponent>
+<entitydescription.ceilcomponent>Gibt den kleinsten ganzzahligen Wert aus, der größer als der Eingabewert beziehungsweise gleich dem Eingabewert ist.</entitydescription.ceilcomponent>
+<entityname.floorcomponent>Floor-Komponente</entityname.floorcomponent>
+<entitydescription.floorcomponent>Gibt den größten ganzzahligen Wert aus, der kleiner als der Eingabewert beziehungsweise gleich dem Eingabewert ist.</entitydescription.floorcomponent>
+<entityname.factorialcomponent>Fakultät-Komponente</entityname.factorialcomponent>
+<entitydescription.factorialcomponent>Gibt die Fakultät des Eingabewerts aus.</entitydescription.factorialcomponent>
+<entityname.squarerootcomponent>Quadratwurzel-Komponente</entityname.squarerootcomponent>
+<entitydescription.squarerootcomponent>Gibt die Quadratwurzel des Eingabewerts aus.</entitydescription.squarerootcomponent>
+<entityname.abscomponent>Abs-Komponente</entityname.abscomponent>
+<entitydescription.abscomponent>Gibt den absoluten Wert des Eingabewerts aus.</entitydescription.abscomponent>
+<entityname.powcomponent>Potenzierung-Komponente</entityname.powcomponent>
+<entitydescription.powcomponent>Gibt die angegebene Potenz des Eingabewerts aus.</entitydescription.powcomponent>
 
+<connection.setmodulus>modulus_setzen</connection.setmodulus>
+<shuttle>Shuttle</shuttle>
+<privacypolicy>Datenschutzrichtlinie</privacypolicy>
+<entityname.mudraptoregg>Schlammechsen-Ei</entityname.mudraptoregg>
+<entitydescription.mudraptoregg>Ein schleimiges, pulsierendes Schlammechsen-Ei. Der klaffende Schlund am oberen Ende des Eis scheint nach Fressen zu gieren.</entitydescription.mudraptoregg>
 
+<!-- Server lobby 2.0 -->
+<serverlisttab.all>Alle Server</serverlisttab.all>
+<serverlisttab.favorites>Favoriten</serverlisttab.favorites>
+<serverlisttab.recent>Zuletzt verwendet</serverlisttab.recent>
+<addtofavorites>Zu Favoriten hinzufügen</addtofavorites>
+<removefromfavorites>Aus Favoriten entfernen</removefromfavorites>
+<servertag.casual>Locker</servertag.casual>
+<servertagdescription.casual>Spaß zu haben ist wichtiger, als das Ziel abzuschließen. Eine gute Wahl für neue Spieler.</servertagdescription.casual>
+<servertag.serious>Ernst</servertag.serious>
+<servertagdescription.serious>Die Besatzung muss sich darauf konzentrieren, effizient zusammenzuarbeiten und ihr Ziel zu erreichen. Keine unnötigen Spielchen.</servertagdescription.serious>
+<servertag.roleplay>Rollenspiel</servertag.roleplay>
+<servertagdescription.roleplay>Die Besatzung muss versuchen, sich wie eine echte U-Boot-Besatzung zu verhalten. Die Befehlskette ist wichtig, jeder muss sich um seinen Aufgabenbereich kümmern und Befehle befolgen. Man sollte die ganze Runde über in seiner Rolle bleiben.</servertagdescription.roleplay>
+<servertag.somethingdifferent>Abwechslung</servertag.somethingdifferent>
+<servertagdescription.somethingdifferent>Die Spielweise unterscheidet sich deutlich vom üblichen Barotrauma-Gameplay. Gemoddete Server, sehr unkonventionelle U-Boote, Battle-Royale-Runden, Shuttle-Wettrennen, Deathrun-Karten ... Alles ist erlaubt!</servertagdescription.somethingdifferent>
+<servertag.rampage>Amok</servertag.rampage>
+<servertagdescription.rampage>Kämpfe um dein Leben! Der Server ist stark auf den Kampf ausgerichtet, wobei Kampf Player-versus-Player, PvE oder beides bedeuten kann. Die Serverbeschreibung sollte Hinweise darauf enthalten, welche Art von Gewalt auf dem Server erlaubt ist.</servertagdescription.rampage>
+<servertag.modded.true>Gemoddet</servertag.modded.true>
+<servertagdescription.modded.true>Mindestens eine Mod ist aktiviert. Um dem Server beitreten zu können, müssen eventuell Mods aus dem Workshop installiert werden.</servertagdescription.modded.true>
+<servertag.modded.false>Standard</servertag.modded.false>
+<servertagdescription.modded.false>Der Server verwendet keine Mods.</servertagdescription.modded.false>
+<servertag.247.true>24/7</servertag.247.true>
+<servertagdescription.247.true>Läuft rund um die Uhr.</servertagdescription.247.true>
+<servertag.247.false>Unregelmäßig</servertag.247.false>
+<servertagdescription.247.false>Der Server läuft nicht rund um die Uhr.</servertagdescription.247.false>
+<servertag.friendlyfire.true>Eigenbeschuss ein</servertag.friendlyfire.true>
+<servertagdescription.friendlyfire.true>Es ist möglich, den Kameraden aus der eigenen Besatzung Schaden zuzufügen.</servertagdescription.friendlyfire.true>
+<servertag.friendlyfire.false>Eigenbeschuss aus</servertag.friendlyfire.false>
+<servertagdescription.friendlyfire.false>Es ist nicht möglich, den Kameraden aus der eigenen Besatzung Schaden zuzufügen.</servertagdescription.friendlyfire.false>
+<servertag.voip.true>Sprachchat ein</servertag.voip.true>
+<servertagdescription.voip.true>Sprachchat ist eingeschaltet.</servertagdescription.voip.true>
+<servertag.voip.false>Sprachchat aus</servertag.voip.false>
+<servertagdescription.voip.false>Sprachchat ist ausgeschaltet.</servertagdescription.voip.false>
+<servertag.karma.true>Karma ein</servertag.karma.true>
+<servertagdescription.karma.true>Das Karma-System ist eingeschaltet.</servertagdescription.karma.true>
+<servertag.karma.false>Karma aus</servertag.karma.false>
+<servertagdescription.karma.false>Das Karma-System ist ausgeschaltet.</servertagdescription.karma.false>
+<servertag.traitors.true>Verräter ein</servertag.traitors.true>
+<servertagdescription.traitors.true>Verräter sind auf dem Server eingeschaltet.</servertagdescription.traitors.true>
+<servertag.traitor.false>Verräter aus</servertag.traitor.false>
+<servertagdescription.traitors.false>Verräter sind auf dem Server ausgeschaltet.</servertagdescription.traitors.false>
+<friendplayingbarotrauma>Spielt Barotrauma</friendplayingbarotrauma>
+<friendplayinganothergame>Spielt ein anderes Spiel</friendplayinganothergame>
+<friendnotplaying>Spielt nicht</friendnotplaying>
+<serversettingsplaystyle>Spielstil</serversettingsplaystyle>
+<serversettingsallowfriendlyfire>Eigenbeschuss erlauben</serversettingsallowfriendlyfire>
+<serversettingsallowrewiring>Neuverkabelung erlauben</serversettingsallowrewiring>
+<serversettingsallowdisguises>Verkleidungen erlauben</serversettingsallowdisguises>
+<filtersameversion>Selbe Version</filtersameversion>
+<filterwhitelistedservers>Whitelist anzeigen</filterwhitelistedservers>
+<!-- Misc -->
+<chat.shownewmessages>Neue Nachrichten anzeigen</chat.shownewmessages>
+<chat>Chat</chat>
+<clicktoselectjob>Klicken, um einen Job zu wählen</clicktoselectjob>
+<faceattachment.hair>Haare</faceattachment.hair>
+<faceattachment.beard>Bart</faceattachment.beard>
+<faceattachment.moustache>Schnurrbart</faceattachment.moustache>
+<faceattachment.accessories>Zubehör</faceattachment.accessories>
+<characterappearance>Aussehen</characterappearance>
+<disconnect>Verbindung trennen</disconnect>
+<endcampaignverification>Bist du dir sicher, dass du die Kampagne beenden willst? Dein nicht gespeicherter Fortschritt geht verloren.</endcampaignverification>
+<leveldifficultyexplanation>Der Schwierigkeitsgrad wirkt sich darauf aus, wie der Level generiert wird und welche Arten von zufälligen Begegnungen während der Mission möglich sind. Auf einem höheren Schwierigkeitsgrad musst du mit mehr Umgebungsgefahren, mehr Kreaturen und gefährlicheren Gegnern rechnen.</leveldifficultyexplanation>
+<subnotdownloaded>U-Boot nicht heruntergeladen</subnotdownloaded>
 
+<difficulty.easy>Leicht</difficulty.easy>
+<difficulty.medium>Mittel</difficulty.medium>
+<difficulty.hard>Schwer</difficulty.hard>
+<difficulty.hellish>Höllisch</difficulty.hellish>
 
+<!-- New traitor goals -->
+<traitorgoalkilltargetinfowithcause>Ermorde [targetname]. Methode: [causeofdeath].</traitorgoalkilltargetinfowithcause>
+<traitorgoalkilltargetinfowithhull>Ermorde [targetname]. Leichenversteck: [targethullname].</traitorgoalkilltargetinfowithhull>
+<traitorgoalkilltargetinfowithcauseandhull>Ermorde [targetname]. Methode: [causeofdeath]. Leichenversteck: [targethullname].</traitorgoalkilltargetinfowithcauseandhull>
+<traitorgoalpoisoneveryoneinfo>Injiziere allen Besatzungsmitgliedern folgendes Gift: [poison].</traitorgoalpoisoneveryoneinfo>
+<traitorgoalkeepalive>Beschütze [duration] Sekunden lang folgende Spezies: [speciesname].</traitorgoalkeepalive>
+
+<!-- Goblin mission -->
+<goblins_traitormissionstartinfotext>Als du von unten Kratzgeräusche hörst, wird dir klar, dass die Ballastgoblins schon eine Weile nicht gefüttert worden. Zum Glück ist jede Menge Fleisch vorhanden.</goblins_traitormissionstartinfotext>
+<goblins_traitorobjectivestartmessage1>Zuerst einmal ein paar Gewürze. In einer gut sortierten Küche gibt es davon reichlich, aber für die heutigen Zwecke ist nur das reinste Zyanid gut genug.\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage1>
+<goblins_objectivesuccessmessage1>Ah, ja. Perfekt.</goblins_objectivesuccessmessage1>
+<goblins_traitorobjectivestartmessage2>Geben wir den kleinen Rackern erst einmal ein wenig Wasser.\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage2>
+<goblins_objectivesuccessmessage2>Sodala.</goblins_objectivesuccessmessage2>
+<goblins_traitorobjectivestartmessage3>Will jemand Hors d'oeuvres?\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage3>
+<goblins_objectivesuccessmessage3>Hmm, dieses zarte, saftige Fleisch!</goblins_objectivesuccessmessage3>
+<goblins_traitorobjectivestartmessage4>Und jetzt zum Hauptgang: \n[traitorgoalinfos]</goblins_traitorobjectivestartmessage4>
+<goblins_objectivesuccessmessage4>Nachdem die Goblins gefüttert sind, ist die Speisekammer leer. Wir müssen bei der nächsten Station Vorräte aufnehmen.</goblins_objectivesuccessmessage4>
+
+<!-- Oxygen sabotage mission -->
+<oxygen_sabotage_traitormissionstartinfotext>Zeit für ein weiteres Experiment. Dieses Mal testen wir, wie der menschliche Körper auf Sauerstoffmangel reagiert.</oxygen_sabotage_traitormissionstartinfotext>
+<oxygen_sabotage_traitorobjectivestartmessage1>Die Versuchspersonen wurden rekrutiert und wir können loslegen.\n[traitorgoalinfos]</oxygen_sabotage_traitorobjectivestartmessage1>
+<oxygen_sabotage_objectivesuccessmessage1>Die Versuchspersonen werden die Wirkung bald zu spüren beginnen. Mögliche Symptome eines Sauerstoffmangels sind unter anderem blau anlaufende Glieder, Krampfanfälle und Bewusstlosigkeit.</oxygen_sabotage_objectivesuccessmessage1>
+<oxygen_sabotage_traitorobjectivestartmessage2>Wenn du genügend Daten gesammelt hast, entsorge die Versuchspersonen.\n[traitorgoalinfos]</oxygen_sabotage_traitorobjectivestartmessage2>
+<oxygen_sabotage_objectivesuccessmessage2>Wieder ein Test erfolgreich abgeschlossen. Erstatte beim nächsten Außenposten der Koalition Bericht.</oxygen_sabotage_objectivesuccessmessage2>
+
+<!-- Acidparty mission -->
+<acidparty_traitormissionstartinfotext>Du findest eine manisch niedergekritzelte Nachricht in deiner Tasche. Hey, Mann. Du weißt doch, dass es in der Mitte vom Mond dieses Ding gibt, oder? Was wäre, wenn man herausfinden könnte, was das ist, ohne extra hinreisen zu müssen?</acidparty_traitormissionstartinfotext>
+<acidparty_traitorobjectivestartmessage1>Schritt 1. Beschaff dir ein bisschen Delimi ... Delirun ... Der ... von dem Zeug, auf dem DEL steht, okay? \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage1>
+<acidparty_objectivesuccessmessage1>Das muss es sein. Hab ich noch nie probiert.</acidparty_objectivesuccessmessage1>
+<acidparty_traitorobjectivestartmessage2>Schritt 2. Manchmal gibt es auf U-Booten diese ... diese Sichtblockierer, okay? Die schränken einen einfach ein, so dass man nur noch eine ganz enge Repräsentation der Realität sieht, okay? Die Teile musst du beseitigen. Die nennen den Scheiß Halleberrydil oder so was. \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage2>
+<acidparty_objectivesuccessmessage2>Das waren wohl alle.</acidparty_objectivesuccessmessage2>
+<acidparty_traitorobjectivestartmessage3>Schritt 3. Regel Nummer 1 ist, wir müssen teilen. Manche Leute hier, ja, manche Leute haben quasi eine Gehirnwäsche verpasst bekommen, so dass sie panische Angst vor allem haben, was ihre Weltsicht herausfordert, okay? Du musst also einen Weg finden, den richtig guten Stoff irgendwie unauffällig in ihr System zu schleusen, klar? \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage3>
+<acidparty_objectivesuccessmessage3>Schritt 4. Leg dich hin und hör den Wellen zu, Mann.</acidparty_objectivesuccessmessage3>
+
+<!-- Tainted welding mission -->
+<tainted_welding_traitorobjectivestartmessage2>Der Empfänger knackt und pfeift und empfängt ein schwaches Signal: Europäischer Widerstand, direkte Maßnahme. Mission freigegeben: Dieses U-Boot muss versenkt werden, und es muss wie ein Unfall aussehen. Sabotiere zunächst die Schweißausrüstung.\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage2>
+<tainted_welding_goalinfotext_2>Tausche bei mindestens 70 % der Schweißwerkzeuge auf dem U-Boot das Schweißgas gegen Sauerstofftanks aus.</tainted_welding_goalinfotext_2>
+<tainted_welding_objectivesuccessmessage2>Gut gemacht. Wenn man Schweißwerkzeuge mit Sauerstofftanks bestückt, neigen die Tanks zum Verbrennen.</tainted_welding_objectivesuccessmessage2>
+<tainted_welding_traitorobjectivestartmessage3>Jetzt musst du das requirierte Schweißgas entsorgen, damit die Besatzung es später nicht nutzen kann.\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage3>
+<tainted_welding_objectivesuccessmessage3>Gut gemacht! Die Besatzung ist jetzt extrem anfällig, weiß das aber nicht einmal.</tainted_welding_objectivesuccessmessage3>
+<tainted_welding_traitorobjectivestartmessage4>Jetzt lass die Falle schnell zuschnappen!\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage4>
+<tainted_welding_objectivesuccessmessage4>Gute Arbeit, Genosse! Jetzt sind die Schweine dem Untergang geweiht.</tainted_welding_objectivesuccessmessage4>
+<tainted_welding_traitorobjectivestartmessage5>Jetzt verschwinde da! Du wirst bald von einem Shuttle abgeholt!\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage5>
+<tainted_welding_objectivesuccessmessage5>Der Alarm deines Taucheranzugs ertönt ... Das Shuttle hätte längst da sein sollen, doch das Einzige, was sich in der Dunkelheit bewegt, sind Schwärme fremdartiger Organismen. Du setzt erneut einen Funkspruch ab: Europäischer Widerstand, direkte Maßnahme, bitte kommen! Erbitte Extraktion! Der Transmitter bleibt stumm. Man hat dich deinem Schicksal überlassen. Europa schließt dich in seine Arme.</tainted_welding_objectivesuccessmessage5>
+
+<!-- One of Us mission -->
+<one_of_us_goalinfotext_2>Geweihte Behältnisse der Hüllenjungen wurden hinter einem lockeren Luftauslass versteckt. Finde diese Eier, bevor jemand anders über sie stolpert!</one_of_us_goalinfotext_2>
+<one_of_us_objectivesuccessmessage2>Du schauderst vor Vergnügen, als du die Eier findest. Ein trockenes, wahnsinniges Lachen hallt kurz in deinem Kopf wider und verliert sich dann zu kaum mehr wahrnehmbaren nassen Klicks.</one_of_us_objectivesuccessmessage2>
+<one_of_us_objectivesuccessmessage3>Als das letzte Calyxanid zerstört ist, dreht sich in deinem Kopf alles und deine Sicht verengt sich.</one_of_us_objectivesuccessmessage3>
+<one_of_us_traitorobjectivestartmessage4>Du liest die letzte Aufgabe:\n[traitorgoalinfos]</one_of_us_traitorobjectivestartmessage4>
+<one_of_us_goalinfotext_4>Alle auf diesem U-Boot müssen mit der Hülle vereint werden!</one_of_us_goalinfotext_4>
+
+<!-- Easter bunny mission -->
+<easterbunny_goalinfotext_1>Finde ein ganz besonderes Ei, das möglicherweise in einem der Luftauslässe versteckt ist.</easterbunny_goalinfotext_1>
+<easterbunny_objectivesuccessmessage1>Das Ei widert dich an, passt aber perfekt in deine Tasche. TRÖT!</easterbunny_objectivesuccessmessage1>
+<easterbunny_traitorobjectivestartmessage2>Brüte das Ei aus:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage2>
+<easterbunny_goalinfotext_2>Finde einen sicheren Ort, an dem das Ei wachsen kann, und füttere es hiermit: [catalystitem].</easterbunny_goalinfotext_2>
+<easterbunny_objectivesuccessmessage2>Das Ei wölbt sich und gibt seltsame Geräusche von sich ... Du bekommst ein Kind!</easterbunny_objectivesuccessmessage2>
+<easterbunny_traitorobjectivestartmessage3>Das Ei zerspringt und eine Schlammechse kommt daraus hervor:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage3>
+<easterbunny_goalinfotext_3>Sorge mit allen Mitteln dafür, dass die Schlammechse mindestens 3 Minuten lang überlebt.</easterbunny_goalinfotext_3>
+<easterbunny_objectivesuccessmessage3>Tröt, tröt! Das war saulustig! Der geschminkte Mann wird sich kaputtlachen, wenn er hört, wie die Sache gelaufen ist.</easterbunny_objectivesuccessmessage3>
+<easterbunny_traitorobjectivestartmessage4>Flucht:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage4>
+
+<!-- Modified values -->
+<pausemenuquitverification>Bist du dir sicher, dass du zum Hauptmenü zurückkehren willst? Dein nicht gespeicherter Fortschritt geht verloren.</pausemenuquitverification>
+<leveldifficulty>Schwierigkeit</leveldifficulty>
+<connection.set_text>text_setzen</connection.set_text>
 
 </infotexts>
