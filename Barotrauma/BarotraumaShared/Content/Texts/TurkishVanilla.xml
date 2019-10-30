@@ -3010,7 +3010,7 @@
 <entityname.mudraptoregg>Çamur Raptörü Yumurtası</entityname.mudraptoregg>
 <entitydescription.mudraptoregg>Balçıksı, titreyen bir çamur raptörü yumurtası. Yumurtanın tepesindeki açık ağız, yiyecek bir şey aradığını gösteriyor.</entitydescription.mudraptoregg>
 
-<Server lobby 2.0><!-- No data --></Server lobby 2.0>
+  <!-- Server lobby 2.0 -->
 <serverlisttab.all>Tüm sunucular</serverlisttab.all>
 <serverlisttab.favorites>Favoriler</serverlisttab.favorites>
 <serverlisttab.recent>Son Zamandakiler</serverlisttab.recent>
