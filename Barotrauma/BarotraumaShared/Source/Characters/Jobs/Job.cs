@@ -169,6 +169,12 @@ namespace Barotrauma
                 else
                 {
                     wearable.Variant = wearable.Variant; //force server event
+                    if (wearable.Variants > 0 && Variant == 0)
+                    {
+                        //set variant to the same as the wearable to get the rest of the character's gear
+                        //to use the same variant (if possible)
+                        Variant = wearable.Variant;
+                    }
                 }
             }
 

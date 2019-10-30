@@ -5,10 +5,10 @@
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Outpost" buyprice="100" />
-    <Sprite name="Captain's Cap" texture="Content/Items/Jobgear/headgears.png" depth="0.6" sourcerect="14,130,80,55" origin="0.5,0.5" />
+    <Sprite name="Captain's Cap" texture="Content/Items/Jobgear/headgears_1.png" depth="0.6" sourcerect="13,11,80,55" origin="0.5,0.5" />
     <Body width="75" height="50" density="30" />
-    <Wearable limbtype="Head" slots="Any,Head" msg="ItemMsgPickUpSelect">
-      <sprite name="Captain's Cap Wearable" texture="Content/Items/Jobgear/headgears.png" limb="Head" inheritlimbdepth="true" inherittexturescale="true" hidelimb="false" sourcerect="4,121,96,96" origin="0.5,0.6485507" />
+    <Wearable limbtype="Head" slots="Any,Head" msg="ItemMsgPickUpSelect" variants="3">
+      <sprite name="Captain's Cap Wearable" texture="Content/Items/Jobgear/headgears_[VARIANT].png" limb="Head" inheritlimbdepth="true" inherittexturescale="true" hidelimb="false" sourcerect="4,1,96,96" origin="0.5,0.6485507" />
     </Wearable>
   </Item>
   <Item name="Captain's Uniform" identifier="captainsuniform" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem" scale="0.5" impactsoundtag="impact_soft">
