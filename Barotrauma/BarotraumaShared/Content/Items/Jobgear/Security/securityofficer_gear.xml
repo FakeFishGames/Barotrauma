@@ -7,7 +7,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,320,64,64" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Jobgear/clothes.png" sourcerect="49,133,195,78" depth="0.6" origin="0.5,0.5" />
     <Body width="100" height="50" density="30" />
-    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
+    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect" variants="3">
       <sprite name="Security Officer's Uniform Torso" texture="securityofficer_torso_[GENDER]_[VARIANT].png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Security Officer's Uniform Left Arm" texture="securityofficer_torso_[GENDER]_[VARIANT].png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Security Officer's Uniform Right Arm" texture="securityofficer_torso_[GENDER]_[VARIANT].png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
@@ -63,7 +63,7 @@
     <Wearable slots="Any,Head" armorvalue="20.0" msg="ItemMsgPickUpSelect">
       <damagemodifier afflictiontypes="damage" armorsector="0.0,360.0" damagemultiplier="0.2" bleedingmultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true" />
       <damagemodifier afflictiontypes="bleeding" armorsector="0.0,360.0" damagemultiplier="0.1" bleedingmultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
-      <sprite texture="Content/Items/Jobgear/headgears.png" limb="Head" inherittexturescale="true" sourcerect="96,96,96,96" origin="0.5,0.5" />
+      <sprite name="Ballistic Helmet Wearable" texture="Content/Items/Jobgear/headgears.png" limb="Head" inheritlimbdepth="true" inherittexturescale="true" sourcerect="5,215,96,96" origin="0.5,0.5" />
     </Wearable>
   </Item>
   <Item name="Handcuffs" identifier="handcuffs" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem" impactsoundtag="impact_metal_light">
