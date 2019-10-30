@@ -15,10 +15,10 @@
       <RequiredItem identifier="plastic" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,256,64,64" origin="0.5,0.5" />
-    <Sprite name="Health Scanner" texture="Content/Items/Jobgear/headgears.png" sourcerect="197,29,86,38" depth="0.6" origin="0.5,0.5" />
+    <Sprite name="Health Scanner" texture="Content/Items/Jobgear/headgears.png" sourcerect="112,344,86,38" depth="0.6" origin="0.5,0.5" />
     <Body width="30" height="15" density="30" />
     <Wearable limbtype="Head" slots="Any,Head" msg="ItemMsgPickUpSelect">
-      <sprite texture="Content/Items/Jobgear/headgears.png" limb="Head" inheritlimbdepth="true" hidelimb="false" hideotherwearables="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" sheetindex="2,0" sourcerect="0,0,288,288" origin="0.5,0.5" />
+      <sprite name="Health Scanner Wearable" texture="Content/Items/Jobgear/headgears.png" limb="Head" inheritlimbdepth="true" inherittexturescale="true" sourcerect="111,346,86,38" origin="0.5084296,0.623871" />
     </Wearable>
     <StatusHUD drawhudwhenequipped="true" />
   </Item>
