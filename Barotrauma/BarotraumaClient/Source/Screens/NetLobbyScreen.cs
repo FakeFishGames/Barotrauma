@@ -2370,7 +2370,7 @@ namespace Barotrauma
                 };
             }
 
-            int faceAttachmentCount = info.FilterByTypeAndHeadID(info.FilterElementsByGenderAndRace(info.Wearables), WearableType.Beard).Count();
+            int faceAttachmentCount = info.FilterByTypeAndHeadID(info.FilterElementsByGenderAndRace(info.Wearables), WearableType.FaceAttachment).Count();
             if (faceAttachmentCount > 0)
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), rightColumn.RectTransform), TextManager.Get("FaceAttachment.Accessories"));
