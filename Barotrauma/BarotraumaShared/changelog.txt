@@ -5,6 +5,8 @@ v0.9.5.0
 Misc additions and changes:
 - A new submarine, Kastrull.
 - 6 new traitor missions with much more varied objectives.
+- 3 variants of all job outfits.
+- 30 new character face sprites. 
 - Overhauled job assignment logic to make the job distribution a little more balanced. Now each client gets assigned one of the spawnpoints (and its associated job) according to their job preference, which means that if the sub for example has 2x as many engineer spawnpoints than medic spawnpoints, there tend to be 2x more engineers. When playing with a mod that adds new jobs to the game, spawnpoints that have no job associated with them are considered spawnpoints for the non-vanilla jobs.
 - New logic components: sin, cos, tan, asin, acos, atan, modulo, round, ceil, floor and factorial.
 - Improved autopilot: much faster and less likely to get stuck.
