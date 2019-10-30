@@ -215,8 +215,6 @@ namespace Barotrauma
 
         private void DrawAttachmentSprite(SpriteBatch spriteBatch, WearableSprite attachment, Sprite head, Vector2 drawPos, float scale, float depthStep, SpriteEffects spriteEffects = SpriteEffects.None)
         {
-            // Disable job indicators for now TODO: undo and fix them
-            if (attachment.Type == WearableType.JobIndicator) { return; }
             if (attachment.InheritSourceRect)
             {
                 if (attachment.SheetIndex.HasValue)
