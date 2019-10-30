@@ -317,6 +317,12 @@ namespace Barotrauma
             }
         }
 
+        private void CalculateHeadPosition(Sprite sprite)
+        {
+            if (type != LimbType.Head) { return; }
+            character.Info?.CalculateHeadPosition(sprite);
+        }
+
         private string GetSpritePath(XElement element, SpriteParams spriteParams)
         {
             string texturePath = element.GetAttributeString("texture", null);
@@ -489,6 +495,13 @@ namespace Barotrauma
                 enableHuskSprite && HuskSprite != null && HuskSprite.HideLimb || 
                 OtherWearables.Any(w => w.HideLimb) || 
                 wearingItems.Any(w => w != null && w.HideLimb);
+
+            var activeSprite = ActiveSprite;
+            if (type == LimbType.Head)
+            {
+                CalculateHeadPosition(activeSprite);
+            }
+
             // TODO: there's now two calls to this, because body.Draw() method calls this too -> is this an issue?
             body.UpdateDrawPosition();
 
@@ -510,7 +523,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    body.Draw(spriteBatch, ActiveSprite, color, null, Scale * TextureScale, Params.MirrorHorizontally, Params.MirrorVertically);
+                    body.Draw(spriteBatch, activeSprite, color, null, Scale * TextureScale, Params.MirrorHorizontally, Params.MirrorVertically);
                 }
             }
             SpriteEffects spriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
@@ -524,9 +537,9 @@ namespace Barotrauma
             {
                 DamagedSprite.Draw(spriteBatch,
                     new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
-                    color * Math.Min(damageOverlayStrength, 1.0f), ActiveSprite.Origin,
+                    color * Math.Min(damageOverlayStrength, 1.0f), activeSprite.Origin,
                     -body.DrawRotation,
-                    Scale, spriteEffect, ActiveSprite.Depth - 0.0000015f);
+                    Scale, spriteEffect, activeSprite.Depth - 0.0000015f);
             }
             foreach (var decorativeSprite in DecorativeSprites)
             {
@@ -696,23 +709,27 @@ namespace Barotrauma
 
         private void DrawWearable(WearableSprite wearable, float depthStep, SpriteBatch spriteBatch, Color color, SpriteEffects spriteEffect)
         {
+            var sprite = ActiveSprite;
             if (wearable.InheritSourceRect)
             {
                 if (wearable.SheetIndex.HasValue)
                 {
-                    Point location = (ActiveSprite.SourceRect.Location + ActiveSprite.SourceRect.Size) * wearable.SheetIndex.Value;
-                    wearable.Sprite.SourceRect = new Rectangle(location, ActiveSprite.SourceRect.Size);
+                    wearable.Sprite.SourceRect = new Rectangle(CharacterInfo.CalculateOffset(sprite, wearable.SheetIndex.Value), sprite.SourceRect.Size);
+                }
+                else if (type == LimbType.Head && character.Info != null && character.Info.Head.SheetIndex.HasValue)
+                {
+                    wearable.Sprite.SourceRect = new Rectangle(CharacterInfo.CalculateOffset(sprite, character.Info.Head.SheetIndex.Value.ToPoint()), sprite.SourceRect.Size);
                 }
                 else
                 {
-                    wearable.Sprite.SourceRect = ActiveSprite.SourceRect;
+                    wearable.Sprite.SourceRect = sprite.SourceRect;
                 }
             }
 
             Vector2 origin = wearable.Sprite.Origin;
             if (wearable.InheritOrigin)
             {
-                origin = ActiveSprite.Origin;
+                origin = sprite.Origin;
                 wearable.Sprite.Origin = origin;
             }
             else
@@ -729,7 +746,7 @@ namespace Barotrauma
 
             if (wearable.InheritLimbDepth)
             {
-                depth = ActiveSprite.Depth - depthStep;
+                depth = sprite.Depth - depthStep;
                 Limb depthLimb = (wearable.DepthLimb == LimbType.None) ? this : character.AnimController.GetLimb(wearable.DepthLimb);
                 if (depthLimb != null)
                 {
@@ -763,11 +780,11 @@ namespace Barotrauma
             XElement element;
             if (random)
             {
-                element = info.FilterByTypeAndHeadID(character.Info.FilterElementsByGenderAndRace(character.Info.Wearables), type)?.FirstOrDefault();
+                element = info.FilterByTypeAndHeadID(character.Info.FilterElementsByGenderAndRace(character.Info.Wearables), type)?.GetRandom(Rand.RandSync.ClientOnly);
             }
             else
             {
-                element = info.FilterByTypeAndHeadID(character.Info.FilterElementsByGenderAndRace(character.Info.Wearables), type)?.GetRandom(Rand.RandSync.ClientOnly);
+                element = info.FilterByTypeAndHeadID(character.Info.FilterElementsByGenderAndRace(character.Info.Wearables), type)?.FirstOrDefault();
             }
             if (element != null)
             {

@@ -3005,7 +3005,10 @@ namespace Barotrauma.Networking
                     //find the client that wants the job the most, or force it to random client if none of them want it
                     Client assignedClient = FindClientWithJobPreference(unassigned, jobPrefab, true);
 
-                    assignedClient.AssignedJob = new Pair<JobPrefab, int>(jobPrefab, 0);
+                    assignedClient.AssignedJob = 
+                        assignedClient.JobPreferences.FirstOrDefault(jp => jp.First == jobPrefab) ??
+                        new Pair<JobPrefab, int>(jobPrefab, 0);
+
                     assignedClientCount[jobPrefab]++;
                     unassigned.Remove(assignedClient);
 
@@ -3087,10 +3090,12 @@ namespace Barotrauma.Networking
                     {
                         jobIndex++;
                         skips++;
-                        if (jobIndex >= jobList.Count) jobIndex -= jobList.Count;
-                        if (skips >= jobList.Count) break;
+                        if (jobIndex >= jobList.Count) { jobIndex -= jobList.Count; }
+                        if (skips >= jobList.Count) { break; }
                     }
-                    c.AssignedJob = new Pair<JobPrefab, int>(jobList[jobIndex], 0);
+                    c.AssignedJob =
+                        c.JobPreferences.FirstOrDefault(jp => jp.First == jobList[jobIndex]) ??
+                        new Pair<JobPrefab, int>(jobList[jobIndex], 0);
                     assignedClientCount[c.AssignedJob.First]++;
                 }
                 //if one of the client's preferences is still available, give them that job
