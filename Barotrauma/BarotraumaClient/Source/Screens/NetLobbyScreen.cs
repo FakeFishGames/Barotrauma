@@ -2393,7 +2393,11 @@ namespace Barotrauma
             if (HeadSelectionList != null)
             {
                 HeadSelectionList.Visible = true;
-                HeadSelectionList.Content.Children.ForEach(c => c.Visible = (Gender)c.UserData == selectedGender);
+                foreach (GUIComponent child in HeadSelectionList.Content.Children)
+                {
+                    child.Visible = (Gender)child.UserData == selectedGender;
+                    child.Children.ForEach(c => c.Visible = ((Tuple<Gender, Race, int>)c.UserData).Item1 == selectedGender);
+                }
                 return true;
             }
 
@@ -2458,7 +2462,8 @@ namespace Barotrauma
                         PressedColor = Color.White * 0.5f,
                         UserData = new Tuple<Gender, Race, int>(gender, race, headIndex),
                         OnClicked = SwitchHead,
-                        Selected = gender == info.Gender && race == info.Race && headIndex == info.HeadSpriteId
+                        Selected = gender == info.Gender && race == info.Race && headIndex == info.HeadSpriteId,
+                        Visible = gender == selectedGender
                     };
 
                     new GUIImage(new RectTransform(Vector2.One, btn.RectTransform), headSprite, scaleToFit: true);
