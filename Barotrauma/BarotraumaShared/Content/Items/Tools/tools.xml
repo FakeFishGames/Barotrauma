@@ -187,9 +187,6 @@
       <RequiredItem identifier="aluminium" />
       <RequiredItem identifier="ethanol" />
     </Fabricate>
-    <Fabricate suitablefabricators="fabricator" displayname="WeldingFuelTankEmpty" outcondition="0.0" requiredtime="5">
-      <RequiredItem identifier="aluminium" />
-    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,0,64,64" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Tools/tools_new.png" sourcerect="395,223,38,109" depth="0.55" />
     <Body width="39" height="110" density="5" />

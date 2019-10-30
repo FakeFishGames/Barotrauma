@@ -940,7 +940,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Water Detector" identifier="waterdetector" category="Electrical" Tags="smallitem,sensor" cargocontaineridentifier="metalcrate" description="Sends out a signal when the detector is submerged." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
-    <Upgrade gameversion="0.9.3.1" scale="0.5"/>
+    <Upgrade gameversion="0.9.5.0" scale="0.5"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -994,7 +994,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Motion Detector" identifier="motiondetector" category="Electrical" Tags="smallitem,sensor" cargocontaineridentifier="metalcrate" description="Sends out a signal when it detects movement." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
-    <Upgrade gameversion="0.9.3.1" scale="0.5"/>
+    <Upgrade gameversion="0.9.5.0" scale="0.5"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -1193,7 +1193,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Camera" identifier="camera" category="Electrical" Tags="smallitem,camera" focusonselected="true" offsetonselected="500" cargocontaineridentifier="metalcrate" description="Typically used in photonics masts to provide the crew with a high-resolution view of the area outside the sub." Scale="0.5">
-    <Upgrade gameversion="0.9.3.1" scale="0.5"/>
+    <Upgrade gameversion="0.9.5.0" scale="0.5"/>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,320,64,64" origin="0.5,0.5" />
     <Sprite texture="detectors.png" depth="0.8" sourcerect="131,44,60,46" origin="0.5,0.5" />
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">

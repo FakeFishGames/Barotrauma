@@ -191,7 +191,6 @@
   <workshop.contenttag.itemassembly>Item assembly</workshop.contenttag.itemassembly>
   <workshop.contenttag.language>Language</workshop.contenttag.language>
   <workshoperroronenable>Cannot enable Workshop item '[itemname]'.</workshoperroronenable>
-  <workshoppublisherror.limitexceeded>Publishing the Workshop item failed (limit exceeded). Make sure you have enabled Steam Cloud and haven't exceeded your Steam Cloud quota.</workshoppublisherror.limitexceeded>
   <workshoppublisherror.limiteduseraccount>Publishing the Workshop item failed. Limited user accounts are not allowed to publish items in the Steam Workshop. You need to spend at least $5 in the Steam store to become a non-limited user.</workshoppublisherror.limiteduseraccount>
   <workshoppublisherror.banned>Publishing the Workshop item failed because your account has been banned.</workshoppublisherror.banned>
   <workshoppublisherror.insufficientprivilege>Publishing the Workshop item failed (insufficient privileges). This can happen due to a hub ban, account lock or a community ban. You may need to contact Steam Support.</workshoppublisherror.insufficientprivilege>
@@ -3710,5 +3709,7 @@
   <!-- Modified values as of Oct 22 -->
   <entitydescription.atancomponent>Outputs the angle whose tangent is equal to the input. If the the "signal_in_x" and "signal_in_y" connections are used, the input is interpreted as a vector and the angle calculated using Atan2.</entitydescription.atancomponent>
   <serverendpoint>Server IP / SteamID</serverendpoint>
+
+  <workshoppublisherror.limitexceeded>Publishing the Workshop item failed (limit exceeded). Make sure you have enabled Steam Cloud and haven't exceeded your Steam Cloud quota. If you are using Steam Cloud sync, a large number of save files can cause you to run out of space on the cloud. You may want to check [savepath] to make sure you're not storing an excessive number of save files.</workshoppublisherror.limitexceeded>
 
 </infotexts>
