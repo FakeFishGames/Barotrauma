@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -130,12 +131,18 @@ namespace Barotrauma
                 {
                     string[] split = csvContent[i].Split(separator, 3);
 
-                    if (split.Length >= 2) // >= 2 = has comments, -> ignored
+                    if (split.Length >= 2) // Localization data
                     {
+                        if (split.Length > 2 && !split[0].All(char.IsLower)) // Invalid header in line with localization data
+                        {
+                            split[0] = split[1];
+                            split[1] = split[2];
+                            split[2] = string.Empty;
+                        }
                         split[1] = split[1].Replace("\"", ""); // Replaces quotation marks around data that are added when exporting via excel
                         xmlContent.Add($"<{split[0]}>{split[1]}</{split[0]}>");
                     }
-                    else if (split[0].Contains(".")) // An empty field
+                    else if (split[0].Contains(".") && split[0].All(char.IsLower)) // An empty field
                     {
                         xmlContent.Add($"<{split[0]}><!-- No data --></{split[0]}>");
                     }
