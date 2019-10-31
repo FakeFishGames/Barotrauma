@@ -247,7 +247,7 @@
     <monster character="bonethresher" count="2"/>
     <message header="Target terminated" text="The swarm is terminated. Navigate the submarine out of the cavern to claim the reward."/>
 
-    <Icon texture="Content/UI/MissionIcons2.png" sourcerect="768,768,256,256" color="214,50,48"/>
+    <Icon texture="Content/UI/MissionIcons2.png" sourcerect="256,768,256,256" color="214,50,48"/>
 
     <LocationType from="City" to="None"/>
     <LocationType from="City" to="City"/>

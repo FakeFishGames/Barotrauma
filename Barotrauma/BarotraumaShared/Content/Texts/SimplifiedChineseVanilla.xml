@@ -2954,16 +2954,188 @@
 <replaceshuttles>替换</replaceshuttles>
 <replaceshuttledockingportoccupied>这首丢失的飞船无法被替换，因为当前对接舱口已被占用。你需要腾出对接舱口才可替换新的飞船。</replaceshuttledockingportoccupied>
 <character.blackmoloch>黑色摩洛克</character.blackmoloch>
-<character.goldenhammerhead>金色锤头鲨</character.goldenhammerhead>
+<character.hammerheadgold>金色锤头鲨</character.hammerheadgold>
 <character.hammerheadmatriarch>锤头鲨女族长</character.hammerheadmatriarch>
-<character.bonetigerthresher>骨虎长尾鲨</character.bonetigerthresher>
+<character.bonethresher>骨虎长尾鲨</character.bonethresher>
 
-<!-- Updated values as of 13th of August -->
+<!-- New Additions for the November update -->
+<submarine.name.kastrull>卡斯特罗</submarine.name.kastrull>
+<submarine.description.kastrull>卡斯特罗是一种可靠的进攻型潜艇，具有强大的火力。虽然不是很灵活，但是却有无人炮艇的威力。它有着实验性开放式压载舱，低进水耐久和高组员数量要求，只有一队经验丰富的海员才能发挥此舰艇的最大实力。</submarine.description.kastrull>
 
+<gamemodedescription.singleplayercampaign>深入探索木卫二的无底海洋。穿行于各地，完成任务并获得金钱购买补给，探索新的生态圈，并发掘木卫二的秘密。</gamemodedescription.singleplayercampaign>
+<gamemodedescription.sandbox>没有特定目标的游戏模式。</gamemodedescription.sandbox>
+<gamemodedescription.mission>玩家必须合作完成一个特殊任务，例如回收外星遗物或者杀死骚扰附近哨站的生物。该任务完成或所有船员死亡后游戏将会结束。</gamemodedescription.mission>
+<gamemodedescription.multiplayercampaign>深入探索木卫二的无底海洋。穿行于各地，完成任务并获得金钱购买补给，探索新的生态圈，并发掘木卫二的秘密。</gamemodedescription.multiplayercampaign>
 
+<entityname.sincomponent>正弦元件</entityname.sincomponent>
+<entitydescription.sincomponent>输出输入项的正弦值</entitydescription.sincomponent>
+<entityname.coscomponent>余弦元件</entityname.coscomponent>
+<entitydescription.coscomponent>输出输入项的余弦值</entitydescription.coscomponent>
+<entityname.tancomponent>正切元件</entityname.tancomponent>
+<entitydescription.tancomponent>输出输入项的正切值</entitydescription.tancomponent>
+<entityname.asincomponent>角A正弦元件</entityname.asincomponent>
+<entitydescription.asincomponent>输出与输入角正弦相等的角</entitydescription.asincomponent>
+<entityname.acoscomponent>角A余弦元件</entityname.acoscomponent>
+<entitydescription.acoscomponent>输出与输入角余弦相等的角</entitydescription.acoscomponent>
+<entityname.atancomponent>角A正切元件</entityname.atancomponent>
+<entitydescription.atancomponent>输出与输入角正切相等的角</entitydescription.atancomponent>
+<entityname.modulocomponent>模元件</entityname.modulocomponent>
+<entitydescription.modulocomponent>输出输入值被除以特定值后的余数。</entitydescription.modulocomponent>
+<entityname.roundcomponent>整元件</entityname.roundcomponent>
+<entitydescription.roundcomponent>将一个输入值取整到最近的整数上。</entitydescription.roundcomponent>
+<entityname.ceilcomponent>上整元件</entityname.ceilcomponent>
+<entitydescription.ceilcomponent>输出一个向上取整的输入值。</entitydescription.ceilcomponent>
+<entityname.floorcomponent>下整元件</entityname.floorcomponent>
+<entitydescription.floorcomponent>输出一个向下取整的输入值。</entitydescription.floorcomponent>
+<entityname.factorialcomponent>阶乘元件</entityname.factorialcomponent>
+<entitydescription.factorialcomponent>输出输入值的阶乘。</entitydescription.factorialcomponent>
+<entityname.squarerootcomponent>平方根元件</entityname.squarerootcomponent>
+<entitydescription.squarerootcomponent>输出输入值的平方根。</entitydescription.squarerootcomponent>
+<entityname.abscomponent>绝对值元件</entityname.abscomponent>
+<entitydescription.abscomponent>输出输入值的绝对值。</entitydescription.abscomponent>
+<entityname.powcomponent>幂元件</entityname.powcomponent>
+<entitydescription.powcomponent>输出输入的给定能量幂次方。</entitydescription.powcomponent>
 
+<connection.setmodulus>set_modulus</connection.setmodulus>
+<shuttle>穿梭艇</shuttle>
+<privacypolicy>隐私政策</privacypolicy>
+<entityname.mudraptoregg>泥偶迅猛龙蛋</entityname.mudraptoregg>
+<entitydescription.mudraptoregg>一只覆满粘液，不断涌动的泥偶迅猛龙蛋。蛋顶端张开的口子仿佛要择人而噬。</entitydescription.mudraptoregg>
 
+<!-- Server lobby 2.0 -->
+<serverlisttab.all>所有服务器</serverlisttab.all>
+<serverlisttab.favorites>偏好</serverlisttab.favorites>
+<serverlisttab.recent>近期</serverlisttab.recent>
+<addtofavorites>添加到偏好</addtofavorites>
+<removefromfavorites>从偏好移除</removefromfavorites>
+<servertag.casual>休闲</servertag.casual>
+<servertagdescription.casual>娱乐比完成目标更加重要。新玩家首选。</servertagdescription.casual>
+<servertag.serious>严肃</servertag.serious>
+<servertagdescription.serious>船员需要高效协作并完成目标。不许恶作剧。</servertagdescription.serious>
+<servertag.roleplay>角色扮演</servertag.roleplay>
+<servertagdescription.roleplay>船员组旨在扮演一艘真实潜艇上的组员。命令链条十分重要，例如完成自己的职责与听从命令。尽量不要在游戏中说出不符合所扮演角色的言辞。</servertagdescription.roleplay>
+<servertag.somethingdifferent>异常</servertag.somethingdifferent>
+<servertagdescription.somethingdifferent>游戏与正常的潜渊症体验完全不同。可能是打上了mod，特殊潜艇，大乱斗，潜艇竞速，死亡赛跑地图...一切皆有可能！</servertagdescription.somethingdifferent>
+<servertag.rampage>大杀特杀</servertag.rampage>
+<servertagdescription.rampage>准备好为了自己的小命战斗吧！这是非常专注于战斗的服务器。这可能意味着PVP或者PVE，有时两者皆有。服务器描述中应该写明允许哪类暴力。</servertagdescription.rampage>
+<servertag.modded.true>Mod</servertag.modded.true>
+<servertagdescription.modded.true>已经使用一个或更多mod。需要安装从工坊下载的mod才能进入服务器。</servertagdescription.modded.true>
+<servertag.modded.false>经典</servertag.modded.false>
+<servertagdescription.modded.false>此服务器没有使用任何mod。</servertagdescription.modded.false>
+<servertag.247.true>24/7</servertag.247.true>
+<servertagdescription.247.true>全天开放。</servertagdescription.247.true>
+<servertag.247.false>偶尔开放</servertag.247.false>
+<servertagdescription.247.false>非全天开放服务器。</servertagdescription.247.false>
+<servertag.friendlyfire.true>友军火力开</servertag.friendlyfire.true>
+<servertagdescription.friendlyfire.true>可以对友军造成伤害。</servertagdescription.friendlyfire.true>
+<servertag.friendlyfire.false>友军火力关</servertag.friendlyfire.false>
+<servertagdescription.friendlyfire.false>不可以对友军造成伤害。</servertagdescription.friendlyfire.false>
+<servertag.voip.true>开启语音聊天</servertag.voip.true>
+<servertagdescription.voip.true>语音聊天已开启</servertagdescription.voip.true>
+<servertag.voip.false>关闭语音聊天</servertag.voip.false>
+<servertagdescription.voip.false>语音聊天已关闭</servertagdescription.voip.false>
+<servertag.karma.true>开启道德值系统</servertag.karma.true>
+<servertagdescription.karma.true>道德值系统已开启</servertagdescription.karma.true>
+<servertag.karma.false>关闭道德值系统</servertag.karma.false>
+<servertagdescription.karma.false>道德值系统已关闭</servertagdescription.karma.false>
+<servertag.traitors.true>开启叛徒</servertag.traitors.true>
+<servertagdescription.traitors.true>叛徒已开启</servertagdescription.traitors.true>
+<servertag.traitor.false>关闭叛徒</servertag.traitor.false>
+<servertagdescription.traitors.false>叛徒已关闭</servertagdescription.traitors.false>
+<friendplayingbarotrauma>正在游玩潜渊症</friendplayingbarotrauma>
+<friendplayinganothergame>正在游玩其他游戏</friendplayinganothergame>
+<friendnotplaying>未在游戏中</friendnotplaying>
+<serversettingsplaystyle>游戏风格</serversettingsplaystyle>
+<serversettingsallowfriendlyfire>允许友军火力</serversettingsallowfriendlyfire>
+<serversettingsallowrewiring>允许重新布线</serversettingsallowrewiring>
+<serversettingsallowdisguises>允许伪装</serversettingsallowdisguises>
+<filtersameversion>相同版本</filtersameversion>
+<filterwhitelistedservers>显示白名单</filterwhitelistedservers>
+<!-- Misc -->
+<chat.shownewmessages>显示新信息</chat.shownewmessages>
+<chat>聊天</chat>
+<clicktoselectjob>点击选择职业</clicktoselectjob>
+<faceattachment.hair>头发</faceattachment.hair>
+<faceattachment.beard>胡须</faceattachment.beard>
+<faceattachment.moustache>上唇胡须</faceattachment.moustache>
+<faceattachment.accessories>装饰</faceattachment.accessories>
+<characterappearance>外观</characterappearance>
+<disconnect>断开连接</disconnect>
+<endcampaignverification>确定要退出战役吗？所有未保存进度都将丢失。</endcampaignverification>
+<leveldifficultyexplanation>难度设定影响关卡生成以及任务中遭遇的随机事件。难度等级越高，环境危险和高级敌人就越多。</leveldifficultyexplanation>
+<subnotdownloaded>潜艇未下载</subnotdownloaded>
 
+<difficulty.easy>简单</difficulty.easy>
+<difficulty.medium>中等</difficulty.medium>
+<difficulty.hard>困难</difficulty.hard>
+<difficulty.hellish>地狱</difficulty.hellish>
 
+<!-- New traitor goals -->
+<traitorgoalkilltargetinfowithcause>使用[causeofdeath]刺杀[targetname]。</traitorgoalkilltargetinfowithcause>
+<traitorgoalkilltargetinfowithhull>刺杀[targetname]并将其尸体放到[targethullname]。</traitorgoalkilltargetinfowithhull>
+<traitorgoalkilltargetinfowithcauseandhull>使用[causeofdeath]刺杀[targetname]并将其尸体放到[targethullname]。</traitorgoalkilltargetinfowithcauseandhull>
+<traitorgoalpoisoneveryoneinfo>向所有船员注射[poison]。</traitorgoalpoisoneveryoneinfo>
+<traitorgoalkeepalive>保护[speciesname]，[duration]秒。</traitorgoalkeepalive>
+
+<!-- Goblin mission -->
+<goblins_traitormissionstartinfotext>你一听到底下传来的抓挠声，就想起有段时间没喂压舱哥布林了。不过幸运的是，这里并不缺肉。</goblins_traitormissionstartinfotext>
+<goblins_traitorobjectivestartmessage1>首先，来调味。一个备料丰富的厨房应有尽有，但是这次你只需要氰化物。\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage1>
+<goblins_objectivesuccessmessage1>没错，这样就好了。</goblins_objectivesuccessmessage1>
+<goblins_traitorobjectivestartmessage2>让我们先给他们来点水。\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage2>
+<goblins_objectivesuccessmessage2>好。</goblins_objectivesuccessmessage2>
+<goblins_traitorobjectivestartmessage3>有人要餐前甜点吗？\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage3>
+<goblins_objectivesuccessmessage3>看看这鲜嫩的肉！</goblins_objectivesuccessmessage3>
+<goblins_traitorobjectivestartmessage4>现在是主菜：\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage4>
+<goblins_objectivesuccessmessage4>现在哥布林们被喂饱了，但食品储藏室里已经空空如也。是时候在下一站装一些了...</goblins_objectivesuccessmessage4>
+
+<!-- Oxygen sabotage mission -->
+<oxygen_sabotage_traitormissionstartinfotext>又到了实验的时候。这一次我们要测试缺氧对人类身体的影响。</oxygen_sabotage_traitormissionstartinfotext>
+<oxygen_sabotage_traitorobjectivestartmessage1>实验对象已经就位，我们可以开始了。\n[traitorgoalinfos]</oxygen_sabotage_traitorobjectivestartmessage1>
+<oxygen_sabotage_objectivesuccessmessage1>实验对象很快就会感觉到效果了。缺氧的症状有但不限于：肢体末端发蓝，抽搐以及晕眩。</oxygen_sabotage_objectivesuccessmessage1>
+<oxygen_sabotage_traitorobjectivestartmessage2>当你获得了足够的数据后，处理掉测试对象。\n[traitorgoalinfos]</oxygen_sabotage_traitorobjectivestartmessage2>
+<oxygen_sabotage_objectivesuccessmessage2>又一场成功的测试。向最近的海岸哨所汇报。</oxygen_sabotage_objectivesuccessmessage2>
+
+<!-- Acidparty mission -->
+<acidparty_traitormissionstartinfotext>你在口袋里发现了一张潦草的疯狂涂鸦。“伙计，你知道月亮中心的那个东西吧？要是有办法不上月亮就能看见里面呢？”</acidparty_traitormissionstartinfotext>
+<acidparty_traitorobjectivestartmessage1>第一步，找到善-删，呃，谵开头的东西！\n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage1>
+<acidparty_objectivesuccessmessage1>一定是这个。</acidparty_objectivesuccessmessage1>
+<acidparty_traitorobjectivestartmessage2>第二步，有时候潜艇上会带这些...视觉封锁器？就是戴上了之后只能看到一点点东西，一部分割裂的现实，对不对？你得处理掉那些玩意。他们叫它halleberrydil还是什么玩意的。\n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage2>
+<acidparty_objectivesuccessmessage2>这应该就是全部了。</acidparty_objectivesuccessmessage2>
+<acidparty_traitorobjectivestartmessage3>第三步，重要的是我们得分享。有些人，有些人被洗脑了，完全不能接受任何挑战他们世界观的新东西。所以你的想办法往他们身上打点什么进去，对吧？\n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage3>
+<acidparty_objectivesuccessmessage3>第四步，躺下来听海浪的声音吧，伙计。</acidparty_objectivesuccessmessage3>
+
+<!-- Tainted welding mission -->
+<tainted_welding_traitorobjectivestartmessage2>收音器吱吱作响，你收到了一个微弱的信号：木卫二抵抗军直接命令，你被允许继续你的任务：必须弄沉此潜艇，并让它看上去像是个意外。从破坏焊接工具开始。\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage2>
+<tainted_welding_goalinfotext_2>将潜艇上至少70%焊接工具的燃料换成氧气罐。</tainted_welding_goalinfotext_2>
+<tainted_welding_objectivesuccessmessage2>干得好。氧气罐在接上焊接工具后会剧烈燃烧。</tainted_welding_objectivesuccessmessage2>
+<tainted_welding_traitorobjectivestartmessage3>现在你需要处理掉那些焊接工具燃料，免得船员之后再换回来：\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage3>
+<tainted_welding_objectivesuccessmessage3>很好！船员现在在不知不觉中已经陷入了大麻烦。</tainted_welding_objectivesuccessmessage3>
+<tainted_welding_traitorobjectivestartmessage4>现在赶快去设置一个陷阱！\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage4>
+<tainted_welding_objectivesuccessmessage4>干得好，同志！这些猪现在已经必死无疑。</tainted_welding_objectivesuccessmessage4>
+<tainted_welding_traitorobjectivestartmessage5>准备逃脱！一个穿梭艇将很快到达你的位置接你！\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage5>
+<tainted_welding_objectivesuccessmessage5>你的潜水服里想起了警报...穿梭艇本该来这里与你会合，但你只看到了外星生物的身影。你再次发出了信号：“木卫二抵抗军直接行动人员，收到请回信！需要撤离！”没有人回应。你将命丧于此。</tainted_welding_objectivesuccessmessage5>
+
+<!-- One of Us mission -->
+<one_of_us_goalinfotext_2>画皮幼虫的神圣容器正藏在一个松动的通风口后面。赶快在别人之前找到这些卵！</one_of_us_goalinfotext_2>
+<one_of_us_objectivesuccessmessage2>你找到了虫卵，一阵喜悦冲刷过你的身体。你的脑海中想起了一阵干涸而疯狂的笑声并慢慢消退，只剩下了水滴声。</one_of_us_objectivesuccessmessage2>
+<one_of_us_objectivesuccessmessage3>你摧毁了所有皮虫净，你头晕目眩，视野慢慢模糊。</one_of_us_objectivesuccessmessage3>
+<one_of_us_traitorobjectivestartmessage4>你阅读了最终任务:\n[traitorgoalinfos]</one_of_us_traitorobjectivestartmessage4>
+<one_of_us_goalinfotext_4>潜艇上的所有人都必须与画皮虫交融！</one_of_us_goalinfotext_4>
+
+<!-- Easter bunny mission -->
+<easterbunny_goalinfotext_1>寻找一个藏在通风口的特殊卵。</easterbunny_goalinfotext_1>
+<easterbunny_objectivesuccessmessage1>你觉得这卵很恶心，但它放进你的口袋恰好合适。滴——！</easterbunny_objectivesuccessmessage1>
+<easterbunny_traitorobjectivestartmessage2>培养卵：\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage2>
+<easterbunny_goalinfotext_2>找一个安全的地方让卵成长，然后喂给它[catalystitem]。</easterbunny_goalinfotext_2>
+<easterbunny_objectivesuccessmessage2>卵脉动着，发出奇怪的声音...你就要有孩子啦!</easterbunny_objectivesuccessmessage2>
+<easterbunny_traitorobjectivestartmessage3>卵裂开了，一头泥偶迅猛龙冲了出来:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage3>
+<easterbunny_goalinfotext_3>让它存活最少3分钟。</easterbunny_goalinfotext_3>
+<easterbunny_objectivesuccessmessage3>滴滴——！太好笑了。油彩脸听到这个一定会很乐的。</easterbunny_objectivesuccessmessage3>
+<easterbunny_traitorobjectivestartmessage4>逃离:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage4>
+
+<!-- Modified values -->
+<pausemenuquitverification>确定要返回主菜单吗？所有未保存的进度都将丢失。</pausemenuquitverification>
+<leveldifficulty>难度</leveldifficulty>
+<connection.set_text>set_text</connection.set_text>
 
 </infotexts>

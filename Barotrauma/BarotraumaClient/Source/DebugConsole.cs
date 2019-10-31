@@ -1985,10 +1985,17 @@ namespace Barotrauma
                 {
                     character.Info.Race = race;
                     character.ReloadHead();
+                    foreach (var limb in character.AnimController.Limbs)
+                    {
+                        if (limb.type != LimbType.Head)
+                        {
+                            limb.RecreateSprites();
+                        }
+                    }
                 }
             }, isCheat: true));
 
-            commands.Add(new Command("loadhead|head", "Load head sprite(s). Required argument: head id. Optional arguments: hair index, beard index, moustache index, face attachment index.", args =>
+            commands.Add(new Command("head", "Load the head sprite and the wearables (hair etc). Required argument: head id. Optional arguments: hair index, beard index, moustache index, face attachment index.", args =>
             {
                 var character = Character.Controlled;
                 if (character == null)
@@ -2022,6 +2029,13 @@ namespace Barotrauma
                         int.TryParse(args[4], out faceAttachmentIndex);
                     }
                     character.ReloadHead(id, hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
+                    foreach (var limb in character.AnimController.Limbs)
+                    {
+                        if (limb.type != LimbType.Head)
+                        {
+                            limb.RecreateSprites();
+                        }
+                    }
                 }
             }, isCheat: true));
 

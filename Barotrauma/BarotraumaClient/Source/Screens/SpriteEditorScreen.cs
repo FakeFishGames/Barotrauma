@@ -332,7 +332,7 @@ namespace Barotrauma
                 string spriteFolder = "";
                 string textureElement = element.GetAttributeString("texture", "");
                 // TODO: parse and create?
-                if (textureElement.Contains("[GENDER]") || textureElement.Contains("[HEADID]") || textureElement.Contains("[RACE]")) { return; }
+                if (textureElement.Contains("[GENDER]") || textureElement.Contains("[HEADID]") || textureElement.Contains("[RACE]") || textureElement.Contains("[VARIANT]")) { return; }
                 if (!textureElement.Contains("/"))
                 {
                     var parsedPath = element.ParseContentPathFromUri();

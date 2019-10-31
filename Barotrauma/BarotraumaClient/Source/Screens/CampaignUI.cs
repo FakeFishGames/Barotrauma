@@ -104,7 +104,8 @@ namespace Barotrauma
                     new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.9f), tabButton.RectTransform, i == 0 ? Anchor.CenterLeft : Anchor.CenterRight) { RelativeOffset = new Vector2(0.05f, 0.0f) },
                         TextManager.Get(tab.ToString()), textColor: tabButton.TextColor, font: GUI.LargeFont, textAlignment: Alignment.Center, style: null)
                     {
-                        UserData = "buttontext"
+                        UserData = "buttontext",
+                        Padding = new Vector4(GUI.Scale * 1)                    
                     };
                 }
                 else
@@ -112,7 +113,8 @@ namespace Barotrauma
                     new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.9f), tabButton.RectTransform, Anchor.Center),
                         TextManager.Get(tab.ToString()), textColor: tabButton.TextColor, font: GUI.LargeFont, textAlignment: Alignment.Center, style: null)
                     {
-                        UserData = "buttontext"
+                        UserData = "buttontext",
+                        Padding = new Vector4(GUI.Scale * 1)
                     };
                 }
 

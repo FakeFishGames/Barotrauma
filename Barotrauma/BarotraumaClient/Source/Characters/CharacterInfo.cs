@@ -149,6 +149,17 @@ namespace Barotrauma
             }
         }
 
+        // Doesn't work if the head's source rect does not start at 0,0.
+        public static Point CalculateOffset(Sprite sprite, Point offset) => sprite.SourceRect.Size * offset;
+
+        public void CalculateHeadPosition(Sprite sprite)
+        {
+            if (sprite == null) { return; }
+            if (Head.SheetIndex == null) { return; }
+            Point location = CalculateOffset(sprite, Head.SheetIndex.Value.ToPoint());
+            sprite.SourceRect = new Rectangle(location, sprite.SourceRect.Size);
+        }
+
         public void DrawPortrait(SpriteBatch spriteBatch, Vector2 screenPos, float targetWidth)
         {
             float backgroundScale = 1;
@@ -162,6 +173,10 @@ namespace Barotrauma
                 // Scale down the head sprite 10%
                 float scale = targetWidth * 0.9f / Portrait.size.X;
                 Vector2 offset = Portrait.size * backgroundScale / 4;
+                if (Head.SheetIndex.HasValue)
+                {
+                    Portrait.SourceRect = new Rectangle(CalculateOffset(Portrait, Head.SheetIndex.Value.ToPoint()), Portrait.SourceRect.Size);
+                }
                 Portrait.Draw(spriteBatch, screenPos + offset, scale: scale, spriteEffect: SpriteEffects.FlipHorizontally);
                 if (AttachmentSprites != null)
                 {
@@ -177,16 +192,21 @@ namespace Barotrauma
         
         public void DrawIcon(SpriteBatch spriteBatch, Vector2 screenPos, Vector2 targetAreaSize)
         {
-            if (HeadSprite != null)
+            var headSprite = HeadSprite;
+            if (headSprite != null)
             {
-                float scale = Math.Min(targetAreaSize.X / HeadSprite.size.X, targetAreaSize.Y / HeadSprite.size.Y);
-                HeadSprite.Draw(spriteBatch, screenPos, scale: scale);
+                float scale = Math.Min(targetAreaSize.X / headSprite.size.X, targetAreaSize.Y / headSprite.size.Y);
+                if (Head.SheetIndex.HasValue)
+                {
+                    headSprite.SourceRect = new Rectangle(CalculateOffset(headSprite, Head.SheetIndex.Value.ToPoint()), headSprite.SourceRect.Size);
+                }
+                headSprite.Draw(spriteBatch, screenPos, scale: scale);
                 if (AttachmentSprites != null)
                 {
                     float depthStep = 0.000001f;
                     foreach (var attachment in AttachmentSprites)
                     {
-                        DrawAttachmentSprite(spriteBatch, attachment, HeadSprite, screenPos, scale, depthStep);
+                        DrawAttachmentSprite(spriteBatch, attachment, headSprite, screenPos, scale, depthStep);
                         depthStep += depthStep;
                     }
                 }
@@ -195,13 +215,15 @@ namespace Barotrauma
 
         private void DrawAttachmentSprite(SpriteBatch spriteBatch, WearableSprite attachment, Sprite head, Vector2 drawPos, float scale, float depthStep, SpriteEffects spriteEffects = SpriteEffects.None)
         {
-            var list = AttachmentSprites.ToList();
             if (attachment.InheritSourceRect)
             {
                 if (attachment.SheetIndex.HasValue)
                 {
-                    Point location = (head.SourceRect.Location + head.SourceRect.Size) * attachment.SheetIndex.Value;
-                    attachment.Sprite.SourceRect = new Rectangle(location, head.SourceRect.Size);
+                    attachment.Sprite.SourceRect = new Rectangle(CalculateOffset(head, attachment.SheetIndex.Value), head.SourceRect.Size);
+                }
+                else if (Head.SheetIndex.HasValue)
+                {
+                    attachment.Sprite.SourceRect = new Rectangle(CalculateOffset(head, Head.SheetIndex.Value.ToPoint()), head.SourceRect.Size);
                 }
                 else
                 {
@@ -225,7 +247,6 @@ namespace Barotrauma
             }
             attachment.Sprite.Draw(spriteBatch, drawPos, Color.White, origin, rotate: 0, scale: scale, depth: depth, spriteEffect: spriteEffects);
         }
-
 
         public static CharacterInfo ClientRead(string speciesName, IReadMessage inc)
         {
