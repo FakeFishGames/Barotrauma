@@ -3712,4 +3712,7 @@
 
   <workshoppublisherror.limitexceeded>Publishing the Workshop item failed (limit exceeded). Make sure you have enabled Steam Cloud and haven't exceeded your Steam Cloud quota. If you are using Steam Cloud sync, a large number of save files can cause you to run out of space on the cloud. You may want to check [savepath] to make sure you're not storing an excessive number of save files.</workshoppublisherror.limitexceeded>
 
+  <entityname.duffelbag>Duffel Bag</entityname.duffelbag>
+  <entitydescription.duffelbag>The traditional way of storing a deceased seafarer's belongings until they can be delivered to their next of kin (or stolen or sold).</entitydescription.duffelbag>
+  
 </infotexts>

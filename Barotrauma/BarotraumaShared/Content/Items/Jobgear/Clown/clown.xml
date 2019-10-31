@@ -13,8 +13,8 @@
   </Item>
   <Item name="Clown Costume" identifier="clowncostume" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem" description="Praise the honkmother." impactsoundtag="impact_soft" scale="0.5">
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,448,64,64" origin="0.5,0.5" />
-    <Sprite texture="Content/Items/Jobgear/clothes.png" sourcerect="54,242,195,68" depth="0.6" origin="0.5,0.5" />
-    <Body width="100" height="50" density="30" />
+    <Sprite texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="6,163,195,68" depth="0.6" origin="0.5,0.5" />
+    <Body width="100" height="50" density="30" friction="0.8" restitution="0.01" />
     <Deconstruct time="40">
       <Item identifier="bikehorn" />
       <Item identifier="bikehorn" />

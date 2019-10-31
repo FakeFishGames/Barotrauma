@@ -32,10 +32,10 @@
     <sprite texture="Content/Characters/Human/legs_[GENDER].png" sourcerect="177,1,78,145" depth="0.15" origin="0.5316457,0.5310345" />
   </limb>
   <limb id="7" radius="7" height="19.032" mass="5" type="LeftLeg" healthindex="4" name="Limb 7" flip="True" attackpriority="1" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Human/legs_[GENDER].png" sourcerect="177,146,78,110" depth="0.16" origin="0.5384616,0.5" />
+    <sprite texture="Content/Characters/Human/legs_[GENDER].png" sourcerect="177,146,78,110" depth="0.151" origin="0.5384616,0.5" />
   </limb>
   <limb id="8" radius="6" height="15" mass="2" type="LeftFoot" flip="True" pullpos="-4.7,2" healthindex="4" name="Limb 8" attackpriority="1" steerforce="0" stepoffset="0,0" width="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Human/legs_[GENDER].png" sourcerect="1,91,73,102" depth="0.17" origin="0.4520548,0.4117647" />
+    <sprite texture="Content/Characters/Human/legs_[GENDER].png" sourcerect="1,91,73,102" depth="0.152" origin="0.4520548,0.4117647" />
     <sound tag="footstep_metal" />
   </limb>
   <!-- right leg -->

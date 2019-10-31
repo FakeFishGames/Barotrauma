@@ -2370,9 +2370,17 @@ namespace Barotrauma
             despawnTimer += deltaTime;
             if (despawnTimer < DespawnDelay) { return; }
 
-            //TODO: move the despawning character's items to a bag/sack instead of a metal crate 
-            var containerPrefab = MapEntityPrefab.Find(null, identifier: "metalcrate") as ItemPrefab;
-            Spawner.AddToSpawnQueue(containerPrefab, WorldPosition, onSpawned: onItemContainerSpawned);
+            var containerPrefab =
+                (MapEntityPrefab.List.Find(me => me.Tags.Contains("despawncontainer")) ??
+                MapEntityPrefab.Find(null, identifier: "metalcrate")) as ItemPrefab;
+            if (containerPrefab == null)
+            {
+                DebugConsole.NewMessage("Could not spawn a container for a despawned character's items. No item with the tag \"despawncontainer\" or the identifier \"metalcrate\" found.", Color.Red);
+            }
+            else
+            {
+                Spawner.AddToSpawnQueue(containerPrefab, WorldPosition, onSpawned: onItemContainerSpawned);
+            }
 
             void onItemContainerSpawned(Item item)
             {
