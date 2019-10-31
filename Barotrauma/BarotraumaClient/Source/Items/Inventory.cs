@@ -983,6 +983,11 @@ namespace Barotrauma
                 if (inventory != null && inventory.Locked) { slotColor = Color.Gray * 0.5f; }
                 spriteBatch.Draw(slotSprite.Texture, rect, slotSprite.SourceRect, slotColor);
 
+                if (slot.IsHighlighted && (draggingItem != null && inventory.CanBePut(draggingItem)))
+                {
+                    GUI.UIGlow.Draw(spriteBatch, rect, Color.LightGreen);
+                }
+
                 if (item != null && drawItem)
                 {
                     if (!item.IsFullCondition && (itemContainer == null || !itemContainer.ShowConditionInContainedStateIndicator))
