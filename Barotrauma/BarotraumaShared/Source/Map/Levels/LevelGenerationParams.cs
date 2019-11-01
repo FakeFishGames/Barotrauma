@@ -9,21 +9,37 @@ namespace Barotrauma
 {
     class Biome
     {
-        public readonly string Name;
+
+        public readonly string Identifier;
+        public readonly string DisplayName;
         public readonly string Description;
 
         public readonly List<int> AllowedZones = new List<int>();
 
         public Biome(string name, string description)
         {
-            Name = name;
+            Identifier = name;
             Description = description;
         }
 
         public Biome(XElement element)
         {
-            Name = element.GetAttributeString("name", "Biome");
-            Description = element.GetAttributeString("description", "");
+            Identifier = element.GetAttributeString("identifier", "");
+            if (string.IsNullOrEmpty(Identifier))
+            {
+                Identifier = element.GetAttributeString("name", "");
+                DebugConsole.ThrowError("Error in biome \"" + Identifier + "\": identifier missing, using name as the identifier.");
+            }
+
+            DisplayName =
+                TextManager.Get("biomename." + Identifier, returnNull: true) ??
+                element.GetAttributeString("name", "Biome") ??
+                TextManager.Get("biomename." + Identifier);
+
+            Description =
+                TextManager.Get("biomedescription." + Identifier, returnNull: true) ??
+                element.GetAttributeString("description", "") ??
+                TextManager.Get("biomedescription." + Identifier);
 
             string allowedZonesStr = element.GetAttributeString("AllowedZones", "1,2,3,4,5,6,7,8,9");
             string[] zoneIndices = allowedZonesStr.Split(',');
@@ -32,7 +48,7 @@ namespace Barotrauma
                 int zoneIndex = -1;
                 if (!int.TryParse(zoneIndices[i].Trim(), out zoneIndex))
                 {
-                    DebugConsole.ThrowError("Error in biome config \"" + Name + "\" - \"" + zoneIndices[i] + "\" is not a valid zone index.");
+                    DebugConsole.ThrowError("Error in biome config \"" + Identifier + "\" - \"" + zoneIndices[i] + "\" is not a valid zone index.");
                     continue;
                 }
                 AllowedZones.Add(zoneIndex);
@@ -374,7 +390,7 @@ namespace Barotrauma
             var matchingLevelParams = levelParams.FindAll(lp => lp.allowedBiomes.Contains(biome));
             if (matchingLevelParams.Count == 0)
             {
-                DebugConsole.ThrowError("Level generation presets not found for the biome \"" + biome.Name + "\"!");
+                DebugConsole.ThrowError("Level generation presets not found for the biome \"" + biome.Identifier + "\"!");
                 return new LevelGenerationParams(null);
             }
 
@@ -399,11 +415,19 @@ namespace Barotrauma
                     string biomeName = biomeNames[i].Trim().ToLowerInvariant();
                     if (biomeName == "none") { continue; }
 
-                    Biome matchingBiome = biomes.Find(b => b.Name.ToLowerInvariant() == biomeName);
+                    Biome matchingBiome = biomes.Find(b => b.Identifier.ToLowerInvariant() == biomeName);
                     if (matchingBiome == null)
                     {
-                        DebugConsole.ThrowError("Error in level generation parameters: biome \"" + biomeName + "\" not found.");
-                        continue;
+                        matchingBiome = biomes.Find(b => b.DisplayName.ToLowerInvariant() == biomeName);
+                        if (matchingBiome == null)
+                        {
+                            DebugConsole.ThrowError("Error in level generation parameters: biome \"" + biomeName + "\" not found.");
+                            continue;
+                        }
+                        else
+                        {
+                            DebugConsole.NewMessage("Please use biome identifiers instead of names in level generation parameter \"" + Name + "\".", Color.Orange);
+                        }
                     }
 
                     allowedBiomes.Add(matchingBiome);
